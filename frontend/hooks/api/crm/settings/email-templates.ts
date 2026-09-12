@@ -27,7 +27,7 @@ export interface EmailTemplate {
   updatedAt: string | null;
 }
 
-interface CreateEmailTemplateInput {
+export interface CreateEmailTemplateInput {
   name: string;
   subject: string;
   body: string;

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyWarehouseIllustration } from "@/components/illustrations";
@@ -27,15 +28,39 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { useCan } from "@/hooks/api/access";
 
 const PAGE_LIMIT = 20;
 
 const HOLD_STATUSES: QualityHoldStatus[] = ["ACTIVE", "RELEASED", "EXPIRED"];
 
+/**
+ * What exactly is held, beyond which product it is.
+ *
+ * A hold is against a grain, not against a variant: `inv_stock_levels` is keyed
+ * by variant, location, lot, serial, handling unit and ownership, and the hold
+ * table carries the same columns. Two holds in the same bin — one on a
+ * consigned pallet, one on loose owned stock — are different holds on different
+ * rows, and without this they render as two identical lines.
+ *
+ * Only the parts that are actually set are named. A loose, owned, unlotted hold
+ * has nothing to say here and says nothing, rather than printing "OWNED" beside
+ * every row until it stops being read.
+ */
+function resolveGrainLabel(hold: QualityHold): string | null {
+  const parts: string[] = [];
+  if (hold.lotId) parts.push(`Lot #${hold.lotId}`);
+  if (hold.serialId) parts.push(`Serial #${hold.serialId}`);
+  if (hold.handlingUnitId) parts.push(`HU #${hold.handlingUnitId}`);
+  if (hold.ownership && hold.ownership !== "OWNED")
+    parts.push(hold.ownership === "VENDOR" ? "Consigned (vendor)" : "Customer-owned");
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
 function resolveVariantLabel(hold: QualityHold): string {
-  if (hold.productVariant?.name && hold.productVariant.sku) return `${hold.productVariant.name} — ${hold.productVariant.sku}`;
-  if (hold.productVariant?.name) return hold.productVariant.name;
-  if (hold.productVariant?.sku) return hold.productVariant.sku;
+  if (hold.productName && hold.variantSku) return `${hold.productName} — ${hold.variantSku}`;
+  if (hold.productName && hold.variantName) return `${hold.productName} — ${hold.variantName}`;
+  if (hold.variantSku) return hold.variantSku;
   return `Variant #${hold.productVariantId}`;
 }
 
@@ -86,6 +111,7 @@ const HoldReleaseAction = forwardRef<HTMLDivElement, HoldReleaseActionProps>(
 );
 
 function HoldsPageInner() {
+  const canView = useCan("inventory:quality:read");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -176,6 +202,21 @@ function HoldsPageInner() {
       ),
     },
     {
+      key: "grain",
+      header: "Held stock",
+      className: "text-muted-foreground text-sm",
+      cell: (r) => {
+        const grain = resolveGrainLabel(r);
+        return grain === null ? (
+          // Not "—" as a placeholder for missing data: loose owned stock is the
+          // ordinary case, and it genuinely has nothing more to say.
+          <span className="text-muted-foreground/60">Loose, owned</span>
+        ) : (
+          <span>{grain}</span>
+        );
+      },
+    },
+    {
       key: "qty",
       header: "Qty",
       headerClassName: "w-[80px] text-right",
@@ -236,6 +277,16 @@ function HoldsPageInner() {
       </Select>
     </div>
   );
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Quality Holds"
+        subtitle="Manage inventory quality holds"
+      >
+        <NoPermissionState permission="inventory:quality:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <>

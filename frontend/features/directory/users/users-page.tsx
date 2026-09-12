@@ -34,7 +34,7 @@ import {
   DEFAULT_PAGE_SIZE,
   STANDARD_PAGE_SIZE_OPTIONS,
 } from "@/lib/list-pagination";
-import { readUsersListState } from "./users-list-state";
+import { readUsersListState, USER_SORT_FIELDS } from "./users-list-state";
 import { UserBulkActionsBar } from "./user-bulk-actions-bar";
 import {
   getUserBulkActionCopy,
@@ -398,6 +398,12 @@ export function UsersPage() {
                   getRowLabel: (user) => user.name || user.email,
                 }}
                 sortState={{
+                  /*
+                    The orders `GET /organization/users` will actually apply,
+                    and so the only headers that get a control: a column can
+                    never offer an order the endpoint would drop on the floor.
+                  */
+                  fields: USER_SORT_FIELDS,
                   field: sortBy,
                   direction: sortOrder,
                   onChange: handleSortChange,

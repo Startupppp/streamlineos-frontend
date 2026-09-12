@@ -38,6 +38,7 @@ export function DataTableFooter({
           mode="cursor"
           limit={limit}
           rowCount={rowCount}
+          pageNumber={cursor.pageNumber}
           hasMore={cursor.hasMore}
           hasPrevious={cursor.hasPrevious}
           onNext={cursor.onNext}

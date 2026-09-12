@@ -17,13 +17,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ErrorState } from "@/components/shared";
-import {
-  EmptyTransferIllustration,
-  EmptySearchIllustration,
-} from "@/components/illustrations";
+import { ErrorState, NoPermissionState } from "@/components/shared";
+import { useCan } from "@/hooks/api/access";
+import { EmptyTransferIllustration } from "@/components/illustrations";
 import { useMotionVariants } from "@/lib/motion-variants";
+import { formatCalendarDate, formatShortDate } from "@/lib/date-utils";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { formatQuantity } from "@/features/inventory/components/planning/forecast-format";
 import { useLots } from "@/hooks/api/inventory/traceability";
 import {
   LOT_STATUS_BADGE,
@@ -75,8 +75,8 @@ const LOTS_COLUMNS: DataTableColumn<LotItem>[] = [
     header: "Product / SKU",
     cell: (row) => (
       <>
-        <TruncatedText text={row.productVariant?.name ?? "—"} className="font-medium text-foreground" />
-        <span className="text-muted-foreground font-mono text-micro">{row.productVariant?.sku ?? "—"}</span>
+        <TruncatedText text={row.productName} className="font-medium text-foreground" />
+        <span className="text-muted-foreground font-mono text-micro">{row.variantSku}</span>
       </>
     ),
   },
@@ -93,12 +93,19 @@ const LOTS_COLUMNS: DataTableColumn<LotItem>[] = [
     ),
   },
   {
+    key: "totalOnHand",
+    header: "On Hand",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums",
+    cell: (row) => <>{formatQuantity(row.totalOnHand)}</>,
+  },
+  {
     key: "expiryDate",
     header: "Expiry Date",
     className: "tabular-nums",
     cell: (row) => (
       <span className={getExpiryClass(row.expiryDate)}>
-        {row.expiryDate ? new Date(row.expiryDate).toLocaleDateString() : "—"}
+        {row.expiryDate ? formatCalendarDate(row.expiryDate) : "—"}
       </span>
     ),
   },
@@ -107,7 +114,7 @@ const LOTS_COLUMNS: DataTableColumn<LotItem>[] = [
     header: "Created",
     headerClassName: "hidden lg:table-cell",
     className: "text-muted-foreground tabular-nums hidden lg:table-cell",
-    cell: (row) => <>{new Date(row.createdAt).toLocaleDateString()}</>,
+    cell: (row) => <>{formatShortDate(row.createdAt)}</>,
   },
   {
     key: "actions",
@@ -117,6 +124,7 @@ const LOTS_COLUMNS: DataTableColumn<LotItem>[] = [
 ];
 
 export function LotsClient() {
+  const canView = useCan("inventory:stock:read");
   const { fadeUp } = useMotionVariants();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("ALL");
@@ -174,6 +182,18 @@ export function LotsClient() {
       />
     </motion.div>
   );
+
+  // G8. Denied is not empty. Placed after every hook, not at the top of
+  // the component: an early return above a useState or useQuery makes the
+  // hook order depend on a permission, which React forbids and which only
+  // shows up for the user who lacks the key.
+  if (!canView) {
+    return (
+      <PageWrapper title="Lots">
+        <NoPermissionState permission="inventory:stock:read" className="flex-1" />
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper

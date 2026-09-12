@@ -19,9 +19,10 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
@@ -69,6 +70,7 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
   const invoiceMutation = useInvoiceSalesOrder();
   const cancelMutation = useCancelSalesOrder();
 
+  const canRead = useCan("inventory:sales-orders:read");
   const canUpdate = useCan("inventory:sales-orders:update");
   const canConfirm = useCan("inventory:sales-orders:confirm");
   const canShip = useCan("inventory:sales-orders:ship");
@@ -155,6 +157,17 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
   const isMutating =
     confirmMutation.isPending || reserveMutation.isPending ||
     packMutation.isPending || cancelMutation.isPending || invoiceMutation.isPending;
+
+  // G8. The action keys were gated and the read was not, so somebody who may
+  // not see sales orders got the order — just without the buttons. Denied is
+  // its own answer, not a read with the controls removed.
+  if (!canRead) {
+    return (
+      <PageWrapper title="Sales Order">
+        <NoPermissionState permission="inventory:sales-orders:read" className="flex-1" />
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper

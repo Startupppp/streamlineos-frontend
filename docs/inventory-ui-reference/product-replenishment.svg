@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+  <title id="title">StreamlineOS product replenishment reference</title>
+  <desc id="desc">A product detail and replenishment workspace that preserves StreamlineOS page anatomy and token usage.</desc>
+  <rect width="1440" height="900" fill="#f8fafc"/>
+  <g font-family="Geist, Arial, sans-serif" fill="#0b1220">
+    <text x="60" y="52" font-size="12" fill="#64748b">INVENTORY / PRODUCTS / ST-220</text>
+    <text x="60" y="94" font-size="26" font-weight="700">Steel fastener</text><text x="60" y="122" font-size="13" fill="#64748b">ST-220 · Active · Stockable · Tracked by lot</text>
+    <rect x="1234" y="72" width="146" height="36" rx="7" fill="#0b1220"/><text x="1264" y="95" font-size="12" fill="#ffffff" font-weight="650">Edit product</text>
+    <line x1="60" y1="154" x2="1380" y2="154" stroke="#e2e8f0"/>
+    <rect x="60" y="184" width="840" height="176" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+    <text x="84" y="218" font-size="14" font-weight="650">Stock position</text>
+    <g transform="translate(84 242)"><text x="0" y="0" font-size="10" fill="#64748b">ON HAND</text><text x="0" y="34" font-size="25" font-weight="700">18</text><text x="0" y="56" font-size="11" fill="#b91c1c">Below reorder point</text></g>
+    <g transform="translate(244 242)"><text x="0" y="0" font-size="10" fill="#64748b">COMMITTED</text><text x="0" y="34" font-size="25" font-weight="700">12</text><text x="0" y="56" font-size="11" fill="#64748b">Open sales orders</text></g>
+    <g transform="translate(404 242)"><text x="0" y="0" font-size="10" fill="#64748b">AVAILABLE</text><text x="0" y="34" font-size="25" font-weight="700">6</text><text x="0" y="56" font-size="11" fill="#b91c1c">0.5 weeks cover</text></g>
+    <g transform="translate(564 242)"><text x="0" y="0" font-size="10" fill="#64748b">ON ORDER</text><text x="0" y="34" font-size="25" font-weight="700">480</text><text x="0" y="56" font-size="11" fill="#64748b">Expected Sep 02</text></g>
+    <rect x="924" y="184" width="456" height="176" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+    <circle cx="955" cy="219" r="15" fill="#fffbeb"/><text x="948" y="225" font-size="15" fill="#D97706">✦</text><text x="980" y="222" font-size="14" font-weight="650">Replenishment recommendation</text>
+    <text x="948" y="263" font-size="13" fill="#334155">Order 360 units to restore 4 weeks of cover.</text><text x="948" y="286" font-size="12" fill="#64748b">Evidence: available 6 · weekly demand 42 · lead time 9 days</text>
+    <rect x="948" y="307" width="160" height="30" rx="6" fill="#0b1220"/><text x="987" y="327" font-size="11" fill="#ffffff" font-weight="650">Review proposal</text>
+    <rect x="60" y="392" width="1320" height="210" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+    <text x="84" y="428" font-size="14" font-weight="650">Stock by location</text><text x="1234" y="428" font-size="11" fill="#64748b">View movements →</text>
+    <line x1="84" y1="449" x2="1355" y2="449" stroke="#e2e8f0"/>
+    <g font-size="10" fill="#64748b"><text x="84" y="473">WAREHOUSE / LOCATION</text><text x="450" y="473">ON HAND</text><text x="590" y="473">COMMITTED</text><text x="740" y="473">AVAILABLE</text><text x="900" y="473">REORDER POINT</text><text x="1100" y="473">STATUS</text></g>
+    <g font-size="12"><text x="84" y="510" font-weight="650">Pune DC · P-02-14</text><text x="450" y="510">18</text><text x="590" y="510">12</text><text x="740" y="510">6</text><text x="900" y="510">50</text><rect x="1100" y="493" width="88" height="24" rx="5" fill="#fef2f2" stroke="#fecaca"/><text x="1117" y="509" fill="#b91c1c">Critical</text>
+      <line x1="84" y1="532" x2="1355" y2="532" stroke="#f1f5f9"/><text x="84" y="568" font-weight="650">Bhiwandi A · A-04-18</text><text x="450" y="568">0</text><text x="590" y="568">0</text><text x="740" y="568">0</text><text x="900" y="568">30</text><rect x="1100" y="551" width="88" height="24" rx="5" fill="#fef2f2" stroke="#fecaca"/><text x="1117" y="567" fill="#b91c1c">Out</text></g>
+    <rect x="60" y="634" width="650" height="184" rx="12" fill="#ffffff" stroke="#e2e8f0"/><text x="84" y="670" font-size="14" font-weight="650">Demand evidence</text><text x="84" y="697" font-size="12" fill="#64748b">Last 8 weeks · sale movements only</text>
+    <polyline points="90,770 160,744 230,752 300,720 370,733 440,690 510,704 580,672 650,681" fill="none" stroke="#3b82f6" stroke-width="3"/><line x1="90" y1="780" x2="670" y2="780" stroke="#e2e8f0"/><text x="90" y="800" font-size="10" fill="#64748b">W−8</text><text x="638" y="800" font-size="10" fill="#64748b">Now</text>
+    <rect x="738" y="634" width="642" height="184" rx="12" fill="#ffffff" stroke="#e2e8f0"/><text x="762" y="670" font-size="14" font-weight="650">Decision record</text><text x="762" y="697" font-size="12" fill="#64748b">Every recommendation keeps its evidence and reviewer state.</text>
+    <circle cx="770" cy="732" r="5" fill="#D97706"/><text x="786" y="736" font-size="12" fill="#334155">AI proposal generated from deterministic reorder evidence</text><circle cx="770" cy="764" r="5" fill="#94a3b8"/><text x="786" y="768" font-size="12" fill="#334155">Awaiting planner review · no stock or PO write has occurred</text><circle cx="770" cy="796" r="5" fill="#94a3b8"/><text x="786" y="800" font-size="12" fill="#334155">Source: Pune DC stock, 8-week sales, vendor lead time</text>
+  </g>
+</svg>

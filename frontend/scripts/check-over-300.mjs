@@ -23,7 +23,9 @@
  * catch; a red run means split the file the run names.
  *
  * Scans: all *.ts and *.tsx under the project root, excluding:
- *   node_modules, .next, feedbucket-widget (a separate bundled widget),
+ *   node_modules, every .next* build directory (.next, .next-e2e — gitignored
+ *   generated output, not code anyone wrote), feedbucket-widget (a separate
+ *   bundled widget),
  *   *.spec.ts, *.spec.tsx, *.d.ts, scripts/ (gate scripts themselves).
  *
  * Passes when actual count <= BASELINE. Fails when it increases.
@@ -40,13 +42,33 @@ import { fileURLToPath } from "node:url";
 import { isExcludedScanDir, runScanDirSelfTest } from "./check-repo-paths.mjs";
 
 const LIMIT = 300;
+// 2026-09-11, the merge of origin/main into the inventory integration lane.
+// Main had lowered its own count to 513 (see BASELINE HISTORY above). This lane
+// had moved to 520: the CRM/Timesheets merge (7486adb99) took the inventory-lane
+// baseline of 519, which never counted that lane's files, to 522 — 35 of the 36
+// files it newly counted were already over 300 there, and the 36th,
+// sidebar-nav-inventory.test.ts, was split instead; 32 inventory-side files left
+// the count, replaced by the accounting rewrite; deleting the dead pre-rewrite
+// types/accounting.ts and hooks/api/accounting.ts made it 520. Neither number
+// describes the merged tree. The lower one is kept because this baseline may
+// only move down; re-measure the merged tree before trusting a red or a green.
 const BASELINE = 513;
+// Main's vacuity floor, the stricter of the two (this lane had 100). The merged
+// tree only adds files to main's, so it cannot fall under it.
 const MIN_FILES = 4900;
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
 const EXTRA_EXCLUDED_DIRS = new Set(["scripts", "public"]);
 
+/**
+ * Next writes generated types under a build directory per mode — `.next` for
+ * dev/build, `.next-e2e` for the e2e harness — and both are gitignored. Naming
+ * only `.next` let `.next-e2e/dev/types/validator.ts` into the count at **6,082
+ * lines**, so the ratchet was partly measuring whether anyone had run the e2e
+ * harness lately. `isExcludedScanDir` skips every dot-directory, so a future
+ * mode directory cannot reopen it.
+ */
 function isExcludedDir(name) {
   return isExcludedScanDir(name) || EXTRA_EXCLUDED_DIRS.has(name);
 }
@@ -107,7 +129,7 @@ function runSelfTests() {
   const fixture = mkdtempSync(join(tmpdir(), "fe-over-300-self-test-"));
   try {
     mkdirSync(join(fixture, "features", "nested"), { recursive: true });
-    mkdirSync(join(fixture, ".next-buildmart", "dev"), { recursive: true });
+    mkdirSync(join(fixture, ".next-custom", "dev"), { recursive: true });
     mkdirSync(join(fixture, "next-intl"), { recursive: true });
     mkdirSync(join(fixture, "node_modules"), { recursive: true });
 
@@ -118,7 +140,7 @@ function runSelfTests() {
     writeFileSync(join(fixture, "over.spec.tsx"), "x\n".repeat(400));
     writeFileSync(join(fixture, "over.d.ts"), "x\n".repeat(400));
     writeFileSync(join(fixture, "over.js"), "x\n".repeat(400));
-    writeFileSync(join(fixture, ".next-buildmart", "dev", "chunk.ts"), "x\n".repeat(9000));
+    writeFileSync(join(fixture, ".next-custom", "dev", "chunk.ts"), "x\n".repeat(9000));
     writeFileSync(join(fixture, "next-intl", "authored.tsx"), "x\n".repeat(400));
     writeFileSync(join(fixture, "node_modules", "dep.ts"), "x\n".repeat(900));
 
@@ -133,7 +155,7 @@ function runSelfTests() {
     assert("spec files are excluded", !collected.some((f) => f.includes(".spec.")));
     assert("declaration files are excluded", !collected.some((f) => f.endsWith(".d.ts")));
     assert("non-TypeScript files are excluded", !collected.some((f) => f.endsWith(".js")));
-    assert("generated build output is excluded", !collected.some((f) => f.includes(".next-buildmart")));
+    assert("generated build output is excluded", !collected.some((f) => f.includes(".next-custom")));
     assert("node_modules is excluded", !collected.some((f) => f.includes("node_modules")));
     assert(
       "an authored directory merely starting with 'next-' is still scanned",
@@ -141,6 +163,9 @@ function runSelfTests() {
     );
     assert("the vacuity guard would fire on this fixture", collected.length < MIN_FILES);
     runScanDirSelfTest(assert);
+    assert("isExcludedDir excludes .next", isExcludedDir(".next"));
+    assert("isExcludedDir excludes .next-e2e", isExcludedDir(".next-e2e"));
+    assert("isExcludedDir keeps a real directory", isExcludedDir("features") === false);
   } finally {
     rmSync(fixture, { recursive: true, force: true });
   }

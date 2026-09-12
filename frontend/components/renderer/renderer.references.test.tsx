@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { validateLayout, type RecordLayout } from "@/lib/renderer/layout";
+import { type RecordLayout } from "@/lib/renderer/layout";
+import { validateLayout } from "@/lib/renderer/layout-validation";
 import { formatFieldText } from "./format-value";
 import { RecordDetail } from "./record-detail";
 import { RecordForm } from "./record-form";
@@ -328,6 +329,7 @@ describe("a field that points at another record — controls", () => {
       expect(onSubmit).toHaveBeenCalledWith(
         expect.objectContaining({ ownerId: "u-42" }),
         expect.anything(),
+        {},
       ),
     );
   });

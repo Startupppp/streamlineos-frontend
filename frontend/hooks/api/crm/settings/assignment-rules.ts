@@ -20,9 +20,20 @@ const deleteAssignmentRuleLazy = lazyContract(() =>
   import("@/hooks/api/crm/settings/assignment-rules-schema").then((m) => m.deleteAssignmentRuleContract),
 );
 
+/**
+ * The two the `assignment_type` column will hold. `assignmentRuleCreateSchema`
+ * is `.strict()` and its `assignmentType` is this enum and no wider, so sending
+ * one of the three extended names is a 400 and not a value.
+ */
+export type BaseAssignmentType = "assign_user" | "round_robin";
+
+/**
+ * What the rule actually does, which the server reads as
+ * `assignmentTypeText ?? assignmentType` (`crm-rules.service.ts`). The three
+ * beyond the base pair live in the separate `assignmentTypeText` column.
+ */
 export type AssignmentType =
-  | "assign_user"
-  | "round_robin"
+  | BaseAssignmentType
   | "weighted_round_robin"
   | "least_loaded"
   | "territory";
@@ -38,31 +49,42 @@ export interface WeightedMember {
   weight: number;
 }
 
+/**
+ * The `config` jsonb column, and the only home the extended arms have.
+ *
+ * `weights` is keyed by user id, which is why the weighted editor is a list of
+ * rows here and a record there. `fallbackUserId` is who a territory rule falls
+ * to when no territory matches. There is no window key: `resolveAssignment`
+ * counts a member's open leads with no date filter at all, so a control for one
+ * would store a number nothing reads.
+ */
+export interface AssignmentRuleConfig {
+  weights?: Record<string, number>;
+  fallbackUserId?: string;
+}
+
 export interface AssignmentRule {
   id: number;
   orgId: string;
   name: string;
-  assignmentType: AssignmentType;
+  assignmentType: BaseAssignmentType;
+  assignmentTypeText: AssignmentType | null;
   assignToUserId: string | null;
   roundRobinUserIds: string[] | null;
-  weightedMembers: WeightedMember[] | null;
-  windowHours: number | null;
-  territoryId: number | null;
+  config: AssignmentRuleConfig | null;
   conditions: AssignmentRuleCondition[];
   priority: number;
   isActive: boolean;
   createdAt: string | null;
-  updatedAt: string | null;
 }
 
 export interface CreateAssignmentRuleInput {
   name: string;
-  assignmentType: AssignmentType;
+  assignmentType: BaseAssignmentType;
+  assignmentTypeText?: AssignmentType;
   assignToUserId?: string;
   roundRobinUserIds?: string[];
-  weightedMembers?: WeightedMember[];
-  windowHours?: number;
-  territoryId?: number;
+  config?: AssignmentRuleConfig;
   conditions: AssignmentRuleCondition[];
   priority?: number;
   isActive?: boolean;
@@ -71,12 +93,11 @@ export interface CreateAssignmentRuleInput {
 export interface UpdateAssignmentRuleInput {
   id: number;
   name?: string;
-  assignmentType?: AssignmentType;
+  assignmentType?: BaseAssignmentType;
+  assignmentTypeText?: AssignmentType;
   assignToUserId?: string;
   roundRobinUserIds?: string[];
-  weightedMembers?: WeightedMember[];
-  windowHours?: number;
-  territoryId?: number;
+  config?: AssignmentRuleConfig;
   conditions?: AssignmentRuleCondition[];
   priority?: number;
   isActive?: boolean;

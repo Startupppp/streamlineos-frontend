@@ -1,3 +1,4 @@
+import type { CreateCalendarEventPayload } from "@/hooks/api/calendar";
 import { useState, useCallback } from "react";
 import {
   parseCalendarEventId,

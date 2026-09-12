@@ -4,3 +4,4 @@ export * from "./order-line-helpers";
 export * from "./po-schema";
 export * from "./so-schema";
 export * from "./vendor-schema";
+export * from "./scan-resolution";

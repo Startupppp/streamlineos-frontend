@@ -7,9 +7,9 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useWorkers } from "@/hooks/api/directory/workers";
 import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
@@ -189,8 +189,6 @@ export function WorkersPage() {
     {
       key: "name",
       header: "Worker",
-      sortable: true,
-      sortValue: (r) => workerDisplayName(r),
       className: TABLE_TITLE_CELL,
       cell: (row) => (
         <div className="flex min-w-0 flex-col">

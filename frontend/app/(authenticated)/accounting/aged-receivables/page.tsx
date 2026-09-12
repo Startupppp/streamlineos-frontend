@@ -1,5 +1,12 @@
-import { AgedReceivablesPage } from "@/features/accounting/reports/aged-receivables-page";
+import { Suspense } from "react";
+import { requirePermission } from "@/lib/rbac/require-permission";
+import { AgedReceivablesClient } from "@/features/accounting/sales";
 
-export default function Page() {
-  return <AgedReceivablesPage />;
+export default async function AccountingAgedReceivablesPage() {
+  await requirePermission("accounting:receivables:read");
+  return (
+    <Suspense>
+      <AgedReceivablesClient />
+    </Suspense>
+  );
 }

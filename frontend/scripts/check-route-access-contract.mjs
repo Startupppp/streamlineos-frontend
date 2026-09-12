@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { backendPath } from "./lib/backend-root.mjs";
 
 const FRONTEND_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const CONTRACT = join(FRONTEND_ROOT, "contracts", "openapi.json");
@@ -52,12 +53,56 @@ function isCheckable(key) {
   return PERMISSION_SHAPE.test(key);
 }
 
+/**
+ * The source with its comments blanked out, strings left intact.
+ *
+ * Navigation files explain their gates in prose, and the prose names the keys a
+ * route deliberately does NOT use ("`accounting:read` and not `accounting:view`:
+ * no route enforces the latter"). Scanning comments reported those as live gates,
+ * which is the check failing on exactly the note that records its own last fix.
+ * A `//` inside a string (a URL) is kept; only real comments go.
+ */
+export function stripComments(source) {
+  let out = "";
+  let quote = null;
+  for (let i = 0; i < source.length; i += 1) {
+    const ch = source[i];
+    const next = source[i + 1];
+    if (quote) {
+      out += ch;
+      if (ch === "\\") { out += next ?? ""; i += 1; }
+      else if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === "`") { quote = ch; out += ch; continue; }
+    if (ch === "/" && next === "/") {
+      while (i < source.length && source[i] !== "\n") i += 1;
+      out += "\n";
+      continue;
+    }
+    if (ch === "/" && next === "*") {
+      i += 2;
+      while (i < source.length && !(source[i] === "*" && source[i + 1] === "/")) {
+        if (source[i] === "\n") out += "\n";
+        i += 1;
+      }
+      i += 1;
+      continue;
+    }
+    out += ch;
+  }
+  return out;
+}
+
+export function keysIn(source) {
+  return [...stripComments(source).matchAll(LITERAL)].map((match) => match[1]);
+}
+
 function collectSourceKeys(files) {
   const found = new Map();
   for (const file of files) {
     const source = readFileSync(file, "utf8");
-    for (const match of source.matchAll(LITERAL)) {
-      const key = match[1];
+    for (const key of keysIn(source)) {
       if (!found.has(key)) found.set(key, file.slice(FRONTEND_ROOT.length).split("\\").join("/"));
     }
   }
@@ -106,6 +151,15 @@ function runSelfTest() {
     {
       description: "a key backed by an endpoint is not reported",
       passes: !ghosts.some(([k]) => k === "hr:employees:view"),
+    },
+    {
+      description: "a key named only in a comment is not collected as a gate",
+      passes: (() => {
+        const keys = keysIn(
+          "// `hr:employees:export` is not used here\n/* nor \"build:tickets:edit\" */\nconst gate = \"hr:employees:view\"; const url = \"https://x.test/a\";",
+        );
+        return keys.length === 1 && keys[0] === "hr:employees:view";
+      })(),
     },
     {
       description: "a broken source walk refuses to report a pass",
@@ -166,8 +220,66 @@ if (ghosts.length === 0) {
   process.exit(0);
 }
 
-console.error(`✖  ${ghosts.length} route-access permission(s) name no endpoint in the generated contract:`);
-for (const [key, file] of ghosts) console.error(`   ${key}  <-  ${file}`);
+/**
+ * Separate the phantoms before printing, when the backend is on disk.
+ *
+ * This gate reads the VENDORED contract, so every one of its findings is only
+ * as current as that copy — and on 2026-09-10 the vendored copy was stale by a
+ * whole module, describing accounting surfaces that no longer exist and knowing
+ * nothing of the CRM autonomy, commission, lifecycle, reporting or
+ * call-analysis routes. Five of the six keys it reported as naming no endpoint
+ * were enforced by endpoints that were simply newer than the file.
+ *
+ * That is worse than a stale number. The phantoms are indistinguishable from
+ * the one real finding, so the whole list stops being read — which is how a red
+ * gate becomes furniture. When the paired backend has an artifact, each ghost is
+ * re-checked against it and the two groups are printed apart.
+ */
+/*
+ * Read the backend's SOURCE, not its generated artifact.
+ *
+ * The artifact is the thing that goes stale — the one beside this checkout is
+ * dated two days before the routes in question — so re-checking a ghost against
+ * it reproduces the same wrong answer. A `@RequirePermission("key")` in a
+ * controller cannot be stale: it is what the guard will actually enforce.
+ * Measured here: five of the six keys this gate reported are enforced by
+ * between one and five controller handlers each.
+ */
+const backendSrc = backendPath(FRONTEND_ROOT, join("src", "modules"));
+let fresh = null;
+if (backendSrc !== null && existsSync(backendSrc)) {
+  const enforced = new Set();
+  for (const file of walk(backendSrc)) {
+    if (!file.endsWith(".controller.ts")) continue;
+    const text = readFileSync(file, "utf8");
+    for (const m of text.matchAll(/@RequirePermission\(\s*"([^"]+)"/g)) enforced.add(m[1]);
+  }
+  /* A walk that finds nothing must not certify every ghost as real. */
+  fresh = enforced.size > 100 ? enforced : null;
+}
+
+const phantoms = fresh === null ? [] : ghosts.filter(([key]) => fresh.has(key));
+const real = fresh === null ? ghosts : ghosts.filter(([key]) => !fresh.has(key));
+
+if (phantoms.length > 0) {
+  console.error(
+    `!  ${phantoms.length} of these are STALE-CONTRACT ARTIFACTS, not findings.`,
+  );
+  console.error("   A controller beside this checkout declares each of these on a live");
+  console.error("   handler; the vendored contract is simply older. Re-vendor and they go:");
+  for (const [key, file] of phantoms) console.error(`   ${key}  <-  ${file}`);
+  console.error("");
+}
+
+if (fresh === null) {
+  console.error("!  No backend source was reachable, so none of these could be");
+  console.error("   re-checked against what the guards actually declare. If the vendored");
+  console.error("   contract is stale, some of the list below may be enforced after all.");
+  console.error("");
+}
+
+console.error(`✖  ${real.length} route-access permission(s) name no endpoint in the generated contract:`);
+for (const [key, file] of real) console.error(`   ${key}  <-  ${file}`);
 console.error("");
 console.error("   A navigation gate on a key no endpoint enforces is false forever: the route is");
 console.error("   hidden from everyone who is not an owner, and no backend guard ever runs.");

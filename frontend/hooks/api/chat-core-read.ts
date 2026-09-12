@@ -4,11 +4,7 @@ import { useCallback, useMemo } from "react";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import {
-  lazyContract,
-  type ContractSource,
-  type LazyResponseContract,
-} from "@/lib/api-envelope";
+import { lazyContract, type ContractSource } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { reportError } from "@/lib/observability/error-reporter";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -49,19 +45,17 @@ export interface ChannelListResult<TChannel> {
  * still passed to the seam, so `/chat/channels` — the route the
  * `members[].membership.user` defect shipped through — is parsed as before.
  */
-const myChannelsContract: LazyResponseContract<ChannelPage<Channel>> =
-  lazyContract(() =>
-    import("@/hooks/api/chat-schema").then((m) =>
-      m.chatChannelPageContract(m.chatChannelContract),
-    ),
-  );
+const myChannelsContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) =>
+    m.chatChannelPageContract(m.chatChannelContract),
+  ),
+);
 
-const publicChannelsContract: LazyResponseContract<ChannelPage<PublicChannel>> =
-  lazyContract(() =>
-    import("@/hooks/api/chat-schema").then((m) =>
-      m.chatChannelPageContract(m.chatPublicChannelContract),
-    ),
-  );
+const publicChannelsContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) =>
+    m.chatChannelPageContract(m.chatPublicChannelContract),
+  ),
+);
 
 const messagesPageContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatMessagesPageContract),

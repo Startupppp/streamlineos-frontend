@@ -62,8 +62,8 @@ import { CaptionPlugin } from "@platejs/caption/react";
 import { EmojiPlugin, EmojiInputPlugin } from "@platejs/emoji/react";
 import emojiData from "@emoji-mart/data";
 import type { EmojiMartData } from "@emoji-mart/data";
-import { createLowlight } from "lowlight";
-import { common } from "lowlight";
+import { createLowlight, common } from "lowlight";
+
 import {
   ParagraphElement,
   HeadingElement,

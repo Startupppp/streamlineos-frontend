@@ -4,49 +4,20 @@ import { useMemo } from "react";
 import { AiActionsMenu, type AiAction } from "@/components/ai";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
-
-const supplierDelayBriefingContract = lazyContract(() =>
-  import("@/hooks/api/inventory/ai-schema").then((m) => m.supplierDelayBriefingContract),
-);
+import type { SupplierDelayBriefing } from "@/hooks/api/inv-ai-explain";
+import type { ScorecardRate } from "@/types/inventory-vendor-performance";
 
 interface VendorAiActionsProps {
   vendorId: number;
   vendorName: string;
 }
 
-interface LocalVendorPerformance {
-  vendorId: number;
-  onTimeRate: number;
-  fillRate: number;
-  avgLeadTimeDays: number;
-  returnRate: number;
-  openPoCount: number;
-  totalSpend: string;
+function rateLine(rate: ScorecardRate, unit: string): string {
+  if (rate.percent === null) return `not measured (no ${unit})`;
+  return `${rate.percent}% over ${rate.sampleSize} ${unit}`;
 }
 
-interface LocalVendorInsight {
-  id: number;
-  title: string;
-  body: string;
-  severity: string;
-}
-
-interface LocalVendor {
-  vendorId: number;
-  vendorName: string;
-  insightCount: number;
-  insights: LocalVendorInsight[];
-  performance: LocalVendorPerformance;
-}
-
-interface SupplierDelayResponse {
-  vendors: LocalVendor[];
-  narration: string;
-  generatedAt: string;
-}
-
-function briefingToText(briefing: SupplierDelayResponse): string {
+function briefingToText(briefing: SupplierDelayBriefing): string {
   const parts: string[] = [];
 
   if (briefing.narration) {
@@ -60,11 +31,14 @@ function briefingToText(briefing: SupplierDelayResponse): string {
 
   for (const v of briefing.vendors) {
     const p = v.performance;
+    // C4. Copied out verbatim, sample size included. A rate with no sample
+    // beside it is the shape that lets somebody quote "50% rejected" from two
+    // receipts, and this text is what a buyer pastes into an email.
     const metrics = [
-      `• On-Time Rate: ${(p.onTimeRate * 100).toFixed(1)}%`,
-      `• Fill Rate: ${(p.fillRate * 100).toFixed(1)}%`,
-      `• Avg Lead Time: ${p.avgLeadTimeDays} days`,
-      `• Return Rate: ${(p.returnRate * 100).toFixed(1)}%`,
+      `• On-Time Rate: ${rateLine(p.onTime, "orders")}`,
+      `• Line Fill Rate: ${rateLine(p.lineFill, "lines")}`,
+      `• Lead Time p90: ${p.leadTime.observations === 0 ? "not measured" : `${p.leadTime.p90Days} days over ${p.leadTime.observations} receipts`}`,
+      `• Return Rate: ${rateLine(p.returns, "returned lines")}`,
       `• Open POs: ${p.openPoCount}`,
       `• Delay Insights: ${v.insightCount}`,
     ].join("\n");
@@ -76,7 +50,7 @@ function briefingToText(briefing: SupplierDelayResponse): string {
 }
 
 export function VendorAiActions({ vendorId, vendorName }: VendorAiActionsProps) {
-  const canAi = useCan("inventory:reports:read");
+  const canAi = useCan("inventory:ai:read");
 
   const actions = useMemo<AiAction[]>(
     () => [
@@ -85,11 +59,10 @@ export function VendorAiActions({ vendorId, vendorName }: VendorAiActionsProps) 
         label: "Supplier-delay briefing",
         description: "AI narrates delivery performance evidence",
         run: async (signal?: AbortSignal) => {
-          const briefing = await apiClient.get<SupplierDelayResponse>(
+          const briefing = await apiClient.get<SupplierDelayBriefing>(
             "/inventory/ai/supplier-delay",
             { vendorId: String(vendorId) },
             signal,
-            supplierDelayBriefingContract,
           );
           return { text: briefingToText(briefing) };
         },

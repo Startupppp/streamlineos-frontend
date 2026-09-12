@@ -35,6 +35,10 @@ const bulkRejectC = lazyContract(() =>
  */
 type ApprovalStatusFilter = Extract<PeriodStatus, "SUBMITTED" | "APPROVED" | "REJECTED">;
 
+/** One page of the approvals queue. Shared by the page header and the tab panel
+ * so the two ask for the same rows under one cache key. */
+export const APPROVALS_PAGE_SIZE = 25;
+
 interface ApprovalsQuery {
   status?: ApprovalStatusFilter;
   userId?: string;

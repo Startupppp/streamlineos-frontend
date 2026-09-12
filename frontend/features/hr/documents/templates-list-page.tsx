@@ -181,8 +181,6 @@ function buildTemplateColumns(
           </div>
         );
       },
-      sortable: true,
-      sortValue: (t) => t.title,
     },
     {
       key: "type",

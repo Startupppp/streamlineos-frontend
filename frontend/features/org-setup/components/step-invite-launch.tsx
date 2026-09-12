@@ -13,9 +13,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { INVITE_ROLES } from "../lib/constants";
 import { useBillingPlans } from "@/hooks/api/subscription";
-import { formatRoleLabel } from "@/lib/constants/user-invite-roles";
+import {
+  DEFAULT_INVITE_ROLE,
+  USER_INVITE_ROLES,
+  formatRoleLabel,
+} from "@/lib/constants/user-invite-roles";
+import { validateInviteEmail } from "../lib/invite-email";
 import type { Invitee, WizardData } from "../lib/wizard-data-schema";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { StepGeneration } from "./step-generation";
@@ -35,7 +39,8 @@ export function StepInviteLaunch({
 }: StepInviteLaunchProps) {
   const reduceMotion = useReducedMotion();
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<string>(INVITE_ROLES[0] ?? "ORG_ADMIN");
+  const [role, setRole] = useState<string>(DEFAULT_INVITE_ROLE);
+  const [inviteError, setInviteError] = useState<string | null>(null);
   const [phase, setPhase] = useState<"form" | "pending" | "generating">("form");
   const { data: plansData } = useBillingPlans();
 
@@ -46,14 +51,14 @@ export function StepInviteLaunch({
   const atLimit = inviteLimit !== null && data.invitees.length >= inviteLimit;
 
   function handleAdd() {
-    const trimmed = email.trim();
-    if (!trimmed || !trimmed.includes("@")) return;
     if (atLimit) return;
-    if (
-      data.invitees.some((i) => i.email.toLowerCase() === trimmed.toLowerCase())
-    )
+    const result = validateInviteEmail(email, data.invitees);
+    if (!result.ok) {
+      setInviteError(result.error);
       return;
-    onChangeInvitees([...data.invitees, { email: trimmed, role }]);
+    }
+    setInviteError(null);
+    onChangeInvitees([...data.invitees, { email: result.email, role }]);
     setEmail("");
   }
 
@@ -113,7 +118,12 @@ export function StepInviteLaunch({
         <Input
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            if (inviteError) setInviteError(null);
+          }}
+          aria-invalid={!!inviteError}
+          aria-describedby={inviteError ? "invite-email-error" : undefined}
           placeholder="teammate@company.com"
           className="min-w-0 h-9 w-full flex-1 text-sm"
           disabled={isPending || atLimit}
@@ -125,9 +135,9 @@ export function StepInviteLaunch({
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-              {INVITE_ROLES.map((roleValue) => (
-                <SelectItem key={roleValue} value={roleValue}>
-                  {formatRoleLabel(roleValue)}
+              {USER_INVITE_ROLES.map((r) => (
+                <SelectItem key={r.value} value={r.value}>
+                  {r.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -145,6 +155,18 @@ export function StepInviteLaunch({
           </Button>
         </div>
       </div>
+
+      <p className="text-xs text-muted-foreground">
+        Members work in the modules you enable. Org Admins can also change
+        settings, billing and everyone else&apos;s access, so pick that one
+        deliberately.
+      </p>
+
+      {inviteError && (
+        <p id="invite-email-error" role="alert" className="text-xs text-destructive">
+          {inviteError}
+        </p>
+      )}
 
       {atLimit && (
         <p className="text-label leading-relaxed text-status-warning-ink">

@@ -48,11 +48,11 @@ export const AUTOMATION_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search automations…",
     columns: [
-      { field: "name", primary: true, sortable: true },
+      { field: "name", primary: true },
       { field: "triggerLabel", width: "w-56 shrink-0" },
       { field: "state", width: "w-24 shrink-0" },
-      { field: "executionCount", sortable: true, width: "w-20 shrink-0" },
-      { field: "lastRunAt", sortable: true, width: "w-44 shrink-0" },
+      { field: "executionCount", width: "w-20 shrink-0" },
+      { field: "lastRunAt", width: "w-44 shrink-0" },
     ],
   },
   detail: {

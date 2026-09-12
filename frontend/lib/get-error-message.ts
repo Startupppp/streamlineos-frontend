@@ -5,6 +5,8 @@ const CHUNK_PATTERN = /chunkloaderror|loading chunk \S+ failed|(?:failed|error) 
 const GENERIC_SERVER_PATTERN =
   /^(?:an unexpected error occurred|unexpected error|internal server error)$/i;
 const BARE_STATUS = /^(\d{3})(\s|$)/;
+/** The filter's own headline for a Zod refusal; the issues say more than it does. */
+const VALIDATION_HEADLINE = /^validation failed\.?$/i;
 
 const GENERIC_MESSAGE = "Something went wrong. Please try again.";
 const STALE_BUILD_MESSAGE =
@@ -77,6 +79,48 @@ function extractMessage(error: unknown, depth = 0): string {
   return "";
 }
 
+/**
+ * The field-level issues a validation refusal already carried.
+ *
+ * `AllExceptionsFilter` answers every `ZodError` with `"Validation failed."` and
+ * puts the issues -- the path and what was wrong with it -- in `details`.
+ * Nothing here ever read them, so a refusal that knew exactly which control was
+ * at fault arrived as three words. The CRM assignment-rule sheet lost three of
+ * its five options behind that sentence, and the only way anyone found out was
+ * reading the server.
+ *
+ * Capped, because this ends up in a toast: enough to name the problem, not a
+ * wall. `VALIDATION_ISSUE_LIMIT` issues then a count of the rest.
+ */
+const VALIDATION_ISSUE_LIMIT = 3;
+
+function isValidationIssue(value: unknown): value is { path?: unknown; message: string } {
+  if (!value || typeof value !== "object" || !("message" in value)) return false;
+  const { message } = value;
+  return typeof message === "string" && message.trim().length > 0;
+}
+
+function describeIssue(issue: { path?: unknown; message: string }): string {
+  const path = typeof issue.path === "string" ? issue.path.trim() : "";
+  // "body" is the filter's stand-in for an issue with no path; naming it tells
+  // the reader nothing they can act on.
+  if (!path || path === "body") return issue.message.trim();
+  return `${path}: ${issue.message.trim()}`;
+}
+
+function validationDetail(error: unknown): string {
+  if (!error || typeof error !== "object" || !("details" in error)) return "";
+  const { details } = error;
+  if (!Array.isArray(details)) return "";
+
+  const issues = details.filter(isValidationIssue).map(describeIssue).filter(Boolean);
+  if (issues.length === 0) return "";
+
+  const shown = issues.slice(0, VALIDATION_ISSUE_LIMIT);
+  const hidden = issues.length - shown.length;
+  return hidden > 0 ? `${shown.join("; ")} (and ${hidden} more)` : shown.join("; ");
+}
+
 function extractStatus(error: unknown): number | undefined {
   if (!error || typeof error !== "object") return undefined;
   if ("status" in error && typeof error.status === "number") return error.status;
@@ -99,9 +143,12 @@ export function getErrorMessage(error: unknown): string {
   const message = extractMessage(error);
   const status = extractStatus(error);
 
-  if (!message || message === "[object Object]") 
+  const detail = validationDetail(error);
+  if (detail) return message && !VALIDATION_HEADLINE.test(message) ? `${message} ${detail}` : detail;
+
+  if (!message || message === "[object Object]")
     return status === undefined ? GENERIC_MESSAGE : statusFallback(status);
-  
+
 
   if (CHUNK_PATTERN.test(message)) return STALE_BUILD_MESSAGE;
   if (NETWORK_PATTERN.test(message) || HOST_IN_MESSAGE.test(message)) 

@@ -49,6 +49,19 @@ const optimizePackageImports =
     : ["lucide-react"];
 
 const nextConfig: NextConfig = {
+  /**
+   * A second dev server on this working tree needs its own build directory.
+   *
+   * `next dev` writes a lock into `<distDir>/dev/lock` and refuses to start when
+   * one is already there, which is correct — two servers sharing one `.next`
+   * corrupt each other's output. Two people (or two agent sessions) working on
+   * the same checkout still need to run one each, so the directory is
+   * overridable: `NEXT_DIST_DIR=.next-local npx next dev -p 1002`.
+   *
+   * Unset in every normal case, so CI, Vercel and `pnpm dev` all keep writing
+   * `.next` exactly as before.
+   */
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   turbopack: {},
   webpack(config, { dev }) {
     if (!dev) config.cache = false;

@@ -1,5 +1,5 @@
-import { GeneralLedgerPage } from "@/features/accounting/core/general-ledger-page";
+import { GeneralLedgerClient } from "@/features/accounting/ledger";
 
-export default function Page() {
-  return <GeneralLedgerPage />;
+export default function GeneralLedgerPage() {
+  return <GeneralLedgerClient />;
 }

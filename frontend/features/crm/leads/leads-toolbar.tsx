@@ -122,7 +122,7 @@ export function LeadsToolbar({
       {(scope === "own" || scope === "team") && (
         <Badge
           variant="outline"
-          className="h-5 shrink-0 self-center px-2 text-[11px] font-medium text-blue-700 border-blue-200 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30"
+          className="h-5 shrink-0 self-center px-2 text-micro font-medium border-status-info-rule bg-status-info-surface text-status-info-ink"
         >
           {scope === "own" ? "Your leads only" : "Your team's leads"}
         </Badge>

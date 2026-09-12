@@ -10,3 +10,8 @@ export interface AuditEvent {
   reason: string | null;
   createdAt: string;
 }
+
+export function auditActorLabel(event: Pick<AuditEvent, "actorMembershipId" | "actorName">): string {
+  if (event.actorName) return event.actorName;
+  return event.actorMembershipId === null ? "System" : "Former member";
+}

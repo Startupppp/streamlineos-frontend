@@ -263,7 +263,7 @@ function runSelfTest() {
     mkdirSync(join(fixture, "features", "deep"), { recursive: true });
     mkdirSync(join(fixture, "features", "crm"), { recursive: true });
     mkdirSync(join(fixture, "features", "landing"), { recursive: true });
-    mkdirSync(join(fixture, ".next-buildmart"), { recursive: true });
+    mkdirSync(join(fixture, ".next-custom"), { recursive: true });
 
     const write = (rel, body) => writeFileSync(join(fixture, rel), body);
 
@@ -304,7 +304,7 @@ function runSelfTest() {
       "export const P = () => <i onChange={(e) => f.onChange(Number(e.target.value))} />;");
     write(join("features", "landing", "public.tsx"),
       "export const Q = () => <i onChange={(e) => setSeats(Number(e.target.value))} />;");
-    write(join(".next-buildmart", "chunk.jsx"),
+    write(join(".next-custom", "chunk.jsx"),
       "x(<i onChange={(e) => f.onChange(Number(e.target.value))} />);");
 
     const { violations, scannedFiles, inlineClosures, excludedNonTrivial } = scan(fixture);

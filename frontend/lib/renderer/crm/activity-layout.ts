@@ -93,12 +93,12 @@ export const ACTIVITY_LAYOUT: RecordLayout = {
     columns: [
       // Notes ride under the title as a second, quieter line rather than taking
       // a column: they are context for the row, not a value to scan down.
-      { field: "title", primary: true, sortable: true, subtitle: "notes" },
+      { field: "title", primary: true, subtitle: "notes" },
       { field: "type", width: "w-28 shrink-0" },
       { field: "status", width: "w-28 shrink-0" },
       { field: "entityType", width: "w-24 shrink-0" },
-      { field: "dueDate", sortable: true, width: "w-32 shrink-0" },
-      { field: "createdAt", sortable: true, width: "w-44 shrink-0" },
+      { field: "dueDate", width: "w-32 shrink-0" },
+      { field: "createdAt", width: "w-44 shrink-0" },
     ],
   },
   detail: {

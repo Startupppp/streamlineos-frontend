@@ -5,7 +5,13 @@ import { fileURLToPath } from "node:url";
 import { isExcludedScanDir, runScanDirSelfTest } from "./check-repo-paths.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-
+/*
+  `isExcludedScanDir` (check-repo-paths.mjs) skips every dot-directory, the
+  `.next*` build outputs among them, plus node_modules and feedbucket-widget.
+  scripts/ holds the gates themselves and stays out of their own corpus, as it
+  was before the shared helper replaced this file's own list.
+*/
+const EXTRA_EXCLUDED_DIRS = new Set(["scripts"]);
 const EXTENSIONS = new Set([".tsx", ".ts", ".jsx", ".js"]);
 const JSX_EXTENSIONS = new Set([".tsx", ".jsx"]);
 const HEX_ARBITRARY = /-\[#[0-9a-fA-F]/;
@@ -19,7 +25,7 @@ const MUTED_FG_OPACITY_ALLOWLIST = new Set([
 
 function* walkFiles(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if (isExcludedScanDir(entry.name)) continue;
+    if (isExcludedScanDir(entry.name) || EXTRA_EXCLUDED_DIRS.has(entry.name)) continue;
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
       yield* walkFiles(full);
@@ -64,14 +70,14 @@ function runSelfTest() {
   const fixture = mkdtempSync(join(tmpdir(), "no-arbitrary-colors-"));
   try {
     mkdirSync(join(fixture, "features", "deep"), { recursive: true });
-    mkdirSync(join(fixture, ".next-buildmart", "chunks"), { recursive: true });
+    mkdirSync(join(fixture, ".next-custom", "chunks"), { recursive: true });
     mkdirSync(join(fixture, "node_modules", "pkg"), { recursive: true });
 
     writeFileSync(join(fixture, "features", "deep", "bad.tsx"), 'const a = <div className="text-[#3b82f6]" />;\n');
     writeFileSync(join(fixture, "features", "deep", "bad-style.tsx"), 'const b = <div className="bg-[#0b1220]" />;\n');
     writeFileSync(join(fixture, "good.tsx"), 'const c = <div className="text-primary" />;\n');
     writeFileSync(join(fixture, "token-arbitrary.tsx"), 'const d = <div className="w-[calc(100%-1rem)]" />;\n');
-    writeFileSync(join(fixture, ".next-buildmart", "chunks", "gen.js"), 'e.className="text-[#ffffff]";\n');
+    writeFileSync(join(fixture, ".next-custom", "chunks", "gen.js"), 'e.className="text-[#ffffff]";\n');
     writeFileSync(join(fixture, "node_modules", "pkg", "vendor.js"), 'f.className="text-[#000000]";\n');
     writeFileSync(join(fixture, "notes.md"), "text-[#123456]\n");
     writeFileSync(join(fixture, "features", "deep", "mf-opacity.tsx"), 'const e = <p className="text-muted-foreground/50">pts</p>;\n');

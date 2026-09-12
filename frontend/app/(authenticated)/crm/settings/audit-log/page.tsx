@@ -30,6 +30,7 @@ import {
   auditEntryFields,
 } from "@/lib/renderer/crm/settings/audit-entry-layout";
 import { useAuditLogs } from "@/hooks/api/audit-log";
+import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { useCan } from "@/hooks/api/access";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 
@@ -122,12 +123,12 @@ export default function CrmAuditLogPage() {
   );
 
   const handleFromDateChange = useCallback(
-    (value: string) => updateParams({ from: value || null, page: null }),
+    (value: string) => updateParams({ from: value || null }),
     [updateParams],
   );
 
   const handleToDateChange = useCallback(
-    (value: string) => updateParams({ to: value || null, page: null }),
+    (value: string) => updateParams({ to: value || null }),
     [updateParams],
   );
 

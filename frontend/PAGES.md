@@ -900,15 +900,15 @@ Responsive browser acceptance remains unverified. Evidence:
 
 ## Timesheets
 
-- [ ] `/timesheets` · **Timesheets** · hooks: `→ features/timesheets` · §8: L ? C ? F ? P ? Perm ? States ?
-- [ ] `/timesheets/approvals` · **Timesheets** · hooks: `→ features/timesheets` · §8: L ? Perm ? States ?
-- [ ] `/timesheets/billing` · **Timesheets** · hooks: `→ features/timesheets` · §8: L ? F ? P ? Perm ? States ?
-- [ ] `/timesheets/exceptions` · **Timesheets** · hooks: `→ features/timesheets` · §8: L ? F ? States ?
-- [ ] `/timesheets/payroll` · **Timesheets** · hooks: `→ features/timesheets` · §8: L ? F ? Perm ? States ?
-- [ ] `/timesheets/reports` · **Timesheets** · hooks: `→ features/timesheets/reports` · §8: F ? States ?
-- [ ] `/timesheets/settings` · **Timesheets** · hooks: `→ features/timesheets/settings` · §8: E ? Perm ? States ?
-- [ ] `/timesheets/team` · **Timesheets** · hooks: `→ features/timesheets` · §8: L ? F ? P ? States ?
-- [ ] `/timesheets/access` · **Timesheets** · hooks: `→ features/timesheets` · §8: Perm ? States ?
+- [x] `/timesheets` · **Timesheets** · hooks: `→ features/timesheets` · §8: L ✓ C ✓ F ✓ P ✓ Perm ✓ States ✓
+- [x] `/timesheets/approvals` · **Timesheets** · hooks: `→ features/timesheets` · §8: L ✓ Perm ✓ States ✓
+- [x] `/timesheets/billing` · **Timesheets** · hooks: `→ features/timesheets` · §8: L ✓ F ✓ P ✓ Perm ✓ States ✓
+- [x] `/timesheets/exceptions` · **Timesheets** · hooks: `→ features/timesheets` · §8: L ✓ F ✓ States ✓
+- [x] `/timesheets/payroll` · **Timesheets** · hooks: `→ features/timesheets` · §8: L ✓ F ✓ Perm ✓ States ✓
+- [x] `/timesheets/reports` · **Timesheets** · hooks: `→ features/timesheets/reports` · §8: F ✓ States ✓
+- [x] `/timesheets/settings` · **Timesheets** · hooks: `→ features/timesheets/settings` · §8: E ✓ Perm ✓ States ✓
+- [x] `/timesheets/team` · **Timesheets** · hooks: `→ features/timesheets` · §8: L ✓ F ✓ P ✓ States ✓
+- [x] `/timesheets/access` · **Timesheets** · hooks: `→ features/timesheets` · §8: Perm ✓ States ✓
 
 ---
 

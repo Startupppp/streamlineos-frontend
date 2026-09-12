@@ -27,6 +27,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import {
   CONTENT_FILL_PANEL,
@@ -43,7 +44,7 @@ import {
 import { withDealStages } from "@/lib/renderer/crm/deal-layout";
 import { useDealApprovals, useResolveDealApproval } from "@/hooks/api/crm";
 import { useCrmStages } from "@/hooks/api/crm/metadata";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -125,7 +126,18 @@ export default function DealApprovalsPage() {
 
   const money = useOrgDisplay();
   const [density, setDensity] = useDensity();
-  const canApprove = useCan("crm:deals:approve");
+  /*
+    `crm:deals:update`, which is what `POST /deals/approvals` actually declares.
+    This gated on `crm:deals:approve` — a key that exists in the catalog and
+    guards no handler anywhere in the backend, so it got the audience exactly
+    backwards: granting it showed the buttons to somebody whose every click
+    would 403, while the people who can genuinely resolve an approval never saw
+    them at all. The handler additionally requires structural org-admin standing,
+    which no key expresses and the client cannot see, so a non-admin holding
+    update still gets a refusal — a narrower control than this can draw, but the
+    right direction: the guard is the boundary and hiding a control is only UX.
+  */
+  const canApprove = useCan("crm:deals:update");
 
   const [decision, setDecision] = useState<PendingDecision | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -134,7 +146,7 @@ export default function DealApprovalsPage() {
   const { data: stages } = useCrmStages("deal");
   const layout = useMemo(() => withDealStages(tenantLayout, stages ?? []), [tenantLayout, stages]);
 
-  const { data, isLoading, isError, refetch, access} = useDealApprovals({
+  const { data, isLoading, isError, refetch } = useDealApprovals({
     status: statusFilter === "all" ? undefined : statusFilter,
   });
   const resolve = useResolveDealApproval();
@@ -204,6 +216,19 @@ export default function DealApprovalsPage() {
   const statusFilterLabel =
     STATUS_OPTIONS.find((option) => option.value === statusFilter)?.label ?? statusFilter;
 
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:deals:read") === "denied")
+    return <NoPermissionState permission="crm:deals:read" />;
+
   return (
     <PageWrapper
       title="Deal approvals"
@@ -238,7 +263,6 @@ export default function DealApprovalsPage() {
           />
         ) : rows.length === 0 ? (
           <EmptyState
-            access={access}
             illustration={<EmptyApprovalIllustration />}
             title={isFiltered ? "No approvals match this filter" : "Nothing waiting on you"}
             description={

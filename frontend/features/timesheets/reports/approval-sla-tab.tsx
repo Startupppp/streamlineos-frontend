@@ -9,9 +9,10 @@ import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/st
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { Gated } from "@/components/shared/gated";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApprovalSlaReport } from "@/hooks/api/timesheets-core/reports";
-import type { ApprovalSlaApprover } from "./reports-types";
+import type { ApprovalSlaApprover, ApprovalSlaReport } from "./reports-types";
 import { memberLabel } from "./report-format";
 
 interface ApprovalSlaTabProps {
@@ -43,8 +44,6 @@ const COLUMNS: DataTableColumn<ApprovalSlaApprover>[] = [
         ) : null}
       </div>
     ),
-    sortable: true,
-    sortValue: (row) => memberLabel(row.name, row.email).toLowerCase(),
     className: "max-w-[220px]",
   },
   {
@@ -58,8 +57,6 @@ const COLUMNS: DataTableColumn<ApprovalSlaApprover>[] = [
       ) : (
         <span className="text-muted-foreground">—</span>
       ),
-    sortable: true,
-    sortValue: (row) => row.pendingCount,
   },
   {
     key: "avgHoursToDecision",
@@ -69,8 +66,6 @@ const COLUMNS: DataTableColumn<ApprovalSlaApprover>[] = [
         {row.avgHoursToDecision === null ? "—" : `${row.avgHoursToDecision.toFixed(1)}h`}
       </span>
     ),
-    sortable: true,
-    sortValue: (row) => row.avgHoursToDecision ?? -1,
   },
 ];
 
@@ -104,26 +99,37 @@ export function ApprovalSlaTab({ params, enabled }: ApprovalSlaTabProps) {
     [data],
   );
 
-  if (isError) {
-    return (
-      <ErrorState
-        title="Couldn't load approval SLA"
-        description="Something went wrong while loading the approval SLA report."
-        onRetry={handleRetry}
-      />
-    );
-  }
+  return (
+    <Gated
+      permission="timesheets:reports:view"
+      isLoading={!isError && (isLoading || !data)}
+      isError={isError}
+      loading={
+        <div className="space-y-4">
+          <StatCardGridSkeleton cols={4} count={4} />
+          <Skeleton className="h-[72px] rounded-lg" />
+          <DataTableSkeleton rows={6} columns={3} />
+        </div>
+      }
+      error={
+        <ErrorState
+          title="Couldn't load approval SLA"
+          description="Something went wrong while loading the approval SLA report."
+          onRetry={handleRetry}
+        />
+      }
+    >
+      {data ? <ApprovalSlaBody data={data} statusEntries={statusEntries} /> : null}
+    </Gated>
+  );
+}
 
-  if (isLoading || !data) {
-    return (
-      <div className="space-y-4">
-        <StatCardGridSkeleton cols={4} count={4} />
-        <Skeleton className="h-[72px] rounded-lg" />
-        <DataTableSkeleton rows={6} columns={3} />
-      </div>
-    );
-  }
+interface ApprovalSlaBodyProps {
+  data: ApprovalSlaReport;
+  statusEntries: [string, number][];
+}
 
+function ApprovalSlaBody({ data, statusEntries }: ApprovalSlaBodyProps) {
   const pendingCount = data.byStatus.SUBMITTED ?? 0;
 
   return (

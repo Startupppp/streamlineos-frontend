@@ -1,13 +1,17 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
-import type { CrmCampaign, CampaignRoi, CampaignAttribution } from "@/types/crm/campaigns";
+import type {
+  CrmCampaign,
+  CampaignRoi,
+  CampaignAttribution,
+  AttributionByModelReport,
+  AttributionModel,
+} from "@/types/crm/campaigns";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-
-
 import { lazyContract } from "@/lib/api-envelope";
 
 const campaignLazy = lazyContract(() => import("@/hooks/api/crm/campaigns-schema").then((m) => m.campaignContract));
@@ -24,6 +28,7 @@ const campaignLeadsLazy = lazyContract(() =>
 const campaignAttributionLazy = lazyContract(() =>
   import("@/hooks/api/crm/campaigns-schema").then((m) => m.campaignAttributionListContract),
 );
+
 interface CampaignListParams {
   page?: number;
   limit?: number;
@@ -100,6 +105,30 @@ export function useCampaignLeads(campaignId: number, params?: CampaignLeadsParam
     queryKey: queryKeys.crmCampaigns.leads(campaignId, p),
     queryFn: ({ signal }) => apiClient.get<{ items: unknown[]; hasMore: boolean; nextCursor: string | null; total?: number }>(`/crm/campaigns/${campaignId}/leads`, p, signal, campaignLeadsLazy),
     staleTime: 60_000,
+  });
+}
+
+/**
+ * CRM-P1-01. The same revenue read under any of the five models.
+ *
+ * Gated on `crm:reports:view` like the two single-touch reports beside it, and
+ * for the backend's stated reason: multi-touch is different arithmetic over
+ * touches that key already discloses, not a wider disclosure.
+ *
+ * `halfLifeDays` is sent always and read only by `time_decay`. It is in the
+ * query key regardless, because a cached answer under one half-life is the
+ * wrong answer for another and the mistake is invisible on screen.
+ */
+export function useAttributionByModel(model: AttributionModel, halfLifeDays: number) {
+  return useGatedQuery("crm:reports:view", {
+    queryKey: queryKeys.crmCampaigns.attributionByModel(model, halfLifeDays),
+    queryFn: ({ signal }) =>
+      apiClient.get<AttributionByModelReport>(
+        `/crm/campaigns/attribution/by-model?model=${model}&halfLifeDays=${halfLifeDays}`,
+        undefined,
+        signal,
+      ),
+    staleTime: 5 * 60_000,
   });
 }
 

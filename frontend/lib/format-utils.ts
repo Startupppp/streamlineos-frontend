@@ -184,6 +184,48 @@ export function formatMoneyCompact(
   }).format(toAmount(value));
 }
 
+const numberFormats = new Map<string, Intl.NumberFormat>();
+
+function cachedNumberFormat(
+  locale: string | undefined,
+  options: Intl.NumberFormatOptions,
+): Intl.NumberFormat {
+  const key = `${locale ?? ""}|${JSON.stringify(options)}`;
+  const cached = numberFormats.get(key);
+  if (cached) return cached;
+  const created = new Intl.NumberFormat(locale, options);
+  numberFormats.set(key, created);
+  return created;
+}
+
+export function formatDecimal(
+  value: number | Intl.StringNumericLiteral,
+  maximumFractionDigits: number,
+  locale?: string,
+): string {
+  return cachedNumberFormat(locale, { maximumFractionDigits }).format(value);
+}
+
+export function formatMoneyRounded(
+  amount: number,
+  display: MoneyDisplay,
+  maximumFractionDigits: number,
+): string {
+  return cachedNumberFormat(display.locale, {
+    style: "currency",
+    currency: display.currency,
+    maximumFractionDigits,
+  }).format(amount);
+}
+
+export function formatRatioAsPercent(
+  ratio: number,
+  locale: string,
+  maximumFractionDigits: number,
+): string {
+  return cachedNumberFormat(locale, { style: "percent", maximumFractionDigits }).format(ratio);
+}
+
 export function formatDealId(id: number): string {
   return `DEAL-${id.toString().padStart(4, "0")}`;
 }

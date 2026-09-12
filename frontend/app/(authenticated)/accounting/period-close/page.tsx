@@ -1,5 +1,5 @@
-import { PeriodClosePage } from "@/features/accounting/core/period-close-page";
+import { PeriodCloseClient } from "@/features/accounting/ledger";
 
-export default function Page() {
-  return <PeriodClosePage />;
+export default function PeriodClosePage() {
+  return <PeriodCloseClient />;
 }

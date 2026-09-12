@@ -1,71 +1,29 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { PackageStatus, ShipmentStatus, LoadStatus } from "@/features/inventory/lib";
-import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { ShipmentStatus } from "@/features/inventory/lib";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import type { Package } from "./shipping-packages";
 
-const listPackagesContract = lazyContract(() =>
-  import("@/hooks/api/inventory/shipping-schema").then((m) => m.listPackagesContract),
-);
-const getPackageContract = lazyContract(() =>
-  import("@/hooks/api/inventory/shipping-schema").then((m) => m.getPackageContract),
-);
-const listShipmentsContract = lazyContract(() =>
-  import("@/hooks/api/inventory/shipping-schema").then((m) => m.listShipmentsContract),
-);
-const getShipmentContract = lazyContract(() =>
-  import("@/hooks/api/inventory/shipping-schema").then((m) => m.getShipmentContract),
-);
-const listLoadsContract = lazyContract(() =>
-  import("@/hooks/api/inventory/shipping-schema").then((m) => m.listLoadsContract),
-);
-const getLoadContract = lazyContract(() =>
-  import("@/hooks/api/inventory/shipping-schema").then((m) => m.getLoadContract),
-);
-const carriersArrayContract = lazyContract(() =>
-  import("@/hooks/api/inventory/shipping-schema").then((m) => m.carriersArrayContract),
-);
-const carrierDetailContract = lazyContract(() =>
-  import("@/hooks/api/inventory/shipping-schema").then((m) => m.carrierDetailContract),
-);
+/**
+ * Packages, loads and carriers live in their own modules and are re-exported
+ * here, so every importer is unchanged. Shipments stay: the backend's
+ * response-shape drift spec reads `ShipmentStatusEvent`, and the timeline call,
+ * from this file by name.
+ */
+export * from "./shipping-packages";
+export * from "./shipping-loads";
+export * from "./shipping-carriers";
 
-interface PackageItem {
-  id: number;
-  packageId: number;
-  productVariantId: number;
-  quantity: string;
-  lotId: number | null;
-  serialId: number | null;
-  productVariant?: { id: number; name: string; sku: string };
-}
-
-export interface Package {
-  id: number;
-  orgId: string;
-  packageNumber: string;
-  shipmentId: number | null;
-  loadId: number | null;
-  packageType: string | null;
-  weight: string | null;
-  weightUnit: string | null;
-  dimensions: Record<string, unknown> | null;
-  status: PackageStatus;
-  createdAt: string;
-  updatedAt: string;
-  items?: PackageItem[];
-}
-
-type PackageListResponse = {
-  items: Package[];
-  total: number;
-  page: number;
-  totalPages: number;
-};
-
+/**
+ * A shipment line as `GET /inventory/shipments/:id` returns it: the stored row,
+ * quantity a decimal string, the variant by id alone. `productVariant` is only
+ * present where a caller loads the relation; the detail route does not.
+ */
 interface ShipmentLine {
   id: number;
   shipmentId: number;
@@ -81,21 +39,17 @@ export interface Shipment {
   id: number;
   orgId: string;
   shipmentNumber: string;
-  soId: number | null;
-  warehouseId: number | null;
-  carrierId: number | null;
   status: ShipmentStatus;
-  trackingNumber: string | null;
-  shippedAt: string | null;
-  deliveredAt: string | null;
-  cancelledAt: string | null;
-  notes: string | null;
-  createdBy: string;
-  createdByMembershipId: number | null;
+  soId?: number | null;
+  warehouseId?: number | null;
+  carrierId?: number | null;
+  carrierName?: string | null;
+  trackingNumber?: string | null;
+  notes?: string | null;
+  lines?: ShipmentLine[];
+  packages?: Package[];
   createdAt: string;
   updatedAt: string;
-  carrier?: Carrier | null;
-  lines?: ShipmentLine[];
 }
 
 type ShipmentListResponse = {
@@ -104,134 +58,6 @@ type ShipmentListResponse = {
   page: number;
   totalPages: number;
 };
-
-export interface Load {
-  id: number;
-  orgId: string;
-  loadNumber: string;
-  carrierId: number | null;
-  status: LoadStatus;
-  departedAt: string | null;
-  arrivedAt: string | null;
-  cancelledAt: string | null;
-  notes: string | null;
-  createdBy: string;
-  createdByMembershipId: number | null;
-  createdAt: string;
-  updatedAt: string;
-  carrier?: Carrier | null;
-  packages?: Package[];
-}
-
-type LoadListResponse = {
-  items: Load[];
-  total: number;
-  page: number;
-  totalPages: number;
-};
-
-export interface Carrier {
-  id: number;
-  orgId: string;
-  name: string;
-  code: string | null;
-  trackingUrlTemplate: string | null;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface PackageQueryParams {
-  [key: string]: unknown;
-  shipmentId?: number;
-  status?: PackageStatus;
-  page?: number;
-  limit?: number;
-}
-
-export function usePackages(params?: PackageQueryParams) {
-  const canView = useCan("inventory:packages:manage");
-  return useQuery<PackageListResponse, Error>({
-    queryKey: queryKeys.inventory.packages(params),
-    queryFn: ({ signal }) =>
-      apiClient.get<PackageListResponse>("/inventory/packages", {
-        ...(params?.shipmentId ? { shipmentId: String(params.shipmentId) } : {}),
-        ...(params?.status ? { status: params.status } : {}),
-        ...(params?.page ? { page: String(params.page) } : {}),
-        ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }, signal, listPackagesContract),
-    staleTime: 30_000,
-    enabled: canView,
-  });
-}
-
-export function usePackageDetail(packageId: number) {
-  const canView = useCan("inventory:packages:manage");
-  return useQuery<Package, Error>({
-    queryKey: queryKeys.inventory.packageDetail(packageId),
-    queryFn: ({ signal }) => apiClient.get<Package>(`/inventory/packages/${packageId}`, undefined, signal, getPackageContract),
-    enabled: canView && packageId > 0,
-    staleTime: 60_000,
-  });
-}
-
-export function useCreatePackage() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation<
-    Package,
-    Error,
-    { shipmentId?: number; lines?: { variantId: number; lotId?: number; serialId?: number; qty: number }[] }
-  >("inventory:packages:manage", {
-    mutationKey: ["inventory", "package", "create"],
-    mutationFn: (data) => apiClient.post<Package>("/inventory/packages", data, undefined, getPackageContract),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.packages() });
-    },
-  });
-}
-
-export function useUpdatePackageLines() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation<
-    Package,
-    Error,
-    { packageId: number; lines: { variantId: number; lotId?: number; serialId?: number; qty: number }[] }
-  >("inventory:packages:manage", {
-    mutationKey: ["inventory", "package", "lines", "update"],
-    mutationFn: ({ packageId, lines }) =>
-      apiClient.patch<Package>(`/inventory/packages/${packageId}/lines`, { lines }, undefined, getPackageContract),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.packageDetail(vars.packageId) });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.packages() });
-    },
-  });
-}
-
-export function useClosePackage() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation<Package, Error, number>("inventory:packages:manage", {
-    mutationKey: ["inventory", "package", "close"],
-    mutationFn: (packageId) =>
-      apiClient.post<Package>(`/inventory/packages/${packageId}/close`, {}, undefined, getPackageContract),
-    onSuccess: (_, packageId) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.packageDetail(packageId) });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.packages() });
-    },
-  });
-}
-
-export function useReopenPackage() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation<Package, Error, number>("inventory:packages:manage", {
-    mutationKey: ["inventory", "package", "reopen"],
-    mutationFn: (packageId) =>
-      apiClient.post<Package>(`/inventory/packages/${packageId}/reopen`, {}, undefined, getPackageContract),
-    onSuccess: (_, packageId) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.packageDetail(packageId) });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.packages() });
-    },
-  });
-}
 
 interface ShipmentQueryParams {
   [key: string]: unknown;
@@ -255,7 +81,7 @@ export function useShipments(params?: ShipmentQueryParams) {
         ...(params?.soId ? { soId: String(params.soId) } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }, signal, listShipmentsContract),
+      }, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -265,7 +91,7 @@ export function useShipment(shipmentId: number) {
   const canView = useCan("inventory:shipments:manage");
   return useQuery<Shipment, Error>({
     queryKey: queryKeys.inventory.shipment(shipmentId),
-    queryFn: ({ signal }) => apiClient.get<Shipment>(`/inventory/shipments/${shipmentId}`, undefined, signal, getShipmentContract),
+    queryFn: ({ signal }) => apiClient.get<Shipment>(`/inventory/shipments/${shipmentId}`, undefined, signal),
     enabled: canView && shipmentId > 0,
     staleTime: 60_000,
   });
@@ -273,13 +99,13 @@ export function useShipment(shipmentId: number) {
 
 export function useCreateShipment() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<
+  return useAuthorizedIdempotentMutation<
     Shipment,
     Error,
     { soId?: number; warehouseId?: number; carrierId?: number; trackingNumber?: string; notes?: string }
   >("inventory:shipments:manage", {
     mutationKey: ["inventory", "shipment", "create"],
-    mutationFn: (data) => apiClient.post<Shipment>("/inventory/shipments", data, undefined, getShipmentContract),
+    mutationFn: (data, idempotencyKey) => apiClient.post<Shipment>("/inventory/shipments", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.shipments() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -296,7 +122,7 @@ export function useUpdateShipment() {
   >("inventory:shipments:manage", {
     mutationKey: ["inventory", "shipment", "update"],
     mutationFn: ({ shipmentId, ...data }) =>
-      apiClient.patch<Shipment>(`/inventory/shipments/${shipmentId}`, data, undefined, getShipmentContract),
+      apiClient.patch<Shipment>(`/inventory/shipments/${shipmentId}`, data),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.shipment(vars.shipmentId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.shipments() });
@@ -306,10 +132,10 @@ export function useUpdateShipment() {
 
 export function useShipShipment() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<Shipment, Error, number>("inventory:shipments:manage", {
+  return useAuthorizedIdempotentMutation<Shipment, Error, number>("inventory:shipments:manage", {
     mutationKey: ["inventory", "shipment", "ship"],
-    mutationFn: (shipmentId) =>
-      apiClient.post<Shipment>(`/inventory/shipments/${shipmentId}/ship`, {}, undefined, getShipmentContract),
+    mutationFn: (shipmentId, idempotencyKey) =>
+      apiClient.post<Shipment>(`/inventory/shipments/${shipmentId}/ship`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, shipmentId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.shipment(shipmentId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.shipments() });
@@ -318,140 +144,112 @@ export function useShipShipment() {
   });
 }
 
+/**
+ * B7 — the carrier contract, as the API actually exposes it.
+ *
+ * A shipment's journey is a list of events the carrier claimed, newest first.
+ * Each is stored under the carrier's own event id, so a replayed scan is a
+ * no-op, and an event that would move the shipment backwards is recorded and
+ * ignored rather than applied — `advanced: false` is the API saying so.
+ */
+export interface ShipmentStatusEvent {
+  id: number;
+  status: ShipmentStatus;
+  /** When the carrier says it happened, which is not when we heard. */
+  occurredAt: string;
+  receivedAt: string;
+  description?: string | null;
+}
+
+export interface ShipmentTimeline {
+  shipment: { id: number; status: ShipmentStatus; trackingNumber: string | null };
+  events: ShipmentStatusEvent[];
+}
+
+export interface CarrierStatusRecorded {
+  recorded: boolean;
+  advanced: boolean;
+  status: ShipmentStatus;
+}
+
+/**
+ * What a refresh did. `polled: false` is the normal answer while no real carrier
+ * adapter is registered: there is nobody to ask, and tracking on this shipment
+ * is whatever the operator entered.
+ */
+export interface CarrierRefreshResult {
+  shipmentId: number;
+  carrier: string;
+  polled: boolean;
+  recorded: number;
+  status: ShipmentStatus;
+  deadLettered: boolean;
+  error?: string;
+}
+
+export function useShipmentTimeline(shipmentId: number) {
+  const canView = useCan("inventory:shipments:manage");
+  return useQuery<ShipmentTimeline, Error>({
+    queryKey: queryKeys.inventory.shipmentTimeline(shipmentId),
+    queryFn: ({ signal }) =>
+      apiClient.get<ShipmentTimeline>(`/inventory/shipments/${shipmentId}/timeline`, undefined, signal),
+    enabled: canView && shipmentId > 0,
+    staleTime: 30_000,
+  });
+}
+
+export function useRecordCarrierStatus() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation<
+    CarrierStatusRecorded,
+    Error,
+    {
+      shipmentId: number;
+      trackingNumber: string;
+      status: "LABEL_CREATED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+      occurredAt: string;
+      carrierEventId?: string;
+      description?: string;
+    }
+  >("inventory:shipments:manage", {
+    mutationKey: ["inventory", "shipment", "carrier-status"],
+    mutationFn: ({ shipmentId: _shipmentId, ...body }) =>
+      apiClient.post<CarrierStatusRecorded>("/inventory/shipments/carrier-status", body),
+    onSuccess: (_data, vars) => {
+      void qc.invalidateQueries({
+        queryKey: queryKeys.inventory.shipmentTimeline(vars.shipmentId),
+      });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.shipment(vars.shipmentId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.shipments() });
+    },
+  });
+}
+
+export function useRefreshShipmentTracking() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation<CarrierRefreshResult, Error, number>("inventory:shipments:manage", {
+    mutationKey: ["inventory", "shipment", "refresh-tracking"],
+    mutationFn: (shipmentId) =>
+      apiClient.post<CarrierRefreshResult>(
+        `/inventory/shipments/${shipmentId}/refresh-tracking`,
+        {},
+      ),
+    onSuccess: (_data, shipmentId) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.shipmentTimeline(shipmentId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.shipment(shipmentId) });
+    },
+  });
+}
+
 export function useCancelShipment() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<Shipment, Error, number>("inventory:shipments:manage", {
+  return useAuthorizedIdempotentMutation<Shipment, Error, number>("inventory:shipments:manage", {
     mutationKey: ["inventory", "shipment", "cancel"],
-    mutationFn: (shipmentId) =>
-      apiClient.post<Shipment>(`/inventory/shipments/${shipmentId}/cancel`, {}, undefined, getShipmentContract),
+    mutationFn: (shipmentId, idempotencyKey) =>
+      apiClient.post<Shipment>(`/inventory/shipments/${shipmentId}/cancel`, {}, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: (_, shipmentId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.shipment(shipmentId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.shipments() });
-    },
-  });
-}
-
-interface LoadsQueryParams {
-  [key: string]: unknown;
-  page?: number;
-  limit?: number;
-}
-
-export function useLoads(params?: LoadsQueryParams) {
-  const canView = useCan("inventory:loads:manage");
-  return useQuery<LoadListResponse, Error>({
-    queryKey: queryKeys.inventory.loads(params),
-    queryFn: ({ signal }) =>
-      apiClient.get<LoadListResponse>("/inventory/loads", {
-        ...(params?.page ? { page: String(params.page) } : {}),
-        ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }, signal, listLoadsContract),
-    staleTime: 30_000,
-    enabled: canView,
-  });
-}
-
-export function useLoad(loadId: number) {
-  const canView = useCan("inventory:loads:manage");
-  return useQuery<Load, Error>({
-    queryKey: queryKeys.inventory.load(loadId),
-    queryFn: ({ signal }) => apiClient.get<Load>(`/inventory/loads/${loadId}`, undefined, signal, getLoadContract),
-    enabled: canView && loadId > 0,
-    staleTime: 60_000,
-  });
-}
-
-export function useCreateLoad() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation<
-    Load,
-    Error,
-    { name?: string; members: { type: "SHIPMENT" | "TRANSFER"; referenceId: number }[] }
-  >("inventory:loads:manage", {
-    mutationKey: ["inventory", "load", "create"],
-    mutationFn: (data) => apiClient.post<Load>("/inventory/loads", data, undefined, getLoadContract),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.loads() });
-    },
-  });
-}
-
-export function useDispatchLoad() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation<Load, Error, number>("inventory:loads:manage", {
-    mutationKey: ["inventory", "load", "dispatch"],
-    mutationFn: (loadId) =>
-      apiClient.post<Load>(`/inventory/loads/${loadId}/dispatch`, {}, undefined, getLoadContract),
-    onSuccess: (_, loadId) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.load(loadId) });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.loads() });
-    },
-  });
-}
-
-export function useCloseLoad() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation<Load, Error, number>("inventory:loads:manage", {
-    mutationKey: ["inventory", "load", "close"],
-    mutationFn: (loadId) =>
-      apiClient.post<Load>(`/inventory/loads/${loadId}/close`, {}, undefined, getLoadContract),
-    onSuccess: (_, loadId) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.load(loadId) });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.loads() });
-    },
-  });
-}
-
-export function useCancelLoad() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation<Load, Error, number>("inventory:loads:manage", {
-    mutationKey: ["inventory", "load", "cancel"],
-    mutationFn: (loadId) =>
-      apiClient.post<Load>(`/inventory/loads/${loadId}/cancel`, {}, undefined, getLoadContract),
-    onSuccess: (_, loadId) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.load(loadId) });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.loads() });
-    },
-  });
-}
-
-export function useCarriers() {
-  const canView = useCan("inventory:shipments:manage");
-  return useQuery<Carrier[], Error>({
-    queryKey: queryKeys.inventory.carriers(),
-    queryFn: ({ signal }) => apiClient.get<Carrier[]>("/inventory/carriers", undefined, signal, carriersArrayContract),
-    staleTime: 30_000,
-    enabled: canView,
-  });
-}
-
-export function useCreateCarrier() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation<
-    Carrier,
-    Error,
-    { name: string; code: string; trackingUrlTemplate?: string; isActive?: boolean }
-  >("inventory:shipments:manage", {
-    mutationKey: ["inventory", "carrier", "create"],
-    mutationFn: (data) => apiClient.post<Carrier>("/inventory/carriers", data, undefined, carrierDetailContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.carriers() });
-    },
-  });
-}
-
-export function useUpdateCarrier() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation<
-    Carrier,
-    Error,
-    { carrierId: number; name?: string; code?: string; trackingUrlTemplate?: string; isActive?: boolean }
-  >("inventory:shipments:manage", {
-    mutationKey: ["inventory", "carrier", "update"],
-    mutationFn: ({ carrierId, ...data }) =>
-      apiClient.patch<Carrier>(`/inventory/carriers/${carrierId}`, data, undefined, carrierDetailContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.carriers() });
     },
   });
 }

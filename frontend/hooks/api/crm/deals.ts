@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
 import { customerWorkQueryKeys } from "@/lib/query-keys/customer-work";
@@ -18,15 +18,8 @@ import type {
   DealMeeting,
   CreateDealMeetingInput,
   WinLossAnalysis,
-  DealCompetitor,
-  CreateDealCompetitorInput,
   DealHealth,
-  ForecastSnapshot,
-  CaptureForecastSnapshotInput,
   PatchNextStepInput,
-  DealStakeholder,
-  CreateStakeholderInput,
-  OverrideForecastInput,
 } from "@/types/crm";
 import type { DealStageTransition } from "@/types/crm/stage-transitions";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -35,25 +28,14 @@ import { lazyContract } from "@/lib/api-envelope";
 const dealLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealContract));
 const dealListLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealListContract));
 const dealStatsLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealStatsContract));
-const dealAgingLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealAgingContract));
-const dealForecastSnapshotsLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealForecastSnapshotsContract));
-const dealForecastSnapshotLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealForecastSnapshotContract));
 const dealWinLossLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealWinLossContract));
 const dealHealthLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealHealthContract));
-const dealApprovalLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealApprovalContract));
-const dealApprovalsListLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealApprovalsListContract));
-const dealStakeholdersListLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealStakeholdersListContract));
-const dealStakeholderLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealStakeholderContract));
-const dealCompetitorsListLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealCompetitorsListContract));
-const dealCompetitorLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealCompetitorContract));
 const dealMeetingsListLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealMeetingsListContract));
 const dealMeetingLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealMeetingContract));
 const dealActivityLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealActivityContract));
 const dealStageTransitionsLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealStageTransitionsContract));
 const dealUpdateResultLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealUpdateResultContract));
 const dealDeleteLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealDeleteContract));
-const stakeholderDeleteLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.stakeholderDeleteContract));
-
 
 export type {
   DealActivity,
@@ -63,34 +45,18 @@ export type {
   WinLossAnalysis,
 };
 
-interface DealApproval {
-  id: number;
-  dealId: number;
-  dealName: string | null;
-  dealValue: string | null;
-  requesterName: string | null;
-  requestedStage: string;
-  status: string;
-  rejectionReason: string | null;
-  createdAt: string | null;
-  resolvedAt: string | null;
-}
-
-interface AgingDeal {
-  id: number;
-  name: string;
-  value: string | null;
-  stage: string;
-  daysInStage: number;
-  createdAt: string;
-  updatedAt: string;
-  assigneeName: string | null;
-}
-
-interface AgingResponse {
-  summary: { total: number; stale: number; critical: number };
-  deals: AgingDeal[];
-}
+export { useDealApprovals, useDealAging, useResolveDealApproval } from "./deal-approvals";
+export { useForecastSnapshots, useCaptureForecastSnapshot, useOverrideForecast } from "./deal-forecast";
+export {
+  useDealCompetitors,
+  useAddDealCompetitor,
+  useDeleteDealCompetitor,
+  useDealCompetitorSuggestions,
+  useScanDealCompetitorSuggestions,
+  useAcceptDealCompetitorSuggestion,
+  useDismissDealCompetitorSuggestion,
+} from "./deal-competitors";
+export { useStakeholders, useCreateStakeholder, useDeleteStakeholder } from "./deal-stakeholders";
 
 export function useDeals(filters?: DealFilters) {
   return useGatedQuery("crm:deals:read", {
@@ -262,89 +228,6 @@ export function useWinLossAnalysis() {
   });
 }
 
-export function useDealApprovals(params?: { status?: string }) {
-  return useGatedQuery("crm:deals:read", {
-    queryKey: customerWorkQueryKeys.deals.approvals(params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get<DealApproval[]>("/deals/approvals", params as Record<string, unknown>, signal, dealApprovalsListLazy),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useDealAging() {
-  return useGatedQuery<AgingResponse>("crm:deals:read", {
-    queryKey: customerWorkQueryKeys.deals.aging(),
-    queryFn: ({ signal }) => apiClient.get<AgingResponse>("/deals/aging", undefined, signal, dealAgingLazy),
-    staleTime: 305_000,
-    refetchInterval: 300_000,
-  });
-}
-
-export function useResolveDealApproval() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("crm:deals:update", {
-    mutationKey: ["deals", "approvals", "resolve"] as const,
-    mutationFn: (input: { approvalId: number; action: "approve" | "reject"; rejectionReason?: string }) =>
-      apiClient.post("/deals/approvals", input, undefined, dealApprovalLazy),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.approvals() });
-      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.all });
-    },
-  });
-}
-
-export function useForecastSnapshots(params?: { period?: string; limit?: number }) {
-  return useGatedQuery("crm:deals:forecast", {
-    queryKey: customerWorkQueryKeys.deals.forecastSnapshots(params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get<ForecastSnapshot[]>("/deals/forecast/snapshots", params as Record<string, unknown>, signal, dealForecastSnapshotsLazy),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useCaptureForecastSnapshot() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("crm:deals:forecast", {
-    mutationKey: ["deals", "forecast", "captureSnapshot"] as const,
-    mutationFn: (input: CaptureForecastSnapshotInput) =>
-      apiClient.post<ForecastSnapshot>("/deals/forecast/snapshot", input, undefined, dealForecastSnapshotLazy),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.forecastSnapshots() });
-    },
-  });
-}
-
-export function useDealCompetitors(dealId: number) {
-  return useGatedQuery("crm:deals:read", {
-    queryKey: customerWorkQueryKeys.deals.competitors(dealId),
-    queryFn: ({ signal }) => apiClient.get<DealCompetitor[]>(`/deals/${dealId}/competitors`, undefined, signal, dealCompetitorsListLazy),
-    staleTime: 2 * 60_000,
-    enabled: dealId > 0,
-  });
-}
-
-export function useAddDealCompetitor(dealId: number) {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("crm:deals:update", {
-    mutationKey: ["deals", "competitors", "create", dealId] as const,
-    mutationFn: (input: CreateDealCompetitorInput) =>
-      apiClient.post<DealCompetitor>(`/deals/${dealId}/competitors`, input, undefined, dealCompetitorLazy),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.competitors(dealId) });
-    },
-  });
-}
-
-export function useDeleteDealCompetitor(dealId: number) {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("crm:deals:update", {
-    mutationKey: ["deals", "competitors", "delete", dealId] as const,
-    mutationFn: (competitorId: string) =>
-      apiClient.delete<{ success: boolean }>(`/deals/${dealId}/competitors/${competitorId}`, undefined, undefined, dealDeleteLazy),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.competitors(dealId) });
-    },
-  });
-}
-
 export function useDealHealth(dealId: number) {
   return useGatedQuery("crm:deals:read", {
     queryKey: customerWorkQueryKeys.deals.health(dealId),
@@ -362,67 +245,6 @@ export function usePatchNextStep(dealId: number) {
       apiClient.patch<Deal>(`/deals/${dealId}`, { nextStep: input.nextStep }, undefined, dealLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.detail(dealId) });
-    },
-  });
-}
-
-export function useStakeholders(dealId: number) {
-  return useGatedQuery("crm:deals:read", {
-    queryKey: customerWorkQueryKeys.deals.stakeholders(dealId),
-    queryFn: ({ signal }) => apiClient.get<DealStakeholder[]>(`/deals/${dealId}/stakeholders`, undefined, signal, dealStakeholdersListLazy),
-    staleTime: 2 * 60_000,
-    enabled: dealId > 0,
-  });
-}
-
-export function useCreateStakeholder(dealId: number) {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("crm:deals:update", {
-    mutationKey: ["deals", "stakeholders", "create", dealId] as const,
-    mutationFn: (input: CreateStakeholderInput) =>
-      apiClient.post<DealStakeholder>(`/deals/${dealId}/stakeholders`, input, undefined, dealStakeholderLazy),
-    onMutate: async () => {
-      await qc.cancelQueries({ queryKey: customerWorkQueryKeys.deals.stakeholders(dealId) });
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.stakeholders(dealId) });
-    },
-  });
-}
-
-export function useDeleteStakeholder(dealId: number) {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("crm:deals:update", {
-    mutationKey: ["deals", "stakeholders", "delete", dealId] as const,
-    mutationFn: (stakeholderId: string) =>
-      apiClient.delete<{ deleted: boolean }>(`/deals/${dealId}/stakeholders/${stakeholderId}`, undefined, undefined, stakeholderDeleteLazy),
-    onMutate: async (stakeholderId) => {
-      await qc.cancelQueries({ queryKey: customerWorkQueryKeys.deals.stakeholders(dealId) });
-      const snapshot = qc.getQueryData<DealStakeholder[]>(customerWorkQueryKeys.deals.stakeholders(dealId));
-      qc.setQueryData<DealStakeholder[]>(customerWorkQueryKeys.deals.stakeholders(dealId), (old) =>
-        old ? old.filter((s) => s.id !== stakeholderId) : old,
-      );
-      return { snapshot };
-    },
-    onError: (_, _vars, context) => {
-      if (context?.snapshot) {
-        qc.setQueryData(customerWorkQueryKeys.deals.stakeholders(dealId), context.snapshot);
-      }
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.stakeholders(dealId) });
-    },
-  });
-}
-
-export function useOverrideForecast() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("crm:deals:manage", {
-    mutationKey: ["deals", "forecast", "override"] as const,
-    mutationFn: ({ snapshotId, ...data }: OverrideForecastInput & { snapshotId: string }) =>
-      apiClient.patch<ForecastSnapshot>(`/deals/forecast/${snapshotId}/override`, data, undefined, dealForecastSnapshotLazy),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.forecastSnapshots() });
     },
   });
 }

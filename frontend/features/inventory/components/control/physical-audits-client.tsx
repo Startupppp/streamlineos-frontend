@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyWarehouseIllustration } from "@/components/illustrations";
 import {
@@ -37,9 +37,12 @@ import {
   CYCLE_COUNT_STATUS_BADGE,
   CYCLE_COUNT_STATUS_LABEL,
   type CycleCountStatus,
+  isCycleCountStatus,
 } from "@/features/inventory/lib/inventory-status";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
+import { COUNT_READ_KEY, COUNT_WRITE_KEY } from "@/hooks/api/inventory/counts";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
@@ -58,16 +61,10 @@ function ViewAuditButton({ href }: { href: string }) {
 const STATUS_OPTIONS: CycleCountStatus[] = ["PLANNED", "COUNTING", "REVIEW", "POSTED", "CANCELLED"];
 const PAGE_LIMIT = 20;
 
-function isCycleCountStatus(s: string): s is CycleCountStatus {
-  return s === "PLANNED" || s === "COUNTING" || s === "REVIEW" || s === "POSTED" || s === "CANCELLED";
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const cls = isCycleCountStatus(status) ? CYCLE_COUNT_STATUS_BADGE[status] : "";
-  const label = isCycleCountStatus(status) ? CYCLE_COUNT_STATUS_LABEL[status] : status;
+function StatusBadge({ status }: { status: CycleCountStatus }) {
   return (
-    <Badge variant="outline" className={`text-micro h-4 px-1.5 py-0 ${cls}`}>
-      {label}
+    <Badge variant="outline" className={`text-micro h-4 px-1.5 py-0 ${CYCLE_COUNT_STATUS_BADGE[status]}`}>
+      {CYCLE_COUNT_STATUS_LABEL[status]}
     </Badge>
   );
 }
@@ -139,10 +136,12 @@ function NewAuditSheet({
 }
 
 export function PhysicalAuditsClient() {
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<CycleCountStatus | "all">("all");
   const [page, setPage] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
   const { iconRef: plusRef, hoverHandlers: plusHandlers } = useAnimatedIcon();
+  const canView = useCan(COUNT_READ_KEY);
+  const canCount = useCan(COUNT_WRITE_KEY);
 
   const { data, isLoading, error, refetch } = usePhysicalAudits({
     status: statusFilter === "all" ? undefined : statusFilter,
@@ -153,7 +152,7 @@ export function PhysicalAuditsClient() {
   const total = data?.total ?? 0;
 
   function handleStatusChange(value: string): void {
-    setStatusFilter(value);
+    setStatusFilter(value === "all" || isCycleCountStatus(value) ? value : "all");
     setPage(1);
   }
 
@@ -184,14 +183,14 @@ export function PhysicalAuditsClient() {
     {
       key: "warehouse",
       header: "Warehouse",
-      cell: (row) => <TruncatedText text={String(row.warehouseId)} className="text-sm font-mono tabular-nums" />,
+      cell: (row) => <TruncatedText text={row.warehouseName} className="text-sm" />,
     },
     {
       key: "lineCount",
       header: "Lines",
       headerClassName: "w-[70px] text-right",
       className: "text-right tabular-nums text-muted-foreground",
-      cell: (row) => row.lines?.length ?? "—",
+      cell: (row) => row.lineCount,
     },
     {
       key: "status",
@@ -237,14 +236,27 @@ export function PhysicalAuditsClient() {
         subtitle="Warehouse-wide full stock audits."
         filters={filtersRow}
         actions={
-          <Button size="sm" onClick={handleOpenSheet} {...plusHandlers}>
-            <PlusIcon ref={plusRef} size={14} aria-hidden="true" />
-            New Physical Audit
-          </Button>
+          canCount ? (
+            <Button size="sm" onClick={handleOpenSheet} {...plusHandlers}>
+              <PlusIcon ref={plusRef} size={14} aria-hidden="true" />
+              New Physical Audit
+            </Button>
+          ) : undefined
         }
       >
         <div className="flex flex-1 min-h-0 flex-col">
-        {error ? (
+        {/*
+         * G8 — denied is a different answer from empty.
+         *
+         * The list query is gated on the read key inside its hook, so a reader
+         * without it received an empty page and was told the warehouse has no
+         * physical audits. The branch sits below every hook on purpose: an early return
+         * above them would make hook order depend on a permission, which only
+         * breaks for the person who lacks it.
+         */}
+        {!canView ? (
+          <NoPermissionState className="flex-1" permission={COUNT_READ_KEY} />
+        ) : error ? (
           <ErrorState
             title="Failed to load physical audits"
             description={getErrorMessage(error)}
@@ -263,7 +275,7 @@ export function PhysicalAuditsClient() {
                 illustration={<EmptyWarehouseIllustration />}
                 title="No physical audits yet"
                 description="Create a physical audit to count all stock in a warehouse."
-                action={{ label: "New Physical Audit", onClick: handleOpenSheet }}
+                action={canCount ? { label: "New Physical Audit", onClick: handleOpenSheet } : undefined}
                 className="border-0 bg-transparent"
               />
             }

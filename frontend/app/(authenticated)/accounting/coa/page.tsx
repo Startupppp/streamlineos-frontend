@@ -1,5 +1,5 @@
-import { ChartOfAccountsPage } from "@/features/accounting/coa/chart-of-accounts-page";
+import { ChartOfAccountsClient } from "@/features/accounting/ledger";
 
-export default function Page() {
-  return <ChartOfAccountsPage />;
+export default function ChartOfAccountsPage() {
+  return <ChartOfAccountsClient />;
 }

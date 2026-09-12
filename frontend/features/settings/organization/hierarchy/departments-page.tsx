@@ -185,8 +185,6 @@ export function OrgDepartmentsPage() {
       cell: (department) => (
         <span className="font-medium">{department.name}</span>
       ),
-      sortable: true,
-      sortValue: (department) => department.name,
     },
     {
       key: "code",

@@ -1,7 +1,13 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import type { StagedImportType } from "@/hooks/api/inventory/staged-import";
 
+/**
+ * `satisfies` rather than a bare literal: the runner these cards feed takes a
+ * `StagedImportType`, so a card offering a kind the staged-import contract does
+ * not know is a type error here rather than a cast at the call site.
+ */
 const IMPORT_TYPES = [
   { value: "products", label: "Products", description: "Items, SKUs, variants" },
   { value: "vendors", label: "Vendors", description: "Supplier information" },
@@ -10,7 +16,11 @@ const IMPORT_TYPES = [
   { value: "locations", label: "Locations", description: "Warehouse locations" },
   { value: "opening-stock", label: "Opening Stock", description: "Initial stock quantities" },
   { value: "reorder-rules", label: "Reorder Rules", description: "Replenishment thresholds" },
-] as const;
+] as const satisfies ReadonlyArray<{
+  value: StagedImportType;
+  label: string;
+  description: string;
+}>;
 
 export type ImportType = (typeof IMPORT_TYPES)[number]["value"];
 

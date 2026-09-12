@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { format, parseISO } from "date-fns";
 import { useAuditEvents } from "@/hooks/api/timesheets-core/audit";
 import { useCan } from "@/hooks/api/access";
-import type { AuditEvent } from "@/features/timesheets/audit-types";
+import { auditActorLabel, type AuditEvent } from "@/features/timesheets/audit-types";
 import { cn } from "@/lib/utils";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
@@ -20,6 +20,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { AuditDetailSheet } from "./audit-detail-sheet";
+import { AuditChainCheck } from "./audit-chain-check";
 
 const SELECT_ALL = "__all__";
 const PAGE_LIMIT = 20;
@@ -79,7 +80,7 @@ const COLUMNS: DataTableColumn<AuditEvent>[] = [
     header: "Actor",
     cell: (row) => (
       <span className="text-xs">
-        {row.actorName ?? "System"}
+        {auditActorLabel(row)}
       </span>
     ),
   },
@@ -207,6 +208,7 @@ export function AuditTab() {
 
   return (
     <>
+      <AuditChainCheck />
       <DataTable
         data={events}
         columns={COLUMNS}

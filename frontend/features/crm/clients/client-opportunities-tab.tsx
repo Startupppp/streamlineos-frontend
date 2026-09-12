@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback } from "react";
+import { useCanState } from "@/hooks/api/access";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { RecordList, asRecordValues } from "@/components/renderer";
 import { useDensity } from "@/components/renderer/density-toggle";
 import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
@@ -33,11 +34,24 @@ export function ClientOpportunitiesTab({ clientId }: { clientId: number }) {
   const money = useOrgDisplay();
   const [density] = useDensity();
 
-  const { data, isLoading, isError, error, refetch, access} = useClientOpportunities(clientId);
+  const { data, isLoading, isError, error, refetch } = useClientOpportunities(clientId);
 
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:clients:read") === "denied")
+    return <NoPermissionState permission="crm:clients:read" />;
 
   if (isLoading)
     return <DataTableSkeleton rows={6} columns={layout.list.columns.length} />;
@@ -57,7 +71,6 @@ export function ClientOpportunitiesTab({ clientId }: { clientId: number }) {
   if (opportunities.length === 0)
     return (
       <EmptyState
-            access={access}
         compact
         className="py-10"
         title="No opportunities logged"

@@ -10,7 +10,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { useApprovals } from "@/hooks/api/timesheets-core/approvals";
+import { APPROVALS_PAGE_SIZE, useApprovals } from "@/hooks/api/timesheets-core/approvals";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
 import type { PeriodStatus, TimesheetPeriod } from "@/features/timesheets/types";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,8 @@ import { cn } from "@/lib/utils";
 export type ApprovalTab = Extract<PeriodStatus, "SUBMITTED" | "APPROVED" | "REJECTED">;
 
 export const ALL_APPROVAL_TABS: ApprovalTab[] = ["SUBMITTED", "APPROVED", "REJECTED"];
+
+export const APPROVALS_TABPANEL_ID = "approvals-tabpanel";
 
 export const APPROVAL_TAB_LABEL: Record<ApprovalTab, string> = {
   SUBMITTED: "Pending",
@@ -31,7 +33,7 @@ const TAB_EMPTY: Record<ApprovalTab, string> = {
   REJECTED: "No rejected timesheets for this period.",
 };
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = APPROVALS_PAGE_SIZE;
 
 interface ApprovalsTableProps {
   periods: TimesheetPeriod[];
@@ -87,8 +89,6 @@ function ApprovalsTable({
             )}
           </div>
         ),
-        sortable: true,
-        sortValue: (row) => row.user?.name ?? row.user?.email ?? "",
       },
       {
         key: "period",
@@ -99,8 +99,6 @@ function ApprovalsTable({
             {format(parseISO(row.periodEnd), "MMM d")}
           </span>
         ),
-        sortable: true,
-        sortValue: (row) => row.periodStart,
       },
       {
         key: "totalHours",
@@ -108,8 +106,6 @@ function ApprovalsTable({
         headerClassName: "text-right",
         className: "text-right tabular-nums",
         cell: (row) => `${parseFloat(row.totalHours).toFixed(1)}h`,
-        sortable: true,
-        sortValue: (row) => parseFloat(row.totalHours),
       },
       {
         key: "billableHours",
@@ -129,8 +125,6 @@ function ApprovalsTable({
           ) : (
             <span className="text-muted-foreground">—</span>
           ),
-        sortable: true,
-        sortValue: (row) => row.submittedAt ?? "",
       },
       {
         key: "status",

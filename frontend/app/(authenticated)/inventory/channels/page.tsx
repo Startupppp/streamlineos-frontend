@@ -12,9 +12,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
+import { SYNC_STATUS_BADGE, SYNC_STATUS_LABEL } from "@/features/inventory/lib";
 import {
   useChannels,
   useSyncChannelStock,
@@ -26,6 +28,9 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { ChannelSheet } from "@/features/inventory/components/channels/channel-sheet";
 import { ChannelPublicationsPanel } from "@/features/inventory/components/channels/channel-publications-panel";
+import { ChannelPoolsPanel } from "@/features/inventory/components/channels/channel-pools-panel";
+import { ChannelSnapshotDiffsPanel } from "@/features/inventory/components/channels/channel-snapshot-diffs-panel";
+import { useCan } from "@/hooks/api/access";
 
 const CHANNEL_TYPE_BADGE: Record<ChannelType, string> = {
   INTERNAL: "bg-muted text-muted-foreground border-border",
@@ -45,12 +50,7 @@ const CHANNEL_TYPE_LABEL: Record<ChannelType, string> = {
   THREE_PL: "3PL",
 };
 
-const CHANNEL_TYPES_LIST: ReadonlyArray<ChannelType> = ["INTERNAL", "SHOPIFY", "WOOCOMMERCE", "MARKETPLACE", "B2B", "THREE_PL"];
 const EXTERNAL_TYPES = new Set<ChannelType>(["SHOPIFY", "WOOCOMMERCE", "MARKETPLACE", "B2B", "THREE_PL"]);
-
-function resolveChannelType(raw: string | undefined): ChannelType | undefined {
-  return CHANNEL_TYPES_LIST.find((t) => t === raw);
-}
 
 function formatDate(iso: string | null): string {
   if (!iso) return "Never";
@@ -84,13 +84,14 @@ interface ChannelCardProps {
   channel: Channel;
   onEdit: (channel: Channel) => void;
   onViewPublications: (channel: Channel) => void;
+  onViewPools: (channel: Channel) => void;
+  onViewDifferences: (channel: Channel) => void;
 }
 
-const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublications }: ChannelCardProps) {
+const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublications, onViewPools, onViewDifferences }: ChannelCardProps) {
   const { fadeUp } = useMotionVariants();
   const syncMutation = useSyncChannelStock();
-  const channelType = resolveChannelType(channel.channelType);
-  const isExternal = channelType !== undefined && EXTERNAL_TYPES.has(channelType);
+  const isExternal = EXTERNAL_TYPES.has(channel.channelType);
 
   function handleSync(): void {
     syncMutation.mutate(channel.id, {
@@ -105,6 +106,14 @@ const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublicati
 
   function handleViewPublications(): void {
     onViewPublications(channel);
+  }
+
+  function handleViewPools(): void {
+    onViewPools(channel);
+  }
+
+  function handleViewDifferences(): void {
+    onViewDifferences(channel);
   }
 
   return (
@@ -127,12 +136,19 @@ const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublicati
           </div>
 
           <div className="flex flex-wrap gap-1.5">
-            {channelType && (
+            <Badge
+              variant="outline"
+              className={cn("text-dense", CHANNEL_TYPE_BADGE[channel.channelType])}
+            >
+              {CHANNEL_TYPE_LABEL[channel.channelType]}
+            </Badge>
+
+            {channel.lastSyncStatus && (
               <Badge
                 variant="outline"
-                className={cn("text-dense", CHANNEL_TYPE_BADGE[channelType])}
+                className={cn("text-dense", SYNC_STATUS_BADGE[channel.lastSyncStatus])}
               >
-                {CHANNEL_TYPE_LABEL[channelType]}
+                {SYNC_STATUS_LABEL[channel.lastSyncStatus]}
               </Badge>
             )}
           </div>
@@ -145,6 +161,9 @@ const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublicati
           )}
 
           <div className="space-y-0.5">
+            <p className="text-dense text-muted-foreground">
+              Last sync: {formatDate(channel.lastSyncAt)}
+            </p>
             {channel.safetyBuffer != null && (
               <p className="text-dense text-muted-foreground">
                 Safety buffer: {channel.safetyBuffer}%
@@ -180,6 +199,22 @@ const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublicati
             >
               View publications
             </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-xs"
+              onClick={handleViewDifferences}
+            >
+              Stock differences
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-xs"
+              onClick={handleViewPools}
+            >
+              Reserved stock
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -188,6 +223,7 @@ const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublicati
 });
 
 function ChannelsContent() {
+  const canView = useCan("inventory:channels:manage");
   const { data, isLoading, isError, refetch } = useChannels();
   const channels = useMemo(() => (Array.isArray(data) ? data : []), [data]);
   const { staggerContainer } = useMotionVariants();
@@ -196,6 +232,10 @@ function ChannelsContent() {
   const [editChannel, setEditChannel] = useState<Channel | undefined>(undefined);
   const [publicationsChannel, setPublicationsChannel] = useState<Channel | null>(null);
   const [publicationsPanelOpen, setPublicationsPanelOpen] = useState(false);
+  const [poolsChannel, setPoolsChannel] = useState<Channel | null>(null);
+  const [poolsPanelOpen, setPoolsPanelOpen] = useState(false);
+  const [diffsChannel, setDiffsChannel] = useState<Channel | null>(null);
+  const [diffsPanelOpen, setDiffsPanelOpen] = useState(false);
   const { iconRef: addIconRef, hoverHandlers: addHoverHandlers } = useAnimatedIcon();
 
   const handleNewChannel = useCallback(() => {
@@ -223,6 +263,26 @@ function ChannelsContent() {
     if (!open) setPublicationsChannel(null);
   }, []);
 
+  const handleViewPools = useCallback((channel: Channel) => {
+    setPoolsChannel(channel);
+    setPoolsPanelOpen(true);
+  }, []);
+
+  const handlePoolsPanelOpenChange = useCallback((open: boolean) => {
+    setPoolsPanelOpen(open);
+    if (!open) setPoolsChannel(null);
+  }, []);
+
+  const handleViewDifferences = useCallback((channel: Channel) => {
+    setDiffsChannel(channel);
+    setDiffsPanelOpen(true);
+  }, []);
+
+  const handleDiffsPanelOpenChange = useCallback((open: boolean) => {
+    setDiffsPanelOpen(open);
+    if (!open) setDiffsChannel(null);
+  }, []);
+
   function handleRetry(): void {
     void refetch();
   }
@@ -233,6 +293,15 @@ function ChannelsContent() {
       New Channel
     </Button>
   );
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Channels"
+      >
+        <NoPermissionState permission="inventory:channels:manage" className="flex-1" />
+      </PageWrapper>
+    );
 
   if (isLoading) {
     return (
@@ -282,6 +351,8 @@ function ChannelsContent() {
                 channel={ch}
                 onEdit={handleEdit}
                 onViewPublications={handleViewPublications}
+                onViewPools={handleViewPools}
+                onViewDifferences={handleViewDifferences}
               />
             ))}
           </motion.div>
@@ -304,6 +375,16 @@ function ChannelsContent() {
         open={publicationsPanelOpen}
         onOpenChange={handlePanelOpenChange}
         channel={publicationsChannel}
+      />
+      <ChannelPoolsPanel
+        open={poolsPanelOpen}
+        onOpenChange={handlePoolsPanelOpenChange}
+        channel={poolsChannel}
+      />
+      <ChannelSnapshotDiffsPanel
+        open={diffsPanelOpen}
+        onOpenChange={handleDiffsPanelOpenChange}
+        channel={diffsChannel}
       />
     </>
   );

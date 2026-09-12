@@ -5,11 +5,23 @@ name: Frontend CI/CD
 # (Lint) and every one of the 10 gate steps below it reported `-`, i.e. never
 # executed. A gate sequenced after a red step is not a gate. `gates` carries no
 # `needs:`, so a lint regression can no longer mask the enforcement surface.
-
+#
+# 2026-09-05 (ticket 20) — WHY `feat/**` IS HERE.
+#
+# `push` was `[main]` only, so a feature branch's sole trigger was `pull_request`,
+# which GitHub raises from the PR's MERGE commit and stops raising once the PR
+# conflicts with its base. `refs/pull/32/merge` was last written
+# 2026-09-01T08:47:02Z and the last `pull_request` run on this branch started
+# 2026-09-01T08:47:05Z — three seconds later, then nothing, through every push
+# since. Same mechanism, same day, independently, in the backend repo.
+#
+# So none of the inventory ratchets had ever executed in CI. A gate a merge
+# conflict can switch off is not a gate.
 on:
   push:
     branches:
       - main
+      - "feat/**"
     paths:
       - frontend/**
       - .github/workflows/frontend.yml
@@ -83,6 +95,17 @@ jobs:
 
       - name: Type Check
         run: pnpm run type-check
+
+      # tsconfig.json excludes every test path and jest transforms with SWC, so
+      # without this no gate ever typechecks a spec.
+      - name: Type Check (specs)
+        run: pnpm run type-check:specs
+
+      # tsconfig.specs.json excludes `e2e`, so the Playwright suite was outside
+      # both typecheck gates. Its own config, because those specs are checked
+      # against Playwright's types rather than jest's ambient globals.
+      - name: Type Check (e2e)
+        run: pnpm run type-check:e2e
 
   # No `needs:`. The env block is NOT decoration: `next build` runs with
   # NODE_ENV=production, and `frontend/lib/env.ts` parses process.env at import
@@ -460,6 +483,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run check:colors:self-test && pnpm run check:colors
 
+      - name: No customer proper noun in the source every tenant runs
+        if: ${{ !cancelled() }}
+        run: pnpm run check:tenant-neutral:self-test && pnpm run check:tenant-neutral
+
       # BLOCKING AND NEWLY RED, deliberately. 2026-09-03 (ticket 35) bite-proved
       # this gate and it did not bite: it reported "No useEffect-driven API
       # fetches found (5,278 files scanned)" over a real one, because both of
@@ -785,3 +812,75 @@ jobs:
         run: >-
           node scripts/run-gate.mjs check:contract-vendor:self-test check:contract-vendor
           --prerequisite "a checkout of Startupppp/streamlineos-backend carrying a generated openapi.json (set STREAMLINE_BACKEND_ROOT)"
+
+  # The six frontend inventory ratchets, BY NAME. `tests` above runs them too,
+  # but only as part of one shared verdict for the whole suite; named here they
+  # are readable in the log and cannot be silenced by an unrelated red suite.
+  # `--ci` with no `--passWithNoTests`, so a pattern that matches nothing exits 1.
+  #
+  # The env block is the `tests` job's, for the `tests` job's reason: a suite
+  # that imports `components/ai/ai-error-state.ts` throws at MODULE LOAD
+  # without NEXT_PUBLIC_API_URL, which would fail a ratchet on an import rather
+  # than on its assertion.
+  inventory-ratchets:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      TZ: UTC
+      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'ci-test-only-placeholder-not-a-real-secret-abc123' }}
+      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:1500' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Ratchet - rf-surface
+        run: pnpm exec jest --ci --testPathPattern=rf-surface
+
+      - name: Ratchet - inventory-route-states
+        run: pnpm exec jest --ci --testPathPattern=inventory-route-states
+
+      - name: Ratchet - inventory-a11y
+        run: pnpm exec jest --ci --testPathPattern=inventory-a11y
+
+      - name: Ratchet - sidebar-nav-inventory-reachability
+        run: pnpm exec jest --ci --testPathPattern=sidebar-nav-inventory-reachability
+
+      - name: Ratchet - available-formula
+        run: pnpm exec jest --ci --testPathPattern=available-formula
+
+      - name: Ratchet - inventory-keys
+        run: pnpm exec jest --ci --testPathPattern=inventory-keys
+
+      # Anti-vacuity: a renamed ratchet must fail loudly rather than stop existing.
+      - name: The six ratchets exist
+        run: |
+          set -euo pipefail
+          missing=0
+          for f in \
+            "app/(authenticated)/inventory/rf/rf-surface.test.ts" \
+            "app/(authenticated)/inventory/inventory-route-states.test.ts" \
+            "app/(authenticated)/inventory/inventory-a11y.test.tsx" \
+            "components/layout/sidebar/sidebar-nav-inventory-reachability.test.ts" \
+            "hooks/api/inventory/available-formula.test.ts" \
+            "lib/query-keys/inventory-keys.test.ts" ; do
+            if [ ! -f "$f" ]; then echo "MISSING RATCHET: $f"; missing=1; fi
+          done
+          exit $missing

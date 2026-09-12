@@ -72,11 +72,11 @@ export const CLIENT_OPPORTUNITY_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search opportunities…",
     columns: [
-      { field: "title", primary: true, sortable: true },
+      { field: "title", primary: true },
       { field: "type", width: "w-28 shrink-0" },
       { field: "stage", width: "w-32 shrink-0" },
-      { field: "value", sortable: true, width: "w-32 shrink-0" },
-      { field: "expectedCloseDate", sortable: true, width: "w-36 shrink-0" },
+      { field: "value", width: "w-32 shrink-0" },
+      { field: "expectedCloseDate", width: "w-36 shrink-0" },
     ],
   },
   detail: {

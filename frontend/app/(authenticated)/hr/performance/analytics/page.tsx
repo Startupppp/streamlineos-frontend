@@ -12,8 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { useReviewCycles } from "@/hooks/api/hr";
-import { useHrPerformanceReviews } from "@/hooks/api/hr";
+import { useReviewCycles, useHrPerformanceReviews } from "@/hooks/api/hr";
+
 import type { ReviewCycle } from "@/types/hr";
 
 const PerformanceAnalyticsCharts = dynamic(
@@ -44,8 +44,6 @@ const REVIEW_CYCLE_COLUMNS: DataTableColumn<ReviewCycle>[] = [
     key: "name",
     header: "Name",
     cell: (c) => <span className="text-sm font-medium text-foreground">{c.name}</span>,
-    sortable: true,
-    sortValue: (c) => c.name,
   },
   {
     key: "type",

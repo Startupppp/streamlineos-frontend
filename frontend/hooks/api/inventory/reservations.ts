@@ -1,12 +1,11 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
+import { useAuthorizedIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { StockReservationStatus } from "@/types/inventory";
-import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { StockReservation, StockReservationStatus } from "@/types/inventory-availability";
 
 interface ReservationsFilters {
   sourceType?: string;
@@ -17,30 +16,8 @@ interface ReservationsFilters {
   limit?: number;
 }
 
-export interface ReservationApiItem {
-  id: number;
-  orgId: string;
-  sourceType: string;
-  sourceId: string;
-  sourceLineId: string | null;
-  productVariantId: number;
-  warehouseId: number | null;
-  locationId: number | null;
-  lotId: number | null;
-  serialId: number | null;
-  reservedQty: string;
-  status: string;
-  idempotencyKey: string | null;
-  expiresAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  productVariant?: { id: number; name: string; sku: string };
-  location?: { id: number; name: string; code: string };
-  warehouse?: { id: number; name: string };
-}
-
 interface ReservationsResult {
-  items: ReservationApiItem[];
+  items: StockReservation[];
   total: number;
   page: number;
   totalPages: number;
@@ -58,19 +35,6 @@ interface OpeningStockInput {
   notes?: string;
 }
 
-const listReservationsContract = lazyContract(() =>
-  import("@/hooks/api/inventory/stock-schema").then((m) => m.listReservationsContract),
-);
-const createReservationContract = lazyContract(() =>
-  import("@/hooks/api/inventory/stock-schema").then((m) => m.createReservationContract),
-);
-const successContract = lazyContract(() =>
-  import("@/hooks/api/inventory/stock-schema").then((m) => m.successContract),
-);
-const stockEngineResultContract = lazyContract(() =>
-  import("@/hooks/api/inventory/stock-schema").then((m) => m.stockEngineResultContract),
-);
-
 export function useReservations(filters?: ReservationsFilters) {
   const canView = useCan("inventory:stock:read");
   return useQuery<ReservationsResult, Error>({
@@ -83,7 +47,7 @@ export function useReservations(filters?: ReservationsFilters) {
         ...(filters?.warehouseId ? { warehouseId: filters.warehouseId } : {}),
         ...(filters?.page !== undefined ? { page: filters.page } : {}),
         ...(filters?.limit !== undefined ? { limit: filters.limit } : {}),
-      }, signal, listReservationsContract),
+      }, signal),
     staleTime: 60_000,
     refetchInterval: 60_000,
     refetchIntervalInBackground: false,
@@ -93,10 +57,10 @@ export function useReservations(filters?: ReservationsFilters) {
 
 export function useReleaseReservation() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<{ success: true }, Error, number>("inventory:stock:reserve", {
+  return useAuthorizedIdempotentMutation<void, Error, number>("inventory:stock:reserve", {
     mutationKey: ["inventory", "stock", "release-reservation"],
-    mutationFn: (reservationId) =>
-      apiClient.post<{ success: true }>("/inventory/stock/release-reservation", { reservationId }, undefined, successContract),
+    mutationFn: (reservationId, idempotencyKey) =>
+      apiClient.post<void>("/inventory/stock/release-reservation", { reservationId }, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.reservations() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -106,12 +70,10 @@ export function useReleaseReservation() {
 
 export function useOpeningStock() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<unknown, Error, OpeningStockInput>("inventory:stock:adjust", {
+  return useAuthorizedIdempotentMutation<unknown, Error, OpeningStockInput>("inventory:stock:adjust", {
     mutationKey: ["inventory", "stock", "opening"],
-    mutationFn: (data) =>
-      apiClient.post<unknown>("/inventory/stock/opening", data, {
-        headers: { "Idempotency-Key": crypto.randomUUID() },
-      }, stockEngineResultContract),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<unknown>("/inventory/stock/opening", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.dashboard() });

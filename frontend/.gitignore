@@ -21,8 +21,11 @@ package-lock.json
 
 # next.js
 /.next/
+# Any custom distDir. A dev server started with `distDir: ".next-local"`
+# left 718MB of Turbopack output untracked here, and the repo gates exclude the
+# directory named exactly `.next`, so two of them went red over compiled chunks.
+/.next-*/
 /.next-baseline/
-/.next-buildmart/
 /out/
 
 # production
@@ -77,6 +80,20 @@ docs/superpowers/
 .claude-flow
 
 .env*
+
+# A second local dev server writes here (NEXT_DIST_DIR); never committed.
+.next-local
+
+# Build-check output from a second dist dir; never committed.
+.next-build-check
+# Local agent scratch (token minters, API walk harness).
+.scratch
+
+# Playwright run artifacts
+/blob-report/
+/playwright/.cache/
+# The e2e suite's own dev-server build dir (playwright.config.ts NEXT_DIST_DIR).
+.next-e2e
 
 # minted test session token — never commit
 .capture-cookie*

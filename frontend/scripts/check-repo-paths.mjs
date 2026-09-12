@@ -13,7 +13,7 @@
  */
 
 import { existsSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const SCRIPT_DIR = fileURLToPath(new URL(".", import.meta.url));
@@ -24,8 +24,22 @@ function isBackendRoot(candidate) {
   return existsSync(join(candidate, MARKER));
 }
 
-function candidateRoots() {
+function pairedWorktreeRoots() {
   const roots = [];
+  const suffix = "-frontend";
+  let dir = SCRIPT_DIR;
+  for (let depth = 0; depth < 8; depth++) {
+    const name = basename(dir);
+    if (name.endsWith(suffix)) roots.push(join(dirname(dir), `${name.slice(0, -suffix.length)}-backend`));
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return roots;
+}
+
+function candidateRoots() {
+  const roots = pairedWorktreeRoots();
   let dir = SCRIPT_DIR;
   for (let depth = 0; depth < 8; depth++) {
     for (const name of SIBLING_NAMES) roots.push(join(dir, name));
@@ -85,7 +99,7 @@ export function reportBackendUnreachable(gateName, whatIsSkipped) {
 /**
  * Directory-walk exclusion for every frontend source scan.
  *
- * A name-exact `.next` blocklist let `.next-buildmart` — 718 MB of minified
+ * A name-exact `.next` blocklist let `.next-custom` — 718 MB of minified
  * build output from an alternate distDir — into the corpus of every gate that
  * scans .js, producing findings in generated chunks. No frontend SOURCE
  * directory begins with a dot, so skipping dot-directories wholesale is both
@@ -107,7 +121,7 @@ export function runScanDirSelfTest(assert) {
   assert("the default build dir is excluded", isExcludedScanDir(".next") === true);
   assert(
     "an alternate distDir is excluded — the defect that let 718MB of chunks into the corpus",
-    isExcludedScanDir(".next-buildmart") === true,
+    isExcludedScanDir(".next-custom") === true,
   );
   assert("the swc cache is excluded", isExcludedScanDir(".swc") === true);
   assert("the scratch dir is excluded", isExcludedScanDir(".scratch") === true);

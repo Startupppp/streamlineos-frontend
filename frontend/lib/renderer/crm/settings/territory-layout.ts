@@ -51,10 +51,10 @@ export const TERRITORY_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search territories…",
     columns: [
-      { field: "name", primary: true, sortable: true, subtitle: "description" },
+      { field: "name", primary: true, subtitle: "description" },
       { field: "states", width: "w-40 shrink-0" },
       { field: "industries", width: "w-40 shrink-0" },
-      { field: "priority", sortable: true, width: "w-24 shrink-0" },
+      { field: "priority", width: "w-24 shrink-0" },
       { field: "isActive", width: "w-24 shrink-0" },
     ],
   },

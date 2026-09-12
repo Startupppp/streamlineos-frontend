@@ -1,74 +1,79 @@
-import { Users, Clock, Receipt, FileText, BarChart3, ClipboardList, ShieldCheck, CreditCard, Wallet, TrendingUp, BookOpen, Package, Bell, Scale, Coins, Landmark, RefreshCcw, BarChart2, Inbox, SlidersHorizontal, Calculator, Tag, ArrowLeftRight, ShoppingCart, Truck, NotebookPen, PlayCircle, Lock, Layers, PiggyBank, Percent, ArrowDownToLine, HandCoins, TrendingDown, FileStack, Workflow } from "lucide-react";
+import {
+  ArrowDownToLine,
+  BarChart3,
+  BookOpen,
+  Calculator,
+  Coins,
+  CreditCard,
+  FileStack,
+  FileText,
+  HandCoins,
+  Inbox,
+  Landmark,
+  Lock,
+  NotebookPen,
+  Percent,
+  Receipt,
+  RefreshCcw,
+  Scale,
+  ShieldCheck,
+  ShoppingCart,
+  SlidersHorizontal,
+  TrendingUp,
+  Truck,
+  Users,
+  Wallet,
+  Workflow,
+} from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const FINANCE_NAV_GROUPS: NavGroup[] = [
-{
+  {
     label: "Accounting & Finance",
     product: "finance",
     module: "finance",
-    requiredPermission: [
-      "accounting:accounts:read",
-      "accounting:assets:read",
-      "accounting:banking:read",
-      "accounting:banking:reconcile",
-      "accounting:budgets:read",
-      "accounting:credit-notes:read",
-      "accounting:dimensions:read",
-      "accounting:forecast:read",
-      "accounting:general-ledger:read",
-      "accounting:journal:create",
-      "accounting:journal:read",
-      "accounting:payables:read",
-      "accounting:payment-runs:read",
-      "accounting:periods:read",
-      "accounting:read",
-      "accounting:receivables:read",
-      "accounting:recurring:read",
-      "accounting:reimbursements:read",
-      "accounting:reminders:read",
-      "accounting:reports:read",
-      "accounting:settings:read",
-      "accounting:taxes:read",
-      "accounting:vendor-credits:read",
-      "payments:providers:view",
-    ],
+    // `accounting:read` and not `accounting:view`: no route enforces the
+    // latter, so the group offered itself on a key the server never checks.
+    requiredPermission: ["accounting:read", "payments:providers:view"],
     routes: [
       {
         label: "Overview",
         icon: Calculator,
         href: "/accounting",
         exact: true,
-        requiredPermission: "accounting:reports:read",
+        // `AccountingHubClient` gates on `accounting:read`, and 14 routes
+        // enforce it. Aligned to the page, as three earlier nav corrections were.
+        requiredPermission: "accounting:read",
       },
       {
-        label: "Sales",
+        label: "Set up",
+        icon: NotebookPen,
+        href: "/accounting/setup",
+        requiredPermission: "accounting:settings:read",
+      },
+      {
+        label: "Money in",
         icon: TrendingUp,
         href: "/accounting/invoices",
         activePrefixes: ["/billing/invoices"],
-        requiredPermission: "accounting:read",
+        requiredPermission: "accounting:receivables:read",
         children: [
           {
             label: "Invoices",
             icon: FileText,
             href: "/accounting/invoices",
             activePrefixes: ["/billing/invoices"],
-            requiredPermission: "accounting:read",
+            requiredPermission: "accounting:receivables:read",
           },
           {
             label: "Customers",
             icon: Users,
             href: "/accounting/customers",
-            requiredPermission: "accounting:reports:read",
-          },
-          {
-            label: "Recurring invoices",
-            icon: RefreshCcw,
-            href: "/accounting/recurring-invoices",
-            requiredPermission: "accounting:recurring:read",
+            requiredPermission: "accounting:read",
           },
           {
             label: "Credit notes",
-            icon: FileStack,
+            icon: RefreshCcw,
             href: "/accounting/credit-notes",
             requiredPermission: "accounting:credit-notes:read",
           },
@@ -79,64 +84,56 @@ export const FINANCE_NAV_GROUPS: NavGroup[] = [
             requiredPermission: "accounting:receivables:read",
           },
           {
-            label: "Payment reminders",
-            icon: Bell,
-            href: "/accounting/payment-reminders",
-            requiredPermission: "accounting:reminders:read",
-          },
-          {
-            label: "Aged receivables",
-            icon: Clock,
+            label: "What customers owe us",
+            icon: FileStack,
             href: "/accounting/aged-receivables",
-            requiredPermission: "accounting:reports:read",
+            // Matches the page's own gate (`requirePermission("accounting:receivables:read")`).
+            // It read `accounting:reports:read`, so anyone holding reports-but-not-receivables
+            // was shown a link that answered 403.
+            requiredPermission: "accounting:receivables:read",
           },
         ],
       },
       {
-        label: "Purchases",
+        label: "Money out",
         icon: ShoppingCart,
         href: "/accounting/purchase-bills",
-        requiredPermission: "accounting:journal:read",
+        requiredPermission: "accounting:payables:read",
         children: [
           {
-            label: "Purchase bills",
+            label: "Bills",
             icon: Receipt,
             href: "/accounting/purchase-bills",
-            requiredPermission: "accounting:journal:read",
+            requiredPermission: "accounting:payables:read",
           },
           {
             label: "Vendors",
             icon: Truck,
             href: "/accounting/vendors",
-            requiredPermission: "accounting:reports:read",
+            requiredPermission: "accounting:read",
           },
           {
-            label: "Recurring bills",
+            label: "Debit notes",
             icon: RefreshCcw,
-            href: "/accounting/recurring-bills",
-            requiredPermission: "accounting:recurring:read",
-          },
-          {
-            label: "Vendor credits",
-            icon: FileStack,
             href: "/accounting/vendor-credits",
-            requiredPermission: "accounting:vendor-credits:read",
+            // This page renders `ApDocumentsPage`, which reads
+            // `useCan("accounting:payables:read")` and fetches AP documents —
+            // whose routes all require that same key. Nothing enforces
+            // `accounting:vendor-credits:read`; the only vendor-credit route
+            // is a POST on `:manage`. So the old gate was wrong in BOTH
+            // directions: it showed the link to someone who would be refused,
+            // and hid it from someone who could use it.
+            requiredPermission: "accounting:payables:read",
           },
           {
-            label: "Vendor payments",
-            icon: Coins,
+            label: "Payments made",
+            icon: ArrowDownToLine,
             href: "/accounting/vendor-payments",
             requiredPermission: "accounting:payables:read",
           },
           {
-            label: "Payment runs",
-            icon: PlayCircle,
-            href: "/accounting/payment-runs",
-            requiredPermission: "accounting:payment-runs:read",
-          },
-          {
-            label: "Aged payables",
-            icon: Clock,
+            label: "What we owe",
+            icon: FileStack,
             href: "/accounting/aged-payables",
             requiredPermission: "accounting:reports:read",
           },
@@ -150,16 +147,16 @@ export const FINANCE_NAV_GROUPS: NavGroup[] = [
         children: [
           {
             label: "Bank accounts",
-            icon: Landmark,
+            icon: Wallet,
             href: "/accounting/banking",
             exact: true,
             requiredPermission: "accounting:banking:read",
           },
           {
             label: "Import statement",
-            icon: ArrowDownToLine,
+            icon: Inbox,
             href: "/accounting/banking/import",
-            requiredPermission: "accounting:banking:read",
+            requiredPermission: "accounting:banking:import",
           },
           {
             label: "Reconciliation",
@@ -167,49 +164,10 @@ export const FINANCE_NAV_GROUPS: NavGroup[] = [
             href: "/accounting/banking/reconciliation",
             requiredPermission: "accounting:banking:reconcile",
           },
-          {
-            label: "Transfers",
-            icon: ArrowLeftRight,
-            href: "/accounting/banking/transfers",
-            requiredPermission: "accounting:banking:read",
-          },
         ],
       },
       {
-        label: "Expenses",
-        icon: Wallet,
-        href: "/accounting/expenses",
-        requiredPermission: "accounting:reimbursements:read",
-        children: [
-          {
-            label: "Expenses",
-            icon: Wallet,
-            href: "/accounting/expenses",
-            exact: true,
-            requiredPermission: "accounting:reimbursements:read",
-          },
-          {
-            label: "Receipt inbox",
-            icon: Inbox,
-            href: "/accounting/expenses/receipts",
-            requiredPermission: "accounting:reimbursements:read",
-          },
-          {
-            label: "Reimbursements",
-            icon: RefreshCcw,
-            href: "/accounting/expenses/reimbursements",
-            requiredPermission: "accounting:reimbursements:read",
-          },
-          {
-            label: "Policies",
-            icon: FileText,
-            href: "/accounting/expenses/policies",
-            requiredPermission: "accounting:reimbursements:read",
-          },
-        ],
-      },
-      {
-        label: "Accounting",
+        label: "The ledger",
         icon: BookOpen,
         href: "/accounting/coa",
         requiredPermission: "accounting:accounts:read",
@@ -228,7 +186,7 @@ export const FINANCE_NAV_GROUPS: NavGroup[] = [
           },
           {
             label: "General ledger",
-            icon: ClipboardList,
+            icon: FileStack,
             href: "/accounting/general-ledger",
             requiredPermission: "accounting:general-ledger:read",
           },
@@ -242,52 +200,7 @@ export const FINANCE_NAV_GROUPS: NavGroup[] = [
             label: "Opening balances",
             icon: Scale,
             href: "/accounting/opening-balances",
-            requiredPermission: "accounting:journal:create",
-          },
-          {
-            label: "Dimensions",
-            icon: Tag,
-            href: "/accounting/dimensions",
-            requiredPermission: "accounting:dimensions:read",
-          },
-        ],
-      },
-      {
-        label: "Taxes",
-        icon: Percent,
-        href: "/accounting/taxes",
-        requiredPermission: "accounting:taxes:read",
-        children: [
-          {
-            label: "Tax dashboard",
-            icon: Percent,
-            href: "/accounting/taxes",
-            exact: true,
-            requiredPermission: "accounting:taxes:read",
-          },
-          {
-            label: "GSTR-1",
-            icon: FileText,
-            href: "/accounting/gstr-1",
-            requiredPermission: "accounting:reports:read",
-          },
-          {
-            label: "GSTR-3B",
-            icon: BarChart2,
-            href: "/accounting/gstr-3b",
-            requiredPermission: "accounting:reports:read",
-          },
-          {
-            label: "Tax payments",
-            icon: Coins,
-            href: "/accounting/taxes/payments",
-            requiredPermission: "accounting:taxes:read",
-          },
-          {
-            label: "Tax codes",
-            icon: Tag,
-            href: "/accounting/taxes/codes",
-            requiredPermission: "accounting:taxes:read",
+            requiredPermission: "accounting:settings:read",
           },
         ],
       },
@@ -301,6 +214,7 @@ export const FINANCE_NAV_GROUPS: NavGroup[] = [
             label: "All reports",
             icon: BarChart3,
             href: "/accounting/reports",
+            exact: true,
             requiredPermission: "accounting:reports:read",
           },
           {
@@ -327,51 +241,17 @@ export const FINANCE_NAV_GROUPS: NavGroup[] = [
             href: "/accounting/cash-flow",
             requiredPermission: "accounting:reports:read",
           },
-        ],
-      },
-      {
-        label: "Budgets",
-        icon: PiggyBank,
-        href: "/accounting/budgets",
-        requiredPermission: "accounting:budgets:read",
-        children: [
           {
-            label: "Budgets",
-            icon: PiggyBank,
-            href: "/accounting/budgets",
-            requiredPermission: "accounting:budgets:read",
+            label: "Ageing",
+            icon: FileStack,
+            href: "/accounting/reports/aging",
+            requiredPermission: "accounting:reports:read",
           },
           {
-            label: "Cash forecast",
-            icon: TrendingDown,
-            href: "/accounting/forecast",
-            requiredPermission: "accounting:forecast:read",
-          },
-          {
-            label: "Scenarios",
-            icon: Layers,
-            href: "/accounting/scenarios",
-            requiredPermission: "accounting:forecast:read",
-          },
-        ],
-      },
-      {
-        label: "Assets",
-        icon: Package,
-        href: "/accounting/assets",
-        requiredPermission: "accounting:assets:read",
-        children: [
-          {
-            label: "Fixed assets",
-            icon: Package,
-            href: "/accounting/assets",
-            requiredPermission: "accounting:assets:read",
-          },
-          {
-            label: "Depreciation runs",
-            icon: TrendingDown,
-            href: "/accounting/assets/depreciation",
-            requiredPermission: "accounting:assets:read",
+            label: "Tax summary",
+            icon: Percent,
+            href: "/accounting/taxes",
+            requiredPermission: "accounting:taxes:read",
           },
         ],
       },
@@ -385,13 +265,10 @@ export const FINANCE_NAV_GROUPS: NavGroup[] = [
         label: "Settings",
         icon: SlidersHorizontal,
         href: "/accounting/settings",
-        requiredPermission: [
-          "accounting:settings:read",
-          "payments:providers:view",
-        ],
+        requiredPermission: ["accounting:settings:read", "payments:providers:view"],
         children: [
           {
-            label: "Finance Settings",
+            label: "Accounting settings",
             icon: SlidersHorizontal,
             href: "/accounting/settings",
             exact: true,
@@ -404,7 +281,7 @@ export const FINANCE_NAV_GROUPS: NavGroup[] = [
             requiredPermission: "settings:automations:view",
           },
           {
-            label: "Payment Providers",
+            label: "Payment providers",
             icon: CreditCard,
             href: "/accounting/settings/payment-providers",
             requiredPermission: "payments:providers:view",

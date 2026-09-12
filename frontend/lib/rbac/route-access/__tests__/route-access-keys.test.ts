@@ -242,11 +242,11 @@ describe("route-access registry keys", () => {
 
   it("BITE: each accounting descendant carries its own permission, not the blanket accounting:read", () => {
     const checks: Array<{ path: string; expected: string | string[] }> = [
-      { path: "/accounting/budgets", expected: "accounting:budgets:read" },
+      { path: "/accounting/invoices", expected: "accounting:receivables:read" },
       { path: "/accounting/coa", expected: "accounting:accounts:read" },
       { path: "/accounting/journal", expected: "accounting:journal:read" },
       { path: "/accounting/banking", expected: "accounting:banking:read" },
-      { path: "/accounting/assets", expected: "accounting:assets:read" },
+      { path: "/accounting/general-ledger", expected: "accounting:general-ledger:read" },
       { path: "/accounting/taxes", expected: "accounting:taxes:read" },
       { path: "/accounting/reports", expected: "accounting:reports:read" },
     ];

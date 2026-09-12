@@ -35,6 +35,7 @@ const HOOK_MODULES = [
   "hooks/api/invoice.ts",
   "hooks/api/subscription.ts",
   "hooks/api/payments.ts",
+  "hooks/api/payments-manual-methods.ts",
   "hooks/api/ai-credits.ts",
   "hooks/api/entitlements.ts",
 ];

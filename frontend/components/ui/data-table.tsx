@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import {
   type ColumnDef,
   type SortingState,
@@ -33,37 +39,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { DataTableColumn, DataTableProps } from "./data-table.types";
+import { createRowActivationKeyHandler, propagationShield } from "@/lib/keyboard-activation";
+import { readSortKey, selectionRowLabel } from "./data-table-row";
 
 export type { DataTableColumn, DataTableProps };
-
-function stopRowEvent(event: React.MouseEvent | React.KeyboardEvent): void {
-  event.stopPropagation();
-}
-
-/**
- * A row checkbox announced as "Select row" is indistinguishable from every
- * other one in the table, so a screen-reader user has nothing to confirm which
- * row they just selected. `selection.getRowLabel` supplies the row's own
- * subject; the generic wording survives only where a call site has not given
- * one yet, and `design-system-control-names.contract` counts those.
- */
-function selectionRowLabel(rowLabel: string | undefined): string {
-  const trimmed = rowLabel?.trim();
-  return trimmed ? `Select ${trimmed}` : "Select row";
-}
-
-function readSortKey(row: unknown, key: string): string | number | boolean | null {
-  if (row === null || typeof row !== "object") return null;
-  const value: unknown = Reflect.get(row, key);
-  if (
-    typeof value === "string" ||
-    typeof value === "number" ||
-    typeof value === "boolean"
-  ) {
-    return value;
-  }
-  return null;
-}
 
 export function DataTable<T>({
   data,
@@ -88,16 +67,26 @@ export function DataTable<T>({
   const externalSorting: SortingState = sortState?.field
     ? [{ id: sortState.field, desc: sortState.direction === "desc" }]
     : [];
+  const serverSortFields = sortState?.fields;
   const [localRowSelection, setLocalRowSelection] = useState<RowSelectionState>({});
   const [internalPage, setInternalPage] = useState(0);
 
   const tagged = pagination !== undefined && "mode" in pagination ? pagination : undefined;
-  const mode = tagged?.mode ?? "client";
   const serverPag = tagged?.mode === "server" ? tagged : null;
   const cursorPag = tagged?.mode === "cursor" ? tagged : null;
   const clientPag = tagged === undefined ? pagination : null;
   const isServerPagination = serverPag !== null || cursorPag !== null;
   const clientPageSize = clientPag?.pageSize ?? 50;
+  /**
+   * Two sorts, never both on one table. With `sortState` the server orders the
+   * whole set, and only the keys its endpoint accepts (`sortState.fields`) earn
+   * a header control — a header can never ask for an order the API would drop.
+   * Without it, a column's own `sortable` reorders the rows, but only while the
+   * table holds every row it will show: a server- or cursor-paginated table
+   * holds one page, and sorting that page would present a slice as the sorted
+   * set.
+   */
+  const clientSortEnabled = sortState === undefined && !isServerPagination;
 
   const isRowSelectable = selection?.isRowSelectable;
 
@@ -137,8 +126,8 @@ export function DataTable<T>({
               <TooltipTrigger asChild>
                 <span
                   className="inline-flex cursor-not-allowed"
-                  onClick={stopRowEvent}
-                  onKeyDown={stopRowEvent}
+                  onClick={propagationShield.onClick}
+                  onKeyDown={propagationShield.onKeyDown}
                 >
                   <Checkbox
                     checked={false}
@@ -157,15 +146,24 @@ export function DataTable<T>({
 
     for (const col of columns) {
       const sortValueFn = col.sortValue;
+      const serverSortable = serverSortFields?.includes(col.key) ?? false;
+      const clientSortable = clientSortEnabled && (col.sortable ?? false);
       defs.push({
         id: col.key,
         header: col.header,
-        accessorFn: col.sortable
-          ? (row: T) => sortValueFn?.(row) ?? readSortKey(row, col.key)
-          : undefined,
+        // `getCanSort()` ends in `!!column.accessorFn`, so a display column can
+        // never be sortable however its flags read. A server-sorted column's
+        // value is never used: the rows arrive in the server's order and are
+        // rendered in it.
+        accessorFn: serverSortable
+          ? () => null
+          : clientSortable
+            ? (row: T) => sortValueFn?.(row) ?? readSortKey(row, col.key)
+            : undefined,
         cell: ({ row }) => col.cell(row.original),
-        enableSorting: col.sortable ?? false,
-        sortingFn: sortValueFn
+        enableSorting: serverSortable || clientSortable,
+        sortDescFirst: serverSortable ? false : undefined,
+        sortingFn: clientSortable && sortValueFn
           ? (rowA, rowB) => {
               const a = sortValueFn(rowA.original);
               const b = sortValueFn(rowB.original);
@@ -177,7 +175,7 @@ export function DataTable<T>({
     }
 
     return defs;
-  }, [columns, selection]);
+  }, [columns, selection, serverSortFields, clientSortEnabled]);
 
   const table = useReactTable<T>({
     data,
@@ -192,7 +190,10 @@ export function DataTable<T>({
           ? { pageIndex: 0, pageSize: cursorPag.pageSize }
           : { pageIndex: clientPage, pageSize: clientPageSize },
     },
-    manualSorting: sortState !== undefined,
+    manualSorting: !clientSortEnabled,
+    // Table-core drops the sort on the third click by default, which leaves no
+    // field to send and makes the header look broken.
+    enableSortingRemoval: false,
     manualPagination: isServerPagination,
     pageCount: serverPag !== null
       ? Math.ceil(serverPag.total / serverPag.pageSize)
@@ -224,6 +225,8 @@ export function DataTable<T>({
       }
     },
     onPaginationChange: (updater) => {
+      // A cursor walk is driven by the footer's own next/previous handlers, not
+      // by a page index — there is no index to move to.
       if (cursorPag) return;
       if (serverPag) {
         const prev = { pageIndex: serverPag.page - 1, pageSize: serverPag.pageSize };
@@ -238,7 +241,7 @@ export function DataTable<T>({
       }
     },
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: sortState ? undefined : getSortedRowModel(),
+    getSortedRowModel: clientSortEnabled ? getSortedRowModel() : undefined,
     getPaginationRowModel: isServerPagination ? undefined : getPaginationRowModel(),
   });
 
@@ -292,8 +295,10 @@ export function DataTable<T>({
    * page holds. Reporting `data.length` as the total would tell a screen
    * reader the table ends here.
    */
+  // An empty page reached by Next still owes the reader a way back.
   const showPagination = cursorPag !== null
-    ? data.length > 0 && (cursorPag.hasMore || cursorPag.hasPrevious || hasPageSizeControl)
+    ? (data.length > 0 || cursorPag.hasPrevious) &&
+      (cursorPag.hasMore || cursorPag.hasPrevious || hasPageSizeControl)
     : totalItems > 0 && (totalPages > 1 || hasPageSizeControl);
   const ariaRowCount = cursorPag !== null ? -1 : totalItems + 1;
   const firstRowNumber = currentPage * pSize + 1;
@@ -361,7 +366,7 @@ export function DataTable<T>({
           </div>
         ) : rows.length === 0 ? (
           <div
-            role="status"
+            role={emptyState ? undefined : "status"}
             className="flex flex-1 min-h-0 h-full flex-col justify-center p-2 [&>*]:!border-0 [&>*]:!bg-transparent [&>*]:!shadow-none"
           >
             {emptyState ?? (
@@ -382,12 +387,7 @@ export function DataTable<T>({
                   onClick={onRowClick ? () => handleRowActivate(row.original, row.id) : undefined}
                   onKeyDown={
                     onRowClick
-                      ? (e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            handleRowActivate(row.original, row.id);
-                          }
-                        }
+                      ? createRowActivationKeyHandler(() => handleRowActivate(row.original, row.id))
                       : undefined
                   }
                   className={cn(
@@ -430,12 +430,7 @@ export function DataTable<T>({
                     onClick={onRowClick ? () => handleRowActivate(row.original, row.id) : undefined}
                     onKeyDown={
                       onRowClick
-                        ? (e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              handleRowActivate(row.original, row.id);
-                            }
-                          }
+                        ? createRowActivationKeyHandler(() => handleRowActivate(row.original, row.id))
                         : undefined
                     }
                     tabIndex={onRowClick ? 0 : undefined}

@@ -1,5 +1,5 @@
-import { AccountingSetupPage } from "@/features/accounting/settings/accounting-setup-page";
+import { AccountingSetupClient } from "@/features/accounting/setup/accounting-setup-client";
 
-export default function Page() {
-  return <AccountingSetupPage />;
+export default function AccountingSetupPage() {
+  return <AccountingSetupClient />;
 }

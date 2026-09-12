@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import { NoPermissionState } from "@/components/shared";
+import { useCanState } from "@/hooks/api/access";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -26,8 +28,23 @@ import {
   useLastTouchAttribution,
 } from "@/hooks/api/crm/campaigns";
 import { formatMoney } from "@/lib/format-utils";
-import { type FieldTone, fieldByName, toneForSignedValue } from "@/lib/renderer/layout";
+import { fieldByName, toneForSignedValue } from "@/lib/renderer/layout";
 import type { StatTone } from "@/components/ui/stat-card";
+import type { FieldTone } from "@/lib/renderer/layout";
+
+/*
+  The renderer speaks in verdicts (success, danger); StatCard speaks in colours.
+  Naming the mapping once keeps the two vocabularies from being re-guessed —
+  and typing it as a total Record means adding a FieldTone breaks here, at the
+  translation, rather than silently falling through to a default colour.
+*/
+const STAT_TONE_BY_FIELD_TONE: Record<FieldTone, StatTone> = {
+  success: "emerald",
+  danger: "red",
+  neutral: "default",
+  warning: "amber",
+  info: "blue",
+};
 
 const AttributionChart = dynamic(
   () => import("./attribution-chart").then((m) => ({ default: m.AttributionChart })),
@@ -81,6 +98,20 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
     setLeadsPage(page);
   }, []);
 
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Placed after the last hook and before the first branch that can return:
+   * denial outranks loading, error and emptiness alike, and a hook below a
+   * conditional return would run in a different order on different renders.
+   */
+  if (useCanState("crm:campaigns:view") === "denied")
+    return <NoPermissionState permission="crm:campaigns:view" />;
+
   if (listLoading) {
     return (
       <PageWrapper title="Campaign" backHref="/crm/campaigns">
@@ -113,16 +144,9 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
     not from a comparison written here. The hand-written version of this line
     was one of two colour rules on this screen that disagreed about zero.
   */
-  const roiToneByFieldTone: Record<FieldTone, StatTone> = {
-    success: "emerald",
-    danger: "red",
-    neutral: "default",
-    warning: "amber",
-    info: "blue",
-  };
   const roiField = fieldByName(CAMPAIGN_LAYOUT, "roi");
   const roiTone: StatTone =
-    roiToneByFieldTone[
+    STAT_TONE_BY_FIELD_TONE[
       (roiField ? toneForSignedValue(roiField, roiValue) : undefined) ?? "neutral"
     ];
 

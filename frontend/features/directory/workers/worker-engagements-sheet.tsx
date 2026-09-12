@@ -3,9 +3,9 @@
 import { useCallback, useState } from "react";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+
 import { EmptyState } from "@/components/ui/empty-state";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
 import {
@@ -47,12 +47,7 @@ export function WorkerEngagementsSheet({
     useState<WorkerEngagement | null>(null);
 
   const engagementsQuery = useWorkerEngagements(worker.workerId);
-  const {
-    data: engagements,
-    isLoading,
-    isError,
-    refetch,
-  } = engagementsQuery;
+  const { data: engagements, isLoading, isError, refetch } = engagementsQuery;
 
   function handleRetry() {
     void refetch();

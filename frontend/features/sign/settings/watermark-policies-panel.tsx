@@ -9,10 +9,12 @@ import { Switch } from "@/components/ui/switch";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useDeleteWatermarkPolicy, useSignWatermarkPolicies, useUpdateWatermarkPolicy } from "@/hooks/api/sign/settings";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { WatermarkPolicyDialog } from "./watermark-policy-dialog";
 
 export function WatermarkPoliciesPanel() {
   const [createOpen, setCreateOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const { data: policies } = useSignWatermarkPolicies();
   const update = useUpdateWatermarkPolicy();
   const del = useDeleteWatermarkPolicy();
@@ -25,13 +27,29 @@ export function WatermarkPoliciesPanel() {
     }
   }
 
-  async function handleDelete(id: number) {
+  function handleDeleteRequest(id: number) {
+    return function requestDelete(): void {
+      setPendingDeleteId(id);
+    };
+  }
+
+  function handleDeleteDialogChange(open: boolean): void {
+    if (!open) setPendingDeleteId(null);
+  }
+
+  async function handleDeleteConfirm(): Promise<void> {
+    if (pendingDeleteId == null) return;
     try {
-      await del.mutateAsync(id);
+      await del.mutateAsync(pendingDeleteId);
       toast.success("Watermark policy deleted");
+      setPendingDeleteId(null);
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
+  }
+
+  function handleDeleteConfirmClick(): void {
+    void handleDeleteConfirm();
   }
 
   return (
@@ -57,13 +75,23 @@ export function WatermarkPoliciesPanel() {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Switch checked={policy.enabled} onCheckedChange={(v) => handleToggle(policy.id, v)} />
-                <AnimatedIconButton variant="ghost" size="icon" icon={Trash2Icon} className="size-8" aria-label="Delete watermark policy" onClick={() => handleDelete(policy.id)} />
+                <AnimatedIconButton variant="ghost" size="icon" icon={Trash2Icon} className="size-8" aria-label="Delete watermark policy" onClick={handleDeleteRequest(policy.id)} />
               </div>
             </div>
           ))
         )}
       </CardContent>
       <WatermarkPolicyDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <ConfirmDialog
+        open={pendingDeleteId != null}
+        onOpenChange={handleDeleteDialogChange}
+        title="Delete this watermark policy?"
+        description="Envelopes that already used it keep their stamped copy. New envelopes will not."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDeleteConfirmClick}
+        isPending={del.isPending}
+      />
     </Card>
   );
 }

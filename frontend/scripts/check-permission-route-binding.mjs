@@ -67,7 +67,8 @@
  * `features/**`, which `check-gated-reads.mjs` does not see because it scans
  * only `hooks/api` — and `--list` prints them so they are not lost.
  * `useMutation` has no `enabled`, so a raw mutation is never bound here either:
- * `useAuthorizedMutation` is the only sound binding for a write.
+ * `useAuthorizedMutation` and its idempotent twin `useAuthorizedIdempotentMutation`
+ * are the only sound bindings for a write.
  *
  * AMBIGUITY — the false positive this gate refuses to report
  * `useExpensePageData` reads `options.selfService ? "/me/expenses" :
@@ -128,6 +129,7 @@ const TEST_FILE_RE = /\.test\.|\.spec\.|__tests__|__mocks__/;
 const WRAPPERS = new Map([
   ["useGatedQuery", "read"],
   ["useAuthorizedMutation", "write"],
+  ["useAuthorizedIdempotentMutation", "write"],
 ]);
 const SCOPE_MARKERS = new Set(["usePermissionGate", "useCan"]);
 
@@ -218,24 +220,6 @@ const MIN_REASON_LENGTH = 60;
 const UNGATED_HELD_BACK = new Map();
 
 const DELIBERATE = new Map([
-  [
-    "hooks/api/accounting/expenses.ts::useTeamExpenses::GET /hr/expenses/page-data",
-    {
-      hookKey: "accounting:reimbursements:read",
-      routeKey: "hr:expenses:view",
-      reason:
-        "The accounting reimbursement surface reads an HR-owned route. Loosening the hook to hr:expenses:view would put the accounting screen in front of Sales Representatives and Recruiters, who hold that key; tightening the route would take the HR expenses page away from them. Neither is a client fix — accounting needs its own endpoint, which is the accounting rewrite's territory (feat/accounting-module). Today only the org owner holds accounting:reimbursements:read and the owner also passes hr:expenses:view, so nothing is broken until a custom role is granted one and not the other.",
-    },
-  ],
-  [
-    "hooks/api/accounting/expenses.ts::usePendingForBatch::GET /hr/expenses/page-data",
-    {
-      hookKey: "accounting:reimbursements:manage",
-      routeKey: "hr:expenses:view",
-      reason:
-        "Same cross-module read as useTeamExpenses: the reimbursement batch builder pulls pending rows from the HR expenses page-data route. The fix is an accounting-owned endpoint, not a client key change — see the useTeamExpenses entry above for the full reasoning and the population it affects.",
-    },
-  ],
   [
     "hooks/api/payroll/reports.ts::useExportPayrollReport::GET /payroll/reports/*",
     {
@@ -879,7 +863,7 @@ function collectSites(rootDir) {
   for (const dir of SCAN_DIRS) {
     for (const file of walk(join(rootDir, dir), isFrontendSource)) {
       const src = readFileSync(file, "utf8");
-      if (!/useGatedQuery|useAuthorizedMutation|use(?:Infinite|Suspense)?Query\s*[<(]/.test(src)) continue;
+      if (!/useGatedQuery|useAuthorized(?:Idempotent)?Mutation|use(?:Infinite|Suspense)?Query\s*[<(]/.test(src)) continue;
       scanned++;
       const sf = parseFile(file, file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
       const rel = relative(rootDir, file).replace(/\\/g, "/");
@@ -1063,6 +1047,30 @@ function runSelfTest() {
     }`);
     const { tally, mismatches } = classify(wrapper, bySegments);
     assert("(b) the corrected hook produces no mismatch", mismatches.length === 0 && tally.matched === 1);
+  }
+
+  // (a2) the idempotent authorized wrapper binds a write exactly as the plain one does
+  {
+    const { wrapper } = scan(`export function useCreateTicket() {
+      return useAuthorizedIdempotentMutation("support:tickets:view", {
+        mutationFn: (d, key) => apiClient.post("/support/tickets", d, { headers: { "Idempotency-Key": key } }),
+      });
+    }`);
+    const { mismatches } = classify(wrapper, bySegments);
+    assert(
+      "(a2) an idempotent write bound on the wrong key is a mismatch",
+      mismatches.length === 1 && mismatches[0].declared === "support:tickets:create",
+    );
+  }
+
+  {
+    const { wrapper } = scan(`export function useCreateTicket() {
+      return useAuthorizedIdempotentMutation("support:tickets:create", {
+        mutationFn: (d, key) => apiClient.post("/support/tickets", d, { headers: { "Idempotency-Key": key } }),
+      });
+    }`);
+    const { tally, mismatches } = classify(wrapper, bySegments);
+    assert("(a2) the correctly keyed idempotent write is silent", mismatches.length === 0 && tally.matched === 1);
   }
 
   // (c) a template-literal path normalises to the route's parameter shape

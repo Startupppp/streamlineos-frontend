@@ -86,8 +86,6 @@ export function buildAssetReturnColumns(
           </span>
         );
       },
-      sortable: true,
-      sortValue: (ar) => ar.status ?? "",
     },
     {
       key: "condition",
@@ -118,8 +116,6 @@ export function buildAssetReturnColumns(
           {ar.createdAt ? format(new Date(ar.createdAt), "MMM d, yyyy") : "—"}
         </span>
       ),
-      sortable: true,
-      sortValue: (ar) => ar.createdAt ?? "",
     },
   ];
 

@@ -33,6 +33,7 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
@@ -49,6 +50,7 @@ import {
   type ListFilterSpec,
 } from "@/components/list-view";
 import type { PurchaseOrderStatus, PurchaseOrderSummary } from "@/types/inventory";
+import { useCan } from "@/hooks/api/access";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All statuses" },
@@ -204,8 +206,6 @@ const columns: DataTableColumn<PurchaseOrderSummary>[] = [
         </Link>
       </div>
     ),
-    sortable: true,
-    sortValue: (po) => po.poNumber,
   },
   {
     key: "vendor",
@@ -238,8 +238,6 @@ const columns: DataTableColumn<PurchaseOrderSummary>[] = [
     ),
     className: "text-right font-mono tabular-nums",
     headerClassName: "text-right",
-    sortable: true,
-    sortValue: (po) => Number(po.total),
   },
   {
     key: "status",
@@ -280,6 +278,7 @@ const PURCHASE_ORDER_FILTERS: ListFilterSpec = {
 const ALL = "all";
 
 export default function PurchaseOrdersListPage() {
+  const canView = useCan("inventory:purchase-orders:read");
   const router = useRouter();
   const filters = useListFilterParams(PURCHASE_ORDER_FILTERS);
 
@@ -379,6 +378,16 @@ export default function PurchaseOrdersListPage() {
       </div>
     </div>
   );
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Purchase Orders"
+        subtitle="Track and manage orders sent to your suppliers."
+      >
+        <NoPermissionState permission="inventory:purchase-orders:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper

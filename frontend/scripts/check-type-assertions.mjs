@@ -16,7 +16,7 @@
  * built so it cannot repeat either:
  *
  *   - the "661 `@ts-ignore`" figure is entirely inside
- *     `.next-buildmart/dev/types/validator.ts`, a generated Next.js route-type
+ *     `.next-custom/dev/types/validator.ts`, a generated Next.js route-type
  *     file. Every directory whose name begins `.next` is skipped below, so
  *     generated output can never enter the count.
  *   - a whole-tree grep also sweeps `coverage/` and the spec suite. Spec files
@@ -85,7 +85,7 @@ const DOUBLE_CAST = /\bas\s+unknown\s+as\b/g;
 
 /**
  * Generated, vendored and non-source trees. `.next*` is matched by prefix on
- * purpose: the package has carried both `.next/` and a 718 MB `.next-buildmart/`
+ * purpose: the package has carried both `.next/` and a 718 MB `.next-custom/`
  * alternate distDir, and it is the second one that produced the phantom 661
  * `@ts-ignore`. A future alternate distDir is caught by the same prefix.
  */
@@ -473,7 +473,7 @@ function runSelfTest() {
     "(h) a real suppression directive MUST be caught, with or without a space, in a line or block comment");
   assert(directiveHits("// we ship zero @ts-ignore in application code\n", "@ts-ignore") === 0,
     "(i) prose mentioning a directive is not a directive — TypeScript only honours one that begins the comment");
-  assert(".next-buildmart".startsWith(".next"),
+  assert(".next-custom".startsWith(".next"),
     "(j) the generated-output skip must match an alternate distDir, not just `.next`");
   assert(isSkippedDir("build", 0) && isSkippedDir("public", 0) && isSkippedDir("dist", 0),
     "(j1) `build`/`public`/`dist` at the PACKAGE ROOT are output and must be skipped");
@@ -639,7 +639,7 @@ function runSelfTest() {
     "  (g) comment-stripping CANNOT see a directive  -> why directives are matched raw",
     "  (h) a real @ts-ignore/-expect-error/-nocheck  -> caught (gate bites)",
     "  (i) prose mentioning a directive              -> not a directive",
-    "  (j) `.next-buildmart` skipped like `.next`    -> generated output cannot enter the count",
+    "  (j) `.next-custom` skipped like `.next`    -> generated output cannot enter the count",
     "  (j1) root `build`/`public`/`dist`              -> skipped (output)",
     "  (j2) NESTED `build`/`public`                   -> scanned (source; this was the blind spot)",
     "  (j3) node_modules/__tests__ at any depth       -> skipped",

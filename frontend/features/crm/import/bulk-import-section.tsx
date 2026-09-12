@@ -15,7 +15,11 @@ import { downloadBlob } from "@/lib/download-blob";
 import { formatCurrency } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { useBulkImport } from "@/hooks/api/crm/bulk-import";
+import {
+  useBulkImportContacts,
+  useBulkImportDeals,
+  useBulkImportLeads,
+} from "@/hooks/api/crm/bulk-import";
 import {
   matchField,
   requiredFieldOf,
@@ -52,7 +56,11 @@ export function BulkImportSection({ entity }: { entity: BulkEntity }) {
   const [autoDistribute, setAutoDistribute] = useState(true);
   const [result, setResult] = useState<BulkImportResult | null>(null);
 
-  const bulkImport = useBulkImport(entity);
+  const importLeads = useBulkImportLeads();
+  const importContacts = useBulkImportContacts();
+  const importDeals = useBulkImportDeals();
+  const bulkImport =
+    entity.id === "leads" ? importLeads : entity.id === "contacts" ? importContacts : importDeals;
 
   const { rows, problems } = useMemo(
     () => planRows(entity, contents, mappings),
@@ -139,7 +147,7 @@ export function BulkImportSection({ entity }: { entity: BulkEntity }) {
   const handleImport = useCallback(() => {
     if (rows.length === 0 || tooMany) return;
     bulkImport.mutate(
-      { rows, autoDistribute },
+      entity.body(rows, autoDistribute),
       {
         onSuccess: (imported) => {
           setResult(imported);

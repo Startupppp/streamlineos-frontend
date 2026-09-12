@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { NoPermissionState } from "@/components/shared";
+import { useCanState } from "@/hooks/api/access";
 import { AlertTriangle, ChevronDown, ChevronUp, RefreshCw, Users } from "lucide-react";
 import { EmptyLeadsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
@@ -185,7 +187,7 @@ function DuplicatesSkeleton() {
 }
 
 export default function DuplicateLeadsPage() {
-  const { data, isLoading, isFetching, isError, refetch, access} = useDuplicateLeads();
+  const { data, isLoading, isFetching, isError, refetch } = useDuplicateLeads();
   const { mutate: mergeLead, isPending: isMerging } = useMergeLead();
 
   const leadLayout = useLeadLayout();
@@ -221,6 +223,19 @@ export default function DuplicateLeadsPage() {
       }, new Set<number>()).size,
     [groups],
   );
+
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:leads:view") === "denied")
+    return <NoPermissionState permission="crm:leads:view" />;
 
   return (
     <PageWrapper
@@ -267,7 +282,6 @@ export default function DuplicateLeadsPage() {
               news rather than as an empty container.
             */
             <EmptyState
-            access={access}
               illustration={<EmptyLeadsIllustration />}
               title="No duplicates found"
               description="Every lead in your pipeline looks like a distinct person. The scan runs against name, email, phone and company."

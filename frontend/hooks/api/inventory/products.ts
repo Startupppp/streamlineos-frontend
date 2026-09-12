@@ -1,11 +1,16 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
+  InventoryProduct,
+  InventoryCategory,
+  InventoryUom,
+  InventoryProductVariant,
+  ProductVariantFlat,
   ProductStatus,
   ProductType,
   CreateProductInput,
@@ -13,17 +18,7 @@ import type {
   CreateProductVariantInput,
   CreateUomInput,
 } from "@/types/inventory";
-import type {
-  InvUomShape,
-  InvCategoryShape,
-  InvProductVariantShape,
-  InvProductBaseShape,
-  InvProductShape,
-  InvProductListShape,
-  InvVariantListShape,
-  InvVariantFlatShape,
-} from "@/hooks/api/inventory/products-schema";
-import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
 interface ProductFilters {
   [key: string]: unknown;
@@ -33,6 +28,13 @@ interface ProductFilters {
   limit?: number;
   status?: ProductStatus;
   productType?: ProductType;
+}
+
+interface ProductListResponse {
+  items: InventoryProduct[];
+  total: number;
+  page: number;
+  totalPages: number;
 }
 
 type UpdateProductPayload = UpdateProductInput & { productId?: number };
@@ -69,61 +71,19 @@ function serializeVariantWrite(data: CreateProductVariantInput) {
   };
 }
 
-const listProductsContract = lazyContract(() =>
-  import("@/hooks/api/inventory/products-schema").then((m) => m.listProductsContract),
-);
-const getProductContract = lazyContract(() =>
-  import("@/hooks/api/inventory/products-schema").then((m) => m.getProductContract),
-);
-const invProductBaseResultContract = lazyContract(() =>
-  import("@/hooks/api/inventory/products-schema").then((m) => m.invProductBaseContract),
-);
-const listCategoriesContract = lazyContract(() =>
-  import("@/hooks/api/inventory/products-schema").then((m) => m.listCategoriesContract),
-);
-const listUomContract = lazyContract(() =>
-  import("@/hooks/api/inventory/products-schema").then((m) => m.listUomContract),
-);
-const listVariantsContract = lazyContract(() =>
-  import("@/hooks/api/inventory/products-schema").then((m) => m.listVariantsContract),
-);
-const invProductVariantContract = lazyContract(() =>
-  import("@/hooks/api/inventory/products-schema").then((m) => m.invProductVariantContract),
-);
-const invCategoryContract = lazyContract(() =>
-  import("@/hooks/api/inventory/products-schema").then((m) => m.invCategoryContract),
-);
-const invUomContract = lazyContract(() =>
-  import("@/hooks/api/inventory/products-schema").then((m) => m.invUomContract),
-);
-const noContentContract = lazyContract(() =>
-  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
-);
-
-export type {
-  InvUomShape,
-  InvCategoryShape,
-  InvProductVariantShape,
-  InvProductBaseShape,
-  InvProductShape,
-  InvProductListShape,
-  InvVariantListShape,
-  InvVariantFlatShape,
-};
-
 export function useProducts(filters?: ProductFilters) {
   const canView = useCan("inventory:products:read");
-  return useQuery<InvProductListShape, Error>({
+  return useQuery<ProductListResponse, Error>({
     queryKey: queryKeys.inventory.products(filters),
     queryFn: ({ signal }) =>
-      apiClient.get<InvProductListShape>("/inventory/products", {
+      apiClient.get<ProductListResponse>("/inventory/products", {
         ...(filters?.categoryId ? { categoryId: String(filters.categoryId) } : {}),
         ...(filters?.search ? { search: filters.search } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.productType ? { productType: filters.productType } : {}),
-      }, signal, listProductsContract),
+      }, signal),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -132,9 +92,9 @@ export function useProducts(filters?: ProductFilters) {
 
 export function useProduct(productId: number) {
   const canView = useCan("inventory:products:read");
-  return useQuery<InvProductShape, Error>({
+  return useQuery<InventoryProduct, Error>({
     queryKey: queryKeys.inventory.product(productId),
-    queryFn: ({ signal }) => apiClient.get<InvProductShape>(`/inventory/products/${productId}`, undefined, signal, getProductContract),
+    queryFn: ({ signal }) => apiClient.get<InventoryProduct>(`/inventory/products/${productId}`, undefined, signal),
     enabled: canView && productId > 0,
     staleTime: 2 * 60_000,
   });
@@ -142,9 +102,9 @@ export function useProduct(productId: number) {
 
 export function useCategories() {
   const canView = useCan("inventory:products:read");
-  return useQuery<InvCategoryShape[], Error>({
+  return useQuery<InventoryCategory[], Error>({
     queryKey: queryKeys.inventory.categories(),
-    queryFn: ({ signal }) => apiClient.get<InvCategoryShape[]>("/inventory/products/categories", undefined, signal, listCategoriesContract),
+    queryFn: ({ signal }) => apiClient.get<InventoryCategory[]>("/inventory/products/categories", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -152,9 +112,9 @@ export function useCategories() {
 
 export function useUom() {
   const canView = useCan("inventory:products:read");
-  return useQuery<InvUomShape[], Error>({
+  return useQuery<InventoryUom[], Error>({
     queryKey: queryKeys.inventory.uom(),
-    queryFn: ({ signal }) => apiClient.get<InvUomShape[]>("/inventory/products/uom", undefined, signal, listUomContract),
+    queryFn: ({ signal }) => apiClient.get<InventoryUom[]>("/inventory/products/uom", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -162,10 +122,10 @@ export function useUom() {
 
 export function useCreateProduct() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<InvProductBaseShape, Error, CreateProductInput>("inventory:products:create", {
+  return useAuthorizedIdempotentMutation<InventoryProduct, Error, CreateProductInput>("inventory:products:create", {
     mutationKey: ["inventory", "product", "create"],
-    mutationFn: (data) =>
-      apiClient.post<InvProductBaseShape>("/inventory/products", serializeProductWrite(data), undefined, invProductBaseResultContract),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<InventoryProduct>("/inventory/products", serializeProductWrite(data), { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
     },
@@ -174,16 +134,14 @@ export function useCreateProduct() {
 
 export function useUpdateProduct(id?: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation<InvProductBaseShape, Error, UpdateProductPayload>("inventory:products:update", {
+  return useAuthorizedMutation<InventoryProduct, Error, UpdateProductPayload>("inventory:products:update", {
     mutationKey: ["inventory", "product", "update"],
     mutationFn: ({ productId, ...data }) => {
       const resolvedId = id ?? productId;
       if (resolvedId === undefined) throw new Error("Product id is required");
-      return apiClient.patch<InvProductBaseShape>(
+      return apiClient.patch<InventoryProduct>(
         `/inventory/products/${resolvedId}`,
         serializeProductWrite(data),
-        undefined,
-        invProductBaseResultContract,
       );
     },
     onSuccess: (_, vars) => {
@@ -196,26 +154,37 @@ export function useUpdateProduct(id?: number) {
   });
 }
 
+/**
+ * The lifecycle writes invalidate `inventory.all`, not `inventory.products()`.
+ * The list factory takes a filters argument, so calling it with none yields a
+ * key ending in an explicit `undefined`, which `partialMatchKey` compares
+ * against the stored filters object and rejects — the list never refetched. The
+ * wider prefix is also the honest one: archiving a SKU changes what every order
+ * form, variant picker and stock view is allowed to show.
+ */
 export function useDeleteProduct() {
   const qc = useQueryClient();
   return useAuthorizedMutation<void, Error, number>("inventory:products:delete", {
     mutationKey: ["inventory", "product", "delete"],
     mutationFn: (productId) =>
-      apiClient.delete<void>(`/inventory/products/${productId}`, undefined, undefined, noContentContract),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
+      apiClient.delete<void>(`/inventory/products/${productId}`),
+    onSuccess: (_data, productId) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.productsList });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
     },
   });
 }
 
 export function useArchiveProduct() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<InvProductBaseShape, Error, number>("inventory:products:update", {
+  return useAuthorizedMutation<InventoryProduct, Error, number>("inventory:products:update", {
     mutationKey: ["inventory", "product", "archive"],
     mutationFn: (productId) =>
-      apiClient.post<InvProductBaseShape>(`/inventory/products/${productId}/archive`, {}, undefined, invProductBaseResultContract),
-    onSuccess: (_, productId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
+      apiClient.post<InventoryProduct>(`/inventory/products/${productId}/archive`, {}),
+    onSuccess: (_data, productId) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.productsList });
+      // The detail key is not under the list prefix, so the page this was
+      // triggered from keeps its old status badge until staleTime lapses.
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
     },
   });
@@ -223,12 +192,14 @@ export function useArchiveProduct() {
 
 export function useRestoreProduct() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<InvProductBaseShape, Error, number>("inventory:products:update", {
+  return useAuthorizedMutation<InventoryProduct, Error, number>("inventory:products:update", {
     mutationKey: ["inventory", "product", "restore"],
     mutationFn: (productId) =>
-      apiClient.post<InvProductBaseShape>(`/inventory/products/${productId}/restore`, {}, undefined, invProductBaseResultContract),
-    onSuccess: (_, productId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
+      apiClient.post<InventoryProduct>(`/inventory/products/${productId}/restore`, {}),
+    onSuccess: (_data, productId) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.productsList });
+      // The detail key is not under the list prefix, so the page this was
+      // triggered from keeps its old status badge until staleTime lapses.
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
     },
   });
@@ -236,12 +207,17 @@ export function useRestoreProduct() {
 
 export function useProductVariants(filters?: ProductVariantFilters) {
   const canView = useCan("inventory:products:read");
-  return useQuery<InvVariantFlatShape[], Error>({
+  return useQuery<ProductVariantFlat[], Error>({
     queryKey: queryKeys.inventory.productVariants(filters),
+    // The endpoint pages ({ items, total, page, totalPages }); every picker that
+    // calls this wants the rows, so unwrap here and ask for the largest page.
     queryFn: async ({ signal }) =>
-      (await apiClient.get<InvVariantListShape>("/inventory/products/variants", {
-        ...(filters?.activeOnly ? { activeOnly: "true" } : {}),
-      }, signal, listVariantsContract)).items,
+      (
+        await apiClient.get<{ items: ProductVariantFlat[] }>("/inventory/products/variants", {
+          ...(filters?.activeOnly ? { activeOnly: "true" } : {}),
+          limit: "100",
+        }, signal)
+      ).items,
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -249,14 +225,13 @@ export function useProductVariants(filters?: ProductVariantFilters) {
 
 export function useCreateProductVariant(productId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation<InvProductVariantShape, Error, CreateProductVariantInput>("inventory:products:update", {
+  return useAuthorizedIdempotentMutation<InventoryProductVariant, Error, CreateProductVariantInput>("inventory:products:update", {
     mutationKey: ["inventory", "product", productId, "variant", "create"],
-    mutationFn: (data) =>
-      apiClient.post<InvProductVariantShape>(
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<InventoryProductVariant>(
         `/inventory/products/${productId}/variants`,
         serializeVariantWrite(data),
-        undefined,
-        invProductVariantContract,
+        { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
@@ -267,10 +242,10 @@ export function useCreateProductVariant(productId: number) {
 
 export function useCreateCategory() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<InvCategoryShape, Error, CreateCategoryInput>("inventory:products:create", {
+  return useAuthorizedIdempotentMutation<InventoryCategory, Error, CreateCategoryInput>("inventory:products:create", {
     mutationKey: ["inventory", "category", "create"],
-    mutationFn: (data) =>
-      apiClient.post<InvCategoryShape>("/inventory/products/categories", data, undefined, invCategoryContract),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<InventoryCategory>("/inventory/products/categories", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.categories() });
     },
@@ -279,10 +254,10 @@ export function useCreateCategory() {
 
 export function useCreateUom() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<InvUomShape, Error, CreateUomInput>("inventory:products:create", {
+  return useAuthorizedIdempotentMutation<InventoryUom, Error, CreateUomInput>("inventory:products:create", {
     mutationKey: ["inventory", "uom", "create"],
-    mutationFn: (data) =>
-      apiClient.post<InvUomShape>("/inventory/products/uom", data, undefined, invUomContract),
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post<InventoryUom>("/inventory/products/uom", data, { headers: { "Idempotency-Key": idempotencyKey } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.uom() });
     },
@@ -298,7 +273,7 @@ export function useUpdateCategory() {
   >("inventory:products:update", {
     mutationKey: ["inventory", "category", "update"],
     mutationFn: ({ categoryId, data }) =>
-      apiClient.patch(`/inventory/products/categories/${categoryId}`, data, undefined, invCategoryContract),
+      apiClient.patch(`/inventory/products/categories/${categoryId}`, data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.categories() });
     },
@@ -314,7 +289,7 @@ export function useUpdateProductVariant(productId: number) {
   >("inventory:products:update", {
     mutationKey: ["inventory", "product", productId, "variant", "update"],
     mutationFn: ({ variantId, data }) =>
-      apiClient.patch(`/inventory/products/${productId}/variants/${variantId}`, data, undefined, invProductVariantContract),
+      apiClient.patch(`/inventory/products/${productId}/variants/${variantId}`, data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
     },

@@ -6,9 +6,10 @@ import { DownloadIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTable, type DataTableColumn, DataTableSkeleton } from "@/components/ui/data-table";
+
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
@@ -16,6 +17,7 @@ import { useSlowMovingReport, type SlowMovingRow } from "@/hooks/api/inventory/r
 import { downloadCsv } from "@/features/inventory/lib";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
+import { useCan } from "@/hooks/api/access";
 import { formatShortDate } from "@/lib/date-utils";
 
 const DAYS_OPTIONS = [
@@ -41,8 +43,6 @@ function buildColumns(): DataTableColumn<SlowMovingRow>[] {
       key: "productName",
       header: "Product",
       cell: (row) => <span className="font-medium">{row.productName}</span>,
-      sortable: true,
-      sortValue: (row) => row.productName,
     },
     {
       key: "variantSku",
@@ -55,8 +55,6 @@ function buildColumns(): DataTableColumn<SlowMovingRow>[] {
       headerClassName: "text-right",
       className: "text-right",
       cell: (row) => <span className="font-mono tabular-nums">{row.onHand}</span>,
-      sortable: true,
-      sortValue: (row) => row.onHand,
     },
     {
       key: "value",
@@ -66,8 +64,6 @@ function buildColumns(): DataTableColumn<SlowMovingRow>[] {
       cell: (row) => (
         <span className="font-mono tabular-nums">${row.value.toFixed(2)}</span>
       ),
-      sortable: true,
-      sortValue: (row) => row.value,
     },
     {
       key: "lastMovement",
@@ -88,8 +84,6 @@ function buildColumns(): DataTableColumn<SlowMovingRow>[] {
           {row.daysSinceLastMovement ?? "Never moved"}
         </span>
       ),
-      sortable: true,
-      sortValue: (row) => row.daysSinceLastMovement ?? 99999,
     },
   ];
 }
@@ -111,6 +105,7 @@ function exportToCsv(rows: SlowMovingRow[]): void {
 }
 
 function SlowMovingReportContent() {
+  const canView = useCan("inventory:reports:read");
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -154,6 +149,16 @@ function SlowMovingReportContent() {
   const hasData = !query.isLoading && !query.error;
   const isEmpty = hasData && total === 0;
   const hasRows = hasData && total > 0;
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Slow-Moving Inventory"
+        subtitle="Products with stock on hand but no outbound activity within the selected window"
+      >
+        <NoPermissionState permission="inventory:reports:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper

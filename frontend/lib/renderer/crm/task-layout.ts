@@ -171,12 +171,12 @@ export const TASK_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search tasks…",
     columns: [
-      { field: "title", primary: true, sortable: true },
+      { field: "title", primary: true },
       { field: "type", width: "w-32 shrink-0" },
       { field: "entityId", width: "w-36 shrink-0" },
       { field: "status", width: "w-28 shrink-0" },
       { field: "urgency", width: "w-28 shrink-0" },
-      { field: "dueDate", sortable: true, width: "w-44 shrink-0" },
+      { field: "dueDate", width: "w-44 shrink-0" },
       { field: "assigneeId", width: "min-w-[140px]" },
     ],
   },

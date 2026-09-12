@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, Suspense } from "react";
+import { useCanState } from "@/hooks/api/access";
 import { useSearchParams, useRouter } from "next/navigation";
 import { AnimatePresence } from "framer-motion";
 import {
@@ -20,6 +21,7 @@ import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { type RecordValue } from "@/components/renderer";
 import { useDensity } from "@/components/renderer/density-toggle";
@@ -37,10 +39,10 @@ import {
   type TasksFilters,
 } from "@/hooks/api/tasks";
 import { useCalendarMemberLookup } from "@/hooks/api/calendar";
-import { MyTasksPanel } from "@/components/timeline/my-tasks-panel";
 import { TaskBucketSection } from "@/features/crm/tasks/task-bucket-section";
 import { CreateTaskDialog } from "@/features/crm/tasks/create-task-dialog";
 import { TasksToolbar } from "@/features/crm/tasks/tasks-toolbar";
+import { MyTasksPanel } from "@/components/timeline/my-tasks-panel";
 
 function getTaskBucket(dueDate: string | null): TaskBucket {
   if (!dueDate) return "NO_DATE";
@@ -364,6 +366,19 @@ function CrmTasksContent() {
 }
 
 export default function CrmTasksPage() {
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("directory:people:view") === "denied")
+    return <NoPermissionState permission="directory:people:view" />;
+
   return (
     <Suspense
       fallback={

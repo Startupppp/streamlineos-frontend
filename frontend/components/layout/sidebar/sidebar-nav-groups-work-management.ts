@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Briefcase, Receipt, FileText, Timer, BarChart3, Network, ShieldCheck, Target, ClipboardCheck, Map, ListChecks, Inbox, Building2, SlidersHorizontal, ShieldAlert, LayoutTemplate, LayoutGrid, CheckSquare, Plug, Banknote, Layers, Boxes } from "lucide-react";
+import { AlarmClock, LayoutDashboard, Users, Briefcase, Receipt, FileText, Timer, BarChart3, Network, ShieldCheck, Target, ClipboardCheck, Map, ListChecks, Inbox, Building2, SlidersHorizontal, ShieldAlert, LayoutTemplate, LayoutGrid, CheckSquare, Plug, Banknote, Layers, Boxes } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const WORK_MANAGEMENT_NAV_GROUPS: NavGroup[] = [
@@ -35,6 +35,12 @@ export const WORK_MANAGEMENT_NAV_GROUPS: NavGroup[] = [
         label: "Approvals",
         icon: ListChecks,
         href: "/timesheets/approvals",
+        requiredPermission: "timesheets:approvals:view",
+      },
+      {
+        label: "Overdue",
+        icon: AlarmClock,
+        href: "/timesheets/overdue",
         requiredPermission: "timesheets:approvals:view",
       },
       {

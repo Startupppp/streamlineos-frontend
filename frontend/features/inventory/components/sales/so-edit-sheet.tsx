@@ -174,6 +174,7 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
                         <WarehouseSelect
                           value={field.value ?? ""}
                           onChange={field.onChange}
+                          ariaLabel="Warehouse"
                         />
                       </FormControl>
                       <FormMessage />

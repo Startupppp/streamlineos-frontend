@@ -231,7 +231,17 @@ function applyContract<T>(
   return rejectContractViolation(resource, status, result.error.issues);
 }
 
-async function readErrorBody(res: ApiResponseLike): Promise<ApiError> {
+/**
+ * The refusal half of `parseApiResponse`, on its own.
+ *
+ * A response whose body is not JSON — a CSV download, a file — still refuses in
+ * exactly the same envelope, and until this was separable the download path had
+ * its own reader: it took `body.error` and nothing else, so NestJS's `message`
+ * (where the actual sentence lives), the status, the code and the `details`
+ * carrying field-level validation issues were all discarded. One parser now
+ * builds the error for both.
+ */
+export async function apiErrorFromResponse(res: ApiResponseLike): Promise<ApiError> {
   let message = `${res.status} ${res.statusText}`;
   let code: string | undefined;
   let details: unknown;
@@ -275,7 +285,7 @@ export async function parseApiResponse<T>(
   contract?: ResponseContract<T>,
   resource = "response",
 ): Promise<T> {
-  if (!res.ok) throw await readErrorBody(res);
+  if (!res.ok) throw await apiErrorFromResponse(res);
   if (res.status === 204)
     return applyContract<T>(undefined, contract, resource, res.status);
   const body = await res.json();

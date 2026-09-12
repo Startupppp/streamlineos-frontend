@@ -13,6 +13,7 @@ import {
 } from "@/hooks/api/hr/import-export";
 import { downloadBlob } from "@/lib/download-blob";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { randomId } from "@/lib/random-id";
 
 interface EmployeeExportActionProps {
   filters: HrEmployeeExportFilters;
@@ -74,7 +75,7 @@ export function EmployeeExportAction({ filters }: EmployeeExportActionProps) {
 
   const startExport = useCallback(() => {
     createExport.mutate(
-      { filters, idempotencyKey: crypto.randomUUID() },
+      { filters, idempotencyKey: randomId() },
       {
         onSuccess: (createdJob) => {
           lastNotice.current = null;

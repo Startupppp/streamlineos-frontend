@@ -8,6 +8,10 @@ import {
   formatAmountInCurrency,
   formatNumber,
   formatPercent,
+  formatDecimal,
+  formatMoneyRounded,
+  formatRatioAsPercent,
+  DEFAULT_MONEY_DISPLAY,
 } from "./format-utils";
 
 describe("formatMoney — canonical multi-currency formatter", () => {
@@ -216,6 +220,46 @@ describe("formatPercent — locale-aware percentage formatter", () => {
     const result = formatPercent(-5.5, "en-US");
     expect(result).toContain("%");
     expect(result).toContain("5");
+  });
+});
+
+describe("formatDecimal — capped fraction digits, exact decimal strings", () => {
+  it("matches the default-locale formatters it replaced", () => {
+    expect(formatDecimal(15651.6, 0)).toBe((15651.6).toLocaleString(undefined, { maximumFractionDigits: 0 }));
+    expect(formatDecimal(1234.5678, 2)).toBe((1234.5678).toLocaleString(undefined, { maximumFractionDigits: 2 }));
+  });
+
+  it("formats a numeric(18,4) string exactly, without a float round trip", () => {
+    const exact: Intl.StringNumericLiteral = "12345678901234.5678";
+    expect(formatDecimal(exact, 4, "en-IN")).toBe("1,23,45,67,89,01,234.5678");
+    expect(formatDecimal(Number(exact), 4, "en-IN")).not.toBe("1,23,45,67,89,01,234.5678");
+  });
+});
+
+describe("formatMoneyRounded — currency capped at N fraction digits", () => {
+  it("renders whole rupees as the inventory stock-value formatter did", () => {
+    const wholeRupees: Intl.NumberFormatOptions = {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    };
+    expect(formatMoneyRounded(1234567.89, DEFAULT_MONEY_DISPLAY, 0)).toBe((1234567.89).toLocaleString("en-IN", wholeRupees));
+    expect(formatMoneyRounded(1234567.89, DEFAULT_MONEY_DISPLAY, 0)).toBe("₹12,34,568");
+  });
+
+  it("keeps two places when asked", () => {
+    expect(formatMoneyRounded(12.5, { currency: "USD", locale: "en-US" }, 2)).toBe("$12.50");
+  });
+
+  it("throws on an unknown currency code, so a caller's fallback still runs", () => {
+    expect(() => formatMoneyRounded(1, { currency: "NOT-A-CODE", locale: "en" }, 2)).toThrow(RangeError);
+  });
+});
+
+describe("formatRatioAsPercent — Intl percent style", () => {
+  it("matches the basis-point formatter it replaced", () => {
+    expect(formatRatioAsPercent(0.125, "de-DE", 0)).toBe((0.125).toLocaleString("de-DE", { style: "percent", maximumFractionDigits: 0 }));
+    expect(formatRatioAsPercent(0.125, "en-IN", 0)).toBe("13%");
   });
 });
 

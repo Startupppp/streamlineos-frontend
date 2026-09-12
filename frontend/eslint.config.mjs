@@ -4,6 +4,26 @@ import nextTs from "eslint-config-next/typescript";
 import noRawVisualValues from "./eslint-rules/no-raw-visual-values.mjs";
 import noUnlabelledIconButton from "./eslint-rules/no-unlabelled-icon-button.mjs";
 
+/**
+ * One plugin object, referenced by every block that enables a rule from it.
+ *
+ * ESLint 9 compares plugin definitions by identity when a name is registered in
+ * more than one config block, so three separate `{ rules: { ... } }` literals —
+ * which is what stood here — are three different plugins under one name, and it
+ * refuses the whole config with "Cannot redefine plugin". Not degraded: `eslint`
+ * would not start at all, so `pnpm lint` has been reporting nothing about any
+ * file on this branch.
+ *
+ * The blocks still differ in what they *enable* and with which options; that is
+ * a property of `rules`, not of the plugin.
+ */
+const streamlinePlugin = {
+  rules: {
+    "no-raw-visual-values": noRawVisualValues,
+    "no-unlabelled-icon-button": noUnlabelledIconButton,
+  },
+};
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -45,14 +65,7 @@ const eslintConfig = defineConfig([
       "features/employee-onboarding/components/brand-column.tsx",
       "features/employee-onboarding/components/profile-preview.tsx",
     ],
-    plugins: {
-      streamline: {
-        rules: {
-          "no-raw-visual-values": noRawVisualValues,
-          "no-unlabelled-icon-button": noUnlabelledIconButton,
-        },
-      },
-    },
+    plugins: { streamline: streamlinePlugin },
     rules: {
       "streamline/no-raw-visual-values": "error",
       "streamline/no-unlabelled-icon-button": "error",
@@ -88,14 +101,7 @@ const eslintConfig = defineConfig([
       "features/employee-onboarding/components/brand-column.tsx",
       "features/employee-onboarding/components/profile-preview.tsx",
     ],
-    plugins: {
-      streamline: {
-        rules: {
-          "no-raw-visual-values": noRawVisualValues,
-          "no-unlabelled-icon-button": noUnlabelledIconButton,
-        },
-      },
-    },
+    plugins: { streamline: streamlinePlugin },
     rules: {
       "streamline/no-raw-visual-values": ["error", { skip: ["type", "shadow", "radius"] }],
       "streamline/no-unlabelled-icon-button": "error",
@@ -116,6 +122,9 @@ const eslintConfig = defineConfig([
    */
   globalIgnores([
     ".next/**",
+    // A second dev server on this working tree builds into its own directory
+    // (`NEXT_DIST_DIR`, see next.config.ts). Generated output, same as `.next`.
+    ".next-*/**",
     ".next-buildmart/**",
     "coverage/**",
     "out/**",

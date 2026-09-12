@@ -87,6 +87,10 @@ describe("RecordForm", () => {
       expect(onSubmit).toHaveBeenCalledWith(
         expect.objectContaining({ name: "Initech" }),
         expect.anything(),
+        // A record with no repeating group submits an empty rows map, not
+        // nothing: a caller reading `lines.items` should never see undefined
+        // because this layout happens to have none.
+        {},
       ),
     );
   });

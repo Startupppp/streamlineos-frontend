@@ -1,5 +1,5 @@
-import { TrialBalancePage } from "@/features/accounting/reports/trial-balance-page";
+import { TrialBalanceReport } from "@/features/accounting/reports";
 
-export default function Page() {
-  return <TrialBalancePage />;
+export default function TrialBalancePage() {
+  return <TrialBalanceReport />;
 }

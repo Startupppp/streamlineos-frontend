@@ -30,7 +30,11 @@ import { useCanManageOrganizationMembership } from "@/hooks/api/access";
 import type { User } from "@/hooks/api/users";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-import { ORG_OWNER_ROLE, USER_INVITE_ROLES } from "@/lib/constants/user-invite-roles";
+import {
+  ORG_OWNER_ROLE,
+  USER_INVITE_ROLES,
+  toStructuralRole,
+} from "@/lib/constants/user-invite-roles";
 import { useEmploymentFacts } from "@/hooks/api/directory/employment";
 
 const USER_EDIT_FORM_ID = "user-edit-form";
@@ -76,7 +80,7 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
       lastName: user.lastName ?? "",
       designation: employment?.designation ?? "",
       phone: user.phone ?? "",
-      role: user.role,
+      role: toStructuralRole(user.role),
       bio: user.bio ?? "",
       emergencyName: user.emergencyContact?.name ?? "",
       emergencyRelation: user.emergencyContact?.relation ?? "",

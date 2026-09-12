@@ -1,6 +1,6 @@
 import { fireEvent, render as rtlRender, screen } from "@testing-library/react";
-import type { AnchorHTMLAttributes, PropsWithChildren } from "react";
-import type { ReactElement } from "react";
+import type { AnchorHTMLAttributes, PropsWithChildren, ReactElement } from "react";
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProductSwitcherMenu } from "./product-switcher-menu";

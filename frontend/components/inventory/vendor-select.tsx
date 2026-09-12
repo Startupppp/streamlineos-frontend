@@ -7,6 +7,12 @@ import { useVendors } from "@/hooks/api/inventory/vendors";
 interface VendorSelectProps {
   value: string;
   onChange: (value: string) => void;
+  /**
+   * The trigger's accessible name — required, see `Combobox`'s own `ariaLabel`.
+   * Required rather than optional because every existing call site had simply
+   * omitted it, and an optional prop is reintroduced by omission.
+   */
+  ariaLabel: string;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -16,6 +22,7 @@ interface VendorSelectProps {
 export function VendorSelect({
   value,
   onChange,
+  ariaLabel,
   placeholder = "Select vendor…",
   disabled,
   className,
@@ -46,6 +53,7 @@ export function VendorSelect({
       emptyText={isLoading ? "Loading vendors…" : "No vendors found."}
       disabled={disabled || isLoading}
       className={className}
+      ariaLabel={ariaLabel}
     />
   );
 }

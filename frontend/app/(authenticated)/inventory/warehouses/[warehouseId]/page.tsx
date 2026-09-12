@@ -21,10 +21,11 @@ import {
   LOCATION_TYPE_ORDER,
   LOCATION_TYPE_LABELS,
   LOCATION_TYPE_COLORS,
-  SPECIAL_LOCATION_TYPES,
 } from "@/features/inventory/components/warehouse/location-type-constants";
 import { AddLocationSheet } from "@/features/inventory/components/warehouse/add-location-sheet";
+import { LocationRow } from "@/features/inventory/components/warehouse/location-row";
 import { WarehouseStockTab } from "@/features/inventory/components/warehouse/warehouse-stock-tab";
+import { WarehouseAccessTab } from "@/features/inventory/components/warehouses/warehouse-access-tab";
 
 function groupByType(locations: WarehouseLocation[]): Map<LocationType, WarehouseLocation[]> {
   const map = new Map<LocationType, WarehouseLocation[]>();
@@ -36,46 +37,6 @@ function groupByType(locations: WarehouseLocation[]): Map<LocationType, Warehous
     if (arr) arr.push(loc);
   }
   return map;
-}
-
-function LocationRow({ location }: { location: WarehouseLocation }) {
-  return (
-    <div className="flex items-center justify-between gap-2 py-2 px-3 rounded-lg hover:bg-muted/50 transition-colors">
-      <div className="flex items-center gap-2 min-w-0">
-        <Badge
-          variant="outline"
-          className={cn(
-            "text-micro px-1.5 py-0 h-4 shrink-0",
-            LOCATION_TYPE_COLORS[location.locationType],
-          )}
-        >
-          {LOCATION_TYPE_LABELS[location.locationType]}
-        </Badge>
-        <span className="text-sm font-medium text-foreground truncate">{location.name}</span>
-        <span className="text-dense text-muted-foreground font-mono shrink-0">
-          {location.code}
-        </span>
-      </div>
-      <div className="flex items-center gap-1.5 shrink-0">
-        {SPECIAL_LOCATION_TYPES.includes(location.locationType) && (
-          <Badge
-            variant="outline"
-            className="h-4 text-micro px-1.5 py-0 bg-muted text-muted-foreground border-border shrink-0"
-          >
-            Special
-          </Badge>
-        )}
-        {!location.isActive && (
-          <Badge
-            variant="outline"
-            className="h-4 text-micro px-1.5 py-0 bg-muted text-muted-foreground border-border shrink-0"
-          >
-            Inactive
-          </Badge>
-        )}
-      </div>
-    </div>
-  );
 }
 
 export default function WarehouseDetailPage({
@@ -211,6 +172,7 @@ export default function WarehouseDetailPage({
         <TabsList>
           <TabsTrigger value="locations">Locations</TabsTrigger>
           <TabsTrigger value="stock">Stock</TabsTrigger>
+          <TabsTrigger value="access">Access</TabsTrigger>
         </TabsList>
 
         <TabsContent value="locations" className={TABS_CONTENT_PAGE_BODY_CLASS}>
@@ -250,7 +212,12 @@ export default function WarehouseDetailPage({
                       <CardContent className="px-4 pb-4">
                         <div className="divide-y divide-border/60">
                           {items.map((loc) => (
-                            <LocationRow key={loc.id} location={loc} />
+                            <LocationRow
+                              key={loc.id}
+                              location={loc}
+                              warehouseId={warehouseId}
+                              locations={locations}
+                            />
                           ))}
                         </div>
                       </CardContent>
@@ -264,6 +231,10 @@ export default function WarehouseDetailPage({
 
         <TabsContent value="stock" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <WarehouseStockTab warehouseId={warehouseId} />
+        </TabsContent>
+
+        <TabsContent value="access" className={TABS_CONTENT_PAGE_BODY_CLASS}>
+          <WarehouseAccessTab warehouseId={warehouseId} warehouseName={warehouse.name} />
         </TabsContent>
       </Tabs>
 

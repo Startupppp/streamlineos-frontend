@@ -1,8 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -10,21 +9,18 @@ import type {
   RawStockSummaryEnvelope,
   RawReorderEnvelope,
   RawMovementsEnvelope,
-  RawFlatStockItem,
-  RawFlatMovementItem,
-  RawReorderRow,
+  RawStockLevelRow,
   RawTransactionRow,
-  RawSlowMovingItem,
-  RawExpiryItem,
+  RawReorderRow,
   InventoryDashboard,
   InventoryDashboardMovement,
   StockSummaryRow,
   ReorderReportRow,
   MovementReportRow,
-  MovementType,
   ReorderUrgency,
   PaginatedResponse,
   MovementsParams,
+  CursorResponse,
   SlowMovingRow,
   ExpiryReportRow,
   SlowMovingParams,
@@ -41,20 +37,11 @@ export type {
   StockSummaryRow,
   ReorderReportRow,
   MovementReportRow,
-  StockSummaryParams,
-  ReorderReportParams,
   SlowMovingParams,
   ExpiryReportParams,
 } from "./reports-types";
 
-const VALID_MOVEMENT_TYPES = new Set<string>(["PURCHASE","SALE","ADJUSTMENT_IN","ADJUSTMENT_OUT","TRANSFER_IN","TRANSFER_OUT","RETURN_IN","RETURN_OUT","GRN"]);
-
-function isMovementType(value: string): value is MovementType {
-  return VALID_MOVEMENT_TYPES.has(value);
-}
-
-function toNumber(value: string | number | null | undefined): number {
-  if (value == null) return 0;
+function toNumber(value: string | null | undefined): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
 }
@@ -68,63 +55,74 @@ function reorderUrgency(onHand: number, reorderPoint: number): ReorderUrgency {
   return "medium";
 }
 
-function toStockSummaryRow(row: RawFlatStockItem): StockSummaryRow {
+function toStockSummaryRow(row: RawStockLevelRow): StockSummaryRow {
+  const variant = row.productVariant;
+  const product = variant?.product ?? null;
   const onHandQty = toNumber(row.onHand);
   const reservedQty = toNumber(row.committed);
+  const costPrice = product?.costPrice ?? variant?.costPrice ?? null;
   return {
-    productId: row.productId,
-    productName: row.productName,
-    sku: row.variantSku,
+    productId: product?.id ?? variant?.id ?? 0,
+    productName: product?.name ?? variant?.name ?? "—",
+    sku: variant?.sku ?? "—",
     categoryName: null,
     uom: null,
-    warehouseName: null,
+    warehouseName: row.location?.warehouse?.name ?? null,
     onHandQty,
     reservedQty,
-    availableQty: toNumber(row.available),
-    reorderPoint: row.reorderPoint != null ? toNumber(row.reorderPoint) : null,
-    costPrice: row.averageCost ?? null,
-    totalValue: row.totalValue ?? (onHandQty * toNumber(row.averageCost)),
+    availableQty: toNumber(row.availableQty),
+    reorderPoint: product?.reorderPoint != null ? toNumber(product.reorderPoint) : null,
+    costPrice,
+    totalValue: onHandQty * toNumber(costPrice),
   };
 }
 
 function toReorderRowFromFlat(row: RawReorderRow): ReorderReportRow {
-  const onHand = toNumber(row.onHand);
-  const reorderPoint = toNumber(row.reorderPoint);
-  const deficit = Math.max(reorderPoint - onHand, 0);
+  const deficit = Math.max(row.reorderPoint - row.onHand, 0);
   return {
     productId: row.productId,
     productName: row.productName,
-    sku: row.variantSku,
+    sku: row.productSku,
     variantSku: row.variantSku,
     categoryName: null,
-    warehouseName: row.vendorName ?? null,
-    onHand,
-    availableQty: onHand,
-    reorderPoint,
-    reorderQty: row.suggestedQty != null && row.suggestedQty > 0 ? row.suggestedQty : (deficit > 0 ? deficit : null),
+    warehouseId: row.warehouseId,
+    warehouseCode: row.warehouseCode,
+    warehouseName: row.warehouseName,
+    locationId: row.locationId,
+    locationCode: row.locationCode,
+    onHand: row.onHand,
+    // A1. This was an eighth copy of the availability formula, two terms
+    // short — it ignored blocked, quality-held and picked-not-shipped stock.
+    availableQty: row.availableQty,
+    reorderPoint: row.reorderPoint,
+    // `deficit` is `suggestedQty` above, so the old inner branch was the same
+    // test twice and could never be reached.
+    reorderQty: row.suggestedQty > 0 ? row.suggestedQty : null,
     deficit,
     costPrice: null,
-    vendorName: row.vendorName ?? null,
-    urgency: reorderUrgency(onHand, reorderPoint),
+    vendorName: null,
+    urgency: reorderUrgency(row.onHand, row.reorderPoint),
   };
 }
 
-function toMovementRow(row: RawFlatMovementItem): MovementReportRow {
+function toMovementRow(row: RawTransactionRow): MovementReportRow {
+  const variant = row.productVariant;
+  const product = variant?.product ?? null;
   return {
     id: row.id,
-    type: isMovementType(row.transactionType) ? row.transactionType : "GRN",
-    productName: row.variantName ?? "—",
-    sku: row.variantSku ?? "—",
-    warehouseId: null,
-    warehouseName: null,
-    locationName: null,
+    type: row.transactionType,
+    productName: product?.name ?? variant?.name ?? "—",
+    sku: variant?.sku ?? "—",
+    warehouseId: row.location?.warehouse?.id ?? null,
+    warehouseName: row.location?.warehouse?.name ?? null,
+    locationName: row.location?.name ?? null,
     quantity: toNumber(row.quantityChange),
-    balanceAfter: null,
-    referenceType: null,
-    referenceNumber: null,
-    notes: null,
+    balanceAfter: row.quantityAfter != null ? toNumber(row.quantityAfter) : null,
+    referenceType: row.referenceType,
+    referenceNumber: row.referenceId,
+    notes: row.notes,
     createdAt: row.createdAt,
-    performedBy: null,
+    performedBy: row.creator?.name ?? null,
   };
 }
 
@@ -136,7 +134,7 @@ function toDashboardMovement(row: RawTransactionRow): InventoryDashboardMovement
     transactionType: row.transactionType,
     quantityChange: toNumber(row.quantityChange),
     createdAt: row.createdAt,
-    notes: row.notes ?? null,
+    notes: row.notes,
     productName: product?.name ?? variant?.name ?? "—",
     sku: variant?.sku ?? "—",
     locationName: row.location?.name ?? null,
@@ -144,66 +142,18 @@ function toDashboardMovement(row: RawTransactionRow): InventoryDashboardMovement
   };
 }
 
-function mapSlowMovingRow(row: RawSlowMovingItem): SlowMovingRow {
-  return {
-    productVariantId: row.productVariantId,
-    variantSku: row.variantSku,
-    variantName: row.variantName,
-    productName: row.productName,
-    onHand: toNumber(row.onHand),
-    averageCost: 0,
-    value: toNumber(row.totalValue),
-    lastMovement: row.lastMovementDate,
-    daysSinceLastMovement: row.daysSinceMovement,
-  };
-}
-
-function mapExpiryRow(row: RawExpiryItem): ExpiryReportRow {
-  return {
-    id: row.lotId,
-    lotNumber: row.lotNumber,
-    expiryDate: row.expiryDate ?? "",
-    status: "ACTIVE",
-    productVariantId: row.productVariantId,
-    variantSku: row.variantSku,
-    variantName: row.variantName,
-    productName: row.productName,
-    totalOnHand: row.totalOnHand,
-    daysUntilExpiry: row.daysUntilExpiry ?? 0,
-  };
-}
-
-const dashboardContract = lazyContract(() =>
-  import("@/hooks/api/inventory/reports-schema").then((m) => m.dashboardContract),
-);
-const stockSummaryContract = lazyContract(() =>
-  import("@/hooks/api/inventory/reports-schema").then((m) => m.stockSummaryContract),
-);
-const reorderReportContract = lazyContract(() =>
-  import("@/hooks/api/inventory/reports-schema").then((m) => m.reorderReportContract),
-);
-const movementsReportContract = lazyContract(() =>
-  import("@/hooks/api/inventory/reports-schema").then((m) => m.movementsReportContract),
-);
-const slowMovingReportContract = lazyContract(() =>
-  import("@/hooks/api/inventory/reports-schema").then((m) => m.slowMovingReportContract),
-);
-const expiryReportContract = lazyContract(() =>
-  import("@/hooks/api/inventory/reports-schema").then((m) => m.expiryReportContract),
-);
-
 export function useInventoryDashboard() {
   const canView = useCan("inventory:reports:read");
   return useQuery<InventoryDashboard, Error>({
     queryKey: queryKeys.inventory.dashboard(),
     queryFn: async ({ signal }) => {
-      const data = await apiClient.get<RawDashboardResponse>("/inventory/reports/dashboard", undefined, signal, dashboardContract);
+      const data = await apiClient.get<RawDashboardResponse>("/inventory/reports/dashboard", undefined, signal);
       const summary = data.stockSummary;
       return {
         totalSkus: summary?.totalSkus ?? 0,
-        totalOnHand: toNumber(summary?.totalOnHand),
-        totalCommitted: toNumber(summary?.totalCommitted),
-        totalOnOrder: toNumber(summary?.totalOnOrder),
+        totalOnHand: summary?.totalOnHand ?? 0,
+        totalCommitted: summary?.totalCommitted ?? 0,
+        totalOnOrder: summary?.totalOnOrder ?? 0,
         lowStockCount: data.lowStockCount ?? 0,
         draftPoCount: data.draftPoCount ?? 0,
         openSoCount: data.openSoCount ?? 0,
@@ -231,7 +181,7 @@ export function useStockSummary(params?: { page?: number; limit?: number }) {
       const data = await apiClient.get<RawStockSummaryEnvelope>("/inventory/reports/stock-summary", {
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
-      }, signal, stockSummaryContract);
+      }, signal);
       const items = (data.items ?? []).map(toStockSummaryRow);
       return { items, total: data.total, page: data.page, totalPages: data.totalPages };
     },
@@ -248,7 +198,7 @@ export function useReorderReport(params?: { page?: number; limit?: number }) {
       const data = await apiClient.get<RawReorderEnvelope>("/inventory/reports/reorder", {
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
-      }, signal, reorderReportContract);
+      }, signal);
       const items = (data.items ?? []).map(toReorderRowFromFlat);
       return { items, total: data.total, page: data.page, totalPages: data.totalPages };
     },
@@ -259,21 +209,30 @@ export function useReorderReport(params?: { page?: number; limit?: number }) {
 
 export function useMovementsReport(params?: MovementsParams) {
   const canView = useCan("inventory:reports:read");
-  return useQuery<PaginatedResponse<MovementReportRow>, Error>({
+  return useQuery<CursorResponse<MovementReportRow>, Error>({
     queryKey: queryKeys.inventory.movementsReport(params),
     queryFn: async ({ signal }) => {
       const data = await apiClient.get<RawMovementsEnvelope>("/inventory/reports/movements", {
         ...(params?.dateFrom !== undefined ? { fromDate: params.dateFrom } : {}),
         ...(params?.dateTo !== undefined ? { toDate: params.dateTo } : {}),
         ...(params?.warehouseId !== undefined ? { warehouseId: String(params.warehouseId) } : {}),
-        ...(params?.type !== undefined ? { type: params.type } : {}),
+        ...(params?.transactionType !== undefined ? { transactionType: params.transactionType } : {}),
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
-      }, signal, movementsReportContract);
+        ...(params?.cursor !== undefined ? { cursor: params.cursor } : {}),
+      }, signal);
       const items = (data.items ?? []).map(toMovementRow);
-      return { items, total: data.total, page: data.page, totalPages: data.totalPages };
+      return {
+        items,
+        total: data.total,
+        page: data.page,
+        totalPages: data.totalPages,
+        hasMore: data.hasMore,
+        nextCursor: data.nextCursor,
+      };
     },
     staleTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
     enabled: canView,
   });
 }
@@ -283,12 +242,12 @@ export function useSlowMovingReport(params?: SlowMovingParams) {
   return useQuery<PaginatedResponse<SlowMovingRow>, Error>({
     queryKey: queryKeys.inventory.slowMovingReport(params),
     queryFn: async ({ signal }) => {
-      const data = await apiClient.get<PaginatedResponse<RawSlowMovingItem>>("/inventory/reports/slow-moving", {
+      const data = await apiClient.get<PaginatedResponse<SlowMovingRow>>("/inventory/reports/slow-moving", {
         ...(params?.days !== undefined ? { days: String(params.days) } : {}),
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
-      }, signal, slowMovingReportContract);
-      return { items: data.items.map(mapSlowMovingRow), total: data.total, page: data.page, totalPages: data.totalPages };
+      }, signal);
+      return data;
     },
     staleTime: 5 * 60_000,
     enabled: canView,
@@ -300,14 +259,14 @@ export function useExpiryReport(params?: ExpiryReportParams) {
   return useQuery<PaginatedResponse<ExpiryReportRow>, Error>({
     queryKey: queryKeys.inventory.expiryReport(params),
     queryFn: async ({ signal }) => {
-      const data = await apiClient.get<PaginatedResponse<RawExpiryItem>>("/inventory/reports/expiry", {
+      const data = await apiClient.get<PaginatedResponse<ExpiryReportRow>>("/inventory/reports/expiry", {
         ...(params?.withinDays !== undefined ? { withinDays: String(params.withinDays) } : {}),
         ...(params?.warehouseId !== undefined ? { warehouseId: String(params.warehouseId) } : {}),
         ...(params?.status !== undefined ? { status: params.status } : {}),
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
-      }, signal, expiryReportContract);
-      return { items: data.items.map(mapExpiryRow), total: data.total, page: data.page, totalPages: data.totalPages };
+      }, signal);
+      return data;
     },
     staleTime: 5 * 60_000,
     enabled: canView,

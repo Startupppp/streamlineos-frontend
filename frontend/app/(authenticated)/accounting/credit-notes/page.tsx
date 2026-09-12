@@ -1,5 +1,12 @@
-import { CreditNotesPage } from "@/features/accounting/sales/credit-notes-page";
+import { Suspense } from "react";
+import { requirePermission } from "@/lib/rbac/require-permission";
+import { CreditNotesPageClient } from "@/features/accounting/sales";
 
-export default function Page() {
-  return <CreditNotesPage />;
+export default async function AccountingCreditNotesPage() {
+  await requirePermission("accounting:credit-notes:read");
+  return (
+    <Suspense>
+      <CreditNotesPageClient />
+    </Suspense>
+  );
 }

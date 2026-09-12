@@ -23,8 +23,11 @@ import {
 } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { ProductStatusBadge } from "@/features/inventory/components/product-status-badge";
+import { ProductRowActions } from "@/features/inventory/components/product-lifecycle-actions";
 import {
   CONTENT_FILL_PANEL,
   FILTER_SELECT_TRIGGER,
@@ -37,13 +40,13 @@ import {
   formatPrice,
   StatusBadge,
   TrackingBadge,
-  ProductRowActions,
 } from "@/features/inventory/components/product-row-actions";
-import type { InvProductListShape } from "@/hooks/api/inventory/products-schema";
+import type { InventoryProduct } from "@/types/inventory";
 
 const PAGE_LIMIT = 20;
 
 function ProductsPageInner() {
+  const canView = useCan("inventory:products:read");
   const canCreate = useCan("inventory:products:create");
   const canImport = useCan("inventory:import");
   const router = useRouter();
@@ -115,7 +118,9 @@ function ProductsPageInner() {
       ? ("ACTIVE" as const)
       : statusParam === "INACTIVE"
         ? ("INACTIVE" as const)
-        : undefined;
+        : statusParam === "DISCONTINUED"
+          ? ("DISCONTINUED" as const)
+          : undefined;
   const categoryId = categoryIdParam ? Number(categoryIdParam) : undefined;
   const productTypeFilter =
     productTypeParam === "STOCKABLE"
@@ -153,12 +158,13 @@ function ProductsPageInner() {
     productTypeParam
   );
   const isFirstLoad =
+    canView &&
     !productsQuery.isLoading &&
     !productsQuery.error &&
     total === 0 &&
     !hasFilters;
 
-  const columns = useMemo<DataTableColumn<InvProductListShape["items"][number]>[]>(
+  const columns = useMemo<DataTableColumn<InventoryProduct>[]>(
     () => [
       {
         key: "name",
@@ -179,8 +185,6 @@ function ProductsPageInner() {
             </Link>
           </div>
         ),
-        sortable: true,
-        sortValue: (p) => p.name,
       },
       {
         key: "sku",
@@ -226,8 +230,8 @@ function ProductsPageInner() {
       {
         key: "status",
         header: "Status",
-        headerClassName: "w-[80px]",
-        cell: (p) => <StatusBadge status={p.status} />,
+        headerClassName: "w-[110px]",
+        cell: (p) => <ProductStatusBadge status={p.status} />,
       },
       {
         key: "actions",
@@ -257,6 +261,7 @@ function ProductsPageInner() {
             <SelectItem value="all">All statuses</SelectItem>
             <SelectItem value="ACTIVE">Active</SelectItem>
             <SelectItem value="INACTIVE">Inactive</SelectItem>
+            <SelectItem value="DISCONTINUED">Discontinued</SelectItem>
           </SelectContent>
         </Select>
         <Select
@@ -304,6 +309,7 @@ function ProductsPageInner() {
               { value: "all", label: "All statuses" },
               { value: "ACTIVE", label: "Active" },
               { value: "INACTIVE", label: "Inactive" },
+              { value: "DISCONTINUED", label: "Discontinued" },
             ],
             onChange: handleStatusChange,
           },
@@ -349,10 +355,15 @@ function ProductsPageInner() {
           </Button>
         ) : undefined
       }
-      filters={filtersRow}
+      filters={canView ? filtersRow : undefined}
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-        {productsQuery.error ? (
+        {!canView ? (
+          <NoPermissionState
+            permission="inventory:products:read"
+            className="flex-1"
+          />
+        ) : productsQuery.error ? (
           <ErrorState
             title="Failed to load products"
             description={getErrorMessage(productsQuery.error)}

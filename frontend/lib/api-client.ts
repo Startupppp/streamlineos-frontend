@@ -2,6 +2,7 @@ import { clearRegisteredQueryCache } from "@/lib/query-cache-control";
 import { isRecord } from "@/lib/is-record";
 import {
   ApiError,
+  apiErrorFromResponse,
   parseApiResponse,
   resolveContract,
   type ContractSource,
@@ -38,10 +39,14 @@ function linkAbortSignals(sources: readonly AbortSignal[]): AbortSignal {
   return controller.signal;
 }
 
-function makeRequestSignal(external?: AbortSignal, timeoutMs?: number): AbortSignal {
+function makeRequestSignal(
+  external?: AbortSignal,
+  timeoutMs?: number,
+): AbortSignal {
   const timeout = AbortSignal.timeout(timeoutMs ?? REQUEST_TIMEOUT_MS);
   if (!external) return timeout;
-  if (typeof AbortSignal.any === "function") return AbortSignal.any([timeout, external]);
+  if (typeof AbortSignal.any === "function")
+    return AbortSignal.any([timeout, external]);
   return linkAbortSignals([timeout, external]);
 }
 
@@ -78,7 +83,9 @@ const ORGANIZATION_ACCESS_ERROR_CODES = new Set([
   "ORG_MEMBERSHIP_SUSPENDED",
 ]);
 
-async function redirectForOrganizationAccessError(res: Response): Promise<void> {
+async function redirectForOrganizationAccessError(
+  res: Response,
+): Promise<void> {
   if (
     res.status !== 403 ||
     typeof window === "undefined" ||
@@ -141,11 +148,16 @@ export async function getBackendToken(): Promise<string | null> {
       const res = await fetch("/api/auth/session", { credentials: "include" });
       if (!res.ok) return null;
       const data: unknown = await res.json();
-      if (!isRecord(data) || typeof data.backendJwt !== "string" || !data.backendJwt)
+      if (
+        !isRecord(data) ||
+        typeof data.backendJwt !== "string" ||
+        !data.backendJwt
+      )
         return null;
       const backendJwt = data.backendJwt;
       const expiresAt = readTokenExpiry(backendJwt);
-      cachedToken = expiresAt === null ? null : { value: backendJwt, expiresAt };
+      cachedToken =
+        expiresAt === null ? null : { value: backendJwt, expiresAt };
       return backendJwt;
     } catch {
       return null;
@@ -166,6 +178,16 @@ function requestHost(url: string): string {
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
+/**
+ * Re-exported because a caller that needs a key stable across *retries* has to
+ * mint it once, outside the request. The per-fetch key below is minted inside
+ * `authedFetch`, so a retried mutation would carry a new one and replay
+ * nothing — which is fine for a request that is cheap to repeat and wrong for
+ * one that spends money or holds a message. The key itself lives in
+ * `lib/idempotency-key`; `hooks/common/use-idempotent-operation.ts` is the hook form.
+ */
+export { newIdempotencyKey };
+
 export async function authedFetch(
   url: string,
   init: RequestInit,
@@ -179,7 +201,10 @@ export async function authedFetch(
   const { signal: initSignal, ...requestInit } = init;
   const headers = new Headers(init.headers);
   const isPublic = isPublicPath(path);
-  const combinedSignal = makeRequestSignal(signal ?? initSignal ?? undefined, options?.timeoutMs);
+  const combinedSignal = makeRequestSignal(
+    signal ?? initSignal ?? undefined,
+    options?.timeoutMs,
+  );
 
   // One id per request, sent to the API and remembered here, so a browser error
   // report and the server-side logs for the same call can be joined up.
@@ -203,14 +228,24 @@ export async function authedFetch(
   }
 
   try {
-    let res = await fetch(url, { ...requestInit, headers, credentials: "omit", signal: combinedSignal });
+    let res = await fetch(url, {
+      ...requestInit,
+      headers,
+      credentials: "omit",
+      signal: combinedSignal,
+    });
 
     if (!isPublic && res.status === 401) {
       cachedToken = null;
       const token = await getBackendToken();
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
-        res = await fetch(url, { ...requestInit, headers, credentials: "omit", signal: combinedSignal });
+        res = await fetch(url, {
+          ...requestInit,
+          headers,
+          credentials: "omit",
+          signal: combinedSignal,
+        });
       }
       if (
         res.status === 401 &&
@@ -227,7 +262,11 @@ export async function authedFetch(
     return res;
   } catch (error: unknown) {
     if (error instanceof DOMException && error.name === "TimeoutError") {
-      throw new ApiError("Request timed out. Please try again.", undefined, "TIMEOUT");
+      throw new ApiError(
+        "Request timed out. Please try again.",
+        undefined,
+        "TIMEOUT",
+      );
     }
     if (error instanceof DOMException && error.name === "AbortError") {
       throw new ApiError("Request was cancelled.", undefined, "ABORTED");
@@ -269,11 +308,7 @@ export function buildUrl(path: string, params?: QueryParams): string {
   return search ? `${url}?${search}` : url;
 }
 
-export {
-  ApiError,
-  isApiError,
-  getApiErrorCode,
-} from "@/lib/api-envelope";
+export { ApiError, isApiError, getApiErrorCode } from "@/lib/api-envelope";
 
 /**
  * Starts a lazy contract downloading in PARALLEL with the request instead of
@@ -417,6 +452,12 @@ async function upload<T>(
   return parseApiResponse<T>(res, await pendingContract, url);
 }
 
+export interface DownloadConfig {
+  method?: "GET" | "POST";
+  body?: unknown;
+  signal?: AbortSignal;
+}
+
 async function download(
   url: string,
   params?: QueryParams,
@@ -444,4 +485,3 @@ export const apiClient = {
   upload,
   download,
 } as const;
-

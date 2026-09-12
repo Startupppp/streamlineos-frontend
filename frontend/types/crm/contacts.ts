@@ -1,5 +1,11 @@
 import type { z } from "zod";
 import type { customerPageContract } from "@/hooks/api/build/reports-schema";
+import type {
+  contactDetailContract,
+  contactListContract,
+  contactRecordContract,
+  contactRowContract,
+} from "@/hooks/api/crm/contacts-schema";
 export type OrgSize = "1-10" | "11-50" | "51-200" | "201-1000" | "1000+";
 export type OrgTimelineEventType = "contact_created" | "deal_created" | "lead_linked" | "note_added";
 
@@ -22,34 +28,11 @@ export interface CrmOrganization {
   openRequestCount?: number;
 }
 
-export interface Contact {
-  id: number;
-  orgId: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  title: string | null;
-  department: string | null;
-  company: string | null;
-  organizationId: number | null;
-  linkedinUrl: string | null;
-  twitterUrl: string | null;
-  websiteUrl: string | null;
-  avatarUrl: string | null;
-  leadId: number | null;
-  dealId: number | null;
-  source: string | null;
-  status: string | null;
-  notes: string | null;
-  ownerId: string | null;
-  tags: string[];
-  createdAt: string | null;
-  updatedAt: string | null;
-  customFields?: Record<string, unknown>;
-  crmOrganization?: CrmOrganization | null;
-  lead?: { id: number; name: string } | null;
-  deal?: { id: number; name: string } | null;
-}
+export type Contact = z.infer<typeof contactRowContract>;
+
+export type ContactDetail = z.infer<typeof contactDetailContract>;
+
+export type ContactRecord = z.infer<typeof contactRecordContract>;
 
 export interface ContactFilters {
   search?: string;
@@ -58,12 +41,7 @@ export interface ContactFilters {
   cursor?: string;
 }
 
-export interface PaginatedContacts {
-  items: Contact[];
-  total?: number;
-  hasMore: boolean;
-  nextCursor: string | null;
-}
+export type PaginatedContacts = z.infer<typeof contactListContract>;
 
 export interface CreateContactInput {
   name: string;

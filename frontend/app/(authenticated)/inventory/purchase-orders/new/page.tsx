@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { useCan } from "@/hooks/api/access";
 import { Card } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { LoadingButton } from "@/components/ui/loading-button";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useVendors, useProductVariants, useCreatePurchaseOrder } from "@/hooks/api/inventory";
@@ -29,6 +31,7 @@ function todayIso(): string {
 }
 
 export default function NewPurchaseOrderPage() {
+  const canCreate = useCan("inventory:purchase-orders:create");
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedVendorId = searchParams.get("vendorId") ?? "";
@@ -131,6 +134,38 @@ export default function NewPurchaseOrderPage() {
   if (vendorsQuery.error) return <ErrorState description={getErrorMessage(vendorsQuery.error)} onRetry={handleVendorsRetry} />;
   if (variantsQuery.error) return <ErrorState description={getErrorMessage(variantsQuery.error)} onRetry={handleVariantsRetry} />;
 
+  const totalsFooter = (
+    <div className="flex justify-end mt-2">
+      <div className="space-y-1 text-sm tabular-nums w-64">
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Subtotal</span>
+          <span>{totals.subtotal.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Tax</span>
+          <span>{totals.taxTotal.toFixed(2)}</span>
+        </div>
+        <div className="border-t border-border pt-1 flex justify-between font-medium text-base">
+          <span>Total</span>
+          <span>{totals.total.toFixed(2)}</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // G8. A create form is not a list, so it has no empty state — but it can
+  // still be opened by somebody who may not save, and letting them fill it
+  // in before the server refuses is the worst version of that. Placed after
+  // every hook: an early return above one makes hook order depend on a
+  // permission, which React forbids.
+  if (!canCreate) {
+    return (
+      <PageWrapper title="New Purchase Order">
+        <NoPermissionState permission="inventory:purchase-orders:create" className="flex-1" />
+      </PageWrapper>
+    );
+  }
+
   if (vendors.length === 0)
     return (
       <PageWrapper title="New purchase order" backHref="/inventory/purchase-orders">
@@ -154,25 +189,6 @@ export default function NewPurchaseOrderPage() {
         />
       </PageWrapper>
     );
-
-  const totalsFooter = (
-    <div className="flex justify-end mt-2">
-      <div className="space-y-1 text-sm tabular-nums w-64">
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Subtotal</span>
-          <span>{totals.subtotal.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Tax</span>
-          <span>{totals.taxTotal.toFixed(2)}</span>
-        </div>
-        <div className="border-t border-border pt-1 flex justify-between font-medium text-base">
-          <span>Total</span>
-          <span>{totals.total.toFixed(2)}</span>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <PageWrapper

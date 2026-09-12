@@ -1,10 +1,5 @@
-import {
-  fieldByName,
-  type ColumnSpec,
-  type LayoutProblem,
-  type RecordLayout,
-  type SectionSpec,
-} from "./layout";
+import { fieldByName, type ColumnSpec, type RecordLayout, type SectionSpec } from "./layout";
+import { type LayoutProblem } from "./layout-validation";
 
 /**
  * A tenant's arrangement of a record type, held apart from the description.

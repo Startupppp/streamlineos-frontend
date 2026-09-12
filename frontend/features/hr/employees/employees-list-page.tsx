@@ -82,11 +82,6 @@ function buildEmployeeListColumns(
           </div>
         );
       },
-      sortable: true,
-      sortValue: (emp) =>
-        emp.firstName && emp.lastName
-          ? `${emp.firstName} ${emp.lastName}`
-          : (emp.name ?? ""),
     },
     {
       key: "employeeId",
@@ -94,8 +89,6 @@ function buildEmployeeListColumns(
       headerClassName: "w-[110px] hidden md:table-cell",
       className: "text-xs text-muted-foreground font-mono hidden md:table-cell",
       cell: (emp) => emp.employeeId ?? "—",
-      sortable: true,
-      sortValue: (emp) => emp.employeeId ?? "",
     },
     {
       key: "designation",

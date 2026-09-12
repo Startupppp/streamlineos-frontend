@@ -126,13 +126,13 @@ export const QUOTE_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search quotes…",
     columns: [
-      { field: "quoteNumber", primary: true, sortable: true, subtitle: "subject" },
+      { field: "quoteNumber", primary: true, subtitle: "subject" },
       { field: "dealName", width: "min-w-[120px]" },
       { field: "clientName", width: "min-w-[120px]" },
       { field: "status", width: "w-28 shrink-0" },
       { field: "netAmount", width: "w-32 shrink-0" },
       { field: "validUntil", width: "w-32 shrink-0" },
-      { field: "createdAt", sortable: true, width: "w-32 shrink-0" },
+      { field: "createdAt", width: "w-32 shrink-0" },
     ],
   },
   detail: {

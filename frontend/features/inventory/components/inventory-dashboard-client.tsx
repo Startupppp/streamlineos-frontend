@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { Card, CardHeader, CardTitle, CardContent, CardAction } from "@/components/ui/card";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { EmptyProductsIllustration } from "@/components/illustrations";
 import {
   useInventoryDashboard,
@@ -29,8 +29,13 @@ import {
   type ReorderReportRow,
 } from "@/hooks/api/inventory/reports";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useCan } from "@/hooks/api/access";
+import { DEFAULT_MONEY_DISPLAY, formatMoneyRounded } from "@/lib/format-utils";
 import { RecentMovementsTable } from "./inventory-recent-movements";
+import { NeedsAttentionBoard } from "./materials/needs-attention-board";
+import { OperationalPositionCard } from "./materials/operational-position-card";
 import { DashboardInsightsPanel } from "./dashboard-insights-panel";
+import { InventoryAiBriefCard } from "./inventory-ai-brief-card";
 
 function AddProductLink() {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -44,6 +49,18 @@ function AddProductLink() {
       Add Product
     </Link>
   );
+}
+
+/**
+ * Stock value comes from the API as `SUM(on_hand × average_cost)` — **rupees**,
+ * the currency every cost on this catalogue is held in. It was rendered as
+ * `$${value / 100}`, which was wrong twice over: a hundredfold understatement of
+ * a figure somebody reconciles against their accounts, in the wrong currency.
+ * There are no minor units anywhere in this number's path, so there is nothing
+ * to divide by.
+ */
+function formatStockValue(stockValue: number): string {
+  return formatMoneyRounded(stockValue, DEFAULT_MONEY_DISPLAY, 0);
 }
 
 const URGENCY_CONFIG: Record<
@@ -79,13 +96,23 @@ function LowStockSkeleton() {
   );
 }
 
-function LowStockAlertSection() {
+function LowStockAlertSection({ canReadReports }: { canReadReports: boolean }) {
   const { data: reorderData, isLoading, error, refetch } = useReorderReport();
   const items = reorderData?.items ?? [];
 
   function handleRetry(): void {
     void refetch();
   }
+
+  if (!canReadReports)
+    return (
+      <NoPermissionState
+        compact
+        permission="inventory:reports:read"
+        title="Alerts hidden"
+        description="Reorder alerts are part of inventory reporting."
+      />
+    );
 
   if (isLoading) return <LowStockSkeleton />;
 
@@ -116,13 +143,20 @@ function LowStockAlertSection() {
         const urgency = URGENCY_CONFIG[item.urgency];
         return (
           <div
-            key={`${item.productId}-${item.variantSku}`}
+            // B4. The report is one row per stock level, so the SKU alone is not
+            // an identity — nor is the store: a SKU can be low in two bins of the
+            // same store. React silently dropped the duplicate, hiding a bin that
+            // was genuinely short. The bin is the row.
+            key={`${item.productId}-${item.variantSku}-${item.locationId}`}
             className={`flex items-center gap-3 rounded-lg border p-3 ${urgency.className}`}
           >
             <div className={`h-2 w-2 rounded-full shrink-0 ${urgency.dotClass}`} />
             <div className="flex-1 min-w-0">
               <TruncatedText text={item.productName} className="text-dense font-semibold text-foreground" />
-              <p className="text-dense text-muted-foreground font-mono">{item.variantSku}</p>
+              <p className="text-dense text-muted-foreground">
+                <span className="font-mono">{item.variantSku}</span>
+                {item.warehouseName ? <span> · {item.warehouseName}</span> : null}
+              </p>
             </div>
             <div className="text-right shrink-0">
               <p className="text-dense text-muted-foreground">
@@ -196,6 +230,10 @@ function ExpiryAlertsCard({ count }: { count: number }) {
 }
 
 export function InventoryDashboardClient() {
+  const canReadReports = useCan("inventory:reports:read");
+  const canReadStock = useCan("inventory:stock:read");
+  const canCreateProduct = useCan("inventory:products:create");
+  const canImport = useCan("inventory:import");
   const {
     data: dashboard,
     isLoading: isKpiLoading,
@@ -227,7 +265,31 @@ export function InventoryDashboardClient() {
     void dashRefetch();
   }
 
-  if (!isKpiLoading && !kpiError && !hasAnyData) {
+  /**
+   * A6. "Denied" and "empty" are different facts.
+   *
+   * Every KPI on this page comes from `GET /inventory/reports/dashboard`, gated on
+   * `inventory:reports:read`. Without that key the query never fires, so the numbers
+   * are all zero — and the onboarding state below used to read that as "this company
+   * has no inventory yet" and invite a stock reader to add their first product. It is
+   * shown only to somebody who could have seen the data and genuinely has none.
+   */
+  if (!canReadReports && !canReadStock)
+    return (
+      <PageWrapper
+        title="Inventory Dashboard"
+        subtitle="Track stock levels, movements, and reorder alerts."
+      >
+        <NoPermissionState
+          permission="inventory:reports:read"
+          title="Dashboard unavailable"
+          description="The inventory dashboard needs either inventory reporting or stock-level access."
+          className="flex-1"
+        />
+      </PageWrapper>
+    );
+
+  if (canReadReports && !isKpiLoading && !kpiError && !hasAnyData) {
     return (
       <PageWrapper
         title="Inventory Dashboard"
@@ -237,8 +299,14 @@ export function InventoryDashboardClient() {
           illustration={<EmptyProductsIllustration />}
           title="Set up your inventory"
           description="Add products, configure warehouses, and start tracking stock levels, movements, and reorder alerts — all in one place."
-          action={{ label: "Add Your First Product", href: "/inventory/products/new" }}
-          secondaryAction={{ label: "Import Products", href: "/inventory/import" }}
+          action={
+            canCreateProduct
+              ? { label: "Add Your First Product", href: "/inventory/products/new" }
+              : undefined
+          }
+          secondaryAction={
+            canImport ? { label: "Import Products", href: "/inventory/import" } : undefined
+          }
           className="flex-1"
         />
       </PageWrapper>
@@ -249,10 +317,25 @@ export function InventoryDashboardClient() {
     <PageWrapper
       title="Inventory Dashboard"
       subtitle="Track stock levels, movements, and reorder alerts."
-      actions={<AddProductLink />}
+      actions={canCreateProduct ? <AddProductLink /> : undefined}
     >
       <div className="space-y-4">
-        {isKpiLoading ? (
+        {/*
+          B2 — the two things somebody opens this page for, above everything
+          else: what is on the shelf right now, and what needs a decision today.
+          The KPI grid below them is the weekly read, not the morning one.
+        */}
+        <OperationalPositionCard />
+        <NeedsAttentionBoard />
+
+        {!canReadReports ? (
+          <NoPermissionState
+            compact
+            permission="inventory:reports:read"
+            title="Metrics hidden"
+            description="Inventory totals, values and counts come from inventory reporting."
+          />
+        ) : isKpiLoading ? (
           <KpiSkeletons />
         ) : kpiError ? (
           <ErrorState
@@ -292,7 +375,7 @@ export function InventoryDashboardClient() {
             />
             <StatCard
               label="Stock Value"
-              value={`$${(stockValue / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              value={formatStockValue(stockValue)}
               icon={DollarSign}
               tone="blue"
             />
@@ -349,6 +432,8 @@ export function InventoryDashboardClient() {
           </div>
         )}
 
+        <InventoryAiBriefCard />
+
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           <Card className="lg:col-span-3">
             <CardHeader className="border-b border-border/60 pb-3">
@@ -365,7 +450,16 @@ export function InventoryDashboardClient() {
               </CardAction>
             </CardHeader>
             <CardContent className="p-0">
-              <RecentMovementsTable />
+              {canReadStock ? (
+                <RecentMovementsTable />
+              ) : (
+                <NoPermissionState
+                  compact
+                  permission="inventory:stock:read"
+                  title="Movements hidden"
+                  description="Stock movements need stock-level access."
+                />
+              )}
             </CardContent>
           </Card>
 
@@ -385,12 +479,12 @@ export function InventoryDashboardClient() {
               </CardAction>
             </CardHeader>
             <CardContent className="pt-3">
-              <LowStockAlertSection />
+              <LowStockAlertSection canReadReports={canReadReports} />
             </CardContent>
           </Card>
         </div>
 
-        {!isKpiLoading && !kpiError && (
+        {canReadReports && !isKpiLoading && !kpiError && (
           <ExpiryAlertsCard count={expiringLotsCount} />
         )}
 

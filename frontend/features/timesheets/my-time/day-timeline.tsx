@@ -20,7 +20,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { LogTimeSheet } from "./log-time-sheet";
-import { useVoidTimesheetEntry } from "@/hooks/api/timesheets-core";
+import { describeDayColumn } from "./day-label";
+import { usePermissionGate } from "@/hooks/api/access";
+import { useTimesheetHolidays, useVoidTimesheetEntry } from "@/hooks/api/timesheets-core";
 import {
   BILLING_TYPE_LABEL,
   ENTRY_STATUS_BADGE,
@@ -30,6 +32,8 @@ import {
 interface DayTimelineProps {
   entries: TimesheetEntry[] | undefined;
   days: string[];
+  weekStart: string;
+  weekEnd: string;
 }
 
 interface EntryRowProps {
@@ -91,7 +95,26 @@ const EntryRow = memo(function EntryRow({ entry, onEdit, onVoid }: EntryRowProps
   );
 });
 
-export function DayTimeline({ entries, days }: DayTimelineProps) {
+export function DayTimeline({ entries, days, weekStart, weekEnd }: DayTimelineProps) {
+  /**
+   * `entries` arrives from a query gated on this key, so "no entries" and "you
+   * may not see the entries" reach this component as the same empty array.
+   * The route redirects a denied caller before it renders, but the empty state
+   * is the thing that would state the falsehood if that ever stopped being
+   * true, so it carries the gate rather than relying on the redirect.
+   */
+  const access = usePermissionGate("timesheets:entries:view");
+  /**
+   * Same query key as the week grid's, so this is a cache read rather than a
+   * second request. A holiday that disappears when you switch from Week to Day
+   * is a holiday the org does not really have.
+   */
+  const { data: holidayData } = useTimesheetHolidays(weekStart, weekEnd);
+  const holidayByDate = useMemo(
+    () => new Map((holidayData?.holidays ?? []).map((h) => [h.date, h.name])),
+    [holidayData],
+  );
+
   const today = format(new Date(), "yyyy-MM-dd");
   const defaultDay = days.includes(today) ? today : (days[0] ?? "");
   const [selectedDay, setSelectedDay] = useState(defaultDay);
@@ -148,15 +171,19 @@ export function DayTimeline({ entries, days }: DayTimelineProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-1 flex-wrap">
+      <div role="group" aria-label="Pick a day" className="flex items-center gap-1 flex-wrap">
         {days.map((d) => {
           const dayEntryCount = (entries ?? []).filter((e) => e.date === d).length;
           const active = d === selectedDay;
           const todayDay = isToday(parseISO(d));
+          const holiday = holidayByDate.get(d);
           return (
             <button
               key={d}
+              type="button"
               data-day={d}
+              aria-pressed={active}
+              aria-label={describeDayColumn(d, holiday)}
               onClick={handleDaySelect}
               className={cn(
                 "flex flex-col items-center px-3 py-1.5 rounded-lg border text-xs transition-colors",
@@ -164,6 +191,7 @@ export function DayTimeline({ entries, days }: DayTimelineProps) {
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-card border-border hover:border-primary/50 hover:bg-muted/40 text-foreground",
                 todayDay && !active && "border-primary/60",
+                holiday && !active && "bg-muted/60",
               )}
             >
               <span className="font-medium">{format(parseISO(d), "EEE")}</span>
@@ -205,6 +233,7 @@ export function DayTimeline({ entries, days }: DayTimelineProps) {
         {dayEntries.length === 0 ? (
           <EmptyState
             illustrationPreset="activity"
+            access={access}
             title="No time logged"
             description="No entries for this day. Log your first entry."
             compact

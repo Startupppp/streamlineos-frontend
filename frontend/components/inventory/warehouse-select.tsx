@@ -7,6 +7,12 @@ import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 interface WarehouseSelectProps {
   value: string;
   onChange: (value: string) => void;
+  /**
+   * The trigger's accessible name — required, see `Combobox`'s own `ariaLabel`.
+   * Required rather than optional because every existing call site had simply
+   * omitted it, and an optional prop is reintroduced by omission.
+   */
+  ariaLabel: string;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -16,6 +22,7 @@ interface WarehouseSelectProps {
 export function WarehouseSelect({
   value,
   onChange,
+  ariaLabel,
   placeholder = "Select warehouse…",
   disabled,
   className,
@@ -45,6 +52,7 @@ export function WarehouseSelect({
       emptyText={isLoading ? "Loading warehouses…" : "No warehouses found."}
       disabled={disabled || isLoading}
       className={className}
+      ariaLabel={ariaLabel}
     />
   );
 }

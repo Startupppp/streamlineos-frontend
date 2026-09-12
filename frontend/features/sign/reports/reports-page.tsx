@@ -2,6 +2,7 @@
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { CheckCircle2, XCircle, Clock, ShieldAlert } from "lucide-react";
@@ -14,17 +15,10 @@ function formatPercent(value: number): string {
 }
 
 export function ReportsPage() {
-  const { data, isLoading, isError, refetch } = useSignSummary();
+  const { data, isLoading, isError, error, refetch } = useSignSummary();
 
-  if (isLoading || !data) {
-    return (
-      <PageWrapper
-        title="Reports"
-        subtitle="Envelope activity, completion rates, and usage across SignOS"
-      >
-        <StatCardGridSkeleton cols={4} />
-      </PageWrapper>
-    );
+  function handleRetry() {
+    void refetch();
   }
 
   if (isError) {
@@ -35,8 +29,20 @@ export function ReportsPage() {
       >
         <ErrorState
           title="Failed to load reports"
-          onRetry={() => void refetch()}
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
         />
+      </PageWrapper>
+    );
+  }
+
+  if (isLoading || !data) {
+    return (
+      <PageWrapper
+        title="Reports"
+        subtitle="Envelope activity, completion rates, and usage across SignOS"
+      >
+        <StatCardGridSkeleton cols={4} />
       </PageWrapper>
     );
   }

@@ -8,6 +8,7 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { useMotionVariants } from "@/lib/motion-variants";
@@ -21,20 +22,28 @@ function formatEventType(eventType: string): string {
 export function SignDashboard() {
   const { staggerContainer, fadeUp } = useMotionVariants();
   const [createOpen, setCreateOpen] = useState(false);
-  const { data, isLoading, isError, refetch } = useSignDashboard();
+  const { data, isLoading, isError, error, refetch } = useSignDashboard();
 
-  if (isLoading || !data) {
-    return (
-      <PageWrapper title="SignOS" subtitle="Envelopes, signatures, and completion status at a glance">
-        <StatCardGridSkeleton cols={4} />
-      </PageWrapper>
-    );
+  function handleRetry() {
+    void refetch();
   }
 
   if (isError) {
     return (
       <PageWrapper title="SignOS" subtitle="Envelopes, signatures, and completion status at a glance">
-        <ErrorState title="Failed to load SignOS dashboard" onRetry={() => void refetch()} />
+        <ErrorState
+          title="Failed to load SignOS dashboard"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      </PageWrapper>
+    );
+  }
+
+  if (isLoading || !data) {
+    return (
+      <PageWrapper title="SignOS" subtitle="Envelopes, signatures, and completion status at a glance">
+        <StatCardGridSkeleton cols={4} />
       </PageWrapper>
     );
   }

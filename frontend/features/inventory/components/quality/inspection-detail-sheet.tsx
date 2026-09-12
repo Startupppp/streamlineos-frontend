@@ -4,14 +4,28 @@ import { memo, useCallback, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { AppSheet } from "@/components/shared";
+import { ConfirmWithReasonSheet } from "@/components/ui/confirm-with-reason-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useCan } from "@/hooks/api/access";
@@ -22,6 +36,7 @@ import {
   useFailInspection,
   useDisposeInspection,
   useCancelInspection,
+  useCorrectInspection,
 } from "@/hooks/api/inventory/quality";
 import type { InspectionLine } from "@/hooks/api/inventory/quality";
 import {
@@ -31,7 +46,8 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
-type Disposition = "RELEASE_TO_AVAILABLE" | "QUARANTINE" | "RETURN_TO_VENDOR" | "SCRAP";
+type Disposition =
+  "RELEASE_TO_AVAILABLE" | "QUARANTINE" | "RETURN_TO_VENDOR" | "SCRAP";
 
 const DISPOSITION_LABELS: Record<Disposition, string> = {
   RELEASE_TO_AVAILABLE: "Release to Available",
@@ -68,8 +84,10 @@ const LineDispositionRow = memo(function LineDispositionRow({
 
   return (
     <div className="flex items-center gap-2 py-1.5 border-b border-border/40 last:border-0">
-      <TruncatedText text={line.productVariant?.name ?? "—"} className="flex-1 text-xs" />
-      <span className="text-xs text-muted-foreground w-12 text-right tabular-nums">{line.quantityInspected}</span>
+      <TruncatedText text={line.variantName} className="flex-1 text-xs" />
+      <span className="text-xs text-muted-foreground w-12 text-right tabular-nums">
+        {line.qty}
+      </span>
       <Select value={value} onValueChange={handleChange}>
         <SelectTrigger className="w-44 text-xs">
           <SelectValue placeholder="Choose..." />
@@ -88,17 +106,38 @@ const LineDispositionRow = memo(function LineDispositionRow({
 
 const INSPECTION_LINE_COLUMNS: DataTableColumn<InspectionLine>[] = [
   {
-    key: "productVariant",
+    key: "variantName",
     header: "Variant",
     className: "text-xs",
-    cell: (line) => <TruncatedText text={line.productVariant?.name ?? "—"} className="max-w-[160px]" />,
+    cell: (line) => (
+      <TruncatedText text={line.variantName} className="max-w-[160px]" />
+    ),
   },
   {
-    key: "quantityInspected",
+    key: "qty",
     header: "Qty",
     className: "text-right tabular-nums text-xs",
     headerClassName: "text-right",
-    cell: (line) => line.quantityInspected,
+    cell: (line) => line.qty,
+  },
+  {
+    key: "sampleQuantity",
+    header: "Sample",
+    className: "text-right tabular-nums text-xs text-muted-foreground",
+    headerClassName: "text-right",
+    // What the governing plan requires be opened. Absent on an inspection raised
+    // by hand, where nobody has said how much to check.
+    cell: (line) =>
+      line.sampleQuantity ? trimQuantity(line.sampleQuantity) : "—",
+  },
+  {
+    key: "heldQuantity",
+    header: "Held",
+    className: "text-right tabular-nums text-xs",
+    headerClassName: "text-right",
+    // The figure a verdict releases — not the line quantity, and not whatever the
+    // stock level happens to show.
+    cell: (line) => (line.heldQuantity ? trimQuantity(line.heldQuantity) : "—"),
   },
   {
     key: "disposition",
@@ -108,11 +147,24 @@ const INSPECTION_LINE_COLUMNS: DataTableColumn<InspectionLine>[] = [
   },
 ];
 
-export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Props) {
+/** `numeric(18,4)` reads back with four decimals; a whole count should not. */
+function trimQuantity(value: string): string {
+  return value.includes(".") ? value.replace(/\.?0+$/, "") : value;
+}
+
+export function InspectionDetailSheet({
+  open,
+  onOpenChange,
+  inspectionId,
+}: Props) {
   const [showFailForm, setShowFailForm] = useState(false);
-  const [failDispositions, setFailDispositions] = useState<Record<number, string>>({});
+  const [failDispositions, setFailDispositions] = useState<
+    Record<number, string>
+  >({});
 
   const canRelease = useCan("inventory:quality:release");
+  const canInspect = useCan("inventory:quality:inspect");
+  const [correcting, setCorrecting] = useState(false);
 
   const inspectionQuery = useQualityInspection(inspectionId ?? 0);
   const startMut = useStartInspection();
@@ -120,6 +172,7 @@ export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Prop
   const failMut = useFailInspection();
   const disposeMut = useDisposeInspection();
   const cancelMut = useCancelInspection();
+  const correctMut = useCorrectInspection();
 
   const inspection = inspectionQuery.data;
   const isLoading = inspectionQuery.isLoading;
@@ -147,17 +200,22 @@ export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Prop
   function handleShowFail(): void {
     setShowFailForm(true);
     const initial: Record<number, string> = {};
-    for (const line of inspection?.lines ?? []) initial[line.id] = "QUARANTINE";
+    for (const line of inspection?.lines ?? []) {
+      initial[line.id] = "QUARANTINE";
+    }
     setFailDispositions(initial);
   }
 
-  const handleDispositionChange = useCallback((lineId: number, d: string): void => {
-    setFailDispositions((prev) => ({ ...prev, [lineId]: d }));
-  }, []);
+  const handleDispositionChange = useCallback(
+    (lineId: number, d: string): void => {
+      setFailDispositions((prev) => ({ ...prev, [lineId]: d }));
+    },
+    [],
+  );
 
   function handleSubmitFail(): void {
     if (!inspectionId || !inspection) return;
-    const lines = (inspection.lines ?? []).map((l) => ({
+    const lines = inspection.lines.map((l) => ({
       lineId: l.id,
       disposition: (failDispositions[l.id] ?? "QUARANTINE") as Disposition,
     }));
@@ -196,61 +254,144 @@ export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Prop
   }
 
   const isBusy =
-    startMut.isPending || passMut.isPending || failMut.isPending ||
-    disposeMut.isPending || cancelMut.isPending;
+    startMut.isPending ||
+    passMut.isPending ||
+    failMut.isPending ||
+    disposeMut.isPending ||
+    cancelMut.isPending;
 
   const status = inspection?.status;
-  const isTerminal = status === "PASSED" || status === "COMPLETED" || status === "CANCELLED";
+  const isTerminal =
+    status === "PASSED" || status === "COMPLETED" || status === "CANCELLED";
+  /*
+   * Narrower than `isTerminal` on purpose. The service's own TERMINAL_STATUSES
+   * is `["COMPLETED", "CANCELLED"]` — a PASSED inspection is refused with "an
+   * open one is still editable" — so offering the control on PASSED would be a
+   * button that only ever produces a 409.
+   */
+  const isCorrectable = status === "COMPLETED" || status === "CANCELLED";
+
+  function handleCorrectOpen(): void {
+    setCorrecting(true);
+  }
+
+  function handleCorrect(reason: string): void {
+    if (inspectionId === null) return;
+    correctMut.mutate(
+      { inspectionId, reason },
+      {
+        onSuccess: (created) => {
+          toast.success(
+            `Correction raised as inspection #${String(created.id)}.`,
+          );
+          setCorrecting(false);
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
 
   const footer = (
     <div className="flex items-center gap-2 flex-wrap">
       {status === "PENDING" && (
-        <Button size="sm" onClick={handleStart} disabled={isBusy}>Start</Button>
+        <Button size="sm" onClick={handleStart} disabled={isBusy}>
+          Start
+        </Button>
       )}
       {status === "IN_PROGRESS" && !showFailForm && (
         <>
           {canRelease && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button size="sm" variant="default" disabled={isBusy}>Pass</Button>
+                <Button size="sm" variant="default" disabled={isBusy}>
+                  Pass
+                </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Pass inspection?</AlertDialogTitle>
-                  <AlertDialogDescription>All lines will be released to available stock.</AlertDialogDescription>
+                  <AlertDialogDescription>
+                    All lines will be released to available stock.
+                  </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handlePass}>Confirm Pass</AlertDialogAction>
+                  <AlertDialogAction onClick={handlePass}>
+                    Confirm Pass
+                  </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           )}
-          <Button size="sm" variant="destructive" onClick={handleShowFail} disabled={isBusy}>Fail</Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={handleShowFail}
+            disabled={isBusy}
+          >
+            Fail
+          </Button>
         </>
       )}
       {status === "IN_PROGRESS" && showFailForm && (
         <>
-          <Button size="sm" variant="outline" onClick={handleHideFail} disabled={isBusy}>Back</Button>
-          <Button size="sm" variant="destructive" onClick={handleSubmitFail} disabled={isBusy}>Submit Fail</Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleHideFail}
+            disabled={isBusy}
+          >
+            Back
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={handleSubmitFail}
+            disabled={isBusy}
+          >
+            Submit Fail
+          </Button>
         </>
       )}
       {(status === "FAILED" || status === "DISPOSITION_REQUIRED") && (
-        <Button size="sm" onClick={handleDispose} disabled={isBusy}>Dispose</Button>
+        <Button size="sm" onClick={handleDispose} disabled={isBusy}>
+          Dispose
+        </Button>
+      )}
+      {canInspect && isCorrectable && (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleCorrectOpen}
+          disabled={isBusy}
+        >
+          Correct this result
+        </Button>
       )}
       {!isTerminal && (
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button size="sm" variant="ghost" className="text-muted-foreground" disabled={isBusy}>Cancel</Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-muted-foreground"
+              disabled={isBusy}
+            >
+              Cancel
+            </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Cancel inspection?</AlertDialogTitle>
-              <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+              <AlertDialogDescription>
+                This action cannot be undone.
+              </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Back</AlertDialogCancel>
-              <AlertDialogAction onClick={handleCancel}>Cancel Inspection</AlertDialogAction>
+              <AlertDialogAction onClick={handleCancel}>
+                Cancel Inspection
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -259,62 +400,134 @@ export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Prop
   );
 
   return (
-    <AppSheet
-      open={open}
-      onOpenChange={onOpenChange}
-      title={`Inspection #${inspectionId ?? "—"}`}
-      description="Quality inspection details and actions"
-      footer={inspection && !isLoading ? footer : undefined}
-    >
-      {isLoading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-5 w-24" />
-          <Skeleton className="h-4 w-48" />
-          <Skeleton className="h-32 w-full" />
-        </div>
-      ) : !inspection ? (
-        <p className="text-sm text-muted-foreground">Could not load inspection.</p>
-      ) : (
-        <div className="space-y-5">
-          <div className="flex items-center gap-3 flex-wrap">
-            <Badge
-              variant="outline"
-              className={cn("h-5 text-micro px-2 border", INSPECTION_STATUS_BADGE[inspection.status])}
-            >
-              {INSPECTION_STATUS_LABEL[inspection.status]}
-            </Badge>
-            {inspection.sourceType && (
-              <span className="text-xs text-muted-foreground">Source: {inspection.sourceType}</span>
-            )}
-            <span className="text-xs text-muted-foreground">
-              {format(new Date(inspection.createdAt), "dd MMM yyyy")}
-            </span>
+    <>
+      <AppSheet
+        open={open}
+        onOpenChange={onOpenChange}
+        title={`Inspection #${inspectionId ?? "—"}`}
+        description="Quality inspection details and actions"
+        footer={inspection && !isLoading ? footer : undefined}
+      >
+        {isLoading ? (
+          <div className="space-y-3">
+            <Skeleton className="h-5 w-24" />
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-32 w-full" />
           </div>
+        ) : !inspection ? (
+          <p className="text-sm text-muted-foreground">
+            Could not load inspection.
+          </p>
+        ) : (
+          <div className="space-y-5">
+            <div className="flex items-center gap-3 flex-wrap">
+              <Badge
+                variant="outline"
+                className={cn(
+                  "h-5 text-micro px-2 border",
+                  INSPECTION_STATUS_BADGE[inspection.status],
+                )}
+              >
+                {INSPECTION_STATUS_LABEL[inspection.status]}
+              </Badge>
+              {inspection.source && (
+                <span className="text-xs text-muted-foreground">
+                  Source: {inspection.source}
+                </span>
+              )}
+              <span className="text-xs text-muted-foreground">
+                {format(new Date(inspection.createdAt), "dd MMM yyyy")}
+              </span>
+            </div>
 
-          {showFailForm ? (
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-foreground">Set disposition per line:</p>
-              {(inspection.lines ?? []).map((line) => (
-                <LineDispositionRow
-                  key={line.id}
-                  line={line}
-                  value={failDispositions[line.id] ?? "QUARANTINE"}
-                  onChange={handleDispositionChange}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-foreground">Lines</p>
-              <DataTable
-                data={inspection.lines ?? []}
-                columns={INSPECTION_LINE_COLUMNS}
-                getRowKey={(line) => line.id}
-              />
-            </div>
-          )}
-        </div>
-      )}
-    </AppSheet>
+            {/*
+            Raising a correction is only half of it: the original result stays
+            evidence, so the replacement has to say what it replaces or the two
+            read as unrelated inspections of the same goods.
+          */}
+            {inspection.correctsInspectionId ? (
+              <p className="text-xs text-muted-foreground">
+                Corrects inspection #{String(inspection.correctsInspectionId)}
+                {inspection.correctionReason
+                  ? ` — ${inspection.correctionReason}`
+                  : ""}
+              </p>
+            ) : null}
+
+            {showFailForm ? (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-foreground">
+                  Set disposition per line:
+                </p>
+                {inspection.lines.map((line) => (
+                  <LineDispositionRow
+                    key={line.id}
+                    line={line}
+                    value={failDispositions[line.id] ?? "QUARANTINE"}
+                    onChange={handleDispositionChange}
+                  />
+                ))}
+              </div>
+            ) : (
+              <>
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-foreground">Lines</p>
+                  <DataTable
+                    data={inspection.lines}
+                    columns={INSPECTION_LINE_COLUMNS}
+                    getRowKey={(line) => line.id}
+                  />
+                </div>
+
+                {inspection.statusTimeline &&
+                  inspection.statusTimeline.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-foreground">
+                        Timeline
+                      </p>
+                      <div className="space-y-1">
+                        {inspection.statusTimeline.map((entry, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center gap-2 text-xs"
+                          >
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "h-4 text-micro px-1.5 py-0 border shrink-0",
+                                INSPECTION_STATUS_BADGE[entry.status],
+                              )}
+                            >
+                              {INSPECTION_STATUS_LABEL[entry.status]}
+                            </Badge>
+                            <span className="text-muted-foreground">
+                              {format(new Date(entry.at), "dd MMM yyyy HH:mm")}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+              </>
+            )}
+          </div>
+        )}
+      </AppSheet>
+
+      <ConfirmWithReasonSheet
+        open={correcting}
+        onOpenChange={setCorrecting}
+        title="Correct this inspection"
+        description="The original result stays as it is — evidence is never edited. This raises a fresh inspection against the same goods that names this one as what it supersedes."
+        reasonLabel="What was wrong with the result"
+        reasonPlaceholder="Sample was measured against the wrong plan version"
+        reasonRequired
+        reasonErrorMessage="Say what is being corrected — it is written onto the new inspection."
+        confirmLabel="Raise correction"
+        destructive={false}
+        isPending={correctMut.isPending}
+        onConfirm={handleCorrect}
+      />
+    </>
   );
 }

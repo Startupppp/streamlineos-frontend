@@ -40,7 +40,7 @@ export default function SequencesPage() {
   const [openTarget, setOpenTarget] = useState<CrmSequence | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<CrmSequence | null>(null);
 
-  const { data, isLoading, isError, refetch, access} = useCrmSequences();
+  const { data, isLoading, isError, refetch } = useCrmSequences();
   const updateSequence = useUpdateCrmSequence();
   const deleteSequence = useDeleteCrmSequence();
 
@@ -171,7 +171,6 @@ export default function SequencesPage() {
           />
         ) : sequences.length === 0 ? (
           <EmptyState
-            access={access}
             illustration={<AutomationsIllustration />}
             title="No sequences yet"
             description="A sequence is a run of touches — an email, a call task, a wait — that every enrolled record receives in order."

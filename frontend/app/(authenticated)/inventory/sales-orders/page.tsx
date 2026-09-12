@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   Select,
@@ -24,10 +24,12 @@ import {
 } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { cn } from "@/lib/utils";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useSalesOrders, type SalesOrderStatus, type SalesOrderListItem } from "@/hooks/api/inventory/sales-orders";
+import { useCan } from "@/hooks/api/access";
 import { formatShortDate } from "@/lib/date-utils";
 
 type StatusFilter = "ALL" | SalesOrderStatus;
@@ -83,8 +85,6 @@ const columns: DataTableColumn<SalesOrderListItem>[] = [
         {so.soNumber}
       </Link>
     ),
-    sortable: true,
-    sortValue: (so) => so.soNumber,
   },
   {
     key: "customerName",
@@ -113,8 +113,6 @@ const columns: DataTableColumn<SalesOrderListItem>[] = [
     ),
     className: "text-right",
     headerClassName: "text-right",
-    sortable: true,
-    sortValue: (so) => Number(so.total),
   },
   {
     key: "status",
@@ -141,6 +139,7 @@ const columns: DataTableColumn<SalesOrderListItem>[] = [
 ];
 
 function SalesOrdersContent() {
+  const canView = useCan("inventory:sales-orders:read");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
@@ -236,6 +235,16 @@ function SalesOrdersContent() {
       />
     </div>
   );
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Sales Orders"
+        subtitle="Manage customer sales orders from creation to invoicing."
+      >
+        <NoPermissionState permission="inventory:sales-orders:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper

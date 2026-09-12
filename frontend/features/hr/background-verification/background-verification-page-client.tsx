@@ -193,8 +193,6 @@ function buildBgvColumns(
           {bgv.createdAt ? format(new Date(bgv.createdAt), "MMM d, yyyy") : "—"}
         </span>
       ),
-      sortable: true,
-      sortValue: (bgv) => (bgv.createdAt ? new Date(bgv.createdAt).getTime() : 0),
     },
     {
       key: "status",

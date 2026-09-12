@@ -10,12 +10,15 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { CarrierSheet } from "@/features/inventory/components/shipping/carrier-sheet";
 import { useCarriers, type Carrier } from "@/hooks/api/inventory/shipping";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 
 function CarriersPageInner() {
+  const canView = useCan("inventory:shipments:manage");
   const [sheetOpen, setSheetOpen] = useState<boolean>(false);
   const [selectedCarrier, setSelectedCarrier] = useState<Carrier | undefined>(undefined);
 
@@ -47,8 +50,6 @@ function CarriersPageInner() {
       key: "name",
       header: "Name",
       cell: (c) => <span className="font-medium">{c.name}</span>,
-      sortable: true,
-      sortValue: (c) => c.name,
     },
     {
       key: "code",
@@ -85,6 +86,16 @@ function CarriersPageInner() {
       ),
     },
   ];
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Carriers"
+        subtitle="Manage shipping carriers and tracking"
+      >
+        <NoPermissionState permission="inventory:shipments:manage" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <>

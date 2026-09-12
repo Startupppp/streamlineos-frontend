@@ -1,16 +1,11 @@
 "use client";
 
-import { memo, useState } from "react";
-import { useForm, useFieldArray, useWatch, type Control } from "react-hook-form";
+import { useEffect, useMemo, useState } from "react";
+import { useForm, useFieldArray, type DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Form,
   FormControl,
@@ -22,231 +17,58 @@ import {
 import { AppSheet } from "@/components/shared/app-sheet";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useReceiveGoods } from "@/hooks/api/inventory";
+import { useCreateGrnDraft, type GrnDraftLineInput } from "@/hooks/api/inventory/operations";
 import { WarehouseSelect } from "@/components/inventory/warehouse-select";
 import { LocationSelect } from "@/components/inventory/location-select";
-import type { ReceiveGoodsInput, ReceiveGoodsLineInput } from "@/types/inventory";
-import type { LocalPurchaseOrder } from "@/hooks/api/inventory/purchase-orders";
+import type { PurchaseOrder, ReceiveGoodsInput } from "@/types/inventory";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { TrackingMethod } from "@/types/inventory";
-
-const grnLineSchema = z.object({
-  poLineId: z.number(),
-  quantityReceived: z.number().min(0),
-  qualityStatus: z.enum(["ACCEPTED", "REJECTED"]),
-  rejectionReason: z.string().optional(),
-  lotNumber: z.string().optional(),
-  expiryDate: z.string().optional(),
-  manufactureDate: z.string().optional(),
-  serialNumbers: z.string().optional(),
-});
-
-const grnSchema = z.object({
-  locationId: z.number({ error: "Location is required" }).int().positive(),
-  notes: z.string().max(500).optional(),
-  lines: z
-    .array(grnLineSchema)
-    .refine(
-      (lines) =>
-        lines.every(
-          (l) =>
-            l.qualityStatus === "ACCEPTED" ||
-            (l.rejectionReason && l.rejectionReason.length > 0),
-        ),
-      { message: "Rejection reason required for rejected lines" },
-    ),
-});
-
-type GrnFormValues = z.infer<typeof grnSchema>;
-
-interface DraftLineMeta {
-  productName: string;
-  sku: string | null;
-  ordered: number;
-  alreadyReceived: number;
-  trackingMethod: TrackingMethod;
-}
+import { getTodayString } from "@/lib/date-utils";
+import { useScanTarget } from "@/features/inventory/hooks/use-scan-target";
+import { scanNamesVariant, type ResolvedScan } from "@/features/inventory/lib/scan-resolution";
+import { ScanField } from "@/features/inventory/components/scan";
+import { GrnLineRow, type DraftLineMeta } from "./receive-goods-line-row";
+import {
+  grnSchema,
+  NO_DISCREPANCY,
+  type GrnFormLine,
+  type GrnFormValues,
+} from "./receive-goods-schema";
 
 export interface ReceiveGoodsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  po: LocalPurchaseOrder;
+  po: PurchaseOrder;
 }
 
-interface GrnLineRowProps {
-  meta: DraftLineMeta;
-  index: number;
-  control: Control<GrnFormValues>;
+function splitSerials(value: string | undefined): string[] {
+  return (value ?? "")
+    .split(/[\n,]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
-const GrnLineRow = memo(function GrnLineRow({ meta, index, control }: GrnLineRowProps) {
-  const qualityStatus = useWatch({ control, name: `lines.${index}.qualityStatus` });
-  const quantityReceived = useWatch({ control, name: `lines.${index}.quantityReceived` });
-  const serialNumbersValue = useWatch({ control, name: `lines.${index}.serialNumbers` });
-  const serialCount = serialNumbersValue
-    ? serialNumbersValue
-        .split(/[\n,]/)
-        .map((s) => s.trim())
-        .filter(Boolean).length
-    : 0;
-
-  return (
-    <div className="rounded-md border border-border/60 p-3 space-y-2">
-      <div>
-        <div className="text-sm font-medium">{meta.productName}</div>
-        {meta.sku && <div className="text-xs text-muted-foreground font-mono">{meta.sku}</div>}
-        <div className="text-xs text-muted-foreground mt-0.5">
-          Ordered: {meta.ordered.toFixed(2)} · Received: {meta.alreadyReceived.toFixed(2)}
-        </div>
-      </div>
-      <div className="flex items-center gap-3 flex-wrap">
-        <FormField
-          control={control}
-          name={`lines.${index}.quantityReceived`}
-          render={({ field }) => (
-            <FormItem className="flex items-center gap-1.5">
-              <FormLabel className="text-xs text-muted-foreground whitespace-nowrap">
-                Qty received
-              </FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  min="0"
-                  max={meta.ordered - meta.alreadyReceived}
-                  step="0.0001"
-                  className="w-28 text-right tabular-nums"
-                  value={field.value}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name={`lines.${index}.qualityStatus`}
-          render={({ field }) => (
-            <FormItem className="ml-auto">
-              <FormControl>
-                <RadioGroup
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  className="flex gap-3"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <RadioGroupItem value="ACCEPTED" id={`q-accepted-${index}`} />
-                    <Label htmlFor={`q-accepted-${index}`} className="text-xs cursor-pointer">
-                      Accepted
-                    </Label>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <RadioGroupItem value="REJECTED" id={`q-rejected-${index}`} />
-                    <Label htmlFor={`q-rejected-${index}`} className="text-xs cursor-pointer">
-                      Rejected
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </FormControl>
-            </FormItem>
-          )}
-        />
-      </div>
-      {qualityStatus === "REJECTED" && (
-        <FormField
-          control={control}
-          name={`lines.${index}.rejectionReason`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xs">Rejection reason *</FormLabel>
-              <FormControl>
-                <Input placeholder="Describe the reason for rejection" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      )}
-      {meta.trackingMethod === "LOT" && (
-        <div className="grid grid-cols-3 gap-2">
-          <FormField
-            control={control}
-            name={`lines.${index}.lotNumber`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs">Lot number</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g. LOT-001" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={control}
-            name={`lines.${index}.expiryDate`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs">Expiry date</FormLabel>
-                <FormControl>
-                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={control}
-            name={`lines.${index}.manufactureDate`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs">Manufacture date</FormLabel>
-                <FormControl>
-                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-      )}
-      {meta.trackingMethod === "SERIAL" && (
-        <FormField
-          control={control}
-          name={`lines.${index}.serialNumbers`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xs">
-                Serial numbers
-                <span className="ml-2 text-muted-foreground">
-                  {serialCount} / {quantityReceived > 0 ? quantityReceived.toFixed(0) : "?"} entered
-                </span>
-              </FormLabel>
-              <FormControl>
-                <Textarea
-                  rows={3}
-                  placeholder={"One serial per line or comma-separated"}
-                  className="resize-none font-mono text-xs"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      )}
-    </div>
-  );
-});
-
+/**
+ * B1 — the same sheet, with somewhere to stop.
+ *
+ * "Record receipt" used to be the only exit: typing a delivery posted it to the
+ * stock ledger, and a clerk who was halfway through a pallet had to either
+ * finish or throw the count away. "Save as draft" opens the receipt without
+ * moving anything, and it is finished later on the receipts workbench.
+ */
 export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetProps) {
   const receiveMutation = useReceiveGoods(po.id);
+  const draftMutation = useCreateGrnDraft();
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<number>(po.warehouseId ?? 0);
+  const [activeLineId, setActiveLineId] = useState<number | null>(null);
   const effectiveWarehouseId = selectedWarehouseId > 0 ? selectedWarehouseId : undefined;
 
-  const pendingLines = po.lines.filter(
-    (l) => Number(l.quantity) > Number(l.quantityReceived),
+  const pendingLines = useMemo(
+    () => po.lines.filter((l) => Number(l.quantity) > Number(l.quantityReceived)),
+    [po.lines],
   );
   const lineMetas: DraftLineMeta[] = pendingLines.map((l) => ({
+    poLineId: l.id,
+    productVariantId: l.productVariantId,
     productName: l.productVariant?.product?.name ?? l.productVariant?.name ?? "Product",
     sku: l.productVariant?.sku ?? null,
     ordered: Number(l.quantity),
@@ -254,13 +76,13 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
     trackingMethod: l.productVariant?.product?.trackingMethod ?? "NONE",
   }));
 
-  const form = useForm<GrnFormValues>({
-    resolver: zodResolver(grnSchema),
-    defaultValues: {
+  const defaults = useMemo<DefaultValues<GrnFormValues>>(
+    () => ({
       notes: "",
       lines: pendingLines.map((l) => ({
         poLineId: l.id,
-        quantityReceived: Math.max(0, Number(l.quantity) - Number(l.quantityReceived)),
+        quantityReceived: Math.max(0, Number(l.quantity) - Number(l.quantityReceived)).toFixed(4),
+        discrepancyReason: NO_DISCREPANCY,
         qualityStatus: "ACCEPTED" as const,
         rejectionReason: "",
         lotNumber: "",
@@ -268,87 +90,201 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
         manufactureDate: "",
         serialNumbers: "",
       })),
-    },
+    }),
+    [pendingLines],
+  );
+
+  const form = useForm<GrnFormValues>({
+    resolver: zodResolver(grnSchema),
+    defaultValues: defaults,
   });
 
   const { fields } = useFieldArray({ control: form.control, name: "lines" });
 
+  /**
+   * B2 — the count a receiver scanned, per PO line.
+   *
+   * Kept beside the form rather than derived from it, because the two mean
+   * different things: the form field starts at what the order still owed, and a
+   * tally starts at nothing. Once a line has been scanned even once its count is
+   * the tally, so a partial delivery cannot post the ordered quantity because
+   * nobody cleared a pre-filled box.
+   */
+  const [scannedTally, setScannedTally] = useState<Record<number, number>>({});
+
+  useEffect(
+    function reseedOnOpen() {
+      if (!open) return;
+      form.reset(defaults);
+      setScannedTally({});
+      setActiveLineId(null);
+      setSelectedWarehouseId(po.warehouseId ?? 0);
+    },
+    [open, defaults, form, po.warehouseId],
+  );
+
+  const scan = useScanTarget<DraftLineMeta>({
+    candidates: lineMetas,
+    documentNoun: "delivery",
+    match: (meta, resolved) => scanNamesVariant(resolved, meta.productVariantId, meta.sku),
+    describe: (meta) => ({
+      key: String(meta.poLineId),
+      primary: meta.productName,
+      secondary: `${meta.sku ?? "no SKU"} · ${(meta.ordered - meta.alreadyReceived).toFixed(2)} outstanding`,
+    }),
+    acceptedMessage: (meta) =>
+      `${meta.productName} — ${(scannedTally[meta.poLineId] ?? 0) + 1} counted.`,
+    onResolved: handleScanResolved,
+  });
+
+  /**
+   * A scanned unit lands on its line, and the grains the label carried land with
+   * it. A GS1 label knows its own lot and serial; making the receiver retype
+   * them is how a lot number ends up transposed on a receipt that has to answer
+   * a recall.
+   */
+  function handleScanResolved(meta: DraftLineMeta, resolved: ResolvedScan): void {
+    const index = lineMetas.findIndex((candidate) => candidate.poLineId === meta.poLineId);
+    if (index < 0) return;
+
+    const next = (scannedTally[meta.poLineId] ?? 0) + 1;
+    setScannedTally((previous) => ({ ...previous, [meta.poLineId]: next }));
+    setActiveLineId(meta.poLineId);
+    form.setValue(`lines.${index}.quantityReceived`, next.toFixed(4), { shouldDirty: true });
+
+    if (meta.trackingMethod === "LOT" && resolved.lotNumber) {
+      form.setValue(`lines.${index}.lotNumber`, resolved.lotNumber, { shouldDirty: true });
+    }
+    if (meta.trackingMethod === "SERIAL" && resolved.serialNumber) {
+      const existing = form.getValues(`lines.${index}.serialNumbers`) ?? "";
+      const already = existing
+        .split(/[\n,]/)
+        .map((serial) => serial.trim())
+        .filter(Boolean);
+      if (!already.includes(resolved.serialNumber)) {
+        form.setValue(
+          `lines.${index}.serialNumbers`,
+          [...already, resolved.serialNumber].join("\n"),
+          { shouldDirty: true },
+        );
+      }
+    }
+  }
+
+  function handleActivateLine(poLineId: number): void {
+    setActiveLineId((current) => (current === poLineId ? null : poLineId));
+  }
+
   function handleClose(): void {
     form.reset();
+    setScannedTally({});
+    setActiveLineId(null);
     setSelectedWarehouseId(po.warehouseId ?? 0);
     onOpenChange(false);
   }
 
   function handleOpenChange(nextOpen: boolean): void {
     if (!nextOpen) {
-      form.reset();
+      form.reset(defaults);
+      setScannedTally({});
+      setActiveLineId(null);
       setSelectedWarehouseId(po.warehouseId ?? 0);
     }
     onOpenChange(nextOpen);
   }
 
-  async function onSubmit(values: GrnFormValues): Promise<void> {
-    const indexedLines = values.lines.map((l, origIdx) => ({ l, meta: lineMetas[origIdx] }));
-    const activeIndexed = indexedLines.filter(({ l }) => l.quantityReceived > 0);
+  function handleWarehouseChange(value: string): void {
+    setSelectedWarehouseId(Number(value));
+    form.resetField("locationId");
+  }
 
-    if (activeIndexed.length === 0) {
-      toast.error("Enter quantity for at least one line");
-      return;
+  /** The counted lines, or `null` when the count itself does not hold together. */
+  function buildLines(values: GrnFormValues): GrnDraftLineInput[] | null {
+    const counted = values.lines
+      .map((line, index) => ({ line, meta: lineMetas[index] }))
+      .filter(({ line }) => Number(line.quantityReceived) > 0);
+
+    if (counted.length === 0) {
+      toast.error("Enter a quantity for at least one line");
+      return null;
     }
 
-    for (let i = 0; i < activeIndexed.length; i++) {
-      const entry = activeIndexed[i];
-      if (!entry) continue;
-      const { l: line, meta } = entry;
-      if (meta?.trackingMethod === "SERIAL") {
-        const serials = (line.serialNumbers ?? "")
-          .split(/[\n,]/)
-          .map((s) => s.trim())
-          .filter(Boolean);
-        if (serials.length !== Math.round(line.quantityReceived)) {
-          toast.error(
-            `Serial count mismatch on line ${i + 1}: ${serials.length} entered, ${Math.round(line.quantityReceived)} expected`,
-          );
-          return;
-        }
+    const payload: GrnDraftLineInput[] = [];
+    for (const [position, { line, meta }] of counted.entries()) {
+      const isSerial = meta?.trackingMethod === "SERIAL";
+      const serials = isSerial ? splitSerials(line.serialNumbers) : undefined;
+      if (serials !== undefined && serials.length !== Math.round(Number(line.quantityReceived))) {
+        toast.error(
+          `Serial count mismatch on line ${position + 1}: ${serials.length} entered, ${Math.round(Number(line.quantityReceived))} expected`,
+        );
+        return null;
       }
+      payload.push(toPayloadLine(line, meta, serials));
     }
+    return payload;
+  }
 
-    const today = new Date().toISOString().slice(0, 10);
+  function toPayloadLine(
+    line: GrnFormLine,
+    meta: DraftLineMeta | undefined,
+    serials: string[] | undefined,
+  ): GrnDraftLineInput {
+    const isLot = meta?.trackingMethod === "LOT";
+    return {
+      poLineId: line.poLineId,
+      quantityReceived: line.quantityReceived,
+      discrepancyReason:
+        line.discrepancyReason && line.discrepancyReason !== NO_DISCREPANCY
+          ? line.discrepancyReason
+          : undefined,
+      qualityStatus: line.qualityStatus,
+      rejectionReason: line.qualityStatus === "REJECTED" ? line.rejectionReason : undefined,
+      lotNumber: isLot ? line.lotNumber?.trim() || undefined : undefined,
+      expiryDate: isLot ? line.expiryDate?.trim() || undefined : undefined,
+      manufactureDate: isLot ? line.manufactureDate?.trim() || undefined : undefined,
+      serialNumbers: serials && serials.length > 0 ? serials : undefined,
+    };
+  }
 
+  function handleSaveDraft(): void {
+    void form.handleSubmit((values) => {
+      const lines = buildLines(values);
+      if (!lines) return;
+      draftMutation.mutate(
+        {
+          poId: po.id,
+          receivedDate: getTodayString(),
+          locationId: values.locationId,
+          notes: values.notes?.trim() || undefined,
+          lines,
+        },
+        {
+          onSuccess: (grn) => {
+            toast.success(`GRN ${grn.grnNumber} saved as a draft — no stock has moved`);
+            handleClose();
+          },
+          onError: (error) => toast.error(getErrorMessage(error)),
+        },
+      );
+    })();
+  }
+
+  function handleSubmit(values: GrnFormValues): void {
+    const lines = buildLines(values);
+    if (!lines) return;
     const payload: ReceiveGoodsInput = {
       locationId: values.locationId,
-      receivedDate: today,
+      receivedDate: getTodayString(),
       notes: values.notes?.trim() || undefined,
-      lines: activeIndexed.map<ReceiveGoodsLineInput>(({ l, meta }) => {
-        const serials =
-          meta?.trackingMethod === "SERIAL" && l.serialNumbers
-            ? l.serialNumbers
-                .split(/[\n,]/)
-                .map((s) => s.trim())
-                .filter(Boolean)
-            : undefined;
-        return {
-          poLineId: l.poLineId,
-          quantityReceived: l.quantityReceived,
-          qualityStatus: l.qualityStatus,
-          rejectionReason: l.qualityStatus === "REJECTED" ? l.rejectionReason : undefined,
-          lotNumber: meta?.trackingMethod === "LOT" ? l.lotNumber?.trim() || undefined : undefined,
-          expiryDate: meta?.trackingMethod === "LOT" ? l.expiryDate?.trim() || undefined : undefined,
-          manufactureDate:
-            meta?.trackingMethod === "LOT" ? l.manufactureDate?.trim() || undefined : undefined,
-          serialNumbers: serials,
-        };
-      }),
+      lines,
     };
-
-    try {
-      const grn = await receiveMutation.mutateAsync(payload);
-      toast.success(`GRN ${grn.grnNumber} recorded`);
-      handleClose();
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
+    receiveMutation.mutate(payload, {
+      onSuccess: (grn) => {
+        toast.success(`GRN ${grn.grnNumber} posted to stock`);
+        handleClose();
+      },
+      onError: (error) => toast.error(getErrorMessage(error)),
+    });
   }
 
   return (
@@ -356,39 +292,53 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
       open={open}
       onOpenChange={handleOpenChange}
       title="Receive Goods"
-      description="Record quantities received for this purchase order."
+      description="Count what arrived. Save it as a draft, or post it to stock now."
       footer={
-        <div className="grid grid-cols-2 gap-2 w-full">
-          <Button variant="outline" size="sm" onClick={handleClose}>
+        <div className="grid w-full grid-flow-col auto-cols-fr gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={handleClose}>
             Cancel
           </Button>
+          <LoadingButton
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleSaveDraft}
+            isPending={draftMutation.isPending}
+            loadingText="Saving…"
+          >
+            Save as draft
+          </LoadingButton>
           <LoadingButton
             type="submit"
             form="receive-goods-form"
             size="sm"
             isPending={receiveMutation.isPending}
-            loadingText="Recording…"
+            loadingText="Posting…"
           >
-            Record receipt
+            Post to stock
           </LoadingButton>
         </div>
       }
     >
       <Form {...form}>
-        <form id="receive-goods-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          {!po.warehouseId && (
+        <form id="receive-goods-form" onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4">
+          <ScanField
+            scan={scan}
+            label="Scan a unit as it comes off the pallet"
+            placeholder="Barcode, GTIN, SKU, lot or serial"
+            sticky
+          />
+          {!po.warehouseId ? (
             <FormItem>
               <FormLabel>Warehouse *</FormLabel>
               <WarehouseSelect
                 value={selectedWarehouseId > 0 ? String(selectedWarehouseId) : ""}
-                onChange={(v) => {
-                  setSelectedWarehouseId(Number(v));
-                  form.resetField("locationId");
-                }}
+                onChange={handleWarehouseChange}
                 activeOnly
+                ariaLabel="Warehouse"
               />
             </FormItem>
-          )}
+          ) : null}
           <FormField
             control={form.control}
             name="locationId"
@@ -401,13 +351,14 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
                     value={field.value != null && field.value > 0 ? String(field.value) : ""}
                     onChange={(v) => field.onChange(Number(v))}
                     activeOnly
+                    ariaLabel="Receive at Location"
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             {fields.map((field, index) => {
               const meta = lineMetas[index];
               if (!meta) return null;
@@ -417,6 +368,9 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
                   meta={meta}
                   index={index}
                   control={form.control}
+                  scannedCount={scannedTally[meta.poLineId] ?? 0}
+                  isActive={activeLineId === meta.poLineId}
+                  onActivate={handleActivateLine}
                 />
               );
             })}

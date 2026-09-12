@@ -1,5 +1,5 @@
-import { JournalPage } from "@/features/accounting/core/journal-page";
+import { PostJournalClient } from "@/features/accounting/ledger";
 
-export default function Page() {
-  return <JournalPage />;
+export default function NewJournalPage() {
+  return <PostJournalClient />;
 }

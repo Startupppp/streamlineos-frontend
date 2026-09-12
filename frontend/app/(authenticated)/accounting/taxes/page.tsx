@@ -1,5 +1,5 @@
-import { TaxPage } from "@/features/accounting/taxes/tax-page";
+import { TaxSummaryReport } from "@/features/accounting/reports";
 
-export default function Page() {
-  return <TaxPage />;
+export default function TaxSummaryPage() {
+  return <TaxSummaryReport />;
 }

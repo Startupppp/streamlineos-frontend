@@ -16,6 +16,8 @@ const ALL_SENTINEL = "all";
 
 interface CrmOptionSelectProps {
   type: CrmOptionType;
+  /** Points a sibling <Label htmlFor> at the trigger, so the control is named. */
+  id?: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -25,6 +27,7 @@ interface CrmOptionSelectProps {
 
 export function CrmOptionSelect({
   type,
+  id,
   value,
   onChange,
   placeholder = "Select…",
@@ -35,7 +38,7 @@ export function CrmOptionSelect({
 
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className={cn("text-xs", className)}>
+      <SelectTrigger id={id} className={cn("text-xs", className)}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

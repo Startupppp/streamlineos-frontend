@@ -26,6 +26,7 @@ import { AppSheet } from "@/components/shared/app-sheet";
 import { usePickSalesOrder, useWarehouses, useLocations } from "@/hooks/api/inventory";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { decimalQuantityOrZeroSchema } from "@/features/inventory/lib/quantity-schema";
 
 const pickSchema = z.object({
   warehouseId: z.number().int().min(1, "Select a warehouse"),
@@ -33,7 +34,7 @@ const pickSchema = z.object({
   lines: z.array(
     z.object({
       soLineId: z.number().int(),
-      quantityPicked: z.number().min(0, "Must be 0 or more"),
+      quantityPicked: decimalQuantityOrZeroSchema,
     }),
   ),
 });
@@ -54,7 +55,7 @@ interface PickSheetProps {
 }
 
 function buildDefaultLines(lines: SoLine[]): PickFormValues["lines"] {
-  return lines.map((l) => ({ soLineId: l.id, quantityPicked: Number(l.quantity) }));
+  return lines.map((l) => ({ soLineId: l.id, quantityPicked: Number(l.quantity).toFixed(4) }));
 }
 
 export function PickSheet({ open, onOpenChange, soId, lines }: PickSheetProps) {
@@ -202,7 +203,7 @@ export function PickSheet({ open, onOpenChange, soId, lines }: PickSheetProps) {
                     min="0"
                     step="0.001"
                     className="text-xs text-right"
-                    {...form.register(`lines.${idx}.quantityPicked`, { valueAsNumber: true })}
+                    {...form.register(`lines.${idx}.quantityPicked`)}
                   />
                 </div>
               ))}

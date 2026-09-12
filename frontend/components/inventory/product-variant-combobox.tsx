@@ -11,6 +11,12 @@ interface ProductVariantComboboxProps {
   disabled?: boolean;
   className?: string;
   activeOnly?: boolean;
+  /**
+   * The trigger's accessible name — required, see `Combobox`'s own `ariaLabel`.
+   * Required rather than optional because every existing call site had simply
+   * omitted it, and an optional prop is reintroduced by omission.
+   */
+  ariaLabel: string;
 }
 
 export function ProductVariantCombobox({
@@ -20,6 +26,7 @@ export function ProductVariantCombobox({
   disabled,
   className,
   activeOnly = true,
+  ariaLabel,
 }: ProductVariantComboboxProps) {
   const { data: variants = [], isLoading } = useProductVariants(
     activeOnly ? { activeOnly: true } : undefined,
@@ -45,6 +52,7 @@ export function ProductVariantCombobox({
       emptyText={isLoading ? "Loading variants…" : "No variants match your search."}
       disabled={disabled || isLoading}
       className={className}
+      ariaLabel={ariaLabel}
     />
   );
 }

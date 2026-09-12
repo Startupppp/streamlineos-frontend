@@ -15,11 +15,11 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import {
@@ -229,8 +229,6 @@ export function PortfoliosPage() {
     {
       key: "name",
       header: "Name",
-      sortable: true,
-      sortValue: (r) => r.name,
       className: TABLE_TITLE_CELL,
       cell: (row) => (
         <Link

@@ -1,5 +1,5 @@
-import { VendorsListPage } from "@/features/accounting/vendors/vendors-list-page";
+import { VendorsPage } from "@/features/accounting/purchases/vendors/vendors-page";
 
-export default function Page() {
-  return <VendorsListPage />;
+export default function AccountingVendorsPage() {
+  return <VendorsPage />;
 }

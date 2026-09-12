@@ -48,7 +48,7 @@ export default function AutomationsPage() {
   const [density, setDensity] = useDensity();
   const canManage = useCan("crm:settings:manage");
 
-  const { data, isLoading, isError, refetch, access} = useCrmAutomationRules();
+  const { data, isLoading, isError, refetch } = useCrmAutomationRules();
   const { data: eventsData } = useAutomationEvents();
   const enableRule = useEnableCrmAutomationRule();
   const disableRule = useDisableCrmAutomationRule();
@@ -185,7 +185,6 @@ export default function AutomationsPage() {
           />
         ) : rows.length === 0 ? (
           <EmptyState
-            access={access}
             illustration={<AutomationsIllustration />}
             title="No automations yet"
             description="An automation watches for something — a lead arriving, a deal moving — and does the next thing without anybody asking."

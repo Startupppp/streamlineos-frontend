@@ -3,44 +3,43 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { JOB_STATUS_BADGE, JOB_STATUS_LABEL, type JobStatus } from "@/features/inventory/lib";
-import {
-  useImportPreview,
-  useCreateImportJob,
-  useImportJobs,
-} from "@/hooks/api/inventory/admin";
+import { useImportPreview, useImportJobs } from "@/hooks/api/inventory/admin";
 import type { ImportPreviewResult } from "@/hooks/api/inventory/admin";
 import { ImportTypeStep, type ImportType } from "./import-type-step";
 import { ImportPreviewStep } from "./import-preview-step";
+import { StagedImportRunner } from "./staged-import-runner";
 import { ImportResultStep } from "./import-result-step";
+import { AppSheet } from "@/components/shared/app-sheet";
 import { ExportTab } from "./export-tab";
 
-const STEPS = ["type", "preview", "running", "done"] as const;
+const STEPS = ["type", "preview", "running"] as const;
 type Step = (typeof STEPS)[number];
 
 const STEP_LABELS: Record<Step, string> = {
   type: "1. Select Type",
   preview: "2. Upload & Preview",
-  running: "3. Running",
-  done: "4. Done",
+  running: "3. Import",
 };
 
-function isJobStatus(s: string): s is JobStatus {
-  return s === "PENDING" || s === "PROCESSING" || s === "COMPLETED" || s === "FAILED" || s === "CANCELLED";
-}
-
+/**
+ * The job row under the names the import routes return: its kind is `jobType`,
+ * its failures `errorRows`, and it carries no completion time, so `updatedAt`
+ * is when it last moved.
+ */
 interface ImportJobRow {
   id: number;
   jobType: string;
-  status: string;
+  status: JobStatus;
   totalRows: number;
   processedRows: number;
   errorRows: number;
@@ -65,8 +64,8 @@ const IMPORT_HISTORY_COLUMNS: DataTableColumn<ImportJobRow>[] = [
     key: "status",
     header: "Status",
     cell: (job) => (
-      <Badge className={isJobStatus(job.status) ? JOB_STATUS_BADGE[job.status] : ""}>
-        {isJobStatus(job.status) ? JOB_STATUS_LABEL[job.status] : job.status}
+      <Badge className={JOB_STATUS_BADGE[job.status]}>
+        {JOB_STATUS_LABEL[job.status]}
       </Badge>
     ),
   },
@@ -106,14 +105,32 @@ const IMPORT_HISTORY_COLUMNS: DataTableColumn<ImportJobRow>[] = [
 ];
 
 export function ImportClient() {
+  const canView = useCan("inventory:import");
   const canImport = useCan("inventory:import");
+
+  function handleRetryJobs(): void {
+    void refetchJobs();
+  }
   const [step, setStep] = React.useState<Step>("type");
   const [selectedType, setSelectedType] = React.useState<ImportType | null>(null);
   const [preview, setPreview] = React.useState<ImportPreviewResult | null>(null);
-  const [jobId, setJobId] = React.useState<number | null>(null);
+  /**
+   * Kept because the import is driven from the file's own rows.
+   *
+   * The previous flow sent `preview.sample` to the single-shot job endpoint, and
+   * the backend defines that sample as `rows.slice(0, 20)` — so importing five
+   * thousand products applied twenty of them under a job that read COMPLETED.
+   * The staged routes take the whole file in chunks, which means the file has to
+   * survive the preview step.
+   */
+  const [file, setFile] = React.useState<File | null>(null);
+  /**
+   * A past job's rejected rows had no way in at all: the history table listed an
+   * error count and nothing opened it.
+   */
+  const [inspectingJobId, setInspectingJobId] = React.useState<number | null>(null);
 
   const previewMutation = useImportPreview();
-  const createJobMutation = useCreateImportJob();
   const {
     data: jobsData,
     isLoading: isJobsLoading,
@@ -121,10 +138,6 @@ export function ImportClient() {
     error: jobsError,
     refetch: refetchJobs,
   } = useImportJobs();
-
-  function handleRetryJobs(): void {
-    void refetchJobs();
-  }
 
   function handleTypeSelect(type: ImportType): void {
     setSelectedType(type);
@@ -140,30 +153,42 @@ export function ImportClient() {
     try {
       const result = await previewMutation.mutateAsync(fd);
       setPreview(result);
-    } catch {
-      toast.error("Failed to preview file. Check the format and try again.");
+      setFile(file);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   }
 
-  async function handleConfirm(): Promise<void> {
-    if (!selectedType || !preview) return;
-    try {
-      const job = await createJobMutation.mutateAsync({
-        importType: selectedType,
-        rows: preview.sample,
-      });
-      setJobId(job.id);
-      setStep("running");
-    } catch {
-      toast.error("Failed to start import job.");
-    }
+  function handleConfirm(): void {
+    if (!selectedType || !preview || !file) return;
+    setStep("running");
   }
 
   function handleReset(): void {
     setStep("type");
     setSelectedType(null);
     setPreview(null);
-    setJobId(null);
+    setFile(null);
+  }
+
+  function handleInspectJob(job: ImportJobRow): void {
+    setInspectingJobId(job.id);
+  }
+
+  function handleInspectClose(open: boolean): void {
+    if (!open) setInspectingJobId(null);
+  }
+
+  // G8. Denied is not empty. Placed after every hook, not at the top of
+  // the component: an early return above a useState or useQuery makes the
+  // hook order depend on a permission, which React forbids and which only
+  // shows up for the user who lacks the key.
+  if (!canView) {
+    return (
+      <PageWrapper title="Import & Export">
+        <NoPermissionState permission="inventory:import" className="flex-1" />
+      </PageWrapper>
+    );
   }
 
   return (
@@ -215,11 +240,15 @@ export function ImportClient() {
                       preview={preview}
                       onUpload={handleUpload}
                       onConfirm={handleConfirm}
-                      isConfirming={createJobMutation.isPending}
+                      isConfirming={false}
                     />
                   )}
-                  {(step === "running" || step === "done") && jobId !== null && (
-                    <ImportResultStep jobId={jobId} onReset={handleReset} />
+                  {step === "running" && selectedType && file && (
+                    <StagedImportRunner
+                      file={file}
+                      importType={selectedType}
+                      onDone={handleReset}
+                    />
                   )}
                 </CardContent>
               </Card>
@@ -227,21 +256,26 @@ export function ImportClient() {
               <div>
                 <p className="text-xs font-semibold text-foreground mb-2">Import History</p>
                 {isJobsError ? (
+                  // G8. A failed history read used to render the empty table, so
+                  // "we could not fetch your imports" and "you have never imported
+                  // anything" looked identical — and the second sends somebody off
+                  // to re-run an import that already succeeded.
                   <ErrorState
-                    compact
+                    className="flex-1"
                     title="Couldn't load import history"
                     description={getErrorMessage(jobsError)}
                     onRetry={handleRetryJobs}
                   />
                 ) : (
-                <DataTable
-                  data={jobsData?.items ?? []}
-                  columns={IMPORT_HISTORY_COLUMNS}
-                  getRowKey={(job) => job.id}
-                  isLoading={isJobsLoading}
-                  className="flex-1 min-h-0"
-                  emptyState={<div className="py-8 text-center text-sm text-muted-foreground">No import jobs yet.</div>}
-                />
+                  <DataTable
+                    data={jobsData?.items ?? []}
+                    columns={IMPORT_HISTORY_COLUMNS}
+                    getRowKey={(job) => job.id}
+                    isLoading={isJobsLoading}
+                    className="flex-1 min-h-0"
+                    onRowClick={handleInspectJob}
+                    emptyState={<div className="py-8 text-center text-sm text-muted-foreground">No import jobs yet.</div>}
+                  />
                 )}
               </div>
             </>
@@ -252,6 +286,17 @@ export function ImportClient() {
           <ExportTab />
         </TabsContent>
       </Tabs>
+
+      <AppSheet
+        open={inspectingJobId !== null}
+        onOpenChange={handleInspectClose}
+        title="Import job"
+        description="What this run applied, and every row it rejected."
+      >
+        {inspectingJobId === null ? null : (
+          <ImportResultStep jobId={inspectingJobId} onReset={() => setInspectingJobId(null)} />
+        )}
+      </AppSheet>
     </PageWrapper>
   );
 }

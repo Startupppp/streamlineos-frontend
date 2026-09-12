@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { Gated } from "@/components/shared/gated";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -23,7 +24,7 @@ import { CreateBlueprintDialog } from "@/features/crm/settings/blueprints/create
 import { TransitionMatrix } from "@/features/crm/settings/blueprints/transition-matrix";
 
 export default function BlueprintsPage() {
-  const { data: blueprints, isLoading, isError, refetch, access } = useBlueprints();
+  const { data: blueprints, isLoading, isError, refetch } = useBlueprints();
   const { data: metadata } = useCrmMetadata();
   const updateBlueprint = useUpdateBlueprint();
 
@@ -83,26 +84,40 @@ export default function BlueprintsPage() {
           </Button>
         }
       >
-        {isLoading ? (
-          <div className="space-y-3">
-            {[0, 1, 2].map((i) => <Skeleton key={i} className="h-14 w-full" />)}
-          </div>
-        ) : isError ? (
-          <ErrorState
-            title="Couldn't load blueprints"
-            description="The blueprint list didn't load. Check your connection and try again."
-            onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          />
-        ) : !blueprints || blueprints.length === 0 ? (
-          <EmptyState
-            access={access}
-            title="No blueprints"
-            description="Blueprints define which stage transitions are allowed and what requirements must be met."
-            action={{ label: "New Blueprint", onClick: handleOpenDialog }}
-            className={CONTENT_FILL_PANEL}
-          />
-        ) : (
+        {/*
+          * Ticket 26. A disabled query reports `isLoading: false` with no rows,
+          * which is exactly what an empty list looks like -- so this ternary
+          * told a caller without `crm:settings:view` that no blueprints had been
+          * defined, rather than that they were not allowed to see them.
+          */}
+        <Gated
+          permission="crm:settings:view"
+          isLoading={isLoading}
+          isError={isError}
+          isEmpty={!blueprints || blueprints.length === 0}
+          className={CONTENT_FILL_PANEL}
+          loading={
+            <div className="space-y-3">
+              {[0, 1, 2].map((i) => <Skeleton key={i} className="h-14 w-full" />)}
+            </div>
+          }
+          error={
+            <ErrorState
+              title="Couldn't load blueprints"
+              description="The blueprint list didn't load. Check your connection and try again."
+              onRetry={handleRetry}
+              className={CONTENT_FILL_PANEL}
+            />
+          }
+          empty={
+            <EmptyState
+              title="No blueprints"
+              description="Blueprints define which stage transitions are allowed and what requirements must be met."
+              action={{ label: "New Blueprint", onClick: handleOpenDialog }}
+              className={CONTENT_FILL_PANEL}
+            />
+          }
+        >
           <div className="flex gap-4 items-start">
             <Card className="bg-card border border-border rounded-xl shadow-sm w-[250px] shrink-0">
               <CardHeader className="px-3 py-2.5">
@@ -112,7 +127,7 @@ export default function BlueprintsPage() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="divide-y divide-border">
-                  {blueprints.map((bp) => (
+                  {(blueprints ?? []).map((bp) => (
                     <button
                       key={bp.id}
                       type="button"
@@ -192,7 +207,7 @@ export default function BlueprintsPage() {
               )}
             </div>
           </div>
-        )}
+        </Gated>
       </PageWrapper>
     </>
   );

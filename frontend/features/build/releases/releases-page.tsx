@@ -21,15 +21,8 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import {
-  PmPageShell,
-  PmSection,
-  PM_FILL_PANEL,
-} from "@/components/pm-chrome";
-import {
-  TABLE_TITLE_CELL,
-  TEXT_FLEX_CHILD,
-} from "@/lib/text-overflow";
+import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { TABLE_TITLE_CELL, TEXT_FLEX_CHILD } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   STATUS_CONFIG,
@@ -110,21 +103,23 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
       {
         key: "name",
         header: "Name",
-        sortable: true,
-        sortValue: (r) => r.name,
         className: TABLE_TITLE_CELL,
         cell: (r) => (
           <div className={cn(TEXT_FLEX_CHILD, "space-y-0.5 overflow-hidden")}>
-            <TruncatedText text={r.name} className="text-xs font-medium text-foreground" />
-            <TruncatedText text={r.version} className="font-mono text-micro text-muted-foreground" />
+            <TruncatedText
+              text={r.name}
+              className="text-xs font-medium text-foreground"
+            />
+            <TruncatedText
+              text={r.version}
+              className="font-mono text-micro text-muted-foreground"
+            />
           </div>
         ),
       },
       {
         key: "status",
         header: "Status",
-        sortable: true,
-        sortValue: statusSort,
         cell: (r) => {
           const cfg = STATUS_CONFIG[r.status];
           return (
@@ -140,8 +135,6 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
       {
         key: "releaseDate",
         header: "Release Date",
-        sortable: true,
-        sortValue: (r) => r.releaseDate ?? "",
         cell: (r) =>
           r.releaseDate ? (
             <span className="text-xs tabular-nums text-muted-foreground">
@@ -154,8 +147,6 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
       {
         key: "ticketCount",
         header: "Tickets",
-        sortable: true,
-        sortValue: (r) => r.ticketCount,
         cell: (r) => (
           <span className="text-xs tabular-nums text-muted-foreground">
             {r.ticketCount}
@@ -240,22 +231,22 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
             />
           ) : (
             <DataTable
-                className={PM_FILL_PANEL}
-                data={releases ?? []}
-                columns={columns}
-                getRowKey={(r) => r.id}
-                isLoading={isLoading}
-                onRowClick={handleOpenEdit}
-                emptyState={
-                  <EmptyState
-                    illustrationPreset="projects"
-                    title="No releases yet"
-                    description="Create your first release to track shipped features and versions."
-                    action={{ label: "New Release", onClick: handleOpenCreate }}
-                    className={PM_FILL_PANEL}
-                  />
-                }
-              />
+              className={PM_FILL_PANEL}
+              data={releases ?? []}
+              columns={columns}
+              getRowKey={(r) => r.id}
+              isLoading={isLoading}
+              onRowClick={handleOpenEdit}
+              emptyState={
+                <EmptyState
+                  illustrationPreset="projects"
+                  title="No releases yet"
+                  description="Create your first release to track shipped features and versions."
+                  action={{ label: "New Release", onClick: handleOpenCreate }}
+                  className={PM_FILL_PANEL}
+                />
+              }
+            />
           )}
         </PmSection>
 

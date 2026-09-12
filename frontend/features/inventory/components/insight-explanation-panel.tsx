@@ -9,6 +9,7 @@ import { AiGeneratedLabel } from "@/components/ai/ai-generated-label";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useExplainInsight, type ExplainFactor, type InsightNarration } from "@/hooks/api/inv-ai-explain";
 import type { AiInsight } from "@/hooks/api/inventory/reports";
+import { AiSuggestedActions } from "./ai-suggested-actions";
 
 interface EvidenceSectionProps {
   narration: InsightNarration;
@@ -62,23 +63,7 @@ const EvidenceSection = memo(function EvidenceSection({ narration }: EvidenceSec
         </div>
       )}
 
-      {narration.suggestedActions.length > 0 && (
-        <div>
-          <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
-            Suggested Actions
-          </p>
-          <ul className="space-y-1">
-            {narration.suggestedActions.map((action: string, i: number) => (
-              <li key={i} className="flex items-start gap-1.5 text-dense text-muted-foreground">
-                <span className="shrink-0 mt-0.5 h-3.5 w-3.5 rounded-full border border-primary/30 bg-primary/5 flex items-center justify-center text-micro font-bold text-primary">
-                  {i + 1}
-                </span>
-                {action}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <AiSuggestedActions actions={narration.actions} />
     </div>
   );
 });

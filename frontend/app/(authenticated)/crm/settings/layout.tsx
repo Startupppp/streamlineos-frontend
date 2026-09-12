@@ -23,6 +23,7 @@ const TABS = [
   { label: "Automations", href: "/crm/settings/automations" },
   { label: "Sequences", href: "/crm/settings/sequences" },
   { label: "AI Settings", href: "/crm/settings/ai" },
+  { label: "MCP", href: "/crm/settings/mcp" },
   { label: "Import / Export", href: "/crm/settings/import-export" },
   { label: "Audit Log", href: "/crm/settings/audit-log" },
 ] as const;

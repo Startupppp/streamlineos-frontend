@@ -43,10 +43,10 @@ export const SEQUENCE_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search sequences…",
     columns: [
-      { field: "name", primary: true, sortable: true, subtitle: "description" },
+      { field: "name", primary: true, subtitle: "description" },
       { field: "entityType", width: "w-32 shrink-0" },
       { field: "isActive", width: "w-28 shrink-0" },
-      { field: "createdAt", sortable: true, width: "w-32 shrink-0" },
+      { field: "createdAt", width: "w-32 shrink-0" },
     ],
   },
   detail: {

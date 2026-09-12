@@ -10,9 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent, CardAction } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { InsightExplanationPanel } from "@/features/inventory/components/insight-explanation-panel";
+import { useCan } from "@/hooks/api/access";
 import { useInventoryInsights, useGenerateInsights, useUpdateInsight } from "@/hooks/api/inventory/ai";
 import type { AiInsight } from "@/hooks/api/inventory/reports";
 
@@ -41,6 +42,7 @@ interface InsightRowProps {
   onAcknowledge: (id: number) => void;
   onDismiss: (id: number) => void;
   isPending: boolean;
+  canManage: boolean;
 }
 
 const InsightRow = memo(function InsightRow({
@@ -48,6 +50,7 @@ const InsightRow = memo(function InsightRow({
   onAcknowledge,
   onDismiss,
   isPending,
+  canManage,
 }: InsightRowProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -86,28 +89,32 @@ const InsightRow = memo(function InsightRow({
           >
             <Sparkles className="h-3 w-3 text-status-info-ink" aria-hidden="true" />
           </Button>
-          <AnimatedIconButton
-            icon={CheckCheckIcon}
-            iconSize={12}
-            iconClassName="text-status-success-ink"
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            aria-label="Acknowledge insight"
-            onClick={handleAcknowledge}
-            disabled={isPending}
-          />
-          <AnimatedIconButton
-            icon={XIcon}
-            iconSize={12}
-            iconClassName="text-muted-foreground"
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            aria-label="Dismiss insight"
-            onClick={handleDismiss}
-            disabled={isPending}
-          />
+          {canManage ? (
+            <>
+              <AnimatedIconButton
+                icon={CheckCheckIcon}
+                iconSize={12}
+                iconClassName="text-status-success-ink"
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                aria-label="Acknowledge insight"
+                onClick={handleAcknowledge}
+                disabled={isPending}
+              />
+              <AnimatedIconButton
+                icon={XIcon}
+                iconSize={12}
+                iconClassName="text-muted-foreground"
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                aria-label="Dismiss insight"
+                onClick={handleDismiss}
+                disabled={isPending}
+              />
+            </>
+          ) : null}
         </div>
       </div>
       {expanded && (
@@ -130,6 +137,8 @@ function InsightsSkeleton() {
 }
 
 export function DashboardInsightsPanel() {
+  const canRead = useCan("inventory:ai:read");
+  const canManage = useCan("inventory:ai:manage");
   const { data, isLoading, error, refetch } = useInventoryInsights({ status: "NEW" });
   const generateInsights = useGenerateInsights();
   const updateInsight = useUpdateInsight();
@@ -165,21 +174,30 @@ export function DashboardInsightsPanel() {
           <Sparkles className="h-3.5 w-3.5 text-status-info-ink" aria-hidden="true" />
           AI Insights
         </CardTitle>
-        <CardAction>
-          <LoadingButton
-            variant="outline"
-            size="sm"
-            className="text-xs"
-            onClick={handleGenerate}
-            isPending={generateInsights.isPending}
-            loadingText="Generating…"
-          >
-            Generate Insights
-          </LoadingButton>
-        </CardAction>
+        {canManage ? (
+          <CardAction>
+            <LoadingButton
+              variant="outline"
+              size="sm"
+              className="text-xs"
+              onClick={handleGenerate}
+              isPending={generateInsights.isPending}
+              loadingText="Generating…"
+            >
+              Generate Insights
+            </LoadingButton>
+          </CardAction>
+        ) : null}
       </CardHeader>
       <CardContent className="pt-3">
-        {isLoading ? (
+        {!canRead ? (
+          <NoPermissionState
+            compact
+            permission="inventory:ai:read"
+            title="Insights hidden"
+            description="AI-assisted inventory insights need their own read permission."
+          />
+        ) : isLoading ? (
           <InsightsSkeleton />
         ) : error ? (
           <ErrorState
@@ -203,6 +221,7 @@ export function DashboardInsightsPanel() {
                 onAcknowledge={handleAcknowledge}
                 onDismiss={handleDismiss}
                 isPending={updateInsight.isPending}
+                canManage={canManage}
               />
             ))}
           </div>

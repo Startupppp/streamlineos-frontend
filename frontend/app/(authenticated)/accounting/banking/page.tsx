@@ -1,5 +1,5 @@
-import { BankingHubClient } from "@/features/accounting/banking/components/banking-hub-client";
+import { BankAccountsPage } from "@/features/accounting/banking/accounts/bank-accounts-page";
 
-export default function BankingPage() {
-  return <BankingHubClient />;
+export default function AccountingBankingPage() {
+  return <BankAccountsPage />;
 }

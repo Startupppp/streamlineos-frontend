@@ -1,33 +1,28 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Plus, ExternalLink, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { useDeleteSignEnvelope, useSignEnvelopes } from "@/hooks/api/sign/envelopes";
-import { EnvelopeStatusBadge } from "../components/envelope-status-badge";
 import { CreateEnvelopeDialog } from "@/components/sign/create-envelope-dialog";
 import { EditEnvelopeSheet } from "../components/edit-envelope-sheet";
+import { envelopeColumns } from "./envelope-list-columns";
 import type { SignEnvelope } from "@/types/sign";
-import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
-import { propagationShield } from "@/lib/keyboard-activation";
+import { cn } from "@/lib/utils";
+import { DEFAULT_PAGE_SIZE, STANDARD_PAGE_SIZE_OPTIONS, parsePage, parsePageSize } from "@/lib/list-pagination";
 
 const STATUS_FILTERS = [
   { value: "all", label: "All" },
@@ -39,19 +34,65 @@ const STATUS_FILTERS = [
   { value: "expired", label: "Expired" },
 ] as const;
 
-const EDITABLE_STATUSES = new Set(["draft", "ready_to_send"]);
+const STATUS_VALUES = new Set<string>(STATUS_FILTERS.map((f) => f.value));
 
 export function EnvelopeList() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const canCreateEnvelope = useCan("sign:envelope:create");
-  const [status, setStatus] = useState<string>("all");
+  const statusParam = searchParams.get("status") ?? "all";
+  const status = STATUS_VALUES.has(statusParam) ? statusParam : "all";
+  const page = parsePage(searchParams.get("page"));
+  const pageSize = parsePageSize(searchParams.get("size"));
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } = useQueryParamOpen("create");
   const [editEnvelope, setEditEnvelope] = useState<SignEnvelope | null>(null);
   const [deleteEnvelope, setDeleteEnvelope] = useState<SignEnvelope | null>(null);
-  const { data: envelopes, isLoading, isError, refetch } = useSignEnvelopes(
-    status === "all" ? undefined : { status },
-  );
+  const { data, isLoading, isError, error, refetch } = useSignEnvelopes({
+    status: status === "all" ? undefined : status,
+    page,
+    limit: pageSize,
+  });
+  const envelopes = data?.items ?? [];
+  const total = data?.total ?? 0;
   const deleteMutation = useDeleteSignEnvelope();
+
+  const replaceParams = useCallback(
+    (mutate: (params: URLSearchParams) => void) => {
+      const params = new URLSearchParams(searchParams.toString());
+      mutate(params);
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [router, pathname, searchParams],
+  );
+
+  function handleStatusChange(value: string) {
+    replaceParams((params) => {
+      if (value === "all") params.delete("status");
+      else params.set("status", value);
+      params.delete("page");
+    });
+  }
+
+  function handleClearFilter() {
+    handleStatusChange("all");
+  }
+
+  function handlePageChange(next: number) {
+    replaceParams((params) => {
+      if (next <= 1) params.delete("page");
+      else params.set("page", String(next));
+    });
+  }
+
+  function handlePageSizeChange(next: number) {
+    replaceParams((params) => {
+      if (next === DEFAULT_PAGE_SIZE) params.delete("size");
+      else params.set("size", String(next));
+      params.delete("page");
+    });
+  }
 
   function handleCreateOpen() {
     openCreate();
@@ -65,22 +106,12 @@ export function EnvelopeList() {
     router.push(`/sign/envelopes/${envelope.id}`);
   }
 
-  function makeOpenHandler(id: number) {
-    return function handleOpenClick() {
-      router.push(`/sign/envelopes/${id}`);
-    };
+  function handleEditRequest(envelope: SignEnvelope) {
+    setEditEnvelope(envelope);
   }
 
-  function makeEditHandler(envelope: SignEnvelope) {
-    return function handleEditClick() {
-      setEditEnvelope(envelope);
-    };
-  }
-
-  function makeDeleteHandler(envelope: SignEnvelope) {
-    return function handleDeleteClick() {
-      setDeleteEnvelope(envelope);
-    };
+  function handleDeleteRequest(envelope: SignEnvelope) {
+    setDeleteEnvelope(envelope);
   }
 
   function handleEditOpenChange(open: boolean) {
@@ -109,7 +140,7 @@ export function EnvelopeList() {
       illustrationPreset="search"
       title={`No ${activeFilter.label.toLowerCase()} envelopes`}
       description="Try a different status filter or clear it to see all."
-      action={{ label: "Clear filter", onClick: () => setStatus("all") }}
+      action={{ label: "Clear filter", onClick: handleClearFilter }}
       className="border-0 bg-transparent min-h-[40vh]"
     />
   ) : (
@@ -122,118 +153,67 @@ export function EnvelopeList() {
     />
   );
 
-  const columns: DataTableColumn<SignEnvelope>[] = [
-    {
-      key: "title",
-      header: "Title",
-      className: TABLE_TITLE_CELL,
-      cell: (envelope) => (
-        <TruncatedText text={envelope.title} className="font-medium" />
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (envelope) => <EnvelopeStatusBadge status={envelope.status} />,
-    },
-    {
-      key: "sentAt",
-      header: "Sent",
-      cell: (envelope) => (
-        <span className="text-muted-foreground">
-          {envelope.sentAt ? new Date(envelope.sentAt).toLocaleDateString() : "—"}
-        </span>
-      ),
-    },
-    {
-      key: "expiresAt",
-      header: "Expires",
-      cell: (envelope) => (
-        <span className="text-muted-foreground">
-          {envelope.expiresAt ? new Date(envelope.expiresAt).toLocaleDateString() : "—"}
-        </span>
-      ),
-    },
-    {
-      key: "actions",
-      header: "",
-      headerClassName: "w-12",
-      cell: (envelope) => {
-        const canEdit = EDITABLE_STATUSES.has(envelope.status);
-        return (
-          <div className="flex justify-end" {...propagationShield}>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-8"
-                  aria-label={`Actions for ${envelope.title}`}
-                >
-                  <MoreHorizontal className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={makeOpenHandler(envelope.id)}>
-                  <ExternalLink className="size-4" />
-                  Open
-                </DropdownMenuItem>
-                {canEdit && (
-                  <DropdownMenuItem onClick={makeEditHandler(envelope)}>
-                    <Pencil className="size-4" />
-                    Edit
-                  </DropdownMenuItem>
-                )}
-                {canEdit && canCreateEnvelope && (
-                  <DropdownMenuItem
-                    variant="destructive"
-                    onClick={makeDeleteHandler(envelope)}
-                  >
-                    <Trash2 className="size-4" />
-                    Delete
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        );
-      },
-    },
-  ];
+  const columns = envelopeColumns({
+    canDelete: canCreateEnvelope,
+    onOpen: handleRowClick,
+    onEdit: handleEditRequest,
+    onDelete: handleDeleteRequest,
+  });
 
   return (
     <PageWrapper
       title="Envelopes"
       subtitle="Every signing request you've sent, organized by status"
       actions={
-        <Button onClick={handleCreateOpen}>
-          <Plus className="size-4" />
-          New envelope
-        </Button>
+        canCreateEnvelope ? (
+          <Button onClick={handleCreateOpen}>
+            <Plus className="size-4" />
+            New envelope
+          </Button>
+        ) : undefined
+      }
+      filters={
+        <Select value={status} onValueChange={handleStatusChange}>
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-44")} aria-label="Status">
+            <SelectValue placeholder="All statuses" />
+          </SelectTrigger>
+          <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
+            {STATUS_FILTERS.map((f) => (
+              <SelectItem key={f.value} value={f.value}>
+                {f.value === "all" ? "All statuses" : f.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       }
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4">
-        <Tabs value={status} onValueChange={setStatus}>
-          <TabsList>
-            {STATUS_FILTERS.map((f) => (
-              <TabsTrigger key={f.value} value={f.value}>
-                {f.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-
         {isError ? (
-          <ErrorState title="Failed to load envelopes" onRetry={handleRetry} />
+          <ErrorState
+            className="flex-1"
+            title="Failed to load envelopes"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
         ) : (
           <DataTable
             className="flex-1 min-h-0"
-            data={envelopes ?? []}
+            data={envelopes}
             columns={columns}
             getRowKey={(envelope) => envelope.id}
             isLoading={isLoading}
             emptyState={emptyState}
             onRowClick={handleRowClick}
+            minWidth="720px"
+            pagination={{
+              mode: "server",
+              page,
+              pageSize,
+              total,
+              onPageChange: handlePageChange,
+              onPageSizeChange: handlePageSizeChange,
+              pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+            }}
           />
         )}
       </div>

@@ -80,6 +80,7 @@ export const InspectionLineRow = memo(function InspectionLineRow({
                   form.setValue(`lines.${index}.serialId`, "");
                 }}
                 className="text-xs"
+                ariaLabel={`Variant, line ${String(index + 1)}`}
               />
             )}
           />

@@ -46,6 +46,7 @@ export {
   parseCalendarEventId,
   extractEventNumericId,
 } from "./calendar-types";
+export type { CreateCalendarEventPayload } from "./calendar-mutations";
 export {
   useCreateCalendarEvent,
   useUpdateCalendarEvent,

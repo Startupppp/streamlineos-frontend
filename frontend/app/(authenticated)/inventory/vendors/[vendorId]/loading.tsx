@@ -6,8 +6,8 @@ export default function VendorDetailLoading() {
       title="Vendor"
       subtitle="Loading..."
       backHref="/inventory/vendors"
-      statCols={3}
-      statCount={6}
+      statCols={4}
+      statCount={8}
       actions={null}
     />
   );

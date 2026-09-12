@@ -4,12 +4,28 @@ import { fileURLToPath } from "node:url";
 import { isExcludedScanDir } from "./check-repo-paths.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-
+/*
+  `isExcludedScanDir` (check-repo-paths.mjs) skips every dot-directory, the
+  `.next*` build outputs among them, plus node_modules and feedbucket-widget.
+  scripts/ holds the gates themselves and stays out of their own corpus, as it
+  was before the shared helper replaced this file's own list.
+*/
+const EXTRA_EXCLUDED_DIRS = new Set(["scripts"]);
 const EXTENSIONS = new Set([".tsx", ".ts", ".jsx", ".js"]);
 const LOCAL_FORMATTER = /new\s+Intl\.NumberFormat\s*\(/;
 const CANONICAL_PATH = "lib/format-utils.ts";
 
 export const KNOWN_EXCEPTIONS = [
+  {
+    file: "lib/accounting/money.ts",
+    line: 59,
+    reason: "GL money library: renders integer minor units at the currency's ISO 4217 scale (minimum = maximum = 0, 2 or 3 digits) in a per-currency locale, with an optional symbol-less decimal style and signDisplay. format-utils takes major units at Intl's default digits and has no fixed-scale or symbol-less form, so routing through it is not output-identical.",
+  },
+  {
+    file: "lib/accounting/money.ts",
+    line: 69,
+    reason: "GL money library's compact form over minor units. format-utils' formatMoneyCompact matches it for finite amounts but coerces NaN and Infinity to 0, so routing through it is not output-identical.",
+  },
 ];
 
 export function isLocalFormatterLine(line) {
@@ -143,7 +159,7 @@ function validateExceptions(exceptions) {
 
 function* walkFiles(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if (isExcludedScanDir(entry.name)) continue;
+    if (isExcludedScanDir(entry.name) || EXTRA_EXCLUDED_DIRS.has(entry.name)) continue;
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
       yield* walkFiles(full);

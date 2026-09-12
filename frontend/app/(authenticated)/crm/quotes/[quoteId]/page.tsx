@@ -14,6 +14,7 @@ import {
   useQuoteDetail,
   useUpdateQuote,
   useUpdateQuoteStatus,
+  useSendQuote,
   useDeleteQuote,
   useApproveQuote,
   useRejectQuote,
@@ -60,6 +61,7 @@ export default function QuoteDetailPage({
   const { data: pricebooks } = usePricebooks();
   const { data: templates } = useQuoteTemplates();
   const updateStatus = useUpdateQuoteStatus();
+  const sendQuote = useSendQuote();
   const updateQuote = useUpdateQuote();
   const deleteQuote = useDeleteQuote();
   const approveQuote = useApproveQuote();
@@ -73,14 +75,19 @@ export default function QuoteDetailPage({
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   const handleSend = useCallback(() => {
-    updateStatus.mutate(
-      { id: quoteId, status: "SENT" },
+    /*
+     * The dedicated route, not `PATCH { status: "SENT" }`. Only this one refuses
+     * a quote that is pending discount approval, refuses one with no linked
+     * contact, and emits `quote.sent` for the automation rules.
+     */
+    sendQuote.mutate(
+      { id: quoteId },
       {
         onSuccess: () => toast.success("Quote sent"),
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [quoteId, updateStatus]);
+  }, [quoteId, sendQuote]);
 
   const handleAccept = useCallback(() => {
     updateStatus.mutate(

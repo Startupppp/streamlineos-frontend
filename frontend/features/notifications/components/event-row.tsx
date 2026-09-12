@@ -1,65 +1,23 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useCallback } from "react";
 import { toast } from "sonner";
-import { Settings2, Bell } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
-import { useSession } from "next-auth/react";
-import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Settings2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { Input } from "@/components/ui/input";
-import { SearchInput } from "@/components/ui/search-input";
 import { Switch } from "@/components/ui/switch";
-import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { ErrorState } from "@/components/shared/error-state";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetBody,
-  SheetFooter,
-} from "@/components/ui/sheet";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { SendIcon } from "@animateicons/react/lucide";
 import {
-  useNotificationEventCatalog,
-  useUpdateNotificationEventPolicy,
-  useEmitNotificationEvent,
+  useUpdateNotificationEventPolicy
 } from "@/hooks/api/notifications";
-import { useCan } from "@/hooks/api/access";
-import { policySchema, type PolicyFormValues } from "@/features/notifications/policy-schema";
 import type {
   NotificationEventDefinition,
-  NotificationChannel,
-  NotificationPriority,
 } from "@/types/notifications";
 
-import { PRIORITIES, QUIET_HOURS_OPTIONS, priorityBadgeClass } from "./event-config";
+import { priorityBadgeClass } from "./event-config";
 
 export function EventRow({
   event,

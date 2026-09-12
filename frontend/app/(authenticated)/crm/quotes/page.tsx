@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useTransition, useMemo, useEffect } from "react";
+import { useCanState } from "@/hooks/api/access";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Download } from "lucide-react";
 import {
@@ -17,6 +18,7 @@ import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import {
   AlertDialog,
@@ -39,6 +41,7 @@ import { DensityToggle, useDensity } from "@/components/renderer/density-toggle"
 import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { QUOTE_LAYOUT, quoteListRecordFields } from "@/lib/renderer/crm/quote-layout";
 import { useQuotes, useUpdateQuoteStatus, useDeleteQuote } from "@/hooks/api/crm";
+import { useSendQuote } from "@/hooks/api/crm/quotes";
 import { downloadQuotesCsv } from "@/hooks/api/crm/quotes";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -63,6 +66,7 @@ export default function QuotesPage() {
   const layout = useTenantLayout(QUOTE_LAYOUT);
   const money = useOrgDisplay();
   const updateQuoteStatus = useUpdateQuoteStatus();
+  const sendQuote = useSendQuote();
   const deleteQuote = useDeleteQuote();
 
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
@@ -172,15 +176,24 @@ export default function QuotesPage() {
 
   const handleStatusUpdate = useCallback(
     (id: number, status: QuoteStatus) => {
-      updateQuoteStatus.mutate(
-        { id, status },
-        {
-          onSuccess: () => toast.success(`Quote marked as ${STATUS_LABELS[status].toLowerCase()}`),
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
+      const onSuccess = () =>
+        toast.success(`Quote marked as ${STATUS_LABELS[status].toLowerCase()}`);
+      const onError = (e: unknown) => toast.error(getErrorMessage(e));
+
+      /*
+       * Sending has its own endpoint and the generic PATCH is not a substitute:
+       * only the dedicated route refuses a quote that is pending discount
+       * approval, refuses one with no linked contact, writes the audit row and
+       * emits `quote.sent` for the automation rules. Accept and reject are
+       * customer outcomes with no endpoint of their own and stay on the PATCH.
+       */
+      if (status === "SENT") {
+        sendQuote.mutate({ id }, { onSuccess, onError });
+        return;
+      }
+      updateQuoteStatus.mutate({ id, status }, { onSuccess, onError });
     },
-    [updateQuoteStatus],
+    [updateQuoteStatus, sendQuote],
   );
 
   const handlePrevious = useCallback(() => {
@@ -211,6 +224,19 @@ export default function QuotesPage() {
     },
     [byId, handleRequestDelete, handleStatusUpdate],
   );
+
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:quotes:read") === "denied")
+    return <NoPermissionState permission="crm:quotes:read" />;
 
   return (
     <>

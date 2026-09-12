@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Gated } from "@/components/shared";
 import { ErrorState } from "@/components/shared/error-state";
 import {
   Select,
@@ -244,33 +245,50 @@ export function IssuesPage() {
       }
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden">
-        {records.isLoading ? (
-          <DataTableSkeleton
-            rows={12}
-            columns={layout.list.columns.length}
-            className="flex-1"
-          />
-        ) : records.isError ? (
-          <ErrorState
-            className={CONTENT_FILL_PANEL}
-            title={`Couldn't load ${plural}`}
-            onRetry={() => void records.refetch()}
-          />
-        ) : rows.length === 0 ? (
-          <EmptyState
-            access={records.access}
-            className={CONTENT_FILL_PANEL}
-            title={`No ${plural} yet`}
-            description={
-              isFiltered
-                ? "No results match your filters."
-                : `${layout.plural} raised by your team, or by the system on their behalf, will appear here.`
-            }
-            filtersActive={isFiltered}
-            onClearFilters={handleClearFilters}
-            action={!isFiltered && canManage ? { label: `New ${layout.singular.toLowerCase()}`, onClick: handleOpenCreate } : undefined}
-          />
-        ) : (
+        {/*
+          * Ticket 26. `useIssues` disables itself when the caller lacks
+          * `crm:issues:view`, and a disabled query in TanStack Query v5 reports
+          * `isLoading: false` with no rows -- the same flags an empty list has.
+          * The ternary this replaced therefore reached `No issues yet` and told
+          * somebody their team had raised nothing, when the truth was that they
+          * were not allowed to look.
+          */}
+        <Gated
+          permission="crm:issues:view"
+          isLoading={records.isLoading}
+          isError={records.isError}
+          isEmpty={rows.length === 0}
+          className={CONTENT_FILL_PANEL}
+          loading={
+            <DataTableSkeleton
+              rows={12}
+              columns={layout.list.columns.length}
+              className="flex-1"
+            />
+          }
+          error={
+            <ErrorState
+              className={CONTENT_FILL_PANEL}
+              title={`Couldn't load ${plural}`}
+              onRetry={() => void records.refetch()}
+            />
+          }
+          empty={
+            <EmptyState
+              access={records.access}
+              className={CONTENT_FILL_PANEL}
+              title={`No ${plural} yet`}
+              description={
+                isFiltered
+                  ? "No results match your filters."
+                  : `${layout.plural} raised by your team, or by the system on their behalf, will appear here.`
+              }
+              filtersActive={isFiltered}
+              onClearFilters={handleClearFilters}
+              action={!isFiltered && canManage ? { label: `New ${layout.singular.toLowerCase()}`, onClick: handleOpenCreate } : undefined}
+            />
+          }
+        >
           <>
             <RecordList
               layout={layout}
@@ -289,7 +307,7 @@ export function IssuesPage() {
               </div>
             ) : null}
           </>
-        )}
+        </Gated>
       </div>
 
       {createOpen ? (

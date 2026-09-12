@@ -1,11 +1,8 @@
 "use client";
 
-import { useFieldArray, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
-import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { AppSheet } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -18,7 +15,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { InventoryReferenceCombobox } from "@/components/inventory/inventory-reference-combobox";
 import {
   Select,
   SelectContent,
@@ -26,102 +22,80 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCreateLoad } from "@/hooks/api/inventory/shipping";
+import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
+import { useCreateLoad } from "@/hooks/api/inventory/shipping-loads";
+import { useShipments } from "@/hooks/api/inventory/shipping";
+import { useCarriers } from "@/hooks/api/inventory/shipping-carriers";
+import { useTransfers } from "@/hooks/api/inventory/transfers";
+import { useWarehouses } from "@/hooks/api/inventory/warehouses";
+import { SHIPMENT_STATUS_LABEL, TRANSFER_STATUS_LABEL } from "@/features/inventory/lib";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  LOAD_CREATE_DEFAULTS,
+  loadCreateSchema,
+  toCreateLoadInput,
+  type LoadCreateValues,
+} from "./load-create-schema";
+import { LoadDocumentPicker, type LoadDocumentOption } from "./load-document-picker";
 
-const memberSchema = z.object({
-  type: z.enum(["SHIPMENT", "TRANSFER"]),
-  referenceId: z.string().min(1, "Required"),
-});
-
-const loadSchema = z.object({
-  name: z.string(),
-  members: z.array(memberSchema),
-});
-
-type LoadFormValues = z.infer<typeof loadSchema>;
+const NO_SELECTION = "none";
+const DOCUMENT_LIMIT = 100;
 
 interface LoadCreateSheetProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }
 
-interface RemoveMemberButtonProps {
-  index: number;
-  onRemove: (index: number) => void;
-}
-
-function RemoveMemberButton({ index, onRemove }: RemoveMemberButtonProps) {
-  function handleClick(): void {
-    onRemove(index);
-  }
-
-  return (
-    <AnimatedIconButton
-      type="button"
-      icon={Trash2Icon}
-      iconSize={14}
-      iconClassName="text-destructive"
-      variant="ghost"
-      size="icon"
-      className="w-7 shrink-0"
-      aria-label="Remove from load"
-      onClick={handleClick}
-    />
-  );
-}
-
 export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
   const createMutation = useCreateLoad();
+  const warehousesQuery = useWarehouses();
+  const carriersQuery = useCarriers();
+  const shipmentsQuery = useShipments({ limit: DOCUMENT_LIMIT });
+  const transfersQuery = useTransfers({ limit: DOCUMENT_LIMIT });
 
-  const form = useForm<LoadFormValues>({
-    resolver: zodResolver(loadSchema),
-    defaultValues: {
-      name: "",
-      members: [],
-    },
+  const form = useForm<LoadCreateValues>({
+    resolver: zodResolver(loadCreateSchema),
+    defaultValues: LOAD_CREATE_DEFAULTS,
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "members",
-  });
+  const shipmentOptions: LoadDocumentOption[] = (shipmentsQuery.data?.items ?? []).map(
+    (shipment) => ({
+      id: shipment.id,
+      label: shipment.shipmentNumber,
+      sublabel: shipment.trackingNumber
+        ? `${SHIPMENT_STATUS_LABEL[shipment.status]} · ${shipment.trackingNumber}`
+        : SHIPMENT_STATUS_LABEL[shipment.status],
+    }),
+  );
+
+  const transferOptions: LoadDocumentOption[] = (transfersQuery.data?.items ?? []).map(
+    (transfer) => ({
+      id: transfer.id,
+      label: transfer.referenceNumber,
+      sublabel: `${TRANSFER_STATUS_LABEL[transfer.status]} · ${transfer.fromLocationName ?? "—"} → ${transfer.toLocationName ?? "—"}`,
+    }),
+  );
 
   function handleOpenChange(nextOpen: boolean): void {
-    if (!nextOpen) form.reset();
+    if (!nextOpen) form.reset(LOAD_CREATE_DEFAULTS);
     onOpenChange(nextOpen);
   }
 
   function handleClose(): void {
-    form.reset();
+    form.reset(LOAD_CREATE_DEFAULTS);
     onOpenChange(false);
   }
 
-  function handleAddMember(): void {
-    append({ type: "SHIPMENT", referenceId: "" });
-  }
-
-  function handleRemoveMember(index: number): void {
-    remove(index);
-  }
-
-  async function onSubmit(values: LoadFormValues): Promise<void> {
-    const members = values.members
-      .filter((m) => m.referenceId.trim())
-      .map((m) => ({
-        type: m.type,
-        referenceId: Number(m.referenceId),
-      }));
-    try {
-      await createMutation.mutateAsync({
-        name: values.name.trim() || undefined,
-        members,
-      });
-      toast.success("Load created");
-      handleClose();
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
+  function handleSubmit(values: LoadCreateValues): void {
+    createMutation.mutate(toCreateLoadInput(values), {
+      onSuccess: () => {
+        toast.success("Load created");
+        handleClose();
+      },
+      onError: (error) => {
+        toast.error(getErrorMessage(error));
+      },
+    });
   }
 
   return (
@@ -148,89 +122,130 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
       }
     >
       <Form {...form}>
-        <form id="load-create-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          id="load-create-form"
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="space-y-4"
+        >
           <FormField
             control={form.control}
-            name="name"
+            name="destination"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name (optional)</FormLabel>
+                <FormLabel>Destination</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Morning run batch" className="text-sm" {...field} />
+                  <Input placeholder="e.g. Pune hub" className="text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <FormLabel className="text-xs">Members</FormLabel>
-              <AnimatedIconButton
-                type="button"
-                icon={PlusIcon}
-                iconSize={12}
-                iconClassName="mr-1"
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-xs"
-                onClick={handleAddMember}
-              >
-                Add
-              </AnimatedIconButton>
-            </div>
-
-            {fields.length === 0 && (
-              <p className="text-xs text-muted-foreground">
-                No members added. Click Add to include shipments or transfers.
-              </p>
+          <FormField
+            control={form.control}
+            name="vehicleRef"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Vehicle</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. MH12 AB 1234" className="text-sm" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
+          />
 
-            {fields.map((field, index) => (
-              <div key={field.id} className="flex items-end gap-2">
-                <FormField
-                  control={form.control}
-                  name={`members.${index}.type`}
-                  render={({ field: f }) => (
-                    <FormItem className="w-[130px] shrink-0">
-                      <FormLabel className="text-micro font-semibold text-foreground/80">Type</FormLabel>
-                      <Select value={f.value} onValueChange={f.onChange}>
-                        <FormControl>
-                          <SelectTrigger className="text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="SHIPMENT">Shipment</SelectItem>
-                          <SelectItem value="TRANSFER">Transfer</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name={`members.${index}.referenceId`}
-                  render={({ field: f }) => (
-                    <FormItem className="flex-1 min-w-0">
-                      <FormLabel className="text-micro font-semibold text-foreground/80">Reference</FormLabel>
-                      <FormControl>
-                        <InventoryReferenceCombobox
-                          type={form.watch(`members.${index}.type`)}
-                          value={f.value}
-                          onChange={f.onChange}
-                          className="text-xs"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <RemoveMemberButton index={index} onRemove={handleRemoveMember} />
-              </div>
-            ))}
-          </div>
+          <FormField
+            control={form.control}
+            name="sourceWarehouseId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Source warehouse</FormLabel>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <FormControl>
+                    <SelectTrigger className="text-sm">
+                      <SelectValue placeholder="No source warehouse" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
+                    <SelectItem value={NO_SELECTION}>No source warehouse</SelectItem>
+                    {(warehousesQuery.data ?? []).map((warehouse) => (
+                      <SelectItem key={warehouse.id} value={String(warehouse.id)}>
+                        {warehouse.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="carrierId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Carrier</FormLabel>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <FormControl>
+                    <SelectTrigger className="text-sm">
+                      <SelectValue placeholder="No carrier" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
+                    <SelectItem value={NO_SELECTION}>No carrier</SelectItem>
+                    {(carriersQuery.data ?? []).map((carrier) => (
+                      <SelectItem key={carrier.id} value={String(carrier.id)}>
+                        {carrier.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="shipmentIds"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Shipments</FormLabel>
+                <div className="max-h-52 min-h-0 overflow-y-auto rounded-md border border-border">
+                  <LoadDocumentPicker
+                    options={shipmentOptions}
+                    value={field.value}
+                    onChange={field.onChange}
+                    isLoading={shipmentsQuery.isLoading}
+                    emptyText="No shipments available."
+                  />
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="transferIds"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Transfers</FormLabel>
+                <div className="max-h-52 min-h-0 overflow-y-auto rounded-md border border-border">
+                  <LoadDocumentPicker
+                    options={transferOptions}
+                    value={field.value}
+                    onChange={field.onChange}
+                    isLoading={transfersQuery.isLoading}
+                    emptyText="No transfers available."
+                  />
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </form>
       </Form>
     </AppSheet>
