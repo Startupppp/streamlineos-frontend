@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useLayoutEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { AnimatePresence } from "framer-motion";
-import { clearBackendTokenCache } from "@/lib/api-client";
+import { clearBackendTokenCache, setAutoSignOutSuppressed } from "@/lib/api-client";
 import { completeOnboardingGate } from "@/lib/onboarding-gate";
 import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
 import {
@@ -65,6 +65,11 @@ export function StepGeneration({ data }: StepGenerationProps) {
   const completeOrgSetup = useCompleteOrgSetupMutation();
   const completeOrgSetupRef = useRef(completeOrgSetup);
   const provisioning = useSetupProvisioning(orgCreatedResult !== null);
+
+  useEffect(() => {
+    setAutoSignOutSuppressed(true);
+    return () => setAutoSignOutSuppressed(false);
+  }, []);
 
   useLayoutEffect(() => {
     dataRef.current = data;

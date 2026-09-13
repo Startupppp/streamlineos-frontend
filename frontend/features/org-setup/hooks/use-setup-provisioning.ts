@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isApiError } from "@/lib/api-client";
 import { CONTRACT_VIOLATION_CODE } from "@/lib/api-envelope";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useOrgSetupStatusQuery } from "@/lib/api/hooks/org";
 import type { OrgSetupStatus, RecipientOutcome } from "@/lib/api/hooks/org-schema";
 
@@ -164,6 +165,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
   const seenOrgIdRef = useRef<string | undefined>(undefined);
 
   const { data, error, isFetching, refetch } = useOrgSetupStatusQuery({
+    ...INLINE_READ_ERROR,
     enabled: isStarted && !hasTimedOut && terminalError === null,
     refetchInterval: (query) => {
       const { data: qData, error: qError } = query.state;
