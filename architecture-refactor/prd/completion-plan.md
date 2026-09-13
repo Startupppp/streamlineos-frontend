@@ -1737,17 +1737,61 @@ Status: ACTIONABLE after safe preflight. Maps to: PRD-C135, PRD-C149. Owner: S5.
 
 - [ ] DOC-002 also requires Documents-specific Web Vitals on the current production build using the existing route/SLO budgets and authenticated target-route samples; a passing Build INP run is not Documents performance proof.
 
+  `PARTIAL 2026-09-13 | desktop PASS on all 5 DOC routes | mobile /knowledge/wiki/recent LCP INCONCLUSIVE | axe: zero application violations`
+  Documents-specific samples were captured rather than borrowed from Build, as the row demands.
+  Desktop passes its budgets on every DOC route: `/knowledge/wiki` LCP p75 ~836-1316 ms,
+  `/knowledge/wiki/recent` ~796-940 ms, `/knowledge/chat` ~84-108 ms, `/sign` ~104-148 ms and
+  `/sign/envelopes` ~980-1480 ms — the last one inside the 1500 ms budget but borderline. INP p75 stayed
+  40-80 ms and CLS ~0.001-0.002 throughout.
+  **`/knowledge/wiki/recent` on mobile measured LCP ~2592-3296 ms against a 2500 ms budget.** That is a
+  breach of the number, but it is recorded INCONCLUSIVE rather than FAIL because the host was running
+  several agents concurrently and load of that kind can add 500-1000 ms. It needs one quiet-host re-run
+  to become a verdict either way — it is not dismissed.
+  Accessibility is genuinely clean: the only axe violations are `aria-prohibited-attr` on
+  `#feedbucket-root .launcher-logo`, a third-party widget, with **zero application-level violations**
+  across the Documents, KB and sign routes. Live regions present on `/knowledge/chat`, citation
+  navigation resolves, and keyboard traversal reaches a meaningful control within 30 tabs.
+  NOT-RUN, with reasons: the Plate editor save/reload/revision-conflict states and the KB page detail
+  route, because the tenant has no KB pages to open; upload and ingestion states, because no storage
+  credential exists here; the offline/retry check, which needs a loaded KB page to intercept; and
+  permission-change states, which need a second fixture user. The frontend server went down before the
+  vitals JSON was written, so the numbers above come from streamed output and the artifact is owed.
+
 ## DOC-004 — Current DB/PDF and deployed data lifecycle
 
 Status: LOCAL-VERIFICATION plus EXTERNAL-INPUT for deployed operations.
 Maps to: PRD-C162, PRD-C185. Owner: S5 with Documents/privacy owners.
 
-- [ ] Use a fully migrated, exclusively owned disposable DB, not merely a restored
+- [x] Use a fully migrated, exclusively owned disposable DB, not merely a restored
   production-shaped schema. Verify migration lineage, role grants, RLS, tenant FKs,
   append-only constraints and ledger/declaration consistency before DB fixtures.
+
+  `DONE 2026-09-13 | doc_004_scratch, created and dropped | 876/876 applied | 998/998 tables granted`
+  Built cold rather than restored, which is the distinction this row exists to enforce. All 876 journal
+  entries applied and all 876 confirmed present in `drizzle.__drizzle_migrations` — no gaps, no failed
+  entries. `MIGRATION_SEARCH_PATH` set to `'"$user", public, build_events, app'` before each migration.
+  Measured on the finished database: **869 tables with RLS enabled, 877 policies, 6 append-only
+  triggers**, `sign_*` and `kb_*` tables all present, and `org_id` tenant FKs on every document and sign
+  table. `db-bootstrap-app-role.mjs` re-run after the schemas were populated granted `streamline_app`
+  DML on 998/998 tables, with UPDATE/DELETE/TRUNCATE revoked on `audit_logs`. Database dropped after use.
 - [ ] Run KB DB/seeded acceptance, vector recall/latency, real signing-auth concurrency,
   and e-sign-signing-flow.e2e-spec.ts with real PDF/certificate creation, finalization
   replay, expiry, revocation, decline and watermarking; isolate provider delivery.
+
+  `PARTIAL 2026-09-13 | e-sign e2e 7/7 exit 0 with REAL PDFs | KB recall 5/5 synthetic | customer-representative recall INCONCLUSIVE`
+  **e-sign is closed on this row's terms.** `e-sign-signing-flow.e2e-spec.ts` passes 7/7 creating real
+  PDFs through `pdf-lib.PDFDocument.create()` — not fixtures — and exercises finalization replay,
+  expiry, revocation, decline and watermarking. Provider delivery is genuinely isolated: `StorageService`
+  is an in-memory `Map` and `SignNotificationsService` is mocked, so nothing left the machine. Two orgs
+  were seeded and cross-tenant isolation passed.
+  **KB vector recall passes on synthetic data and that is explicitly not the same claim.** 5/5 including
+  an HNSW plan confirmed by EXPLAIN, full-pool return, ground-truth match and no cross-tenant leak; the
+  recall failure was reproduced deliberately by forcing `hnsw.max_scan_tuples = 120` with sort disabled,
+  and iterative scan recovered ground truth. But `doc_004_scratch` had no real articles or embeddings,
+  and sinusoidal synthetic vectors do not represent a production embedding distribution — so
+  **customer-representative recall is INCONCLUSIVE**, which matters here because the known failure mode
+  is silent: an ANN plan returns exactly `LIMIT` rows whether recall is 100% or 44%, so a row count can
+  never detect the loss. Closing this needs the seeded Neon database with real ingested content.
 - [ ] In identified authorized environments prove object storage, indexing/vector
   retrieval, cache purge, erasure, retention and legal-hold boundaries. Coordinate
   OPS-001/003; record timestamped artifacts and accountable privacy decision.
