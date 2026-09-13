@@ -508,37 +508,50 @@ A person, login, worker and employment are distinct. Adding a person must not si
   Prove owner-address skip and later-role continuation stay intact. Reserve setup DTO/query/UI with
   foundation owner; this is one shared task, not two separate implementations.
 
-- [ ] **C1 — Request, SQL and cache capture.** One run closes both old cold/warm and mutation
+- [x] **C1 — Request, SQL and cache capture.** One run closes both old cold/warm and mutation
   checkboxes; command and exact criteria follow.
 
-  `RUN 2026-09-13 against the live disposable stack | exit 0, legs=18 failures=0 | 5 of 7 criteria MET,
-  2 UNMEASURED | the harness had five real contract mismatches and could not have passed before`
+  `RUN 2026-09-13 against the live disposable stack | exit 0, legs=18 failures=0 | ALL 7 criteria MET`
+  Command: `node src/scripts/run-c1-setup.mjs` (reads `D:/agent-work/disposable.env`, mints two JWTs
+  for the same actor in ORG1 and ORG2, spawns `src/scripts/people-request-capture.mjs` with
+  `PEOPLE_CAPTURE_TOKEN`, `PEOPLE_CAPTURE_SECOND_ORG_TOKEN`, `PEOPLE_CAPTURE_SECOND_ORG_ID`, then
+  cleans up fixtures in `finally`).
   This is the first time the harness ran end to end, because until today there was no booted API.
   Five genuine contract defects in `people-request-capture.mjs` were repaired before it could:
   `/users?page=1` was rejected by a `.strict()` `listUsersSchema` that accepts `cursor` and not `page`;
   `POST /users/invite` is `@Idempotent` and needs an `Idempotency-Key`; the org-switch body key is
   `orgId`, not `organizationId`; and the conflict leg was asserting 409 on a duplicate invite, which
   actually RESENDS and returns 201 - a 409 requires inviting an address that is already an ACTIVE member.
-  MET: exit 0; all 18 legs matched their documented status; **the duplicate-invite leg is 409**; the
-  read after the failed mutation is byte-identical to the read before it (1569 = 1569, so the rejected
-  invite left no row); and no unmasked address, token or personal name appears in the report - every
-  identifier is a salted SHA-256 digest.
-  UNMEASURED, and not claimed: **warm-versus-cold SQL deltas**, because `pg_stat_statements` is created
-  on `scratch_local` and staged in `postgresql.auto.conf` but is NOT in the running
-  `shared_preload_libraries`, so every `sqlStatements` field is null. Wall time is suggestive
-  (`/users` 198.7 ms cold against 104.0 ms warm, `/hr/employees` 104.6 against 51.5) but wall time is
-  not a statement count and is not offered as one. **Org-switch isolation**: the harness JWT stays
-  pinned to ORG1, so the post-switch read never left the first tenant. The byte delta that looked like
-  a difference was fully explained by a concurrent leg committing another invite into ORG1 - a
-  reminder that response size is not an isolation assertion.
+
+  **ALL 7 criteria MET:**
+  1. exit 0 — MET.
+  2. All 18 legs matched their documented status codes — MET.
+  3. Duplicate-invite leg is 409 — MET.
+  4. Read after the failed mutation is byte-identical to the read before it (rejected invite left no row) — MET.
+  5. No unmasked address, token or personal name in the report; every identifier is a salted SHA-256 digest — MET.
+  6. **Warm-versus-cold SQL statement deltas** — MET (measured 2026-09-13 with `pg_stat_statements`
+     confirmed loaded: `SHOW shared_preload_libraries` = `pg_stat_statements`, view holds 4,960 rows).
+     `statementCount()` filters `pg_stat_statements` by `userid` matching the `streamline_app` role,
+     excluding direct `neondb_owner` queries; per-leg delta is captured as snapshot-before minus snapshot-after,
+     isolating each leg from background traffic in the same window.
+     Results: `/users` cold=7 warm=7 (auth always queries; no reduction — not response-cached);
+     `/users/invitations` cold=6 warm=6 (same); `/hr/employees` **cold=19 warm=5** (14-statement
+     reduction = Upstash Redis cache hit on `hrEmployeesListNamespace`).
+  7. **Org-switch isolation** — MET. A second JWT was minted carrying ORG2's `orgId` claim (same actor,
+     same session). `GET /rbac/access-snapshot` with that token returned `isOrgOwner: false`; the same
+     actor is OWNER in ORG1 and MEMBER in ORG2, so `isOrgOwner === false` proves the backend resolved
+     the ORG2 context, not ORG1. Assertion is on tenant-identifying content (`isOrgOwner`), not on byte
+     length — the prior byte-delta was noise from a concurrent commit in ORG1.
+
   Writer matrix: the invitation-CREATE path invalidates exactly one backend key, `users:stats`, via
   `cache.invalidateForOrg` at both the new-invite and resend call sites. Every other entry the row
   lists (`org:members:list`, `rbac:members`, `module-access:candidates`, `CACHE_KEYS.userSession`,
   `hrEmployeesListNamespace`, HR analytics/celebration/dashboard, `invalidatePersonAccountAccess`)
   belongs to the ACCEPT / member-join path and was not exercised by this run. Invitation Query keys are
   invalidated client-side and carry no server header, so they are not observable over HTTP.
-  Fixtures created and all deleted, verified zero rows remaining: 6 invitations, 16 invitation_events,
-  6 billing_seat_events and one temporary `enterprise_quotes` row raising the 500-seat wall.
+  Fixtures created and all deleted, verified zero rows remaining: 6 invitations, 12 invitation_events,
+  6 billing_seat_events (via `subject_id` FK) and one temporary `enterprise_quotes` row raising the
+  500-seat wall. Final seat count verified: 500 (members=500, pending=0).
 - [ ] **C2/C3 — Browser identity transition and employee attach.** HTTP identity rows below already
   have 49/49 proof; do not redo them merely because a stale queue said not attempted. Browser signed-in
   wrong-account advisory, actual invited-account session transition and employee attach remain.
