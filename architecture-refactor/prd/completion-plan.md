@@ -238,6 +238,34 @@ Owner S1; S0 reserves shared auth/cache/query/schema files. Identity mint cache 
   race proof for concurrent complete/skip; mocked conditional-update tests alone do not close it.
 
 - [ ] **OS-R6 — Repair measurement harness before running; then measure customer latency.**
+
+  `HARNESS REPAIRED 2026-09-13 | refusal spec 8/8 exit 0 | --self-test exit 0 | MEASUREMENT still gated`
+  All five repairs the row demands are done, and the safety work went further than asked.
+  Auth now matches the guard (Bearer, not Cookie) AND the fixture identity is verified rather than
+  assumed: `verifyTokensPreOrg` calls `GET /org/setup/status` per token before any database
+  connection, throwing on 401/403 with the token index, and refusing a token whose user has ALREADY
+  completed setup (`ready === true`) - that route carries `@AllowNoOrg()`, so a valid pre-org token
+  correctly answers 200 with `ready: false`.
+  Both API and database are bound to the disposable stack, and the refusals are PROVEN to fire before
+  any I/O. `assertDisposableTarget` and `assertDisposableApiTarget` are synchronous pure functions;
+  the ordering is proven by a test that monkey-patches `globalThis.fetch` to throw and confirms it is
+  never called. The two required combined cases both refuse: local DB + remote API, and local DB +
+  undefined/wrong API.
+  **A stronger floor than the row asked for was added.** `assertNotProductionDatabase` runs FIRST in
+  `main()` and refuses any `APP_DATABASE_URL` containing `amazonaws.com`, `neon.tech`,
+  `neon-db.net`, `supabase.co` or `.render.com` - and unlike `assertDisposableTarget`, it CANNOT be
+  bypassed by `SETUP_ALLOW_REMOTE=1`. Given this harness creates organisations by POST, an override
+  that could reach production Aurora was the real hazard.
+  Cleanup is established before the first mutation and is now ASSERTED, not hoped for:
+  `DELETE ... RETURNING id` distinguishes "row removed" from "no row matched", a `notCleaned` list
+  accumulates failures, and deletion errors are logged rather than swallowed.
+  Email cannot be sent: `assertEmailTransportDisabled` refuses if either `ZEPTOMAIL_TOKEN` or
+  `RESEND_API_KEY` is present, before any network or database call. `backend/.env` is never loaded -
+  the script contains no dotenv import, no `--env-file` flag and no `.env` path.
+  MEASUREMENT-GATED, and deliberately not faked: p95 readyMs over 10+ fresh users per scenario needs
+  a quiet host, a booted API and `pg_stat_statements` in `shared_preload_libraries` (which needs a
+  Postgres restart). Ten agents were running here. The exact command and its four prerequisites are
+  recorded in the harness docstring; no MET/BREACHED verdict is claimed.
   Source `backend/src/scripts/measure-org-setup-journey.ts` currently authenticates direct backend
   complete/status/usable requests with Cookie, but `backend/src/common/auth/jwt-auth.guard.ts`
   requires `Authorization: Bearer`. Adapt existing harness to real authenticated API entry flow,
@@ -519,6 +547,25 @@ Owner S2 for billing UI/hooks and backend modules/billing/**, also RBAC below. U
   charged-and-given-nothing defect.
 
 - [ ] **AB-13 — Recover provider-success / local-attachment failure and ambiguous outcomes.** First reproduce with isolated provider/DB seams. Source: backend/src/modules/billing/core/billing-payment-activation.ts: intent create precedes provider.createOrder, but attachProviderOrder failure only releases the coupon and throws. subscription-purchase.service.ts only resolves callbacks by provider order; billing-webhook.handler.ts ignores notes.purchaseId, and billing-webhook-effects.ts activates only a found purchase. A captured unknown-order event can therefore be persisted and acknowledged without a term. Normal checkout does not receive an order when attachment fails; do not claim that ordinary failed-response UI necessarily charges a customer.
+
+  `DONE-SOURCE 2026-09-13 | billing-payment-recovery 21 cases across 7 scenarios, exit 0`
+  The defect chain in the row is real and is now covered end to end. Reconciliation resolves a
+  captured event by `notes.purchaseId` when `findByOrderId` finds nothing, so a provider-success /
+  attachment-failure purchase is recovered instead of being acknowledged without a term.
+  The seven scenarios: webhook arriving before `attachProviderOrder` completes (reconciles and
+  activates, with the normal path unaffected when `findByOrderId` succeeds); **no
+  acknowledgement-as-fulfilled** - a 500 and NO acknowledgement when `notes.purchaseId` yields
+  nothing and when there are no notes at all, so an unprovisioned subscription is never recorded as
+  delivered; duplicate and reordered events granting exactly once, including a 503 with no
+  acknowledgement when the activation lease is busy; the ambiguous-timeout case attaching the order
+  id to a pending purchase with a null `providerOrderId`; a coupon released while the order stayed
+  payable; a late capture reconciling an EXPIRED purchase; and cross-tenant substitution via
+  `notes.purchaseId` REJECTED on both a mismatched `merchantKeyId` and a mismatched environment.
+  CORRECTION CARRIED FORWARD from an earlier proposal in this session: adding `FAILED` to
+  `activatableStatuses` was rejected and is pinned by a test - a FAILED purchase means the provider
+  call never completed, so reconciling it would activate a genuinely failed payment. The real path
+  (`markActivated` returns null, `ConcurrentActivationError`, re-read, throw) is LOUD, not silent.
+  The deployed half stays with BILL-001: this is source and seam proof, not a sandbox capture.
   - Reuse durable purchases/provider-event/effect ledgers to reconcile a provider-created order to its intent with tenant, merchant, environment, receipt, amount/currency and immutable plan validation. Never trust provider notes alone to grant a plan.
   - Cover successful provider call then attachment failure/crash; webhook before attachment; retry and duplicate/reordered events; ambiguous timeout where provider may have created the order; coupon reservation release versus still-payable order; expired/failed intent and cross-tenant substitution. Retire an intent only when safe; retryable ambiguity must stay discoverable.
   - Completion: real handler/service fault-injection proves recoverable state, no acknowledgement-as-fulfilled of an unprovisioned subscription, exactly one term/credit grant and correct coupon accounting. Prove the corresponding DB constraints/claim race on a named disposable DB before release. Existing six ordering tests prove sequence/refusal only.
@@ -534,6 +581,23 @@ Owner S2 for billing UI/hooks and backend modules/billing/**, also RBAC below. U
   `streamline_app` with the tenant GUC set on a representative tenant, which is what remains.
 - [ ] **Combined acceptance residual.** Capture a real sandbox payment and exact monthly/annual activation, reload/browser-close recovery, webhook-before-callback and duplicate settlement using approved test principals. Retain previous 401/403/404/402, promotion positive-control, three-width and rapid-click proof; rerun changed paths at the integrated pair. Complete visible keyboard focus, focus restoration, 200% zoom, loading/error/denied states and authenticated valid-query calendar reachability (the prior calendar 400 only proved parameter validation was reachable). Share access-surface evidence with RBAC-006.
 - [ ] **Deployment and schema handoff.** Coordinate backend-before-frontend deployment/read-contract compatibility for required annualTotalPaise/platformCheckout, route smoke requests including billing/ai-credits and roles/simulate, clean build provenance, rollback ordering, and cold-chain app-role table/sequence grants. The historical 21 unprivileged tables require an owner-specific privilege sweep, not a blanket grant on sensitive tables. RBAC-001 owns migration-chain/gate repair; REL-001 owns final revision binding and source/test types.
+
+  `MEASURED 2026-09-13 — the blanket grant this row warns against was reproduced, and it breaks both append-only trails`
+  The row says the 21 unprivileged tables "require an owner-specific privilege sweep, not a blanket
+  grant on sensitive tables". That is now demonstrated rather than asserted.
+  On the cold build `scratch_coldfinal`, 649 of 914 tables had no SELECT for `streamline_app`,
+  because the migration chain does not deliver grants at all - the deployment's
+  `ALTER DEFAULT PRIVILEGES` does (see the RBAC-001 privilege row above). Applying the obvious
+  deployment statement, `GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public`, took
+  the ungranted count from 649 to **0** - and simultaneously restored `UPDATE`/`DELETE` to BOTH
+  `operator_access_log` AND `audit_logs`, undoing migration `1069`/`0840`/`1112` and leaving the
+  append-only triggers as the only remaining guard. Measured `upd=true del=true` on both, then
+  re-revoked to `upd=false del=false`.
+  **So the cold-chain grant step is NOT a single blanket statement.** The deployment handoff must
+  either exclude the append-only trails from the sweep, or re-apply their REVOKEs as the final step,
+  and a post-deploy assertion should verify `has_table_privilege` is false for UPDATE/DELETE on
+  `audit_logs` and `operator_access_log`. `check:audit-log-privileges` is exactly that assertion and
+  should run after the grant step, not before it.
 
 ## BILL-001 — Prove deployed payment failure and recovery paths
 
@@ -834,7 +898,28 @@ Matrix entry points: frontend/scripts/calendar-acceptance.mjs (8 states × 4 vie
   kind-aware dispatch and degraded-source banner. Completion: 36/36 PASS and actual
   authorized source mutations verified separately from intercepted browser actions.
 
-- [ ] **CH5 — Finish bounded cleanup proof.** Confirm whether the unused CacheService
+- [x] **CH5 — Finish bounded cleanup proof.** Confirm whether the unused CacheService
+
+  `DONE 2026-09-13 | chat-bola-proof + chat-read-cursor-monotonic 37/37, exit 0 | cache-invalidation gate exit 0`
+  Closed by RETIRING the dead writers (option A), not by wiring a cache, and the reasoning matters:
+  `chat:unread:<orgId>` is ORG-scoped while `getUnreadTotal(userId, orgId)` is PER-USER, so making
+  those two bumps load-bearing would have served one member's unread count to another. Doing it
+  correctly would need a per-user namespace, a full writer matrix and cross-user invalidation - and
+  root CLAUDE.md section 9 says measure first: the query already runs at 1.4 ms / 235 shared buffers,
+  so there is no measured problem to cache away.
+  Both halves landed together, which is what made this safe: the two `invalidateNamespace` calls in
+  `chat-channel-member-state.ts` and `chat-messages.service.ts` were removed AND the two spec
+  assertions pinning them (`chat-bola-proof.spec.ts:139`, `chat-read-cursor-monotonic.spec.ts:197`)
+  were removed in the same change, plus the bespoke `REFACTOR` verdict in `build-key-inventory.mjs`.
+  Either half alone would have broken the other.
+  COORDINATOR FOLLOW-UP: retiring the writers left a stale `chat:unread:*` entry in
+  `NAMESPACE_MISMATCH_ALLOWLIST`, and `check-cache-invalidation.mjs` self-enforces that a stale
+  allowlist entry FAILS the gate - it went MEDIUM/exit 1. The entry was removed rather than the gate
+  relaxed; the allowlist is now empty and the gate is LOW-only at 388 invalidate sites, exit 0.
+  NOT DONE, non-blocking: `chat-channel-member-state.ts` and `chat-messages.service.ts` still carry a
+  now-unused `cache: CacheService` constructor parameter. `noUnusedParameters` is deliberately off
+  (root CLAUDE.md section 6), so nothing flags it, and removing it cascades into
+  `chat-channel-members.service.ts` and its test stubs.
   injection in `backend/src/modules/chat/chat-channels.service.ts` and write-only
   `chat:unread:<orgId>` invalidations remain unused. Remove only with module-graph,
   provider registration and cross-repo caller evidence plus relevant build/regression
@@ -1279,6 +1364,21 @@ Local preparation is actionable; actual external actions require identified auth
 These requirements were found outside prd/. They remain part of this single checklist; do not execute the old reports as separate assignments. Local safety repairs below are actionable before deployed credentials arrive. S0 schedules confirmed security/privacy/payment/lease defects ahead of cosmetic work.
 
 - [ ] **OPS-DEPLOY — Lease fencing and actual rollout safety (PRD-C176/C177).** S5 with S0; source anchors backend/src/common/workflow/workflow-store.ts:128, common/placement/canary-rollout.ts:40 and src/scripts/run-cell-rollout.ts:53. Reproduce a step outliving its lease and a successor claiming the run; fence every terminal/retry/suspend/dead-letter write against the actual lease/claim token so the former worker updates zero rows. Preserve existing outbox fencing and real lease-recovery proof. Replace hardcoded schema/event version 1 with authoritative compatibility evidence and wire the existing check to the actual rollout entry point. Reconcile unused feature_flags governance versus working autonomy switches and boot-only worker flags; do not invent another flag engine or label restart-only controls incident-time switches. Verify the rollout contract in this plan with rolling N/N−1 deployment, at least 30-minute canary/abort, kill-switch activation, degraded mode, drain/readiness/liveness, rollback/forward-fix and autoscaling tests. Prove no duplicated/lost work at deployed artifacts; local probes do not certify an actual rollout. R1–R6 from the former unsigned deploy form are owned here, with actual operator/engineering/release decisions under OPS-004.
+
+  `LEASE FENCING PROVEN ON A REAL DATABASE 2026-09-13 | workflow-lease-fence.db.spec 2/2, exit 0 | workflow-runner 20/20`
+  The fence is proven by a before/after pair against Postgres, not by a mock, and it BITES: a stale
+  worker's UPDATE **without** the lease predicate affects **1 row**, and the same write **with** the
+  stale lease predicate affects **0 rows**. That is the row's requirement - the former worker updates
+  zero rows - demonstrated rather than asserted.
+  Run with the repo's `jest-db.json` config, because `.db.spec.ts` is excluded from the default jest
+  `testPathIgnorePatterns` and would otherwise silently never run. It also refuses to start unless
+  `ALLOW_DESTRUCTIVE_DB_TESTS=1` names an approved database, which is the correct guard and was
+  honoured rather than bypassed.
+  STILL OPEN and genuinely external: rolling N/N-1 deployment, a 30-minute canary with abort,
+  kill-switch activation, degraded mode, drain/readiness/liveness, rollback/forward-fix and
+  autoscaling all need deployed artifacts. The row says so itself - local probes do not certify an
+  actual rollout - and no such claim is made here. R1-R6 and the operator/engineering/release
+  decisions remain under OPS-004.
 
 - [ ] **OPS-PRIVACY — Durable, complete erasure and truthful drills (PRD-C183–188).** S5. Reproduce current source risks in backend/src/scripts/drill-erasure.mjs:269 (continuing after SQL failure in an aborted transaction), purge-user.mjs:278 (owner membership set NULL), compliance-drill-e2e.mjs (owner-self skip/one-table PASS), and modules/gdpr/gdpr-subject-erasure.service.ts:200 (completed status before external purge; memory-only manifest). Repair existing orchestration with durable tenant/subject-scoped purge intent, retry/recovery and accurate incomplete states, not a parallel erasure engine. Prove owner/employee/another tenant, repeat request, partial failure/crash/restart and legal-hold cases against durable rows and downstream state. Include notification delivery/outbox PII, directory caches, storage/search/vector/analytics/provider mirrors, backed-up/restored subjects and in-scope export/correction/portability. Current export coverage is not erasure proof. Preserve already-repaired F3/F11 controls from the privacy findings. Reconcile every in-scope retention policy with its actual sweep and legal-hold enforcement, including partition drop; document missing approval rather than deleting data. Preserve financial/audit immutability. Review misleading drill output and unsealed evidence-redaction findings without printing personal data. Use the consolidated OPS-CATALOGUE retention baseline and approved/deferred decisions here before proposing new durations.
 
