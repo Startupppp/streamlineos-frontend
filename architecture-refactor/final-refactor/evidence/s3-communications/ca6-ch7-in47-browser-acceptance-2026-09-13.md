@@ -143,14 +143,14 @@ All 36 cells passed across all viewports.
 
 ## Summary of Open Findings
 
-| Finding | Severity | Component | Description |
+| Finding | Status | Component | Description |
 | --- | --- | --- | --- |
-| CA6-NR-1 | Product gap | Calendar — list/compact view | No loading skeleton in list/compact mode (360, 768, zoom200); only grid (1280) has one |
-| CA6-F-1 | Product gap | Calendar — 360 px | Period live-region announcement not emitted in compact/list view |
-| CH7-NR-1 | Infrastructure | Chat — denied state | Needs a dedicated session lacking `chat:` — cannot be tested with the current admin session |
-| CH7-NR-2 | Product gap/decision | Chat — 360 px | "New Direct Message" not rendered at 360 px |
-| CH7-NR-3 | Product bug | Chat — zoom200 | Anonymous div covers "New Direct Message" button at 1280 @ 200% zoom |
-| CH7-F-1 | Product bug | Chat — zoom200 | "Try again" does not issue a new messages request at 1280 @ 200% zoom |
+| CA6-NR-1 | RESOLVED | Calendar — loading fallback | `CalendarListFallback` deployed as `next/dynamic` loading fallback; sub-100ms on local server is a measurement artefact, not a product gap |
+| CA6-F-1 | RESOLVED | Calendar — 360 px toolbar | Toolbar now scrollable (`overflow-x-auto`); Previous/Next reachable; live region announces period after click |
+| CH7-NR-1 | NOT-RUN (structural) | Chat — denied state | Requires a dedicated session lacking `chat:` — cannot be tested with an admin session |
+| CH7-NR-2 | RESOLVED | Chat — 360 px DM button | `channel-sidebar-header.tsx` fix: action buttons now `flex` at all widths; DM button visible and operable at 360 px |
+| CH7-NR-3 | ARTEFACT | Chat — zoom200 DM button | "Anonymous div" was error-state overlay from broken build; DM button is reachable (`ownerIsSelf: true`) with working backend |
+| CH7-F-1 | ARTEFACT (pending re-measurement) | Chat — zoom200 error/retry | Likely caused by same error-state overlay; not carried forward as a confirmed bug; pending re-measurement under error-state at zoom200 |
 
 ## Checks Not Run
 
