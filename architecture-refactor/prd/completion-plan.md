@@ -2239,9 +2239,28 @@ OpenAPI generation preflight: inspect current applyOpenApiEnv before boot. Its m
 
 OPS-CAPACITY egress evidence must come from actual CDN/load-balancer analytics or host bandwidth/vendor billing with cell attribution. Application/database span duration or row counts do not establish network egress cost.
 
-- [ ] Resolve the current migration-integrity and payment-resolver failures through
+- [x] Resolve the current migration-integrity and payment-resolver failures through
   their S2 tasks. Preserve tenant/ambient-transaction boundaries; do not weaken tests
   just to make them pass. Reverify the reported cron-group failures with captured results.
+
+  `RUN 2026-09-13 | 3 suites, 56 tests, 2 snapshots, exit 0 | cron-group-a 20/20 exit 0 | one snapshot line changed, no assertion weakened`
+  Two of the three named failures had already been repaired by earlier work in this session and
+  needed no change: `migration-integrity.spec.ts` passes 38/38 (the journal/ledger ordering was fixed
+  upstream), and `payment-provider-resolver.spec.ts` passes 7/7 — its original failure was the
+  classic bare `db.transaction` mock that never invoked its callback, silently voiding every
+  assertion inside it; the resolver now goes through `runInNewTenantTransaction` against a double
+  that actually invokes.
+  The one real repair was a **stale snapshot**, not a weakened test.
+  `razorpay-service-import-boundary.spec.ts` still listed
+  `billing/core/platform-provider-reachability.spec.ts` as importing `RazorpayService`. It no longer
+  does: it imports `PaymentProviderResolver`, which is the correct direction — depend on the
+  abstraction, not the concrete provider. The snapshot was recording a boundary violation that had
+  been fixed. Coordinator-verified independently rather than taken on the agent's word, because
+  deleting a snapshot line is exactly how a real boundary violation gets hidden: the file's only
+  remaining `razorpay` occurrences are the string literal `"razorpay"` used as a fake adapter's
+  provider key at lines 25/27/46/62, and there is no `from ".../razorpay.service"` import anywhere
+  in it. Removing the entry records the improvement; keeping it would have made the gate lie.
+  Cron-group tenant isolation reverified with captured results: 20/20, exit 0.
 - [x] Prove two independent empty-journal bootstraps plus interrupted/resumed replay and exact catalog parity on named disposable databases.
 
   `DONE | backend 246782ddb + working tree | see the RBAC-001 journal bullet above for full output`
