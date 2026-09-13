@@ -319,6 +319,22 @@ Owner S1; S0 reserves shared auth/cache/query/schema files. Identity mint cache 
   a quiet host, a booted API and `pg_stat_statements` in `shared_preload_libraries` (which needs a
   Postgres restart). Ten agents were running here. The exact command and its four prerequisites are
   recorded in the harness docstring; no MET/BREACHED verdict is claimed.
+
+  `PREREQUISITES 2026-09-13 | 2 of 3 now SATISFIED | only a quiet host remains`
+  **`pg_stat_statements` is now loaded.** `SHOW shared_preload_libraries` returns
+  `pg_stat_statements` and the view holds 4,960 rows, so Postgres has been restarted since that
+  measurement and the extension prerequisite is met. This is the same unblocking that let C1 close its
+  two previously-null SQL-delta criteria, and it should not be re-reported as a blocker.
+  **The API is booted** on `127.0.0.1:1500` (`/health` → 200), started from `dist/main.js` with
+  `--env-file=/d/agent-work/disposable.env`.
+  **Only the quiet host is missing**, and that is a scheduling constraint rather than a defect: several
+  capture lanes are running concurrently and p95 latency measured under that load would be an artefact
+  of the load, not of the product — the same trap that made the mobile INP figure inconclusive earlier
+  today. Run it when the lanes are clear; do not run it sooner to produce a number.
+  Still open independently of the host: the harness authenticates with `Cookie` while
+  `jwt-auth.guard.ts` requires `Authorization: Bearer`, and `SETUP_API_BASE_URL` is unvalidated while
+  `APP_DATABASE_URL` is guarded. Both must be fixed before the run, or the measurement will fail for a
+  reason unrelated to latency.
   Source `backend/src/scripts/measure-org-setup-journey.ts` currently authenticates direct backend
   complete/status/usable requests with Cookie, but `backend/src/common/auth/jwt-auth.guard.ts`
   requires `Authorization: Bearer`. Adapt existing harness to real authenticated API entry flow,
