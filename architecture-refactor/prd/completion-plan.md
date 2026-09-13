@@ -1325,6 +1325,14 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   provider and clears cache on logout/org-switch | revocation: DB flag per request, Redis tombstone cache-only |
   browser cross-tab proof: NOT MEASURED (desktop arm: errorBoundary=true unexplained; mobile worked; real
   two-tab BroadcastChannel unproven — suite stubs) | evidence: same file as FD1 above`
+
+  `RECONFIRMED 2026-09-13 | build-cache-sync 10/10, settled-purchase-invalidation 1/1, exit 0`
+  Re-verified at head; no new cache engine was built, as the row requires. The four source claims above
+  still hold. The remaining gap is unchanged and is stated as a gap, not averaged away: the cross-tab
+  suite drives a `TabChannel` **stub**, so ten passing tests prove the publish/subscribe contract and
+  not one real `BroadcastChannel` message between two real tabs. Logout, switch, revoke, employee
+  removal, module disable and renewal across tabs stay NOT-RUN pending a browser, and the Ably token
+  lifetime stays with S2.
 - [ ] **FD4 — Close remaining server-cost coverage.** Retain the measured 500-member
   results. Selective search can scan global users: measure realistic global and tenant
   cardinality, not only one small tenant. First verify/reuse the shared fixture recorded by CHAT-002 (180,000 messages);
@@ -1372,6 +1380,22 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   fill/bust, rollback and retry must not widen authority, oversell quota or suppress
   a never-delivered warning. The source findings above
   are not fault-injection proof or an approved waiver.
+
+  `CLOSED-LOCALLY 2026-09-13 | plan-limits 59/59 exit 0 | 2 new tests, RED before the fix, GREEN after | real Redis NOT-RUN`
+  **The row's opening premise is now FALSE and should not be re-raised from it.** `assertWithinLimit` is
+  no longer called before the transaction: `lockQuota` and `assertWithinLimit` sit together inside the
+  `db.transaction()` in BOTH `createProject` (lines 46-47) and `createFromDeal` (lines 148-149) of
+  `projects-provision.service.ts`, so concurrent last-slot creation serialises on the lock rather than
+  racing a pre-transaction check.
+  `maybeAlertQuota` is likewise no longer fire-and-forget — it defers through `registerAfterCommit`
+  (`plan-limits.service.ts:273`). The two new tests prove the consequence the row actually cares about:
+  when the ambient transaction rolls back the hook never runs, so **no Redis dedup key is written**, and
+  a later committed admission therefore still sends the warning instead of being silently deduplicated
+  against an admission that never happened. That is the "suppressed, never-delivered warning" failure
+  mode. Bite-proven: both tests fail against the fire-and-forget version and pass against the fix.
+  NOT-RUN and explicitly not claimed: the same rollback against a real Redis and a real database. The
+  unit tests mock the cache layer, so they prove the code path, not the infrastructure. Racing
+  fill/bust under genuine contention is also unproven.
 
   `IN-PROGRESS | root 501f2e60b / backend 246782ddb + working tree | quota admission REPAIRED
   and PROVEN, alert durability REPAIRED and unit-proven only | remaining: real rollback-vs-Redis
@@ -1828,6 +1852,31 @@ These requirements were found outside prd/. They remain part of this single chec
 
 - [ ] **OPS-DEPLOY — Lease fencing and actual rollout safety (PRD-C176/C177).** S5 with S0; source anchors backend/src/common/workflow/workflow-store.ts:128, common/placement/canary-rollout.ts:40 and src/scripts/run-cell-rollout.ts:53. Reproduce a step outliving its lease and a successor claiming the run; fence every terminal/retry/suspend/dead-letter write against the actual lease/claim token so the former worker updates zero rows. Preserve existing outbox fencing and real lease-recovery proof. Replace hardcoded schema/event version 1 with authoritative compatibility evidence and wire the existing check to the actual rollout entry point. Reconcile unused feature_flags governance versus working autonomy switches and boot-only worker flags; do not invent another flag engine or label restart-only controls incident-time switches. Verify the rollout contract in this plan with rolling N/N−1 deployment, at least 30-minute canary/abort, kill-switch activation, degraded mode, drain/readiness/liveness, rollback/forward-fix and autoscaling tests. Prove no duplicated/lost work at deployed artifacts; local probes do not certify an actual rollout. R1–R6 from the former unsigned deploy form are owned here, with actual operator/engineering/release decisions under OPS-004.
 
+  `DONE-SOURCE 2026-09-13 | lease fencing PROVEN on two real connections | canary-rollout 21/21, 86 tests exit 0 | deployed rollout NOT-RUN`
+  **Lease fencing already existed and is genuine, which is the opposite of what the row assumed.**
+  `createLifecycleStore` captures the `leaseExpiresAt` returned by `claimDueRuns` as the fence token,
+  and every terminal write — complete, suspend, retry, dead-letter — carries
+  `AND lease_expires_at = $workersLease`, throwing `lease superseded — stale write rejected (0 rows)`
+  on a zero row count. Equality on the exact claim-time timestamp is stronger than a monotonic
+  comparison, and `FOR UPDATE SKIP LOCKED` stops two workers claiming the same row at once.
+  Proven with a **real two-connection race**, not a simulated one: worker A commits its insert, worker B
+  claims and commits a new lease on an independent `postgres()` client, then A's fenced write on its own
+  connection affects **0 rows** (84 ms). This matters because of a trap that produced a false P0 here
+  before — two `BEGIN`s on a single client do not race, so a one-client "concurrency" test proves
+  nothing. Both clients were separate instances with `max: 1`.
+  The hardcoded schema/event version `1` is gone: `run-cell-rollout.ts` now imports
+  `OUTBOX_EVENT_SCHEMA_VERSION` and `CANARY_CELL_SCHEMA_VERSION` from their owning modules instead of
+  two `?? "1"` fallbacks. The compatibility check was already wired to the entry points that make real
+  rollout decisions (`regressedCanaryRun`, `fullRollout`); `selfTest` omits it deliberately because it
+  exercises SLO measurement, not the gate.
+  **Flag reconciliation — no new engine, and one label corrected.** Three mechanisms exist and are not
+  interchangeable: `featureFlags` carries `owner`/`expiresAt` governance enforced by CI but is not yet
+  consumed by any gate; `autonomySwitches` is the working runtime kill switch, platform-wide plus
+  per-org, with no restart needed; `*_WORKER_ENABLED` env vars are **boot-only and must not be called
+  incident-time controls** — changing one needs a restart.
+  NOT-RUN: kill-switch activation, degraded mode, drain/readiness/liveness against an orchestrator, and
+  the actual deployed rollout. Local probes do not certify a rollout, exactly as the row says.
+
   `LEASE FENCING PROVEN ON A REAL DATABASE 2026-09-13 | workflow-lease-fence.db.spec 2/2, exit 0 | workflow-runner 20/20`
   The fence is proven by a before/after pair against Postgres, not by a mock, and it BITES: a stale
   worker's UPDATE **without** the lease predicate affects **1 row**, and the same write **with** the
@@ -2064,6 +2113,25 @@ These requirements were found outside prd/. They remain part of this single chec
 
 - [ ] **OPS-CAPACITY — SLOs, topology and sustainable cost (PRD-C166–169/C172/C175).** S5 with S4 measurement. Run all existing 14 workload objectives simultaneously under sustained production-shaped load, plus a 60-second burst at twice normal RPS with zero 5xx and p95 within 20% of normal; include a separate mobile-3G run; capture pools/queues/CPU/memory/errors and prove declared SLOs with at least 40% headroom. Verify independently resourced cells (DB/cache/queues-workers/realtime-provider/search-vector/storage/monitoring), routing, credential and namespace isolation plus outage negatives; two labels on one service are not separate provisioning. Use the current RB07 collector's sample contract, reconcile historical count discrepancies explicitly, and capture at least seven daily snapshots for trend/capacity evidence unless a stronger existing rule applies. Attribute actual vendor invoice/API costs per cell, active organization/member/message/job; include Ably scoping and approved saturation forecast with Finance/operations decisions. Reuse existing manifest/schema with topology, identity, actual SHA/artifact, operator, timestamp, exit and hashes. Missing provisioned topology is an explicit external gate, not permission to fabricate infrastructure evidence.
 
+  `GATE REPAIRED 2026-09-13 | ops:evidence:self-test exit 0 (10 checks) | ops:evidence:check exit 1, correctly | spec 11/11 exit 0`
+  The evidence gate could be satisfied by a stray file, which is the quiet way infrastructure evidence
+  gets fabricated without anyone intending to. `collectJson` walked the whole evidence tree and treated
+  **any** JSON carrying a `format` field as a submitted deployment manifest — a raw measurement, a
+  synthetic control, or an accidentally-dropped file all qualified.
+  Selection is now explicit: `verify` reads one `submission-index.json` naming the submitted manifests,
+  and nothing outside that list exists to the gate. The index's own format string differs from a
+  manifest's, so the two cannot be confused for each other. `collectJson` was removed.
+  Bite-proven against the real difference: a fixture containing a valid submission index **plus** an
+  unlisted file bearing `format: streamlineos.production-ops-evidence/v1` and runbook `RB-99` fails
+  under the old selector and passes under the new one. Six named cases are covered, including
+  local/synthetic evidence being rejected even when explicitly listed, a listed-but-missing manifest,
+  and a tampered artifact.
+  `ops:evidence:check` against the real evidence root exits 1 — `no submitted evidence manifests found`
+  — and that is the correct answer, not a regression: no operator has submitted a captured manifest.
+  **No historical evidence was renamed, deleted or rejected**; the 14 existing JSON files are simply
+  not examined. A parseable operator name and timestamp inside a manifest is not authentication of a
+  human approval, so OPS-004 still needs its real accountable decision and nothing here substitutes for it.
+
   Manifest-discovery acceptance (same task): backend/src/scripts/production-ops-evidence.mjs currently recursively selects every non-.input.json JSON as a deployment manifest. Implement explicit submitted-manifest selection that distinguishes raw measurements, hash seals and synthetic controls without deleting/renaming historical evidence. Test the real verify entry point with valid RB-01–RB-08 manifests beside unrelated JSON; zero/missing required manifests; malformed/unsupported selected manifests; failed/missing assertions; unlisted/missing/tampered artifacts; and local/synthetic evidence rejection. Preserve current integrity, required-runbook and credential-redaction checks. A parseable operator name/timestamp does not authenticate a human approval; OPS-004 still requires the real accountable decision.
 
   Queue-backlog fixture acceptance (OPS-001/002 shared): the canonical failure-drill currently selects an existing organization. On an empty disposable database, establish an exclusively owned synthetic tenant and prove canonical predicate behavior plus scoped rollback/cleanup; no tenant means inconclusive, not pass. Preserve the current fixture recipe until an equivalent safe canonical path exists.
@@ -2181,7 +2249,45 @@ These requirements were found outside prd/. They remain part of this single chec
 
 - [ ] **ARCH-PERF — Full in-scope performance coverage (PRD-C140–148/C151).** S4/domain owners. Preserve approved synchronous exact timesheet totals and legacy page>1 rejection; do not turn future optional pagination proposals into new mandatory features. Verify every in-scope module benchmark manifest, representative/skew dataset, bounded worker/pool behavior and authorized cache-hit/failure path. Existing targets: ordinary API p95 ≤300 ms (approved complex aggregate/search application overhead ≤800 ms, excluding provider/internet time); ordinary SQL ≤50 ms; approved complex SQL ≤200 ms; authorized cache-hit p95 ≤100 ms. Use current documented SLO exceptions, not invented thresholds. Produce statistically meaningful latency/query/buffer/payload/memory regressions and route JS/CSS/server-payload/image/font/third-party budgets. Historical timing detection was DISARMED: establish noise-aware executable acceptance rather than waive timing or reuse noisy measurements. Do not reopen the 152 redundant FKs: later evidence assigns all of them to excluded CRM/Inventory.
 
+  `PARTIAL 2026-09-13 | keyset ratchet caught a REAL page-two bug | keyset 32/32 + loader 18/18, 50/50 exit 0`
+  **The ratchet earned its keep.** `calendar-exception-loader.ts:27` built its keyset cursor with bare
+  interpolation — `(eventId, id) > (${after.eventId}, ${after.id})` — instead of binding through
+  `sql.param`. This is the defect class that is invisible until page two and invisible to every mocked
+  test, because an unbound value reaches postgres-js as untyped text. Both sides now bind through their
+  column encoders. Red before, green after.
+  Verified present and deliberately untouched, as the row instructs: synchronous exact timesheet totals
+  (`payroll-summary.service.ts` computes in-process from approved entries, 16 tests green) and the
+  legacy page>1 rejection. The 152 redundant FKs were not reopened.
+  Manifest provenance (PRD-C140), statement ceilings (C142) and the regression gate (C148) all pass,
+  with three slots honestly marked seed-too-small rather than scored.
+  NOT-MEASURED and not claimed: authorized cache-hit p95, because no Redis runs against the benchmark
+  seed — every number in that manifest is the cache-MISS path, and the gate says so itself. End-to-end
+  API p95 passes its ceiling against a **committed capture**, not a fresh run, which is a weaker claim
+  than the row's wording implies.
+
 - [ ] **AI-RELEASE — Every supported AI stream and billed effect (PRD-C152–155).** S4 frontend with S5/backend owner reserved by S0. Verify text/tool-progress dispatch, actual abort propagation, deadlines/circuit breakers, replay-safe pre-stream retries, paid-request deduplication and settlement/refund. Cover credit exhaustion, queueing, streaming, cancellation, partial/error output, citation/source integrity, provider failure and permission revocation. Measure supported newly streamed routes, not chat alone: existing target application overhead before provider dispatch p95 ≤250 ms and first visible streamed state within100 ms. Use the actual provider/transaction seam, not a source-only “streaming implemented” claim. Verify relevant focused abort tests at current source; historical flaky timings are not a new proven defect. Validate transactional email advertised locale, English fallback and template version; shared registry/wrapper and recipient migration0844 already exist. Distributed Redis circuit breakers are conditional on measured multi-node recovery need, not an unconditional rewrite.
+
+  `DONE-SOURCE 2026-09-13 | 187 tests / 13 suites exit 0 | abort RELEASES the reserve | first-token NOT-RUN`
+  **The billing question that mattered — what happens to the reservation when a stream is aborted — is
+  answered: it is RELEASED, not settled.** `onAbort` calls
+  `releaseReservation("stream_aborted_no_settle")`, and `onFinish` short-circuits on a `resolved` guard
+  so the two cannot both fire and double-settle. The chat surface needs its own `onAbort` for a
+  specific reason worth keeping: after a tool step, `finishReason` **resolves** rather than rejects, so
+  without it a cancelled multi-step turn would settle a zero-credit charge instead of releasing.
+  Metering is token-based end to end, as the product rule requires: `settleStream` charges
+  `computeTokenCharge(model, promptTokens, completionTokens)` and `settle` computes
+  `delta = reservedMilli - actualMilli`, refunding an under-run and debiting an overage;
+  `AI_FEATURE_COSTS` is only the reserve ceiling. The ledger is integer milli-credits, pinned by its own
+  invariant spec. Credit exhaustion throws before any provider call, so an exhausted wallet cannot spend.
+  Abort was proven against a real HTTP server rather than a mocked signal — a client disconnect
+  produces the signal, `ledger.release` is called and `ledger.settle` is not — including on metered
+  routes outside the AI module.
+  NOT-RUN: first visible streamed state within 100 ms, which needs a booted API on a quiet host. The
+  in-process pre-dispatch budget passed well inside its target (p95 0.93 ms against 150 ms), but that is
+  not the same measurement and is not offered as one. Permission revocation mid-stream stays
+  KNOWN-BOUNDED by `maxOutputTokens` and the 60 s deadline — inherent to streaming, not a new defect.
+  The distributed Redis circuit breaker remains correctly NOT-DONE: the row makes it conditional on a
+  measured multi-node need that has not been measured.
 
   `VERIFIED-ALREADY-CORRECT 2026-09-13 | 276+ tests across 24 spec files, 0 failures | NO FILES CHANGED`
   Every requirement in PRD-C152-155 was checked at current source and found already implemented.
