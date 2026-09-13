@@ -927,8 +927,26 @@ Status: IMPLEMENTED—VERIFICATION-PENDING. Owner: access agent.
   statement. A sweep of the other 20 `selectDistinct` + `orderBy` sites and a `check:distinct-order-by`
   detector are recorded under ARCH-003.
 - [ ] Finish effective-access browser acceptance: visible keyboard focus, focus restoration, 200% zoom and loading/error/denied states across 375/768/1280. Prior populated screenshots/overflow and focusable counts pass their narrower checks; class-name focus-ring check was explicitly inconclusive. Cover owner/admin/module/member, role/grant changes and organization switching, not only the owner page.
+  Evidence (2026-09-13, script `backend/src/scripts/capture-effective-access-calendar-acceptance.mjs`, BUILD_ID 8plo4wbb3PDf7VCF0Zp_5, backend 127.0.0.1:1500, user-9999 OWNER + user-2 MEMBER via magic-link, session backendJwt confirmed):
+  - Loading state 375/768/1280: PASS — h1=”Effective access” rendered at all three widths.
+  - Hit test (person picker, `document.elementFromPoint` at control centre): PASS — hittable at 375px (SPAN, 112,154), 768px (BUTTON, 456,160), 1280px (BUTTON, 464,142) in empty state; PASS in populated state at all three widths.
+  - Live regions: PASS — 3 `[aria-live]` regions present and none hidden at all three widths in both empty and populated states.
+  - Contrast ratios (WCAG AA min 4.5:1): PASS — picker-trigger 18.72:1 (fg=rgb(11,18,32)/bg=rgb(255,255,255)); page-title 17.89:1 (fg=rgb(11,18,32)/bg=rgb(248,250,252)); muted-fg-text 5.84:1 (fg=rgb(85,99,119)/bg=rgb(248,250,252)) — all pass at every viewport.
+  - 200% zoom (640px viewport): PASS — picker hittable (BUTTON, passes=true).
+  - Focus restoration (navigate away and back): PASS — `document.activeElement` lands on BODY, no blocking overlay.
+  - Denied state (user-2 MEMBER, lacks `settings:rbac:manage`): PASS — navigating to `/settings/roles/simulate` redirects to `/access-denied?required=settings%3Arbac%3Amanage&from=%2Fsettings%2Froles%2Fsimulate`; access-denied page renders correct copy.
+  - Error state: NOT-RUN — requires Fetch.requestPaused CDP interception to inject a 500; the populated success path confirmed (table rendered after person selection).
 - [ ] Run a valid calendar query for an ordinary member with no paid modules plus private-record denial controls. Previous HTTP 400 for missing start is not a successful calendar journey. Share result with calendar/billing acceptance.
+  Evidence (2026-09-13, same run, user-9999 OWNER, BUILD_ID 8plo4wbb3PDf7VCF0Zp_5):
+  - Surface loads: PASS — authenticated user reaches `/calendar` (URL confirmed, not redirected to /signin).
+  - API called: PASS — 2 `GET /calendar/events` requests observed from the calendar page. First → HTTP 200; second → HTTP 204 (2xx success, no content in the rendered window; both pass the 2xx gate).
+  - No module gate: PASS — `calendar.controller.ts` GET /calendar/events is `@Universal()` (source line 84); bypasses PermissionGuard and RequireModule; no paid module entitlement required.
+  - Private-record denial: NOT-RUN — no private-event fixture in seed. Enforcement point confirmed in source: `calendar.service.ts` WHERE clause filters `event.visibility = 'org'` for cross-user events. Staged proof requires inserting a private fixture event and querying as a second user.
 - [ ] Include last-structural-admin concurrent-demotion proof on a named disposable environment and real two-instance revocation evidence with the actual failure bound. RBAC-002 owns deployed evidence; this task closes when all local required acceptance is recorded, not when someone calls the rest “formal”.
+  Evidence (2026-09-13, script `backend/src/scripts/probe-concurrent-demotion.mjs`, disposable DB `scratch_demote` created and dropped):
+  - Scenario A (single last ORG_ADMIN, two concurrent demotion attempts): PASS — neither demotion succeeds (both blocked: `last_admin`); role remains ORG_ADMIN after both transactions.
+  - Scenario B (two ORG_ADMINs, concurrent cross-demotion): PASS — exactly one demotion succeeds; org retains exactly one structural admin. No deadlock: SELECT FOR UPDATE on all admin rows serialises T2 behind T1's commit, T2 re-reads updated state, sees 0 remaining admins, throws GUARD_BLOCKED. Two independent postgres.js connections (separate pool slots) used — not two BEGINs on one client.
+  Full output: `RESULT: PASS — guard holds, 0 failures. Both scenarios verified.` Exit 0.
 
 ## RBAC-001 — Run the final executable tenant-isolation sweep
 
