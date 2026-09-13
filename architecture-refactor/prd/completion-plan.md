@@ -1525,6 +1525,26 @@ Matrix entry points: frontend/scripts/calendar-acceptance.mjs (8 states × 4 vie
     GET /me/inbox/count → 401 ✓
     GET /notifications → 401 ✓
     GET /notifications/unread-count → 401 ✓
+  - **BUILD PROVENANCE — READ THIS BEFORE TRUSTING ANY BROWSER EVIDENCE DATED 2026-09-13.**
+    A coordinator error invalidated one build's worth of browser capture. `pnpm build` was run directly
+    instead of the project's `/d/agent-work/fe-build.sh`, which exports
+    `NEXT_PUBLIC_API_URL=http://127.0.0.1:1500` first. **`NEXT_PUBLIC_*` is baked into the client bundle
+    at build time**, so build `oPzc1DNdej_kGwUS7shVX` shipped with **50 chunk files containing
+    `https://api.streamlineos.in` and zero containing `127.0.0.1:1500`** — every client-side fetch from
+    the browser was aimed at PRODUCTION.
+    It did not announce itself, which is the dangerous part: server components read the URL at runtime
+    and kept working, so pages rendered normally and only client-driven state was wrong. Any cell
+    measuring loading, empty, error, retry or populated state on that build was measuring a failed
+    cross-origin call, not the product — so a convincing "defect" could be a pure artefact. Layout-only
+    cells (geometry, focus rings, computed contrast) are probably sound but were re-verified rather than
+    assumed.
+    Rebuilt correctly as **`8plo4wbb3PDf7VCF0Zp_5`**: 50 chunks now contain `127.0.0.1:1500`, **zero**
+    contain the production host. Server restarted, `/signin` → 200. Every capture lane was told to
+    discard its results and re-run, and to state explicitly which earlier findings survive and which
+    evaporated — a defect that disappears when the API URL is corrected was never a defect.
+    Rule for anyone capturing here: **verify the baked URL before trusting a browser run**
+    (`grep -rhoE 'https?://[a-zA-Z0-9.-]+' .next/static/chunks/*.js | sort | uniq -c`), and never build
+    the frontend with anything but `fe-build.sh`.
   - Production frontend build: running at localhost:1000. **CORRECTED by the coordinator:** the
     recorded `BUILD_ID 2REKrikocjK5aTuOFjG6p` was already stale when written. The served build is
     `oPzc1DNdej_kGwUS7shVX`, rebuilt 2026-09-13 (`pnpm build` exit 0) to pick up the calendar toolbar,
