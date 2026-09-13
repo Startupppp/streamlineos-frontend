@@ -1725,6 +1725,30 @@ Local preparation is actionable; actual external actions require identified auth
   unconditionally, so running it at all loads production Aurora credentials. Its five drills were
   replicated through the alert self-test paths instead. That script needs the same treatment given to
   `cell-backup.mjs` and `e2e-smoke.mjs`.
+
+  `CLOSED 2026-09-13 | 8 destructive scripts guarded | check:destructive-targets 8/8, exit 0 | both directions bitten`
+  Rather than repair the third instance and wait for a fourth, the whole class was swept and then
+  fenced by a gate. Eight scripts that can destroy or exfiltrate data now validate their target before
+  touching it: `purge-user`, `drill-erasure`, `compliance-drill-e2e`, `seed-scratch-e2e` and
+  `run-recovery-drill` refuse a production host outright; `relocate-org`, `db-bootstrap` and
+  `run-pending-migrations` are migration tools that may legitimately need a production target, so they
+  require an explicit `ALLOW_PRODUCTION_MIGRATION=1` intent instead. Each exports its predicate and
+  carries a `--self-test`.
+  **Ordering was the subtle part.** A guard placed after `dotenv.config()` is useless, because merely
+  reaching it has already loaded production credentials — that is exactly what made `failure-drill` the
+  third instance. `db-bootstrap` and `seed-scratch-e2e` had their self-test and target check moved
+  ahead of `dotenv.config()`; `purge-user` had its guard moved ahead of the positional-argument check,
+  which was making `--self-test` exit 1 before the guard ran at all.
+  **`check:destructive-targets`** (`backend/src/scripts/check-destructive-targets.mjs`) spawns each of
+  the eight with an `amazonaws.com`-shaped `DATABASE_URL` and asserts a non-zero exit, so a future
+  script that forgets its guard fails a gate rather than a customer's database. It has a vacuity floor:
+  if the list drops below eight the gate fails, because a shrunken sweep is not a passing sweep — the
+  self-test empties the array to prove that floor actually bites.
+  Verified independently by the coordinator, both directions: against a production-shaped URL
+  `purge-user` exits 1 with `PURGE BLOCKED — DATABASE_URL names production host 'amazonaws.com'`;
+  against the loopback scratch target the same script's self-test exits 0 across 9 cases. The guard
+  discriminates, it does not simply refuse everything — a blanket refusal would have passed the gate
+  while breaking every legitimate use.
   Honest gaps: every live provider call (Razorpay, Stripe, Ably, mail, R2, Composio) needs an external
   endpoint and credentials this stack deliberately lacks - absent-behaviour is source-proven, not
   execution-proven. The Redis cache-loss drill is blocked by the script itself, correctly, because
