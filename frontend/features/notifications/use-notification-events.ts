@@ -114,9 +114,6 @@ function openStream(
     }
   };
 
-  // Coming back from an offline stretch is the one moment a reconnect is both
-  // free and certain to be needed; without it the tab waits out whatever backoff
-  // it had reached when the network went away.
   const reconnectNow = () => {
     if (controller.signal.aborted) return;
     retryCount = 0;
