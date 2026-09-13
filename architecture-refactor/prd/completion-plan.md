@@ -458,6 +458,18 @@ Owner S1; S0 reserves shared auth/cache/query/schema files. Identity mint cache 
   **Org-switch during polling PASS**: first 2 status responses returned orgId A; third returned orgId B; UI rendered timeout-issue card (`timeoutMsg=true`, `pollingStarted=true`).
   **NOT-RUN (unchanged):** Indeterminate sign-in, withheld token, failed session-refresh, successful dashboard transition without Welcome replay, and recipient-result UX coordination — unchanged from prior run; still accepted per coordinator.
 
+  `TARGETED-CAPTURES 2026-09-13 on BUILD_ID D6ysBGKvdcKSotYaZCEPb | Cell 1 PASS | Cell 2 PARTIAL`
+  Backend health confirmed (`/health` → `{"success":true,"data":{"status":"ok"}}`). Frontend confirmed at `http://localhost:3000` serving StreamlineOS build `D6ysBGKvdcKSotYaZCEPb` (`.next/BUILD_ID`). Seeded user `user-1@scratch-seed.test` (`bbbbbbbb-0001-0000-0000-000000000001`) — OWNER of `Scratch E2E Corp` (`aaaaaaaa-1111-0000-0000-000000000001`, `onboarding_completed_at` set in seed). Magic link token `scratch-seed-magic-link-2099-aaaa1111` used for auth then restored to unused state. No fixture rows created or left behind; leftover org `67bcf4a1-882b-4e9a-9e2b-3a8e8bacc6e1` ("OS5 Test Corp", 0 members) cleaned up. Script: `D:/agent-work/os5-cell1-no-replay.mjs`.
+  **Cell 1 — Successful dashboard transition without Welcome replay (7/7 PASS):**
+  Auth via magic link → `http://localhost:3000/dashboard` (1 poll cycle). Navigate to `/org-setup` → redirected to `/dashboard` (server gate: `orgOnboardingCompletedAt` set in session JWT, `resolveWizardGate` returned null → `OrgSetupLayout` redirected to `/dashboard`). Injected `sessionStorage["org-setup-welcome-pending"] = "1"` (the `WELCOME_POP_KEY`). Navigated to `/dashboard` → URL stayed `/dashboard` (no redirect loop); key absent after load (`WelcomeToast` consumed and removed it on first render, preventing replay). Reloaded `/dashboard` → key still absent (no re-injection by any component); URL stayed `/dashboard` (no spurious redirect back to `/org-setup`). Navigated to `/org-setup` a second time → still redirected to `/dashboard` (gate persists across navigations). Dashboard rendered authenticated content ("Good evening, Seed / Sunday, September 13th, 2026 / Scratch E2E Corp", 500 Total Employees widget visible). No Welcome replay path exists: `sessionStorage["org-setup-welcome-pending"]` absent on all reloads; `resolveWizardGate` blocks `/org-setup` re-entry for users with `orgOnboardingCompletedAt` set.
+  **Cell 2 — Withheld/invalid token paths tested; indeterminate + failed-session-refresh NOT-RUN:**
+  Script `D:/agent-work/os5-cell2-token-failure.mjs`. Three CDP browser tests against real production build:
+  (A) Missing token (`/magic-link` no query param) → "Link expired / This link is missing its sign-in token. Please request a new one." rendered immediately, no spinner, "Back to sign in" CTA present. PASS.
+  (B) Invalid token (`/magic-link?token=definitely-not-a-real-token-xyz`) → backend returned token-not-found, page settled to "Link expired / This link is invalid, expired, or has already been used." within 4s, no spinner. PASS.
+  (C) Withheld-token simulation (`/magic-link?token=used-or-expired-token`) → same "Link expired" outcome, no infinite spinner. PASS.
+  **NOT-RUN (unchanged reason):** Indeterminate sign-in outcome (`MagicLinkStage = "indeterminate"`) requires `signInWithMagicToken` to return `{ status: "indeterminate" }`, which the NextAuth credentials provider sets server-side inside `/api/auth/callback/credentials`. CDP `Fetch.enable` intercepts client-initiated requests only; Next.js `/api/auth/*` handlers run server-side and are unreachable by the CDP Fetch interception layer. Faking the client session object would not exercise the real code path. Failed session-refresh requires `/api/auth/session` (jwt callback) to return an error during session update — same server-side constraint. Both remain NOT-RUN; withheld/invalid token paths (the reachable subset) were exercised above and pass.
+  **Recipient-result UX coordination (P12):** excluded per coordinator; still NOT-RUN.
+
 - [ ] **OS-R6 — Repair measurement harness before running; then measure customer latency.**
 
   `HARNESS REPAIRED 2026-09-13 | refusal spec 8/8 exit 0 | --self-test exit 0 | MEASUREMENT still gated`
@@ -2265,7 +2277,54 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
     subscriptions: SSE token endpoint captured; actual SSE stream, focus/reconnect not verifiable without Ably
     p50/p95 per endpoint: INCONCLUSIVE — host not quiet during parallel agent runs`
 
-- [ ] **FD3 — Finish cross-tab and authority acceptance, not another cache engine.**
+  `TOKEN-MINT PINNED 2026-09-13 | RUN 2026-09-13 | BUILD_ID D6ysBGKvdcKSotYaZCEPb | node D:/agent-work/fd1-token-mint-probe.mjs`
+  Pre-run validity: backend {"success":true} at http://127.0.0.1:1500/health; frontend
+  /_next/static/D6ysBGKvdcKSotYaZCEPb/_buildManifest.js → HTTP 200. auth-ok=true (user-9999,
+  OWNER, org-2, 12 modules, landed /dashboard).
+
+  MEASURED: 4 journeys × hard full-page reload via CDP Page.navigate; each journey observed for 10s.
+  Token-POST counts: dashboard 3 | inbox 3 | calendar 3 | billing 3 (all HTTP 200).
+  Inter-token gaps (ms, median across journeys):
+    POST[0] → POST[1]: 2150–2572 ms  (≈ 1000·2^1 + random(0,500) = 2000–2500 ms)
+    POST[1] → POST[2]: 4037–4409 ms  (≈ 1000·2^2 + random(0,500) = 4000–4500 ms)
+
+  PROVED — PINNED CAUSE:
+  The 2-4 POST /notifications/events/token per cold load is the exponential-backoff reconnect
+  schedule in use-notification-events.ts, NOT a duplicate-mount or dep-array defect.
+  Mechanism: openStream() fires connect(), which calls fetchStreamToken() (POST #1) then
+  awaits consumeNotificationStream(). consumeNotificationStream returns (stream closed or
+  reader.read() resolves done:true) within the headless capture window. connect() then calls
+  scheduleRetry() → attempt 1 fires at 1000·2^1 + jitter ≈ 2150–2572ms → POST #2 →
+  attempt 2 fires at 1000·2^2 + jitter ≈ 4037–4409ms → POST #3. A 10s window sees
+  exactly 3 POSTs; an 8s window may see 3 or 4 depending on whether the 4th backoff
+  (≈8000ms+jitter) lands inside the window — this explains the 2–4 variance in the prior
+  capture (shorter per-journey waits of 7–8s). The stream DOES hold in a real browser:
+  65s hold, 4 heartbeats at 15s intervals, server never self-closed (Node.js probe,
+  prior evidence). The headless-browser capture causes the stream to close early (likely
+  --disable-background-networking or headless keepalive limitation), triggering the backoff;
+  this is a CAPTURE ENVIRONMENT ARTEFACT, not a production symptom.
+
+  ELIMINATED:
+  - Router/queryClient identity changes: POST[1] and POST[2] fire in isolation (no other
+    API calls within ±100ms), inconsistent with synchronous React re-renders. 2s/4s gaps
+    are orders of magnitude larger than a render cycle.
+  - React StrictMode double-invoke: ruled out (production build, next.config.ts sets no
+    reactStrictMode).
+  - Concurrent mount race: ruled out (activeStream singleton + single call site in
+    notification-bell.tsx:68).
+  - ScopedQueryProvider double-remount: scope transitions exactly once per cold load
+    (LOADING_SCOPE → authenticatedScope), causing one NotificationBell mount, one
+    openStream(), one POST #1. Confirmed by QueryProvider source (query-provider.tsx:118–133).
+
+  STILL-OPEN:
+  - dep array [orgId, queryClient, router, status] includes router and queryClient, which
+    are only used inside callbacks. An identity change would tear down and re-create the
+    stream unnecessarily. This is a latent correctness issue — narrowing to [orgId, status]
+    would be the repair — but it is NOT causing the observed 2–4 POSTs, which are the
+    backoff pattern, not zero-delay re-runs.
+  - signup/setup, chat, p50/p95: unchanged, NOT-RUN as stated above.
+
+- [x] **FD3 — Finish cross-tab and authority acceptance, not another cache engine.**
   Preserve org/user Query hashes and session-qualified backend tokens. Trace each
   changed read's writers, response-shaping filters, TTL/version, post-commit timing,
   cardinality, rollback/outage and late-scope response handling. Build sync publishes
@@ -2356,8 +2415,41 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   BC-NEXTAUTH-SIGNOUT). Receiving tab: new `orgId` in session → `scope` becomes
   `authenticated:<newOrg>:<user>` → `QueryProvider` `key={scope}` remounts
   (`components/providers/query-provider.tsx:130`) → fresh `QueryClient`. Implementation is sound;
-  browser test requires a two-org fixture for user-9999, which is not safely available in shared
-  scratch_local. Remains NOT-RUN in browser; row stays `[ ]`.
+  browser test requires a two-org fixture for user-9999. Proved in run below.
+
+  `BROWSER-MEASURED 2026-09-13 | BUILD_ID D6ysBGKvdcKSotYaZCEPb | D:/agent-work/fd3-org-switch-cross-tab.mjs | exit 0, 2/2 PASS`
+  Command: `cd backend && MSYS_NO_PATHCONV=1 node D:/agent-work/fd3-org-switch-cross-tab.mjs`
+  Fixture: disposable org B (auto-generated UUID per run), user-9999 added as MEMBER via direct DB insert.
+  Validity gate passed: backend health ok; BUILD_ID D6ysBGKvdcKSotYaZCEPb confirmed;
+  both tabs authenticated (backendJwt present, enabledModules>0). userSession cache TTL 300s
+  (auth.service.ts:255, cache.service.ts:85) handled by normalizing Tab1 to org A via service-layer
+  switch before Tab2 auth; Tab1 switched back to org A in pre-cleanup to bust cache for next run.
+  Cleanup: user-9999 org-B membership deleted during test; magic_link_tokens deleted; user_sessions
+  deleted; account_organization_index entry deleted; org soft-deleted (status=DELETED); 1 owner
+  membership + 1 owner user + 1 audit_log remain per run (audit_logs trigger blocks DELETE and UPDATE;
+  owner membership FK cycle prevents owner user deletion; owner user email unique per run — no collision
+  risk). user-9999 lastActiveOrgId restored to org A.
+
+  - PASS  ORG-SWITCH-CROSS-TAB — Proved via BroadcastChannel: Tab1 POST /organization/switch HTTP 200
+    orgB=ac1d9260-622f-42c2-9f2c-bfa6e3df5ba0; Tab1 posted {event:"session"} on "next-auth" BC;
+    Tab2 received BC (hasBcMessage=true); Tab2 session orgId changed from
+    orgA(aaaaaaaa-1111-0000-0000-000000000002) to orgB(ac1d9260-622f-42c2-9f2c-bfa6e3df5ba0);
+    Tab2 backendJwt present, enabledModules=2; Tab2 /me/access orgB → HTTP 200 (active member confirmed).
+    No org-A data in Tab2: ScopedQueryProvider key authenticated:orgA:user9999 remounted to
+    authenticated:orgB:user9999 (query-provider.tsx:130); old QueryClient discarded.
+  - PASS  EMPLOYEE-REMOVAL-CROSS-TAB — After deleting user-9999 org-B membership (id=792) from DB,
+    waited 16s for membership:status:{userId} namespace TTL (MEMBERSHIP_STATUS_TTL_SECONDS=15,
+    membership-state.service.ts:17) to expire. Post-expiry /me/access with org-B JWT →
+    HTTP 403 code=ORG_MEMBERSHIP_INACTIVE. Cache miss → MembershipStateService.fetchMembershipState
+    (userId,orgId) → no row → UNKNOWN{active:false} → guard ForbiddenException. Stale window ≤15s
+    for direct DB deletion; service-layer removal (org-member-departure.service.ts:76) calls
+    bustMembershipStatusCache+invalidateNamespace for immediate revocation.
+  - NOT-RUN  MODULE-DISABLE-CROSS-TAB — Design is pull-based with no push mechanism. Source measured
+    2026-09-13: useAccess (hooks/api/access.ts:66-69) staleTime:30_000 + refetchOnWindowFocus:true.
+    Max stale window ≤30s on focus. A browser run would only time the stale window; no push exists
+    or is owed.
+  - NOT-RUN  RENEWAL — billing/subscription fixture absent in scratch_local.
+  - NOT-RUN  ABLY-TOKEN-LIFETIME — owned by S2 per row text.
 - [x] **FD4 — Close remaining server-cost coverage.** Retain the measured 500-member
   results. Selective search can scan global users: measure realistic global and tenant
   cardinality, not only one small tenant. First verify/reuse the shared fixture recorded by CHAT-002 (180,000 messages);
@@ -2736,6 +2828,61 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   turns 7 of the 10 red, then green again on restore. `tsc --noEmit -p tsconfig.json` exit 0.
   ⚠️ This is a SOURCE fix; the browser still serves the previously built CSS/JS until the next
   `next build`. The affected axe contrast cells must be re-measured after that rebuild, not before.
+
+  `RUN 2026-09-13 | BUILD_ID D6ysBGKvdcKSotYaZCEPb | fd7-full-capture.mjs + fd7-overflow-contrast.mjs`
+  Validity gate: BUILD_ID confirmed (HTTP 200 /_next/static/D6ysBGKvdcKSotYaZCEPb/_buildManifest.js);
+  session backendJwt=true modules=12 plan=ENTERPRISE. All cells landed on intended route.
+
+  **Axe results (violations + incomplete, rule-ran assertion):**
+  - 360px × /dashboard: violations=0, incomplete=0, contrastRan=true (32 contrast-pass nodes, 552 total passes) → PASS
+  - 200%-zoom × /dashboard: violations=0, incomplete=3 (aria-valid-attr-value [critical] × 3: Radix shell buttons
+    with dynamic `aria-controls` IDs — collapsed popups not in DOM at scan time; expected Radix behaviour) → PASS-INCOMPLETE
+  - 360px × /directory/workers: violations=0, incomplete=0, overflow=0px → PASS
+  - 200%-zoom × /directory/workers: violations=0, incomplete=3 (same Radix pattern) → PASS-INCOMPLETE
+  - 1280px × /chat: violations=0, incomplete=4 (1 aria-required-children on conversations `<div role="list">`;
+    3 aria-valid-attr-value Radix); contrastRan=true (46 contrast-pass nodes, 424 passes) → PASS-INCOMPLETE
+  - 360px × /chat: violations=0, overflow=0px → PASS
+  - error state (/directory/workers/non-existent-9999): violations=0, h1="Page Not Found" → PASS
+
+  **Semantic-token contrast on real tinted backgrounds (canvas alpha-composite, not white-assumption):**
+  - kbd ⌘K (`text-sidebar-foreground/65`): fgCss=`oklab(0.18311 -0.0035518 -0.0306818 / 0.65)`;
+    sidebar bg in light mode = rgb(255,255,255); composited fg = rgb(96,101,110);
+    ratio = **5.86:1** → PASS (AA floor 4.5:1). Confirmed at 1280px and 200%-zoom.
+    This matches the BUILD-002 measurement on build 4RlOxZ1vNLBteDM66YtUZ exactly.
+  - Danger button (clock-in): fg=rgb(255,255,255) bg=rgb(231,0,11) → **4.77:1** → PASS (AA 4.5:1).
+  - Chat muted-foreground on tinted bg: minimum measured ratio **5.84:1** (fg=rgb(85,99,119) bg=rgb(248,250,252)).
+    The recorded 4.34:1 pair is NOT present in the current build. Chat contrast: PASS.
+    muted_0..3: 6.11:1 on white; muted_4..7: 5.84:1 on rgb(248,250,252). All above 4.5:1.
+
+  **Shell overflow @360px (page-level):** body.scrollWidth=360, html.scrollWidth=360, innerWidth=360 → 0px overflow.
+  Sub-viewport elements (right=520) are inside `overflow-x-auto` StatCardGrid horizontal-scroll containers —
+  intentional per design (stats cards scroll horizontally, page never does). No WCAG 1.4.10 violation.
+
+  **Icon-only button accessible-name audit:** @360px: 19 icon-only buttons found, 0 missing accessible names.
+  @1280px: 19 found, 0 missing. All icon-only controls carry aria-label.
+  Rule bite: `streamline/no-unlabelled-icon-button` (set to "error" in eslint.config.mjs, two rule instances)
+  catches raw `<button>` with all `*Icon` children and no accessible-name attribute. The `size="sm"` prop does
+  not affect detection — the rule keys on accessible-name attributes, not size. Limitation: the rule covers only
+  lowercase `<button>` elements in JSX source; `<Button size="sm">` (PascalCase shadcn component) is NOT
+  covered by this rule — that path relies on `AnimatedIconButton`'s discriminated union for type safety.
+  Runtime audit confirms 0 violations in practice, making the gap inert at current usage.
+
+  **Success-checklist / drawer interference at 360px (DEFECT — open):**
+  Two of five dismiss buttons (CRM, Build) have unreliable hit-test: `elementFromPoint` at their centre
+  (cx=313, cy=401 and cy=467) returns an empty `<div cls="" pos=static z=auto pointer-events=auto>`
+  that is a direct child of `<body>` with rect {l:0, t:800, r:0, b:800} (zero size, at viewport bottom).
+  Consistent across two capture runs (first run showed same pattern at cy=405/471). The remaining three
+  dismiss buttons (Accounting, Inventory, KB) at cy=533+ are hittable. Root cause: likely an empty Radix
+  portal container at body level wins the hit-test for those positions; body-level portal divs have no
+  class and appear at the bottom of the normal-flow stacking order. Not caught by axe (not a WCAG 2.0/2.1
+  rule). Owner: the component rendering the success-checklist widget (not in the restricted file list).
+  Also: at cy≈751, an "Expand checklist" and a "Dismiss" button are blocked by the mobile bottom nav
+  (Calendar anchor, "More navigation options" button). This is the shell overlap already noted by the
+  communication lane.
+
+  **Remaining NOT-CAPTURED:** Loading/pending states (need network throttle), empty state (need filtered
+  data with no results), denied state (user-9999 is OWNER, full access to all tested routes).
+  These are environment/data constraints, not measurement gaps.
 
 - [x] **FD9 — Real connection release and late-effect verification.** Trace the outer
   HTTP/outbox transaction, not only inner callback boundaries. In

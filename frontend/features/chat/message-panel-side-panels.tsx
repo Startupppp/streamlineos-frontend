@@ -40,7 +40,7 @@ type SidePanelsProps = {
   setShowFilesPanel: (open: boolean) => void;
   forwardMessage: ForwardableMessage | null;
   setForwardMessage: (message: ForwardableMessage | null) => void;
-  dropdownTriggerRef?: RefObject<HTMLButtonElement>;
+  dropdownTriggerRef?: RefObject<HTMLButtonElement | null>;
 };
 
 const panelMotion = {
