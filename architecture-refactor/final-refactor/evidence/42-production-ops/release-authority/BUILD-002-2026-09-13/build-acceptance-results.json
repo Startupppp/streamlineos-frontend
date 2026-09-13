@@ -1,0 +1,375 @@
+{
+  "capturedAt": "2026-09-13T06:22:15.459Z",
+  "baseUrl": "http://localhost:1001",
+  "widths": [
+    375,
+    768,
+    1280
+  ],
+  "projectPath": "/build/1",
+  "projectFlat": "/build/1",
+  "ticketKey": null,
+  "planned": 15,
+  "counts": {
+    "PASS": 3,
+    "FAIL": 6,
+    "NOT-RUN": 6
+  },
+  "screenshotDir": "D:/projects/personal/Streamlineos/architecture-refactor/final-refactor/evidence/42-production-ops/release-authority/BUILD-002-2026-09-13",
+  "cells": [
+    {
+      "state": "loading-and-empty",
+      "width": 375,
+      "verdict": "FAIL",
+      "reason": "empty state: no empty-state copy was rendered for a no-match filter",
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\loading-and-empty-375px-loading.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\loading-and-empty-375px-empty.png"
+      ],
+      "checks": [
+        {
+          "name": "loading skeleton painted",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "empty state",
+          "verdict": "FAIL",
+          "reason": "no empty-state copy was rendered for a no-match filter"
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 35,
+        "violations": []
+      }
+    },
+    {
+      "state": "error-and-retry",
+      "width": 375,
+      "verdict": "NOT-RUN",
+      "reason": "no ticket key could be discovered, so the 500/404 split is unprovable",
+      "screenshots": []
+    },
+    {
+      "state": "cross-tab-freshness",
+      "width": 375,
+      "verdict": "FAIL",
+      "reason": "propagation: the peer tab received no cache-sync message; refetch: the peer tab issued no request after the mutation",
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\cross-tab-freshness-375px-peer.png"
+      ],
+      "checks": [
+        {
+          "name": "propagation",
+          "verdict": "FAIL",
+          "reason": "the peer tab received no cache-sync message"
+        },
+        {
+          "name": "refetch",
+          "verdict": "FAIL",
+          "reason": "the peer tab issued no request after the mutation"
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 35,
+        "violations": []
+      }
+    },
+    {
+      "state": "keyboard-and-accessibility",
+      "width": 375,
+      "verdict": "NOT-RUN",
+      "reason": "risk matrix: no named risk cells on /build/1/risks (1 buttons seen; none named probability)",
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\keyboard-and-accessibility-375px-risks.png"
+      ],
+      "checks": [
+        {
+          "name": "risk matrix",
+          "verdict": "NOT-RUN",
+          "reason": "no named risk cells on /build/1/risks (1 buttons seen; none named probability)"
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 35,
+        "violations": []
+      }
+    },
+    {
+      "state": "responsive-layout",
+      "width": 375,
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\responsive-layout-375px-build-all.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\responsive-layout-375px-build-1.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\responsive-layout-375px-build-1-backlog.png"
+      ],
+      "checks": [
+        {
+          "name": "no horizontal overflow /build/all",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "no horizontal overflow /build/1",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "no horizontal overflow /build/1/backlog",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 35,
+        "violations": []
+      }
+    },
+    {
+      "state": "loading-and-empty",
+      "width": 768,
+      "verdict": "FAIL",
+      "reason": "empty state: no empty-state copy was rendered for a no-match filter",
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\loading-and-empty-768px-loading.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\loading-and-empty-768px-empty.png"
+      ],
+      "checks": [
+        {
+          "name": "loading skeleton painted",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "empty state",
+          "verdict": "FAIL",
+          "reason": "no empty-state copy was rendered for a no-match filter"
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 35,
+        "violations": []
+      }
+    },
+    {
+      "state": "error-and-retry",
+      "width": 768,
+      "verdict": "NOT-RUN",
+      "reason": "no ticket key could be discovered, so the 500/404 split is unprovable",
+      "screenshots": []
+    },
+    {
+      "state": "cross-tab-freshness",
+      "width": 768,
+      "verdict": "FAIL",
+      "reason": "propagation: the peer tab received no cache-sync message; refetch: the peer tab issued no request after the mutation",
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\cross-tab-freshness-768px-peer.png"
+      ],
+      "checks": [
+        {
+          "name": "propagation",
+          "verdict": "FAIL",
+          "reason": "the peer tab received no cache-sync message"
+        },
+        {
+          "name": "refetch",
+          "verdict": "FAIL",
+          "reason": "the peer tab issued no request after the mutation"
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 35,
+        "violations": []
+      }
+    },
+    {
+      "state": "keyboard-and-accessibility",
+      "width": 768,
+      "verdict": "NOT-RUN",
+      "reason": "risk matrix: no named risk cells on /build/1/risks (1 buttons seen; none named probability)",
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\keyboard-and-accessibility-768px-risks.png"
+      ],
+      "checks": [
+        {
+          "name": "risk matrix",
+          "verdict": "NOT-RUN",
+          "reason": "no named risk cells on /build/1/risks (1 buttons seen; none named probability)"
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 35,
+        "violations": []
+      }
+    },
+    {
+      "state": "responsive-layout",
+      "width": 768,
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\responsive-layout-768px-build-all.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\responsive-layout-768px-build-1.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\responsive-layout-768px-build-1-backlog.png"
+      ],
+      "checks": [
+        {
+          "name": "no horizontal overflow /build/all",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "no horizontal overflow /build/1",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "no horizontal overflow /build/1/backlog",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 35,
+        "violations": []
+      }
+    },
+    {
+      "state": "loading-and-empty",
+      "width": 1280,
+      "verdict": "FAIL",
+      "reason": "empty state: no empty-state copy was rendered for a no-match filter",
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\loading-and-empty-1280px-loading.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\loading-and-empty-1280px-empty.png"
+      ],
+      "checks": [
+        {
+          "name": "loading skeleton painted",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "empty state",
+          "verdict": "FAIL",
+          "reason": "no empty-state copy was rendered for a no-match filter"
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 35,
+        "violations": []
+      }
+    },
+    {
+      "state": "error-and-retry",
+      "width": 1280,
+      "verdict": "NOT-RUN",
+      "reason": "no ticket key could be discovered, so the 500/404 split is unprovable",
+      "screenshots": []
+    },
+    {
+      "state": "cross-tab-freshness",
+      "width": 1280,
+      "verdict": "FAIL",
+      "reason": "propagation: the peer tab received no cache-sync message; refetch: the peer tab issued no request after the mutation",
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\cross-tab-freshness-1280px-peer.png"
+      ],
+      "checks": [
+        {
+          "name": "propagation",
+          "verdict": "FAIL",
+          "reason": "the peer tab received no cache-sync message"
+        },
+        {
+          "name": "refetch",
+          "verdict": "FAIL",
+          "reason": "the peer tab issued no request after the mutation"
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 35,
+        "violations": []
+      }
+    },
+    {
+      "state": "keyboard-and-accessibility",
+      "width": 1280,
+      "verdict": "NOT-RUN",
+      "reason": "risk matrix: no named risk cells on /build/1/risks (1 buttons seen; none named probability)",
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\keyboard-and-accessibility-1280px-risks.png"
+      ],
+      "checks": [
+        {
+          "name": "risk matrix",
+          "verdict": "NOT-RUN",
+          "reason": "no named risk cells on /build/1/risks (1 buttons seen; none named probability)"
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 35,
+        "violations": []
+      }
+    },
+    {
+      "state": "responsive-layout",
+      "width": 1280,
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\responsive-layout-1280px-build-all.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\responsive-layout-1280px-build-1.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\42-production-ops\\release-authority\\BUILD-002-2026-09-13\\responsive-layout-1280px-build-1-backlog.png"
+      ],
+      "checks": [
+        {
+          "name": "no horizontal overflow /build/all",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "no horizontal overflow /build/1",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "no horizontal overflow /build/1/backlog",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 35,
+        "violations": []
+      }
+    }
+  ]
+}

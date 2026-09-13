@@ -110,6 +110,7 @@ export function invalidateSettledPurchase(queryClient: QueryClient): void {
   queryClient.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.summary() });
   queryClient.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.entitlements() });
   queryClient.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.seats() });
+  queryClient.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.plans() });
   queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
   queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.orgModules() });
 }

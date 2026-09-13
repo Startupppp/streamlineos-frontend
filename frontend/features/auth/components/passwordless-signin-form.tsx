@@ -310,7 +310,7 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
           {...emailForm.register("email")}
           disabled={requestOtpMutation.isPending}
           className={cn(
-            "h-8 text-sm",
+            "h-9 text-sm",
             emailForm.formState.errors.email &&
               "border-destructive focus-visible:ring-destructive/30",
           )}

@@ -572,3 +572,150 @@ See `#database-cell-failure` for the database-specific path and RB-01 for the is
 **Recovery:** Follow [RB-04](../../../runbooks/RB-04-recovery-drill.md); relocation is [RB-02](../../../runbooks/RB-02-pitr-backup.md).
 
 **Verification:** `alert-cell-recovery.mjs` exits 0 and RB-01 isolation checks still pass.
+
+---
+
+## #workflow-stranded
+
+**What fires:** `workflow-stranded` (critical, platform-reliability) when any `workflow_executions` row has entered `timed_out` or `failed` status within the lookback window (default 24 h).
+
+**Detection signal:** `alert-workflow-stranded.mjs` queries `workflow_executions` grouped by `(org_id, status)`. A `timed_out` row means a worker held the execution past `RUNNING_TIMEOUT_MS` (15 min) without a status transition — the worker likely crashed. A `failed` row is a hard terminal failure. Neither status ever transitions back to pending, so these rows accumulate permanently and silently without this alert.
+
+**First five minutes**
+
+```bash
+# 1. Identify which tenants and statuses are affected
+node backend/src/scripts/alert-workflow-stranded.mjs --hours=24
+
+# 2. Look for correlated worker crash signals in the same window
+journalctl -u streamlineos-api --since "30 minutes ago" | grep -i "workflow"
+
+# 3. Check whether the worker process is still running
+# (a missing heartbeat in the job-queue or cron logs is the companion signal)
+node backend/src/scripts/alert-job-queue-age.mjs
+```
+
+**Containment:** There is no runtime containment — the executions are already permanently stuck. The priority is preventing new ones by confirming the worker is healthy.
+
+**Recovery:**
+
+1. Identify the execution ids from the alert output (grouped by `org_id`, `status`).
+2. Determine root cause: for `timed_out`, inspect logs around the `oldest_at` timestamp for the affected org to find the worker crash or network partition.
+3. For executions that can be safely retried, reset them to a retryable state and re-queue. For executions that represent irrecoverable failures, record the outcome in the audit log and notify the affected organization.
+4. Restart the worker process if it was found crashed.
+
+**Verification:** `alert-workflow-stranded.mjs --hours=1` exits 0 with no stranded rows in the window after remediation.
+
+---
+
+## #on-call-rotation
+
+**Structure (rotation template — named-person slots require an accountable owner decision)**
+
+The dispatch registry assigns each alert an `owner` team (e.g. `platform-reliability`, `notifications-team`, `payments-team`). That team label maps to an on-call responder through the following structure; the rotation itself is a people decision and must be filled in by the responsible engineering manager before the first production deployment.
+
+| Role | Responsibilities | Handoff cadence |
+|------|-----------------|-----------------|
+| **Primary on-call** | First responder. Acknowledges within 5 min (SEV1) or 15 min (SEV2). Owns diagnosis and initial containment. | Weekly rotation |
+| **Secondary on-call** | Escalation target if primary misses acknowledgement at 5 min (SEV1) or 15 min (SEV2). Backs up primary for complex incidents. | Weekly rotation, offset by 3–4 days from primary |
+| **Incident commander** | Takes command when SEV1 is unmitigated at 15 min or SEV2 at 30 min. Coordinates cross-team response, owns external communication decision. | Separate rotation or named senior engineer |
+| **Customer-comms owner** | Drafts and posts status-page updates. Acts on incident commander authorization. | Named per incident from communications or engineering leadership |
+
+**Per-team registry mapping:**
+
+| Registry owner | Team | Primary slot (FILL IN) | Secondary slot (FILL IN) |
+|---|---|---|---|
+| `platform-reliability` | Platform SRE | _Accountable owner required_ | _Accountable owner required_ |
+| `notifications-team` | Notifications | _Accountable owner required_ | _Accountable owner required_ |
+| `payments-team` | Payments | _Accountable owner required_ | _Accountable owner required_ |
+
+**Handoff protocol:**
+
+- The outgoing primary hands off open incidents, any suppressed alerts (check the dispatch state file), and current system health to the incoming primary.
+- Handoff is confirmed in writing (chat or ticket) before the shift ends.
+- The rotation schedule is the authoritative source for who is on-call; this document records the structure, not the names.
+
+---
+
+## #severity-escalation-matrix
+
+Derived from the approved OPS-002/003 and REL-002 operational acceptance contract (completion-plan.md line 1682).
+
+| Severity | Acknowledgement | Secondary escalation | Incident commander / leadership | Leadership / comms (unmitigated) |
+|---|---|---|---|---|
+| **SEV1** | Immediate (alert fires) | 5 min after alert without ACK | 15 min after alert without ACK | 30 min unmitigated |
+| **SEV2** | Immediate (alert fires) | 15 min after alert without ACK | 30 min after alert without ACK | — |
+
+**SEV1 criteria:** any `critical` severity alert from `alert-dispatch.mjs` (`dead-outbox`, `dead-notification-outbox`, `tenant-ctx-errors`, `cell-recovery`, `retention-dead-man`, `workflow-stranded`), a confirmed cross-tenant data leak, or any condition that makes the platform unavailable to paying tenants.
+
+**SEV2 criteria:** any `high` severity alert (`dead-delivery`, `sig-failures`, `p95`, `seam-latency`, `queue-age`, `job-queue-age`, `pool-saturation`, `tenant-cost`), or a degradation that materially impairs a specific feature or tenant group without platform-wide impact.
+
+**Pause/rollback triggers (from approved contract):**
+- Two consecutive smoke failures
+- P0 unresolved 10 min after acknowledgement
+- Headroom below 20% on any of CPU / memory / pool / queue
+- DB errors above 1%
+- Any confirmed cross-tenant leak
+
+Execute rollback only within actual deployment authority.
+
+---
+
+## #customer-communication
+
+Derived from the approved OPS-002/003 and REL-002 operational acceptance contract (completion-plan.md line 1682).
+
+**Status-page update cadence:**
+
+| Severity | First update | Subsequent updates |
+|---|---|---|
+| **SEV1** | Within 30 min of incident declaration | Every 30 min until resolved |
+| **SEV2** | Within 60 min of incident declaration | Every 60 min until resolved |
+
+**Authorization:** Do not publish or notify external parties without authorization from the incident commander. The customer-comms owner drafts; the incident commander approves before posting.
+
+**Content guidelines:**
+
+- State what is affected (which feature or service) and what is not affected.
+- Do not speculate on root cause in public updates.
+- State the current status (investigating / identified / monitoring / resolved) and the expected next update time.
+- When resolved, confirm full restoration and provide the time of resolution.
+
+**Real contacts and status channel:** Assign real contacts and a status channel before the first production deployment. The slots below are structural placeholders requiring an accountable owner decision.
+
+| Role | Contact (FILL IN) | Status channel (FILL IN) |
+|---|---|---|
+| Incident commander | _Accountable owner required_ | _Accountable owner required_ |
+| Customer-comms owner | _Accountable owner required_ | _Accountable owner required_ |
+| Status page credentials | _Accountable owner required_ | _Accountable owner required_ |
+
+---
+
+## #post-incident-review
+
+Derived from the approved OPS-002/003 and REL-002 operational acceptance contract (completion-plan.md line 1682).
+
+**Timeline:**
+
+| Step | Deadline |
+|---|---|
+| Draft circulated to responders | Within 3 business days of resolution |
+| Review meeting held | Within 5 business days of resolution |
+| Final report published internally | Within 5 business days of resolution |
+
+**Required sections in the post-incident document:**
+
+1. **Incident summary** — one-paragraph description of what happened, when, and how it was resolved.
+2. **Timeline** — chronological list of events: trigger, first alert, acknowledgement, escalations, containment actions, resolution. Include timestamps and the `release` field from logs to anchor to the deploy that introduced the regression (if applicable).
+3. **Impact** — which tenants, features or cells were affected; duration of degradation; customer-facing symptoms.
+4. **Root cause** — the specific technical condition that caused the incident. Distinguish proximate cause from contributing factors.
+5. **Detection** — which alert fired first; whether the alert was timely; whether the runbook was accurate.
+6. **Response** — what actions were taken and in what order; what worked and what did not; whether escalations fired at the right time.
+7. **Action items** — specific, owned, time-bounded remediation tasks. Each item names an owner and a target date. Distinguish: (a) immediate fixes already applied, (b) monitoring improvements, (c) process improvements.
+8. **What went well** — at least one thing the team did well, to preserve effective practices.
+
+**Anti-patterns to avoid:**
+
+- Do not assign blame to individuals.
+- Do not list an action item without an owner and date.
+- Do not close an incident without verifying that the alert that fired now exits 0 over a fresh log window.

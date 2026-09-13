@@ -80,6 +80,7 @@ const main = async () => {
   if (argv.includes("--self-test")) return selfTest();
   const userId = flag("user-id");
   const email = flag("email");
+  const sessionId = flag("session-id");
   const secret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
   if (!userId || !email) {
     console.error("--user-id and --email are required");
@@ -89,7 +90,7 @@ const main = async () => {
     console.error("NEXTAUTH_SECRET (or AUTH_SECRET) is required — run with --env-file=.env");
     process.exit(1);
   }
-  const value = await mint({ userId, email, secret });
+  const value = await mint({ userId, email, secret, sessionId });
   const out = flag("out");
   if (out) {
     writeFileSync(out, value);
