@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import dynamic from "next/dynamic";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { useInfiniteProjects } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
@@ -9,13 +10,11 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { RequireModule } from "@/components/auth/require-module";
-import { NewProjectDialog } from "@/features/build/project-list/new-project-dialog";
 import { ResumeLastProjectAction } from "@/features/build/project-list/resume-last-project-action";
 import { ProjectCard } from "@/features/build/project-list/project-card";
 import { ProjectTable } from "@/features/build/project-list/project-table";
 import { ProjectFilterBar } from "@/features/build/project-list/project-filter-bar";
 import { ProjectsEmptyState } from "@/features/build/project-list/projects-empty-state";
-import { GroupingSidebar } from "@/features/build/project-list/grouping-sidebar";
 import { getUserDisplayName } from "@/lib/person-display";
 import { useDisplayPrefs } from "@/features/build/project-list/use-display-prefs";
 import type { ProjectActiveFilters } from "@/features/build/project-list/add-filter-popover";
@@ -41,6 +40,15 @@ import type {
   ProjectOrderBy,
   ProjectSortDir,
 } from "@/features/build/project-list/use-display-prefs";
+
+const NewProjectDialog = dynamic(
+  () => import("./new-project-dialog").then((m) => ({ default: m.NewProjectDialog })),
+  { ssr: false },
+);
+const GroupingSidebar = dynamic(
+  () => import("./grouping-sidebar").then((m) => ({ default: m.GroupingSidebar })),
+  { ssr: false, loading: () => null },
+);
 
 type ViewMode = "grid" | "list";
 const VIEW_MODES: readonly ViewMode[] = ["grid", "list"];

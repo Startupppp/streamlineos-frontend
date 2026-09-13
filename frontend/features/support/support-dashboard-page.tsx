@@ -14,7 +14,7 @@ import { MiniAreaChart } from "@/components/charts/mini-area-chart";
 import { MiniDonutChart } from "@/components/charts/mini-donut-chart";
 import { ActivityFeed } from "@/components/charts/activity-feed";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { useSupportDashboard } from "@/hooks/api";
+import { useSupportDashboard } from "@/hooks/api/crm/analytics";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { safeMax, calcPercent } from "@/lib/format-utils";
 import { sparkColors } from "@/lib/theme-constants";

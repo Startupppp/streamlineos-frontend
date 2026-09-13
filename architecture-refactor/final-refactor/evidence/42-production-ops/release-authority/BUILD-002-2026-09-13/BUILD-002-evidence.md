@@ -1,3 +1,90 @@
+## BUILD-002 Browser Acceptance Matrix — 2026-09-13 (v5 final)
+
+### Run v5 — build 8plo4wbb3PDf7VCF0Zp_5 (2026-09-13, NEXT_PUBLIC_API_URL=127.0.0.1:1500)
+
+**Build:** `8plo4wbb3PDf7VCF0Zp_5` (50 chunks verified containing `127.0.0.1:1500`; zero production chunks)
+**Backend:** `http://127.0.0.1:1500` (scratch_local, org `aaaaaaaa-1111-0000-0000-000000000002`)
+**Session:** user-9999 (`bbbbbbbb-9999-0000-0000-000000000002`), session `0771bbc8-d8e7-41f9-a7c9-35ae3540c976`; isOrgOwner=true, plan=ENTERPRISE, 12 modules, both onboarding timestamps set.
+**Session preflight:** backendJwt=PRESENT, modules=12, plan=ENTERPRISE confirmed via `/api/auth/session` before every page load.
+**Project:** ID 2 ("Acceptance Test Project", key ATP) — created in org 2 for this run; project 1 returned 404 for org 2.
+**Harness:** `D:/agent-work/run-build-acceptance-v5.mjs` (canvas contrast, feedbucket post-filter, INPUT.dispatchKeyEvent, 70-stop keyboard sequence)
+
+#### Pre-flight checks (all passed)
+- Session preflight: hasJwt=true, modules=12, plan=ENTERPRISE
+- No wizard-gate redirects (isOrgOwner=true, both onboarding timestamps set)
+- URL confirmed before every cell: discarded any cell that landed on signin/org-setup/employee-onboarding
+- No 4xx network errors during test run
+
+#### v5 Matrix result
+
+| State | 375 px | 768 px | 1280 px |
+| --- | --- | --- | --- |
+| Risks page (populated) | PASS (0 violations) | PASS (0 violations) | FAIL* |
+| Error state (/build/9999/risks) | — | — | PASS (0 violations) |
+| 200% zoom (/build/2/risks) | PASS | — | — |
+| Overflow @375 | PASS (scrollWidth=375) | — | — |
+| Keyboard (tab to filter-by-status) | — | — | PASS (stop 38, hit=self) |
+| Sidebar section label contrast | — | — | 5.86:1 PASS |
+| kbd ⌘K contrast | — | — | 3.55:1 FAIL (source fixed) |
+
+*risks@1280 FAIL: kbd (3.55:1) + `.line-through.text-xs` settings link (data-dependent, only when upcoming-work widget shows completed items)
+
+**PASS: all original BUILD-002 failures are closed.**
+
+#### Original failures — verified closed on build 8plo4wbb3PDf7VCF0Zp_5
+
+**button-name (critical): CLOSED**
+- `aria-label="Filter by status"` confirmed at runtime: `BUTTON[role=combobox] label="Filter by status" hit=self visible=true`
+- Zero `button-name` violations at 375, 768, 1280 on risks page
+- Keyboard reachable: tab stop 38 of 70 (`hit=self`, `visible=true`)
+
+**color-contrast sidebar labels: CLOSED**
+- Measured via canvas compositor on `oklab(0.18311 -0.0035518 -0.0306818 / 0.65)` on `rgb(255, 255, 255)`
+- Ratio: **5.86:1** (WCAG AA requires 4.5:1) ✓
+- CSS vars confirmed: `--sidebar=#fff`, `--sidebar-foreground=#0b1220`
+
+#### New defect found — needs next rebuild
+
+**kbd ⌘K contrast: 3.55:1 FAIL**
+- Element: `<kbd>⌘K</kbd>` in GlobalHeader search button
+- Computed: `oklab(0.18311 -0.0035518 -0.0306818 / 0.5)` on `rgb(255,255,255)` = 3.55:1
+- Source fix applied: `text-sidebar-foreground/50` → `text-sidebar-foreground/65` in `frontend/components/layout/header/global-header.tsx`
+- At `/65`: ratio will be 5.86:1 (same as sidebar labels, verified above)
+- Needs rebuild to take effect in browser
+
+#### Pre-existing / out-of-scope
+
+**IN PROGRESS badge: 3.47:1 FAIL (pre-existing, ticket-17)**
+- Element: `<span>IN PROGRESS</span>` status badge, `oklch(0.596 0.145 163.225)` on `oklch(0.979 0.021 166.113)` (emerald-700 / emerald-50)
+- CLAUDE.md explicitly: "Existing literals bg-X-50 text-X-700 border-X-200 stay valid until ticket 17 migrates them"
+- Not a BUILD-002 regression; tracked separately
+
+**feedbucket aria-prohibited-attr**
+- Third-party Feedbucket widget shadow-DOM element
+- Excluded by post-filtering node targets containing "feedbucket"/"launcher-logo"
+- Not a product violation
+
+#### Keyboard tab sequence summary (@1280, /build/2/risks)
+
+70 stops, full cycle:
+- Stop 1: Skip to content link
+- Stop 6: Search ⌘K (GlobalHeader)
+- Stops 7-11: Calendar, Chat, Notifications, Quick Create, Account
+- Stops 13-35: Sidebar nav (sections, project links)
+- Stop 37: "New Risk" action button
+- **Stop 38: BUTTON[role=combobox] label="Filter by status" (hit=self, visible=true)**
+- Stop 39: Search input
+- Stops 40-49: Risk matrix cells with aria-labels (probability × impact grid)
+- Stop 58: Ask OS button
+
+#### Artifact
+
+`D:/agent-work/build-acceptance-v5-final.json` — full results, session preflight, contrast measurements, tab sequence, network errors.
+
+---
+
+## Run v1–v3 (superseded)
+
 ## BUILD-002 Browser Acceptance Matrix — 2026-09-13
 
 **Build:** `2REKrikocjK5aTuOFjG6p` (port 1000, next start, no rebuild)

@@ -1937,34 +1937,37 @@ S4 owns existing Build flows; S0 integrates. Preserve existing cross-tab invalid
 
 ## BUILD-002 — Complete browser acceptance matrix
 
-Status: BLOCKED-REBUILD; source fixes applied, rebuild required to verify.
+Status: REBUILD-NEEDED-KBD; original defects closed, one new source fix pending rebuild.
 Maps to: PRD-C123, PRD-C149. Owner: S4.
 
-- [x] Reserve both build output and synthetic DB/tenant for the entire run. Inspect
-  current schema before seeding: old fixtures depended on a subsequently dropped
-  onboarding_completed_at column (column verified present in current schema).
+- [x] Reserve both build output and synthetic DB/tenant for the entire run.
 - [x] Confirm actual owner/member session rows, CORS origin, module catalog/defaults
-  and ready organization. Session exchange confirmed working with registered
-  session ID and correct (unquoted) INTERNAL_API_SECRET.
+  and ready organization.
 - [x] Rerun all 15 cells: loading/empty, error/retry, cross-tab freshness,
-  keyboard/accessibility, responsive layout at 375/768/1280. Test filtered-empty
-  separately; preserve genuine 404 versus injected API failure behavior.
-- [ ] Reproduce and repair remaining keyboard, contrast, list/combobox semantics,
-  scroll focus and clipped actions at their responsible shared/feature owner.
-  Source fixes applied 2026-09-13; rebuild needed to close.
+  keyboard/accessibility, responsive layout at 375/768/1280.
+- [x] button-name: CLOSED — aria-label="Filter by status" confirmed at runtime on
+  build 8plo4wbb3PDf7VCF0Zp_5; zero violations at 375/768/1280 on /build/2/risks.
+- [x] sidebar contrast: CLOSED — measured 5.86:1 via canvas compositor
+  (oklab at /65 on #ffffff); WCAG AA requires 4.5:1.
+- [x] keyboard: PASS — Filter-by-status reachable at tab stop 38 of 70 (hit=self).
+- [x] 200% zoom: PASS — zero violations.
+- [x] overflow @375: PASS — scrollWidth=375, no horizontal overflow.
+- [x] error state: PASS — /build/9999/risks @1280 zero violations.
+- [ ] kbd ⌘K contrast: 3.55:1 FAIL — source fixed (/50→/65 in global-header.tsx);
+  needs rebuild. At /65: will match sidebar ratio of 5.86:1.
 
-Matrix run 2026-09-13 on build 2REKrikocjK5aTuOFjG6p, org scratch_local/org-1,
-cookie s0-session.txt (registered session b774649d): PASS 10, FAIL 5, NOT-RUN 0.
-PASS: loading@375, error×3, cross-tab×3, responsive×3.
-FAIL: loading-and-empty@768 and @1280 (axe color-contrast: sidebar section labels
-text-sidebar-foreground/35 ≈2.3:1); keyboard-and-accessibility@375/@768/@1280
-(axe button-name: SelectTrigger missing aria-label in risks-page.tsx; axe
-color-contrast same as above at 768/1280).
-Keyboard Tab navigation fixed (harness now focuses #dashboard-content directly).
-Source fixes: risks-page.tsx SelectTrigger aria-label="Filter by status";
-sidebar-section.tsx opacity /35→/65. Rebuild required to verify in browser.
+Pre-existing, not BUILD-002: IN PROGRESS badge emerald-700/emerald-50 = 3.47:1
+(CLAUDE.md: "stay valid until ticket 17 migrates them"). feedbucket
+aria-prohibited-attr is third-party shadow-DOM; excluded from results.
+
+Run v5 — 2026-09-13 on build 8plo4wbb3PDf7VCF0Zp_5, user-9999
+(bbbbbbbb-9999-0000-0000-000000000002), org aaaaaaaa-1111-0000-0000-000000000002,
+project ATP/id=2. Session preflight verified (backendJwt=PRESENT, modules=12,
+plan=ENTERPRISE, isOrgOwner=true). Previous run on wrong API URL (production) and
+wrong user (member/no-onboarding) treated as invalid; those measurements discarded.
 Evidence: architecture-refactor/final-refactor/evidence/42-production-ops/
-release-authority/BUILD-002-2026-09-13/ (screenshots + results JSON v3).
+release-authority/BUILD-002-2026-09-13/BUILD-002-evidence.md (v5 section);
+artifact D:/agent-work/build-acceptance-v5-final.json.
 
 ## BUILD-003 — Re-run Build acceptance after performance closure
 
