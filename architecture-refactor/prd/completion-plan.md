@@ -531,8 +531,46 @@ A person, login, worker and employment are distinct. Adding a person must not si
 - [ ] **C2/C3 — Browser identity transition and employee attach.** HTTP identity rows below already
   have 49/49 proof; do not redo them merely because a stale queue said not attempted. Browser signed-in
   wrong-account advisory, actual invited-account session transition and employee attach remain.
-- [ ] **C4/C5/C6 — Live privacy, worker number and salary transaction acceptance.** Run after P10
+
+  `RUN 2026-09-13 | C3 HTTP/DB legs PASS | browser legs NOT-RUN`
+  The full admission chain was exercised end to end against the live disposable stack and every
+  durable consequence asserted in the database, not merely in the response. `POST /users/invite` →
+  201; `POST /organization/invitations/accept` → 200 with an autoLoginToken, invitation status
+  ACCEPTED and **exactly one** INVITE_ACCEPTED seat event keyed on the invitation id;
+  `POST /hr/employees/onboard` with `attachToExistingMember: true` → 201 leaving 1 membership,
+  1 org_people, 1 hr_people and 1 primary hr_employment. **Attach does not double-bill**: the
+  INVITE_ACCEPTED count was still 1 after onboarding, so the attach path emits no second seat event.
+  Both negative controls return a 409 with a customer-actionable message rather than a generic
+  conflict: repeat onboard names the existing employment record, and onboarding a SUSPENDED member
+  directs the operator to restore from Users instead of re-inviting. All fixtures deleted and
+  verified at count=0, including the temporary `enterprise_quotes` row.
+  STILL OPEN, browser only: the signed-in wrong-account amber advisory, the real invited-account
+  session transition, expired/revoked-token "Invitation unavailable", global-suspend 403, and the
+  wizard's attach notice. These need a browser; an API agent cannot certify them.
+- [x] **C4/C5/C6 — Live privacy, worker number and salary transaction acceptance.** Run after P10
   repair; assert both response and durable DB state with rollback/cleanup.
+
+  `RUN 2026-09-13 against the live disposable stack | all legs PASS | fixtures cleaned, verified 0 rows`
+  **C4 — bank step and draft privacy.** `PATCH /onboarding/bank-details` for a member with no
+  employment row returns 409 explaining the employment record is not set up yet, and — the part that
+  matters — `onboarding_steps` gains **no** Bank Details COMPLETED row, so a rejected save cannot
+  leave the wizard believing the step is done. P10 fail-closed confirmed at the boundary: a depth-9
+  payload is rejected 400 VALIDATION_FAILED by the DTO, the sanitizer returns `{}` for over-depth
+  objects rather than a partially-stripped one, sensitive keys (`accountNumber`, `iban`, …) are
+  removed case-insensitively, and non-sensitive fields survive.
+  **C5 — worker number reservation.** Created W-0007, archived it, re-created W-0007 → 409
+  `WORKER_NUMBER_RESERVED` naming the number; a distinct number → 201. Both
+  `uniq_workers_org_number` and `uniq_workers_active_org_number` confirmed present in the database,
+  so the reservation is enforced by a constraint and not only by application code.
+  **C6 — salary currency.** With org currency AED, onboarding at `monthlySalary: 5000` wrote
+  `hr_employee_sensitive_fields.salary_currency = 'AED'` **and**
+  `employee_salary_profiles.currency = 'AED'` — both columns, not just one. With the org currency
+  emptied, the onboard returns 400 telling the operator to set the organization currency, and
+  **no partial employee is left behind**: `users`, `hr_people` and every related table verified at
+  0 rows. That is the transactional property the row asks for.
+  Source-verified, not browser-verified: `handleCreateError` in
+  `frontend/features/directory/workers/worker-form-dialog.tsx:87-92` calls `form.setError` on
+  `WORKER_NUMBER_RESERVED`, so the field-level error is wired; the visual belongs to C7.
 - [ ] **C7 — Responsive, keyboard and zoom UI acceptance.** Existing component suites are not layout proof.
 - [ ] **C8 — Final schema/environment and release integration.** Run named disposable drift/ledger
   checks and coordinate migrations with S2/S5. Portal invitation acceptance is a distinct external
