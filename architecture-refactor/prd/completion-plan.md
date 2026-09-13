@@ -1615,6 +1615,27 @@ Status: PARTIAL. Maps to: PRD-C018, PRD-C190, PRD-C191. Owner: S4/S0.
   **NOTED, not repaired (needs an owner): there is no backend CI workflow.** `.github/workflows/`
   contains only `frontend.yml`, so every backend gate above is coordinator-invoked only. The row's
   premise that these gates exist "in package scripts and CI" is half true — scripts yes, CI no.
+
+  `CORRECTED 2026-09-13 | that finding was WRONG | 3 new gates wired into backend CI, yaml parses, 95/95 guarded`
+  **The "no backend CI" claim looked at the wrong repository.** `backend/` is its own git repo
+  (`Startupppp/streamlineos-backend`), so the root tree's `.github/workflows/` legitimately holds only
+  `frontend.yml`. The backend repo carries **seven** workflows of its own, including a 78 KB `ci.yml`
+  and a `db-gates.yml` with a bootstrapped Postgres service. The row's premise was true as written and
+  false in substance; recorded here rather than silently deleted, because the same mistake is easy to
+  repeat in a two-repo tree.
+  The REAL gap was narrower and is now closed: four gates added this session existed only as package
+  scripts. `check:watermark-free`, `check:distinct-order-by` and `check:destructive-targets` are now
+  steps in the `gates` job, each running `:self-test && <gate>` so a gate that has stopped biting fails
+  the build instead of passing vacuously. Each carries `if: ${{ !cancelled() }}` — the convention this
+  file already documents from run 33622293615, where ten gate steps sequenced below a red `Lint` all
+  reported `-` and had never executed. Verified: `ci.yml` parses, the `gates` job holds 95 named steps,
+  all three new ones are present, and **every step in the job with a `run` has the guard — zero
+  unguarded**, so none of them is maskable by a red predecessor.
+  STILL OPEN: **`check:boot` is not yet in CI.** It is the gate that caught the P0 every static check
+  missed (an unregistered Nest provider — invisible to `tsc`, `nest build` and ts-jest, because DI is
+  runtime metadata), so it is the most valuable of the four. It needs both a built `dist/` and a live
+  database: `verify` builds but has no Postgres service, `db-gates` has Postgres but builds nothing.
+  Wiring it needs a service plus a complete CI env file, and is assigned rather than improvised.
   knip reports 2 unused files (`billing/core/billing-platform-pricing.ts`,
   `inventory/purchase-orders/po-lifecycle.ts`). Neither was deleted: root CLAUDE.md §10 requires knip
   PLUS a real build, and both belong to other module owners.
