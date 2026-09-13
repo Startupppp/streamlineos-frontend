@@ -350,7 +350,34 @@ A person, login, worker and employment are distinct. Adding a person must not si
   `flow/onboarding-session.service.ts` is a hand-written interface duplicating the Zod shape where
   root CLAUDE.md 6 requires `z.infer`.
 
-- [ ] **P12 — Customer-safe setup recipient outcomes.** Core bulk/savepoint repairs are complete;
+- [x] **P12 — Customer-safe setup recipient outcomes.** Core bulk/savepoint repairs are complete;
+
+  `DONE 2026-09-13 | backend 18 suites / 205 tests exit 0 | frontend 8 suites / 92 tests exit 0 | NO CHANGES NEEDED`
+  Verified rather than reimplemented; all six acceptance points hold at current source.
+  The generic `SETUP_BACKGROUND_PARTIAL` is no longer all the customer gets: `resolveInviteeOutcomes`
+  maps invitation state onto four non-overlapping outcomes - PENDING to `queued`, ACCEPTED to
+  `successful`, DECLINED/REVOKED to `failed(invitation_revoked)`, an active member with no invitation
+  to `failed(already_member)`, neither to `failed(unknown)`, and the owner's own address to `skipped`.
+  Authorization is real on both axes. Tenant: `resolveCurrentSetupTarget` pins the lookup to the
+  caller's `userId` under `withIdentity` and the RESOLVED org drives the tenant GUC, not the org the
+  JWT claimed. Owner: `recipientOutcomes` is computed only when `isOrgOwner` is true, and a member
+  actor receives `null` - pinned by a test, not by inspection.
+  Nothing leaks. The inbox read projects `lastError` as a BOOLEAN
+  (`sql<boolean>\`${inboxRecords.lastError} is not null\`` aliased `hasOptionalFailure`), the response
+  type and Zod schema have no such field, and two tests assert `not.toHaveProperty("lastError")`.
+  The per-recipient object is whitelisted to exactly `{email, outcome, reason}`, asserted by comparing
+  sorted keys. Addresses come only from the org's own stored payload, read under
+  `eq(outboxEvents.organizationId, orgId)`, and the consumer's cross-tenant guard fires before any
+  field is read (9 isolation tests).
+  Duplicates cannot double-report: a `processedEmails` set means an address listed twice (MEMBER then
+  ORG_ADMIN) yields one outcome, and the owner-skip plus later-role continuation case is pinned by its
+  own test.
+  The frontend genuinely renders the distinction - `RecipientOutcomeList` in
+  `generation-progress-stage.tsx` filters `skipped` (the owner is not told they skipped themselves)
+  and renders successful/failed/queued with distinct status tokens and plain-language labels
+  ("joined", "pending", "already a member", "declined or revoked", "not sent"). It is passed only when
+  provisioning completed with `SETUP_BACKGROUND_PARTIAL`, which is the only case the backend
+  populates. A backend field nobody renders would not have closed this row.
   `OrgSetupQueryService.getSetupStatus` still emits generic SETUP_BACKGROUND_PARTIAL rather than
   identifying failed invitees. Complete the prior acceptance using a typed, tenant/owner-authorized
   per-recipient outcome projection and existing wizard/invitation UI. Reuse durable invitation/event
@@ -755,6 +782,15 @@ Matrix entry points: frontend/scripts/calendar-acceptance.mjs (8 states × 4 vie
   no focus trap or blocked page action, and shared ErrorState change receives owner review.
 
 - [ ] **CA6 — Calendar grid accessibility and mobile fallback.** S3 with S0 dependency
+
+  `NO SOURCE DEFECT FOUND 2026-09-13 | detail-capability-contract 8/8 + event-detail-mutation-authority 18/18, exit 0`
+  The row's "historical missing localVersion fixture" is resolved: the fixture at
+  `event-detail-mutation-authority.test.tsx:86` carries `localVersion: 1` against a
+  `z.number().int()` schema, and `canManage` round-trips.
+  Everything else in this row is BROWSER-GATED and is not claimed from jsdom. The month/week/day grid
+  cell roles are rendered by `react-big-calendar`, `useShellVariant` selecting list mode at 360px
+  needs a real `window.innerWidth` (jsdom reports 0), and the all-day row normalisation, 200% zoom
+  focus rings and axe contrast checks all need computed styles.
   approval. frontend/features/calendar/big-calendar-wrapper.tsx uses the vendor calendar.
   Later source evidence records timed-view all-day role normalization; preserve it and
   recheck actual day/week/month accessibility. Month-grid roles were clean in the focused
@@ -769,6 +805,17 @@ Matrix entry points: frontend/scripts/calendar-acceptance.mjs (8 states × 4 vie
   zero critical/serious axe failures. Current historical result is 16 PASS/10 FAIL/6 NOT-RUN.
 
 - [ ] **CH7 — Saved/files pane responsive gaps and remaining browser states.** S3 owns
+
+  `SOURCE FIXED, REMAINDER BROWSER-GATED 2026-09-13 | chat-side-panels-breakpoint 8/8, exit 0`
+  The historical breakpoint gap is closed at source: `hidden lg:flex` combined with `sm:hidden` left
+  the saved and files panes unreachable between 640px and 1023px. `use-chat-mobile.ts` now exposes
+  `useIsChatPanelNarrow()` on `(max-width: 1023px)`, and `message-panel-side-panels.tsx` drives all
+  three panes (saved, files, thread) from it, so no breakpoint band is uncovered.
+  `build-project-chat-page.tsx` uses the same hook, so the thread fallback agrees.
+  STILL BROWSER-GATED, and explicitly NOT claimed from the passing jsdom suite: behaviour at the
+  639/640/767/768/1023/1024 boundaries, that the Sheet does not mount a second focus trap, and that
+  Escape dismisses it and restores focus. The Sheet is `@radix-ui/react-dialog`, whose focus
+  management depends on real pointer and focus APIs that jsdom does not implement.
   `frontend/features/chat/message-panel-side-panels.tsx`: desktop `hidden lg:flex` plus
   Sheet `sm:hidden` leaves saved/files unreachable at 640–1023. Align rendering and
   isChatMobile selection on one breakpoint; verify the related Build-project thread
@@ -812,7 +859,24 @@ Matrix entry points: frontend/scripts/calendar-acceptance.mjs (8 states × 4 vie
   invalidations become load-bearing. Deleting the writers alone would leave a future reader silently
   stale. Typing-cache DB authorization untouched.
 
-- [ ] **CA7/CHAT-002 integration dependency — Grant/migration replay proof.** S2 implements schema/grant repairs under S0 reservation; S0 integrates and S3 verifies consumers. Historical claim “no migration fixed grants” is stale:
+- [x] **CA7/CHAT-002 integration dependency — Grant/migration replay proof.** S2 implements schema/grant repairs under S0 reservation; S0 integrates and S3 verifies consumers. Historical claim “no migration fixed grants” is stale:
+
+  `DONE 2026-09-13 | migration 1115 added and proven on a cold build | cold replay 876 applied / 0 skipped / 0 failures / 915 tables`
+  The row is right that "no migration fixed grants" is stale — but the replay proof turned up a real
+  gap it did not name. `1111` explicitly grants 20 named public tables, loops every public sequence,
+  and sets forward-only default privileges; `0432` grants ALL TABLES and ALL SEQUENCES in the `build`
+  schema plus default privileges. Those all verify.
+  **`build_events` did not.** `0431` creates the schema, grants USAGE, and sets
+  `ALTER DEFAULT PRIVILEGES` — which is FORWARD-ONLY. The three tables it moves in with
+  `ALTER TABLE ... SET SCHEMA` (`ticket_activity_log`, `ticket_comments`, `sprint_scope_events`) were
+  created in `public` before any blanket grant existed, and `SET SCHEMA` carries the table without
+  carrying a grant, so on any cold build all three answered `42501`. That reads as an RLS denial and
+  is not one. Reproduced on a scratch database, then fixed by new migration
+  `1115_build_events_grants_for_relocated_tables.sql` (journal idx 1003), which grants USAGE on the
+  schema plus SELECT/INSERT/UPDATE/DELETE on all its tables and USAGE/SELECT on its sequences,
+  guarded on the schema existing.
+  Verified on a genuinely cold build (`scratch_coldfinal`, all 876 migrations from empty): all three
+  tables go from `sel=false ins=false` to `sel=true ins=true`.
   `backend/migrations/1111_app_role_grants_for_ungranted_tables.sql` is journaled and
   grants named public tables, public sequences and public default privileges for
   current_user. Its comment saying default privileges were not changed is also stale.
@@ -926,6 +990,21 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   inline fallback when there is no ambient context. Unit-proven only — a rolled-back transaction
   leaving the Redis dedup key clean is NOT yet proven against real Redis.
 - [ ] **FD6 — Current build/bundle/performance evidence.** Reserve .next and the
+
+  `BUNDLE HALF DONE 2026-09-13 | next build exit 0, BUILD_ID yaVUDZR43dMbe6req7uJw | check-route-bundle-budget exit 0, provenance MATCHES`
+  The gate previously failed on stale provenance — the manifest described a build the checkout no
+  longer held, which is unusable in BOTH directions (a breach may already be fixed; a regression may
+  go unreported). A fresh production build was taken and the manifest re-measured against it: 13
+  routes, 13 measured, 0 pending, every one WITHIN its declared ceiling and every one SMALLER than
+  previously recorded (for example `/build/my-work` -267,646 bytes, `/support/inbox` -253,443).
+  WHAT THE BUNDLE GATE DOES NOT COVER, and therefore what FD6 still owes: per-journey request counts
+  (bytes delivered is not calls issued); browser Core Web Vitals, and note that mobile INP breaches
+  here are real and memoization did not fix them; SSR prefetch correctness under the scoped query-key
+  hash (a prefetch written under the default hash while the client reads a scoped one is a dead entry
+  — that is how authenticated routes once SSR'd a spinner); wizard-gate and permission redirect paths;
+  API latency; Ably channel lifecycle and reconnect; real cross-tab BroadcastChannel behaviour, which
+  the suite stubs; and semantic-token contrast on tinted backgrounds, where the chat muted-on-muted
+  ratio of 4.34:1 sits at the WCAG AA boundary for large text and must be measured in a browser.
   capture DB; rebuild API before web for strict response-contract additions. Verify
   explicit test API configuration and smoke-request representative routes/manifests.
   Refresh the bundle artifact against that build and run unchanged budgets; measure
@@ -1051,6 +1130,29 @@ Status: ACTIONABLE measurement. Maps to: PRD-C149, PRD-C190. Owner: S4.
 Status: PARTIAL. Maps to: PRD-C018, PRD-C190, PRD-C191. Owner: S4/S0.
 
 - [ ] Preserve today's frontend size/growth passes; recheck at the final revision
+
+  `RECHECKED 2026-09-13 | query-scope, request-params, file-sizes, dead-code, route-bundle-budget, madge: ALL exit 0 | over-300 exit 1 at 515 vs baseline 513`
+  Five of six frontend gates pass at the final revision, plus zero circular dependencies in BOTH
+  repos (frontend 6,672 files, backend 7,903 files) and backend dead-code, route-classification,
+  query-projections, unbounded-reads, migration-discipline-minus-one, migration-immutability,
+  evidence-seal (7 seals, 106/106) and evidence-redaction (0 leaks) all exit 0.
+  **over-300 is 515 against a baseline of 513, and the attribution is exact.** Every file over 300
+  lines was compared against its length at root `501f2e60b`: exactly ONE crossed the boundary during
+  this work - `features/org-setup/components/step-generation.tsx`, from 300 to 301. The remaining
+  overage predates the committed tree. Two files this session touched actually SHRANK
+  (`plan-tab.tsx` 469 to 467, `ai-credits-settings-page.tsx` 431 to 428) because the P1.13 checkout
+  consolidation removed duplicated provider code.
+  NOT FIXED BY SPLITTING, deliberately. `step-generation.tsx` is one cohesive component one line over;
+  root CLAUDE.md section 1.8 says file length alone does not justify fragmentation, and this gate's own
+  header forbids passing by whitespace compression. The gate's header also records that baseline 513
+  came from main while this lane measured 520, and states plainly: "Neither number describes the
+  merged tree... re-measure the merged tree before trusting a red or a green." Re-measuring the merged
+  tree and setting an honest baseline is the open item; it is a decision for the size-gate owner, not
+  something to be silenced by splitting a file or by raising a ratchet that may only fall.
+  The three backend ledger gates were SHRUNK rather than repriced, which is the direction they allow:
+  the dead-code ledger lost its stale `finance/controls/provider-bridge.service` entry (the GL repair
+  made it real, and that spec now loads and runs 21 tests where it previously ran 0), and the
+  assertion ceiling lost 3 stale entries, 213 to 210.
   alongside backend size, cycle, types, relevant regressions and detector self-tests.
   No baseline/exclusion increase, whitespace compression or arbitrary fragmentation.
   Documentation-integration recheck found backend billing-payment-activation.ts at 515 lines and modules/reporting/reporting.service.ts at 585; verify current counts and resolve in-scope violations by cohesive ownership, not fabricated exemptions. Inventory shopify-admin.adapter.ts was 734 and remains excluded scope; report that distinction rather than claim the whole gate passed.
@@ -1075,7 +1177,24 @@ Status: PARTIAL. Maps to: PRD-C018, PRD-C190, PRD-C191. Owner: S4/S0.
   no route, registry, dynamic-import or test consumer. Coordinator must stage the
   ten deletions and run `node frontend/scripts/check-dead-code.mjs` (already passes)
   and `next build` to confirm no dangling import at bundle time.
-- [ ] Backend spec compilation gates now exist in package scripts and CI. Do not
+- [x] Backend spec compilation gates now exist in package scripts and CI. Do not
+
+  `RUN 2026-09-13 | tsconfig.build.json 0 errors, exit 0 | nest build exit 0, dist/main.js emitted | tsconfig.json 51 errors, all pre-existing Inventory`
+  Programs run rather than recreated. The production program is clean and the application builds.
+  The test-inclusive program has 51 errors and ALL of them are in two pre-existing Inventory files:
+  `stock-engine/__tests__/quantity.property.spec.ts` (47) and `available-formula-parity.db.spec.ts` (4).
+  **Both suites are DEAD, not merely untyped.** They `import fc from "fast-check"` — which is in
+  neither `dependencies` nor `devDependencies` and is absent from the pnpm store — and from
+  `./quantity-arbitraries`, a file that existed at commit `057d9fe03` and was dropped by a merge.
+  Measured: `npx jest --runTestsByPath quantity.property.spec.ts` fails to load and runs **0 tests**.
+  Two property-based suites over stock quantity maths have therefore been asserting nothing.
+  NOT REPAIRED HERE, deliberately: CRM/Inventory is excluded PRD scope, both files are unmodified in
+  git so this predates this session, and closing it needs a real dependency install plus a lockfile
+  change. Assigned to the Inventory owner: restore `quantity-arbitraries.ts` from `057d9fe03` and add
+  `fast-check` to devDependencies.
+  Test-source coverage kept explicit: seven spec files broken by THIS session's own constructor
+  changes were repaired rather than skipped (six GDPR specs plus `legal-hold-drill-probe.ts` for the
+  `ExternalEffectLedger` argument, and `billing-session-bust.spec.ts` for an import path).
 
   `DONE 2026-09-13 | backend madge --circular: 7903 files, ZERO cycles, exit 0 | knip exit 0 | RBAC-004 backend 22/22 + frontend 2/2, exit 0`
   The four existing gates are `pnpm typecheck` (`tsconfig.build.json`, production source only),
@@ -1315,6 +1434,38 @@ These requirements were found outside prd/. They remain part of this single chec
 
 - [ ] **AI-RELEASE — Every supported AI stream and billed effect (PRD-C152–155).** S4 frontend with S5/backend owner reserved by S0. Verify text/tool-progress dispatch, actual abort propagation, deadlines/circuit breakers, replay-safe pre-stream retries, paid-request deduplication and settlement/refund. Cover credit exhaustion, queueing, streaming, cancellation, partial/error output, citation/source integrity, provider failure and permission revocation. Measure supported newly streamed routes, not chat alone: existing target application overhead before provider dispatch p95 ≤250 ms and first visible streamed state within100 ms. Use the actual provider/transaction seam, not a source-only “streaming implemented” claim. Verify relevant focused abort tests at current source; historical flaky timings are not a new proven defect. Validate transactional email advertised locale, English fallback and template version; shared registry/wrapper and recipient migration0844 already exist. Distributed Redis circuit breakers are conditional on measured multi-node recovery need, not an unconditional rewrite.
 
+  `VERIFIED-ALREADY-CORRECT 2026-09-13 | 276+ tests across 24 spec files, 0 failures | NO FILES CHANGED`
+  Every requirement in PRD-C152-155 was checked at current source and found already implemented.
+  Abort genuinely reaches the provider: `AiRequestAbortInterceptor` arms a signal on disconnect or
+  deadline (120s buffered, 60s streaming), stores it in AsyncLocalStorage, and it threads through
+  `preflightCall` into the provider adapter's `invoke(messages, { signal })`. AI routes carry
+  `@NoTenantTransaction()` so `TenantContextInterceptor` cannot replace the signal, and a socket
+  destroyed with NO client-side abort still aborts the provider call. `onAbort` releases the
+  reservation and the concurrency slot without settling, and `onFinish` carries a `resolved` guard so
+  it cannot fire afterwards.
+  A duplicate paid request cannot be charged twice: in-flight dedup on a SHA-256 of
+  org/user/feature/prompt, plus cross-request dedup from the caller's `Idempotency-Key` composed into
+  a reservation key behind the partial unique index
+  `uq_ai_credit_res_org_idem_key ON (org_id, idempotency_key) WHERE idempotency_key IS NOT NULL`.
+  The billing contract holds exactly as this plan requires: the ledger stores integer milli-credits,
+  APIs emit fractional credits via `milliToCredits`, `computeTokenCharge` is token-metered, and
+  `AI_FEATURE_COSTS` are reserve ceilings only, with over-run debits and under-run refunds both
+  proven. Credits are reserved before the provider call and released on failure or cancellation.
+  Breaker attribution is per-tenant AND global, so five bad prompts from one tenant cannot deny AI to
+  everyone. A mid-stream fault destroys the response rather than ending it, so the client sees a
+  failure instead of a truncated success. Citations ride in headers, ahead of the body, so they
+  survive truncation. Email locale, English fallback and `EMAIL_TEMPLATE_VERSION` verified; the shared
+  registry and migration 0844 already existed and were not recreated. The distributed Redis breaker
+  rewrite was NOT done, correctly: the row makes it conditional on a measured multi-node need.
+  NOT PROVEN, and honestly so: permission revocation CANNOT abort an in-flight stream on a
+  `@NoTenantTransaction()` route. Session-level revocation catches it at the next request, and the
+  exposure is bounded by `maxOutputTokens` (4096) and the 60s deadline. This is inherent to
+  streaming, not a new defect.
+  MEASUREMENT-GATED: the PRD-C152 end-to-end targets (application overhead before provider dispatch
+  p95 <=250ms, first visible streamed state within 100ms) need a quiet host and a booted API. The
+  in-process dispatch budget passed here (p50 0.236ms, p95 0.335ms against a 50ms budget) but that is
+  not the end-to-end number and is not offered as one.
+
 - [x] **ARCH-RESIDUAL — Classify surviving architecture findings at current source.** S0 assigns existing domain owners: Historical P1.13 frontend provider-neutral checkout seam (S2); P2.6 global /settings/automations ownership (S4); P2.7 payroll decimal versus integer-minor-unit contract (S5/payroll). For each preserve exact evidence if already fixed, otherwise reproduce, repair the owning boundary and verify consumers/transactions. These dated findings are not assumed still broken. Preserve approved global cross-module webhooks separately from module automation settings.
 
   `DONE 2026-09-13 | P1.13 REPAIRED, P2.6 VERIFIED-ALREADY-CORRECT, P2.7 VERIFIED-ALREADY-CORRECT`
@@ -1465,7 +1616,20 @@ OPS-CAPACITY egress evidence must come from actual CDN/load-balancer analytics o
   ledger content and current app-role/table/sequence/default privileges. Verify
   whether each historical defect remains before editing. Duplicate-object errors,
   manual grants, hash stamping and restored schemas are not migration completion.
-- [ ] Run current backend application/spec/test and frontend app/spec/e2e type
+- [x] Run current backend application/spec/test and frontend app/spec/e2e type
+
+  `RUN 2026-09-13 | backend build 0 · backend spec 51 (all pre-existing Inventory) · frontend 0/0/0 · both production builds exit 0`
+  Backend `tsc -p tsconfig.build.json`: 0 errors. Backend `nest build`: exit 0, `dist/main.js` emitted.
+  Backend `tsc -p tsconfig.json`: 51 errors, every one in the two dead Inventory property suites
+  documented under ARCH-003 above.
+  Frontend `tsconfig.json`, `tsconfig.specs.json` and `tsconfig.e2e.json`: 0 errors each.
+  Frontend `next build`: exit 0, BUILD_ID `yaVUDZR43dMbe6req7uJw`, full route manifest emitted.
+  One arity break was caught here that no test could see: adding `ExternalEffectLedger` to
+  `GdprSubjectErasureService` produced 7 x TS2554 across six specs and a script, while every affected
+  jest suite still passed, because ts-jest runs isolatedModules and never typechecks arity. This is
+  the concrete case behind the backend/CLAUDE.md section 8 rule, and it is also why the stale claim in
+  that section (that `test/**` is never typechecked) was corrected on the same day — `tsconfig.json`
+  now includes `test/**/*`, so three of the four gates do cover `test/security` and `test/perf`.
   programs, sequential change-related test batches, contract/schema/vendor/route/access gates,
   dependency-cycle/dead-code/size gates and both production builds at one frozen pair.
   Investigate spec-compiler OOM (program scope/config and available resources);

@@ -9,6 +9,8 @@ const PLAN_NAME = "prd/completion-plan.md";
 // These are consumed by evidence seals or the S7 collector, not execution plans.
 // Exact paths only: adding a new report requires review, not a directory exemption.
 export const REQUIRED_EVIDENCE_MD = new Set([
+  "final-refactor/evidence/40-observability/FAILURE-RUNBOOKS.md",
+  "final-refactor/evidence/42-production-ops/OPS-CATALOGUE-INVENTORY.md",
   "final-refactor/evidence/42-production-ops/data-catalogue-c183/README.md",
   "final-refactor/evidence/42-production-ops/RB-10-privacy-compliance/C187-downstream-store-trace.md",
   "final-refactor/evidence/42-production-ops/RB-10-privacy-compliance/FINDINGS.md",
