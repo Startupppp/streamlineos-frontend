@@ -22,6 +22,7 @@ let mockProvisioning: SetupProvisioning = {
   issue: null,
   isRechecking: false,
   hasTimedOut: false,
+  recipientOutcomes: null,
   recheck: mockRecheck,
 };
 
@@ -132,6 +133,7 @@ function resetMocks() {
     issue: null,
     isRechecking: false,
     hasTimedOut: false,
+    recipientOutcomes: null,
     recheck: mockRecheck,
   };
 }

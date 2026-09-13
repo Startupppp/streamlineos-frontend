@@ -8,6 +8,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 import { PREVIEW_EASE } from "../lib/preview-motion";
 import type { ProvisioningIssue } from "../hooks/use-setup-provisioning";
+import type { RecipientOutcome } from "@/lib/api/hooks/org-schema";
 import type { SetupError } from "./generation-failure-stage";
 import { GenerationFailureStage } from "./generation-failure-stage";
 
@@ -23,6 +24,7 @@ type GenerationProgressStageProps = {
   companyName?: string;
   setupError: SetupError | null;
   provisioningIssue: ProvisioningIssue | null;
+  recipientOutcomes: RecipientOutcome[] | null;
   isRecheckingProvisioning: boolean;
   showWelcome: boolean;
   onRetry: () => void;
@@ -40,6 +42,7 @@ export function GenerationProgressStage({
   companyName,
   setupError,
   provisioningIssue,
+  recipientOutcomes,
   isRecheckingProvisioning,
   showWelcome,
   onRetry,
@@ -278,6 +281,9 @@ export function GenerationProgressStage({
                 <code className="select-all break-all font-mono">{provisioningIssue.reference}</code>
               </p>
             )}
+            {recipientOutcomes !== null && recipientOutcomes.length > 0 && (
+              <RecipientOutcomeList outcomes={recipientOutcomes} />
+            )}
             <div className="mt-2.5 flex gap-2">
               <LoadingButton
                 size="sm"
@@ -304,6 +310,56 @@ export function GenerationProgressStage({
 
       </div>
     </div>
+  );
+}
+
+const OUTCOME_LABEL: Record<string, string> = {
+  successful: "joined",
+  queued: "pending",
+  skipped: "you",
+};
+
+const OUTCOME_REASON_LABEL: Record<string, string> = {
+  already_member: "already a member",
+  invitation_revoked: "declined or revoked",
+  unknown: "not sent",
+};
+
+function recipientOutcomeLabel(outcome: RecipientOutcome): string {
+  if (outcome.outcome === "failed") {
+    return OUTCOME_REASON_LABEL[outcome.reason ?? ""] ?? "not sent";
+  }
+  return OUTCOME_LABEL[outcome.outcome] ?? outcome.outcome;
+}
+
+function recipientOutcomeClass(outcome: RecipientOutcome["outcome"]): string {
+  if (outcome === "successful")
+    return "text-status-success-ink bg-status-success-surface";
+  if (outcome === "failed") return "text-status-danger-ink bg-status-danger-surface";
+  return "text-status-warning-ink/60 bg-status-warning-surface/60";
+}
+
+function RecipientOutcomeList({ outcomes }: { outcomes: RecipientOutcome[] }) {
+  const visibleOutcomes = outcomes.filter((o) => o.outcome !== "skipped");
+  if (visibleOutcomes.length === 0) return null;
+  return (
+    <ul className="mt-2 space-y-1" aria-label="Invitation outcomes">
+      {visibleOutcomes.map((outcome) => (
+        <li key={outcome.email} className="flex min-w-0 items-center gap-2">
+          <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-status-warning-ink/80">
+            {outcome.email}
+          </span>
+          <span
+            className={cn(
+              "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium",
+              recipientOutcomeClass(outcome.outcome),
+            )}
+          >
+            {recipientOutcomeLabel(outcome)}
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 

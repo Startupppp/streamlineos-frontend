@@ -20,6 +20,7 @@ let mockProvisioning: SetupProvisioning = {
   issue: null,
   isRechecking: false,
   hasTimedOut: false,
+  recipientOutcomes: null,
   recheck: jest.fn(),
 };
 
@@ -124,6 +125,7 @@ function resetMocks() {
     issue: null,
     isRechecking: false,
     hasTimedOut: false,
+    recipientOutcomes: null,
     recheck: jest.fn(),
   };
 }
@@ -285,6 +287,7 @@ describe("StepGeneration — background failed + isReady true → user can conti
       issue,
       isRechecking: false,
       hasTimedOut: false,
+      recipientOutcomes: null,
       recheck: jest.fn(),
     };
     mockMutateAsync.mockResolvedValue({ ...SETUP_RESPONSE, autoLoginToken: null });

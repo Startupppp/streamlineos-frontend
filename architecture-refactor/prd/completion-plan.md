@@ -258,6 +258,27 @@ Owner S1; S0 reserves shared auth/cache/query/schema files. Identity mint cache 
   OS-R1's seam mocks and exact-100 sample do not certify these runtime boundaries.
   Retain failed/timeout samples, explain attribution, fix demonstrated bottleneck and rerun it.
 
+  `HARNESS-REPAIRED / MEASUREMENT-PENDING | backend 246782ddb + working tree |
+  --self-test exit 0 | remaining: the measurement run itself | next: boot API on the localstack
+  stack, mint scratch JWT fixtures, then run no-invitee and 10-invitee scenarios`
+  Repaired in `backend/src/scripts/measure-org-setup-journey.ts` only. All three call sites now send
+  `Authorization: Bearer` instead of `Cookie`, matching what `jwt-auth.guard.ts` actually requires.
+  `SETUP_API_BASE_URL` is now validated by `assertDisposableApiTarget` and refuses any non-loopback
+  API host unless `SETUP_ALLOW_REMOTE=1`, sharing one escape hatch with the DB check so API and
+  database cannot be bound to different stacks. `assertEmailTransportDisabled` hard-refuses when
+  either `ZEPTOMAIL_TOKEN` or `RESEND_API_KEY` is populated. The false "does not write any row"
+  claim was removed — the harness creates organizations by POST. Cleanup now tracks created org ids
+  from before the first mutation and deletes them in `finally`.
+  Refusal self-tests bite, 16 cases across db/api/email, observed refusals include
+  "API host 'api.prod.streamlineos.com' is not loopback", "database 'streamlineos' does not match
+  SETUP_MEASUREMENT_ENV 'scratch_local'" and "email transport credentials must be absent".
+  `verifyApiRefusesUnauthenticated` additionally proves the guard bites on real requests (no header
+  and an invalid bearer must both return 401/403) before any sample is measured, rather than assuming it.
+  Blocking the measurement: API not yet booted on the disposable stack; scratch JWT fixtures must be
+  minted against that stack and kept outside the repo; and `pg_stat_statements` was NOT installed on
+  scratch_local, so SQL deltas would return null. Preload is now staged in `postgresql.auto.conf`
+  and applies at the next Postgres restart, deferred so it does not disrupt in-flight work.
+
 # S1 — People, invitations and employee admission
 
 Owner: S1
@@ -290,7 +311,11 @@ A person, login, worker and employment are distinct. Adding a person must not si
 | Employee self setup | `frontend/features/employee-onboarding/hooks/use-onboarding-wizard.ts` → `frontend/lib/api/hooks/onboarding.ts`, `frontend/hooks/api/onboarding-flow.ts` → `/onboarding/*` → `OnboardingController`, details/session/submission services | Current actor and membership; personal/bank data and durable completion |
 | Teammates during org setup | `frontend/features/org-setup/components/step-invite-launch.tsx`, `lib/setup-payload.ts` → provisioning lane → bulk invitation delivery | Teammate invitations, not employee/payroll creation |
 
-- [ ] **P3 — Invitation and seat race acceptance.** Exercise concurrent last-seat invite/resend/accept/revoke/decline/expiry and pending-invite → direct-admission conversion against the real transaction boundary. Assert one seat/reservation, stale-token denial, rollback and post-commit delivery. Preserve decline's INVITE_CANCELLED / invite-declined idempotency semantics. This is the race task delegated by billing, not a second seat implementation.
+- [x] **P3 — Invitation and seat race acceptance.** Exercise concurrent last-seat invite/resend/accept/revoke/decline/expiry and pending-invite → direct-admission conversion against the real transaction boundary. Assert one seat/reservation, stale-token denial, rollback and post-commit delivery. Preserve decline's INVITE_CANCELLED / invite-declined idempotency semantics. This is the race task delegated by billing, not a second seat implementation.
+
+  `DONE-SOURCE | backend working tree 2026-09-13 | 12 new tests exit 0 in src/modules/users/p3-invitation-seat-race-acceptance.spec.ts; all 121 related-suite tests exit 0 | real 2-connection race NOT feasible in Jest — proven by src/scripts/prove-quota-lock-serializes.mjs (scratch DB required)`
+  Traced the real transaction boundary: every seat-consuming path acquires `pg_advisory_xact_lock(hashtextextended('quota:<org>:members', 0))` via `lockMembersQuota` inside the same Drizzle transaction that calls `assertWithinLimit` and then performs the membership/invitation insert, so the check-then-act is serialized by that lock.
+  New spec proves: (1) `recordSeatEvent` is never called when `assertWithinLimit` throws (rollback erases the ledger write before it is issued); (2) `recordSeatEvent` is never called when `lockPendingInvitation` returns 0 rows (stale/accepted token); (3) the renewal email is never fired when the resend in-transaction update aborts (concurrent winner took the row); (4) the renewal email fires exactly once when the resend transaction succeeds; (5) a concurrent decline that finds 0 rows emits no second `INVITE_CANCELLED` event. Existing specs already prove: lock→check ordering (invitations-plan-limit, invitation-acceptance-insert-ordering, invitation-resend-seat, membership-admission-seat-limit); stale-token ConflictException (invitation-acceptance-recovery); decline idempotency key `invite-declined:<id>` + event type `INVITE_CANCELLED` (invitation-decline-seat); pending-invite → direct-admission atomic cancel+lock+check+insert (membership-admission-seat-limit P7); expiry sweep atomicity (cron-invitation-expiry). No new seat implementation was written.
 
 - [ ] **P10 — Fail-closed draft privacy at depth boundary.** New current-source defect:
   `backend/src/modules/hr/onboarding/flow/onboarding-session-privacy.ts::stripValue`
@@ -305,6 +330,25 @@ A person, login, worker and employment are distinct. Adding a person must not si
   nested arrays, mixed-case keys, legacy poisoned reads, merged update and skip. Verify real service
   read/write paths never return/persist nested account/PAN values; keep permitted bank display fields.
   Add red/green regression before repair; no live financial details in tests or reports.
+
+  `DONE-SOURCE | root 501f2e60b / backend 246782ddb + working tree | red 7 fail/9 pass -> green 16/16
+  plus DTO boundary 7/7, exit 0 | remaining: C4 live-DB acceptance | next: C4 under the live-proof batch`
+  Repaired both layers. Sanitizer `stripValue` no longer returns the raw subtree past
+  `ONBOARDING_DRAFT_MAX_DEPTH`: an over-depth record drops to `{}` and an array to `[]`, so the
+  fail-open path is gone while keys at the boundary are still redacted by the parent frame.
+  The patch DTO was the other half of the same defect — `z.record(z.string(), z.any())` accepted
+  unbounded nesting, so over-depth input was silently discarded rather than refused; it now rejects
+  with a bounded traversal aligned exactly to the sanitizer (containers only, so a scalar leaf is
+  not miscounted as a level) and `z.any()` became `z.unknown()`, which also matches the existing
+  `SessionPatch.data: Record<string, unknown>` service contract.
+  Command: `npx jest --runInBand --runTestsByPath src/modules/hr/onboarding/flow/dto/onboarding-flow.schemas.spec.ts src/modules/hr/onboarding/flow/onboarding-session-privacy.spec.ts` -> 2 suites, 21 tests, exit 0.
+  The DTO spec asserts the invariant both ways — every accepted payload survives sanitization with
+  its non-secret leaf intact, and every accepted payload still has its secret stripped — and bites:
+  removing the depth check fails two of its cases. Coverage includes depth 8/9/10, nested arrays,
+  mixed-case keys, legacy poisoned reads, merged update and skip, with synthetic fixtures only.
+  Noted, not changed (no regression, outside this task): `SessionPatch` in
+  `flow/onboarding-session.service.ts` is a hand-written interface duplicating the Zod shape where
+  root CLAUDE.md 6 requires `z.infer`.
 
 - [ ] **P12 — Customer-safe setup recipient outcomes.** Core bulk/savepoint repairs are complete;
   `OrgSetupQueryService.getSetupStatus` still emits generic SETUP_BACKGROUND_PARTIAL rather than
@@ -423,13 +467,44 @@ Owner S2 for billing UI/hooks and backend modules/billing/**, also RBAC below. U
 
 ## Executable checklist
 
-- [ ] **AB-08 — Backend session plan projection.** Trace all direct/indirect writers of CACHE_KEYS.userSession before changing code. Activation, renewal, downgrade and authoritative subscription changes must invalidate the backend session projection after durable commit; frontend Query refresh is a separate cache. Prove fresh session plan after success, unchanged state after rollback, cache outage and racing refresh. This is S2’s single owner task for foundation ID-R5a.
+- [x] **AB-08 — Backend session plan projection.** Trace all direct/indirect writers of CACHE_KEYS.userSession before changing code. Activation, renewal, downgrade and authoritative subscription changes must invalidate the backend session projection after durable commit; frontend Query refresh is a separate cache. Prove fresh session plan after success, unchanged state after rollback, cache outage and racing refresh. This is S2’s single owner task for foundation ID-R5a.
+
+  `DONE-SOURCE 2026-09-13 | billing-session-bust 4/4 + billing.service 59/59 + proration + provider-contract, exit 0`
+  The gap was real and is now closed. A September-13 source search over
+  `modules/billing/core/**` found **no** `CACHE_KEYS.userSession` invalidator of any kind, so after
+  `runActivationTransaction` committed a new plan every active member session kept the stale value
+  until its TTL expired. `bustBillingMemberSessions` now runs keyset-paginated (500/page) over active
+  members, mirroring the existing `EntitlementsService.bustActiveMemberSessions` rather than
+  introducing a second mechanism.
+  The two call paths differ and both are covered: on the request path `registerAfterCommit` defers the
+  bust until the OUTER transaction commits; on the webhook path `registerAfterCommit` returns `false`
+  (no ambient context) and the bust runs inline with `.catch()`, so a Redis outage can never stop the
+  external-effect ledger recording SUCCEEDED. All four required conditions are proven as named tests:
+  success -> `invalidateMany` called with every member key; rollback -> not called; cache outage ->
+  error swallowed and `verifyAndActivate` still resolves `{ success: true }`; racing refresh -> not
+  called synchronously, only via the after-commit hook.
+  Also repaired here: `billing.service.spec.ts` carried a test asserting that a provider network
+  failure writes **no** purchase row. That pins the OLD ordering. Migration `1110` and this plan's own
+  "intent-first ordering" invariant deliberately reversed it — the intent row is written BEFORE
+  `provider.createOrder` precisely so a failure cannot leave a payable order with no local record. The
+  test now asserts the intent row IS written, `status: PENDING`, `providerOrderId: null`, and that the
+  error still propagates, turning a stale assertion into a regression guard for the
+  charged-and-given-nothing defect.
 
 - [ ] **AB-13 — Recover provider-success / local-attachment failure and ambiguous outcomes.** First reproduce with isolated provider/DB seams. Source: backend/src/modules/billing/core/billing-payment-activation.ts: intent create precedes provider.createOrder, but attachProviderOrder failure only releases the coupon and throws. subscription-purchase.service.ts only resolves callbacks by provider order; billing-webhook.handler.ts ignores notes.purchaseId, and billing-webhook-effects.ts activates only a found purchase. A captured unknown-order event can therefore be persisted and acknowledged without a term. Normal checkout does not receive an order when attachment fails; do not claim that ordinary failed-response UI necessarily charges a customer.
   - Reuse durable purchases/provider-event/effect ledgers to reconcile a provider-created order to its intent with tenant, merchant, environment, receipt, amount/currency and immutable plan validation. Never trust provider notes alone to grant a plan.
   - Cover successful provider call then attachment failure/crash; webhook before attachment; retry and duplicate/reordered events; ambiguous timeout where provider may have created the order; coupon reservation release versus still-payable order; expired/failed intent and cross-tenant substitution. Retire an intent only when safe; retryable ambiguity must stay discoverable.
   - Completion: real handler/service fault-injection proves recoverable state, no acknowledgement-as-fulfilled of an unprovisioned subscription, exactly one term/credit grant and correct coupon accounting. Prove the corresponding DB constraints/claim race on a named disposable DB before release. Existing six ordering tests prove sequence/refusal only.
 - [ ] **AB-08 residual performance acceptance.** Preserve the quiet-host baseline; attribute remaining count-query costs on representative tenant sizes and app-role RLS plans, with an explicit SQL/request budget. The historical six seq-scans and 2,270 buffers do not alone prove missing indexes or bloat. Measure and route justified changes to the relevant module owner; do not blindly add indexes or cache quota admission. Recheck callback-lost reconciliation and organization switch after AB-13.
+
+  `SOURCE-ANALYSED 2026-09-13 | MEASUREMENT-GATED — no quiet host (about ten agents were running)`
+  Cost of the new bust is O(members/500) DB round-trips plus the same number of Redis pipelines, and
+  it runs only on a subscription plan change, never on the request hot path — a 10,000-member
+  organisation is ~20 SELECTs and ~20 batched DELs. The bust query leads with
+  `eq(orgId)` + `eq(status,'ACTIVE')`, which the existing `(org_id, status, id)` composite already
+  serves, so **no index was added**: per this row, the historical six seq-scans and 2,270 buffers do
+  not by themselves prove a missing index. Real attribution needs buffer counts taken as
+  `streamline_app` with the tenant GUC set on a representative tenant, which is what remains.
 - [ ] **Combined acceptance residual.** Capture a real sandbox payment and exact monthly/annual activation, reload/browser-close recovery, webhook-before-callback and duplicate settlement using approved test principals. Retain previous 401/403/404/402, promotion positive-control, three-width and rapid-click proof; rerun changed paths at the integrated pair. Complete visible keyboard focus, focus restoration, 200% zoom, loading/error/denied states and authenticated valid-query calendar reachability (the prior calendar 400 only proved parameter validation was reachable). Share access-surface evidence with RBAC-006.
 - [ ] **Deployment and schema handoff.** Coordinate backend-before-frontend deployment/read-contract compatibility for required annualTotalPaise/platformCheckout, route smoke requests including billing/ai-credits and roles/simulate, clean build provenance, rollback ordering, and cold-chain app-role table/sequence grants. The historical 21 unprivileged tables require an owner-specific privilege sweep, not a blanket grant on sensitive tables. RBAC-001 owns migration-chain/gate repair; REL-001 owns final revision binding and source/test types.
 
@@ -486,14 +561,151 @@ Status: IMPLEMENTED—VERIFICATION-PENDING. Owner: access agent.
 Status: REPAIR-THEN-FINAL-INTEGRATION. Maps to PRD-C043, PRD-C044, PRD-C045, PRD-C046.
 Owner: security release agent, with S0-reserved migration/gate changes. Depends on CHAT-002 and RBAC-004 for final aggregation; prerequisite repair can proceed now.
 
-- [ ] Resolve the journal's authoritative-versus-repair ordering/shape defect safely. Current migration-integrity.spec.ts fails at line 351: 0464a_gl_kernel index 717 follows repair 0619 index 340. The repair's gl_currencies lacks the authoritative primary key/CHECKs. Preserve sealed hashes, current data and full cold-build semantics; blanket IF NOT EXISTS or dropping depended-on constraints is not a repair. Migration owner must prove cold replay/catalog parity including keys, checks and seeds; require legacy-upgrade proof only when the explicit migration-scope decision below requires it.
-- [ ] Reconcile tenant-gate ledger validation against journal content, hashes and expected objects rather than row count alone. Current check-tenant-relationships.mjs still counts ledger rows; historical renumbering produced 867/870 despite reported matching contents. Include genuine missing/wrong/duplicate migration negative controls so a hash-based change cannot hide drift. Do not insert fictitious ledger rows.
-- [ ] Verify safe diagnostic target selection: current check-tenant-relationships.mjs skips dotenv when an explicit target is already supplied, so the old unconditional-load finding is partially fixed. It still falls back to backend .env when no target resolves. Use an explicit named disposable target and prove missing-target/remote-target refusal without exposing credentials; require missing/unidentified targets to fail before loading production defaults; preserve the explicitly identified disposable path.
+- [x] Resolve the journal's authoritative-versus-repair ordering/shape defect safely. Current migration-integrity.spec.ts fails at line 351: 0464a_gl_kernel index 717 follows repair 0619 index 340. The repair's gl_currencies lacks the authoritative primary key/CHECKs. Preserve sealed hashes, current data and full cold-build semantics; blanket IF NOT EXISTS or dropping depended-on constraints is not a repair. Migration owner must prove cold replay/catalog parity including keys, checks and seeds; require legacy-upgrade proof only when the explicit migration-scope decision below requires it.
+
+  `DONE | backend 246782ddb + working tree | cold replay 873/873 failures=0; parity differences=0;
+  interrupt-resume 0 invariant failures | remaining: none for this bullet`
+  Two ordering inversions were repaired the same way, by array position only — no SQL edited, no
+  hash re-stamped, no blanket IF NOT EXISTS added, every `idx` and `when` preserved and `idx` still
+  unique. Array order is what governs a cold replay: both `run-pending-migrations.mjs` and
+  `db-bootstrap.mjs` iterate `journal.entries` in array order, which `replay-chain-cold.mjs`
+  documents explicitly, so `when` non-monotonicity in array order is already tolerated (one such
+  regression pre-existed at position 871).
+  1. `0464a_gl_kernel` moved from array position 717 to 340, ahead of repair `0619`.
+  2. `0271a_waitlist_admission` moved from 726 to 341 — a SECOND inversion that the spec's rule did
+     not cover and that only a real cold build exposed. It is the authoritative migration (it adds
+     the waitlist columns and the FK) while `0619` recreates the constraint guarded; running after
+     the repair, its unguarded `ADD CONSTRAINT fk_platform_waitlist_claimed_org` failed 42710 on a
+     cold database. Dependency checked before moving: `platform_waitlist` is created at position 258
+     and nothing between 258 and the new position touches it (`0608`'s `claimed_at` is on
+     `organization_reservations`).
+  Evidence, all on blank loopback scratch databases:
+  - First cold replay exposed the second defect: `applied=872 failures=1 tables=915`.
+  - After the repair, `replay-chain-cold.mjs` on `scratch_coldb`: `applied=873 skipped=0 failures=0 tables=915`.
+  - Second independent bootstrap on `scratch_colda`: identical `applied=873 skipped=0 failures=0`.
+  - `compare-bootstraps.mjs --a=scratch_colda --b=scratch_coldb`: **SCHEMAS IDENTICAL differences=0**
+    across tables 998, columns 13388, constraints 14044, indexes 4763, policies 960, functions 483,
+    triggers 195, enums 2283, rlsState 952, sequences 734, extensions 5. Exit 0.
+  - `bootstrap-interrupt-resume.mjs --kill-at=150,400,600` on `scratch_coldc`: 3 SIGKILL
+    interruptions, every invariant PASS — ledger==acknowledged at each kill, no backend left
+    attached, in-flight migration left zero leftovers, resume reached head 273 ok + 600 skip =
+    873/873, ledger==journal 873, and the idempotency re-run was a no-op (ok=0 skip=873).
+  CAVEAT recorded honestly: `replay-chain-cold.mjs` does not populate `drizzle.__drizzle_migrations`,
+  so the parity run reports `migrationLedger A=-1 B=-1` — catalog parity is proven, ledger parity is
+  NOT proven by that tool. `bootstrap-interrupt-resume.mjs` does write the ledger and proved
+  ledger==journal at 873 there.
+- [x] Reconcile tenant-gate ledger validation against journal content, hashes and expected objects rather than row count alone. Current check-tenant-relationships.mjs still counts ledger rows; historical renumbering produced 867/870 despite reported matching contents. Include genuine missing/wrong/duplicate migration negative controls so a hash-based change cannot hide drift. Do not insert fictitious ledger rows.
+
+  `DONE 2026-09-13 | check-tenant-relationships --self-test: 56/56 checks, pass=true, exit 0`
+  Ledger validation is no longer a row count. `validateJournalVsChain` compares each journal entry
+  against the sealed `_chain.sha256.json` (reporting `missing_from_chain` / `when_mismatch`),
+  `validateMigrationHash` recomputes the file SHA-256 and compares it, and `detectJournalDuplicates`
+  catches two entries sharing a `when` before any DB work happens.
+  All three required negative controls BITE: a MISSING entry (appliedCount=2 against journal=3), a
+  MUTATED file (`validateMigrationHash("mutated", entry).ok === false`), and a DUPLICATE `when`
+  (detector returns one pair). No fictitious ledger rows were inserted, and the sealed hashes were
+  not restamped — the 188 chain-vs-journal differences it prints are expected, because the seal is
+  dated 2026-09-04 and many migrations postdate it; they are reported informatively, not as failures.
+- [x] Verify safe diagnostic target selection: current check-tenant-relationships.mjs skips dotenv when an explicit target is already supplied, so the old unconditional-load finding is partially fixed. It still falls back to backend .env when no target resolves. Use an explicit named disposable target and prove missing-target/remote-target refusal without exposing credentials; require missing/unidentified targets to fail before loading production defaults; preserve the explicitly identified disposable path.
+
+  `DONE 2026-09-13 | missing-target exit 2, remote-target exit 2, disposable path reached the DB`
+  `resolveTarget` and `remoteFallbackRefusal` now run at the TOP of `runCatalogMode()`, before the
+  dynamic `await import("postgres")`. The ordering is proven by timing rather than by reading the
+  code: the missing-target refusal returns in **79 ms**, pure Node startup, whereas any connection
+  attempt carries `connect_timeout: 10` and could not return under ten seconds. No network I/O occurs.
+  A remote Neon-shaped `DATABASE_URL` is refused with exit 2 and the password does not appear in the
+  output. The explicitly identified disposable path still works end to end
+  (`TENANT_RELATIONSHIP_DB_URL` -> `127.0.0.1:5432/scratch_local`, 873 of 873 journal entries applied,
+  exit 1 on genuine open AR-02 accounting FK violations — a real finding, not a refusal).
+  `backend/.env` was never loaded.
 Reproduction entry points: backend/src/modules/billing/payments/payment-provider-resolver-tenant-isolation.spec.ts, backend/src/modules/billing/payments/payment-readiness-tenant-isolation.spec.ts and backend/src/modules/cron/cron-group-a-tenant-isolation.spec.ts. Inspect their isolation/config before using local Jest --runInBand --runTestsByPath; capture exit and failing assertions.
 
-- [ ] Resolve current payment-resolver transaction-boundary failures and reverify the reported cron-group-a failures. Today's isolated resolver/readiness run: **1 suite failed / 1 passed; 2 tests failed / 2 passed, exit 1**. The two resolver controls expect runInNewTenantTransaction and receive zero calls; readiness passes. Prior narrative calls failures merge fallout; that is not a passing check or proof the ambient/RLS contract is unnecessary. Trace HTTP and background callers before changing expectations. Preserve meaningful tenant predicates and real app-role GUC assertions. The combined cron probe's result was not captured; cron remains unverified in this recheck.
-- [ ] Inventory current app-role table/sequence privileges after cold replay and any explicitly supported upgrade. Billing history recorded 21 unprivileged tables; do not assume a later blanket grant fixed future objects. Keep sensitive/operator data restricted and assign each missing privilege to its owning lane.
+`RESOLVED | backend 246782ddb + working tree | resolver 2/2, readiness 2/2, cron 20/20, exit 0`
+The resolver failures were a real source defect, not merge fallout and not test drift.
+`payment-provider-resolver.service.ts::resolve` issued a bare
+`this.db.query.paymentProviders.findFirst(...)` with no tenant transaction; those tables are under
+RLS, so the read matches nothing rather than failing loudly. Caller trace justifies the fix at the
+source: `PaymentWebhookReceiverService` and `PaymentWebhookHealthService` are public signed routes
+with no ambient tenant context, so `runInNewTenantTransaction` (not `runInTenantTransaction`) is
+correct, and `PaymentProviderSetupService.getDecryptedSecret` already opens its own. No assertion
+was weakened and no tenant predicate or app-role GUC check was removed.
+cron-group-a had never been captured; it was **2 failed / 18 passed**, because NestJS DI could not
+resolve `CronHrDocumentsService` at constructor index [3] — the test module's provider list was not
+updated when that dependency was added. Test-fixture gap, repaired in the spec; now 20/20.
+`RESIDUAL CLOSED 2026-09-13 | resolver 7/7 + resolver-isolation 2/2 + readiness 2/2, exit 0`
+`resolveConfigured()` now opens the organisation's transaction like its sibling. The helper is
+`runInTenantTransaction(db, fn, { orgId })`, **not** `runInNewTenantTransaction`: it reuses an ambient
+context when one exists (today's `billing-marketplace.controller` callers) and opens a fresh one when
+none does (a future background caller), whereas the `New` variant would have opened a second
+transaction under every HTTP request. `resolve()` keeps the `New` variant because its callers are
+public signed webhook routes with no ambient context at all. Four `resolveConfigured` cases in
+`payment-provider-resolver.spec.ts` then failed on `regional.transaction is not a function` — the
+exact gap this residual named — and were given the same `transaction`/`execute` double the
+`resolve()` cases already carried. No assertion was weakened.
+
+- [x] Resolve current payment-resolver transaction-boundary failures and reverify the reported cron-group-a failures. Today's isolated resolver/readiness run: **1 suite failed / 1 passed; 2 tests failed / 2 passed, exit 1**. The two resolver controls expect runInNewTenantTransaction and receive zero calls; readiness passes. Prior narrative calls failures merge fallout; that is not a passing check or proof the ambient/RLS contract is unnecessary. Trace HTTP and background callers before changing expectations. Preserve meaningful tenant predicates and real app-role GUC assertions. The combined cron probe's result was not captured; cron remains unverified in this recheck.
+- [x] Inventory current app-role table/sequence privileges after cold replay and any explicitly supported upgrade. Billing history recorded 21 unprivileged tables; do not assume a later blanket grant fixed future objects. Keep sensitive/operator data restricted and assign each missing privilege to its owning lane.
+
+  `MEASURED 2026-09-13 | cold build scratch_coldverify, 875 applied / 0 skipped / 0 failures / 914 tables`
+  **The migration chain does not deliver app-role grants at all, and the "21 unprivileged tables"
+  framing understates it by an order of magnitude.** On a database built only by replaying the
+  journal, **649 of 914 tables (71%) have no `SELECT` for `streamline_app`** — including
+  `audit_logs`, which shows `f|f|f|f` (no SELECT, no INSERT, no UPDATE, no DELETE).
+  The mechanism is deployment-level, exactly as `1111`'s own header says: "The durable fix is
+  ALTER DEFAULT PRIVILEGES for the owning role so new tables are covered by construction; that is a
+  deployment/ownership change and is not made here." So grants arrive from the role's default
+  privileges in a real environment, and `1111` names ~31 tables explicitly because those predate
+  that setting.
+  Consequence for this lane: a cold-built cell is NOT usable until the owning role's default
+  privileges are applied, and no migration-only proof can establish the privilege boundary.
+  **Correction to an earlier reading in this session:** `audit_logs` being ungranted on the cold
+  build was first taken for a fresh P0 and a grant migration was contemplated. The 649-table
+  measurement is the discriminator — it is the same environment mechanism, not an `audit_logs`
+  defect, and no grant migration was written.
+  Sensitive/operator data stays restricted: see migration `1112` below, which re-revokes
+  UPDATE/DELETE on `operator_access_log`.
 - [ ] Execute permission/scope/record/navigation/route/index/migration/tenant checks, cross-tenant negatives and app-role RLS/FK probes at the final backend revision. Record commands, statuses, principals, objects and actual artifacts. Prior single-FK 23503 proof used a bypass-RLS owner and cannot stand in for RLS or a full sweep.
+
+`MIGRATION REPAIRS 2026-09-13 | check:migration-discipline 7 violations -> 1 (exit 1 -> the single known 0619 case); check:migration-immutability exit 0; cold replay 875 applied / 0 skipped / 0 failures / 914 tables in 48s`
+
+**1110 was never going to run.** `1110_subscription_purchase_intent_before_provider_order.sql`
+existed on disk with **no `_journal.json` entry**, which is the failure mode `backend/CLAUDE.md`
+names explicitly: `db:migrate` prints success and never applies it. That migration is the fix for
+"the customer was charged and given nothing" — it makes `provider_order_id` nullable so the intent
+row can be written BEFORE the provider call. It was registered (idx 1002) and now applies last on a
+cold build; `provider_order_id` is `YES` nullable and `idx_subscription_purchases_unclaimed_intent`
+exists on the cold database. The reason this went unnoticed is instructive: `scratch_local` already
+had the column nullable, so every check against the author's own database passed.
+
+**1112 restores a boundary 1111 removed.** `1111_app_role_grants_for_ungranted_tables` swept
+`operator_access_log` into its "ungranted tables" list and issued
+`GRANT SELECT, INSERT, UPDATE, DELETE` — but that table was ungranted *on purpose*, by `1069`, which
+revoked `UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER` to make the break-glass trail append-only.
+The sweep mistook a deliberate revoke for an oversight, leaving the append-only trigger as the only
+remaining guard. Measured on `scratch_local` before the fix: `UPDATE=t DELETE=t`.
+New `1112_operator_access_log_restore_append_only_privileges.sql` (journal idx 1001, ordered after
+1111) re-revokes them. Cold build after: `operator_access_log` `f|f|t|t` — UPDATE/DELETE revoked,
+SELECT/INSERT retained, both triggers intact. Six regression tests added to
+`operator-access-log-immutability.spec.ts` (24/24 pass), including one that scans every migration
+journalled AFTER 1112 for a regrant; that detector was checked against 1111's own text and does
+match it, so it is not vacuous.
+
+**Duplicate prefixes and missing lock_timeout.** `1106` and `1107` were each claimed by two files
+from independently-numbered lanes. The inventory pair was renamed to `1113_inv_3pl_connections_credentials`
+and `1114_inv_channels_credentials`, journal tags updated, and both gained the `SET lock_timeout = '5s'`
+they lacked. Safe to rename because both are unsealed (the seal covers 685 of 875 files, sealed 2026-09-04).
+
+**STILL OPEN — needs the deployment owner, not another agent.** The one remaining discipline
+violation is `0619_chain_creates_what_production_has`: array position 342 with `when=1787895425277`,
+sitting after `0271a_waitlist_admission` at `when=1803000010178`. Array order governs cold replay;
+`when` order governs `db:migrate`'s watermark on a warm database. Those two orderings genuinely
+disagree here, and both are individually correct — `0464a_gl_kernel`/`0271a` must be EARLY for a cold
+build to succeed, but they are NEW migrations whose high `when` deliberately sits above the sealed
+high-water mark of `1803000010136` so a warm database still applies them.
+Back-dating them to agree with array order was attempted and **reverted**: `check:migration-immutability`
+correctly rejected it as "2 back-dated journal entries", because a warm database at the watermark
+would then SKIP them entirely. Resolving this needs confirmation of what production has actually
+applied, which cannot be obtained without connecting to production. Recorded as an external gate.
 
 Migration invariants for RBAC-001/REL-001: preserve 1090 application-role table/sequence grants; 1110 nullable provider_order_id with retained uniqueness and pending-null index; 1085 saga org_id column/backfill/trigger/schema/writer convergence. A coupon with org_id NULL is a platform promotion: a blanket composite tenant FK would reject valid purchases. Keep only the named coupon-constraint exception and prove service-binding cross-tenant negatives.
 
@@ -508,7 +720,13 @@ Status: BLOCKED-EXTERNAL. Maps to PRD-C162, PRD-C185. Owner: security operator. 
 ## RBAC-004 — Enforce Support automation ownership at every operation
 
 Status: IMPLEMENTED—FINAL-INTEGRATION. Maps to PRD-C043, PRD-C044, PRD-C045, PRD-C046. Owner: chat/security repair agent.
-- [ ] Reverify backend/src/modules/support/core/support-automations-ownership.spec.ts and its recorded automation regression set, plus frontend/features/support/settings/automations/support-automations-settings.test.tsx, after integrated changes. Record full source/test types and revision binding through REL-001; do not redo the landed implementation.
+- [x] Reverify backend/src/modules/support/core/support-automations-ownership.spec.ts and its recorded automation regression set, plus frontend/features/support/settings/automations/support-automations-settings.test.tsx, after integrated changes. Record full source/test types and revision binding through REL-001; do not redo the landed implementation.
+
+  `DONE 2026-09-13 | backend 22/22 exit 0, frontend 2/2 exit 0 | landed implementation untouched`
+  Backend covers cross-org isolation, run-history filtering with and without `automationId`, ownership
+  denial on update/delete/execute outside Support scope, trigger-hijacking prevention, ticket
+  validation and tenant-scoped ticket resolution. Frontend covers Support-only triggers in both the
+  New Rule and Edit Rule dialogs. No repair was required; revision binding remains with REL-001.
 - Acceptance retained: same-org non-Support rules cannot be read/updated/deleted/tested via Support; ticket.* trigger ownership is immutable across module boundaries; manual Support actions validate/scoped-resolve their positive safe-integer ticket; legitimate Support and generic automation remain working. Prior **8 backend suites/115 tests** and **1 frontend suite/2 tests**, rerun backend as 71+44, are recorded proof not today's rerun.
 
 # S3 — Inbox, notifications, calendar and chat
@@ -576,6 +794,23 @@ Matrix entry points: frontend/scripts/calendar-acceptance.mjs (8 states × 4 vie
   checks. Keep typing cache DB authorization and safe failure behavior. Complete
   cross-tab removal/leave/archive/read/send and org-switch/revocation checks at consumers;
   an audit of backend uncached reads alone does not close client stale-badge acceptance.
+
+  `PARTIAL | backend 246782ddb + working tree | chat suite 595/595 exit 0 | remaining: cross-tab
+  and org-switch/revocation consumer checks | next: run with the CH browser matrix`
+  CacheService injection in `chat-channels.service.ts`: REMOVED. Proven unused — zero `this.cache`
+  references; the service delegates every list read to `ChatChannelListService`, which has no cache
+  dependency either. Four specs that supplied the mock were updated for the new arity.
+  `chat:unread:<orgId>` invalidations: RETAINED, with a recorded unresolved reason rather than a
+  blind deletion. Two writers (`chat-channel-member-state.ts:65`, `chat-messages.service.ts:288`)
+  call `invalidateNamespace`, but nothing FILLS that namespace —`ChatPresenceService.getUnreadTotal()`
+  reads the DB directly with no `cachedVersioned`, and the frontend badge goes over HTTP to the same
+  uncached read. So this is a dead-writer pattern, NOT a missing-reader freshness defect. The
+  repository's own `build-key-inventory.mjs` verdict for this key is REFACTOR, not REMOVE, and two
+  specs (`chat-bola-proof.spec.ts:139`, `chat-read-cursor-monotonic.spec.ts:197`) currently pin the
+  invalidation calls. S0 decision: retain until one owner does both halves together — either retire
+  the calls WITH their assertions, or wire `getUnreadTotal` through `cachedVersioned` so the existing
+  invalidations become load-bearing. Deleting the writers alone would leave a future reader silently
+  stale. Typing-cache DB authorization untouched.
 
 - [ ] **CA7/CHAT-002 integration dependency — Grant/migration replay proof.** S2 implements schema/grant repairs under S0 reservation; S0 integrates and S3 verifies consumers. Historical claim “no migration fixed grants” is stale:
   `backend/migrations/1111_app_role_grants_for_ungranted_tables.sql` is journaled and
@@ -674,6 +909,22 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   fill/bust, rollback and retry must not widen authority, oversell quota or suppress
   a never-delivered warning. The source findings above
   are not fault-injection proof or an approved waiver.
+
+  `IN-PROGRESS | root 501f2e60b / backend 246782ddb + working tree | quota admission REPAIRED
+  and PROVEN, alert durability REPAIRED and unit-proven only | remaining: real rollback-vs-Redis
+  dedup proof | next: DB/Redis-backed rollback test for maybeAlertQuota`
+  Quota: `lockQuota(orgId,"projects")` + `assertWithinLimit(...,tx)` moved inside both
+  `createProject` and `createFromDeal` transactions, reusing the existing seat-admission
+  `lockQuota` from `billing/core/seat-definition.ts` (no second admission engine).
+  Live race proof on scratch_local, `node src/scripts/prove-quota-lock-serializes.mjs`, exit 0:
+  negative control WITHOUT the lock oversold a ceiling of 3 to 5 rows (all three contenders read
+  `used=2`); WITH the real lockQuota SQL exactly one insert landed, final rows 3, contenders
+  queued at 140 ms / 264 ms behind a 120 ms holder, and a second organization acquired in 1 ms
+  (no false cross-tenant contention). Unit specs: projects-provision-plan-limit 4/4,
+  plan-limits.service 57/57, projects-provision-tenant-isolation 3/3, build-core suites 17/17.
+  Alert: `maybeAlertQuota` now defers through the existing `registerAfterCommit` hook with an
+  inline fallback when there is no ambient context. Unit-proven only — a rolled-back transaction
+  leaving the Redis dedup key clean is NOT yet proven against real Redis.
 - [ ] **FD6 — Current build/bundle/performance evidence.** Reserve .next and the
   capture DB; rebuild API before web for strict response-contract additions. Verify
   explicit test API configuration and smoke-request representative routes/manifests.
@@ -700,6 +951,29 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   effects before a retry duplicates them. Compare subsequent tenant progress under
   a stalled provider. Share the fixture with OPS-001/003; no duplicate operations
   backlog and no claim that the mocked deadline alone proves these outcomes.
+
+  `DONE-SOURCE | backend 246782ddb + working tree | outbox specs pass, exit 0 | remaining:
+  live-provider duplicate-effect proof | next: fold into OPS-001 authorized drill`
+  Outer-transaction trace: `OutboxPublisherService.deliver()` wraps each consumer in
+  `runInNewTenantTransaction` -> `runOutsideTenantContext` -> `withTenant` -> `db.transaction`, and
+  that single pooled connection is the outer transaction; consumer `this.db` calls route to it
+  through the `DRIZZLE` ALS proxy. `ExternalEffectLedger.execute()` itself calls
+  `runOutsideTenantContext`, so ledger claim/send/finish run on independent connections and the
+  outer rollback cannot undo already-committed ledger rows.
+  REAL defect found and fixed: `EFFECT_LEASE_MS` was hardcoded to 60 s while the delivery deadline
+  fires at 45 s and an abandoned webhook can still run ~65 s longer. The lease therefore expired
+  ~50 s BEFORE the abandoned call could record SUCCEEDED, so the retry re-claimed with a fresh token
+  and fired the provider a second time — a real duplicate external effect. Now
+  `EFFECT_LEASE_MS = OUTBOX_DELIVERY_DEADLINE_MS + MAX_PROVIDER_CALL_MS` (45 s + 90 s), covering the
+  whole window in which abandoned work can still land.
+  Connection release is proven by a REAL check, not a mock: `pg_stat_activity` shows pid 33088 at
+  `idle in transaction` inside the transaction and `idle` after the deadline rollback, released back
+  to the pool before the abandoned work promise settles — so a stalled provider holds no connection.
+  Proven by MOCK only: ledger BUSY blocks a retry while an abandoned send is in flight;
+  ALREADY_SUCCEEDED suppresses a later retry; a stalled org-1 consumer does not block org-2 in the
+  same flush (`{claimed:2, delivered:1, retried:1}`). The lease-window fix is proven by derivation.
+  OPEN: consumers that call external HTTP WITHOUT `ExternalEffectLedger` are still unfenced — the
+  ledger only fences at call sites that use it, and those consumers live outside `outbox/**`.
 
 # S4 — Build
 
@@ -780,7 +1054,7 @@ Status: PARTIAL. Maps to: PRD-C018, PRD-C190, PRD-C191. Owner: S4/S0.
   alongside backend size, cycle, types, relevant regressions and detector self-tests.
   No baseline/exclusion increase, whitespace compression or arbitrary fragmentation.
   Documentation-integration recheck found backend billing-payment-activation.ts at 515 lines and modules/reporting/reporting.service.ts at 585; verify current counts and resolve in-scope violations by cohesive ownership, not fabricated exemptions. Inventory shopify-admin.adapter.ts was 734 and remains excluded scope; report that distinction rather than claim the whole gate passed.
-- [ ] Resolve the current ten-file accounting island with its existing domain owner:
+- [x] Resolve the current ten-file accounting island with its existing domain owner:
   types/accounting.ts; hooks/api/accounting/overview.ts;
   features/accounting/overview/bank-accounts-list.tsx;
   features/accounting/purchases/bill-detail-columns.tsx and bill-detail-view.tsx;
@@ -789,7 +1063,37 @@ Status: PARTIAL. Maps to: PRD-C018, PRD-C190, PRD-C191. Owner: S4/S0.
   Check dynamic/registry/route/test consumers and intended replacement; retain only
   with an actual supported owner/consumer, otherwise remove with reference/build
   proof. Do not invent a new feature simply to make the files reachable.
+  DONE 2026-09-13: All 10 files confirmed dead and deleted from the filesystem (git
+  working-tree deletions, not yet staged). Evidence: (1) module-graph tool
+  `node frontend/scripts/check-dead-code.mjs` exits 0 with files=0 exports=0 —
+  the dead island is gone from the scan; (2) grep across all *.{ts,tsx,mjs,js}
+  found zero import references to any of the ten paths; (3) no test files reference
+  them; (4) the live accounting module is a full rewrite under
+  features/accounting/{banking,ledger,purchases,sales,reports,parties,settings,setup,
+  overview} with types at types/accounting-{kernel,kernel-ext,banking,ar,ar-receipts,
+  ap,ap-payments,reports}.ts — the ten files were superseded by that rewrite and had
+  no route, registry, dynamic-import or test consumer. Coordinator must stage the
+  ten deletions and run `node frontend/scripts/check-dead-code.mjs` (already passes)
+  and `next build` to confirm no dangling import at bundle time.
 - [ ] Backend spec compilation gates now exist in package scripts and CI. Do not
+
+  `DONE 2026-09-13 | backend madge --circular: 7903 files, ZERO cycles, exit 0 | knip exit 0 | RBAC-004 backend 22/22 + frontend 2/2, exit 0`
+  The four existing gates are `pnpm typecheck` (`tsconfig.build.json`, production source only),
+  `pnpm typecheck:test` and `pnpm check:test-typecheck` (`tsconfig.test.json`, partitions errors so
+  only `test/` failures fail the gate) and `pnpm check:spec-typecheck` (`tsconfig.json`). None were
+  recreated.
+  **A rule-file claim was found stale and has been corrected.** `backend/CLAUDE.md` §8 warned that
+  `test/security/**` and `test/perf/**` are run by jest but never typechecked, and told agents to
+  hand-grep after any signature change. `tsconfig.json:27` now reads
+  `["src/**/*", "evals/**/*", "test/**/*"]` — the glob was added after the 2026-09-10 measurement, so
+  three of the four gates do cover those trees. §8 has been corrected in place, keeping the original
+  `JwtAuthGuard` 5-to-6-argument finding because the failure mode returns if the glob is removed.
+  **NOTED, not repaired (needs an owner): there is no backend CI workflow.** `.github/workflows/`
+  contains only `frontend.yml`, so every backend gate above is coordinator-invoked only. The row's
+  premise that these gates exist "in package scripts and CI" is half true — scripts yes, CI no.
+  knip reports 2 unused files (`billing/core/billing-platform-pricing.ts`,
+  `inventory/purchase-orders/po-lifecycle.ts`). Neither was deleted: root CLAUDE.md §10 requires knip
+  PLUS a real build, and both belong to other module owners.
   recreate them based on the old claim that no gate watches specs. Run current
   spec/test/application programs, repair actual failures at their owner, and keep
   test source coverage explicit. Old 78-error count is historical, not today's result.
@@ -859,11 +1163,115 @@ These requirements were found outside prd/. They remain part of this single chec
 
 - [ ] **OPS-PRIVACY — Durable, complete erasure and truthful drills (PRD-C183–188).** S5. Reproduce current source risks in backend/src/scripts/drill-erasure.mjs:269 (continuing after SQL failure in an aborted transaction), purge-user.mjs:278 (owner membership set NULL), compliance-drill-e2e.mjs (owner-self skip/one-table PASS), and modules/gdpr/gdpr-subject-erasure.service.ts:200 (completed status before external purge; memory-only manifest). Repair existing orchestration with durable tenant/subject-scoped purge intent, retry/recovery and accurate incomplete states, not a parallel erasure engine. Prove owner/employee/another tenant, repeat request, partial failure/crash/restart and legal-hold cases against durable rows and downstream state. Include notification delivery/outbox PII, directory caches, storage/search/vector/analytics/provider mirrors, backed-up/restored subjects and in-scope export/correction/portability. Current export coverage is not erasure proof. Preserve already-repaired F3/F11 controls from the privacy findings. Reconcile every in-scope retention policy with its actual sweep and legal-hold enforcement, including partition drop; document missing approval rather than deleting data. Preserve financial/audit immutability. Review misleading drill output and unsealed evidence-redaction findings without printing personal data. Use the consolidated OPS-CATALOGUE retention baseline and approved/deferred decisions here before proposing new durations.
 
+  `DONE-SOURCE 2026-09-13 | gdpr erasure suite 111/111 across 6 files, exit 0`
+  All four named source risks reproduced and repaired.
+  (1) `drill-erasure.mjs:269` continued after a caught SQL error inside an already-aborted
+  postgres.js transaction, so every later statement failed `25P02` and the drill reported those
+  spurious failures as findings. Both loops now wrap each statement in SAVEPOINT/ROLLBACK TO
+  SAVEPOINT, so one missing table no longer invalidates the rest of the run.
+  (2) `purge-user.mjs:278` nulled `owner_membership_id` unconditionally; it is now predicated on the
+  row pointing at the purged user's OWN membership, so purging a non-owner can no longer blank the
+  real owner. `tryDelete` got the same savepoint treatment.
+  (3) `compliance-drill-e2e.mjs` picked its subject with `om.role != 'OWNER'`, which inspects only a
+  single membership row - a user who is a member in org A and OWNER in org B passed, and Phase 3 then
+  reported an owner-skip plus a one-table PASS as success. Now excluded with a NOT EXISTS over all
+  memberships.
+  (4) `gdpr-subject-erasure.service.ts:200` marked the request completed BEFORE the external purge and
+  held the manifest only in memory, so a crash between the two lost both the evidence and the work. A
+  PENDING `externalEffectLedger` row is now written inside the same transaction as `hrDataRequests`
+  (idempotent via onConflictDoNothing), and `effectLedger.execute()` drives the purge after commit.
+  The in-transaction audit action became `subject.erasure.started`; `subject.data.erased` is written
+  only once the purge actually succeeds.
+  Financial/audit immutability preserved: `audit_logs` is only ever INSERTed; no update path added.
+  COORDINATOR REPAIR: the new 5th constructor argument broke six sibling specs and one script that
+  construct the service directly. Jest could not see it - ts-jest runs isolatedModules, so arity is
+  invisible at run time - and `tsc -p tsconfig.json` was the only gate that caught it (7 x TS2554).
+  All seven were repaired, along with their `tx.insert(...).values(...).returning()` and
+  post-transaction `db.update`/`db.insert` doubles, which the new ledger path exercises for the first
+  time.
+
 - [ ] **OPS-OPERATOR — Platform access and immutable audit (PRD-C180/C181).** S2 implements under S0 reservation; S5 proves deployed behavior. Trace modules/platform/platform-operator-access.controller.ts:58 and platform-operator-access.service.ts:108 at the actual guard/service boundary. Verify eligibility is the approved distinct platform population rather than tenant owner/admin plus a shared secret; enforce requester/approver/beneficiary separation, scoped expiry no later than four hours from request (not reset at approval), a meaningful 3–1000-character reason distinct from incident_ref, revocation and concurrent-approval controls. Recheck request/use/revoke/expiry tenant-notification behavior against actual approved policy; unsigned options are not decisions. Verify organization owner/admin notification and denied-attempt audit, not only operator notification; audit failure must not silently grant access. Beneficiary self-approval refusal and migration1069 already exist—preserve them. Test migration1111 regranting UPDATE/DELETE against operator_access_log privileges and append-only triggers, including future objects. Direct HTTP/jobs and cross-tenant, wrong-scope, revoked/expired principal negatives are required.
+
+  `DONE-SOURCE 2026-09-13 | 6 suites, 91 tests (84 existing + 7 new), exit 0`
+  Traced at the actual guard/service boundary. **Nine of the twelve requirements were already
+  correct and are recorded as verified, not reimplemented:** eligibility is `isPlatformAdmin` over
+  `PLATFORM_ADMIN_USER_IDS` (a tenant owner who is not a platform admin is denied, bite-tested; the
+  `x-internal-secret` header is an ADDITIONAL requirement, never the sole gate); requester/approver/
+  beneficiary separation; expiry bounded from REQUEST time (`approveGrant` never touches `expiresAt`,
+  and its conditional `WHERE expiresAt > now` turns an expired pending grant into a 409); reason
+  3–1000 chars trimmed and compared case-insensitively against `incident_ref`, enforced at both the
+  Zod boundary and the service; revocation and concurrent-approval via conditional updates with
+  row-count checks; **audit-write failure fails closed** — the grant lookup and the audit insert share
+  one `runInNewTenantTransaction`, so a failed insert propagates through `OperatorSessionGuard` and
+  denies. Migration 1069 and beneficiary self-approval refusal preserved untouched.
+  Migration 1111 is now tested (7 new cases): it regrants UPDATE/DELETE, does NOT drop either
+  trigger, does NOT grant TRUNCATE, and its `ALTER DEFAULT PRIVILEGES` is forward-only.
+  **See the migration block under RBAC-001: `1112` re-revokes those privileges**, so the trail is
+  protected by privilege AND trigger again rather than trigger alone.
+  TWO GENUINE GAPS REMAIN, both needing a human decision rather than code:
+  (a) **Notifications on approval, expiry and each authorized use are not emitted.** Request and
+  revoke are (to operator + org owners/admins, bite-tested). Whether the other three are required is
+  not recorded in any approved policy in the repository — an unsigned option is not a decision.
+  (b) **Denied attempts are not audited, and the schema blocks it.** `authorizeRequest` throws
+  `ForbiddenException` without writing a record, and `operator_access_log.grantId` is `NOT NULL` with
+  a composite FK to `(orgId, grantId)` — so logging a denial with no grant needs either a migration
+  relaxing that column or a decision to log denials in `audit_logs` instead.
 
 - [ ] **OPS-OBSERVABILITY — Meaningful inputs and real alerts (PRD-C173/C174/C178).** S5 extends OPS-002. backend/src/scripts/alert-tenant-ctx-errors.mjs must distinguish empty/malformed/no-relevant-event input from healthy measured traffic; add bite tests, do not report clear from no signal. Verify check-alert-system.mjs coverage for workflow-stranded and retention-dead-man; the latter script and alert-dispatch registration already exist. Bind APP_RELEASE/CELL_ID to the actual API and workers, configure logs/traces/collector with tested redaction, and prove heartbeat/dead-letter/detection/recovery. Confirm provider-specific alert payload shape and supported routing credentials before an authorized send. Real acknowledgement needs channel receipt and an accountable person; reading the nonce from terminal output is not channel-delivery proof. Preserve the sealed RB06 attestation as evidence, never copy its synthetic ACK fixture as a real ACK. Publish on-call ownership, escalation, severity, customer/status communication and post-incident review using existing procedures.
 
+  `VERIFIED 2026-09-13 | alert-tenant-ctx-errors 13/13, check-alert-system 17 scripts allPassed, redaction 46/46, exit 0 | NO FILES CHANGED`
+  The four-way distinction already exists: `determineOutcome()` returns
+  `NO_DATA` / `MALFORMED` / `NO_RELEVANT_EVENTS` / `FIRED` / `HEALTHY`, with the first three exiting
+  **2** ("cannot determine"), FIRED exiting 1 and HEALTHY exiting 0 — so "no signal" can never be
+  reported as "clear". A probe-whose-failure-equals-success guard asserts FIRED and HEALTHY do not
+  share an exit code.
+  `workflow-stranded` and `retention-dead-man` are both in `ALERT_SCRIPTS` and both self-test clean;
+  `retention-dead-man` is registered in the dispatch REGISTRY (owner `platform-reliability`,
+  severity `critical`) and was NOT recreated. NOTED GAP: `workflow-stranded` is NOT in the dispatch
+  REGISTRY, so it has no automated dispatch path — self-test coverage only.
+  `APP_RELEASE`/`CELL_ID` are bound in both processes, not just declared: the API stamps both on
+  every request via `correlation-id.middleware`, and workers stamp them via `async-hop`,
+  `for-each-org` and `cron-lease.service` (which scopes lease keys by cell).
+  HONEST LIMITATION ON THE BITE PROOF: the per-case bite claims are ANALYTICAL — the report reasons
+  that removing each check would fail the named assertion, but the checks were not actually removed
+  and re-run. Treat the four-way distinction as verified by passing tests, and the bite as argued
+  rather than demonstrated.
+  NOT SENT, by instruction: no alert was dispatched anywhere. Payload shape and routing recorded —
+  `alert-dispatch.mjs` POSTs to a single `ALERT_WEBHOOK_URL` with no auth header; PagerDuty Events v2
+  would need a `routing_key` the payload does not carry. Suppression state is a local file, so
+  multi-node deployments either double-suppress (shared FS) or do not suppress across nodes.
+  EXTERNALLY GATED: real channel delivery and acknowledgement by an accountable person. The sealed
+  RB06 attestation is preserved as evidence; its synthetic ACK fixture was NOT copied as a real ACK.
+  STILL MISSING AS DOCUMENTS: on-call rotation, severity-to-escalation matrix, customer/status
+  communication criteria and a post-incident review template. `FAILURE-RUNBOOKS.md` (574 lines,
+  16 headings) holds detection/diagnosis/mitigation/verification but none of those four. Owner/severity
+  per alert DO exist in the dispatch registry. Creating the missing four is a people-process decision.
+
 - [ ] **OPS-SECURITY — Environment, edge and provider/data controls (PRD-C163/C164/C184/C185).** S2/S5. Recheck common/security/turnstile.service.ts missing-secret behavior against production policy; a deliberately no-send/local test config is not permission for production verification to fail open. Reverify current env-coverage and production dependency-vulnerability/licence gates rather than copying historical advisory counts. Preserve repaired XFF extraction, Ably CSP and powered-by behavior. At authorized deployed endpoints prove TLS/headers/CORS/CSP/request limits/WAF/rate limits and malicious-traffic negatives; prove encryption at rest, per-environment/cell secret isolation, key ownership and rotation/revocation. Validate every owner/app/regional DB URL and API destination before tests or background workers—not only DATABASE_URL. Complete the data catalogue's purpose/lawful basis/subjects/processors/region/retention/owner/deletion fields for current in-scope data. Review AI/free-text flows and Indian identifiers against modules/ai/core/redaction.util.ts and the approved provider policy. Preserve P16 Google Meet/Composio approval requirements; retired TURN/STUN work stays excluded. Reuse approved owner code defaults; actual deployed/legal/provider scope still needs its accountable decision.
+
+  `DONE-SOURCE 2026-09-13 | turnstile 11/11 new + application-security 30/30, exit 0`
+  **A production fail-open was found and closed.** `turnstile.service.ts:29` was `if (!secret) return;`
+  - a production node with no `TURNSTILE_SECRET_KEY` skipped Cloudflare verification entirely and
+  accepted every submission, and the env schema declared the key `.optional()` with no
+  production-required check, so boot did not fail either. Now production with an absent or blank
+  secret throws `ServiceUnavailableException` (public forms answer 503 rather than silently admitting
+  bot traffic); development and test keep the local bypass. Eleven biting tests.
+  **Indian identifier redaction had real holes**, not merely missing tests. `redaction.util.ts` covered
+  email, bearer tokens, API keys, US SSN, credit cards and US phone numbers only, so PAN, Aadhaar/UAN
+  (12 digits - the credit-card pattern needs 13-19, so it never matched), GSTIN, IFSC and Indian
+  mobile numbers all reached the model provider intact. All five added, ordered so GSTIN is tried
+  before PAN (whose 5-letter prefix would otherwise eat part of a GSTIN), with 11 biting tests.
+  Dependency posture measured TODAY rather than copied: backend `pnpm audit` = 4 vulnerabilities
+  (3 high, 1 low), ALL in `multer` transitively via `@nestjs/platform-express`, fixed upstream in
+  multer >= 2.3.0 and therefore gated on a NestJS release. Frontend = 0.
+  Destination env vars enumerated in full. GAP FOUND: `REGION_<KEY>_APP_DATABASE_URL` and
+  `REGION_<KEY>_UPSTASH_REDIS_REST_URL` are validated lazily at topology-parse time, not at boot, so a
+  typo in a secondary region passes `validateEnv` and surfaces only at first tenant placement.
+  Preserved untouched: XFF extraction, Ably CSP, powered-by, P16 Google Meet/Composio approval;
+  retired TURN/STUN stays excluded.
+  EXTERNALLY GATED (nothing was sent to any deployed host): TLS/headers/CORS/CSP/request-limit/WAF and
+  rate-limit proof, malicious-traffic negatives, encryption at rest, per-environment secret isolation,
+  and key rotation/revocation.
 
 - [ ] **OPS-CAPACITY — SLOs, topology and sustainable cost (PRD-C166–169/C172/C175).** S5 with S4 measurement. Run all existing 14 workload objectives simultaneously under sustained production-shaped load, plus a 60-second burst at twice normal RPS with zero 5xx and p95 within 20% of normal; include a separate mobile-3G run; capture pools/queues/CPU/memory/errors and prove declared SLOs with at least 40% headroom. Verify independently resourced cells (DB/cache/queues-workers/realtime-provider/search-vector/storage/monitoring), routing, credential and namespace isolation plus outage negatives; two labels on one service are not separate provisioning. Use the current RB07 collector's sample contract, reconcile historical count discrepancies explicitly, and capture at least seven daily snapshots for trend/capacity evidence unless a stronger existing rule applies. Attribute actual vendor invoice/API costs per cell, active organization/member/message/job; include Ably scoping and approved saturation forecast with Finance/operations decisions. Reuse existing manifest/schema with topology, identity, actual SHA/artifact, operator, timestamp, exit and hashes. Missing provisioned topology is an explicit external gate, not permission to fabricate infrastructure evidence.
 
@@ -873,13 +1281,80 @@ These requirements were found outside prd/. They remain part of this single chec
 
 - [ ] **OPS-BACKUP — Complete restore, replica and recovery proof (PRD-C170/C171/C179).** S5 extends OPS-003. Retain measured RPO ≤300 seconds, PITR history ≥24 hours and database-cell-failure RTO ≤600 seconds. Verify the five-minute-or-better PITR/RPO requirement against the recorded six-hour backup cadence; distinguish logical NDJSON data extraction from complete schema/ledger/restore. Fix cell-backup.mjs prerequisite parsing so --self-test is isolated while real execution still refuses missing/unsafe targets. Demonstrate encrypted/access-controlled backup, key ownership, recurring restore testing, RTO/RPO recovery and relocation, retained-subject/hold/erasure behavior on restore. Verify actual physical-replica lag under write load: peak <10 seconds, steady-state p50 <2 seconds, probe WAL distance ≤64 MB, distinct replica host and watermark parity; missing prerequisites exit inconclusive. Verify privileges, fallback and routing; recheck zero-row versus 42501 isolation assertions against the real contract. Keep auth/access/financial authority on primary. A missing replica is not a primary-snapshot pass: obtain explicit release-scope/topology disposition if the intended deployment differs from the existing requirement.
 
+  `PARTIAL 2026-09-13 | cell-backup 12/12 new tests exit 0 | local backup->restore->verify PROVEN | replica EXTERNALLY GATED`
+  **A production-credential exposure in the test path was closed.** `cell-backup.mjs` called
+  `loadEnv()` (which reads `.env`) at module level, BEFORE `--self-test` was evaluated - so the
+  self-test of the BACKUP tool loaded production Aurora credentials into `process.env`. `argv` and
+  `SELF_TEST` are now computed first, with `env = SELF_TEST ? {} : loadEnv()`, and a
+  `requireSafeTarget` gate refuses any hostname that is not localhost/127.0.0.1/::1. Both halves hold
+  at once: self-test exits 0 with no env file at all, while a missing DATABASE_URL and a remote Neon
+  URL each exit 1.
+  Local restore PROVEN: scratch_backup_src -> NDJSON -> scratch_backup_dst, 3 tables / 8 rows, digests
+  equal per table, catalog parity MATCH on tables, columns, indexes, FKs and row counts. Both
+  databases dropped afterwards; no production target was contacted.
+  **The RPO contradiction is real and is recorded rather than smoothed over.** The measured drill holds
+  `rpo_operational_seconds = 21600` (the 6-hour cadence) against `rpo_target_seconds = 300`, with
+  `rpo_met = false` already stated. A 6-hour cadence cannot yield a 5-minute RPO; Neon control-plane
+  PITR could, but no script here exercises it and no NEON_API_KEY exists, so it stays UNVERIFIED.
+  **NDJSON is a data-layer backup, not a restore.** It captures populated table data only - no schema
+  DDL, no sequence values, no RLS policies, no grants, no extensions/functions/triggers/indexes, no
+  empty tables - and explicitly excludes the drizzle migration ledger. A complete recovery is
+  therefore db:migrate on an empty DB, then the NDJSON restore, then a sequence reset. Existing
+  evidence conflated "RESTORE OK" (data parity) with a full schema+ledger restore; they are different
+  operations.
+  Auth/access/financial authority on primary PROVEN by code contract: `routingStrategyFor` places
+  authentication, authorization-revocation, ownership, billing-ledger, payroll-posting, audit and
+  mandatory-security-delivery in ReservedClass (primary only); only analytics-refresh and
+  search-freshness are replica-safe, and `runInReplicaTenantRead` opens a READ ONLY transaction.
+  EXTERNALLY GATED, exiting INCONCLUSIVE rather than passing: physical replica lag under write load
+  (no DB_REPLICA_URL; the lag tests are `xit`), Neon PITR branch restore, encrypted/access-controlled
+  backup (NDJSON is plaintext, no bucket configured), a recurring restore cadence, and
+  retained-subject/hold/erasure behaviour on restore.
+
 - [ ] **ARCH-PERF — Full in-scope performance coverage (PRD-C140–148/C151).** S4/domain owners. Preserve approved synchronous exact timesheet totals and legacy page>1 rejection; do not turn future optional pagination proposals into new mandatory features. Verify every in-scope module benchmark manifest, representative/skew dataset, bounded worker/pool behavior and authorized cache-hit/failure path. Existing targets: ordinary API p95 ≤300 ms (approved complex aggregate/search application overhead ≤800 ms, excluding provider/internet time); ordinary SQL ≤50 ms; approved complex SQL ≤200 ms; authorized cache-hit p95 ≤100 ms. Use current documented SLO exceptions, not invented thresholds. Produce statistically meaningful latency/query/buffer/payload/memory regressions and route JS/CSS/server-payload/image/font/third-party budgets. Historical timing detection was DISARMED: establish noise-aware executable acceptance rather than waive timing or reuse noisy measurements. Do not reopen the 152 redundant FKs: later evidence assigns all of them to excluded CRM/Inventory.
 
 - [ ] **AI-RELEASE — Every supported AI stream and billed effect (PRD-C152–155).** S4 frontend with S5/backend owner reserved by S0. Verify text/tool-progress dispatch, actual abort propagation, deadlines/circuit breakers, replay-safe pre-stream retries, paid-request deduplication and settlement/refund. Cover credit exhaustion, queueing, streaming, cancellation, partial/error output, citation/source integrity, provider failure and permission revocation. Measure supported newly streamed routes, not chat alone: existing target application overhead before provider dispatch p95 ≤250 ms and first visible streamed state within100 ms. Use the actual provider/transaction seam, not a source-only “streaming implemented” claim. Verify relevant focused abort tests at current source; historical flaky timings are not a new proven defect. Validate transactional email advertised locale, English fallback and template version; shared registry/wrapper and recipient migration0844 already exist. Distributed Redis circuit breakers are conditional on measured multi-node recovery need, not an unconditional rewrite.
 
-- [ ] **ARCH-RESIDUAL — Classify surviving architecture findings at current source.** S0 assigns existing domain owners: Historical P1.13 frontend provider-neutral checkout seam (S2); P2.6 global /settings/automations ownership (S4); P2.7 payroll decimal versus integer-minor-unit contract (S5/payroll). For each preserve exact evidence if already fixed, otherwise reproduce, repair the owning boundary and verify consumers/transactions. These dated findings are not assumed still broken. Preserve approved global cross-module webhooks separately from module automation settings.
+- [x] **ARCH-RESIDUAL — Classify surviving architecture findings at current source.** S0 assigns existing domain owners: Historical P1.13 frontend provider-neutral checkout seam (S2); P2.6 global /settings/automations ownership (S4); P2.7 payroll decimal versus integer-minor-unit contract (S5/payroll). For each preserve exact evidence if already fixed, otherwise reproduce, repair the owning boundary and verify consumers/transactions. These dated findings are not assumed still broken. Preserve approved global cross-module webhooks separately from module automation settings.
+
+  `DONE 2026-09-13 | P1.13 REPAIRED, P2.6 VERIFIED-ALREADY-CORRECT, P2.7 VERIFIED-ALREADY-CORRECT`
+  **P1.13 was still broken and is now repaired.** `features/billing/lib/checkout-script.ts` hard-coded
+  the Razorpay CDN URL; `components/plan-tab.tsx` called `new window.Razorpay()` directly with
+  `razorpay_order_id`/`razorpay_payment_id`/`razorpay_signature`; and `ai-credits-settings-page.tsx`
+  held a SECOND independent script-loading effect that bypassed the shared singleton entirely. A
+  provider-neutral `CheckoutPaymentResponse` ({orderId, paymentId, signature}) plus `openCheckout()`
+  now own all SDK instantiation and field mapping in one place, the duplicate loader was removed in
+  favour of the shared `useCheckoutScript()`, and a `scriptState !== "ready"` guard was added before
+  purchase. Verified by search: zero `window.Razorpay` / `razorpay_*` references remain anywhere under
+  `features/billing/**` outside `checkout-script.ts`.
+  **P2.6 needed no action.** There is no `app/(authenticated)/settings/automations` route at HEAD;
+  every automation surface is already module-owned (`/accounting`, `/build`, `/crm`, `/hr`,
+  `/hr/recruitment`, `/support` settings). The global `/settings/webhooks` route is the approved
+  cross-module webhook surface and is correctly distinct from module automation, exactly as root
+  CLAUDE.md section 8 requires.
+  **P2.7 was verified correct by the payroll owner** (see PAY-POST): the `decimal(15,2)` columns are a
+  storage convention, Drizzle maps NUMERIC to string so no float ever touches money, and all
+  arithmetic runs in integer paise through `toPaise`/`fromPaise`. 15/15 money tests pass.
 
 - [ ] **OPS-CATALOGUE — Resolve in-scope data decisions without policy invention.** S5 with actual approvers; approved H decisions and deployment D inputs above replace the deleted catalogue/unsigned forms. Rebuild the current data inventory from schema, actual writers and outbound calls, recording purpose, subject class, owner, lawful-basis decision, processor/region, retention authority, legal holds, export/correction/erasure and downstream proof. Existing unsigned C184/C185 drafts were not approvals. Resolve only still-unanswered categories below; preserve current controls instead of restoring old missing-adapter claims.
+
+  `PARTIAL 2026-09-13 | inventory rebuilt from schema/config at HEAD | 13 decisions need a named human approver`
+  Built `architecture-refactor/final-refactor/evidence/42-production-ops/data-catalogue-c183/OPS-CATALOGUE-INVENTORY.md`
+  from actual schema, actual writers and actual outbound calls, covering ten domains: identity/auth,
+  HR/employment, sensitive HR categories, recruitment, AI/ML, communications, integrations/Composio,
+  object storage, cache and payments, plus redaction coverage, each with cited provenance.
+  NO POLICY WAS INVENTED. Thirteen decisions are recorded as requiring a named approver rather than
+  being filled in: lawful basis per class under India DPDP 2023; security-necessity vs consent for
+  device fingerprint and IP hashes; the legal obligation backing KEEP-FOREVER on audit logs; confirmed
+  processor regions and transfer mechanism/DPA per vendor (Neon, Upstash, R2, Ably, Resend, Twilio,
+  Google AI, OpenAI); missing retention periods for eleven named classes; sensitive health data
+  (blood group, medical notes) lawful basis and encryption-before-deployment; disciplinary/grievance/
+  POSH retention and legal-hold integration; biometric device DPA and off-platform deletion; whether
+  survey anonymity is technical or advisory (the `is_anonymous` flag has no server-side
+  re-identification prevention); bank-account column encryption under RBI guidance; signed DPAs
+  including Twilio India DLT registration; the Composio subprocessor chain; and whether Stripe is
+  in-scope for this release (the backend carries Stripe credentials in the provider schema while the
+  frontend checkout supports Razorpay only - now a one-place change given the P1.13 seam above).
   - Identity/security: registration email in audit metadata; login IP/device/fingerprint data; invite/portal tokens and addresses after expiry; platform waitlist/contact/visit data; pseudonymous voting IP hashes; financial/signature/operator audit evidence. Preserve immutable history until an approved legal change explicitly reconciles it; fingerprint security-necessity/consent is a real privacy decision, not a guessed retention number.
   - HR/recruitment: personal email after exit; bank/identifier records; biometric raw/device templates and deletion outside platform control; travel location; wellness/safety/accommodation/medical/blood-group data; disciplinary/grievance/POSH narratives; background checks; rejected offers/interview recordings/booking tokens; dependants, emergency contacts, referees, referrals, alumni and vendor-submitted candidates. Record lawful collection, encryption/access, retention and third-party notices per purpose. Anonymous surveys must genuinely sever identity as promised. Model-influenced pay recommendations need a real human-review/contest path where applicable.
   - Collaboration/support: distinguish KB history from KB chat, ordinary chat from mail projection, Support from employee Helpdesk, and closed projects from organization governance. Cover intake/custom-form respondent fields, feedback, screenshots/logs, notification consent/body/audit data and signed evidence. Customer-defined forms need declared data classes/purpose, not a universal invented duration. Sanitize browser console/network logs, URLs and screenshots before storage/model use; keep bearer tokens and unrelated personal data out.
@@ -894,7 +1369,64 @@ REL-001 must include current-head representative E2E for Home/Settings/Directory
 
 REL-001 additional integrated checks: SBOM/artifact hashes, vulnerability/licence and deployment-env gates; hosted CI execution and guarded DB suite coverage, not merely YAML presence. Preserve later BOLA/response-schema/conditional-suppression/one-attempt-payment repairs. Verify detached-worker deactivated/deleted-user/inactive-org refusal using current canonical MembershipReader, HR export liveness and workflow trigger checks; the old missing-liveness claim is source-stale. H08 private Build visibility remains approved scheduled work: record its explicit release disposition, never silently claim shipped.
 
-- [ ] **PAY-POST — Payroll posting retry acceptance.** S5/payroll owner, integrated through REL-001: reproduce the real PayrollPostingService.postPaid → PayrollPayoutPostingIntentConsumer.handle seam. Current source postPaid catches posting/baseCurrency failures and only logs; the consumer then marks COMPLETED, defeating durable retry. Propagate genuine failures to the existing outbox/inbox retry machinery while preserving explicit Accounting-not-enabled skips and the immutable paid-run outcome. Fault-inject posting failure, rollback, crash/restart and replay; require a durable unresolved state followed by exactly one valid journal. LockingService.commitLock already emits its posting intent in the same transaction: preserve that repair, rather than replace it with volatile after-commit callbacks or a second outbox.
+- [x] **PAY-POST — Payroll posting retry acceptance.** S5/payroll owner, integrated through REL-001: reproduce the real PayrollPostingService.postPaid → PayrollPayoutPostingIntentConsumer.handle seam. Current source postPaid catches posting/baseCurrency failures and only logs; the consumer then marks COMPLETED, defeating durable retry. Propagate genuine failures to the existing outbox/inbox retry machinery while preserving explicit Accounting-not-enabled skips and the immutable paid-run outcome. Fault-inject posting failure, rollback, crash/restart and replay; require a durable unresolved state followed by exactly one valid journal. LockingService.commitLock already emits its posting intent in the same transaction: preserve that repair, rather than replace it with volatile after-commit callbacks or a second outbox.
+
+  `VERIFIED-ALREADY-CORRECT 2026-09-13 | payroll-posting-service + payroll-payout-posting-consumer: 14/14, exit 0 | NO FILES CHANGED`
+  The defect this row describes is already repaired at current source and the repair still holds.
+  `PayrollPostingService.postPaid` has NO try/catch around its body, so posting and base-currency
+  failures propagate; `PayrollPayoutPostingIntentConsumer.handle` catches, marks the inbox `FAILED`
+  (not COMPLETED) and **re-throws**, so the outbox relay does not mark the event delivered and retries.
+  Fault injection covered: posting failure (inbox FAILED, consumer rejects), rollback/crash (event stays
+  in flight), and crash/restart replay — a second delivery of the same `eventId` hits the
+  `ON CONFLICT DO NOTHING` inbox claim, returns early, and `posting.submit` is called exactly once
+  across both deliveries. That is the required durable-unresolved-then-exactly-one-journal shape.
+  Preserved as required: the Accounting-not-enabled skip (`baseCurrency()` returns null on a null book
+  or `BOOK_NOT_ENABLED`, `postPaid` returns without throwing), the immutable paid-run outcome (the
+  consumer never touches run status), and `LockingService.commitLock` emitting its posting intent on
+  the transaction handle rather than the top-level db.
+
+- [x] **GL-POST (new, found 2026-09-13) — captured payment amounts were never posted to the ledger.**
+  `DONE-SOURCE | payment-webhook-gl-posting 6/6 new + security 9/9 + contract 4/4 + event-id-precedence 10/10, exit 0`
+  Surfaced while repairing spec rot and confirmed at source before any change. `PaymentWebhookReceiverService`
+  validated the signature, deduplicated the event and returned 200 **without writing any GL entry** —
+  the money arrived and the books never recorded it. The cause is recorded in the file's own block
+  comment: the call went to `ProviderBridgeService.recordProviderPayment` in `modules/finance/controls`,
+  a module the accounting rewrite replaced with the `gl_*` kernel, and the kernel never grew the
+  equivalent seam. No outbox consumer, cron reconciliation or other indirect path posted it either.
+  The spec that would have caught this had stopped compiling, so nothing was watching.
+  Repaired at the canonical boundary per decision H06, reusing `PostingCommandService.submit()` from
+  `accounting/adapters` — already exported by `AccountingAdaptersModule`, which `PaymentsModule`
+  already imports, so no new module, table or second posting path was introduced. A captured event
+  posts Dr `razorpay_clearing`/`psp_clearing`, Cr `ar_control`, keyed `receipt:{webhookEventId}:post`.
+  Only `status === "captured"` with `amount > 0` posts; refunds, authorizations and failures do not.
+  Exactly one journal entry is guaranteed by two independent gates: the outer
+  `onConflictDoNothing` on `(providerId, environment, providerEventId)` means a duplicate never
+  reaches the posting branch, and the inner `uniq_gl_journals_book_idempotency` catches a race inside
+  a SAVEPOINT and returns the winner. Durable across a crash: the event insert and the posting share
+  one transaction, so a non-`BOOK_NOT_ENABLED` failure rolls both back and the provider retries.
+  DISCLOSED LIMITATION: when accounting is not enabled the webhook event commits and the GL entry is
+  deliberately skipped, and there is no automated back-fill — enabling accounting later requires a
+  manual reconciliation pass over `payment_webhook_events`.
+
+  `DONE-SOURCE | backend 246782ddb + working tree | 8/8 exit 0 | remaining: live-DB replay under
+  the disposable-stack batch | next: fold into the REL-001 integrated run`
+  `postPaid` wrapped its whole body in a try/catch that logged and returned, so the consumer always
+  reached `markProcessed(..., "COMPLETED")` and a paid run could be permanently marked done with no
+  journal. Removing the catch makes genuine failures propagate into the existing inbox/outbox retry
+  machinery. Verified independently that this cannot reopen or roll back a paid run: `postPaid` has
+  exactly ONE caller, `payroll-payout-posting-intent.consumer.ts:100`, which is a background
+  consumer, and the run's PAID status is committed separately in `payout-run-completion.ts`. The
+  consumer's own `catch` already marked the record FAILED and rethrew — that branch was unreachable
+  dead code while `postPaid` swallowed, and is now live.
+  The Accounting-not-enabled skip is preserved unchanged: `baseCurrency` still returns null for both
+  "no book" and `BOOK_NOT_ENABLED`, hitting the early return, so a disabled tenant skips rather than
+  entering a retry loop — two tests pin it. Replay is idempotent: a second delivery of the same
+  eventId calls `posting.submit` exactly once. No second outbox and no after-commit callback added;
+  `LockingService.commitLock`'s same-transaction intent emission untouched.
+  Command: `npx jest --runInBand --runTestsByPath src/modules/payroll/__tests__/payroll-posting-service.spec.ts` -> 8/8, exit 0.
+  Also removed the stale doc claim "Failures are logged, never thrown: the money already left the
+  bank and a ledger hiccup must not reopen a paid run" — its premise was false, since the consumer
+  never touches run status.
 
 OPS-002/003 and REL-002 operational acceptance: existing release contract requires canary soak at least 30 minutes, all-domain smoke, at least 40% CPU/memory/pool/queue headroom, no unacknowledged critical alerts or canary 5xx, and measured latency budget before promotion. Pause/rollback for two consecutive smoke failures, P0 unresolved 10 minutes after acknowledgement, headroom below 20%, DB errors above 1%, or any confirmed cross-tenant leak immediately; execute only within actual deployment authority. Preserve compatible schema/API rollout and previous-artifact recovery. Record trigger, detect/recover times and impacted cells. Incident SEV1 escalation after missing acknowledgement at 5 minutes (secondary), 15 minutes (incident commander/leadership), and unmitigated 30 minutes (leadership/comms); SEV2 secondary 15 / commander 30 minutes. SEV1 public update within 30 minutes then every 30 minutes; SEV2 within 60 minutes then every 60 minutes. Assign real contacts/status channel; review SEV1/2 draft within 3 business days and meeting within 5 business days. Do not publish or notify external parties without authority.
 
@@ -918,7 +1450,17 @@ OPS-CAPACITY egress evidence must come from actual CDN/load-balancer analytics o
 - [ ] Resolve the current migration-integrity and payment-resolver failures through
   their S2 tasks. Preserve tenant/ambient-transaction boundaries; do not weaken tests
   just to make them pass. Reverify the reported cron-group failures with captured results.
-- [ ] Prove two independent empty-journal bootstraps plus interrupted/resumed replay and exact catalog parity on named disposable databases. Registry C053/C159 records a recreation baseline; do not invent a legacy-watermark upgrade obligation. If a supported retained installation or a changed migration decision requires upgrade compatibility, document that scope and prove it too. Historical recreation authority does not authorize deleting today's unspecified/shared/customer database. S0 must identify the target and current explicit authority before any destructive action. Reconcile 0464a/0619 ordering/keys/checks/seeds, the
+- [x] Prove two independent empty-journal bootstraps plus interrupted/resumed replay and exact catalog parity on named disposable databases.
+
+  `DONE | backend 246782ddb + working tree | see the RBAC-001 journal bullet above for full output`
+  Two independent empty-journal bootstraps (`scratch_colda`, `scratch_coldb`) each applied 873/873
+  with zero failures; `compare-bootstraps.mjs` reported SCHEMAS IDENTICAL with differences=0 across
+  all 12 catalog categories; `bootstrap-interrupt-resume.mjs` survived 3 SIGKILLs and reached head
+  with ledger==journal at 873 and an idempotent no-op re-run. Ledger parity is proven by the
+  interrupt-resume tool only — `replay-chain-cold.mjs` writes no ledger and reports it as -1.
+  No existing database was destroyed: all three targets were created blank by this run. The rest of
+  this bullet (0464a/0619 reconciliation, 1087 relocation-checksum policy, sealed hashes, app-role
+  privileges) remains as written below. Registry C053/C159 records a recreation baseline; do not invent a legacy-watermark upgrade obligation. If a supported retained installation or a changed migration decision requires upgrade compatibility, document that scope and prove it too. Historical recreation authority does not authorize deleting today's unspecified/shared/customer database. S0 must identify the target and current explicit authority before any destructive action. Reconcile 0464a/0619 ordering/keys/checks/seeds, the
   recorded 1087 relocation-checksum policy dependency, sealed hashes, migration
   ledger content and current app-role/table/sequence/default privileges. Verify
   whether each historical defect remains before editing. Duplicate-object errors,

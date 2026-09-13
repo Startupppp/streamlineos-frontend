@@ -32,6 +32,7 @@ function buildStatus(
     provisioning,
     errorCode: null,
     correlationId: null,
+    recipientOutcomes: null,
     ...overrides,
   };
 }

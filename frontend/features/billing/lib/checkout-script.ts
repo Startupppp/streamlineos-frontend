@@ -80,3 +80,42 @@ export function useCheckoutScript(): { state: ScriptState; retry: () => void } {
   const scriptState = useSyncExternalStore(_subscribe, _getSnapshot, _getServerSnapshot);
   return { state: scriptState, retry: retryCheckoutScript };
 }
+
+export interface CheckoutPaymentResponse {
+  orderId: string;
+  paymentId: string;
+  signature: string;
+}
+
+export interface CheckoutOptions {
+  key: string;
+  orderId: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description?: string;
+  prefillEmail?: string;
+  onSuccess: (response: CheckoutPaymentResponse) => void;
+  onDismiss: () => void;
+}
+
+export function openCheckout(options: CheckoutOptions): void {
+  const rzp = new window.Razorpay({
+    key: options.key,
+    order_id: options.orderId,
+    amount: options.amount,
+    currency: options.currency,
+    name: options.name,
+    description: options.description,
+    prefill: { email: options.prefillEmail },
+    handler: (response: RazorpayPaymentResponse) => {
+      options.onSuccess({
+        orderId: response.razorpay_order_id,
+        paymentId: response.razorpay_payment_id,
+        signature: response.razorpay_signature,
+      });
+    },
+    modal: { ondismiss: options.onDismiss },
+  });
+  rzp.open();
+}

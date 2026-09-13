@@ -32,7 +32,7 @@ const ForwardMessageDialog = dynamic(
 
 type SidePanelsProps = {
   channelId: number;
-  isChatMobile: boolean;
+  isPanelNarrow: boolean;
   showSavedPanel: boolean;
   setShowSavedPanel: (open: boolean) => void;
   showFilesPanel: boolean;
@@ -46,12 +46,12 @@ const panelMotion = {
   animate: { opacity: 1, x: 0 },
   exit: { opacity: 0, x: 20 },
   transition: { duration: 0.2, ease: "easeInOut" as const },
-  className: "hidden lg:flex w-80 flex-col overflow-hidden shrink-0",
+  className: "flex w-80 flex-col overflow-hidden shrink-0",
 };
 
 export function MessagePanelSidePanels({
   channelId,
-  isChatMobile,
+  isPanelNarrow,
   showSavedPanel,
   setShowSavedPanel,
   showFilesPanel,
@@ -59,49 +59,52 @@ export function MessagePanelSidePanels({
   forwardMessage,
   setForwardMessage,
 }: SidePanelsProps) {
+  const handleCloseSaved = () => setShowSavedPanel(false);
+  const handleCloseFiles = () => setShowFilesPanel(false);
+
   return (
     <>
       <AnimatePresence>
-        {showSavedPanel && (
+        {!isPanelNarrow && showSavedPanel && (
           <motion.div {...panelMotion}>
             <SavedMessagesPanel
-              onClose={() => setShowSavedPanel(false)}
-              onJumpToChannel={() => setShowSavedPanel(false)}
+              onClose={handleCloseSaved}
+              onJumpToChannel={handleCloseSaved}
             />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {isChatMobile && (
+      {isPanelNarrow && (
         <Sheet open={showSavedPanel} onOpenChange={setShowSavedPanel}>
-          <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:hidden">
+          <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0">
             <SheetTitle className="sr-only">Saved messages</SheetTitle>
             <SavedMessagesPanel
-              onClose={() => setShowSavedPanel(false)}
-              onJumpToChannel={() => setShowSavedPanel(false)}
+              onClose={handleCloseSaved}
+              onJumpToChannel={handleCloseSaved}
             />
           </SheetContent>
         </Sheet>
       )}
 
       <AnimatePresence>
-        {showFilesPanel && (
+        {!isPanelNarrow && showFilesPanel && (
           <motion.div {...panelMotion}>
             <SharedFilesPanel
               channelId={channelId}
-              onClose={() => setShowFilesPanel(false)}
+              onClose={handleCloseFiles}
             />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {isChatMobile && (
+      {isPanelNarrow && (
         <Sheet open={showFilesPanel} onOpenChange={setShowFilesPanel}>
-          <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:hidden">
+          <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0">
             <SheetTitle className="sr-only">Shared files</SheetTitle>
             <SharedFilesPanel
               channelId={channelId}
-              onClose={() => setShowFilesPanel(false)}
+              onClose={handleCloseFiles}
             />
           </SheetContent>
         </Sheet>

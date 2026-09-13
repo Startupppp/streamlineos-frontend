@@ -28,6 +28,7 @@ import { PlanTabSkeleton } from "@/features/billing/components/billing-page-skel
 import { EntitlementGate } from "@/components/entitlement-gate";
 import {
   loadCheckoutScript,
+  openCheckout,
   useCheckoutScript,
 } from "@/features/billing/lib/checkout-script";
 import type { BillingReadiness } from "@/hooks/api/subscription";
@@ -226,20 +227,20 @@ export function PlanTab() {
           billingCycle,
           couponId,
         });
-        const rzp = new window.Razorpay({
+        openCheckout({
           key: order.keyId ?? "",
-          order_id: order.orderId,
+          orderId: order.orderId,
           amount: order.amount,
           currency: order.currency,
           name: "StreamlineOS",
           description: `${planLabel(plan)} Plan – ${billingCycle === "annual" ? "Annual" : "Monthly"}`,
-          prefill: { email: session?.user?.email ?? undefined },
-          handler: async (response: RazorpayPaymentResponse) => {
+          prefillEmail: session?.user?.email ?? undefined,
+          onSuccess: async (response) => {
             try {
               const result = await verifySubscription({
-                orderId: response.razorpay_order_id,
-                paymentId: response.razorpay_payment_id,
-                signature: response.razorpay_signature,
+                orderId: response.orderId,
+                paymentId: response.paymentId,
+                signature: response.signature,
               });
               checkoutInFlightRef.current = false;
               setUpgradingPlan(null);
@@ -253,11 +254,8 @@ export function PlanTab() {
               await reconcileInBackground(plan);
             }
           },
-          modal: {
-            ondismiss: handleCheckoutDismissed,
-          },
+          onDismiss: handleCheckoutDismissed,
         });
-        rzp.open();
       } catch (err) {
         checkoutInFlightRef.current = false;
         setUpgradeError(err);

@@ -46,6 +46,27 @@ export type OrgSetupStatusErrorCode = z.infer<
   typeof orgSetupStatusErrorCodeSchema
 >;
 
+export const inviteeOutcomeSchema = z.enum([
+  "successful",
+  "queued",
+  "failed",
+  "skipped",
+]);
+
+export const inviteeFailureReasonSchema = z.enum([
+  "already_member",
+  "invitation_revoked",
+  "unknown",
+]);
+
+export const recipientOutcomeSchema = z.object({
+  email: z.string(),
+  outcome: inviteeOutcomeSchema,
+  reason: inviteeFailureReasonSchema.nullable(),
+});
+
+export type RecipientOutcome = z.infer<typeof recipientOutcomeSchema>;
+
 export const orgSetupStatusContract = z.object({
   orgId: z.string().nullable(),
   onboardingCompletedAt: z.string().nullable(),
@@ -59,6 +80,7 @@ export const orgSetupStatusContract = z.object({
   ]),
   errorCode: orgSetupStatusErrorCodeSchema.nullable(),
   correlationId: z.string().nullable(),
+  recipientOutcomes: z.array(recipientOutcomeSchema).nullable(),
 });
 
 export type OrgSetupStatus = z.infer<typeof orgSetupStatusContract>;

@@ -276,6 +276,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
         companyName={companyName}
         setupError={setupError}
         provisioningIssue={provisioning.issue}
+        recipientOutcomes={provisioning.recipientOutcomes}
         isRecheckingProvisioning={provisioning.isRechecking}
         showWelcome={showWelcome}
         onRetry={runSetup}

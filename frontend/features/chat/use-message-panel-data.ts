@@ -22,7 +22,7 @@ import { resolveMessageWindowStart } from "./message-render-window";
 import type { AiAction } from "@/components/ai";
 import { useChatSummarize } from "@/hooks/api/chat-summarize";
 import { useCan } from "@/hooks/api/access";
-import { useIsChatMobile } from "./use-chat-mobile";
+import { useIsChatPanelNarrow } from "./use-chat-mobile";
 import type { ForwardableMessage } from "./forward-message-dialog";
 import { useChatMentions } from "./use-chat-mentions";
 import { useChatTypingText } from "./use-chat-typing-text";
@@ -83,7 +83,7 @@ export function useMessagePanelData({
   const joinHuddle = useJoinHuddle();
   const summarize = useChatSummarize();
   const canUseAi = useCan("ai:chat:use");
-  const isChatMobile = useIsChatMobile();
+  const isPanelNarrow = useIsChatPanelNarrow();
 
   const summarizeAction: AiAction = useMemo(
     () => ({
@@ -450,7 +450,7 @@ export function useMessagePanelData({
       huddle: activeHuddle && isInHuddle ? { huddle: activeHuddle, channelId, currentUserId } : undefined,
     },
     thread: { messageId: threadMessageId, channelId, currentUserId, onClose: handleCloseThread },
-    sidePanels: { channelId, isChatMobile, showSavedPanel, setShowSavedPanel, showFilesPanel, setShowFilesPanel, forwardMessage, setForwardMessage },
+    sidePanels: { channelId, isPanelNarrow, showSavedPanel, setShowSavedPanel, showFilesPanel, setShowFilesPanel, forwardMessage, setForwardMessage },
     isOnline,
     isReconnecting: isOnline && !ablySocketConnected,
   };

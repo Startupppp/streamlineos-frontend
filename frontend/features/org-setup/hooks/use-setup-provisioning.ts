@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { isApiError } from "@/lib/api-client";
 import { CONTRACT_VIOLATION_CODE } from "@/lib/api-envelope";
 import { useOrgSetupStatusQuery } from "@/lib/api/hooks/org";
-import type { OrgSetupStatus } from "@/lib/api/hooks/org-schema";
+import type { OrgSetupStatus, RecipientOutcome } from "@/lib/api/hooks/org-schema";
 
 const POLL_INTERVAL_MS = 2_000;
 const POLL_DEADLINE_MS = 90_000;
@@ -20,6 +20,7 @@ export type SetupProvisioning = {
   isReady: boolean;
   background: "pending" | "in-progress" | "completed" | "failed" | "unknown";
   issue: ProvisioningIssue | null;
+  recipientOutcomes: RecipientOutcome[] | null;
   isRechecking: boolean;
   hasTimedOut: boolean;
   recheck: () => void;
@@ -215,6 +216,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
       isReady: false,
       background: "unknown",
       issue: null,
+      recipientOutcomes: null,
       isRechecking: false,
       hasTimedOut: false,
       recheck,
@@ -226,6 +228,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
       isReady: false,
       background: "failed",
       issue: issueForAuth(),
+      recipientOutcomes: null,
       isRechecking: isFetching,
       hasTimedOut,
       recheck,
@@ -237,6 +240,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
       isReady: false,
       background: "failed",
       issue: issueForContract(),
+      recipientOutcomes: null,
       isRechecking: isFetching,
       hasTimedOut,
       recheck,
@@ -250,6 +254,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
         ? toBackground(data.provisioning, data.errorCode)
         : "unknown",
       issue: issueForNetwork(),
+      recipientOutcomes: null,
       isRechecking: isFetching,
       hasTimedOut,
       recheck,
@@ -262,6 +267,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
         isReady: false,
         background: "unknown",
         issue: issueForTimeout(false, null),
+        recipientOutcomes: null,
         isRechecking: isFetching,
         hasTimedOut,
         recheck,
@@ -271,13 +277,14 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
       isReady: false,
       background: "unknown",
       issue: null,
+      recipientOutcomes: null,
       isRechecking: isFetching,
       hasTimedOut,
       recheck,
     };
   }
 
-  const { provisioning, errorCode, ready, correlationId } = data;
+  const { provisioning, errorCode, ready, correlationId, recipientOutcomes } = data;
   const background = toBackground(provisioning, errorCode);
 
   if (provisioning === "completed") {
@@ -288,6 +295,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
         errorCode === "SETUP_BACKGROUND_PARTIAL"
           ? issueForBackgroundPartial(correlationId)
           : null,
+      recipientOutcomes: recipientOutcomes ?? null,
       isRechecking: false,
       hasTimedOut,
       recheck,
@@ -302,6 +310,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
             isReady: ready,
             background: "in-progress",
             issue: issueForTimeout(true, correlationId),
+            recipientOutcomes: null,
             isRechecking: isFetching,
             hasTimedOut,
             recheck,
@@ -311,6 +320,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
           isReady: ready,
           background: "in-progress",
           issue: null,
+          recipientOutcomes: null,
           isRechecking: isFetching,
           hasTimedOut,
           recheck,
@@ -321,6 +331,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
           isReady: ready,
           background: "failed",
           issue: issueForBackgroundDead(correlationId, ready),
+          recipientOutcomes: null,
           isRechecking: isFetching,
           hasTimedOut,
           recheck,
@@ -330,6 +341,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
           isReady: ready,
           background: "failed",
           issue: issueForBackgroundInvalid(correlationId, ready),
+          recipientOutcomes: null,
           isRechecking: isFetching,
           hasTimedOut,
           recheck,
@@ -339,6 +351,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
           isReady: ready,
           background: "failed",
           issue: issueForBackgroundSuppressed(correlationId, ready),
+          recipientOutcomes: null,
           isRechecking: isFetching,
           hasTimedOut,
           recheck,
@@ -348,6 +361,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
           isReady: ready,
           background: "failed",
           issue: issueForBackgroundDead(correlationId, ready),
+          recipientOutcomes: null,
           isRechecking: isFetching,
           hasTimedOut,
           recheck,
@@ -360,6 +374,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
       isReady: ready,
       background,
       issue: issueForTimeout(false, correlationId),
+      recipientOutcomes: null,
       isRechecking: isFetching,
       hasTimedOut,
       recheck,
@@ -370,6 +385,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
     isReady: ready,
     background,
     issue: null,
+    recipientOutcomes: null,
     isRechecking: isFetching,
     hasTimedOut,
     recheck,

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-const CHAT_MOBILE_QUERY = "(max-width: 639px)";
 const CHAT_PANEL_NARROW_QUERY = "(max-width: 1023px)";
 
 function useMediaQueryMatches(query: string): boolean {
@@ -17,10 +16,6 @@ function useMediaQueryMatches(query: string): boolean {
   }, [query]);
 
   return matches;
-}
-
-export function useIsChatMobile(): boolean {
-  return useMediaQueryMatches(CHAT_MOBILE_QUERY);
 }
 
 /**

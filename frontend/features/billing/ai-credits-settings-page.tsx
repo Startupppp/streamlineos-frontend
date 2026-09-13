@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { Activity, RefreshCw, TrendingDown, TrendingUp, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,11 @@ import { TXN_COLUMNS, getTxnRowKey } from "@/features/billing/components/ai-cred
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatCredits, formatTokens } from "@/lib/format-ai";
 import { cn } from "@/lib/utils";
+import {
+  openCheckout,
+  useCheckoutScript,
+  type CheckoutPaymentResponse,
+} from "@/features/billing/lib/checkout-script";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 import {
   AI_CREDITS_USAGE_DAYS,
@@ -63,6 +68,7 @@ export function AiCreditsSettingsPage() {
   const purchaseMutation = usePurchaseAiCredits();
   const verifyMutation = useVerifyAiCreditPurchase();
   const canPurchase = useCan("billing:ai-credits:purchase");
+  const { state: scriptState } = useCheckoutScript();
 
   const [txnLimit, setTxnLimit] = useState<TxnPageSize>(AI_CREDIT_TRANSACTION_LIMIT);
   const [txnCursors, setTxnCursors] = useState<Array<string | undefined>>([undefined]);
@@ -99,16 +105,6 @@ export function AiCreditsSettingsPage() {
   const usageDaily = usageData?.daily ?? [];
   const usageByModel = usageData?.byModel ?? [];
   const usageByFeature = usageData?.byFeature ?? [];
-
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
 
   function handleAutoTopUpToggle(enabled: boolean) {
     setLocalAutoTopUp(enabled);
@@ -155,17 +151,17 @@ export function AiCreditsSettingsPage() {
     void refetchUsage();
   }
 
-  function handleRazorpayDismiss() {
+  function handleCheckoutDismiss() {
     setSelectedPack(null);
   }
 
-  function handleRazorpaySuccess(response: RazorpayPaymentResponse, pack: AiCreditPack) {
+  function handleCheckoutSuccess(response: CheckoutPaymentResponse, pack: AiCreditPack) {
     verifyMutation.mutate(
       {
         packId: pack.id,
-        orderId: response.razorpay_order_id,
-        paymentId: response.razorpay_payment_id,
-        signature: response.razorpay_signature,
+        orderId: response.orderId,
+        paymentId: response.paymentId,
+        signature: response.signature,
       },
       {
         onSettled: () => {
@@ -176,6 +172,10 @@ export function AiCreditsSettingsPage() {
   }
 
   async function handleBuyPack(pack: AiCreditPack) {
+    if (scriptState !== "ready") {
+      toast.error("Payment checkout is not available. Please retry or refresh the page.");
+      return;
+    }
     setSelectedPack(pack);
     let result: PurchaseAiPackOrder | PurchaseAiPackResult;
     try {
@@ -194,21 +194,18 @@ export function AiCreditsSettingsPage() {
       return;
     }
     try {
-      const rz = new window.Razorpay({
+      openCheckout({
         key: result.keyId,
-        order_id: result.orderId,
+        orderId: result.orderId,
         amount: result.amount,
         currency: result.currency,
         name: "StreamlineOS",
         description: `${pack.name} – ${pack.credits.toLocaleString()} credits`,
-        handler: (response: RazorpayPaymentResponse) => {
-          handleRazorpaySuccess(response, pack);
+        onSuccess: (response) => {
+          handleCheckoutSuccess(response, pack);
         },
-        modal: {
-          ondismiss: handleRazorpayDismiss,
-        },
+        onDismiss: handleCheckoutDismiss,
       });
-      rz.open();
     } catch (err) {
       toast.error(getErrorMessage(err));
       setSelectedPack(null);

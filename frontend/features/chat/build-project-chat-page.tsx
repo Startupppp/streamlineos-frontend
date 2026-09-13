@@ -15,7 +15,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { ChatAblyProvider } from "./ably-provider";
 import { MessagePanel } from "./message-panel";
 import { ChannelInfoPanel } from "./channel-info-panel";
-import { useIsChatMobile } from "./use-chat-mobile";
+import { useIsChatPanelNarrow } from "./use-chat-mobile";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { PM_PANEL_SOLID, PmPageShell } from "@/components/pm-chrome";
 
@@ -33,7 +33,7 @@ export function BuildProjectChatPage({ projectId }: ProjectChatPageProps) {
     projectId,
   );
   const [showInfoPanel, setShowInfoPanel] = useState(false);
-  const isChatMobile = useIsChatMobile();
+  const isPanelNarrow = useIsChatPanelNarrow();
   const canCreateChannel = useCan("chat:channels:write");
   const createEntityChannel = useCreateEntityChannel();
 
@@ -133,13 +133,13 @@ export function BuildProjectChatPage({ projectId }: ProjectChatPageProps) {
                 />
               </div>
               <AnimatePresence>
-                {showInfoPanel && (
+                {!isPanelNarrow && showInfoPanel && (
                   <motion.div
                     initial={{ width: 0, opacity: 0 }}
                     animate={{ width: 320, opacity: 1 }}
                     exit={{ width: 0, opacity: 0 }}
                     transition={{ duration: 0.2, ease: "easeInOut" }}
-                    className="hidden lg:flex shrink-0 flex-col overflow-hidden border-l border-border/40 bg-card/50"
+                    className="flex shrink-0 flex-col overflow-hidden border-l border-border/40 bg-card/50"
                   >
                     <ChannelInfoPanel
                       channelId={channel.id}
@@ -151,9 +151,9 @@ export function BuildProjectChatPage({ projectId }: ProjectChatPageProps) {
                   </motion.div>
                 )}
               </AnimatePresence>
-              {isChatMobile && (
+              {isPanelNarrow && (
                 <Sheet open={showInfoPanel} onOpenChange={setShowInfoPanel}>
-                  <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:hidden">
+                  <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0">
                     <ChannelInfoPanel
                       channelId={channel.id}
                       currentUserId={currentUserId}
