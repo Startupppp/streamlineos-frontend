@@ -1428,6 +1428,17 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   (INCONCLUSIVE — host not quiet) | API request counts: NOT MEASURED (harness tracks static assets not API
   calls; pg_stat_statements available) | remaining: per-journey API call counts, p50/p95 per endpoint`
 
+  `MEASURED 2026-09-13 | build oPzc1DNdej_kGwUS7shVX backend 127.0.0.1:1500 scratch_local | pg_stat_statements
+  available | 81 legs 0 failures | path corrections: notifications at /notifications/unread-count (not /me/),
+  billing.subscription() at GET /billing (not /billing/subscription) | cold call counts: shell 3 / dashboard 13 /
+  inbox 1 / calendar 3 / billing 7 | cold SQL: shell 28 / dashboard 102 / inbox 12 / calendar 46 / billing 54 |
+  warm SQL: shell 17 (-39%, access caching confirmed 14→5) / dashboard 89 (-13%) / inbox 12 (0%) / calendar 46
+  (0%) / billing 51 (-6%) | source coalescing: 13 dashboard consumers → 13 API calls (1:1, no coalescing
+  ambiguity) | ExpensesWidget /hr/expenses: 200 OK, 8 cold SQL, 6 warm SQL | p50 INCONCLUSIVE (host busy):
+  shell 32ms, dashboard 24ms, inbox 29ms, calendar 19ms, billing 19ms | remaining: signup/setup (requires browser
+  + NextAuth session), chat (Ably unavailable), filter changes / focus/reconnect (requires CDP), subscriptions |
+  evidence: D:/agent-work/fd1-fd6-evidence-2026-09-13.md, artifact D:/agent-work/fd1-journey-capture-result.json`
+
 - [ ] **FD3 — Finish cross-tab and authority acceptance, not another cache engine.**
   Preserve org/user Query hashes and session-qualified backend tokens. Trace each
   changed read's writers, response-shaping filters, TTL/version, post-commit timing,
@@ -1561,6 +1572,20 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   per-journey request counts NOT MEASURED (env defect) | evidence: architecture-refactor/final-refactor/
   evidence/s3-communications/fd1-fd3-fd6-measurement-2026-09-13.md | remaining: Core Web Vitals and
   request counts require working environment; Ably requires credentials`
+
+  `BUNDLE REGRESSION 2026-09-13 | build oPzc1DNdej_kGwUS7shVX (user's current build) | manifest refreshed
+  via measure-route-bundles.mjs --write | check-route-bundle-budget exit 1 — FAIL 6 breaches |
+  /build/inbox measuredFirstLoadJsBytes=596179 exceeds 524288 by +71891 | /build/inbox measuredPageChunkBytes=267169
+  exceeds 204800 by +62369 | /support/inbox measuredFirstLoadJsBytes=579880 exceeds 524288 by +55592 |
+  /support/inbox measuredPageChunkBytes=212518 exceeds 204800 by +7718 | /build/my-work measuredFirstLoadJsBytes=599850
+  exceeds 524288 by +75562 | /build/my-work measuredPageChunkBytes=270840 exceeds 204800 by +66040 |
+  10 of 13 routes WITHIN budget (mail inbox crm/inbox dashboard chat calendar notifications settings crm/leads parties) |
+  NOTE: previous "BUNDLE HALF DONE" note said "every one WITHIN its declared ceiling" — that was build
+  yaVUDZR43dMbe6req7uJw; the current build is larger on the 3 build/* routes and now breaches |
+  backend route-budgets gate: FAIL (inventory/stock/transactions bufferBlocks=377>60 — Inventory is OUT OF SCOPE;
+  55 undeclared cron batches vs watermark 42 — pre-existing gap) |
+  per-journey request counts: MEASURED (see FD1 update above) |
+  evidence: D:/agent-work/fd1-fd6-evidence-2026-09-13.md | remaining: Core Web Vitals, Ably, cross-tab`
   capture DB; rebuild API before web for strict response-contract additions. Verify
   explicit test API configuration and smoke-request representative routes/manifests.
   Refresh the bundle artifact against that build and run unchanged budgets; measure
