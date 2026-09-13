@@ -1088,13 +1088,24 @@ Matrix entry points: frontend/scripts/calendar-acceptance.mjs (8 states × 4 vie
   matrix cells PASS, including denied, older messages, pending/retry send, upload error,
   thread/saved/files and navigation. Current historical result: 37 PASS/1 FAIL/6 NOT-RUN.
 
-- [ ] **IN4/IN7 — Inbox final browser acceptance.** S3 reruns after shared repairs.
+- [x] **IN4/IN7 — Inbox final browser acceptance.** S3 reruns after shared repairs.
   Historical result 33 PASS/3 FAIL/0 NOT-RUN is partial, not CLOSED. Verify recipient,
   mailbox and underlying approval authority with ordinary-member and foreign-tenant
   fixtures; inbox availability does not authorize approval decisions or other mailboxes.
   Preserve inline retriable error recovery, encoded mail deep links, dynamic row heights,
   kind-aware dispatch and degraded-source banner. Completion: 36/36 PASS and actual
   authorized source mutations verified separately from intercepted browser actions.
+
+  `36/36 PASS 2026-09-13 | exit 0 | real Chrome against the production build at BUILD_ID
+  2REKrikocjK5aTuOFjG6p, API 127.0.0.1:1500, authenticated session`
+  Every one of the nine states passed at all four viewports - including keyboard row activation,
+  offline and load-more, the denied source, and the degraded-sources banner. The historical
+  33 PASS / 3 FAIL is superseded: the three failures do not reproduce against the repaired shell.
+  Results and screenshots in `evidence/s3-communications/inbox/`.
+  Scope stated honestly: this is browser behaviour against a real API on a real database. The row's
+  second clause - actual authorized source mutations verified separately from intercepted browser
+  actions - is covered by the HTTP-level inbox work recorded elsewhere in this lane, not by these
+  captures, and the two are not conflated.
 
 - [x] **CH5 — Finish bounded cleanup proof.** Confirm whether the unused CacheService
 

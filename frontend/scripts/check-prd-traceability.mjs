@@ -30,6 +30,8 @@ export const REQUIRED_EVIDENCE_MD = new Set([
   "final-refactor/evidence/42-production-ops/release-authority/BUILD-002-2026-09-13/BUILD-002-evidence.md",
   "final-refactor/evidence/s3-communications/calendar/calendar-acceptance-table.md",
   "final-refactor/evidence/s3-communications/chat/chat-acceptance-table.md",
+  "final-refactor/evidence/s3-communications/ca6-ch7-in47-browser-acceptance-2026-09-13.md",
+  "final-refactor/evidence/s3-communications/inbox/inbox-acceptance-table.md",
 ]);
 
 // Markdown examples and comments cannot manufacture traceability.
