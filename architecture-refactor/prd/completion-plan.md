@@ -2239,6 +2239,57 @@ OPS-CAPACITY egress evidence must come from actual CDN/load-balancer analytics o
 
 - [ ] Prepare a bounded launch handoff using the existing supported features: promised capabilities versus verified coverage, setup/payment recovery, support contact and escalation, rollback/pause criteria, and measurable activation/payment success/error signals. Keep unsupported features unpromised; prepare recommendations for the first buyer/workflow and a small monitored pilot for the user to approve. Do not publish, contact customers or change pricing without authority. Commercial traction is not a checkbox an agent can certify.
 
+  `HANDOFF DRAFTED 2026-09-13 | nothing published, no customer contacted, no price changed |
+  the buyer choice and the pilot decision are the user's and are left open`
+
+  **Promised capability versus verified coverage.** Only claim what has evidence in this plan.
+  - *Safe to promise now:* organisation setup and first usable workspace (p95 ready 739 ms measured);
+    invitations, acceptance and employee admission (seat races, deduplication and attach proven);
+    RBAC and tenant isolation (all nine RLS probes and the under-RLS FK probe pass as the application
+    role, 954/954 services carry a cross-tenant negative); universal self-service, mail, chat, calendar
+    and knowledge reading; Build project management; Documents reading and editing.
+  - *Promise with a stated limitation:* payments. Reconciliation, idempotency, intent-first ordering
+    and GL posting are proven at source and seam level, but **no sandbox capture has been executed** -
+    BILL-001 is open. Do not tell a buyer payments are proven end to end.
+  - *Do not promise at all:* real-time push (Ably has no credential in any verified environment),
+    outbound email delivery (unproven against a live provider), file upload and storage (R2
+    unconfigured, uploads answer 503), AI features end to end (no provider account exercised),
+    and anything in CRM or Inventory, which are explicitly out of this release's scope.
+
+  **Setup and payment recovery, in customer terms.** Setup: a failed optional step leaves a usable
+  organisation with a truthful warning and an intact draft; completing or skipping is durable and a
+  user is never bounced back into a skipped wizard. Payment: an intent row is written *before* the
+  provider call, so a provider success with a local attachment failure is recoverable by
+  `notes.purchaseId` rather than acknowledged as fulfilled; a captured payment now posts to the ledger,
+  which it previously did not. **The residual is that none of this has been exercised against a real
+  provider**, and the handoff must say so.
+
+  **Support contact and escalation.** The severity-to-escalation matrix, customer-communication
+  criteria and post-incident template now exist in `FAILURE-RUNBOOKS.md`, derived from the approved
+  contract in this plan rather than invented. **Every named-person slot is empty and marked
+  `_Accountable owner required_`.** A pilot cannot start without real names behind primary, secondary,
+  incident commander and customer-communications, and a real status channel. That is a people
+  decision, not an engineering one.
+
+  **Rollback and pause criteria** are already approved in this plan and need no new invention: pause or
+  roll back on two consecutive smoke failures, a P0 unresolved ten minutes after acknowledgement,
+  headroom below 20%, database errors above 1%, or any confirmed cross-tenant leak immediately.
+  Promotion requires a canary soak of at least 30 minutes, all-domain smoke, and at least 40%
+  headroom - none of which has been exercised, because no deployed environment exists.
+
+  **Measurable signals to instrument before a pilot, all available from existing tables.** Activation:
+  organisations reaching `ready = true`, and time to first usable organisation. Payment: purchases by
+  terminal status, and the count of unclaimed intent rows (`providerOrderId IS NULL` past a threshold),
+  which is the direct detector for charged-and-given-nothing. Error: the fourteen registered alerts,
+  of which the queue-age, dead-outbox and dead-delivery predicates are already proven to fire.
+
+  **Recommendation for the user, not a decision taken.** The narrowest defensible first pilot is a
+  single friendly tenant on organisation setup, people and Build, with payments taken manually
+  off-platform until BILL-001 has a sandbox capture, and with push, email, uploads and AI disabled
+  rather than half-promised. **This is a recommendation; the buyer and workflow choice is yours, and no
+  pilot has been arranged, no customer contacted, no pricing touched, and no external party notified.**
+  Commercial traction remains outside anything this plan can certify.
+
 
 - [ ] Record a single verdict with source revisions, artifact identities, environment,
   commands/exits, tests, measured budgets, screenshots, migrations, recovery and

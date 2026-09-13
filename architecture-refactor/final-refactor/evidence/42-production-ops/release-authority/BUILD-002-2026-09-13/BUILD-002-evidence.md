@@ -2,7 +2,7 @@
 
 **Build:** `2REKrikocjK5aTuOFjG6p` (port 1000, next start, no rebuild)
 **Backend:** `http://127.0.0.1:1500` (scratch_local, org `aaaaaaaa-1111-0000-0000-000000000001`)
-**Session:** `D:/agent-work/s0-session.txt` (user `bbbbbbbb-0001-0000-0000-000000000001`, session `b774649d`, org 1)
+**Session:** a minted session fixture held outside the repository (user `bbbbbbbb-0001-0000-0000-000000000001`, session `b774649d`, org 1)
 **Project:** ID 1 — "Test Project Alpha" (key TPA, 1 ticket TPA-1)
 **Ticket key:** TPA-1 (auto-discovered from /build/1/backlog)
 **Harness:** `scripts/build-acceptance.mjs` + `scripts/lib/build-acceptance-states.mjs`
