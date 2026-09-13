@@ -171,6 +171,7 @@ export function CalendarView() {
 
   const {
     data: eventsResponse,
+    isLoading: eventsIsLoading,
     isError: eventsIsError,
     error: eventsError,
     refetch: refetchEvents,
@@ -345,7 +346,11 @@ export function CalendarView() {
                   <CalendarAgendaPreview events={visibleEvents} />
                 )
               ) : isMobile ? (
-                <CalendarAgendaPreview events={visibleEvents} maxEvents={50} />
+                eventsIsLoading ? (
+                  <CalendarListFallback label="Loading events" />
+                ) : (
+                  <CalendarAgendaPreview events={visibleEvents} maxEvents={50} />
+                )
               ) : afterLoad ? (
                 <CalendarEventsPanel
                   mode={viewMode}

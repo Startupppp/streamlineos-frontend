@@ -68,7 +68,7 @@ export function ChannelSidebarHeader({
             </p>
           </div>
         </div>
-        <div className="hidden items-center gap-0.5 sm:flex">
+        <div className="flex items-center gap-0.5">
           <SidebarSearchButton
             type="button"
             onClick={onOpenChatSearch}
