@@ -1035,6 +1035,29 @@ exact gap this residual named — and were given the same `transaction`/`execute
   guard survives while RLS protects the rows. **Acceptance is that the mismatch guard still returns 400
   after RLS is on** — without that proof the migration must not ship. If it proves impossible, the table
   goes into the exemption allowlist with its reason, so the gap is tracked rather than silent.
+  `P0 CLOSED 2026-09-13 | migration 1117 | RLS ON, guard still bites | webhook spec 45/45 exit 0 | ledger 878/878 exit 0`
+  The exposure is now closed **and** the guard survived, which was the whole difficulty.
+  `app.subscription_purchase_org_for_order(text)` is a SECURITY DEFINER function owned by
+  `neondb_owner` returning **only** the owning org id for a provider order id — never the row. The
+  webhook calls it with no tenant context, compares the returned org to the endpoint org, returns 400
+  "organization mismatch" on a mismatch, and only then fetches the full row inside
+  `runInNewTenantTransaction`. So the cross-tenant comparison happens on an org id rather than on
+  protected data, and RLS never has to be bypassed to read a purchase.
+  Coordinator-verified independently, five properties: `prosecdef = true`; owner is `neondb_owner` (the
+  BYPASSRLS role); ACL is `{neondb_owner=X/neondb_owner, streamline_app=X/neondb_owner}`, so **PUBLIC
+  has no EXECUTE**; the lookup returns the owning org id with no GUC set; and an unknown order id
+  returns NULL rather than raising, so it fails closed without leaking whether the order exists.
+  RLS probes, all three directions: no GUC → **42501** (previously returned every row), owning org GUC
+  → 3 rows, other org GUC → **0 rows**. The positive control matters — without it a zero could be a
+  typo rather than isolation.
+  **The guard was bite-proven, not taken on report.** Replacing its condition with `if (false)` fails
+  exactly one test — "refuses and returns 400 when the SECURITY DEFINER lookup returns a different
+  org's id" — and restoring it returns 45/45. That single test is what stops another tenant's payment
+  being attached to this org and its `notes.packId` credits being granted.
+  One latent defect was fixed on the way: `performActivationFromWebhook` now runs inside
+  `runInNewTenantTransaction` within the `ExternalEffectLedger.execute()` send callback, because
+  `send()` runs outside any ambient tenant transaction — the after-commit-has-no-GUC hazard, which
+  under RLS would have started failing 42501.
   Ledger note: applying `1116` surfaced three stale-hash duplicate rows (ids 1374/1377/1532) left from
   the earlier cleanup, whose current-hash twins the applier had just written. The stale rows were
   deleted under the same rule the earlier pass used — keep the row matching the current file hash — and
@@ -1389,6 +1412,71 @@ Matrix entry points: frontend/scripts/calendar-acceptance.mjs (8 states × 4 vie
   intercepted requests and synthetic writes: they prove UI behavior, not that a message,
   approval, upload or provider operation actually committed. Record provider/DB fanout
   on representative connected-account scenarios rather than copying fixture-only cost.
+
+  `PARTIAL 2026-09-13 | root 32854cd0d | backend suite 452/452 exit 0 across 45 suites`
+
+  **CA4 — Calendar sync/webhook legs (local-stack proof):**
+  PASS — originalStartTimeZone (Outlook): `external-event-normalizers.spec.ts` 11/11 exit 0;
+    test "carries the booked zone from originalStartTimeZone, not the rendering zone" verified.
+  PASS — Revoked account → terminal, not retried; connection marked needs_reauth:
+    `calendar-ca4-sync-scenarios.spec.ts` 18/18 exit 0; BITE tests confirm ComposioToolError(isAuthError=true)
+    sets FAILED (not retry) and patches the connection row to status=needs_reauth in the same transaction.
+  PASS — Transient errors (ECONNRESET, provider 503, timeout) retry with backoff, not marked terminal:
+    same 18/18 run; ComposioToolError(isAuthError=false) → retried; bare Error → retried.
+  PASS — Duplicate/out-of-order webhook: delivery where providerUpdatedAt ≤ event.updatedAt
+    discarded; duplicate with existing pending sync row discarded; newer delivery with no pending row
+    requeued. Anti-vacuity tests confirm the positive path produces requeue and one insert.
+  PASS — Cross-user account isolation: getExternalEvents predicate always binds the requesting
+    userId AND orgId; OTHER user's id never appears in the WHERE clause; two independent callers
+    produce independent predicates with no leakage between them.
+  PASS — Retry/cancel race: retrySync resets FAILED→PENDING making it visible to cancelSync;
+    IN_FLIGHT rows excluded from cancel (dialect-inspected WHERE confirms PENDING-only predicate).
+  NOT-RUN — Live Composio API proof (real Google/Outlook OAuth connected account, real provider call,
+    reconnect flow after revocation): requires COMPOSIO_API_KEY + a provisioned Composio connected
+    account against a live OAuth provider. No sandbox credential available in this environment.
+
+  **CH3/CH4 — Chat concurrent/invite/revocation/attachment legs (local-stack proof):**
+  PASS — Duplicate single-use invitation acceptance: `chat-invite-links.spec.ts` + `.service.spec.ts`
+    93 tests across 9 suites exit 0; covers accepted/expired/revoked invite link states,
+    single-use enforcement, tenant isolation.
+  PASS — Realtime reconnect/catch-up: `chat-reconnect-replay.spec.ts` covers catchup after gap.
+  PASS — Revocation including attachment capability: `chat-realtime-revocation.spec.ts` (revoked
+    token rejects continued reads); `chat-attachment-privacy.spec.ts` + `chat-attachments.spec.ts`
+    (attachment access scoped to channel membership; departed-member attachment revocation).
+  PASS — Entity channel concurrent creation (last-slot quota logic): `chat-entity-channel-read-create.spec.ts`
+    43 tests exit 0; quota check uses `chatChannels` lock; entity access revocation coverage in
+    `chat-entity-access-revocation.spec.ts`.
+  PASS — Rollback/idempotent send: `chat-send-idempotency.spec.ts`; BOLA isolation:
+    `chat-bola-proof.spec.ts`; conflict-target: `chat-send-conflict-target.spec.ts`. 45/45 exit 0.
+  NOT-RUN — Real application-role concurrent atomicity (DB-level): `chat-unread-concurrent-delivery.db.spec.ts`
+    requires `ALLOW_DESTRUCTIVE_DB_TESTS=1` + `CHAT_PROBE_DATABASE_URL` pointing to a local loopback
+    scratch DB. The spec documents the UPDATE-lock mechanism; the logic is proven at source but
+    the two-connection race is not exercised in this run. Run with jest-db.json on scratch_local.
+  NOT-RUN — Live Ably realtime reconnect proof: requires `ABLY_API_KEY` and a live Ably channel.
+    The reconnect/catch-up behaviour is proven at the service seam; actual WebSocket reconnection
+    needs a browser or Ably realtime client connected to a live endpoint.
+
+  **IN3/IN6 — Inbox lifecycle/permission/partial-failure/delivery legs (local-stack proof):**
+  PASS — Read/dismiss lifecycle: `notifications-lifecycle-tenant-isolation.spec.ts` 5/5;
+    markRead cross-user returns 404; archive cross-user returns 404; own-user read advances state.
+  PASS — Snooze: `unified-inbox-snooze.spec.ts` 6/6; `notifications-snooze-predicate.spec.ts` 7/7;
+    future-snoozed row hidden from feed and badge; expired snooze returns row still unread;
+    archived rows always visible (snooze applies to active inbox only). Suppression ANDed with
+    tenant and recipient scope.
+  PASS — Source permissions: `unified-inbox.spec.ts` (mail excluded without mail:inbox:view;
+    approvals excluded without build:approvals:view; permission checked against CurrentUser not
+    a client param). 54 tests across 4 suites exit 0.
+  PASS — Partial mail-account failure: `unified-inbox-partial-availability.spec.ts` 3/3;
+    failed source does not lose the page, healthy sources advance, no leakage from failed source.
+  PASS — After-commit delivery/rollback: `notification-dispatch-after-commit.spec.ts` 7/7;
+    intent recorded inside caller's transaction before dispatch; drained in its own tenant
+    transaction after commit; failed drain leaves intent PENDING for relay; dispatches synchronously
+    when no ambient transaction. Rollback path: intent not dispatched if caller rolls back.
+  PASS — Retry bounded: `notification-retry-bounded.spec.ts` 2/2; maxAttempt → DEAD; below max →
+    requeue with backoff.
+  NOT-RUN — Real mail provider delivery/rollback: requires live SMTP or transactional email API
+    key (SendGrid/Postmark/Resend). The after-commit seam is proven at the service level; actual
+    email delivery to a real inbox is not exercised in this environment.
 
 - [ ] **CHAT-003 + communication release binding.** S0 after all above. Bind root/backend
   revisions and working-tree differences to current types (including test types), scoped
@@ -1845,9 +1933,34 @@ Status: PARTIAL. Maps to: PRD-C018, PRD-C190, PRD-C191. Owner: S4/S0.
   recreate them based on the old claim that no gate watches specs. Run current
   spec/test/application programs, repair actual failures at their owner, and keep
   test source coverage explicit. Old 78-error count is historical, not today's result.
-- [ ] Integrate generated-contract, dependency-cycle and dead-code checks with the
+- [x] Integrate generated-contract, dependency-cycle and dead-code checks with the
   foundation/access/communication changes at one revision pair. Migrations and
   deployment readiness remain REL-001, not implicitly closed by these source gates.
+
+  `RUN 2026-09-13 at one revision pair | cycles 0/0 | FE dead-code exit 0 | contract registry exit 0 | BE knip red as documented`
+  All three check families run at the same revision pair, after the foundation, access and
+  communication changes landed — not at three different moments.
+  **Dependency cycles: zero in both repositories.** `madge --circular` over `backend/src` and over the
+  frontend both report `✔ No circular dependency found!`, exit 0. No `forwardRef` was added to reach
+  that, and none of this session's moves introduced a barrel imported from inside its own tree.
+  **Dead code: frontend clean, backend red exactly as already documented.**
+  `frontend/scripts/check-dead-code.mjs` exits 0 at `files=0 exports=0` — the ten-file accounting island
+  is gone from the scan and its deletions are committed. Backend `knip` exits 1 on unused exports in
+  module source (lifecycle renewal constants, settings automation schemas, support kb-gap schemas);
+  that gate is `continue-on-error` in CI by deliberate decision, every finding sits in application
+  source owned by other module tickets, and knip's report is a floor rather than the number, because
+  its config cannot see production code kept alive only by its tests.
+  **Generated contracts: registry regenerated and green.** `check-api-contract-registry.mjs` exits 0
+  across 4,159 operations after nine API routes that had been added without a regeneration were picked
+  up; `check-contract-breaking-change` also exits 0 over 100 published and 4,059 internal operations.
+  **One knip hint was investigated and deliberately NOT followed.** knip advised removing `multer` and
+  `@types/multer` from `ignoreDependencies`. Both are genuinely required and invisible to a name-based
+  scan: eight controllers use `FileInterceptor` from `@nestjs/platform-express`, which needs `multer`
+  at runtime, and they type their payloads as `Express.Multer.File`, which is an ambient global
+  augmentation contributed by `@types/multer` — neither package is ever imported by name. Following the
+  hint would have made knip report both as unused, and the next cleanup would have removed the
+  dependencies underneath every file-upload endpoint in the product. `knip.json` is left unchanged.
+  Migrations and deployment readiness remain with REL-001 and are not implicitly closed here.
 
   `TWO NEW GATES ADDED 2026-09-13 — both cover a class every existing gate was blind to`
   **`check:boot`** (`backend/src/scripts/check-boot.mjs`). Nothing in either repository constructed the
