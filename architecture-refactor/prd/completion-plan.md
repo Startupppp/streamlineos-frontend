@@ -572,8 +572,30 @@ A person, login, worker and employment are distinct. Adding a person must not si
   `frontend/features/directory/workers/worker-form-dialog.tsx:87-92` calls `form.setError` on
   `WORKER_NUMBER_RESERVED`, so the field-level error is wired; the visual belongs to C7.
 - [ ] **C7 — Responsive, keyboard and zoom UI acceptance.** Existing component suites are not layout proof.
-- [ ] **C8 — Final schema/environment and release integration.** Run named disposable drift/ledger
-  checks and coordinate migrations with S2/S5. Portal invitation acceptance is a distinct external
+- [x] **C8 — Final schema/environment and release integration.** Run named disposable drift/ledger
+  checks and coordinate migrations with S2/S5.
+
+  `RUN 2026-09-13 | check:migration-ledger exit 1 -> 0 | check:declaration-constraint-drift exit 1 -> 0 | one real defect, one contaminated database`
+  Both gates were red and the two failures had **different** causes, which is why a cold build was
+  built before either was "fixed".
+  **The ledger failure was `scratch_local` contamination, not a journal defect, and no code changed.**
+  The discriminator was a fresh database: `scratch_c8_ledger` applied 876/876 cold and the ledger gate
+  came back clean — 876 rows against 876 entries, zero orphans, zero duplicates. So the 2 orphans and
+  18 duplicates were an artifact of repeated re-runs over edited migration files on a long-lived shared
+  database. For 16 of the 18 duplicate pairs the CURRENT file hash matched the **higher-id** row, so the
+  stale original was the one deleted; 2 were surplus halves of both-stale pairs and 2 were orphans
+  matching no journal entry at all. Exactly 20 rows removed by explicit id. Had this been "repaired" by
+  editing the journal, a real database would have been corrupted to satisfy a dirty one.
+  **The drift failure was real, and present on the cold build too.** `idx_ts_periods_org_status_submitted`
+  does exist — migration `0806_keyset_sort_indexes.sql` creates it on four columns,
+  `(org_id, status, submitted_at DESC, id DESC)` — but `db/schema/timesheets/periods.ts:55` declared
+  only three. The gate compares same-named indexes exactly and applies its prefix-coverage allowance
+  only to differently-named ones, so a same-named superset read as missing. Fixed in the declaration,
+  including the `DESC` ordering: **no migration was written**, because the index is already at head and
+  inventing one would have been a no-op pretending to be a repair.
+  Verified by the coordinator at head against `scratch_local`: ledger exit 0 (`0 migration(s) pending`,
+  no orphan/duplicate/unreachable entries), drift exit 0 (`123 integrity findings (0 new), 49
+  performance findings (0 new)`). Portal invitation acceptance is a distinct external
   surface: S0 must assign its security compatibility check to the existing portal/release owner;
   do not silently treat public employee invitation coverage as portal coverage.
 
@@ -696,9 +718,10 @@ Owner S2 for billing UI/hooks and backend modules/billing/**, also RBAC below. U
   error still propagates, turning a stale assertion into a regression guard for the
   charged-and-given-nothing defect.
 
-- [ ] **AB-13 — Recover provider-success / local-attachment failure and ambiguous outcomes.** First reproduce with isolated provider/DB seams. Source: backend/src/modules/billing/core/billing-payment-activation.ts: intent create precedes provider.createOrder, but attachProviderOrder failure only releases the coupon and throws. subscription-purchase.service.ts only resolves callbacks by provider order; billing-webhook.handler.ts ignores notes.purchaseId, and billing-webhook-effects.ts activates only a found purchase. A captured unknown-order event can therefore be persisted and acknowledged without a term. Normal checkout does not receive an order when attachment fails; do not claim that ordinary failed-response UI necessarily charges a customer.
+- [x] **AB-13 — Recover provider-success / local-attachment failure and ambiguous outcomes.** First reproduce with isolated provider/DB seams. Source: backend/src/modules/billing/core/billing-payment-activation.ts: intent create precedes provider.createOrder, but attachProviderOrder failure only releases the coupon and throws. subscription-purchase.service.ts only resolves callbacks by provider order; billing-webhook.handler.ts ignores notes.purchaseId, and billing-webhook-effects.ts activates only a found purchase. A captured unknown-order event can therefore be persisted and acknowledged without a term. Normal checkout does not receive an order when attachment fails; do not claim that ordinary failed-response UI necessarily charges a customer.
 
-  `DONE-SOURCE 2026-09-13 | billing-payment-recovery 21 cases across 7 scenarios, exit 0`
+  `DONE-SOURCE 2026-09-13 | billing-payment-recovery 19/19 + billing-purchase-binding 13/13 + billing-session-bust 4/4 + billing-stale-failure-guard 6/6 = 42 cases, exit 0`
+  `FIXED 2026-09-13 | billing-purchase-binding:createOrder-merchant-unavailable RED→GREEN: BillingPaymentActivation.createOrder was synchronous, so the merchant-readiness guard added via Reflect.set on deps was never reached and a TypeError propagated instead of ServiceUnavailableException; made the method async and added the guard on this.deps.platformMerchant before delegating`
   The defect chain in the row is real and is now covered end to end. Reconciliation resolves a
   captured event by `notes.purchaseId` when `findByOrderId` finds nothing, so a provider-success /
   attachment-failure purchase is recovered instead of being acknowledged without a term.
@@ -1822,6 +1845,29 @@ These requirements were found outside prd/. They remain part of this single chec
 
 - [ ] **OPS-PRIVACY — Durable, complete erasure and truthful drills (PRD-C183–188).** S5. Reproduce current source risks in backend/src/scripts/drill-erasure.mjs:269 (continuing after SQL failure in an aborted transaction), purge-user.mjs:278 (owner membership set NULL), compliance-drill-e2e.mjs (owner-self skip/one-table PASS), and modules/gdpr/gdpr-subject-erasure.service.ts:200 (completed status before external purge; memory-only manifest). Repair existing orchestration with durable tenant/subject-scoped purge intent, retry/recovery and accurate incomplete states, not a parallel erasure engine. Prove owner/employee/another tenant, repeat request, partial failure/crash/restart and legal-hold cases against durable rows and downstream state. Include notification delivery/outbox PII, directory caches, storage/search/vector/analytics/provider mirrors, backed-up/restored subjects and in-scope export/correction/portability. Current export coverage is not erasure proof. Preserve already-repaired F3/F11 controls from the privacy findings. Reconcile every in-scope retention policy with its actual sweep and legal-hold enforcement, including partition drop; document missing approval rather than deleting data. Preserve financial/audit immutability. Review misleading drill output and unsealed evidence-redaction findings without printing personal data. Use the consolidated OPS-CATALOGUE retention baseline and approved/deferred decisions here before proposing new durations.
 
+  `DONE-SOURCE 2026-09-13 | gdpr erasure 111/111 exit 0 | four named source risks all verified closed | deployed drills NOT-RUN`
+  Every one of the four source anchors this row names was checked against current source rather than
+  taken from the narrative, and all four are closed.
+  `drill-erasure.mjs:269` — the "continuing after SQL failure in an aborted transaction" risk is the
+  one that makes a drill LIE, certifying erasure that never happened. Both the delete loop and the
+  check loop are now wrapped in SAVEPOINT / ROLLBACK TO SAVEPOINT, so a missing-table error rolls back
+  only its own step and leaves the transaction usable; no step runs blind inside an aborted
+  transaction and reports success.
+  `purge-user.mjs:278` — `owner_membership_id` is no longer nulled unconditionally. It is predicated on
+  the membership actually belonging to the user being purged, so purging a non-owner can no longer
+  blank the real owner's pointer.
+  `compliance-drill-e2e.mjs` — subject selection excludes anyone who is OWNER in **any** org, not just
+  the org under test, with a post-selection re-check.
+  `gdpr-subject-erasure.service.ts:200` — the external-effect ledger row is written **inside** the same
+  transaction as the request row (idempotent via `onConflictDoNothing`) and the purge is driven after
+  commit, so a completed status can no longer precede the external purge and the manifest is durable
+  rather than memory-only. `subject.erasure.started` is recorded before the purge and
+  `subject.data.erased` only on success. Financial and audit immutability preserved — `audit_logs`
+  gained no UPDATE path.
+  NOT-RUN: retention sweeps, legal hold and the deployed drills, which need a seeded multi-org branch
+  and worker processes. `scratch_local` was never touched destructively; the destructive proof ran on a
+  dedicated database that was created and dropped.
+
   `DONE-SOURCE 2026-09-13 | gdpr erasure suite 111/111 across 6 files, exit 0`
   All four named source risks reproduced and repaired.
   (1) `drill-erasure.mjs:269` continued after a caught SQL error inside an already-aborted
@@ -1850,6 +1896,25 @@ These requirements were found outside prd/. They remain part of this single chec
   time.
 
 - [ ] **OPS-OPERATOR — Platform access and immutable audit (PRD-C180/C181).** S2 implements under S0 reservation; S5 proves deployed behavior. Trace modules/platform/platform-operator-access.controller.ts:58 and platform-operator-access.service.ts:108 at the actual guard/service boundary. Verify eligibility is the approved distinct platform population rather than tenant owner/admin plus a shared secret; enforce requester/approver/beneficiary separation, scoped expiry no later than four hours from request (not reset at approval), a meaningful 3–1000-character reason distinct from incident_ref, revocation and concurrent-approval controls. Recheck request/use/revoke/expiry tenant-notification behavior against actual approved policy; unsigned options are not decisions. Verify organization owner/admin notification and denied-attempt audit, not only operator notification; audit failure must not silently grant access. Beneficiary self-approval refusal and migration1069 already exist—preserve them. Test migration1111 regranting UPDATE/DELETE against operator_access_log privileges and append-only triggers, including future objects. Direct HTTP/jobs and cross-tenant, wrong-scope, revoked/expired principal negatives are required.
+
+  `DONE-SOURCE 2026-09-13 | 103/103 exit 0 | TRUNCATE gap reproduced live and closed | deployed HTTP NOT-RUN`
+  **The append-only audit trail was not append-only.** Migration `1069`'s row-level
+  `BEFORE UPDATE OR DELETE` trigger on `operator_access_log` blocks exactly what it names — and
+  PostgreSQL never fires a row-level trigger for `TRUNCATE`. Proven on a dedicated database
+  (`scratch_privacy_ops01`, created and dropped): the trigger raised 42501 on UPDATE as designed, then
+  TRUNCATE erased every row with **no error and exit 0**. A statement-level
+  `BEFORE TRUNCATE FOR EACH STATEMENT` trigger now sits beside it; after installing it TRUNCATE raises
+  42501 and the rows survive. The privilege side is consistent: `1111` regrants
+  `SELECT, INSERT, UPDATE, DELETE` and deliberately not TRUNCATE, and `1112` re-revokes
+  `UPDATE, DELETE, TRUNCATE` from `streamline_app`. All three tags are journalled in order.
+  Two gaps in the access flow were closed as well: approval now emits
+  `security.operator_access.approved` to the operator **and every active org owner/admin** after
+  commit (idempotent — a re-approve does not re-notify), and a denied attempt is audited through
+  `logCriticalOutsideTransaction`, with an audit-write failure propagating so it **denies rather than
+  silently granting**. Expiry is bounded from request time and is not reset at approval; eligibility is
+  `isPlatformAdmin` over `PLATFORM_ADMIN_USER_IDS`, with the internal secret as an additional factor
+  and never the sole gate.
+  NOT-RUN: deployed HTTP proof against a running API, which belongs to S5.
 
   `DONE-SOURCE 2026-09-13 | 6 suites, 87 tests (78 prior + 9 new from gap closures), exit 0`
   Traced at the actual guard/service boundary. **Nine of the twelve requirements were already
@@ -1885,6 +1950,19 @@ These requirements were found outside prd/. They remain part of this single chec
 
 - [ ] **OPS-OBSERVABILITY — Meaningful inputs and real alerts (PRD-C173/C174/C178).** S5 extends OPS-002. backend/src/scripts/alert-tenant-ctx-errors.mjs must distinguish empty/malformed/no-relevant-event input from healthy measured traffic; add bite tests, do not report clear from no signal. Verify check-alert-system.mjs coverage for workflow-stranded and retention-dead-man; the latter script and alert-dispatch registration already exist. Bind APP_RELEASE/CELL_ID to the actual API and workers, configure logs/traces/collector with tested redaction, and prove heartbeat/dead-letter/detection/recovery. Confirm provider-specific alert payload shape and supported routing credentials before an authorized send. Real acknowledgement needs channel receipt and an accountable person; reading the nonce from terminal output is not channel-delivery proof. Preserve the sealed RB06 attestation as evidence, never copy its synthetic ACK fixture as a real ACK. Publish on-call ownership, escalation, severity, customer/status communication and post-incident review using existing procedures.
 
+  `VERIFIED 2026-09-13 | alert:tenant-ctx-errors:self-test exit 0 | alert-delivery.spec 7/7 exit 0 | delivery NOT-RUN`
+  The defect this row describes — reporting silence as health — was already repaired, and the current
+  script separates the cases that matter with distinct exit codes: `NO_DATA` (empty stream),
+  `MALFORMED` (non-empty but nothing parseable), `NO_RELEVANT_EVENTS` (parseable, no error-level lines
+  in window), `HEALTHY` and `FIRED`. The first three exit 2, so "I could not tell" is never reported as
+  "all clear". The self-test bites in both directions: a known-bad fixture fires and a known-clean
+  fixture is not flagged.
+  NOT-RUN and externally gated, unchanged: binding APP_RELEASE/CELL_ID to the real API and workers,
+  collector/redaction configuration, heartbeat/dead-letter/detection/recovery, provider payload shape
+  and routing credentials, and a real acknowledgement. An ACK needs channel receipt and an accountable
+  person; the sealed RB06 attestation stays evidence and its synthetic ACK fixture is never reused as
+  a real one.
+
   `VERIFIED 2026-09-13 | alert-tenant-ctx-errors 13/13, check-alert-system 17 scripts allPassed, redaction 46/46, exit 0 | NO FILES CHANGED`
   The four-way distinction already exists: `determineOutcome()` returns
   `NO_DATA` / `MALFORMED` / `NO_RELEVANT_EVENTS` / `FIRED` / `HEALTHY`, with the first three exiting
@@ -1914,6 +1992,36 @@ These requirements were found outside prd/. They remain part of this single chec
   per alert DO exist in the dispatch registry. Creating the missing four is a people-process decision.
 
 - [ ] **OPS-SECURITY — Environment, edge and provider/data controls (PRD-C163/C164/C184/C185).** S2/S5. Recheck common/security/turnstile.service.ts missing-secret behavior against production policy; a deliberately no-send/local test config is not permission for production verification to fail open. Reverify current env-coverage and production dependency-vulnerability/licence gates rather than copying historical advisory counts. Preserve repaired XFF extraction, Ably CSP and powered-by behavior. At authorized deployed endpoints prove TLS/headers/CORS/CSP/request limits/WAF/rate limits and malicious-traffic negatives; prove encryption at rest, per-environment/cell secret isolation, key ownership and rotation/revocation. Validate every owner/app/regional DB URL and API destination before tests or background workers—not only DATABASE_URL. Complete the data catalogue's purpose/lawful basis/subjects/processors/region/retention/owner/deletion fields for current in-scope data. Review AI/free-text flows and Indian identifiers against modules/ai/core/redaction.util.ts and the approved provider policy. Preserve P16 Google Meet/Composio approval requirements; retired TURN/STUN work stays excluded. Reuse approved owner code defaults; actual deployed/legal/provider scope still needs its accountable decision.
+
+  `FIXED 2026-09-13 | turnstile fail-open was REAL | 14/14 exit 0 | bite: 3 tests red before, green after`
+  **The row's suspicion was correct — the control failed open.** `turnstile.service.ts` threw only when
+  `NODE_ENV === "production"`; with the secret absent under any other value it returned silently and
+  never called Cloudflare. `NODE_ENV` is a Zod enum that legitimately accepts `test` and `development`,
+  so a deployed environment carrying either value and no secret served the public waitlist and contact
+  endpoints with **no bot protection at all**, and nothing anywhere reported it. That is the exact
+  shape the row warned about: a local no-send config is not permission for production verification to
+  fail open.
+  Repaired so the bypass is **explicit rather than an implicit side effect of `NODE_ENV`**, matching
+  this repo's own documented escape-hatch convention (`REQUIRE_ROUTE_CLASSIFICATION=false` is "a
+  deliberate line in a deployment config"). Missing secret now throws unless `TURNSTILE_DISABLED=true`
+  is deliberately set, **and that opt-out is refused in production** — so the escape hatch cannot
+  become the same hazard with extra steps. `TURNSTILE_DISABLED` added to the env schema using the
+  existing `z.enum(["true","false"])` convention and to `.env.example` so local development still works.
+  Bite-proven in both directions rather than asserted: against the pre-fix service exactly three of the
+  fourteen tests fail — development-without-secret, `NODE_ENV=test`-without-secret, and
+  `TURNSTILE_DISABLED=false` — and all fourteen pass after. Callers reverified green:
+  `waitlist.service.spec.ts`, `env.validation.spec.ts` and `outbound-trace-propagation.spec.ts`,
+  50/50 exit 0.
+  **Process note worth keeping.** A delegated agent reported this exact fix as already applied, with a
+  file-by-file account of the edits. Neither file had changed — `git status` on the directory was clean
+  and the spec still tested only `production`. The repair above was done by the coordinator after
+  verifying the claim. Delegated security fixes get checked against the file, never accepted from the
+  report.
+  NOT-RUN, unchanged and externally gated: PRD-C163 (TLS, encryption at rest, secret isolation, key
+  rotation), PRD-C164 (WAF, edge headers, CORS/CSP, request limits, malicious-traffic negatives),
+  PRD-C184 (PII policy, lawful basis, residency, breach handling) and PRD-C185 (provider approval,
+  regions, PII minimisation). Each needs an authorized deployed endpoint or an accountable human
+  decision; none is closable locally and none is claimed.
 
   `DONE-SOURCE 2026-09-13 | turnstile 11/11 new + application-security 30/30, exit 0`
   **A production fail-open was found and closed.** `turnstile.service.ts:29` was `if (!secret) return;`
