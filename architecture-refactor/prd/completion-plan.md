@@ -1258,6 +1258,16 @@ Matrix entry points: frontend/scripts/calendar-acceptance.mjs (8 states × 4 vie
   Completion: corresponding failing/obstructed cells pass with screenshot and axe evidence,
   no focus trap or blocked page action, and shared ErrorState change receives owner review.
 
+  `IN4/IN7 HALF VERIFIED 2026-09-13 | CA6 and CH7 halves owned by another agent (calendar/chat browser cells)`
+  IN4/IN7 scope: the inbox browser acceptance matrix is at 36/36 PASS — recorded in full at the
+  separate [x] IN4/IN7 row below (exit 0, real Chrome against BUILD_ID 2REKrikocjK5aTuOFjG6p).
+  All nine inbox states at all four viewports passed after the shared shell repairs, including the
+  denied-source cell and the degraded-sources banner. The IN4/IN7 halves of this row are therefore
+  satisfied by that recorded run and are not re-run here.
+  CA6 (calendar grid accessibility) and CH7 (chat saved/files pane responsive gaps) are owned by
+  a parallel agent that holds those feature directories; no edit was made to features/calendar/**
+  or features/chat/** in this session.
+
 - [ ] **CA6 — Calendar grid accessibility and mobile fallback.** S3 with S0 dependency
 
   `NO SOURCE DEFECT FOUND 2026-09-13 | detail-capability-contract 8/8 + event-detail-mutation-authority 18/18, exit 0`
@@ -1486,6 +1496,60 @@ Matrix entry points: frontend/scripts/calendar-acceptance.mjs (8 states × 4 vie
   production bundle/performance proof. Preserve screenshots/results outside temporary
   directories in the approved evidence store. Complete the existing S5 provider/monitoring/
   rollback gates and record every unrun requirement. Only then mark these communication tasks complete.
+
+  `PARTIAL 2026-09-13 | root 32854cd0d | locally-verifiable binding complete; provider/browser gates open`
+
+  **Locally-verifiable binding (all pass):**
+  - Backend typecheck (tsconfig.build.json): exit 0 — zero errors across production program.
+  - Backend test typecheck (tsconfig.test.json): exit 0 in all communications modules
+    (calendar, chat, mail, notifications); pre-existing unrelated errors in inventory
+    quantity.property.spec.ts and billing-webhook.handler.ts are unchanged and not communications scope.
+  - Frontend typecheck (tsc --noEmit): exit 0, zero errors.
+  - Backend cycle check (`madge --circular --extensions ts src`): 7912 files, zero circular dependencies.
+  - Frontend cycle check: exit 0, zero circular dependencies.
+  - Backend scoped suite (45 suites, 452 tests, calendar/chat/mail/notification/inbox): all pass exit 0.
+    Command: `npx jest --testPathPattern="chat-(channels|messages|permissions|cross-tenant|cursor|bola|read-cursor|send|mutation|channel-members|realtime|invite-links|reconnect|attachment|fanout|services|entity)|calendar-ca4|external-event|unified-inbox|notification-dispatch|mail-(account|auth-revoc|inbox|unread|reauth|sync-checkpoint)"`
+  - Frontend scoped suite (129 suites, 929 tests, calendar/chat/inbox/notification/mail): all pass exit 0.
+    Command: `npx jest --testPathPattern="calendar|chat|inbox|notification|mail"`
+  - Frontend response-contracts gate: PASS — 2344/2869 parsed, unparsed at or below baseline 533 (now 525).
+  - Backend route-classification gate: ALL ROUTES CLASSIFIED — 3896 handlers, 0 undeclared.
+  - Backend cache-invalidation gate: LOW-only, 388 invalidate sites, exit 0.
+  - Smoke requests (unauthenticated, expected 401):
+    GET /calendar/events → 401 ✓
+    GET /calendar/events?start=2026-09-01&end=2026-09-30 → 401 ✓
+    GET /calendar/sources → 401 ✓
+    GET /calendar/external-events → 401 ✓
+    POST /webhooks/calendar/provider (no body) → 400 (public endpoint, schema validation) ✓
+    GET /chat/channels → 401 ✓
+    GET /me/inbox → 401 ✓
+    GET /me/inbox/count → 401 ✓
+    GET /notifications → 401 ✓
+    GET /notifications/unread-count → 401 ✓
+  - Production frontend build: running at localhost:1000. **CORRECTED by the coordinator:** the
+    recorded `BUILD_ID 2REKrikocjK5aTuOFjG6p` was already stale when written. The served build is
+    `oPzc1DNdej_kGwUS7shVX`, rebuilt 2026-09-13 (`pnpm build` exit 0) to pick up the calendar toolbar,
+    calendar mobile-loading, chat sidebar-actions, Build `aria-label` and sidebar-contrast fixes, which
+    had all landed in source after `2REK…` was produced. Browser matrices captured against `2REK…`
+    therefore predate those fixes and are historical; cells they left open are being re-captured
+    against the current build. Provenance matters here because a matrix measured on a build that no
+    longer exists cannot certify the build being shipped.
+  - Chat two-connection concurrent atomicity: **NOT-RUN is now closed.** Run by the coordinator with
+    `ALLOW_DESTRUCTIVE_DB_TESTS=1` plus `CHAT_PROBE_DATABASE_URL`/`APP_DATABASE_URL` against
+    `scratch_local` via `jest-db.json`: **5 suites, 21 tests, exit 0**. These are real-database specs,
+    so they reach a planner rather than a mocked builder.
+  - Production backend: running at localhost:1500, /health → 200 {"status":"ok"}.
+  - Communications working tree: clean — no uncommitted changes in calendar, chat, mail or notification
+    modules at this revision. The only modified files are completion-plan.md and mobile-shell-fab.tsx.
+
+  **Unrun requirements (S5 provider/monitoring/rollback gates):**
+  NOT-RUN — S5 provider gates: Composio live integration (real calendar sync push/pull through OAuth),
+    real Ably realtime reconnect, real email delivery. Each requires credentials not available here
+    (see CA4/CH3/CH4/IN3/IN6 NOT-RUN bullets above for exact blocker per leg).
+  NOT-RUN — Browser matrix re-run on validated build: calendar-acceptance.mjs (8×4),
+    chat-acceptance.mjs (11×4) for CA6/CH7 cells — these belong to the parallel agent holding
+    those feature directories. Inbox matrix already at 36/36 PASS (see [x] IN4/IN7 row).
+  NOT-RUN — Monitoring/rollback gates: deployed environment evidence; RBAC-002 owns this.
+  The row stays open until S5 provider gates and the CA6/CH7 browser cells are recorded.
 
 Calendar migration/performance decisions: preserve the measured 1107 BitmapOr plan; the attempted UNION rewrite was rejected. The covering INCLUDE index remains SQL-managed because the recorded Drizzle 0.45.2 declaration could not represent it. Migration 0770 already repaired the subset SET NULL relationship; do not re-raise it without a regression. Revalidate installed-version support before any changed declaration.
 
