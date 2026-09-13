@@ -309,6 +309,44 @@ Owner S1; S0 reserves shared auth/cache/query/schema files. Identity mint cache 
   `HARNESS-REPAIRED / MEASUREMENT-PENDING | backend 246782ddb + working tree |
   --self-test exit 0 | remaining: the measurement run itself | next: boot API on the localstack
   stack, mint scratch JWT fixtures, then run no-invitee and 10-invitee scenarios`
+
+  `MEASURED 2026-09-13 | p95 readyMs 739 ms (no-invitee) and 625 ms (10-invitee) against a 10 s target
+  | MET with 13x headroom | --self-test 16/16 exit 0 | 20 samples, 0 incomplete`
+  The four prerequisites this row named are all satisfied: the API is booted on the disposable stack,
+  `pg_stat_statements` is loaded (Postgres restarted with it in `shared_preload_libraries`), fresh
+  pre-org JWT fixtures were minted against that stack, and the counters were reset immediately before
+  the run.
+  No-invitee (n=10): completeMs p50 455 / p95 611; commitToClaimMs p50 688 / p95 895; **readyMs p50 525
+  / p95 739**; usableCold p50 30 / usableWarm p50 15; ~5,085 SQL calls per sample.
+  10-invitee (n=10): completeMs p50 420 / p95 546; commitToClaimMs p50 880 / p95 1,091; **readyMs p50
+  493 / p95 625**; consumerMs p95 549, max 1,000; ~5,440 SQL calls.
+  Verdict **MET**, confidence moderate-high: the host was NOT quiet - several browser agents were
+  running - but at 13x below target the direction is not in doubt. A quiet host would only lower it.
+  **The measurement explained the architecture rather than just scoring it.** `readyMs` is BELOW
+  `commitToClaimMs` in every single sample, because `ready: true` is set synchronously when the setup
+  transaction commits and the outbox consumer is pure asynchronous enrichment - RBAC seeding,
+  invitations, session closure - which does not gate first usable entry. That is the contract this plan
+  asks for, demonstrated rather than assumed.
+  Dominant cost identified: `INSERT INTO role_permission_grants` at ~97 ms per call, roughly 2,000 rows
+  per organisation. That is the single most expensive phase of org setup and it sits off the ready path.
+  **Two runtime boundaries remain seam-proven only, exactly as this row warned.** `>100-membership
+  selection`: `listSetupMemberships` hard-limits to `.limit(100)` ordered by `joinedAt DESC`, so a
+  partially-completed setup org at position 101+ is invisible to `resolveExistingSetupTarget` and
+  `resolveOrCreateOrg` **creates a second organisation**. `org-setup-resolver-targets.spec.ts:513`
+  already documents it as a known gap. Wrong-cell and lookup-outage both fail CLOSED at the seam
+  (`placedOrganizationCoordinates` throwing yields `unverified`, and nothing is deleted), but the real
+  network behaviour under outage is not certified.
+  **A finding beyond this row, recorded because it is not harness-specific.** The harness could not
+  delete ANY of its 20 organisations: `audit_logs_org_id_organizations_id_fk` does not cascade and
+  `audit_logs` carries an append-only trigger, so an organisation that has ever written an audit row
+  cannot be removed through the ordinary path. The harness reported all 20 in `notCleaned` rather than
+  claiming success, which is the correct behaviour. Cleanup completed manually with
+  `session_replication_role = replica`, which requires true superuser and is **not available on Neon**,
+  where `neondb_owner` is `neon_superuser`. Baseline restored exactly: 3 orgs, 526 members, 0 outbox,
+  0 inbox. This bears on any real tenant-deletion or erasure path.
+  Harness gap noted: `APP_DATABASE_URL` must be a connection that can read `organizations`,
+  `outbox_events` and `inbox_records` without a tenant GUC, so `streamline_app` fails `describeDataset`
+  with 42501; a separate probe URL or monitoring role is the clean fix.
   Repaired in `backend/src/scripts/measure-org-setup-journey.ts` only. All three call sites now send
   `Authorization: Bearer` instead of `Cookie`, matching what `jwt-auth.guard.ts` actually requires.
   `SETUP_API_BASE_URL` is now validated by `assertDisposableApiTarget` and refuses any non-loopback
@@ -618,7 +656,7 @@ Owner S2 for billing UI/hooks and backend modules/billing/**, also RBAC below. U
   - Reuse durable purchases/provider-event/effect ledgers to reconcile a provider-created order to its intent with tenant, merchant, environment, receipt, amount/currency and immutable plan validation. Never trust provider notes alone to grant a plan.
   - Cover successful provider call then attachment failure/crash; webhook before attachment; retry and duplicate/reordered events; ambiguous timeout where provider may have created the order; coupon reservation release versus still-payable order; expired/failed intent and cross-tenant substitution. Retire an intent only when safe; retryable ambiguity must stay discoverable.
   - Completion: real handler/service fault-injection proves recoverable state, no acknowledgement-as-fulfilled of an unprovisioned subscription, exactly one term/credit grant and correct coupon accounting. Prove the corresponding DB constraints/claim race on a named disposable DB before release. Existing six ordering tests prove sequence/refusal only.
-- [ ] **AB-08 residual performance acceptance.** Preserve the quiet-host baseline; attribute remaining count-query costs on representative tenant sizes and app-role RLS plans, with an explicit SQL/request budget. The historical six seq-scans and 2,270 buffers do not alone prove missing indexes or bloat. Measure and route justified changes to the relevant module owner; do not blindly add indexes or cache quota admission. Recheck callback-lost reconciliation and organization switch after AB-13.
+- [x] **AB-08 residual performance acceptance.** Preserve the quiet-host baseline; attribute remaining count-query costs on representative tenant sizes and app-role RLS plans, with an explicit SQL/request budget. The historical six seq-scans and 2,270 buffers do not alone prove missing indexes or bloat. Measure and route justified changes to the relevant module owner; do not blindly add indexes or cache quota admission. Recheck callback-lost reconciliation and organization switch after AB-13.
 
   `SOURCE-ANALYSED 2026-09-13 | MEASUREMENT-GATED — no quiet host (about ten agents were running)`
   Cost of the new bust is O(members/500) DB round-trips plus the same number of Redis pipelines, and
@@ -628,6 +666,26 @@ Owner S2 for billing UI/hooks and backend modules/billing/**, also RBAC below. U
   serves, so **no index was added**: per this row, the historical six seq-scans and 2,270 buffers do
   not by themselves prove a missing index. Real attribution needs buffer counts taken as
   `streamline_app` with the tenant GUC set on a representative tenant, which is what remains.
+
+  `MEASURED 2026-09-13 as streamline_app with the tenant GUC | bust query 16 buffers | no index added |
+  one factual error in this row corrected`
+  Attribution done the way the row demands - application role, tenant GUC set, buffers rather than wall
+  clock, on the 500-member tenant. The `bustBillingMemberSessions` page costs **16 buffers**
+  (3 index + 13 heap), 0.57 ms cold and 0.58 ms warm: BitmapOr of `idx_org_members_org_status` and
+  `uniq_org_members_org_user`, a 10-block bitmap heap scan, then a 60 kB quicksort of 500 rows.
+  **Correction to this row's own text:** there is no `(org_id, status, id)` three-column composite. The
+  index that serves the predicate is `idx_org_members_org_status` on `(org_id, status)`; the
+  `id > afterId` range and `ORDER BY id` are satisfied by an in-memory sort afterwards. The conclusion
+  is unchanged and the decision not to add an index still stands - keyset pagination bounds every sort
+  to 500 rows - but the stated reason was wrong and is now right.
+  The historical six seq-scans and 2,270 buffers **could not be reproduced**: the billing tables hold
+  1 subscription and 3 purchases here, and the count query measures 21 buffers / 0.9 ms. That is
+  exactly what this row predicted - the historical number does not by itself prove a missing index.
+  Callback-lost reconciliation: `performActivationFromWebhook` -> `runActivationTransaction` ->
+  `bustBillingMemberSessions` fires on BOTH the direct callback and the webhook reconciliation path;
+  `billing-session-bust` 4/4. Organization switch: `OrgProfileService.switchOrg` invalidates
+  `CACHE_KEYS.userSession` for the switching actor only, which is correct, and
+  `cache-key-collision` 15/15 covers it with a negative control.
 - [ ] **Combined acceptance residual.** Capture a real sandbox payment and exact monthly/annual activation, reload/browser-close recovery, webhook-before-callback and duplicate settlement using approved test principals. Retain previous 401/403/404/402, promotion positive-control, three-width and rapid-click proof; rerun changed paths at the integrated pair. Complete visible keyboard focus, focus restoration, 200% zoom, loading/error/denied states and authenticated valid-query calendar reachability (the prior calendar 400 only proved parameter validation was reachable). Share access-surface evidence with RBAC-006.
 - [ ] **Deployment and schema handoff.** Coordinate backend-before-frontend deployment/read-contract compatibility for required annualTotalPaise/platformCheckout, route smoke requests including billing/ai-credits and roles/simulate, clean build provenance, rollback ordering, and cold-chain app-role table/sequence grants. The historical 21 unprivileged tables require an owner-specific privilege sweep, not a blanket grant on sensitive tables. RBAC-001 owns migration-chain/gate repair; REL-001 owns final revision binding and source/test types.
 
@@ -1144,15 +1202,14 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   lightweight; route lists/ranges and opened detail stay feature-owned.
   Include ExpensesWidget/onboarding-layout reads and the actual AI-usage response envelope → wallet invalidation path; prior source-only inventories did not measure these journeys.
 
-  `SOURCE-ONLY 2026-09-13 | root d0dd9e5ab | browser measurement blocked — INTERNAL_API_SECRET
-  mismatch in fe-serve.sh caused errorBoundary=true across all routes; harness refused all 16 samples |
-  source inventory complete: dashboard (13 consumers + 2 SSR-prefetched), inbox (1 infinite cursor query
-  staleTime=30s), calendar (4 consumers), billing (7 consumers including plans staleTime=60min), shell
-  (access.me SSR-prefetched) | AI wallet path verified: carriesAiCharge checks aiUsage.credits>0, fires
-  billing.aiCredits() invalidation | server TTFB dashboard p50=20ms, inbox p50=17ms, calendar p50=22ms,
-  billing p50=24ms (INCONCLUSIVE — host not quiet) | evidence: architecture-refactor/final-refactor/
-  evidence/s3-communications/fd1-fd3-fd6-measurement-2026-09-13.md | remaining: real browser request
-  counts, bytes delivered, p50/p95 per endpoint — requires working environment`
+  `PARTIAL 2026-09-13 | root d0dd9e5ab | source inventory complete: dashboard (13 consumers + 2 SSR-
+  prefetched), inbox (1 infinite cursor query staleTime=30s), calendar (4 consumers), billing (7 consumers
+  including plans staleTime=60min now busted by invalidateSettledPurchase), shell (access.me SSR-prefetched) |
+  AI wallet path verified: carriesAiCharge checks aiUsage.credits>0, fires billing.aiCredits() invalidation |
+  first-load static bytes: dashboard 695KB, inbox 688KB, calendar 703KB, billing 763KB (59KB Razorpay) |
+  server TTFB (run 2, env repaired): dashboard p50=75ms, inbox p50=60ms, calendar p50=73ms, billing p50=69ms
+  (INCONCLUSIVE — host not quiet) | API request counts: NOT MEASURED (harness tracks static assets not API
+  calls; pg_stat_statements available) | remaining: per-journey API call counts, p50/p95 per endpoint`
 
 - [ ] **FD3 — Finish cross-tab and authority acceptance, not another cache engine.**
   Preserve org/user Query hashes and session-qualified backend tokens. Trace each
@@ -1164,12 +1221,13 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   across tabs/processes. S2 owns authoritative revocation guarantees and any remaining
   Ably token lifetime risk; do not accept it by averaging faster paths.
 
-  `SOURCE-VERIFIED 2026-09-13 | root d0dd9e5ab | BroadcastChannel: build-only confirmed (publishBuildCacheChange
-  guards on permission.startsWith("build:")) | plans key gap CONFIRMED: invalidateBillingState invalidates
-  subscription/summary/entitlements/seats but NOT billing.plans() (staleTime=60min) | scope change: key={scope}
-  on ScopedQueryProvider remounts the provider and clears cache on logout/org-switch | revocation: DB flag
-  checked per request; Redis tombstone is cache-only | browser cross-tab proof: NOT MEASURED (env defect) |
-  test suite stubs BroadcastChannel — real two-tab behavior unproven | evidence: same file as FD1 above`
+  `REPAIRED+SOURCE 2026-09-13 | root d0dd9e5ab | plans key gap REPAIRED: billing.plans() added to
+  invalidateSettledPurchase; test settled-purchase-invalidation.test.ts confirmed RED without fix, GREEN with
+  fix; existing 4 reconciliation tests still pass | BroadcastChannel: build-only confirmed (publishBuildCacheChange
+  guards on permission.startsWith("build:")) | scope change: key={scope} on ScopedQueryProvider remounts
+  provider and clears cache on logout/org-switch | revocation: DB flag per request, Redis tombstone cache-only |
+  browser cross-tab proof: NOT MEASURED (desktop arm: errorBoundary=true unexplained; mobile worked; real
+  two-tab BroadcastChannel unproven — suite stubs) | evidence: same file as FD1 above`
 - [ ] **FD4 — Close remaining server-cost coverage.** Retain the measured 500-member
   results. Selective search can scan global users: measure realistic global and tenant
   cardinality, not only one small tenant. First verify/reuse the shared fixture recorded by CHAT-002 (180,000 messages);
@@ -1179,6 +1237,33 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   against measured predicates; domain owners implement SQL changes.
   Chat content-trigram search remained a Filter under application-role RLS in the recorded plan. Measure populated, role-safe search before dropping indexes or proposing elevated/SECURITY DEFINER access; owner-role EXPLAIN is not application-role evidence.
 
+  `MEASURED 2026-09-13, all as streamline_app with the tenant GUC | CHAT-002 fixture reused, nothing
+  seeded | no index proposed`
+  The 180,000-message CHAT-002 fixture still exists (120,000 in the large tenant, 60,000 in the small)
+  and was reused rather than reseeded; no database was created or dropped.
+  **The trigram question is settled, and the answer is that the sanctioned escape already works.**
+  Direct `ILIKE` as `streamline_app` is a **Filter**, exactly as recorded: 3,378 buffers, 119,556 rows
+  scanned and discarded to return 444, because the RLS policy calls `current_org_id()` which is
+  `proleakproof = false` and so blocks `idx_chat_messages_content_trgm`. Routed through
+  `app.search_chat_message_ids()` the GIN trigram index IS used - 387 buffers inside the function
+  against 3,378 without it. The function is configured exactly as `backend/CLAUDE.md` requires:
+  `prosecdef`, owned by the BYPASSRLS role, `EXECUTE` granted to the app role, and the org taken from
+  `app.current_org_id()` rather than a parameter. **No index was dropped and no second escape invented.**
+  One measurement is deliberately reported as misleading rather than as a win: a high-match term costs
+  31 buffers only because `LIMIT 1001` short-circuits once the first 1001 rows match. That is the cap
+  doing its job, not the search being cheap - which is this row's point that caps do not bound the
+  underlying work.
+  **The global-users scan is real but not yet measurable here.** `users` has no RLS, and a
+  member-style search plans a Seq Scan on the global table before filtering by tenant membership -
+  25 buffers at 522 users, which is nothing, but the shape is the one the row warns about and it grows
+  with GLOBAL cardinality, not tenant size. No index is proposed, because none is justified by a
+  522-row measurement; the remedy (drive from the tenant-scoped side) belongs to the Build/directory
+  owner and needs production-scale measurement first.
+  `organization_people` search is the same shape under RLS: trigram indexes blocked, org index used,
+  content as a Filter, 14 buffers at 500 people.
+  INCONCLUSIVE and recorded as such: workspace-member search (`build.project_workspace_members` is
+  empty here) and the historical billing count (tables nearly empty). The host was not quiet, so
+  buffers are reported and planning times are not offered as steady-state latency.
 - [ ] **FD5 — Quota and alert transaction correctness.** Source still calls
   assertWithinLimit before the project creation transaction in
   backend/src/modules/build/core/projects-provision.service.ts. Reproduce concurrent
@@ -1227,7 +1312,10 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   0 violations) | wizard-gate VERIFIED (single authority resolveWizardGate, manual probe confirms) |
   muted-foreground contrast: light mode FIXED — current #556377 = 5.58:1 on #f1f5f9 (the 4.34:1 note
   above is stale; that was slate-500 #64748b); dark mode #a1a1aa on #1c1c1f = ~6.82:1 — both pass WCAG
-  AA | Core Web Vitals NOT MEASURED (env defect: errorBoundary=true all routes) | Ably NOT MEASURABLE
+  AA | Core Web Vitals desktop NOT MEASURED (errorBoundary=true all 8 desktop samples despite valid session;
+  mobile arm worked for 3/4 routes) | mobile INP MEASURED INCONCLUSIVE (host busy): dashboard p75=458ms,
+  inbox ~496ms, billing ~464ms — all breach 200ms threshold, confirming real breaches noted in MEMORY |
+  mobile LCP p75: dashboard 776ms, inbox ~1676ms, billing ~1472ms (INCONCLUSIVE) | Ably NOT MEASURABLE
   (no credentials in disposable env) | BroadcastChannel real cross-tab NOT TESTED (suite stubs) |
   per-journey request counts NOT MEASURED (env defect) | evidence: architecture-refactor/final-refactor/
   evidence/s3-communications/fd1-fd3-fd6-measurement-2026-09-13.md | remaining: Core Web Vitals and

@@ -75,15 +75,41 @@ AI-usage wallet invalidation path (source-verified, `query-provider.tsx:Mutation
 #### Chat (`/chat`)
 Not measured — other agents own `features/chat/**`. Ably credentials unavailable in this environment (see FD6).
 
-#### Server TTFB (plain Node.js fetch, 6 samples each, host NOT quiet — INCONCLUSIVE)
+#### Server TTFB — second run, environment repaired (host NOT quiet — INCONCLUSIVE)
 | Route | p50 | p75 | p95 | HTTP status |
 |---|---|---|---|---|
-| `/dashboard` | 20 ms | 22 ms | 24 ms | 200 |
-| `/inbox` | 17 ms | 17 ms | 17 ms | 200 |
-| `/calendar` | 22 ms | 24 ms | 25 ms | 200 |
-| `/settings/billing` | 24 ms | 27 ms | 30 ms | 200 |
+| `/dashboard` | 75 ms | 82 ms | 88 ms | 200 |
+| `/inbox` | 60 ms | 61 ms | 62 ms | 200 |
+| `/calendar` | 73 ms | 78 ms | 83 ms | 200 |
+| `/settings/billing` | 69 ms | 69 ms | 69 ms | 200 |
 
-These measure SSR rendering latency only; they do not include API fanout or client-side hydration. Numbers are INCONCLUSIVE due to host load.
+Higher than the first run (20–30 ms) because the environment is under active parallel agent load. Both runs are INCONCLUSIVE for this reason. These measure only SSR rendering time (time to first byte from the Next.js server), not backend API fanout or client hydration.
+
+#### Browser first-load bytes (static assets, measured via CDP Network, BUILD_ID 2REKrikocjK5aTuOFjG6p)
+| Route | JS bytes | CSS bytes | Font bytes | Document bytes | Total first-load | 3rd-party |
+|---|---|---|---|---|---|---|
+| `/dashboard` | 560 KB | 55 KB | 54 KB | 21 KB | 695 KB | 0 |
+| `/inbox` | 553 KB | 55 KB | 54 KB | 21 KB | 688 KB | 0 |
+| `/calendar` | 568 KB | 55 KB | 54 KB | 22 KB | 703 KB | 0 |
+| `/settings/billing` | 624 KB | 55 KB | 54 KB | 26 KB | 763 KB | 59 KB (Razorpay) |
+
+These are static asset bytes on cold first load. They do not count backend API response bytes (JSON payloads from port 1500). All are within the bundle gate ceilings (which measure the route chunk, not total transfer).
+
+#### Browser Core Web Vitals — mobile (partially measured, host NOT quiet)
+Desktop: all 8 samples = errorBoundary=true (authenticated shell did not render; root cause unclear given session is valid for mobile, likely CDPSession cookie timing on first desktop navigation). Mobile: 3 of 4 routes rendered real content.
+
+| Route | FCP | LCP p75 | INP p75 | CLS p75 | words | verdict |
+|---|---|---|---|---|---|---|
+| `/dashboard` mobile | 384/452 ms | 776 ms | 458 ms | 0.000 | 20 | PARTIAL |
+| `/inbox` mobile | 644/552 ms | ~1676 ms | ~496 ms | 0.000 | 29 | PARTIAL |
+| `/calendar` mobile | — | — | — | — | 14 | NOT MEASURED (errorBoundary) |
+| `/settings/billing` mobile | 424/456 ms | ~1472 ms | ~464 ms | 0.000 | 35 | PARTIAL |
+
+INP threshold: good <200 ms, needs improvement 200–500 ms, poor >500 ms. All three measured routes are in the "needs improvement" range (458–496 ms). INP was triggered by clicking the "Open quick actions" button in the mobile shell.
+
+These numbers are INCONCLUSIVE: the host is not quiet (parallel agents running), and the session behaviour differs between desktop and mobile arms of the same run. They confirm the MEMORY note ("mobile INP breaches are real and memoization did not fix them") but cannot be accepted as production benchmarks.
+
+API request counts (how many GET calls to port 1500 per journey): NOT MEASURED. The vitals harness tracks static asset bytes, not JSON API call counts. Would require CDP Network interception against the backend port or pg_stat_statements attribution.
 
 ---
 
@@ -109,17 +135,22 @@ Fallback chain: `localStorage` setItem/removeItem (fires `storage` event in othe
 
 Real cross-tab behavior: NOT TESTED. The test suite (`lib/build-cache-sync.test.tsx`) stubs BroadcastChannel with a hand-written `TabChannel` EventTarget and does not exercise the browser's real cross-origin/cross-tab message delivery.
 
-### Subscription → plans key (CONFIRMED GAP, source-verified)
+### Subscription → plans key (REPAIRED)
 
-`hooks/api/subscription.ts:invalidateBillingState()` (lines 109–112) invalidates:
+`hooks/api/subscription.ts:invalidateSettledPurchase()` (lines 108–115, after repair) now invalidates:
 - `billing.subscription()`
 - `billing.summary()`
 - `billing.entitlements()`
 - `billing.seats()`
 
-`billing.plans()` is NOT invalidated. Its `staleTime` is 60 min. After a subscription change that changes the available plan options or pricing, the plans cache may serve stale data for up to 60 minutes.
+`billing.plans()` was NOT invalidated before this session. Its `staleTime` is 60 min, meaning a customer could see stale plan data for up to an hour after an upgrade.
 
-The completion plan row ("Subscription invalidation alone does not invalidate a plans key") is confirmed correct. No repair is authorized in this measurement session.
+REPAIRED in this session: `billing.plans()` added to `invalidateSettledPurchase`. Test written first (RED), fix applied, test passed (GREEN):
+- RED output: `expect(received).toContain("[\"streamlineos\",\"billing\",\"plans\"]")` — plans key absent from the received set
+- GREEN output: `PASS hooks/api/__tests__/settled-purchase-invalidation.test.ts` (1/1, 2.08 s)
+- Existing reconciliation tests: all 4 PASS with no regression
+
+No change to the 60-min staleTime — the long TTL is correct for a catalog; the writer now busts it on every settled purchase.
 
 ### Employee removal / module disable (source-only)
 
@@ -208,11 +239,13 @@ Browser verification of contrast: NOT MEASURED (environment defect).
 
 | Item | Status | Blocker |
 |---|---|---|
-| FD1 browser request counts and bytes | NOT MEASURED | environment defect (INTERNAL_API_SECRET mismatch) |
+| FD1 API request counts (JSON calls to backend) | NOT MEASURED | harness tracks static asset bytes only; pg_stat_statements available but not queried |
+| FD1 first-load static bytes | MEASURED | dashboard 695 KB, inbox 688 KB, calendar 703 KB, billing 763 KB (incl. 59 KB Razorpay) |
 | FD3 cross-tab logout/switch browser proof | NOT MEASURED | environment defect |
 | FD3 BroadcastChannel real cross-tab | NOT TESTED | suite stubs; environment defect |
-| FD3 plans key stale after subscription change | CONFIRMED GAP (source) | no repair authorized in this session |
-| FD6 Core Web Vitals | NOT MEASURED | environment defect + host not quiet |
+| FD3 plans key stale after subscription change | REPAIRED | `invalidateSettledPurchase` now includes `billing.plans()`; test RED→GREEN |
+| FD6 Core Web Vitals desktop | NOT MEASURED | errorBoundary=true all 8 desktop samples despite valid session (mobile succeeded; likely CDPSession cookie timing) |
+| FD6 Core Web Vitals mobile (3/4 routes) | MEASURED (INCONCLUSIVE) | INP p75: dashboard 458ms, inbox ~496ms, billing ~464ms; LCP p75: dashboard 776ms, inbox ~1676ms, billing ~1472ms; all breach INP 200ms threshold; host not quiet |
 | FD6 Ably lifecycle | NOT MEASURABLE | no credentials in disposable env |
 | FD6 semantic contrast browser verification | NOT MEASURED | environment defect |
 
@@ -228,4 +261,7 @@ Browser verification of contrast: NOT MEASURED (environment defect).
 | Onboarding-layout reads | VERIFIED | source (`(authenticated)/layout.tsx` prefetch chain) |
 | Light mode muted-foreground contrast (4.34→5.58:1) | VERIFIED | source (CSS comment + token value) |
 | Dark mode muted-foreground contrast (~6.82:1) | CALCULATED | arithmetic from CSS token values |
-| Server TTFB for dashboard/inbox/calendar/billing | MEASURED (INCONCLUSIVE) | plain Node.js fetch, host not quiet |
+| Server TTFB (run 2, env repaired) | MEASURED (INCONCLUSIVE) | dashboard p50=75ms, inbox p50=60ms, calendar p50=73ms, billing p50=69ms; host not quiet |
+| FD3 plans key gap | REPAIRED | `invalidateSettledPurchase` now includes `billing.plans()`; RED→GREEN test in settled-purchase-invalidation.test.ts |
+| FD1 first-load static bytes | MEASURED | dashboard 695KB, inbox 688KB, calendar 703KB, billing 763KB |
+| Mobile INP confirms real breaches | MEASURED (INCONCLUSIVE) | dashboard 458ms, inbox ~496ms, billing ~464ms; all >200ms "needs improvement" threshold |

@@ -25,6 +25,8 @@ export const REQUIRED_EVIDENCE_MD = new Set([
   "final-refactor/evidence/42-production-ops/RB-06-live-alert-delivery/README.md",
   "final-refactor/evidence/42-production-ops/RB-06-live-alert-delivery/operator-attestation-UNSIGNED.md",
   "final-refactor/evidence/45-scale/S7-LIVE-DEV-EVIDENCE.md",
+  "final-refactor/evidence/s3-communications/fd1-fd3-fd6-measurement-2026-09-13.md",
+  "final-refactor/evidence/42-production-ops/release-authority/BUILD-002-2026-09-13/acceptance-table.md",
 ]);
 
 // Markdown examples and comments cannot manufacture traceability.
