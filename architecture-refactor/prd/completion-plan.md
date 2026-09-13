@@ -428,7 +428,7 @@ A person, login, worker and employment are distinct. Adding a person must not si
   Traced the real transaction boundary: every seat-consuming path acquires `pg_advisory_xact_lock(hashtextextended('quota:<org>:members', 0))` via `lockMembersQuota` inside the same Drizzle transaction that calls `assertWithinLimit` and then performs the membership/invitation insert, so the check-then-act is serialized by that lock.
   New spec proves: (1) `recordSeatEvent` is never called when `assertWithinLimit` throws (rollback erases the ledger write before it is issued); (2) `recordSeatEvent` is never called when `lockPendingInvitation` returns 0 rows (stale/accepted token); (3) the renewal email is never fired when the resend in-transaction update aborts (concurrent winner took the row); (4) the renewal email fires exactly once when the resend transaction succeeds; (5) a concurrent decline that finds 0 rows emits no second `INVITE_CANCELLED` event. Existing specs already prove: lock→check ordering (invitations-plan-limit, invitation-acceptance-insert-ordering, invitation-resend-seat, membership-admission-seat-limit); stale-token ConflictException (invitation-acceptance-recovery); decline idempotency key `invite-declined:<id>` + event type `INVITE_CANCELLED` (invitation-decline-seat); pending-invite → direct-admission atomic cancel+lock+check+insert (membership-admission-seat-limit P7); expiry sweep atomicity (cron-invitation-expiry). No new seat implementation was written.
 
-- [ ] **P10 — Fail-closed draft privacy at depth boundary.** New current-source defect:
+- [x] **P10 — Fail-closed draft privacy at depth boundary.** New current-source defect:
   `backend/src/modules/hr/onboarding/flow/onboarding-session-privacy.ts::stripValue`
   returns the original value when depth >8. The patch DTO in
   `flow/dto/onboarding-flow.schemas.ts` accepts arbitrary nested `z.any()` values.
@@ -460,6 +460,17 @@ A person, login, worker and employment are distinct. Adding a person must not si
   Noted, not changed (no regression, outside this task): `SessionPatch` in
   `flow/onboarding-session.service.ts` is a hand-written interface duplicating the Zod shape where
   root CLAUDE.md 6 requires `z.infer`.
+
+  `CLOSED 2026-09-13 | the one remaining item, C4 live acceptance, is now measured`
+  The row was held open solely for "C4 live-DB acceptance", and that ran against the live disposable
+  stack today. The exploit path is closed at the real entry point, not only in the helper: a depth-9
+  payload is refused by the DTO with **400 VALIDATION_FAILED**, so over-depth input never reaches the
+  sanitizer at all; the sanitizer independently returns `{}` for an over-depth object rather than a
+  partially-stripped one; sensitive keys (`accountNumber`, `iban`, …) are removed case-insensitively;
+  and permitted display fields (`country`, `holderName`, `bankName`) survive — the half that proves
+  the fix did not simply blank everything.
+  Both layers of the original defect are closed and verified at the live boundary, with synthetic
+  fixtures only and no financial values in any test or report.
 
 - [x] **P12 — Customer-safe setup recipient outcomes.** Core bulk/savepoint repairs are complete;
 
