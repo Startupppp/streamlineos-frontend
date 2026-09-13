@@ -25,10 +25,14 @@ const localizer = dateFnsLocalizer({
 const ORPHAN_ROLE_SELECTOR =
   '.rbc-allday-cell[role="rowgroup"], .rbc-allday-cell [role="row"]';
 
-function normaliseOrphanVendorRoles(root: HTMLElement | null): void {
+const SCROLLABLE_REGION_SELECTOR = ".rbc-time-content";
+
+function normaliseVendorAccessibility(root: HTMLElement | null): void {
   if (!root) return;
   for (const node of root.querySelectorAll(ORPHAN_ROLE_SELECTOR))
     node.setAttribute("role", "presentation");
+  for (const node of root.querySelectorAll(SCROLLABLE_REGION_SELECTOR))
+    if (!node.hasAttribute("tabindex")) node.setAttribute("tabindex", "0");
 }
 
 export interface BigCalEvent {
@@ -92,7 +96,7 @@ export function BigCalendarWrapper({
       : { height: "100%" };
 
   useEffect(() => {
-    normaliseOrphanVendorRoles(gridRef.current);
+    normaliseVendorAccessibility(gridRef.current);
   }, [view, date, events]);
 
   const components = useMemo<Components>(

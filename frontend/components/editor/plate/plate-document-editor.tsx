@@ -110,6 +110,7 @@ export default function PlateDocumentEditor({
         <PlateContent
           placeholder={placeholder}
           readOnly={!editable}
+          aria-label="Page editor"
           className="plate-editor min-h-[150px] outline-none px-1 py-2"
           onDropCapture={handleContentDrop}
           onPasteCapture={handleContentPaste}

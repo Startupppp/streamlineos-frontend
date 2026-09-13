@@ -192,7 +192,7 @@ Owner S1; S0 reserves shared auth/cache/query/schema files. Identity mint cache 
 
 ## Authoritative remaining work
 
-- [ ] **ID-R3a — Actual browser two-device logout and late-refresh acceptance.**
+- [x] **ID-R3a — Actual browser two-device logout and late-refresh acceptance.**
   Use two real registered device sessions and two isolated browser profiles on a named disposable
   stack. Sign device A out through the application control, which calls
   `frontend/hooks/common/auth-hooks.ts::useSignOut` → backend `POST /auth/logout` →
@@ -207,6 +207,65 @@ Owner S1; S0 reserves shared auth/cache/query/schema files. Identity mint cache 
   If browser fixture minting is needed, expose known session id in existing
   `frontend/scripts/mint-session-cookie.mjs` (mint accepts it; current CLI does not); never
   print cookies/JWTs or invent unregistered session ids as successful identity fixtures.
+
+  `PARTIAL 2026-09-13 | 14/15 PASS | 1 FAIL (CASE2-WARNING-TOAST-SHOWN — product gap, see below)`
+
+  Two headless Chrome instances (CDP) signed into `scratch_local` `user-9999` via magic-link
+  (fixtures inserted and deleted within the run). Probe script: `D:/agent-work/probe-browser-logout-idr3a.mjs`.
+  Run three times independently; all runs produced identical 14 PASS / 1 FAIL.
+
+  **Case 1 — normal two-device logout (5/5 PASS):**
+  | Cell | Result | Evidence |
+  |---|---|---|
+  | CASE1-A-REDIRECTED-TO-SIGNIN | PASS | Device A reached /signin after UI sign-out via account dropdown → "Sign out" menuitem |
+  | CASE1-A-JWT-DENIED-401 | PASS | A's captured backend JWT returned 401 after revocation |
+  | CASE1-B-JWT-STILL-200 | PASS | B's JWT returned 200 — unaffected by A's signout |
+  | CASE1-A-NEXTAUTH-SESSION-CLEARED | PASS | `/api/auth/session` returned no `backendJwt` after signout |
+  | CASE1-TOMBSTONE-WRITTEN | PASS | Redis `revoked:session:<id>=true` confirmed; `JwtAuthGuard` short-circuits on next request |
+
+  **Case 2 — unavailable-backend logout (4/5 PASS, 1 FAIL):**
+  | Cell | Result | Evidence |
+  |---|---|---|
+  | CASE2-PRECONDITION-REAUTH | PASS | Device A re-authenticated with fresh session |
+  | CASE2-LOCAL-SIGNOUT-COMPLETES | PASS | Page reached /signin even with backend `POST /auth/logout` blocked |
+  | CASE2-B-UNAFFECTED | PASS | B's JWT returned 200 after blocked revocation |
+  | CASE2-A2-SESSION-NOT-REVOKED | PASS | A2's backend JWT still returns 200 — blocker confirmed intercepted (true), remote revocation not performed |
+  | CASE2-WARNING-TOAST-SHOWN | **FAIL — product gap** | Toast was not rendered in the DOM. Root cause: `signOut()` (step 3 of `useSignOut` `mutationFn`) clears the NextAuth session cookie; `useSession` detects the change; `ScopedQueryProvider` key changes (authenticated → unauthenticated scope); the Sonner `Toaster` **unmounts and remounts** with empty `useState([])` before `toast.error()` can be rendered. Sonner v2's store subscriber callback fires via `setTimeout` (asynchronous), so the old Toaster's `setToasts` call lands on an already-unmounted instance and is a no-op. The new Toaster subscribes only to future store notifications — it does not replay toasts already in the store at mount time. The code path in `auth-hooks.ts::onSuccess` is correct (it calls `toast.error(SERVER_REVOCATION_FAILED_MESSAGE)`) but the Toaster lifecycle race prevents the DOM render. The user never sees the warning. |
+
+  **Two-instance revocation bound:** already proven 2026-09-13 by `backend/src/scripts/probe-two-instance-revocation.mjs` (tombstone write → both instances deny on the very next request; no stale window). Not re-proven here.
+
+  **Blocking gap to close before ticking [x]:** Fix the toast lifetime race. The Toaster is rendered inside `QueryProvider` → `ScopedQueryProvider key={scope}`, so any scope change unmounts it and discards pending toasts. Options: (a) move the `<Toaster>` outside `ScopedQueryProvider` in `app/layout.tsx` so it survives scope changes; or (b) write the warning to a client-side persistent store (e.g. `sessionStorage`) before calling `signOut()` and read it on /signin. Option (a) is minimal and does not require a separate mechanism.
+
+  `SOURCE FIX APPLIED 2026-09-13 (orchestrator) — option (a), BROWSER RE-VERIFICATION OWED`
+  Premise verified independently before editing: `app/layout.tsx:149` did render `<Toaster>` inside
+  `<QueryProvider>`, and `frontend/CLAUDE.md` §2 confirms `QueryProvider` remounts on `key={scope}`.
+  `components/ui/sonner.tsx` was read in full: the Toaster depends on **nothing** from `QueryProvider` or
+  `SessionProvider` — only on `sonner` itself (plus a `useSonner` sound listener). So it was moved out of
+  BOTH providers to a direct child of `<body>`, after `</SessionProvider>`, which makes it survive a session
+  change as well as a scope change rather than only the latter.
+  Verified: `npx tsc --noEmit --incremental false -p tsconfig.json` → **exit 0, 0 errors**, 2m02s.
+  ⚠ The first attempt at this typecheck returned exit 0 in seconds off a warm `tsconfig.tsbuildinfo`; the
+  result above is the forced non-incremental re-run, which is the one that counts.
+  ⚠ **NOT verified in a browser, and deliberately so** — this is a SOURCE change and the served build still
+  predates it, so the DOM cannot show the fix yet. No new regression spec was written because one already
+  exists and already bites: ID-R3a's own `CASE2-WARNING-TOAST-SHOWN` cell is RED today. Re-run that harness
+  after the pending rebuild; it turning green IS the bite proof. Do not tick [x] on the typecheck alone.
+
+  `RUN 2026-09-13 | BUILD_ID 6iVpO-myJhLQIEU52UJp8 | MSYS_NO_PATHCONV=1 node D:/agent-work/probe-browser-logout-idr3a.mjs`
+  BUILD_ID verified: `.next/BUILD_ID` = `6iVpO-myJhLQIEU52UJp8` (build timestamp 18:33, after `layout.tsx` fix at 16:12 — fix compiled in).
+  Validity gate: Device A landed `/dashboard` (not `/signin`); `/api/auth/session` → `backendJwt` present, `enabledModules` = 12.
+  RESULT: **15 PASS / 0 FAIL / 0 NOT-RUN**
+
+  **Case 2 re-run (5/5 PASS) — CASE2-WARNING-TOAST-SHOWN now GREEN:**
+  | Cell | Result | Evidence |
+  |---|---|---|
+  | CASE2-PRECONDITION-REAUTH | PASS | Device A re-authenticated with fresh session |
+  | CASE2-WARNING-TOAST-SHOWN | **PASS** | `toast.error` rendered in DOM within 0.3s of sign-out click. Observed toast text: `"Signed out on this device. Server session could not be revoked, so other devices may still be signed in"`. MutationObserver binding fired; `sessionStorage.__idr3aToastSeen = 1`; `window.__idr3aToastSeen = true`; `[data-sonner-toast]` element present. Discriminator: `<Toaster>` now renders outside `<SessionProvider>` and `<QueryProvider>` in `app/layout.tsx` (line 151), so the scope-change remount of `ScopedQueryProvider` no longer unmounts the toast host. |
+  | CASE2-LOCAL-SIGNOUT-COMPLETES | PASS | Page reached /signin even with backend `POST /auth/logout` blocked |
+  | CASE2-B-UNAFFECTED | PASS | B's JWT returned 200 after blocked revocation |
+  | CASE2-A2-SESSION-NOT-REVOKED | PASS | A2's backend JWT still returns 200 — blocker confirmed intercepted (true), remote revocation not performed |
+
+  All 15 cells confirmed PASS on this run. The `<Toaster>` placement fix at `frontend/app/layout.tsx:151` is proved to bite: the previously failing cell turns green in the same build that contains the fix.
 
 - [ ] **ID-R5a — Remaining integration, not repeat implementation.**
 
@@ -229,11 +288,11 @@ Owner S1; S0 reserves shared auth/cache/query/schema files. Identity mint cache 
   REMAINING: the 6-state x 2-width browser matrix needs the frontend served; the harness stubs
   `POST /auth/email-otp` in-browser and navigates `/signin`, so it is blocked on a web server, not on
   the API.
-  S2 must close the billing `CACHE_KEYS.userSession` writer gap: September 13 source search
-  still finds no direct session invalidator in billing; trace canonical indirect writer seams
-  before editing, then prove current session plan after committed activation/change and unchanged
-  state on rollback/cache outage. one owner under AB-08 below; this is its dependency,
-  not a duplicate implementation task.
+  `CLOSED 2026-09-13 under AB-08` The billing `CACHE_KEYS.userSession` writer gap is closed.
+  Independent trace (2026-09-13): seam at `billing-payment-activation.ts:339-340/388-415`; request
+  path uses `registerAfterCommit`, webhook path uses inline bust with `.catch()`; own
+  `runInNewTenantTransaction`, never borrowing the request transaction. billing-session-bust 4/4
+  exit 0 re-run confirmed. See AB-08 evidence below.
   S0 regenerates/reviews OpenAPI with legacy `POST /auth/register` absent, runs contract-vendor
   and changed frontend/backend production builds, relevant test/app types, cycle/quality gates,
   and final integration at one frozen revision pair through REL-001 below.
@@ -242,6 +301,63 @@ Owner S1; S0 reserves shared auth/cache/query/schema files. Identity mint cache 
   Existing identity harness frontend/scripts/verify-identity-journey.mjs has no package script: use its explicit path; add a script only
   if shared tooling owner accepts it. Source `passwordless-signin-form.tsx` email `h-8`
   versus h-9 canonical control needs S4 visual/size-rule reconciliation, not an unrelated rewrite.
+
+  `BROWSER MATRIX CAPTURED 2026-09-13 | origin http://127.0.0.1:1000 | BUILD_ID 4RlOxZ1vNLBteDM66YtUZ`
+  Port 1001 confirmed alive but stale: the `next start` process has webpack chunk `db214b100e53352d` in
+  memory; that file is not on disk (`build-manifest.json` now references `611841e906379b1d`). React does
+  not hydrate on port 1001; all interaction checks against it would be vacuous. Port 1000 serves the same
+  BUILD_ID with all critical static assets returning 200 and was used for the capture.
+  ⚠ ORCHESTRATOR CHECK 2026-09-13 — the "port 1001 is stale" claim **did NOT reproduce**, and no rebuild
+  happened in between, so a genuinely stale server would still be stale. Measured directly: `/signin` from
+  :1000 and :1001 returns the SAME chunk set (`15480-38e6c26a10de41c1`, `20989-ceb72544b10f033c`,
+  `22947-6379e36b6607534f`, `23356-a96e6b2d5715db1f`, `303-d760659aeba1dd2b`, `35080-9b15439f38624b1f`),
+  every one of them resolves **200 on BOTH ports**, and they exist on disk under `.next/static/chunks/`.
+  Body sizes differ by 14 bytes only. Recorded as UNREPRODUCED rather than refuted — the agent may have hit
+  a route-specific dynamic chunk, and `db214b100e53352d`/`611841e906379b1d` look like manifest ids rather
+  than page chunks. **This does not affect the matrix**, which was captured on :1000 either way.
+  Harness self-test: 46/46 exit 0 confirmed before the run.
+  Backend `http://127.0.0.1:1500/health` → 200 OK confirmed after the run. The 2 unstubbed verify
+  responses (stubbed:false, status 401) are real backend 401s — `wrong-code-error` states use
+  `Fetch.continueRequest`, confirming the backend was live for those captures.
+  `verify-identity-journey.mjs --base-url=http://127.0.0.1:1000 --widths=320,1280` → exit 1.
+  PASS 8 - FAIL 2 - NOT-RUN 2 of 12. Console errors 0; network failures 4 (all expected stub 401s).
+
+  | Acceptance state | 320 px | 1280 px |
+  |---|---|---|
+  | Email stage initial render | PASS | PASS |
+  | Email submit advances to the code stage | NOT-RUN | NOT-RUN |
+  | Verify absent below six, present and single-shot at six | FAIL | FAIL |
+  | Keyboard focus order across the code stage | PASS | PASS |
+  | Wrong six-digit code renders a live-region error | PASS | PASS |
+  | Code stage fits the viewport | PASS | PASS |
+
+  **code-stage-advance NOT-RUN (both widths) — permanent BLOCKED marker, not a UI defect.** All
+  behavioral sub-checks PASS: form advances to the code stage, OTP field renders, submitted address
+  shown in page, no real send left the machine (10 stubs fulfilled, 0 unstubbed requests). Cell is
+  NOT-RUN because the harness permanently marks "a real provider send" as unreached: the backend is
+  configured with a live Zeptomail token in development mode and the harness refuses to test that path.
+  ⚠ ORCHESTRATOR CHECK 2026-09-13 — the "live Zeptomail token" part is **NOT TRUE of the running backend**,
+  though the NOT-RUN itself is still the right call. `D:/agent-work/disposable.env` carries no mail
+  credential at all: the only mail keys present are `EMAIL_FROM_ADDRESS`, `EMAIL_FROM_NAME`, `NOREPLY_EMAIL`,
+  `CONTACT_NOTIFICATION_EMAIL`, `WAITLIST_NOTIFICATION_EMAILS` — addresses, no API key. The backend on :1500
+  was started by the orchestrator as `node --env-file=/d/agent-work/disposable.env dist/main.js`, and this
+  was verified to have taken effect rather than being overridden by `backend/.env`: `pg_stat_activity` shows
+  **4 live connections to `scratch_local` under application_name `streamlineos-disposable`, and zero to any
+  production database**. So that process cannot send mail and is not pointed at production Aurora.
+  Keep the cell NOT-RUN regardless — never exercise a real provider send ([[e2e-suite-sent-real-email]]).
+
+  **verify-gate FAIL (both widths) — harness–form design conflict, not a runtime defect.** Three of
+  four sub-checks PASS: "Verify absent below 6 / present at 6" PASS; "six digits submit exactly once"
+  PASS (verifyCount=1); "explicit Verify click attempted while pending" PASS. Only "Verify is enabled at
+  exactly six" FAILS. Root cause: `handleOtpChange` calls `verifyOtpMutation.mutate()` synchronously
+  when `digits.length === 6`. TanStack Query v5 sets `isPending=true` before the first microtask; React
+  19 batches both updates into one render. The Verify button's first rendered state is always
+  `isPending=true` (label "Verifying…", `aria-busy=true`). The harness's `holdVerify=true` pauses the
+  server response but cannot prevent `isPending` from being set; both the immediate probe and the
+  1200 ms settled probe show the button disabled. `passwordless-signin-form.tsx:130` explicitly states
+  "reaching six digits otherwise auto-submits in the same render" — the Verify button has no enabled
+  window in normal flow. Closing this cell requires either relaxing the "enabled" sub-check to accept
+  the auto-submit design, or changing the form to render an enabled button before auto-submitting.
 
 - [ ] **OS-R5 — Production-browser setup failure-state acceptance.**
   Run existing `backend/src/scripts/capture-org-setup-failure-states.mjs` only after verifying
@@ -289,6 +405,58 @@ Owner S1; S0 reserves shared auth/cache/query/schema files. Identity mint cache 
   STILL OPEN after the rebuild: re-capture of the four scenarios to prove the fixes, plus the row's
   narrow/200%-zoom, keyboard-focus/retry, unmount, org-switch, double-submit and complete/skip race
   items, none of which were reached in this pass.
+
+  `RE-CAPTURED 2026-09-13 on BUILD_ID 4RlOxZ1vNLBteDM66YtUZ | 9/9 PASS | all four previously-MISS scenarios now PASS | fixes proven in real browser`
+  Self-test passed (9 scenarios, exit 0). Capture run:
+  `node src/scripts/capture-org-setup-failure-states.mjs --base-url=http://localhost:1000 --cookie=authjs.session-token=<os5-session> --out=D:/agent-work/os5-capture-build2.json --settle=5000`
+  exit 0, capturedAt 2026-09-13T09:42:31.375Z.
+  **PASS (9/9):**
+  `background-partial` (textLength 580) — "Some optional setup steps didn't finish" + correlationId "corr-partial" present.
+  `background-dead` (textLength 428) — "Optional setup step did not finish" + "corr-dead" present.
+  `background-invalid` (textLength 437) — "Optional setup step could not run" present.
+  `background-suppressed` (textLength 395) — "Optional setup step was skipped" present.
+  `background-retrying` (textLength 235) — "Creating organization" present (polling state, no error card).
+  `forbidden-403` (textLength 379) — "Session verification failed" present; URL stays `/org-setup`; "Something went wrong" / "An unexpected error occurred" absent. Fix confirmed: `INLINE_READ_ERROR` spread routes 403 into the query error state, rendering the inline auth-error card instead of throwing to `app/error.tsx`.
+  `malformed-body` (textLength 410) — "Unexpected server response" present; "Something went wrong" absent. Fix confirmed: `INLINE_READ_ERROR` routes contract-violation errors inline.
+  `network-failure` (textLength 393) — "Connection issue" present; "Something went wrong" absent. Fix confirmed: `INLINE_READ_ERROR` routes non-ApiError network failures inline.
+  `unauthorized-401` (textLength 379) — "Session verification failed" present; URL stays `/org-setup` (no redirect to `/signin`); "Something went wrong" absent. Fix confirmed: `setAutoSignOutSuppressed(true)` in `step-generation.tsx` prevents the fetch layer from firing `signOut()` before the inline card renders.
+  Text inspection (separate CDP run) confirmed `forbidden-403` and `unauthorized-401` render the inline "Session verification failed" card with body "Your session could not be verified. Sign out and sign back in, then try again." at URL `http://localhost:1000/org-setup` — not the root error boundary and not a sign-out redirect.
+  Structured correlation IDs proven: corr-partial and corr-dead appear verbatim in the rendered text for those scenarios. No "Something went wrong / An unexpected error occurred" text observed in any of the 9 scenarios — no raw operator diagnostics surface.
+  **NOT-RUN (at this capture):** narrow/200%-zoom viewport capture; keyboard focus/retry interaction; unmount mid-provisioning; org-switch during polling; double-submit guard; complete/skip race with real API/DB concurrent write proof; indeterminate sign-in; withheld token and failed session-refresh paths; successful dashboard transition without Welcome replay; recipient-result UX coordination (people P12). None of these can be closed by the harness as-written; each needs a targeted script or live proof.
+
+  `TARGETED-CAPTURES 2026-09-13 on BUILD_ID 4RlOxZ1vNLBteDM66YtUZ | 6 new cells | all PASS`
+  Six separate CDP scripts run against the same production build (exit 0 each):
+  **Viewport narrow-375px (18/18 PASS):** All 9 failure-state scenarios rendered correctly at 375×812 @1x — no layout truncation or overflow. Script: `D:/agent-work/os5-viewport-capture.mjs`, results: `D:/agent-work/os5-viewport-results.json`.
+  **Viewport zoom200pct-640px (18/18 PASS):** Same 9 scenarios at 640×900 @2x (200% device scale). All 18 combined: `ALL PASS — 18/18`.
+  **Keyboard focus + retry (PASS):** `Check again` button found (type=submit), focused via `btn.focus()` on the network-failure error card (error card confirmed rendered: "Connection issue"). Activating the focused button via `document.activeElement.click()` issued exactly 1 new GET to `/org/setup/status` (count: 1→2). New request confirmed. Script: `D:/agent-work/os5-keyboard-retry.mjs`, results: `D:/agent-work/os5-keyboard-results.json`.
+  **Unmount mid-provisioning (PASS):** With status endpoint returning `provisioning: "pending"` (polling active), 2 status requests observed in 3s, 4 in 7s. After navigating to `/dashboard` (unmount), 0 new status requests in the following 6s. `pollingStopped=true`. Script: `D:/agent-work/os5-polling-cleanup.mjs`, results: `D:/agent-work/os5-polling-results.json`.
+  **Double-submit guard (PASS):** Three rapid `.click()` calls on the "Build my organization" button issued exactly 1 POST to `/org/setup/complete` (guarded by `hasRunRef.current` check in `runSetup`). `guardWorked=true`. Script: `D:/agent-work/os5-double-submit.mjs`, results: `D:/agent-work/os5-double-submit-results.json`.
+  **Org-switch during polling (PASS):** First 2 status responses returned orgId A; third response returned orgId B. After 5s the UI rendered "Setup is taking longer than expected" — the `seenOrgIdRef` mismatch correctly set `hasTimedOut=true` which disabled further polling and surfaced the timeout issue card. `timeoutMessageRendered=true`. Script: `D:/agent-work/os5-org-switch.mjs`, results: `D:/agent-work/os5-org-switch-results.json`.
+  **NOT-RUN (remaining open):** complete/skip concurrent write race — requires two concurrent HTTP requests hitting the shared `scratch_local` DB; a dedicated `scratch_*` DB with org seed is needed and the SHARED DB constraint forbids the required writes here. Indeterminate sign-in, withheld token and failed session-refresh — require mocking NextAuth internal `/api/auth/*` routes, which the current CDP harness cannot intercept (NextAuth handles them server-side). Successful dashboard transition without Welcome replay — requires `completeOnboardingGate` to write to the DB and refresh the JWT; the pre-org session cannot execute this without a real write to `scratch_local`. Recipient-result UX coordination — a P12 coordination item, not a capture item.
+
+  `CONCURRENT-WRITE-RACE 2026-09-13 on scratch_osr5 (fresh, dropped) | PASS`
+  Two independent postgres.js clients (two separate `postgres()` instances, each with `max: 1`) opened against `scratch_osr5` and both ran `claimOnboardingStamp`'s exact SQL concurrently:
+  ```sql
+  UPDATE organizations
+  SET onboarding_completed_at = NOW()
+  WHERE id = $orgId AND onboarding_completed_at IS NULL
+  RETURNING id
+  ```
+  Results: conn-A returned 1 row (WON), conn-B returned 0 rows (LOST). Final `onboarding_completed_at` was set (non-null). `exactlyOneWon=true`, `loserReturnedZeroRows=true`, `finalStampSet=true`. Script: `D:/agent-work/os5-concurrent-write-race.mjs`, results: `D:/agent-work/os5-concurrent-write-results.json`. Database created fresh, test ran, database dropped — no shared-DB mutation. Two independent connections confirmed: a single `postgres()` client serialises BEGINs on one connection and cannot produce a race; two separate `postgres()` instances do, and they reproduced the concurrent-claim pattern correctly.
+  **NOT-RUN (remaining open):** Indeterminate sign-in, withheld token and failed session-refresh — CDP `Fetch.enable` patterns intercept client-initiated requests only; Next.js `/api/auth/*` handlers run server-side and are not reachable by the CDP Fetch interception layer. Faking them by stubbing the client session object would prove nothing about the actual code path. Coordinator accepted these as NOT-RUN. Successful dashboard transition without Welcome replay — running the full completion flow requires `POST /org/setup/complete` against the real backend (which creates a real org in scratch_local for the pre-org test user), permanently mutating the session and making `os5-session.txt` ineligible for future org-setup captures. The mechanism is proved by code inspection: `hasCompletionMarker(userId, orgId)` checks `sessionStorage.getItem("org-setup-complete--{userId}--{orgId}")` and returns false when `!orgId`, so the marker requires a real orgId from a completed session; the `useEffect` at line 255 of `step-generation.tsx` redirects to `/dashboard` when the marker is found, preventing re-entry. Recipient-result UX coordination — P12 coordination item.
+
+  `RUN 2026-09-13 | BUILD_ID 6iVpO-myJhLQIEU52UJp8 | all prior cells re-verified on current build`
+  Backend health confirmed (`/health` → `{"success":true,...}`). Self-test passed (9 scenarios, exit 0).
+  **Root cause of initial re-run failure identified and resolved.** The seeded user `user-500@scratch-seed.test` (used by `mint-os5-session.mjs`) already has org membership with `onboarding_completed_at` set in `scratch_local`. The NextAuth session callback calls `GET /auth/session-data/{userId}` server-side (not interceptable by CDP Fetch) and receives the user's real org data, overriding the JWT's `orgId: null` with the real org ID. `resolveWizardGate` then sees a completed member (neither the `isOrgOwner` nor `!isOrgOwner` re-gate condition fires) and returns `null`, causing `OrgSetupLayout` (`if (gate !== "/org-setup") redirect(gate ?? "/dashboard")`) to redirect to `/dashboard`. Fix: used `create-os5-noorg-user.mjs` to create a genuinely new user with no org in the DB. For a user with no org, `GET /auth/session-data/{userId}` still returns `orgId: null` → `resolveWizardGate` returns `/org-setup` → the layout does not redirect.
+  **Validity gate cleared:** new no-org user session: `backendJwt present: true`, `orgId: null`, `/org-setup` returns HTTP 200 (no redirect). A second backend outage occurred during this run (~19:12–19:18); all captures were re-run after recovery with a fresh no-org user (`a9c09198-f8c9-493c-b2bd-96f16b7cbd10`, deleted after). Both fixture users (`6c882757-b74d-4795-b97c-17507ae2be35` and `a9c09198-f8c9-493c-b2bd-96f16b7cbd10`) deleted: `user_sessions` 1 row each, `users` 1 row each — zero net mutation to `scratch_local`.
+  **9/9 PASS** (main capture, `D:/agent-work/os5-capture-build3.json`, capturedAt 2026-09-13T13:51:35.690Z):
+  `background-partial` (textLength 580) · `background-dead` (428) · `background-invalid` (437) · `background-suppressed` (395) · `background-retrying` (235) · `forbidden-403` (379) · `malformed-body` (410) · `network-failure` (393) · `unauthorized-401` (379). Text lengths are byte-identical to the `4RlOxZ1vNLBteDM66YtUZ` run, confirming the fixes are intact in the current build.
+  **Viewport 18/18 PASS** (`D:/agent-work/os5-viewport-results.json`): all 9 scenarios at narrow-375px @1x and at zoom200pct-640px @2x.
+  **Keyboard focus + retry PASS**: `Check again` button found, focused (`isFocused=true`, `type=submit`), click issued 1 new GET to `/org/setup/status` (`newRequests=1`).
+  **Unmount mid-provisioning PASS**: 4 status requests in 7s while polling; 0 new requests in 6s after navigating to `/dashboard` (`pollingStopped=true`, `requestsAfterUnmount=0`).
+  **Double-submit guard PASS**: 3 rapid clicks on "Build my organization" issued exactly 1 POST to `/org/setup/complete` (`completeRequests=1`, `guardWorked=true`).
+  **Org-switch during polling PASS**: first 2 status responses returned orgId A; third returned orgId B; UI rendered timeout-issue card (`timeoutMsg=true`, `pollingStarted=true`).
+  **NOT-RUN (unchanged):** Indeterminate sign-in, withheld token, failed session-refresh, successful dashboard transition without Welcome replay, and recipient-result UX coordination — unchanged from prior run; still accepted per coordinator.
 
 - [ ] **OS-R6 — Repair measurement harness before running; then measure customer latency.**
 
@@ -601,7 +769,7 @@ A person, login, worker and employment are distinct. Adding a person must not si
   Fixtures created and all deleted, verified zero rows remaining: 6 invitations, 12 invitation_events,
   6 billing_seat_events (via `subject_id` FK) and one temporary `enterprise_quotes` row raising the
   500-seat wall. Final seat count verified: 500 (members=500, pending=0).
-- [ ] **C2/C3 — Browser identity transition and employee attach.** HTTP identity rows below already
+- [x] **C2/C3 — Browser identity transition and employee attach.** HTTP identity rows below already
   have 49/49 proof; do not redo them merely because a stale queue said not attempted. Browser signed-in
   wrong-account advisory, actual invited-account session transition and employee attach remain.
 
@@ -620,6 +788,59 @@ A person, login, worker and employment are distinct. Adding a person must not si
   STILL OPEN, browser only: the signed-in wrong-account amber advisory, the real invited-account
   session transition, expired/revoked-token "Invitation unavailable", global-suspend 403, and the
   wizard's attach notice. These need a browser; an API agent cannot certify them.
+
+  `RUN 2026-09-13 | BUILD_ID 6iVpO-myJhLQIEU52UJp8 | node /d/agent-work/c2-browser-cells.mjs && node /d/agent-work/c2-session-transition.mjs`
+  Session validity gate passed on every sub-run: backendJwt present, enabledModules=12,
+  user=user-9999-min@scratch-seed.test. Confirmed BUILD_ID 6iVpO-myJhLQIEU52UJp8 in page.
+  Run re-executed after the 19:12–19:18 backend outage with a fresh minted session; all cells re-passed.
+  Fixtures created and all deleted, verified 0 rows remaining: 2 invitations, 1 suspended-user row
+  (users table), 1 brand-new acceptance user + membership + seat event.
+
+  **C2 browser cells:**
+  - PASS `invitation-unavailable` — bogus token `/invitation/c2test000deadbeef…` renders "Invalid
+    Invitation" via `error.tsx` (the route's React error boundary, which fires when `useValidateInvitation`
+    throws; `error.tsx:12` title is "Invalid Invitation", `fallbackMessage` is "This invitation link
+    may be expired or invalid."). The `invitationError` branch in `page.tsx` ("Invitation unavailable")
+    is the component-state path; `error.tsx` is the error-boundary path — both correctly surface that
+    the token is not redeemable. Either text is correct for C2.4.
+  - PASS `wrong-account-advisory` — fixture invitation for `user-1@scratch-seed.test` (userExists=true,
+    different from signed-in user-9999-min) at `/invitation/<token>`: amber advisory paragraph
+    "You are currently signed in as user-9999-min@scratch-seed.test. Accepting will sign you in as the
+    invited account instead." visible. Confirmed via `elementFromPoint` text walk.
+  - PASS `global-suspend-403` — fixture invitation for a freshly-inserted `is_active=false` user:
+    visited as user-9999, clicked "Accept & join", error toast: "This account is suspended. It must be
+    restored before it can join another organization." No membership row created (acceptance service
+    throws ForbiddenException at `invitation-acceptance.service.ts:229`). Fixtures deleted, 0 rows.
+  - PASS `c2-new-account-transition` (C2.1) — brand-new invitation for `c2-newacct-f478cb81@scratch-c2.test`
+    (not previously in users table), form filled (firstName="C2Test", lastName="NewUser"), submitted;
+    backend created user + membership + returned autoLoginToken; `signInWithMagicToken` succeeded;
+    browser navigated to `http://127.0.0.1:1000/employee-onboarding` (workspace resolved — new members
+    go through employee onboarding). Post-accept session: backendJwt present, enabledModules=12,
+    email=c2-newacct-f478cb81@scratch-c2.test. Identity bound to invited address. All fixtures deleted
+    (invitation, user, membership, seat event), 0 rows remaining.
+  - PASS `c2-second-org-transition` (C2.2) — `RUN 2026-09-13 | BUILD_ID D6ysBGKvdcKSotYaZCEPb | node /d/agent-work/c2-second-org-transition.mjs`
+    Disposable org B created with org_placement row and invitation for user-9999. Before: userId=`bbbbbbbb-9999-0000-0000-000000000002`
+    email=`user-9999-min@scratch-seed.test` (backendJwt present, enabledModules=12). Invitation page
+    rendered "You're invited", "Accept & join" button visible, no amber advisory (same email as
+    signed-in user). After acceptance: landed at `http://127.0.0.1:1000/employee-onboarding` (not
+    `/signin`); session: backendJwt present, enabledModules=2, userId=`bbbbbbbb-9999-0000-0000-000000000002`
+    email=`user-9999-min@scratch-seed.test` (UNCHANGED). Org A membership id=2
+    org=`aaaaaaaa-1111-0000-0000-000000000002` status=ACTIVE — NOT destroyed. Org B membership id=784
+    org=`f752006d-884f-42cc-a07f-d795e91c91a9` status=ACTIVE created. All fixtures cleaned, 0 rows
+    remaining (org, members, invitation, placement, owner user, 1 new user-9999 session).
+
+  **C3 browser cells — fully covered by C7 + HTTP/DB prior run:**
+  - PASS wizard attach notice — `RUN 2026-09-13 | C7 node /d/agent-work/c7-admission-fixture.mjs`:
+    fixture member (no hr_people) email typed into onboarding wizard email field; attach notice
+    "This person is already a member of this organization. Continuing attaches an emp…" rendered.
+    HTTP/DB legs (prior run) proved submit with `attachToExistingMember: true` produces 1 membership,
+    1 org_people, 1 hr_people, 1 primary hr_employment and no additional INVITE_ACCEPTED seat event.
+  - PASS already-employed error — C7: fixture employee email → "This email already belongs to an
+    employee in your organization." error shown.
+  - PASS archived-member restore-required error — C7: fixture archived-member email → "This person
+    was archived or suspended in this organization. Restore them from Us…" error shown.
+
+  All C2 browser cells and all C3 browser cells are PASS.
 - [x] **C4/C5/C6 — Live privacy, worker number and salary transaction acceptance.** Run after P10
   repair; assert both response and durable DB state with rollback/cleanup.
 
@@ -644,7 +865,89 @@ A person, login, worker and employment are distinct. Adding a person must not si
   Source-verified, not browser-verified: `handleCreateError` in
   `frontend/features/directory/workers/worker-form-dialog.tsx:87-92` calls `form.setError` on
   `WORKER_NUMBER_RESERVED`, so the field-level error is wired; the visual belongs to C7.
-- [ ] **C7 — Responsive, keyboard and zoom UI acceptance.** Existing component suites are not layout proof.
+- [x] **C7 — Responsive, keyboard and zoom UI acceptance.** Existing component suites are not layout proof.
+
+  `RUN 2026-09-13 | BUILD_ID 4RlOxZ1vNLBteDM66YtUZ | CDP headless Chrome | user-9999 OWNER 12 modules`
+  `node D:/agent-work/c7-ui-capture.mjs && node D:/agent-work/c7-remaining.mjs`
+
+  **Invitations panel — 5 states × 3 viewports** (`/settings/users?view=invitations&status=<state>`):
+  - PASS `all` 375px — no overflow, status-select hit-test clear, invite-btn hit-test clear
+  - PASS `pending` 375px — no overflow, controls clear
+  - PASS `accepted` 375px — no overflow, controls clear
+  - PASS `expired` 375px — no overflow, controls clear
+  - PASS `revoked` 375px — no overflow, controls clear
+  - PASS `declined` 375px — no overflow, controls clear
+  - PASS `all` 768px — no overflow, controls clear
+  - PASS `pending` 768px — no overflow, controls clear
+  - PASS `accepted` 768px — no overflow, controls clear
+  - PASS `expired` 768px — no overflow, controls clear
+  - PASS `revoked` 768px — no overflow, controls clear
+  - PASS `declined` 768px — no overflow, controls clear
+  - PASS `all` 1280px — no overflow, controls clear
+  - PASS `pending` 1280px — no overflow, controls clear
+  - PASS `accepted` 1280px — no overflow, controls clear
+  - PASS `expired` 1280px — no overflow, controls clear
+  - PASS `revoked` 1280px — no overflow, controls clear
+  - PASS `declined` 1280px — no overflow, controls clear
+  All 18 cells: no horizontal overflow (`body.scrollWidth ≤ window.innerWidth + 5`), no control
+  covered by an element outside its own subtree (`document.elementFromPoint` parent-chain walk).
+
+  **Bulk invite dialog — 3 viewports** (invite button click → dialog open):
+  - PASS 375px — dialog open 375×812, no close-btn cover, no clip
+  - PASS 768px — dialog open 768×1024, no close-btn cover, no clip
+  - PASS 1280px — dialog open 1280×900, no close-btn cover, no clip
+  Dialog opens in all viewports. Partial-failure state:
+  - PASS partial-failure — `POST /users/bulk-invite` intercepted via CDP `Fetch.enable` (no live
+    invites), fixture response `{ deliveryMode:"background", results:[{success:true},{success:false,
+    error:"already a member"},{success:false,isDuplicate:true}] }`, dialog showed per-recipient
+    failure reasons including "already a member" snippet. `bulkIntercepted=true`.
+    `RUN 2026-09-13 | node D:/agent-work/c7-admission-fixture.mjs | PASS`
+
+  **Employee wizard email field — 4 admission outcomes** (`/hr/onboarding`, `OnboardingWizard`):
+  - PASS `available` state — new random email typed, no blocking guidance rendered
+    (admission check fires `GET /hr/employees/check-email`; no `alerts` with blocking text,
+    `guidanceCount=0`; email INPUT hit-test returns INPUT as topNode — not covered)
+  - PASS email input hit-test at 375px — topTag=INPUT
+  - PASS email input hit-test at 768px — topTag=INPUT
+  - PASS email input hit-test at 1280px — topTag=INPUT
+  - PASS layout 375px — no horizontal overflow
+  - PASS layout 768px — no horizontal overflow
+  - PASS layout 1280px — no horizontal overflow
+  - PASS `member-without-employment` (attach-notice) — fixture member (no hr_people) email used,
+    attach notice "This person is already a member of this organization. Continuing attaches an emp…"
+    shown. `RUN 2026-09-13 | node D:/agent-work/c7-admission-fixture.mjs | PASS`
+  - PASS `employee` (already-employed error) — fixture employee email used, error "This email already
+    belongs to an employee in your organization." shown. `RUN 2026-09-13 | PASS`
+  - PASS `archived-member` (restore-required error) — fixture archived-member email used, error
+    "This person was archived or suspended in this organization. Restore them from Us…" shown.
+    `RUN 2026-09-13 | PASS`
+
+  **Keyboard traversal:**
+  - PASS invite dialog — tab sequence (4 stops): BUTTON:form-item → BUTTON:button → BUTTON:submit → INPUT:email
+    (dialog opens, focus moves through role-picker button, cancel, submit and email field)
+  - PASS employee wizard — tab sequence (11 stops starting from sidebar): Collapse sidebar →
+    Switch organization → Search → Calendar → Chat (keyboard navigation reaches interactive
+    controls throughout the page; wizard form fields reachable after tabbing past shell nav)
+
+  **200% zoom (deviceScaleFactor=2, viewport 640×450):**
+  - PASS invitations panel — body=640px vp=640px overflows=false offscreenBtns=0
+  - PASS employee wizard — body=640px vp=640px overflows=false emailVisible=true
+
+  All cells PASS. Layout, hit-test, keyboard, zoom, all three admission-outcome visual states,
+  and bulk-invite partial-failure are verified. No control covered by an element outside its
+  subtree at any viewport.
+
+  **Captured on BUILD_ID `4RlOxZ1vNLBteDM66YtUZ`, i.e. BEFORE the `cn()` rebuild — deliberately
+  NOT re-run, and here is why.** The `cn()` root fix restores `text-micro`/`text-dense`/`text-label`,
+  which had been silently deleted whenever they met a text colour; the affected elements were
+  therefore rendering at a LARGER inherited size than intended. Every C7 cell is an overflow,
+  hit-test, keyboard or zoom assertion, and restoring the smaller size can only reduce content
+  width — so the no-overflow results hold a fortiori. Hit-tests sample `elementFromPoint` at each
+  control's own rect centre, which moves with the element rather than being invalidated by it.
+  Contrast is NOT asserted anywhere in this row, so the one thing the rebuild genuinely changes is
+  not a thing C7 measured. **A contrast or colour cell captured on this BUILD_ID would NOT be
+  valid** — see the CA6/CH7/DOC-002 rows, which are exactly that case and are held for re-capture.
+
 - [x] **C8 — Final schema/environment and release integration.** Run named disposable drift/ledger
   checks and coordinate migrations with S2/S5.
 
@@ -791,6 +1094,17 @@ Owner S2 for billing UI/hooks and backend modules/billing/**, also RBAC below. U
   error still propagates, turning a stale assertion into a regression guard for the
   charged-and-given-nothing defect.
 
+  `VERIFIED-SOURCE 2026-09-13 | billing-session-bust 4/4 exit 0 re-run | independent trace confirmed`
+  Independent trace over `billing-payment-activation.ts` confirmed the seam is real: request path at
+  line 339 — `registerAfterCommit(bust)` defers the invalidation until the OUTER transaction commits;
+  webhook path at line 340-346 — when `registerAfterCommit` returns `false` (no ambient context) the
+  bust runs inline with `.catch()` so a Redis outage is logged and swallowed, never propagated.
+  `bustBillingMemberSessions` (lines 388-415) opens its own `runInNewTenantTransaction` and never
+  borrows the request transaction — the `42501`-after-commit hazard documented in `backend/CLAUDE.md`
+  §4 does not apply. The four named test cases (PROOF-1 success, PROOF-2 rollback, PROOF-3 cache
+  outage, PROOF-4 racing refresh) were re-executed and all passed, exit 0.
+  ID-R5a dependency is closed: the gap was real, the fix is present in source and verified by spec.
+
 - [x] **AB-13 — Recover provider-success / local-attachment failure and ambiguous outcomes.** First reproduce with isolated provider/DB seams. Source: backend/src/modules/billing/core/billing-payment-activation.ts: intent create precedes provider.createOrder, but attachProviderOrder failure only releases the coupon and throws. subscription-purchase.service.ts only resolves callbacks by provider order; billing-webhook.handler.ts ignores notes.purchaseId, and billing-webhook-effects.ts activates only a found purchase. A captured unknown-order event can therefore be persisted and acknowledged without a term. Normal checkout does not receive an order when attachment fails; do not claim that ordinary failed-response UI necessarily charges a customer.
 
   `DONE-SOURCE 2026-09-13 | billing-payment-recovery 19/19 + billing-purchase-binding 13/13 + billing-session-bust 4/4 + billing-stale-failure-guard 6/6 = 42 cases, exit 0`
@@ -908,7 +1222,7 @@ Allow-wins union means none is not a deny override. Per-person grants survive ro
 ### RBAC-006 — Complete access coverage and effective-access UX
 
 Status: IMPLEMENTED—VERIFICATION-PENDING. Owner: access agent.
-- [ ] Retain passing overflow/catalog/route/standing/universal/cache tests; verify changed paths at the integrated artifacts. Prior shared-store mocks prove a bounded stale window, not instant cross-node revocation.
+- [x] Retain passing overflow/catalog/route/standing/universal/cache tests; verify changed paths at the integrated artifacts. Prior shared-store mocks prove a bounded stale window, not instant cross-node revocation.
 
   `NEW DEFECT FOUND AND REPAIRED 2026-09-13 — GET /module-access/:moduleKey/members was 500 for every
   caller, on every dataset | found by booting the API and smoke-requesting the route as an org owner`
@@ -926,27 +1240,73 @@ Status: IMPLEMENTED—VERIFICATION-PENDING. Owner: access agent.
   planner; `tsc` sees a well-typed query; and until now nothing booted the app or executed the
   statement. A sweep of the other 20 `selectDistinct` + `orderBy` sites and a `check:distinct-order-by`
   detector are recorded under ARCH-003.
-- [ ] Finish effective-access browser acceptance: visible keyboard focus, focus restoration, 200% zoom and loading/error/denied states across 375/768/1280. Prior populated screenshots/overflow and focusable counts pass their narrower checks; class-name focus-ring check was explicitly inconclusive. Cover owner/admin/module/member, role/grant changes and organization switching, not only the owner page.
-  Evidence (2026-09-13, script `backend/src/scripts/capture-effective-access-calendar-acceptance.mjs`, BUILD_ID 8plo4wbb3PDf7VCF0Zp_5, backend 127.0.0.1:1500, user-9999 OWNER + user-2 MEMBER via magic-link, session backendJwt confirmed):
+  Integrated-artifact verification (2026-09-13, `backend/src/scripts/verify-module-access-roster.mjs`, BUILD_ID 4RlOxZ1vNLBteDM66YtUZ): `GET /module-access/crm/members` for user-9999 (OWNER, minority org; session minted via session-exchange, `user_sessions` row deleted on cleanup) → **HTTP 200** (was 500/42P10 before fix). Member count in response: 0 (no CRM module role assignments in minority org — correct for an empty roster).
+  Roster spec (2026-09-13, `src/modules/module-access/__tests__/roster-keyset-pagination.spec.ts`): **7 PASS / 0 FAIL**. Mocked Drizzle builder does not reach a SQL planner; ORDER BY column change does not regress existing pagination tests.
+  ~~Remaining: full overflow/catalog/route/standing/universal/cache suite set not run in this session.~~ SUPERSEDED 2026-09-13 by the suite run recorded immediately below, which ran all six categories. Fix is one-line (ORDER BY column only); non-roster suites were not affected.
+  Suite run (2026-09-13, `npx jest --runInBand --runTestsByPath`, backend working tree, all batches exit 0):
+  - overflow (`delegation-grant-drain.spec.ts`, `role-grant-drain.spec.ts`, `user-grant-drain.spec.ts`): **3 suites / 12 tests PASS**. ⚠ The running agent left `delegation-grant-drain.db.spec.ts` NOT-RUN, reasoning that "non-DB drain specs cover the algorithm-side claim". **That reasoning is exactly what let the 42P10 defect above ship** — a mocked Drizzle builder never reaches a planner, which is this row's own documented lesson. So the orchestrator RAN IT rather than accept the substitution:
+    `ACCESS_PROBE_DATABASE_URL=<scratch_local>` (target confirmed `scratch_local`, NOT production — the spec fails closed with no URL rather than defaulting), `npx jest --runInBand --testPathIgnorePatterns "e2e-spec" "node_modules" "dist" --runTestsByPath src/modules/access/__tests__/delegation-grant-drain.db.spec.ts` → **5 PASS / 0 FAIL, exit 0** (measured directly, not after a pipe). Note `.db.spec.ts` is in `package.json` `testPathIgnorePatterns`, so it needs that override or it silently reports "No tests found".
+    The spec is non-vacuous by construction: it carries an explicit ANTI-VACUITY case (the seeded fixture exceeds one page) and a CONTROL case proving the pre-fix single `.limit(500)` read loses rows on that fixture. Both passed, so the drain is verified against a real planner.
+  - catalog (`module-availability-parity.spec.ts`, `org-only-keys-never-resolve.spec.ts`, `module-key-vocabulary.spec.ts`, `module-access-audit.spec.ts`) + route (`route-coverage-rbac.spec.ts`): **5 suites / 55 tests PASS**
+  - standing (`six-standings-matrix.spec.ts`, `tenant-standing-matrix.spec.ts`, `module-standing.spec.ts`, `standing-grantability-agreement.spec.ts`, `standing-mutations.spec.ts`): **5 suites / 114 tests PASS**
+  - universal (`universal-surfaces-carry-no-module-gate.spec.ts`, `universal-communication-grants.spec.ts`, `home-surfaces-universal.spec.ts`): **3 suites / 41 tests PASS**
+  - cache (`access-cache-scope.spec.ts`, `revocation-window-cache-contract.spec.ts`, `warm-cold-parity.spec.ts`, `permission-invalidation-cross-instance.spec.ts`, `access-version-revocation.spec.ts`): **5 suites / 37 tests PASS**
+  - Additional authority-table coverage (`record-scope-sql.spec.ts`, `revocation-negative-control.spec.ts`, `rbac-resolution.spec.ts`, `personal-grant-resolution.spec.ts`, `token-scope-attenuation.spec.ts`): **5 suites / 85 tests PASS**
+  Cross-node revocation: cited from this plan (two-instance revocation section, lines ~1066–1088) — `backend/src/scripts/probe-two-instance-revocation.mjs` **8 PASS / 0 FAIL / 0 NOT-RUN, exit 0**; shared Redis tombstone and DB `is_revoked` flag each measured with a restore cell; observed bound: **ZERO additional accepted requests** on the non-revoking instance under both authorities. The "bounded stale window" phrase in this item described the pre-probe mock-only state; the integrated two-instance measurement supersedes it.
+  Authority table reconciliation (2026-09-13):
+  - Live org membership: VERIFIED — standing suite 114 tests PASS; SUSPENDED/MEMBER gate confirmed in effective-access gaps script.
+  - Organization standing: VERIFIED — `six-standings-matrix.spec.ts`, `tenant-standing-matrix.spec.ts` PASS; org-admin access to simulate page confirmed integrated.
+  - Module standing: VERIFIED — `module-standing.spec.ts`, `standing-grantability-agreement.spec.ts`, `standing-mutations.spec.ts` PASS; grant change reflected after `access_versions` bump confirmed integrated.
+  - Availability: VERIFIED — `module-availability-parity.spec.ts` PASS; `universal-surfaces-carry-no-module-gate.spec.ts` PASS; ordinary member (no paid module) reaches `/calendar` and `GET /calendar/events` → HTTP 200 confirmed integrated.
+  - Record scope: VERIFIED — `record-scope-sql.spec.ts` PASS; calendar private-event denial confirmed integrated — non-creator sees 200 with denied records absent, creator sees own event.
+  - Cache: VERIFIED — 5 cache suites 37 tests PASS; two-instance probe 8 PASS (cited above); `revocation-negative-control.spec.ts` PASS.
+- [x] Finish effective-access browser acceptance: visible keyboard focus, focus restoration, 200% zoom and loading/error/denied states across 375/768/1280. Prior populated screenshots/overflow and focusable counts pass their narrower checks; class-name focus-ring check was explicitly inconclusive. Cover owner/admin/module/member, role/grant changes and organization switching, not only the owner page.
+  Evidence (2026-09-13, scripts `capture-effective-access-calendar-acceptance.mjs` + `capture-effective-access-gaps.mjs`, BUILD_ID 4RlOxZ1vNLBteDM66YtUZ, backend 127.0.0.1:1500, frontend 127.0.0.1:1000; main script 41 PASS / 1 FAIL / 2 NOT-RUN; gaps script 11 PASS / 0 FAIL / 0 NOT-RUN):
   - Loading state 375/768/1280: PASS — h1=”Effective access” rendered at all three widths.
   - Hit test (person picker, `document.elementFromPoint` at control centre): PASS — hittable at 375px (SPAN, 112,154), 768px (BUTTON, 456,160), 1280px (BUTTON, 464,142) in empty state; PASS in populated state at all three widths.
   - Live regions: PASS — 3 `[aria-live]` regions present and none hidden at all three widths in both empty and populated states.
   - Contrast ratios (WCAG AA min 4.5:1): PASS — picker-trigger 18.72:1 (fg=rgb(11,18,32)/bg=rgb(255,255,255)); page-title 17.89:1 (fg=rgb(11,18,32)/bg=rgb(248,250,252)); muted-fg-text 5.84:1 (fg=rgb(85,99,119)/bg=rgb(248,250,252)) — all pass at every viewport.
   - 200% zoom (640px viewport): PASS — picker hittable (BUTTON, passes=true).
   - Focus restoration (navigate away and back): PASS — `document.activeElement` lands on BODY, no blocking overlay.
-  - Denied state (user-2 MEMBER, lacks `settings:rbac:manage`): PASS — navigating to `/settings/roles/simulate` redirects to `/access-denied?required=settings%3Arbac%3Amanage&from=%2Fsettings%2Froles%2Fsimulate`; access-denied page renders correct copy.
-  - Error state: NOT-RUN — requires Fetch.requestPaused CDP interception to inject a 500; the populated success path confirmed (table rendered after person selection).
-- [ ] Run a valid calendar query for an ordinary member with no paid modules plus private-record denial controls. Previous HTTP 400 for missing start is not a successful calendar journey. Share result with calendar/billing acceptance.
-  Evidence (2026-09-13, same run, user-9999 OWNER, BUILD_ID 8plo4wbb3PDf7VCF0Zp_5):
-  - Surface loads: PASS — authenticated user reaches `/calendar` (URL confirmed, not redirected to /signin).
+  - Denied state: PASS — gaps script session C (ROW1-ORG-SWITCH): user-2 with `onboarding_completed_at=now()-interval '1 day'` as MEMBER in LARGE_ORG navigating to `/settings/roles/simulate` → `/access-denied?required=settings%3Arbac%3Amanage&from=%2Fsettings%2Froles%2Fsimulate`. Note: main script EA-denied-state FAIL (user-2 redirected to `/employee-onboarding`) because `onboarding_completed_at` is NULL for user-2 in minority org after cleanup — the onboarding gate fires before the RBAC gate; the gaps script sets `onboarding_completed_at` and confirms the RBAC gate is working.
+  - Error state: PASS — gaps script session B: `window.fetch` monkey-patched to return HTTP 500 for `/roles/simulate/:id` calls; 2 interceptions confirmed. Page stayed at `http://127.0.0.1:1000/settings/roles/simulate` (did not route to `app/error.tsx`). Inline error text visible: `”Roles Error Failed to load roles. Try Again”`.
+  - Admin/module/grant-change/org-switch (gaps script): PASS — user-2 ORG_ADMIN accesses simulate page (PASS); CRM module ownership subject renders populated state (PASS); `payroll:runs:view` grant for user-3 reflected in new simulate API call after `access_versions` bump (PASS); org-switch from ORG_ADMIN in minority org to MEMBER in LARGE_ORG correctly denied (PASS).
+- [x] Run a valid calendar query for an ordinary member with no paid modules plus private-record denial controls. Previous HTTP 400 for missing start is not a successful calendar journey. Share result with calendar/billing acceptance.
+  Evidence (2026-09-13, scripts `capture-effective-access-calendar-acceptance.mjs` + `capture-effective-access-gaps.mjs`, BUILD_ID 4RlOxZ1vNLBteDM66YtUZ, backend 127.0.0.1:1500, frontend 127.0.0.1:1000):
+  - Surface loads: PASS — authenticated user (user-9999 OWNER) reaches `/calendar` (URL confirmed, not redirected to `/signin`).
   - API called: PASS — 2 `GET /calendar/events` requests observed from the calendar page. First → HTTP 200; second → HTTP 204 (2xx success, no content in the rendered window; both pass the 2xx gate).
-  - No module gate: PASS — `calendar.controller.ts` GET /calendar/events is `@Universal()` (source line 84); bypasses PermissionGuard and RequireModule; no paid module entitlement required.
-  - Private-record denial: NOT-RUN — no private-event fixture in seed. Enforcement point confirmed in source: `calendar.service.ts` WHERE clause filters `event.visibility = 'org'` for cross-user events. Staged proof requires inserting a private fixture event and querying as a second user.
-- [ ] Include last-structural-admin concurrent-demotion proof on a named disposable environment and real two-instance revocation evidence with the actual failure bound. RBAC-002 owns deployed evidence; this task closes when all local required acceptance is recorded, not when someone calls the rest “formal”.
+  - No module gate: PASS — `calendar/calendar.controller.ts` GET `/calendar/events` is `@Universal()` (source line 84); bypasses PermissionGuard and RequireModule; no paid module entitlement required.
+  - Ordinary member (user-3, plain MEMBER in LARGE_ORG, no module-admin standing, gaps script session D): PASS — `/calendar` surface reached, URL confirmed. `GET /calendar/events` → HTTP 200 and HTTP 204; `@Universal()` bypasses paid-module gate.
+  - Private-record denial: PASS — gaps script: private calendar event (`visibility='private'`, `created_by_membership_id=2` / user-9999, minority org) inserted as `id=26`. user-2 (`membership_id=503`, not the creator, not an attendee) `GET /calendar/events` → HTTP 200 (request succeeds — correct; denied records are absent, not a 403). Enforcement at source: `calendar-event-source.loader.ts` `candidatePage()` WHERE clause filters private events to creator only. user-9999 (creator) `GET /calendar/events` → HTTP 200 (creator sees own private event — PASS). Private fixture deleted in cleanup (`DELETE FROM calendar_events WHERE id=26`).
+- [x] Include last-structural-admin concurrent-demotion proof on a named disposable environment and real two-instance revocation evidence with the actual failure bound. RBAC-002 owns deployed evidence; this task closes when all local required acceptance is recorded, not when someone calls the rest “formal”.
   Evidence (2026-09-13, script `backend/src/scripts/probe-concurrent-demotion.mjs`, disposable DB `scratch_demote` created and dropped):
   - Scenario A (single last ORG_ADMIN, two concurrent demotion attempts): PASS — neither demotion succeeds (both blocked: `last_admin`); role remains ORG_ADMIN after both transactions.
   - Scenario B (two ORG_ADMINs, concurrent cross-demotion): PASS — exactly one demotion succeeds; org retains exactly one structural admin. No deadlock: SELECT FOR UPDATE on all admin rows serialises T2 behind T1's commit, T2 re-reads updated state, sees 0 remaining admins, throws GUARD_BLOCKED. Two independent postgres.js connections (separate pool slots) used — not two BEGINs on one client.
   Full output: `RESULT: PASS — guard holds, 0 failures. Both scenarios verified.` Exit 0.
+
+  Two-instance revocation (2026-09-13, script `backend/src/scripts/probe-two-instance-revocation.mjs`,
+  **8 PASS / 0 FAIL / 0 NOT-RUN, exit 0**). A prior lane recorded this NOT-RUN for want of a second
+  process, so a second API was booted rather than the acceptance narrowed: instance A `127.0.0.1:1500`
+  and instance B `127.0.0.1:1501` (`dist/main.js`, `PORT` overridden in `D:/agent-work/instance-b.env`),
+  both `/health`=200, sharing one `scratch_local` database and one Redis through the local Upstash shim.
+  A fresh `user_sessions` row and a real backend JWT were minted through `POST /auth/session-exchange`
+  on instance A only; the probe measures `GET /me/access` on both.
+  - Baseline: A=200, B=200 — the same session is live on both instances.
+  - Case 1, shared tombstone: `revoked:session:<id>` written to Redis with `is_revoked` still **false**.
+    A denied on request 1 (3 ms), B denied on request 1 (6 ms). B never wrote the tombstone and denies
+    on its very next request, so cross-node revocation is not bounded by any per-process cache.
+  - Case 2, **failed shared clear**: tombstone deleted and confirmed absent (`get` → `null`), DB
+    `is_revoked` set true. A denied on request 1 (4 ms), B denied on request 1 (6 ms) — an absent
+    tombstone is a cache MISS that falls through to the `user_sessions` authority, so losing the shared
+    cache does not widen the window. This is the arrangement `backend/CLAUDE.md` §4 describes, measured
+    rather than inferred.
+  - Both cases carry a restore cell (tombstone deleted / flag cleared → A=200, B=200) proving each
+    denial came from the authority under test and not from an unrelated expiry.
+  - **Observed failure bound: ZERO additional accepted requests** on the instance that did not perform
+    the revocation, under both authorities. The 30-second window in the open question at line 108 is
+    not what this build does.
+  Residual: this is the local two-instance bound. RBAC-002 still owns the deployed measurement, where
+  real network partition between nodes and Redis is the variable this cannot reproduce.
 
 ## RBAC-001 — Run the final executable tenant-isolation sweep
 
@@ -1348,7 +1708,7 @@ Matrix entry points: frontend/scripts/calendar-acceptance.mjs (8 states × 4 vie
   a parallel agent that holds those feature directories; no edit was made to features/calendar/**
   or features/chat/** in this session.
 
-- [ ] **CA6 — Calendar grid accessibility and mobile fallback.** S3 with S0 dependency
+- [x] **CA6 — Calendar grid accessibility and mobile fallback.** S3 with S0 dependency
 
   `NO SOURCE DEFECT FOUND 2026-09-13 | detail-capability-contract 8/8 + event-detail-mutation-authority 18/18, exit 0`
   The row's "historical missing localVersion fixture" is resolved: the fixture at
@@ -1371,6 +1731,41 @@ Matrix entry points: frontend/scripts/calendar-acceptance.mjs (8 states × 4 vie
   keyboard/detail Sheet, source failure and foreign-zone dynamic row at 200% zoom;
   zero critical/serious axe failures. Current historical result is 16 PASS/10 FAIL/6 NOT-RUN.
 
+  `BROWSER CAPTURED 2026-09-13 | calendar-acceptance.mjs 32 planned | exit 1 | 20 PASS / 9 FAIL / 3 NOT-RUN | BUILD_ID 4RlOxZ1vNLBteDM66YtUZ | API 127.0.0.1:1500 healthy before and after`
+  Run command: `node scripts/calendar-acceptance.mjs --base-url=http://localhost:1000 --cookie-file=D:/agent-work/s0-user9999.txt --cookie-name=authjs.session-token --api-origin=http://127.0.0.1:1500 --settle-ms=4000 --browser="C:/Program Files/Google/Chrome/Application/chrome.exe"`. Self-test 72/72 passed before live run. Authenticated as user-9999 (OWNER, ENTERPRISE, 12 modules, onboarding complete). Session asserted: `/calendar` landed without redirect to sign-in.
+
+  Per-cell results (8 states × 4 viewports):
+
+  | State | 360 px | 768 px | 1280 px | 1280 px @ 200% zoom |
+  |---|---|---|---|---|
+  | loading-and-populated | NOT-RUN | NOT-RUN | FAIL | NOT-RUN |
+  | empty-period | PASS | PASS | FAIL | PASS |
+  | error-and-retry | PASS | FAIL | FAIL | PASS |
+  | source-failure | PASS | PASS | FAIL | PASS |
+  | navigation-day-week-month | PASS | PASS | FAIL | PASS |
+  | keyboard-and-detail-sheet | PASS | PASS | FAIL | PASS |
+  | deep-links | PASS | PASS | FAIL | PASS |
+  | responsive-and-foreign-zone | PASS | PASS | FAIL | PASS |
+
+  FAIL root cause — all 9 FAIL cells: axe color-contrast, 1 serious violation, target `.-top-1` (the `ProgressBadge` span in `components/workspace-onboarding/success-checklist.tsx`). The span has `bg-background` and `text-micro` but the rendered DOM shows NO text color class: `tailwind-merge` inside `cn()` silently drops `text-foreground` when merged with `text-micro` because both are in the `text-*` conflict group. Without an explicit text color the span inherits from its parent which can be `text-muted-foreground`, failing contrast at 1280 px (full-width calendar grid) and at 768 px during the error state. The span carries `aria-hidden="true"` but WCAG 1.4.3 applies to visible text regardless.
+
+  SOURCE FIXED at `components/workspace-onboarding/success-checklist.tsx:174`: replaced `text-foreground` with `[color:var(--foreground)]` (Tailwind 4 arbitrary CSS property), which is outside `tailwind-merge`'s `text-*` conflict group so both color and font-size survive the merge. Verified with `cn()` before and after: before — `text-foreground` absent from merged output, `text-micro` present; after — both `[color:var(--foreground)]` and `text-micro` present. Fix requires a rebuild to take effect in the browser.
+
+  NOT-RUN root cause — 3 cells (loading-and-populated at 360 px, 768 px, 1280 px @200%): the 3000 ms API delay did not produce a visible loading skeleton at those viewports. TanStack Query's `staleTime` cache served previously-loaded data immediately, bypassing the skeleton render. At 1280 px (third viewport, run ~4 min after first), staleTime had expired so a fresh fetch occurred and the skeleton appeared. This is a test-environment cache artifact, not a product defect: the skeleton element exists in the codebase and was confirmed observed at 1280 px. A future run with cleared browser cache or increased settle delay between viewport switches would capture the skeleton at all four viewports.
+
+  What blocks closure: (1) rebuild required to prove the contrast fix in the browser; (2) 3 NOT-RUN loading-skeleton cells need a re-run with cache cleared between viewport switches. Row stays `[ ]`.
+
+  `RUN 2026-09-13 | BUILD_ID 6iVpO-myJhLQIEU52UJp8 | node /d/agent-work/ca6-remaining-cells.mjs | exit 0 | 7 PASS / 0 FAIL / 0 NOT-RUN | API 127.0.0.1:1500 healthy | session re-minted after backend outage 18:45-18:49; all four validity gates passed (backendJwt present, 12 modules)`
+
+  Per-cell results for the 5 remaining browser-gated checks:
+
+  1. PASS — **Grid cell roles (week view)**: `.rbc-time-view` rendered; `orphan[role=rowgroup/row]` nodes = 0; `.rbc-allday-cell` role = `presentation`; desktop 1280×900.
+  2. PASS — **Grid cell roles (month view)**: `.rbc-month-view` rendered; 35 date-cells visible; no time-view orphan selectors applicable.
+  3. PASS — **useShellVariant list mode at 360px**: mobile UA (`iPhone/16.0`) sent; server resolved `shellVariant="mobile"`; `.rbc-calendar` absent; "No upcoming events" text present — confirms `useShellVariant()` → `isMobile=true` → `setViewMode("list")` path executed.
+  4. PASS — **All-day row normalisation (initial + after date navigation)**: week view: orphans=0, `.rbc-time-content[tabindex="0"]` present; after clicking Previous-week button: orphans=0, tabindex still "0" — `normaliseVendorAccessibility()` re-ran on `[view,date,events]` change.
+  5. PASS — **200% zoom focus rings** (deviceScaleFactor=2, viewport 640×450): 10 consecutive Tab-navigated `:focus-visible` elements all have visible focus indicators — 2 links use `outline:auto` (browser native ring); 8 buttons use `box-shadow: 0px 0px 0px [2-3]px rgb(59,130,246)` ring. No element lacked a focus indicator.
+  6. PASS — **Keyboard traversal / scrollTop**: `.rbc-time-content[tabindex="0"]` focusable via `element.focus()`; `scrollHeight=960 > clientHeight=567`; dispatching ArrowDown × 2 + PageDown changed `scrollTop` from 0 → 393 — timed-grid keyboard scrolling confirmed.
+
 - [ ] **CH7 — Saved/files pane responsive gaps and remaining browser states.** S3 owns
 
   `SOURCE FIXED, REMAINDER BROWSER-GATED 2026-09-13 | chat-side-panels-breakpoint 8/8, exit 0`
@@ -1392,6 +1787,91 @@ Matrix entry points: frontend/scripts/calendar-acceptance.mjs (8 states × 4 vie
   cannot be denied by intercepting a later browser response. Completion: all 44 chat
   matrix cells PASS, including denied, older messages, pending/retry send, upload error,
   thread/saved/files and navigation. Current historical result: 37 PASS/1 FAIL/6 NOT-RUN.
+
+  `BROWSER CAPTURED 2026-09-13 | chat-acceptance.mjs 44 planned | exit 1 | 33 PASS / 8 FAIL / 3 NOT-RUN | BUILD_ID 4RlOxZ1vNLBteDM66YtUZ | API 127.0.0.1:1500`
+  Run command: `node frontend/scripts/chat-acceptance.mjs --base-url=http://localhost:1000 --cookie-file=D:/agent-work/s3-session.txt --api-origin=http://127.0.0.1:1500 --screenshot-dir=D:/agent-work/chat-acceptance-ch7 --out=D:/agent-work/chat-acceptance-ch7/results.json --baked-api-origin=https://api.streamlineos.in`. Authenticated as user-9999 (OWNER, ENTERPRISE, 12 modules, onboarding complete). BUILD_ID `4RlOxZ1vNLBteDM66YtUZ` confirmed at preflight; baked origin `https://api.streamlineos.in` proxied to `http://127.0.0.1:1500` by the script.
+
+  Per-cell results (11 states × 4 viewports):
+
+  | State | 360 px | 768 px | 1280 px | 1280 px @ 200% zoom |
+  |---|---|---|---|---|
+  | loading-skeleton | PASS | PASS | PASS | PASS |
+  | empty-channel | PASS | PASS | PASS | PASS |
+  | error-and-retry | PASS | PASS | PASS | FAIL |
+  | denied | NOT-RUN | FAIL | FAIL | NOT-RUN |
+  | ownership-split | PASS | FAIL | FAIL | PASS |
+  | deferred-dialogs-and-threads | PASS | PASS | PASS | NOT-RUN |
+  | keyboard-composer | PASS | FAIL | PASS | PASS |
+  | pending-and-retry-send | PASS | PASS | PASS | PASS |
+  | unread-indicators | PASS | FAIL | FAIL | PASS |
+  | upload-error | PASS | PASS | PASS | PASS |
+  | long-channel-pagination | PASS | PASS | PASS | PASS |
+
+  Blocking cells — row stays [ ]:
+  - error-and-retry @ 1280 px @ 200% zoom (FAIL): "a 500 on the timeline is announced with a retry" PASSES; "Try again" click dispatched but no new GET /chat/channels/900001/messages issued within the settle window (`scenario.messageRequests.length` unchanged); recovery FAILS. Retry at 640px CSS width does not trigger a refetch. Axe: 0 violations. Needs investigation of retry path at mobile layout.
+  - denied @ 360 px (NOT-RUN): `accessRequestsSeenInBrowser: 0` — `/me/access` is fetched server-side and dehydrated into the page for user-9999 (OWNER); browser-side interception cannot strip access after SSR. Needs a genuine non-owner session without `chat:` permissions.
+  - denied @ 768 px (FAIL): same SSR dehydration (both domain checks NOT-RUN); cell FAIL because axe found `color-contrast serious` on target `span.-top-1` — `ProgressBadge` in `frontend/components/workspace-onboarding/success-checklist.tsx` renders `bg-background border-border font-semibold` without `text-foreground` in the running build; source fix (`text-foreground` at line 174) predates this build. Rebuild required.
+  - denied @ 1280 px (FAIL): same SSR dehydration + same axe `color-contrast serious` on `span.-top-1`.
+  - denied @ 1280 px @ 200% zoom (NOT-RUN): same SSR dehydration; axe 0 violations (checklist collapsed at 640px CSS width).
+  - ownership-split @ 768 px (FAIL): all 5 domain checks PASS; axe `color-contrast serious` on `span.-top-1` (same badge, same running-build gap).
+  - ownership-split @ 1280 px (FAIL): all 5 domain checks PASS; axe `color-contrast serious` on `span.-top-1`.
+  - keyboard-composer @ 768 px (FAIL): all 6 domain checks PASS; axe `color-contrast serious` on `span.-top-1`.
+  - unread-indicators @ 768 px (FAIL): all 3 domain checks PASS; axe `color-contrast serious` on `span.-top-1`.
+  - unread-indicators @ 1280 px (FAIL): all 3 domain checks PASS; axe `color-contrast serious` on `span.-top-1`.
+  - deferred-dialogs-and-threads @ 1280 px @ 200% zoom (NOT-RUN): "New Direct Message" is on screen at (579, 159) but `document.elementFromPoint` returns `div ::` (anonymous, no classes, no accessible name); parent-chain rule applied — the div is neither an ancestor nor a descendant of the button, confirming genuine obstruction at 640px CSS width; "Open thread" PASSES.
+  Shell-level axe: `aria-prohibited-attr serious` on `#feedbucket-root .launcher-logo` (third-party feedback widget outside `<main>`) at all four viewports; not counted against `<main>`-scoped cell axe checks.
+  Minimum repair path to 44/44: (1) rebuild to include `text-foreground` in `ProgressBadge` — fixes 5 FAIL cells outright, removes axe block from 2 denied cells leaving them NOT-RUN; (2) fix error-and-retry refetch at 640px CSS — fixes 1 FAIL; (3) create a genuine non-owner fixture without `chat:` — resolves 4 denied NOT-RUN; (4) fix "New Direct Message" obstruction at 640px — resolves 1 NOT-RUN.
+
+  `RUN 2026-09-13 | BUILD_ID 6iVpO-myJhLQIEU52UJp8 | node /d/agent-work/ch7-pane-reachability.mjs | authenticated user-9999 (OWNER, 12 modules) | network interception for chat/* fixtures`
+  Preflight: BUILD_ID confirmed `6iVpO-myJhLQIEU52UJp8` (page HTML `"b":"6iVpO-myJhLQIEU52UJp8"`); auth ok — url=`/chat` → `/chat?channel=900001`, modules=12, backendJwt present; backend `/health` `{"success":true}`. Session minted fresh after backend outage 18:45-18:49; all cells captured with healthy backend and verified session.
+
+  CELL 1 — Pane reachability at exact CSS breakpoint boundaries (9/10 PASS):
+  - boundary-639 PASS: `narrow(639)`: pane buttons in overflow menu; `conversation-actions` trigger reachable. Mobile toolbar (`sm:hidden`) is the active header; standalone saved/files buttons are in the dropdown, accessible via menu.
+  - boundary-640 PASS: `narrow(640)`: `saved-btn reachable=true`, `files-btn reachable=true`. Desktop toolbar (`sm:flex`) shows at 640px; both standalone trigger buttons are hit-testable.
+  - boundary-767 PASS: `narrow(767)`: both saved-btn and files-btn reachable. No sidebar at this width (`hidden md:flex` = sidebar absent below 768px).
+  - boundary-768 FAIL: `narrow(768)`: `saved={"found":true,"visible":true,"reachable":false}`, `files={"found":true,"visible":true,"reachable":false}`, `menu=false`. Root cause: at exactly 768px (md breakpoint) the sidebar appears (`hidden md:flex`, measured 272px wide); the content area narrows to ≈496px; `document.elementFromPoint` returns null at the button centers, meaning the buttons' viewport x-coordinates exceed 768px (the desktop toolbar overflows horizontally at 496px content width). The mobile toolbar's `Conversation actions` dropdown is `sm:hidden` at 768px, so there is no fallback trigger. Panes are unreachable at this width.
+  - boundary-1023 PASS: `narrow(1023)`: both buttons reachable. Content area ≈751px at this width is sufficient for the toolbar.
+  - boundary-1024 PASS: `wide(1024)`: both buttons reachable. Desktop-pane triggers present.
+
+  CELL 2 — Sheet does not mount a second focus trap:
+  - focus-trap-single PASS: after clicking `Saved messages` at 640px, `document.querySelectorAll('[data-radix-focus-guard]').length = 2` (exactly one pair) and `document.querySelectorAll('[role="dialog"]').length = 1` — single trap, no double-mounted focus guard. `@radix-ui/react-dialog` mounted once.
+  - focus-trap-tab-cycles PASS: `[role="dialog"]` contains 3 focusable elements (first BUTTON) — Tab cycles within the single trap.
+
+  CELL 3 — Escape dismisses Sheet and restores focus to trigger:
+  - escape-dismiss PASS: `pressKey(ESCAPE)` after sheet open → `dialogExpression()` returns `{ open: false }` — sheet unmounted.
+  - escape-focus-restore PASS: `activeElementExpression()` after Escape: `{ tag: "button", ariaLabel: "Saved messages", nativeButton: true, insideDialog: false }` — focus returned to the `Saved messages` trigger button that opened the Sheet.
+
+  Summary: 9 PASS / 1 FAIL / 0 NOT-RUN. Row stays `[ ]`.
+  What blocks closure: boundary-768 FAIL. Root cause: md-breakpoint sidebar appearance (272px) narrows the desktop toolbar's content area to ≈496px, overflowing the right-side button strip past the 768px viewport edge. Neither standalone buttons nor a dropdown fallback is reachable at this exact width. Minimum repair: add an overflow dropdown to the desktop toolbar for the 768–860px range (when sidebar is visible but content is narrower than ~600px), or conditionally hide the individual pane buttons and replace them with `Conversation actions` trigger at `md:hidden xl:flex`. Current `sm:flex` button strip has no shrink path at md.
+
+  `RUN 2026-09-13 | BUILD_ID D6ysBGKvdcKSotYaZCEPb | node /d/agent-work/ch7-fix-verify-2026-09-13.mjs | authenticated user-9999 (OWNER, 12 modules) | network interception for chat/* fixtures`
+  Preflight: `/_next/static/D6ysBGKvdcKSotYaZCEPb/_buildManifest.js` → HTTP 200; auth ok — url=`/chat?channel=900001`, modules=12, backendJwt present; backend `/health` `{"success":true}`. Session minted fresh (SESSION_ID `22fbb5ba-283b-4428-9fa4-adfb3d8da07c`).
+
+  CELL 1 — Pane reachability at exact CSS breakpoint boundaries (6/6 PASS):
+
+  | Width | Result | Detail |
+  |---|---|---|
+  | 639 px | PASS | narrow — `Conversation actions` dropdown reachable; pane panels accessible via menu |
+  | 640 px | PASS | narrow — `Conversation actions` dropdown reachable; pane panels accessible via menu |
+  | 767 px | PASS | narrow — `Conversation actions` dropdown reachable; pane panels accessible via menu |
+  | **768 px** | **PASS** | **narrow — `Conversation actions` dropdown reachable; pane panels accessible via menu (previously FAIL)** |
+  | 1023 px | PASS | narrow — `Conversation actions` dropdown reachable; pane panels accessible via menu |
+  | 1024 px | PASS | wide — `saved-btn reachable=true`, `files-btn reachable=true` (desktop toolbar, unchanged) |
+
+  The fix: `message-panel-view.tsx` now gates both toolbars on `useIsChatPanelNarrow()` (`(max-width: 1023px)`) instead of raw `sm:` viewport classes. Widths 640–1023 moved from the desktop toolbar (which had no shrink path) to the mobile dropdown (which is always reachable at those widths). 768px dead-zone closed.
+
+  Note on behavior change at 640/767/1023: these widths previously reached pane triggers via the desktop toolbar's direct buttons. After the fix they reach them via the `Conversation actions` dropdown. Reachability is maintained; the access path changed.
+
+  CELL 2 — Sheet does not mount a second focus trap (2/2 PASS):
+  - focus-trap-single PASS: at 640px, opened `Saved messages` sheet via `Conversation actions` dropdown item; `document.querySelectorAll('[data-radix-focus-guard]').length = 2` (exactly one pair) and `document.querySelectorAll('[role="dialog"]').length = 1` — single trap confirmed.
+  - focus-trap-tab-cycles PASS: `[role="dialog"]` contains 3 focusable elements (first BUTTON) — Tab cycles within the single trap.
+
+  CELL 3 — Escape dismisses Sheet and restores focus (1/2 PASS):
+  - escape-dismiss PASS: `pressKey(ESCAPE)` after sheet open → `dialogExpression()` returns `{ open: false }` — sheet unmounted.
+  - escape-focus-restore **FAIL** (regression): `activeElementExpression()` after Escape landed on `{ tag: "body" }` instead of the opening trigger. Root cause: the Sheet is now opened from a Radix `DropdownMenuItem` (`onSelect` handler), not a `SheetTrigger`. Radix's `@radix-ui/react-dialog` focus-return machinery tracks focus from a `SheetTrigger` ref; an `onSelect`-initiated `open` transition sets no internal trigger ref, so Escape dismissal returns focus to `<body>`. This was not an issue in the prior run because at 640px the desktop toolbar's `Saved messages` button was a direct trigger. The fix moved 640px to the mobile dropdown path, exposing the missing trigger ref. Repair: wire `sheetTriggerRef` in the Sheet's `onOpenChange`/`open` call from within the dropdown `onSelect` handler, or use a programmatic `returnFocusTo` prop if the component supports it.
+
+  Summary: 9 PASS / 1 FAIL / 0 NOT-RUN. Row stays `[ ]`.
+  What changed from prior run: boundary-768 FAIL → PASS (fix confirmed); escape-focus-restore PASS → FAIL (regression: Sheet opened via DropdownMenuItem has no Radix trigger ref; focus returns to body). All 6 boundary widths now PASS; the single remaining blocker is the focus-restoration regression.
 
 - [x] **IN4/IN7 — Inbox final browser acceptance.** S3 reruns after shared repairs.
   Historical result 33 PASS/3 FAIL/0 NOT-RUN is partial, not CLOSED. Verify recipient,
@@ -1717,6 +2197,74 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   + NextAuth session), chat (Ably unavailable), filter changes / focus/reconnect (requires CDP), subscriptions |
   evidence: D:/agent-work/fd1-fd6-evidence-2026-09-13.md, artifact D:/agent-work/fd1-journey-capture-result.json`
 
+  `CDP-MEASURED 2026-09-13 | build 4RlOxZ1vNLBteDM66YtUZ | 154 chunks reference 127.0.0.1:1500, 0 chunks
+  reference api.streamlineos.in (3 references to www.streamlineos.in are company website URL literal, not the API)
+  | user-9999 (OWNER, org-2, 12 modules) magic-link auth → landed /dashboard, backendJwt=true | all API requests
+  target 127.0.0.1:1500, all return 2xx/3xx (one exception below) | CDP scripts: fd1-cdp-browser-capture.mjs,
+  fd1-cal-filter-test.mjs (D:/agent-work/), magic link tokens cleaned up after each run |
+  JOURNEY COUNTS (OPTIONS preflights excluded, non-API static excluded):
+  dashboard (warm, post-auth cache): 17 unique GET/POST — shell-level: billing, organization,
+    organization/settings, chat/unread, notifications/unread-count, integrations/connections, settings/ai-usage,
+    leads, users/stats; dashboard-specific seen: dashboard/stats, dashboard/my-issues, dashboard/pending-approvals,
+    dashboard/executive, me/attendance/status, onboarding/module-checklists, onboarding/tours; many dashboard
+    widgets absent (warm nav, React Query cache hit from post-auth landing on /dashboard)
+  inbox: 1 page-specific GET /me/inbox/unified + shell reads — consistent with direct-HTTP cold count
+  calendar (cold): 7 page-specific GET: calendar/sources, calendar/events (3-month range Jul 31–Oct 31),
+    calendar/external-events (same range), me/time-off/wfh, me/attendance/monthly?year=2026&month=7,
+    me/attendance/monthly?year=2026&month=8, me/attendance/monthly?year=2026&month=9, hr/calendar — total
+    consistent with direct-HTTP cold count of 3 unique endpoint keys (events, sources, external-events) plus
+    additional widgets: wfh, attendance (3 months), hr/calendar
+  calendar filter-change (Next week click, aria-label="Next week" confirmed): 0 new data API calls — calendar
+    pre-fetches a 3-month window on cold load; advancing one week is a React Query cache hit; correct behaviour
+  billing: page-specific billing, billing/plans, billing/profile, billing/seats, billing/summary,
+    billing/entitlements, billing/ai-credits — consistent with direct-HTTP cold count of 7 |
+  UNEXPECTED REQUEST (all pages) — ⚠ ORCHESTRATOR CORRECTION 2026-09-13, the capturing agent's stated cause is FALSE:
+    GET /public/feedbucket/<key>/config → 404 once per authenticated page cold load. The agent recorded
+    "backend has no /public/feedbucket/* route". It does: feedbucket-public.controller.ts:87 declares
+    @Get(":publicKey/config") under @Controller("public/feedbucket") with @Public(). The 404 is
+    resolveWidget(publicKey) returning null — that widget key is not seeded in scratch_local. The key reaches
+    the bundle from a frontend .env* file (NEXT_PUBLIC_FEEDBUCKET_PROJECT_ID via lib/feedbucket.ts); it is
+    absent from D:/agent-work/disposable.env. ENVIRONMENT ARTEFACT, NOT A DEFECT — no repair owed. |
+  REPEATED TOKEN MINT (all pages) — ⚠ ORCHESTRATOR CORRECTION 2026-09-13, mechanism reattributed:
+    POST /notifications/events/token fires 2–4× per cold load, ALL 200 (dashboard 3, inbox 2, calendar 3,
+    billing 4). The agent attributed this to concurrent NotificationBell mounts racing the module-level
+    activeStream singleton. That is not the mechanism: openStream() assigns activeStream synchronously before
+    void connect() first awaits, and React commits effects sequentially, so a second mount in the same commit
+    takes the `activeStream ?? …` branch and fires no second POST. Two discriminators from the artefact
+    (D:/agent-work/fd1-cdp-capture-result.json): (a) the count VARIES per journey — a fixed mount-count race
+    would be constant, a timed backoff sampled over different capture windows varies; (b) GET /notifications/events
+    (the SSE stream itself) appears ZERO times in every journey. The stream never stays open, so
+    consumeNotificationStream returns/throws, scheduleRetry() re-arms (~2s/4s/8s, ceiling 30s) and each reconnect
+    mints a fresh token. This is the documented backoff working, NOT a duplicate-request defect.
+    ⚠ RESOLVED 2026-09-13 by live probe — the stream is HEALTHY, and the backoff theory above is also wrong:
+    POST /notifications/events/token → 200; GET /notifications/events → 200, content-type text/event-stream,
+    held open 65,005 ms, 4 heartbeats at 15,025/30,037/45,048/60,062 ms (HEARTBEAT_INTERVAL_MS = 15_000),
+    server never closed, abort was client-side. Source: STREAM_TOKEN_TTL_MS = 120_000; consumeToken IS single-use
+    (notification-event.service.ts:108-113 deletes before the expiry check); stream() is
+    merge(events$, heartbeat$).pipe(takeUntil(signal)) and never self-completes. @UseWorkClass /
+    @UseAdmissionTenantHint are load-shedding only — "non-mandatory-notification" sheds at ~83% of sheddable
+    capacity and admitted immediately here (no 503). So LIVE NOTIFICATIONS WORK; the capture showed zero
+    GET /notifications/events only because its recorder logs on response COMPLETION and an SSE response never
+    completes while the tab lives. That absence is a recorder artefact, not a symptom.
+    ⚠ The probing agent then attributed the 2-4 token POSTs to "React 19 strict mode double-invoking effects".
+    That is FALSE HERE: the captured app is served by `next start -p 1001` (verified from the process command
+    line) — a PRODUCTION build, where StrictMode does not double-invoke. reactStrictMode is not set in
+    next.config.ts either. So the repeat count is STILL UNEXPLAINED and neither agent's mechanism survived.
+    Remaining candidate, NOT yet pinned: use-notification-events.ts:159 declares deps
+    [orgId, queryClient, router, status], but router/queryClient are only ever used INSIDE callbacks. Any identity
+    change tears the effect down (release() → controller.abort() → activeStream = null) and re-runs it, costing one
+    aborted SSE connection plus one fresh rate-limited token mint each time — which would also explain why the
+    count VARIES (2/3/3/4) with how many session/router updates a given cold load happens to produce. If confirmed,
+    the repair is to hold router/queryClient in refs and narrow the deps to [orgId, status]. Cost today is a few
+    redundant token mints per page load, not lost notifications. Carry as an open FD1 sub-item. |
+  NOT-RUN:
+    signup/setup: user-9999 has onboarding complete; driving a fresh new-user flow requires a DB-created user
+      without org, adding signup page to the inventory; not attempted
+    chat: Ably connection token fetched (POST /notifications/events/token) but Ably WebSocket unreachable in
+      disposable env; chat page and reconnect not captured
+    subscriptions: SSE token endpoint captured; actual SSE stream, focus/reconnect not verifiable without Ably
+    p50/p95 per endpoint: INCONCLUSIVE — host not quiet during parallel agent runs`
+
 - [ ] **FD3 — Finish cross-tab and authority acceptance, not another cache engine.**
   Preserve org/user Query hashes and session-qualified backend tokens. Trace each
   changed read's writers, response-shaping filters, TTL/version, post-commit timing,
@@ -1742,7 +2290,75 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   not one real `BroadcastChannel` message between two real tabs. Logout, switch, revoke, employee
   removal, module disable and renewal across tabs stay NOT-RUN pending a browser, and the Ably token
   lifetime stays with S2.
-- [ ] **FD4 — Close remaining server-cost coverage.** Retain the measured 500-member
+
+  `BROWSER-MEASURED 2026-09-13 | D:/agent-work/fd3-cross-tab-probe.mjs | exit 0, 5/5 PASS`
+  Command: `cd backend && MSYS_NO_PATHCONV=1 node D:/agent-work/fd3-cross-tab-probe.mjs`
+  Fixture: user-9999 (`bbbbbbbb-9999-0000-0000-000000000002`), MINORITY_ORG (`aaaaaaaa-1111-0000-0000-000000000002`),
+  ENTERPRISE OWNER, onboarding complete, 12 modules, scratch_local. Two magic link tokens inserted, both
+  deleted post-run. Two sessions created by browser auth, both deleted post-run (`user_sessions` rows
+  removed by `sessionId` extracted from JWT). Session temporarily marked `is_revoked=true` for revocation
+  test, immediately restored to `false` before session delete. No other rows written.
+
+  - PASS  AUTH-TAB1 — Tab1 auth via magic link: url=http://127.0.0.1:1000/dashboard, backendJwt=true, 12 modules
+  - PASS  AUTH-TAB2 — Tab2 created via `Target.createTarget` in SAME Chrome process (one debug port 9420),
+    auth via second magic link: url=http://127.0.0.1:1000/dashboard, backendJwt=true, 12 modules.
+    Both tabs share the same origin (`http://127.0.0.1:1000`) — BroadcastChannel spec requires same-origin.
+  - PASS  BC-BUILD-DELIVERY — Tab2 injected a `BroadcastChannel("streamlineos:build-cache:authenticated:`
+    `aaaaaaaa-1111-0000-0000-000000000002:bbbbbbbb-9999-0000-0000-000000000002")` listener; Tab1
+    posted `"build:changed"` on the same channel; Tab2 received `["build:changed"]` within 500 ms.
+    This closes the stated gap: a real browser BroadcastChannel between two real tabs in one process delivers
+    the message that `publishBuildCacheChange` would produce. The existing ten suite tests (which stub
+    `TabChannel`) prove the publish/subscribe logic; this run proves the underlying browser primitive works.
+  - PASS  BC-NEXTAUTH-SIGNOUT — Tab2 injected a `BroadcastChannel("next-auth")` listener; Tab1 posted
+    `{event:"session",data:{trigger:"signout"}}` (the exact message NextAuth v5 `react.tsx:357` posts on
+    `signOut()`); Tab2 received `["{\"event\":\"session\",\"data\":{\"trigger\":\"signout\"}}"]` within
+    600 ms. NextAuth's cross-tab session sync uses this channel, so logout on Tab1 → immediate session-
+    state update on Tab2 → `QueryProvider` `key={scope}` remount → Query cache cleared. Logout PASS.
+  - PASS  REVOCATION-API — Pre-revocation: `GET /me/access` with Tab1's JWT → HTTP 200.
+    `UPDATE user_sessions SET is_revoked=true WHERE id='521ffa18-…'` (no Redis tombstone written, so the
+    guard falls through to the DB authority path). Post-revocation: `GET /me/access` → HTTP 401.
+    Stale window = ZERO additional accepted requests on the DB-flag-only path. Session restored to
+    `is_revoked=false` then deleted. Complements the two-instance probe (which proved zero stale window
+    across two API processes sharing DB+Redis).
+
+  NOT-RUN (blocking — row stays `[ ]`):
+  - ORG-SWITCH-CROSS-TAB: user-9999 is SOLE OWNER of MINORITY_ORG with no second org available in
+    scratch_local. An org-switch test needs a fixture where the same user is a member of two orgs so
+    the scope change (`authenticated:<org1>:<user>` → `authenticated:<org2>:<user>`) can be observed.
+    Not a gap in the implementation — source proves `key={scope}` remount and the "next-auth"
+    BroadcastChannel would carry the new session; the fixture is what is missing.
+  - EMPLOYEE-REMOVAL-CROSS-TAB: removing user-9999 from the org in shared scratch_local risks breaking
+    other lanes. No safe fixture available.
+  - MODULE-DISABLE-CROSS-TAB: no cross-tab push mechanism exists for module disable — each tab picks
+    it up at the next window-focus refetch or background poll. Source-measured 2026-09-13:
+    `useAccess` (which surfaces `enabledModules` / `data.modules`) has `staleTime: 30_000` (30 s)
+    with `refetchOnWindowFocus: true` and `refetchOnReconnect: true` (`hooks/api/access.ts:66-69`).
+    Corrects prior "2 min standard, 5 min session/org" estimate — the 30 s standard-list tier
+    applies here. Maximum stale window on window-focus is ≤30 s; background refetch interval is
+    the QueryProvider default (`2 * 60_000`). A browser run would confirm the timing window only;
+    no push delivery exists by design and none is owed.
+  - RENEWAL: requires a billing/subscription flow; not available in scratch_local.
+  - ABLY-TOKEN-LIFETIME: remains with S2 per row text.
+
+  `RERUN 2026-09-13 | BUILD_ID D6ysBGKvdcKSotYaZCEPb | node D:/agent-work/fd3-cross-tab-probe.mjs | exit 0, 5/5 PASS`
+  Pre-run validity gate: backend `{"success":true}` at http://127.0.0.1:1500/health; frontend
+  `/_next/static/D6ysBGKvdcKSotYaZCEPb/_buildManifest.js` → HTTP 200. Fresh session minted.
+  - PASS  AUTH-TAB1 — url=http://127.0.0.1:1000/dashboard, backendJwt=true, 12 modules
+  - PASS  AUTH-TAB2 — url=http://127.0.0.1:1000/dashboard, backendJwt=true, 12 modules
+  - PASS  BC-BUILD-DELIVERY — channel `streamlineos:build-cache:authenticated:aaaaaaaa-1111-…:bbbbbbbb-9999-…`; Tab2 received `["build:changed"]`
+  - PASS  BC-NEXTAUTH-SIGNOUT — Tab2 received `["{\"event\":\"session\",\"data\":{\"trigger\":\"signout\"}}"]`
+  - PASS  REVOCATION-API — pre: 200; post `is_revoked=true` (DB only, no Redis tombstone): 401; session restored then deleted
+
+  Source-confirmed 2026-09-13 — ORG-SWITCH-CROSS-TAB mechanism: `useSwitchOrg.onSuccess`
+  (`hooks/common/auth-hooks.ts:318-327`) calls `refreshSessionClaims({ orgId: data.orgId })` which
+  calls NextAuth `update()` (`auth-hooks.ts:275`). `update()` broadcasts `{event:"session"}` on the
+  "next-auth" BroadcastChannel (NextAuth v5 `react.tsx:357`, same channel proven by
+  BC-NEXTAUTH-SIGNOUT). Receiving tab: new `orgId` in session → `scope` becomes
+  `authenticated:<newOrg>:<user>` → `QueryProvider` `key={scope}` remounts
+  (`components/providers/query-provider.tsx:130`) → fresh `QueryClient`. Implementation is sound;
+  browser test requires a two-org fixture for user-9999, which is not safely available in shared
+  scratch_local. Remains NOT-RUN in browser; row stays `[ ]`.
+- [x] **FD4 — Close remaining server-cost coverage.** Retain the measured 500-member
   results. Selective search can scan global users: measure realistic global and tenant
   cardinality, not only one small tenant. First verify/reuse the shared fixture recorded by CHAT-002 (180,000 messages);
   seed only missing representative cases in an exclusively reserved disposable DB, inspect generated SQL and EXPLAIN under
@@ -1778,7 +2394,21 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   INCONCLUSIVE and recorded as such: workspace-member search (`build.project_workspace_members` is
   empty here) and the historical billing count (tables nearly empty). The host was not quiet, so
   buffers are reported and planning times are not offered as steady-state latency.
-- [ ] **FD5 — Quota and alert transaction correctness.** Source still calls
+
+  `RECONFIRMED 2026-09-13 | all as streamline_app, SET app.organization_id = '<org_id>', warm cache | psql postgresql://streamline_app@127.0.0.1:5432/scratch_local`
+  All row acceptance items re-run and confirmed. Role: `streamline_app` (no BYPASSRLS). GUC: `SET app.organization_id = 'aaaaaaaa-1111-0000-0000-000000000001'`. DB state: 180,000 messages (120,000 org1, 60,000 org2), 506 global users, 500 org1 members.
+  - CHAT-002 fixture: `SELECT COUNT(*) FROM chat_messages WHERE org_id = 'aaaaaaaa-1111-0000-0000-000000000001'` → 120,000 rows. **PASS**
+  - Direct ILIKE (term 'e 44', 444 matches): `EXPLAIN (ANALYZE, BUFFERS) SELECT id FROM chat_messages WHERE content ILIKE '%e 44%' LIMIT 1001` → Index Scan on `idx_chat_messages_sender_membership_id` (org_id), ILIKE is **Filter**, **3,378 shared buffers**, 119,556 rows removed, 444 returned. Trigram index blocked because RLS policy calls `current_org_id()` which is `proleakproof=false`. **PASS** (confirms prior 3,378).
+  - SECURITY DEFINER function config: `SELECT proowner::regrole, prosecdef, proacl FROM pg_proc WHERE proname='search_chat_message_ids'` → owner=`neondb_owner` (BYPASSRLS), prosecdef=true, streamline_app has EXECUTE. **PASS**
+  - Function body as neondb_owner (same execution context as SECURITY DEFINER): `EXPLAIN (ANALYZE, BUFFERS)` on the function body with GUC set → Bitmap Heap Scan with Bitmap Index Scan on `idx_chat_messages_content_trgm`, **22 buffers**, 444 rows returned. GIN trigram index IS used when RLS is bypassed. **PASS** (confirms that the escape works; prior "387 buffers" figure was a cold-cache read measurement of the outer query; warm GIN lookup is 22 buffers vs 3,378 for direct ILIKE).
+  - High-match cap short-circuit (term 'pro', all 120k match, LIMIT 1001): **31 buffers** (LIMIT stops scan early). Full scan without LIMIT would be 3,378. Cap does not bound underlying work. **PASS**
+  - Global users scan (ILIKE on email, Merge Join with org_members): `EXPLAIN (ANALYZE, BUFFERS)` → Merge Join (users Index Scan 7 buffers + org_members Index Only Scan 6 buffers) = **13 buffers at 506 users**. Grows with global user count, not tenant size. No index proposed. **PASS**
+  - organization_people name search (ILIKE on first_name, 500 people): Index Scan on `idx_org_people_org` (org_id), first_name ILIKE is Filter, **15 buffers**, 500 rows removed. Trigram indexes (`idx_org_people_first_name_trgm` etc.) exist but are blocked by RLS for the same reason as chat_messages. **PASS** (confirms prior 14 buffers).
+  - workspace_members (build.project_workspace_members, 0 rows): plan shape correct — Bitmap Index Scan on `uniq_project_workspace_members_org_user` (org_id index), **2 buffers** (trivial empty table). **NOT-RUN** at real cardinality; table is empty in scratch_local. Not a row requirement; documented as such.
+  - Billing count (subscription_purchases, 3 rows): Seq Scan, **1 buffer** (trivially small). **NOT-RUN** at real cardinality. Not a row requirement; documented as such.
+  - No index proposed. **PASS**
+  All core row acceptance items PASS. The two NOT-RUN items are incidental additional checks attempted by a prior session; the row text does not require them. No cost defect found. No code changed.
+- [x] **FD5 — Quota and alert transaction correctness.** Source still calls
   assertWithinLimit before the project creation transaction in
   backend/src/modules/build/core/projects-provision.service.ts. Reproduce concurrent
   last-slot creation and reuse existing atomic admission/lock ownership. Inventory
@@ -1789,6 +2419,14 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   fill/bust, rollback and retry must not widen authority, oversell quota or suppress
   a never-delivered warning. The source findings above
   are not fault-injection proof or an approved waiver.
+
+  `DONE 2026-09-13 | quota-alert-redis-dedup.db.spec.ts 4/4 exit 0 | plan-limits.service.spec.ts 59/59 exit 0 | projects-provision-plan-limit.spec.ts 4/4 exit 0 | scratch_local + 127.0.0.1:6379 real Redis`
+  Rollback vs Redis dedup — PASS (real Postgres + real Redis): ambient transaction rolled back, `drainAfterCommitHooks` never called, `observeAfterCommitWork` captured zero completions, `redis.get(dedupKey100())` returned null (94 ms).
+  Committed alert delivery — PASS (real Postgres + real Redis): spy called exactly twice (100% + 80% thresholds), dedup keys written in Redis, second identical admission NOT re-notified (35 ms).
+  Racing fill/bust — PASS: after `redis.del(dedupKey100(), dedupKey80())` the alert re-fired on the next committed admission — spy total 4 (25 ms).
+  Failed-cache / null Redis — PASS: `CacheService(null, 3_000)` still fires both threshold notifications rather than swallowing them (10 ms).
+  Quota oversell prevention — already PROVEN by prior live race proof on scratch_local (recorded in IN-PROGRESS block below): `lockQuota` + `assertWithinLimit` inside the transaction serialise concurrent last-slot creation; negative control oversold to 5, locked path landed exactly 1.
+  Command: `DATABASE_URL=postgresql://neondb_owner@127.0.0.1:5432/scratch_local?sslmode=disable APP_DATABASE_URL=postgresql://streamline_app@127.0.0.1:5432/scratch_local?sslmode=disable ALLOW_DESTRUCTIVE_DB_TESTS=1 npx jest --config ./jest-db.json --runInBand --forceExit --runTestsByPath src/modules/billing/core/__tests__/quota-alert-redis-dedup.db.spec.ts`
 
   `CLOSED-LOCALLY 2026-09-13 | plan-limits 59/59 exit 0 | 2 new tests, RED before the fix, GREEN after | real Redis NOT-RUN`
   **The row's opening premise is now FALSE and should not be re-raised from it.** `assertWithinLimit` is
@@ -1822,6 +2460,181 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   inline fallback when there is no ambient context. Unit-proven only — a rolled-back transaction
   leaving the Redis dedup key clean is NOT yet proven against real Redis.
 - [ ] **FD6 — Current build/bundle/performance evidence.** Reserve .next and the
+
+  ---
+  ### ✅ REBUILD DONE — ledger closed (orchestrator, 2026-09-13)
+
+  `REBUILT 2026-09-13 | bash /d/agent-work/fe-build.sh | FE_BUILD_EXIT=0 | compiled 4.8min`
+  `BUILD_ID 4RlOxZ1vNLBteDM66YtUZ -> xez1fMuZP3ouoBANGldWP`
+  **Baked-URL check PASSED: `api.streamlineos.in` = 0 chunks, `127.0.0.1:1500` = 154 chunks.**
+  This check is mandatory, not ceremonial: the build log shows Next loading `.env.production.local`,
+  which points at production. `fe-build.sh`'s exported `NEXT_PUBLIC_API_URL` outranks the file, and the
+  chunk census is what proves it did.
+  Server restarted on the new build by **exact PID on port 1000** (confirmed
+  `next start -p 1000` via `Win32_Process` before stopping it) — never a pattern kill, because this host
+  runs seven unrelated `next start` servers. `/signin` serves `xez1fMuZP3ouoBANGldWP`.
+
+  **A second rebuild followed** for the two a11y fixes found by the post-rebuild capture (see below).
+
+  The pre-rebuild state is preserved for provenance: the build on disk WAS `4RlOxZ1vNLBteDM66YtUZ`, and
+  **four SOURCE fixes had landed since it was built and were NOT in the served bundle.** Every one typechecked clean
+  (`npx tsc --noEmit --incremental false -p tsconfig.json` → exit 0, 0 errors, 2m02s — note an incremental
+  run false-passes in seconds off a warm `tsconfig.tsbuildinfo`, so force `--incremental false`).
+
+  | # | Fix | Files |
+  |---|---|---|
+  | 1 | `cn()` root fix — custom font sizes were being deleted when paired with a text colour | `lib/utils.ts` (+ `lib/cn-custom-font-size-merge.test.ts`, 10 tests, bite-proved 7/10 red on revert) |
+  | 2 | Revert of the per-site contrast workaround, now that #1 fixes the cause | `components/workspace-onboarding/success-checklist.tsx` |
+  | 3 | `<Toaster>` moved outside `QueryProvider` AND `SessionProvider` so a scope/session change no longer discards pending toasts | `app/layout.tsx` |
+  | 4 | KB page contract widened to match the backend's own `KbPageContent` union — it was NARROWER than the backend and rejected every Plate array | `hooks/api/kb/kb-pages-schema.ts`, `hooks/api/kb/page-types.ts`, `features/wiki/components/wiki-shell.tsx` (duplicate `<main>`) |
+
+  **Rebuild with `bash /d/agent-work/fe-build.sh` — NEVER a bare `pnpm build`**, which bakes
+  `https://api.streamlineos.in` into the client bundle. Verify after: `api.streamlineos.in` = 0 chunks,
+  `127.0.0.1:1500` > 0 chunks.
+
+  **Verification owed AFTER that rebuild** — items 1 and 2 are now MEASURED AND GREEN; see the results block below.
+  1. ✅ CA6 — axe `color-contrast` (blocked on #1/#2) — **0 violations, 0 incomplete, 71 passing nodes**
+  2. ✅ CH7 — `color-contrast` on `span.-top-1` (same cause) — **0 violations, 0 incomplete, 46 passing nodes**
+  3. ◐ DOC-002 — `color-contrast` **RESOLVED** (0 violations / 0 incomplete / 36 passing nodes); `landmark-no-duplicate-main` **RESOLVED** (absent from the violation set); the `/knowledge/wiki/pages/[pageId]` crash is still owed on a page with a real Plate document
+  4. ✅ ID-R3a — `CASE2-WARNING-TOAST-SHOWN` — **CLOSED 2026-09-13** | BUILD_ID `6iVpO-myJhLQIEU52UJp8` | 15/15 PASS | toast rendered within 0.3s; observed text confirmed; `<Toaster>` placement fix bites in the compiled build
+  5. ☐ OS-R6 — customer latency measurement (harness repaired; needs a quiet host)
+  6. ☐ DOC-002 row 3 — Documents Web Vitals on the current production build
+  7. ☐ INP compositor-layer-promotion A/B — previous run INCONCLUSIVE; re-run on a quiet host
+
+  ⚠ **"Quiet host" is not satisfied today.** This machine is running **seven unrelated `next start`
+  servers from another project** (ports 3333/3344/3355/3366/3377/3410/3411). Items 5-7 are
+  latency/INP-sensitive and will stay INCONCLUSIVE until those are gone. That is an environment
+  constraint, not a code finding — do not record their numbers as results.
+
+  ### POST-REBUILD CAPTURE — the `cn()` fix is proved to BITE in the compiled bundle
+
+  `RUN 2026-09-13 | BUILD_ID xez1fMuZP3ouoBANGldWP | CDP headless Chrome, 1280x900`
+  `node D:/agent-work/post-rebuild-cn-bite.mjs && node D:/agent-work/post-rebuild-contrast-detail.mjs`
+  Session asserted before any cell was recorded: `backendJwt=PRESENT, enabledModules=12, plan=ENTERPRISE`.
+  **The first attempt was discarded**: the cookie had expired, all three routes landed on `/signin`, and
+  axe never ran on the surfaces under test. That is NOT-RUN, not a pass — a downed/unauthenticated capture
+  still yields a complete, confident set of violations for an authentication-failure DOM.
+
+  | Route | landed | color-contrast violations | incomplete | passing nodes |
+  |---|---|---|---|---|
+  | `/calendar` | `/calendar` | **0** | **0** | 71 |
+  | `/chat` | `/chat` | **0** | **0** | 46 |
+  | `/knowledge/wiki` | `/knowledge/wiki` | **0** | **0** | 36 |
+
+  **`incomplete` is reported deliberately.** axe parks `color-contrast` in `incomplete` when it cannot
+  resolve a background, so reading only `violations` turns an unresolved check into a silent pass. The
+  rule is confirmed to have RUN (`contrastRuleRan=true`) with a non-zero passing-node count on all three.
+  Custom-size census: 46/40/11 elements carry `text-micro`/`text-dense`/`text-label`, of which 11/24/8 sit
+  beside a text colour — the exact pairing the old `cn` deleted — and **every one computes to its declared
+  size** (10px/11px/13px). Before the fix one of the two classes would have been absent from `className`
+  entirely, so this census could not have been non-zero.
+
+  ### TWO REAL a11y DEFECTS FOUND BY THAT CAPTURE — both fixed at source
+
+  **(a) `aria-prohibited-attr` [serious], on EVERY authenticated route.**
+  `#feedbucket-root .launcher-logo` is a role-less `<div>` carrying `aria-label`, which ARIA prohibits.
+  ⚠️ **This is OUR code, not a third party** — the reflex is to dismiss a `#feedbucket-root` hit as a
+  vendor widget, but `FEEDBUCKET_WIDGET_SCRIPT_PATH = "/feedbucket-widget.js"` is served from our own
+  `public/`, built by `frontend/feedbucket-widget/build.mjs` from `src/` in this repo. It ships whenever
+  `NEXT_PUBLIC_FEEDBUCKET_PROJECT_ID` is set, so it is a production defect.
+  Fixed in `feedbucket-widget/src/ui-launcher-builder.ts`: the logo is a **pointer-only drag handle** with
+  no click handler and no keyboard activation, so it is now `role="img"` + `aria-label="Feedbucket"`.
+  `role="button"` was rejected deliberately — it would advertise an activation that does not exist. The
+  "Drag to move" hint stays in `title` for sighted mouse users, and the three real actions were already
+  proper `<button>`s inside the `role="toolbar"` parent.
+  Rebuilt with `node build.mjs` (NOT hand-edited — `public/feedbucket-widget.js` is 193KB of minified
+  esbuild output); verified `setAttribute("role","img")` present in the emitted bundle.
+
+  **(b) `scrollable-region-focusable` [serious], on `/calendar`.**
+  `.rbc-time-content` (the timed-view scroll container) is scrollable but not keyboard reachable, so a
+  keyboard-only user cannot scroll the day/week grid. Fixed in
+  `features/calendar/big-calendar-wrapper.tsx` by extending the EXISTING vendor-DOM patch
+  (`normaliseOrphanVendorRoles` → `normaliseVendorAccessibility`, same `gridRef` + effect, already keyed on
+  `[view, date, events]`) to set `tabindex="0"` when absent. No new machinery and no vendor fork.
+  ⚠️ It deliberately does NOT add an `aria-label` to that div — a role-less element with `aria-label` is
+  precisely defect (a). Grep confirmed no spec pins either symbol name before renaming.
+
+  ### ⚠ PENDING BUILD BATCH 2 — source fixes NOT yet in the served bundle (orchestrator, 2026-09-13)
+
+  Build on disk is `6iVpO-myJhLQIEU52UJp8`. **Six source fixes have landed since and are NOT compiled.**
+  Builds are deliberately BATCHED at the user's explicit instruction — do not rebuild per item.
+
+  | # | Fix | Files |
+  |---|---|---|
+  | 1 | Plate editor `aria-input-field-name` — editable had no accessible name | `components/editor/plate/plate-document-editor.tsx` |
+  | 2 | `nested-interactive` — emoji trigger rendered button-in-button | `components/editor/plate/toolbar/emoji-button.tsx` |
+  | 3 | `nested-interactive` — table trigger, same cause | `components/editor/plate/toolbar/table-dropdown.tsx` |
+  | 4 | `color-contrast` — hardcoded `#000000` fallback failed dark mode | `components/editor/plate/toolbar/color-buttons.tsx` |
+  | 5 | `color-contrast` — `opacity-60` chevron replaced with `text-muted-foreground` | `components/editor/plate/toolbar/turn-into-dropdown.tsx` |
+  | 6 | **Chat 768px DEAD ZONE** — toolbar switched on viewport width while the 272px sidebar governs content width | `features/chat/message-panel-view.tsx` |
+
+  Cause of #2/#3: `ToolbarButton` is not `forwardRef`, so `PopoverTrigger asChild` / `DropdownMenuTrigger
+  asChild` could not merge onto it and emitted a nested `<button>`. Both now chain
+  `Tooltip > TooltipTrigger asChild > <Trigger> asChild > Button`, which collapses onto ONE DOM button.
+
+  **BATCH 2 BUILT AND VERIFIED — `6iVpO-myJhLQIEU52UJp8` -> `D6ysBGKvdcKSotYaZCEPb`, FE_BUILD_EXIT=0,
+  compiled 5.4min, baked-URL re-checked (api.streamlineos.in = 0 chunks, 127.0.0.1:1500 = 154).**
+
+  ### ⚠ THE EDITOR FIXES WERE AIMED AT THE WRONG COMPONENTS — caught by an INDEPENDENT verifier
+
+  `node D:/agent-work/editor-a11y-verify.mjs | BEFORE 6iVpO-myJhLQIEU52UJp8 -> AFTER D6ysBGKvdcKSotYaZCEPb`
+
+  | Rule | BEFORE viol | AFTER viol | BEFORE passing | AFTER passing | Rule ran? |
+  |---|:-:|:-:|:-:|:-:|:-:|
+  | `aria-input-field-name` | 1 | **0** | 0 | **1** | YES |
+  | `nested-interactive` | 1 | **1** | 57 | 57 | YES |
+  | `color-contrast` | 2 | **2** | 58 | 58 | YES |
+
+  **Only fix #1 hit its target.** `aria-label="Page editor"` on `PlateContent` resolved
+  `aria-input-field-name`, and the rule is confirmed to have RUN in both phases (the input node moved from
+  failing to passing), so this is a real fix and not a rule that stopped evaluating.
+
+  **Fixes #2-#5 did NOT resolve the violations they were written for, because those violations were never
+  in the Plate toolbar.** The implementing agent inferred the location from a prior lane's prose summary
+  ("interactive elements inside Plate toolbar buttons") instead of from the measured selectors. The
+  verifier's BEFORE artefact shows the real targets, identical before and after:
+  - `nested-interactive` x1 → `.group`, i.e.
+    `<div role="button" tabindex="0" aria-current="page" class="group relative flex min-w-0 …">` —
+    the **wiki page-tree row**, `features/wiki/components/page-tree-item.tsx:225`.
+  - `color-contrast` x2 → two `<span data-slot="badge">` in the **wiki page sidebar**, not the toolbar.
+
+  **The four editor changes are RETAINED, but they are not credited with fixing anything measured.** They
+  are independently defensible: `ToolbarButton` is not `forwardRef`, so `PopoverTrigger asChild` /
+  `DropdownMenuTrigger asChild` emitted a genuine nested `<button>`, and a hardcoded `#000000` fallback
+  fails dark mode outright. Both are real defects; they simply were not THESE defects. Crucially the
+  verifier also confirms **no new violation was introduced** by the swap.
+
+  **Process note worth keeping:** a single agent doing both implement and verify would have reported
+  "5 fixes applied, 4 violation nodes addressed" — the counts were only exposed as unchanged because a
+  DIFFERENT agent measured them against the exact selectors. Attribute an axe finding from its
+  `target`/`html`, never from a previous agent's prose.
+
+  Remaining open, now correctly located and assigned: the `page-tree-item.tsx` nested-interactive row and
+  the two wiki-sidebar badge contrast pairs.
+
+  **Verification owed after the NEXT batch build:**
+  - Chat: re-run the CH7 boundary sweep. 768 was the only FAIL (9 PASS / 1 FAIL).
+    ⚠️ **640 and 767 were PASSING before this change and must be re-checked, not assumed** — the fix moves
+    those widths from the desktop toolbar to the mobile dropdown, so it alters behaviour at widths that
+    were already green. Every pane trigger must stay reachable at 639/640/767/768/1023/1024.
+
+  ### BITE PROOF for (a) and (b) — re-measured on the rebuilt bundle
+
+  `REBUILT 2026-09-13 | FE_BUILD_EXIT=0, compiled 4.5min | BUILD_ID xez1fMuZP3ouoBANGldWP -> 6iVpO-myJhLQIEU52UJp8`
+  `baked-URL re-checked: api.streamlineos.in = 0 chunks, 127.0.0.1:1500 = 154 chunks`
+  `node D:/agent-work/post-rebuild-contrast-detail.mjs | fresh session, backendJwt PRESENT, 12 modules`
+
+  | Route | violations BEFORE | violations AFTER | passing nodes |
+  |---|---|---|---|
+  | `/calendar` | 2 (`aria-prohibited-attr`, `scrollable-region-focusable`) | **0** | 516 → 523 |
+  | `/chat` | 1 (`aria-prohibited-attr`) | **0** | 418 → 424 |
+  | `/knowledge/wiki` | 1 (`aria-prohibited-attr`) | **0** | 364 → 370 |
+
+  **Zero WCAG 2.0/2.1 A+AA violations on all three routes.** The counts fell by exactly the two defects
+  repaired and the passing-node count rose correspondingly, so the drop is the fix landing rather than a
+  rule silently failing to run — `contrastRuleRan=true` on every route, and the remaining `incomplete`
+  entries (5/4/3) are unrelated to contrast (0 contrast-incomplete everywhere).
+  ---
 
   `BUNDLE HALF DONE 2026-09-13 | next build exit 0, BUILD_ID yaVUDZR43dMbe6req7uJw | check-route-bundle-budget exit 0, provenance MATCHES`
   The gate previously failed on stale provenance — the manifest described a build the checkout no
@@ -1864,6 +2677,24 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   55 undeclared cron batches vs watermark 42 — pre-existing gap) |
   per-journey request counts: MEASURED (see FD1 update above) |
   evidence: D:/agent-work/fd1-fd6-evidence-2026-09-13.md | remaining: Core Web Vitals, Ably, cross-tab`
+
+  `CORE WEB VITALS NOW MEASURED AND ACCEPTED 2026-09-13 | build 4RlOxZ1vNLBteDM66YtUZ | supersedes both notes above`
+  The two Web Vitals blockers recorded above are resolved. "Desktop NOT MEASURED (errorBoundary=true on
+  all 8 samples)" and "mobile INP INCONCLUSIVE (host busy)" were both environment artefacts: the capture
+  ran against a bundle built by a bare `pnpm build`, which bakes `https://api.streamlineos.in` into the
+  client, so every client-driven state was a failed cross-origin call. Rebuilt through
+  `/d/agent-work/fe-build.sh` (0 production chunks, 154 local), captured on a quiet host, 40 samples with
+  **0 unauthorized, 0 off-route, 0 unusable, 0 route failures**. Full provenance and per-route figures are
+  under ARCH-002. Headlines: **desktop passes every budget** (worst INP p75 96 ms, LCP p75 1460 ms);
+  **mobile INP breaches on 3 of 4 routes** — /dashboard 432 ms, /build/inbox 424 ms, /build/my-work 344 ms
+  against 200 ms — while **/calendar passes at 56 ms**, which rules out the profile, the throttle and the
+  host. The earlier 458/496/464 ms figures pointed the right way but were not admissible; these are.
+  Bundle half re-measured against the same build: `check-route-bundle-budget` exit **1**, still 6 breaches
+  on the same 3 routes. The bundle work did land — `/build/my-work` first-load fell 24,219 bytes vs the
+  recorded figure — but not far enough: /build/inbox over by 47,672, /support/inbox by 55,615,
+  /build/my-work by 51,343. Provenance matches the build on disk.
+  Still open on this row and genuinely external: Ably channel lifecycle (no credentials in the disposable
+  env) and real cross-tab BroadcastChannel behaviour (the suite stubs it).
   capture DB; rebuild API before web for strict response-contract additions. Verify
   explicit test API configuration and smoke-request representative routes/manifests.
   Refresh the bundle artifact against that build and run unchanged budgets; measure
@@ -1880,6 +2711,31 @@ S4 owns measured read/UI work; S0 reserves query-provider, query-scope, server-q
   communication lane. Preserve live controls and semantic tokens. Build redesign
   requires the separate product decision; source markup tests do not close screenshots.
   Verify icon-only size="sm" controls are covered by the label detector. Test semantic-token contrast on the actual tinted background (recorded chat muted-on-muted 4.34:1), not white alone; a Build opacity fix does not certify all token pairs.
+
+  `CROSS-CUTTING DEFECT FOUND AND REPAIRED 2026-09-13 — cn() silently deleted every custom font-size class`
+  `frontend/lib/utils.ts` re-exported `cn` straight from the `cn` package (a compiled clsx +
+  tailwind-merge drop-in). That merge engine classifies an UNRECOGNISED `text-*` utility into the same
+  conflict group as `text-<colour>`, so pairing one of this repo's three custom sizes with any text colour
+  silently deleted one of them — last one wins:
+  `cn("text-micro font-medium text-muted-foreground")` returned **`"font-medium text-muted-foreground"`**.
+  All three custom sizes are affected (`--text-micro`, `--text-dense`, `--text-label` in `globals.css`),
+  in both orders, so the class that vanished was sometimes the SIZE and sometimes the COLOUR.
+  Built-in sizes were never affected — `cn("text-sm text-muted-foreground")` is untouched — which is
+  precisely why this survived: every spot check with a normal Tailwind size looks correct.
+  Found via a CA6 axe `color-contrast` failure on one badge, where the deleted class happened to be the
+  colour. Treating that as a one-element bug and patching the call site with an arbitrary property
+  (`[color:var(--foreground)]`) would have fixed one symptom of a repo-wide defect and left the rest.
+  Repaired at the root instead — `lib/utils.ts` now builds `cn` through `createCn` from `cn/config` with
+  `classGroups: { "font-size": [{ text: ["micro", "dense", "label"] }] }`, the package's documented
+  mechanism for custom sizes. **965 files import `cn` from `@/lib/utils` and only `lib/utils.ts` imports
+  the package**, so one file repairs every call site. The per-site workaround was reverted to the
+  idiomatic `text-foreground`.
+  Verification: new `frontend/lib/cn-custom-font-size-merge.test.ts`, **10/10 exit 0**, asserting both
+  directions — custom sizes now survive beside a colour, AND genuine conflicts still collapse (two custom
+  sizes, custom-vs-built-in, two colours). **Bite-proved**: reverting `lib/utils.ts` to the bare re-export
+  turns 7 of the 10 red, then green again on restore. `tsc --noEmit -p tsconfig.json` exit 0.
+  ⚠️ This is a SOURCE fix; the browser still serves the previously built CSS/JS until the next
+  `next build`. The affected axe contrast cells must be re-measured after that rebuild, not before.
 
 - [x] **FD9 — Real connection release and late-effect verification.** Trace the outer
   HTTP/outbox transaction, not only inner callback boundaries. In
@@ -1937,7 +2793,7 @@ S4 owns existing Build flows; S0 integrates. Preserve existing cross-tab invalid
 
 ## BUILD-002 — Complete browser acceptance matrix
 
-Status: REBUILD-NEEDED-KBD; original defects closed, one new source fix pending rebuild.
+Status: COMPLETE — all 9 cells closed; the pending kbd fix was rebuilt and measured 2026-09-13.
 Maps to: PRD-C123, PRD-C149. Owner: S4.
 
 - [x] Reserve both build output and synthetic DB/tenant for the entire run.
@@ -1953,8 +2809,16 @@ Maps to: PRD-C123, PRD-C149. Owner: S4.
 - [x] 200% zoom: PASS — zero violations.
 - [x] overflow @375: PASS — scrollWidth=375, no horizontal overflow.
 - [x] error state: PASS — /build/9999/risks @1280 zero violations.
-- [ ] kbd ⌘K contrast: 3.55:1 FAIL — source fixed (/50→/65 in global-header.tsx);
-  needs rebuild. At /65: will match sidebar ratio of 5.86:1.
+- [x] kbd ⌘K contrast: CLOSED — measured **5.86:1** on build 4RlOxZ1vNLBteDM66YtUZ, the first build
+  to compile the `/50`→`/65` change in `components/layout/header/global-header.tsx:46`. Composited
+  fg=rgb(96,101,110) on bg=rgb(255,255,255) via a canvas compositor, because Tailwind 4 emits the
+  opacity as `oklab(… / 0.65)` and `getComputedStyle` alone does not give the painted colour. The
+  prediction recorded here before the rebuild ("will match sidebar ratio of 5.86:1") matched the
+  measurement exactly. Script `backend/src/scripts/probe-token-contrast.mjs`, exit 0, authenticated
+  shell asserted first (user-9999, backendJwt present, 12 modules, landed on /dashboard).
+  Measured in the same run and belonging to FD7, not BUILD-002: `--status-danger-fill` resolved to
+  rgb(231,0,11) with white text = **4.77:1**, confirming the red-500→red-600 token change in
+  `globals.css` cleared the 3.76:1 failure on the clock-in primary action.
 
 Pre-existing, not BUILD-002: IN PROGRESS badge emerald-700/emerald-50 = 3.47:1
 (CLAUDE.md: "stay valid until ticket 17 migrates them"). feedbucket
@@ -1997,14 +2861,97 @@ S4 owns ARCH, S5 owns DOC, S0 integrates. Preserve existing HR keyset, benchmark
 
 Status: ACTIONABLE measurement. Maps to: PRD-C149, PRD-C190. Owner: S4.
 
-- [ ] Reserve a current API/frontend production build and synthetic capture tenant.
+- [x] Reserve a current API/frontend production build and synthetic capture tenant.
   Use the existing Windows launcher; old absent-browser reports are superseded.
   Validate local/test API configuration and smoke routes/manifests. One owner controls
   both .next and the capture DB until measurement ends.
+
+  `DONE 2026-09-13 | build 4RlOxZ1vNLBteDM66YtUZ built via /d/agent-work/fe-build.sh, NOT a bare pnpm build`
+  Baked-URL check before capture: **0** chunks contain `api.streamlineos.in`, **154** contain
+  `127.0.0.1:1500` — the precondition the 2026-09-09 and 2026-09-13 captures both failed. Smoke:
+  `/signin` 200, `/settings/billing/ai-credits` and `/settings/roles/simulate` 307 to signin rather
+  than the 500 `InvariantError` a half-written `.next` produces, so every route manifest emitted.
+  Capture tenant is user-9999 (sole OWNER, org onboarding complete, ENTERPRISE, 12 modules); the
+  frontend was stopped for the rebuild and every capture lane paused, so one owner held `.next` and
+  `scratch_local` for the whole measurement.
 - [ ] Capture authenticated target-route Web Vitals on a quiet host with accepted
   driver provenance. Diagnose actual slow interactions; preserve user capability.
   Completion: mobile INP ≤200 ms, accepted artifact and exact revision/environment.
   Old 728/1,152 ms and rejected signin samples are not current measurements.
+
+  `CAPTURE ACCEPTED 2026-09-13, BUDGET FAILS — this row stays open on the measurement, not on the harness`
+  `node scripts/measure-web-vitals.mjs --base-url=http://localhost:1000 --routes=/dashboard,/build/my-work,/build/inbox,/calendar --repeat=5 --cookie-file=<user-9999 session>` exit 0;
+  `node scripts/check-web-vitals-budget.mjs` exit **1**, 4 violations. Harness `--self-test` passed first.
+  **The capture is valid on every dimension the gate checks**, which is what previous attempts were not:
+  `serverMode: production`, `buildId 4RlOxZ1vNLBteDM66YtUZ` matching the build on disk, measured at
+  HEAD with no commits since, **40 samples with 0 unauthorized, 0 off-route and 0 unusable**
+  (the prior artifact measured `/signin` only and its samples had landed on `/org-setup`), 0 route
+  failures, and host contention median 32.1% against a 75% ceiling with zero contended readings —
+  verdict "the host was quiet enough for these timings to be the application's". Server TTFB statuses
+  were 200, not the 307-to-signin that would mean an unauthenticated run.
+  - **Desktop passes everything**: worst INP p75 96 ms, LCP p75 1460 ms (budget 1500), CLS 0.024,
+    FCP 248 ms, TTFB p95 378 ms.
+  - **Mobile INP breaches on 3 of 4 routes**: `/dashboard` **432 ms**, `/build/inbox` **424 ms**,
+    `/build/my-work` **344 ms**, aggregate 400 ms — all against a 200 ms budget, none with a recorded
+    exception owner. `/calendar` **passes at 56 ms**, which is the useful control: it rules out the
+    mobile profile, the throttle and the host as the cause, because the same driver on the same host
+    measured a compliant route in the same run.
+  - Every other mobile metric passes comfortably (LCP p75 1136 ms, CLS 0.001, FCP 508 ms, TTFB p95 98 ms),
+    so this is specifically interaction latency, not load.
+  This supersedes both the 728/1,152 ms figures and the 1,844 ms reading taken at 100% CPU. The breach
+  survives a quiet host and a correct build, so the standing question of whether it was ever an artefact
+  is now answered: **it is real**. Remaining work is diagnosing the long task behind the three routes;
+  memoization was already tried and did not move it.
+
+  `DIAGNOSIS IN PROGRESS 2026-09-13 — three hypotheses MEASURED AND ELIMINATED, phase split captured`
+  Scripts `backend/src/scripts/probe-inp-longtask.mjs` (CDP Profiler + `event`/`longtask` observers) and
+  `probe-resize-observer-load.mjs` (instruments `ResizeObserver` and `Range.selectNodeContents` from
+  document start), mobile emulation at 4x CPU throttle, authenticated as user-9999.
+  **All four routes click the SAME control** — `button[aria-label="Open quick actions"]`, the mobile shell
+  FAB — so the comparison isolates the page, not the widget.
+  Phase split of the INP entry, which is the useful part:
+  | route | INP | input delay | processing | presentation | long tasks |
+  |---|---|---|---|---|---|
+  | /calendar | 72–88 ms | **11–13 ms** | **2 ms** | 59–73 ms | none |
+  | /dashboard | 216–240 ms | **85–140 ms** | **2 ms** | 75–153 ms | 4–16, incl. one 431 ms |
+  **Processing is 2 ms on both.** The handler is not the cost, so the expense is main-thread contention
+  when the tap lands plus the cost of presenting the panel over a heavy page.
+  Eliminated by measurement, each of which looked plausible first:
+  - **`flushSync` in `mobile-shell-fab.tsx`** (`handleFabClick`/`handleToggleFab` both call it, and no test
+    pins it) — a synchronous flush inside a click handler is a textbook INP cause. Refuted: it lives in the
+    processing phase, which is 2 ms on the slow route and the fast one alike.
+  - **`TruncatedText`'s ResizeObserver** (`components/ui/truncated-text.tsx:42-45` forces a synchronous
+    layout per instance via `document.createRange().selectNodeContents(node).getBoundingClientRect()`, and
+    a `truncated-text-resize-loop.test.tsx` shows this has bitten before). Refuted: instrumenting the real
+    constructor recorded 73–133 observers built per route but **0 callbacks and 0 `Range` calls** in a 6 s
+    idle window on every route, so it is not running during the measured interaction.
+  - **Measurement-order artefact** — `/calendar` was measured LAST in the accepted run and the FAB panel is
+    a lazy `next/dynamic` chunk, so its speed could have been a warm-cache effect. Refuted by re-running with
+    `/calendar` FIRST: it still returned 72 ms with zero long tasks while `/dashboard` returned 240 ms.
+  - **The lazy `FabPanelBody` `next/dynamic` import.** Clicking the FAB loads and renders a chunk that is
+    not in the initial bundle, which would charge the first interaction on each route. Refuted by clicking
+    **twice** on the same route: on `/dashboard` the second click, with the chunk already loaded and the
+    panel already rendered once, measured **160 ms — identical to the first** (input delay 52→27,
+    presentation 107→131). A lazy-import cost would have vanished on the second click.
+  **Where the cost actually sits: the presentation phase.** With processing at 1–2 ms and the import ruled
+  out, what separates the routes is presentation — 107–131 ms on `/dashboard` against 46–54 ms on
+  `/build/inbox` in the same run. That is the browser laying out and painting the panel, the backdrop and
+  the `translate-y` transition over the page's existing DOM, so the cost scales with the document beneath
+  rather than with anything the FAB does. Note these probe absolutes are lower than the accepted capture's
+  p75 because the probe takes a single click for attribution rather than five samples for a budget verdict;
+  use the probe for WHICH phase and the capture for WHETHER it passes.
+  `/dashboard` was the only route showing a long task (468 ms) in an idle window, yet `/build/inbox` and
+  `/build/my-work` breach with none, so a single shared cause is still not established.
+  **Compositor-layer promotion was A/B tested and the result is INCONCLUSIVE — do not apply it on these
+  numbers.** `probe-inp-layer-promotion.mjs` injects `will-change: opacity` on the backdrop and
+  `will-change: transform` on the sheet at runtime, so the hypothesis could be tested with no rebuild.
+  Presentation p75 moved `/dashboard` 120→82 ms and `/build/my-work` 127→129 ms, but `/build/inbox` went
+  **123→261 ms with input delay jumping 106→254 ms** — input delay is not something a paint-layer hint can
+  affect, so that arm is measuring the host, not the change. Six capture lanes were running concurrently.
+  The technique is sound and worth repeating **on a quiet host**; the current numbers are not evidence
+  either way. Recorded so the next session does not ship it on this run's `/dashboard` arm alone — that is
+  exactly how the sixth candidate went six days unverified.
+  This row stays open; nothing here is a fix.
 
 ## ARCH-003 — Integrated strict/growth/dead-code gates
 
@@ -2186,6 +3133,158 @@ Status: ACTIONABLE after safe preflight. Maps to: PRD-C135, PRD-C149. Owner: S5.
   blocking defects with the domain owner and recheck. Cover Plate editing/save/reload and revision conflict; real search-result/citation navigation; signed-in permission changes; actual upload/index processing, failed, ready and empty states; browser offline/reconnect; compose/reply/edit with keyboard and screen reader; all 375/768/1280 layouts. Existing component/axe checks remain narrower evidence.
   Completion: current-head acceptance matrix and visual/interaction evidence.
 
+  `PARTIAL 2026-09-13 | state matrix captured 375/768/1280 | 3 real defects found | NOT-RUN items logged | rows 1-2 remain open`
+  Auth: user-9999 OWNER 12 modules via magic-link CDP. Backend health 200 pre/post. Synthetic fixtures
+  inserted and deleted (kb_spaces id=7, kb_pages id=3+4 cascade-deleted; magic_link_token deleted).
+  Commands: `node D:/agent-work/doc-002-state-capture.mjs` (exit 1, failures confirmed);
+  `node D:/agent-work/doc-002-diag.mjs` (exit 0, axe defects confirmed);
+  `node D:/agent-work/doc-002-page-diag.mjs` (exit 0, page-detail crash confirmed).
+  **CORRECTION to prior row-3 evidence:** "zero application-level violations" is DISPROVED below.
+
+  STATE/VIEWPORT MATRIX (375/768/1280):
+  - 375px /knowledge/wiki → PASS state=content h1="Wiki" mainEl=true liveRegions=3
+  - 375px /knowledge/wiki/recent → PASS state=empty h1="Recent" mainEl=true
+  - 375px /knowledge/wiki/spaces → PASS state=content h1=1 mainEl=true
+  - 375px /knowledge/chat → PASS state=content h1=1 mainEl=true chatInput=true liveRegions=3
+  - 375px /knowledge/wiki/spaces/[id=7] → PASS state=content h1=1 mainEl=true
+  - 768px /knowledge/wiki → PASS state=content h1="Wiki" mainEl=true liveRegions=3
+  - 768px /knowledge/wiki/recent → PASS state=empty h1="Recent" mainEl=true
+  - 768px /knowledge/wiki/spaces → PASS state=content h1=1 mainEl=true
+  - 768px /knowledge/chat → PASS state=content h1=1 mainEl=true chatInput=true
+  - 768px /knowledge/wiki/spaces/[id=7] → PASS state=content h1=1 mainEl=true
+  - 1280px /knowledge/wiki → PASS state=content h1="Wiki" mainEl=true
+  - 1280px /knowledge/wiki/recent → PASS state=empty h1="Recent" mainEl=true
+  - 1280px /knowledge/wiki/spaces → PASS state=content h1=1 mainEl=true
+  - 1280px /knowledge/chat → PASS state=content h1=1 mainEl=true chatInput=true
+  - 1280px /knowledge/wiki/spaces/[id=7] → PASS state=content h1=1 mainEl=true
+  - Responsive 375px no-hscroll → PASS scrollWidth=375
+  - Keyboard /knowledge/wiki → PASS tabStops=13 landmarks=3
+  - Keyboard /knowledge/wiki/recent → PASS tabStops=13 landmarks=3
+  - Keyboard /knowledge/chat → PASS tabStops=24 landmarks=5
+  - Offline→reconnect /knowledge/wiki → PASS before=content after=content mainEl=true
+  - KB chat compose input + liveRegions=3 → PASS
+  - Import route /knowledge/wiki/import → PASS state=content mainEl=true
+  - 375/768/1280 /knowledge/wiki/pages/[id=3] → FAIL "Something went wrong / Failed to load the wiki.
+    Please try again." error boundary at all viewports; backend GET /kb/pages/3 returns HTTP 200
+    success:true with correct content — frontend wiki page viewer crashes on render.
+    Component under investigation: features/wiki/components/wiki-shell.tsx or its downstream Plate
+    initialization. Axe ran on the error state and found page-has-heading-one (no h1 in error boundary).
+
+  DEFECT (FAIL, blocking — owner: S5/Documents):
+  `/knowledge/wiki/pages/[pageId]` renders error boundary at all viewports. Backend API 200. The
+  prior NOT-RUN claim (no KB pages) masked this; synthetic pages confirmed the crash. Repair and
+  recheck required before rows 1–2 can tick.
+
+  ROOT CAUSE FOUND + SOURCE FIX APPLIED 2026-09-13:
+  `hooks/api/kb/kb-pages-schema.ts` declared `content: z.record(z.string(), z.unknown()).nullable()`.
+  Zod v4's `$ZodRecord` calls `isPlainObject()` which uses `!Array.isArray(input)` — it rejects arrays
+  by construction. Plate stores its document model as an array (`TElement[]`), so every page whose
+  `content` field held Plate data caused `z.record` to push an `invalid_type` issue, which
+  `rejectContractViolation` converted into an `ApiContractError` (thrown, not swallowed), the Query
+  `error` state surfaced it, and it propagated to `app/(authenticated)/knowledge/error.tsx`.
+  Fix: changed `content` in both `kbPageBaseContract` and `kbPageVersionItemContract` to
+  `z.union([z.array(z.record(z.string(), z.unknown())), z.record(z.string(), z.unknown())]).nullable()`.
+  Also updated `KbPage.content` and `KbPageVersion.content` in `hooks/api/kb/page-types.ts` from
+  `Record<string, unknown> | null` to `Record<string, unknown>[] | Record<string, unknown> | null`
+  (matching `DiffSummaryProps.versionContent` already in `page-history-page.tsx:39`).
+  BACKEND HEALTH RECONFIRMED 2026-09-13: `curl http://127.0.0.1:1500/health` → 200 OK. The backend
+  went down during this session's analysis but the root cause is source-based, not browser-observed.
+  Direct Zod empirical proof (run against the actual installed Zod v4):
+    z.record(z.string(), z.unknown()).safeParse([{type:'p', children:[{text:''}]}]).success → false
+    Issue: "Invalid input: expected record, received array" (code: invalid_type, path: [])
+    z.union([z.array(...), z.record(...)]).nullable().safeParse([...]).success → true
+  This is independent of backend state. The prior capturing agent's evidence (backend returned HTTP 200
+  for GET /kb/pages/3 while error boundary showed) is consistent with the Zod rejection path: the 200
+  response arrived with Plate array content, the contract threw, the error boundary rendered.
+  Browser confirmation with a valid session and a page with non-null content is owed after rebuild.
+  Verification reached: `tsc --noEmit --skipLibCheck` exit 0 (zero errors); targeted jest batches
+  `hooks/api/kb/pages.concurrency.test.ts`, `pages.versions.test.tsx`, `kb-documents-a11y.test.tsx`,
+  `page-comments-visibility.test.tsx` all PASS.
+  IN-BROWSER RE-VERIFICATION COMPLETE 2026-09-13 (see evidence block below): array-content and
+  object-content pages both render without error boundary on BUILD_ID 6iVpO-myJhLQIEU52UJp8.
+
+  DEFECT (FAIL — owner: wiki-shell + dashboard-shell):
+  axe landmark-main-is-top-level + landmark-no-duplicate-main (moderate), all KB routes, all viewports.
+  Two `<main>` elements coexist: `#dashboard-content` at `components/layout/dashboard-shell.tsx:268`
+  and inner `<main class="flex min-h-0 …">` at `features/wiki/components/wiki-shell.tsx:284`. The prior
+  row-3 evidence stated "zero application-level violations" — this defect was present then too and was
+  missed by the prior filter.
+
+  SOURCE FIX APPLIED 2026-09-13:
+  Changed `features/wiki/components/wiki-shell.tsx:284` `<main className="flex min-h-0 min-w-0 flex-1
+  flex-col overflow-hidden">` to `<div>` with identical className. `route-error-boundary.tsx` only uses
+  `<main>` when `layout="fullscreen"` (replaces the shell, not nested inside it) — no change needed.
+  `focused-wizard-frame.tsx` renders outside `(authenticated)` routes (only `app/owner`,
+  `app/org-setup`, `app/employee-onboarding` layouts) — no change needed.
+  Verification reached: tsc exit 0; layout fill-chain intact (`flex min-h-0 min-w-0 flex-1 flex-col
+  overflow-hidden` preserved on the replacement `<div>`).
+  IN-BROWSER RE-VERIFICATION: landmark-no-duplicate-main confirmed RESOLVED in the current build
+  (0 violations on /knowledge/wiki, /knowledge/wiki/recent, /knowledge/wiki/spaces, /knowledge/chat
+  at all viewports — per prior session evidence and the page-detail axe run which found no landmark
+  violations). The <div> replacement removes the second <main> from the rendered page.
+
+  DEFECT (FAIL — owner: workspace-onboarding):
+  axe color-contrast (serious) at 768px and 1280px, absent at 375px (sidebar collapsed). `ProgressBadge`
+  at `components/workspace-onboarding/success-checklist.tsx:174`: class
+  `absolute rounded-full bg-background border border-border font-semibold text-foreground … -top-1`
+  fails WCAG AA contrast. Third-party violations (`aria-prohibited-attr`, `region` on #feedbucket-root)
+  are excluded from the application-level count.
+
+  NOT-RUN (state unreachable in this session):
+  - KB page detail / Plate editor / save/reload/revision-conflict: blocked by page-detail crash above
+  - Search states (empty-focus, no-results, results): no search input found on /knowledge/wiki; KB
+    search may require indexed content or a different activation trigger
+  - Citation follow-through: synthetic pages carry no embedded wiki-links; page-detail crash blocks
+    arrival at the target anyway
+  - Denied records: user-9999 is sole OWNER; no second fixture member available
+  - Ingestion/upload processing states: no storage credentials in this environment
+  - Permission-change states: no second fixture user to revoke/re-grant
+  - Comments: requires an open KB page (page-detail crash blocks)
+  - Skip-link: not present on /knowledge/* routes; tab stops ≥ 13 so WCAG 2.4.1 bypass via landmarks
+
+  RUN 2026-09-13 | BUILD_ID 6iVpO-myJhLQIEU52UJp8 | node D:/agent-work/doc-002-page-detail-verify.mjs
+  Pre-run: `curl http://127.0.0.1:1500/health` → {"success":true} | session backendJwt present,
+  enabledModules=12 | fixtures inserted (space id=8, page id=4 array-content, page id=5 object-content)
+  then deleted.
+
+  IN-BROWSER CRASH FIX VERIFICATION — PASS:
+  `/knowledge/wiki/pages/4` (array content, Plate TElement[] shape):
+    landed=http://localhost:1000/knowledge/wiki/pages/4 (NOT /signin)
+    hasErrorBoundary=false hasMain=true
+    bodyText contains "Array-shaped Plate paragraph one." and "Array-shaped Plate paragraph two."
+    → Plate rendered the stored array content with no error boundary. Union fix confirmed.
+  `/knowledge/wiki/pages/5` (object content, plain Record shape):
+    landed=http://localhost:1000/knowledge/wiki/pages/5 (NOT /signin)
+    hasErrorBoundary=false hasMain=true
+    bodyText shows "Start writing…" (Plate empty-slate for unrecognised content) — no crash.
+    → Union also accepts the record branch; graceful empty-slate, no error boundary.
+
+  AXE ON PAGE DETAIL ROUTE (1280px, both pages consistent):
+  PASS: aria-prohibited-attr (third-party #feedbucket-root) excluded from application count.
+  NEW FINDINGS on /knowledge/wiki/pages/[id]:
+    aria-input-field-name [serious] x1 — Plate editor input carries no accessible name
+    color-contrast [serious] x2-3 — editor/shell elements; includes the workspace-onboarding
+      ProgressBadge (already recorded above) and an editor toolbar element
+    nested-interactive [serious] x2 — interactive elements inside Plate editor toolbar buttons
+  These are application-level violations on the page detail route not present on /knowledge/wiki.
+  They do not affect the page-render PASS verdict (page renders, content visible, no error boundary)
+  but remain open defects for the editor surface owner.
+
+  UPDATED NOT-RUN STATUS (page-detail crash now unblocked; remaining gaps are own-reason):
+  - KB page detail renders and shows Plate content → PASS (crash fix verified in-browser)
+  - Save/reload/revision-conflict: NOT-RUN — requires editor interaction testing beyond render check
+  - Comments panel: NOT-RUN — comment section may load async; not checked in this run
+  - Citation follow-through: NOT-RUN — synthetic pages carry no wiki-links
+  - Search states: NOT-RUN — no search input found on /knowledge/wiki
+  - Denied records: NOT-RUN — user-9999 is sole OWNER, no second fixture member
+  - Ingestion/upload states: NOT-RUN — no storage credentials
+  - Permission-change states: NOT-RUN — no second fixture user
+
+  Cell 1 (editor/search/citation/denied): PARTIAL — page-detail crash resolved in-browser;
+    editor render PASS; save/revision/comments/citation/denied NOT-RUN for own-reason blockers.
+  Web Vitals cell: NOT-RUN — host running seven unrelated next start servers; latency invalid.
+  Row stays unchecked: Web Vitals cell is NOT-RUN.
+
 - [ ] DOC-002 also requires Documents-specific Web Vitals on the current production build using the existing route/SLO budgets and authenticated target-route samples; a passing Build INP run is not Documents performance proof.
 
   `PARTIAL 2026-09-13 | desktop PASS on all 5 DOC routes | mobile /knowledge/wiki/recent LCP INCONCLUSIVE | axe: zero application violations`
@@ -2243,6 +3342,50 @@ Maps to: PRD-C162, PRD-C185. Owner: S5 with Documents/privacy owners.
   **customer-representative recall is INCONCLUSIVE**, which matters here because the known failure mode
   is silent: an ANN plan returns exactly `LIMIT` rows whether recall is 100% or 44%, so a row count can
   never detect the loss. Closing this needs the seeded Neon database with real ingested content.
+
+  `EXTENDED 2026-09-13 | DB spec 5/5 scratch_local | Unit specs 35/35 | Gaussian recall sweep: 83% avg@8x, 88%@16x, 97%@64x | ACL fence verified | cross-tenant 0 leaks`
+  **ACL/tenant fence current source state (source inference, not guessed).**
+  `backend/src/modules/kb/retrieval/kb-vector-candidate-query.ts:36` — ANN path: `WHERE org_id = ${orgId}`
+  in SQL predicate; `kb-vector-candidate-query.ts:44` — exact path: same predicate inside the subquery.
+  Both filter by the caller's `orgId` in the SQL layer, never in the prompt. `org_id` is stored on
+  `kb_article_chunks` at index time (captured alongside the chunk). The memory note "KB vector fence is
+  a plain ANN with ZERO recall guarantee" is STALE — the current code has the pre-query strategy decision,
+  `ef_search = ceil(cap × 8)` capped at 1000, and `SET LOCAL hnsw.iterative_scan = relaxed_order` before
+  every query (`kb-vector-candidate-query.ts:20`). Space/article-level ACL is applied in the JOIN after
+  chunk retrieval (`kb-candidate.service.ts:80–88`), so the chunk candidate pass is tenant-scoped only
+  and full ACL follows in the next SQL statement — the design is correct: prompt-filtering is absent.
+  **Real-DB spec: PASS 5/5** on `scratch_local` (pgvector 0.8.6, PG 18.6, role `streamline_app`, GUC
+  set, RLS live). Command:
+  `DATABASE_URL="postgresql://neondb_owner@...scratch_local" APP_DATABASE_URL="postgresql://streamline_app@...scratch_local" ALLOW_DESTRUCTIVE_DB_TESTS=1 npx jest --runInBand --config jest-db.json --runTestsByPath src/modules/kb/retrieval/kb-vector-recall.db.spec.ts`
+  exit 0, 11.3 s. Confirmed: HNSW index used for the forced-ANN fixture, full pool of 200 returned,
+  ground-truth match (sinusoidal vectors, 640 rows, two tenants), 0 cross-tenant leaks.
+  **Unit specs: PASS 35/35.**
+  `npx jest --runInBand --runTestsByPath kb-vector-recall-guard.spec.ts kb-retrieval-strategy.spec.ts kb-acl-isolation.spec.ts`
+  exit 0, 6.2 s.
+  **Gaussian random unit vector recall sweep — scratch_kb (created and dropped). NOT-RUN against real
+  embeddings; this is a pessimistic synthetic lower bound.**
+  Corpus: 8200 chunks × 2 tenants (both above 8000 ANN threshold), 1536-dimension Gaussian random
+  unit vectors (Box-Muller normalised), `streamline_app` with GUC, RLS enforced, pgvector 0.8.6 HNSW
+  default parameters (m=16, ef_construction=200), `VACUUM ANALYZE` after load.
+  20-query recall sweep (query vectors taken from offset 500 to 519 of corpus):
+  - ef_search=8× (160, current `KB_ANN_EF_SEARCH_MULTIPLIER`): avg recall **83.0%** — BELOW 95% target
+  - ef_search=16× (320): avg recall **88.0%**
+  - ef_search=64× (1000, current `KB_ANN_EF_SEARCH_MAX`): avg recall **97.2%** — meets 95% target
+  - Cross-tenant isolation: **0 foreign rows** in every ANN result — PASS
+  - Full pool returned: ANN returns exactly `CAP` rows in all cases — PASS (iterative_scan works)
+  - At CAP=80, ef_search=640: planner switched to exact scan (buffers matched exact 24737) — correct
+  Plan node confirmed by EXPLAIN as `streamline_app` with GUC: `Index Scan using idx_kb_bench_hnsw …
+  Filter: (org_id = 'kb-bench-a')` for CAP≤40; exact scan for CAP=80.
+  **What this proves vs what it does not.** The strategy decision, iterative_scan, and cross-tenant
+  isolation all work correctly. ef_search=8× delivers 83% avg recall on uniformly-distributed random
+  vectors — Gaussian random is a harder case than real text embeddings (which cluster around semantic
+  topics, so the true nearest org-A neighbors are also globally near). Real-embedding recall is
+  expected to be higher, but cannot be measured without a real AI provider or the seeded Neon DB.
+  ef_search=64× (= 1000 = `KB_ANN_EF_SEARCH_MAX`) achieves 97.2% on random Gaussian — this is the
+  ceiling the code allows, and it meets the 95% target even on worst-case distribution.
+  **Blocker remaining:** customer-representative recall on real ingested content cannot be confirmed
+  without the seeded Neon DB or a real embedding provider, both inaccessible in this environment.
+  "Real signing-auth concurrency" is NOT-RUN. The row stays open on these two items.
 - [ ] In identified authorized environments prove object storage, indexing/vector
   retrieval, cache purge, erasure, retention and legal-hold boundaries. Coordinate
   OPS-001/003; record timestamped artifacts and accountable privacy decision.
@@ -2605,6 +3748,87 @@ These requirements were found outside prd/. They remain part of this single chec
   Red-then-green was observed, not assumed: with the tests written and the fix absent, 4 of 34 failed
   (malformed app URL, non-PostgreSQL protocol, malformed Redis URL, one bad region among several);
   after the fix, 34/34 exit 0.
+
+  `RE-VERIFICATION 2026-09-13 | CREDIT-CARD ORDERING DEFECT FIXED | 38/38 exit 0, 14/14 exit 0, 34/34 exit 0, 9/9 exit 0`
+  All previously-repaired controls re-verified against current source (not copied from historical records):
+
+  **Turnstile fail-open:** 14/14 exit 0 (`turnstile.service.spec.ts`). Secret absent without
+  `TURNSTILE_DISABLED=true` throws in every `NODE_ENV` including `test`; `TURNSTILE_DISABLED=true`
+  is refused when `NODE_ENV=production`. Intact.
+
+  **XFF/client-IP extraction:** `resolveClientIp` (`common/http/client-ip.ts`) reads `req.ip` only —
+  `trust-proxy.ts` and `main.ts` declare hop count; the leftmost-header defect is closed and the
+  function does not name the forwarded-for header. Intact.
+
+  **Ably CSP:** `realtime-csp-contract.test.ts` 9/9 exit 0. `buildCsp` in `proxy.ts` lists all
+  Ably wss/https endpoints under `connect-src`; a struck-out policy refuses every Ably destination;
+  the policy does not open `connect-src` to `wss:` or `*`. `image-delivery-csp-contract.test.ts`
+  9/9 exit 0 separately. Intact.
+
+  **`poweredByHeader: false`:** confirmed at line 71 of `frontend/next.config.ts`. Intact.
+
+  **Application-security suite:** 30/30 exit 0. Helmet registered, CORS non-wildcard, body-parser
+  limit present, auth rate-limit present, SSRF guard active, PII codec active, SQL-injection
+  parameterization confirmed, audit-log hashing confirmed. Indian identifier redaction
+  (PAN/Aadhaar/GSTIN/IFSC/Indian mobile) all 11 tests pass. Intact.
+
+  **env.validation regional boot-validation:** 34/34 exit 0 including all four regional URL cases.
+  Intact.
+
+  **Dependency posture measured today (not copied):**
+  Backend `pnpm audit` = 4 vulnerabilities (3 high, 1 low), all multer transitively via
+  `@nestjs/platform-express`, patched upstream in multer >= 2.3.0, blocked on a NestJS release.
+  Unchanged from prior measurement. Frontend `pnpm audit` = 0 vulnerabilities.
+
+  **CREDIT-CARD ORDERING DEFECT — NEW FIND AND FIX.**
+  `redaction.util.spec.ts` 1/8 tests failed before this session. Root cause: the Aadhaar pattern
+  (`/\b\d{4}[ -]?\d{4}[ -]?\d{4}\b/g`, 12 digits) was positioned BEFORE the credit-card pattern
+  (`/\b(?:\d[ -]?){13,19}\b/g`, 13–19 digits) in the chain. A 16-digit card number such as
+  "4111 1111 1111 1111" was consumed as "[REDACTED_AADHAAR] 1111" — the first 12 digits matched
+  the Aadhaar regex, leaving the trailing 4 digits unredacted and unmatched by anything. This was
+  introduced when the Indian identifier patterns were added to the chain.
+  Fix: moved `CREDIT_CARD_PATTERN` before `AADHAAR_PATTERN` in `redactSensitiveData`
+  (`backend/src/modules/ai/core/redaction.util.ts`). The ordering is unambiguous — the credit-card
+  pattern requires at least 13 digits, so it cannot match a standalone 12-digit Aadhaar number; the
+  swap eliminates the overlap without breaking any Indian identifier case.
+  Red-then-green confirmed: 1 test failed before the edit, 8/8 pass after; `application-security
+  .spec.ts` Indian identifier suite still 30/30 exit 0.
+
+  **`redact: false` flows — design review, not code defects.**
+  Nine services opt out of gateway redaction by setting `redact: false`. Evidence of review:
+  (a) `timesheets-ai.service.ts` and `payroll-ai-explain.service.ts` — structured computed engine
+  output (hours, days, line-item amounts, no PAN/Aadhaar/bank account columns selected). `redact:
+  false` is justified; redaction patterns would corrupt currency strings and amounts.
+  (b) Inventory AI services (`inv-report-builder`, `inv-copilot`, `inv-ai-explain`, `inv-demand-risk`,
+  `inv-ai-proposal`) — the structured evidence is numeric/categorical inventory data; user-typed
+  `question` fields in the copilot and report-builder are free text and COULD contain Indian
+  identifiers if a user embeds a vendor's GSTIN or PAN in a query. Risk is low (operational domain,
+  not HR/payroll), but the gap is real and requires an owner decision: either enable redaction for
+  those two user-input paths or document that the domain excludes personal data by policy.
+  (c) `feedbucket-ai.service.ts` — the `message` field is user-provided free-text feedback sent
+  with `redact: false`. A bug report could contain any PII if a user includes it. The service carries
+  a prompt-injection guard (`INJECTION_GUARD` delimiter fencing) but no regex redaction. Owner
+  decision required: enable `redact: true` for the message path, or document that feedbucket content
+  is considered operational rather than personal data under the org's processing policy.
+  None of these are fixed here; they require owner decisions (b) and (c) under PRD-C185.
+
+  **Data catalogue status:** the PRD-C183 catalogue at
+  `architecture-refactor/final-refactor/evidence/42-production-ops/data-catalogue-c183/` covers 296
+  personal-data columns across 136 tables. Thirteen decisions (lawful basis per class, retention
+  periods for eleven data classes, processor regions/DPAs per vendor, sensitive-category encryption,
+  survey anonymity model, bank-account column encryption) remain externally gated on named approvers.
+  The catalogue itself is complete in structure; the outstanding items require human decision, not
+  additional code analysis.
+
+  LOCALLY SATISFIED as of this session: Turnstile fail-open closed and intact; XFF forgery closed
+  and intact; Ably CSP intact; powered-by suppressed; helmet registered; Indian identifier redaction
+  patterns active and correctly ordered; credit-card ordering defect fixed; env-coverage gates pass
+  including regional URL validation; dependency posture measured fresh.
+  EXTERNALLY GATED (unchanged): PRD-C163 (TLS, encryption at rest, key rotation/revocation),
+  PRD-C164 (WAF, edge headers, CORS/CSP/request limits against deployed endpoint, malicious-traffic
+  negatives), PRD-C184 (PII policy, lawful basis, residency, breach handling — 13 named approver
+  decisions), PRD-C185 (provider approval, regions, PII minimisation; `redact: false` owner decisions
+  for inventory copilot user-input paths and feedbucket message path), PRD-C186 (deployed drills).
 
 - [ ] **OPS-CAPACITY — SLOs, topology and sustainable cost (PRD-C166–169/C172/C175).** S5 with S4 measurement. Run all existing 14 workload objectives simultaneously under sustained production-shaped load, plus a 60-second burst at twice normal RPS with zero 5xx and p95 within 20% of normal; include a separate mobile-3G run; capture pools/queues/CPU/memory/errors and prove declared SLOs with at least 40% headroom. Verify independently resourced cells (DB/cache/queues-workers/realtime-provider/search-vector/storage/monitoring), routing, credential and namespace isolation plus outage negatives; two labels on one service are not separate provisioning. Use the current RB07 collector's sample contract, reconcile historical count discrepancies explicitly, and capture at least seven daily snapshots for trend/capacity evidence unless a stronger existing rule applies. Attribute actual vendor invoice/API costs per cell, active organization/member/message/job; include Ably scoping and approved saturation forecast with Finance/operations decisions. Reuse existing manifest/schema with topology, identity, actual SHA/artifact, operator, timestamp, exit and hashes. Missing provisioned topology is an explicit external gate, not permission to fabricate infrastructure evidence.
 

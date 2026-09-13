@@ -80,7 +80,7 @@ export function TurnIntoDropdown() {
           className="gap-1 px-2 text-xs font-normal"
         >
           <span className="max-w-[80px] truncate">{currentLabel}</span>
-          <ChevronDown className="size-3 opacity-60" />
+          <ChevronDown className="size-3 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-[160px]">

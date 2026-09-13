@@ -8,8 +8,8 @@ export const KB_STATUS_LABELS: Record<string, string> = {
 export const KB_STATUS_BADGE_CLASS: Record<string, string> = {
   draft: "bg-muted text-muted-foreground border-border",
   in_review:
-    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+    "bg-status-warning-surface text-status-warning-ink-strong border-status-warning-rule",
   published:
-    "bg-status-success-surface text-status-success-ink border-status-success-rule",
-  archived: "bg-muted text-muted-foreground border-border opacity-60",
+    "bg-status-success-surface text-status-success-ink-strong border-status-success-rule",
+  archived: "bg-muted text-muted-foreground border-border",
 };

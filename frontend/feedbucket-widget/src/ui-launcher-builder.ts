@@ -50,7 +50,8 @@ export function buildLauncher(callbacks: LauncherCallbacks): LauncherRefs {
   const logo = document.createElement("div");
   logo.className = "launcher-logo";
   logo.title = "Drag to move";
-  logo.setAttribute("aria-label", "Feedbucket — drag to move");
+  logo.setAttribute("role", "img");
+  logo.setAttribute("aria-label", "Feedbucket");
   logo.appendChild(buildLogoMark());
   const gripOverlay = svgIcon({
     size: 16,

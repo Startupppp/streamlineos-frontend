@@ -1,5 +1,6 @@
 "use client";
 
+import { type MouseEvent } from "react";
 import { Table } from "lucide-react";
 import { useEditorRef } from "platejs/react";
 import {
@@ -17,10 +18,15 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { ToolbarButton } from "./toolbar-button";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 export function TableDropdown() {
   const editor = useEditorRef();
+
+  function handleMouseDown(e: MouseEvent<HTMLButtonElement>) {
+    e.preventDefault();
+  }
 
   function handleInsertTable() {
     insertTable(editor, { rowCount: 3, colCount: 3 });
@@ -48,11 +54,22 @@ export function TableDropdown() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <ToolbarButton tooltip="Table" aria-label="Table">
-          <Table className="size-4" />
-        </ToolbarButton>
-      </DropdownMenuTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Table"
+              className="h-8 w-8 shrink-0"
+              onMouseDown={handleMouseDown}
+            >
+              <Table className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent>Table</TooltipContent>
+      </Tooltip>
       <DropdownMenuContent align="start">
         <DropdownMenuItem onClick={handleInsertTable}>
           Insert table (3×3)

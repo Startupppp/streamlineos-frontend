@@ -162,13 +162,6 @@ const PageTreeItem = memo(function PageTreeItemInner({
     e.stopPropagation();
   }
 
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (renaming) return;
-    if (e.key === "Enter" || e.key === " ") {
-      handleNavigate();
-    }
-  }
-
   function handleStartRename() {
     setRenameValue(node.title || "");
     setRenaming(true);
@@ -222,18 +215,13 @@ const PageTreeItem = memo(function PageTreeItemInner({
     <>
       <div className="min-w-0 overflow-hidden">
         <div
-          role="button"
-          tabIndex={0}
-          aria-current={isActive ? "page" : undefined}
           className={cn(
-            "group relative flex min-w-0 items-center gap-1 overflow-hidden py-1 rounded-md cursor-pointer text-sm transition-colors select-none",
+            "group relative flex min-w-0 items-center gap-1 overflow-hidden py-1 rounded-md text-sm transition-colors select-none",
             isActive
               ? "bg-muted text-foreground font-medium"
               : "text-foreground/80 hover:bg-muted",
           )}
           style={{ paddingLeft: depth * 16, paddingRight: 4 }}
-          onClick={handleNavigate}
-          onKeyDown={handleKeyDown}
           {...animatedNavHoverHandlers}
         >
           <span
@@ -246,6 +234,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
             )}
           />
           <button
+            type="button"
             className="shrink-0 h-4 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground"
             onClick={handleToggleExpand}
             aria-label={expanded ? "Collapse" : "Expand"}
@@ -262,30 +251,49 @@ const PageTreeItem = memo(function PageTreeItemInner({
             )}
           </button>
 
-          <span className="shrink-0 text-base leading-none">
-            {node.icon ? (
-              node.icon
-            ) : (
-              <SidebarAnimatedNavIcon
-                icon={KbFileTextIcon}
-                iconRef={iconRef}
-                className="h-3.5 w-3.5 text-muted-foreground"
-              />
-            )}
-          </span>
-
           {renaming ? (
-            <Input
-              ref={renameInputRef}
-              value={renameValue}
-              onChange={handleRenameInputChange}
-              onKeyDown={handleRenameKeyDown}
-              onBlur={handleRenameCommit}
-              onClick={handleRenameInputClick}
-              className="flex-1 h-6 text-sm py-0 px-1 min-w-0"
-            />
+            <>
+              <span className="shrink-0 text-base leading-none">
+                {node.icon ? (
+                  node.icon
+                ) : (
+                  <SidebarAnimatedNavIcon
+                    icon={KbFileTextIcon}
+                    iconRef={iconRef}
+                    className="h-3.5 w-3.5 text-muted-foreground"
+                  />
+                )}
+              </span>
+              <Input
+                ref={renameInputRef}
+                value={renameValue}
+                onChange={handleRenameInputChange}
+                onKeyDown={handleRenameKeyDown}
+                onBlur={handleRenameCommit}
+                onClick={handleRenameInputClick}
+                className="flex-1 h-6 text-sm py-0 px-1 min-w-0"
+              />
+            </>
           ) : (
-            <TruncatedText text={node.title || "Untitled"} className="flex-1" />
+            <button
+              type="button"
+              aria-current={isActive ? "page" : undefined}
+              className="flex min-w-0 flex-1 items-center gap-1 cursor-pointer text-left"
+              onClick={handleNavigate}
+            >
+              <span className="shrink-0 text-base leading-none">
+                {node.icon ? (
+                  node.icon
+                ) : (
+                  <SidebarAnimatedNavIcon
+                    icon={KbFileTextIcon}
+                    iconRef={iconRef}
+                    className="h-3.5 w-3.5 text-muted-foreground"
+                  />
+                )}
+              </span>
+              <TruncatedText text={node.title || "Untitled"} className="flex-1" />
+            </button>
           )}
 
           {!renaming && (
@@ -294,6 +302,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
             >
               {canCreate && (
                 <button
+                  type="button"
                   className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
                   onClick={handleAddChild}
                   tabIndex={-1}
@@ -305,6 +314,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
               <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
                 <DropdownMenuTrigger asChild>
                   <button
+                    type="button"
                     className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
                     onClick={handleMoreClick}
                     tabIndex={-1}

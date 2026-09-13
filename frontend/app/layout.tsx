@@ -146,9 +146,9 @@ export default async function RootLayout({
           <ObservabilityProvider />
           <QueryProvider>
             <MotionProvider>{children}</MotionProvider>
-            <Toaster position="top-right" richColors />
           </QueryProvider>
         </SessionProvider>
+        <Toaster position="top-right" richColors />
         <MicrosoftClarity nonce={nonce} />
       </body>
     </html>

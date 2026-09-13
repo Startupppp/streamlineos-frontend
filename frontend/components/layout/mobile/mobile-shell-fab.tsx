@@ -65,6 +65,11 @@ export function MobileShellFab({
     return () => document.removeEventListener("keydown", handleKey);
   }, [fabOpen]);
 
+  useEffect(() => {
+    if (!fabOpen || !bodyReady) return;
+    sheetRef.current?.focus();
+  }, [fabOpen, bodyReady]);
+
   const handleClose = useCallback(() => setFabOpen(false), []);
 
   const handleToggleFab = useCallback(() => {

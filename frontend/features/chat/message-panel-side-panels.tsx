@@ -1,5 +1,6 @@
 "use client";
 
+import type { RefObject } from "react";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -39,6 +40,7 @@ type SidePanelsProps = {
   setShowFilesPanel: (open: boolean) => void;
   forwardMessage: ForwardableMessage | null;
   setForwardMessage: (message: ForwardableMessage | null) => void;
+  dropdownTriggerRef?: RefObject<HTMLButtonElement>;
 };
 
 const panelMotion = {
@@ -58,9 +60,16 @@ export function MessagePanelSidePanels({
   setShowFilesPanel,
   forwardMessage,
   setForwardMessage,
+  dropdownTriggerRef,
 }: SidePanelsProps) {
   const handleCloseSaved = () => setShowSavedPanel(false);
   const handleCloseFiles = () => setShowFilesPanel(false);
+
+  function handleCloseAutoFocus(event: Event) {
+    if (!dropdownTriggerRef?.current) return;
+    event.preventDefault();
+    dropdownTriggerRef.current.focus();
+  }
 
   return (
     <>
@@ -77,7 +86,7 @@ export function MessagePanelSidePanels({
 
       {isPanelNarrow && (
         <Sheet open={showSavedPanel} onOpenChange={setShowSavedPanel}>
-          <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0">
+          <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0" onCloseAutoFocus={handleCloseAutoFocus}>
             <SheetTitle className="sr-only">Saved messages</SheetTitle>
             <SavedMessagesPanel
               onClose={handleCloseSaved}
@@ -100,7 +109,7 @@ export function MessagePanelSidePanels({
 
       {isPanelNarrow && (
         <Sheet open={showFilesPanel} onOpenChange={setShowFilesPanel}>
-          <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0">
+          <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0" onCloseAutoFocus={handleCloseAutoFocus}>
             <SheetTitle className="sr-only">Shared files</SheetTitle>
             <SharedFilesPanel
               channelId={channelId}

@@ -1,4 +1,10 @@
-export { cn } from "cn";
+import { createCn } from "cn/config";
+
+export const cn = createCn({
+  extend: {
+    classGroups: { "font-size": [{ text: ["micro", "dense", "label"] }] },
+  },
+});
 
 const ABSOLUTE_SOURCE = /^(?:https?:|data:|blob:)/i;
 const ORG_ID_SEGMENT =
@@ -34,7 +40,10 @@ export function storageObjectUrl(key: string): string {
   return `${MEDIA_IMAGE_ROUTE}?key=${encodeURIComponent(normalized)}`;
 }
 
-const RESOLVED_IMAGE_PATHS = [`${MEDIA_IMAGE_ROUTE}?key=`, "/storage/image?key="] as const;
+const RESOLVED_IMAGE_PATHS = [
+  `${MEDIA_IMAGE_ROUTE}?key=`,
+  "/storage/image?key=",
+] as const;
 
 /**
  * The inverse of `storageObjectUrl`. A value that has already been resolved for
@@ -55,7 +64,9 @@ export function storageKeyFromUrl(value: string): string {
   return value;
 }
 
-export function resolveImageUrl(image: string | null | undefined): string | undefined {
+export function resolveImageUrl(
+  image: string | null | undefined,
+): string | undefined {
   if (!image) return undefined;
   if (ABSOLUTE_SOURCE.test(image)) return image;
   if (image.startsWith("/") && !isStorageObjectKey(image)) return image;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 import { Smile } from 'lucide-react';
 import { useEditorRef } from 'platejs/react';
 import {
@@ -8,7 +8,8 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from '@/components/ui/popover';
-import { ToolbarButton } from './toolbar-button';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 const COMMON_EMOJIS = [
   '😀', '😂', '🥰', '😊', '🤔', '😎', '🥳', '😅',
@@ -28,13 +29,28 @@ export function EmojiButton() {
     setOpen(false);
   }
 
+  function handleMouseDown(e: MouseEvent<HTMLButtonElement>) {
+    e.preventDefault();
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <ToolbarButton tooltip="Insert emoji" aria-label="Insert emoji">
-          <Smile className="size-4" />
-        </ToolbarButton>
-      </PopoverTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Insert emoji"
+              className="h-8 w-8 shrink-0"
+              onMouseDown={handleMouseDown}
+            >
+              <Smile className="size-4" />
+            </Button>
+          </PopoverTrigger>
+        </TooltipTrigger>
+        <TooltipContent>Insert emoji</TooltipContent>
+      </Tooltip>
       <PopoverContent className="w-auto p-2" align="start">
         <div className="grid grid-cols-8 gap-0.5">
           {COMMON_EMOJIS.map((emoji) => (

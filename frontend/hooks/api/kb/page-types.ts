@@ -14,7 +14,7 @@ export type KbPage = {
   visibility: "private" | "org" | "public";
   publicToken: string | null;
   publicSlug: string | null;
-  content: Record<string, unknown> | null;
+  content: Record<string, unknown>[] | Record<string, unknown> | null;
   contentText: string | null;
   isLocked: boolean;
   createdAt: string;
@@ -77,7 +77,7 @@ export type KbPageVersion = {
   pageId: number;
   versionNumber: number;
   title: string;
-  content: Record<string, unknown> | null;
+  content: Record<string, unknown>[] | Record<string, unknown> | null;
   contentText: string | null;
   changeSummary: string | null;
   authorId: string | null;

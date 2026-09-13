@@ -90,7 +90,7 @@ export const FloatingComposition = memo(function FloatingComposition({
                   Pipeline · Q2
                 </span>
               </div>
-              <span className="text-micro font-mono text-status-success-ink px-1.5 py-0.5 rounded bg-status-success-surface border border-status-success-rule">
+              <span className="text-micro font-mono text-status-success-ink-strong px-1.5 py-0.5 rounded bg-status-success-surface border border-status-success-rule">
                 +12.4%
               </span>
             </div>
@@ -151,7 +151,7 @@ export const FloatingComposition = memo(function FloatingComposition({
               <Users className="h-3 w-3 text-brand-cyan" />
               <span className="text-micro font-medium text-muted-foreground">Attendance</span>
             </div>
-            <span className="text-micro font-mono text-status-success-ink px-1.5 py-0.5 rounded bg-status-success-surface">
+            <span className="text-micro font-mono text-status-success-ink-strong px-1.5 py-0.5 rounded bg-status-success-surface">
               94%
             </span>
           </div>

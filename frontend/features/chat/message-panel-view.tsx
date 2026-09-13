@@ -126,6 +126,7 @@ export function MessagePanelView({
 
   const isPanelNarrow = useIsChatPanelNarrow();
   const isThreadOpen = thread.messageId !== null;
+  const dropdownTriggerRef = React.useRef<HTMLButtonElement>(null);
 
   function handleThreadOpenChange(open: boolean) {
     if (!open) thread.onClose();
@@ -134,7 +135,8 @@ export function MessagePanelView({
   return (
     <div className="flex flex-1 min-w-0 overflow-hidden">
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border/40 bg-card/80 px-3 backdrop-blur-sm sm:hidden">
+        {isPanelNarrow && (
+        <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border/40 bg-card/80 px-3 backdrop-blur-sm">
           <button
             type="button"
             className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -177,6 +179,7 @@ export function MessagePanelView({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <AnimatedIconButton
+                ref={dropdownTriggerRef}
                 icon={EllipsisIcon}
                 iconSize={16}
                 variant="ghost"
@@ -198,8 +201,10 @@ export function MessagePanelView({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        )}
 
-        <div className="hidden h-[56px] shrink-0 items-center gap-3 border-b border-border/40 bg-card/80 px-4 backdrop-blur-sm sm:flex sticky top-0 z-20">
+        {!isPanelNarrow && (
+        <div className="flex h-[56px] shrink-0 items-center gap-3 border-b border-border/40 bg-card/80 px-4 backdrop-blur-sm sticky top-0 z-20">
           {onToggleSidebar && (
             <ChannelSidebarCollapseButton
               isCollapsed={isSidebarCollapsed ?? false}
@@ -339,6 +344,7 @@ export function MessagePanelView({
             />
           </div>
         </div>
+        )}
 
         {!isOnline ? (
           <div
@@ -395,7 +401,7 @@ export function MessagePanelView({
         </Sheet>
       )}
 
-      <MessagePanelSidePanels {...sidePanels} />
+      <MessagePanelSidePanels {...sidePanels} dropdownTriggerRef={dropdownTriggerRef} />
     </div>
   );
 }

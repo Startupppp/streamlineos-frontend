@@ -150,7 +150,7 @@ export function ColorButtons() {
             <Baseline className="size-3.5" />
             <span
               className="h-1 w-4 rounded-sm"
-              style={{ backgroundColor: currentTextColor ?? "#000000" }}
+              style={{ backgroundColor: currentTextColor ?? 'var(--foreground)' }}
             />
           </Button>
         }
