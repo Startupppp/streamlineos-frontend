@@ -80,7 +80,7 @@ export function SidebarSection({
             onClick={onToggleGroup}
             className="w-full flex items-center justify-between px-2 py-1 mb-0.5 group/header rounded-md hover:bg-sidebar-accent transition-colors"
           >
-            <span className="text-micro font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/35 select-none transition-colors">
+            <span className="text-micro font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/65 select-none transition-colors">
               {group.label}
             </span>
             <ChevronDown
@@ -92,7 +92,7 @@ export function SidebarSection({
           </button>
         ) : (
           <div className="px-2 pt-3 pb-1">
-            <span className="text-micro font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/35 select-none">
+            <span className="text-micro font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/65 select-none">
               {group.label}
             </span>
           </div>

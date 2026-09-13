@@ -248,7 +248,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
       <Select value={statusFilter} onValueChange={setStatusFilter}>
-        <SelectTrigger className="w-40">
+        <SelectTrigger className="w-40" aria-label="Filter by status">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

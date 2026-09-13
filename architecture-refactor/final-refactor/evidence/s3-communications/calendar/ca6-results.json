@@ -1,0 +1,1644 @@
+{
+  "capturedAt": "2026-09-13T06:38:04.797Z",
+  "baseUrl": "http://localhost:1000",
+  "readerZone": "Asia/Calcutta",
+  "foreignZone": "America/New_York",
+  "deepLinkSourceKey": "leaves",
+  "failedSource": {
+    "key": "leaves",
+    "label": "Leave"
+  },
+  "syntheticSources": [
+    {
+      "key": "holidays",
+      "label": "Holidays",
+      "module": "HRMS",
+      "enabled": true
+    },
+    {
+      "key": "leaves",
+      "label": "Leave",
+      "module": "HRMS",
+      "enabled": false
+    },
+    {
+      "key": "interviews",
+      "label": "Interviews",
+      "module": "HRMS",
+      "enabled": true
+    }
+  ],
+  "viewports": [
+    {
+      "key": "360",
+      "label": "360 px",
+      "width": 360,
+      "height": 780,
+      "deviceScaleFactor": 1,
+      "mobile": true,
+      "cssWidth": 360,
+      "zoom": 1
+    },
+    {
+      "key": "768",
+      "label": "768 px",
+      "width": 768,
+      "height": 900,
+      "deviceScaleFactor": 1,
+      "mobile": false,
+      "cssWidth": 768,
+      "zoom": 1
+    },
+    {
+      "key": "1280",
+      "label": "1280 px",
+      "width": 1280,
+      "height": 900,
+      "deviceScaleFactor": 1,
+      "mobile": false,
+      "cssWidth": 1280,
+      "zoom": 1
+    },
+    {
+      "key": "1280-zoom200",
+      "label": "1280 px @ 200% zoom",
+      "width": 640,
+      "height": 450,
+      "deviceScaleFactor": 2,
+      "mobile": false,
+      "cssWidth": 640,
+      "zoom": 2
+    }
+  ],
+  "planned": 32,
+  "counts": {
+    "PASS": 28,
+    "FAIL": 1,
+    "NOT-RUN": 3
+  },
+  "screenshotDir": "D:/projects/personal/Streamlineos/architecture-refactor/final-refactor/evidence/s3-communications/calendar",
+  "apiOrigin": "http://127.0.0.1:1500",
+  "bakedOrigin": "https://api.streamlineos.in",
+  "livePreflight": {
+    "rendered": true,
+    "screenshot": "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\preflight-livepx.png",
+    "bodyExcerpt": "Skip to content StreamlineOS Home Scratch E2E Corp Search… ⌘K 1800 unread notifications 99+ S OVERVIEW Dashboard COMMUNICATION Inbox Mail Calendar Chat Notifications FOR ME Time Off Attendance Expenses Pay My Documents Onboarding Tasks Recruitment COMPANY Announcements People Workers Showing September 2026 Week 37 September 2026 Week 37 Share Add Today Week Attendance HR events CRM events Sources ",
+    "mainExcerpt": "Showing September 2026 Week 37 September 2026 Week 37 Share Add Today Week Attendance HR events CRM events Sources 07 Mon 08 Tue 09 Wed 10 Thu 11 Fri 12 Sat 13 Sun Seed User 130 - OOO Seed User 129 - OOO Seed User 128 - OOO Seed User 127 - OOO Seed User 126 - OOO Seed User 125 - OOO Seed User 124 - OOO Seed User 123 - OOO Seed User 122 - OOO Seed User 121 - OOO Seed User 120 - OOO Seed User 150 - "
+  },
+  "pageErrors": [
+    "ApiError: Internal Server Error at p (http://localhost:1000/_next/static/chunks/74846-1e3c63423e35618f.js:1:6838) at async y (http://localhost:1000/_next/static/chunks/74846-1e3c63423e35618f.js:1:6916)",
+    "{\"level\":\"error\",\"source\":\"browser\",\"timestamp\":\"2026-09-13T06:31:17.887Z\",\"error\":{\"name\":\"ApiError\",\"message\":\"Internal Server Error\",\"stack\":\"ApiError: Internal Server Error\\n at p (http://localhost:1000/_next/static/chunks/74846-1e3c63423e35618f.js:1:6838)\\n at async y (http://localhost:1000/_ne",
+    "{\"level\":\"error\",\"source\":\"browser\",\"timestamp\":\"2026-09-13T06:31:21.478Z\",\"error\":{\"name\":\"ApiError\",\"message\":\"Internal Server Error\",\"stack\":\"ApiError: Internal Server Error\\n at p (http://localhost:1000/_next/static/chunks/74846-1e3c63423e35618f.js:1:6838)\\n at async y (http://localhost:1000/_ne",
+    "{\"level\":\"error\",\"source\":\"browser\",\"timestamp\":\"2026-09-13T06:33:03.996Z\",\"error\":{\"name\":\"ApiError\",\"message\":\"Internal Server Error\",\"stack\":\"ApiError: Internal Server Error\\n at p (http://localhost:1000/_next/static/chunks/74846-1e3c63423e35618f.js:1:6838)\\n at async y (http://localhost:1000/_ne",
+    "{\"level\":\"error\",\"source\":\"browser\",\"timestamp\":\"2026-09-13T06:33:07.614Z\",\"error\":{\"name\":\"ApiError\",\"message\":\"Internal Server Error\",\"stack\":\"ApiError: Internal Server Error\\n at p (http://localhost:1000/_next/static/chunks/74846-1e3c63423e35618f.js:1:6838)\\n at async y (http://localhost:1000/_ne",
+    "{\"level\":\"error\",\"source\":\"browser\",\"timestamp\":\"2026-09-13T06:34:51.743Z\",\"error\":{\"name\":\"ApiError\",\"message\":\"Internal Server Error\",\"stack\":\"ApiError: Internal Server Error\\n at p (http://localhost:1000/_next/static/chunks/74846-1e3c63423e35618f.js:1:6838)\\n at async y (http://localhost:1000/_ne",
+    "{\"level\":\"error\",\"source\":\"browser\",\"timestamp\":\"2026-09-13T06:34:55.357Z\",\"error\":{\"name\":\"ApiError\",\"message\":\"Internal Server Error\",\"stack\":\"ApiError: Internal Server Error\\n at p (http://localhost:1000/_next/static/chunks/74846-1e3c63423e35618f.js:1:6838)\\n at async y (http://localhost:1000/_ne",
+    "{\"level\":\"error\",\"source\":\"browser\",\"timestamp\":\"2026-09-13T06:36:44.580Z\",\"error\":{\"name\":\"ApiError\",\"message\":\"Internal Server Error\",\"stack\":\"ApiError: Internal Server Error\\n at p (http://localhost:1000/_next/static/chunks/74846-1e3c63423e35618f.js:1:6838)\\n at async y (http://localhost:1000/_ne",
+    "{\"level\":\"error\",\"source\":\"browser\",\"timestamp\":\"2026-09-13T06:36:48.251Z\",\"error\":{\"name\":\"ApiError\",\"message\":\"Internal Server Error\",\"stack\":\"ApiError: Internal Server Error\\n at p (http://localhost:1000/_next/static/chunks/74846-1e3c63423e35618f.js:1:6838)\\n at async y (http://localhost:1000/_ne"
+  ],
+  "interception": {
+    "fulfilled": 199,
+    "continued": 353,
+    "proxiedToLocalBackend": 0,
+    "proxyFailures": []
+  },
+  "shellAxe": [
+    {
+      "viewport": "360",
+      "result": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 435,
+        "violations": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 1,
+            "target": [
+              "#feedbucket-root,.launcher-logo"
+            ],
+            "html": [
+              "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "viewport": "768",
+      "result": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 583,
+        "violations": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 1,
+            "target": [
+              "#feedbucket-root,.launcher-logo"
+            ],
+            "html": [
+              "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+            ]
+          },
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 4,
+            "target": [
+              "div:nth-child(1) > .mb-0\\.5.group\\/header.py-1 > .tracking-\\[0\\.08em\\].text-sidebar-foreground\\/35.uppercase",
+              ".mt-2:nth-child(2) > .mb-0\\.5.group\\/header.py-1 > .tracking-\\[0\\.08em\\].text-sidebar-foreground\\/35.uppercase"
+            ],
+            "html": [
+              "<span class=\"text-micro font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/35 select-none transition-colors\">Overview</span>",
+              "<span class=\"text-micro font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/35 select-none transition-colors\">Communication</span>"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "viewport": "1280",
+      "result": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 600,
+        "violations": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 1,
+            "target": [
+              "#feedbucket-root,.launcher-logo"
+            ],
+            "html": [
+              "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+            ]
+          },
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodes": 5,
+            "target": [
+              "kbd",
+              "div:nth-child(1) > .mb-0\\.5.group\\/header.py-1 > .tracking-\\[0\\.08em\\].text-sidebar-foreground\\/35.uppercase"
+            ],
+            "html": [
+              "<kbd class=\"hidden shrink-0 lg:inline-flex h-4 items-center rounded border border-sidebar-border bg-sidebar px-1 font-mono text-micro text-sidebar-foreground/50\">⌘K</kbd>",
+              "<span class=\"text-micro font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/35 select-none transition-colors\">Overview</span>"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "viewport": "1280-zoom200",
+      "result": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 436,
+        "violations": [
+          {
+            "id": "aria-prohibited-attr",
+            "impact": "serious",
+            "nodes": 1,
+            "target": [
+              "#feedbucket-root,.launcher-logo"
+            ],
+            "html": [
+              "<div class=\"launcher-logo\" title=\"Drag to move\" aria-label=\"Feedbucket — drag to move\">"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "cells": [
+    {
+      "state": "loading-and-populated",
+      "width": "360",
+      "verdict": "NOT-RUN",
+      "reason": "loading skeleton: no skeleton was observed before the page settled",
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\loading-and-populated-360px-populated-live.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\loading-and-populated-360px-populated-rows.png"
+      ],
+      "checks": [
+        {
+          "name": "loading skeleton",
+          "verdict": "NOT-RUN",
+          "reason": "no skeleton was observed before the page settled"
+        },
+        {
+          "name": "live calendar chrome rendered",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "every seeded event row rendered",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 216,
+        "violations": []
+      }
+    },
+    {
+      "state": "empty-period",
+      "width": "360",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\empty-period-360px-list.png"
+      ],
+      "checks": [
+        {
+          "name": "empty period renders empty-state copy",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "empty is not dressed as an error",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 141,
+        "violations": []
+      }
+    },
+    {
+      "state": "error-and-retry",
+      "width": "360",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\error-and-retry-360px-500.png"
+      ],
+      "checks": [
+        {
+          "name": "a failed range read is announced on the surface",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "\"Try Again\" re-issues the range request",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 18,
+        "violations": []
+      }
+    },
+    {
+      "state": "source-failure",
+      "width": "360",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\source-failure-360px-surface.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\source-failure-360px-sources-panel.png"
+      ],
+      "checks": [
+        {
+          "name": "a failed source is announced and the others still render",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "the surviving source still renders its events",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 70,
+        "violations": []
+      }
+    },
+    {
+      "state": "navigation-day-week-month",
+      "width": "360",
+      "verdict": "FAIL",
+      "reason": "period announcement: no navigation step changed the period",
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\navigation-day-week-month-360px-navigated.png"
+      ],
+      "checks": [
+        {
+          "name": "day -> next",
+          "verdict": "NOT-RUN",
+          "reason": "\"Next day\" is on screen at 360 px but button.box-border.h-9.rounded-md.border :: Calendar view owns the pixel at (125, 132), so a real press never reaches it"
+        },
+        {
+          "name": "day -> previous",
+          "verdict": "NOT-RUN",
+          "reason": "\"Previous day\" is on screen at 360 px but button.box-border.h-9.rounded-md.border :: Calendar view owns the pixel at (93, 132), so a real press never reaches it"
+        },
+        {
+          "name": "week -> next",
+          "verdict": "NOT-RUN",
+          "reason": "\"Next week\" is on screen at 360 px but button.box-border.h-9.rounded-md.border :: Calendar view owns the pixel at (125, 132), so a real press never reaches it"
+        },
+        {
+          "name": "month -> next",
+          "verdict": "NOT-RUN",
+          "reason": "\"Next month\" is on screen at 360 px but button.box-border.h-9.rounded-md.border :: Calendar view owns the pixel at (125, 132), so a real press never reaches it"
+        },
+        {
+          "name": "period announcement",
+          "verdict": "FAIL",
+          "reason": "no navigation step changed the period"
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 526,
+        "violations": []
+      },
+      "navigationSteps": [
+        {
+          "label": "day -> next",
+          "control": "Next day",
+          "clicked": false,
+          "movedPeriod": false,
+          "titleBefore": "Sunday, September 13, 2026",
+          "titleAfter": "Sunday, September 13, 2026",
+          "liveBefore": "1800 unread notifications | 1800 unread notifications | Showing Sunday, September 13, 2026",
+          "liveAfter": "1800 unread notifications | 1800 unread notifications | Showing Sunday, September 13, 2026"
+        },
+        {
+          "label": "day -> previous",
+          "control": "Previous day",
+          "clicked": false,
+          "movedPeriod": false,
+          "titleBefore": "Sunday, September 13, 2026",
+          "titleAfter": "Sunday, September 13, 2026",
+          "liveBefore": "1800 unread notifications | 1800 unread notifications | Showing Sunday, September 13, 2026",
+          "liveAfter": "1800 unread notifications | 1800 unread notifications | Showing Sunday, September 13, 2026"
+        },
+        {
+          "label": "week -> next",
+          "control": "Next week",
+          "clicked": false,
+          "movedPeriod": false,
+          "titleBefore": "September 2026 Week 37",
+          "titleAfter": "September 2026 Week 37",
+          "liveBefore": "1800 unread notifications | 1800 unread notifications | Showing September 2026 Week 37",
+          "liveAfter": "1800 unread notifications | 1800 unread notifications | Showing September 2026 Week 37"
+        },
+        {
+          "label": "month -> next",
+          "control": "Next month",
+          "clicked": false,
+          "movedPeriod": false,
+          "titleBefore": "September 2026",
+          "titleAfter": "September 2026",
+          "liveBefore": "1800 unread notifications | 1800 unread notifications | Showing September 2026",
+          "liveAfter": "1800 unread notifications | 1800 unread notifications | Showing September 2026"
+        }
+      ]
+    },
+    {
+      "state": "keyboard-and-detail-sheet",
+      "width": "360",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\keyboard-and-detail-sheet-360px-row-focused.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\keyboard-and-detail-sheet-360px-sheet.png"
+      ],
+      "checks": [
+        {
+          "name": "Tab reaches the row, Enter opens the Sheet, Escape restores focus",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "Escape closes the Sheet",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "no unsupported mutation action is offered on an unmanageable event",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "the detail Sheet names the authored zone",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 216,
+        "violations": []
+      }
+    },
+    {
+      "state": "deep-link",
+      "width": "360",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\deep-link-360px-source.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\deep-link-360px-create.png"
+      ],
+      "checks": [
+        {
+          "name": "?source=<key> enables that source and is stripped",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "?create=1 opens the create dialog and is stripped",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 202,
+        "violations": []
+      },
+      "unimplementedDeepLinks": [
+        "view",
+        "date"
+      ]
+    },
+    {
+      "state": "responsive-and-foreign-zone",
+      "width": "360",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\responsive-and-foreign-zone-360px-grid.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\responsive-and-foreign-zone-360px-list.png"
+      ],
+      "checks": [
+        {
+          "name": "viewport is 360 px",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "no horizontal overflow in calendar view",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "no horizontal overflow in list view",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "foreign-zone row fits its virtualised slot",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "foreign-zone row names both zones",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "foreign-zone row with location fits its virtualised slot",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "foreign-zone row with location names both zones",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 216,
+        "violations": []
+      },
+      "rowGeometry": {
+        "noLocation": {
+          "found": true,
+          "slotStyleHeight": null,
+          "slotHeight": 104,
+          "slotPaddingBottom": 8,
+          "buttonHeight": 96,
+          "buttonScrollHeight": 94,
+          "buttonBottom": 396,
+          "slotBottom": 404,
+          "nextSlotTop": 404,
+          "textHeight": 48,
+          "textClientHeight": 48,
+          "textScrollHeight": 48,
+          "textLineHeight": "16px",
+          "text": "13 Sept 2026, 1:30 am – 2:30 am · America/New_York (11:00 am Asia/Calcutta)"
+        },
+        "withLocation": {
+          "found": true,
+          "slotStyleHeight": null,
+          "slotHeight": 132,
+          "slotPaddingBottom": 8,
+          "buttonHeight": 124,
+          "buttonScrollHeight": 122,
+          "buttonBottom": 528,
+          "slotBottom": 536,
+          "nextSlotTop": 172,
+          "textHeight": 48,
+          "textClientHeight": 48,
+          "textScrollHeight": 48,
+          "textLineHeight": "16px",
+          "text": "13 Sept 2026, 4:30 am – 5:30 am · America/New_York (2:00 pm Asia/Calcutta)"
+        }
+      }
+    },
+    {
+      "state": "loading-and-populated",
+      "width": "768",
+      "verdict": "NOT-RUN",
+      "reason": "loading skeleton: no skeleton was observed before the page settled",
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\loading-and-populated-768px-populated-live.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\loading-and-populated-768px-populated-rows.png"
+      ],
+      "checks": [
+        {
+          "name": "loading skeleton",
+          "verdict": "NOT-RUN",
+          "reason": "no skeleton was observed before the page settled"
+        },
+        {
+          "name": "live calendar chrome rendered",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "every seeded event row rendered",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 270,
+        "violations": []
+      }
+    },
+    {
+      "state": "empty-period",
+      "width": "768",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\empty-period-768px-list.png"
+      ],
+      "checks": [
+        {
+          "name": "empty period renders empty-state copy",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "empty is not dressed as an error",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 195,
+        "violations": []
+      }
+    },
+    {
+      "state": "error-and-retry",
+      "width": "768",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\error-and-retry-768px-500.png"
+      ],
+      "checks": [
+        {
+          "name": "a failed range read is announced on the surface",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "\"Try Again\" re-issues the range request",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 71,
+        "violations": []
+      }
+    },
+    {
+      "state": "source-failure",
+      "width": "768",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\source-failure-768px-surface.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\source-failure-768px-sources-panel.png"
+      ],
+      "checks": [
+        {
+          "name": "a failed source is announced and the others still render",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "the surviving source still renders its events",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 276,
+        "violations": []
+      }
+    },
+    {
+      "state": "navigation-day-week-month",
+      "width": "768",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\navigation-day-week-month-768px-navigated.png"
+      ],
+      "checks": [
+        {
+          "name": "Day view navigates with \"Next day\"",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "Day view navigates with \"Previous day\"",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "Week view navigates with \"Next week\"",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "Month view navigates with \"Next month\"",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "every navigation step updates the aria-live period",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 569,
+        "violations": []
+      },
+      "navigationSteps": [
+        {
+          "label": "day -> next",
+          "control": "Next day",
+          "clicked": true,
+          "movedPeriod": true,
+          "titleBefore": "Sunday, September 13, 2026",
+          "titleAfter": "Monday, September 14, 2026",
+          "liveBefore": "1800 unread notifications | 1800 unread notifications | Showing Sunday, September 13, 2026",
+          "liveAfter": "1800 unread notifications | 1800 unread notifications | Showing Monday, September 14, 2026"
+        },
+        {
+          "label": "day -> previous",
+          "control": "Previous day",
+          "clicked": true,
+          "movedPeriod": true,
+          "titleBefore": "Monday, September 14, 2026",
+          "titleAfter": "Sunday, September 13, 2026",
+          "liveBefore": "1800 unread notifications | 1800 unread notifications | Showing Monday, September 14, 2026",
+          "liveAfter": "1800 unread notifications | 1800 unread notifications | Showing Sunday, September 13, 2026"
+        },
+        {
+          "label": "week -> next",
+          "control": "Next week",
+          "clicked": true,
+          "movedPeriod": true,
+          "titleBefore": "September 2026 Week 37",
+          "titleAfter": "September 2026 Week 38",
+          "liveBefore": "1800 unread notifications | 1800 unread notifications | Showing September 2026 Week 37",
+          "liveAfter": "1800 unread notifications | 1800 unread notifications | Showing September 2026 Week 38"
+        },
+        {
+          "label": "month -> next",
+          "control": "Next month",
+          "clicked": true,
+          "movedPeriod": true,
+          "titleBefore": "September 2026",
+          "titleAfter": "October 2026",
+          "liveBefore": "1800 unread notifications | 1800 unread notifications | Showing September 2026",
+          "liveAfter": "1800 unread notifications | 1800 unread notifications | Showing October 2026"
+        }
+      ]
+    },
+    {
+      "state": "keyboard-and-detail-sheet",
+      "width": "768",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\keyboard-and-detail-sheet-768px-row-focused.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\keyboard-and-detail-sheet-768px-sheet.png"
+      ],
+      "checks": [
+        {
+          "name": "Tab reaches the row, Enter opens the Sheet, Escape restores focus",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "Escape closes the Sheet",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "no unsupported mutation action is offered on an unmanageable event",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "the detail Sheet names the authored zone",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 270,
+        "violations": []
+      }
+    },
+    {
+      "state": "deep-link",
+      "width": "768",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\deep-link-768px-source.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\deep-link-768px-create.png"
+      ],
+      "checks": [
+        {
+          "name": "?source=<key> enables that source and is stripped",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "?create=1 opens the create dialog and is stripped",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 266,
+        "violations": []
+      },
+      "unimplementedDeepLinks": [
+        "view",
+        "date"
+      ]
+    },
+    {
+      "state": "responsive-and-foreign-zone",
+      "width": "768",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\responsive-and-foreign-zone-768px-grid.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\responsive-and-foreign-zone-768px-list.png"
+      ],
+      "checks": [
+        {
+          "name": "viewport is 768 px",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "no horizontal overflow in calendar view",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "no horizontal overflow in list view",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "foreign-zone row fits its virtualised slot",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "foreign-zone row names both zones",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "foreign-zone row with location fits its virtualised slot",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "foreign-zone row with location names both zones",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 270,
+        "violations": []
+      },
+      "rowGeometry": {
+        "noLocation": {
+          "found": true,
+          "slotStyleHeight": null,
+          "slotHeight": 88,
+          "slotPaddingBottom": 8,
+          "buttonHeight": 80,
+          "buttonScrollHeight": 78,
+          "buttonBottom": 364,
+          "slotBottom": 372,
+          "nextSlotTop": 372,
+          "textHeight": 32,
+          "textClientHeight": 32,
+          "textScrollHeight": 32,
+          "textLineHeight": "16px",
+          "text": "13 Sept 2026, 1:30 am – 2:30 am · America/New_York (11:00 am Asia/Calcutta)"
+        },
+        "withLocation": {
+          "found": true,
+          "slotStyleHeight": null,
+          "slotHeight": 116,
+          "slotPaddingBottom": 8,
+          "buttonHeight": 108,
+          "buttonScrollHeight": 106,
+          "buttonBottom": 480,
+          "slotBottom": 488,
+          "nextSlotTop": 172,
+          "textHeight": 32,
+          "textClientHeight": 32,
+          "textScrollHeight": 32,
+          "textLineHeight": "16px",
+          "text": "13 Sept 2026, 4:30 am – 5:30 am · America/New_York (2:00 pm Asia/Calcutta)"
+        }
+      }
+    },
+    {
+      "state": "loading-and-populated",
+      "width": "1280",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\loading-and-populated-1280px-loading.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\loading-and-populated-1280px-populated-live.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\loading-and-populated-1280px-populated-rows.png"
+      ],
+      "checks": [
+        {
+          "name": "loading skeleton painted",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "live calendar chrome rendered",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "every seeded event row rendered",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 285,
+        "violations": []
+      }
+    },
+    {
+      "state": "empty-period",
+      "width": "1280",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\empty-period-1280px-list.png"
+      ],
+      "checks": [
+        {
+          "name": "empty period renders empty-state copy",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "empty is not dressed as an error",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 210,
+        "violations": []
+      }
+    },
+    {
+      "state": "error-and-retry",
+      "width": "1280",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\error-and-retry-1280px-500.png"
+      ],
+      "checks": [
+        {
+          "name": "a failed range read is announced on the surface",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "\"Try Again\" re-issues the range request",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 71,
+        "violations": []
+      }
+    },
+    {
+      "state": "source-failure",
+      "width": "1280",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\source-failure-1280px-surface.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\source-failure-1280px-sources-panel.png"
+      ],
+      "checks": [
+        {
+          "name": "a failed source is announced and the others still render",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "the surviving source still renders its events",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 291,
+        "violations": []
+      }
+    },
+    {
+      "state": "navigation-day-week-month",
+      "width": "1280",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\navigation-day-week-month-1280px-navigated.png"
+      ],
+      "checks": [
+        {
+          "name": "Day view navigates with \"Next day\"",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "Day view navigates with \"Previous day\"",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "Week view navigates with \"Next week\"",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "Month view navigates with \"Next month\"",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "every navigation step updates the aria-live period",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 583,
+        "violations": []
+      },
+      "navigationSteps": [
+        {
+          "label": "day -> next",
+          "control": "Next day",
+          "clicked": true,
+          "movedPeriod": true,
+          "titleBefore": "Sunday, September 13, 2026",
+          "titleAfter": "Monday, September 14, 2026",
+          "liveBefore": "1800 unread notifications | 1800 unread notifications | Showing Sunday, September 13, 2026",
+          "liveAfter": "1800 unread notifications | 1800 unread notifications | Showing Monday, September 14, 2026"
+        },
+        {
+          "label": "day -> previous",
+          "control": "Previous day",
+          "clicked": true,
+          "movedPeriod": true,
+          "titleBefore": "Monday, September 14, 2026",
+          "titleAfter": "Sunday, September 13, 2026",
+          "liveBefore": "1800 unread notifications | 1800 unread notifications | Showing Monday, September 14, 2026",
+          "liveAfter": "1800 unread notifications | 1800 unread notifications | Showing Sunday, September 13, 2026"
+        },
+        {
+          "label": "week -> next",
+          "control": "Next week",
+          "clicked": true,
+          "movedPeriod": true,
+          "titleBefore": "September 2026 Week 37",
+          "titleAfter": "September 2026 Week 38",
+          "liveBefore": "1800 unread notifications | 1800 unread notifications | Showing September 2026 Week 37",
+          "liveAfter": "1800 unread notifications | 1800 unread notifications | Showing September 2026 Week 38"
+        },
+        {
+          "label": "month -> next",
+          "control": "Next month",
+          "clicked": true,
+          "movedPeriod": true,
+          "titleBefore": "September 2026",
+          "titleAfter": "October 2026",
+          "liveBefore": "1800 unread notifications | 1800 unread notifications | Showing September 2026",
+          "liveAfter": "1800 unread notifications | 1800 unread notifications | Showing October 2026"
+        }
+      ]
+    },
+    {
+      "state": "keyboard-and-detail-sheet",
+      "width": "1280",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\keyboard-and-detail-sheet-1280px-row-focused.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\keyboard-and-detail-sheet-1280px-sheet.png"
+      ],
+      "checks": [
+        {
+          "name": "Tab reaches the row, Enter opens the Sheet, Escape restores focus",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "Escape closes the Sheet",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "no unsupported mutation action is offered on an unmanageable event",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "the detail Sheet names the authored zone",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 285,
+        "violations": []
+      }
+    },
+    {
+      "state": "deep-link",
+      "width": "1280",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\deep-link-1280px-source.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\deep-link-1280px-create.png"
+      ],
+      "checks": [
+        {
+          "name": "?source=<key> enables that source and is stripped",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "?create=1 opens the create dialog and is stripped",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 281,
+        "violations": []
+      },
+      "unimplementedDeepLinks": [
+        "view",
+        "date"
+      ]
+    },
+    {
+      "state": "responsive-and-foreign-zone",
+      "width": "1280",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\responsive-and-foreign-zone-1280px-grid.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\responsive-and-foreign-zone-1280px-list.png"
+      ],
+      "checks": [
+        {
+          "name": "viewport is 1280 px",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "no horizontal overflow in calendar view",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "no horizontal overflow in list view",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "foreign-zone row fits its virtualised slot",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "foreign-zone row names both zones",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "foreign-zone row with location fits its virtualised slot",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "foreign-zone row with location names both zones",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 285,
+        "violations": []
+      },
+      "rowGeometry": {
+        "noLocation": {
+          "found": true,
+          "slotStyleHeight": null,
+          "slotHeight": 72,
+          "slotPaddingBottom": 8,
+          "buttonHeight": 64,
+          "buttonScrollHeight": 62,
+          "buttonBottom": 348,
+          "slotBottom": 356,
+          "nextSlotTop": 356,
+          "textHeight": 16,
+          "textClientHeight": 16,
+          "textScrollHeight": 16,
+          "textLineHeight": "16px",
+          "text": "13 Sept 2026, 1:30 am – 2:30 am · America/New_York (11:00 am Asia/Calcutta)"
+        },
+        "withLocation": {
+          "found": true,
+          "slotStyleHeight": null,
+          "slotHeight": 100,
+          "slotPaddingBottom": 8,
+          "buttonHeight": 92,
+          "buttonScrollHeight": 90,
+          "buttonBottom": 448,
+          "slotBottom": 456,
+          "nextSlotTop": 172,
+          "textHeight": 16,
+          "textClientHeight": 16,
+          "textScrollHeight": 16,
+          "textLineHeight": "16px",
+          "text": "13 Sept 2026, 4:30 am – 5:30 am · America/New_York (2:00 pm Asia/Calcutta)"
+        }
+      }
+    },
+    {
+      "state": "loading-and-populated",
+      "width": "1280-zoom200",
+      "verdict": "NOT-RUN",
+      "reason": "loading skeleton: no skeleton was observed before the page settled",
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\loading-and-populated-1280-zoom200px-populated-live.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\loading-and-populated-1280-zoom200px-populated-rows.png"
+      ],
+      "checks": [
+        {
+          "name": "loading skeleton",
+          "verdict": "NOT-RUN",
+          "reason": "no skeleton was observed before the page settled"
+        },
+        {
+          "name": "live calendar chrome rendered",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "every seeded event row rendered",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 217,
+        "violations": []
+      }
+    },
+    {
+      "state": "empty-period",
+      "width": "1280-zoom200",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\empty-period-1280-zoom200px-list.png"
+      ],
+      "checks": [
+        {
+          "name": "empty period renders empty-state copy",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "empty is not dressed as an error",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 143,
+        "violations": []
+      }
+    },
+    {
+      "state": "error-and-retry",
+      "width": "1280-zoom200",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\error-and-retry-1280-zoom200px-500.png"
+      ],
+      "checks": [
+        {
+          "name": "a failed range read is announced on the surface",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "\"Try Again\" re-issues the range request",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 18,
+        "violations": []
+      }
+    },
+    {
+      "state": "source-failure",
+      "width": "1280-zoom200",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\source-failure-1280-zoom200px-surface.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\source-failure-1280-zoom200px-sources-panel.png"
+      ],
+      "checks": [
+        {
+          "name": "a failed source is announced and the others still render",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "the surviving source still renders its events",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 72,
+        "violations": []
+      }
+    },
+    {
+      "state": "navigation-day-week-month",
+      "width": "1280-zoom200",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\navigation-day-week-month-1280-zoom200px-navigated.png"
+      ],
+      "checks": [
+        {
+          "name": "Day view navigates with \"Next day\"",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "Day view navigates with \"Previous day\"",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "Week view navigates with \"Next week\"",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "Month view navigates with \"Next month\"",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "every navigation step updates the aria-live period",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 517,
+        "violations": []
+      },
+      "navigationSteps": [
+        {
+          "label": "day -> next",
+          "control": "Next day",
+          "clicked": true,
+          "movedPeriod": true,
+          "titleBefore": "Sunday, September 13, 2026",
+          "titleAfter": "Monday, September 14, 2026",
+          "liveBefore": "1800 unread notifications | 1800 unread notifications | Showing Sunday, September 13, 2026",
+          "liveAfter": "1800 unread notifications | 1800 unread notifications | Showing Monday, September 14, 2026"
+        },
+        {
+          "label": "day -> previous",
+          "control": "Previous day",
+          "clicked": true,
+          "movedPeriod": true,
+          "titleBefore": "Monday, September 14, 2026",
+          "titleAfter": "Sunday, September 13, 2026",
+          "liveBefore": "1800 unread notifications | 1800 unread notifications | Showing Monday, September 14, 2026",
+          "liveAfter": "1800 unread notifications | 1800 unread notifications | Showing Sunday, September 13, 2026"
+        },
+        {
+          "label": "week -> next",
+          "control": "Next week",
+          "clicked": true,
+          "movedPeriod": true,
+          "titleBefore": "September 2026 Week 37",
+          "titleAfter": "September 2026 Week 38",
+          "liveBefore": "1800 unread notifications | 1800 unread notifications | Showing September 2026 Week 37",
+          "liveAfter": "1800 unread notifications | 1800 unread notifications | Showing September 2026 Week 38"
+        },
+        {
+          "label": "month -> next",
+          "control": "Next month",
+          "clicked": true,
+          "movedPeriod": true,
+          "titleBefore": "September 2026",
+          "titleAfter": "October 2026",
+          "liveBefore": "1800 unread notifications | 1800 unread notifications | Showing September 2026",
+          "liveAfter": "1800 unread notifications | 1800 unread notifications | Showing October 2026"
+        }
+      ]
+    },
+    {
+      "state": "keyboard-and-detail-sheet",
+      "width": "1280-zoom200",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\keyboard-and-detail-sheet-1280-zoom200px-row-focused.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\keyboard-and-detail-sheet-1280-zoom200px-sheet.png"
+      ],
+      "checks": [
+        {
+          "name": "Tab reaches the row, Enter opens the Sheet, Escape restores focus",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "Escape closes the Sheet",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "no unsupported mutation action is offered on an unmanageable event",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "the detail Sheet names the authored zone",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 217,
+        "violations": []
+      }
+    },
+    {
+      "state": "deep-link",
+      "width": "1280-zoom200",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\deep-link-1280-zoom200px-source.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\deep-link-1280-zoom200px-create.png"
+      ],
+      "checks": [
+        {
+          "name": "?source=<key> enables that source and is stripped",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "?create=1 opens the create dialog and is stripped",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 192,
+        "violations": []
+      },
+      "unimplementedDeepLinks": [
+        "view",
+        "date"
+      ]
+    },
+    {
+      "state": "responsive-and-foreign-zone",
+      "width": "1280-zoom200",
+      "verdict": "PASS",
+      "reason": null,
+      "screenshots": [
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\responsive-and-foreign-zone-1280-zoom200px-grid.png",
+        "D:\\projects\\personal\\Streamlineos\\architecture-refactor\\final-refactor\\evidence\\s3-communications\\calendar\\responsive-and-foreign-zone-1280-zoom200px-list.png"
+      ],
+      "checks": [
+        {
+          "name": "viewport is 1280 px @ 200% zoom",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "no horizontal overflow in calendar view",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "no horizontal overflow in list view",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "foreign-zone row fits its virtualised slot",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "foreign-zone row names both zones",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "foreign-zone row with location fits its virtualised slot",
+          "verdict": "PASS",
+          "reason": null
+        },
+        {
+          "name": "foreign-zone row with location names both zones",
+          "verdict": "PASS",
+          "reason": null
+        }
+      ],
+      "axe": {
+        "ran": true,
+        "reason": null,
+        "nodesChecked": 217,
+        "violations": []
+      },
+      "rowGeometry": {
+        "noLocation": {
+          "found": true,
+          "slotStyleHeight": null,
+          "slotHeight": 72,
+          "slotPaddingBottom": 8,
+          "buttonHeight": 64,
+          "buttonScrollHeight": 62,
+          "buttonBottom": 348,
+          "slotBottom": 356,
+          "nextSlotTop": 356,
+          "textHeight": 16,
+          "textClientHeight": 16,
+          "textScrollHeight": 16,
+          "textLineHeight": "16px",
+          "text": "13 Sept 2026, 1:30 am – 2:30 am · America/New_York (11:00 am Asia/Calcutta)"
+        },
+        "withLocation": {
+          "found": true,
+          "slotStyleHeight": null,
+          "slotHeight": 100,
+          "slotPaddingBottom": 8,
+          "buttonHeight": 92,
+          "buttonScrollHeight": 90,
+          "buttonBottom": 448,
+          "slotBottom": 456,
+          "nextSlotTop": 172,
+          "textHeight": 16,
+          "textClientHeight": 16,
+          "textScrollHeight": 16,
+          "textLineHeight": "16px",
+          "text": "13 Sept 2026, 4:30 am – 5:30 am · America/New_York (2:00 pm Asia/Calcutta)"
+        }
+      }
+    }
+  ]
+}

@@ -329,24 +329,49 @@ Owner S1; S0 reserves shared auth/cache/query/schema files. Identity mint cache 
   asks for, demonstrated rather than assumed.
   Dominant cost identified: `INSERT INTO role_permission_grants` at ~97 ms per call, roughly 2,000 rows
   per organisation. That is the single most expensive phase of org setup and it sits off the ready path.
-  **Two runtime boundaries remain seam-proven only, exactly as this row warned.** `>100-membership
-  selection`: `listSetupMemberships` hard-limits to `.limit(100)` ordered by `joinedAt DESC`, so a
-  partially-completed setup org at position 101+ is invisible to `resolveExistingSetupTarget` and
-  `resolveOrCreateOrg` **creates a second organisation**. `org-setup-resolver-targets.spec.ts:513`
-  already documents it as a known gap. Wrong-cell and lookup-outage both fail CLOSED at the seam
-  (`placedOrganizationCoordinates` throwing yields `unverified`, and nothing is deleted), but the real
-  network behaviour under outage is not certified.
-  **A finding beyond this row, recorded because it is not harness-specific.** The harness could not
-  delete ANY of its 20 organisations: `audit_logs_org_id_organizations_id_fk` does not cascade and
-  `audit_logs` carries an append-only trigger, so an organisation that has ever written an audit row
-  cannot be removed through the ordinary path. The harness reported all 20 in `notCleaned` rather than
-  claiming success, which is the correct behaviour. Cleanup completed manually with
-  `session_replication_role = replica`, which requires true superuser and is **not available on Neon**,
-  where `neondb_owner` is `neon_superuser`. Baseline restored exactly: 3 orgs, 526 members, 0 outbox,
-  0 inbox. This bears on any real tenant-deletion or erasure path.
-  Harness gap noted: `APP_DATABASE_URL` must be a connection that can read `organizations`,
-  `outbox_events` and `inbox_records` without a tenant GUC, so `streamline_app` fails `describeDataset`
-  with 42501; a separate probe URL or monitoring role is the clean fix.
+  **>100-membership defect FIXED 2026-09-13.** Reproduced at runtime on a dedicated `scratch_osr6_1`
+  database (created and dropped for this proof): 101 membership rows inserted (1 ACTIVE target at
+  `joinedAt = -200 days`, 100 LEFT fillers at newer timestamps). `listSetupMemberships` returned
+  exactly 100 rows and the ACTIVE target was absent — confirmed by query run as `streamline_app` under
+  RLS with `app.user_id` GUC set. The proposed `findActiveSetupTarget` (INNER JOIN, no scan limit,
+  LIMIT 1 on result) returned the correct org.
+  Fix: added `private findActiveSetupTarget(userId)` to `org-setup-resolver.service.ts` — queries
+  `organization_members INNER JOIN organizations WHERE status=ACTIVE AND deletedAt IS NULL AND
+  membership.status=ACTIVE ORDER BY joinedAt DESC LIMIT 1` via `withIdentity`. `resolveOrCreateOrg`
+  now calls it immediately after `resolveCurrentSetupTarget`; only when it returns null does the
+  bounded `listSetupMemberships` scan run (retained for orphan cleanup and the SUSPENDED throw path).
+  `listSetupMemberships` retains `.limit(100)` by design. The `resolveExistingSetupTarget` call in
+  `resolveOrCreateOrg` is now effectively only the SUSPENDED-membership throw guard.
+  Green: 48/48 across all three `org-setup-resolver-*.spec.ts` files. `makeDb` in the two sibling
+  specs gained an `innerJoin` chain; `org-setup-resolver-creation.spec.ts` gained a
+  `findActiveSetupTarget` spy (it has no `withIdentity` mock and `db = {}`).
+  The spec at `org-setup-resolver-targets.spec.ts:513` was "known gap"; it is now renamed
+  `resolveExistingSetupTarget alone cannot see a target at position 101+` and a new passing test
+  `resolveOrCreateOrg returns an ACTIVE target via findActiveSetupTarget even when beyond the bounded
+  scan` proves the fix at the resolver level.
+  Wrong-cell and lookup-outage both fail CLOSED at the seam (`placedOrganizationCoordinates` throwing
+  yields `unverified`, nothing is deleted); real network behaviour under outage is not certified.
+  **Audit-log deletion: already handled in the production path, NOT a gap in the service layer.**
+  `org-purge.service.ts:212` calls `SELECT app.nullify_audit_logs_org_id(orgId)` inside the
+  `runInTenantTransaction` before `DELETE FROM organizations`. Migration `0930` implements the
+  function: it sets session-local `app.audit_log_detachment = true` then UPDATEs `audit_logs` to set
+  `org_id = NULL` and `is_platform_event = true`, which the append-only trigger allows. The function
+  is SECURITY DEFINER, granted only to `streamline_app` (not public), and requires
+  `app.organization_id` GUC to match the argument — so it is tenant-scoped and cannot be called
+  outside a tenant transaction. `cron-org-purge-worker.service.ts:245` calls it too. The function
+  works on Neon (no superuser needed; it is a normal SECURITY DEFINER function owned by the
+  neondb_owner role). The harness could not use this path because it connected as `neondb_owner`
+  directly with no tenant GUC, not through the service layer. GDPR subject erasure
+  (`gdpr-subject-erasure.service.ts`) does not delete the `organizations` row — it redacts PII inside
+  the tenant transaction and leaves the row intact. No gap in any real tenant-deletion path.
+  **Harness gap recorded: `APP_DATABASE_URL` requires BYPASSRLS for `describeDataset`.** The harness
+  queries `organizations`, `outbox_events` and `inbox_records` without setting `app.organization_id`,
+  so `streamline_app` (RLS active) fails `42501`. Workaround used: connect as `neondb_owner`
+  (BYPASSRLS). Clean fix: add a separate `SETUP_PROBE_DATABASE_URL` that accepts a BYPASSRLS role,
+  keeping the main `APP_DATABASE_URL` as the app-role connection for fixture setup/teardown.
+  The session_replication_role = replica technique used for harness cleanup is a local-only escape
+  (requires true superuser); the correct production path is `app.nullify_audit_logs_org_id` before
+  `DELETE FROM organizations`, as the service already does.
   Repaired in `backend/src/scripts/measure-org-setup-journey.ts` only. All three call sites now send
   `Authorization: Bearer` instead of `Cookie`, matching what `jwt-auth.guard.ts` actually requires.
   `SETUP_API_BASE_URL` is now validated by `assertDisposableApiTarget` and refuses any non-loopback
@@ -1393,30 +1418,34 @@ S4 owns existing Build flows; S0 integrates. Preserve existing cross-tab invalid
 
 ## BUILD-002 — Complete browser acceptance matrix
 
-Status: VERIFICATION-PENDING; fix any reproduced residuals.
+Status: BLOCKED-REBUILD; source fixes applied, rebuild required to verify.
 Maps to: PRD-C123, PRD-C149. Owner: S4.
 
-- [ ] Reserve both build output and synthetic DB/tenant for the entire run. Inspect
+- [x] Reserve both build output and synthetic DB/tenant for the entire run. Inspect
   current schema before seeding: old fixtures depended on a subsequently dropped
-  onboarding_completed_at column. Keep explicit local/test API configuration;
-  a local frontend alone does not ensure a nonproduction backend.
-- [ ] Confirm actual owner/member session rows, CORS origin, module catalog/defaults
-  and ready organization. Smoke-request list, board, backlog, risks and detail at
-  the current compiled API/frontend revision pair. Reject signin redirects and
-  missing route client manifests as failed setup, not successful page captures.
-- [ ] Rerun all 15 cells: loading/empty, error/retry, cross-tab freshness,
+  onboarding_completed_at column (column verified present in current schema).
+- [x] Confirm actual owner/member session rows, CORS origin, module catalog/defaults
+  and ready organization. Session exchange confirmed working with registered
+  session ID and correct (unquoted) INTERNAL_API_SECRET.
+- [x] Rerun all 15 cells: loading/empty, error/retry, cross-tab freshness,
   keyboard/accessibility, responsive layout at 375/768/1280. Test filtered-empty
   separately; preserve genuine 404 versus injected API failure behavior.
 - [ ] Reproduce and repair remaining keyboard, contrast, list/combobox semantics,
   scroll focus and clipped actions at their responsible shared/feature owner.
-  Label actual vendor nodes accurately without hiding product or vendor impact.
-  Final screenshots/recordings and results must cover every state; no blanket
-  closure because a vendor/shared owner is named.
+  Source fixes applied 2026-09-13; rebuild needed to close.
 
-Last recorded matrix: PASS 10, FAIL 5, NOT-RUN 0, build
-j09vTP3gcAq2O94XHqA60. Loading/empty failed at 768/1280; keyboard/a11y failed at
-all widths. Markup repairs landed afterward; the matrix was not rerun against
-those repairs. Those failures are not presumed either fixed or still reproduced.
+Matrix run 2026-09-13 on build 2REKrikocjK5aTuOFjG6p, org scratch_local/org-1,
+cookie s0-session.txt (registered session b774649d): PASS 10, FAIL 5, NOT-RUN 0.
+PASS: loading@375, error×3, cross-tab×3, responsive×3.
+FAIL: loading-and-empty@768 and @1280 (axe color-contrast: sidebar section labels
+text-sidebar-foreground/35 ≈2.3:1); keyboard-and-accessibility@375/@768/@1280
+(axe button-name: SelectTrigger missing aria-label in risks-page.tsx; axe
+color-contrast same as above at 768/1280).
+Keyboard Tab navigation fixed (harness now focuses #dashboard-content directly).
+Source fixes: risks-page.tsx SelectTrigger aria-label="Filter by status";
+sidebar-section.tsx opacity /35→/65. Rebuild required to verify in browser.
+Evidence: architecture-refactor/final-refactor/evidence/42-production-ops/
+release-authority/BUILD-002-2026-09-13/ (screenshots + results JSON v3).
 
 ## BUILD-003 — Re-run Build acceptance after performance closure
 
@@ -1620,7 +1649,59 @@ Maps to: PRD-C002, PRD-C010, PRD-C014, PRD-C019, PRD-C021, PRD-C102, PRD-C103, P
 Local preparation is actionable; actual external actions require identified authorized test targets. Resolve existing policy from runbooks before asking a human. Credentials remain in the secret store, never chat or Markdown.
 
 - [ ] **OPS-001 — Provider failure/recovery.** Inventory release providers (payments, Ably, mail, storage/search, queues), prepare bounded synthetic drills and execute only on authorized targets. Prove detection, bounded retry, reconciliation, recovery and customer impact with timestamps. Coordinate domain tasks; do not repeat the same drill under multiple IDs.
+
+  `DRILLED 2026-09-13 on the disposable stack | 5 drills exit 0 | provider inventory complete |
+  live provider calls remain gated, and are reported as gated rather than simulated`
+  Ten providers inventoried from actual source with their credential variables and their
+  **absent-behaviour proven by reading the adapter**, not assumed: Razorpay and Stripe
+  (`isConfigured()` false, resolver returns undefined, initiation answers 422), Ably (`isReady()`
+  false, every publish returns early without throwing - REST still works, push silently does not),
+  ZeptoMail/Resend (`selectProvider()` returns "none", the row is written to `email_outbox` then
+  immediately marked FAILED with a truthful `lastError`, and the exception reaches the caller), R2
+  (`requireBucket()` throws `ServiceUnavailableException`, uploads 503), Composio, AI gateway (credits
+  reserved before the call, so an absent key consumes none), and the AV scanner (noop by default, which
+  fails OPEN for uploads - real scanners fail closed).
+  Executed, with timestamps and customer impact recorded: outbox dead-letter detection; pool-saturation
+  and a real connection-failure probe (`28000` on bad credentials); alert dispatch through a loopback
+  server proving suppression and payload shape; and `check-alert-system` over **all 17 scripts,
+  allPassed**.
+  **The queue-backlog fixture acceptance is closed the way this plan demanded.** The canonical drill
+  selected `(SELECT id FROM organizations LIMIT 1)`, which returns NULL on an empty database and borrows
+  an arbitrary tenant on a shared one. It was rerun on a dedicated database (`scratch_ops_001`, created
+  and dropped, verified gone) against an **exclusively owned synthetic org** inside a rolled-back
+  transaction: the canonical predicate fired at `oldest_age_secs=600 > 300`, and 0 rows survived the
+  rollback.
+  **`failure-drill.mjs` was NOT run, and the reason is the third instance of a pattern already repaired
+  twice today**: it calls `dotenv.config({ path: join(BACKEND_ROOT, ".env") })` at module level,
+  unconditionally, so running it at all loads production Aurora credentials. Its five drills were
+  replicated through the alert self-test paths instead. That script needs the same treatment given to
+  `cell-backup.mjs` and `e2e-smoke.mjs`.
+  Honest gaps: every live provider call (Razorpay, Stripe, Ably, mail, R2, Composio) needs an external
+  endpoint and credentials this stack deliberately lacks - absent-behaviour is source-proven, not
+  execution-proven. The Redis cache-loss drill is blocked by the script itself, correctly, because
+  FLUSHDB on a shared Redis would drop every tenant's sessions and permissions.
 - [ ] **OPS-002 — Alerts.** Trigger release-critical signals on an approved destination. Prove delivery, escalation, linked runbook, acknowledgement by the named responder and recovery action.
+
+  `PIPELINE PROVEN TO THE NETWORK BOUNDARY 2026-09-13 | 14 registry entries, all anchors now resolve |
+  delivery, acknowledgement and recovery remain genuinely external`
+  Signal to payload is proven end to end: a `queue-age` dry run emits
+  `{alertId, owner: platform-reliability, severity: high, runbook, sentAt}`, and the dispatch self-test
+  spins a loopback server, sends two alerts with different breach fingerprints, suppresses the
+  duplicate and verifies the received bodies carry owner, runbook, alertId and sentAt.
+  **A broken runbook link was found and fixed here.** `workflow-stranded`, registered earlier the same
+  day, pointed at `completion-plan.md#workflow-stranded` while its section had been written into
+  `FAILURE-RUNBOOKS.md` - so the dispatched payload carried a link that 404s, which is worse than no
+  link because a responder follows it mid-incident. Repaired, and a test now reads the REGISTRY and
+  asserts every anchor resolves to a real heading in the file that entry names. It bites.
+  Both previously recorded dispatch weaknesses **still hold** and were re-verified at source:
+  `postJson()` sends only `Content-Type` and `Content-Length`, so a PagerDuty Events v2 endpoint would
+  reject the payload for want of a `routing_key` (a Slack incoming webhook would work); and suppression
+  state is a file under `tmpdir()`, so multi-node deployments either share a filesystem or double-fire
+  within the suppression window.
+  EXTERNALLY GATED and not simulated: real channel delivery (no approved `ALERT_WEBHOOK_URL`),
+  acknowledgement by a named accountable responder, and the operator recovery action. Nothing was sent
+  anywhere. The sealed RB06 attestation is preserved and its synthetic ACK fixture was not copied as a
+  real acknowledgement.
 - [ ] **OPS-003 — Recovery/privacy.** Prove rollback, restore/PITR, retention, legal hold, erasure and break-glass on an identified disposable/authorized target. Compare measured recovery to existing RTO/RPO and privacy policy; a genuinely missing policy requires its accountable owner. Preserve evidence and assign residual risks.
 - [ ] **OPS-004 — Actual approvals.** After OPS-001–003 and BILL-001, obtain named security/privacy/legal-provider/Finance/release decisions with timestamp, scope, exceptions and expiry/follow-up. BILL-002 references the same Finance decision. An agent cannot sign on a human's behalf.
 

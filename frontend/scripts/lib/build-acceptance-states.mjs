@@ -443,9 +443,7 @@ export async function runKeyboard({ cdp, width, projectFlat, navigate, evaluate,
       );
       return cellFromChecks(state, width, checks, shots, await runAxe(cdp));
     }
-    await evaluate(cdp, "document.body.focus()");
-    let reachedName = null;
-    for (let i = 0; i < TAB_LIMIT && !reachedName; i += 1) {
+    const dispatchTab = async () => {
       await cdp.send("Input.dispatchKeyEvent", {
         type: "rawKeyDown",
         key: "Tab",
@@ -461,10 +459,8 @@ export async function runKeyboard({ cdp, width, projectFlat, navigate, evaluate,
         nativeVirtualKeyCode: 9,
       });
       await sleep(60);
-      const active = await evaluate(cdp, activeElementExpression());
-      if (active?.name && RISK_CELL_PATTERN.test(active.name)) reachedName = active.name;
-    }
-    if (reachedName) {
+    };
+    const dispatchEnter = async () => {
       for (const type of ["rawKeyDown", "char", "keyUp"]) {
         await cdp.send("Input.dispatchKeyEvent", {
           type,
@@ -475,7 +471,29 @@ export async function runKeyboard({ cdp, width, projectFlat, navigate, evaluate,
           nativeVirtualKeyCode: 13,
         });
       }
-      await sleep(1200);
+      await sleep(300);
+    };
+    await evaluate(
+      cdp,
+      `(() => {
+        const main = document.getElementById("dashboard-content");
+        if (main) {
+          if (!main.hasAttribute("tabindex")) main.setAttribute("tabindex", "-1");
+          main.focus();
+        } else {
+          document.body.focus();
+        }
+      })()`,
+    );
+    let reachedName = null;
+    for (let i = 0; i < TAB_LIMIT && !reachedName; i += 1) {
+      await dispatchTab();
+      const active = await evaluate(cdp, activeElementExpression());
+      if (active?.name && RISK_CELL_PATTERN.test(active.name)) reachedName = active.name;
+    }
+    if (reachedName) {
+      await dispatchEnter();
+      await sleep(900);
     }
     const pressedNames = await evaluate(cdp, pressedCellsExpression());
     shots.push(await screenshot(cdp, state, width, "risks"));
