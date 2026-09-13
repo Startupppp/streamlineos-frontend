@@ -257,6 +257,39 @@ Owner S1; S0 reserves shared auth/cache/query/schema files. Identity mint cache 
   after optional failure. Coordinate recipient-result UX with people P12. Retain actual API/DB
   race proof for concurrent complete/skip; mocked conditional-update tests alone do not close it.
 
+  `CAPTURED 2026-09-13 on BUILD_ID 8plo4wbb3PDf7VCF0Zp_5 | 9/9 OBSERVED | 5 PASS, 4 MISS — all four are REAL defects | fixes written, rebuild owed`
+  Every result is OBSERVED in a real browser, not inferred. An earlier run of the same matrix is
+  discarded: it executed against the build that had the production API URL baked in, so although it
+  produced the same 5/4 pattern it cannot be cited. This capture is the authoritative one.
+  **PASS (5):** `background-partial`, `background-dead`, `background-invalid`, `background-suppressed`
+  and `background-retrying` each render their own distinct, customer-readable message — "Some optional
+  setup steps didn't finish", "Optional setup step did not finish", "…could not run", "…was skipped" —
+  and the retrying state polls without showing an error card. That is the row's core requirement: a
+  partial background failure leaves the operator with a usable org and a truthful warning.
+  **MISS (4), and every one is a genuine defect rather than a harness artefact.**
+  Three of them — `forbidden-403`, `malformed-body` and `network-failure` — hit the **root error
+  boundary** and show "Something went wrong / An unexpected error occurred" instead of the specific
+  inline card the wizard already implements ("Session verification failed", "Unexpected server
+  response", "Connection issue"). Root cause: the global `readErrorReachesBoundary` policy in
+  `lib/query-error-policy.ts` returns true for a plain 403, for contract violations and for non-ApiError
+  failures, and `useOrgSetupStatusQuery` carried no `throwOnError` override — so the error was thrown to
+  `app/error.tsx` **before** the hook's `useEffect` could set `terminalError` and render the card. The
+  inline branch existed and was unreachable, which is exactly the dead-`isError`-branch class a jsdom
+  test cannot see.
+  The fourth, `unauthorized-401`, hard-redirects to `/signin`. Different cause, worth separating:
+  `readErrorReachesBoundary` already returns false for 401, so the boundary is not involved — the
+  redirect comes from the fetch layer, where `authedFetch` retries once and then calls
+  `signOut({ callbackUrl: "/signin" })`, firing within ~100-200 ms, before React can render the auth
+  error. The customer is signed out rather than told what happened.
+  Fixes written, both requiring a rebuild before they can be re-captured:
+  `features/org-setup/hooks/use-setup-provisioning.ts` now spreads `INLINE_READ_ERROR` into the
+  status-query options so those three errors stay in the query's `error` state; and
+  `features/org-setup/components/step-generation.tsx` suppresses auto-signout for the lifetime of the
+  provisioning step via `setAutoSignOutSuppressed(true)` on mount with cleanup on unmount.
+  STILL OPEN after the rebuild: re-capture of the four scenarios to prove the fixes, plus the row's
+  narrow/200%-zoom, keyboard-focus/retry, unmount, org-switch, double-submit and complete/skip race
+  items, none of which were reached in this pass.
+
 - [ ] **OS-R6 — Repair measurement harness before running; then measure customer latency.**
 
   `HARNESS REPAIRED 2026-09-13 | refusal spec 8/8 exit 0 | --self-test exit 0 | MEASUREMENT still gated`
