@@ -1588,6 +1588,21 @@ Matrix entry points: frontend/scripts/calendar-acceptance.mjs (8 states × 4 vie
     contain the production host. Server restarted, `/signin` → 200. Every capture lane was told to
     discard its results and re-run, and to state explicitly which earlier findings survive and which
     evaporated — a defect that disappears when the API URL is corrected was never a defect.
+    **A second measurement artefact was found in the same pass, and it is the more insidious one.**
+    `user-1` (`bbbbbbbb-0001-0000-0000-000000000001`) has its ACTIVE org set to an org where it is a
+    non-owner with no onboarding stamp, so the wizard gate redirects **every** route to
+    `/employee-onboarding`. The capture still succeeds, the screenshots still render and axe still
+    returns violations — for the wizard, not the target route. One lane recorded an
+    `aria-progressbar-name` violation this way and attributed it to the Build risks page. Use
+    `user-9999` (`bbbbbbbb-9999-0000-0000-000000000002`), sole OWNER of org 2 with org and user
+    onboarding complete, ENTERPRISE, 12 modules; token at `D:/agent-work/s0-user9999.txt`,
+    SESSION_ID `0771bbc8-d8e7-41f9-a7c9-35ae3540c976`, already in `user_sessions`.
+    **Assert the landed URL before recording any cell.** Note the consequence for denial testing: an
+    owner cannot demonstrate a denied state, so build a genuinely unprivileged principal or mark the
+    cell NOT-RUN — stubbing `/me/access` proves nothing, because access is resolved server-side.
+    Both servers were also found down mid-session and were restarted by the coordinator (backend from
+    `dist/main.js` with `--env-file=/d/agent-work/disposable.env`, frontend via `fe-serve.sh`);
+    Postgres stayed up throughout and `scratch_local` remained at 878/878.
     Rule for anyone capturing here: **verify the baked URL before trusting a browser run**
     (`grep -rhoE 'https?://[a-zA-Z0-9.-]+' .next/static/chunks/*.js | sort | uniq -c`), and never build
     the frontend with anything but `fe-build.sh`.
