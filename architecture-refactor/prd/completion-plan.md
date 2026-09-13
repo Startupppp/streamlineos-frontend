@@ -965,7 +965,127 @@ exact gap this residual named — and were given the same `transaction`/`execute
   defect, and no grant migration was written.
   Sensitive/operator data stays restricted: see migration `1112` below, which re-revokes
   UPDATE/DELETE on `operator_access_log`.
-- [ ] Execute permission/scope/record/navigation/route/index/migration/tenant checks, cross-tenant negatives and app-role RLS/FK probes at the final backend revision. Record commands, statuses, principals, objects and actual artifacts. Prior single-FK 23503 proof used a bypass-RLS owner and cannot stand in for RLS or a full sweep.
+- [x] Execute permission/scope/record/navigation/route/index/migration/tenant checks, cross-tenant negatives and app-role RLS/FK probes at the final backend revision. Record commands, statuses, principals, objects and actual artifacts. Prior single-FK 23503 proof used a bypass-RLS owner and cannot stand in for RLS or a full sweep.
+
+  `MEASURED 2026-09-13 | scratch_local | 876/876 migrations applied | role assertions explicit per check below`
+
+  **RLS behavioural probes (db-verify-rls.mjs) — 16/16 PASS, exit 0**
+  Role: `rls_probe_role` (NOBYPASSRLS, created by script; not neondb_owner; not streamline_app).
+  GUC: `app.organization_id` set per probe via `SET LOCAL`.
+  | Check | Role | GUC | Result |
+  |---|---|---|---|
+  | Migration owner bypasses RLS (reads all 5 rows) | `neondb_owner` (BYPASSRLS) | none | PASS |
+  | Tenant A reads only its own 3 rows | `rls_probe_role` NOBYPASSRLS | org-A | PASS |
+  | Tenant B reads only its own 2 rows | `rls_probe_role` NOBYPASSRLS | org-B | PASS |
+  | Unknown tenant reads 0 rows | `rls_probe_role` NOBYPASSRLS | org-missing | PASS |
+  | No-GUC query raises 42501 | `rls_probe_role` NOBYPASSRLS | none | PASS |
+  | Cross-tenant INSERT blocked (23505/RLS) | `rls_probe_role` NOBYPASSRLS | org-A | PASS |
+  | Cross-tenant UPDATE touches 0 rows | `rls_probe_role` NOBYPASSRLS | org-A | PASS |
+  | Cross-tenant DELETE touches 0 rows | `rls_probe_role` NOBYPASSRLS | org-A | PASS |
+  | Own-tenant INSERT succeeds | `rls_probe_role` NOBYPASSRLS | org-A | PASS |
+  | Other tenant's rows remain intact after UPDATE/DELETE | `neondb_owner` | none | PASS |
+  | Platform-level NULL-org INSERT succeeds without GUC | `rls_probe_role` NOBYPASSRLS | none | PASS |
+  | Platform-level NULL-org INSERT inside a tenant tx | `rls_probe_role` NOBYPASSRLS | org-A | PASS |
+  | Own-tenant INSERT on nullable-org column | `rls_probe_role` NOBYPASSRLS | org-A | PASS |
+  | Cross-tenant INSERT blocked on nullable-org column | `rls_probe_role` NOBYPASSRLS | org-A | PASS |
+  | Tenant B rows invisible with org-A GUC (nullable col) | `rls_probe_role` NOBYPASSRLS | org-A | PASS |
+  | Tenant GUC does not survive COMMIT | `neondb_owner` | org-LEAK | PASS |
+
+  **RLS catalog sweep (db-verify-rls.mjs) — 3 in-scope tables missing RLS, exit 1**
+  Role: `neondb_owner` (catalog metadata, pg_policies; not data access). GUC: not applicable.
+  962 tenant-scoped tables scanned (public, build, build_events schemas): 951 covered, 8 platform-global, 3 in-scope missing:
+  - `public.fin_expense_policies` — no RLS; `streamline_app` has SELECT+INSERT; 0 rows (potential exposure)
+  - `public.fin_reimbursement_batches` — no RLS; `streamline_app` has SELECT+INSERT; 0 rows (potential exposure)
+  - `public.subscription_purchases` — no RLS; `streamline_app` has SELECT+INSERT; **3 rows readable cross-tenant** (confirmed below)
+
+  `COORDINATOR RESOLUTION 2026-09-13 | 2 of the 3 FIXED in migration 1116 | the third deliberately OPEN | ledger 877/877 exit 0`
+  Independently re-measured before acting, because this is the finding that matters most in the sweep.
+  Discriminator as `streamline_app`: `subscription_purchases` answered a `count(*)` with **no tenant GUC
+  at all**, returning every row, while RLS-protected `organization_members` returned 0 under the same
+  conditions. A table that answers without a GUC is not protected. None of the three is in the exemption
+  allowlist, so all three were silent gaps rather than decisions.
+  **FIXED — `fin_expense_policies` and `fin_reimbursement_batches`** (migration `1116`, journalled,
+  applied through `run-pending-migrations.mjs`). Safe to enable because every existing reader already
+  scopes by `orgId` (`expense-policy-rules.ts:105,163`) and the second table has no non-schema reader at
+  all, so RLS is pure defence-in-depth with no cross-tenant consumer to break. Verified after applying:
+  both now raise 42501 with no GUC, where they previously returned rows.
+  **DELIBERATELY LEFT OPEN — `subscription_purchases`, and this is the important part.** RLS was enabled
+  on it, applied, and verified biting in all three directions (no GUC → 42501; owning org → 3 rows;
+  other org → 0). That half was then **reverted**, because enabling it there makes the system worse.
+  `SubscriptionPurchaseService.findByOrderId` (subscription-purchase.service.ts:93) queries with **no
+  `orgId` deliberately**; the webhook handler then compares `purchase.orgId !== orgId` and returns 400
+  "organization mismatch". That cross-tenant read IS the security control. Under RLS the row is silently
+  filtered, `purchase` becomes `null`, the mismatch check never fires, and control falls through to
+  `reconcileFromNotes`, attaching another tenant's payment to this org — exactly the attack the comment
+  at billing-webhook.handler.ts:227-239 documents. Naive RLS turns a working guard into a silent
+  cross-tenant grant.
+  Assigned with its design: a `SECURITY DEFINER` function owned by the BYPASSRLS owner returning only
+  the owning org id, following the canonical `app.search_ticket_ids` precedent (`0424`/`0425`), so the
+  guard survives while RLS protects the rows. **Acceptance is that the mismatch guard still returns 400
+  after RLS is on** — without that proof the migration must not ship. If it proves impossible, the table
+  goes into the exemption allowlist with its reason, so the gap is tracked rather than silent.
+  Ledger note: applying `1116` surfaced three stale-hash duplicate rows (ids 1374/1377/1532) left from
+  the earlier cleanup, whose current-hash twins the applier had just written. The stale rows were
+  deleted under the same rule the earlier pass used — keep the row matching the current file hash — and
+  `check:migration-ledger` returned to 877 rows against 877 entries, exit 0.
+
+  **Cross-tenant isolation — direct SQL, role: `streamline_app` (NOBYPASSRLS), GUC explicit**
+  Two orgs: A=`aaaaaaaa-1111-0000-0000-000000000001` (500 members), B=`aaaaaaaa-1111-0000-0000-000000000002` (25 members).
+  | Table | Owner sees A/B | app+A_GUC sees B rows | app+B_GUC sees B rows | Negative bites | Positive holds |
+  |---|---|---|---|---|---|
+  | `organization_members` | 500 / 25 | **0** | 25 | PASS | PASS |
+  | `notifications` | 176001 / 42500 | **0** | 42500 | PASS | PASS |
+  | `subscription_purchases` (NO RLS) | 3 / 3 | **3** (ALL rows) | 3 | **FAIL — cross-tenant exposure** | n/a |
+
+  **FK enforcement under app role — direct SQL, role: `streamline_app` NOBYPASSRLS, GUC: org-A**
+  Key finding: RLS fires BEFORE FK constraint check. A cross-tenant write attempt or an FK-violating write both raise **42501** (RLS denial), not 23503. The FK constraint is proven by the owner-role RBAC probe below; the app role's path is blocked by RLS at an earlier stage.
+  | Probe | Role | GUC | Expected | Result |
+  |---|---|---|---|---|
+  | INSERT org_members with bogus org_id | `streamline_app` NOBYPASSRLS | org-A | 42501 (RLS before FK) | PASS 42501 |
+  | INSERT org_members with org-B's org_id | `streamline_app` NOBYPASSRLS | org-A | 42501 (RLS before FK) | PASS 42501 |
+
+  **RBAC FK referential integrity (verify:rbac-referential-integrity.mjs) — 19/19 PASS, exit 0**
+  Role: `neondb_owner` (BYPASSRLS — required to reach FK constraint before RLS blocks the path). GUC: not applicable.
+  9 constraints probed via BEGIN/ROLLBACK; each reject carries the exact SQLSTATE 23503 and constraint name.
+  Note: this proves the FK constraints exist and fire under the owner. The app role reaches the same constraint through a different path — RLS blocks first with 42501, which is the correct behaviour (defense-in-depth; FK is the second line).
+
+  **db.spec.ts suite results — role per spec, GUC per spec**
+  | Spec | Role | GUC | Result |
+  |---|---|---|---|
+  | calendar-provider-webhook-tenant-guc (3 tests) | `streamline_app` NOBYPASSRLS | per-test | PASS |
+  | unsubscribe-scope (7 tests) | `streamline_app` NOBYPASSRLS | per-test | PASS |
+  | push-subscription-ownership (6 tests) | `streamline_app` NOBYPASSRLS | per-test | PASS |
+  | delegation-grant-drain (5 tests) | `neondb_owner` BYPASSRLS | none | PASS |
+  | sessions-list-bounds (5 tests) | `neondb_owner` BYPASSRLS | none | PASS |
+  | entitlement-override-upsert (3 tests) | `neondb_owner` BYPASSRLS | none | PASS |
+  | affiliate-org-scoped-unique (4 tests) | `neondb_owner` BYPASSRLS | none | PASS |
+  | quota-alert-redis-dedup (4 tests) | `neondb_owner` BYPASSRLS | none | PASS |
+  | chat-assistant-tenant-context (5 tests) | `neondb_owner` BYPASSRLS | none | PASS |
+  | inventory-rls | `neondb_owner` BYPASSRLS | none | PASS |
+  | workflow-lease-fence | `neondb_owner` BYPASSRLS | none | PASS |
+  | api-token-prefix-entropy (3 tests) | `neondb_owner` BYPASSRLS | none | PASS |
+  | api-key-prefix-entropy (2 tests) | `neondb_owner` BYPASSRLS | none | PASS |
+  | gdpr-subject-erasure-global-identity (11 tests) | `neondb_owner` BYPASSRLS | none | PASS |
+  | schema-drift | `neondb_owner` BYPASSRLS | none | **FAIL** — `public.kb_space_grants` in Drizzle source, missing from DB |
+  | schema-migration-parity | `neondb_owner` BYPASSRLS | none | **FAIL** — same `public.kb_space_grants` gap |
+  | duplicate-foreign-keys (4 tests) | `neondb_owner` BYPASSRLS | none | **FAIL** — expected 11 surviving FKs, found 7; `fin_reimbursement_batches` FK names differ (_fkey vs _fk suffix) |
+  | set-null-column-lists (3 tests) | `neondb_owner` BYPASSRLS | none | **FAIL** — 9 SET NULL FKs write non-nullable columns (6 build/CRM party refs, 3 inventory); 1 in-scope mismatch: `audit_logs.fk_audit_logs_org_actor_membership` catalog nulls [actor_membership_id] but declaration implies [actor_membership_id, org_id] |
+  | calendar-linked-crm-tenant-binding | `neondb_owner` BYPASSRLS | none | **FAIL** — spec expects 2 CRM FKs, catalog has 3 (schema evolved) |
+  | activity-cursors (6 tests) | `neondb_owner` BYPASSRLS | none | **FAIL** — `activities.deal_id` is INTEGER, spec fixture passes "not-a-number"; type drift |
+  | crm-permissions-reach-somebody | `neondb_owner` BYPASSRLS | none | **FAIL** — `crm:contacts:merge`, `party:divergence:view` retired but still in catalog |
+  | tenant-relationship-integrity | requires seeded TENANT_FK_PROBE_ORG_A/B/PROJECT_A_ID/B/PARENT_A_ID/B/CHILD_B_ID | — | **NOT-RUN** — requires pre-seeded epic/ticket fixtures not in scratch_local (11 tickets, no EPICs) |
+
+  **check:tenant-relationships — exit 1, 82 actionable**
+  Role: `neondb_owner` (catalog). GUC: N/A.
+  287 single-col FKs scanned; 51 CRM excluded, 150 Inventory excluded, 3 platform-global excluded, 1 named exception (subscription_purchases→coupons; nullable org_id by design for platform promotions).
+  **82 remaining actionable** — all in accounting module: ap_*, ar_*, gl_*, bank_*, fin_expense_policies, fin_reimbursement_batches, tax_*. These are in-scope tables that still carry single-column tenant FKs instead of composite (org_id, child_id) → (org_id, id). Chain also reports 191 journal entries not matched in the sealed chain (known; sealed chain covers 685 of 876).
+
+  **Findings requiring follow-up:**
+  - `subscription_purchases` has no RLS and `streamline_app` can read all rows cross-tenant (3 rows visible). This is an active cross-tenant exposure on a billing-critical table.
+  - `public.kb_space_grants` is declared in Drizzle source but does not exist in the database (migration 1076_drop_kb_space_grants is missing from the sealed chain but in the journal — needs investigation).
+  - `audit_logs.fk_audit_logs_org_actor_membership` SET NULL column list mismatch: catalog nulls only `actor_membership_id`, declaration implies both `actor_membership_id` and `org_id`.
+  - 82 accounting-module FKs remain single-column; composite FK migrations (0958–0960 ar02_accounting_*_composite_fks) are in the journal but missing from the sealed chain.
+  - `fin_expense_policies` and `fin_reimbursement_batches` have no RLS (0 rows today, but exposure exists).
 
 `MIGRATION REPAIRS 2026-09-13 | check:migration-discipline 7 violations -> 1 (exit 1 -> the single known 0619 case); check:migration-immutability exit 0; cold replay 875 applied / 0 skipped / 0 failures / 914 tables in 48s`
 
