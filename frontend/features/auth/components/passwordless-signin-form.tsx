@@ -104,11 +104,11 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
     onSuccess: async (data) => {
       if (!codeStageActiveRef.current) return;
       const outcome = await signInWithMagicToken(data.autoLoginToken);
-      if (!codeStageActiveRef.current) return;
       if (outcome.status === "signed-in") {
         window.location.assign(getCallbackUrl());
         return;
       }
+      if (!codeStageActiveRef.current) return;
       if (outcome.status === "indeterminate") {
         setVerifyError("Sign-in status is uncertain. Please try signing in again.");
         setOtpValue("");

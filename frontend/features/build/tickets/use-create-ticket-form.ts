@@ -231,6 +231,7 @@ export function useCreateTicketForm({
               );
               await addAttachmentMutation.mutateAsync({
                 ticketId: data.id,
+                projectId,
                 fileUrl: result.key,
                 fileName: file.name,
                 fileSize: file.size,

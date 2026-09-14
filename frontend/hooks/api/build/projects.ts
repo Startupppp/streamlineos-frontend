@@ -3,7 +3,6 @@
 import {
   useInfiniteQuery,
   useQuery,
-  useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
 import type {
@@ -229,7 +228,7 @@ export function useDeleteProject(
   >,
 ) {
   const queryClient = useQueryClient();
-  return useMutation<void, Error, { projectId: number }>({
+  return useAuthorizedMutation<void, Error, { projectId: number }>("build:delete", {
     ...options,
     mutationKey: ["projects", "delete"],
     mutationFn: ({ projectId }) =>
@@ -253,11 +252,11 @@ export function useArchiveProject(
   >,
 ) {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     ProjectWithDetails,
     Error,
     { projectId: number; restore?: boolean }
-  >({
+  >("build:update", {
     ...options,
     mutationKey: ["projects", "archive"],
     mutationFn: ({ projectId, restore }) =>

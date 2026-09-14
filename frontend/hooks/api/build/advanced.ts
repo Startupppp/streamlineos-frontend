@@ -69,9 +69,9 @@ export function useEpics(
   return useQuery<Epic[]>({
     queryKey: buildWorkQueryKeys.projects.epics(projectId),
     queryFn: ({ signal }) => apiClient.get<Epic[]>(`/build/${projectId}/epics`, undefined, signal, epicListContract),
-    enabled: canView && !!projectId,
     staleTime: 30_000,
     ...options,
+    enabled: canView && !!projectId,
   });
 }
 
@@ -84,9 +84,9 @@ export function useCycles(
   return useQuery<Cycle[]>({
     queryKey: buildWorkQueryKeys.projects.cycles(projectId),
     queryFn: ({ signal }) => apiClient.get<Cycle[]>(`/build/${projectId}/cycles`, undefined, signal, cycleListContract),
-    enabled: canView && !!projectId,
     staleTime: 60_000,
     ...options,
+    enabled: canView && !!projectId,
   });
 }
 
@@ -113,9 +113,9 @@ export function useModules(
   return useQuery<Module[]>({
     queryKey: buildWorkQueryKeys.projects.modules(projectId),
     queryFn: ({ signal }) => apiClient.get<Module[]>(`/build/${projectId}/modules`, undefined, signal, moduleListContract),
-    enabled: canView && !!projectId,
     staleTime: 60_000,
     ...options,
+    enabled: canView && !!projectId,
   });
 }
 
@@ -142,9 +142,9 @@ export function useViews(
   return useQuery<ProjectView[]>({
     queryKey: buildWorkQueryKeys.projects.views(projectId),
     queryFn: ({ signal }) => apiClient.get<ProjectView[]>(`/build/${projectId}/views`, undefined, signal, viewListContract),
-    enabled: canView && !!projectId,
     staleTime: 60_000,
     ...options,
+    enabled: canView && !!projectId,
   });
 }
 
@@ -266,18 +266,19 @@ export function useIntakeRequests(
   if (params?.status) query["status"] = params.status;
   if (params?.cursor) query["cursor"] = params.cursor;
   if (params?.limit) query["limit"] = String(params.limit);
+  const queryParams = Object.keys(query).length ? query : undefined;
   return useQuery<IntakePage>({
-    queryKey: buildWorkQueryKeys.projects.intake(projectId),
+    queryKey: buildWorkQueryKeys.projects.intake(projectId, queryParams),
     queryFn: ({ signal }) =>
       apiClient.get<IntakePage>(
         `/build/${projectId}/intake`,
-        Object.keys(query).length ? query : undefined,
+        queryParams,
         signal,
         intakeListContract,
       ),
-    enabled: canView && !!projectId,
     staleTime: 30_000,
     ...options,
+    enabled: canView && !!projectId,
   });
 }
 

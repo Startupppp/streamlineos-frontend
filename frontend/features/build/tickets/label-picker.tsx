@@ -64,7 +64,9 @@ export function LabelPicker({
     onSuccess: (newLabel) => {
       setNewLabelName("");
       queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.labels() });
-      addLabel.mutate({ ticketId, projectId, labelId: newLabel.id });
+      if (projectId !== undefined) {
+        addLabel.mutate({ ticketId, projectId, labelId: newLabel.id });
+      }
     },
     onError: (error) => toast.error(getErrorMessage(error)),
   });
@@ -92,10 +94,12 @@ export function LabelPicker({
     allLabels?.filter((l) => !currentLabelIds.has(l.id)) ?? [];
 
   const handleRemoveLabel = (labelId: number) => () => {
+    if (projectId === undefined) return;
     removeLabel.mutate({ ticketId, projectId, labelId });
   };
 
   const handleAddLabel = (labelId: number) => () => {
+    if (projectId === undefined) return;
     addLabel.mutate({ ticketId, projectId, labelId });
   };
 

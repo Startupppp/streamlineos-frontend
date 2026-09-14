@@ -38,7 +38,7 @@ const ticketLabelLazy = lazyContract(() =>
 
 export interface AddCommentInput {
   ticketId: number;
-  projectId?: number;
+  projectId: number;
   content: string;
   parentCommentId?: number;
 }
@@ -50,7 +50,7 @@ export function useAddComment(
   return useMutation<{ id: number; orgId: string; ticketId: number; body: string; clientVisible: boolean; isEdited: boolean; createdAt: string; updatedAt: string; author: { id: string | null; name: string | null; image: string | null; email: string | null } | null }, Error, AddCommentInput>({
     ...options,
     mutationKey: ["projects", "tickets", "comments", "add"],
-    mutationFn: ({ ticketId, projectId = 0, content, parentCommentId }) =>
+    mutationFn: ({ ticketId, projectId, content, parentCommentId }) =>
       apiClient.post<{ id: number; orgId: string; ticketId: number; body: string; clientVisible: boolean; isEdited: boolean; createdAt: string; updatedAt: string; author: { id: string | null; name: string | null; image: string | null; email: string | null } | null }>(
         `/build/${projectId}/tickets/${ticketId}/comments`,
         { content, parentCommentId },
@@ -70,13 +70,13 @@ export function useAddComment(
 }
 
 export function useAddLabelToTicket(
-  options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number; projectId?: number; labelId: number }>, "mutationFn">
+  options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number; projectId: number; labelId: number }>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, { ticketId: number; projectId?: number; labelId: number }>({
+  return useMutation<{ success: boolean }, Error, { ticketId: number; projectId: number; labelId: number }>({
     ...options,
     mutationKey: ["projects", "tickets", "labels", "add"],
-    mutationFn: ({ ticketId, projectId = 0, labelId }) =>
+    mutationFn: ({ ticketId, projectId, labelId }) =>
       apiClient.post<{ success: boolean }>(`/build/${projectId}/tickets/${ticketId}/labels`, { labelId }, undefined, successLazy),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
@@ -93,13 +93,13 @@ export function useAddLabelToTicket(
 }
 
 export function useRemoveLabelFromTicket(
-  options?: Omit<UseMutationOptions<void, Error, { ticketId: number; projectId?: number; labelId: number }>, "mutationFn">
+  options?: Omit<UseMutationOptions<void, Error, { ticketId: number; projectId: number; labelId: number }>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation<void, Error, { ticketId: number; projectId?: number; labelId: number }>({
+  return useMutation<void, Error, { ticketId: number; projectId: number; labelId: number }>({
     ...options,
     mutationKey: ["projects", "tickets", "labels", "remove"],
-    mutationFn: ({ ticketId, projectId = 0, labelId }) =>
+    mutationFn: ({ ticketId, projectId, labelId }) =>
       apiClient.delete<void>(
         `/build/${projectId}/tickets/${ticketId}/labels/${labelId}`,
         undefined,
@@ -138,7 +138,7 @@ export function useCreateOrgLabel(
 
 type AddAttachmentInput = {
   ticketId: number;
-  projectId?: number;
+  projectId: number;
   fileName: string;
   fileUrl: string;
   fileSize: number;
@@ -152,7 +152,7 @@ export function useAddAttachment(
   return useMutation<{ id: number }, Error, AddAttachmentInput>({
     ...options,
     mutationKey: ["projects", "tickets", "attachments", "add"],
-    mutationFn: ({ ticketId, projectId = 0, fileName, fileUrl, fileSize, mimeType }) =>
+    mutationFn: ({ ticketId, projectId, fileName, fileUrl, fileSize, mimeType }) =>
       apiClient.post<{ id: number }>(`/build/${projectId}/tickets/${ticketId}/attachments`, {
         fileName,
         fileUrl,

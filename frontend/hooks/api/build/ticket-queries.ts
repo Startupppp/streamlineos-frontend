@@ -17,8 +17,8 @@ const ticketDetailLazy = lazyContract(() =>
 const columnCountsLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-schema").then((m) => m.columnCountsContract),
 );
-const ticketRowListLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketRowListContract),
+const subtaskListLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-schema").then((m) => m.subtaskListContract),
 );
 import type {
   Ticket,
@@ -175,13 +175,13 @@ export function useSubtasks(
 ) {
   const canView = useCan("build:tickets:view");
   return useQuery<Ticket[]>({
-    queryKey: buildWorkQueryKeys.projects.subtasks(ticketId),
+    queryKey: buildWorkQueryKeys.projects.subtasks(ticketId, projectId),
     queryFn: ({ signal }) =>
       apiClient.get<Ticket[]>(
         `/build/${projectId ?? 0}/tickets/${ticketId}/subtasks`,
         undefined,
         signal,
-        ticketRowListLazy,
+        subtaskListLazy,
       ),
     enabled: canView && ticketId > 0 && (projectId ?? 0) > 0,
     staleTime: 30_000,

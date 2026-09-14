@@ -326,6 +326,8 @@ export const columnCountsContract = z.record(z.string(), z.number().int());
 
 export const ticketRowListContract = z.array(ticketRowContract);
 
+export const subtaskListContract = z.array(ticketListRowContract);
+
 /**
  * `GET /build/:projectId/tickets/:ticketId/comments/:commentId` answers a joined
  * permalink projection — comment, author identity and the parent ticket — not

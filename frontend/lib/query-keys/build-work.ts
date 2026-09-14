@@ -27,8 +27,10 @@ export const buildWorkQueryKeys = {
       [...base, "projects", "tickets", "by-key", projectId, ticketNumber] as const,
     ticketRelations: (ticketId: number) =>
       [...base, "projects", "tickets", "detail", ticketId, "relations"] as const,
-    subtasks: (ticketId: number) =>
-      [...base, "projects", "subtasks", { ticketId }] as const,
+    subtasks: (ticketId: number, projectId?: number) =>
+      projectId === undefined
+        ? ([...base, "projects", "subtasks", { ticketId }] as const)
+        : ([...base, "projects", "subtasks", { ticketId }, projectId] as const),
     ticketSearch: (searchQuery: string) =>
       [...base, "projects", "search", "tickets", searchQuery] as const,
     members: (projectId?: number) =>
@@ -57,8 +59,10 @@ export const buildWorkQueryKeys = {
       [...base, "projects", projectId, "tickets", ticketId, "custom-field-values"] as const,
     automations: (projectId: number) =>
       [...base, "projects", projectId, "automations"] as const,
-    intake: (projectId: number) =>
-      [...base, "projects", "intake", projectId] as const,
+    intake: (projectId: number, params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "projects", "intake", projectId] as const)
+        : ([...base, "projects", "intake", projectId, params] as const),
     analytics: (projectId: number) =>
       [...base, "projects", "analytics", projectId] as const,
     watchers: (ticketId: number) =>

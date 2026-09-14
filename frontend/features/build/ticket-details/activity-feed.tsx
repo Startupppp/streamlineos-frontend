@@ -37,7 +37,7 @@ const COMMENT_RENDER_PAGE_SIZE = 20;
 
 interface ActivityFeedProps {
   ticketId: number;
-  projectId?: number;
+  projectId: number;
   projectKey?: string | null;
   ticketNumber?: number | null;
   comments: TicketComment[];
@@ -51,7 +51,7 @@ const noopStr = (_: string) => {};
 
 export function ActivityFeed({
   ticketId,
-  projectId = 0,
+  projectId,
   projectKey,
   ticketNumber,
   comments,

@@ -44,7 +44,13 @@ export default function SignInPage() {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const url = params.get("callbackUrl");
-      if (url && url.startsWith("/") && !url.startsWith("//") && !url.includes("\\")) {
+      if (
+        url &&
+        url.startsWith("/") &&
+        !url.startsWith("//") &&
+        !url.includes("\\") &&
+        !url.split("?")[0].startsWith("/signin")
+      ) {
         return url;
       }
     }
