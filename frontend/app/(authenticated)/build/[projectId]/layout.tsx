@@ -1,17 +1,17 @@
 ﻿import { notFound } from "next/navigation";
-import { HydrationBoundary, type DehydratedState } from "@tanstack/react-query";
 import { isApiError } from "@/lib/api-client";
-import { prefetchBuildProject } from "@/lib/prefetch/build";
 import type { ProjectWithDetails } from "@/types/projects";
+import { prefetchBuildProject } from "@/lib/prefetch/build";
+import { HydrationBoundary, type DehydratedState } from "@tanstack/react-query";
+import { RememberLastProject } from "@/features/build/sidebar/remember-last-project";
 import { AccessDeniedView } from "@/features/build/project-detail/access-denied-view";
 import { BackendUnavailableView } from "@/features/build/project-detail/backend-unavailable-view";
-import { RememberLastProject } from "@/features/build/sidebar/remember-last-project";
 
 function getApiErrorDetails(error: { details?: unknown }): Record<string, unknown> | undefined {
   const detailsRaw = error.details;
-  if (detailsRaw !== null && typeof detailsRaw === "object") {
+  if (detailsRaw !== null && typeof detailsRaw === "object") 
     return detailsRaw as Record<string, unknown>;
-  }
+  
   return undefined;
 }
 
@@ -29,24 +29,21 @@ export default async function ProjectLayout({
   let project: ProjectWithDetails | null = null;
   let hydrated: DehydratedState | null = null;
   try {
-    // PRD-C094 — this is the SAME request the 29 `useProject` callers below would each
-    // have re-issued on mount. Reading it into the request's query client and handing
-    // the snapshot down means the client reads it from cache instead of fetching again.
     const prefetched = await prefetchBuildProject(numId);
     project = prefetched.project;
     hydrated = prefetched.state;
   } catch (err: unknown) {
     if (isApiError(err)) {
-      if (err.code === "BACKEND_UNREACHABLE") {
+      if (err.code === "BACKEND_UNREACHABLE") 
         return <BackendUnavailableView />;
-      }
+      
       const status = err.status;
       const code = err.code;
       const details = getApiErrorDetails(err);
       const reason = typeof details?.reason === "string" ? details.reason : undefined;
-      if (status === 404 || code === "PROJECTS_NOT_FOUND") {
+      if (status === 404 || code === "PROJECTS_NOT_FOUND") 
         return notFound();
-      }
+      
       if (status === 403 || code === "PROJECTS_FORBIDDEN_PROJECT") {
         const hint =
           reason === "NOT_A_MEMBER"
