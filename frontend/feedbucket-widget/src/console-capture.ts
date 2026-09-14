@@ -9,17 +9,32 @@ export interface LogEntry {
 const MAX_ENTRIES = 50;
 const buffer: LogEntry[] = [];
 
+function formatArg(a: unknown): string {
+  if (typeof a === "string") return a;
+  try {
+    return JSON.stringify(a) ?? String(a);
+  } catch {
+    try {
+      return String(a);
+    } catch {
+      return "[unserialisable]";
+    }
+  }
+}
+
 function formatArgs(args: unknown[]): string {
-  return args
-    .map((a) => (typeof a === "string" ? a : JSON.stringify(a)))
-    .join(" ");
+  return args.map(formatArg).join(" ");
 }
 
 function push(level: LogLevel, args: unknown[]): void {
-  if (buffer.length >= MAX_ENTRIES) {
-    buffer.shift();
+  try {
+    if (buffer.length >= MAX_ENTRIES) {
+      buffer.shift();
+    }
+    buffer.push({ level, message: formatArgs(args), ts: Date.now() });
+  } catch {
+    return;
   }
-  buffer.push({ level, message: formatArgs(args), ts: Date.now() });
 }
 
 export function initConsoleCapture(): void {

@@ -18,10 +18,14 @@ let patched = false;
 let apiBase = "";
 
 function push(entry: NetworkLogEntry): void {
-  if (buffer.length >= MAX_ENTRIES) {
-    buffer.shift();
+  try {
+    if (buffer.length >= MAX_ENTRIES) {
+      buffer.shift();
+    }
+    buffer.push(entry);
+  } catch {
+    return;
   }
-  buffer.push(entry);
 }
 
 function isSelfRequest(url: string): boolean {
@@ -116,38 +120,44 @@ function patchXhr(): void {
   window.XMLHttpRequest = PatchedXHR as unknown as typeof XMLHttpRequest;
 }
 
-function patchFetch(): void {
-  const origFetch = window.fetch.bind(window);
-
-  window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    const method = (init?.method ?? (typeof input === "object" && "method" in input ? (input as Request).method : undefined) ?? "GET").toUpperCase();
+function describeRequest(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): { method: string; url: string } | null {
+  try {
+    const method = (
+      init?.method ??
+      (typeof input === "object" && "method" in input ? (input as Request).method : undefined) ??
+      "GET"
+    ).toUpperCase();
     const rawUrl =
       typeof input === "string"
         ? input
         : input instanceof URL
           ? input.href
           : (input as Request).url;
-    const url = truncateUrl(rawUrl);
-    const startedAt = new Date().toISOString();
-    const t0 = Date.now();
+    return { method, url: truncateUrl(String(rawUrl)) };
+  } catch {
+    return null;
+  }
+}
 
-    if (isSelfRequest(url)) {
+function patchFetch(): void {
+  const origFetch = window.fetch.bind(window);
+
+  window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    const described = describeRequest(input, init);
+    if (described === null || isSelfRequest(described.url)) {
       return origFetch(input, init);
     }
 
+    const { method, url } = described;
+    const startedAt = new Date().toISOString();
+    const t0 = Date.now();
+
+    let response: Response;
     try {
-      const response = await origFetch(input, init);
-      push({
-        method,
-        url,
-        status: response.status,
-        statusText: response.statusText,
-        durationMs: Date.now() - t0,
-        startedAt,
-        type: "fetch",
-        ok: response.ok,
-      });
-      return response;
+      response = await origFetch(input, init);
     } catch (err) {
       push({
         method,
@@ -162,6 +172,22 @@ function patchFetch(): void {
       });
       throw err;
     }
+
+    try {
+      push({
+        method,
+        url,
+        status: response.status,
+        statusText: response.statusText,
+        durationMs: Date.now() - t0,
+        startedAt,
+        type: "fetch",
+        ok: response.ok,
+      });
+    } catch {
+      return response;
+    }
+    return response;
   };
 }
 
