@@ -257,18 +257,13 @@ describe("build project prefetch feeds useProject's cache", () => {
     await expect(prefetchBuildProject(314)).rejects.toBe(failure);
   });
 
-  it("both build layouts mount a HydrationBoundary over that snapshot", () => {
-    const layouts = [
-      "app/(authenticated)/build/[projectId]/layout.tsx",
-      "app/(authenticated)/build/workspaces/[pmWorkspaceId]/[projectId]/layout.tsx",
-    ];
-    for (const relative of layouts) {
-      const source = fs.readFileSync(path.join(FE_ROOT, relative), "utf8");
-      expect([relative, source.includes("prefetchBuildProject")]).toEqual([relative, true]);
-      expect([relative, /<HydrationBoundary state=\{hydrated\}>/.test(source)]).toEqual([relative, true]);
-      // The duplicate-fetch shape this replaced: a bare serverGet with nowhere to put it.
-      expect([relative, source.includes("serverGet")]).toEqual([relative, false]);
-    }
+  it("the build layout mounts a HydrationBoundary over that snapshot", () => {
+    const relative = "app/(authenticated)/build/[projectId]/layout.tsx";
+    const source = fs.readFileSync(path.join(FE_ROOT, relative), "utf8");
+    expect([relative, source.includes("prefetchBuildProject")]).toEqual([relative, true]);
+    expect([relative, /<HydrationBoundary state=\{hydrated\}>/.test(source)]).toEqual([relative, true]);
+    // The duplicate-fetch shape this replaced: a bare serverGet with nowhere to put it.
+    expect([relative, source.includes("serverGet")]).toEqual([relative, false]);
   });
 });
 

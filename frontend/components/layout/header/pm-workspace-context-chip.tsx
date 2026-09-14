@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   parsePmWorkspaceIdFromPath,
+  stripPmWorkspacePrefix,
   withPmWorkspacePath,
 } from "@/lib/build/pm-workspace-path";
 import { cn } from "@/lib/utils";
@@ -63,7 +64,11 @@ function MountedPmWorkspaceContextChip({
   function handleWorkspaceSelect(pmWorkspaceId: string) {
     if (pmWorkspaceId === activeWorkspace?.pmWorkspaceId) return;
     const search = searchParams.toString();
-    const next = withPmWorkspacePath(pathname, search, pmWorkspaceId);
+    const basePath = stripPmWorkspacePrefix(pathname);
+    const isProjectPage = /^\/build\/\d+/.test(basePath);
+    const next = isProjectPage
+      ? `/build/workspaces/${pmWorkspaceId}/all`
+      : withPmWorkspacePath(pathname, search, pmWorkspaceId);
     router.push(next);
   }
 

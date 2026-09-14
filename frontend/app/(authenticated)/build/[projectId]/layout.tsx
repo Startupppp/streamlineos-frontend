@@ -1,13 +1,7 @@
-﻿import { notFound, redirect } from "next/navigation";
-import { headers } from "next/headers";
+﻿import { notFound } from "next/navigation";
 import { HydrationBoundary, type DehydratedState } from "@tanstack/react-query";
 import { isApiError } from "@/lib/api-client";
 import { prefetchBuildProject } from "@/lib/prefetch/build";
-import { withPmWorkspacePath } from "@/lib/build/pm-workspace-path";
-import {
-  hasWorkspaceMirror,
-  projectSubPath,
-} from "../workspaces/mirrored-project-routes";
 import type { ProjectWithDetails } from "@/types/projects";
 import { AccessDeniedView } from "@/features/build/project-detail/access-denied-view";
 import { BackendUnavailableView } from "@/features/build/project-detail/backend-unavailable-view";
@@ -65,15 +59,6 @@ export default async function ProjectLayout({
   }
 
   if (!project) return notFound();
-
-  if (project.pmWorkspaceId) {
-    const headerList = await headers();
-    const pathname = headerList.get("x-pathname") ?? `/build/${projectId}`;
-    const search = headerList.get("x-search") ?? "";
-    const subPath = projectSubPath(pathname, projectId);
-    if (subPath !== null && hasWorkspaceMirror(subPath))
-      redirect(withPmWorkspacePath(pathname, search, project.pmWorkspaceId));
-  }
 
   return (
     <HydrationBoundary state={hydrated}>

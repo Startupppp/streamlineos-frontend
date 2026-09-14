@@ -6,7 +6,7 @@ import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import type { TicketLabel, CreateLabelInput } from "@/types/projects";
+import type { Ticket, TicketComment, TicketLabel, CreateLabelInput } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 import type { z } from "zod";
@@ -36,35 +36,132 @@ const ticketLabelLazy = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.ticketLabelContract),
 );
 
+interface CommentCreateResponse {
+  id: number;
+  orgId: string;
+  ticketId: number;
+  body: string;
+  clientVisible: boolean;
+  isEdited: boolean;
+  createdAt: string;
+  updatedAt: string;
+  author: { id: string | null; name: string | null; image: string | null; email: string | null } | null;
+}
+
+interface OptimisticAuthor {
+  id: string;
+  name: string | null;
+  image: string | null;
+}
+
+interface AddCommentContext {
+  tempId: number;
+  ticketKey: readonly unknown[];
+  previousComments: TicketComment[];
+}
+
 export interface AddCommentInput {
   ticketId: number;
   projectId: number;
   content: string;
   parentCommentId?: number;
+  optimisticAuthor?: OptimisticAuthor;
 }
 
 export function useAddComment(
-  options?: Omit<UseMutationOptions<{ id: number; orgId: string; ticketId: number; body: string; clientVisible: boolean; isEdited: boolean; createdAt: string; updatedAt: string; author: { id: string | null; name: string | null; image: string | null; email: string | null } | null }, Error, AddCommentInput>, "mutationFn">
+  options?: Omit<UseMutationOptions<CommentCreateResponse, Error, AddCommentInput, AddCommentContext>, "mutationFn" | "mutationKey" | "onMutate">
 ) {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; orgId: string; ticketId: number; body: string; clientVisible: boolean; isEdited: boolean; createdAt: string; updatedAt: string; author: { id: string | null; name: string | null; image: string | null; email: string | null } | null }, Error, AddCommentInput>({
+  return useMutation<CommentCreateResponse, Error, AddCommentInput, AddCommentContext>({
     ...options,
     mutationKey: ["projects", "tickets", "comments", "add"],
     mutationFn: ({ ticketId, projectId, content, parentCommentId }) =>
-      apiClient.post<{ id: number; orgId: string; ticketId: number; body: string; clientVisible: boolean; isEdited: boolean; createdAt: string; updatedAt: string; author: { id: string | null; name: string | null; image: string | null; email: string | null } | null }>(
+      apiClient.post<CommentCreateResponse>(
         `/build/${projectId}/tickets/${ticketId}/comments`,
         { content, parentCommentId },
         undefined,
         commentRowLazy,
       ),
+    onMutate: async (variables) => {
+      const tempId = -Date.now();
+      const ticketKey = buildWorkQueryKeys.projects.ticket(variables.ticketId);
+      await queryClient.cancelQueries({ queryKey: ticketKey });
+      const ticket = queryClient.getQueryData<Ticket | null>(ticketKey);
+      const previousComments = ticket?.comments ?? [];
+      const tempComment: TicketComment = {
+        id: tempId,
+        orgId: "",
+        ticketId: variables.ticketId,
+        userId: variables.optimisticAuthor?.id ?? "",
+        content: variables.content,
+        parentCommentId: variables.parentCommentId ?? null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        user: variables.optimisticAuthor
+          ? {
+              id: variables.optimisticAuthor.id,
+              name: variables.optimisticAuthor.name,
+              firstName: null,
+              lastName: null,
+              email: null,
+              image: variables.optimisticAuthor.image,
+            }
+          : undefined,
+      };
+      queryClient.setQueryData<Ticket | null>(ticketKey, (current) => {
+        if (!current) return current;
+        return { ...current, comments: [...(current.comments ?? []), tempComment] };
+      });
+      return { tempId, ticketKey, previousComments };
+    },
     onSuccess: (data, variables, context, mutFnCtx) => {
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: accountingAndSupportQueryKeys.ticketActivity.list(variables.ticketId),
-      });
+      if (context) {
+        const realComment: TicketComment = {
+          id: data.id,
+          orgId: data.orgId,
+          ticketId: data.ticketId,
+          userId: data.author?.id ?? "",
+          content: data.body,
+          parentCommentId: variables.parentCommentId ?? null,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+          user: data.author
+            ? {
+                id: data.author.id ?? "",
+                name: data.author.name,
+                firstName: null,
+                lastName: null,
+                email: data.author.email,
+                image: data.author.image,
+              }
+            : undefined,
+        };
+        queryClient.setQueryData<Ticket | null>(context.ticketKey, (current) => {
+          if (!current?.comments) return current;
+          return {
+            ...current,
+            comments: current.comments.map((c) => (c.id === context.tempId ? realComment : c)),
+          };
+        });
+      }
       options?.onSuccess?.(data, variables, context, mutFnCtx);
+    },
+    onError: (error, variables, context, mutFnCtx) => {
+      if (context) {
+        queryClient.setQueryData<Ticket | null>(context.ticketKey, (current) => {
+          if (!current) return current;
+          return {
+            ...current,
+            comments: current.comments?.filter((c) => c.id !== context.tempId) ?? context.previousComments,
+          };
+        });
+      }
+      options?.onError?.(error, variables, context, mutFnCtx);
+    },
+    onSettled: (data, error, variables, context, mutFnCtx) => {
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId) });
+      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.ticketActivity.list(variables.ticketId) });
+      options?.onSettled?.(data, error, variables, context, mutFnCtx);
     },
   });
 }

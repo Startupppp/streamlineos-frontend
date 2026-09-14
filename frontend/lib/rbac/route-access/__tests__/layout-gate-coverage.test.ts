@@ -6,10 +6,6 @@ describe("L11 layout gate upgrades — enforceRouteAccess replaces requireSessio
       expect(resolveRouteAccess("/build/workspaces/1").kind).toBe("permission");
     });
 
-    it("resolves /build/workspaces/1/2 (nested project layout) to a permission decision", () => {
-      expect(resolveRouteAccess("/build/workspaces/1/2").kind).toBe("permission");
-    });
-
     it("the decision carries a module key so the build module must be enabled", () => {
       const decision = resolveRouteAccess("/build/workspaces/1");
       if (decision.kind !== "permission") throw new Error("unexpected kind");

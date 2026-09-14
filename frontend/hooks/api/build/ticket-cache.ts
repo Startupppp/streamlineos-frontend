@@ -58,6 +58,49 @@ export function restoreTicketCollections(client: QueryClient, snapshots: TicketS
   }
 }
 
+export function addTicketToCollections(
+  client: QueryClient,
+  projectId: number,
+  ticket: Ticket,
+): TicketSnapshots {
+  const snapshots: TicketSnapshots = [];
+  for (const [key, collection] of client.getQueriesData<TicketCollection>({ queryKey: buildWorkQueryKeys.projects.tickets({ projectId }) })) {
+    if (!collection) continue;
+    const previous = collectionTickets(collection);
+    const updated = prependTicketToCollection(collection, ticket);
+    const optimistic = client.setQueryData<TicketCollection>(key, updated);
+    if (optimistic) snapshots.push({ key, previous, optimistic: collectionTickets(optimistic) });
+  }
+  return snapshots;
+}
+
+function prependTicketToCollection(collection: TicketCollection, ticket: Ticket): TicketCollection {
+  if ("pages" in collection) {
+    if (collection.pages.length === 0) return collection;
+    const [first, ...rest] = collection.pages;
+    return { ...collection, pages: [{ ...first, data: [ticket, ...first.data] }, ...rest] };
+  }
+  return { ...collection, data: [ticket, ...collection.data] };
+}
+
+export function removeTicketFromCollections(
+  client: QueryClient,
+  projectId: number,
+  ticketId: number,
+): void {
+  for (const [key, collection] of client.getQueriesData<TicketCollection>({ queryKey: buildWorkQueryKeys.projects.tickets({ projectId }) })) {
+    if (!collection) continue;
+    client.setQueryData<TicketCollection>(key, filterTicketFromCollection(collection, ticketId));
+  }
+}
+
+function filterTicketFromCollection(collection: TicketCollection, ticketId: number): TicketCollection {
+  const keep = (t: Ticket) => t.id !== ticketId;
+  if ("pages" in collection)
+    return { ...collection, pages: collection.pages.map((p) => ({ ...p, data: p.data.filter(keep) })) };
+  return { ...collection, data: collection.data.filter(keep) };
+}
+
 export function invalidateBuildViews(
   client: QueryClient,
   projectId: number,

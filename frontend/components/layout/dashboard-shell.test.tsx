@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import type { PropsWithChildren } from "react";
+import { renderWithProviders } from "@/test-utils/render";
 import { DashboardShell } from "./dashboard-shell";
 import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";
 import { getChatMobileBottomNavClassName } from "./mobile/chat-mobile-chrome-layout";
@@ -31,6 +32,14 @@ let currentPathname = "/build";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => currentPathname,
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+    refresh: jest.fn(),
+  }),
 }));
 
 jest.mock("@/features/chat/chat-mobile-bottom-nav", () => ({
@@ -163,7 +172,7 @@ describe("DashboardShell mobile navigation", () => {
   });
 
   it("uses a bottom drawer and closes it after navigation", () => {
-    render(
+    renderWithProviders(
       <DashboardShell
         userId="user-1"
         defaultCollapsed={false}
@@ -190,7 +199,7 @@ describe("DashboardShell mobile navigation", () => {
   });
 
   it("configures the product switcher as a drawer", () => {
-    render(
+    renderWithProviders(
       <DashboardShell
         userId="user-1"
         defaultCollapsed={false}
@@ -212,7 +221,7 @@ describe("DashboardShell shell variant", () => {
   });
 
   it("desktop variant renders both the desktop aside and the mobile drawer AppSidebar", () => {
-    render(
+    renderWithProviders(
       <DashboardShell
         userId="user-1"
         defaultCollapsed={false}
@@ -227,7 +236,7 @@ describe("DashboardShell shell variant", () => {
   });
 
   it("mobile variant renders only the mobile drawer AppSidebar, not the desktop aside", () => {
-    render(
+    renderWithProviders(
       <DashboardShell
         userId="user-1"
         defaultCollapsed={false}
@@ -241,7 +250,7 @@ describe("DashboardShell shell variant", () => {
   });
 
   it("defaults to desktop behaviour when shellVariant is omitted", () => {
-    render(
+    renderWithProviders(
       <DashboardShell userId="user-1" defaultCollapsed={false}>
         <div>Content</div>
       </DashboardShell>,
@@ -266,7 +275,7 @@ describe("DashboardShell /chat mobile bottom nav", () => {
   });
 
   it("mobile variant on /chat renders ChatMobileBottomNav synchronously with ≥ 3 in-app nav links", () => {
-    render(
+    renderWithProviders(
       <DashboardShell
         userId="user-1"
         defaultCollapsed={false}
@@ -284,7 +293,7 @@ describe("DashboardShell /chat mobile bottom nav", () => {
   });
 
   it("desktop variant on /chat still mounts the slot — the md: breakpoint hides it, not the variant", () => {
-    render(
+    renderWithProviders(
       <DashboardShell
         userId="user-1"
         defaultCollapsed={false}
@@ -304,7 +313,7 @@ describe("DashboardShell /chat mobile bottom nav", () => {
     const chatSlot = jest.fn(renderChatMobileNav);
 
     for (const shellVariant of ["mobile", "desktop"] as const) {
-      const { unmount } = render(
+      const { unmount } = renderWithProviders(
         <DashboardShell
           userId="user-1"
           defaultCollapsed={false}

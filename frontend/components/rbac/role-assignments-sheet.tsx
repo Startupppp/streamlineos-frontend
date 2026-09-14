@@ -100,7 +100,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
     (member) => member.principalType === "user" && member.via === "direct",
   );
   const assignedDepartments = members.filter(
-    (member) => member.principalType === "department",
+    (member) => member.principalType === "group",
   );
   const directUserIds = new Set(
     directUsers.map((member) => member.principalId),
@@ -133,25 +133,25 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
     const via =
       member.via === "direct"
         ? "Direct"
-        : `via ${member.departmentName ?? "Department"}`;
+        : `via ${member.groupName ?? "Department"}`;
     if (!existing.vias.includes(via)) existing.vias.push(via);
     effectiveUsers.set(member.principalId, existing);
   }
   const effectiveList = Array.from(effectiveUsers.entries());
 
   const isAdding = useCallback(
-    (principalType: "user" | "department", principalId: string | number) =>
+    (principalType: "user" | "group", principalId: string) =>
       assign.isPending &&
       assign.variables?.principalType === principalType &&
-      String(assign.variables?.principalId) === String(principalId),
+      assign.variables?.principalId === principalId,
     [assign.isPending, assign.variables],
   );
 
   const isRemoving = useCallback(
-    (principalType: "user" | "department", principalId: string | number) =>
+    (principalType: "user" | "group", principalId: string) =>
       unassign.isPending &&
       unassign.variables?.principalType === principalType &&
-      String(unassign.variables?.principalId) === String(principalId),
+      unassign.variables?.principalId === principalId,
     [unassign.isPending, unassign.variables],
   );
 
@@ -186,9 +186,9 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
   );
 
   const handleAddDepartment = useCallback(
-    (departmentId: number) => {
+    (groupId: string) => {
       assign.mutate(
-        { roleId, principalType: "department", principalId: String(departmentId) },
+        { roleId, principalType: "group", principalId: groupId },
         {
           onSuccess: () => toast.success("Department assigned"),
           onError: (error) => toast.error(getErrorMessage(error)),
@@ -199,9 +199,9 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
   );
 
   const handleRemoveDepartment = useCallback(
-    (departmentId: number) => {
+    (groupId: string) => {
       unassign.mutate(
-        { roleId, principalType: "department", principalId: String(departmentId) },
+        { roleId, principalType: "group", principalId: groupId },
         {
           onSuccess: () => toast.success("Department removed"),
           onError: (error) => toast.error(getErrorMessage(error)),
@@ -347,7 +347,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                       <AssignableDepartmentItem
                         key={department.id}
                         department={department}
-                        busy={isAdding("department", department.id)}
+                        busy={isAdding("group", department.id)}
                         onAdd={handleAddDepartment}
                       />
                     ))}
@@ -367,9 +367,9 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                   assignedDepartments.map((member) => (
                     <div key={member.id} role="listitem">
                       <DepartmentRow
-                        name={member.name ?? member.departmentName}
-                        principalId={Number(member.principalId)}
-                        removing={isRemoving("department", member.principalId)}
+                        name={member.name ?? member.groupName}
+                        principalId={member.principalId}
+                        removing={isRemoving("group", member.principalId)}
                         onRemove={handleRemoveDepartment}
                       />
                     </div>

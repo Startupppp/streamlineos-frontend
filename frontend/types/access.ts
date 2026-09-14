@@ -10,7 +10,7 @@ export type {
 
 import type { DataScope } from "@/hooks/api/access-schema";
 
-export type RolePrincipalType = "user" | "department";
+export type RolePrincipalType = "user" | "group";
 
 export interface RolePermissionGrant {
   permissionKey: string;
@@ -24,9 +24,9 @@ export interface RoleMember {
   name: string | null;
   email: string | null;
   image: string | null;
-  via: "direct" | "department";
-  departmentId: number | null;
-  departmentName: string | null;
+  via: "direct" | "group";
+  groupId: string | null;
+  groupName: string | null;
 }
 
 export interface SetRolePermissionsInput {

@@ -138,21 +138,30 @@ export function ActivityFeed({
   const handleSubmit = useCallback(() => {
     const content = newComment.trim();
     if (!content) return;
-    addComment.mutate({ ticketId, projectId, content });
-  }, [newComment, ticketId, projectId, addComment]);
+    const optimisticAuthor =
+      session?.user?.id
+        ? { id: session.user.id, name: session.user.name ?? null, image: session.user.image ?? null }
+        : undefined;
+    addComment.mutate({ ticketId, projectId, content, optimisticAuthor });
+  }, [newComment, ticketId, projectId, addComment, session]);
 
   const handleReplySubmit = useCallback(
     (commentId: number) => {
       const content = replyText.trim();
       if (!content) return;
+      const optimisticAuthor =
+        session?.user?.id
+          ? { id: session.user.id, name: session.user.name ?? null, image: session.user.image ?? null }
+          : undefined;
       addReply.mutate({
         ticketId,
         projectId,
         content,
         parentCommentId: commentId,
+        optimisticAuthor,
       });
     },
-    [replyText, ticketId, projectId, addReply],
+    [replyText, ticketId, projectId, addReply, session],
   );
 
   const handleSaveEdit = useCallback(

@@ -161,14 +161,14 @@ export const rolePermissionGrantsContract = z.array(
 export const roleMembersContract = z.array(
   z.object({
     id: z.string(),
-    principalType: z.enum(["user", "department"]),
+    principalType: z.enum(["user", "group"]),
     principalId: z.string(),
     name: z.string().nullable(),
     email: z.string().nullable(),
     image: z.string().nullable(),
-    via: z.enum(["direct", "department"]),
-    departmentId: z.number().nullable(),
-    departmentName: z.string().nullable(),
+    via: z.enum(["direct", "group"]),
+    groupId: z.string().nullable(),
+    groupName: z.string().nullable(),
   }),
 );
 
@@ -183,7 +183,7 @@ export const rolesAnalyticsContract = z.object({
 
 export const assignableDepartmentsContract = z.array(
   z.object({
-    id: z.number(),
+    id: z.string(),
     name: z.string(),
   }),
 );

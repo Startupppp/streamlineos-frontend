@@ -1,6 +1,7 @@
 import React from "react";
 import type { PropsWithChildren } from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { renderWithProviders } from "@/test-utils/render";
 
 jest.mock("lucide-react", () => {
   const Svg = ({ className }: { className?: string }) => (
@@ -207,7 +208,7 @@ describe("keyboard — SidebarCollapseToggle", () => {
 
 describe("keyboard — skip-to-content link (DashboardShell)", () => {
   it("renders a link that targets #dashboard-content", () => {
-    render(
+    renderWithProviders(
       <DashboardShell userId="u1" defaultCollapsed={false}>
         <div>content</div>
       </DashboardShell>,
@@ -217,7 +218,7 @@ describe("keyboard — skip-to-content link (DashboardShell)", () => {
   });
 
   it("link carries sr-only class so it is visually hidden by default", () => {
-    render(
+    renderWithProviders(
       <DashboardShell userId="u1" defaultCollapsed={false}>
         <div>content</div>
       </DashboardShell>,
@@ -227,7 +228,7 @@ describe("keyboard — skip-to-content link (DashboardShell)", () => {
   });
 
   it("link carries focus:not-sr-only class so it becomes visible on focus", () => {
-    render(
+    renderWithProviders(
       <DashboardShell userId="u1" defaultCollapsed={false}>
         <div>content</div>
       </DashboardShell>,
@@ -237,7 +238,7 @@ describe("keyboard — skip-to-content link (DashboardShell)", () => {
   });
 
   it("main content landmark carries the id the skip link targets", () => {
-    render(
+    renderWithProviders(
       <DashboardShell userId="u1" defaultCollapsed={false}>
         <div>content</div>
       </DashboardShell>,

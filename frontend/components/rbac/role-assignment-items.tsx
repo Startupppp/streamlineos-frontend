@@ -62,7 +62,7 @@ export function AssignableUserItem({
 export interface AssignableDepartmentItemProps {
   department: AssignableDepartment;
   busy: boolean;
-  onAdd: (departmentId: number) => void;
+  onAdd: (groupId: string) => void;
 }
 
 export function AssignableDepartmentItem({
@@ -156,9 +156,9 @@ export function MemberRow({
 
 export interface DepartmentRowProps {
   name: string | null;
-  principalId: number;
+  principalId: string;
   removing: boolean;
-  onRemove: (departmentId: number) => void;
+  onRemove: (groupId: string) => void;
 }
 
 export function DepartmentRow({

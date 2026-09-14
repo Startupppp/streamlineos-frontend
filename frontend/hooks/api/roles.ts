@@ -300,7 +300,7 @@ export function useRolesAnalytics(
 }
 
 export interface AssignableDepartment {
-  id: number;
+  id: string;
   name: string;
 }
 
