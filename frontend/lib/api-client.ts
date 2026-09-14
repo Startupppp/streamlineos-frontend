@@ -149,6 +149,10 @@ export function getImpersonationSessionId(): string | null {
 }
 
 const TOKEN_REFRESH_SKEW_MS = 30_000;
+const TOKEN_FALLBACK_TTL_MS = 8 * 60 * 1_000;
+
+const TOKEN_UNAVAILABLE_BACKOFF_MS = 3_000;
+let tokenUnavailableUntil = 0;
 
 function readTokenExpiry(token: string): number | null {
   const payload = token.split(".")[1];
@@ -166,6 +170,7 @@ function readTokenExpiry(token: string): number | null {
 export function clearBackendTokenCache(): void {
   cachedToken = null;
   fetchingTokenPromise = null;
+  tokenUnavailableUntil = 0;
 }
 
 export function setAutoSignOutSuppressed(value: boolean): void {
@@ -176,6 +181,7 @@ export async function getBackendToken(): Promise<string | null> {
   if (impersonationToken !== null) return impersonationToken;
   if (cachedToken && cachedToken.expiresAt - TOKEN_REFRESH_SKEW_MS > Date.now())
     return cachedToken.value;
+  if (tokenUnavailableUntil > Date.now()) return null;
   if (fetchingTokenPromise) return fetchingTokenPromise;
   fetchingTokenPromise = (async () => {
     try {
@@ -190,12 +196,17 @@ export async function getBackendToken(): Promise<string | null> {
         return null;
       const backendJwt = data.backendJwt;
       const expiresAt = readTokenExpiry(backendJwt);
-      cachedToken =
-        expiresAt === null ? null : { value: backendJwt, expiresAt };
+      cachedToken = {
+        value: backendJwt,
+        expiresAt: expiresAt ?? (Date.now() + TOKEN_FALLBACK_TTL_MS),
+      };
+      tokenUnavailableUntil = 0;
       return backendJwt;
     } catch {
       return null;
     } finally {
+      if (cachedToken === null)
+        tokenUnavailableUntil = Date.now() + TOKEN_UNAVAILABLE_BACKOFF_MS;
       fetchingTokenPromise = null;
     }
   })();
@@ -270,7 +281,7 @@ export async function authedFetch(
     });
 
     if (!isPublic && res.status === 401) {
-      cachedToken = null;
+      clearBackendTokenCache();
       const token = await getBackendToken();
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);

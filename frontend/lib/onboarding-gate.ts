@@ -40,6 +40,13 @@ export function clearGateCookies(): void {
     document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax${secure}`;
 }
 
+export function writeGateCookie(cookieName: GateCookieBase, scopeId: string): void {
+  if (typeof document === "undefined") return;
+  const name = gateCookieName(cookieName, scopeId);
+  const secure = secureFlag();
+  document.cookie = `${name}=1; path=/; max-age=${GATE_COOKIE_MAX_AGE}; SameSite=Lax${secure}`;
+}
+
 export async function completeOnboardingGate<TExpected, TResult>(
   cookieName: GateCookieBase,
   scopeId: string,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect, useRef, type ReactNode } from "react";
+import { useState, useCallback, useMemo, useEffect, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
@@ -8,10 +8,8 @@ import {
   useTeamAttendance,
   useActiveSprintSummary,
   useRecentActivity,
-  useTodayActivities,
   useMyIssues,
 } from "@/hooks/api/dashboard";
-import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
@@ -95,14 +93,12 @@ export function DashboardDeferredBody({ access, expensesSlot, publicDocumentsSlo
   const router = useRouter();
   const {
     hrEnabled,
-    crmEnabled,
     projectsEnabled,
     canViewAttendance,
     canSelfAttendance,
     canViewLeaves,
     canApproveLeaves,
     canViewExecutive,
-    canViewCrmLeads,
     canViewTickets,
     signEnabled,
     canViewSignEnvelopes,
@@ -168,30 +164,6 @@ export function DashboardDeferredBody({ access, expensesSlot, publicDocumentsSlo
   } = useActiveSprintSummary({
     enabled: deferredVisible && projectsEnabled,
   });
-  const { data: todayActivities } = useTodayActivities({
-    enabled: deferredVisible && crmEnabled && canViewCrmLeads,
-  });
-
-  const shownMeetingToastRef = useRef(false);
-  useEffect(() => {
-    if (
-      todayActivities &&
-      todayActivities.length > 0 &&
-      !shownMeetingToastRef.current
-    ) {
-      shownMeetingToastRef.current = true;
-      if (todayActivities.length === 1) {
-        const a = todayActivities[0];
-        toast.info(`Scheduled ${a.type} today: ${a.subject || "No subject"}`, {
-          duration: 6000,
-        });
-      } else {
-        toast.info(`${todayActivities.length} meetings/calls scheduled today`, {
-          duration: 6000,
-        });
-      }
-    }
-  }, [todayActivities]);
 
   useEffect(() => {
     if (!deferredVisible) return;

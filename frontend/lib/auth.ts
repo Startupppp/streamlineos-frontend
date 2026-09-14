@@ -260,7 +260,12 @@ export const authConfig = {
       if (trigger === "update") {
         const userId = token.id;
         if (userId) {
-          invalidateSessionData(userId);
+          const shouldInvalidate =
+            session !== null &&
+            typeof session === "object" &&
+            "_invalidate" in session &&
+            session._invalidate === true;
+          if (shouldInvalidate) invalidateSessionData(userId);
           const fresh = await fetchSessionData(userId);
           if (fresh) {
             const claims = resolveSessionClaims(fresh, token);

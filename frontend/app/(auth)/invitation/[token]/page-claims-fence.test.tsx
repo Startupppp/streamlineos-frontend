@@ -1,7 +1,6 @@
 import type { HTMLAttributes, PropsWithChildren } from "react";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { SESSION_CLAIMS_UNCONFIRMED_MESSAGE } from "@/hooks/common/use-confirmed-session-claims-refresh";
 
 jest.mock("framer-motion", () => {
   function MotionDiv({
@@ -113,17 +112,15 @@ describe("InvitationPage — joining without an auto-login token waits for a con
     });
   });
 
-  it("a timed-out refresh warns and keeps the invitee off the dashboard", async () => {
+  it("navigates to dashboard even if the session refresh times out — the acceptance committed", async () => {
     mockRefreshSessionClaims.mockResolvedValue(null);
 
     await acceptAsExistingUser();
 
     await waitFor(() => {
-      expect(mockToastError).toHaveBeenCalledWith(
-        SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
-      );
+      expect(mockPush).toHaveBeenCalledWith("/dashboard");
     });
-    expect(mockPush).not.toHaveBeenCalledWith("/dashboard");
+    expect(mockToastError).not.toHaveBeenCalled();
   });
 
   it("a refresh that lands after a newer acceptance started is discarded in silence", async () => {

@@ -54,7 +54,6 @@ export function SessionProvider({
   return (
     <NextAuthSessionProvider
       session={session}
-      refetchOnWindowFocus
       refetchInterval={CLAIMS_BACKSTOP_POLL_SECONDS}
     >
       <MembershipLifecycleSync />

@@ -254,18 +254,6 @@ export const teamAttendanceContract = z.object({
   hasMore: z.boolean(),
 });
 
-/** `teamAvailabilitySchema` — the real array shape, from `getTeamAvailability`. */
-export const teamAvailabilityContract = z.array(
-  z.object({
-    userId: z.string(),
-    name: z.string(),
-    image: z.string().nullable(),
-    checkIn: z.string().nullable(),
-    checkOut: z.string().nullable(),
-    isOnline: z.boolean(),
-  }),
-);
-
 /** `listDocumentsResponseSchema`; `documents.type` is a NOT NULL pgEnum. */
 export const hrDocumentsListContract = z.object({
   data: z.array(

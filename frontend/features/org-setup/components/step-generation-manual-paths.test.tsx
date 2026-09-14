@@ -1,7 +1,6 @@
 import React from "react";
 import { act, render, waitFor } from "@testing-library/react";
 import { gateCookieName } from "@/lib/onboarding-gate";
-import { SESSION_CLAIMS_UNCONFIRMED_MESSAGE } from "@/hooks/common/use-confirmed-session-claims-refresh";
 import type { SetupProvisioning } from "../hooks/use-setup-provisioning";
 
 const mockMutateAsync = jest.fn();
@@ -206,39 +205,38 @@ describe("StepGeneration — manual continue paths honour the discriminated sign
   );
 
   it.each(["onOpenOrganization", "onGoToInvitations"] as const)(
-    "%s: a null session refresh surfaces an error and does not navigate",
+    "%s: autoLoginToken present and signIn ok: navigates without a refresh call",
     async (prop) => {
       await renderWithCreatedOrg();
       mockSignIn.mockResolvedValue({ status: "signed-in" });
-      mockRefreshSessionClaims.mockResolvedValue(null);
 
       await invokeCaptured(prop);
 
       await waitFor(() => {
-        expect(mockToastError).toHaveBeenCalled();
+        expect(mockLocationReplace).toHaveBeenCalledTimes(1);
       });
-      expect(mockLocationReplace).not.toHaveBeenCalled();
-      expect(mockSetCompletionMarker).not.toHaveBeenCalled();
+      expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
+      expect(mockToastError).not.toHaveBeenCalled();
+      expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new");
     },
   );
 
-  it("onOpenOrganization: both auth steps succeed → marker written and /dashboard", async () => {
+  it("onOpenOrganization: signIn ok → marker written, no refresh, /dashboard", async () => {
     await renderWithCreatedOrg();
     mockSignIn.mockResolvedValue({ status: "signed-in" });
-    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
 
     await invokeCaptured("onOpenOrganization");
 
     await waitFor(() => {
       expect(mockLocationReplace).toHaveBeenCalledWith("/dashboard");
     });
+    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
     expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new");
   });
 
-  it("onGoToInvitations: both auth steps succeed → invitations view", async () => {
+  it("onGoToInvitations: signIn ok → no refresh, invitations view", async () => {
     await renderWithCreatedOrg();
     mockSignIn.mockResolvedValue({ status: "signed-in" });
-    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
 
     await invokeCaptured("onGoToInvitations");
 
@@ -247,6 +245,7 @@ describe("StepGeneration — manual continue paths honour the discriminated sign
         "/settings/users?view=invitations",
       );
     });
+    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
   });
 
   it("a withheld auto-login token skips the magic sign-in and still refreshes the session", async () => {
@@ -264,29 +263,21 @@ describe("StepGeneration — manual continue paths honour the discriminated sign
     );
   });
 
-  it("a session that still names the previous org does not navigate or mark completion", async () => {
+  it("autoLoginToken present: signIn establishes the new org, no refresh needed", async () => {
     await renderWithCreatedOrg();
     mockSignIn.mockResolvedValue({ status: "signed-in" });
-    mockRefreshSessionClaims.mockResolvedValue({
-      ...FAKE_SESSION,
-      orgId: "org-prev",
-    });
 
     await invokeCaptured("onOpenOrganization");
 
     await waitFor(() => {
-      expect(mockToastError).toHaveBeenCalledWith(
-        SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
-      );
+      expect(mockLocationReplace).toHaveBeenCalledWith("/dashboard");
     });
-    expect(mockLocationReplace).not.toHaveBeenCalled();
-    expect(mockSetCompletionMarker).not.toHaveBeenCalled();
-    expect(mockClearAll).not.toHaveBeenCalled();
+    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
+    expect(mockToastError).not.toHaveBeenCalled();
   });
 
-  it("re-entering while a refresh is still in flight starts no second run, so the first can still land", async () => {
-    await renderWithCreatedOrg();
-    mockSignIn.mockResolvedValue({ status: "signed-in" });
+  it("no-token path: re-entering while a refresh is still in flight starts no second run", async () => {
+    await renderWithCreatedOrg({ autoLoginToken: undefined });
 
     let settleFirst: ((session: unknown) => void) | undefined;
     mockRefreshSessionClaims.mockImplementationOnce(
@@ -317,12 +308,11 @@ describe("StepGeneration — manual continue paths honour the discriminated sign
   it("a second manual continue while one is in flight does not run the flow twice", async () => {
     await renderWithCreatedOrg();
     mockSignIn.mockResolvedValue({ status: "signed-in" });
-    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
 
     await invokeCaptured("onOpenOrganization");
     await invokeCaptured("onGoToInvitations");
 
-    expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(1);
+    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
     expect(mockLocationReplace).toHaveBeenCalledTimes(1);
     expect(mockLocationReplace).toHaveBeenCalledWith("/dashboard");
   });

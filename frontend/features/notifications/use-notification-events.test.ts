@@ -16,7 +16,11 @@
  */
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { QueryKey } from "@tanstack/react-query";
-import { useNotificationEvents } from "./use-notification-events";
+import {
+  clearStreamToken,
+  useNotificationEvents,
+} from "./use-notification-events";
+import { clearBackendTokenCache } from "@/lib/api-client";
 import { consumeNotificationStream } from "./notification-event-stream";
 import type { IncomingNotification } from "./notification-event-stream";
 import { queryKeys } from "@/lib/query-keys";
@@ -56,6 +60,8 @@ describe("useNotificationEvents — a single failure must not end the stream", (
     consume.mockReset();
     fetchMock.mockReset();
     invalidateQueries.mockReset();
+    clearBackendTokenCache();
+    clearStreamToken();
     global.fetch = fetchMock as unknown as typeof fetch;
   });
 
@@ -145,6 +151,8 @@ describe("useNotificationEvents — a live notification refreshes every surface 
     consume.mockReset();
     fetchMock.mockReset();
     invalidateQueries.mockReset();
+    clearBackendTokenCache();
+    clearStreamToken();
     global.fetch = fetchMock as unknown as typeof fetch;
     fetchMock.mockImplementation((input: unknown) =>
       Promise.resolve(

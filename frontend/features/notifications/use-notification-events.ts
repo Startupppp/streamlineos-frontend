@@ -29,13 +29,19 @@ interface ActiveStream {
 
 let activeStream: ActiveStream | null = null;
 let cachedToken: string | null = null;
+let cachedTokenOrgId: string | null = null;
 let tokenFetchedAt = 0;
+let tokenFetchPromise: Promise<string | null> | null = null;
 const TOKEN_CACHE_MS = 55 * 60_000;
 
-async function fetchStreamToken(): Promise<string | null> {
-  const now = Date.now();
-  if (cachedToken !== null && now - tokenFetchedAt < TOKEN_CACHE_MS)
-    return cachedToken;
+export function clearStreamToken(): void {
+  cachedToken = null;
+  cachedTokenOrgId = null;
+  tokenFetchedAt = 0;
+  tokenFetchPromise = null;
+}
+
+async function mintStreamToken(orgId: string): Promise<string | null> {
   try {
     const backendJwt = await getBackendToken();
     if (!backendJwt) return null;
@@ -52,12 +58,26 @@ async function fetchStreamToken(): Promise<string | null> {
     const token = typeof body.token === "string" ? body.token : null;
     if (token !== null) {
       cachedToken = token;
+      cachedTokenOrgId = orgId;
       tokenFetchedAt = Date.now();
     }
     return token;
   } catch {
     return null;
+  } finally {
+    tokenFetchPromise = null;
   }
+}
+
+function fetchStreamToken(orgId: string): Promise<string | null> {
+  if (
+    cachedToken !== null &&
+    cachedTokenOrgId === orgId &&
+    Date.now() - tokenFetchedAt < TOKEN_CACHE_MS
+  )
+    return Promise.resolve(cachedToken);
+  tokenFetchPromise ??= mintStreamToken(orgId);
+  return tokenFetchPromise;
 }
 
 function showIncoming(
@@ -100,7 +120,7 @@ function openStream(
 
   const connect = async (): Promise<void> => {
     if (controller.signal.aborted) return;
-    const token = await fetchStreamToken();
+    const token = await fetchStreamToken(orgId);
     if (controller.signal.aborted) return;
     if (!token) {
       scheduleRetry();
@@ -143,8 +163,6 @@ function openStream(
       controller.abort();
       window.removeEventListener("online", reconnectNow);
       if (retryTimer) clearTimeout(retryTimer);
-      cachedToken = null;
-      tokenFetchedAt = 0;
     },
   };
 }
@@ -161,10 +179,14 @@ export function useNotificationEvents(): void {
   routerRef.current = router;
 
   useEffect(() => {
-    if (status !== "authenticated" || !orgId) return;
+    if (status !== "authenticated" || !orgId) {
+      if (status === "unauthenticated") clearStreamToken();
+      return;
+    }
     if (activeStream && activeStream.orgId !== orgId) {
       activeStream.release();
       activeStream = null;
+      clearStreamToken();
     }
     const stream = activeStream ?? openStream(orgId, queryClientRef, routerRef);
     activeStream = stream;

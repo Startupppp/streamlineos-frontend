@@ -8,12 +8,8 @@ import {
   Shield,
 } from "lucide-react";
 import { SendIcon } from "@animateicons/react/lucide";
-import { completeOnboardingGate } from "@/lib/onboarding-gate";
+import { writeGateCookie } from "@/lib/onboarding-gate";
 import { getErrorMessage } from "@/lib/get-error-message";
-import {
-  useConfirmedSessionClaimsRefresh,
-  SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
-} from "@/hooks/common/use-confirmed-session-claims-refresh";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useSubmitOnboardingMutation } from "@/lib/api/hooks/onboarding";
@@ -121,7 +117,6 @@ export function StepReview({
   onClearDraft,
 }: StepReviewProps) {
   const { data: session } = useSession();
-  const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
   const countryCode =
     draft.bank.countryCode || countryNameToCode(draft.personal.addressCountry);
   const { data: requirements } = useOnboardingRequirements(countryCode);
@@ -163,7 +158,7 @@ export function StepReview({
   }, [isContinuing]);
 
   async function handleSubmit() {
-    if (isSubmitting) return;
+    if (isSubmitting || showCelebration) return;
 
     const personalParsed = personalInfoSchema.safeParse({
       ...draft.personal,
@@ -204,21 +199,13 @@ export function StepReview({
     }
 
     setIsSubmitting(true);
-    const claimsRun = beginClaimsRefresh();
     try {
       await submitOnboarding();
       onClearDraft();
-      const sessionOrgId = session?.orgId ?? null;
-      const outcome = await completeOnboardingGate(
+      writeGateCookie(
         "onboarding-done",
-        `${session?.user?.id ?? ""}--${sessionOrgId ?? ""}`,
-        claimsRun.confirm,
-        sessionOrgId === null ? undefined : { orgId: sessionOrgId },
+        `${session?.user?.id ?? ""}--${session?.orgId ?? ""}`,
       );
-      if (outcome.status === "superseded") return;
-      if (outcome.status !== "confirmed")
-        toast.error(SESSION_CLAIMS_UNCONFIRMED_MESSAGE);
-      if (outcome.status === "unconfirmed") return;
       setShowCelebration(true);
     } catch (err) {
       toast.error(getErrorMessage(err));

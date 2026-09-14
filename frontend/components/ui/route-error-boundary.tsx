@@ -12,16 +12,6 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { isTransientNetworkError } from "@/lib/query-error-policy";
 
-/**
- * The budget is keyed by ROUTE, never by `error.message`. A network ApiError
- * names the endpoint it failed on, so a message key gave every one of a page's
- * reads its own three retries — and each retry refetches the whole page, whose
- * next failure is a different endpoint with a fresh budget. The cap could not
- * bite: one outage on a 27-read dashboard produced hundreds of requests.
- *
- * The TTL is what makes a route key safe. Without it a spent budget would mean
- * an outage an hour later never auto-retries at all for the life of the tab.
- */
 interface NetworkRetryBudget {
   readonly attempts: number;
   readonly lastAttemptAt: number;
@@ -78,11 +68,6 @@ export function RouteErrorBoundary({
     reset();
   }, [onBeforeReset, reset]);
 
-  /**
-   * The timer reads the retry through a ref so a parent re-render handing down
-   * a new `reset` cannot restart the countdown and strand the page on
-   * "Retrying automatically…" forever.
-   */
   const retryRef = useRef(handleRetry);
   useLayoutEffect(() => {
     retryRef.current = handleRetry;

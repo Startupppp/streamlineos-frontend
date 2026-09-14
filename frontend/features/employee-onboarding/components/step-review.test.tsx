@@ -1,7 +1,6 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { gateCookieName } from "@/lib/onboarding-gate";
-import { SESSION_CLAIMS_UNCONFIRMED_MESSAGE } from "@/hooks/common/use-confirmed-session-claims-refresh";
 import { DATA_STEP_IDS } from "../lib/constants";
 import type { WizardDraft } from "../lib/wizard-draft-schema";
 
@@ -76,12 +75,6 @@ const DRAFT: WizardDraft = {
   },
 };
 
-const REFRESHED_SESSION = {
-  user: { id: "user-1", name: "Ada Lovelace" },
-  orgId: "org-acme",
-  expires: "2099-01-01",
-};
-
 const GATE_SCOPE = "user-1--org-acme";
 
 beforeEach(() => {
@@ -111,79 +104,51 @@ async function submitReview() {
   await user.click(screen.getByRole("button", { name: /confirm & submit/i }));
 }
 
-describe("StepReview — the celebration waits for a session that still names the org", () => {
-  it("submits, writes the scoped gate cookie and celebrates on a confirmed refresh", async () => {
-    mockRefreshSessionClaims.mockResolvedValue(REFRESHED_SESSION);
-
+describe("StepReview — submitting writes the gate cookie and shows the celebration immediately", () => {
+  it("submits, writes the scoped gate cookie and shows celebration without waiting for a refresh", async () => {
     await submitReview();
 
     await waitFor(() => {
       expect(screen.getByTestId("celebration")).toBeInTheDocument();
     });
     expect(mockSubmitOnboarding).toHaveBeenCalledTimes(1);
-    expect(mockRefreshSessionClaims).toHaveBeenCalledWith({ orgId: "org-acme" });
+    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
     expect(document.cookie).toContain(
       gateCookieName("onboarding-done", GATE_SCOPE),
     );
     expect(mockToastError).not.toHaveBeenCalled();
   });
 
-  it("a timed-out refresh warns but still celebrates, because the submission committed and the gate cookie is already written", async () => {
-    mockRefreshSessionClaims.mockResolvedValue(null);
+  it("a member with no active org uses a null scope and still celebrates immediately", async () => {
+    sessionState.data.orgId = null;
 
     await submitReview();
 
-    await waitFor(() => {
-      expect(mockToastError).toHaveBeenCalledWith(
-        SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
-      );
-    });
-    expect(mockSubmitOnboarding).toHaveBeenCalledTimes(1);
-    expect(document.cookie).toContain(
-      gateCookieName("onboarding-done", GATE_SCOPE),
-    );
     await waitFor(() => {
       expect(screen.getByTestId("celebration")).toBeInTheDocument();
     });
+    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
+    expect(mockToastError).not.toHaveBeenCalled();
   });
 
-  it("a session that names a different org is refused", async () => {
-    mockRefreshSessionClaims.mockResolvedValue({
-      ...REFRESHED_SESSION,
-      orgId: "org-other",
-    });
+  it("a submit API error surfaces the error toast and does not show celebration", async () => {
+    mockSubmitOnboarding.mockRejectedValue(new Error("Server error"));
 
     await submitReview();
 
     await waitFor(() => {
-      expect(mockToastError).toHaveBeenCalledWith(
-        SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
-      );
+      expect(mockToastError).toHaveBeenCalled();
     });
     expect(screen.queryByTestId("celebration")).toBeNull();
+    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
   });
 
-  it("a member with no active org asserts nothing but still needs a session back", async () => {
-    sessionState.data.orgId = null;
-    mockRefreshSessionClaims.mockResolvedValue({
-      ...REFRESHED_SESSION,
-      orgId: "org-acme",
-    });
-
-    await submitReview();
-
-    await waitFor(() => {
-      expect(screen.getByTestId("celebration")).toBeInTheDocument();
-    });
-    expect(mockRefreshSessionClaims).toHaveBeenCalledWith(undefined);
-  });
-
-  it("a second submit while the refresh is in flight starts no second run, so the first still lands", async () => {
-    let settleFirst: ((session: unknown) => void) | undefined;
-    mockRefreshSessionClaims.mockImplementationOnce(
+  it("a second submit while the first is in flight starts no second run, so the first still lands", async () => {
+    let settleSubmit: (() => void) | undefined;
+    mockSubmitOnboarding.mockImplementationOnce(
       () =>
-        new Promise((resolve) => {
-          settleFirst = resolve;
+        new Promise<void>((resolve) => {
+          settleSubmit = resolve;
         }),
     );
 
@@ -191,23 +156,20 @@ describe("StepReview — the celebration waits for a session that still names th
     renderReview();
     const submit = screen.getByRole("button", { name: /confirm & submit/i });
     await user.click(submit);
-    await waitFor(() => {
-      expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(1);
-    });
-    expect(screen.queryByTestId("celebration")).toBeNull();
 
+    expect(screen.queryByTestId("celebration")).toBeNull();
     await user.click(submit);
     expect(mockSubmitOnboarding).toHaveBeenCalledTimes(1);
 
     await act(async () => {
-      settleFirst?.(REFRESHED_SESSION);
+      settleSubmit?.();
       await Promise.resolve();
     });
 
     await waitFor(() => {
       expect(screen.getByTestId("celebration")).toBeInTheDocument();
     });
-    expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(1);
+    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
     expect(mockToastError).not.toHaveBeenCalled();
   });
 });

@@ -8,7 +8,7 @@
  * identical in all three states.
  */
 
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DashboardDeferredBody } from "./dashboard-deferred-body";
 import type { DashboardAccess } from "./use-dashboard-access";
@@ -21,7 +21,6 @@ const hookState = {
   recentActivity: { data: undefined as unknown, isLoading: true, error: null as unknown, refetch },
   myIssues: { data: undefined as unknown, isLoading: true, error: null as unknown, refetch },
   activeSprint: { data: undefined as unknown, isLoading: true, error: null as unknown, refetch },
-  todayActivities: { data: undefined as unknown, isLoading: false, error: null as unknown, refetch },
 };
 
 jest.mock("@/hooks/api/dashboard", () => ({
@@ -30,7 +29,6 @@ jest.mock("@/hooks/api/dashboard", () => ({
   useRecentActivity: () => hookState.recentActivity,
   useMyIssues: () => hookState.myIssues,
   useActiveSprintSummary: () => hookState.activeSprint,
-  useTodayActivities: () => hookState.todayActivities,
 }));
 
 jest.mock("./home-widget-grid", () => ({
@@ -102,6 +100,7 @@ function renderHome() {
 
 describe("PRD-C144 — Home sections resolve independently", () => {
   beforeEach(() => {
+    jest.useFakeTimers();
     reveal = undefined;
     window.IntersectionObserver = IntersectionObserverMock;
 
@@ -144,19 +143,21 @@ describe("PRD-C144 — Home sections resolve independently", () => {
       refetch,
     };
     hookState.teamAttendance = { data: { records: [] }, isLoading: false, error: null, refetch };
-    hookState.todayActivities = { data: [], isLoading: false, error: null, refetch };
+  });
+
+  afterEach(() => {
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
   });
 
   it("MEASURED: an answered section renders while a sibling is still loading and another has failed", async () => {
     renderHome();
     act(() => reveal?.());
+    await act(async () => { jest.advanceTimersByTime(1600); });
 
-    expect(await screen.findByText("Answered ticket section")).toBeInTheDocument();
-    expect(await screen.findByText("Answered activity section")).toBeInTheDocument();
-
-    await waitFor(() =>
-      expect(screen.getByText("recent projects source is down")).toBeInTheDocument(),
-    );
+    expect(screen.getByText("Answered ticket section")).toBeInTheDocument();
+    expect(screen.getByText("Answered activity section")).toBeInTheDocument();
+    expect(screen.getByText("recent projects source is down")).toBeInTheDocument();
 
     expect(screen.queryByText(/Sprint answered/)).not.toBeInTheDocument();
     expect(screen.getByText("Active Sprint")).toBeInTheDocument();
@@ -165,11 +166,12 @@ describe("PRD-C144 — Home sections resolve independently", () => {
   it("MEASURED: the failed section states the error in an alert and offers its own retry", async () => {
     renderHome();
     act(() => reveal?.());
+    await act(async () => { jest.advanceTimersByTime(1600); });
 
-    const alert = await screen.findByRole("alert");
+    const alert = screen.getByRole("alert");
     expect(alert).toHaveTextContent("recent projects source is down");
 
-    const retries = await screen.findAllByRole("button", { name: /retry/i });
+    const retries = screen.getAllByRole("button", { name: /retry/i });
     expect(retries.length).toBeGreaterThan(0);
   });
 

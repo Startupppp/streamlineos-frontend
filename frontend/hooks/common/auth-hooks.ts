@@ -16,6 +16,7 @@ import {
   setAutoSignOutSuppressed,
 } from "@/lib/api-client";
 import { clearGateCookies } from "@/lib/onboarding-gate";
+import { clearStreamToken } from "@/features/notifications/use-notification-events";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { lazyContract } from "@/lib/api-envelope";
@@ -81,8 +82,6 @@ async function probeSession(): Promise<SessionProbe> {
 async function attemptCredentialsSignIn(
   magicToken: string,
 ): Promise<MagicLinkSignInOutcome> {
-  const priorSession = await probeSession();
-
   let rejected = false;
   try {
     const result = await signIn("credentials", {
@@ -95,19 +94,10 @@ async function attemptCredentialsSignIn(
   }
   if (rejected) return { status: "failed" };
 
-  const establishedSession = await probeSession();
-  if (
-    priorSession.status === "unreadable" ||
-    establishedSession.status === "unreadable"
-  )
+  const established = await probeSession();
+  if (established.status === "unreadable" || !established.signedIn)
     return { status: "indeterminate" };
-  if (!establishedSession.signedIn) return { status: "indeterminate" };
-  if (typeof establishedSession.sessionId !== "string")
-    return { status: "indeterminate" };
-  if (
-    priorSession.signedIn &&
-    priorSession.sessionId === establishedSession.sessionId
-  )
+  if (typeof established.sessionId !== "string")
     return { status: "indeterminate" };
   return { status: "signed-in" };
 }
@@ -218,6 +208,7 @@ export function useSignOut() {
         serverRevocationCompleted = false;
       }
       clearBackendTokenCache();
+      clearStreamToken();
       queryClient.clear();
       await signOut({ redirect: false });
       return { localSignOutCompleted: true, serverRevocationCompleted };
@@ -272,7 +263,11 @@ export function useSessionClaimsRefresh(): SessionClaimsRefresh {
           () => resolve(null),
           CLAIM_REFRESH_TIMEOUT_MS,
         );
-        void update(data).then(
+        const payload =
+          data !== null && typeof data === "object"
+            ? { ...(data as Record<string, unknown>), _invalidate: true }
+            : { _invalidate: true };
+        void update(payload).then(
           (session) => {
             clearTimeout(timeout);
             resolve(session);

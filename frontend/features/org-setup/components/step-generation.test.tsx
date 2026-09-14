@@ -177,10 +177,29 @@ describe("StepGeneration — signInWithMagicToken returns false", () => {
 });
 
 describe("StepGeneration — the claims refresh never confirms the new org", () => {
-  it("a timed-out refresh surfaces the error, clears nothing and navigates nowhere", async () => {
+  it("signIn ok with autoLoginToken: skips refresh, writes gate cookie and shows welcome", async () => {
     mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
     mockMutateAsync.mockResolvedValue(SETUP_RESPONSE);
     mockSignIn.mockResolvedValue(SIGN_IN_SUCCESS);
+
+    render(<StepGeneration data={TEST_DATA} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.showWelcome).toBe(true);
+    });
+
+    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
+    expect(mockClearAll).toHaveBeenCalledWith("user-1");
+    expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new");
+    expect(capturedProgressProps.setupError).toBeNull();
+    expect(document.cookie).toContain(
+      gateCookieName("org-setup-done", "org-new"),
+    );
+  });
+
+  it("no autoLoginToken: a timed-out refresh surfaces the error, clears nothing", async () => {
+    mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
+    mockMutateAsync.mockResolvedValue({ ...SETUP_RESPONSE, autoLoginToken: null });
     mockRefreshSessionClaims.mockResolvedValue(null);
 
     render(<StepGeneration data={TEST_DATA} />);
@@ -198,35 +217,9 @@ describe("StepGeneration — the claims refresh never confirms the new org", () 
     });
   });
 
-  it("a session still naming the previous org is refused, not celebrated", async () => {
+  it("no autoLoginToken: asks the refresh for the org the setup mutation returned", async () => {
     mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
-    mockMutateAsync.mockResolvedValue(SETUP_RESPONSE);
-    mockSignIn.mockResolvedValue(SIGN_IN_SUCCESS);
-    mockRefreshSessionClaims.mockResolvedValue({
-      ...FAKE_SESSION,
-      orgId: "org-prev",
-    });
-
-    render(<StepGeneration data={TEST_DATA} />);
-
-    await waitFor(() => {
-      expect(capturedProgressProps.setupError).not.toBeNull();
-    });
-
-    expect(capturedProgressProps.showWelcome).toBe(false);
-    expect(mockClearAll).not.toHaveBeenCalled();
-    expect(mockSetCompletionMarker).not.toHaveBeenCalled();
-    expect(mockLocationReplace).not.toHaveBeenCalled();
-    expect(capturedProgressProps.setupError).toMatchObject({
-      kind: "setup-failed",
-      message: SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
-    });
-  });
-
-  it("asks the refresh for the org the setup mutation just returned", async () => {
-    mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
-    mockMutateAsync.mockResolvedValue(SETUP_RESPONSE);
-    mockSignIn.mockResolvedValue(SIGN_IN_SUCCESS);
+    mockMutateAsync.mockResolvedValue({ ...SETUP_RESPONSE, autoLoginToken: null });
     mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
 
     render(<StepGeneration data={TEST_DATA} />);
@@ -241,11 +234,10 @@ describe("StepGeneration — the claims refresh never confirms the new org", () 
 });
 
 describe("StepGeneration — both auth steps succeed", () => {
-  it("clears draft, writes scoped marker keyed to user+org, shows welcome", async () => {
+  it("clears draft, writes scoped marker keyed to user+org, shows welcome without a refresh call", async () => {
     mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
     mockMutateAsync.mockResolvedValue(SETUP_RESPONSE);
     mockSignIn.mockResolvedValue(SIGN_IN_SUCCESS);
-    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
 
     render(<StepGeneration data={TEST_DATA} />);
 
@@ -253,6 +245,7 @@ describe("StepGeneration — both auth steps succeed", () => {
       expect(capturedProgressProps.showWelcome).toBe(true);
     });
 
+    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
     expect(mockClearAll).toHaveBeenCalledWith("user-1");
     expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new");
     expect(capturedProgressProps.setupError).toBeNull();

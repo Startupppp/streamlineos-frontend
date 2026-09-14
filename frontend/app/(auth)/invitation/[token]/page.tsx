@@ -161,8 +161,8 @@ export default function InvitationPage() {
             await autoLoginWithToken(data.autoLoginToken);
             return;
           }
-          const confirmed = await claimsRun.confirmOrWarn();
-          if (!confirmed) return;
+          const outcome = await claimsRun.confirm();
+          if (outcome.status === "superseded") return;
           router.push("/dashboard");
         },
         onError: (error) => {

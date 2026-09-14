@@ -4,12 +4,11 @@ import { useState, useEffect, useRef, useLayoutEffect, useCallback } from "react
 import { useSession } from "next-auth/react";
 import { AnimatePresence } from "framer-motion";
 import { clearBackendTokenCache, isApiError, setAutoSignOutSuppressed } from "@/lib/api-client";
-import { completeOnboardingGate } from "@/lib/onboarding-gate";
+import { completeOnboardingGate, writeGateCookie } from "@/lib/onboarding-gate";
 import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
 import {
   SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
   useConfirmedSessionClaimsRefresh,
-  type SessionClaimsOutcome,
 } from "@/hooks/common/use-confirmed-session-claims-refresh";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -108,8 +107,6 @@ export function StepGeneration({ data }: StepGenerationProps) {
     setCompletedSteps(total);
     clearBackendTokenCache();
 
-    const claimsRun = beginClaimsRefresh();
-    let claimsOutcome: SessionClaimsOutcome;
     try {
       if (autoLoginToken) {
         const outcome = await signInWithMagicToken(autoLoginToken);
@@ -119,29 +116,31 @@ export function StepGeneration({ data }: StepGenerationProps) {
           );
         if (outcome.status !== "signed-in")
           throw new Error("Sign-in failed. Please retry.");
+        writeGateCookie("org-setup-done", orgId);
+      } else {
+        const claimsRun = beginClaimsRefresh();
+        const claimsOutcome = await completeOnboardingGate(
+          "org-setup-done",
+          orgId,
+          claimsRun.confirm,
+          { orgId },
+        );
+        if (claimsOutcome.status === "superseded") return;
+        if (
+          claimsOutcome.status === "unconfirmed" ||
+          claimsOutcome.status === "unavailable"
+        ) {
+          apiDoneRef.current = false;
+          handleSetupError({
+            kind: "setup-failed",
+            message: SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
+          });
+          return;
+        }
       }
-      claimsOutcome = await completeOnboardingGate(
-        "org-setup-done",
-        orgId,
-        claimsRun.confirm,
-        { orgId },
-      );
     } catch (err) {
       apiDoneRef.current = false;
       handleSetupError({ kind: "setup-failed", message: getErrorMessage(err) });
-      return;
-    }
-
-    if (claimsOutcome.status === "superseded") return;
-    if (
-      claimsOutcome.status === "unconfirmed" ||
-      claimsOutcome.status === "unavailable"
-    ) {
-      apiDoneRef.current = false;
-      handleSetupError({
-        kind: "setup-failed",
-        message: SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
-      });
       return;
     }
 
@@ -178,7 +177,6 @@ export function StepGeneration({ data }: StepGenerationProps) {
     stopAnimation();
     const orgResult = orgCreatedResult;
     const userId = session?.user?.id ?? "";
-    const claimsRun = beginClaimsRefresh();
     try {
       clearBackendTokenCache();
       if (orgResult.autoLoginToken) {
@@ -189,21 +187,27 @@ export function StepGeneration({ data }: StepGenerationProps) {
           );
         if (outcome.status !== "signed-in")
           throw new Error("Sign-in failed. Please retry.");
+        writeGateCookie("org-setup-done", orgResult.orgId);
+        clearAll(userId);
+        setCompletionMarker(userId, orgResult.orgId);
+        window.location.replace(destination);
+      } else {
+        const claimsRun = beginClaimsRefresh();
+        const confirmed = await completeOnboardingGate(
+          "org-setup-done",
+          orgResult.orgId,
+          claimsRun.confirmOrWarn,
+          { orgId: orgResult.orgId },
+        );
+        if (!confirmed) {
+          apiDoneRef.current = false;
+          setIsContinuing(false);
+          return;
+        }
+        clearAll(userId);
+        setCompletionMarker(userId, orgResult.orgId);
+        window.location.replace(destination);
       }
-      const confirmed = await completeOnboardingGate(
-        "org-setup-done",
-        orgResult.orgId,
-        claimsRun.confirmOrWarn,
-        { orgId: orgResult.orgId },
-      );
-      if (!confirmed) {
-        apiDoneRef.current = false;
-        setIsContinuing(false);
-        return;
-      }
-      clearAll(userId);
-      setCompletionMarker(userId, orgResult.orgId);
-      window.location.replace(destination);
     } catch (err) {
       apiDoneRef.current = false;
       toast.error(getErrorMessage(err));
