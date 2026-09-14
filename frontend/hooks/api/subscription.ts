@@ -183,12 +183,11 @@ export function useBillingPlans() {
 
 export function useValidateCoupon(code: string, plan: SubscriptionPlan | null, billingCycle?: BillingCycle) {
   const canManage = useCan("billing:subscription:manage");
-  const cycleParam = billingCycle ? `&billingCycle=${billingCycle}` : "";
   return useQuery<CouponValidationResult, Error>({
     queryKey: growthAndSignQueryKeys.billing.coupon(code, plan, billingCycle),
     queryFn: ({ signal }) =>
       apiClient.get(
-        `/billing/coupons/validate?code=${encodeURIComponent(code)}&plan=${plan ?? ""}${cycleParam}`,
+        `/billing/coupons/validate?code=${encodeURIComponent(code)}&plan=${plan ?? ""}`,
         undefined,
         signal,
         couponContract,
