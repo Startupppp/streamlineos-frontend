@@ -38,6 +38,10 @@ import {
   ModuleStandingList,
   OrgStandingCard,
 } from "./effective-access-standing";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { useCan } from "@/hooks/api/access";
+import { useStartImpersonation } from "@/hooks/api/impersonation";
+import { toast } from "sonner";
 
 const ALL_MODULES = "all";
 const DEFAULT_PAGE_SIZE = 25;
@@ -66,6 +70,8 @@ function SimulateContent() {
   const grantableQuery = useModuleGrantable(
     moduleFilter === ALL_MODULES ? undefined : moduleFilter,
   );
+  const canImpersonate = useCan("settings:impersonate:manage");
+  const startImpersonation = useStartImpersonation();
 
   const candidates = useMemo(
     () => candidatesQuery.data?.data ?? [],
@@ -123,6 +129,15 @@ function SimulateContent() {
     void accessQuery.refetch();
   }, [accessQuery]);
 
+  const handleLoginAs = useCallback(() => {
+    if (!selectedPerson) return;
+    startImpersonation.mutate(selectedPerson.id, {
+      onError: (error) => {
+        toast.error(getErrorMessage(error));
+      },
+    });
+  }, [selectedPerson, startImpersonation]);
+
   const access = accessQuery.data;
   const hasFilters =
     moduleFilter !== ALL_MODULES || debouncedPermissionSearch !== "";
@@ -134,6 +149,18 @@ function SimulateContent() {
       backHref="/settings/roles"
       noInternalScroll
       className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+      actions={
+        canImpersonate && selectedPerson ? (
+          <LoadingButton
+            type="button"
+            size="sm"
+            isPending={startImpersonation.isPending}
+            onClick={handleLoginAs}
+          >
+            Log in as {selectedPerson.name ?? selectedPerson.email}
+          </LoadingButton>
+        ) : undefined
+      }
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <SimulatePersonPicker

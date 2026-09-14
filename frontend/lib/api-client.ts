@@ -115,6 +115,39 @@ let cachedToken: { value: string; expiresAt: number } | null = null;
 let fetchingTokenPromise: Promise<string | null> | null = null;
 let autoSignOutSuppressed = false;
 
+let impersonationToken: string | null = null;
+let impersonationTargetUser: { id: string; name: string | null; email: string } | null = null;
+let impersonationSessionId: string | null = null;
+
+export function setImpersonationToken(
+  token: string | null,
+  targetUser: { id: string; name: string | null; email: string } | null,
+  sessionId?: string | null,
+): void {
+  impersonationToken = token;
+  impersonationTargetUser = targetUser;
+  impersonationSessionId = sessionId ?? null;
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("impersonation-change", {
+        detail: token !== null ? { active: true, targetUser, sessionId } : { active: false },
+      }),
+    );
+  }
+}
+
+export function isImpersonating(): boolean {
+  return impersonationToken !== null;
+}
+
+export function getImpersonationUser(): { id: string; name: string | null; email: string } | null {
+  return impersonationTargetUser;
+}
+
+export function getImpersonationSessionId(): string | null {
+  return impersonationSessionId;
+}
+
 const TOKEN_REFRESH_SKEW_MS = 30_000;
 
 function readTokenExpiry(token: string): number | null {
@@ -140,6 +173,7 @@ export function setAutoSignOutSuppressed(value: boolean): void {
 }
 
 export async function getBackendToken(): Promise<string | null> {
+  if (impersonationToken !== null) return impersonationToken;
   if (cachedToken && cachedToken.expiresAt - TOKEN_REFRESH_SKEW_MS > Date.now())
     return cachedToken.value;
   if (fetchingTokenPromise) return fetchingTokenPromise;

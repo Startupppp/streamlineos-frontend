@@ -2,6 +2,7 @@ import type { Permission } from "./types";
 
 export const SETTINGS_PERMISSIONS: Permission[] = [
   { name: "settings:api-tokens:read", resource: "settings:api-tokens", action: "read", description: "View personal API tokens" },
+  { name: "settings:impersonate:manage", resource: "settings:impersonate", action: "manage", description: "Log in as another organization member to troubleshoot their access" },
   { name: "settings:api-tokens:write", resource: "settings:api-tokens", action: "write", description: "Create and revoke personal API tokens" },
   { name: "settings:custom-fields:manage", resource: "settings:custom-fields", action: "manage", description: "Manage custom fields" },
   { name: "settings:custom-fields:view", resource: "settings:custom-fields", action: "view", description: "View custom field definitions" },

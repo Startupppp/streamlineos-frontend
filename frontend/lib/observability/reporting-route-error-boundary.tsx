@@ -30,7 +30,9 @@ export function ReportingRouteErrorBoundary({
   }, [error]);
 
   const handleBeforeReset = useCallback(() => {
-    void queryClient.resetQueries();
+    void queryClient.resetQueries({
+      predicate: (query) => query.state.status === "error",
+    });
   }, [queryClient]);
 
   return (

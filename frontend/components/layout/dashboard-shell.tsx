@@ -10,6 +10,7 @@ import { CommandPalette } from "./command-palette";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { usePushSubscription } from "@/hooks/common/use-push-subscription";
 import { TrialBanner } from "@/components/billing/trial-banner";
+import { ImpersonationBanner } from "@/components/impersonation/impersonation-banner";
 import { ProductSwitcherMenu } from "./header/product-switcher-menu";
 import { useProductSidebarVisibility } from "./sidebar/use-product-sidebar-visibility";
 import { useAccess } from "@/hooks/api/access";
@@ -237,6 +238,7 @@ export function DashboardShell({
         <AskOsProvider>
           <CommandPalette />
           <TrialBanner />
+          <ImpersonationBanner />
 
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <GlobalHeader

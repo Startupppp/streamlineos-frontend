@@ -1,6 +1,7 @@
 "use client";
 import type { z } from "zod";
 import type { bankDetailsContract as bankDetailsContractDef } from "@/lib/api/hooks/onboarding-schema";
+import type { onboardingCompletionContract as onboardingCompletionContractDef } from "@/lib/api/hooks/onboarding-schema";
 import type { personalDetailsContract as personalDetailsContractDef } from "@/lib/api/hooks/onboarding-schema";
 
 import {
@@ -21,6 +22,9 @@ const bankDetailsContract = lazyContract(() =>
 );
 const onboardingSuccessContract = lazyContract(() =>
   import("@/lib/api/hooks/onboarding-schema").then((m) => m.onboardingSuccessContract),
+);
+const onboardingCompletionContract = lazyContract(() =>
+  import("@/lib/api/hooks/onboarding-schema").then((m) => m.onboardingCompletionContract),
 );
 
 export interface PersonalDetailsPayload {
@@ -92,17 +96,19 @@ export function useBankDetailsMutation() {
   });
 }
 
+export type OnboardingCompletion = z.infer<typeof onboardingCompletionContractDef>;
+
 export function useSubmitOnboardingMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: ["onboarding", "submit"],
+    mutationKey: ["onboarding", "complete"],
     mutationFn: () =>
-      apiClient.post<{ success: true }>(
-        "/onboarding/submit",
+      apiClient.post<OnboardingCompletion>(
+        "/onboarding/complete",
         undefined,
         undefined,
-        onboardingSuccessContract,
+        onboardingCompletionContract,
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({

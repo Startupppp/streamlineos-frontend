@@ -25,5 +25,10 @@ export const bankDetailsContract = z.object({
   statutory: z.record(z.string(), z.string()),
 });
 
-/** `successSchema` — the three onboarding writes all answer `{ success: true }`. */
+/** `successSchema` — the two detail-save writes answer `{ success: true }`. */
 export const onboardingSuccessContract = z.object({ success: z.literal(true) });
+
+export const onboardingCompletionContract = z.object({
+  completedAt: z.string(),
+  leaveBalancesAllocated: z.number().int(),
+});

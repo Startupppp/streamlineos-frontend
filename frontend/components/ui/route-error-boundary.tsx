@@ -1,15 +1,52 @@
 "use client";
 
-import { useCallback, useEffect, useId } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { isTransientNetworkError } from "@/lib/query-error-policy";
 
-const networkRetryCount = new Map<string, number>();
-const MAX_NETWORK_AUTO_RETRIES = 3;
+/**
+ * The budget is keyed by ROUTE, never by `error.message`. A network ApiError
+ * names the endpoint it failed on, so a message key gave every one of a page's
+ * reads its own three retries — and each retry refetches the whole page, whose
+ * next failure is a different endpoint with a fresh budget. The cap could not
+ * bite: one outage on a 27-read dashboard produced hundreds of requests.
+ *
+ * The TTL is what makes a route key safe. Without it a spent budget would mean
+ * an outage an hour later never auto-retries at all for the life of the tab.
+ */
+interface NetworkRetryBudget {
+  readonly attempts: number;
+  readonly lastAttemptAt: number;
+}
+
+const networkRetryBudgets = new Map<string, NetworkRetryBudget>();
+export const MAX_NETWORK_AUTO_RETRIES = 3;
+export const NETWORK_RETRY_BUDGET_TTL_MS = 60_000;
 const NETWORK_RETRY_DELAYS_MS: readonly [number, number, number] = [
   3_000, 6_000, 12_000,
 ];
+
+export function resetNetworkRetryBudgets(): void {
+  networkRetryBudgets.clear();
+}
+
+function spentNetworkRetries(routeKey: string): number {
+  const budget = networkRetryBudgets.get(routeKey);
+  if (!budget) return 0;
+  if (Date.now() - budget.lastAttemptAt > NETWORK_RETRY_BUDGET_TTL_MS) {
+    networkRetryBudgets.delete(routeKey);
+    return 0;
+  }
+  return budget.attempts;
+}
 
 interface RouteErrorBoundaryProps {
   error: Error & { digest?: string };
@@ -31,27 +68,44 @@ export function RouteErrorBoundary({
   const headingId = useId();
   const isWholePage = layout === "fullscreen";
   const isNetwork = isTransientNetworkError(error);
-  const networkKey = isNetwork ? error.message : null;
+  const [routeKey] = useState(() =>
+    typeof window === "undefined" ? "server" : window.location.pathname,
+  );
+  const networkKey = isNetwork ? routeKey : null;
 
   const handleRetry = useCallback(() => {
     onBeforeReset?.();
     reset();
   }, [onBeforeReset, reset]);
 
+  /**
+   * The timer reads the retry through a ref so a parent re-render handing down
+   * a new `reset` cannot restart the countdown and strand the page on
+   * "Retrying automatically…" forever.
+   */
+  const retryRef = useRef(handleRetry);
+  useLayoutEffect(() => {
+    retryRef.current = handleRetry;
+  });
+
   useEffect(() => {
-    if (!networkKey) return;
-    const count = networkRetryCount.get(networkKey) ?? 0;
-    if (count >= MAX_NETWORK_AUTO_RETRIES) return;
-    const delay = NETWORK_RETRY_DELAYS_MS[count] ?? 12_000;
+    if (networkKey === null) return;
+    const spent = spentNetworkRetries(networkKey);
+    if (spent >= MAX_NETWORK_AUTO_RETRIES) return;
+    const delay = NETWORK_RETRY_DELAYS_MS[spent] ?? 12_000;
     const timer = setTimeout(() => {
-      networkRetryCount.set(networkKey, count + 1);
-      handleRetry();
+      networkRetryBudgets.set(networkKey, {
+        attempts: spent + 1,
+        lastAttemptAt: Date.now(),
+      });
+      retryRef.current();
     }, delay);
     return () => clearTimeout(timer);
-  }, [networkKey, handleRetry]);
+  }, [networkKey]);
 
-  const autoRetryCount = networkKey !== null ? (networkRetryCount.get(networkKey) ?? 0) : 0;
-  const isAutoRetrying = isNetwork && autoRetryCount < MAX_NETWORK_AUTO_RETRIES;
+  const isAutoRetrying =
+    networkKey !== null &&
+    spentNetworkRetries(networkKey) < MAX_NETWORK_AUTO_RETRIES;
 
   const resolvedTitle = isNetwork
     ? "Server temporarily unavailable"

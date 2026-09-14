@@ -262,6 +262,7 @@ export type ExtendedPermissionKey =
   | "settings:custom-fields:manage"
   | "settings:custom-fields:view"
   | "settings:email-templates:manage"
+  | "settings:impersonate:manage"
   | "settings:mfa"
   | "settings:onboarding:manage"
   | "settings:organization:manage"
