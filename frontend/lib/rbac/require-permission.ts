@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import type { Session } from "next-auth";
 import { getServerAuth } from "@/lib/get-server-auth";
 import { signInPathForMissingSession } from "@/lib/auth-session-cookies";
-import { getServerAccess } from "@/lib/rbac/get-server-access";
+import { getServerAccessResult } from "@/lib/rbac/get-server-access";
 import { resolveRequestPath } from "@/lib/rbac/request-path";
 import { grantsPermission } from "@/lib/rbac/permission-gate";
 import type { AccessResponse } from "@/types/access";
@@ -15,6 +15,19 @@ import { normalizeOrgModuleKey } from "@/lib/org-module-keys";
 interface RequirePermissionResult {
   session: Session;
   access: AccessResponse;
+}
+
+export class AccessUnavailableError extends Error {
+  constructor() {
+    super("Could not load your permissions. Please try again.");
+    this.name = "AccessUnavailableError";
+  }
+}
+
+async function resolveAccessOrFail(): Promise<AccessResponse> {
+  const result = await getServerAccessResult();
+  if (!result.ok) throw new AccessUnavailableError();
+  return result.access;
 }
 
 async function getCurrentPath(): Promise<string | null> {
@@ -44,7 +57,7 @@ export async function requirePermission(
   }
   if (session.user.isActive === false) redirect(signInPathForMissingSession());
 
-  const access = await getServerAccess();
+  const access = await resolveAccessOrFail();
   const perms = Array.isArray(permission) ? permission : [permission];
   const allowed = perms.some((p) => grantsPermission(access, p));
 
@@ -64,7 +77,7 @@ export async function requireModulePermission(
   permission?: PermissionKey | PermissionKey[],
 ): Promise<RequirePermissionResult> {
   const session = await requireSession();
-  const access = await getServerAccess();
+  const access = await resolveAccessOrFail();
   const normalizedModule = normalizeOrgModuleKey(moduleKey);
 
   if (access.modules[normalizedModule] !== true) {

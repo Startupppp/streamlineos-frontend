@@ -1,2 +1,0 @@
-SKIP  (f) applied watermark — DATABASE_URL is set but unreadable: Client network socket disconnected before secure TLS connection was established
-PASS  migration chain verified — no issues found

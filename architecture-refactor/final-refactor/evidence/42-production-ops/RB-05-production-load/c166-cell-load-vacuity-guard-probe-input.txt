@@ -1,9 +1,0 @@
-{
-  "_comment": "SYNTHETIC GUARD PROBE INPUT — NOT A LOAD MEASUREMENT. organizationMembers is set to the real count observed in scratch_head_1010 (2) to show that cell:load refuses a laptop-scale fixture. The single objective is a placeholder that would otherwise PASS, so the only reason for a non-zero exit is the vacuity guard.",
-  "generatedAtMs": 1788453600000,
-  "requestCount": 1,
-  "durationMs": 1000,
-  "organizationMembers": 2,
-  "conditions": { "geography": { "value": "same-host", "note": "localhost loopback, not a colocated cell" } },
-  "objectives": [ { "name": "p95-simple-db-roundtrip", "verdict": "MET", "measured": 1.0, "target": 20 } ]
-}

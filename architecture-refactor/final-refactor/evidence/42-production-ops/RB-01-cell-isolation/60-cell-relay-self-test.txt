@@ -1,7 +1,0 @@
-◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
-Running self-test: prove the guard can fail.
-SELF-TEST PASS: assertMayCrossCells("build.ticket.created") throws CrossCellEventRefusedError
-SELF-TEST PASS: error.message = "[cell] refusing to publish across cells: "build.ticket.created" is a cell-local event. Only control-plane facts cross a "
-SELF-TEST PASS: relay("hr.employee.onboarded").status = "refused"
-SELF-TEST PASS: deadLettered = true
-SELF-TEST PASS: reason = "[cell] refusing to publish across cells: "hr.employee.onboarded" is a cell-local event. Only control-plane facts cross a"

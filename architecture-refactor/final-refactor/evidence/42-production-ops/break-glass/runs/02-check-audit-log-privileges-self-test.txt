@@ -1,4 +1,0 @@
-$ npm run check:audit-log-privileges:self-test
-# run 2026-09-03T16:30:36Z  backend 45f8a2e99
-{"selfTest":true,"pass":true,"safe":{"role":"streamline_app","isAppRole":true,"updateRevoked":true,"deleteRevoked":true,"triggerPresent":true},"unsafe":{"role":"streamline_app","isAppRole":true,"updateRevoked":false,"deleteRevoked":true,"triggerPresent":true},"wrongRole":{"role":"neon_superuser","isAppRole":false,"updateRevoked":true,"deleteRevoked":true,"triggerPresent":true}}
-exit=0

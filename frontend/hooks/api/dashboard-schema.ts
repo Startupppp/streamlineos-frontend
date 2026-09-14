@@ -234,12 +234,7 @@ export const recentActivityContract = z.array(
   }),
 );
 
-/**
- * `teamAttendanceSchema` is aliased to `teamAvailabilitySchema` on the backend
- * and declares an array, but `DashboardAvailabilityService.buildTeamAttendance`
- * returns the counts object below — the openapi shape would reject every
- * response.
- */
+/** `teamAttendanceSchema` — the counts object `DashboardAvailabilityService.buildTeamAttendance` returns. */
 export const teamAttendanceContract = z.object({
   total: z.number().int(),
   present: z.number().int(),

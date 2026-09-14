@@ -1,2 +1,0 @@
-{"role":"streamline_app","isAppRole":true,"updateRevoked":true,"deleteRevoked":true,"triggerPresent":true}
-EXIT_CODE=0

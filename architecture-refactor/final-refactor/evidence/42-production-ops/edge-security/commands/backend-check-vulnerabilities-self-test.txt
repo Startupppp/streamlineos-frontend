@@ -1,6 +1,0 @@
-
-> streamlineos-api@0.1.0 check:vulnerabilities:self-test
-> node src/scripts/check-vulnerabilities.mjs --self-test
-
-check-vulnerabilities self-tests: 11 passed
-EXIT=0

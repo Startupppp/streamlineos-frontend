@@ -1,6 +1,0 @@
-
-> streamlineos-api@0.1.0 validate:env:self-test
-> node -r ts-node/register/transpile-only src/scripts/validate-env.ts --self-test
-
-SELF-TEST PASSED: validate-env correctly rejects a bare environment.
-EXIT=0

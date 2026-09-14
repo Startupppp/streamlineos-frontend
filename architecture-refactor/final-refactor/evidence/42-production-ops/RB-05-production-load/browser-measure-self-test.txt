@@ -1,5 +1,0 @@
-$ npm run --silent browser:measure:self-test
---- stdout+stderr ---
-[0.0s] self-test: starting a minimal HTTP server on port 9870 and measuring with browser
-SELF-TEST FAIL: no browser found at any candidate path
---- exit code: 1 ---

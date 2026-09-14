@@ -1,7 +1,0 @@
-$ npm run --silent cell:unit-cost:self-test
---- started: 2026-09-03T16:37:11Z ---
---- stdout+stderr ---
-◇ injected env (53) from .env // tip: ⌘ override existing { override: true }
-SELF-TEST PASS: anomaly detector fired on 500-cost outlier — guard can fail
---- exit code: 0 ---
---- finished: 2026-09-03T16:37:12Z ---

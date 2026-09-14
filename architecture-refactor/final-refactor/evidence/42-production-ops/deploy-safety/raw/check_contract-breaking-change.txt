@@ -1,2 +1,0 @@
-check-contract-breaking-change: 102 published operations, 3554 internal, 23 published webhook event names
-  OK — no breaking changes detected

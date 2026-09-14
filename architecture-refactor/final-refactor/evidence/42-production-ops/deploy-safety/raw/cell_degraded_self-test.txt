@@ -1,2 +1,0 @@
-◇ injected env (56) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-SELF-TEST PASS: a registry that falls back instead of refusing is reported as a failure

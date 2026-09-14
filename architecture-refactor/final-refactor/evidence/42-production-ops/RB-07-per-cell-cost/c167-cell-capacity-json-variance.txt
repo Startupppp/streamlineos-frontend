@@ -1,7 +1,0 @@
-$ npm run --silent cell:capacity:json   # second reading, same DB, no workload change
---- started: 2026-09-03T16:40:11Z ---
---- stdout+stderr ---
-◇ injected env (53) from .env // tip: ⌘ suppress logs { quiet: true }
-[{"cellId":"local-scratch-1010","limitingResource":"table-bloat","used":0.13642908567314616,"limit":0.3,"measuredAt":1788453611736}]
---- exit code: 0 ---
---- finished: 2026-09-03T16:40:12Z ---

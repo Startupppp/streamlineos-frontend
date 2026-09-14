@@ -1,1 +1,0 @@
-check-outbox-consumers self-tests: 30 passed

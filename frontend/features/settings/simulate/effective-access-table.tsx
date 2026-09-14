@@ -15,9 +15,8 @@ import {
   SCOPE_LABELS,
   SCOPE_TONES,
   TEAM_SCOPE_EXPLANATION,
-  actionOf,
-  resourceOf,
 } from "./effective-access-labels";
+import { actionOf, resourceOf } from "@/lib/rbac/administering-module";
 
 function getPermissionRowKey(row: ExplainedPermission): string {
   return row.permissionKey;

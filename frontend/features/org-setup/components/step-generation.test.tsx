@@ -62,6 +62,8 @@ jest.mock("@/features/org-setup/lib/draft", () => ({
 
 jest.mock("@/lib/api-client", () => ({
   clearBackendTokenCache: jest.fn((...args: unknown[]) => mockClearBackendTokenCache(...args)),
+  setAutoSignOutSuppressed: jest.fn(),
+  isApiError: jest.fn().mockReturnValue(false),
 }));
 
 jest.mock("../lib/setup-payload", () => ({

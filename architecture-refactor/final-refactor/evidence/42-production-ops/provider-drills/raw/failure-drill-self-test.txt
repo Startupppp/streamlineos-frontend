@@ -1,3 +1,0 @@
-◇ injected env (56) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
-{"selfTest":true,"pass":true,"checks":{"allFiveDrillsPresent":true,"allDrillsReturnDryRunWithoutExecuteFlag":true,"cacheLossBlockedInExecuteMode":true,"badReleaseBlockedInExecuteMode":true,"badReleaseNotFakePass":true},"drills":["provider-outage","queue-backlog","cache-loss","database-cell-failure","bad-release"]}
-EXIT=0

@@ -16,12 +16,6 @@ export function isSessionCookieName(name: string): boolean {
   );
 }
 
-export function hasSessionCookie(
-  cookies: ReadonlyArray<{ name: string }>,
-): boolean {
-  return cookies.some((cookie) => isSessionCookieName(cookie.name));
-}
-
 export function signInPathForMissingSession(callbackUrl?: string): string {
   const params = new URLSearchParams();
   params.set(SESSION_EXPIRED_QUERY, SESSION_EXPIRED_VALUE);

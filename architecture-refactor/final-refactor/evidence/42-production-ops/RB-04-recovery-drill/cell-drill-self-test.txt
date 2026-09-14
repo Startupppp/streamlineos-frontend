@@ -1,7 +1,0 @@
-$ cd backend && npm run cell:drill:self-test
-  (node src/scripts/run-recovery-drill.mjs --self-test)
-run_at: 2026-09-03T16:20:01Z
----
-[0.0s] self-test: verifying drill script structure and JSON output shape
-SELF-TEST PASS: drill script structure and result shape are correct
---- exit code: 0

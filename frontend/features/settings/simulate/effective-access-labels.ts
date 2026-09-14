@@ -93,17 +93,6 @@ export const TEAM_SCOPE_EXPLANATION =
 export const UNAVAILABLE_MODULE_EXPLANATION =
   "This module is not enabled for the organization, so these permissions resolve but every request to the module is refused. That is different from being denied the permission.";
 
-export function actionOf(permissionKey: string): string {
-  const segments = permissionKey.split(":");
-  return segments[segments.length - 1] ?? permissionKey;
-}
-
-export function resourceOf(permissionKey: string): string {
-  const segments = permissionKey.split(":");
-  if (segments.length < 3) return permissionKey;
-  return segments.slice(1, -1).join(":");
-}
-
 /**
  * `grantableRanks` comes back as `ROLE_RANK` numbers. Only the three ranks
  * `describeGrantable` can return are named; anything else renders its number

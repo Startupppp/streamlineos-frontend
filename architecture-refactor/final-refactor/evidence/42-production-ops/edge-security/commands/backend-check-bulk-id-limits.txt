@@ -1,6 +1,0 @@
-
-> streamlineos-api@0.1.0 check:bulk-id-limits
-> node src/scripts/check-bulk-id-limits.mjs
-
-check:bulk-id-limits — scanned 3384 schema files; no unbounded id-array properties found.
-EXIT=0

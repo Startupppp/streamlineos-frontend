@@ -1,9 +1,0 @@
-{
-  "_WARNING": "SYNTHETIC GATE-BEHAVIOUR PROBE. NOT AN ACKNOWLEDGEMENT. No human acked anything.",
-  "_why": "Proves the 24h TTL branch is live: an ack older than the TTL still fails the gate.",
-  "delivered": true,
-  "acked": true,
-  "nonce": "SYNTHETIC-NOT-A-REAL-NONCE",
-  "sentAt": "2026-09-01T16:24:09.245Z",
-  "ackedAt": "2026-09-01T16:24:09.245Z"
-}

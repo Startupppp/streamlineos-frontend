@@ -1,3 +1,0 @@
-$ APP_DATABASE_URL=postgres://streamline_app@localhost:5432/scratch_gates_head node src/scripts/verify-audit-log-privileges.mjs
-{"role":"streamline_app","isAppRole":true,"updateRevoked":true,"deleteRevoked":true,"triggerPresent":true}
-EXIT_CODE=0

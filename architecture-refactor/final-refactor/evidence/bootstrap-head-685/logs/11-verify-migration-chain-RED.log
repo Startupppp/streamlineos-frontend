@@ -1,6 +1,0 @@
-RAN   (f) applied watermark — max created_at=1803000010136
-FAIL  migration chain has 3 issue(s):
-
-  (a) UNJOURNALLED  1062_mail_metadata_unread_count_index
-  (a) UNJOURNALLED  1063_invoice_item_immutability_trigger
-  (a) UNJOURNALLED  1064_revenue_events_currency

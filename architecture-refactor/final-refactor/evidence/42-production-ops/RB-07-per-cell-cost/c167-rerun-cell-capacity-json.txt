@@ -1,7 +1,0 @@
-$ npm run --silent cell:capacity:json
---- started: 2026-09-03T16:37:56Z ---
---- stdout+stderr ---
-◇ injected env (53) from .env // tip: ⌘ suppress logs { quiet: true }
-[{"cellId":"local-scratch-1010","limitingResource":"table-bloat","used":0.8955933682373473,"limit":0.3,"measuredAt":1788453476488}]
---- exit code: 1 ---
---- finished: 2026-09-03T16:37:57Z ---

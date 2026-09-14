@@ -75,7 +75,7 @@ export function useCompleteOrgSetupMutation() {
   return useMutation({
     mutationKey: ["org", "setup", "complete"],
     mutationFn: (payload: OrgSetupPayload) =>
-      apiClient.post<OrgSetupResponse>("/org/setup/complete", payload, undefined, orgSetupCompleteContract),
+      apiClient.post<OrgSetupResponse>("/org/setup/complete", payload, { timeoutMs: 5 * 60_000 }, orgSetupCompleteContract),
     retry: false,
   });
 }

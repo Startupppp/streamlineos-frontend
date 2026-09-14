@@ -1,3 +1,0 @@
-◇ injected env (56) from .env // tip: ⌘ override existing { override: true }
-{"selfTest":true,"pass":true,"case1FiresOnFailingEndpoint":true,"case2ClearsOnStaleFailure":true,"note":"git-webhook signature failures are log-only — configure your log aggregator separately"}
-EXIT=0

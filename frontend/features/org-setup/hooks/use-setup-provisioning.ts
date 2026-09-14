@@ -21,6 +21,7 @@ export type SetupProvisioning = {
   isReady: boolean;
   background: "pending" | "in-progress" | "completed" | "failed" | "unknown";
   issue: ProvisioningIssue | null;
+  orgId: string | null;
   recipientOutcomes: RecipientOutcome[] | null;
   isRechecking: boolean;
   hasTimedOut: boolean;
@@ -218,6 +219,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
       isReady: false,
       background: "unknown",
       issue: null,
+      orgId: null,
       recipientOutcomes: null,
       isRechecking: false,
       hasTimedOut: false,
@@ -230,6 +232,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
       isReady: false,
       background: "failed",
       issue: issueForAuth(),
+      orgId: data?.orgId ?? null,
       recipientOutcomes: null,
       isRechecking: isFetching,
       hasTimedOut,
@@ -242,6 +245,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
       isReady: false,
       background: "failed",
       issue: issueForContract(),
+      orgId: data?.orgId ?? null,
       recipientOutcomes: null,
       isRechecking: isFetching,
       hasTimedOut,
@@ -256,6 +260,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
         ? toBackground(data.provisioning, data.errorCode)
         : "unknown",
       issue: issueForNetwork(),
+      orgId: data?.orgId ?? null,
       recipientOutcomes: null,
       isRechecking: isFetching,
       hasTimedOut,
@@ -269,6 +274,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
         isReady: false,
         background: "unknown",
         issue: issueForTimeout(false, null),
+        orgId: null,
         recipientOutcomes: null,
         isRechecking: isFetching,
         hasTimedOut,
@@ -279,6 +285,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
       isReady: false,
       background: "unknown",
       issue: null,
+      orgId: null,
       recipientOutcomes: null,
       isRechecking: isFetching,
       hasTimedOut,
@@ -288,6 +295,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
 
   const { provisioning, errorCode, ready, correlationId, recipientOutcomes } = data;
   const background = toBackground(provisioning, errorCode);
+  const statusOrgId = data.orgId;
 
   if (provisioning === "completed") {
     return {
@@ -297,6 +305,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
         errorCode === "SETUP_BACKGROUND_PARTIAL"
           ? issueForBackgroundPartial(correlationId)
           : null,
+      orgId: statusOrgId,
       recipientOutcomes: recipientOutcomes ?? null,
       isRechecking: false,
       hasTimedOut,
@@ -312,6 +321,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
             isReady: ready,
             background: "in-progress",
             issue: issueForTimeout(true, correlationId),
+            orgId: statusOrgId,
             recipientOutcomes: null,
             isRechecking: isFetching,
             hasTimedOut,
@@ -322,6 +332,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
           isReady: ready,
           background: "in-progress",
           issue: null,
+          orgId: statusOrgId,
           recipientOutcomes: null,
           isRechecking: isFetching,
           hasTimedOut,
@@ -333,6 +344,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
           isReady: ready,
           background: "failed",
           issue: issueForBackgroundDead(correlationId, ready),
+          orgId: statusOrgId,
           recipientOutcomes: null,
           isRechecking: isFetching,
           hasTimedOut,
@@ -343,6 +355,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
           isReady: ready,
           background: "failed",
           issue: issueForBackgroundInvalid(correlationId, ready),
+          orgId: statusOrgId,
           recipientOutcomes: null,
           isRechecking: isFetching,
           hasTimedOut,
@@ -353,6 +366,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
           isReady: ready,
           background: "failed",
           issue: issueForBackgroundSuppressed(correlationId, ready),
+          orgId: statusOrgId,
           recipientOutcomes: null,
           isRechecking: isFetching,
           hasTimedOut,
@@ -363,6 +377,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
           isReady: ready,
           background: "failed",
           issue: issueForBackgroundDead(correlationId, ready),
+          orgId: statusOrgId,
           recipientOutcomes: null,
           isRechecking: isFetching,
           hasTimedOut,
@@ -376,6 +391,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
       isReady: ready,
       background,
       issue: issueForTimeout(false, correlationId),
+      orgId: statusOrgId,
       recipientOutcomes: null,
       isRechecking: isFetching,
       hasTimedOut,
@@ -387,6 +403,7 @@ export function useSetupProvisioning(isStarted: boolean): SetupProvisioning {
     isReady: ready,
     background,
     issue: null,
+    orgId: statusOrgId,
     recipientOutcomes: null,
     isRechecking: isFetching,
     hasTimedOut,

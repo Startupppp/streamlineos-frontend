@@ -16,6 +16,7 @@ import {
   exchangeSessionForBackendJwt,
   fetchSessionData,
   fetchSessionDataCached,
+  invalidateSessionData,
   invalidateBackendJwtSession,
   resolveGoogleUser,
   buildUserFromSessionData,
@@ -67,6 +68,7 @@ export async function authorizeMagicToken(
     );
     const identity = magicLinkVerifyResponseSchema.safeParse(unwrapBackend(raw));
     if (!identity.success) return null;
+    invalidateSessionData(identity.data.userId);
     const sessionData = await fetchSessionData(identity.data.userId);
     if (!sessionData) return null;
     return {
@@ -209,6 +211,7 @@ export const authConfig = {
         const { userId, sessionId } = googleResult;
         user.id = userId;
         user.sessionId = sessionId;
+        invalidateSessionData(userId);
         const sessionData = await fetchSessionData(userId);
         if (sessionData) {
           const claims = resolveSessionClaims(sessionData, {
@@ -257,6 +260,7 @@ export const authConfig = {
       if (trigger === "update") {
         const userId = token.id;
         if (userId) {
+          invalidateSessionData(userId);
           const fresh = await fetchSessionData(userId);
           if (fresh) {
             const claims = resolveSessionClaims(fresh, token);

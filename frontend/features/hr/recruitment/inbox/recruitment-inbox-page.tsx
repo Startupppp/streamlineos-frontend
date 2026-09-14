@@ -8,11 +8,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared/error-state";
+import { Gated, ErrorState } from "@/components/shared";
 import { ThreadItem, ThreadPane } from "./recruitment-thread-ui";
 
 export function RecruitmentInboxPage() {
-  const { data: threads = [], isLoading, isError, refetch } = useMessageThreads();
+  const threadsQuery = useMessageThreads();
+  const threads = threadsQuery.data ?? [];
   const [activeThread, setActiveThread] = useState<MessageThread | null>(null);
 
   const handleSelectThread = useCallback(
@@ -21,34 +22,7 @@ export function RecruitmentInboxPage() {
   );
 
   function handleRetry() {
-    void refetch();
-  }
-
-  if (isLoading) {
-    return (
-      <PageWrapper title="Candidate Inbox" subtitle="Messages with candidates" noInternalScroll>
-        <div className="flex gap-4 h-full">
-          <div className="w-72 space-y-2">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 rounded-lg" />
-            ))}
-          </div>
-          <Skeleton className="flex-1 rounded-xl" />
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper title="Candidate Inbox" subtitle="Messages with candidates" noInternalScroll>
-        <ErrorState
-          title="Unable to load inbox"
-          description="Try again. If this keeps happening, check your permissions or contact an admin."
-          onRetry={handleRetry}
-        />
-      </PageWrapper>
-    );
+    void threadsQuery.refetch();
   }
 
   return (
@@ -57,13 +31,36 @@ export function RecruitmentInboxPage() {
       subtitle="Manage candidate conversations across channels"
       noInternalScroll
     >
-      {threads.length === 0 ? (
-        <RecruitmentEmptyState
-          illustration={<EmptyInboxIllustration />}
-          title="No messages yet"
-          description="Send the first message to a candidate from their profile page."
-        />
-      ) : (
+      <Gated
+        permission="hr:employees:view"
+        isLoading={threadsQuery.isLoading}
+        isError={threadsQuery.isError}
+        isEmpty={threads.length === 0}
+        loading={
+          <div className="flex gap-4 h-full">
+            <div className="w-72 space-y-2">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <Skeleton key={i} className="h-16 rounded-lg" />
+              ))}
+            </div>
+            <Skeleton className="flex-1 rounded-xl" />
+          </div>
+        }
+        error={
+          <ErrorState
+            title="Unable to load inbox"
+            description="Try again. If this keeps happening, check your permissions or contact an admin."
+            onRetry={handleRetry}
+          />
+        }
+        empty={
+          <RecruitmentEmptyState
+            illustration={<EmptyInboxIllustration />}
+            title="No messages yet"
+            description="Send the first message to a candidate from their profile page."
+          />
+        }
+      >
         <div className="flex gap-0 border rounded-xl overflow-hidden h-full">
           <div className="w-72 border-r flex flex-col shrink-0">
             <div className="px-3 py-2 border-b">
@@ -95,7 +92,7 @@ export function RecruitmentInboxPage() {
             )}
           </div>
         </div>
-      )}
+      </Gated>
     </PageWrapper>
   );
 }

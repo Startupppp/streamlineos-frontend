@@ -354,6 +354,7 @@ async function get<T>(
 export interface RequestConfig {
   headers?: Record<string, string>;
   signal?: AbortSignal;
+  timeoutMs?: number;
 }
 
 async function post<T>(
@@ -375,6 +376,7 @@ async function post<T>(
     },
     url,
     config?.signal,
+    config?.timeoutMs !== undefined ? { timeoutMs: config.timeoutMs } : undefined,
   );
   return parseApiResponse<T>(res, await pendingContract, url);
 }

@@ -1,3 +1,0 @@
-◇ injected env (56) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-{"selfTest":true,"pass":true,"case1FiresOnDeadRow":true,"case2ClearsOnStaleRow":true}
-EXIT=0

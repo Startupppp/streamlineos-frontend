@@ -158,8 +158,42 @@ export async function fetchSessionData(userId: string): Promise<SessionData | nu
   return null;
 }
 
+const SESSION_DATA_TTL_MS = 15_000;
+
+interface SessionDataEntry {
+  data: SessionData;
+  expiresAt: number;
+}
+const sessionDataStore = new Map<string, SessionDataEntry>();
+
+function evictExpiredSessionData(): void {
+  const now = Date.now();
+  for (const [key, entry] of sessionDataStore)
+    if (entry.expiresAt <= now) sessionDataStore.delete(key);
+}
+
+export function invalidateSessionData(userId: string): void {
+  sessionDataStore.delete(userId);
+}
+
+export function clearSessionDataStoreForTesting(): void {
+  sessionDataStore.clear();
+}
+
 async function fetchSessionDataWithCache(userId: string): Promise<SessionData | null> {
-  return fetchSessionData(userId);
+  const entry = sessionDataStore.get(userId);
+  if (entry && entry.expiresAt > Date.now()) return entry.data;
+
+  const fresh = await fetchSessionData(userId);
+  if (!fresh) return null;
+
+  if (sessionDataStore.size >= MAX_STORE_SIZE) evictExpiredSessionData();
+  if (sessionDataStore.size < MAX_STORE_SIZE)
+    sessionDataStore.set(userId, {
+      data: fresh,
+      expiresAt: Date.now() + SESSION_DATA_TTL_MS,
+    });
+  return fresh;
 }
 
 export const fetchSessionDataCached = cache(fetchSessionDataWithCache);

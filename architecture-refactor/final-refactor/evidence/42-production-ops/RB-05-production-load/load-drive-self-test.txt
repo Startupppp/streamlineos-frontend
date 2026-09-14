@@ -1,5 +1,0 @@
-$ npm run --silent load:drive:self-test
---- stdout+stderr ---
-◇ injected env (56) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
-SELF-TEST PASS: a breach is reported as BREACHED and an unsampled objective as NOT_DRIVEN — the guard can fail
---- exit code: 0 ---

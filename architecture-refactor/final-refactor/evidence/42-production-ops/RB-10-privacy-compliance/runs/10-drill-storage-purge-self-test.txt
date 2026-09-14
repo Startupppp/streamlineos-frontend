@@ -1,7 +1,0 @@
-[self-test] Verifying each assertion bites when the invariant is broken…
-[self-test] ✓ assertion 1 (zero-remaining) bites correctly
-[self-test] ✓ assertion 2 (idempotent second run) bites correctly
-[self-test] ✓ assertion 3 (partial-failure separation) bites correctly
-[self-test] ✓ assertion 4 (zero-failures on clean data) bites correctly
-[self-test] All assertions verified. PASS.
-EXIT_CODE=0

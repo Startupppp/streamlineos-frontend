@@ -8,8 +8,6 @@ const CANONICAL = "lib/rbac/administering-module.ts";
 const NOT_A_PERMISSION_KEY: Readonly<Record<string, string>> = {
   "lib/renderer/crm/contact-role-layout.ts":
     "entity refs `deal:123` / `company:456`, not a permission key",
-  "features/settings/simulate/simulate-page.tsx":
-    "resourceOf() extracts the permission key's resource segment, not the module",
   "features/build/project-list/projects-page.tsx":
     "`status:ACTIVE` client-side filter-group token, not a permission key",
   "features/hr/attendance/attendance-regularization-dialog.tsx": "HH:MM regularization time",

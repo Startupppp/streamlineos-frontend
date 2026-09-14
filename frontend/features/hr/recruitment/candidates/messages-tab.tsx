@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
+import { Gated, ErrorState } from "@/components/shared";
 
 const MESSAGE_CHANNELS = [
   "EMAIL",
@@ -54,7 +55,8 @@ export function MessagesTab({
   candidateId: number;
   candidateEmail: string;
 }) {
-  const { data: messages = [], isLoading } = useCandidateMessages(candidateId);
+  const messagesQuery = useCandidateMessages(candidateId);
+  const messages = messagesQuery.data ?? [];
   const send = useSendCandidateMessage();
   const [body, setBody] = useState("");
   const [subject, setSubject] = useState("");
@@ -68,6 +70,10 @@ export function MessagesTab({
   function handleChannelChange(v: string) {
     const next = MESSAGE_CHANNELS.find((candidate) => candidate === v);
     if (next) setChannel(next);
+  }
+
+  function handleRetryMessages() {
+    void messagesQuery.refetch();
   }
 
   const handleSend = useCallback(() => {
@@ -89,13 +95,25 @@ export function MessagesTab({
     <div className="flex flex-col rounded-xl border bg-card" style={{ minHeight: "400px", maxHeight: "600px" }}>
       <ScrollArea hideScrollbar className="min-h-0 flex-1">
         <div className="overscroll-contain space-y-3 p-4">
-        {isLoading ? (
-          Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-xl" />)
-        ) : messages.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">No messages yet.</p>
-        ) : (
-          [...messages].reverse().map((msg) => <MessageBubble key={msg.id} msg={msg} />)
-        )}
+        <Gated
+          permission="hr:employees:view"
+          isLoading={messagesQuery.isLoading}
+          isError={messagesQuery.isError}
+          isEmpty={messages.length === 0}
+          loading={
+            <>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-14 rounded-xl" />
+              ))}
+            </>
+          }
+          error={<ErrorState onRetry={handleRetryMessages} compact />}
+          empty={<p className="text-sm text-muted-foreground text-center py-8">No messages yet.</p>}
+        >
+          <>
+            {[...messages].reverse().map((msg) => <MessageBubble key={msg.id} msg={msg} />)}
+          </>
+        </Gated>
         <div ref={bottomRef} />
         </div>
       </ScrollArea>

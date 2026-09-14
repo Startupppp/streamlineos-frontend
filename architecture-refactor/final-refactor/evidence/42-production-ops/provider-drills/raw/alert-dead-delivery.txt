@@ -1,3 +1,0 @@
-◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
-{"fired":false,"count":0,"threshold":{"maxDeadRowsInWindow":0,"windowHours":24},"destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system (PagerDuty, Slack webhook, etc.)","rows":[]}
-EXIT=0

@@ -1,7 +1,0 @@
-◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-{"drill":"provider-outage","outcome":"dry-run","detail":"Feeds a synthetic log fixture with provider error patterns to alert-dead-outbox self-test, proving detection fires without touching real outbox rows."}
-{"drill":"queue-backlog","outcome":"dry-run","detail":"Inserts a synthetic PENDING outbox row with an old timestamp inside a rolled-back transaction, runs the queue-age predicate, asserts it fires, then verifies the row is gone after rollback."}
-{"drill":"cache-loss","outcome":"dry-run","detail":"Prints the Redis FLUSHDB command that would flush the tenant cache. EXECUTE mode is intentionally blocked: FLUSHDB on a shared Redis instance drops every org's cached permissions and sessions. Run it only on a dedicated dev Redis with explicit consent."}
-{"drill":"database-cell-failure","outcome":"dry-run","detail":"Attempts to open a Postgres connection with an invalid password, asserts the expected ECONNREFUSED/authentication error class, and runs the pool-saturation alert in self-test mode to confirm the detection path is wired."}
-{"drill":"bad-release","outcome":"dry-run","detail":"Overrides APP_RELEASE to a synthetic 'bad-release-drill' value in-process, emits a log line via the logger, and asserts the captured JSON carries the overridden release field."}
-EXIT=0

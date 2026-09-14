@@ -1,7 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getToken, type JWT } from "next-auth/jwt";
 import {
-  hasSessionCookie,
   sessionCookieBases,
   SESSION_EXPIRED_QUERY,
   SESSION_EXPIRED_VALUE,
@@ -200,8 +199,6 @@ export async function proxy(req: NextRequest) {
     if (token) break;
   }
 
-  const staleSessionCookie = !token && hasSessionCookie(req.cookies.getAll());
-
   const isProtected =
     matchesAny(pathname, PROTECTED_ROUTES) || isBlogAdminPath(pathname);
 
@@ -210,11 +207,7 @@ export async function proxy(req: NextRequest) {
     url.pathname = "/signin";
     url.search = "";
     url.searchParams.set("callbackUrl", pathname + req.nextUrl.search);
-    return withExpiredSessionCookies(
-      NextResponse.redirect(url),
-      req,
-      staleSessionCookie,
-    );
+    return NextResponse.redirect(url);
   }
 
   if (token) {
@@ -230,16 +223,16 @@ export async function proxy(req: NextRequest) {
       );
 
     if (matchesAny(pathname, AUTH_ROUTES)) {
-      if (
+      const serverReportedMissingSession =
         req.nextUrl.searchParams.get(SESSION_EXPIRED_QUERY) ===
-        SESSION_EXPIRED_VALUE
-      )
-        return withExpiredSessionCookies(redirectTo(req, pathname), req, true);
+        SESSION_EXPIRED_VALUE;
 
-      const target = resolveSafeCallbackUrl(req);
-      if (target) return redirectTo(req, target.pathname, target.search);
+      if (!serverReportedMissingSession) {
+        const target = resolveSafeCallbackUrl(req);
+        if (target) return redirectTo(req, target.pathname, target.search);
 
-      return redirectTo(req, "/dashboard");
+        return redirectTo(req, "/dashboard");
+      }
     }
   }
 

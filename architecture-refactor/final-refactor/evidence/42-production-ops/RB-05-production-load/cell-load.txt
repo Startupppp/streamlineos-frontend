@@ -1,8 +1,0 @@
-$ npm run --silent cell:load
---- stdout+stderr ---
-MISSING PREREQUISITE: /Users/tarunchintakunta/Personal/streamline/streamlineos-backend/.load-driver-results.json does not exist.
-Produce it first by running the load driver from a colocated runner:
-  pnpm -C backend load:drive
-Then assert headroom:
-  pnpm -C backend cell:load
---- exit code: 1 ---

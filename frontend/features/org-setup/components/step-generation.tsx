@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useLayoutEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { AnimatePresence } from "framer-motion";
-import { clearBackendTokenCache, setAutoSignOutSuppressed } from "@/lib/api-client";
+import { clearBackendTokenCache, isApiError, setAutoSignOutSuppressed } from "@/lib/api-client";
 import { completeOnboardingGate } from "@/lib/onboarding-gate";
 import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
 import {
@@ -46,6 +46,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
   const [orgCreatedResult, setOrgCreatedResult] = useState<OrgCreatedResult | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isContinuing, setIsContinuing] = useState(false);
+  const [isPollingAfterTimeout, setIsPollingAfterTimeout] = useState(false);
   const dataRef = useRef(data);
   const sessionRef = useRef(session);
 
@@ -64,7 +65,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
 
   const completeOrgSetup = useCompleteOrgSetupMutation();
   const completeOrgSetupRef = useRef(completeOrgSetup);
-  const provisioning = useSetupProvisioning(orgCreatedResult !== null);
+  const provisioning = useSetupProvisioning(orgCreatedResult !== null || isPollingAfterTimeout);
 
   useEffect(() => {
     setAutoSignOutSuppressed(true);
@@ -241,7 +242,11 @@ export function StepGeneration({ data }: StepGenerationProps) {
         orgId: res.orgId,
       });
     } catch (err) {
-      handleSetupError({ kind: "setup-failed", message: getErrorMessage(err) });
+      if (isApiError(err) && err.code === "TIMEOUT") {
+        setIsPollingAfterTimeout(true);
+      } else {
+        handleSetupError({ kind: "setup-failed", message: getErrorMessage(err) });
+      }
     }
   }
 
@@ -263,6 +268,11 @@ export function StepGeneration({ data }: StepGenerationProps) {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isPollingAfterTimeout || orgCreatedResult !== null || provisioning.orgId === null) return;
+    setOrgCreatedResult({ autoLoginToken: null, orgId: provisioning.orgId });
+  }, [isPollingAfterTimeout, orgCreatedResult, provisioning.orgId]);
 
   useEffect(() => {
     if (!provisioning.isReady || !orgCreatedResult) return;

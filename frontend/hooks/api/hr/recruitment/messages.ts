@@ -1,9 +1,8 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
-import { useCan } from "@/hooks/api/access";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -58,15 +57,14 @@ export interface SendCandidateMessageInput {
 }
 
 export function useCandidateMessages(candidateId?: number) {
-  const canView = useCan("hr:employees:view");
-  return useQuery({
+  return useGatedQuery("hr:employees:view", {
     queryKey: humanResourcesQueryKeys.hr.candidateMessages(candidateId),
     queryFn: ({ signal }) => {
       const params = candidateId ? `?candidateId=${candidateId}` : "";
       return apiClient.get<CandidateMessage[]>(`/hr/recruitment/messages${params}`, undefined, signal, candidateMessagesListC);
     },
     staleTime: 30_000,
-    enabled: canView && candidateId !== undefined,
+    enabled: candidateId !== undefined,
   });
 }
 

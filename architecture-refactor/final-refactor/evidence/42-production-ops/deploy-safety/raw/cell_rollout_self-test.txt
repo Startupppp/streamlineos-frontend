@@ -1,8 +1,0 @@
-◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
-Measuring canary with healthy workload…
-Measuring canary with regressed workload (generate_series 200k sort)…
-
-healthy   p99=22.0ms error=0.00% avail=100.00%
-regressed p99=2469.6ms error=0.00% avail=100.00%
-
-SELF-TEST PASS: healthy canary yields DEPLOY (p99=22.0ms), regressed canary yields ROLLBACK (p99=2469.6ms, +11133.3% regression)

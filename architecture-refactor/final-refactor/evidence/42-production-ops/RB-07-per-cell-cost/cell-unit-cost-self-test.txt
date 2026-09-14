@@ -1,5 +1,0 @@
-$ npm run --silent cell:unit-cost:self-test
---- stdout+stderr ---
-◇ injected env (55) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
-SELF-TEST PASS: anomaly detector fired on 500-cost outlier — guard can fail
---- exit code: 0 ---
