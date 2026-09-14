@@ -24,6 +24,9 @@ type EmailValues = z.infer<typeof emailSchema>;
 
 const OTP_RESEND_COOLDOWN = 30;
 
+const OTP_SUPERSEDED_NOTICE =
+  "A newer code was sent. Any earlier code has stopped working — use the most recent email.";
+
 interface PasswordlessSigninFormProps {
   getCallbackUrl: () => string;
 }
@@ -35,8 +38,10 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
   const [resendCooldown, setResendCooldown] = useState(0);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [verifyError, setVerifyError] = useState<string | null>(null);
+  const [codeSuperseded, setCodeSuperseded] = useState(false);
   const cooldownRef = useRef<NodeJS.Timeout | null>(null);
   const codeStageActiveRef = useRef(false);
+  const resendRequestedRef = useRef(false);
   const otpFieldRef = useRef<HTMLInputElement>(null);
 
   const emailForm = useForm<EmailValues>({
@@ -85,16 +90,20 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
 
   const requestOtpMutation = useRequestOtp({
     onSuccess: (data, email) => {
+      const wasResend = resendRequestedRef.current;
+      resendRequestedRef.current = false;
       setSubmittedEmail(email);
       codeStageActiveRef.current = true;
       setStage("code");
       setOtpValue("");
       setMagicLinkSent(false);
       setVerifyError(null);
+      setCodeSuperseded(wasResend);
       startCooldown();
       toast.success(getErrorMessage(data));
     },
     onError: (error) => {
+      resendRequestedRef.current = false;
       applyRateLimitCooldown(error);
       toast.error(getErrorMessage(error));
     },
@@ -169,16 +178,19 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
 
   const handleResend = useCallback(() => {
     if (resendCooldown > 0 || verifyOtpMutation.isPending) return;
+    resendRequestedRef.current = true;
     requestOtpMutation.mutate(submittedEmail);
   }, [resendCooldown, requestOtpMutation, submittedEmail, verifyOtpMutation.isPending]);
 
   const handleBack = useCallback(() => {
     codeStageActiveRef.current = false;
+    resendRequestedRef.current = false;
     setStage("email");
     setSubmittedEmail("");
     setOtpValue("");
     setMagicLinkSent(false);
     setVerifyError(null);
+    setCodeSuperseded(false);
     if (cooldownRef.current) clearInterval(cooldownRef.current);
     setResendCooldown(0);
   }, []);
@@ -199,6 +211,11 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
             Sent to{" "}
             <span className="font-medium text-foreground">{submittedEmail}</span>
           </p>
+          {codeSuperseded && (
+            <p className="text-xs text-status-warning-ink">
+              {OTP_SUPERSEDED_NOTICE}
+            </p>
+          )}
           <div className="flex justify-center py-2">
             <InputOTP
               ref={otpFieldRef}

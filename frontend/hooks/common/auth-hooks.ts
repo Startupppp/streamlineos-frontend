@@ -8,6 +8,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import type { Session } from "next-auth";
+import type { SignInResponse } from "next-auth/react";
 import { getSession, signIn, signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -80,33 +81,31 @@ async function probeSession(): Promise<SessionProbe> {
   }
 }
 
-async function attemptCredentialsSignIn(
-  magicToken: string,
-): Promise<MagicLinkSignInOutcome> {
-  const prior = await probeSession();
-  let rejected = false;
-  try {
-    const result = await signIn("credentials", {
-      magicToken,
-      redirect: false,
-    });
-    rejected = !result.ok || Boolean(result.error);
-  } catch {
-    rejected = false;
-  }
-  if (rejected) return { status: "failed" };
+const CREDENTIALS_CALLBACK_ECHO_PATH = "/dashboard";
 
+async function confirmSessionEstablished(): Promise<MagicLinkSignInOutcome> {
   const established = await probeSession();
   if (established.status === "unreadable" || !established.signedIn)
     return { status: "indeterminate" };
   if (typeof established.sessionId !== "string")
     return { status: "indeterminate" };
-  if (
-    prior.status === "read" &&
-    prior.signedIn &&
-    prior.sessionId === established.sessionId
-  )
-    return { status: "indeterminate" };
+  return { status: "signed-in" };
+}
+
+async function attemptCredentialsSignIn(
+  magicToken: string,
+): Promise<MagicLinkSignInOutcome> {
+  let result: SignInResponse | undefined;
+  try {
+    result = await signIn("credentials", {
+      magicToken,
+      redirect: false,
+      callbackUrl: CREDENTIALS_CALLBACK_ECHO_PATH,
+    });
+  } catch {
+    return confirmSessionEstablished();
+  }
+  if (!result?.ok || result.error) return { status: "failed" };
   return { status: "signed-in" };
 }
 

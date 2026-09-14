@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useCan } from "@/hooks/api/access";
+import { stripPmWorkspacePrefix } from "@/lib/build/pm-workspace-path";
 import type { ProjectNavPermissions } from "./project-nav-config";
 
 const ROOT_BOARD_VIEWS = new Set([
@@ -46,15 +47,16 @@ export function useProjectNavIsActive(baseUrl: string) {
   return useCallback(
     (href: string) => {
       if (!pathname) return false;
+      const effectivePathname = stripPmWorkspacePrefix(pathname);
       if (href.includes("view=workload")) {
-        return pathname === baseUrl && searchParams.get("view") === "workload";
+        return effectivePathname === baseUrl && searchParams.get("view") === "workload";
       }
       if (href === baseUrl) {
-        if (pathname !== baseUrl) return false;
+        if (effectivePathname !== baseUrl) return false;
         const view = searchParams.get("view");
         return !view || ROOT_BOARD_VIEWS.has(view);
       }
-      return pathname === href || pathname.startsWith(`${href}/`);
+      return effectivePathname === href || effectivePathname.startsWith(`${href}/`);
     },
     [pathname, searchParams, baseUrl],
   );

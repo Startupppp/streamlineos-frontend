@@ -44,6 +44,8 @@ const mockedSignInWithMagicToken = signInWithMagicToken as jest.Mock;
 
 const mockLocation = { assign: jest.fn() };
 
+const OTP_RESEND_COOLDOWN_MS = 31_000;
+
 beforeAll(() => {
   Object.defineProperty(window, "location", {
     value: mockLocation,
@@ -188,6 +190,74 @@ describe("PasswordlessSigninForm", () => {
       });
 
       expect(mockLocation.assign).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("superseded-code notice", () => {
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it("shows no superseded notice on the first code, because nothing has been replaced yet", async () => {
+      await renderInCodeStage();
+      expect(screen.queryByText(/stopped working/i)).not.toBeInTheDocument();
+    });
+
+    it("warns that the earlier code stopped working once a resend lands, because the server invalidates every outstanding code when it issues a new one and the two failures are otherwise indistinguishable", async () => {
+      jest.useFakeTimers();
+      setupMocks();
+      render(<PasswordlessSigninForm getCallbackUrl={() => "/dashboard"} />);
+
+      const emailInput = screen.getByLabelText(/email/i);
+      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+      fireEvent.submit(emailInput.closest("form")!);
+      await act(async () => {
+        requestOtpOnSuccess?.({ message: "Code sent" }, "test@example.com");
+      });
+
+      await act(async () => {
+        jest.advanceTimersByTime(OTP_RESEND_COOLDOWN_MS);
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: /resend code/i }));
+      await act(async () => {
+        requestOtpOnSuccess?.({ message: "Code sent" }, "test@example.com");
+      });
+
+      expect(screen.getByText(/stopped working/i)).toBeInTheDocument();
+    });
+  });
+
+  describe("session-scope remount during sign-in", () => {
+    it("still navigates when the form unmounts mid sign-in, because signing in remounts the provider tree and the user is already authenticated by then", async () => {
+      setupMocks();
+      const { unmount } = render(
+        <PasswordlessSigninForm getCallbackUrl={() => "/dashboard"} />,
+      );
+
+      const emailInput = screen.getByLabelText(/email/i);
+      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+      fireEvent.submit(emailInput.closest("form")!);
+      await act(async () => {
+        requestOtpOnSuccess?.({ message: "Code sent" }, "test@example.com");
+      });
+
+      let resolveSignIn: ((value: { status: string }) => void) | undefined;
+      mockedSignInWithMagicToken.mockReturnValue(
+        new Promise((resolve) => {
+          resolveSignIn = resolve;
+        }),
+      );
+
+      const pending = verifyOtpOnSuccess?.({ autoLoginToken: "tok" });
+      unmount();
+
+      await act(async () => {
+        resolveSignIn?.({ status: "signed-in" });
+        await pending;
+      });
+
+      expect(mockLocation.assign).toHaveBeenCalledWith("/dashboard");
     });
   });
 });
