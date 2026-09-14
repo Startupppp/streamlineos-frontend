@@ -28,8 +28,14 @@ interface ActiveStream {
 }
 
 let activeStream: ActiveStream | null = null;
+let cachedToken: string | null = null;
+let tokenFetchedAt = 0;
+const TOKEN_CACHE_MS = 55 * 60_000;
 
 async function fetchStreamToken(): Promise<string | null> {
+  const now = Date.now();
+  if (cachedToken !== null && now - tokenFetchedAt < TOKEN_CACHE_MS)
+    return cachedToken;
   try {
     const backendJwt = await getBackendToken();
     if (!backendJwt) return null;
@@ -43,7 +49,12 @@ async function fetchStreamToken(): Promise<string | null> {
     const body: unknown = await response.json();
     if (typeof body !== "object" || body === null || !("token" in body))
       return null;
-    return typeof body.token === "string" ? body.token : null;
+    const token = typeof body.token === "string" ? body.token : null;
+    if (token !== null) {
+      cachedToken = token;
+      tokenFetchedAt = Date.now();
+    }
+    return token;
   } catch {
     return null;
   }
@@ -132,6 +143,8 @@ function openStream(
       controller.abort();
       window.removeEventListener("online", reconnectNow);
       if (retryTimer) clearTimeout(retryTimer);
+      cachedToken = null;
+      tokenFetchedAt = 0;
     },
   };
 }

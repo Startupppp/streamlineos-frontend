@@ -6,7 +6,7 @@ import { createServerQueryClient } from "./server-query-client";
 import { getServerAccessResult } from "@/lib/rbac/get-server-access";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 
-const ACCESS_STALE_TIME = 30_000;
+const ACCESS_STALE_TIME = 5 * 60_000;
 
 export async function prefetchAccess() {
   const session = await getServerAuth();

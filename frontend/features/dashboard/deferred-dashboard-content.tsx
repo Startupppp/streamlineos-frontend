@@ -29,7 +29,7 @@ export function DeferredDashboardContent({
     }
 
     const observer = new IntersectionObserver(handleIntersection, {
-      rootMargin: "240px 0px",
+      rootMargin: "0px 0px",
     });
     observer.observe(element);
     return () => observer.disconnect();
