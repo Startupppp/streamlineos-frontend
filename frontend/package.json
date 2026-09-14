@@ -25,6 +25,7 @@
     "check:empty-states": "node scripts/check-no-handrolled-empty-states.mjs",
     "check:empty-states:self-test": "node scripts/check-no-handrolled-empty-states.mjs --self-test",
     "check:icon-labels": "node scripts/check-no-unlabeled-icon-buttons.mjs",
+    "check:icon-button-rule": "node eslint-rules/no-unlabelled-icon-button.test.mjs",
     "check:query-scope": "node scripts/check-query-scope.mjs",
     "check:query-scope:self-test": "node scripts/check-query-scope.mjs --self-test",
     "check:dead-code": "node scripts/check-dead-code.mjs",

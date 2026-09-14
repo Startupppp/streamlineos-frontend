@@ -1,4 +1,4 @@
-import { fireEvent, render } from "@testing-library/react";
+import { act, fireEvent, render } from "@testing-library/react";
 import { expectNoAxeViolations } from "@/test-utils/axe";
 import PageCommentsSheet from "./page-comments-sheet";
 
@@ -36,7 +36,10 @@ jest.mock("@/hooks/api/kb", () => ({
 
 const { useSession } = jest.requireMock<{ useSession: jest.Mock }>("next-auth/react");
 const { useCan } = jest.requireMock<{ useCan: jest.Mock }>("@/hooks/api/access");
-const { useKbPageComments } = jest.requireMock<{ useKbPageComments: jest.Mock }>("@/hooks/api/kb");
+const { useKbPageComments, useCreateKbPageComment } = jest.requireMock<{
+  useKbPageComments: jest.Mock;
+  useCreateKbPageComment: jest.Mock;
+}>("@/hooks/api/kb");
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -156,5 +159,65 @@ describe("PageCommentsSheet — comment action visibility", () => {
       );
       expect(getByRole("button", { name: /resolve/i })).toBeInTheDocument();
     });
+  });
+});
+
+describe("PageCommentsSheet — WCAG 1.3.1 list semantics", () => {
+  beforeEach(() => {
+    useSession.mockReturnValue({ data: { user: { id: "user-other" } } });
+    useCan.mockReturnValue(false);
+  });
+
+  it("renders the active comment thread inside a list so screen readers report item count and boundaries", () => {
+    const { getAllByRole } = render(
+      <PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />,
+    );
+    expect(getAllByRole("list").length).toBeGreaterThanOrEqual(1);
+    expect(getAllByRole("listitem").length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe("PageCommentsSheet — WCAG 4.1.3 status announcements", () => {
+  beforeEach(() => {
+    useSession.mockReturnValue({ data: { user: { id: "user-other" } } });
+    useCan.mockReturnValue(false);
+  });
+
+  afterEach(() => {
+    useCreateKbPageComment.mockImplementation(() => ({ mutate: jest.fn(), isPending: false }));
+  });
+
+  it("contains a polite live region so screen readers can receive status announcements", () => {
+    const { getByRole } = render(
+      <PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />,
+    );
+    expect(getByRole("status")).toBeInTheDocument();
+  });
+
+  it("announces 'Comment posted.' in the live region after a successful top-level post", () => {
+    let capturedOnSuccess: (() => void) | undefined;
+    const mutateMock = jest.fn((_vars: unknown, opts: { onSuccess?: () => void }) => {
+      capturedOnSuccess = opts.onSuccess;
+    });
+    useCreateKbPageComment.mockImplementation(() => ({
+      mutate: mutateMock,
+      isPending: false,
+    }));
+
+    const { getByRole } = render(
+      <PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />,
+    );
+
+    const textarea = getByRole("textbox", { name: "Write a comment" });
+    fireEvent.change(textarea, { target: { value: "Hello world" } });
+    fireEvent.click(getByRole("button", { name: /post comment/i }));
+
+    expect(getByRole("status")).toHaveTextContent("");
+
+    act(() => {
+      capturedOnSuccess?.();
+    });
+
+    expect(getByRole("status")).toHaveTextContent("Comment posted.");
   });
 });

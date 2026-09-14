@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useCallback, type MouseEvent } from "react";
+import dynamic from "next/dynamic";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,9 +15,19 @@ import {
 import { toast } from "sonner";
 import { useArchiveProject } from "@/hooks/api/build";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { DeleteProjectDialog } from "@/features/build/sidebar/delete-project-dialog";
-import { EditProjectSheet } from "./edit-project-sheet";
 import type { ProjectListItem } from "@/types/projects/projects";
+
+const EditProjectSheet = dynamic(
+  () => import("./edit-project-sheet").then((m) => ({ default: m.EditProjectSheet })),
+  { ssr: false, loading: () => null },
+);
+const DeleteProjectDialog = dynamic(
+  () =>
+    import("@/features/build/sidebar/delete-project-dialog").then((m) => ({
+      default: m.DeleteProjectDialog,
+    })),
+  { ssr: false, loading: () => null },
+);
 
 interface ProjectCardDialogsProps {
   project: ProjectListItem;

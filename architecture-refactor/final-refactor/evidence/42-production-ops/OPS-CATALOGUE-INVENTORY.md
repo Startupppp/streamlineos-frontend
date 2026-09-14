@@ -3,6 +3,8 @@
 Produced 2026-09-13 against backend source HEAD and frontend source HEAD, working from
 `architecture-refactor/prd/completion-plan.md` §OPS-CATALOGUE and existing evidence in
 `data-catalogue-c183/`. Unsigned C184/C185 drafts are NOT adopted as approvals here.
+Extended 2026-09-14: added §13 Party/CRM contact data, §14 Org chat, §15 E-sign, §16 Portal access,
+§17 Mail metadata projection; OPEN items extended to 17 (OPEN-14 through OPEN-17 added).
 
 Legend:
 - **SOURCE** — verifiable from schema / source code at HEAD, no human approval needed
@@ -268,6 +270,11 @@ The following are NOT resolved by this inventory. Each requires an identified Pr
    - Login events
    - Platform payment / billing records
    - Sensitive HR categories (health, disciplinary) — if not already covered by `hr_retention_policies` per org
+   - `support_tickets.requester_email`, `requester_name` (external customer contact) — no approved period; "Helpdesk resolved/closed 730 days" in retention matrix covers internal helpdesk tickets, not external support requester PII
+   - Party/CRM contact records (`party_contacts`, `business_parties`) — no sweep defined
+   - Portal memberships (`portal_memberships`) — no sweep defined
+   - E-sign recipients (`sign_recipients`) and certificates (`sign_certificates`) — legal evidence; may require KEEP-FOREVER
+   - Org chat messages (`chat_messages`) — no approved sweep; historical 365-day partition proposal not adopted
 
 6. **OPEN-6** — Sensitive health data controls: `blood_group`, `medical_notes`, `confidential_medical_note` are stored as plaintext in Neon. Decisions needed: (a) lawful basis for collection (consent / employment contract / occupational safety obligation); (b) whether column-level encryption is required before deployed use; (c) approved retention period; (d) access log adequacy (currently access-gated by RBAC, no separate access audit for these columns).
 
@@ -285,6 +292,105 @@ The following are NOT resolved by this inventory. Each requires an identified Pr
 
 13. **OPEN-13** — Stripe frontend checkout: `env-schema-providers.ts` includes Stripe credentials, and the backend models Stripe alongside Razorpay. The frontend checkout (`checkout-script.ts`, `plan-tab.tsx`) only supports Razorpay. Decision: confirm whether Stripe is intended for live use in this release and, if so, wire the frontend checkout seam (already consolidated into `checkout-script.ts` as the single provider-specific file) for Stripe.
 
+14. **OPEN-14** — Lawful basis for customer contact data: `party_contacts` and `business_parties` hold names, emails, phone numbers and tax IDs of external customers, vendors and partners. No lawful-basis decision is recorded. Decisions needed: (a) confirm which party kinds trigger individual DPDP 2023 data-principal rights (PERSON rows vs. ORGANISATION rows); (b) declare lawful basis and purpose limitation per contact role (CUSTOMER, VENDOR, PROSPECT, PARTNER); (c) define the mechanism for a data-principal erasure request originating from a customer contact — the current GDPR export fetchers cover HR/employee subjects only.
+
+15. **OPEN-15** — Party merge snapshot retention: `party_merges.snapshot` JSONB stores verbatim copies of both party records at merge time, including PII that may since have been corrected or deleted from the live row. No retention period is defined. Decisions needed: (a) minimum retention for merge audit evidence; (b) how a subject erasure request covering a merged party is handled when their PII persists in the snapshot — a legal carve-out or a JSONB scrub mechanism is required.
+
+16. **OPEN-16** — E-sign recipient and certificate retention: `sign_recipients` stores name, email, phone, consent IP and user-agent for every signatory. `sign_certificates` is immutable by code design and stores the complete signing package in `certificate_json`. Decisions needed: (a) lawful basis for processing signatory data (contract performance or legal obligation); (b) approved retention period — legal validity of electronic signatures may require KEEP-FOREVER for certificates; (c) how a subject erasure request interacts with immutable certificate records (explicit legal carve-out required); (d) whether consent IP and user-agent in `sign_recipients` require the same security-necessity vs consent classification as OPEN-2.
+
+17. **OPEN-17** — Org chat message retention: `chat_messages` stores member-authored free-form text that may contain names, contact details or sensitive business information. The completion plan records "365-day partitioning was only a historical proposal; no new partitioning assignment." No approved retention sweep exists. Decisions needed: (a) approved retention period for org chat messages; (b) whether a member's erasure right covers their authored messages — anonymising `sender_membership_id` leaves text in place; (c) confirm no Google Meet recording content is stored in `chat_huddles` or adjacent tables.
+
+---
+
+## 13. Party / CRM Contact Data
+
+### 12.1 Business parties (`business_parties`)
+
+| Field | Content | Subject class | Lawful basis | Retention | Erasure path |
+|---|---|---|---|---|---|
+| `name`, `legal_name`, `display_name` | Company or person name | Customer contact / vendor / partner | **OPEN-14** | No sweep defined — **OPEN-5** | Cascade-deleted on org purge |
+| `tax_number` | GSTIN or equivalent | Customer contact | **OPEN-14** | Same | Same |
+| `email`, `phone` (when `party_kind = PERSON`) | Contact coordinates for individual parties | Customer contact | **OPEN-14** | Same | Same |
+
+Source: `db/schema/party/business-parties.ts`. `party_kind` enum distinguishes PERSON from ORGANISATION; personal-data fields apply to PERSON rows and to linked `party_contacts` rows.
+
+### 12.2 Party contacts (`party_contacts`)
+
+| Field | Content | Subject class | Lawful basis | Retention | Erasure path |
+|---|---|---|---|---|---|
+| `first_name`, `last_name` | Contact person name | Customer contact | **OPEN-14** | No sweep defined — **OPEN-5** | Soft-delete (`deleted_at`); cascade on org purge |
+| `email` | Contact email address | Customer contact | **OPEN-14** | Same | Same |
+| `phone` | Contact phone number | Customer contact | **OPEN-14** | Same | Same |
+| `custom_fields` JSONB | Tenant-defined contact fields (may include any PII) | Customer contact | **OPEN-14** | Same | Cascade-deleted with party |
+
+Source: `db/schema/party/party-contacts.ts`.
+
+### 12.3 Party merges (`party_merges`)
+
+| Asset | Content | Retention | Notes |
+|---|---|---|---|
+| `snapshot` JSONB | Verbatim full party records of both sides at merge time | No sweep defined — **OPEN-15** | Immutable once written; stores all PII from both rows including fields since corrected or deleted |
+| `conflicts` JSONB | Field values that differed between the two sides | Same | May include name, email, tax ID discrepancies |
+
+Source: `db/schema/party/party-roles.ts`. `party_merges` captures the complete state of both party rows at merge time to enable revert. A subject erasure request on a party whose PII persists in a snapshot JSONB requires a named policy decision.
+
+---
+
+## 14. Chat (Organisation Channels)
+
+| Table | Personal data | Retention | Erasure path |
+|---|---|---|---|
+| `chat_messages` | Message text (free-form; may contain names, contact details, financial figures shared informally) | No approved sweep — **OPEN-17** | No individual erasure path; org purge cascades |
+| `chat_attachments` | R2 file keys referenced by message | Same | R2 object purge on org purge |
+| `chat_huddles` | Google Meet URL; participants by membership ID | Same; Meet links expire; no platform-stored recording | Cascade-deleted with org |
+| `chat_channel_members` | Links membership to channel | Same | Cascade-deleted |
+
+Source: `db/schema/chat/chat.ts`. This section covers stored org chat in Neon. Org chat is distinct from KB AI chat (§3.2). The completion plan baseline records "365-day partitioning was only a historical proposal; no new partitioning assignment" — no approved retention sweep is in place.
+
+---
+
+## 15. E-Sign
+
+### 15.1 Envelope recipients (`sign_recipients`)
+
+| Field | Content | Subject class | Lawful basis | Retention |
+|---|---|---|---|---|
+| `name`, `email`, `phone` | Signatory identity | Employee / customer contact / third party | **OPEN-16** | No sweep defined — **OPEN-5** |
+| `consent_ip`, `consent_user_agent` | Browser context at time of signing consent | Signatory | **OPEN-16** | No sweep — **OPEN-5** |
+| `consent_disclosure_version`, `consent_accepted_at` | Disclosure record | Signatory | Legal evidence | Same |
+| `signing_token_hash`, `otp_code_hash`, `access_code_hash` | Auth credential hashes | Signatory | Security necessity | Expire via `token_expires_at`, `otp_expires_at`; no sweep of expired rows |
+
+Source: `db/schema/e-sign/recipients.ts`. Consent fields are legal evidence for the signing act and may require longer retention than the general record.
+
+### 15.2 Sign certificates (`sign_certificates`)
+
+| Asset | Content | Retention | Notes |
+|---|---|---|---|
+| `certificate_file_key`, `final_pdf_file_key` | R2 object keys for signed PDF and certificate | **OPEN-5**: no approved retention; legal validity may require KEEP-FOREVER | Immutable once written |
+| `certificate_json` JSONB | Full signing package (names, emails, timestamps, IP hashes) | Same | Legal evidence; must survive subject erasure requests with legal carve-out — **OPEN-16** |
+
+Source: `db/schema/e-sign/certificates.ts`. Code comment on the table: "Immutable once written. Regeneration must go through an explicit admin/legal recovery flow (new row + audit event), never an in-place update of an existing certificate."
+
+---
+
+## 16. Portal Access
+
+| Table | Personal data | Subject class | Retention | Notes |
+|---|---|---|---|---|
+| `portal_memberships` | Links `party_contacts` to a portal login session via `party_contact_id` | Customer contact | No sweep defined — **OPEN-5** | `session_epoch` invalidates sessions; soft-delete via `deleted_at`; `status = REVOKED` on removal |
+
+Source: `db/schema/portal-access/portal-memberships.ts`. PII lives in the referenced `party_contacts` row. On party erasure, the portal membership must be revoked and the session invalidated — this is not captured in the current erasure path.
+
+---
+
+## 17. Mail Metadata Projection
+
+| Table | Personal data | Subject class | Retention | Erasure path |
+|---|---|---|---|---|
+| `mail_message_metadata` | `sender_email`, `sender_name`, `subject` (may contain names or task content) | Employee (own inbox) | 365 days from `synced_at` — SOURCE (completion-plan baseline) | Cascade-deleted on org purge; no individual erasure path; ages out on schedule |
+
+Source: `db/schema/mail/mail-metadata.ts`. This is a projection of the employee's linked mail account via Composio Google integration; the mail provider retains originals. F-7-equivalent gap: an erasure request does not immediately clear mail projection rows — they age out over up to 365 days after the request.
+
 ---
 
 ## Evidence Provenance
@@ -292,7 +398,13 @@ The following are NOT resolved by this inventory. Each requires an identified Pr
 - Schema enumeration: `pd-columns.csv` (296 personal-data columns, 136 tables, from `scratch_head_1010`) — produced 2026-09-03
 - Redaction probe: `ai-redaction-probe.txt` — produced 2026-09-03 at `45f8a2e99`
 - Privacy findings: `RB-10-privacy-compliance/FINDINGS.md` (F-1 through F-13)
-- Retention baseline: `completion-plan.md` §OPS-CATALOGUE line ~1246
+- Retention baseline: `completion-plan.md` §OPS-CATALOGUE line ~5844
 - Provider config: `backend/src/config/env-schema-app.ts`, `env-schema-providers.ts` — verified at HEAD
 - Sensitive schema: `db/schema/hr/biometric.ts`, `hr/cases.ts`, `hr/enterprise-ops.ts`, `hr/core-people.ts`, `hr/offboarding.ts`, `hr/hiring-candidates.ts`, `hr/travel.ts` — verified at HEAD
 - Redaction source: `modules/ai/core/redaction.util.ts` — verified at HEAD
+- Party/CRM schema (added 2026-09-14): `db/schema/party/business-parties.ts`, `party/party-contacts.ts`, `party/party-roles.ts` — verified at HEAD
+- Chat schema (added 2026-09-14): `db/schema/chat/chat.ts` — verified at HEAD
+- E-sign schema (added 2026-09-14): `db/schema/e-sign/recipients.ts`, `e-sign/certificates.ts` — verified at HEAD
+- Portal schema (added 2026-09-14): `db/schema/portal-access/portal-memberships.ts` — verified at HEAD
+- Mail schema (added 2026-09-14): `db/schema/mail/mail-metadata.ts` — verified at HEAD
+- Support schema (added 2026-09-14): `db/schema/support/tickets.ts` (`requester_email`, `requester_name` noted; retention covered under OPEN-5)

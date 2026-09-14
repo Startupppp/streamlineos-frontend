@@ -157,19 +157,20 @@ export function PageCommentThread({ comment, replies, pageId, onReply, currentUs
         </div>
       </div>
       {replies.length > 0 && (
-        <div className="ml-8 space-y-3 border-l-2 border-border/40 pl-3">
+        <ul role="list" className="ml-8 space-y-3 border-l-2 border-border/40 pl-3">
           {replies.map((reply) => (
-            <PageCommentThread
-              key={reply.id}
-              comment={reply}
-              replies={[]}
-              pageId={pageId}
-              onReply={onReply}
-              currentUserId={currentUserId}
-              canUpdate={canUpdate}
-            />
+            <li key={reply.id} role="listitem">
+              <PageCommentThread
+                comment={reply}
+                replies={[]}
+                pageId={pageId}
+                onReply={onReply}
+                currentUserId={currentUserId}
+                canUpdate={canUpdate}
+              />
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );

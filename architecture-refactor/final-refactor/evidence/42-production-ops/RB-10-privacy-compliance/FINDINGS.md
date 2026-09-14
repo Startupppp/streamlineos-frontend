@@ -406,3 +406,109 @@ F-13 did not exist as a visible finding until generation 3 built a gate for the 
 both are the same pattern — a claim nobody was checking, and the gap that appears the moment
 somebody does. A decision-record author is required for any of these that are to be accepted rather
 than fixed; **no such record exists and this agent has not signed one.**
+
+---
+
+## F-14 · P1 · Retention-sweep legal-hold reconciliation — **FIXED (three defects)**
+
+Measured at HEAD 2026-09-14. Source anchors re-verified first; three sweep defects then found and
+repaired in the same pass.
+
+### Source anchor verdicts
+
+| Anchor | Location | Verdict |
+|---|---|---|
+| `drill-erasure.mjs:269` | `src/scripts/drill-erasure.mjs` lines 288-300, 313-329 | **VERIFIED** — SAVEPOINT/RELEASE/ROLLBACK TO SAVEPOINT wraps each table DELETE and each post-erasure check loop |
+| `purge-user.mjs:278` | `src/scripts/purge-user.mjs` lines 332-337 | **VERIFIED** — `owner_membership_id` nulling carries `AND owner_membership_id IN (SELECT id FROM organization_members WHERE user_id = ${user.id} AND org_id = ANY(${orgIds}))` |
+| `compliance-drill-e2e.mjs` | lines 242-245 + 392-396 | **VERIFIED** — subject selection excludes OWNER in ANY org via `NOT EXISTS (SELECT 1 … WHERE om2.role = 'OWNER')` over all memberships, with a post-selection re-check at lines 392-396 |
+| `gdpr-subject-erasure.service.ts:200` | lines 217-229, 232-248, 261+ | **VERIFIED** — `externalEffectLedger` PENDING row inserted inside the same transaction with `onConflictDoNothing`, `subject.erasure.started` audit inside the same transaction, `effectLedger.execute()` called after commit |
+
+### Retention-policy reconciliation table
+
+Tables in RETENTION_MATRIX as of HEAD (`src/scripts/check-retention-coverage.mjs`):
+
+| Table | Decision | Duration | Worker | Legal-hold check (before fix) | Legal-hold check (after fix) | Partition DDL bypasses hold? |
+|---|---|---|---|---|---|---|
+| `ai_usage_logs` | RETAIN-BOUNDED | 730 days | `CronAiUsageRetentionService` | **ABSENT** | Added — `hr_legal_holds` subquery in `sweepOrg` WHERE | No (row DELETE) |
+| `chat_messages` | PARTITION+ARCHIVE | 365 days | `NotificationRetentionService` | **ABSENT** | Added — `filterHeldPartitions` queries both hold tables before sweepParent | **YES — fixed** |
+| `notifications` | PARTITION+ARCHIVE | 180 days | `NotificationRetentionService` | **ABSENT** | Added — same `filterHeldPartitions` | **YES — fixed** |
+| `mail_message_metadata` | RETAIN-BOUNDED | 365 days | `CronMailRetentionService` | Present (lines 101-106) | Unchanged | No |
+| `announcements` | RETAIN-BOUNDED | expired+90d grace, aged 730d | `CronAnnouncementsRetentionService` | Present (lines 93-98, 120-127) | Unchanged | No |
+| `helpdesk_tickets` | RETAIN-BOUNDED | 730 days | `CronHelpdeskRetentionService` | Present (lines 77-83) | Unchanged | No |
+| `notification_deliveries` | RETAIN-BOUNDED | 90d body / 13mo record | `CronNotificationRetentionService` | **ABSENT** | Added — `hr_legal_holds` subquery on both UPDATE and DELETE | No |
+| `email_outbox` | RETAIN-BOUNDED | 90d body / 13mo record | `CronNotificationRetentionService` | Not applicable — no `org_id` column | Unchanged | No |
+| `notification_outbox` | RETAIN-BOUNDED | 30d PROCESSED / 180d DEAD | `CronNotificationOutboxRetentionService` | Not present (outbox rows are process artifacts, not personal data — no `user_id` on `notification_outbox`) | No change needed | No |
+| `outbox_events` | RETAIN-BOUNDED | 30d terminal | `CronOutboxRetentionService` | Not present (outbox rows carry no personal attribution column) | No change needed | No |
+| `kb_events` | RETAIN-BOUNDED | 365 days | `CronKbTelemetryRetentionService` | Present — both `hr_legal_holds` and `organizationLegalHolds` via `noOrgLegalHold()` | Unchanged | No |
+| `kb_ingestion_checkpoints` | RETAIN-BOUNDED | 30 days | `CronKbTelemetryRetentionService` | Present | Unchanged | No |
+| `kb_chat_conversations` | RETAIN-BOUNDED | 90 days | `CronKbChatRetentionService` | Not inspected in this pass — ticket reserved for separate review | Not changed | No |
+| `kb_article_chunks` | RETAIN-BOUNDED | on orphan | `CronKbChunkRetentionService` | Not inspected in this pass | Not changed | No |
+| `webhook_deliveries` | RETAIN-BOUNDED | 90d completed | `CronBuildRetentionService` | Not inspected in this pass | Not changed | No |
+| `gdpr_export_jobs` | RETAIN-BOUNDED | 72h expiry | `CronGdprExportRetentionService` | Not inspected in this pass | Not changed | No |
+| `documents` / `hr_people` / `attendance` | RETAIN-BOUNDED (HR policies) | per `hr_retention_policies` | `CronHrRetentionService` | Not inspected in this pass | Not changed | No |
+| `audit_logs` | KEEP-FOREVER | — | none | n/a — append-only trigger intact, no sweep touches it | n/a | No |
+| `hr_audit_logs` | KEEP-FOREVER | — | none | n/a | n/a | No |
+| `payroll_runs` / `hr_employments` / `hr_reporting_lines` / `kb_page_versions` / `performance_reviews` / `timesheets` / `gl_accounts` / `business_parties` / `party_roles` / `permissions` / `role_permission_grants` | KEEP-FOREVER | — | none | n/a | n/a | No |
+
+### Three defects found and fixed
+
+**Defect A — CRITICAL: Partition DROP bypasses legal hold entirely (F-14-A)**
+
+`NotificationRetentionService` (`src/modules/notifications/notification-retention.service.ts`) called
+`maintenance.sweepParent(table, partitions)` with the full list of expired partitions for
+`notifications` (180d) and `chat_messages` (365d) with no prior hold check. `sweepParent` issues
+`DETACH PARTITION [CONCURRENTLY]` then `DROP TABLE IF EXISTS` via a DDL-privileged owner connection;
+there is no row-level or org-level interception point below that call. A partition containing data
+for an org under active legal hold would be irreversibly destroyed.
+
+*Fix:* Added `@Inject(DRIZZLE)` Db injection, `filterHeldPartitions(partitions)` method and
+`partitionHasHeldData(partition)` method. Before each `sweepParent` call, every candidate partition
+is queried for rows whose `org_id` appears in either `hr_legal_holds` (per-subject, `status =
+'active' AND deleted_at IS NULL`) or `organization_legal_holds` (`released_at IS NULL`). Partitions
+with any such row are skipped and counted under new `partitionsHeld` in `RetentionRunResult`. The
+spec file (`notification-retention.spec.ts`) was updated to pass a mock Db as 3rd constructor arg.
+
+**Defect B — IMPORTANT: AI usage log sweep has no legal hold check (F-14-B)**
+
+`CronAiUsageRetentionService.sweepOrg` (`src/modules/cron/cron-ai-usage-retention.service.ts`) used
+`and(eq(orgId), lt(cutoff), gt(cursor))` with no hold exclusion. `aiUsageLogs.userId` is nullable
+(`references(() => users.id, { onDelete: "set null" })`), meaning a row can carry personal
+attribution that must be preserved under a subject hold.
+
+*Fix:* Added `sql` to drizzle-orm imports and added a subquery fragment to the `and()` clause:
+`userId IS NULL OR userId NOT IN (SELECT subject_user_id FROM hr_legal_holds WHERE org_id = ? AND
+status = 'active' AND deleted_at IS NULL AND subject_user_id IS NOT NULL)`.
+
+**Defect C — IMPORTANT: Notification delivery sweep has no legal hold check (F-14-C)**
+
+`CronNotificationRetentionService` (`src/modules/cron/cron-notification-retention.service.ts`) ran
+both the body-purge UPDATE and the record-delete DELETE on `notification_deliveries` with no hold
+exclusion. `notificationDeliveries.userId` is `notNull()`, so every row carries personal attribution.
+
+*Fix:* Extracted shared `holdExclusion` sql fragment and added it to both the UPDATE's `and()` and
+the DELETE's `and()`.
+
+### Audit immutability
+
+`audit_logs` is KEEP-FOREVER in RETENTION_MATRIX (`worker: null`). No retention sweep references
+it. The append-only trigger (`audit_logs` schema + any migration guard) is not touched by any of
+the three fixes above. `hr_audit_logs` is identical in posture.
+
+### Missing/unapproved durations — documented, not decided
+
+F-12 above lists 25 high-growth tables with no retention decision as of `runs/30`. These remain
+OPEN. No duration was chosen, no sweep was added, no RETAIN-BOUNDED entry was written to turn the
+gate green. Each requires a named Privacy/DPO and Product decision.
+
+The F-12 note that "11 of the 16 retention/purge services contain no reference to a legal hold"
+is partially superseded by this finding: of the in-scope RETAIN-BOUNDED services whose personal
+attribution columns were confirmed, three now have hold exclusions added. The remaining services not
+inspected in this pass (kb chat, kb chunks, build/webhook, GDPR export, HR retention) retain their
+open status from F-12.
+
+### Files changed
+
+- `src/modules/notifications/notification-retention.service.ts` — Db injection, `filterHeldPartitions`, `partitionHasHeldData`, `partitionsHeld` in result
+- `src/modules/notifications/notification-retention.spec.ts` — mock Db in all 6 `NotificationRetentionService` constructor calls
+- `src/modules/cron/cron-ai-usage-retention.service.ts` — `sql` import, legal hold subquery in `sweepOrg` WHERE
+- `src/modules/cron/cron-notification-retention.service.ts` — `holdExclusion` fragment in both `notificationDeliveries` UPDATE and DELETE

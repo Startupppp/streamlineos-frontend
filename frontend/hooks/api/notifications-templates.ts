@@ -1,14 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import {
-  notificationTemplatesListContract,
-  notificationTemplateContract,
-  notificationSuccessContract,
-  templatePreviewContract,
-} from "@/hooks/api/notifications-schema";
+import { lazyContract } from "@/lib/api-envelope";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type {
@@ -22,21 +17,47 @@ import { toStringParams } from "./notifications-shared";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
+const notificationTemplatesListContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then(
+    (m) => m.notificationTemplatesListContract,
+  ),
+);
+const notificationTemplateContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then(
+    (m) => m.notificationTemplateContract,
+  ),
+);
+const notificationSuccessContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then(
+    (m) => m.notificationSuccessContract,
+  ),
+);
+const templatePreviewContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then(
+    (m) => m.templatePreviewContract,
+  ),
+);
+
 export const useNotificationTemplates = (
   params?: Record<string, unknown>,
-  options?: Omit<UseQueryOptions<NotificationTemplate[], Error>, "queryKey" | "queryFn">,
+  options?: Omit<
+    UseQueryOptions<NotificationTemplate[], Error>,
+    "queryKey" | "queryFn"
+  >,
 ) => {
   const canView = useCan("notifications:templates:view");
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<NotificationTemplate[], Error>({
     queryKey: platformCoreQueryKeys.notifications.templates(params),
     queryFn: async ({ signal }) =>
-      (await apiClient.get<OffsetPage<NotificationTemplate>>(
-        "/notification-templates",
-        params ? toStringParams(params) : undefined,
-        signal,
-        notificationTemplatesListContract,
-      )).items,
+      (
+        await apiClient.get<OffsetPage<NotificationTemplate>>(
+          "/notification-templates",
+          params ? toStringParams(params) : undefined,
+          signal,
+          notificationTemplatesListContract,
+        )
+      ).items,
     staleTime: 60_000,
     ...restOptions,
     enabled: canView && (enabledOption ?? true),
@@ -45,56 +66,114 @@ export const useNotificationTemplates = (
 
 export const useCreateNotificationTemplate = () => {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<NotificationTemplate, Error, CreateTemplateInput>("notifications:templates:manage", {
+  return useAuthorizedMutation<
+    NotificationTemplate,
+    Error,
+    CreateTemplateInput
+  >("notifications:templates:manage", {
     mutationKey: ["notifications", "templates", "create"],
-    mutationFn: (dto) => apiClient.post<NotificationTemplate>("/notification-templates", dto, undefined, notificationTemplateContract),
+    mutationFn: (dto) =>
+      apiClient.post<NotificationTemplate>(
+        "/notification-templates",
+        dto,
+        undefined,
+        notificationTemplateContract,
+      ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.templates() });
+      queryClient.invalidateQueries({
+        queryKey: platformCoreQueryKeys.notifications.templates(),
+      });
     },
   });
 };
 
 export const useUpdateNotificationTemplate = () => {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<NotificationTemplate, Error, { id: number } & UpdateTemplateInput>("notifications:templates:manage", {
+  return useAuthorizedMutation<
+    NotificationTemplate,
+    Error,
+    { id: number } & UpdateTemplateInput
+  >("notifications:templates:manage", {
     mutationKey: ["notifications", "templates", "update"],
     mutationFn: ({ id, ...dto }) =>
-      apiClient.patch<NotificationTemplate>(`/notification-templates/${id}`, dto, undefined, notificationTemplateContract),
+      apiClient.patch<NotificationTemplate>(
+        `/notification-templates/${id}`,
+        dto,
+        undefined,
+        notificationTemplateContract,
+      ),
     onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.templates() });
-      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.template(vars.id) });
+      queryClient.invalidateQueries({
+        queryKey: platformCoreQueryKeys.notifications.templates(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: platformCoreQueryKeys.notifications.template(vars.id),
+      });
     },
   });
 };
 
 export const useSetTemplateApproval = () => {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<NotificationTemplate, Error, { id: number } & SetTemplateApprovalInput>("notifications:templates:manage", {
+  return useAuthorizedMutation<
+    NotificationTemplate,
+    Error,
+    { id: number } & SetTemplateApprovalInput
+  >("notifications:templates:manage", {
     mutationKey: ["notifications", "templates", "approval"],
     mutationFn: ({ id, ...dto }) =>
-      apiClient.patch<NotificationTemplate>(`/notification-templates/${id}/approval`, dto, undefined, notificationTemplateContract),
+      apiClient.patch<NotificationTemplate>(
+        `/notification-templates/${id}/approval`,
+        dto,
+        undefined,
+        notificationTemplateContract,
+      ),
     onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.templates() });
-      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.template(vars.id) });
+      queryClient.invalidateQueries({
+        queryKey: platformCoreQueryKeys.notifications.templates(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: platformCoreQueryKeys.notifications.template(vars.id),
+      });
     },
   });
 };
 
 export const useDeleteNotificationTemplate = () => {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ success: boolean }, Error, number>("notifications:templates:manage", {
-    mutationKey: ["notifications", "templates", "delete"],
-    mutationFn: (id) => apiClient.delete<{ success: boolean }>(`/notification-templates/${id}`, undefined, undefined, notificationSuccessContract),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.templates() });
+  return useAuthorizedMutation<{ success: boolean }, Error, number>(
+    "notifications:templates:manage",
+    {
+      mutationKey: ["notifications", "templates", "delete"],
+      mutationFn: (id) =>
+        apiClient.delete<{ success: boolean }>(
+          `/notification-templates/${id}`,
+          undefined,
+          undefined,
+          notificationSuccessContract,
+        ),
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: platformCoreQueryKeys.notifications.templates(),
+        });
+      },
     },
-  });
+  );
 };
 
 export const usePreviewTemplate = () => {
-  return useAuthorizedMutation<TemplatePreviewResult, Error, { id: number; variables: Record<string, string> }>("notifications:templates:view", {
+  return useAuthorizedMutation<
+    TemplatePreviewResult,
+    Error,
+    { id: number; variables: Record<string, string> }
+  >("notifications:templates:view", {
     mutationKey: ["notifications", "templates", "preview"],
     mutationFn: ({ id, variables }) =>
-      apiClient.post<TemplatePreviewResult>(`/notification-templates/${id}/preview`, { variables }, undefined, templatePreviewContract),
+      apiClient.post<TemplatePreviewResult>(
+        `/notification-templates/${id}/preview`,
+        { variables },
+        undefined,
+        templatePreviewContract,
+      ),
   });
 };

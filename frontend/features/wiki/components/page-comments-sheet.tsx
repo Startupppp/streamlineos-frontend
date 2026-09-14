@@ -38,18 +38,21 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
   const createComment = useCreateKbPageComment();
   const [newContent, setNewContent] = useState("");
   const [replyingTo, setReplyingTo] = useState<KbPageComment | null>(null);
+  const [postAnnouncement, setPostAnnouncement] = useState("");
 
   const topLevel = comments.filter((c) => c.parentId === null && !c.resolvedAt);
   const resolved = comments.filter((c) => c.parentId === null && !!c.resolvedAt);
 
   function handlePost() {
     if (!newContent.trim()) return;
+    const isReply = replyingTo !== null;
     createComment.mutate(
       { pageId, content: newContent.trim(), parentId: replyingTo?.id ?? null },
       {
         onSuccess: () => {
           setNewContent("");
           setReplyingTo(null);
+          setPostAnnouncement(isReply ? "Reply posted." : "Comment posted.");
         },
         onError: (error) => toast.error(getErrorMessage(error)),
       }
@@ -75,6 +78,9 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="p-0 flex flex-col gap-0 sm:max-w-md">
+        <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+          {postAnnouncement}
+        </div>
         <SheetHeader className="shrink-0 px-6 py-4 border-b">
           <SheetTitle className="flex items-center gap-2">
             <KbMessageSquareIcon className="h-4 w-4" />
@@ -114,26 +120,10 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
               />
             )}
             <div className="space-y-5">
-              {topLevel.map((comment) => (
-                <PageCommentThread
-                  key={comment.id}
-                  comment={comment}
-                  replies={comments.filter((c) => c.parentId === comment.id)}
-                  pageId={pageId}
-                  onReply={handleSetReplyingTo}
-                  currentUserId={currentUserId}
-                  canUpdate={canUpdate}
-                />
-              ))}
-              {resolved.length > 0 && (
-                <>
-                  <Separator />
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Resolved ({resolved.length})
-                  </p>
-                  {resolved.map((comment) => (
+              <ul role="list" className="space-y-5">
+                {topLevel.map((comment) => (
+                  <li key={comment.id} role="listitem">
                     <PageCommentThread
-                      key={comment.id}
                       comment={comment}
                       replies={comments.filter((c) => c.parentId === comment.id)}
                       pageId={pageId}
@@ -141,7 +131,29 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
                       currentUserId={currentUserId}
                       canUpdate={canUpdate}
                     />
-                  ))}
+                  </li>
+                ))}
+              </ul>
+              {resolved.length > 0 && (
+                <>
+                  <Separator />
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Resolved ({resolved.length})
+                  </p>
+                  <ul role="list" className="space-y-5">
+                    {resolved.map((comment) => (
+                      <li key={comment.id} role="listitem">
+                        <PageCommentThread
+                          comment={comment}
+                          replies={comments.filter((c) => c.parentId === comment.id)}
+                          pageId={pageId}
+                          onReply={handleSetReplyingTo}
+                          currentUserId={currentUserId}
+                          canUpdate={canUpdate}
+                        />
+                      </li>
+                    ))}
+                  </ul>
                 </>
               )}
             </div>

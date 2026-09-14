@@ -4,12 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import {
-  notificationPreferenceContract,
-  suppressionsListContract,
-  suppressionRowContract,
-  notificationSuccessContract,
-} from "@/hooks/api/notifications-schema";
+import { lazyContract } from "@/lib/api-envelope";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type {
   NotificationPreferences,
@@ -17,6 +12,19 @@ import type {
   SuppressionRule,
   CreateSuppressionInput,
 } from "@/types/notifications";
+
+const notificationPreferenceContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.notificationPreferenceContract),
+);
+const suppressionsListContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.suppressionsListContract),
+);
+const suppressionRowContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.suppressionRowContract),
+);
+const notificationSuccessContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.notificationSuccessContract),
+);
 
 export const useNotificationPreferences = (
   options?: Omit<UseQueryOptions<NotificationPreferences, Error>, "queryKey" | "queryFn">,

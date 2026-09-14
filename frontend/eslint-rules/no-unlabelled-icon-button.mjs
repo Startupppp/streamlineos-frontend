@@ -1,12 +1,11 @@
 /**
- * Flags a raw <button> element that contains only *Icon-named components and
- * carries none of the standard accessible-name attributes.
+ * Flags a <button> or <Button> element that contains only *Icon-named
+ * components and carries none of the standard accessible-name attributes.
  *
- * The component type system enforces this for AnimatedIconButton via a
- * discriminated union that requires either `aria-label` or `children` text.
- * That guard is invisible at the call site when someone writes a raw <button>
- * — the type erases, the accessible name is silently absent, and a screen
- * reader user hears nothing but "button".
+ * AnimatedIconButton's discriminated union enforces an accessible name at the
+ * type level, but that guard is invisible when someone writes a raw <button>
+ * or a plain shadcn <Button> — the type erases and a screen reader hears
+ * nothing but "button".
  *
  * Conservative by design — the rule skips four patterns it cannot resolve
  * statically:
@@ -29,12 +28,12 @@ export default {
     type: "problem",
     docs: {
       description:
-        "Every icon-only <button> must carry aria-label, aria-labelledby, or title so screen readers can announce its purpose.",
+        "Every icon-only <button> or <Button> must carry aria-label, aria-labelledby, or title so screen readers can announce its purpose.",
     },
     schema: [],
     messages: {
       missing:
-        "This <button> has only icon children and no accessible name. Add aria-label=\"…\", aria-labelledby, or title. If it already carries visible text, the rule is a false positive — suppress with // eslint-disable-next-line streamline/no-unlabelled-icon-button and a brief justification.",
+        "This icon-only button has no accessible name. Add aria-label=\"…\", aria-labelledby, or title. If it already carries visible text, the rule is a false positive — suppress with // eslint-disable-next-line streamline/no-unlabelled-icon-button and a brief justification.",
     },
   },
 
@@ -43,7 +42,7 @@ export default {
       JSXOpeningElement(node) {
         if (
           node.name.type !== "JSXIdentifier" ||
-          node.name.name !== "button"
+          (node.name.name !== "button" && node.name.name !== "Button")
         )
           return;
 

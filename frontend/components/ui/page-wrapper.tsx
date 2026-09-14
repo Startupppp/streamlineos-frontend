@@ -200,6 +200,7 @@ export function PageWrapper({
               "flex min-h-full w-full flex-col overscroll-contain",
               PAGE_CHROME_X,
               PAGE_CHROME_BOTTOM,
+              "max-md:[.mobile-nav-active_&]:pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]",
               contentClassName,
             )}
           >

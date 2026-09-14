@@ -3,17 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import {
-  notificationProvidersListContract,
-  notificationProviderContract,
-  notificationProviderTestContract,
-  notificationEventsListContract,
-  notificationEventDefinitionContract,
-  notificationPoliciesListContract,
-  notificationPolicyRowContract,
-  notificationSuccessContract,
-  notificationEmitContract,
-} from "@/hooks/api/notifications-schema";
+import { lazyContract } from "@/lib/api-envelope";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type {
   NotificationProvider,
@@ -31,6 +21,34 @@ import type {
 import { useNotificationInboxInvalidation } from "./notifications-shared";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+const notificationProvidersListContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.notificationProvidersListContract),
+);
+const notificationProviderContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.notificationProviderContract),
+);
+const notificationProviderTestContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.notificationProviderTestContract),
+);
+const notificationEventsListContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.notificationEventsListContract),
+);
+const notificationEventDefinitionContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.notificationEventDefinitionContract),
+);
+const notificationPoliciesListContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.notificationPoliciesListContract),
+);
+const notificationPolicyRowContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.notificationPolicyRowContract),
+);
+const notificationSuccessContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.notificationSuccessContract),
+);
+const notificationEmitContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.notificationEmitContract),
+);
 
 export const useNotificationProviders = (
   options?: Omit<UseQueryOptions<NotificationProvider[], Error>, "queryKey" | "queryFn">,

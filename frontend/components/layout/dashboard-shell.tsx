@@ -21,10 +21,7 @@ import { CommandPaletteProvider } from "@/components/command-palette";
 import { getChatMobileContentPaddingClassName } from "./mobile/chat-mobile-chrome-layout";
 import { MobileModuleBottomNav } from "./mobile/mobile-module-bottom-nav";
 import { MobileShellFab } from "./mobile/mobile-shell-fab";
-import {
-  getMobileModuleContentPaddingClassName,
-  shouldShowMobileModuleBottomNav,
-} from "./mobile/mobile-module-nav-items";
+import { shouldShowMobileModuleBottomNav } from "./mobile/mobile-module-nav-items";
 import { isPortalChromelessPath, type ModuleAccent } from "./sidebar/sidebar-nav-items";
 import { ShellOfflineBanner } from "./shell-offline-banner";
 import { ShellVariantProvider } from "./shell-variant-context";
@@ -268,12 +265,14 @@ export function DashboardShell({
               <main
                 id="dashboard-content"
                 aria-label="Main content"
-                className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+                className={cn(
+                  "flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden",
+                  showModuleBottomNav && "mobile-nav-active",
+                )}
               >
                 <div
                   className={cn(
                     "flex h-full min-h-0 flex-1 flex-col overflow-hidden",
-                    getMobileModuleContentPaddingClassName(showModuleBottomNav),
                     isChatRoute &&
                       getChatMobileContentPaddingClassName(
                         isChatConversationOpen,
