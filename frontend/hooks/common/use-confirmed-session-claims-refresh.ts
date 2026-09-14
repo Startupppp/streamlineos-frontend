@@ -16,6 +16,7 @@ export interface ExpectedSessionClaims {
 export type SessionClaimsOutcome =
   | { status: "confirmed"; session: Session }
   | { status: "superseded" }
+  | { status: "unavailable" }
   | { status: "unconfirmed" };
 
 export interface SessionClaimsRefreshRun {
@@ -50,7 +51,7 @@ export function useConfirmedSessionClaimsRefresh(): BeginSessionClaimsRefresh {
     ): Promise<SessionClaimsOutcome> => {
       const refreshed = await refreshSessionClaims(expected);
       if (generation !== generationRef.current) return { status: "superseded" };
-      if (!refreshed) return { status: "unconfirmed" };
+      if (!refreshed) return { status: "unavailable" };
       if (!matchesExpectedSessionClaims(refreshed, expected))
         return { status: "unconfirmed" };
       return { status: "confirmed", session: refreshed };
@@ -60,7 +61,7 @@ export function useConfirmedSessionClaimsRefresh(): BeginSessionClaimsRefresh {
       expected?: ExpectedSessionClaims,
     ): Promise<boolean> => {
       const outcome = await confirm(expected);
-      if (outcome.status === "unconfirmed")
+      if (outcome.status === "unconfirmed" || outcome.status === "unavailable")
         toast.error(SESSION_CLAIMS_UNCONFIRMED_MESSAGE);
       return outcome.status === "confirmed";
     };

@@ -133,7 +133,10 @@ export function StepGeneration({ data }: StepGenerationProps) {
     }
 
     if (claimsOutcome.status === "superseded") return;
-    if (claimsOutcome.status === "unconfirmed") {
+    if (
+      claimsOutcome.status === "unconfirmed" ||
+      claimsOutcome.status === "unavailable"
+    ) {
       apiDoneRef.current = false;
       handleSetupError({
         kind: "setup-failed",

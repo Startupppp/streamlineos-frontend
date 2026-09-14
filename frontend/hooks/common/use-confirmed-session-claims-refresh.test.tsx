@@ -73,7 +73,7 @@ describe("a claims refresh is only confirmed when the session it returns is the 
     expect(outcome?.status).toBe("confirmed");
   });
 
-  it("reports a timed-out refresh as unconfirmed rather than as success", async () => {
+  it("reports a timed-out refresh as unavailable rather than as success", async () => {
     mockRefreshSessionClaims.mockResolvedValue(null);
     const { result } = renderHook(() => useConfirmedSessionClaimsRefresh());
 
@@ -82,7 +82,8 @@ describe("a claims refresh is only confirmed when the session it returns is the 
       outcome = await result.current().confirm({ orgId: "org-b" });
     });
 
-    expect(outcome).toEqual({ status: "unconfirmed" });
+    expect(outcome).toEqual({ status: "unavailable" });
+    expect(outcome?.status).not.toBe("confirmed");
   });
 
   it("refuses a session whose orgId is not the org the mutation returned", async () => {

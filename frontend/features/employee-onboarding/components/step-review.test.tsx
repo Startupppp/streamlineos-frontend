@@ -128,7 +128,7 @@ describe("StepReview — the celebration waits for a session that still names th
     expect(mockToastError).not.toHaveBeenCalled();
   });
 
-  it("a timed-out refresh warns instead of celebrating", async () => {
+  it("a timed-out refresh warns but still celebrates, because the submission committed and the gate cookie is already written", async () => {
     mockRefreshSessionClaims.mockResolvedValue(null);
 
     await submitReview();
@@ -138,7 +138,13 @@ describe("StepReview — the celebration waits for a session that still names th
         SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
       );
     });
-    expect(screen.queryByTestId("celebration")).toBeNull();
+    expect(mockSubmitOnboarding).toHaveBeenCalledTimes(1);
+    expect(document.cookie).toContain(
+      gateCookieName("onboarding-done", GATE_SCOPE),
+    );
+    await waitFor(() => {
+      expect(screen.getByTestId("celebration")).toBeInTheDocument();
+    });
   });
 
   it("a session that names a different org is refused", async () => {

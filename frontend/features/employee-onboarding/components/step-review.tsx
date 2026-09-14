@@ -10,7 +10,10 @@ import {
 import { SendIcon } from "@animateicons/react/lucide";
 import { completeOnboardingGate } from "@/lib/onboarding-gate";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useConfirmedSessionClaimsRefresh } from "@/hooks/common/use-confirmed-session-claims-refresh";
+import {
+  useConfirmedSessionClaimsRefresh,
+  SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
+} from "@/hooks/common/use-confirmed-session-claims-refresh";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useSubmitOnboardingMutation } from "@/lib/api/hooks/onboarding";
@@ -206,13 +209,16 @@ export function StepReview({
       await submitOnboarding();
       onClearDraft();
       const sessionOrgId = session?.orgId ?? null;
-      const confirmed = await completeOnboardingGate(
+      const outcome = await completeOnboardingGate(
         "onboarding-done",
         `${session?.user?.id ?? ""}--${sessionOrgId ?? ""}`,
-        claimsRun.confirmOrWarn,
+        claimsRun.confirm,
         sessionOrgId === null ? undefined : { orgId: sessionOrgId },
       );
-      if (!confirmed) return;
+      if (outcome.status === "superseded") return;
+      if (outcome.status !== "confirmed")
+        toast.error(SESSION_CLAIMS_UNCONFIRMED_MESSAGE);
+      if (outcome.status === "unconfirmed") return;
       setShowCelebration(true);
     } catch (err) {
       toast.error(getErrorMessage(err));
