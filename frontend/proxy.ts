@@ -16,6 +16,7 @@ export function buildCsp(nonce: string, apiUrl?: string): string {
     "https://www.googletagmanager.com",
     "https://www.clarity.ms",
     "https://checkout.razorpay.com",
+    "https://cdn.razorpay.com",
   ].join(" ");
 
   const apiOrigin = apiUrl
@@ -39,6 +40,8 @@ export function buildCsp(nonce: string, apiUrl?: string): string {
     "https://www.clarity.ms",
     "https://api.razorpay.com",
     "https://checkout.razorpay.com",
+    "https://cdn.razorpay.com",
+    "https://lumberjack.razorpay.com",
     /**
      * Ably, which carries chat and the support inbox (`lib/ably.ts`). This is the
      * policy a document actually receives — the middleware sets the header on every
@@ -56,9 +59,7 @@ export function buildCsp(nonce: string, apiUrl?: string): string {
     "wss://*.realtime.ably.net",
     "https://*.fallback.ably-realtime.com",
     "wss://*.fallback.ably-realtime.com",
-    // The library's own reachability probes. Blocked, every transient transport
-    // failure is misread as "this device is offline" instead of failing over.
-    "https://internet-up.ably-realtime.com",
+   "https://internet-up.ably-realtime.com",
     "wss://ws-up.ably-realtime.com",
     ...(apiOrigin ? [apiOrigin] : []),
   ].join(" ");
