@@ -16,13 +16,13 @@ import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
 import { useRequestOtp, useVerifyOtp, useSendMagicLink } from "@/hooks/api/auth";
 import { cn } from "@/lib/utils";
 
+const OTP_RESEND_COOLDOWN = 30;
+
 const emailSchema = z.object({
   email: z.string().email("Please enter a valid email"),
 });
 
 type EmailValues = z.infer<typeof emailSchema>;
-
-const OTP_RESEND_COOLDOWN = 30;
 
 const OTP_SUPERSEDED_NOTICE =
   "A newer code was sent. Any earlier code has stopped working — use the most recent email.";
