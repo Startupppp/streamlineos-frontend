@@ -10,7 +10,7 @@ import {
   clearBackendTokenCache,
 } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
-import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
+import { clearStreamToken } from "@/features/notifications/use-notification-events";
 
 const startImpersonationContract = lazyContract(() =>
   import("@/hooks/api/impersonation-schema").then((m) => m.startImpersonationResponseContract),
@@ -29,7 +29,6 @@ export interface ImpersonationTargetUser {
 export function useStartImpersonation() {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const refreshSessionClaims = useSessionClaimsRefresh();
   const generationRef = useRef(0);
 
   return useMutation({
@@ -48,14 +47,24 @@ export function useStartImpersonation() {
       await queryClient.cancelQueries();
       return { generation };
     },
-    onSuccess: async (data, _vars, ctx) => {
+    onSuccess: (data, _vars, ctx) => {
       if (ctx.generation !== generationRef.current) return;
-      setImpersonationToken(data.token, data.targetUser, data.impersonationSessionId);
+      setImpersonationToken(
+        data.token,
+        data.targetUser,
+        data.impersonationSessionId,
+        data.expiresAt,
+      );
+      clearStreamToken();
       queryClient.clear();
       router.replace("/dashboard");
       router.refresh();
     },
     onError: () => {
+      setAutoSignOutSuppressed(false);
+    },
+    onSettled: (_data, _error, _vars, ctx) => {
+      if (ctx?.generation !== generationRef.current) return;
       setAutoSignOutSuppressed(false);
     },
   });
@@ -64,7 +73,6 @@ export function useStartImpersonation() {
 export function useStopImpersonation() {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const refreshSessionClaims = useSessionClaimsRefresh();
   const generationRef = useRef(0);
 
   return useMutation({
@@ -73,7 +81,7 @@ export function useStopImpersonation() {
       apiClient.delete(
         `/impersonation/stop/${impersonationSessionId}`,
         undefined,
-        undefined,
+        { asRealUser: true },
         stopImpersonationContract,
       ),
     onMutate: async () => {
@@ -83,17 +91,15 @@ export function useStopImpersonation() {
       await queryClient.cancelQueries();
       return { generation };
     },
-    onSuccess: async (_data, _vars, ctx) => {
-      if (ctx.generation !== generationRef.current) return;
+    onSettled: (_data, _error, _vars, ctx) => {
+      if (ctx?.generation !== generationRef.current) return;
       setImpersonationToken(null, null);
       clearBackendTokenCache();
-      await refreshSessionClaims();
+      clearStreamToken();
+      setAutoSignOutSuppressed(false);
       queryClient.clear();
       router.replace("/settings/roles/simulate");
       router.refresh();
-    },
-    onError: () => {
-      setAutoSignOutSuppressed(false);
     },
   });
 }

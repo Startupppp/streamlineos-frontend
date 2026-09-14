@@ -21,6 +21,7 @@ jest.mock("next-auth/react", () => ({
 
 jest.mock("@/lib/api-client", () => ({
   clearBackendTokenCache: jest.fn(),
+  clearImpersonation: jest.fn(),
   setAutoSignOutSuppressed: jest.fn(),
   apiClient: { get: jest.fn(), post: jest.fn() },
 }));

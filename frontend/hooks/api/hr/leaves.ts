@@ -103,7 +103,7 @@ export function useHrMyLeaveRequests(enabled = true) {
     queryFn: ({ signal }) =>
       apiClient.get<LeaveRequestsPage>(
         "/me/time-off/requests",
-        { limit: 15 }, signal, leaveRequestsPageC,
+        { limit: 100 }, signal, leaveRequestsPageC,
       ),
     select: (response) => ({ requests: response.data }),
     staleTime: 2 * 60_000,

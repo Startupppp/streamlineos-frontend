@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { SendIcon } from "@animateicons/react/lucide";
 import { writeGateCookie } from "@/lib/onboarding-gate";
+import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -117,6 +118,7 @@ export function StepReview({
   onClearDraft,
 }: StepReviewProps) {
   const { data: session } = useSession();
+  const refreshSessionClaims = useSessionClaimsRefresh();
   const countryCode =
     draft.bank.countryCode || countryNameToCode(draft.personal.addressCountry);
   const { data: requirements } = useOnboardingRequirements(countryCode);
@@ -207,6 +209,7 @@ export function StepReview({
         `${session?.user?.id ?? ""}--${session?.orgId ?? ""}`,
       );
       setShowCelebration(true);
+      void refreshSessionClaims();
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {

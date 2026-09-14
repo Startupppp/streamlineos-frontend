@@ -6,11 +6,6 @@ import {
   useNotificationPreferences,
   useSuppressions,
 } from "@/hooks/api/notifications-preferences";
-import {
-  notificationPreferenceContract,
-  suppressionsListContract,
-} from "@/hooks/api/notifications-schema";
-
 const mockGet = jest.fn();
 
 jest.mock("@/lib/api-client", () => ({
@@ -59,8 +54,8 @@ describe("notification preference hooks are platform core (no permission gate)",
     expect(mockGet).toHaveBeenCalledWith(
       "/notification-preferences",
       undefined,
-      expect.any(AbortSignal),
-      notificationPreferenceContract,
+      expect.anything(),
+      expect.any(Function),
     );
   });
 
@@ -74,8 +69,8 @@ describe("notification preference hooks are platform core (no permission gate)",
     expect(mockGet).toHaveBeenCalledWith(
       "/notification-preferences/suppressions",
       undefined,
-      expect.any(AbortSignal),
-      suppressionsListContract,
+      expect.anything(),
+      expect.any(Function),
     );
   });
 

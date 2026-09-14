@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import {
   apiClient,
   clearBackendTokenCache,
+  clearImpersonation,
   setAutoSignOutSuppressed,
 } from "@/lib/api-client";
 import { clearGateCookies } from "@/lib/onboarding-gate";
@@ -82,6 +83,7 @@ async function probeSession(): Promise<SessionProbe> {
 async function attemptCredentialsSignIn(
   magicToken: string,
 ): Promise<MagicLinkSignInOutcome> {
+  const prior = await probeSession();
   let rejected = false;
   try {
     const result = await signIn("credentials", {
@@ -98,6 +100,12 @@ async function attemptCredentialsSignIn(
   if (established.status === "unreadable" || !established.signedIn)
     return { status: "indeterminate" };
   if (typeof established.sessionId !== "string")
+    return { status: "indeterminate" };
+  if (
+    prior.status === "read" &&
+    prior.signedIn &&
+    prior.sessionId === established.sessionId
+  )
     return { status: "indeterminate" };
   return { status: "signed-in" };
 }
@@ -207,6 +215,7 @@ export function useSignOut() {
       } catch {
         serverRevocationCompleted = false;
       }
+      clearImpersonation();
       clearBackendTokenCache();
       clearStreamToken();
       queryClient.clear();
@@ -263,11 +272,7 @@ export function useSessionClaimsRefresh(): SessionClaimsRefresh {
           () => resolve(null),
           CLAIM_REFRESH_TIMEOUT_MS,
         );
-        const payload =
-          data !== null && typeof data === "object"
-            ? { ...(data as Record<string, unknown>), _invalidate: true }
-            : { _invalidate: true };
-        void update(payload).then(
+        void update(data).then(
           (session) => {
             clearTimeout(timeout);
             resolve(session);
@@ -306,6 +311,8 @@ export function useSwitchOrg() {
       switchGenerationRef.current += 1;
       const generation = switchGenerationRef.current;
       setAutoSignOutSuppressed(true);
+      clearImpersonation();
+      clearStreamToken();
       clearGateCookies();
       await queryClient.cancelQueries();
       return { generation };

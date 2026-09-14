@@ -20,6 +20,7 @@ interface NetworkRetryBudget {
 const networkRetryBudgets = new Map<string, NetworkRetryBudget>();
 export const MAX_NETWORK_AUTO_RETRIES = 3;
 export const NETWORK_RETRY_BUDGET_TTL_MS = 60_000;
+const MAX_TRACKED_ROUTE_KEYS = 50;
 const NETWORK_RETRY_DELAYS_MS: readonly [number, number, number] = [
   3_000, 6_000, 12_000,
 ];
@@ -36,6 +37,21 @@ function spentNetworkRetries(routeKey: string): number {
     return 0;
   }
   return budget.attempts;
+}
+
+function recordNetworkRetry(routeKey: string, attempts: number): void {
+  if (
+    !networkRetryBudgets.has(routeKey) &&
+    networkRetryBudgets.size >= MAX_TRACKED_ROUTE_KEYS
+  ) {
+    const now = Date.now();
+    for (const [key, budget] of networkRetryBudgets)
+      if (now - budget.lastAttemptAt > NETWORK_RETRY_BUDGET_TTL_MS)
+        networkRetryBudgets.delete(key);
+    if (networkRetryBudgets.size >= MAX_TRACKED_ROUTE_KEYS)
+      networkRetryBudgets.clear();
+  }
+  networkRetryBudgets.set(routeKey, { attempts, lastAttemptAt: Date.now() });
 }
 
 interface RouteErrorBoundaryProps {
@@ -62,6 +78,7 @@ export function RouteErrorBoundary({
     typeof window === "undefined" ? "server" : window.location.pathname,
   );
   const networkKey = isNetwork ? routeKey : null;
+  const [isAutoRetrying, setIsAutoRetrying] = useState(false);
 
   const handleRetry = useCallback(() => {
     onBeforeReset?.();
@@ -74,23 +91,24 @@ export function RouteErrorBoundary({
   });
 
   useEffect(() => {
-    if (networkKey === null) return;
+    if (networkKey === null) {
+      setIsAutoRetrying(false);
+      return;
+    }
     const spent = spentNetworkRetries(networkKey);
-    if (spent >= MAX_NETWORK_AUTO_RETRIES) return;
+    if (spent >= MAX_NETWORK_AUTO_RETRIES) {
+      setIsAutoRetrying(false);
+      return;
+    }
+    setIsAutoRetrying(true);
     const delay = NETWORK_RETRY_DELAYS_MS[spent] ?? 12_000;
     const timer = setTimeout(() => {
-      networkRetryBudgets.set(networkKey, {
-        attempts: spent + 1,
-        lastAttemptAt: Date.now(),
-      });
+      recordNetworkRetry(networkKey, spent + 1);
+      setIsAutoRetrying(false);
       retryRef.current();
     }, delay);
     return () => clearTimeout(timer);
-  }, [networkKey]);
-
-  const isAutoRetrying =
-    networkKey !== null &&
-    spentNetworkRetries(networkKey) < MAX_NETWORK_AUTO_RETRIES;
+  }, [networkKey, error]);
 
   const resolvedTitle = isNetwork
     ? "Server temporarily unavailable"
@@ -109,7 +127,7 @@ export function RouteErrorBoundary({
     >
       <div className="bg-destructive/10 p-4 rounded-full">
         <AlertTriangle
-          className="w-8 text-destructive"
+          className="h-8 w-8 text-destructive"
           aria-hidden="true"
         />
       </div>

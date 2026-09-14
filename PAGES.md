@@ -167,7 +167,7 @@ Full text of any pre-2026-08-03 entry is in git history.
 - Home navigation rebuilt around universal employee needs: Overview · Communication · For Me · Company; interviews and admin document destinations removed from Home. Added module-independent `/me/time-off`, `/me/attendance`, `/me/expenses`, `/me/pay`, `/me/documents` pages backed by JWT-self-scoped `self:*` APIs; private document upload, attendance correction, editable own expense claims, and core leave-policy provisioning now work, while HR/payroll/finance administration stays module-gated. `sidebar-nav-items.ts` · `employee-*-controller.ts` · `employee-self-service/*` · HR/payroll hooks/controllers · frontend + backend typecheck.
 - Employee onboarding now preloads HR-provided personal/address/emergency, encrypted bank, and statutory data; employee drafts win, each step explains the prefill, and the final review shows masked values with Edit actions before confirmation. Self-only endpoints use authenticated active membership plus tenant/user-scoped queries instead of HR task permissions; draft navigation/success UI waits for confirmed persistence with explicit load/save failure states. Writes synchronize member + canonical HR records under tenant membership scope. `onboarding-details.service.ts` · `onboarding.controller.ts` · `employee-onboarding/page.tsx` · `step-review.tsx` · frontend + backend typecheck.
 - Org/access notifications wired: 11 new `SECURITY` catalog events (`ownership.transfer.*`, `ownership.module_owner.changed`, `organization.invitation.*`, `organization.member.reactivated|left`) — the whole ownership/invitation/membership domain previously emitted nothing. Email only where access changes or the recipient is unreachable in-app (`filterOrgMemberIds` is ACTIVE-only, so removed/suspended members get a direct email, not dispatch). `notification-events.catalog.ts` · `org-admin-recipients.ts` · `templates/organization.ts` · `email-senders.base.ts` · tsc frontend + backend typecheck · 11 focused specs.
-- Invitation decline built — the `DECLINED` enum value, `invitations.declined_at`, and the `DECLINED` invitation event were all unreachable, and the UI's "Decline invitation" button only did `router.push("/signin")`. `POST /organization/invitations/decline` (`@Public()`, status-predicated update + affected-row check) + a confirm dialog on `/invitation/[token]`. `invitation-acceptance.service.ts` · `organization.controller.ts` · `organization.schemas.ts` · `invitation/[token]/page.tsx` · `auth-hooks.ts` · `api-client.ts` · 5 decline specs.
+- Invitation decline built — the `DECLINED` enum value, `invitations.declined_at`, and the `DECLINED` invitation event were all unreachable, and the UI's "Decline invitation" button only did `router.push("/signin")`. `POST /organization/invitations/decline` (`@Public()`, status-predicated update + affected-row check) + a confirm dialog on `/invitation/[invitationToken]`. `invitation-acceptance.service.ts` · `organization.controller.ts` · `organization.schemas.ts` · `invitation/[invitationToken]/page.tsx` · `auth-hooks.ts` · `api-client.ts` · 5 decline specs.
 - §9 splits: `ownership.service.ts` 892 → 222/399/469 (records · transfers · transfer responses) + `ownership-members.helper.ts`; `invitations.service.ts` 1133 → 419/152/217/426 (send · read · lifecycle · acceptance) + `invitations.helpers.ts`. Controllers/module wiring/specs follow. **`org-membership.service.ts` is 732 and still over the line** — pre-existing 620 plus this pass's notices; split not attempted (10 consumers).
 - `CronOrganizationService.expireStaleInvitations` now records the `EXPIRED` invitation event and notifies the inviter; deleted the never-called duplicate that lived on `InvitationsService`. `cron-organization.service.ts`.
 - `expireStaleTransfers` had **no caller** — pending ownership transfers never expired (only lazily, when a recipient tried to accept a stale one). Added `GET|POST /cron/ownership-transfer-expiry` beside the invitation-expiry job. `cron-platform.controller.ts` · `cron.module.ts`.
@@ -312,7 +312,7 @@ Full text of any pre-2026-08-03 entry is in git history.
 - [x] Quick create menu — grouped (Comms/Work/CRM/People/Docs), each item `useCan` + module gated
 - [x] `/dashboard` — Access-driven composition: `useDashboardAccess` gates every widget/stat/action by module enablement + RBAC; queries `enabled`-gated so non-permitted endpoints never fire
 - [x] `/calendar` — The ONE calendar (month/week/day, single-row toolbar, toggleable module sources)
-- [x] `/chat` · `/chat/channels` · `/chat/invite/[token]` — Chat with composer-aware mobile chrome
+- [x] `/chat` · `/chat/channels` · `/chat/invite/[inviteToken]` — Chat with composer-aware mobile chrome
 - [x] `/mail` — Unified Gmail+Outlook inbox via Composio live proxy; **zero mail tables**
 - [x] `/ai` · `/ai/executive-brief` · `/ask` — AI assistant surfaces
 - [x] `/notifications` · `/notifications/preferences` · `/notifications/broadcasts` · `/notifications/events` · `/notifications/policy` · `/notifications/providers` · `/notifications/templates`
@@ -474,7 +474,7 @@ balance until 2026-08-25.
 
 ### E-Sign
 - [x] `/sign` · `/sign/access` · `/sign/envelopes` · `/sign/envelopes/[envelopeId]` · `/sign/templates` · `/sign/bulk-send` · `/sign/reports` · `/sign/settings`
-- [x] `/sign/[token]` — Public signing surface (no auth)
+- [x] `/sign/[recipientToken]` — Public signing surface (no auth)
 
 ### Surveys
 - [x] `/surveys` · `/surveys/access` · `/surveys/new` · `/surveys/[surveyId]` · `/surveys/[surveyId]/participants` · `/surveys/live/[sessionId]/host`
@@ -500,18 +500,18 @@ balance until 2026-08-25.
 ### Onboarding & Auth
 - [x] `/org-setup` — Welcome → Basics (goals + modules merged) → Launch; draft + step resume; ceremonial generation with dedicated failure recovery
 - [x] `/employee-onboarding` — Shell-free wizard; never shown to owners/platform admins; HR-prefilled personal/bank data with employee-overridable drafts; value-level review/edit; country-driven documents/bank/payroll
-- [x] `/signin` — The only account entry (`/signup` retired), reachable by URL only — marketing surfaces send new visitors to `/waitlist` · `/magic-link` · `/verify-email` · `/accept-invitation` · `/invitation/[token]`
+- [x] `/signin` — The only account entry (`/signup` retired), reachable by URL only — marketing surfaces send new visitors to `/waitlist` · `/magic-link` · `/verify-email` · `/accept-invitation` · `/invitation/[invitationToken]`
 - [x] `/access-suspended` — Recovery screen for an organization-only suspension (`resolveWizardGate`); recheck access, switch to another ACTIVE membership, or sign out; org creation intentionally unavailable
 - [x] `/access-denied` · `/build/client-access`
 
 ### Public (no auth)
 - [x] `/` · `/about` · `/pricing` · `/contact` · `/legal/privacy` · `/legal/terms` · `/legal/security`
 - [x] `/waitlist` — The landing page's only entry point; `/signin` is no longer linked from any marketing surface. Collects name, work email, organization, role and team size into `platform_waitlist` via `POST /public/waitlist`, then emails `WAITLIST_NOTIFICATION_EMAILS` and confirms to the signup
-- [x] `/blogs` · `/blogs/[slug]` · `/blogs/category/[slug]` · `/blogs/tag/[tag]`
-- [x] `/careers/[orgSlug]` · `/careers/[orgSlug]/jobs/[jobId]/apply` · `/application-status/[token]` · `/interview-booking/[token]` · `/offer/[token]`
-- [x] `/help/[orgId]` · `/help/[orgId]/[slug]` · `/wiki/[shareToken]` · `/board/[shareToken]` · `/roadmap/[orgId]`
-- [x] `/forms/[token]` · `/intake/[projectId]` · `/nps/[token]` · `/ticket-feedback/[token]` · `/s/[token]` · `/live/[sessionCode]` · `/live-chat/[orgId]`
-- [x] `/refer/[orgId]` · `/refer/link/[token]` · `/vendor-portal/[token]`
+- [x] `/blogs` · `/blogs/[postSlug]` · `/blogs/category/[categorySlug]` · `/blogs/tag/[tag]`
+- [x] `/careers/[orgSlug]` · `/careers/[orgSlug]/jobs/[jobId]/apply` · `/application-status/[applicationToken]` · `/interview-booking/[bookingToken]` · `/offer/[offerToken]`
+- [x] `/help/[orgId]` · `/help/[orgId]/[articleSlug]` · `/wiki/[shareToken]` · `/board/[shareToken]` · `/roadmap/[orgId]`
+- [x] `/forms/[formToken]` · `/intake/[projectId]` · `/nps/[npsToken]` · `/ticket-feedback/[csatToken]` · `/s/[collectorToken]` · `/live/[sessionCode]` · `/live-chat/[orgId]`
+- [x] `/refer/[orgId]` · `/refer/link/[referralToken]` · `/vendor-portal/[vendorPortalToken]`
 
 ---
 

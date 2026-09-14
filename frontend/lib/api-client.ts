@@ -60,6 +60,7 @@ export interface AuthedFetchOptions {
    * the retry it invites reserves and spends a second time.
    */
   timeoutMs?: number;
+  asRealUser?: boolean;
 }
 
 const PUBLIC_AUTH_PATHS = new Set([
@@ -118,15 +119,23 @@ let autoSignOutSuppressed = false;
 let impersonationToken: string | null = null;
 let impersonationTargetUser: { id: string; name: string | null; email: string } | null = null;
 let impersonationSessionId: string | null = null;
+let impersonationExpiresAt: number | null = null;
 
 export function setImpersonationToken(
   token: string | null,
   targetUser: { id: string; name: string | null; email: string } | null,
   sessionId?: string | null,
+  expiresAt?: string | number | null,
 ): void {
   impersonationToken = token;
   impersonationTargetUser = targetUser;
   impersonationSessionId = sessionId ?? null;
+  impersonationExpiresAt =
+    token === null || expiresAt === undefined || expiresAt === null
+      ? null
+      : typeof expiresAt === "number"
+        ? expiresAt
+        : Date.parse(expiresAt) || null;
   if (typeof window !== "undefined") {
     window.dispatchEvent(
       new CustomEvent("impersonation-change", {
@@ -167,23 +176,42 @@ function readTokenExpiry(token: string): number | null {
   }
 }
 
+let tokenGeneration = 0;
+
 export function clearBackendTokenCache(): void {
   cachedToken = null;
   fetchingTokenPromise = null;
   tokenUnavailableUntil = 0;
+  tokenGeneration += 1;
+}
+
+export function clearImpersonation(): void {
+  if (impersonationToken === null) return;
+  setImpersonationToken(null, null);
 }
 
 export function setAutoSignOutSuppressed(value: boolean): void {
   autoSignOutSuppressed = value;
 }
 
-export async function getBackendToken(): Promise<string | null> {
-  if (impersonationToken !== null) return impersonationToken;
+export async function getBackendToken(
+  options?: { asRealUser?: boolean },
+): Promise<string | null> {
+  if (impersonationToken !== null && options?.asRealUser !== true) {
+    if (
+      impersonationExpiresAt !== null &&
+      impersonationExpiresAt - TOKEN_REFRESH_SKEW_MS <= Date.now()
+    )
+      setImpersonationToken(null, null);
+    else return impersonationToken;
+  }
   if (cachedToken && cachedToken.expiresAt - TOKEN_REFRESH_SKEW_MS > Date.now())
     return cachedToken.value;
   if (tokenUnavailableUntil > Date.now()) return null;
   if (fetchingTokenPromise) return fetchingTokenPromise;
+  const generation = tokenGeneration;
   fetchingTokenPromise = (async () => {
+    let minted: string | null = null;
     try {
       const res = await fetch("/api/auth/session", { credentials: "include" });
       if (!res.ok) return null;
@@ -194,20 +222,23 @@ export async function getBackendToken(): Promise<string | null> {
         !data.backendJwt
       )
         return null;
-      const backendJwt = data.backendJwt;
-      const expiresAt = readTokenExpiry(backendJwt);
+      minted = data.backendJwt;
+      if (generation !== tokenGeneration) return null;
+      const expiresAt = readTokenExpiry(minted);
       cachedToken = {
-        value: backendJwt,
+        value: minted,
         expiresAt: expiresAt ?? (Date.now() + TOKEN_FALLBACK_TTL_MS),
       };
       tokenUnavailableUntil = 0;
-      return backendJwt;
+      return minted;
     } catch {
       return null;
     } finally {
-      if (cachedToken === null)
-        tokenUnavailableUntil = Date.now() + TOKEN_UNAVAILABLE_BACKOFF_MS;
-      fetchingTokenPromise = null;
+      if (generation === tokenGeneration) {
+        if (minted === null)
+          tokenUnavailableUntil = Date.now() + TOKEN_UNAVAILABLE_BACKOFF_MS;
+        fetchingTokenPromise = null;
+      }
     }
   })();
   return fetchingTokenPromise;
@@ -267,8 +298,11 @@ export async function authedFetch(
       headers.set(IDEMPOTENCY_HEADER, newIdempotencyKey());
   }
 
+  const tokenOptions =
+    options?.asRealUser === true ? { asRealUser: true } : undefined;
+
   if (!isPublic) {
-    const token = await getBackendToken();
+    const token = await getBackendToken(tokenOptions);
     if (token) headers.set("Authorization", `Bearer ${token}`);
   }
 
@@ -282,7 +316,7 @@ export async function authedFetch(
 
     if (!isPublic && res.status === 401) {
       clearBackendTokenCache();
-      const token = await getBackendToken();
+      const token = await getBackendToken(tokenOptions);
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
         res = await fetch(url, {
@@ -400,6 +434,7 @@ export interface RequestConfig {
   headers?: Record<string, string>;
   signal?: AbortSignal;
   timeoutMs?: number;
+  asRealUser?: boolean;
 }
 
 async function post<T>(
@@ -452,6 +487,7 @@ async function mutate<T>(
     },
     url,
     resolved.signal,
+    resolved.asRealUser === true ? { asRealUser: true } : undefined,
   );
   return parseApiResponse<T>(res, await pendingContract, url);
 }

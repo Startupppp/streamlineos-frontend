@@ -37,6 +37,7 @@ import type { JWT } from "next-auth/jwt";
 import { resolveAuthSession } from "@/lib/auth";
 import {
   clearBackendJwtStoreForTesting,
+  clearSessionDataStoreForTesting,
   getBackendJwtFromStore,
 } from "@/lib/auth-session";
 import {
@@ -69,6 +70,7 @@ afterAll(() => {
 beforeEach(() => {
   jest.clearAllMocks();
   clearBackendJwtStoreForTesting();
+  clearSessionDataStoreForTesting();
 });
 
 describe("session callback — minting, caching and two device sessions", () => {

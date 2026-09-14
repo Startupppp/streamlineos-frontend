@@ -33,7 +33,7 @@ jest.mock("@/features/help-centre/components/public-article-content", () => ({
 import { renderToStaticMarkup } from "react-dom/server";
 import { publicGet } from "@/lib/public-fetch";
 import PublicHelpCentreLandingPage from "@/app/(public)/help/[orgId]/page";
-import PublicHelpArticlePage from "@/app/(public)/help/[orgId]/[slug]/page";
+import PublicHelpArticlePage from "@/app/(public)/help/[orgId]/[articleSlug]/page";
 
 const mockedPublicGet = publicGet as jest.Mock;
 

@@ -32,6 +32,8 @@ let cachedToken: string | null = null;
 let cachedTokenOrgId: string | null = null;
 let tokenFetchedAt = 0;
 let tokenFetchPromise: Promise<string | null> | null = null;
+let tokenFetchOrgId: string | null = null;
+let tokenGeneration = 0;
 const TOKEN_CACHE_MS = 55 * 60_000;
 
 export function clearStreamToken(): void {
@@ -39,9 +41,12 @@ export function clearStreamToken(): void {
   cachedTokenOrgId = null;
   tokenFetchedAt = 0;
   tokenFetchPromise = null;
+  tokenFetchOrgId = null;
+  tokenGeneration += 1;
 }
 
 async function mintStreamToken(orgId: string): Promise<string | null> {
+  const generation = tokenGeneration;
   try {
     const backendJwt = await getBackendToken();
     if (!backendJwt) return null;
@@ -56,6 +61,7 @@ async function mintStreamToken(orgId: string): Promise<string | null> {
     if (typeof body !== "object" || body === null || !("token" in body))
       return null;
     const token = typeof body.token === "string" ? body.token : null;
+    if (generation !== tokenGeneration) return null;
     if (token !== null) {
       cachedToken = token;
       cachedTokenOrgId = orgId;
@@ -65,7 +71,7 @@ async function mintStreamToken(orgId: string): Promise<string | null> {
   } catch {
     return null;
   } finally {
-    tokenFetchPromise = null;
+    if (generation === tokenGeneration) tokenFetchPromise = null;
   }
 }
 
@@ -76,7 +82,10 @@ function fetchStreamToken(orgId: string): Promise<string | null> {
     Date.now() - tokenFetchedAt < TOKEN_CACHE_MS
   )
     return Promise.resolve(cachedToken);
-  tokenFetchPromise ??= mintStreamToken(orgId);
+  if (tokenFetchPromise === null || tokenFetchOrgId !== orgId) {
+    tokenFetchOrgId = orgId;
+    tokenFetchPromise = mintStreamToken(orgId);
+  }
   return tokenFetchPromise;
 }
 

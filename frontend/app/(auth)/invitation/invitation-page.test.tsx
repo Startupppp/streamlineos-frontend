@@ -66,7 +66,7 @@ let currentSession: FakeSession | null = null;
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: (href: string) => routerPush(href) }),
-  useParams: () => ({ token: "invite-token-1" }),
+  useParams: () => ({ invitationToken: "invite-token-1" }),
 }));
 
 jest.mock("next-auth/react", () => ({
@@ -118,7 +118,7 @@ jest.mock("@/hooks/common/auth-hooks", () => ({
   useSessionClaimsRefresh: () => refreshSessionClaims,
 }));
 
-import InvitationPage from "@/app/(auth)/invitation/[token]/page";
+import InvitationPage from "@/app/(auth)/invitation/[invitationToken]/page";
 
 const navigation: NavigationRecorder = {
   href: "",

@@ -17,6 +17,7 @@ import {
   fetchSessionData,
   fetchSessionDataCached,
   invalidateSessionData,
+  primeSessionData,
   invalidateBackendJwtSession,
   resolveGoogleUser,
   buildUserFromSessionData,
@@ -71,10 +72,9 @@ export async function authorizeMagicToken(
     invalidateSessionData(identity.data.userId);
     const sessionData = await fetchSessionData(identity.data.userId);
     if (!sessionData) return null;
-    return {
-      ...buildUserFromSessionData(identity.data.userId, sessionData),
-      sessionId: identity.data.sessionId,
-    };
+    const magicUser = buildUserFromSessionData(identity.data.userId, sessionData);
+    primeSessionData(identity.data.userId, sessionData, magicUser.orgId);
+    return { ...magicUser, sessionId: identity.data.sessionId };
   } catch {
     return null;
   }
@@ -108,7 +108,9 @@ export async function resolveAuthSession(
   token: JWT,
 ): Promise<Session> {
   try {
-    const fresh = token.id ? await fetchSessionDataCached(token.id) : null;
+    const fresh = token.id
+      ? await fetchSessionDataCached(token.id, token.orgId)
+      : null;
 
     applyClaimsToSession(session, token, fresh);
     if (token.daysUntilExpiry !== undefined)
@@ -217,6 +219,7 @@ export const authConfig = {
           const claims = resolveSessionClaims(sessionData, {
             picture: user.image ?? undefined,
           });
+          primeSessionData(userId, sessionData, claims.orgId);
           user.name = claims.name || user.name || user.email || "";
           user.image = claims.image;
           user.role = claims.role;
@@ -260,15 +263,11 @@ export const authConfig = {
       if (trigger === "update") {
         const userId = token.id;
         if (userId) {
-          const shouldInvalidate =
-            session !== null &&
-            typeof session === "object" &&
-            "_invalidate" in session &&
-            session._invalidate === true;
-          if (shouldInvalidate) invalidateSessionData(userId);
+          invalidateSessionData(userId);
           const fresh = await fetchSessionData(userId);
           if (fresh) {
             const claims = resolveSessionClaims(fresh, token);
+            primeSessionData(userId, fresh, claims.orgId);
             token.name = claims.name;
             token.orgId = claims.orgId;
             token.isOrgOwner = claims.isOrgOwner;

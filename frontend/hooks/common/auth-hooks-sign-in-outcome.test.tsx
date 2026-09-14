@@ -15,6 +15,7 @@ jest.mock("next-auth/react", () => ({
 
 jest.mock("@/lib/api-client", () => ({
   clearBackendTokenCache: jest.fn(),
+  clearImpersonation: jest.fn(),
   setAutoSignOutSuppressed: jest.fn(),
   apiClient: { get: jest.fn(), post: jest.fn() },
 }));
@@ -88,6 +89,7 @@ describe("I4 — signInWithMagicToken outcome discrimination", () => {
   });
 
   it("returns signed-in when a new session is established from no prior session", async () => {
+    mockGetSession.mockResolvedValueOnce(null);
     mockGetSession.mockResolvedValueOnce(makeSession("session-new", "user-b"));
     mockSignIn.mockResolvedValueOnce(signInAccepted());
     const outcome = await signInWithMagicToken("valid-token");
@@ -95,6 +97,7 @@ describe("I4 — signInWithMagicToken outcome discrimination", () => {
   });
 
   it("returns signed-in when signIn succeeds and the post-probe session is valid", async () => {
+    mockGetSession.mockResolvedValueOnce(null);
     mockGetSession.mockResolvedValueOnce(makeSession("session-new", "user-b"));
     mockSignIn.mockResolvedValueOnce(signInAccepted());
     const outcome = await signInWithMagicToken("valid-token");
@@ -102,6 +105,7 @@ describe("I4 — signInWithMagicToken outcome discrimination", () => {
   });
 
   it("returns signed-in when signIn throws but a new session is confirmable afterwards", async () => {
+    mockGetSession.mockResolvedValueOnce(null);
     mockGetSession.mockResolvedValueOnce(makeSession("session-new", "user-b"));
     mockSignIn.mockRejectedValueOnce(new Error("Network timeout"));
     const outcome = await signInWithMagicToken("valid-token");
@@ -110,26 +114,38 @@ describe("I4 — signInWithMagicToken outcome discrimination", () => {
 
   it("returns indeterminate when signIn throws and the confirming session read also fails", async () => {
     mockGetSession.mockRejectedValueOnce(new Error("Session read failed"));
+    mockGetSession.mockRejectedValueOnce(new Error("Session read failed"));
     mockSignIn.mockRejectedValueOnce(new Error("Network timeout"));
     const outcome = await signInWithMagicToken("valid-token");
     expect(outcome.status).toBe("indeterminate");
   });
 
   it("returns indeterminate when the session read after sign-in fails", async () => {
+    mockGetSession.mockResolvedValueOnce(null);
     mockGetSession.mockRejectedValueOnce(new Error("Session read failed"));
     mockSignIn.mockResolvedValueOnce(signInAccepted());
     const outcome = await signInWithMagicToken("valid-token");
     expect(outcome.status).toBe("indeterminate");
   });
 
-  it("returns signed-in when signIn succeeds even if the post-probe session has any valid sessionId", async () => {
+  it("returns indeterminate when the post-probe session is the SAME one the user already had, because the magic token did not swap the session", async () => {
     mockGetSession.mockResolvedValueOnce(makeSession("same-session", "user-a"));
+    mockGetSession.mockResolvedValueOnce(makeSession("same-session", "user-a"));
+    mockSignIn.mockResolvedValueOnce(signInAccepted());
+    const outcome = await signInWithMagicToken("token-abc");
+    expect(outcome.status).toBe("indeterminate");
+  });
+
+  it("returns signed-in when a prior session existed but the magic token replaced it with a different sessionId", async () => {
+    mockGetSession.mockResolvedValueOnce(makeSession("session-old", "user-a"));
+    mockGetSession.mockResolvedValueOnce(makeSession("session-new", "user-b"));
     mockSignIn.mockResolvedValueOnce(signInAccepted());
     const outcome = await signInWithMagicToken("token-abc");
     expect(outcome.status).toBe("signed-in");
   });
 
   it("returns indeterminate when signIn is ok but the session carries no sessionId", async () => {
+    mockGetSession.mockResolvedValueOnce(null);
     mockGetSession.mockResolvedValueOnce(makeSession(undefined, "user-b"));
     mockSignIn.mockResolvedValueOnce(signInAccepted());
     const outcome = await signInWithMagicToken("token-abc");

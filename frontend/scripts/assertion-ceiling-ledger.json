@@ -69,7 +69,7 @@
       "as": 2,
       "nonNull": 0
     },
-    "app/(public)/s/[token]/page.tsx": {
+    "app/(public)/s/[collectorToken]/page.tsx": {
       "as": 1,
       "nonNull": 0
     },

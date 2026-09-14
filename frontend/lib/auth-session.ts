@@ -172,27 +172,44 @@ function evictExpiredSessionData(): void {
     if (entry.expiresAt <= now) sessionDataStore.delete(key);
 }
 
+function sessionDataKey(userId: string, scopeOrgId: string | null | undefined): string {
+  return `${userId}:${scopeOrgId ?? ""}`;
+}
+
 export function invalidateSessionData(userId: string): void {
-  sessionDataStore.delete(userId);
+  const prefix = `${userId}:`;
+  for (const key of sessionDataStore.keys())
+    if (key.startsWith(prefix)) sessionDataStore.delete(key);
 }
 
 export function clearSessionDataStoreForTesting(): void {
   sessionDataStore.clear();
 }
 
-async function fetchSessionDataWithCache(userId: string): Promise<SessionData | null> {
-  const entry = sessionDataStore.get(userId);
+export function primeSessionData(
+  userId: string,
+  data: SessionData,
+  scopeOrgId?: string | null,
+): void {
+  if (sessionDataStore.size >= MAX_STORE_SIZE) evictExpiredSessionData();
+  if (sessionDataStore.size < MAX_STORE_SIZE)
+    sessionDataStore.set(sessionDataKey(userId, scopeOrgId), {
+      data,
+      expiresAt: Date.now() + SESSION_DATA_TTL_MS,
+    });
+}
+
+async function fetchSessionDataWithCache(
+  userId: string,
+  scopeOrgId?: string | null,
+): Promise<SessionData | null> {
+  const entry = sessionDataStore.get(sessionDataKey(userId, scopeOrgId));
   if (entry && entry.expiresAt > Date.now()) return entry.data;
 
   const fresh = await fetchSessionData(userId);
   if (!fresh) return null;
 
-  if (sessionDataStore.size >= MAX_STORE_SIZE) evictExpiredSessionData();
-  if (sessionDataStore.size < MAX_STORE_SIZE)
-    sessionDataStore.set(userId, {
-      data: fresh,
-      expiresAt: Date.now() + SESSION_DATA_TTL_MS,
-    });
+  primeSessionData(userId, fresh, scopeOrgId);
   return fresh;
 }
 
