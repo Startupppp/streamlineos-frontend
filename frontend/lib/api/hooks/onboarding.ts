@@ -49,8 +49,6 @@ export function usePersonalDetailsQuery() {
 }
 
 export function usePersonalInfoMutation() {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationKey: ["onboarding", "personal-details"],
     mutationFn: (payload: PersonalDetailsPayload) =>
@@ -60,11 +58,6 @@ export function usePersonalInfoMutation() {
         undefined,
         onboardingSuccessContract,
       ),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: platformCoreQueryKeys.onboardingFlow.personalDetails(),
-      });
-    },
   });
 }
 
@@ -87,8 +80,6 @@ export function useBankDetailsQuery(options?: BankDetailsQueryOptions) {
 }
 
 export function useBankDetailsMutation() {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationKey: ["onboarding", "bank-details"],
     mutationFn: (payload: BankDetailsPayload) =>
@@ -98,11 +89,6 @@ export function useBankDetailsMutation() {
         undefined,
         onboardingSuccessContract,
       ),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: platformCoreQueryKeys.onboardingFlow.bankDetails(),
-      });
-    },
   });
 }
 

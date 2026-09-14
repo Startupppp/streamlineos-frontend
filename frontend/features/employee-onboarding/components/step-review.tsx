@@ -13,11 +13,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useConfirmedSessionClaimsRefresh } from "@/hooks/common/use-confirmed-session-claims-refresh";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import {
-  useBankDetailsMutation,
-  usePersonalInfoMutation,
-  useSubmitOnboardingMutation,
-} from "@/lib/api/hooks/onboarding";
+import { useSubmitOnboardingMutation } from "@/lib/api/hooks/onboarding";
 import { personalInfoSchema } from "@/lib/location/personal-info-validation";
 import { CompletionCelebration } from "@/components/celebration/completion-celebration";
 import { Button } from "@/components/ui/button";
@@ -73,6 +69,7 @@ type StepReviewProps = {
   onBack: () => void;
   onEditPersonal: () => void;
   onEditBank: () => void;
+  onClearDraft: () => void;
 };
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
@@ -118,14 +115,13 @@ export function StepReview({
   onBack,
   onEditPersonal,
   onEditBank,
+  onClearDraft,
 }: StepReviewProps) {
   const { data: session } = useSession();
   const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
   const countryCode =
     draft.bank.countryCode || countryNameToCode(draft.personal.addressCountry);
   const { data: requirements } = useOnboardingRequirements(countryCode);
-  const { mutateAsync: saveBank } = useBankDetailsMutation();
-  const { mutateAsync: savePersonal } = usePersonalInfoMutation();
   const { mutateAsync: submitOnboarding } = useSubmitOnboardingMutation();
   const [showCelebration, setShowCelebration] = useState(false);
   const [isContinuing, setIsContinuing] = useState(false);
@@ -184,17 +180,16 @@ export function StepReview({
       return;
     }
 
-    const bankFormValues = {
-      accountHolder: draft.bank.accountHolder,
-      bankName: draft.bank.bankName,
-      accountNumber: draft.bank.accountNumber,
-      routingCode: draft.bank.routingCode,
-      iban: draft.bank.iban,
-      swift: draft.bank.swift,
-      statutory: draft.bank.statutory ?? {},
-    };
-
     if (requirements) {
+      const bankFormValues = {
+        accountHolder: draft.bank.accountHolder,
+        bankName: draft.bank.bankName,
+        accountNumber: draft.bank.accountNumber,
+        routingCode: draft.bank.routingCode,
+        iban: draft.bank.iban,
+        swift: draft.bank.swift,
+        statutory: draft.bank.statutory ?? {},
+      };
       const bankParsed =
         buildBankDetailsSchema(requirements).safeParse(bankFormValues);
       if (!bankParsed.success) {
@@ -208,9 +203,8 @@ export function StepReview({
     setIsSubmitting(true);
     const claimsRun = beginClaimsRefresh();
     try {
-      await savePersonal(personalParsed.data);
-      await saveBank({ countryCode, ...bankFormValues });
       await submitOnboarding();
+      onClearDraft();
       const sessionOrgId = session?.orgId ?? null;
       const confirmed = await completeOnboardingGate(
         "onboarding-done",

@@ -37,10 +37,13 @@ export function readErrorReachesBoundary(
   return true;
 }
 
-/**
- * Spread into a read whose own surface renders the failure — a panel beside five
- * that loaded, where taking the route down would be the worse answer. It is a
- * claim that something on screen states the error; without one the boundary
- * catches it.
- */
+
 export const INLINE_READ_ERROR = { throwOnError: false } as const;
+
+export function isTransientNetworkError(error: unknown): boolean {
+  if (!isApiError(error)) return false;
+  if (error.code === "NETWORK_ERROR" || error.code === "TIMEOUT") return true;
+  if (error.status === 502 || error.status === 503 || error.status === 504)
+    return true;
+  return false;
+}

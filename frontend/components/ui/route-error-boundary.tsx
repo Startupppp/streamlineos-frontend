@@ -1,8 +1,16 @@
 "use client";
 
-import { useCallback, useId } from "react";
+import { useCallback, useEffect, useId } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { isTransientNetworkError } from "@/lib/query-error-policy";
+
+const networkRetryCount = new Map<string, number>();
+const MAX_NETWORK_AUTO_RETRIES = 3;
+const NETWORK_RETRY_DELAYS_MS: readonly [number, number, number] = [
+  3_000, 6_000, 12_000,
+];
+
 interface RouteErrorBoundaryProps {
   error: Error & { digest?: string };
   reset: () => void;
@@ -13,21 +21,47 @@ interface RouteErrorBoundaryProps {
 }
 
 export function RouteErrorBoundary({
-  error: _,
+  error,
   reset,
   onBeforeReset,
-  title = "Something went wrong",
+  title,
   fallbackMessage = "An unexpected error occurred. Please try again.",
   layout = "inline",
 }: RouteErrorBoundaryProps) {
-  const displayMessage = fallbackMessage;
   const headingId = useId();
   const isWholePage = layout === "fullscreen";
+  const isNetwork = isTransientNetworkError(error);
+  const networkKey = isNetwork ? error.message : null;
 
   const handleRetry = useCallback(() => {
     onBeforeReset?.();
     reset();
   }, [onBeforeReset, reset]);
+
+  useEffect(() => {
+    if (!networkKey) return;
+    const count = networkRetryCount.get(networkKey) ?? 0;
+    if (count >= MAX_NETWORK_AUTO_RETRIES) return;
+    const delay = NETWORK_RETRY_DELAYS_MS[count] ?? 12_000;
+    const timer = setTimeout(() => {
+      networkRetryCount.set(networkKey, count + 1);
+      handleRetry();
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [networkKey, handleRetry]);
+
+  const autoRetryCount = networkKey !== null ? (networkRetryCount.get(networkKey) ?? 0) : 0;
+  const isAutoRetrying = isNetwork && autoRetryCount < MAX_NETWORK_AUTO_RETRIES;
+
+  const resolvedTitle = isNetwork
+    ? "Server temporarily unavailable"
+    : (title ?? "Something went wrong");
+
+  const displayMessage = isAutoRetrying
+    ? "The server is not responding. Retrying automatically…"
+    : isNetwork
+    ? "The server could not be reached. Please try again."
+    : fallbackMessage;
 
   const content = (
     <div
@@ -41,26 +75,19 @@ export function RouteErrorBoundary({
         />
       </div>
       <h1 id={headingId} className="text-xl font-bold text-foreground">
-        {title}
+        {resolvedTitle}
       </h1>
       <p className="text-sm text-muted-foreground max-w-md">{displayMessage}</p>
-      <Button onClick={handleRetry} variant="outline">
-        <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
-        Try Again
-      </Button>
+      {!isAutoRetrying && (
+        <Button onClick={handleRetry} variant="outline">
+          <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+          Try Again
+        </Button>
+      )}
     </div>
   );
 
-  /**
-   * Every one of the 175 route `error.tsx` files replaces its segment's whole
-   * body, and the page heading lives in `PageWrapper` inside that body — no
-   * layout supplies one. So a boundary always owns the `h1`; the document had
-   * none at all while this rendered an `h2`.
-   *
-   * `main` is different. Fullscreen means the boundary replaced the shell too,
-   * so it must supply the landmark the shell would have; inline and centred sit
-   * inside the shell's `main` and must not claim a second one.
-   */
+
   if (isWholePage)
     return (
       <main

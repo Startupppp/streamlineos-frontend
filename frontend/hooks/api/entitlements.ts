@@ -24,5 +24,6 @@ export function useEntitlements(enabled = true) {
     staleTime: 900_000,
     retry: false,
     enabled,
+    throwOnError: false,
   });
 }

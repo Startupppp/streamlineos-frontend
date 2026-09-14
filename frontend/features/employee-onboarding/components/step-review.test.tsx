@@ -5,8 +5,6 @@ import { SESSION_CLAIMS_UNCONFIRMED_MESSAGE } from "@/hooks/common/use-confirmed
 import { DATA_STEP_IDS } from "../lib/constants";
 import type { WizardDraft } from "../lib/wizard-draft-schema";
 
-const mockSavePersonal = jest.fn();
-const mockSaveBank = jest.fn();
 const mockSubmitOnboarding = jest.fn();
 const mockRefreshSessionClaims = jest.fn();
 const mockToastError = jest.fn();
@@ -39,8 +37,6 @@ jest.mock("@/hooks/common/auth-hooks", () => ({
 }));
 
 jest.mock("@/lib/api/hooks/onboarding", () => ({
-  useBankDetailsMutation: () => ({ mutateAsync: mockSaveBank }),
-  usePersonalInfoMutation: () => ({ mutateAsync: mockSavePersonal }),
   useSubmitOnboardingMutation: () => ({ mutateAsync: mockSubmitOnboarding }),
 }));
 
@@ -89,8 +85,6 @@ const REFRESHED_SESSION = {
 const GATE_SCOPE = "user-1--org-acme";
 
 beforeEach(() => {
-  mockSavePersonal.mockReset().mockResolvedValue(undefined);
-  mockSaveBank.mockReset().mockResolvedValue(undefined);
   mockSubmitOnboarding.mockReset().mockResolvedValue(undefined);
   mockRefreshSessionClaims.mockReset();
   mockToastError.mockReset();
@@ -106,6 +100,7 @@ function renderReview() {
       onBack={jest.fn()}
       onEditPersonal={jest.fn()}
       onEditBank={jest.fn()}
+      onClearDraft={jest.fn()}
     />,
   );
 }

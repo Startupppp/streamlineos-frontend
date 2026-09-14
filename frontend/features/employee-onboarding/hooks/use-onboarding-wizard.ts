@@ -10,7 +10,10 @@ import {
 } from "@/hooks/api/onboarding-flow";
 import {
   useBankDetailsQuery,
+  useBankDetailsMutation,
   usePersonalDetailsQuery,
+  usePersonalInfoMutation,
+  type PersonalDetailsPayload,
 } from "@/lib/api/hooks/onboarding";
 import {
   DATA_STEP_IDS,
@@ -36,6 +39,11 @@ import {
   type PersonalDraft,
   type WizardDraft,
 } from "@/features/employee-onboarding/lib/wizard-draft-schema";
+import {
+  clearOnboardingDraft,
+  loadOnboardingDraft,
+  saveOnboardingDraft,
+} from "@/features/employee-onboarding/lib/draft-storage";
 
 const ROLE_LABELS: Record<string, string> = {
   FINAL: "FINAL",
@@ -53,8 +61,6 @@ const ROLE_LABELS: Record<string, string> = {
   VIDEO_EDITOR: "Video Editor",
 };
 
-const DRAFT_PERSIST_MS = 600;
-
 function draftPayload(draft: WizardDraft): Record<string, unknown> {
   return { personal: draft.personal, bank: persistableBankDraft(draft.bank) };
 }
@@ -63,6 +69,24 @@ function resolveStepFromSession(currentStep: string | null | undefined): StepId 
   if (currentStep && isStepId(currentStep)) return currentStep;
   if (currentStep === "docs") return STEP_IDS.REVIEW;
   return STEP_IDS.PERSONAL;
+}
+
+function personalDraftToPayload(personal: PersonalDraft): PersonalDetailsPayload {
+  return {
+    phone: personal.phone,
+    dateOfBirth: personal.dateOfBirth,
+    emergencyName: personal.emergencyName,
+    emergencyRelation: personal.emergencyRelation,
+    emergencyPhone: personal.emergencyPhone,
+    ...(personal.gender === "MALE" || personal.gender === "FEMALE" || personal.gender === "OTHER"
+      ? { gender: personal.gender }
+      : {}),
+    ...(personal.addressLine1 ? { addressLine1: personal.addressLine1 } : {}),
+    ...(personal.addressCity ? { addressCity: personal.addressCity } : {}),
+    ...(personal.addressState ? { addressState: personal.addressState } : {}),
+    ...(personal.addressPostalCode ? { addressPostalCode: personal.addressPostalCode } : {}),
+    ...(personal.addressCountry ? { addressCountry: personal.addressCountry } : {}),
+  };
 }
 
 export interface OnboardingWizardState {
@@ -90,6 +114,7 @@ export interface OnboardingWizardState {
   handleGoToPersonal: () => void;
   handleGoToBank: () => void;
   handleStepSelect: (index: number) => void;
+  clearDraft: () => void;
 }
 
 export function useOnboardingWizard(): OnboardingWizardState {
@@ -99,8 +124,10 @@ export function useOnboardingWizard(): OnboardingWizardState {
   const [localStep, setLocalStep] = useState<StepId | null>(null);
   const [localCompleted, setLocalCompleted] = useState<ReadonlySet<string> | null>(null);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const persistSequenceRef = useRef(0);
+
+  const userId = authSession?.user?.id ?? undefined;
+  const orgId = authSession?.orgId ?? undefined;
 
   const {
     data: session,
@@ -109,6 +136,8 @@ export function useOnboardingWizard(): OnboardingWizardState {
     refetch: refetchSession,
   } = useOnboardingSessionQuery();
   const { mutateAsync: patchSession } = usePatchOnboardingSessionMutation();
+  const { mutateAsync: savePersonal } = usePersonalInfoMutation();
+  const { mutateAsync: saveBank } = useBankDetailsMutation();
 
   const sessionCompleted = useMemo(() => new Set(session?.completedSteps ?? []), [session]);
 
@@ -178,13 +207,19 @@ export function useOnboardingWizard(): OnboardingWizardState {
     };
   }, [bankDetails]);
 
+  const storedDraft = useMemo(
+    () => loadOnboardingDraft(userId, orgId),
+    [userId, orgId],
+  );
+
   const wizardDraft = useMemo(() => {
     if (localDraft) return localDraft;
+    if (storedDraft) return storedDraft;
     return {
       personal: mergePersonalDraft(sessionDraft.personal, personalPrefill),
       bank: mergeBankDraft(sessionDraft.bank, bankPrefill),
     };
-  }, [localDraft, sessionDraft, personalPrefill, bankPrefill]);
+  }, [localDraft, storedDraft, sessionDraft, personalPrefill, bankPrefill]);
 
   const hasPersonalPrefill = personalDraftHasPrefill(personalPrefill);
   const hasBankPrefill = bankDraftHasPrefill(bankPrefill);
@@ -225,31 +260,10 @@ export function useOnboardingWizard(): OnboardingWizardState {
       next: WizardDraft,
       extras?: { currentStep?: string; completedSteps?: string[] },
     ): Promise<boolean> => {
-      if (persistTimerRef.current) {
-        clearTimeout(persistTimerRef.current);
-        persistTimerRef.current = null;
-      }
       return persistDraft(next, extras, true);
     },
     [persistDraft],
   );
-
-  const schedulePersist = useCallback(
-    (next: WizardDraft) => {
-      if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
-      persistTimerRef.current = setTimeout(() => {
-        persistTimerRef.current = null;
-        void persistDraft(next, undefined, true);
-      }, DRAFT_PERSIST_MS);
-    },
-    [persistDraft],
-  );
-
-  useEffect(() => {
-    return () => {
-      if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
-    };
-  }, []);
 
   useEffect(() => {
     if (saveState !== "saved") return;
@@ -294,11 +308,11 @@ export function useOnboardingWizard(): OnboardingWizardState {
         const base = prev ?? draftRef.current;
         const next = { ...base, personal };
         draftRef.current = next;
-        schedulePersist(next);
+        saveOnboardingDraft(next, userId, orgId);
         return next;
       });
     },
-    [schedulePersist],
+    [userId, orgId],
   );
 
   const handleBankDraftChange = useCallback(
@@ -307,11 +321,11 @@ export function useOnboardingWizard(): OnboardingWizardState {
         const base = prev ?? draftRef.current;
         const next = { ...base, bank };
         draftRef.current = next;
-        schedulePersist(next);
+        saveOnboardingDraft(next, userId, orgId);
         return next;
       });
     },
-    [schedulePersist],
+    [userId, orgId],
   );
 
   const handlePersonalComplete = useCallback(
@@ -319,6 +333,20 @@ export function useOnboardingWizard(): OnboardingWizardState {
       const nextDraft = { ...draftRef.current, personal };
       draftRef.current = nextDraft;
       setLocalDraft(nextDraft);
+      saveOnboardingDraft(nextDraft, userId, orgId);
+
+      setSaveState("saving");
+      try {
+        await savePersonal(personalDraftToPayload(personal));
+      } catch (error) {
+        setSaveState("error");
+        toast.error("Personal details could not be saved", {
+          id: "onboarding-save-error",
+          description: getErrorMessage(error),
+        });
+        return;
+      }
+
       const nextCompleted = new Set(localCompleted ?? sessionCompleted);
       nextCompleted.add(STEP_IDS.PERSONAL);
       const persisted = await flushPersist(nextDraft, {
@@ -331,7 +359,7 @@ export function useOnboardingWizard(): OnboardingWizardState {
       setLocalStep(STEP_IDS.BANK);
       toast.success("Personal details saved");
     },
-    [flushPersist, localCompleted, sessionCompleted],
+    [flushPersist, localCompleted, sessionCompleted, savePersonal, userId, orgId],
   );
 
   const handleBankComplete = useCallback(
@@ -339,6 +367,20 @@ export function useOnboardingWizard(): OnboardingWizardState {
       const nextDraft = { ...draftRef.current, bank };
       draftRef.current = nextDraft;
       setLocalDraft(nextDraft);
+      saveOnboardingDraft(nextDraft, userId, orgId);
+
+      setSaveState("saving");
+      try {
+        await saveBank(bank);
+      } catch (error) {
+        setSaveState("error");
+        toast.error("Bank details could not be saved", {
+          id: "onboarding-save-error",
+          description: getErrorMessage(error),
+        });
+        return;
+      }
+
       const nextCompleted = new Set(localCompleted ?? sessionCompleted);
       nextCompleted.add(STEP_IDS.BANK);
       const persisted = await flushPersist(nextDraft, {
@@ -351,13 +393,14 @@ export function useOnboardingWizard(): OnboardingWizardState {
       setLocalStep(STEP_IDS.REVIEW);
       toast.success("Bank details saved");
     },
-    [flushPersist, localCompleted, sessionCompleted],
+    [flushPersist, localCompleted, sessionCompleted, saveBank, userId, orgId],
   );
 
   const handlePersonalClear = useCallback(() => {
     const nextDraft = { ...draftRef.current, personal: { ...EMPTY_PERSONAL_DRAFT } };
     draftRef.current = nextDraft;
     setLocalDraft(nextDraft);
+    saveOnboardingDraft(nextDraft, userId, orgId);
     const nextCompleted = new Set(localCompleted ?? sessionCompleted);
     nextCompleted.delete(STEP_IDS.PERSONAL);
     setLocalCompleted(nextCompleted);
@@ -365,12 +408,13 @@ export function useOnboardingWizard(): OnboardingWizardState {
       currentStep: STEP_IDS.PERSONAL,
       completedSteps: Array.from(nextCompleted),
     });
-  }, [flushPersist, localCompleted, sessionCompleted]);
+  }, [flushPersist, localCompleted, sessionCompleted, userId, orgId]);
 
   const handleBankClear = useCallback(() => {
     const nextDraft = { ...draftRef.current, bank: { ...EMPTY_BANK_DRAFT } };
     draftRef.current = nextDraft;
     setLocalDraft(nextDraft);
+    saveOnboardingDraft(nextDraft, userId, orgId);
     const nextCompleted = new Set(localCompleted ?? sessionCompleted);
     nextCompleted.delete(STEP_IDS.BANK);
     setLocalCompleted(nextCompleted);
@@ -378,7 +422,7 @@ export function useOnboardingWizard(): OnboardingWizardState {
       currentStep: STEP_IDS.BANK,
       completedSteps: Array.from(nextCompleted),
     });
-  }, [flushPersist, localCompleted, sessionCompleted]);
+  }, [flushPersist, localCompleted, sessionCompleted, userId, orgId]);
 
   const handleGoToPersonal = useCallback(
     () => void navigateTo(STEP_IDS.PERSONAL),
@@ -407,6 +451,11 @@ export function useOnboardingWizard(): OnboardingWizardState {
     },
     [navigateTo, reachableSteps],
   );
+
+  const clearDraft = useCallback(() => {
+    clearOnboardingDraft(userId, orgId);
+    setLocalDraft(null);
+  }, [userId, orgId]);
 
   function refetchAll() {
     void Promise.all([refetchSession(), refetchPersonalDetails(), refetchBankDetails()]);
@@ -437,5 +486,6 @@ export function useOnboardingWizard(): OnboardingWizardState {
     handleGoToPersonal,
     handleGoToBank,
     handleStepSelect,
+    clearDraft,
   };
 }

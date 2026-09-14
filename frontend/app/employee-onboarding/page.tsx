@@ -99,6 +99,7 @@ export default function EmployeeOnboardingPage() {
           onBack={wizard.handleGoToBank}
           onEditPersonal={wizard.handleGoToPersonal}
           onEditBank={wizard.handleGoToBank}
+          onClearDraft={wizard.clearDraft}
         />
       ) : null}
     </EmployeeOnboardingShell>

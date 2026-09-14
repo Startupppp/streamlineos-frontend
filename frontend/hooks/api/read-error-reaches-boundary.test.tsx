@@ -41,6 +41,7 @@ jest.mock("@/lib/api-client", () => ({
 }));
 
 import { apiClient } from "@/lib/api-client";
+import { useEntitlements } from "@/hooks/api/entitlements";
 
 const mockedGet = apiClient.get as jest.MockedFunction<typeof apiClient.get>;
 
@@ -151,6 +152,44 @@ describe("a 500 on /users/stats", () => {
 
     expect(await screen.findByText("route error boundary")).toBeInTheDocument();
     expect(screen.queryByText("Total Users")).not.toBeInTheDocument();
+  });
+});
+
+describe("peripheral entitlements failure does not take the route down", () => {
+  function PageWithPeripheralEntitlements() {
+    const { data: entitlements, isError } = useEntitlements();
+    return (
+      <p data-testid="route-content">
+        {isError ? "entitlements absent" : entitlements ? "entitlements loaded" : "loading"}
+      </p>
+    );
+  }
+
+  it("a network error on entitlements leaves the route rendered", async () => {
+    mockedGet.mockRejectedValue(
+      new ApiError("Network error contacting localhost:1500", undefined, "NETWORK_ERROR"),
+    );
+
+    renderUnderBoundary(<PageWithPeripheralEntitlements />, clientWithPolicy());
+
+    expect(await screen.findByTestId("route-content")).toBeInTheDocument();
+    expect(screen.queryByText("route error boundary")).not.toBeInTheDocument();
+  });
+
+  it("a primary read failing still reaches the boundary when entitlements is also peripheral", async () => {
+    mockedGet.mockRejectedValue(
+      new ApiError("Network error contacting localhost:1500", undefined, "NETWORK_ERROR"),
+    );
+
+    function PageWithBoth() {
+      const { data: entitlements } = useEntitlements();
+      void entitlements;
+      return <CompOffPageClient />;
+    }
+
+    renderUnderBoundary(<PageWithBoth />, clientWithPolicy());
+
+    expect(await screen.findByText("route error boundary")).toBeInTheDocument();
   });
 });
 

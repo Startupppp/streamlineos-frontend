@@ -187,6 +187,7 @@ export function AppSidebar({
     enabled: canApproveLeaves && isHrModuleEnabled && !!session?.user,
     refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS,
     refetchIntervalInBackground: false,
+    throwOnError: false,
   });
   const pendingLeaves = pendingApprovalsData?.pendingLeaves ?? 0;
 
@@ -199,6 +200,7 @@ export function AppSidebar({
   const { data: notifData } = useUnreadNotificationCount({
     refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS,
     refetchIntervalInBackground: false,
+    throwOnError: false,
   });
   const unreadNotifCount = notifData?.count ?? 0;
 
