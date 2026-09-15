@@ -105,16 +105,18 @@ async function submitReview() {
 }
 
 describe("StepReview — submitting writes the gate cookie and shows the celebration immediately", () => {
-  it("celebrates without waiting for the claims refresh, and still starts it so the JWT outlives the 5-minute cookie", async () => {
-    mockRefreshSessionClaims.mockImplementation(() => new Promise(() => {}));
-
+  it("keeps the celebration mounted until its dashboard transition", async () => {
     await submitReview();
 
     await waitFor(() => {
-      expect(screen.getByTestId("celebration")).toBeInTheDocument();
+    expect(screen.getByTestId("celebration")).toBeInTheDocument();
     });
     expect(mockSubmitOnboarding).toHaveBeenCalledTimes(1);
-    expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(1);
+    expect(mockSubmitOnboarding).toHaveBeenCalledWith({
+      personal: expect.objectContaining({ phone: DRAFT.personal.phone }),
+      bank: DRAFT.bank,
+    });
+    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
     expect(document.cookie).toContain(
       gateCookieName("onboarding-done", GATE_SCOPE),
     );
@@ -129,7 +131,7 @@ describe("StepReview — submitting writes the gate cookie and shows the celebra
     await waitFor(() => {
       expect(screen.getByTestId("celebration")).toBeInTheDocument();
     });
-    expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(1);
+    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
     expect(mockToastError).not.toHaveBeenCalled();
   });
 
@@ -171,7 +173,7 @@ describe("StepReview — submitting writes the gate cookie and shows the celebra
     await waitFor(() => {
       expect(screen.getByTestId("celebration")).toBeInTheDocument();
     });
-    expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(1);
+    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
     expect(mockToastError).not.toHaveBeenCalled();
   });
 });

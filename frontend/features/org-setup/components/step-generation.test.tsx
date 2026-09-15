@@ -197,6 +197,23 @@ describe("StepGeneration — the claims refresh never confirms the new org", () 
     );
   });
 
+  it("writes the route gate before the auto-login refresh can remount the wizard", async () => {
+    mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
+    mockMutateAsync.mockResolvedValue(SETUP_RESPONSE);
+    mockSignIn.mockImplementation(async () => {
+      expect(document.cookie).toContain(
+        gateCookieName("org-setup-done", "org-new"),
+      );
+      return SIGN_IN_SUCCESS;
+    });
+
+    render(<StepGeneration data={TEST_DATA} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.showWelcome).toBe(true);
+    });
+  });
+
   it("no autoLoginToken: a timed-out refresh surfaces the error, clears nothing", async () => {
     mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
     mockMutateAsync.mockResolvedValue({ ...SETUP_RESPONSE, autoLoginToken: null });

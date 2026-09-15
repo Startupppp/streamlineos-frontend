@@ -65,12 +65,13 @@ export default function InvitationPage() {
   });
 
   const [declineOpen, setDeclineOpen] = useState(false);
+  const [isCompletingAcceptance, setIsCompletingAcceptance] = useState(false);
 
   const {
     data: invitation,
     error: invitationError,
     isPending: isValidating,
-  } = useValidateInvitation(invitationToken);
+  } = useValidateInvitation(isCompletingAcceptance ? "" : invitationToken);
 
   const acceptInvitation = useAcceptInvitation();
   const declineInvitation = useDeclineInvitation();
@@ -97,10 +98,10 @@ export default function InvitationPage() {
   }, [invitationToken, declineInvitation, router]);
 
   const autoLoginWithToken = useCallback(
-    async (autoLoginToken: string): Promise<void> => {
+    async (autoLoginToken: string, destination: string): Promise<void> => {
       const outcome = await signInWithMagicToken(autoLoginToken);
       if (outcome.status === "signed-in") {
-        window.location.href = "/dashboard";
+        window.location.href = destination;
         return;
       }
       if (outcome.status === "indeterminate") {
@@ -128,9 +129,13 @@ export default function InvitationPage() {
         },
         {
           onSuccess: async (data) => {
+            setIsCompletingAcceptance(true);
             toast.success("Account created! Signing you in...");
             if (data?.autoLoginToken) {
-              await autoLoginWithToken(data.autoLoginToken);
+              await autoLoginWithToken(
+                data.autoLoginToken,
+                "/employee-onboarding",
+              );
             } else {
               router.push("/signin");
             }
@@ -155,11 +160,12 @@ export default function InvitationPage() {
       { token: invitationToken },
       {
         onSuccess: async (data) => {
+          setIsCompletingAcceptance(true);
           toast.success(
             `Joined ${invitation?.organizationName ?? "organization"}!`,
           );
           if (data?.autoLoginToken) {
-            await autoLoginWithToken(data.autoLoginToken);
+            await autoLoginWithToken(data.autoLoginToken, "/dashboard");
             return;
           }
           const confirmed = await claimsRun.confirmOrWarn();
@@ -181,7 +187,7 @@ export default function InvitationPage() {
     autoLoginWithToken,
   ]);
 
-  if (isValidating) {
+  if (isValidating || isCompletingAcceptance) {
     return (
       <InvitationCard className="w-full max-w-[480px]">
         <div className="flex items-start gap-3.5 border-b border-border px-5 py-5 sm:px-6 sm:py-6">
@@ -253,8 +259,8 @@ export default function InvitationPage() {
               {signedInAsOtherAccount && (
                 <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
                   You are currently signed in as{" "}
-                  <span className="font-medium">{sessionEmail}</span>.
-                  Accepting will sign you in as the invited account instead.
+                  <span className="font-medium">{sessionEmail}</span>. Accepting
+                  will sign you in as the invited account instead.
                 </p>
               )}
               <div className="space-y-2">

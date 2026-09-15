@@ -15,16 +15,19 @@ import { apiClient } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 
 const personalDetailsContract = lazyContract(() =>
-  import("@/lib/api/hooks/onboarding-schema").then((m) => m.personalDetailsContract),
+  import("@/lib/api/hooks/onboarding-schema").then(
+    (m) => m.personalDetailsContract,
+  ),
 );
 const bankDetailsContract = lazyContract(() =>
-  import("@/lib/api/hooks/onboarding-schema").then((m) => m.bankDetailsContract),
-);
-const onboardingSuccessContract = lazyContract(() =>
-  import("@/lib/api/hooks/onboarding-schema").then((m) => m.onboardingSuccessContract),
+  import("@/lib/api/hooks/onboarding-schema").then(
+    (m) => m.bankDetailsContract,
+  ),
 );
 const onboardingCompletionContract = lazyContract(() =>
-  import("@/lib/api/hooks/onboarding-schema").then((m) => m.onboardingCompletionContract),
+  import("@/lib/api/hooks/onboarding-schema").then(
+    (m) => m.onboardingCompletionContract,
+  ),
 );
 
 export interface PersonalDetailsPayload {
@@ -47,21 +50,13 @@ export function usePersonalDetailsQuery() {
   return useQuery({
     queryKey: platformCoreQueryKeys.onboardingFlow.personalDetails(),
     queryFn: ({ signal }) =>
-      apiClient.get<PersonalDetails>("/onboarding/personal-details", undefined, signal, personalDetailsContract),
-    staleTime: 30_000,
-  });
-}
-
-export function usePersonalInfoMutation() {
-  return useMutation({
-    mutationKey: ["onboarding", "personal-details"],
-    mutationFn: (payload: PersonalDetailsPayload) =>
-      apiClient.patch<{ success: true }>(
+      apiClient.get<PersonalDetails>(
         "/onboarding/personal-details",
-        payload,
         undefined,
-        onboardingSuccessContract,
+        signal,
+        personalDetailsContract,
       ),
+    staleTime: 30_000,
   });
 }
 
@@ -77,36 +72,36 @@ export type BankDetailsQueryOptions = Omit<
 export function useBankDetailsQuery(options?: BankDetailsQueryOptions) {
   return useQuery({
     queryKey: platformCoreQueryKeys.onboardingFlow.bankDetails(),
-    queryFn: ({ signal }) => apiClient.get<BankDetails>("/onboarding/bank-details", undefined, signal, bankDetailsContract),
+    queryFn: ({ signal }) =>
+      apiClient.get<BankDetails>(
+        "/onboarding/bank-details",
+        undefined,
+        signal,
+        bankDetailsContract,
+      ),
     staleTime: 30_000,
     ...options,
   });
 }
 
-export function useBankDetailsMutation() {
-  return useMutation({
-    mutationKey: ["onboarding", "bank-details"],
-    mutationFn: (payload: BankDetailsPayload) =>
-      apiClient.patch<{ success: true }>(
-        "/onboarding/bank-details",
-        payload,
-        undefined,
-        onboardingSuccessContract,
-      ),
-  });
-}
+export type OnboardingCompletion = z.infer<
+  typeof onboardingCompletionContractDef
+>;
 
-export type OnboardingCompletion = z.infer<typeof onboardingCompletionContractDef>;
+export interface OnboardingSubmissionPayload {
+  personal: PersonalDetailsPayload;
+  bank: BankDetailsPayload;
+}
 
 export function useSubmitOnboardingMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationKey: ["onboarding", "complete"],
-    mutationFn: () =>
+    mutationFn: (payload: OnboardingSubmissionPayload) =>
       apiClient.post<OnboardingCompletion>(
         "/onboarding/complete",
-        undefined,
+        payload,
         undefined,
         onboardingCompletionContract,
       ),

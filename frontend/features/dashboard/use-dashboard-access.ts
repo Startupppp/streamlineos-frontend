@@ -45,6 +45,11 @@ export function useDashboardAccess(): DashboardAccess {
     const owner = data?.isOrgOwner ?? false;
     const scopes = data?.scopes ?? {};
     const can = (key: PermissionKey) => owner || key in scopes;
+    const canUseBuild =
+      owner ||
+      Object.keys(scopes).some(
+        (key) => key.startsWith("build:") || key.startsWith("integrations:git:"),
+      );
     const canSection = (id: string) => {
       const key = homeSectionPermission(id);
       return key === null ? true : can(key);
@@ -56,7 +61,7 @@ export function useDashboardAccess(): DashboardAccess {
       refetchAccess: () => void refetch(),
       hrEnabled: moduleOn("HR"),
       crmEnabled: moduleOn("CRM"),
-      projectsEnabled: moduleOn("PROJECTS"),
+      projectsEnabled: moduleOn("PROJECTS") && canUseBuild,
       payrollEnabled: moduleOn("PAYROLL"),
       signEnabled: moduleOn("SIGN"),
       accountingEnabled: moduleOn("accounting"),

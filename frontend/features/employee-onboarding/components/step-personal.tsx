@@ -245,7 +245,7 @@ export function StepPersonal({
               control={form.control}
               name="gender"
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select value={field.value ?? ""} onValueChange={field.onChange}>
                   <SelectTrigger
                     id="gender"
                     className="w-full"
@@ -421,7 +421,7 @@ export function StepPersonal({
                 control={form.control}
                 name="emergencyRelation"
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
                     <SelectTrigger
                       id="emergencyRelation"
                       aria-required="true"

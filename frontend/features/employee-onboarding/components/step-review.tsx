@@ -1,15 +1,9 @@
 "use client";
 
 import { useState, useCallback, type ReactNode } from "react";
-import {
-  ClipboardCheck,
-  LayoutDashboard,
-  Send,
-  Shield,
-} from "lucide-react";
+import { ClipboardCheck, LayoutDashboard, Send, Shield } from "lucide-react";
 import { SendIcon } from "@animateicons/react/lucide";
 import { writeGateCookie } from "@/lib/onboarding-gate";
-import { useSessionClaimsRefresh } from "@/hooks/common/auth-hooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -76,7 +70,9 @@ function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="grid gap-0.5 py-2 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-3">
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="break-words text-sm text-foreground">{value || "Not provided"}</dd>
+      <dd className="break-words text-sm text-foreground">
+        {value || "Not provided"}
+      </dd>
     </div>
   );
 }
@@ -119,7 +115,6 @@ export function StepReview({
   onClearDraft,
 }: StepReviewProps) {
   const { data: session } = useSession();
-  const refreshSessionClaims = useSessionClaimsRefresh();
   const { data: requirements } = useOnboardingRequirements(countryCode);
   const { mutateAsync: submitOnboarding } = useSubmitOnboardingMutation();
   const [showCelebration, setShowCelebration] = useState(false);
@@ -144,13 +139,15 @@ export function StepReview({
   ]
     .filter(Boolean)
     .join(" · ");
-  const bankCode = draft.bank.iban || draft.bank.routingCode || draft.bank.swift;
-  const statutoryRows = requirements?.statutoryFields
-    .map((field) => ({
-      label: field.label,
-      value: maskSensitiveValue(draft.bank.statutory[field.key] ?? ""),
-    }))
-    .filter((row) => row.value) ?? [];
+  const bankCode =
+    draft.bank.iban || draft.bank.routingCode || draft.bank.swift;
+  const statutoryRows =
+    requirements?.statutoryFields
+      .map((field) => ({
+        label: field.label,
+        value: maskSensitiveValue(draft.bank.statutory[field.key] ?? ""),
+      }))
+      .filter((row) => row.value) ?? [];
 
   const goToDashboard = useCallback(() => {
     if (isContinuing) return;
@@ -201,14 +198,16 @@ export function StepReview({
 
     setIsSubmitting(true);
     try {
-      await submitOnboarding();
+      await submitOnboarding({
+        personal: personalParsed.data,
+        bank: draft.bank,
+      });
       onClearDraft();
       writeGateCookie(
         "onboarding-done",
         `${session?.user?.id ?? ""}--${session?.orgId ?? ""}`,
       );
       setShowCelebration(true);
-      void refreshSessionClaims();
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {
@@ -264,16 +263,16 @@ export function StepReview({
           </ReviewSection>
 
           <ReviewSection title="Bank and statutory details" onEdit={onEditBank}>
-            <ReviewRow label="Account holder" value={draft.bank.accountHolder} />
+            <ReviewRow
+              label="Account holder"
+              value={draft.bank.accountHolder}
+            />
             <ReviewRow label="Bank" value={draft.bank.bankName} />
             <ReviewRow
               label="Account number"
               value={maskAccountNumber(draft.bank.accountNumber)}
             />
-            <ReviewRow
-              label={snapshot.bankCodeLabel}
-              value={bankCode}
-            />
+            <ReviewRow label={snapshot.bankCodeLabel} value={bankCode} />
             {statutoryRows.map((row) => (
               <ReviewRow key={row.label} label={row.label} value={row.value} />
             ))}
@@ -310,7 +309,7 @@ export function StepReview({
           onContinue={goToDashboard}
           isContinuing={isContinuing}
           footnote="You can update your details anytime from your profile."
-          autoAdvanceMs={10_000}
+          autoAdvanceMs={1_500}
         />
       ) : null}
     </>

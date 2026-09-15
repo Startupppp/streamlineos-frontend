@@ -453,6 +453,7 @@ export function PlanTab() {
         appliedCoupon={appliedCoupon}
         couponResult={couponResult}
         isValidatingCoupon={isValidatingCoupon}
+        canApply={selectedPlan !== null}
         helperText={!selectedPlan ? "Select a plan card above to apply this code." : undefined}
         onInputChange={handleCouponInputChange}
         onApply={handleApplyCoupon}

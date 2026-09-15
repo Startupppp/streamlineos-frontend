@@ -27,7 +27,7 @@ const STEP_LINKS: Record<ActivationStep, string> = {
   "bring-your-data": "/crm/import",
   "connect-a-channel": "/crm/settings/ai",
   "open-a-deal": "/crm/deals",
-  "invite-a-colleague": "/settings/members",
+  "invite-a-colleague": "/settings/users?view=invitations",
 };
 
 export function ActivationChecklist() {

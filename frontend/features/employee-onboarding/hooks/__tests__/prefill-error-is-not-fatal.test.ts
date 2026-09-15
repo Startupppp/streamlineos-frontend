@@ -50,8 +50,6 @@ jest.mock("@/hooks/api/onboarding-flow", () => ({
 jest.mock("@/lib/api/hooks/onboarding", () => ({
   useBankDetailsQuery: (...args: unknown[]) => mockUseBankDetailsQuery(...args),
   usePersonalDetailsQuery: (...args: unknown[]) => mockUsePersonalDetailsQuery(...args),
-  usePersonalInfoMutation: () => ({ mutateAsync: jest.fn().mockResolvedValue(undefined) }),
-  useBankDetailsMutation: () => ({ mutateAsync: jest.fn().mockResolvedValue(undefined) }),
 }));
 
 function okQuery() {

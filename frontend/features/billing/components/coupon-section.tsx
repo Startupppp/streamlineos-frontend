@@ -57,6 +57,7 @@ interface CouponSectionProps {
   appliedCoupon: CouponValidationResult | null;
   couponResult: CouponValidationResult | undefined;
   isValidatingCoupon: boolean;
+  canApply: boolean;
   helperText?: string;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onApply: () => void;
@@ -68,6 +69,7 @@ export function CouponSection({
   appliedCoupon,
   couponResult,
   isValidatingCoupon,
+  canApply,
   helperText,
   onInputChange,
   onApply,
@@ -100,7 +102,7 @@ export function CouponSection({
                 variant="outline"
                 size="sm"
                 onClick={onApply}
-                disabled={couponInput.trim().length < 3}
+                disabled={!canApply || couponInput.trim().length < 3}
                 isPending={isValidatingCoupon}
               >
                 Apply

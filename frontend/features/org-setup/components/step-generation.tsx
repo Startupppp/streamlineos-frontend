@@ -1,10 +1,24 @@
 "use client";
 
-import { useState, useEffect, useRef, useLayoutEffect, useCallback } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useLayoutEffect,
+  useCallback,
+} from "react";
 import { useSession } from "next-auth/react";
 import { AnimatePresence } from "framer-motion";
-import { clearBackendTokenCache, isApiError, setAutoSignOutSuppressed } from "@/lib/api-client";
-import { completeOnboardingGate, writeGateCookie } from "@/lib/onboarding-gate";
+import {
+  clearBackendTokenCache,
+  isApiError,
+  setAutoSignOutSuppressed,
+} from "@/lib/api-client";
+import {
+  clearGateCookie,
+  completeOnboardingGate,
+  writeGateCookie,
+} from "@/lib/onboarding-gate";
 import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
 import {
   SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
@@ -42,7 +56,8 @@ export function StepGeneration({ data }: StepGenerationProps) {
   const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
   const [completedSteps, setCompletedSteps] = useState(0);
   const [setupError, setSetupError] = useState<SetupError | null>(null);
-  const [orgCreatedResult, setOrgCreatedResult] = useState<OrgCreatedResult | null>(null);
+  const [orgCreatedResult, setOrgCreatedResult] =
+    useState<OrgCreatedResult | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isContinuing, setIsContinuing] = useState(false);
   const [isPollingAfterTimeout, setIsPollingAfterTimeout] = useState(false);
@@ -64,7 +79,9 @@ export function StepGeneration({ data }: StepGenerationProps) {
 
   const completeOrgSetup = useCompleteOrgSetupMutation();
   const completeOrgSetupRef = useRef(completeOrgSetup);
-  const provisioning = useSetupProvisioning(orgCreatedResult !== null || isPollingAfterTimeout);
+  const provisioning = useSetupProvisioning(
+    orgCreatedResult !== null || isPollingAfterTimeout,
+  );
 
   useEffect(() => {
     setAutoSignOutSuppressed(true);
@@ -109,6 +126,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
 
     try {
       if (autoLoginToken) {
+        writeGateCookie("org-setup-done", orgId);
         const outcome = await signInWithMagicToken(autoLoginToken);
         if (outcome.status === "indeterminate")
           throw new Error(
@@ -116,7 +134,6 @@ export function StepGeneration({ data }: StepGenerationProps) {
           );
         if (outcome.status !== "signed-in")
           throw new Error("Sign-in failed. Please retry.");
-        writeGateCookie("org-setup-done", orgId);
       } else {
         const claimsRun = beginClaimsRefresh();
         const claimsOutcome = await completeOnboardingGate(
@@ -139,6 +156,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
         }
       }
     } catch (err) {
+      clearGateCookie("org-setup-done", orgId);
       apiDoneRef.current = false;
       handleSetupError({ kind: "setup-failed", message: getErrorMessage(err) });
       return;
@@ -180,6 +198,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
     try {
       clearBackendTokenCache();
       if (orgResult.autoLoginToken) {
+        writeGateCookie("org-setup-done", orgResult.orgId);
         const outcome = await signInWithMagicToken(orgResult.autoLoginToken);
         if (outcome.status === "indeterminate")
           throw new Error(
@@ -187,7 +206,6 @@ export function StepGeneration({ data }: StepGenerationProps) {
           );
         if (outcome.status !== "signed-in")
           throw new Error("Sign-in failed. Please retry.");
-        writeGateCookie("org-setup-done", orgResult.orgId);
         clearAll(userId);
         setCompletionMarker(userId, orgResult.orgId);
         window.location.replace(destination);
@@ -209,6 +227,7 @@ export function StepGeneration({ data }: StepGenerationProps) {
         window.location.replace(destination);
       }
     } catch (err) {
+      clearGateCookie("org-setup-done", orgResult.orgId);
       apiDoneRef.current = false;
       toast.error(getErrorMessage(err));
       setIsContinuing(false);
@@ -252,7 +271,10 @@ export function StepGeneration({ data }: StepGenerationProps) {
       if (isApiError(err) && err.code === "TIMEOUT") {
         setIsPollingAfterTimeout(true);
       } else {
-        handleSetupError({ kind: "setup-failed", message: getErrorMessage(err) });
+        handleSetupError({
+          kind: "setup-failed",
+          message: getErrorMessage(err),
+        });
       }
     }
   }
@@ -277,13 +299,21 @@ export function StepGeneration({ data }: StepGenerationProps) {
   }, []);
 
   useEffect(() => {
-    if (!isPollingAfterTimeout || orgCreatedResult !== null || provisioning.orgId === null) return;
+    if (
+      !isPollingAfterTimeout ||
+      orgCreatedResult !== null ||
+      provisioning.orgId === null
+    )
+      return;
     setOrgCreatedResult({ autoLoginToken: null, orgId: provisioning.orgId });
   }, [isPollingAfterTimeout, orgCreatedResult, provisioning.orgId]);
 
   useEffect(() => {
     if (!provisioning.isReady || !orgCreatedResult) return;
-    finishSetupRef.current(orgCreatedResult.autoLoginToken, orgCreatedResult.orgId);
+    finishSetupRef.current(
+      orgCreatedResult.autoLoginToken,
+      orgCreatedResult.orgId,
+    );
   }, [provisioning.isReady, orgCreatedResult]);
 
   const progress = Math.round((completedSteps / total) * 100);

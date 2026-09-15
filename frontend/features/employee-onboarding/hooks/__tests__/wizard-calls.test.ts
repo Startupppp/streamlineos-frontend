@@ -1,7 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
 
-const mockSavePersonal = jest.fn();
-const mockSaveBank = jest.fn();
 const mockPatchSession = jest.fn();
 
 const mockUseSession = jest.fn().mockReturnValue({
@@ -56,8 +54,6 @@ jest.mock("@/hooks/api/onboarding-flow", () => ({
 jest.mock("@/lib/api/hooks/onboarding", () => ({
   useBankDetailsQuery: (...args: unknown[]) => mockUseBankDetailsQuery(...args),
   usePersonalDetailsQuery: (...args: unknown[]) => mockUsePersonalDetailsQuery(...args),
-  usePersonalInfoMutation: () => ({ mutateAsync: mockSavePersonal }),
-  useBankDetailsMutation: () => ({ mutateAsync: mockSaveBank }),
 }));
 
 jest.mock("@/features/employee-onboarding/lib/draft-storage", () => ({
@@ -103,8 +99,6 @@ const BANK_DRAFT = {
 describe("useOnboardingWizard — call count guarantees", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSavePersonal.mockResolvedValue(undefined);
-    mockSaveBank.mockResolvedValue(undefined);
     mockPatchSession.mockResolvedValue({ currentStep: "bank", completedSteps: [], data: {} });
     mockUsePatchOnboardingSessionMutation.mockReturnValue({
       mutateAsync: mockPatchSession,
@@ -118,7 +112,7 @@ describe("useOnboardingWizard — call count guarantees", () => {
     });
   });
 
-  it("completing the personal step calls savePersonal exactly once and patchSession exactly once", async () => {
+  it("completing the personal step performs no server mutation", async () => {
     const { useOnboardingWizard } = jest.requireActual<
       typeof import("@/features/employee-onboarding/hooks/use-onboarding-wizard")
     >("@/features/employee-onboarding/hooks/use-onboarding-wizard");
@@ -129,12 +123,10 @@ describe("useOnboardingWizard — call count guarantees", () => {
       await result.current.handlePersonalComplete(PERSONAL_DRAFT);
     });
 
-    expect(mockSavePersonal).toHaveBeenCalledTimes(1);
-    expect(mockPatchSession).toHaveBeenCalledTimes(1);
-    expect(mockSaveBank).not.toHaveBeenCalled();
+    expect(mockPatchSession).not.toHaveBeenCalled();
   });
 
-  it("completing the bank step calls saveBank exactly once and patchSession exactly once", async () => {
+  it("completing the bank step performs no server mutation", async () => {
     mockUseOnboardingSessionQuery.mockReturnValue(makeSession("bank", ["personal"]));
     mockPatchSession.mockResolvedValue({ currentStep: "finish", completedSteps: ["personal", "bank"], data: {} });
 
@@ -148,9 +140,7 @@ describe("useOnboardingWizard — call count guarantees", () => {
       await result.current.handleBankComplete(BANK_DRAFT);
     });
 
-    expect(mockSaveBank).toHaveBeenCalledTimes(1);
-    expect(mockPatchSession).toHaveBeenCalledTimes(1);
-    expect(mockSavePersonal).not.toHaveBeenCalled();
+    expect(mockPatchSession).not.toHaveBeenCalled();
   });
 
   it("field draft changes do NOT call patchSession — only localStorage is written", async () => {
@@ -200,8 +190,6 @@ describe("useOnboardingWizard — call count guarantees", () => {
     expect(result.current.activeTab).toBe("bank");
 
     expect(mockPatchSession).not.toHaveBeenCalled();
-    expect(mockSavePersonal).not.toHaveBeenCalled();
-    expect(mockSaveBank).not.toHaveBeenCalled();
   });
 
   it("re-selecting the step already on screen is a no-op, not another render cycle", () => {
@@ -221,6 +209,34 @@ describe("useOnboardingWizard — call count guarantees", () => {
 
     expect(result.current.activeTab).toBe("bank");
     expect(mockPatchSession).not.toHaveBeenCalled();
+  });
+
+  it("clearing persisted data after submission keeps the completed review mounted", async () => {
+    mockUseOnboardingSessionQuery.mockReturnValue(
+      makeSession("finish", ["personal", "bank"]),
+    );
+
+    const { clearOnboardingDraft } = jest.requireMock<
+      typeof import("@/features/employee-onboarding/lib/draft-storage")
+    >("@/features/employee-onboarding/lib/draft-storage");
+    const { useOnboardingWizard } = jest.requireActual<
+      typeof import("@/features/employee-onboarding/hooks/use-onboarding-wizard")
+    >("@/features/employee-onboarding/hooks/use-onboarding-wizard");
+
+    const { result } = renderHook(() => useOnboardingWizard());
+
+    await act(async () => {
+      await result.current.handlePersonalComplete(PERSONAL_DRAFT);
+      await result.current.handleBankComplete(BANK_DRAFT);
+    });
+    act(() => {
+      result.current.clearDraft();
+    });
+
+    expect(clearOnboardingDraft).toHaveBeenCalledWith("u-1", "org-1");
+    expect(result.current.activeTab).toBe("finish");
+    expect(result.current.wizardDraft.personal.phone).toBe(PERSONAL_DRAFT.phone);
+    expect(result.current.wizardDraft.bank.accountNumber).toBe(BANK_DRAFT.accountNumber);
   });
 });
 

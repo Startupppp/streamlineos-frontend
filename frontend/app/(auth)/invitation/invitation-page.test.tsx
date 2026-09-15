@@ -178,14 +178,16 @@ beforeEach(() => {
 });
 
 describe("InvitationPage — accepting as a new joiner", () => {
-  it("signs the invited account in once and lands on the dashboard", async () => {
+  it("signs the invited account in once and lands on employee onboarding", async () => {
     acceptResolvesWith("invite-login-1");
     signInWithMagicToken.mockResolvedValue({ status: "signed-in" });
 
     render(<InvitationPage />);
     await submitNewJoinerForm();
 
-    await waitFor(() => expect(navigation.href).toBe("/dashboard"));
+    await waitFor(() =>
+      expect(navigation.href).toBe("/employee-onboarding"),
+    );
     expect(acceptMutate).toHaveBeenCalledTimes(1);
     expect(acceptMutate).toHaveBeenCalledWith(
       { token: "invite-token-1", firstName: "Priya", lastName: undefined },
