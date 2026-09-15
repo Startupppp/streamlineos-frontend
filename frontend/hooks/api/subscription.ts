@@ -187,7 +187,7 @@ export function useValidateCoupon(code: string, plan: SubscriptionPlan | null, b
     queryKey: growthAndSignQueryKeys.billing.coupon(code, plan, billingCycle),
     queryFn: ({ signal }) =>
       apiClient.get(
-        `/billing/coupons/validate?code=${encodeURIComponent(code)}&plan=${plan ?? ""}`,
+        `/billing/coupons/validate?code=${encodeURIComponent(code)}&plan=${plan ?? ""}${billingCycle ? `&billingCycle=${billingCycle}` : ""}`,
         undefined,
         signal,
         couponContract,

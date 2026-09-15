@@ -17,7 +17,6 @@ const ClockInWidget = dynamic(
     })),
   { ssr: false },
 );
-import { DashboardStatsSkeleton } from "@/components/ui/dashboard-skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   StatCard,
@@ -136,7 +135,7 @@ export function DashboardClient({ expensesSlot, publicDocumentsSlot }: Dashboard
           aria-live="polite"
           aria-label="Loading dashboard"
         >
-          <DashboardStatsSkeleton />
+          <StatCardGridSkeleton cols={4} />
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             <WidgetSkeleton rows={4} />
             <WidgetSkeleton rows={3} />
@@ -180,7 +179,7 @@ export function DashboardClient({ expensesSlot, publicDocumentsSlot }: Dashboard
       >
         <div className="flex flex-1 min-h-0 flex-col gap-4">
           {isLoading ? (
-            <DashboardStatsSkeleton />
+            <StatCardGridSkeleton cols={4} />
           ) : error ? (
             <div
               className="rounded-xl border border-destructive/30 bg-destructive/5 p-6"

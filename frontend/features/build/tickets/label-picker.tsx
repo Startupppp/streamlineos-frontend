@@ -15,7 +15,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import {
-  useLabels,
+  useProjectLabels,
   useCreateOrgLabel,
   useAddLabelToTicket,
   useRemoveLabelFromTicket,
@@ -58,7 +58,7 @@ export function LabelPicker({
   const [selectedColor, setSelectedColor] = useState<string>(DEFAULT_LABEL_COLOR);
   const queryClient = useQueryClient();
 
-  const { data: allLabels } = useLabels();
+  const { data: allLabels } = useProjectLabels(undefined);
 
   const createLabel = useCreateOrgLabel({
     onSuccess: (newLabel) => {

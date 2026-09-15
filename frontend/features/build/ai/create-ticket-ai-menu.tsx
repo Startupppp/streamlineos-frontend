@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useRef } from "react";
 import { useCan } from "@/hooks/api/access";
 import {
-  AiFieldTrigger,
   type AiActionResult,
   type AiInlineSession,
   useAiInlineAction,
@@ -229,17 +228,4 @@ export function useCreateTicketAi({
       suggestFieldsMutation.isPending,
     ],
   );
-}
-
-interface CreateTicketAiFieldTriggerProps {
-  label: string;
-  disabledReason?: string;
-  disabled?: boolean;
-  isPending?: boolean;
-  onClick: () => void;
-  className?: string;
-}
-
-export function CreateTicketAiFieldTrigger(props: CreateTicketAiFieldTriggerProps) {
-  return <AiFieldTrigger {...props} />;
 }

@@ -20,10 +20,9 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { useProjects } from "@/hooks/api/build/projects";
 import {
   useCreateTicketAi,
-  CreateTicketAiFieldTrigger,
   type CreateTicketAiFieldPatch,
 } from "@/features/build/ai/create-ticket-ai-menu";
-import { AiInlinePreview, type AiInlineSession } from "@/components/ai";
+import { AiFieldTrigger, AiInlinePreview, type AiInlineSession } from "@/components/ai";
 import { useCreateTicketForm } from "./use-create-ticket-form";
 import { TicketCreateProperties } from "./ticket-create-properties";
 import {
@@ -423,7 +422,7 @@ export function CreateTicketDialog({
                     />
                   </div>
                   {createTicketAi.canUseAI ? (
-                    <CreateTicketAiFieldTrigger
+                    <AiFieldTrigger
                       {...createTicketAi.fieldsTrigger}
                       className="mt-0.5 shrink-0"
                     />

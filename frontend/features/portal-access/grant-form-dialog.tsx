@@ -83,7 +83,7 @@ interface EditProps {
 
 type Props = CreateProps | EditProps;
 
-function GrantFormDialogInner({ open, onOpenChange, mode, defaultValues }: Props) {
+export function GrantFormDialog({ open, onOpenChange, mode, defaultValues }: Props) {
   const createGrant = useCreateGrant();
   const updateGrant = useUpdateGrant(
     mode === "edit" ? defaultValues.projectClientGrantId : "",
@@ -357,8 +357,4 @@ function GrantFormDialogInner({ open, onOpenChange, mode, defaultValues }: Props
       </Form>
     </AppDialog>
   );
-}
-
-export function GrantFormDialog(props: Props) {
-  return <GrantFormDialogInner {...props} />;
 }

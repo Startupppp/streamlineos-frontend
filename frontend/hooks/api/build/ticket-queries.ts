@@ -22,11 +22,9 @@ const subtaskListLazy = lazyContract(() =>
 );
 import type {
   Ticket,
-  TicketLabel,
   CursorPageResponse,
   TicketFilters,
 } from "@/types/projects";
-import { useProjectLabels } from "./projects";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const BOARD_PAGE_SIZE = 100;
@@ -162,10 +160,6 @@ export function useTicketByKey(
     staleTime: 60_000,
     ...options,
   });
-}
-
-export function useLabels(options?: Omit<UseQueryOptions<TicketLabel[]>, "queryKey" | "queryFn">) {
-  return useProjectLabels(undefined, options);
 }
 
 export function useSubtasks(

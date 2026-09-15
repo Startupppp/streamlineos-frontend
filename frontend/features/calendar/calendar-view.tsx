@@ -29,7 +29,6 @@ import {
 } from "./calendar-lazy-fallbacks";
 import { CALENDAR_TRUNCATED_WARNING } from "./calendar-event-constants";
 import { useCalendarAccountFilters } from "./use-calendar-account-filters";
-import { useCrmEventsVisible } from "./use-crm-calendar-events";
 import { useCalendarSourceVisibility } from "./use-calendar-source-visibility";
 import { useCalendarSourceDeepLink } from "./use-calendar-source-deeplink";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -201,7 +200,7 @@ export function CalendarView() {
 
   const { hiddenIds } = useCalendarAccountFilters();
   const { visible: hrEventsVisible, toggle: toggleHrEvents } = useCalendarSourceVisibility("hrEvents", true);
-  const { visible: crmEventsVisible, toggle: toggleCrmEvents } = useCrmEventsVisible();
+  const { visible: crmEventsVisible, toggle: toggleCrmEvents } = useCalendarSourceVisibility("crmEvents", true);
   const {
     visible: attendanceEventsVisible,
     toggle: toggleAttendanceEvents,
