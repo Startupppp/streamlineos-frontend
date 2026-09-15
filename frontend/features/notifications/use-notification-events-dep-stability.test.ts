@@ -2,7 +2,7 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { PropsWithChildren } from "react";
-import { useNotificationEvents } from "./use-notification-events";
+import { clearStreamToken, useNotificationEvents } from "./use-notification-events";
 
 const mockConsumeStream = jest.fn();
 
@@ -33,6 +33,7 @@ describe("useNotificationEvents — effect dependency array stability", () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
+    clearStreamToken();
     savedFetch = global.fetch;
     global.fetch = jest.fn().mockImplementation((url: string) => {
       if (String(url).includes("/notifications/events/token"))
@@ -72,6 +73,24 @@ describe("useNotificationEvents — effect dependency array stability", () => {
 
     act(() => {
       useRouterMock.mockReturnValue({ push: jest.fn() });
+      rerender();
+    });
+
+    expect(firstSignal.aborted).toBe(false);
+    expect(mockConsumeStream).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not restart the stream during a claims refresh", async () => {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { rerender } = renderHook(() => useNotificationEvents(), {
+      wrapper: makeWrapper(qc),
+    });
+
+    await waitFor(() => expect(mockConsumeStream).toHaveBeenCalledTimes(1));
+    const firstSignal = (mockConsumeStream.mock.calls[0] as [string, string, AbortSignal])[2];
+
+    act(() => {
+      useSessionMock.mockReturnValue({ data: { orgId: "org-1" }, status: "loading" });
       rerender();
     });
 

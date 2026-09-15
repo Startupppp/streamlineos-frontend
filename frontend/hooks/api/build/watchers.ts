@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
@@ -10,15 +10,15 @@ import type { TicketWatcher } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 /** Deferred: `hooks/api/index.ts` re-exports this, and the schema pulls Zod. */
-const successLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.successContract),
-);
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
 const watchersContract = lazyContract(() =>
   import("@/hooks/api/watchers-schema").then((m) => m.buildTicketWatchersContract),
+);
+const watcherMutationContract = lazyContract(() =>
+  import("@/hooks/api/watchers-schema").then((m) => m.buildWatcherMutationContract),
 );
 
 export function useWatchers(
@@ -62,11 +62,11 @@ export function useToggleWatch(projectId: number) {
         );
         return;
       }
-      await apiClient.post<{ success: boolean }>(
+      await apiClient.post(
         `/build/${projectId}/tickets/${ticketId}/watchers`,
         {},
         undefined,
-        successLazy,
+        watcherMutationContract,
       );
     },
     onSuccess: (_, variables) => {
@@ -81,19 +81,20 @@ export function useAddWatcher(projectId: number) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation("build:tickets:update", {
     mutationKey: ["projects", "watchers", "add"],
-    mutationFn: ({
+    mutationFn: async ({
       ticketId,
       userId,
     }: {
       ticketId: number;
       userId: string;
-    }) =>
-      apiClient.post<{ success: boolean }>(
+    }) => {
+      await apiClient.post(
         `/build/${projectId}/tickets/${ticketId}/watchers`,
         { userId },
         undefined,
-        successLazy,
-      ),
+        watcherMutationContract,
+      );
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.watchers(variables.ticketId),

@@ -8,6 +8,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateTicket } from "@/hooks/api/build/tickets";
 import { Gauge } from "lucide-react";
 import { InlineFieldWrapper } from "./card-field-wrapper";
+import { parseTicketPointsInput } from "../shared/ticket-points";
 
 interface InlineEstimateProps {
   ticketId: number;
@@ -34,17 +35,12 @@ export const InlineEstimate = memo(function InlineEstimate({
   }
 
   function handleSubmit() {
-    const trimmed = value.trim();
-    const parsed = trimmed === "" ? null : parseInt(trimmed, 10);
-    if (
-      trimmed !== "" &&
-      (Number.isNaN(parsed) || (parsed !== null && parsed < 0))
-    ) {
-      setEditing(false);
+    const next = parseTicketPointsInput(value);
+    if (next === undefined) {
+      toast.error("Story points must be a non-negative integer");
       return;
     }
-    const next = parsed ?? undefined;
-    const prev = currentPoints ?? undefined;
+    const prev = currentPoints ?? null;
     if (next !== prev) {
       updateTicket.mutate({ ticketId, points: next });
     }
@@ -76,7 +72,7 @@ export const InlineEstimate = memo(function InlineEstimate({
     el?.select();
   }
 
-  const display = currentPoints != null && currentPoints > 0 ? currentPoints : null;
+  const display = currentPoints ?? null;
 
   if (editing) {
     return (

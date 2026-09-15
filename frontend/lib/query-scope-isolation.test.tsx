@@ -111,6 +111,28 @@ describe("QueryProvider scope isolation on org switch", () => {
     }
   });
 
+  it("keeps the same organization cache during a claims refresh", () => {
+    const { rerender } = render(
+      <QueryProvider>
+        <ClientCapture />
+      </QueryProvider>,
+    );
+    const authenticatedClient = requireCapturedClient();
+
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { id: USER }, orgId: ORG_A },
+      status: "loading",
+      update: jest.fn(),
+    });
+    rerender(
+      <QueryProvider>
+        <ClientCapture />
+      </QueryProvider>,
+    );
+
+    expect(requireCapturedClient()).toBe(authenticatedClient);
+  });
+
   it("proves the guard bites: a plain QueryClient exposes cross-org data", () => {
     const DATA = { secret: "belongs-to-org-a-only" };
     const key = queryKeys.notifications.unreadCount();

@@ -14,15 +14,28 @@ import type {
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
-import { addTicketToCollections, invalidateBuildViews, invalidateTicketUpdateViews, patchTicketCollections, removeTicketFromCollections, restoreTicketCollections, rollbackTicketFields, ticketRollback, type TicketSnapshots } from "./ticket-cache";
-
+import {
+  addTicketToCollections,
+  invalidateBuildViews,
+  invalidateTicketUpdateViews,
+  patchTicketCollections,
+  removeTicketFromCollections,
+  restoreTicketCollections,
+  rollbackTicketFields,
+  ticketRollback,
+  type TicketSnapshots,
+} from "./ticket-cache";
 
 const ticketRowLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketRowContract),
+  import("@/hooks/api/build/build-tickets-schema").then(
+    (m) => m.ticketRowContract,
+  ),
 );
 
 const ticketUpdateResultLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketUpdateResultContract),
+  import("@/hooks/api/build/build-tickets-schema").then(
+    (m) => m.ticketUpdateResultContract,
+  ),
 );
 
 const noContentLazy = lazyContract(() =>
@@ -30,11 +43,15 @@ const noContentLazy = lazyContract(() =>
 );
 
 const rankTicketResultLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.rankTicketResultContract),
+  import("@/hooks/api/build/build-tickets-schema").then(
+    (m) => m.rankTicketResultContract,
+  ),
 );
 
 const bulkUpdateResultLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.bulkUpdateResultContract),
+  import("@/hooks/api/build/build-tickets-schema").then(
+    (m) => m.bulkUpdateResultContract,
+  ),
 );
 
 export interface UpdateTicketResponse {
@@ -52,7 +69,9 @@ interface UpdateTicketContext {
   listSnapshots: TicketSnapshots;
 }
 
-function resolveAssigneeId(input: UpdateTicketInput): string | null | undefined {
+function resolveAssigneeId(
+  input: UpdateTicketInput,
+): string | null | undefined {
   if (input.assigneeIds !== undefined) return input.assigneeIds[0] ?? null;
   if (input.assigneeId !== undefined) return input.assigneeId;
   return undefined;
@@ -76,7 +95,8 @@ function applyTicketPatch(
   if (input.cycleId !== undefined) next.cycleId = input.cycleId;
   if (input.startDate !== undefined) next.startDate = input.startDate;
   if (input.dueDate !== undefined) next.dueDate = input.dueDate;
-  if (input.parentTicketId !== undefined) next.parentTicketId = input.parentTicketId;
+  if (input.parentTicketId !== undefined)
+    next.parentTicketId = input.parentTicketId;
   const assigneeId = resolveAssigneeId(input);
   if (assigneeId !== undefined) {
     next.assigneeId = assigneeId;
@@ -105,25 +125,47 @@ interface CreateTicketContext {
 }
 
 export function useCreateTicket(
-  options?: Omit<UseMutationOptions<Ticket, Error, CreateTicketInput, CreateTicketContext>, "mutationFn" | "mutationKey" | "onMutate">
+  options?: Omit<
+    UseMutationOptions<Ticket, Error, CreateTicketInput, CreateTicketContext>,
+    "mutationFn" | "mutationKey" | "onMutate"
+  >,
 ) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<Ticket, Error, CreateTicketInput, CreateTicketContext>("build:tickets:create", {
+  return useAuthorizedMutation<
+    Ticket,
+    Error,
+    CreateTicketInput,
+    CreateTicketContext
+  >("build:tickets:create", {
     ...options,
     mutationKey: ["projects", "tickets", "create"],
     mutationFn: ({ projectId, ...data }) =>
-      apiClient.post<Ticket>(`/build/${projectId}/tickets`, data, undefined, ticketRowLazy),
+      apiClient.post<Ticket>(
+        `/build/${projectId}/tickets`,
+        data,
+        undefined,
+        ticketRowLazy,
+      ),
     onMutate: async (variables) => {
       const tempId = -Date.now();
-      const subtasksKey = variables.parentTicketId !== undefined
-        ? buildWorkQueryKeys.projects.subtasks(variables.parentTicketId, variables.projectId)
-        : null;
-      await queryClient.cancelQueries({ queryKey: buildWorkQueryKeys.projects.tickets({ projectId: variables.projectId }) });
+      const subtasksKey =
+        variables.parentTicketId !== undefined
+          ? buildWorkQueryKeys.projects.subtasks(
+              variables.parentTicketId,
+              variables.projectId,
+            )
+          : null;
+      await queryClient.cancelQueries({
+        queryKey: buildWorkQueryKeys.projects.tickets({
+          projectId: variables.projectId,
+        }),
+      });
       if (subtasksKey !== null)
         await queryClient.cancelQueries({ queryKey: subtasksKey });
-      const previousSubtasks = subtasksKey !== null
-        ? (queryClient.getQueryData<Ticket[]>(subtasksKey) ?? null)
-        : null;
+      const previousSubtasks =
+        subtasksKey !== null
+          ? (queryClient.getQueryData<Ticket[]>(subtasksKey) ?? null)
+          : null;
       const tempTicket: Ticket = {
         id: tempId,
         orgId: "",
@@ -155,22 +197,36 @@ export function useCreateTicket(
         updatedAt: new Date().toISOString(),
         assignee: null,
       };
-      const listSnapshots = addTicketToCollections(queryClient, variables.projectId, tempTicket);
+      const listSnapshots = addTicketToCollections(
+        queryClient,
+        variables.projectId,
+        tempTicket,
+      );
       if (subtasksKey !== null)
-        queryClient.setQueryData<Ticket[]>(subtasksKey, (old) => (old ? [tempTicket, ...old] : [tempTicket]));
+        queryClient.setQueryData<Ticket[]>(subtasksKey, (old) =>
+          old ? [tempTicket, ...old] : [tempTicket],
+        );
       return { tempId, listSnapshots, subtasksKey, previousSubtasks };
     },
     onSuccess: (data, variables, context, mutFnCtx) => {
       if (context) {
-        void patchTicketCollections(queryClient, variables.projectId, (t) => (t.id === context.tempId ? data : t));
+        void patchTicketCollections(queryClient, variables.projectId, (t) =>
+          t.id === context.tempId ? data : t,
+        );
         if (context.subtasksKey !== null)
-          queryClient.setQueryData<Ticket[]>(context.subtasksKey, (old) => (old ? old.map((t) => (t.id === context.tempId ? data : t)) : [data]));
+          queryClient.setQueryData<Ticket[]>(context.subtasksKey, (old) =>
+            old ? old.map((t) => (t.id === context.tempId ? data : t)) : [data],
+          );
       }
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
     onError: (error, variables, context, mutFnCtx) => {
       if (context) {
-        removeTicketFromCollections(queryClient, variables.projectId, context.tempId);
+        removeTicketFromCollections(
+          queryClient,
+          variables.projectId,
+          context.tempId,
+        );
         if (context.subtasksKey !== null)
           queryClient.setQueryData<Ticket[]>(
             context.subtasksKey,
@@ -191,12 +247,22 @@ export function useCreateTicket(
 export function useUpdateTicket(
   projectId: number,
   options?: Omit<
-    UseMutationOptions<UpdateTicketResponse, Error, UpdateTicketInput, UpdateTicketContext>,
+    UseMutationOptions<
+      UpdateTicketResponse,
+      Error,
+      UpdateTicketInput,
+      UpdateTicketContext
+    >,
     "mutationFn" | "mutationKey" | "onMutate"
-  >
+  >,
 ) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<UpdateTicketResponse, Error, UpdateTicketInput, UpdateTicketContext>("build:tickets:update", {
+  return useAuthorizedMutation<
+    UpdateTicketResponse,
+    Error,
+    UpdateTicketInput,
+    UpdateTicketContext
+  >("build:tickets:update", {
     ...options,
     mutationKey: ["projects", "tickets", "update"],
     mutationFn: ({ ticketId, ...data }) =>
@@ -212,24 +278,38 @@ export function useUpdateTicket(
       await Promise.all([
         queryClient.cancelQueries({ queryKey: detailKey }),
         queryClient.cancelQueries({ queryKey: ticketKey }),
-        queryClient.cancelQueries({ queryKey: buildWorkQueryKeys.projects.tickets({ projectId }) }),
+        queryClient.cancelQueries({
+          queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
+        }),
       ]);
-      const previousDetail = queryClient.getQueryData<ProjectWithDetails | null>(detailKey);
+      const previousDetail =
+        queryClient.getQueryData<ProjectWithDetails | null>(detailKey);
       const previousTicket = queryClient.getQueryData<Ticket | null>(ticketKey);
       const members = previousDetail?.members ?? [];
-      const listSnapshots = patchTicketCollections(queryClient, projectId, (ticket) =>
-        ticket.id === variables.ticketId ? applyTicketPatch(ticket, variables, members) : ticket);
+      const listSnapshots = patchTicketCollections(
+        queryClient,
+        projectId,
+        (ticket) =>
+          ticket.id === variables.ticketId
+            ? applyTicketPatch(ticket, variables, members)
+            : ticket,
+      );
 
       if (previousDetail?.tickets) {
-        queryClient.setQueryData<ProjectWithDetails | null>(detailKey, (old) => {
-          if (!old?.tickets) return old;
-          return {
-            ...old,
-            tickets: old.tickets.map((t) =>
-              t.id === variables.ticketId ? applyTicketPatch(t, variables, members) : t,
-            ),
-          };
-        });
+        queryClient.setQueryData<ProjectWithDetails | null>(
+          detailKey,
+          (old) => {
+            if (!old?.tickets) return old;
+            return {
+              ...old,
+              tickets: old.tickets.map((t) =>
+                t.id === variables.ticketId
+                  ? applyTicketPatch(t, variables, members)
+                  : t,
+              ),
+            };
+          },
+        );
       }
       if (previousTicket) {
         queryClient.setQueryData<Ticket | null>(ticketKey, (old) =>
@@ -241,19 +321,35 @@ export function useUpdateTicket(
         ticketKey,
         previousDetail,
         previousTicket,
-        optimisticDetail: queryClient.getQueryData<ProjectWithDetails | null>(detailKey),
+        optimisticDetail: queryClient.getQueryData<ProjectWithDetails | null>(
+          detailKey,
+        ),
         optimisticTicket: queryClient.getQueryData<Ticket | null>(ticketKey),
         listSnapshots,
       };
     },
     onError: (error, variables, context, mutFnCtx) => {
       if (context) {
-        const restore = ticketRollback(context.previousDetail?.tickets ?? [], context.optimisticDetail?.tickets ?? []);
-        queryClient.setQueryData<ProjectWithDetails | null>(context.detailKey, (current) =>
-          current?.tickets ? { ...current, tickets: current.tickets.map(restore) } : current);
+        const restore = ticketRollback(
+          context.previousDetail?.tickets ?? [],
+          context.optimisticDetail?.tickets ?? [],
+        );
+        queryClient.setQueryData<ProjectWithDetails | null>(
+          context.detailKey,
+          (current) =>
+            current?.tickets
+              ? { ...current, tickets: current.tickets.map(restore) }
+              : current,
+        );
         queryClient.setQueryData<Ticket | null>(context.ticketKey, (current) =>
           current && context.previousTicket && context.optimisticTicket
-            ? rollbackTicketFields(current, context.previousTicket, context.optimisticTicket) : current);
+            ? rollbackTicketFields(
+                current,
+                context.previousTicket,
+                context.optimisticTicket,
+              )
+            : current,
+        );
         restoreTicketCollections(queryClient, context.listSnapshots);
       }
       options?.onError?.(error, variables, context, mutFnCtx);
@@ -291,24 +387,30 @@ export function useUpdateTicket(
 
 export function useDeleteTicket(
   projectId: number,
-  options?: Omit<UseMutationOptions<void, Error, { ticketId: number }>, "mutationFn">
+  options?: Omit<
+    UseMutationOptions<void, Error, { ticketId: number }>,
+    "mutationFn"
+  >,
 ) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<void, Error, { ticketId: number }>("build:tickets:delete", {
-    ...options,
-    mutationKey: ["projects", "tickets", "delete"],
-    mutationFn: ({ ticketId }) =>
-      apiClient.delete<void>(
-        `/build/${projectId}/tickets/${ticketId}`,
-        undefined,
-        undefined,
-        noContentLazy,
-      ),
-    onSuccess: (data, variables, context, mutFnCtx) => {
-      invalidateBuildViews(queryClient, projectId, [variables.ticketId]);
-      options?.onSuccess?.(data, variables, context, mutFnCtx);
+  return useAuthorizedMutation<void, Error, { ticketId: number }>(
+    "build:tickets:delete",
+    {
+      ...options,
+      mutationKey: ["projects", "tickets", "delete"],
+      mutationFn: ({ ticketId }) =>
+        apiClient.delete<void>(
+          `/build/${projectId}/tickets/${ticketId}`,
+          undefined,
+          undefined,
+          noContentLazy,
+        ),
+      onSuccess: (data, variables, context, mutFnCtx) => {
+        invalidateBuildViews(queryClient, projectId, [variables.ticketId]);
+        options?.onSuccess?.(data, variables, context, mutFnCtx);
+      },
     },
-  });
+  );
 }
 
 export interface RankTicketResponse {
@@ -321,10 +423,15 @@ export function useRankTicket<TContext = unknown>(
   options?: Omit<
     UseMutationOptions<RankTicketResponse, Error, RankTicketInput, TContext>,
     "mutationFn" | "mutationKey"
-  >
+  >,
 ) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<RankTicketResponse, Error, RankTicketInput, TContext>("build:tickets:update", {
+  return useAuthorizedMutation<
+    RankTicketResponse,
+    Error,
+    RankTicketInput,
+    TContext
+  >("build:tickets:update", {
     ...options,
     mutationKey: ["projects", "tickets", "rank"],
     mutationFn: ({ projectId, ticketId, ...data }) =>
@@ -335,7 +442,12 @@ export function useRankTicket<TContext = unknown>(
         rankTicketResultLazy,
       ),
     onSettled: (data, error, variables, context, mutationContext) => {
-      invalidateBuildViews(queryClient, variables.projectId, [variables.ticketId], variables.status !== undefined);
+      invalidateBuildViews(
+        queryClient,
+        variables.projectId,
+        [variables.ticketId],
+        variables.status !== undefined,
+      );
       options?.onSettled?.(data, error, variables, context, mutationContext);
     },
   });
@@ -350,9 +462,36 @@ export interface BulkUpdateTicketsInput {
   parentTicketId?: number | null;
 }
 
+interface BulkUpdateTicketsContext {
+  previousDetail: ProjectWithDetails | null | undefined;
+  optimisticDetail: ProjectWithDetails | null | undefined;
+  previousTickets: Map<number, Ticket | null | undefined>;
+  optimisticTickets: Map<number, Ticket | null | undefined>;
+  listSnapshots: TicketSnapshots;
+}
+
+function toTicketUpdateInput(
+  ticketId: number,
+  input: BulkUpdateTicketsInput,
+): UpdateTicketInput {
+  return {
+    ticketId,
+    assigneeId: input.assigneeId,
+    status: input.status,
+    sprintId: input.sprintId,
+    priority: input.priority,
+    parentTicketId: input.parentTicketId,
+  };
+}
+
 export function useBulkUpdateTickets(projectId: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("build:tickets:update", {
+  return useAuthorizedMutation<
+    { updated: number; ticketIds: number[] },
+    Error,
+    BulkUpdateTicketsInput,
+    BulkUpdateTicketsContext
+  >("build:tickets:update", {
     mutationKey: ["projects", "tickets", "bulk-update"],
     mutationFn: (data: BulkUpdateTicketsInput) =>
       apiClient.post<{ updated: number; ticketIds: number[] }>(
@@ -361,7 +500,113 @@ export function useBulkUpdateTickets(projectId: number) {
         undefined,
         bulkUpdateResultLazy,
       ),
-    onSuccess: (_data, variables) => {
+    onMutate: async (variables) => {
+      const detailKey = buildWorkQueryKeys.projects.detail(projectId);
+      const ticketKeys = variables.ticketIds.map((ticketId) =>
+        buildWorkQueryKeys.projects.ticket(ticketId),
+      );
+      await Promise.all([
+        queryClient.cancelQueries({
+          queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
+        }),
+        queryClient.cancelQueries({ queryKey: detailKey }),
+        ...ticketKeys.map((queryKey) =>
+          queryClient.cancelQueries({ queryKey }),
+        ),
+      ]);
+      const previousDetail =
+        queryClient.getQueryData<ProjectWithDetails | null>(detailKey);
+      const members = previousDetail?.members ?? [];
+      const selected = new Set(variables.ticketIds);
+      const patch = (ticket: Ticket) =>
+        selected.has(ticket.id)
+          ? applyTicketPatch(
+              ticket,
+              toTicketUpdateInput(ticket.id, variables),
+              members,
+            )
+          : ticket;
+      const listSnapshots = patchTicketCollections(
+        queryClient,
+        projectId,
+        patch,
+      );
+      if (previousDetail?.tickets) {
+        queryClient.setQueryData<ProjectWithDetails | null>(detailKey, {
+          ...previousDetail,
+          tickets: previousDetail.tickets.map(patch),
+        });
+      }
+      const previousTickets = new Map<number, Ticket | null | undefined>();
+      const optimisticTickets = new Map<number, Ticket | null | undefined>();
+      for (const ticketId of variables.ticketIds) {
+        const queryKey = buildWorkQueryKeys.projects.ticket(ticketId);
+        const previous = queryClient.getQueryData<Ticket | null>(queryKey);
+        previousTickets.set(ticketId, previous);
+        if (previous) queryClient.setQueryData(queryKey, patch(previous));
+        optimisticTickets.set(
+          ticketId,
+          queryClient.getQueryData<Ticket | null>(queryKey),
+        );
+      }
+      return {
+        previousDetail,
+        optimisticDetail: queryClient.getQueryData<ProjectWithDetails | null>(
+          detailKey,
+        ),
+        previousTickets,
+        optimisticTickets,
+        listSnapshots,
+      };
+    },
+    onError: (_error, variables, context) => {
+      if (!context) return;
+      restoreTicketCollections(queryClient, context.listSnapshots);
+      const detailKey = buildWorkQueryKeys.projects.detail(projectId);
+      if (context.previousDetail && context.optimisticDetail) {
+        queryClient.setQueryData<ProjectWithDetails | null>(
+          detailKey,
+          (current) => {
+            if (!current?.tickets) return current;
+            const previousById = new Map(
+              context.previousDetail?.tickets?.map((ticket) => [
+                ticket.id,
+                ticket,
+              ]) ?? [],
+            );
+            const optimisticById = new Map(
+              context.optimisticDetail?.tickets?.map((ticket) => [
+                ticket.id,
+                ticket,
+              ]) ?? [],
+            );
+            return {
+              ...current,
+              tickets: current.tickets.map((ticket) => {
+                const previous = previousById.get(ticket.id);
+                const optimistic = optimisticById.get(ticket.id);
+                return previous && optimistic
+                  ? rollbackTicketFields(ticket, previous, optimistic)
+                  : ticket;
+              }),
+            };
+          },
+        );
+      }
+      for (const ticketId of variables.ticketIds) {
+        const previous = context.previousTickets.get(ticketId);
+        const optimistic = context.optimisticTickets.get(ticketId);
+        if (!previous || !optimistic) continue;
+        queryClient.setQueryData<Ticket | null>(
+          buildWorkQueryKeys.projects.ticket(ticketId),
+          (current) =>
+            current
+              ? rollbackTicketFields(current, previous, optimistic)
+              : current,
+        );
+      }
+    },
+    onSettled: (_data, _error, variables) => {
       invalidateBuildViews(queryClient, projectId, variables.ticketIds);
     },
   });

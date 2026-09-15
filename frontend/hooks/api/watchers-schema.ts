@@ -71,3 +71,12 @@ export const buildTicketWatcherContract = z
   .strict();
 
 export const buildTicketWatchersContract = z.array(buildTicketWatcherContract);
+
+export const buildWatcherMutationContract = z
+  .object({
+    userId: z.string(),
+    name: z.string().nullable(),
+    image: z.string().nullable(),
+    membershipId: z.number().int(),
+  })
+  .strict();

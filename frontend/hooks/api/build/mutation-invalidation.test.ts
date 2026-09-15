@@ -196,9 +196,11 @@ describe("useUpdateTicket — invalidation contract", () => {
 
     expect(invalidateSpy).toHaveBeenCalledWith({
       queryKey: queryKeys.projects.sprints(42),
+      refetchType: "none",
     });
     expect(invalidateSpy).toHaveBeenCalledWith({
       queryKey: queryKeys.projects.columnCounts(42),
+      refetchType: "none",
     });
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
@@ -31,12 +31,6 @@ export type OnboardingFlowSession = {
   data: Record<string, unknown>;
 };
 
-export type OnboardingSessionPatch = {
-  currentStep?: string;
-  completedSteps?: string[];
-  data?: Record<string, unknown>;
-};
-
 export function useOnboardingSessionQuery(enabled = true) {
   return useQuery({
     queryKey: platformCoreQueryKeys.onboardingFlow.session(),
@@ -44,19 +38,6 @@ export function useOnboardingSessionQuery(enabled = true) {
     staleTime: 30_000,
     retry: false,
     enabled,
-  });
-}
-
-export function usePatchOnboardingSessionMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationKey: ["onboarding", "session", "patch"],
-    mutationFn: (payload: OnboardingSessionPatch) =>
-      apiClient.patch<OnboardingFlowSession>("/onboarding/session", payload, undefined, onboardingSessionContract),
-    retry: false,
-    onSuccess: (session) => {
-      queryClient.setQueryData(platformCoreQueryKeys.onboardingFlow.session(), session);
-    },
   });
 }
 

@@ -353,11 +353,6 @@ export const commentPermalinkContract = z.object({
   }),
 });
 
-/**
- * `GET /build/search/tickets` projects eight columns over an inner join, not a
- * ticket row — the backend's `@ResponseSchema(z.array(ticketRowSchema))` on that
- * handler over-declares what `orgTicketSearchQuery` selects.
- */
 export const ticketSearchResultListContract = z.array(
   z.object({
     id: z.number().int(),

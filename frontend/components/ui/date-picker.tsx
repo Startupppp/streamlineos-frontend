@@ -6,12 +6,20 @@ import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { FIELD_CONTROL_CLASS, FIELD_DATE_POPOVER_CONTENT_CLASS } from "@/components/ui/field-control";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  FIELD_CONTROL_CLASS,
+  FIELD_DATE_POPOVER_CONTENT_CLASS,
+} from "@/components/ui/field-control";
 import {
   resolveDatePickerYearBounds,
   startOfLocalDay,
   maxDate,
+  isDateOutsideBounds,
 } from "@/lib/date-constraints";
 
 interface DatePickerProps {
@@ -82,6 +90,16 @@ export function DatePicker({
   );
 
   const handleOpenChange = useCallback((o: boolean) => setOpen(o), []);
+  const isDateDisabled = useCallback(
+    (date: Date) =>
+      isDateOutsideBounds(date, effectiveFromDate, toDate) ||
+      disabledDays?.(date) === true,
+    [effectiveFromDate, toDate, disabledDays],
+  );
+  const hasDisabledDates =
+    effectiveFromDate !== undefined ||
+    toDate !== undefined ||
+    disabledDays !== undefined;
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange} modal>
@@ -103,7 +121,10 @@ export function DatePicker({
           </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className={cn(FIELD_DATE_POPOVER_CONTENT_CLASS, "p-0")} align="start">
+      <PopoverContent
+        className={cn(FIELD_DATE_POPOVER_CONTENT_CLASS, "p-0")}
+        align="start"
+      >
         <Calendar
           mode="single"
           selected={selected}
@@ -114,7 +135,7 @@ export function DatePicker({
           toYear={yearBounds.toYear}
           defaultMonth={selected ?? effectiveFromDate}
           initialFocus
-          disabled={disabledDays}
+          disabled={hasDisabledDates ? isDateDisabled : undefined}
         />
       </PopoverContent>
     </Popover>

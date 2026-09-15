@@ -114,10 +114,8 @@ export function TicketSidebar({
     onAutoSave({ moduleId: v === "none" ? null : parseInt(v) });
   const handleCycleChange = (v: string) =>
     onAutoSave({ cycleId: v === "none" ? null : parseInt(v) });
-  const handlePointsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value === "" ? undefined : parseInt(e.target.value);
-    onAutoSave({ points: val });
-  };
+  const handlePointsChange = (points: number | null) =>
+    onAutoSave({ points });
 
   const currentAssigneeIds = ticket.assignees
     ? ticket.assignees.map((a) => a.userId)
@@ -156,6 +154,7 @@ export function TicketSidebar({
   return (
     <div className="@container space-y-3 border-b border-r border-border bg-muted/10 px-4 py-3">
       <SidebarSelectFields
+        key={`${ticket.id}:${ticket.points ?? ""}`}
         ticket={ticket}
         statuses={statuses}
         sprints={sprints}

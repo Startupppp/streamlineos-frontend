@@ -139,13 +139,15 @@ describe("serverGet", () => {
       );
     });
 
-    it("propagates the abort error when the upstream does not respond in time", async () => {
+    it("normalizes an upstream timeout into the backend unavailable contract", async () => {
       const timeoutError = new DOMException("signal timed out", "TimeoutError");
       mockedGetServerAuth.mockResolvedValueOnce(makeSession("token-test"));
       mockFetch.mockRejectedValueOnce(timeoutError);
 
       await expect(serverGet("/test/timeout-abort")).rejects.toMatchObject({
-        name: "TimeoutError",
+        name: "ApiError",
+        status: 503,
+        code: "BACKEND_UNREACHABLE",
       });
     });
   });

@@ -34,6 +34,17 @@ export function maxDate(...dates: Array<Date | undefined>): Date | undefined {
   return result;
 }
 
+export function isDateOutsideBounds(
+  date: Date,
+  fromDate?: Date,
+  toDate?: Date,
+): boolean {
+  const value = startOfLocalDay(date);
+  const from = fromDate ? startOfLocalDay(fromDate) : undefined;
+  const to = toDate ? startOfLocalDay(toDate) : undefined;
+  return (from !== undefined && value < from) || (to !== undefined && value > to);
+}
+
 export function planningFloorDate(existingValue?: string | null): Date {
   const today = startOfLocalDay();
   const existing = parseDateOnly(existingValue);

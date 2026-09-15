@@ -9,6 +9,15 @@ const sprintListItemSchema = z.object({
   endDate: z.string(),
   goal: z.string().nullable(),
   status: z.string().nullable(),
+  tickets: z.array(
+    z.object({
+      id: z.number().int(),
+      title: z.string(),
+      status: z.string(),
+      points: z.number().int().nullable(),
+      sprintId: z.number().int().nullable(),
+    }),
+  ),
 });
 
 const sprintRowSchema = z.object({
@@ -60,7 +69,14 @@ const moduleListItemSchema = z.object({
   id: z.number(),
   name: z.string(),
   orgId: z.string(),
-  status: z.enum(["backlog", "planned", "in-progress", "completed", "paused", "cancelled"]),
+  status: z.enum([
+    "backlog",
+    "planned",
+    "in-progress",
+    "completed",
+    "paused",
+    "cancelled",
+  ]),
   leadId: z.string().nullable(),
   endDate: z.string().nullable(),
   startDate: z.string().nullable(),
@@ -80,7 +96,14 @@ const moduleRowSchema = z.object({
   projectId: z.number(),
   name: z.string(),
   description: z.string().nullable(),
-  status: z.enum(["backlog", "planned", "in-progress", "completed", "paused", "cancelled"]),
+  status: z.enum([
+    "backlog",
+    "planned",
+    "in-progress",
+    "completed",
+    "paused",
+    "cancelled",
+  ]),
   leadId: z.string().nullable(),
   startDate: z.string().nullable(),
   endDate: z.string().nullable(),
@@ -126,4 +149,6 @@ export const cycleRowContract = cycleRowSchema;
 export const moduleListContract = z.array(moduleListItemSchema);
 export const moduleRowContract = moduleRowSchema;
 export const epicListContract = z.array(epicRowSchema);
-export const sprintUpdateResultContract = z.object({ success: z.literal(true) });
+export const sprintUpdateResultContract = z.object({
+  success: z.literal(true),
+});

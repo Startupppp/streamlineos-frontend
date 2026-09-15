@@ -1,5 +1,18 @@
 import type { SprintStatus } from "./shared";
-import type { Ticket } from "./tasks";
+import type { TicketUser } from "./tasks";
+
+export interface SprintTicket {
+  id: number;
+  title: string;
+  status: string;
+  points: number | null;
+  sprintId: number | null;
+  type?: string | null;
+  priority?: string | null;
+  ticketNumber?: number | null;
+  assigneeId?: string | null;
+  assignee?: TicketUser | null;
+}
 
 export interface Sprint {
   id: number;
@@ -10,7 +23,7 @@ export interface Sprint {
   endDate: string | Date;
   goal: string | null;
   status: string | null;
-  tickets?: Ticket[];
+  tickets?: SprintTicket[];
 }
 
 export interface CreateSprintInput {

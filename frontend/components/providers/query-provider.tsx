@@ -120,7 +120,7 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
   const userId = session?.user?.id ?? "";
   const orgId = session?.orgId ?? "";
   const scope =
-    status === "authenticated"
+    orgId && userId
       ? authenticatedScope(orgId, userId)
       : status === "loading"
         ? LOADING_SCOPE

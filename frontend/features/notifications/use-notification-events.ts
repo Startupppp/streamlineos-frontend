@@ -17,6 +17,7 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 const BACKOFF_CEILING_ATTEMPT = 9;
 const MAX_BACKOFF_MS = 5 * 60_000;
+const STREAM_RELEASE_GRACE_MS = 5_000;
 
 type AppRouter = ReturnType<typeof useRouter>;
 
@@ -24,6 +25,7 @@ interface ActiveStream {
   orgId: string;
   subscribers: number;
   controller: AbortController;
+  releaseTimer?: ReturnType<typeof setTimeout>;
   release: () => void;
 }
 
@@ -31,16 +33,32 @@ let activeStream: ActiveStream | null = null;
 let tokenFetchPromise: Promise<string | null> | null = null;
 let tokenFetchOrgId: string | null = null;
 let tokenGeneration = 0;
+let tokenRetryNotBefore = 0;
 
 export function clearStreamToken(): void {
+  if (activeStream) {
+    activeStream.release();
+    activeStream = null;
+  }
   tokenFetchPromise = null;
   tokenFetchOrgId = null;
+  tokenRetryNotBefore = 0;
   tokenGeneration += 1;
+}
+
+function retryAfterDelay(response: Response): number {
+  const value = response.headers?.get("retry-after");
+  if (!value) return 0;
+  const seconds = Number(value);
+  if (Number.isFinite(seconds)) return Math.max(0, seconds * 1_000);
+  const date = Date.parse(value);
+  return Number.isNaN(date) ? 0 : Math.max(0, date - Date.now());
 }
 
 async function mintStreamToken(): Promise<string | null> {
   const generation = tokenGeneration;
   try {
+    if (Date.now() < tokenRetryNotBefore) return null;
     const backendJwt = await getBackendToken();
     if (!backendJwt) return null;
     const response = await fetch(`${BACKEND_URL}/notifications/events/token`, {
@@ -49,7 +67,13 @@ async function mintStreamToken(): Promise<string | null> {
         new Headers({ Authorization: `Bearer ${backendJwt}` }),
       ),
     });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      if (response.status === 429) {
+        tokenRetryNotBefore = Date.now() + retryAfterDelay(response);
+      }
+      return null;
+    }
+    tokenRetryNotBefore = 0;
     const body: unknown = await response.json();
     if (typeof body !== "object" || body === null || !("token" in body))
       return null;
@@ -109,7 +133,10 @@ function openStream(
     const delay =
       Math.min(MAX_BACKOFF_MS, 1_000 * 2 ** (attempt - 1)) +
       Math.floor(Math.random() * 500);
-    retryTimer = setTimeout(() => void connect(), delay);
+    retryTimer = setTimeout(
+      () => void connect(),
+      Math.max(delay, tokenRetryNotBefore - Date.now()),
+    );
   };
 
   const connect = async (): Promise<void> => {
@@ -166,30 +193,45 @@ export function useNotificationEvents(): void {
   const { data: session, status } = useSession();
   const router = useRouter();
   const orgId = session?.orgId;
+  const streamOrgId = status === "unauthenticated" ? undefined : orgId;
 
   const queryClientRef = useRef(queryClient);
-  queryClientRef.current = queryClient;
   const routerRef = useRef(router);
-  routerRef.current = router;
 
   useEffect(() => {
-    if (status !== "authenticated" || !orgId) {
-      if (status === "unauthenticated") clearStreamToken();
+    queryClientRef.current = queryClient;
+  }, [queryClient]);
+
+  useEffect(() => {
+    routerRef.current = router;
+  }, [router]);
+
+  useEffect(() => {
+    if (!streamOrgId) {
+      clearStreamToken();
       return;
     }
-    if (activeStream && activeStream.orgId !== orgId) {
+    if (activeStream && activeStream.orgId !== streamOrgId) {
       activeStream.release();
       activeStream = null;
       clearStreamToken();
     }
-    const stream = activeStream ?? openStream(orgId, queryClientRef, routerRef);
+    const stream =
+      activeStream ?? openStream(streamOrgId, queryClientRef, routerRef);
+    if (stream.releaseTimer) {
+      clearTimeout(stream.releaseTimer);
+      stream.releaseTimer = undefined;
+    }
     activeStream = stream;
     stream.subscribers += 1;
     return () => {
       stream.subscribers -= 1;
       if (stream.subscribers > 0 || activeStream !== stream) return;
-      stream.release();
-      activeStream = null;
+      stream.releaseTimer = setTimeout(() => {
+        if (stream.subscribers > 0 || activeStream !== stream) return;
+        stream.release();
+        activeStream = null;
+      }, STREAM_RELEASE_GRACE_MS);
     };
-  }, [orgId, status]);
+  }, [streamOrgId]);
 }

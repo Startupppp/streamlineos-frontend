@@ -41,6 +41,7 @@ export function readErrorReachesBoundary(
 export const INLINE_READ_ERROR = { throwOnError: false } as const;
 
 export function isTransientNetworkError(error: unknown): boolean {
+  if (error instanceof Error && error.name === "AccessUnavailableError") return true;
   if (!isApiError(error)) return false;
   if (error.code === "NETWORK_ERROR" || error.code === "TIMEOUT") return true;
   if (error.status === 502 || error.status === 503 || error.status === 504)

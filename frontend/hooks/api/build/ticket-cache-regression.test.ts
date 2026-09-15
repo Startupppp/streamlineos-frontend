@@ -89,13 +89,46 @@ it.each(["title", "priority", "dueDate"])("invalidates My Issues after %s change
 
 it("bulk updates invalidate actual detail, board, sprint and report cache entries", async () => {
   const client = createAppQueryClient();
-  const keys = [queryKeys.projects.ticket(1), queryKeys.projects.ticket(2), queryKeys.projects.tickets({ projectId: 42, view: "board", status: "OPEN" }), queryKeys.projects.sprints(42), queryKeys.projects.analytics(42), queryKeys.projectReports.velocity(42), queryKeys.dashboard.myIssues()];
-  for (const key of keys) client.setQueryData(key, []);
+  const board = queryKeys.projects.tickets({ projectId: 42, view: "board", status: "OPEN" });
+  const keys = [queryKeys.projects.ticket(1), queryKeys.projects.ticket(2), board, queryKeys.projects.sprints(42), queryKeys.projects.analytics(42), queryKeys.projectReports.velocity(42), queryKeys.dashboard.myIssues()];
+  for (const key of keys) client.setQueryData(key, key === board ? { data: [], pagination: { nextCursor: null } } : []);
   jest.mocked(apiClient.post).mockResolvedValue({ updated: 2, ticketIds: [1, 2] });
   const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
   const { result } = renderHook(() => useBulkUpdateTickets(42), { wrapper });
   await act(async () => { await result.current.mutateAsync({ ticketIds: [1, 2], status: "DONE" }); });
   for (const key of keys) expect(client.getQueryState(key)?.isInvalidated).toBe(true);
+  client.clear();
+});
+
+it("bulk updates patch every loaded ticket collection before refetch completes", async () => {
+  const client = createAppQueryClient();
+  const board = queryKeys.projects.tickets({ projectId: 42, view: "board" });
+  const original = {
+    data: [
+      { id: 1, priority: "MEDIUM", title: "One" },
+      { id: 2, priority: "HIGH", title: "Two" },
+      { id: 3, priority: "URGENT", title: "Three" },
+    ],
+    pagination: { nextCursor: null },
+  };
+  client.setQueryData(board, original);
+  jest.mocked(apiClient.post).mockResolvedValue({ updated: 2, ticketIds: [1, 2] });
+  const wrapper = ({ children }: { children: ReactNode }) =>
+    createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useBulkUpdateTickets(42), { wrapper });
+
+  await act(async () => {
+    await result.current.mutateAsync({ ticketIds: [1, 2], priority: "LOW" });
+  });
+
+  expect(client.getQueryData(board)).toEqual({
+    ...original,
+    data: [
+      { id: 1, priority: "LOW", title: "One" },
+      { id: 2, priority: "LOW", title: "Two" },
+      { id: 3, priority: "URGENT", title: "Three" },
+    ],
+  });
   client.clear();
 });
 

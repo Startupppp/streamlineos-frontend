@@ -8,7 +8,8 @@ import { MarkdownContent } from "@/components/markdown/markdown-content";
 import type { AskAiHistoryMessage } from "@/hooks/api/chat-ai-assistant";
 
 const AskOsConfirmationCard = dynamic(
-  () => import("./ask-os-confirmation-card").then((m) => m.AskOsConfirmationCard),
+  () =>
+    import("./ask-os-confirmation-card").then((m) => m.AskOsConfirmationCard),
   { ssr: false },
 );
 
@@ -31,7 +32,8 @@ export function dayKey(iso: string): string {
 export function dayLabel(iso: string): string {
   const d = new Date(iso);
   const now = new Date();
-  const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const startOf = (x: Date) =>
+    new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
   const diff = Math.round((startOf(now) - startOf(d)) / 86_400_000);
   if (diff === 0) return "Today";
   if (diff === 1) return "Yesterday";
@@ -48,7 +50,11 @@ export function buildMsgRows(messages: AskAiHistoryMessage[]): MsgRow[] {
   for (const message of messages) {
     const key = dayKey(message.createdAt);
     if (key !== lastDay) {
-      rows.push({ type: "sep", id: `sep-${key}-${message.id}`, label: dayLabel(message.createdAt) });
+      rows.push({
+        type: "sep",
+        id: `sep-${key}-${message.id}`,
+        label: dayLabel(message.createdAt),
+      });
       lastDay = key;
     }
     rows.push({ type: "msg", message });
@@ -69,13 +75,19 @@ export function EmptyAskOs({
       <div>
         <p className="text-sm font-semibold text-foreground">How can I help?</p>
         <p className="mx-auto mt-1 max-w-[16rem] text-xs text-muted-foreground">
-          I know your leads, projects, calendar, HR data and knowledge base — and I can take actions for you.
+          I can help across CRM, HR, Build, Inventory & Ops, calendars, support,
+          and your knowledge base.
         </p>
       </div>
       <div className="w-full space-y-1.5">
         {SUGGESTIONS.map((s) => (
-          <button key={s} type="button" data-suggestion={s} onClick={onSuggestion}
-            className="w-full rounded-lg bg-muted/60 px-3 py-2 text-left text-xs text-foreground transition-colors hover:bg-muted">
+          <button
+            key={s}
+            type="button"
+            data-suggestion={s}
+            onClick={onSuggestion}
+            className="w-full rounded-lg bg-muted/60 px-3 py-2 text-left text-xs text-foreground transition-colors hover:bg-muted"
+          >
             {s}
           </button>
         ))}
@@ -99,11 +111,16 @@ function parseConfirmPayload(content: string): ConfirmPayload | null {
   try {
     const parsed: unknown = JSON.parse(content.slice(prefix.length).trim());
     if (
-      typeof parsed !== "object" || parsed === null ||
-      !("token" in parsed) || typeof (parsed as Record<string, unknown>)["token"] !== "string" ||
-      !("action" in parsed) || typeof (parsed as Record<string, unknown>)["action"] !== "string" ||
-      !("summary" in parsed) || typeof (parsed as Record<string, unknown>)["summary"] !== "string" ||
-      !("preview" in parsed) || typeof (parsed as Record<string, unknown>)["preview"] !== "object"
+      typeof parsed !== "object" ||
+      parsed === null ||
+      !("token" in parsed) ||
+      typeof (parsed as Record<string, unknown>)["token"] !== "string" ||
+      !("action" in parsed) ||
+      typeof (parsed as Record<string, unknown>)["action"] !== "string" ||
+      !("summary" in parsed) ||
+      typeof (parsed as Record<string, unknown>)["summary"] !== "string" ||
+      !("preview" in parsed) ||
+      typeof (parsed as Record<string, unknown>)["preview"] !== "object"
     ) {
       return null;
     }
@@ -132,12 +149,19 @@ export function AskOsBubble({
   streaming: boolean;
   reduce: boolean;
 }) {
-  const [confirmedResult, setConfirmedResult] = useState<Record<string, unknown> | null>(null);
+  const [confirmedResult, setConfirmedResult] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
   const [cancelled, setCancelled] = useState(false);
 
   if (role === "user") {
     return (
-      <motion.div initial={reduce ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex justify-end">
+      <motion.div
+        initial={reduce ? false : { opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex justify-end"
+      >
         <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-br-sm bg-primary px-3 py-2 text-sm text-primary-foreground shadow-sm">
           {content}
         </div>
@@ -148,8 +172,16 @@ export function AskOsBubble({
   const confirmPayload = parseConfirmPayload(content);
 
   return (
-    <motion.div initial={reduce ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start gap-2">
-      <AnimatedLogo size={24} gradient className="mt-0.5 shrink-0 rounded-full" />
+    <motion.div
+      initial={reduce ? false : { opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex justify-start gap-2"
+    >
+      <AnimatedLogo
+        size={24}
+        gradient
+        className="mt-0.5 shrink-0 rounded-full"
+      />
       <div className="min-w-0 max-w-[85%] rounded-2xl rounded-bl-sm border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm">
         {confirmPayload && !confirmedResult && !cancelled ? (
           <AskOsConfirmationCard
@@ -165,7 +197,9 @@ export function AskOsBubble({
         ) : cancelled ? (
           <p className="text-xs text-muted-foreground">Cancelled.</p>
         ) : content ? (
-          <div className="break-words"><MarkdownContent content={content} /></div>
+          <div className="break-words">
+            <MarkdownContent content={content} />
+          </div>
         ) : streaming ? (
           <TypingDots reduce={reduce} />
         ) : null}
@@ -178,9 +212,12 @@ export function TypingDots({ reduce }: { reduce: boolean }) {
   return (
     <div className="flex items-center gap-1 py-1">
       {[0, 1, 2].map((i) => (
-        <motion.span key={i} className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60"
+        <motion.span
+          key={i}
+          className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60"
           animate={reduce ? undefined : { opacity: [0.3, 1, 0.3] }}
-          transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }} />
+          transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+        />
       ))}
     </div>
   );

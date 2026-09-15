@@ -10,6 +10,7 @@ import {
   type ProductKey,
 } from "../sidebar/sidebar-nav-items";
 import { ProductTile } from "./product-tile";
+import { hasAssignedProductAccess } from "./product-access";
 
 const PRODUCT_TO_LOCKED_MODULE: Partial<Record<ProductKey, string>> = {
   payroll: "payroll",
@@ -40,6 +41,11 @@ export function ProductGrid({
   const visibleProducts = useMemo(() => {
     const products = PRODUCT_DEFINITIONS.flatMap((product) => {
       if (product.key === "administration") return [];
+      if (
+        !canManageModules &&
+        !hasAssignedProductAccess(product.key, scopes)
+      )
+        return [];
       const groups = getNavGroupsForProduct(
         product.key,
         effectiveRole,

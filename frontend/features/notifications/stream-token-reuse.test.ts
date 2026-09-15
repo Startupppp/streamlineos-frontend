@@ -52,17 +52,18 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  act(() => jest.runOnlyPendingTimers());
   jest.useRealTimers();
 });
 
 describe("the notification stream token is minted once per stream, not once per mount", () => {
-  it("mints a fresh token for a genuinely new stream, because the backend deletes the token on first use (consumeToken) and expires it after 120s, so replaying the previous one only yields a 401", async () => {
+  it("keeps the active stream across a transient remount", async () => {
     const first = renderHook(() => useNotificationEvents());
     await waitFor(() => expect(tokenMints()).toBe(1));
 
     first.unmount();
     const second = renderHook(() => useNotificationEvents());
-    await waitFor(() => expect(tokenMints()).toBe(2));
+    await waitFor(() => expect(tokenMints()).toBe(1));
 
     second.unmount();
   });
@@ -74,5 +75,24 @@ describe("the notification stream token is minted once per stream, not once per 
 
     a.unmount();
     b.unmount();
+  });
+
+  it("honors Retry-After without minting more tokens during the cooldown", async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 429,
+      headers: new Headers({ "retry-after": "60" }),
+    });
+
+    const stream = renderHook(() => useNotificationEvents());
+    await waitFor(() => expect(tokenMints()).toBe(1));
+
+    act(() => jest.advanceTimersByTime(59_000));
+    await Promise.resolve();
+    expect(tokenMints()).toBe(1);
+
+    act(() => jest.advanceTimersByTime(2_000));
+    await waitFor(() => expect(tokenMints()).toBe(2));
+    stream.unmount();
   });
 });

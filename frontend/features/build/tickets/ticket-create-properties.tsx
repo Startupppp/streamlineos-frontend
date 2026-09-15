@@ -30,6 +30,7 @@ import { getPriorityColor } from "../shared/priority-badge";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { ProjectStatusRecord, ProjectMemberRecord, Cycle, TicketLabel } from "@/types/projects";
 import type { TicketPriority } from "@/types/projects";
+import { parseTicketPointsInput } from "../shared/ticket-points";
 
 const PRIORITIES: { value: TicketPriority; label: string; Icon: typeof Minus }[] = [
   { value: "URGENT", label: "Urgent", Icon: AlertTriangle },
@@ -147,13 +148,8 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
   function handleEstimateChange(e: React.ChangeEvent<HTMLInputElement>) {
     const next = e.target.value;
     setEstimateInput(next);
-    const trimmed = next.trim();
-    if (trimmed === "") {
-      onChange({ points: null });
-      return;
-    }
-    const parsed = parseInt(trimmed, 10);
-    if (Number.isFinite(parsed) && parsed >= 0) {
+    const parsed = parseTicketPointsInput(next);
+    if (parsed !== undefined) {
       onChange({ points: parsed });
     }
   }

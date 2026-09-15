@@ -9,6 +9,7 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useQueryClient } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
 
 function HeaderAddButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -47,6 +48,18 @@ interface QuickAddInputProps {
 }
 
 export function QuickAddInput({ columnId, projectId, headerMode = false }: QuickAddInputProps) {
+  const canCreate = useCan("build:tickets:create");
+  if (!canCreate) return null;
+  return (
+    <QuickAddInputContent
+      columnId={columnId}
+      projectId={projectId}
+      headerMode={headerMode}
+    />
+  );
+}
+
+function QuickAddInputContent({ columnId, projectId, headerMode = false }: QuickAddInputProps) {
   const [value, setValue] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);

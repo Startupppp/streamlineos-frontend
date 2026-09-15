@@ -23,8 +23,6 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { useCreateTicket } from "@/hooks/api";
 import { useProjectMembers } from "@/hooks/api/build/projects";
-import { useQueryClient } from "@tanstack/react-query";
-import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PriorityBadge } from "../shared/priority-badge";
@@ -50,7 +48,6 @@ interface SubtaskComposerProps {
 }
 
 export function SubtaskComposer({ ticketId, projectId, projectStatuses }: SubtaskComposerProps) {
-  const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState("");
   const [assigneeId, setAssigneeId] = useState<string | null>(null);
@@ -70,17 +67,12 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
       ? projectStatuses.map((s) => s.name)
       : ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"];
 
-  const subtaskQueryKey = [...buildWorkQueryKeys.projects.all, "subtasks", { ticketId }];
-
   const createSubtask = useCreateTicket({
     onSuccess: () => {
       setTitle("");
       setAssigneeId(null);
       setPriority(null);
       setStatus(null);
-      queryClient.invalidateQueries({ queryKey: subtaskQueryKey });
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(ticketId) });
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.detail(projectId) });
       inputRef.current?.focus();
     },
     onError: (error) => toast.error(getErrorMessage(error)),

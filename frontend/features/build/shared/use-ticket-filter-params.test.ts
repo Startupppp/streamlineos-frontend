@@ -25,6 +25,7 @@ function lastParams(): URLSearchParams {
 
 function renderWith(query: string) {
   mockSearchParams = new URLSearchParams(query);
+  window.history.replaceState(null, "", query ? `/build/tickets?${query}` : "/build/tickets");
   return renderHook(() => useTicketFilterParams());
 }
 

@@ -10,11 +10,22 @@ import {
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useProject } from "@/hooks/api";
-import { useViews, useCreateView, useProjectBoardTickets, useProjectMembers } from "@/hooks/api/build";
-import { hydrateDisplayOptions, useDisplayOptions } from "./use-display-options";
+import {
+  useViews,
+  useCreateView,
+  useProjectBoardTickets,
+  useProjectMembers,
+} from "@/hooks/api/build";
+import {
+  hydrateDisplayOptions,
+  useDisplayOptions,
+} from "./use-display-options";
 import { parseViewType, type ViewType } from "./view-switcher";
 import { type SaveViewMeta } from "./save-view-dialog";
-import { INITIAL_FILTERS, type FilterState as WorkloadFilterState } from "./workload-types";
+import {
+  INITIAL_FILTERS,
+  type FilterState as WorkloadFilterState,
+} from "./workload-types";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { KanbanTicket } from "@/features/build/shared/types";
@@ -24,6 +35,7 @@ import {
   getCompletedStatusNames,
 } from "@/features/build/shared/completed-status";
 import { buildTicketDetailUrl } from "@/features/build/ticket-details/build-ticket-detail-url";
+import { currentSearchParams } from "@/lib/current-search-params";
 
 export type ProjectStatus = {
   id: number;
@@ -84,7 +96,17 @@ export function useBoardUrlState(projectId: number) {
       sprint: filterSprint || undefined,
       module: filterModule || undefined,
     }),
-    [q, filterStatus, filterPriority, filterType, filterAssigneeId, filterLabels, filterCycle, filterSprint, filterModule],
+    [
+      q,
+      filterStatus,
+      filterPriority,
+      filterType,
+      filterAssigneeId,
+      filterLabels,
+      filterCycle,
+      filterSprint,
+      filterModule,
+    ],
   );
 
   // `isError` travels with the rows: the ticket list flattens `query.data?.pages`
@@ -108,8 +130,11 @@ export function useBoardUrlState(projectId: number) {
   const [hideCompleted, setHideCompleted] = useState(true);
   const [saveViewOpen, setSaveViewOpen] = useState(false);
   const [saveViewName, setSaveViewName] = useState("");
-  const [workloadFilters, setWorkloadFilters] = useState<WorkloadFilterState>(INITIAL_FILTERS);
-  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
+  const [workloadFilters, setWorkloadFilters] =
+    useState<WorkloadFilterState>(INITIAL_FILTERS);
+  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(
+    new Set(),
+  );
 
   useEffect(() => {
     if (!viewId || !views) return;
@@ -117,7 +142,7 @@ export function useBoardUrlState(projectId: number) {
     const savedView = views.find((v) => v.id.toString() === viewId);
     if (!savedView) return;
     appliedViewIdRef.current = viewId;
-    const next = new URLSearchParams(searchParams.toString());
+    const next = currentSearchParams(searchParams);
     if (savedView.filters && typeof savedView.filters === "object") {
       for (const [k, val] of Object.entries(savedView.filters)) {
         if (typeof val === "string" && val) next.set(k, val);
@@ -125,13 +150,18 @@ export function useBoardUrlState(projectId: number) {
       }
     }
     if (savedView.layoutType) next.set("view", savedView.layoutType);
-    if (savedView.displayOptions && Object.keys(savedView.displayOptions).length > 0) {
+    if (
+      savedView.displayOptions &&
+      Object.keys(savedView.displayOptions).length > 0
+    ) {
       setDisplayOptions(hydrateDisplayOptions(savedView.displayOptions));
     }
     router.replace(`?${next.toString()}`, { scroll: false });
   }, [viewId, views, searchParams, router, setDisplayOptions]);
 
-  const activeView = viewId ? views?.find((v) => v.id.toString() === viewId) : null;
+  const activeView = viewId
+    ? views?.find((v) => v.id.toString() === viewId)
+    : null;
 
   const allTickets: KanbanTicket[] = useMemo(() => {
     if (!boardTickets) return [];
@@ -139,20 +169,25 @@ export function useBoardUrlState(projectId: number) {
   }, [boardTickets]);
 
   const statuses =
-    data && "statuses" in data
-      ? (data.statuses as ProjectStatus[])
-      : undefined;
+    data && "statuses" in data ? (data.statuses as ProjectStatus[]) : undefined;
 
   const filteredTickets = useMemo(() => {
-    let tickets = filterHiddenCompletedTickets(allTickets, hideCompleted, statuses);
+    let tickets = filterHiddenCompletedTickets(
+      allTickets,
+      hideCompleted,
+      statuses,
+    );
     if (displayOptions.completedIssues !== "all") {
       if (displayOptions.completedIssues === "none") {
         tickets = filterHiddenCompletedTickets(tickets, true, statuses);
       } else {
         const cutoff = new Date();
-        if (displayOptions.completedIssues === "last-day") cutoff.setDate(cutoff.getDate() - 1);
-        else if (displayOptions.completedIssues === "last-week") cutoff.setDate(cutoff.getDate() - 7);
-        else if (displayOptions.completedIssues === "last-month") cutoff.setMonth(cutoff.getMonth() - 1);
+        if (displayOptions.completedIssues === "last-day")
+          cutoff.setDate(cutoff.getDate() - 1);
+        else if (displayOptions.completedIssues === "last-week")
+          cutoff.setDate(cutoff.getDate() - 7);
+        else if (displayOptions.completedIssues === "last-month")
+          cutoff.setMonth(cutoff.getMonth() - 1);
         const completedStatuses = getCompletedStatusNames(statuses);
         tickets = tickets.filter(
           (t) =>
@@ -229,7 +264,12 @@ export function useBoardUrlState(projectId: number) {
           name,
           filters,
           layoutType: view === "workload" ? "board" : view,
-          ...(meta ? { visibility: meta.visibility, displayOptions: meta.displayOptions } : {}),
+          ...(meta
+            ? {
+                visibility: meta.visibility,
+                displayOptions: meta.displayOptions,
+              }
+            : {}),
         },
         {
           onSuccess: (created) => {
@@ -242,7 +282,7 @@ export function useBoardUrlState(projectId: number) {
               "id" in created &&
               typeof created.id === "number"
             ) {
-              const next = new URLSearchParams(searchParams.toString());
+              const next = currentSearchParams(searchParams);
               next.set("viewId", String(created.id));
               router.replace(`?${next.toString()}`, { scroll: false });
             }
@@ -251,12 +291,26 @@ export function useBoardUrlState(projectId: number) {
         },
       );
     },
-    [saveViewName, q, filterStatus, filterPriority, filterType, filterAssigneeId, filterLabels, filterCycle, view, projectId, createView, searchParams, router],
+    [
+      saveViewName,
+      q,
+      filterStatus,
+      filterPriority,
+      filterType,
+      filterAssigneeId,
+      filterLabels,
+      filterCycle,
+      view,
+      projectId,
+      createView,
+      searchParams,
+      router,
+    ],
   );
 
   const handleViewChange = useCallback(
     (v: ViewType) => {
-      const p = new URLSearchParams(searchParams.toString());
+      const p = currentSearchParams(searchParams);
       p.set("view", v);
       router.replace(`?${p.toString()}`, { scroll: false });
       setSelectedIds(new Set());
@@ -270,7 +324,10 @@ export function useBoardUrlState(projectId: number) {
   );
 
   const handleWorkloadFilterChange = useCallback(
-    <K extends keyof WorkloadFilterState>(key: K, value: WorkloadFilterState[K]) => {
+    <K extends keyof WorkloadFilterState>(
+      key: K,
+      value: WorkloadFilterState[K],
+    ) => {
       setWorkloadFilters((prev) => ({ ...prev, [key]: value }));
     },
     [],
@@ -298,10 +355,17 @@ export function useBoardUrlState(projectId: number) {
       highlightCommentId,
     );
     if (href) router.replace(href);
-  }, [selectedTicketId, data, allTickets, projectId, highlightCommentId, router]);
+  }, [
+    selectedTicketId,
+    data,
+    allTickets,
+    projectId,
+    highlightCommentId,
+    router,
+  ]);
 
   const handleClearSearch = useCallback(() => {
-    const next = new URLSearchParams(searchParams.toString());
+    const next = currentSearchParams(searchParams);
     next.delete("q");
     next.delete("status");
     next.delete("priority");
@@ -322,7 +386,7 @@ export function useBoardUrlState(projectId: number) {
   const handleCreateOpenChange = useCallback(
     (open: boolean) => {
       if (open) return;
-      const next = new URLSearchParams(searchParams.toString());
+      const next = currentSearchParams(searchParams);
       next.delete("create");
       next.delete("cycleId");
       router.replace(`?${next.toString()}`, { scroll: false });

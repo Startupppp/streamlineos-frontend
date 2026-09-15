@@ -4,6 +4,7 @@ import { useRef, useCallback, useEffect, useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -35,6 +36,7 @@ import { useDuplicateTitleWarning } from "./use-duplicate-title-warning";
 import { TicketDialogTitleField } from "./ticket-dialog-title-field";
 import { TicketDialogDescriptionSection } from "./ticket-dialog-description-section";
 import { TicketDialogFooter } from "./ticket-dialog-footer";
+import { useCan } from "@/hooks/api/access";
 
 interface CreateTicketDialogProps {
   projectId?: number;
@@ -47,6 +49,14 @@ interface CreateTicketDialogProps {
 }
 
 export function CreateTicketDialog({
+  ...props
+}: CreateTicketDialogProps) {
+  const canCreate = useCan("build:tickets:create");
+  if (!canCreate) return null;
+  return <CreateTicketDialogContent {...props} />;
+}
+
+function CreateTicketDialogContent({
   projectId: lockedProjectId,
   defaultStatus,
   defaultCycleId,
@@ -363,6 +373,10 @@ export function CreateTicketDialog({
               <DialogTitle className="text-sm font-medium text-muted-foreground">
                 New Issue
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                Create a ticket and set its project, status, priority, assignee,
+                estimate, labels, and cycle.
+              </DialogDescription>
             </div>
           </DialogHeader>
 

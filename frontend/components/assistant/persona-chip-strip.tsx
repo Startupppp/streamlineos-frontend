@@ -2,8 +2,9 @@
 
 import { useCallback } from "react";
 import { cn } from "@/lib/utils";
+import type { PersonaId } from "./ask-os-request-policy";
 
-export type PersonaId = "support" | "sales" | "hr-policy" | "project" | "operations";
+export type { PersonaId } from "./ask-os-request-policy";
 
 interface PersonaChip {
   id: PersonaId;
@@ -12,10 +13,10 @@ interface PersonaChip {
 
 const PERSONA_CHIPS: PersonaChip[] = [
   { id: "support", label: "Support" },
-  { id: "sales", label: "Sales" },
-  { id: "hr-policy", label: "HR Policy" },
-  { id: "project", label: "Projects" },
-  { id: "operations", label: "Operations" },
+  { id: "sales", label: "CRM" },
+  { id: "hr-policy", label: "HR" },
+  { id: "project", label: "Build" },
+  { id: "operations", label: "Inventory & Ops" },
 ];
 
 interface PersonaChipStripProps {

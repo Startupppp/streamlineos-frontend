@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import {
   Select,
   SelectContent,
@@ -19,6 +21,7 @@ import {
   Boxes,
   RotateCcw,
 } from "lucide-react";
+import { parseTicketPointsInput } from "../shared/ticket-points";
 
 interface Epic {
   id: number;
@@ -67,7 +70,7 @@ export interface SidebarSelectFieldsProps {
   onStatusChange: (v: string) => void;
   onPriorityChange: (v: string) => void;
   onTypeChange: (v: string) => void;
-  onPointsChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onPointsChange: (points: number | null) => void;
   onSprintChange: (v: string) => void;
   onEpicChange: (v: string) => void;
   onModuleChange: (v: string) => void;
@@ -102,6 +105,28 @@ export function SidebarSelectFields({
   onModuleChange,
   onCycleChange,
 }: SidebarSelectFieldsProps) {
+  const [pointsDraft, setPointsDraft] = useState(
+    ticket.points == null ? "" : String(ticket.points),
+  );
+
+  function commitPoints() {
+    const points = parseTicketPointsInput(pointsDraft);
+    if (points === undefined) {
+      setPointsDraft(ticket.points == null ? "" : String(ticket.points));
+      return;
+    }
+    setPointsDraft(points == null ? "" : String(points));
+    if (points !== (ticket.points ?? null)) onPointsChange(points);
+  }
+
+  function handlePointsKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") event.currentTarget.blur();
+    if (event.key === "Escape") {
+      setPointsDraft(ticket.points == null ? "" : String(ticket.points));
+      event.currentTarget.blur();
+    }
+  }
+
   return (
     <div className="space-y-3">
       <div className={FIELD_GRID}>
@@ -179,8 +204,10 @@ export function SidebarSelectFields({
           <Input
             type="number"
             min={0}
-            value={ticket.points ?? ""}
-            onChange={onPointsChange}
+            value={pointsDraft}
+            onChange={(event) => setPointsDraft(event.target.value)}
+            onBlur={commitPoints}
+            onKeyDown={handlePointsKeyDown}
             className={CONTROL_CLASS}
             placeholder="0"
           />

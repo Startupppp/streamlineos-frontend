@@ -14,6 +14,7 @@ import {
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
+import { usePathname } from "next/navigation";
 import {
   useAskAI,
   useAiConversations,
@@ -30,7 +31,11 @@ import { cn } from "@/lib/utils";
 import { classifyAiError, type AiFailureState } from "@/components/ai";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import { useIsMobile } from "@/hooks/common/use-mobile";
-import { type PersonaId } from "./persona-chip-strip";
+import {
+  boundedAskOsContext,
+  personaForPathname,
+  type PersonaId,
+} from "./ask-os-request-policy";
 import { AskOsChatComposer } from "./ask-os-chat-composer";
 import { AskOsChatView } from "./ask-os-chat-view";
 import { AskOsConversationList } from "./ask-os-conversation-list";
@@ -38,7 +43,6 @@ import { useAskOs } from "./ask-os-context";
 import { AskOsPanelHeader } from "./ask-os-panel-header";
 import { AskOsLauncher } from "./ask-os-launcher";
 
-const CONTEXT_WINDOW = 24;
 interface Draft {
   assistant: string;
   user: string;
@@ -48,6 +52,8 @@ export function GlobalAskOs() {
   const reduce = useReducedMotion();
   const hydrated = useHydrated();
   const isMobile = useIsMobile();
+  const pathname = usePathname();
+  const routePersona = personaForPathname(pathname);
   const { open, setOpen } = useAskOs();
   const queryClient = useQueryClient();
   const [input, setInput] = useState("");
@@ -59,8 +65,17 @@ export function GlobalAskOs() {
     number | null
   >(null);
   const [convSearch, setConvSearch] = useState("");
-  const [selectedPersona, setSelectedPersona] = useState<PersonaId | null>(
-    null,
+  const [personaSelection, setPersonaSelection] = useState<{
+    pathname: string;
+    persona: PersonaId | null;
+  }>(() => ({ pathname, persona: routePersona }));
+  const selectedPersona =
+    personaSelection.pathname === pathname
+      ? personaSelection.persona
+      : routePersona;
+  const setSelectedPersona = useCallback(
+    (persona: PersonaId | null) => setPersonaSelection({ pathname, persona }),
+    [pathname],
   );
   const scrollRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
@@ -202,12 +217,13 @@ export function GlobalAskOs() {
           return;
         }
       }
-      const context: AskAIMessage[] = [
-        ...persisted
-          .slice(-CONTEXT_WINDOW)
-          .map((message) => ({ role: message.role, content: message.content })),
+      const context = boundedAskOsContext<AskAIMessage>([
+        ...persisted.map((message) => ({
+          role: message.role,
+          content: message.content,
+        })),
         { role: "user", content: text },
-      ];
+      ]);
       setDraft({ user: text, assistant: "" });
       try {
         const outcome = await sendMessage(

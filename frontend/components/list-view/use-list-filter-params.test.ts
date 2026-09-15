@@ -38,6 +38,7 @@ function lastParams(): URLSearchParams {
 
 function renderWith(query: string) {
   mockSearchParams = new URLSearchParams(query);
+  window.history.replaceState(null, "", query ? `/payroll/runs?${query}` : "/payroll/runs");
   return renderHook(() => useListFilterParams(PAYROLL_RUN_SPEC));
 }
 
@@ -137,6 +138,15 @@ describe("list filter params, driven by a spec", () => {
     expect(params.has("offset")).toBe(false);
     expect(params.get("search")).toBe("ann");
     expect(params.get("view")).toBe("table");
+  });
+
+  it("preserves current URL changes when the render snapshot is stale", () => {
+    const { result } = renderWith("runState=DRAFT&search=annual");
+    window.history.replaceState(null, "", "/payroll/runs?view=table");
+
+    act(() => result.current.clearAll());
+
+    expect(lastParams().toString()).toBe("view=table");
   });
 
   it("honours the page parameter this spec declared", () => {

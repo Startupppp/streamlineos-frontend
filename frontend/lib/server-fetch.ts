@@ -24,12 +24,23 @@ async function requestWithToken<T>(
     headers.set("Content-Type", "application/json");
   }
 
-  const res = await fetch(`${BACKEND_URL}${path}`, {
-    ...init,
-    headers,
-    cache: "no-store",
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${BACKEND_URL}${path}`, {
+      ...init,
+      headers,
+      cache: "no-store",
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+  } catch (error: unknown) {
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
+    throw new ApiError(
+      "The service is taking too long to respond. Please try again.",
+      503,
+      "BACKEND_UNREACHABLE",
+      { path, cause: error instanceof Error ? error.message : String(error) },
+    );
+  }
   return parseApiResponse<T>(res, contract, path);
 }
 

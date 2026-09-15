@@ -2,6 +2,7 @@ import { createAppQueryClient } from "@/components/providers/query-provider";
 import { ApiError } from "@/lib/api-envelope";
 import {
   INLINE_READ_ERROR,
+  isTransientNetworkError,
   readErrorReachesBoundary,
 } from "@/lib/query-error-policy";
 
@@ -96,5 +97,21 @@ describe("the policy is installed, not merely available", () => {
 
   it("offers one opt-out, for a panel that renders its own failure", () => {
     expect(INLINE_READ_ERROR).toEqual({ throwOnError: false });
+  });
+});
+
+describe("transient server failures", () => {
+  it("retries a failed server-side access snapshot", () => {
+    const error = new Error("Could not load your permissions. Please try again.");
+    error.name = "AccessUnavailableError";
+    expect(isTransientNetworkError(error)).toBe(true);
+  });
+
+  it("retries normalized server fetch failures", () => {
+    expect(
+      isTransientNetworkError(
+        new ApiError("slow", 503, "BACKEND_UNREACHABLE"),
+      ),
+    ).toBe(true);
   });
 });

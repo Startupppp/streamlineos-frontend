@@ -1,8 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { currentSearchParams } from "@/lib/current-search-params";
 import {
   categoryParams,
   countActiveCategories,
@@ -74,14 +82,14 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
   const navigate = useCallback(
     (apply: (params: URLSearchParams) => void, keepPage = false) => {
       startTransition(() => {
-        const params = new URLSearchParams(queryString);
+        const params = currentSearchParams(searchParams);
         apply(params);
         if (!keepPage) params.delete(pageParamName);
         const qs = params.toString();
         router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
       });
     },
-    [router, pathname, queryString, pageParamName],
+    [router, pathname, searchParams, pageParamName],
   );
 
   const page = Math.max(1, Number(searchParams.get(pageParamName) ?? "1") || 1);
@@ -197,7 +205,8 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
     urlValue: search,
     value: search,
   }));
-  const localSearch = searchDraft.urlValue === search ? searchDraft.value : search;
+  const localSearch =
+    searchDraft.urlValue === search ? searchDraft.value : search;
   const setLocalSearch = useCallback(
     (value: string) => setSearchDraft({ urlValue: search, value }),
     [search],
