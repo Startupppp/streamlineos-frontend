@@ -170,7 +170,6 @@ export function PlanTab() {
   function handleSelectPlan(plan: SubscriptionPlan) {
     if (plan !== selectedPlan) {
       setAppliedCoupon(null);
-      setCouponInput("");
     }
     setSelectedPlan(plan);
   }
@@ -187,7 +186,6 @@ export function PlanTab() {
   function handleRemoveCoupon() {
     setAppliedCoupon(null);
     setCouponInput("");
-    setSelectedPlan(null);
   }
 
   function handleCouponInputChange(e: React.ChangeEvent<HTMLInputElement>) {

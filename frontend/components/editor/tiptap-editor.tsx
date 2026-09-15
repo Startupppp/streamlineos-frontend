@@ -119,7 +119,7 @@ export function TiptapEditor({
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const extensions = [
-    StarterKit,
+    StarterKit.configure({ link: false, underline: false }),
     Placeholder.configure({ placeholder }),
     Link.configure({ openOnClick: false, HTMLAttributes: { class: "text-primary underline" } }),
     TextAlign.configure({ types: ["heading", "paragraph"] }),

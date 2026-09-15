@@ -25,9 +25,6 @@ const ticketUpdateResultLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketUpdateResultContract),
 );
 
-const successLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.successContract),
-);
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );

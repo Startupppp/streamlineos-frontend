@@ -193,19 +193,17 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
     });
   }, [navigate, spec]);
 
-  const [localSearch, setLocalSearch] = useState(search);
+  const [searchDraft, setSearchDraft] = useState(() => ({
+    urlValue: search,
+    value: search,
+  }));
+  const localSearch = searchDraft.urlValue === search ? searchDraft.value : search;
+  const setLocalSearch = useCallback(
+    (value: string) => setSearchDraft({ urlValue: search, value }),
+    [search],
+  );
   const debouncedSearch = useDebouncedValue(localSearch, debounceMs);
   const previousDebounced = useRef(debouncedSearch);
-  const previousUrlSearch = useRef(search);
-  const syncingFromUrl = useRef(false);
-
-  useEffect(() => {
-    if (search === previousUrlSearch.current) return;
-    previousUrlSearch.current = search;
-    previousDebounced.current = search;
-    syncingFromUrl.current = true;
-    setLocalSearch(search);
-  }, [search]);
 
   const commitSearch = useCallback(
     (value: string) => {
@@ -215,10 +213,6 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
   );
 
   useEffect(() => {
-    if (syncingFromUrl.current) {
-      if (debouncedSearch === search) syncingFromUrl.current = false;
-      return;
-    }
     if (debouncedSearch === previousDebounced.current) return;
     previousDebounced.current = debouncedSearch;
     if (debouncedSearch !== search) commitSearch(debouncedSearch);
@@ -245,6 +239,7 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
       localSearch,
       page,
       activeFilterCount,
+      setLocalSearch,
       setPage,
       toggle,
       setAt,
