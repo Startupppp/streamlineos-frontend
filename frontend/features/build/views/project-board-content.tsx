@@ -21,6 +21,7 @@ import { PM_PANEL } from "@/components/pm-chrome";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import type { ProjectStatus, BoardMember } from "./use-board-url-state";
+import { useCan } from "@/hooks/api/access";
 
 const KanbanBoard = dynamic(
   () => import("./kanban-board").then((m) => m.KanbanBoard),
@@ -44,6 +45,7 @@ interface ProjectBoardContentProps {
   members: BoardMember[];
   displayOptions: DisplayOptions;
   hideCompleted: boolean;
+  hasActiveFilters: boolean;
   workloadFilters: WorkloadFilterState;
   onTicketSelect: (id: number) => void;
   onWorkloadFilterChange: <K extends keyof WorkloadFilterState>(
@@ -73,6 +75,7 @@ export function ProjectBoardContent({
   members,
   displayOptions,
   hideCompleted,
+  hasActiveFilters,
   workloadFilters,
   onTicketSelect,
   onWorkloadFilterChange,
@@ -87,6 +90,7 @@ export function ProjectBoardContent({
   onSelectionChange,
 }: ProjectBoardContentProps) {
   const shouldReduceMotion = useReducedMotion();
+  const canUpdate = useCan("build:tickets:update");
   const viewVariants = shouldReduceMotion ? viewSwapReduced : viewSwap;
 
   if (showEmptyFilterState) {
@@ -152,6 +156,7 @@ export function ProjectBoardContent({
               onTicketSelect={onTicketSelect}
               displayOptions={displayOptions}
               hideCompleted={hideCompleted}
+              hasActiveFilters={hasActiveFilters}
             />
           </motion.div>
         ) : null}
@@ -195,7 +200,7 @@ export function ProjectBoardContent({
           >
             <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
               <div className="overscroll-contain">
-                {selectedIds.size > 0 && (
+                {canUpdate && selectedIds.size > 0 && (
                   <BulkActionBar
                     selectedCount={selectedIds.size}
                     members={members}
@@ -217,7 +222,7 @@ export function ProjectBoardContent({
                   projectId={projectId}
                   projectStatuses={statuses}
                   displayOptions={displayOptions}
-                  selection={{ selected: selectedIds, onChange: onSelectionChange }}
+                  selection={canUpdate ? { selected: selectedIds, onChange: onSelectionChange } : undefined}
                 />
               </div>
             </ScrollArea>

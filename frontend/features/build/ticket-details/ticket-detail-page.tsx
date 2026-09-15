@@ -12,7 +12,6 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useProject } from "@/hooks/api";
 import { useTicketByKey, useEpics, useModules, useCycles } from "@/hooks/api/build";
-import { useProjectBoardTickets } from "@/hooks/api/build/ticket-queries";
 import { formatTicketKey, parseTicketKey } from "@/components/shared/format-ticket-key";
 import { TicketDetailMainSection } from "./ticket-detail-main-section";
 import { TicketDetailRightPanel } from "./ticket-detail-right-panel";
@@ -21,6 +20,7 @@ import { TicketParentControl } from "./ticket-parent-control";
 import { useTicketDetail } from "./use-ticket-detail";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { useCan } from "@/hooks/api/access";
 
 
 interface TicketDetailPageProps {
@@ -53,6 +53,8 @@ function DetailSkeleton() {
 }
 
 export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps) {
+  const canUpdate = useCan("build:tickets:update");
+  const canAssign = useCan("build:tickets:assign");
   const router = useRouter();
   const searchParams = useSearchParams();
   const isMobile = useIsMobile();
@@ -72,15 +74,10 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
   );
   const ticketId = byKeyTicket?.id ?? null;
 
-  // Warmed here, not left behind the ticket guard: the right panel and the
-  // relations block are keyed on projectId alone, so waiting two round-trips
-  // for them is a pure waterfall. Mobile keeps the drawer lists off (the
-  // hooks' own `!!projectId` gate) because that drawer may never open.
   const sidebarWarmProjectId = isMobile ? 0 : projectId;
   useEpics(sidebarWarmProjectId);
   useModules(sidebarWarmProjectId);
   useCycles(sidebarWarmProjectId);
-  useProjectBoardTickets(projectId);
 
   const handleDeleted = () => {
     router.push(`/build/${projectId}`);
@@ -269,6 +266,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
             onApplyDescription={handleApplyAiDescription}
             onTitleChange={handleTitleChange}
             onDescriptionChange={handleDescriptionEditorChange}
+            canUpdate={canUpdate}
           />
         </div>
 
@@ -284,6 +282,8 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
           sprints={sprints}
           statuses={statuses}
           onAutoSave={autoSave}
+          canUpdate={canUpdate}
+          canAssign={canAssign}
           asideClassName="md:w-96 md:min-w-96 xl:w-[26rem] xl:min-w-[26rem]"
         />
       </div>

@@ -107,9 +107,6 @@ export function TicketFilterBar({
   const { iconRef: clearAllIconRef, hoverHandlers: clearAllHoverHandlers } =
     useAnimatedIcon();
 
-  const { data: cycles = [] } = useCycles(projectId ?? 0);
-  const { data: labels = [] } = useProjectLabels(projectId);
-
   const {
     sprintParam,
     dueDateFrom,
@@ -145,6 +142,15 @@ export function TicketFilterBar({
     handleRemoveDueDate,
     clearAll,
   } = useTicketFilterParams();
+
+  const loadTaxonomyOptions =
+    filterMounted || selectedLabels.length > 0 || selectedCycles.length > 0;
+  const { data: cycles = [] } = useCycles(
+    loadTaxonomyOptions ? (projectId ?? 0) : 0,
+  );
+  const { data: labels = [] } = useProjectLabels(projectId, {
+    enabled: loadTaxonomyOptions,
+  });
 
   const statusItems = useMemo<StatusFilterOption[]>(() => {
     if (statuses && statuses.length > 0) {

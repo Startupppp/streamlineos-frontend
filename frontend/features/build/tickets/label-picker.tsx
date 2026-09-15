@@ -58,7 +58,7 @@ export function LabelPicker({
   const [selectedColor, setSelectedColor] = useState<string>(DEFAULT_LABEL_COLOR);
   const queryClient = useQueryClient();
 
-  const { data: allLabels } = useProjectLabels(undefined);
+  const { data: allLabels } = useProjectLabels(undefined, { enabled: open });
 
   const createLabel = useCreateOrgLabel({
     onSuccess: (newLabel) => {

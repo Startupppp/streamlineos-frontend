@@ -140,7 +140,7 @@ export const WORK_MANAGEMENT_NAV_GROUPS: NavGroup[] = [
         label: "Members",
         icon: Users,
         href: "/build/members",
-        requiredPermission: "build:view",
+        requiredPermission: "build:members:view",
       },
       {
         label: "Customers",

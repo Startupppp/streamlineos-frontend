@@ -1,13 +1,16 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
-import { useProjectBoardTickets } from "./ticket-queries";
+import { useProjectBoardTickets, useTicketColumnCounts } from "./ticket-queries";
 
 const forwardedSignal = new AbortController().signal;
 
 jest.mock("@tanstack/react-query", () => ({
   useInfiniteQuery: jest.fn((options: unknown) => options),
+  useQuery: jest.fn((options: unknown) => options),
   useMemo: jest.requireActual("react").useMemo,
 }));
 jest.mock("react", () => ({
@@ -23,6 +26,7 @@ jest.mock("@/lib/api-client", () => ({
 }));
 
 const mockInfiniteQuery = useInfiniteQuery as jest.Mock;
+const mockQuery = useQuery as jest.Mock;
 const mockCan = useCan as jest.Mock;
 
 function useCaptureQueryOptions(projectId: number, filters?: Parameters<typeof useProjectBoardTickets>[1]) {
@@ -148,5 +152,23 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
       forwardedSignal,
       expect.any(Function),
     );
+  });
+
+  it("does not request column counts when the board disables them with an empty project id", () => {
+    useTicketColumnCounts(0);
+
+    expect(mockQuery).toHaveBeenLastCalledWith(
+      expect.objectContaining({ enabled: false }),
+    );
+  });
+
+  it("uses the project detail roster without mounting a duplicate members query", () => {
+    const source = readFileSync(
+      resolve(process.cwd(), "features", "build", "views", "use-board-url-state.ts"),
+      "utf8",
+    );
+
+    expect(source).not.toContain("useProjectMembers");
+    expect(source).toContain("data.members.flatMap");
   });
 });

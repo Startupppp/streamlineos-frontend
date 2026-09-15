@@ -9,6 +9,9 @@ import {
   useDeleteWebhook,
   useRotateWebhookSecret,
 } from "@/hooks/api/webhooks";
+import { InlineGroupCreate } from "@/features/build/views/list-view-group-create";
+import { BulkActionBar } from "@/features/build/backlog/bulk-action-bar";
+import { ProjectViewsToolbar } from "@/features/build/views/project-views-toolbar";
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
@@ -22,6 +25,7 @@ jest.mock("@animateicons/react/lucide", () => ({
   Link2Icon: () => null,
   SendIcon: () => null,
   CopyIcon: () => null,
+  BookmarkIcon: () => null,
 }));
 
 jest.mock("@/hooks/common/use-animated-icon", () => ({
@@ -80,14 +84,28 @@ jest.mock("@/components/ui/animated-icon-button", () => ({
   AnimatedIconButton: ({
     children,
     onClick,
+    "aria-label": ariaLabel,
   }: {
     children: ReactNode;
     onClick?: () => void;
+    "aria-label"?: string;
   }) => (
-    <button type="button" onClick={onClick}>
+    <button type="button" onClick={onClick} aria-label={ariaLabel}>
       {children}
     </button>
   ),
+}));
+
+jest.mock("@/features/build/shared/ticket-filter-bar", () => ({
+  TicketFilterBar: ({ leading }: { leading: ReactNode }) => <div>{leading}</div>,
+}));
+
+jest.mock("@/features/build/views/display-options-panel", () => ({
+  DisplayOptionsPanel: () => null,
+}));
+
+jest.mock("@/features/build/views/view-switcher", () => ({
+  ViewSwitcher: () => null,
 }));
 
 jest.mock("@/features/settings/webhooks/webhook-card", () => ({
@@ -117,6 +135,10 @@ const EPIC = {
 };
 
 function noop(): void {
+  return;
+}
+
+function noopString(_: string): void {
   return;
 }
 
@@ -188,6 +210,84 @@ describe("EpicCard permission gates — build:tickets:*", () => {
     expect(
       screen.getByRole("button", { name: "More actions" }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("Build ticket mutation controls", () => {
+  beforeEach(() => {
+    (useCan as jest.Mock).mockReturnValue(false);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("hides grouped ticket creation without build:tickets:create", () => {
+    render(<InlineGroupCreate groupKey="TODO" projectId={42} status="TODO" />);
+    expect(screen.queryByLabelText("Add ticket to TODO")).not.toBeInTheDocument();
+  });
+
+  it("hides bulk mutation controls without build:tickets:update", () => {
+    render(
+      <BulkActionBar
+        selectedCount={1}
+        members={[]}
+        sprints={[]}
+        onBulkStatus={noopString}
+        onBulkPriority={noopString}
+        onBulkAssignee={noopString}
+        onBulkSprint={noopString}
+        onClear={noop}
+      />,
+    );
+    expect(screen.queryByText("1 selected")).not.toBeInTheDocument();
+    expect(screen.queryByText("Set Status")).not.toBeInTheDocument();
+    expect(screen.queryByText("Assign to")).not.toBeInTheDocument();
+  });
+
+  it("hides saved-view creation without build:workspace:manage", () => {
+    render(
+      <ProjectViewsToolbar
+        view="board"
+        onViewChange={noop}
+        displayOptions={{}}
+        onDisplayOptionsChange={noop}
+        onOpenSaveView={noop}
+        projectId={42}
+        members={[]}
+        hideCompleted={false}
+        onHideCompletedChange={noop}
+        doneCount={0}
+        workloadFilters={{}}
+        onWorkloadFilterChange={noop}
+        onClearWorkloadFilters={noop}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Save view" })).not.toBeInTheDocument();
+  });
+
+  it("shows saved-view creation with build:workspace:manage", () => {
+    (useCan as jest.Mock).mockImplementation(
+      (key) => key === "build:workspace:manage",
+    );
+    render(
+      <ProjectViewsToolbar
+        view="board"
+        onViewChange={noop}
+        displayOptions={{}}
+        onDisplayOptionsChange={noop}
+        onOpenSaveView={noop}
+        projectId={42}
+        members={[]}
+        hideCompleted={false}
+        onHideCompletedChange={noop}
+        doneCount={0}
+        workloadFilters={{}}
+        onWorkloadFilterChange={noop}
+        onClearWorkloadFilters={noop}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Save view" })).toBeInTheDocument();
   });
 });
 

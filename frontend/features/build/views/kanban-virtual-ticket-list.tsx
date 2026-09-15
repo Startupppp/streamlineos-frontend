@@ -37,6 +37,7 @@ interface KanbanVirtualRowData {
   dragStartRef: MutableRefObject<{ x: number; y: number } | null>;
   onSelect: (id: number) => void;
   displayOptions?: DisplayOptions;
+  canDragTickets: boolean;
 }
 
 function mergeRowStyle(
@@ -61,6 +62,7 @@ function KanbanVirtualRow({
   dragStartRef,
   onSelect,
   displayOptions,
+  canDragTickets,
 }: RowComponentProps<KanbanVirtualRowData>) {
   const ticket = tickets[index];
 
@@ -103,7 +105,7 @@ function KanbanVirtualRow({
   }
 
   return (
-    <Draggable draggableId={String(ticket.id)} index={index}>
+    <Draggable draggableId={String(ticket.id)} index={index} isDragDisabled={!canDragTickets}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
@@ -166,6 +168,7 @@ interface KanbanVirtualTicketListProps {
   minHeightClass?: string;
   onSelect: (id: number) => void;
   dragStartRef: MutableRefObject<{ x: number; y: number } | null>;
+  canDragTickets: boolean;
 }
 
 export const KanbanVirtualTicketList = memo(function KanbanVirtualTicketList({
@@ -178,6 +181,7 @@ export const KanbanVirtualTicketList = memo(function KanbanVirtualTicketList({
   minHeightClass = "min-h-[100px]",
   onSelect,
   dragStartRef,
+  canDragTickets,
 }: KanbanVirtualTicketListProps) {
   const heightKey = useMemo(() => tickets.map((ticket) => ticket.id).join("-"), [tickets]);
   const rowHeight = useDynamicRowHeight({
@@ -193,8 +197,9 @@ export const KanbanVirtualTicketList = memo(function KanbanVirtualTicketList({
       dragStartRef,
       onSelect,
       displayOptions,
+      canDragTickets,
     }),
-    [tickets, projectId, projectKey, dragStartRef, onSelect, displayOptions],
+    [tickets, projectId, projectKey, dragStartRef, onSelect, displayOptions, canDragTickets],
   );
 
   const renderClone = useCallback(

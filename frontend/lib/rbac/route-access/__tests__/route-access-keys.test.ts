@@ -7,7 +7,7 @@ import {
   UNIVERSAL_ROUTES,
   isUniversalRoute,
 } from "../universal-routes";
-import { resolveRouteAccess } from "../route-access";
+import { hasAssignedProductAccess, resolveRouteAccess } from "../route-access";
 import {
   PERMISSION_CATALOG_PATH,
   backendPermissionNames as readBackendPermissionNames,
@@ -279,5 +279,22 @@ describe("route-access registry keys", () => {
         expect(keys).toContain(expectedPermission);
       }
     }
+  });
+});
+
+describe("assigned product access", () => {
+  it("always exposes home", () => {
+    expect(hasAssignedProductAccess("home", {})).toBe(true);
+  });
+
+  it("ignores universal member defaults", () => {
+    expect(hasAssignedProductAccess("hrms", { "self:attendance": "own" })).toBe(false);
+    expect(hasAssignedProductAccess("timesheets", { "timesheets:entries:view": "own" })).toBe(false);
+    expect(hasAssignedProductAccess("documents", { "kb:articles:view": "all" })).toBe(false);
+  });
+
+  it("recognizes direct and administered Build namespaces", () => {
+    expect(hasAssignedProductAccess("build", { "build:tickets:view": "all" })).toBe(true);
+    expect(hasAssignedProductAccess("build", { "projects:members:view": "all" })).toBe(true);
   });
 });

@@ -10,6 +10,7 @@ import { SubtaskComposer } from "./subtask-composer";
 import { TicketAiSuggestSubtasksAction } from "@/features/build/ai/ticket-detail-ai";
 import type { Ticket } from "@/types/projects";
 import type { ProjectStatusRecord } from "@/types/projects";
+import { useCan } from "@/hooks/api/access";
 
 interface TicketSubtasksProps {
   ticketId: number;
@@ -24,6 +25,7 @@ export function TicketSubtasks({
   subtasks,
   canUseAI = false,
 }: TicketSubtasksProps) {
+  const canCreate = useCan("build:tickets:create");
   const { data: projectData, isLoading: projectLoading } = useProject(projectId);
 
   const projectKey = projectData?.key ?? null;
@@ -43,11 +45,13 @@ export function TicketSubtasks({
             {subtasksDone}/{subtasksTotal}
           </Badge>
         )}
-        <TicketAiSuggestSubtasksAction
-          projectId={projectId}
-          ticketId={ticketId}
-          canUseAI={canUseAI}
-        />
+        {canCreate ? (
+          <TicketAiSuggestSubtasksAction
+            projectId={projectId}
+            ticketId={ticketId}
+            canUseAI={canUseAI}
+          />
+        ) : null}
       </div>
 
       {subtasksTotal > 0 && (
@@ -72,11 +76,13 @@ export function TicketSubtasks({
         </div>
       )}
 
-      <SubtaskComposer
-        ticketId={ticketId}
-        projectId={projectId}
-        projectStatuses={projectStatuses}
-      />
+      {canCreate ? (
+        <SubtaskComposer
+          ticketId={ticketId}
+          projectId={projectId}
+          projectStatuses={projectStatuses}
+        />
+      ) : null}
     </div>
   );
 }

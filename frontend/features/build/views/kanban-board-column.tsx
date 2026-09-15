@@ -39,6 +39,7 @@ export interface KanbanBoardColumnProps {
   onColorChange: (statusId: number, color: string) => void;
   onSelect: (id: number) => void;
   dragStartRef: MutableRefObject<{ x: number; y: number } | null>;
+  canDragTickets: boolean;
   columnInnerRef?: (element?: HTMLElement | null) => void;
   columnDraggableProps?: DraggableProvidedDraggableProps;
 }
@@ -64,6 +65,7 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
   onColorChange,
   onSelect,
   dragStartRef,
+  canDragTickets,
   columnInnerRef,
   columnDraggableProps,
 }: KanbanBoardColumnProps) {
@@ -129,6 +131,7 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
             minHeightClass={minHeightClass}
             onSelect={onSelect}
             dragStartRef={dragStartRef}
+            canDragTickets={canDragTickets}
           />
         </div>
       )}

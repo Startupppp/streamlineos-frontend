@@ -36,6 +36,7 @@ import { InlineGroupCreate } from "./list-view-group-create";
 import { GroupRows } from "./list-view-group-rows";
 import { OuterGroupHeader, NestedGroup, DroppableGroup } from "./list-view-group";
 import { EmptyState } from "@/components/ui/empty-state";
+import { useCan } from "@/hooks/api/access";
 
 export const ListView = memo(function ListView({
   tickets,
@@ -50,6 +51,8 @@ export const ListView = memo(function ListView({
 }: ListViewProps) {
   const hasRowBy = !!rowBy && rowBy !== "none";
   const shouldReduceMotion = useReducedMotion();
+  const canUpdate = useCan("build:tickets:update");
+  const canAssign = useCan("build:tickets:assign");
   const queryClient = useQueryClient();
   const [optimisticTickets, setOptimisticTickets] = useState(tickets);
   const [visibleFlatCount, setVisibleFlatCount] = useState(LIST_RENDER_PAGE_SIZE);
@@ -64,7 +67,7 @@ export const ListView = memo(function ListView({
     setVisibleFlatCount((count) => count + LIST_RENDER_PAGE_SIZE);
   }, []);
 
-  const isDnDMode = !hasRowBy && !!groupBy && groupBy !== "none" && DROPPABLE_MODES.has(groupBy) && projectId != null;
+  const isDnDMode = canUpdate && (groupBy !== "assignee" || canAssign) && !hasRowBy && !!groupBy && groupBy !== "none" && DROPPABLE_MODES.has(groupBy) && projectId != null;
 
   const updateTicket = useUpdateTicket(projectId ?? 0);
   const rankTicket = useRankTicket<ReorderContext>({

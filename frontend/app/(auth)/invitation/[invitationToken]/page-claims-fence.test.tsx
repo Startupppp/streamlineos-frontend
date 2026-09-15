@@ -121,34 +121,34 @@ describe("InvitationPage — joining without an auto-login token waits for a con
       expect(mockToastError).toHaveBeenCalled();
     });
     expect(mockPush).not.toHaveBeenCalledWith("/dashboard");
+    expect(
+      screen.getByRole("button", { name: /accept & join/i }),
+    ).toBeEnabled();
   });
 
-  it("a refresh that lands after a newer acceptance started is discarded in silence", async () => {
+  it("keeps one acceptance in flight until its claims refresh settles", async () => {
     let settleFirst: ((session: unknown) => void) | undefined;
-    mockRefreshSessionClaims
-      .mockImplementationOnce(
-        () =>
-          new Promise((resolve) => {
-            settleFirst = resolve;
-          }),
-      )
-      .mockResolvedValue(JOINED_SESSION);
+    mockRefreshSessionClaims.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          settleFirst = resolve;
+        }),
+    );
 
     const user = userEvent.setup();
     render(<InvitationPage />);
     const acceptButton = screen.getByRole("button", { name: /accept & join/i });
     await user.click(acceptButton);
-    await user.click(acceptButton);
-
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/dashboard");
-    });
+    expect(acceptMutation.mutate).toHaveBeenCalledTimes(1);
 
     await act(async () => {
       settleFirst?.(JOINED_SESSION);
       await Promise.resolve();
     });
 
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/dashboard");
+    });
     expect(mockPush).toHaveBeenCalledTimes(1);
     expect(mockToastError).not.toHaveBeenCalled();
   });

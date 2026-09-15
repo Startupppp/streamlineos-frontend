@@ -10,6 +10,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlayIcon, PlusIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 
 interface TicketTimeTrackerProps {
   ticketId: number;
@@ -26,6 +27,7 @@ function formatElapsed(seconds: number): string {
 }
 
 export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTimeTrackerProps) {
+  const canLogTime = useCan("build:timesheets:create");
   const logTime = useLogTime();
   const [running, setRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -110,6 +112,15 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
   }, [manualHours, projectId, ticketId, description, logTime]);
 
   const totalSpent = timeSpent ? parseFloat(timeSpent) : 0;
+
+  if (!canLogTime) {
+    return totalSpent > 0 ? (
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Clock className="h-3.5 w-3.5" />
+        <span>{totalSpent}h logged</span>
+      </div>
+    ) : null;
+  }
 
   return (
     <div>

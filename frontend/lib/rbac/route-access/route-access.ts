@@ -4,6 +4,7 @@ import type {
   ProductKey,
 } from "@/components/layout/sidebar/sidebar-nav-types";
 import { moduleByProductKey } from "@/lib/module-manifest";
+import permissionCatalog from "@/contracts/permission-catalog.json";
 import { matchRouteAccessExtension } from "./route-access-extensions";
 import { matchUniversalRoute } from "./universal-routes";
 
@@ -21,9 +22,35 @@ const ALWAYS_ENABLED_PRODUCTS: ReadonlySet<ProductKey> = new Set<ProductKey>([
   "administration",
 ]);
 
+const MEMBER_DEFAULT_PERMISSIONS = new Set(
+  permissionCatalog.memberDefaultPermissions,
+);
+
 export function orgModuleKeyForProduct(product: ProductKey): string | null {
   if (ALWAYS_ENABLED_PRODUCTS.has(product)) return null;
   return moduleByProductKey(product)?.id ?? null;
+}
+
+export function hasAssignedProductAccess(
+  product: ProductKey,
+  scopes: Readonly<Record<string, unknown>> | undefined,
+): boolean {
+  if (product === "home") return true;
+  if (!scopes) return false;
+  const manifestModule = moduleByProductKey(product);
+  if (!manifestModule) return false;
+  const namespaces = new Set([
+    manifestModule.id,
+    ...manifestModule.administersNamespaces,
+    ...manifestModule.cacheNamespaces,
+  ]);
+  return Object.keys(scopes).some((permission) => {
+    if (MEMBER_DEFAULT_PERMISSIONS.has(permission)) return false;
+    const separator = permission.indexOf(":");
+    const namespace =
+      separator === -1 ? permission : permission.slice(0, separator);
+    return namespaces.has(namespace);
+  });
 }
 
 export function resolveRouteAccess(pathname: string): RouteAccessDecision {

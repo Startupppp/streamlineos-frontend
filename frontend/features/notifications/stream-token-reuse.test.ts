@@ -77,6 +77,18 @@ describe("the notification stream token is minted once per stream, not once per 
     b.unmount();
   });
 
+  it("does not open a duplicate stream when online fires while connected", async () => {
+    const stream = renderHook(() => useNotificationEvents());
+    await waitFor(() => expect(consume).toHaveBeenCalledTimes(1));
+
+    act(() => window.dispatchEvent(new Event("online")));
+    await Promise.resolve();
+
+    expect(tokenMints()).toBe(1);
+    expect(consume).toHaveBeenCalledTimes(1);
+    stream.unmount();
+  });
+
   it("honors Retry-After without minting more tokens during the cooldown", async () => {
     fetchMock.mockResolvedValue({
       ok: false,

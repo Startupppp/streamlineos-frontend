@@ -22,6 +22,7 @@ import { PM_TOOLBAR } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { useTicketSearch } from "@/hooks/api/build/ticket-search";
 import { cn } from "@/lib/utils";
+import { useCan } from "@/hooks/api/access";
 
 interface Member {
   id: string;
@@ -157,7 +158,11 @@ export const BulkActionBar = memo(function BulkActionBar({
   onBulkParent,
   onClear,
 }: BulkActionBarProps) {
+  const canUpdate = useCan("build:tickets:update");
+  const canAssign = useCan("build:tickets:assign");
   const resolvedExcludeIds = excludeIds ?? new Set<string | number>();
+
+  if (!canUpdate) return null;
 
   return (
     <div
@@ -194,7 +199,7 @@ export const BulkActionBar = memo(function BulkActionBar({
             ))}
           </SelectContent>
         </Select>
-        <Select onValueChange={onBulkAssignee}>
+        {canAssign ? <Select onValueChange={onBulkAssignee}>
           <SelectTrigger className="w-[8.5rem]">
             <SelectValue placeholder="Assign to" />
           </SelectTrigger>
@@ -205,7 +210,7 @@ export const BulkActionBar = memo(function BulkActionBar({
               </SelectItem>
             ))}
           </SelectContent>
-        </Select>
+        </Select> : null}
         {onBulkLabel !== undefined && (labels?.length ?? 0) > 0 ? (
           <Select onValueChange={onBulkLabel}>
             <SelectTrigger className="w-[8.5rem]">

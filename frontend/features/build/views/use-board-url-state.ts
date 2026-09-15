@@ -14,7 +14,6 @@ import {
   useViews,
   useCreateView,
   useProjectBoardTickets,
-  useProjectMembers,
 } from "@/hooks/api/build";
 import {
   hydrateDisplayOptions,
@@ -122,7 +121,6 @@ export function useBoardUrlState(projectId: number) {
   } = useProjectBoardTickets(projectId, boardFilters);
   const { data } = useProject(projectId);
   const { data: views } = useViews(projectId);
-  const { data: projectMembersData } = useProjectMembers(projectId);
   const createView = useCreateView();
   const appliedViewIdRef = useRef<string | null>(null);
 
@@ -201,15 +199,18 @@ export function useBoardUrlState(projectId: number) {
   }, [allTickets, hideCompleted, displayOptions.completedIssues, statuses]);
 
   const members: BoardMember[] = useMemo(() => {
-    if (!projectMembersData) return [];
-    return projectMembersData.map((m) => ({
-      id: m.id,
-      name: m.name ?? null,
-      firstName: m.firstName ?? null,
-      lastName: m.lastName ?? null,
-      image: m.image ?? null,
-    }));
-  }, [projectMembersData]);
+    if (!data?.members) return [];
+    return data.members.flatMap((member) => {
+      if (!member.user) return [];
+      return [{
+        id: member.user.id,
+        name: member.user.name ?? null,
+        firstName: member.user.firstName ?? null,
+        lastName: member.user.lastName ?? null,
+        image: member.user.image ?? null,
+      }];
+    });
+  }, [data?.members]);
 
   const wipLimits = useMemo<Record<string, number>>(() => {
     if (!statuses) return {};
@@ -438,6 +439,7 @@ export function useBoardUrlState(projectId: number) {
     wipLimits,
     doneCount,
     showEmptyFilterState,
+    hasActiveFilters,
     handleViewChange,
     handleClearSearch,
     handleClearView,

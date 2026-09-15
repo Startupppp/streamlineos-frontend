@@ -18,6 +18,7 @@ import { TicketDetailRightPanel } from "@/features/build/ticket-details/ticket-d
 import { TicketParentLink } from "@/features/build/ticket-details/ticket-parent-link";
 import { useTicketDetail } from "@/features/build/ticket-details/use-ticket-detail";
 import type { InboxTicketLinkTarget } from "./parse-inbox-ticket-link";
+import { useCan } from "@/hooks/api/access";
 
 const RIGHT_PANEL_COLLAPSED_KEY =
   "streamlineos:ticket-detail:right-panel:collapsed";
@@ -86,6 +87,8 @@ export function InboxTicketPreview({
   target,
   onClose,
 }: InboxTicketPreviewProps) {
+  const canUpdate = useCan("build:tickets:update");
+  const canAssign = useCan("build:tickets:assign");
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem(RIGHT_PANEL_COLLAPSED_KEY) === "true";
@@ -284,6 +287,7 @@ export function InboxTicketPreview({
             onApplyDescription={handleApplyAiDescription}
             onTitleChange={handleTitleChange}
             onDescriptionChange={handleDescriptionEditorChange}
+            canUpdate={canUpdate}
           />
         </div>
 
@@ -300,6 +304,8 @@ export function InboxTicketPreview({
           statuses={statuses}
           onAutoSave={autoSave}
           asideClassName="lg:w-72 lg:min-w-72 xl:w-80 xl:min-w-80"
+          canUpdate={canUpdate}
+          canAssign={canAssign}
         />
       </div>
     </div>

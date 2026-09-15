@@ -12,6 +12,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { invalidateHrWorkforceQueries } from "@/lib/hr-workforce-cache";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import type {
   UpdateProfileInput,
   OnboardEmployeeInput,
@@ -19,22 +20,34 @@ import type {
 } from "@/types/hr";
 
 const _successContract = lazyContract(() =>
-  import("@/hooks/api/hr/employee-profile-schema").then((m) => m.successContract),
+  import("@/hooks/api/hr/employee-profile-schema").then(
+    (m) => m.successContract,
+  ),
 );
 const _onboardEmployeeContract = lazyContract(() =>
-  import("@/hooks/api/hr/employee-profile-schema").then((m) => m.onboardEmployeeResponseContract),
+  import("@/hooks/api/hr/employee-profile-schema").then(
+    (m) => m.onboardEmployeeResponseContract,
+  ),
 );
 const _bulkOnboardContract = lazyContract(() =>
-  import("@/hooks/api/hr/employee-profile-schema").then((m) => m.bulkOnboardResultContract),
+  import("@/hooks/api/hr/employee-profile-schema").then(
+    (m) => m.bulkOnboardResultContract,
+  ),
 );
 const _employmentContract = lazyContract(() =>
-  import("@/hooks/api/hr/employee-profile-schema").then((m) => m.employmentByUserIdContract),
+  import("@/hooks/api/hr/employee-profile-schema").then(
+    (m) => m.employmentByUserIdContract,
+  ),
 );
 const _timelineContract = lazyContract(() =>
-  import("@/hooks/api/hr/employee-profile-schema").then((m) => m.timelinePageContract),
+  import("@/hooks/api/hr/employee-profile-schema").then(
+    (m) => m.timelinePageContract,
+  ),
 );
 const _sensitiveContract = lazyContract(() =>
-  import("@/hooks/api/hr/employee-profile-schema").then((m) => m.sensitiveRowContract),
+  import("@/hooks/api/hr/employee-profile-schema").then(
+    (m) => m.sensitiveRowContract,
+  ),
 );
 
 export function useUpdateProfile() {
@@ -42,7 +55,12 @@ export function useUpdateProfile() {
   return useAuthorizedMutation("hr:employees:update", {
     mutationKey: ["hr", "employees", "update"],
     mutationFn: ({ userId, ...data }: UpdateProfileInput) =>
-      apiClient.patch(`/hr/employees/${userId}`, data, undefined, _successContract),
+      apiClient.patch(
+        `/hr/employees/${userId}`,
+        data,
+        undefined,
+        _successContract,
+      ),
     onSuccess: (_, { userId }) => {
       void invalidateHrWorkforceQueries(qc, userId);
     },
@@ -51,11 +69,18 @@ export function useUpdateProfile() {
 
 export function useOnboardEmployee() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("hr:onboarding:manage", {
     mutationKey: ["hr", "employee", "onboard"],
     mutationFn: (data: OnboardEmployeeInput) =>
-      apiClient.post("/hr/employees/onboard", data, undefined, _onboardEmployeeContract),
+      apiClient.post(
+        "/hr/employees/onboard",
+        data,
+        operation.configFor(data),
+        _onboardEmployeeContract,
+      ),
     onSuccess: (result) => void invalidateHrWorkforceQueries(qc, result.userId),
+    onSettled: operation.settle,
   });
 }
 
@@ -79,7 +104,13 @@ export function useEmployeeEmployment(userId: string) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.employeeEmployment(userId),
-    queryFn: ({ signal }) => apiClient.get(`/hr/employees/${userId}/employment`, undefined, signal, _employmentContract),
+    queryFn: ({ signal }) =>
+      apiClient.get(
+        `/hr/employees/${userId}/employment`,
+        undefined,
+        signal,
+        _employmentContract,
+      ),
     enabled: hrEnabled && !!userId && canView,
     staleTime: 5 * 60_000,
   });
@@ -93,8 +124,16 @@ export function useEmployeeTimeline(
   const hrEnabled = useModuleEnabled("hr");
   const limit = params?.limit ?? 20;
   return useInfiniteQuery({
-    queryKey: humanResourcesQueryKeys.hr.employeeTimeline(employmentId ?? 0, { limit }),
-    queryFn: ({ pageParam, signal }: { pageParam: string | null; signal: AbortSignal }) =>
+    queryKey: humanResourcesQueryKeys.hr.employeeTimeline(employmentId ?? 0, {
+      limit,
+    }),
+    queryFn: ({
+      pageParam,
+      signal,
+    }: {
+      pageParam: string | null;
+      signal: AbortSignal;
+    }) =>
       apiClient.get(
         `/hr/employees/${employmentId}/timeline`,
         {
@@ -116,7 +155,13 @@ export function useEmployeeSensitive(employmentId: number | undefined) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.employeeSensitive(employmentId ?? 0),
-    queryFn: ({ signal }) => apiClient.get(`/hr/employees/${employmentId}/sensitive`, undefined, signal, _sensitiveContract),
+    queryFn: ({ signal }) =>
+      apiClient.get(
+        `/hr/employees/${employmentId}/sensitive`,
+        undefined,
+        signal,
+        _sensitiveContract,
+      ),
     enabled: hrEnabled && !!employmentId && canViewSensitive,
     staleTime: 30_000,
   });
@@ -127,8 +172,16 @@ export function useUpdateSensitive(employmentId: number) {
   return useAuthorizedMutation("hr:sensitive:manage", {
     mutationKey: ["hr", "employee", "sensitive", "update", employmentId],
     mutationFn: (data: Record<string, unknown>) =>
-      apiClient.patch(`/hr/employees/${employmentId}/sensitive`, data, undefined, _successContract),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.employeeSensitive(employmentId) }),
+      apiClient.patch(
+        `/hr/employees/${employmentId}/sensitive`,
+        data,
+        undefined,
+        _successContract,
+      ),
+    onSuccess: () =>
+      void qc.invalidateQueries({
+        queryKey: humanResourcesQueryKeys.hr.employeeSensitive(employmentId),
+      }),
   });
 }
 
@@ -140,7 +193,9 @@ export function useExportEmployeePdf(
   return useMutation({
     mutationKey: ["hr", "employees", employeeId, "profile-pdf"],
     mutationFn: async () => {
-      const blob = await apiClient.download(`/hr/employees/${employeeId}/profile-pdf`);
+      const blob = await apiClient.download(
+        `/hr/employees/${employeeId}/profile-pdf`,
+      );
       const header = new Uint8Array(await blob.slice(0, 5).arrayBuffer());
       const isPdf =
         header.length >= 5 &&

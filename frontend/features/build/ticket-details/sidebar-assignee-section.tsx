@@ -19,6 +19,7 @@ interface SidebarAssigneeSectionProps {
   displayedAssignees: DisplayedAssignee[];
   onAddAssignee: (v: string) => void;
   onRemoveAssignee: (personId: string) => void;
+  disabled?: boolean;
 }
 
 export function SidebarAssigneeSection({
@@ -26,6 +27,7 @@ export function SidebarAssigneeSection({
   displayedAssignees,
   onAddAssignee,
   onRemoveAssignee,
+  disabled = false,
 }: SidebarAssigneeSectionProps) {
   function handleAddAssignee(userId: string | null) {
     if (userId) onAddAssignee(userId);
@@ -54,27 +56,27 @@ export function SidebarAssigneeSection({
                 <span className="min-w-0 flex-1 truncate text-xs font-medium text-foreground">
                   {displayName}
                 </span>
-                <button
+                {!disabled ? <button
                   type="button"
                   className="flex h-8 w-8 shrink-0 touch-manipulation items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive md:h-6 md:w-6 md:opacity-0 md:group-hover:opacity-100"
                   onClick={() => onRemoveAssignee(person.id)}
                   aria-label={`Remove ${displayName}`}
                 >
                   <span className="text-sm font-bold leading-none">&times;</span>
-                </button>
+                </button> : null}
               </div>
             );
           })}
         </div>
       )}
-      <ProjectMemberSelect
+      {!disabled ? <ProjectMemberSelect
         projectId={projectId}
         mode="single"
         value=""
         onChange={handleAddAssignee}
         placeholder="+ Add assignee"
         className="text-xs w-full"
-      />
+      /> : null}
     </div>
   );
 }

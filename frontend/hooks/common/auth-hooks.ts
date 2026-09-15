@@ -240,8 +240,7 @@ export function useGetOrganizations(enabled = true) {
     staleTime: 60_000,
     enabled: status === "authenticated" && enabled,
     placeholderData: keepPreviousData,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
   });
 }
 

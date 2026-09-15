@@ -19,6 +19,7 @@ import { InlineDueDate } from "./card-inline-date-fields";
 import { pmSnappy } from "@/lib/motion-presets";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { ListViewItemProps } from "./list-view-shared";
+import { useCan } from "@/hooks/api/access";
 
 export const ListViewItem = memo(function ListViewItem({
   ticket,
@@ -33,6 +34,8 @@ export const ListViewItem = memo(function ListViewItem({
   const handleClick = useCallback(() => onClick(ticket.id), [onClick, ticket.id]);
   const shouldReduceMotion = useReducedMotion();
   const { iconRef: chevronIconRef, hoverHandlers: chevronHoverHandlers } = useAnimatedIcon();
+  const canUpdate = useCan("build:tickets:update");
+  const canAssign = useCan("build:tickets:assign");
 
   const showId = displayOptions?.showId ?? true;
   const showPriority = displayOptions?.showPriority ?? true;
@@ -73,7 +76,7 @@ export const ListViewItem = memo(function ListViewItem({
         </div>
       )}
       <div className="flex flex-1 min-w-0 items-center gap-2 px-3 py-1.5">
-        {hasProjectId ? (
+        {hasProjectId && canUpdate ? (
           <InlineStatus
             ticketId={ticket.id}
             projectId={projectId}
@@ -83,7 +86,7 @@ export const ListViewItem = memo(function ListViewItem({
         ) : (
           <div className={cn("h-2 w-2 rounded-full flex-shrink-0", getStatusDotClass(ticket.status))} />
         )}
-        {hasProjectId ? (
+        {hasProjectId && canUpdate ? (
           <InlineType
             ticketId={ticket.id}
             projectId={projectId}
@@ -103,14 +106,14 @@ export const ListViewItem = memo(function ListViewItem({
         >
           <TruncatedText text={ticket.title} />
         </button>
-        {showLabels && hasProjectId && (
+        {showLabels && hasProjectId && canUpdate && (
           <InlineLabels
             ticketId={ticket.id}
             projectId={projectId}
             currentLabelIds={labelIds}
           />
         )}
-        {showPriority && hasProjectId ? (
+        {showPriority && hasProjectId && canUpdate ? (
           <InlinePriority
             ticketId={ticket.id}
             projectId={projectId}
@@ -119,7 +122,7 @@ export const ListViewItem = memo(function ListViewItem({
         ) : showPriority && ticket.priority ? (
           <span className="text-xs font-medium flex-shrink-0 text-muted-foreground">{ticket.priority}</span>
         ) : null}
-        {showEstimate && hasProjectId ? (
+        {showEstimate && hasProjectId && canUpdate ? (
           <InlineEstimate
             ticketId={ticket.id}
             projectId={projectId}
@@ -128,14 +131,14 @@ export const ListViewItem = memo(function ListViewItem({
         ) : showEstimate && ticket.points != null && ticket.points > 0 ? (
           <Badge variant="outline" className="text-xs flex-shrink-0">{ticket.points}pt</Badge>
         ) : null}
-        {showDueDate && hasProjectId && (
+        {showDueDate && hasProjectId && canUpdate && (
           <InlineDueDate
             ticketId={ticket.id}
             projectId={projectId}
             currentDueDate={ticket.dueDate}
           />
         )}
-        {showAssignee && hasProjectId ? (
+        {showAssignee && hasProjectId && canAssign ? (
           <InlineAssignee
             ticketId={ticket.id}
             projectId={projectId}

@@ -75,6 +75,7 @@ export interface SidebarSelectFieldsProps {
   onEpicChange: (v: string) => void;
   onModuleChange: (v: string) => void;
   onCycleChange: (v: string) => void;
+  disabled?: boolean;
 }
 
 const FIELD_GRID = "grid grid-cols-1 gap-3 @[18rem]:grid-cols-2";
@@ -104,6 +105,7 @@ export function SidebarSelectFields({
   onEpicChange,
   onModuleChange,
   onCycleChange,
+  disabled = false,
 }: SidebarSelectFieldsProps) {
   const [pointsDraft, setPointsDraft] = useState(
     ticket.points == null ? "" : String(ticket.points),
@@ -132,7 +134,7 @@ export function SidebarSelectFields({
       <div className={FIELD_GRID}>
         <div className="min-w-0">
           <FieldLabel>Status</FieldLabel>
-          <Select value={ticket.status || "TODO"} onValueChange={onStatusChange}>
+          <Select value={ticket.status || "TODO"} onValueChange={onStatusChange} disabled={disabled}>
             <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue />
             </SelectTrigger>
@@ -170,7 +172,7 @@ export function SidebarSelectFields({
         </div>
         <div className="min-w-0">
           <FieldLabel>Priority</FieldLabel>
-          <Select value={ticket.priority || "MEDIUM"} onValueChange={onPriorityChange}>
+          <Select value={ticket.priority || "MEDIUM"} onValueChange={onPriorityChange} disabled={disabled}>
             <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue />
             </SelectTrigger>
@@ -187,7 +189,7 @@ export function SidebarSelectFields({
       <div className={FIELD_GRID}>
         <div className="min-w-0">
           <FieldLabel>Type</FieldLabel>
-          <Select value={ticket.type || "TASK"} onValueChange={onTypeChange}>
+          <Select value={ticket.type || "TASK"} onValueChange={onTypeChange} disabled={disabled}>
             <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue />
             </SelectTrigger>
@@ -210,6 +212,7 @@ export function SidebarSelectFields({
             onKeyDown={handlePointsKeyDown}
             className={CONTROL_CLASS}
             placeholder="0"
+            disabled={disabled}
           />
         </div>
       </div>
@@ -220,7 +223,7 @@ export function SidebarSelectFields({
             <Target className="mr-0.5 inline h-3 w-3" />
             Sprint
           </FieldLabel>
-          <Select value={ticket.sprintId?.toString() || "none"} onValueChange={onSprintChange}>
+          <Select value={ticket.sprintId?.toString() || "none"} onValueChange={onSprintChange} disabled={disabled}>
             <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue placeholder="None" />
             </SelectTrigger>
@@ -240,7 +243,7 @@ export function SidebarSelectFields({
             <Zap className="mr-0.5 inline h-3 w-3" />
             Epic
           </FieldLabel>
-          <Select value={ticket.epicId?.toString() || "none"} onValueChange={onEpicChange}>
+          <Select value={ticket.epicId?.toString() || "none"} onValueChange={onEpicChange} disabled={disabled}>
             <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue placeholder="None" />
             </SelectTrigger>
@@ -262,7 +265,7 @@ export function SidebarSelectFields({
             <Boxes className="mr-0.5 inline h-3 w-3" />
             Module
           </FieldLabel>
-          <Select value={ticket.moduleId?.toString() || "none"} onValueChange={onModuleChange}>
+          <Select value={ticket.moduleId?.toString() || "none"} onValueChange={onModuleChange} disabled={disabled}>
             <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue placeholder="None" />
             </SelectTrigger>
@@ -281,7 +284,7 @@ export function SidebarSelectFields({
             <RotateCcw className="mr-0.5 inline h-3 w-3" />
             Cycle
           </FieldLabel>
-          <Select value={ticket.cycleId?.toString() || "none"} onValueChange={onCycleChange}>
+          <Select value={ticket.cycleId?.toString() || "none"} onValueChange={onCycleChange} disabled={disabled}>
             <SelectTrigger className={CONTROL_CLASS}>
               <SelectValue placeholder="None" />
             </SelectTrigger>

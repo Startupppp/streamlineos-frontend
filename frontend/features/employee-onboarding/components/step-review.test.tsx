@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { gateCookieName } from "@/lib/onboarding-gate";
 import { DATA_STEP_IDS } from "../lib/constants";
@@ -175,5 +175,16 @@ describe("StepReview — submitting writes the gate cookie and shows the celebra
     });
     expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
     expect(mockToastError).not.toHaveBeenCalled();
+  });
+
+  it("two submit events in the same render start one completion request", () => {
+    mockSubmitOnboarding.mockReturnValue(new Promise(() => undefined));
+    renderReview();
+    const submit = screen.getByRole("button", { name: /confirm & submit/i });
+
+    fireEvent.click(submit);
+    fireEvent.click(submit);
+
+    expect(mockSubmitOnboarding).toHaveBeenCalledTimes(1);
   });
 });

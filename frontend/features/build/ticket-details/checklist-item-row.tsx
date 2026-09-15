@@ -33,11 +33,13 @@ export const ChecklistItemRow = memo(function ChecklistItemRow({
   checklistId,
   projectId,
   ticketId,
+  canUpdate,
 }: {
   item: ChecklistItem;
   checklistId: number;
   projectId: number;
   ticketId: number;
+  canUpdate: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(item.text);
@@ -108,6 +110,7 @@ export const ChecklistItemRow = memo(function ChecklistItemRow({
             : "border-input hover:border-primary/40",
         )}
         aria-label={item.isCompleted ? "Mark incomplete" : "Mark complete"}
+        disabled={!canUpdate}
       >
         {item.isCompleted && (
           <motion.svg
@@ -129,7 +132,7 @@ export const ChecklistItemRow = memo(function ChecklistItemRow({
         )}
       </button>
 
-      {editing ? (
+      {canUpdate && editing ? (
         <input
           ref={inputRef}
           aria-label="Checklist item text"
@@ -143,21 +146,22 @@ export const ChecklistItemRow = memo(function ChecklistItemRow({
       ) : (
         <span
           className={cn(
-            "flex-1 text-sm cursor-pointer",
+            "flex-1 text-sm",
+            canUpdate && "cursor-pointer",
             item.isCompleted
               ? "line-through text-muted-foreground"
               : "text-foreground",
           )}
-          onClick={() => setEditing(true)}
-          onKeyDown={handleSpanKeyDown}
-          role="button"
-          tabIndex={0}
+          onClick={canUpdate ? () => setEditing(true) : undefined}
+          onKeyDown={canUpdate ? handleSpanKeyDown : undefined}
+          role={canUpdate ? "button" : undefined}
+          tabIndex={canUpdate ? 0 : undefined}
         >
           {item.text}
         </span>
       )}
 
-      <DeleteItemButton onClick={handleDelete} />
+      {canUpdate ? <DeleteItemButton onClick={handleDelete} /> : null}
     </motion.div>
   );
 });

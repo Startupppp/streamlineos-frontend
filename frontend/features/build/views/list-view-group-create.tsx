@@ -8,8 +8,15 @@ import { useCreateTicket } from "@/hooks/api";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import type { InlineGroupCreateProps } from "./list-view-shared";
+import { useCan } from "@/hooks/api/access";
 
 export function InlineGroupCreate({ groupKey, projectId, status }: InlineGroupCreateProps) {
+  const canCreate = useCan("build:tickets:create");
+  if (!canCreate) return null;
+  return <InlineGroupCreateContent groupKey={groupKey} projectId={projectId} status={status} />;
+}
+
+function InlineGroupCreateContent({ groupKey, projectId, status }: InlineGroupCreateProps) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const { iconRef: plusIconRef, hoverHandlers: plusHoverHandlers } = useAnimatedIcon();

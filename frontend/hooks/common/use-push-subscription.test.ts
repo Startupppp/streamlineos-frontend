@@ -154,6 +154,19 @@ describe("usePushSubscription", () => {
     );
   });
 
+  it("does not post the same subscription again when the shell remounts", async () => {
+    pushManager.getSubscription.mockResolvedValue(subscriptionJson("https://push.example/kept"));
+
+    const first = renderPushHook("remount-user");
+    await waitFor(() => expect(api.post).toHaveBeenCalledTimes(1));
+    first.unmount();
+
+    renderPushHook("remount-user");
+
+    await waitFor(() => expect(serviceWorker.register).toHaveBeenCalledTimes(1));
+    expect(api.post).toHaveBeenCalledTimes(1);
+  });
+
   it("reports a permission revoked from browser site settings while the tab is open", async () => {
     const { result } = renderPushHook("user-1");
 
@@ -308,6 +321,30 @@ describe("usePushSubscription", () => {
         expect.any(Function),
       ),
     );
+  });
+
+  it("persists one rotated subscription once when two mounted consumers receive it", async () => {
+    pushManager.getSubscription.mockResolvedValue(subscriptionJson("https://push.example/kept"));
+
+    renderPushHook("rotation-user");
+    renderPushHook("rotation-user");
+    await waitFor(() => expect(api.post).toHaveBeenCalledTimes(1));
+    api.post.mockClear();
+
+    await act(async () => {
+      serviceWorker.dispatchEvent(
+        new MessageEvent("message", {
+          data: {
+            type: "push-subscription-changed",
+            endpoint: "https://push.example/rotated-once",
+            p256dh: "rotated-p256dh",
+            auth: "rotated-auth",
+          },
+        }),
+      );
+    });
+
+    await waitFor(() => expect(api.post).toHaveBeenCalledTimes(1));
   });
 
   it("ignores a worker message that is not a subscription rotation", async () => {

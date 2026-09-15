@@ -16,6 +16,7 @@ import { TicketParentControl } from "./ticket-parent-control";
 import { TicketCustomerPicker } from "./ticket-customer-picker";
 import { TicketDateFields } from "./ticket-date-fields";
 import { TicketSidebarMetadata } from "./ticket-sidebar-metadata";
+import { Badge } from "@/components/ui/badge";
 
 interface TicketSidebarProps {
   ticket: {
@@ -75,6 +76,8 @@ interface TicketSidebarProps {
   sprints: Array<{ id: number; name: string; status?: string | null }>;
   statuses?: Array<{ name: string; id: number }>;
   onAutoSave: (field: Record<string, unknown>) => void;
+  canUpdate: boolean;
+  canAssign: boolean;
 }
 
 export function TicketSidebar({
@@ -85,6 +88,8 @@ export function TicketSidebar({
   sprints,
   statuses,
   onAutoSave,
+  canUpdate,
+  canAssign,
 }: TicketSidebarProps) {
   const { data: epics } = useEpics(projectId ?? 0);
   const { data: modules } = useModules(projectId ?? 0);
@@ -169,6 +174,7 @@ export function TicketSidebar({
         onEpicChange={handleEpicChange}
         onModuleChange={handleModuleChange}
         onCycleChange={handleCycleChange}
+        disabled={!canUpdate}
       />
 
       {projectId != null ? (
@@ -183,26 +189,43 @@ export function TicketSidebar({
         />
       ) : null}
 
-      <TicketCustomerPicker
-        customerId={ticket.customerId}
-        customerName={ticket.customer?.name}
-        onChange={handleCustomerChange}
-      />
+      {canUpdate ? (
+        <TicketCustomerPicker
+          customerId={ticket.customerId}
+          customerName={ticket.customer?.name}
+          onChange={handleCustomerChange}
+        />
+      ) : (
+        <div className="text-xs text-muted-foreground">Customer: {ticket.customer?.name ?? "None"}</div>
+      )}
 
-      <TicketDateFields
-        startDate={ticket.startDate}
-        dueDate={ticket.dueDate}
-        onStartDateChange={handleStartDateChange}
-        onDueDateChange={handleDueDateChange}
-        onClearStartDate={handleClearStartDate}
-        onClearDueDate={handleClearDueDate}
-      />
+      {canUpdate ? (
+        <TicketDateFields
+          startDate={ticket.startDate}
+          dueDate={ticket.dueDate}
+          onStartDateChange={handleStartDateChange}
+          onDueDateChange={handleDueDateChange}
+          onClearStartDate={handleClearStartDate}
+          onClearDueDate={handleClearDueDate}
+        />
+      ) : (
+        <div className="grid grid-cols-2 gap-3 text-xs text-muted-foreground">
+          <span>Start: {ticket.startDate ?? "None"}</span>
+          <span>Due: {ticket.dueDate ?? "None"}</span>
+        </div>
+      )}
 
       <div>
-        <RecurrencePicker
-          value={ticket.recurrenceRule ?? null}
-          onChange={handleRecurrenceChange}
-        />
+        {canUpdate ? (
+          <RecurrencePicker
+            value={ticket.recurrenceRule ?? null}
+            onChange={handleRecurrenceChange}
+          />
+        ) : (
+          <span className="text-xs text-muted-foreground">
+            Recurring: {ticket.recurrenceRule ? ticket.recurrenceRule.frequency : "No"}
+          </span>
+        )}
       </div>
 
       <SidebarAssigneeSection
@@ -210,20 +233,29 @@ export function TicketSidebar({
         displayedAssignees={displayedAssignees}
         onAddAssignee={handleAddAssignee}
         onRemoveAssignee={handleRemoveAssignee}
+        disabled={!canAssign}
       />
 
       <div>
-        <LabelPicker
-          ticketId={ticketId}
-          projectId={projectId}
-          currentLabels={(ticket.labels ?? []).filter(
-            (
-              l,
-            ): l is {
-              label: { id: number; name: string; color: string | null };
-            } => l.label != null,
-          )}
-        />
+        {canUpdate ? (
+          <LabelPicker
+            ticketId={ticketId}
+            projectId={projectId}
+            currentLabels={(ticket.labels ?? []).filter(
+              (
+                l,
+              ): l is {
+                label: { id: number; name: string; color: string | null };
+              } => l.label != null,
+            )}
+          />
+        ) : (
+          <div className="flex flex-wrap gap-1">
+            {(ticket.labels ?? []).flatMap((entry) =>
+              entry.label ? [<Badge key={entry.label.id} variant="secondary">{entry.label.name}</Badge>] : [],
+            )}
+          </div>
+        )}
       </div>
 
       <TicketSidebarMetadata

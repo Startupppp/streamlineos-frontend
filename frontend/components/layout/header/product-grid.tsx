@@ -10,7 +10,7 @@ import {
   type ProductKey,
 } from "../sidebar/sidebar-nav-items";
 import { ProductTile } from "./product-tile";
-import { hasAssignedProductAccess } from "./product-access";
+import { hasAssignedProductAccess } from "@/lib/rbac/route-access/route-access";
 
 const PRODUCT_TO_LOCKED_MODULE: Partial<Record<ProductKey, string>> = {
   payroll: "payroll",

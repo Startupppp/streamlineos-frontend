@@ -122,6 +122,7 @@ function openStream(
   const controller = new AbortController();
   let retryCount = 0;
   let retryTimer: ReturnType<typeof setTimeout> | undefined;
+  let connecting = false;
 
   const invalidate = () => invalidateNotificationInbox(queryClientRef.current);
 
@@ -140,14 +141,15 @@ function openStream(
   };
 
   const connect = async (): Promise<void> => {
-    if (controller.signal.aborted) return;
-    const token = await fetchStreamToken(orgId);
-    if (controller.signal.aborted) return;
-    if (!token) {
-      scheduleRetry();
-      return;
-    }
+    if (controller.signal.aborted || connecting) return;
+    connecting = true;
     try {
+      const token = await fetchStreamToken(orgId);
+      if (controller.signal.aborted) return;
+      if (!token) {
+        scheduleRetry();
+        return;
+      }
       await consumeNotificationStream(
         `${BACKEND_URL}/notifications/events`,
         token,
@@ -163,6 +165,8 @@ function openStream(
       scheduleRetry();
     } catch {
       scheduleRetry();
+    } finally {
+      connecting = false;
     }
   };
 

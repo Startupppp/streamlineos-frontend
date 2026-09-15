@@ -28,6 +28,7 @@ import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
+import { useCan } from "@/hooks/api/access";
 
 const BACKLOG_FILTER_PARAMS = [
   "q",
@@ -49,6 +50,7 @@ interface ProjectBacklogPageProps {
 }
 
 export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPageProps) {
+  const canUpdate = useCan("build:tickets:update");
   const projectId = parseInt(projectIdStr);
   const {
     data,
@@ -295,7 +297,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
       }
     >
       <PmPageShell>
-        {selectedIds.size > 0 ? (
+        {canUpdate && selectedIds.size > 0 ? (
           <BulkActionBar
             selectedCount={selectedIds.size}
             members={members}
@@ -330,11 +332,11 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
             columns={columns}
             getRowKey={(ticket) => ticket.id}
             onRowClick={handleRowClick}
-            selection={{
+            selection={canUpdate ? {
               selected: selectedIds,
               onChange: handleSelectionChange,
               getRowLabel: (ticket) => ticket.title ?? "",
-            }}
+            } : undefined}
             minWidth="640px"
             className="border-0 rounded-none flex-1 min-h-0"
             emptyState={

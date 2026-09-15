@@ -1,5 +1,5 @@
 import type { HTMLAttributes, PropsWithChildren } from "react";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent, { PointerEventsCheckLevel } from "@testing-library/user-event";
 import type {
   InvitationValidation,
@@ -312,6 +312,18 @@ describe("InvitationPage — accepting as an existing account", () => {
     const warning = screen.getByText(/you are currently signed in as/i);
     expect(warning).toBeVisible();
     expect(within(warning).getByText("someone.else@acme.test")).toBeVisible();
+  });
+
+  it("two accept events in the same render consume the invitation once", () => {
+    validation.data = { ...VALID_INVITATION, userExists: true };
+    currentSession = { user: { email: "existing@acme.test" } };
+
+    render(<InvitationPage />);
+    const accept = screen.getByRole("button", { name: /accept & join/i });
+    fireEvent.click(accept);
+    fireEvent.click(accept);
+
+    expect(acceptMutate).toHaveBeenCalledTimes(1);
   });
 });
 

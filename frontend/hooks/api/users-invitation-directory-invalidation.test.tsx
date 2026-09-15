@@ -71,6 +71,16 @@ describe("invitation directory cache invalidation", () => {
     });
 
     expectDirectoryPeopleInvalidated(invalidateSpy);
+    expect(mockedPost.mock.calls[0]?.[2]?.headers?.["Idempotency-Key"]).toEqual(
+      expect.any(String),
+    );
+    expect(
+      invalidateSpy.mock.calls.some(
+        (call) =>
+          JSON.stringify(call[0]?.queryKey) ===
+          JSON.stringify(queryKeys.users.all),
+      ),
+    ).toBe(false);
   });
 
   it("refreshes person access after bulk invitations", async () => {

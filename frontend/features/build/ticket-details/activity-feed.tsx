@@ -73,10 +73,16 @@ export function ActivityFeed({
   const upsertDraft = useUpsertCommentDraft();
   const deleteDraftByTicket = useDeleteCommentDraftByTicket();
   const upsertDraftMutateRef = useRef(upsertDraft.mutate);
-  upsertDraftMutateRef.current = upsertDraft.mutate;
-  const canManage = useCan("build:manage");
+  const canUpdate = useCan("build:tickets:update");
+  const canCreate = useCan("build:tickets:create");
+  const canManageBuild = useCan("build:manage");
+  const canManage = canUpdate && canManageBuild;
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    upsertDraftMutateRef.current = upsertDraft.mutate;
+  }, [upsertDraft.mutate]);
 
   const commentPermalink = useCallback(
     (commentId: number) => {
@@ -105,14 +111,14 @@ export function ActivityFeed({
 
   useEffect(() => {
     if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
-    if (!newComment.trim()) return;
+    if (!canUpdate || !newComment.trim()) return;
     draftTimerRef.current = setTimeout(() => {
       upsertDraftMutateRef.current({ ticketId, body: newComment });
     }, 1200);
     return () => {
       if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
     };
-  }, [newComment, ticketId]);
+  }, [canUpdate, newComment, ticketId]);
 
   const addComment = useAddComment({
     onSuccess: () => {
@@ -332,7 +338,7 @@ export function ActivityFeed({
           {activityAiActions}
         </h4>
 
-        <div className="flex w-full min-w-0 flex-row items-end gap-2">
+        {canUpdate ? <div className="flex w-full min-w-0 flex-row items-end gap-2">
           <MentionTextarea
             value={newComment}
             onChange={setNewComment}
@@ -352,7 +358,7 @@ export function ActivityFeed({
             disabled={!newComment.trim() || addComment.isPending}
             aria-label="Post comment"
           />
-        </div>
+        </div> : null}
       </div>
 
       {commentNotFound && (
@@ -399,11 +405,12 @@ export function ActivityFeed({
                 isHighlighted={highlightCommentId === comment.id}
                 permalinkUrl={commentPermalink(comment.id)}
                 canManage={canManage}
+                canInteract={canUpdate}
                 onSaveEdit={handleSaveEdit}
                 onDelete={handleDeleteComment}
                 isSavingEdit={editingSaveId === comment.id}
                 isDeletingComment={deletingId === comment.id}
-                onCreateIssue={handleCreateIssue}
+                onCreateIssue={canCreate ? handleCreateIssue : undefined}
               />
               {(repliesMap[comment.id]?.length ?? 0) > 0 && (
                 <div className="ml-4 mt-2 space-y-2 border-l border-border pl-3 sm:ml-9">
@@ -439,11 +446,12 @@ export function ActivityFeed({
                           isHighlighted={highlightCommentId === reply.id}
                           permalinkUrl={commentPermalink(reply.id)}
                           canManage={canManage}
+                          canInteract={canUpdate}
                           onSaveEdit={handleSaveEdit}
                           onDelete={handleDeleteComment}
                           isSavingEdit={editingSaveId === reply.id}
                           isDeletingComment={deletingId === reply.id}
-                          onCreateIssue={handleCreateIssue}
+                          onCreateIssue={canCreate ? handleCreateIssue : undefined}
                         />
                       </div>
                     ))}
@@ -468,7 +476,7 @@ export function ActivityFeed({
 
       {comments.length === 0 && (
         <p className="text-xs text-muted-foreground text-center py-4">
-          No comments yet. Be the first to comment.
+          {canUpdate ? "No comments yet. Be the first to comment." : "No comments yet."}
         </p>
       )}
     </div>

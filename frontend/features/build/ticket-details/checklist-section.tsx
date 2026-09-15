@@ -36,10 +36,12 @@ export function ChecklistSection({
   checklist,
   projectId,
   ticketId,
+  canUpdate,
 }: {
   checklist: Checklist;
   projectId: number;
   ticketId: number;
+  canUpdate: boolean;
 }) {
   const [addingItem, setAddingItem] = useState(false);
   const [newItemText, setNewItemText] = useState("");
@@ -127,7 +129,7 @@ export function ChecklistSection({
     <div className="space-y-2">
       <div className="flex items-center gap-2 group">
         <CheckSquare className="h-4 w-4 text-muted-foreground shrink-0" />
-        {editingTitle ? (
+        {canUpdate && editingTitle ? (
           <input
             aria-label="Checklist title"
             value={title}
@@ -139,11 +141,11 @@ export function ChecklistSection({
           />
         ) : (
           <span
-            className="flex-1 text-sm font-semibold text-foreground cursor-pointer hover:text-foreground/80"
-            onClick={() => setEditingTitle(true)}
-            onKeyDown={handleTitleSpanKeyDown}
-            role="button"
-            tabIndex={0}
+            className={cn("flex-1 text-sm font-semibold text-foreground", canUpdate && "cursor-pointer hover:text-foreground/80")}
+            onClick={canUpdate ? () => setEditingTitle(true) : undefined}
+            onKeyDown={canUpdate ? handleTitleSpanKeyDown : undefined}
+            role={canUpdate ? "button" : undefined}
+            tabIndex={canUpdate ? 0 : undefined}
           >
             {checklist.title}
           </span>
@@ -151,7 +153,7 @@ export function ChecklistSection({
         <span className="text-micro text-muted-foreground font-mono">
           {completed}/{total}
         </span>
-        <DeleteChecklistButton onClick={handleDeleteChecklist} />
+        {canUpdate ? <DeleteChecklistButton onClick={handleDeleteChecklist} /> : null}
       </div>
 
       {total > 0 && (
@@ -174,12 +176,13 @@ export function ChecklistSection({
               checklistId={checklist.id}
               projectId={projectId}
               ticketId={ticketId}
+              canUpdate={canUpdate}
             />
           ))}
         </AnimatePresence>
 
         <AnimatePresence>
-          {addingItem ? (
+          {canUpdate && addingItem ? (
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
@@ -206,7 +209,7 @@ export function ChecklistSection({
                 Add
               </button>
             </motion.div>
-          ) : (
+          ) : canUpdate ? (
             <button
               type="button"
               onClick={() => setAddingItem(true)}
@@ -215,7 +218,7 @@ export function ChecklistSection({
               <PlusIcon size={12} />
               Add item
             </button>
-          )}
+          ) : null}
         </AnimatePresence>
       </div>
     </div>

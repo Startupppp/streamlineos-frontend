@@ -2,6 +2,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { TicketFilterBar } from "./ticket-filter-bar";
 
 const mockReplace = jest.fn();
+const mockUseCycles = jest.fn(() => ({ data: [] }));
+const mockUseProjectLabels = jest.fn(() => ({ data: [] }));
 let mockSearchParams = new URLSearchParams();
 
 jest.mock("next/navigation", () => ({
@@ -10,13 +12,15 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
 }));
 
+jest.mock("next/dynamic", () => () => () => null);
+
 // The bar's only data dependencies. Stubbing them keeps the session and query
 // providers out of a test about chips and URL state.
 jest.mock("@/hooks/api/build/advanced", () => ({
-  useCycles: () => ({ data: [] }),
+  useCycles: (...args: unknown[]) => mockUseCycles(...args),
 }));
 jest.mock("@/hooks/api/build/projects", () => ({
-  useProjectLabels: () => ({ data: [] }),
+  useProjectLabels: (...args: unknown[]) => mockUseProjectLabels(...args),
 }));
 
 /**
@@ -27,11 +31,13 @@ jest.mock("@/hooks/api/build/projects", () => ({
 
 function renderWith(query: string) {
   mockSearchParams = new URLSearchParams(query);
+  window.history.replaceState({}, "", query ? `/build/tickets?${query}` : "/build/tickets");
   return render(
     <TicketFilterBar
       statuses={[{ name: "OPEN" }, { name: "DONE" }]}
       members={[{ id: "u1", name: "Priya", firstName: "Priya", lastName: null }]}
       sprints={[{ id: 7, name: "Sprint 7" }]}
+      projectId={42}
     />,
   );
 }
@@ -44,6 +50,8 @@ function lastParams(): URLSearchParams {
 describe("ticket filter bar", () => {
   beforeEach(() => {
     mockReplace.mockReset();
+    mockUseCycles.mockClear();
+    mockUseProjectLabels.mockClear();
     mockSearchParams = new URLSearchParams();
   });
 
@@ -58,6 +66,31 @@ describe("ticket filter bar", () => {
     renderWith("");
 
     expect(screen.queryByLabelText(/remove .* filter/i)).not.toBeInTheDocument();
+  });
+
+  it("defers cycle and label reads until filter options are requested", () => {
+    renderWith("");
+
+    expect(mockUseCycles).toHaveBeenLastCalledWith(0);
+    expect(mockUseProjectLabels).toHaveBeenLastCalledWith(42, {
+      enabled: false,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Add filter" }));
+
+    expect(mockUseCycles).toHaveBeenLastCalledWith(42);
+    expect(mockUseProjectLabels).toHaveBeenLastCalledWith(42, {
+      enabled: true,
+    });
+  });
+
+  it("loads taxonomy names immediately when the URL already contains those filters", () => {
+    renderWith("labels=3&cycle=7");
+
+    expect(mockUseCycles).toHaveBeenLastCalledWith(42);
+    expect(mockUseProjectLabels).toHaveBeenLastCalledWith(42, {
+      enabled: true,
+    });
   });
 
   it("dismissing a chip removes exactly that filter", () => {

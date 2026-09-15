@@ -13,6 +13,7 @@ import { useWatchers, useToggleWatch, useAddWatcher } from "@/hooks/api/build";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
+import { useCan } from "@/hooks/api/access";
 
 interface WatcherListProps {
   projectId: number;
@@ -20,6 +21,7 @@ interface WatcherListProps {
 }
 
 export function WatcherList({ projectId, ticketId }: WatcherListProps) {
+  const canUpdate = useCan("build:tickets:update");
   const { iconRef: watchIconRef, hoverHandlers: watchHoverHandlers } = useAnimatedIcon();
   const { data: session } = useSession();
   const {
@@ -74,7 +76,7 @@ export function WatcherList({ projectId, ticketId }: WatcherListProps) {
         <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium flex items-center gap-1">
           <Eye className="h-3 w-3" /> Watchers
         </label>
-        <Button
+        {canUpdate ? <Button
           variant="ghost"
           size="sm"
           className="h-6 px-2 text-xs"
@@ -91,7 +93,7 @@ export function WatcherList({ projectId, ticketId }: WatcherListProps) {
               <EyeIcon ref={watchIconRef} size={12} className="mr-1" /> Watch
             </>
           )}
-        </Button>
+        </Button> : null}
       </div>
 
       {watchers.length === 0 ? (
@@ -113,12 +115,12 @@ export function WatcherList({ projectId, ticketId }: WatcherListProps) {
         </div>
       )}
 
-      <MemberPicker
+      {canUpdate ? <MemberPicker
         projectId={projectId}
         value=""
         onChange={handleAddWatcher}
         placeholder="+ Add watcher"
-      />
+      /> : null}
     </div>
   );
 }

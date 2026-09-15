@@ -48,6 +48,7 @@ interface TicketDetailMainSectionProps {
   onApplyDescription: (html: string) => void;
   onTitleChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onDescriptionChange: (html: string) => void;
+  canUpdate: boolean;
 }
 
 interface AttachmentItem {
@@ -109,6 +110,7 @@ export function TicketDetailMainSection({
   onApplyDescription,
   onTitleChange,
   onDescriptionChange,
+  canUpdate,
 }: TicketDetailMainSectionProps) {
   const isPreview = variant === "preview";
   const ticketDetailAi = useTicketDetailAi({
@@ -126,6 +128,7 @@ export function TicketDetailMainSection({
         <Textarea
           value={localTitle}
           onChange={onTitleChange}
+          readOnly={!canUpdate}
           rows={2}
           className="h-auto w-full max-w-full min-h-0 resize-none break-words border-0 bg-transparent px-0 py-1 text-lg font-semibold leading-snug shadow-none [overflow-wrap:anywhere] [word-break:break-word] hover:border-0 focus-visible:border-0 focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-xl"
           placeholder="Ticket title"
@@ -133,7 +136,7 @@ export function TicketDetailMainSection({
       </div>
 
       <div className="min-w-0">
-        {isPreview ? (
+        {isPreview || !canUpdate ? (
           <h3 className="mb-2 text-dense font-medium uppercase tracking-wide text-muted-foreground">
             Description
           </h3>
@@ -150,6 +153,7 @@ export function TicketDetailMainSection({
           content={ticket.description ?? ""}
           contentKey={ticketId}
           onChangeHtml={onDescriptionChange}
+          editable={canUpdate}
           output="html"
           minHeightClassName="min-h-[120px] sm:min-h-[160px]"
           placeholder="Add a description..."

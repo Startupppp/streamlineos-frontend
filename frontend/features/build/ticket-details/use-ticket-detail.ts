@@ -16,6 +16,7 @@ import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { ProjectMember } from "./types";
+import { useCan } from "@/hooks/api/access";
 
 interface ProjectManager {
   id: string;
@@ -37,6 +38,7 @@ interface UseTicketDetailOptions {
 }
 
 export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDetailOptions) {
+  const canUpdate = useCan("build:tickets:update");
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [localTitle, setLocalTitle] = useState("");
@@ -126,7 +128,7 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
 
   const enqueueSave = useCallback(
     (field: Record<string, unknown>) => {
-      if (!ticketId) return;
+      if (!ticketId || !canUpdate) return;
       const sequence = ++saveSequenceRef.current;
       setSaving(true);
       const task = saveQueueRef.current.then(() =>
@@ -146,7 +148,7 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
         })
         .catch(() => undefined);
     },
-    [ticketId, updateTicketMutation],
+    [ticketId, canUpdate, updateTicketMutation],
   );
 
   const autoSave = useCallback(

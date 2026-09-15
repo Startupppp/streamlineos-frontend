@@ -30,6 +30,7 @@ import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import { SubtaskRow } from "./subtask-row";
 import type { ProjectStatusRecord } from "@/types/projects";
+import { useCan } from "@/hooks/api/access";
 
 interface TicketRelationsProps {
   ticketId: number;
@@ -94,8 +95,12 @@ function RemoveRelationButton({ onClick }: { onClick: () => void }) {
 }
 
 export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
+  const canUpdate = useCan("build:tickets:update");
   const { data: relations, isLoading } = useTicketRelations(ticketId, projectId);
-  const { data: boardTickets } = useProjectBoardTickets(projectId);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const { data: boardTickets } = useProjectBoardTickets(
+    pickerOpen && canUpdate ? projectId : 0,
+  );
   const { data: projectData } = useProject(projectId);
   const addRelation = useAddTicketRelation(ticketId, projectId);
   const removeRelation = useRemoveTicketRelation(ticketId, projectId);
@@ -103,7 +108,6 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
   const projectKey = projectData?.key ?? null;
   const projectStatuses: ProjectStatusRecord[] = projectData?.statuses ?? [];
 
-  const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<WorkItemRelationType>("relates_to");
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
 
@@ -159,7 +163,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
           <Link2 className="h-3.5 w-3.5" />
           Relations
         </h4>
-        <ResponsivePopover open={pickerOpen} onOpenChange={setPickerOpen}>
+        {canUpdate ? <ResponsivePopover open={pickerOpen} onOpenChange={setPickerOpen}>
           <ResponsivePopoverTrigger asChild>
             <AnimatedIconButton
               variant="outline"
@@ -214,7 +218,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
               {addRelation.isPending ? "Adding..." : "Add Relation"}
             </Button>
           </ResponsivePopoverContent>
-        </ResponsivePopover>
+        </ResponsivePopover> : null}
       </div>
 
       {(relations ?? []).length === 0 ? (
@@ -254,9 +258,9 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
                         projectId={projectId}
                         projectKey={projectKey}
                         projectStatuses={projectStatuses}
-                        endAction={
+                        endAction={canUpdate ? (
                           <RemoveRelationButton onClick={() => handleRemoveRelation(t.id)} />
-                        }
+                        ) : undefined}
                       />
                     );
                   })}

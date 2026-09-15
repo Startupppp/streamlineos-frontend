@@ -4,12 +4,15 @@ import { useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckSquare } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useChecklists, useCreateChecklist } from "@/hooks/api/build/checklists";
+import {
+  useChecklists,
+  useCreateChecklist,
+} from "@/hooks/api/build/checklists";
 import { TicketAiGenerateChecklistAction } from "@/features/build/ai/ticket-detail-ai";
 import { ChecklistSection } from "./checklist-section";
+import { useCan } from "@/hooks/api/access";
 
 interface TicketChecklistsProps {
   projectId: number;
@@ -24,6 +27,7 @@ export function TicketChecklists({
   canUseAI = false,
   generateChecklistDisabledReason,
 }: TicketChecklistsProps) {
+  const canUpdate = useCan("build:tickets:update");
   const { data: checklists = [], isLoading } = useChecklists(
     projectId,
     ticketId,
@@ -51,17 +55,21 @@ export function TicketChecklists({
       <div className="flex w-full items-center gap-2">
         <CheckSquare className="h-4 w-4 text-primary shrink-0" />
         <h4 className="text-sm font-semibold">Checklists</h4>
-        <TicketAiGenerateChecklistAction
-          projectId={projectId}
-          ticketId={ticketId}
-          canUseAI={canUseAI}
-          disabledReason={generateChecklistDisabledReason}
-        />
+        {canUpdate ? (
+          <TicketAiGenerateChecklistAction
+            projectId={projectId}
+            ticketId={ticketId}
+            canUseAI={canUseAI}
+            disabledReason={generateChecklistDisabledReason}
+          />
+        ) : null}
       </div>
 
       {checklists.length === 0 ? (
         <p className="text-xs text-muted-foreground">
-          No checklists on this ticket yet. Add one to break the work into steps.
+          {canUpdate
+            ? "No checklists on this ticket yet. Add one to break the work into steps."
+            : "No checklists on this ticket yet."}
         </p>
       ) : null}
 
@@ -77,21 +85,23 @@ export function TicketChecklists({
               checklist={checklist}
               projectId={projectId}
               ticketId={ticketId}
+              canUpdate={canUpdate}
             />
           </motion.div>
         ))}
       </AnimatePresence>
 
-      <button
-        type="button"
-        onClick={handleAddChecklist}
-        disabled={createChecklist.isPending}
-        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <PlusIcon size={16} />
-        Add checklist
-      </button>
+      {canUpdate ? (
+        <button
+          type="button"
+          onClick={handleAddChecklist}
+          disabled={createChecklist.isPending}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <PlusIcon size={16} />
+          Add checklist
+        </button>
+      ) : null}
     </div>
   );
 }
-

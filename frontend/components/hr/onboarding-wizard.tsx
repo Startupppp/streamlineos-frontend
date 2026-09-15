@@ -63,6 +63,7 @@ export function OnboardingWizard() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const checkedEmail = useRef<string>("");
+  const submittingRef = useRef(false);
   const router = useRouter();
   const { data: departments } = useOnboardingTemplateDepartments();
   const { data: orgRoles } = useRoles();
@@ -143,7 +144,8 @@ export function OnboardingWizard() {
 
   const handleSubmit = useCallback(
     (data: FormValues) => {
-      if (currentStep !== STEPS.length) return;
+      if (currentStep !== STEPS.length || submittingRef.current) return;
+      submittingRef.current = true;
       onboardEmployee.mutate(
         {
           ...data,
@@ -157,6 +159,9 @@ export function OnboardingWizard() {
             router.push(result.userId ? `/hr/employees/${result.userId}` : "/hr/employees");
           },
           onError: (err) => toast.error(getErrorMessage(err)),
+          onSettled: () => {
+            submittingRef.current = false;
+          },
         }
       );
     },

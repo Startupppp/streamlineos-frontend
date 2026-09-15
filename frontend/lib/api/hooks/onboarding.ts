@@ -13,6 +13,7 @@ import {
 import { lazyContract } from "@/lib/api-envelope";
 import { apiClient } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
 const personalDetailsContract = lazyContract(() =>
   import("@/lib/api/hooks/onboarding-schema").then(
@@ -95,6 +96,7 @@ export interface OnboardingSubmissionPayload {
 
 export function useSubmitOnboardingMutation() {
   const queryClient = useQueryClient();
+  const operation = useIdempotentOperation();
 
   return useMutation({
     mutationKey: ["onboarding", "complete"],
@@ -102,7 +104,7 @@ export function useSubmitOnboardingMutation() {
       apiClient.post<OnboardingCompletion>(
         "/onboarding/complete",
         payload,
-        undefined,
+        operation.configFor(payload),
         onboardingCompletionContract,
       ),
     onSuccess: () => {
@@ -110,5 +112,6 @@ export function useSubmitOnboardingMutation() {
         queryKey: platformCoreQueryKeys.onboardingFlow.session(),
       });
     },
+    onSettled: operation.settle,
   });
 }

@@ -43,6 +43,7 @@ interface KanbanBoardProps {
   wipLimits?: Record<string, number>;
   displayOptions?: DisplayOptions;
   hideCompleted?: boolean;
+  hasActiveFilters?: boolean;
 }
 
 export function KanbanBoard({
@@ -54,9 +55,13 @@ export function KanbanBoard({
   wipLimits,
   displayOptions,
   hideCompleted = false,
+  hasActiveFilters = false,
 }: KanbanBoardProps) {
   const canManage = useCan("build:manage");
-  const { data: columnCountsData } = useTicketColumnCounts(projectId);
+  const canUpdateTickets = useCan("build:tickets:update");
+  const { data: columnCountsData } = useTicketColumnCounts(
+    hasActiveFilters ? 0 : projectId,
+  );
   const [optimisticTickets, setOptimisticTickets] = useState(tickets);
   const [optimisticStatuses, setOptimisticStatuses] = useState(statuses);
   const [optimisticColumnOrder, setOptimisticColumnOrder] = useState<KanbanColumn[] | null>(null);
@@ -236,7 +241,7 @@ export function KanbanBoard({
                         canManage={canManage}
                         existingNames={existingNames}
                         wipLimit={wipLimits?.[col.id]}
-                        serverCount={columnCountsData?.[col.id]}
+                        serverCount={hasActiveFilters ? undefined : columnCountsData?.[col.id]}
                         displayOptions={displayOptions}
                         minHeightClass="min-h-[60px]"
                         stretch
@@ -244,6 +249,7 @@ export function KanbanBoard({
                         onColorChange={handleColumnColorChange}
                         onSelect={handleSelect}
                         dragStartRef={dragStartRef}
+                        canDragTickets={canUpdateTickets}
                       />
                     ))}
                   </div>
@@ -293,7 +299,7 @@ export function KanbanBoard({
                       canManage={canManage}
                       existingNames={existingNames}
                       wipLimit={wipLimits?.[col.id]}
-                      serverCount={columnCountsData?.[col.id]}
+                      serverCount={hasActiveFilters ? undefined : columnCountsData?.[col.id]}
                       displayOptions={displayOptions}
                       showQuickAdd
                       showHeaderQuickAdd
@@ -305,6 +311,7 @@ export function KanbanBoard({
                       onColorChange={handleColumnColorChange}
                       onSelect={handleSelect}
                       dragStartRef={dragStartRef}
+                      canDragTickets={canUpdateTickets}
                       columnInnerRef={columnProvided.innerRef}
                       columnDraggableProps={columnProvided.draggableProps}
                     />

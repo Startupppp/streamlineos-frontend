@@ -78,6 +78,8 @@ interface TicketDetailRightPanelProps {
   statuses?: Array<{ name: string; id: number }>;
   onAutoSave: (field: Record<string, unknown>) => void;
   asideClassName?: string;
+  canUpdate: boolean;
+  canAssign: boolean;
 }
 
 function TicketDetailRightPanelBody({
@@ -92,6 +94,8 @@ function TicketDetailRightPanelBody({
   onAutoSave,
   onClose,
   hideClose = false,
+  canUpdate,
+  canAssign,
 }: {
   displayKey: string;
   saving: boolean;
@@ -104,6 +108,8 @@ function TicketDetailRightPanelBody({
   onAutoSave: TicketDetailRightPanelProps["onAutoSave"];
   onClose: () => void;
   hideClose?: boolean;
+  canUpdate: boolean;
+  canAssign: boolean;
 }) {
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
@@ -146,6 +152,8 @@ function TicketDetailRightPanelBody({
           sprints={sprints}
           statuses={statuses}
           onAutoSave={onAutoSave}
+          canUpdate={canUpdate}
+          canAssign={canAssign}
         />
 
         <div className="space-y-4 bg-card px-4 py-3">
@@ -175,6 +183,8 @@ export function TicketDetailRightPanel({
   statuses,
   onAutoSave,
   asideClassName,
+  canUpdate,
+  canAssign,
 }: TicketDetailRightPanelProps) {
   const isMobile = useIsMobile();
   const shouldReduceMotion = useReducedMotion();
@@ -193,6 +203,8 @@ export function TicketDetailRightPanel({
     statuses,
     onAutoSave,
     onClose: handleClose,
+    canUpdate,
+    canAssign,
   };
 
   return (

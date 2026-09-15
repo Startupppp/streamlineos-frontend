@@ -1,6 +1,5 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 
@@ -21,18 +20,15 @@ const vapidPublicKeyContract = lazyContract(() =>
 );
 
 const OPT_OUT_KEY = "streamline.push.opted-out";
+const registrationByContainer = new WeakMap<
+  ServiceWorkerContainer,
+  Map<string, Promise<void>>
+>();
+const rotationByContainer = new WeakMap<
+  ServiceWorkerContainer,
+  Map<string, { endpoint: string; request: Promise<void> }>
+>();
 
-/**
- * RT-003/004. This used to call `Notification.requestPermission()` inside an effect on
- * mount, so the browser prompt appeared the instant the authenticated shell loaded —
- * before the user had seen a single notification or any reason to want one. On most
- * browsers a denial is effectively permanent and cannot be re-prompted, so that spent
- * the one attempt each user ever gets, at the worst possible moment.
- *
- * The hook now only *reports* permission and subscribes users who already granted it.
- * Asking is a separate, explicit action the UI triggers from a user gesture, once it
- * has something worth offering — that is `enable()`.
- */
 export function usePushSubscription(userId: string | undefined) {
   const [permission, setPermission] =
     useState<PushPermissionState>("unsupported");
@@ -41,29 +37,14 @@ export function usePushSubscription(userId: string | undefined) {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [optedOut, setOptedOut] = useState(false);
 
-  const { mutate: registerPushSubscription } = useMutation({
-    mutationKey: ["push", "subscribe"],
-    mutationFn: ({
-      endpoint,
-      p256dh,
-      auth,
-    }: {
-      endpoint: string;
-      p256dh: string;
-      auth: string;
-    }) =>
-      apiClient.post("/push/subscribe", {
-        endpoint,
-        p256dh,
-        auth,
-        userAgent: navigator.userAgent.slice(0, 255),
-      }, undefined, pushSubscribeContract),
-    onSuccess: () => setIsSubscribed(true),
-  });
-
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window)) return;
-    const readPermission = () => setPermission(Notification.permission);
+    const readPermission = () => {
+      const nextPermission = Notification.permission;
+      if (nextPermission !== "granted" && userId)
+        clearSubscriptionRegistration(userId);
+      setPermission(nextPermission);
+    };
     readPermission();
     setOptedOut(readOptOut());
 
@@ -101,7 +82,7 @@ export function usePushSubscription(userId: string | undefined) {
     if (!userId || typeof window === "undefined") return;
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
     if (permission !== "granted" || optedOut) return;
-    void subscribe()
+    void subscribeOnce(userId)
       .then(() => setIsSubscribed(true))
       .catch(() => undefined);
   }, [userId, permission, optedOut]);
@@ -120,13 +101,14 @@ export function usePushSubscription(userId: string | undefined) {
 
     const handleWorkerMessage = (event: MessageEvent) => {
       if (optedOut || !isSubscriptionChangedMessage(event.data)) return;
-      const { endpoint, p256dh, auth } = event.data;
-      registerPushSubscription({ endpoint, p256dh, auth });
+      void persistRotationOnce(userId, event.data)
+        .then(() => setIsSubscribed(true))
+        .catch(() => undefined);
     };
 
     container.addEventListener("message", handleWorkerMessage);
     return () => container.removeEventListener("message", handleWorkerMessage);
-  }, [userId, optedOut, registerPushSubscription]);
+  }, [userId, optedOut]);
 
   const enable = useCallback(async (): Promise<PushPermissionState> => {
     if (typeof window === "undefined" || !("Notification" in window))
@@ -138,7 +120,8 @@ export function usePushSubscription(userId: string | undefined) {
       const result = await Notification.requestPermission();
       setPermission(result);
       if (result === "granted") {
-        await subscribe();
+        if (userId) await subscribeOnce(userId);
+        else await subscribe();
         setIsSubscribed(true);
       }
       return result;
@@ -147,29 +130,20 @@ export function usePushSubscription(userId: string | undefined) {
     } finally {
       setIsEnabling(false);
     }
-  }, []);
+  }, [userId]);
 
-  /**
-   * RT-005. The counterpart the app never had. `POST /push/subscribe` had a
-   * `DELETE /push/subscribe` beside it on the backend with no caller anywhere in
-   * the frontend, so a user who wanted push off had exactly two options: revoke
-   * the permission in browser site settings — which is effectively permanent and
-   * cannot be undone from the app — or keep receiving it. Dropping the browser
-   * subscription first and telling the server second is the safe order: if the
-   * DELETE fails the row is orphaned, and the next send gets a 404/410 from the
-   * push service, which `web-push.service.ts` already reaps.
-   */
   const disable = useCallback(async (): Promise<void> => {
     setIsDisabling(true);
     try {
       writeOptOut(true);
       setOptedOut(true);
+      if (userId) clearSubscriptionRegistration(userId);
       await unsubscribeFromPush();
       setIsSubscribed(false);
     } finally {
       setIsDisabling(false);
     }
-  }, []);
+  }, [userId]);
 
   return {
     permission,
@@ -230,17 +204,6 @@ async function queryNotificationPermission(): Promise<
   }
 }
 
-/**
- * The POST is unconditional, and that is the repair rather than an extra request.
- * The server deletes a subscription row whenever the push service answers 404 or
- * 410 (`web-push.service.ts`), and the row also cascades away with the
- * membership it points at. In every one of those cases the browser still holds a
- * live `PushSubscription`, so the previous `if (existing) return` meant the
- * client could never tell the server about it again: the subscription was dead
- * server-side, unrepairable, and the card still said push was on. Writing it back
- * on each mount is idempotent — the endpoint upserts on the endpoint — and is the
- * only path back.
- */
 async function subscribe(): Promise<void> {
   const registration = await navigator.serviceWorker.register("/sw.js");
   const existing = await registration.pushManager.getSubscription();
@@ -250,12 +213,77 @@ async function subscribe(): Promise<void> {
   const { p256dh, auth } = sub.toJSON().keys ?? {};
   if (p256dh === undefined || auth === undefined) return;
 
-  await apiClient.post("/push/subscribe", {
-    endpoint: sub.endpoint,
-    p256dh,
-    auth,
-    userAgent: navigator.userAgent.slice(0, 255),
-  }, undefined, pushSubscribeContract);
+  await apiClient.post(
+    "/push/subscribe",
+    {
+      endpoint: sub.endpoint,
+      p256dh,
+      auth,
+      userAgent: navigator.userAgent.slice(0, 255),
+    },
+    undefined,
+    pushSubscribeContract,
+  );
+}
+
+function subscribeOnce(userId: string): Promise<void> {
+  const container = navigator.serviceWorker;
+  let registrations = registrationByContainer.get(container);
+  if (!registrations) {
+    registrations = new Map();
+    registrationByContainer.set(container, registrations);
+  }
+  const active = registrations.get(userId);
+  if (active) return active;
+
+  const registration = subscribe().catch((error: unknown) => {
+    registrations.delete(userId);
+    throw error;
+  });
+  registrations.set(userId, registration);
+  return registration;
+}
+
+function clearSubscriptionRegistration(userId: string): void {
+  registrationByContainer.get(navigator.serviceWorker)?.delete(userId);
+}
+
+function persistRotationOnce(
+  userId: string,
+  subscription: PushSubscriptionChangedMessage,
+): Promise<void> {
+  const container = navigator.serviceWorker;
+  let rotations = rotationByContainer.get(container);
+  if (!rotations) {
+    rotations = new Map();
+    rotationByContainer.set(container, rotations);
+  }
+  const active = rotations.get(userId);
+  if (active?.endpoint === subscription.endpoint) return active.request;
+
+  const registration = apiClient
+    .post(
+      "/push/subscribe",
+      {
+        endpoint: subscription.endpoint,
+        p256dh: subscription.p256dh,
+        auth: subscription.auth,
+        userAgent: navigator.userAgent.slice(0, 255),
+      },
+      undefined,
+      pushSubscribeContract,
+    )
+    .then(() => undefined)
+    .catch((error: unknown) => {
+      if (rotations.get(userId)?.endpoint === subscription.endpoint)
+        rotations.delete(userId);
+      throw error;
+    });
+  rotations.set(userId, {
+    endpoint: subscription.endpoint,
+    request: registration,
+  });
+  return registration;
 }
 
 async function unsubscribeFromPush(): Promise<void> {
@@ -276,7 +304,12 @@ async function unsubscribeFromPush(): Promise<void> {
 async function createSubscription(
   registration: ServiceWorkerRegistration,
 ): Promise<PushSubscription | null> {
-  const data = await apiClient.get<{ key: string }>("/push/vapid-public-key", undefined, undefined, vapidPublicKeyContract);
+  const data = await apiClient.get<{ key: string }>(
+    "/push/vapid-public-key",
+    undefined,
+    undefined,
+    vapidPublicKeyContract,
+  );
   if (!data.key) return null;
   return registration.pushManager.subscribe({
     userVisibleOnly: true,
@@ -284,9 +317,6 @@ async function createSubscription(
   });
 }
 
-// Returns the view rather than `.buffer`: `applicationServerKey` takes a
-// BufferSource, and `Uint8Array` is one, which is what removes the last forced
-// type here — `.buffer` is `ArrayBufferLike` and only an assertion made it fit.
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");

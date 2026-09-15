@@ -62,6 +62,7 @@ export interface CommentItemProps {
   isHighlighted?: boolean;
   permalinkUrl?: string;
   canManage: boolean;
+  canInteract: boolean;
   onSaveEdit: (commentId: number, content: string) => void;
   onDelete: (commentId: number) => void;
   isSavingEdit: boolean;
@@ -87,6 +88,7 @@ function CommentItemComponent({
   isHighlighted = false,
   permalinkUrl,
   canManage,
+  canInteract,
   onSaveEdit,
   onDelete,
   isSavingEdit,
@@ -103,7 +105,7 @@ function CommentItemComponent({
     new Date(comment.updatedAt).getTime() > new Date(comment.createdAt).getTime();
 
   const isAuthor = !!currentUserId && user?.id === currentUserId;
-  const canDelete = isAuthor || canManage;
+  const canDelete = canInteract && (isAuthor || canManage);
   const reactionGroups = groupReactions(comment.reactions ?? [], currentUserId);
 
   const [showHighlight, setShowHighlight] = useState(isHighlighted);
@@ -252,12 +254,12 @@ function CommentItemComponent({
 
         {!isEditing && (
           <div className="flex items-center gap-3 mt-1.5">
-            <EmojiReactionBar
+            {canInteract ? <EmojiReactionBar
               reactions={reactionGroups}
               onReact={handleReactEmoji}
               onUnreact={handleUnreactEmoji}
-            />
-            {!hideReplyButton && (
+            /> : null}
+            {canInteract && !hideReplyButton && (
               <button
                 type="button"
                 onClick={handleReplyClick}
@@ -288,7 +290,7 @@ function CommentItemComponent({
                 New issue
               </button>
             )}
-            {isAuthor && (
+            {canInteract && isAuthor && (
               <button
                 type="button"
                 onClick={handleStartEdit}

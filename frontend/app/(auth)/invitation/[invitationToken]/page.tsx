@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState, type FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useSession } from "next-auth/react";
@@ -66,6 +66,7 @@ export default function InvitationPage() {
 
   const [declineOpen, setDeclineOpen] = useState(false);
   const [isCompletingAcceptance, setIsCompletingAcceptance] = useState(false);
+  const acceptingRef = useRef(false);
 
   const {
     data: invitation,
@@ -115,12 +116,14 @@ export default function InvitationPage() {
     [router],
   );
 
-  const onSubmit = useCallback(
+  const submitNewUser = useCallback(
     (values: InvitationAcceptFormValues) => {
+      if (acceptingRef.current) return;
       if (!invitationToken || !invitation) {
         toast.error("Invalid invitation");
         return;
       }
+      acceptingRef.current = true;
       acceptInvitation.mutate(
         {
           token: invitationToken,
@@ -141,6 +144,7 @@ export default function InvitationPage() {
             }
           },
           onError: (error) => {
+            acceptingRef.current = false;
             toast.error(getErrorMessage(error));
           },
         },
@@ -149,12 +153,22 @@ export default function InvitationPage() {
     [invitationToken, invitation, acceptInvitation, router, autoLoginWithToken],
   );
 
+  const handleNewUserSubmit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      void form.handleSubmit(submitNewUser)(event);
+    },
+    [form, submitNewUser],
+  );
+
   const handleExistingUserAccept = useCallback(() => {
+    if (acceptingRef.current) return;
     if (!invitationToken) return;
     if (!session) {
       router.push(`/signin?callbackUrl=/invitation/${invitationToken}`);
       return;
     }
+    acceptingRef.current = true;
     const claimsRun = beginClaimsRefresh();
     acceptInvitation.mutate(
       { token: invitationToken },
@@ -169,10 +183,15 @@ export default function InvitationPage() {
             return;
           }
           const confirmed = await claimsRun.confirmOrWarn();
-          if (!confirmed) return;
+          if (!confirmed) {
+            acceptingRef.current = false;
+            setIsCompletingAcceptance(false);
+            return;
+          }
           router.push("/dashboard");
         },
         onError: (error) => {
+          acceptingRef.current = false;
           toast.error(getErrorMessage(error));
         },
       },
@@ -257,7 +276,7 @@ export default function InvitationPage() {
                 accountEmail={session?.user?.email}
               />
               {signedInAsOtherAccount && (
-                <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                <p className="rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2 text-xs text-status-warning-ink">
                   You are currently signed in as{" "}
                   <span className="font-medium">{sessionEmail}</span>. Accepting
                   will sign you in as the invited account instead.
@@ -320,7 +339,7 @@ export default function InvitationPage() {
 
             <Form {...form}>
               <form
-                onSubmit={form.handleSubmit(onSubmit)}
+                onSubmit={handleNewUserSubmit}
                 className="mt-4 space-y-3.5"
                 aria-busy={acceptInvitation.isPending}
               >

@@ -12,9 +12,14 @@ import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { type Ticket, type TableViewProps, isOverdue } from "./table-view-types";
+import { useCan } from "@/hooks/api/access";
 
 export const TableView = memo(function TableView({ tickets, onTicketClick, projectKey, projectId, projectStatuses, displayOptions, selection }: TableViewProps) {
+  const canUpdate = useCan("build:tickets:update");
+  const canAssign = useCan("build:tickets:assign");
   const hasProjectId = projectId != null;
+  const hasEditableProject = hasProjectId && canUpdate;
+  const hasAssignableProject = hasProjectId && canAssign;
 
   const showId = displayOptions?.showId ?? true;
   const showStatus = displayOptions?.showStatus ?? true;
@@ -60,7 +65,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       className: "hidden md:table-cell w-24",
       cell: (ticket) => (
         <InlineFieldCell>
-          {hasProjectId ? (
+          {hasEditableProject ? (
             <InlineType ticketId={ticket.id} projectId={projectId} currentType={ticket.type} />
           ) : (
             <span className="text-micro text-muted-foreground">{ticket.type}</span>
@@ -74,7 +79,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       className: "w-28",
       cell: (ticket) => (
         <InlineFieldCell>
-          {hasProjectId ? (
+          {hasEditableProject ? (
             <InlineStatus
               ticketId={ticket.id}
               projectId={projectId}
@@ -94,7 +99,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       className: "hidden sm:table-cell w-24",
       cell: (ticket) => (
         <InlineFieldCell>
-          {hasProjectId ? (
+          {hasEditableProject ? (
             <InlinePriority ticketId={ticket.id} projectId={projectId} currentPriority={ticket.priority} />
           ) : ticket.priority ? (
             <span className="text-micro text-muted-foreground">{ticket.priority}</span>
@@ -109,7 +114,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       className: "hidden lg:table-cell w-20",
       cell: (ticket) => (
         <InlineFieldCell>
-          {hasProjectId ? (
+          {hasEditableProject ? (
             <InlineEstimate ticketId={ticket.id} projectId={projectId} currentPoints={ticket.points} />
           ) : (
             <span className="font-mono text-dense tabular-nums">{ticket.points ?? "—"}</span>
@@ -124,14 +129,20 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       className: "hidden md:table-cell w-32",
       cell: (ticket) => (
         <InlineFieldCell>
-          {hasProjectId ? (
+          {hasAssignableProject ? (
             <InlineAssignee
               ticketId={ticket.id}
               projectId={projectId}
               currentAssigneeId={ticket.assigneeId ?? ticket.assignee?.id}
               assignee={ticket.assignee}
             />
-          ) : null}
+          ) : ticket.assignee ? (
+            <span className="text-micro text-muted-foreground">
+              {ticket.assignee.name || `${ticket.assignee.firstName ?? ""} ${ticket.assignee.lastName ?? ""}`.trim()}
+            </span>
+          ) : (
+            <span className="text-micro text-muted-foreground">Unassigned</span>
+          )}
         </InlineFieldCell>
       ),
     },
@@ -146,7 +157,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
           .filter((v): v is number => v != null) ?? [];
         return (
           <InlineFieldCell>
-            {hasProjectId ? (
+            {hasEditableProject ? (
               <InlineLabels ticketId={ticket.id} projectId={projectId} currentLabelIds={labelIds} />
             ) : null}
           </InlineFieldCell>
@@ -160,7 +171,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       className: "hidden xl:table-cell w-28",
       cell: (ticket) => (
         <InlineFieldCell>
-          {hasProjectId ? (
+          {hasEditableProject ? (
             <InlineCycle ticketId={ticket.id} projectId={projectId} currentCycleId={ticket.cycleId} />
           ) : null}
         </InlineFieldCell>
@@ -173,7 +184,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       className: "hidden xl:table-cell w-28",
       cell: (ticket) => (
         <InlineFieldCell>
-          {hasProjectId ? (
+          {hasEditableProject ? (
             <InlineSprint ticketId={ticket.id} projectId={projectId} currentSprintId={ticket.sprintId} />
           ) : null}
         </InlineFieldCell>
@@ -186,7 +197,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       className: "hidden sm:table-cell w-28",
       cell: (ticket) => (
         <InlineFieldCell>
-          {hasProjectId ? (
+          {hasEditableProject ? (
             <InlineDueDate ticketId={ticket.id} projectId={projectId} currentDueDate={ticket.dueDate} />
           ) : ticket.dueDate ? (
             <span className={cn("font-mono text-dense tabular-nums", isOverdue(ticket) && "text-destructive font-medium")}>
@@ -230,7 +241,8 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
     projectId,
     projectStatuses,
     onTicketClick,
-    hasProjectId,
+    hasEditableProject,
+    hasAssignableProject,
     showId,
     showStatus,
     showPriority,
@@ -248,7 +260,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
         columns={columns}
         getRowKey={(ticket) => ticket.id}
         selection={
-          selection
+          selection && canUpdate
             ? { ...selection, getRowLabel: (ticket: Ticket) => ticket.title }
             : undefined
         }

@@ -12,6 +12,7 @@ import { ViewSwitcher, type ViewType } from "@/features/build/views/view-switche
 import { WorkloadFilterBar } from "@/features/build/views/workload-filter-bar";
 import type { FilterState as WorkloadFilterState } from "@/features/build/views/workload-types";
 import type { DisplayOptions } from "@/features/build/shared/types";
+import { useCan } from "@/hooks/api/access";
 
 type AnimatedToolbarIcon = React.ForwardRefExoticComponent<
   { size?: number } & React.RefAttributes<IconHandle>
@@ -93,6 +94,7 @@ export function ProjectViewsToolbar({
   onWorkloadFilterChange,
   onClearWorkloadFilters,
 }: ProjectViewsToolbarProps) {
+  const canManageViews = useCan("build:workspace:manage");
   const handleSaveViewClick = useCallback(() => {
     onOpenSaveView();
   }, [onOpenSaveView]);
@@ -108,11 +110,13 @@ export function ProjectViewsToolbar({
           onChange={onDisplayOptionsChange}
         />
 
-        <ToolbarIconButton
-          onClick={handleSaveViewClick}
-          ariaLabel="Save view"
-          Icon={BookmarkIcon}
-        />
+        {canManageViews ? (
+          <ToolbarIconButton
+            onClick={handleSaveViewClick}
+            ariaLabel="Save view"
+            Icon={BookmarkIcon}
+          />
+        ) : null}
       </div>
 
       {activeViewName && onClearView ? (

@@ -1,12 +1,12 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { focusManager, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type ReactNode } from "react";
 import type { Session } from "next-auth";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useSwitchOrg } from "./auth-hooks";
+import { useGetOrganizations, useSwitchOrg } from "./auth-hooks";
 
 jest.mock("next-auth/react", () => ({
   getSession: jest.fn(),
@@ -41,6 +41,7 @@ jest.mock("sonner", () => ({
 
 const mockUseSession = useSession as jest.Mock;
 const mockPost = apiClient.post as jest.Mock;
+const mockGet = apiClient.get as jest.Mock;
 const mockUseRouter = useRouter as jest.Mock;
 const mockToastError = toast.error as jest.Mock;
 
@@ -89,6 +90,35 @@ beforeEach(() => {
     push: jest.fn(),
     replace: mockReplace,
     refresh: jest.fn(),
+  });
+});
+
+afterEach(() => {
+  focusManager.setFocused(undefined);
+  jest.restoreAllMocks();
+});
+
+describe("organization list request policy", () => {
+  it("does not refetch the organization list when a stale dashboard tab regains focus", async () => {
+    const now = Date.now();
+    const dateNow = jest.spyOn(Date, "now").mockReturnValue(now);
+    mockGet.mockResolvedValue([{ id: "org-a", name: "Acme" }]);
+    const client = makeClient();
+
+    renderHook(() => useGetOrganizations(), {
+      wrapper: makeWrapper(client),
+    });
+
+    await waitFor(() => expect(mockGet).toHaveBeenCalledTimes(1));
+    dateNow.mockReturnValue(now + 10 * 60_000);
+
+    act(() => {
+      focusManager.setFocused(false);
+      focusManager.setFocused(true);
+    });
+
+    await flush();
+    expect(mockGet).toHaveBeenCalledTimes(1);
   });
 });
 
