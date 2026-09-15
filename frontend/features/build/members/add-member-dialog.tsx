@@ -85,6 +85,9 @@ export function AddMemberDialog({ open, onOpenChange }: AddMemberDialogProps) {
             </label>
             <MemberPicker
               mode="single"
+              moduleKey="build"
+              excludeAssigned={false}
+              enabled={open}
               value={selectedUserId ?? undefined}
               onChange={handleUserChange}
               placeholder="Select a member…"

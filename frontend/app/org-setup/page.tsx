@@ -8,9 +8,12 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { clearBackendTokenCache } from "@/lib/api-client";
-import { completeOnboardingGate } from "@/lib/onboarding-gate";
+import { clearGateCookie, completeOnboardingGate } from "@/lib/onboarding-gate";
 import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
-import { useConfirmedSessionClaimsRefresh } from "@/hooks/common/use-confirmed-session-claims-refresh";
+import {
+  SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
+  useConfirmedSessionClaimsRefresh,
+} from "@/hooks/common/use-confirmed-session-claims-refresh";
 import {
   useSkipOrgSetupMutation,
   useOrgSetupSessionQuery,
@@ -65,6 +68,7 @@ export default function OrgSetupPage() {
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
   const hydratedFromServerRef = useRef(false);
   const mountedOnceRef = useRef(false);
+  const skipPendingRef = useRef(false);
 
   const sequence = useMemo(() => getStepSequence(), []);
   const totalSteps = sequence.length;
@@ -121,12 +125,27 @@ export default function OrgSetupPage() {
   );
 
   const handleSkipToDashboard = useCallback(async () => {
+    if (skipPendingRef.current) return;
+    skipPendingRef.current = true;
     setIsSkipping(true);
     const claimsRun = beginClaimsRefresh();
+    let createdOrgId: string | null = null;
     try {
       const res = await skipOrgSetup({});
+      createdOrgId = res.orgId;
       clearBackendTokenCache();
-      if (res?.autoLoginToken) {
+      const claimsOutcome = await completeOnboardingGate(
+        "org-setup-done",
+        res.orgId,
+        claimsRun.confirm,
+        { orgId: res.orgId },
+      );
+      if (claimsOutcome.status === "superseded") {
+        skipPendingRef.current = false;
+        setIsSkipping(false);
+        return;
+      }
+      if (claimsOutcome.status !== "confirmed" && res.autoLoginToken) {
         const outcome = await signInWithMagicToken(res.autoLoginToken);
         if (outcome.status === "indeterminate")
           throw new Error(
@@ -134,20 +153,13 @@ export default function OrgSetupPage() {
           );
         if (outcome.status !== "signed-in")
           throw new Error("Sign-in failed. Please retry.");
-      }
-      const confirmed = await completeOnboardingGate(
-        "org-setup-done",
-        res.orgId,
-        claimsRun.confirmOrWarn,
-        { orgId: res.orgId },
-      );
-      if (!confirmed) {
-        setIsSkipping(false);
-        return;
-      }
+      } else if (claimsOutcome.status !== "confirmed")
+        throw new Error(SESSION_CLAIMS_UNCONFIRMED_MESSAGE);
       clearAll(userId);
       window.location.replace("/dashboard");
     } catch (err) {
+      if (createdOrgId) clearGateCookie("org-setup-done", createdOrgId);
+      skipPendingRef.current = false;
       setIsSkipping(false);
       toast.error(getErrorMessage(err));
     }

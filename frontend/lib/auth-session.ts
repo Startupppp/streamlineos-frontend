@@ -21,19 +21,22 @@ interface BackendJwtEntry {
   expiresAt: number;
 }
 const backendJwtStore = new Map<string, BackendJwtEntry>();
+const backendJwtInflight = new Map<string, Promise<string | null>>();
+const backendJwtSessionGenerations = new Map<string, number>();
 
 function evictExpiredFromStore(): void {
   const now = Date.now();
-  for (const [k, entry] of backendJwtStore) {
+  for (const [k, entry] of backendJwtStore)
     if (entry.expiresAt <= now) backendJwtStore.delete(k);
-  }
 }
 
 function enforceSizeBound(): void {
   if (backendJwtStore.size < MAX_STORE_SIZE) return;
   evictExpiredFromStore();
   if (backendJwtStore.size < MAX_STORE_SIZE) return;
-  const sorted = [...backendJwtStore.entries()].sort((a, b) => a[1].expiresAt - b[1].expiresAt);
+  const sorted = [...backendJwtStore.entries()].sort(
+    (a, b) => a[1].expiresAt - b[1].expiresAt,
+  );
   const toRemove = Math.ceil(sorted.length / 2);
   for (let i = 0; i < toRemove; i += 1) backendJwtStore.delete(sorted[i][0]);
 }
@@ -57,32 +60,57 @@ export function setBackendJwtInStore(key: string, token: string): void {
       enforceSizeBound();
       backendJwtStore.set(key, { token, expiresAt });
     }
-  } catch {
-  }
+  } catch {}
 }
 
-/**
- * Evicts every cached backend JWT belonging to one device session, across every
- * organization that session minted for. The key is `user:session:org`, so a
- * single-org delete would strand the entries an org switch left behind — and
- * logout ends the whole device session, not one of its tenants. User and session
- * ids are UUIDs, so the `:` prefix cannot straddle a neighbouring key.
- *
- * This is a mint cache, never the revocation authority: the backend re-checks the
- * tombstone and `user_sessions.is_revoked` on every request, so revoking another
- * device (which the web tier never observes) is answered there, not here.
- */
-export function invalidateBackendJwtSession(userId: string, sessionId: string): void {
+export function invalidateBackendJwtSession(
+  userId: string,
+  sessionId: string,
+): void {
   const prefix = `${userId}:${sessionId}:`;
+  backendJwtSessionGenerations.set(
+    prefix,
+    (backendJwtSessionGenerations.get(prefix) ?? 0) + 1,
+  );
   for (const key of backendJwtStore.keys())
     if (key.startsWith(prefix)) backendJwtStore.delete(key);
+  for (const key of backendJwtInflight.keys())
+    if (key.startsWith(prefix)) backendJwtInflight.delete(key);
 }
 
 export function clearBackendJwtStoreForTesting(): void {
   backendJwtStore.clear();
+  backendJwtInflight.clear();
+  backendJwtSessionGenerations.clear();
 }
 
 export async function exchangeSessionForBackendJwt(
+  userId: string,
+  sessionId: string,
+  orgId: string | null,
+): Promise<string | null> {
+  const cacheKey = `${userId}:${sessionId}:${orgId ?? ""}`;
+  const sessionKey = `${userId}:${sessionId}:`;
+  const generation = backendJwtSessionGenerations.get(sessionKey) ?? 0;
+  const current = backendJwtInflight.get(cacheKey);
+  if (current) return current;
+
+  const exchange = performSessionExchange(userId, sessionId, orgId).then(
+    (token) =>
+      (backendJwtSessionGenerations.get(sessionKey) ?? 0) === generation
+        ? token
+        : null,
+  );
+  backendJwtInflight.set(cacheKey, exchange);
+  try {
+    return await exchange;
+  } finally {
+    if (backendJwtInflight.get(cacheKey) === exchange)
+      backendJwtInflight.delete(cacheKey);
+  }
+}
+
+async function performSessionExchange(
   userId: string,
   sessionId: string,
   orgId: string | null,
@@ -135,14 +163,18 @@ export async function exchangeSessionForBackendJwt(
   }
 }
 
-export async function fetchSessionData(userId: string): Promise<SessionData | null> {
+export async function fetchSessionData(
+  userId: string,
+): Promise<SessionData | null> {
   const attempts = 2;
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8_000);
     try {
       const res = await fetch(`${BACKEND_URL}/auth/session-data/${userId}`, {
-        headers: withCorrelation(new Headers({ "x-internal-secret": INTERNAL_SECRET })),
+        headers: withCorrelation(
+          new Headers({ "x-internal-secret": INTERNAL_SECRET }),
+        ),
         cache: "no-store",
         signal: controller.signal,
       });
@@ -165,6 +197,8 @@ interface SessionDataEntry {
   expiresAt: number;
 }
 const sessionDataStore = new Map<string, SessionDataEntry>();
+const sessionDataInflight = new Map<string, Promise<SessionData | null>>();
+const sessionDataGenerations = new Map<string, number>();
 
 function evictExpiredSessionData(): void {
   const now = Date.now();
@@ -172,18 +206,29 @@ function evictExpiredSessionData(): void {
     if (entry.expiresAt <= now) sessionDataStore.delete(key);
 }
 
-function sessionDataKey(userId: string, scopeOrgId: string | null | undefined): string {
+function sessionDataKey(
+  userId: string,
+  scopeOrgId: string | null | undefined,
+): string {
   return `${userId}:${scopeOrgId ?? ""}`;
 }
 
 export function invalidateSessionData(userId: string): void {
   const prefix = `${userId}:`;
+  sessionDataGenerations.set(
+    userId,
+    (sessionDataGenerations.get(userId) ?? 0) + 1,
+  );
   for (const key of sessionDataStore.keys())
     if (key.startsWith(prefix)) sessionDataStore.delete(key);
+  for (const key of sessionDataInflight.keys())
+    if (key.startsWith(prefix)) sessionDataInflight.delete(key);
 }
 
 export function clearSessionDataStoreForTesting(): void {
   sessionDataStore.clear();
+  sessionDataInflight.clear();
+  sessionDataGenerations.clear();
 }
 
 export function primeSessionData(
@@ -203,26 +248,33 @@ async function fetchSessionDataWithCache(
   userId: string,
   scopeOrgId?: string | null,
 ): Promise<SessionData | null> {
-  const entry = sessionDataStore.get(sessionDataKey(userId, scopeOrgId));
+  const key = sessionDataKey(userId, scopeOrgId);
+  const entry = sessionDataStore.get(key);
   if (entry && entry.expiresAt > Date.now()) return entry.data;
 
-  const fresh = await fetchSessionData(userId);
-  if (!fresh) return null;
+  const current = sessionDataInflight.get(key);
+  if (current) return current;
 
-  primeSessionData(userId, fresh, scopeOrgId);
-  return fresh;
+  const generation = sessionDataGenerations.get(userId) ?? 0;
+  const request = fetchSessionData(userId).then((fresh) => {
+    if (fresh && (sessionDataGenerations.get(userId) ?? 0) === generation)
+      primeSessionData(userId, fresh, scopeOrgId);
+    return fresh;
+  });
+  sessionDataInflight.set(key, request);
+  try {
+    return await request;
+  } finally {
+    if (sessionDataInflight.get(key) === request)
+      sessionDataInflight.delete(key);
+  }
 }
 
 export const fetchSessionDataCached = cache(fetchSessionDataWithCache);
 
-/**
- * Strips the `{ success: true, data }` envelope and returns the payload as
- * `unknown`. It deliberately does not take a type parameter: a generic here is a
- * cast on a value that just arrived from the network, and every caller already
- * has a schema to narrow it with.
- */
 export function unwrapBackend(body: unknown): unknown {
-  if (isRecord(body) && body.success === true && "data" in body) return body.data;
+  if (isRecord(body) && body.success === true && "data" in body)
+    return body.data;
   return body;
 }
 

@@ -53,6 +53,20 @@ jest.mock("@/hooks/common/auth-hooks", () => ({
   useSessionClaimsRefresh: jest.fn(() => mockRefreshSessionClaims),
 }));
 
+jest.mock("@/hooks/common/use-confirmed-session-claims-refresh", () => ({
+  SESSION_CLAIMS_UNCONFIRMED_MESSAGE:
+    "Your session could not be refreshed. Reload the page before continuing.",
+  useConfirmedSessionClaimsRefresh: () => () => ({
+    confirm: async (expected: { orgId?: string } | undefined) => {
+      const session = await mockRefreshSessionClaims(expected);
+      if (!session) return { status: "unavailable" };
+      if (expected?.orgId !== undefined && session.orgId !== expected.orgId)
+        return { status: "unconfirmed" };
+      return { status: "confirmed", session };
+    },
+  }),
+}));
+
 jest.mock("@/features/org-setup/lib/draft", () => ({
   clearAll: jest.fn((...args: unknown[]) => mockClearAll(...args)),
   setCompletionMarker: jest.fn((...args: unknown[]) => mockSetCompletionMarker(...args)),
@@ -177,10 +191,11 @@ describe("StepGeneration — signInWithMagicToken returns false", () => {
 });
 
 describe("StepGeneration — the claims refresh never confirms the new org", () => {
-  it("signIn ok with autoLoginToken: skips refresh, writes gate cookie and shows welcome", async () => {
+  it("uses the existing session refresh instead of signing in again when it confirms the new org", async () => {
     mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
     mockMutateAsync.mockResolvedValue(SETUP_RESPONSE);
     mockSignIn.mockResolvedValue(SIGN_IN_SUCCESS);
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
 
     render(<StepGeneration data={TEST_DATA} />);
 
@@ -188,7 +203,8 @@ describe("StepGeneration — the claims refresh never confirms the new org", () 
       expect(capturedProgressProps.showWelcome).toBe(true);
     });
 
-    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
+    expect(mockRefreshSessionClaims).toHaveBeenCalledWith({ orgId: "org-new" });
+    expect(mockSignIn).not.toHaveBeenCalled();
     expect(mockClearAll).toHaveBeenCalledWith("user-1");
     expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new");
     expect(capturedProgressProps.setupError).toBeNull();
@@ -197,14 +213,14 @@ describe("StepGeneration — the claims refresh never confirms the new org", () 
     );
   });
 
-  it("writes the route gate before the auto-login refresh can remount the wizard", async () => {
+  it("writes the route gate before refreshing the existing session", async () => {
     mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
     mockMutateAsync.mockResolvedValue(SETUP_RESPONSE);
-    mockSignIn.mockImplementation(async () => {
+    mockRefreshSessionClaims.mockImplementation(async () => {
       expect(document.cookie).toContain(
         gateCookieName("org-setup-done", "org-new"),
       );
-      return SIGN_IN_SUCCESS;
+      return FAKE_SESSION;
     });
 
     render(<StepGeneration data={TEST_DATA} />);
@@ -251,10 +267,11 @@ describe("StepGeneration — the claims refresh never confirms the new org", () 
 });
 
 describe("StepGeneration — both auth steps succeed", () => {
-  it("clears draft, writes scoped marker keyed to user+org, shows welcome without a refresh call", async () => {
+  it("clears draft, writes scoped marker keyed to user+org and shows welcome after one refresh", async () => {
     mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
     mockMutateAsync.mockResolvedValue(SETUP_RESPONSE);
     mockSignIn.mockResolvedValue(SIGN_IN_SUCCESS);
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
 
     render(<StepGeneration data={TEST_DATA} />);
 
@@ -262,7 +279,8 @@ describe("StepGeneration — both auth steps succeed", () => {
       expect(capturedProgressProps.showWelcome).toBe(true);
     });
 
-    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
+    expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(1);
+    expect(mockSignIn).not.toHaveBeenCalled();
     expect(mockClearAll).toHaveBeenCalledWith("user-1");
     expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new");
     expect(capturedProgressProps.setupError).toBeNull();
@@ -325,12 +343,15 @@ describe("StepGeneration — second mount markers", () => {
     expect(mockMutateAsync).not.toHaveBeenCalled();
   });
 
-  it("does NOT redirect when marker is absent (different user+org)", () => {
+  it("does NOT redirect when marker is absent (different user+org)", async () => {
     mockHasCompletionMarker.mockReturnValue(false);
     mockMutateAsync.mockResolvedValue(SETUP_RESPONSE);
 
     render(<StepGeneration data={TEST_DATA} />);
 
+    await waitFor(() => {
+      expect(capturedProgressProps.onOpenOrganization).toBeDefined();
+    });
     expect(mockLocationReplace).not.toHaveBeenCalled();
   });
 });
@@ -347,7 +368,7 @@ describe("StepGeneration — StrictMode double-invoke", () => {
     );
 
     await waitFor(() => {
-      expect(mockMutateAsync).toHaveBeenCalled();
+      expect(capturedProgressProps.onOpenOrganization).toBeDefined();
     });
 
     expect(mockMutateAsync).toHaveBeenCalledTimes(1);

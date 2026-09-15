@@ -186,6 +186,22 @@ describe("list filter params, driven by a spec", () => {
     expect(mockReplace).toHaveBeenCalledTimes(1);
   });
 
+  it("clears search immediately and preserves unrelated state", () => {
+    jest.useFakeTimers();
+    const { result } = renderWith("search=annual&view=table");
+
+    act(() => result.current.setSearch(""));
+
+    expect(lastParams().has("search")).toBe(false);
+    expect(lastParams().get("view")).toBe("table");
+
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+
+    expect(mockReplace).toHaveBeenCalledTimes(1);
+  });
+
   it("synchronizes the input when navigation clears the search parameter", () => {
     jest.useFakeTimers();
     const { result, rerender } = renderWith("search=annual&runState=DRAFT");

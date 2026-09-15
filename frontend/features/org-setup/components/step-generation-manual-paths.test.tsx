@@ -54,6 +54,20 @@ jest.mock("@/hooks/common/auth-hooks", () => ({
   useSessionClaimsRefresh: jest.fn(() => mockRefreshSessionClaims),
 }));
 
+jest.mock("@/hooks/common/use-confirmed-session-claims-refresh", () => ({
+  SESSION_CLAIMS_UNCONFIRMED_MESSAGE:
+    "Your session could not be refreshed. Reload the page before continuing.",
+  useConfirmedSessionClaimsRefresh: () => () => ({
+    confirm: async (expected: { orgId?: string } | undefined) => {
+      const session = await mockRefreshSessionClaims(expected);
+      if (!session) return { status: "unavailable" };
+      if (expected?.orgId !== undefined && session.orgId !== expected.orgId)
+        return { status: "unconfirmed" };
+      return { status: "confirmed", session };
+    },
+  }),
+}));
+
 jest.mock("@/features/org-setup/lib/draft", () => ({
   clearAll: jest.fn((...args: unknown[]) => mockClearAll(...args)),
   setCompletionMarker: jest.fn((...args: unknown[]) => mockSetCompletionMarker(...args)),
@@ -205,7 +219,7 @@ describe("StepGeneration — manual continue paths honour the discriminated sign
   );
 
   it.each(["onOpenOrganization", "onGoToInvitations"] as const)(
-    "%s: autoLoginToken present and signIn ok: navigates without a refresh call",
+    "%s: falls back to auto sign-in when the existing session cannot refresh",
     async (prop) => {
       await renderWithCreatedOrg();
       mockSignIn.mockResolvedValue({ status: "signed-in" });
@@ -215,13 +229,13 @@ describe("StepGeneration — manual continue paths honour the discriminated sign
       await waitFor(() => {
         expect(mockLocationReplace).toHaveBeenCalledTimes(1);
       });
-      expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
+      expect(mockRefreshSessionClaims).toHaveBeenCalledWith({ orgId: "org-new" });
       expect(mockToastError).not.toHaveBeenCalled();
       expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new");
     },
   );
 
-  it("onOpenOrganization: signIn ok → marker written, no refresh, /dashboard", async () => {
+  it("onOpenOrganization: fallback sign-in writes the marker and opens the dashboard", async () => {
     await renderWithCreatedOrg();
     mockSignIn.mockResolvedValue({ status: "signed-in" });
 
@@ -230,11 +244,11 @@ describe("StepGeneration — manual continue paths honour the discriminated sign
     await waitFor(() => {
       expect(mockLocationReplace).toHaveBeenCalledWith("/dashboard");
     });
-    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
+    expect(mockRefreshSessionClaims).toHaveBeenCalledWith({ orgId: "org-new" });
     expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new");
   });
 
-  it("onGoToInvitations: signIn ok → no refresh, invitations view", async () => {
+  it("onGoToInvitations: fallback sign-in opens invitations", async () => {
     await renderWithCreatedOrg();
     mockSignIn.mockResolvedValue({ status: "signed-in" });
 
@@ -245,7 +259,7 @@ describe("StepGeneration — manual continue paths honour the discriminated sign
         "/settings/users?view=invitations",
       );
     });
-    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
+    expect(mockRefreshSessionClaims).toHaveBeenCalledWith({ orgId: "org-new" });
   });
 
   it("a withheld auto-login token skips the magic sign-in and still refreshes the session", async () => {
@@ -263,7 +277,7 @@ describe("StepGeneration — manual continue paths honour the discriminated sign
     );
   });
 
-  it("autoLoginToken present: signIn establishes the new org, no refresh needed", async () => {
+  it("autoLoginToken establishes the org when the refresh is unavailable", async () => {
     await renderWithCreatedOrg();
     mockSignIn.mockResolvedValue({ status: "signed-in" });
 
@@ -272,7 +286,7 @@ describe("StepGeneration — manual continue paths honour the discriminated sign
     await waitFor(() => {
       expect(mockLocationReplace).toHaveBeenCalledWith("/dashboard");
     });
-    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
+    expect(mockRefreshSessionClaims).toHaveBeenCalledWith({ orgId: "org-new" });
     expect(mockToastError).not.toHaveBeenCalled();
   });
 
@@ -312,7 +326,7 @@ describe("StepGeneration — manual continue paths honour the discriminated sign
     await invokeCaptured("onOpenOrganization");
     await invokeCaptured("onGoToInvitations");
 
-    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
+    expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(1);
     expect(mockLocationReplace).toHaveBeenCalledTimes(1);
     expect(mockLocationReplace).toHaveBeenCalledWith("/dashboard");
   });

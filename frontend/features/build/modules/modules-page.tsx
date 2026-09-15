@@ -51,6 +51,7 @@ import {
   MODULE_STATUSES,
   DESC_MAX,
 } from "./create-module-schema";
+import { useCan } from "@/hooks/api/access";
 
 function NewModuleButton() {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -68,6 +69,7 @@ interface ModulesPageProps {
 
 export function ModulesPage({ projectId }: ModulesPageProps) {
   const [createOpen, setCreateOpen] = useState(false);
+  const canManage = useCan("build:workspace:manage");
 
   const {
     data: modules,
@@ -206,7 +208,7 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
       title="Modules"
       subtitle="Organize work into feature groups and track module progress"
       actions={
-        <Sheet open={createOpen} onOpenChange={handleOpenChange}>
+        canManage ? <Sheet open={createOpen} onOpenChange={handleOpenChange}>
           <SheetTrigger asChild>
             <NewModuleButton />
           </SheetTrigger>
@@ -347,7 +349,7 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
               </LoadingButton>
             </div>
           </SheetContent>
-        </Sheet>
+        </Sheet> : undefined
       }
     >
       <PmPageShell>
@@ -366,7 +368,7 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
               illustration={<EmptyTasksIllustration />}
               title="No modules yet"
               description="Create your first module to organize work into feature areas."
-              action={{ label: "Create First Module", onClick: handleOpenCreate }}
+              action={canManage ? { label: "Create First Module", onClick: handleOpenCreate } : undefined}
               className={PM_FILL_PANEL}
             />
           </PmSection>

@@ -46,6 +46,7 @@ interface ViewCardProps {
   onNavigate: (view: ViewItem) => void;
   onTogglePin: (viewId: number, isPinned: boolean) => void;
   onDelete: (viewId: number) => void;
+  canManage: boolean;
 }
 
 export const ViewCard = memo(function ViewCard({
@@ -55,6 +56,7 @@ export const ViewCard = memo(function ViewCard({
   onNavigate,
   onTogglePin,
   onDelete,
+  canManage,
 }: ViewCardProps) {
   const handleNavigate = useCallback(() => onNavigate(view), [onNavigate, view]);
   const handleStopPropagation = useCallback(
@@ -69,7 +71,7 @@ export const ViewCard = memo(function ViewCard({
 
   const filterCount = view.filters ? Object.keys(view.filters).length : 0;
   const meta = LAYOUT_META[view.layoutType] ?? LAYOUT_META["board"];
-  const isOwner = !view.createdBy || !currentUserId || view.createdBy === currentUserId;
+  const isOwner = canManage && (!view.createdBy || view.createdBy === currentUserId);
   const isPrivate = view.visibility === "private";
 
   return (

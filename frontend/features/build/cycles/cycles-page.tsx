@@ -33,6 +33,7 @@ import {
 } from "@/lib/date-constraints";
 import { refineDateOrder, refineNotBeforeToday } from "@/lib/date-refinements";
 import type { Cycle } from "@/types/projects";
+import { useCan } from "@/hooks/api/access";
 
 const DESCRIPTION_MAX = 500;
 
@@ -86,6 +87,7 @@ interface CyclesPageProps {
 
 export function CyclesPage({ projectId }: CyclesPageProps) {
   const [createOpen, setCreateOpen] = useState(false);
+  const canManage = useCan("build:workspace:manage");
 
   const { data: cycles, isLoading, isError, refetch } = useCycles(projectId);
   const activeCycles = cycles?.filter((c) => c.status === "active") ?? [];
@@ -217,7 +219,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
       title="Cycles"
       subtitle="Time-box work into focused iterations"
       actions={
-        <Sheet open={createOpen} onOpenChange={handleOpenChange}>
+        canManage ? <Sheet open={createOpen} onOpenChange={handleOpenChange}>
           <SheetTrigger asChild>
             <AnimatedIconButton size="sm" icon={PlusIcon} iconSize={16} iconClassName="mr-1">
               New Cycle
@@ -294,7 +296,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
               </LoadingButton>
             </div>
           </SheetContent>
-        </Sheet>
+        </Sheet> : undefined
       }
     >
       {hasCycles && (
@@ -427,7 +429,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
           illustration={<EmptyCalendarIllustration />}
           title="No cycles yet"
           description="Create your first cycle to start planning work in time-boxed iterations."
-          action={{ label: "Create First Cycle", onClick: handleOpenCreate }}
+          action={canManage ? { label: "Create First Cycle", onClick: handleOpenCreate } : undefined}
         />
       )}
     </PageWrapper>

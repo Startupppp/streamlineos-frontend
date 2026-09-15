@@ -23,6 +23,7 @@ import {
   PM_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
+import { useCan } from "@/hooks/api/access";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -35,6 +36,7 @@ export function ViewsPage({ params }: PageProps) {
   const router = useRouter();
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
+  const canManage = useCan("build:workspace:manage");
 
   const {
     data: views,
@@ -123,9 +125,9 @@ export function ViewsPage({ params }: PageProps) {
       title="Views"
       subtitle="Saved filters and layouts for this project"
       actions={
-        <Button size="sm" onClick={handleOpenCreate}>
+        canManage ? <Button size="sm" onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-1" /> New View
-        </Button>
+        </Button> : undefined
       }
     >
       <PmPageShell>
@@ -155,6 +157,7 @@ export function ViewsPage({ params }: PageProps) {
                         onNavigate={handleNavigateToView}
                         onTogglePin={handleTogglePin}
                         onDelete={handleDelete}
+                        canManage={canManage}
                       />
                     ))}
                   </PmStaggerList>
@@ -179,6 +182,7 @@ export function ViewsPage({ params }: PageProps) {
                         onNavigate={handleNavigateToView}
                         onTogglePin={handleTogglePin}
                         onDelete={handleDelete}
+                        canManage={canManage}
                       />
                     ))}
                   </PmStaggerList>
@@ -189,12 +193,14 @@ export function ViewsPage({ params }: PageProps) {
         )}
       </PmPageShell>
 
-      <CreateViewSheet
-        projectId={projectId}
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        onCreated={handleCreated}
-      />
+      {canManage ? (
+        <CreateViewSheet
+          projectId={projectId}
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          onCreated={handleCreated}
+        />
+      ) : null}
     </PageWrapper>
   );
 }

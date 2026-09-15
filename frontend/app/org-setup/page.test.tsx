@@ -41,6 +41,20 @@ jest.mock("@/hooks/common/auth-hooks", () => ({
   useSessionClaimsRefresh: jest.fn(() => mockRefreshSessionClaims),
 }));
 
+jest.mock("@/hooks/common/use-confirmed-session-claims-refresh", () => ({
+  SESSION_CLAIMS_UNCONFIRMED_MESSAGE:
+    "Your session could not be refreshed. Reload the page before continuing.",
+  useConfirmedSessionClaimsRefresh: () => () => ({
+    confirm: async (expected: { orgId?: string } | undefined) => {
+      const session = await mockRefreshSessionClaims(expected);
+      if (!session) return { status: "unavailable" };
+      if (expected?.orgId !== undefined && session.orgId !== expected.orgId)
+        return { status: "unconfirmed" };
+      return { status: "confirmed", session };
+    },
+  }),
+}));
+
 jest.mock("@/lib/api/hooks/org", () => ({
   useSkipOrgSetupMutation: jest.fn(() => ({ mutateAsync: mockSkipOrgSetup })),
   useOrgSetupSessionQuery: jest.fn(() => ({ data: undefined })),
@@ -139,6 +153,7 @@ describe("OrgSetupPage — skipping the wizard releases the dashboard only on a 
       expect(mockLocationReplace).toHaveBeenCalledWith("/dashboard");
     });
     expect(mockRefreshSessionClaims).toHaveBeenCalledWith({ orgId: "org-new" });
+    expect(mockSignIn).not.toHaveBeenCalled();
     expect(mockClearAll).toHaveBeenCalledWith("user-1");
     expect(document.cookie).toContain(
       gateCookieName("org-setup-done", "org-new"),
@@ -147,6 +162,7 @@ describe("OrgSetupPage — skipping the wizard releases the dashboard only on a 
   });
 
   it("a timed-out refresh warns, leaves the draft alone and does not navigate", async () => {
+    mockSkipOrgSetup.mockResolvedValue({ ...SKIP_RESPONSE, autoLoginToken: undefined });
     mockRefreshSessionClaims.mockResolvedValue(null);
     await renderWizard();
 
@@ -163,6 +179,7 @@ describe("OrgSetupPage — skipping the wizard releases the dashboard only on a 
   });
 
   it("a session that does not name the provisioned org is refused", async () => {
+    mockSkipOrgSetup.mockResolvedValue({ ...SKIP_RESPONSE, autoLoginToken: undefined });
     mockRefreshSessionClaims.mockResolvedValue({
       ...NEW_ORG_SESSION,
       orgId: "org-other",
@@ -199,15 +216,17 @@ describe("OrgSetupPage — skipping the wizard releases the dashboard only on a 
       await Promise.resolve();
     });
 
-    await waitFor(() => {
-      expect(mockLocationReplace).toHaveBeenCalledWith("/dashboard");
-    });
+    expect(mockSkipOrgSetup).toHaveBeenCalledTimes(1);
+    expect(mockLocationReplace).not.toHaveBeenCalled();
 
     await act(async () => {
       settleFirst?.(NEW_ORG_SESSION);
       await Promise.resolve();
     });
 
+    await waitFor(() => {
+      expect(mockLocationReplace).toHaveBeenCalledWith("/dashboard");
+    });
     expect(mockLocationReplace).toHaveBeenCalledTimes(1);
     expect(mockToastError).not.toHaveBeenCalled();
   });

@@ -96,8 +96,9 @@ function useMemberOptions(
   const canViewOrgMembers = useCan("settings:view");
   const canViewProjectWorkspaceMembers = useCan("build:members:view");
   const useOrgDirectory =
-    !explicit && projectId === undefined && moduleKey === undefined && canViewOrgMembers;
+    enabled && !explicit && projectId === undefined && moduleKey === undefined && canViewOrgMembers;
   const useWorkspaceDirectory =
+    enabled &&
     !explicit &&
     projectId === undefined &&
     moduleKey === undefined &&
@@ -119,7 +120,9 @@ function useMemberOptions(
       placeholderData: (prev) => prev,
     },
   );
-  const { data: projectMembers = [] } = useProjectMembers(projectId ?? 0);
+  const { data: projectMembers = [] } = useProjectMembers(projectId ?? 0, {
+    enabled: enabled && !explicit && projectId !== undefined,
+  });
   const { data: moduleData } = useModuleMemberCandidates(
     moduleKey ?? "",
     50,
@@ -224,6 +227,7 @@ function useMemberOptions(
       selectedMembers: workspaceOptions.filter((m) => selectedIds.includes(m.id)),
     };
   }, [
+    candidates,
     projectId,
     useOrgDirectory,
     useModuleDirectory,
@@ -295,12 +299,13 @@ export function MemberPicker(props: MemberPickerProps) {
     () => multiValues ?? (singleValue ? [singleValue] : []),
     [multiValues, singleValue],
   );
+  const directoryEnabled = enabled && (open || selectedIds.length > 0);
   const { options: members, selectedMembers } = useMemberOptions(
     candidates,
     projectId,
     moduleKey,
     excludeAssigned,
-    enabled,
+    directoryEnabled,
     search,
     selectedIds,
   );

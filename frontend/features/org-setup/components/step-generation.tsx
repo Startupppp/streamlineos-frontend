@@ -14,11 +14,7 @@ import {
   isApiError,
   setAutoSignOutSuppressed,
 } from "@/lib/api-client";
-import {
-  clearGateCookie,
-  completeOnboardingGate,
-  writeGateCookie,
-} from "@/lib/onboarding-gate";
+import { clearGateCookie, completeOnboardingGate } from "@/lib/onboarding-gate";
 import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
 import {
   SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
@@ -82,6 +78,10 @@ export function StepGeneration({ data }: StepGenerationProps) {
   const provisioning = useSetupProvisioning(
     orgCreatedResult !== null || isPollingAfterTimeout,
   );
+  const effectiveOrgId =
+    orgCreatedResult?.orgId ??
+    (isPollingAfterTimeout ? provisioning.orgId : null);
+  const effectiveAutoLoginToken = orgCreatedResult?.autoLoginToken ?? null;
 
   useEffect(() => {
     setAutoSignOutSuppressed(true);
@@ -112,9 +112,34 @@ export function StepGeneration({ data }: StepGenerationProps) {
     hasRunRef.current = false;
     clearCompletionMarker(
       session?.user?.id ?? "",
-      orgCreatedResult?.orgId ?? session?.orgId ?? "",
+      effectiveOrgId ?? session?.orgId ?? "",
     );
     setSetupError(err);
+  }
+
+  async function establishOrganizationSession(
+    autoLoginToken: string | null,
+    orgId: string,
+  ): Promise<"confirmed" | "superseded"> {
+    const claimsRun = beginClaimsRefresh();
+    const claimsOutcome = await completeOnboardingGate(
+      "org-setup-done",
+      orgId,
+      claimsRun.confirm,
+      { orgId },
+    );
+    if (claimsOutcome.status === "confirmed") return "confirmed";
+    if (claimsOutcome.status === "superseded") return "superseded";
+    if (!autoLoginToken) throw new Error(SESSION_CLAIMS_UNCONFIRMED_MESSAGE);
+
+    const outcome = await signInWithMagicToken(autoLoginToken);
+    if (outcome.status === "indeterminate")
+      throw new Error(
+        "We could not confirm your sign-in. Please sign in again.",
+      );
+    if (outcome.status !== "signed-in")
+      throw new Error("Sign-in failed. Please retry.");
+    return "confirmed";
   }
 
   async function finishSetup(autoLoginToken: string | null, orgId: string) {
@@ -125,36 +150,11 @@ export function StepGeneration({ data }: StepGenerationProps) {
     clearBackendTokenCache();
 
     try {
-      if (autoLoginToken) {
-        writeGateCookie("org-setup-done", orgId);
-        const outcome = await signInWithMagicToken(autoLoginToken);
-        if (outcome.status === "indeterminate")
-          throw new Error(
-            "We could not confirm your sign-in. Please sign in again.",
-          );
-        if (outcome.status !== "signed-in")
-          throw new Error("Sign-in failed. Please retry.");
-      } else {
-        const claimsRun = beginClaimsRefresh();
-        const claimsOutcome = await completeOnboardingGate(
-          "org-setup-done",
-          orgId,
-          claimsRun.confirm,
-          { orgId },
-        );
-        if (claimsOutcome.status === "superseded") return;
-        if (
-          claimsOutcome.status === "unconfirmed" ||
-          claimsOutcome.status === "unavailable"
-        ) {
-          apiDoneRef.current = false;
-          handleSetupError({
-            kind: "setup-failed",
-            message: SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
-          });
-          return;
-        }
-      }
+      const sessionOutcome = await establishOrganizationSession(
+        autoLoginToken,
+        orgId,
+      );
+      if (sessionOutcome === "superseded") return;
     } catch (err) {
       clearGateCookie("org-setup-done", orgId);
       apiDoneRef.current = false;
@@ -189,43 +189,25 @@ export function StepGeneration({ data }: StepGenerationProps) {
   }
 
   async function navigateToPostSetup(destination: string) {
-    if (!orgCreatedResult || isContinuing || apiDoneRef.current) return;
+    if (!effectiveOrgId || isContinuing || apiDoneRef.current) return;
     setIsContinuing(true);
     apiDoneRef.current = true;
     stopAnimation();
-    const orgResult = orgCreatedResult;
+    const orgResult = {
+      autoLoginToken: effectiveAutoLoginToken,
+      orgId: effectiveOrgId,
+    };
     const userId = session?.user?.id ?? "";
     try {
       clearBackendTokenCache();
-      if (orgResult.autoLoginToken) {
-        writeGateCookie("org-setup-done", orgResult.orgId);
-        const outcome = await signInWithMagicToken(orgResult.autoLoginToken);
-        if (outcome.status === "indeterminate")
-          throw new Error(
-            "We could not confirm your sign-in. Please sign in again.",
-          );
-        if (outcome.status !== "signed-in")
-          throw new Error("Sign-in failed. Please retry.");
-        clearAll(userId);
-        setCompletionMarker(userId, orgResult.orgId);
-        window.location.replace(destination);
-      } else {
-        const claimsRun = beginClaimsRefresh();
-        const confirmed = await completeOnboardingGate(
-          "org-setup-done",
-          orgResult.orgId,
-          claimsRun.confirmOrWarn,
-          { orgId: orgResult.orgId },
-        );
-        if (!confirmed) {
-          apiDoneRef.current = false;
-          setIsContinuing(false);
-          return;
-        }
-        clearAll(userId);
-        setCompletionMarker(userId, orgResult.orgId);
-        window.location.replace(destination);
-      }
+      const sessionOutcome = await establishOrganizationSession(
+        orgResult.autoLoginToken,
+        orgResult.orgId,
+      );
+      if (sessionOutcome === "superseded") return;
+      clearAll(userId);
+      setCompletionMarker(userId, orgResult.orgId);
+      window.location.replace(destination);
     } catch (err) {
       clearGateCookie("org-setup-done", orgResult.orgId);
       apiDoneRef.current = false;
@@ -247,8 +229,8 @@ export function StepGeneration({ data }: StepGenerationProps) {
   }
 
   function handleContinueAnyway() {
-    if (!orgCreatedResult) return;
-    void finishSetup(orgCreatedResult.autoLoginToken, orgCreatedResult.orgId);
+    if (!effectiveOrgId) return;
+    void finishSetup(effectiveAutoLoginToken, effectiveOrgId);
   }
 
   async function runSetup() {
@@ -299,22 +281,9 @@ export function StepGeneration({ data }: StepGenerationProps) {
   }, []);
 
   useEffect(() => {
-    if (
-      !isPollingAfterTimeout ||
-      orgCreatedResult !== null ||
-      provisioning.orgId === null
-    )
-      return;
-    setOrgCreatedResult({ autoLoginToken: null, orgId: provisioning.orgId });
-  }, [isPollingAfterTimeout, orgCreatedResult, provisioning.orgId]);
-
-  useEffect(() => {
-    if (!provisioning.isReady || !orgCreatedResult) return;
-    finishSetupRef.current(
-      orgCreatedResult.autoLoginToken,
-      orgCreatedResult.orgId,
-    );
-  }, [provisioning.isReady, orgCreatedResult]);
+    if (!provisioning.isReady || !effectiveOrgId) return;
+    finishSetupRef.current(effectiveAutoLoginToken, effectiveOrgId);
+  }, [provisioning.isReady, effectiveAutoLoginToken, effectiveOrgId]);
 
   const progress = Math.round((completedSteps / total) * 100);
   const companyName = data.companyName?.trim();
@@ -334,8 +303,8 @@ export function StepGeneration({ data }: StepGenerationProps) {
         onRetry={runSetup}
         onRecheckProvisioning={handleRecheckProvisioning}
         onContinueAnyway={handleContinueAnyway}
-        onOpenOrganization={orgCreatedResult ? openOrganization : undefined}
-        onGoToInvitations={orgCreatedResult ? goToInvitations : undefined}
+        onOpenOrganization={effectiveOrgId ? openOrganization : undefined}
+        onGoToInvitations={effectiveOrgId ? goToInvitations : undefined}
         isNavigating={isContinuing}
       />
 

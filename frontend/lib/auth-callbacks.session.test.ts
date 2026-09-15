@@ -32,8 +32,6 @@ jest.mock("jose", () => {
   return { decodeJwt, SignJWT };
 });
 
-import type { Session } from "next-auth";
-import type { JWT } from "next-auth/jwt";
 import { resolveAuthSession } from "@/lib/auth";
 import {
   clearBackendJwtStoreForTesting,
@@ -74,6 +72,20 @@ beforeEach(() => {
 });
 
 describe("session callback — minting, caching and two device sessions", () => {
+  it("coalesces concurrent session reads and token exchanges for one device", async () => {
+    const transport = installTransport({ exchangeToken: backendJwt(SESSION_A, ORG) });
+
+    const sessions = await Promise.all([
+      resolveAuthSession(makeSession(), makeToken(SESSION_A)),
+      resolveAuthSession(makeSession(), makeToken(SESSION_A)),
+      resolveAuthSession(makeSession(), makeToken(SESSION_A)),
+    ]);
+
+    expect(transport.sessionDataCalls).toBe(1);
+    expect(transport.exchangeCalls).toBe(1);
+    expect(sessions.every((session) => session.backendJwt === backendJwt(SESSION_A, ORG))).toBe(true);
+  });
+
   it("exchanges once and serves the cached token on the next read", async () => {
     const transport = installTransport({ exchangeToken: backendJwt(SESSION_A, ORG) });
 
