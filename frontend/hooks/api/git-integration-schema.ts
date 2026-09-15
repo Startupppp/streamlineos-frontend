@@ -5,7 +5,7 @@ const wireDate = () => z.string();
 const gitConnectionItemSchema = z.object({
   id: z.number().int(),
   provider: z.enum(["github", "gitlab", "bitbucket"]),
-  projectId: z.string().nullable(),
+  projectId: z.number().int().nullable(),
   repoUrl: z.string(),
   repoName: z.string().nullable(),
   isActive: z.boolean(),
@@ -27,7 +27,7 @@ export const gitConnectionListContract = z.object({
 export const gitConnectionCreateContract = z.object({
   id: z.number().int(),
   provider: z.enum(["github", "gitlab", "bitbucket"]),
-  projectId: z.string().nullable(),
+  projectId: z.number().int().nullable(),
   repoUrl: z.string(),
   repoName: z.string().nullable(),
   isActive: z.boolean(),
@@ -40,7 +40,7 @@ export const gitConnectionCreateContract = z.object({
 export const gitConnectionUpdateContract = z.object({
   id: z.number().int(),
   provider: z.enum(["github", "gitlab", "bitbucket"]),
-  projectId: z.string().nullable(),
+  projectId: z.number().int().nullable(),
   repoUrl: z.string(),
   repoName: z.string().nullable(),
   isActive: z.boolean(),

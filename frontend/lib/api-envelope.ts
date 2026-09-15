@@ -6,19 +6,30 @@ export class ApiError extends Error {
   readonly status?: number;
   readonly code?: string;
   readonly details?: unknown;
+  readonly endpoint?: string;
 
   constructor(
     message: string,
     status?: number,
     code?: string,
     details?: unknown,
+    endpoint?: string,
   ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.code = code;
     this.details = details;
+    this.endpoint = endpoint;
   }
+}
+
+export function getRetryAfterSeconds(error: unknown): number | undefined {
+  if (!isApiError(error) || !isRecord(error.details)) return undefined;
+  const seconds = error.details.retryAfterSecs;
+  return typeof seconds === "number" && Number.isFinite(seconds) && seconds >= 0
+    ? seconds
+    : undefined;
 }
 
 export function isApiError(error: unknown): error is ApiError {
@@ -41,45 +52,13 @@ export interface ContractIssue {
   readonly message: string;
 }
 
-/**
- * A response contract. Every Zod schema is one; nothing else needs to be.
- * Contracts are deliberately NOT `.strict()`: an added backend field is a
- * backward-compatible deploy, while a removed, renamed or retyped field is the
- * drift this exists to catch — and a plain object already rejects all three.
- */
 export type ResponseContract<T> = ZodType<T>;
 
-/**
- * A contract that has not been loaded yet.
- *
- * Every contract in the app is a Zod schema built at MODULE SCOPE, so importing
- * one as a value drags Zod's whole runtime — 56,661 B gzip, and nothing in it
- * tree-shakes, because `import { z } from "zod"` binds a namespace object —
- * into whatever chunk the importer lands in. Six of the shell's boot-critical
- * hooks did exactly that, which put Zod in the first load of EVERY
- * authenticated route, including the ones that never call a contracted read.
- *
- * This defers WHEN the schema module loads. It does not defer WHETHER the
- * contract is applied: the returned thunk is passed in the same argument slot,
- * `api-client` starts resolving it in parallel with the request, and
- * `parseApiResponse` still receives a real contract before it parses a byte.
- * A route that calls the hook pays for Zod exactly as before — that is correct,
- * and it is the point. A route that does not, no longer pays at all.
- */
 export type LazyResponseContract<T> = () => Promise<ResponseContract<T>>;
 
 /** A contract, or the promise of one. Both validate; only the timing differs. */
 export type ContractSource<T> = ResponseContract<T> | LazyResponseContract<T>;
 
-/**
- * Memoises the import so a composed contract — `chatChannelPageContract(row)`
- * builds a NEW schema on every call — is constructed once per module instead of
- * once per request. A rejected load is deliberately NOT cached: a chunk that
- * failed to download is a transient network fault, and caching the rejection
- * would make the query's retry re-throw the same error forever. `getErrorMessage`
- * already renders a chunk-load failure as "a new version of the app is
- * available", so the failure reaches the screen as a real error state.
- */
 export function lazyContract<T>(
   load: LazyResponseContract<T>,
 ): LazyResponseContract<T> {
@@ -105,13 +84,6 @@ export function resolveContract<T>(
   return Promise.resolve(source);
 }
 
-/**
- * A backend response that did not match the contract the caller declared.
- * It is an `ApiError`, so `getErrorMessage`, `readErrorReachesBoundary` and
- * every existing error surface render it without a special case — a contract
- * violation reaches the screen as an error state, never as a raw `ZodError`
- * escaping into an unhandled rejection, and never as a silent pass.
- */
 export class ApiContractError extends ApiError {
   readonly resource: string;
   readonly issues: readonly ContractIssue[];
@@ -121,19 +93,20 @@ export class ApiContractError extends ApiError {
     status: number | undefined,
     issues: readonly ContractIssue[],
   ) {
-    super(CONTRACT_VIOLATION_MESSAGE, status, CONTRACT_VIOLATION_CODE, {
+    super(
+      CONTRACT_VIOLATION_MESSAGE,
+      status,
+      CONTRACT_VIOLATION_CODE,
+      { resource, issues },
       resource,
-      issues,
-    });
+    );
     this.name = "ApiContractError";
     this.resource = resource;
     this.issues = issues;
   }
 }
 
-export function isContractViolation(
-  error: unknown,
-): error is ApiContractError {
+export function isContractViolation(error: unknown): error is ApiContractError {
   return error instanceof ApiContractError;
 }
 
@@ -145,7 +118,8 @@ export interface ApiResponseLike {
 }
 
 function unwrapEnvelope(body: unknown): unknown {
-  if (isRecord(body) && body.success === true && "data" in body) return body.data;
+  if (isRecord(body) && body.success === true && "data" in body)
+    return body.data;
   return body;
 }
 
@@ -163,50 +137,13 @@ function assertUnchecked<T>(payload: unknown): T {
   return payload as T;
 }
 
-/**
- * THE POLICY: a contract violation THROWS. Every time — reads and writes,
- * development and production. The alternative, reporting it and handing the
- * payload through, is today's default behaviour with a log line attached, and
- * today's default behaviour is what shipped the two chat defects. It was
- * considered and rejected. The `never` return type is the policy in the type
- * system; this comment is the policy in prose, and both are here so that
- * changing it means changing something named rather than editing a branch.
- *
- * 1. A contract cannot fail cosmetically. `ResponseContract` is deliberately
- *    NOT `.strict()`, so an ADDED backend field passes — that is the
- *    backward-compatible deploy, and it is allowed. The only remaining ways to
- *    fail are a field removed, renamed or retyped: one this client declared and
- *    reads, which no longer arrives as declared. There is no benign case here
- *    to let through.
- *
- * 2. Wrong-but-plausible only beats an error state for whoever does not have to
- *    act on it. Both shipped defects rendered a normal-looking screen — an
- *    empty Favourites list, a huddle roster of "Unknown". Nobody files a bug
- *    against a page that looks fine, which is exactly why both survived clean
- *    typechecks on both sides for as long as they did. An error state is
- *    discoverable; a plausible wrong one is not.
- *
- * 3. The blast radius is already one query, not the app. The throw lands in
- *    that read's `error`; `readErrorReachesBoundary` then decides boundary or
- *    inline, the same as for any 500.
- *
- * THE ASYMMETRY THAT LOOKS RIGHT AND IS NOT: fail reads, but let a drifted
- * WRITE response through, since the mutation already committed and a thrown
- * error invites a duplicate retry and rolls back optimistic state the server
- * accepted. Sound in general, wrong here: the highest-consequence contracted
- * write in the product is `POST /organization/switch`, whose response is what
- * the session's active org is set from. Failing that one open is a cross-tenant
- * outcome, and one such route is enough to kill the rule.
- *
- * NO SEVERITY DIAL AND NO ENVIRONMENT SWITCH. Either one puts the silent path
- * back, one route at a time, with nothing to say which routes took it. A route
- * that genuinely cannot afford to fail closed should lose its contract instead,
- * where `check:response-contracts` counts it as unparsed and prints it.
- */
 function rejectContractViolation(
   resource: string,
   status: number,
-  zodIssues: ReadonlyArray<{ path: ReadonlyArray<PropertyKey>; message: string }>,
+  zodIssues: ReadonlyArray<{
+    path: ReadonlyArray<PropertyKey>;
+    message: string;
+  }>,
 ): never {
   const issues: ContractIssue[] = zodIssues
     .slice(0, MAX_REPORTED_ISSUES)
@@ -241,13 +178,17 @@ function applyContract<T>(
  * carrying field-level validation issues were all discarded. One parser now
  * builds the error for both.
  */
-export async function apiErrorFromResponse(res: ApiResponseLike): Promise<ApiError> {
+export async function apiErrorFromResponse(
+  res: ApiResponseLike,
+  endpoint?: string,
+): Promise<ApiError> {
   let message = `${res.status} ${res.statusText}`;
   let code: string | undefined;
   let details: unknown;
   try {
     const body = await res.json();
-    if (!isRecord(body)) return new ApiError(message, res.status, code, details);
+    if (!isRecord(body))
+      return new ApiError(message, res.status, code, details, endpoint);
     if (typeof body.message === "string" && body.message) {
       message = body.message;
     } else if (Array.isArray(body.message) && body.message.length > 0) {
@@ -272,7 +213,7 @@ export async function apiErrorFromResponse(res: ApiResponseLike): Promise<ApiErr
       if (Object.keys(rest).length > 0) details = rest;
     }
   } catch {}
-  return new ApiError(message, res.status, code, details);
+  return new ApiError(message, res.status, code, details, endpoint);
 }
 
 /**
@@ -285,14 +226,9 @@ export async function parseApiResponse<T>(
   contract?: ResponseContract<T>,
   resource = "response",
 ): Promise<T> {
-  if (!res.ok) throw await apiErrorFromResponse(res);
+  if (!res.ok) throw await apiErrorFromResponse(res, resource);
   if (res.status === 204)
     return applyContract<T>(undefined, contract, resource, res.status);
   const body = await res.json();
-  return applyContract<T>(
-    unwrapEnvelope(body),
-    contract,
-    resource,
-    res.status,
-  );
+  return applyContract<T>(unwrapEnvelope(body), contract, resource, res.status);
 }

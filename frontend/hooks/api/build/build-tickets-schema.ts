@@ -52,7 +52,25 @@ export const ticketRowContract = z.object({
   updatedAt: z.string(),
 });
 
+const ticketDetailCommentSchema = z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  ticketId: z.number().int(),
+  userId: z.string(),
+  content: z.string(),
+  parentCommentId: z.number().int().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  user: userSummarySchema,
+});
+
 export const ticketDetailContract = ticketRowContract.extend({
+  comments: z
+    .array(ticketDetailCommentSchema)
+    .default([])
+    .transform((items) =>
+      items.map((c) => ({ ...c, user: c.user ?? undefined })),
+    ),
   project: z
     .object({
       id: z.number().int(),
@@ -79,55 +97,67 @@ export const ticketDetailContract = ticketRowContract.extend({
       user: z.object({ user: userSummarySchema }),
     }),
   ),
-  watchers: z.array(
-    z.object({
-      user: userSummarySchema,
-    }),
-  ).transform((items) =>
-    items.map((w, i) => ({
-      id: i,
-      ticketId: 0,
-      userId: w.user?.id ?? null,
-      createdAt: null,
-      user: w.user,
-    })),
-  ),
-  attachments: z.array(
-    z.object({
-      id: z.number().int(),
-      filename: z.string(),
-      url: z.string(),
-      uploader: userSummarySchema,
-    }),
-  ).transform((items) =>
-    items.map((a) => ({
-      id: a.id,
-      orgId: "",
-      ticketId: 0,
-      fileUrl: a.url,
-      fileName: a.filename,
-      fileSize: null,
-      mimeType: null,
-      uploadedBy: a.uploader?.id ?? null,
-      createdAt: null,
-      uploader: a.uploader ?? undefined,
-    })),
-  ),
-  labels: z.array(
-    z.object({
-      id: z.number().int(),
-      name: z.string(),
-      color: z.string().nullable(),
-    }),
-  ).transform((items) =>
-    items.map((l) => ({
-      id: l.id,
-      ticketId: 0,
-      labelId: l.id,
-      createdAt: null,
-      label: { id: l.id, orgId: "", name: l.name, color: l.color, createdAt: null },
-    })),
-  ),
+  watchers: z
+    .array(
+      z.object({
+        user: userSummarySchema,
+      }),
+    )
+    .transform((items) =>
+      items.map((w, i) => ({
+        id: i,
+        ticketId: 0,
+        userId: w.user?.id ?? null,
+        createdAt: null,
+        user: w.user,
+      })),
+    ),
+  attachments: z
+    .array(
+      z.object({
+        id: z.number().int(),
+        filename: z.string(),
+        url: z.string(),
+        uploader: userSummarySchema,
+      }),
+    )
+    .transform((items) =>
+      items.map((a) => ({
+        id: a.id,
+        orgId: "",
+        ticketId: 0,
+        fileUrl: a.url,
+        fileName: a.filename,
+        fileSize: null,
+        mimeType: null,
+        uploadedBy: a.uploader?.id ?? null,
+        createdAt: null,
+        uploader: a.uploader ?? undefined,
+      })),
+    ),
+  labels: z
+    .array(
+      z.object({
+        id: z.number().int(),
+        name: z.string(),
+        color: z.string().nullable(),
+      }),
+    )
+    .transform((items) =>
+      items.map((l) => ({
+        id: l.id,
+        ticketId: 0,
+        labelId: l.id,
+        createdAt: null,
+        label: {
+          id: l.id,
+          orgId: "",
+          name: l.name,
+          color: l.color,
+          createdAt: null,
+        },
+      })),
+    ),
 });
 
 const paginationContract = z.object({
@@ -136,20 +166,74 @@ const paginationContract = z.object({
   nextCursor: z.string().nullable(),
 });
 
-export const ticketListRowContract = ticketRowContract.pick({
-  id: true, orgId: true, title: true, type: true, status: true, priority: true,
-  projectId: true, ticketNumber: true, sprintId: true, epicId: true,
-  assigneeMembershipId: true, reporterId: true, points: true, storyPoints: true,
-  link: true, rank: true, parentTicketId: true, originalEstimate: true,
-  timeSpent: true, startDate: true, dueDate: true, moduleId: true, cycleId: true,
-  sequenceId: true, estimate: true, createdAt: true, updatedAt: true,
-}).extend({
-  assigneeId: z.string().nullable(),
-  assignee: userSummarySchema,
-  assignees: z.array(z.object({ id: z.number().int(), ticketId: z.number().int(), assignedAt: z.string(), assignedBy: z.string().nullable(), userId: z.string(), user: userSummarySchema.unwrap() })),
-  labels: z.array(z.object({ id: z.number().int(), ticketId: z.number().int(), labelId: z.number().int(), createdAt: z.string(), label: z.object({ id: z.number().int(), orgId: z.string(), name: z.string(), color: z.string().nullable(), createdAt: z.string() }) })),
-  cycle: z.object({ id: z.number().int(), name: z.string(), status: z.string(), startDate: z.string(), endDate: z.string() }).nullable(),
-});
+export const ticketListRowContract = ticketRowContract
+  .pick({
+    id: true,
+    orgId: true,
+    title: true,
+    type: true,
+    status: true,
+    priority: true,
+    projectId: true,
+    ticketNumber: true,
+    sprintId: true,
+    epicId: true,
+    assigneeMembershipId: true,
+    reporterId: true,
+    points: true,
+    storyPoints: true,
+    link: true,
+    rank: true,
+    parentTicketId: true,
+    originalEstimate: true,
+    timeSpent: true,
+    startDate: true,
+    dueDate: true,
+    moduleId: true,
+    cycleId: true,
+    sequenceId: true,
+    estimate: true,
+    createdAt: true,
+    updatedAt: true,
+  })
+  .extend({
+    assigneeId: z.string().nullable(),
+    assignee: userSummarySchema,
+    assignees: z.array(
+      z.object({
+        id: z.number().int(),
+        ticketId: z.number().int(),
+        assignedAt: z.string(),
+        assignedBy: z.string().nullable(),
+        userId: z.string(),
+        user: userSummarySchema.unwrap(),
+      }),
+    ),
+    labels: z.array(
+      z.object({
+        id: z.number().int(),
+        ticketId: z.number().int(),
+        labelId: z.number().int(),
+        createdAt: z.string(),
+        label: z.object({
+          id: z.number().int(),
+          orgId: z.string(),
+          name: z.string(),
+          color: z.string().nullable(),
+          createdAt: z.string(),
+        }),
+      }),
+    ),
+    cycle: z
+      .object({
+        id: z.number().int(),
+        name: z.string(),
+        status: z.string(),
+        startDate: z.string(),
+        endDate: z.string(),
+      })
+      .nullable(),
+  });
 
 export const ticketListPageContract = z.object({
   data: z.array(ticketListRowContract),
@@ -194,26 +278,30 @@ export const ticketActivityPageContract = z.object({
   pagination: paginationContract,
 });
 
-const ticketRelationRelatedTicketSchema = z.object({
-  id: z.number().int(),
-  title: z.string(),
-  ticketNumber: z.number().int().nullable(),
-  status: z.string().nullable(),
-  priority: z.string().nullable(),
-  type: z.string().nullable(),
-  points: z.number().nullable(),
-  assigneeMembershipId: z.number().int().nullable(),
-  projectId: z.number().int().nullable(),
-  assignee: z.object({
-    id: z.string(),
-    name: z.string().nullable(),
-    firstName: z.string().nullable(),
-    lastName: z.string().nullable(),
-    email: z.string().nullable(),
-    image: z.string().nullable(),
-  }).nullable(),
-  project: z.object({ key: z.string().nullable() }).nullable(),
-}).nullable();
+const ticketRelationRelatedTicketSchema = z
+  .object({
+    id: z.number().int(),
+    title: z.string(),
+    ticketNumber: z.number().int().nullable(),
+    status: z.string().nullable(),
+    priority: z.string().nullable(),
+    type: z.string().nullable(),
+    points: z.number().nullable(),
+    assigneeMembershipId: z.number().int().nullable(),
+    projectId: z.number().int().nullable(),
+    assignee: z
+      .object({
+        id: z.string(),
+        name: z.string().nullable(),
+        firstName: z.string().nullable(),
+        lastName: z.string().nullable(),
+        email: z.string().nullable(),
+        image: z.string().nullable(),
+      })
+      .nullable(),
+    project: z.object({ key: z.string().nullable() }).nullable(),
+  })
+  .nullable();
 
 const ticketRelationSchema = z.object({
   id: z.number().int(),
@@ -380,14 +468,16 @@ const ticketLabelSchema = z.object({
 
 export const ticketLabelListContract = z.array(ticketLabelSchema);
 
-const allWorkAssigneeSchema = z.object({
-  id: z.string(),
-  name: z.string().nullable(),
-  firstName: z.string().nullable(),
-  lastName: z.string().nullable(),
-  email: z.string().nullable(),
-  image: z.string().nullable(),
-}).nullable();
+const allWorkAssigneeSchema = z
+  .object({
+    id: z.string(),
+    name: z.string().nullable(),
+    firstName: z.string().nullable(),
+    lastName: z.string().nullable(),
+    email: z.string().nullable(),
+    image: z.string().nullable(),
+  })
+  .nullable();
 
 const allWorkItemSchema = z.object({
   id: z.number().int(),
@@ -411,11 +501,16 @@ const allWorkItemSchema = z.object({
   projectKey: z.string().nullable(),
   projectName: z.string().nullable(),
   assignee: allWorkAssigneeSchema,
-  labels: z.array(z.object({
-    id: z.number().int(),
-    name: z.string(),
-    color: z.string().nullable().transform((v) => v ?? ""),
-  })),
+  labels: z.array(
+    z.object({
+      id: z.number().int(),
+      name: z.string(),
+      color: z
+        .string()
+        .nullable()
+        .transform((v) => v ?? ""),
+    }),
+  ),
 });
 
 export const allWorkPageContract = z.object({

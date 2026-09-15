@@ -259,3 +259,24 @@ it.each(["unmount", "scope-switch"])("notifies the original scope after sender %
   expect(nextOrgPeer.client.getQueryState(queryKey)?.isInvalidated).toBe(false);
   expect(TabChannel.sent).toEqual(["build:changed"]);
 });
+
+it("a private draft autosave does not make every other tab refetch the Build cache", async () => {
+  const tabA = connect();
+  const tabB = connect();
+  const queryKey = buildWorkQueryKeys.projects.ticket(42);
+  tabB.client.setQueryData(queryKey, "Before");
+  function Wrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={tabA.client}>{children}</QueryClientProvider>;
+  }
+  const draft = renderHook(() => useAuthorizedMutation("build:tickets:view", {
+    meta: { buildCacheSync: false },
+    mutationKey: ["projects", "comment-drafts", "upsert"],
+    mutationFn: async () => "saved",
+  }), { wrapper: Wrapper });
+  cleanups.push(draft.unmount);
+
+  await act(async () => { await draft.result.current.mutateAsync(); });
+
+  expect(TabChannel.sent).toEqual([]);
+  expect(tabB.client.getQueryState(queryKey)?.isInvalidated).toBe(false);
+});

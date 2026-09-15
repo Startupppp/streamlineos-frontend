@@ -1,19 +1,4 @@
-import { isApiError } from "@/lib/api-envelope";
-
-/**
- * With no `throwOnError`, a failed read reaches the screen as `data === undefined`,
- * which every surface already spells `?? 0` or `?? []`. `/hr/comp-off` answered a
- * 500 with "0.0 days earned" — a number the user has no way to distrust. A read
- * that produced nothing must therefore reach the route error boundary rather than
- * be rendered as an absence.
- *
- * Four failures are excluded, because each already has a surface of its own and
- * an error card would only race it:
- *   · a query holding data — a failed background refresh keeps the working screen
- *   · `ABORTED` — a navigation cancelling its own request is not a failure
- *   · 401 — `authedFetch` is already signing the session out
- *   · a suspended-membership 403 — the client is already leaving for /access-suspended
- */
+import { getRetryAfterSeconds, isApiError } from "@/lib/api-envelope";
 
 const ORGANIZATION_ACCESS_ERROR_CODES = new Set([
   "ORG_MEMBERSHIP_INACTIVE",
@@ -37,14 +22,28 @@ export function readErrorReachesBoundary(
   return true;
 }
 
-
 export const INLINE_READ_ERROR = { throwOnError: false } as const;
 
 export function isTransientNetworkError(error: unknown): boolean {
-  if (error instanceof Error && error.name === "AccessUnavailableError") return true;
+  if (error instanceof Error && error.name === "AccessUnavailableError")
+    return true;
   if (!isApiError(error)) return false;
   if (error.code === "NETWORK_ERROR" || error.code === "TIMEOUT") return true;
   if (error.status === 502 || error.status === 503 || error.status === 504)
     return true;
   return false;
+}
+
+const DEFAULT_BASE_MS = 1_000;
+const DEFAULT_CEILING_MS = 30_000;
+const RETRY_AFTER_CEILING_MS = 60_000;
+
+export function queryRetryDelay(failureCount: number, error: unknown): number {
+  const retryAfter = getRetryAfterSeconds(error);
+  if (retryAfter !== undefined)
+    return Math.min(
+      RETRY_AFTER_CEILING_MS,
+      Math.max(DEFAULT_BASE_MS, retryAfter * 1_000),
+    );
+  return Math.min(DEFAULT_CEILING_MS, DEFAULT_BASE_MS * 2 ** failureCount);
 }

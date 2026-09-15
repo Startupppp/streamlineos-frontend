@@ -32,7 +32,18 @@ function openBuildCacheChannel(channelName: string): BroadcastChannel | undefine
   }
 }
 
-export function publishBuildCacheChange(client: QueryClient, scope: string, permission: unknown): void {
+interface BuildCacheSyncMeta {
+  permission?: unknown;
+  buildCacheSync?: boolean;
+}
+
+export function publishBuildCacheChange(
+  client: QueryClient,
+  scope: string,
+  meta: BuildCacheSyncMeta | undefined,
+): void {
+  if (meta?.buildCacheSync === false) return;
+  const permission = meta?.permission;
   if (typeof permission !== "string" || !permission.startsWith("build:")) return;
   const channelName = buildCacheChannelName(scope);
   if (!channelName) return;

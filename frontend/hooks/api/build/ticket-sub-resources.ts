@@ -159,7 +159,8 @@ export function useAddComment(
       options?.onError?.(error, variables, context, mutFnCtx);
     },
     onSettled: (data, error, variables, context, mutFnCtx) => {
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId) });
+      if (error)
+        queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId) });
       queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.ticketActivity.list(variables.ticketId) });
       options?.onSettled?.(data, error, variables, context, mutFnCtx);
     },

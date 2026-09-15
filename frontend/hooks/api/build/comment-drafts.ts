@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -61,11 +61,22 @@ export function useMyCommentDrafts() {
 export function useUpsertCommentDraft() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:tickets:view", {
+    meta: { buildCacheSync: false },
     mutationKey: ["projects", "comment-drafts", "upsert"],
     mutationFn: ({ ticketId, body }: { ticketId: number; body: string }) =>
       apiClient.put<CommentDraft>(`/build/comment-drafts/tickets/${ticketId}`, { body }, undefined, commentDraftContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
+    onSuccess: (draft) => {
+      qc.setQueryData<CommentDraft[]>(
+        buildWorkQueryKeys.projects.commentDrafts.mine(),
+        (current) => {
+          if (!current) return current;
+          const index = current.findIndex((d) => d.ticketId === draft.ticketId);
+          if (index === -1) return [draft, ...current];
+          const next = [...current];
+          next[index] = draft;
+          return next;
+        },
+      );
     },
   });
 }
@@ -73,6 +84,7 @@ export function useUpsertCommentDraft() {
 export function useDeleteCommentDraft() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:tickets:view", {
+    meta: { buildCacheSync: false },
     mutationKey: ["projects", "comment-drafts", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/${id}`, undefined, undefined, commentDraftDeletedContract),
@@ -85,6 +97,7 @@ export function useDeleteCommentDraft() {
 export function useDeleteCommentDraftByTicket() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:tickets:view", {
+    meta: { buildCacheSync: false },
     mutationKey: ["projects", "comment-drafts", "delete-by-ticket"],
     mutationFn: (ticketId: number) =>
       apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/tickets/${ticketId}`, undefined, undefined, commentDraftDeletedContract),
@@ -97,6 +110,7 @@ export function useDeleteCommentDraftByTicket() {
 export function useDeleteAllCommentDrafts() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:tickets:view", {
+    meta: { buildCacheSync: false },
     mutationKey: ["projects", "comment-drafts", "delete-all"],
     mutationFn: () =>
       apiClient.delete<{ deleted: boolean }>("/build/comment-drafts/mine", undefined, undefined, commentDraftDeletedContract),

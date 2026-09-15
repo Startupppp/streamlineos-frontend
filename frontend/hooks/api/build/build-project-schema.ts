@@ -155,7 +155,10 @@ const projectCustomStateSchema = z.object({
   name: z.string(),
   color: z.string().nullable(),
   order: z.number(),
-  type: z.enum(["unstarted", "started", "completed", "cancelled"]).optional(),
+  type: z
+    .enum(["backlog", "unstarted", "started", "completed", "cancelled"])
+    .nullable()
+    .optional(),
   wipLimit: z.number().nullable().optional(),
 });
 
