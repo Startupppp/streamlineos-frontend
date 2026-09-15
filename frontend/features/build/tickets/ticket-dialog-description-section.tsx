@@ -8,8 +8,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CreateTicketAiFieldTrigger } from "@/features/build/ai/create-ticket-ai-menu";
-import { AiInlinePreview, type AiInlineSession } from "@/components/ai";
+import { AiFieldTrigger, AiInlinePreview, type AiInlineSession } from "@/components/ai";
 import { AttachmentPreview } from "./ticket-attachment-preview";
 import { TicketRelatedLinksEditor, type RelatedLinkDraft } from "./ticket-related-links-editor";
 import type { CreateTicketFormValues } from "./use-create-ticket-form";
@@ -92,7 +91,7 @@ export function TicketDialogDescriptionSection({
               <div className="relative min-h-[120px] cursor-text">
                 {canUseAI ? (
                   <div className="absolute right-0 top-0 z-10">
-                    <CreateTicketAiFieldTrigger
+                    <AiFieldTrigger
                       {...descriptionTriggerProps}
                     />
                   </div>

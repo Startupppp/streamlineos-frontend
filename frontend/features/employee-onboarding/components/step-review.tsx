@@ -19,7 +19,6 @@ import { CompletionCelebration } from "@/components/celebration/completion-celeb
 import { Button } from "@/components/ui/button";
 import { useOnboardingRequirements } from "../hooks/use-onboarding-requirements";
 import { buildBankDetailsSchema } from "../lib/bank-details-schema";
-import { countryNameToCode } from "../lib/onboarding-requirements-schema";
 import { DATA_STEP_IDS } from "../lib/constants";
 import type { WizardDraft } from "../lib/wizard-draft-schema";
 import {
@@ -66,6 +65,7 @@ const CELEBRATION_HIGHLIGHTS = [
 type StepReviewProps = {
   completedSteps: ReadonlySet<string>;
   draft: WizardDraft;
+  countryCode: string;
   onBack: () => void;
   onEditPersonal: () => void;
   onEditBank: () => void;
@@ -112,6 +112,7 @@ function maskSensitiveValue(value: string): string {
 export function StepReview({
   completedSteps,
   draft,
+  countryCode,
   onBack,
   onEditPersonal,
   onEditBank,
@@ -119,8 +120,6 @@ export function StepReview({
 }: StepReviewProps) {
   const { data: session } = useSession();
   const refreshSessionClaims = useSessionClaimsRefresh();
-  const countryCode =
-    draft.bank.countryCode || countryNameToCode(draft.personal.addressCountry);
   const { data: requirements } = useOnboardingRequirements(countryCode);
   const { mutateAsync: submitOnboarding } = useSubmitOnboardingMutation();
   const [showCelebration, setShowCelebration] = useState(false);

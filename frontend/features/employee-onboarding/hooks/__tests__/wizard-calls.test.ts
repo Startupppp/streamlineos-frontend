@@ -177,6 +177,102 @@ describe("useOnboardingWizard — call count guarantees", () => {
     expect(mockPatchSession).not.toHaveBeenCalled();
     expect(saveOnboardingDraft).toHaveBeenCalled();
   });
+
+  it("moving between already-reachable steps costs no request at all", () => {
+    mockUseOnboardingSessionQuery.mockReturnValue(
+      makeSession("finish", ["personal", "bank"]),
+    );
+
+    const { useOnboardingWizard } = jest.requireActual<
+      typeof import("@/features/employee-onboarding/hooks/use-onboarding-wizard")
+    >("@/features/employee-onboarding/hooks/use-onboarding-wizard");
+
+    const { result } = renderHook(() => useOnboardingWizard());
+
+    act(() => {
+      result.current.handleGoToPersonal();
+    });
+    expect(result.current.activeTab).toBe("personal");
+
+    act(() => {
+      result.current.handleGoToBank();
+    });
+    expect(result.current.activeTab).toBe("bank");
+
+    expect(mockPatchSession).not.toHaveBeenCalled();
+    expect(mockSavePersonal).not.toHaveBeenCalled();
+    expect(mockSaveBank).not.toHaveBeenCalled();
+  });
+
+  it("re-selecting the step already on screen is a no-op, not another render cycle", () => {
+    mockUseOnboardingSessionQuery.mockReturnValue(
+      makeSession("bank", ["personal"]),
+    );
+
+    const { useOnboardingWizard } = jest.requireActual<
+      typeof import("@/features/employee-onboarding/hooks/use-onboarding-wizard")
+    >("@/features/employee-onboarding/hooks/use-onboarding-wizard");
+
+    const { result } = renderHook(() => useOnboardingWizard());
+
+    act(() => {
+      result.current.handleGoToBank();
+    });
+
+    expect(result.current.activeTab).toBe("bank");
+    expect(mockPatchSession).not.toHaveBeenCalled();
+  });
+});
+
+describe("useOnboardingWizard — one country code feeds both bank and review", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockPatchSession.mockResolvedValue({ currentStep: "bank", completedSteps: [], data: {} });
+    mockUsePatchOnboardingSessionMutation.mockReturnValue({ mutateAsync: mockPatchSession });
+    mockUseOnboardingSessionQuery.mockReturnValue(makeSession("bank", ["personal"]));
+    mockUsePersonalDetailsQuery.mockReturnValue({
+      data: undefined, error: null, isLoading: false, refetch: jest.fn(),
+    });
+    mockUseBankDetailsQuery.mockReturnValue({
+      data: undefined, error: null, isLoading: false, refetch: jest.fn(),
+    });
+  });
+
+  it("prefers the saved bank country so the two steps cannot request different requirements", () => {
+    const { loadOnboardingDraft } = jest.requireMock<
+      typeof import("@/features/employee-onboarding/lib/draft-storage")
+    >("@/features/employee-onboarding/lib/draft-storage");
+    (loadOnboardingDraft as jest.Mock).mockReturnValue({
+      personal: { ...PERSONAL_DRAFT, addressCountry: "India" },
+      bank: { ...BANK_DRAFT, countryCode: "US" },
+    });
+
+    const { useOnboardingWizard } = jest.requireActual<
+      typeof import("@/features/employee-onboarding/hooks/use-onboarding-wizard")
+    >("@/features/employee-onboarding/hooks/use-onboarding-wizard");
+
+    const { result } = renderHook(() => useOnboardingWizard());
+
+    expect(result.current.countryCode).toBe("US");
+  });
+
+  it("falls back to the address country when no bank country is stored yet", () => {
+    const { loadOnboardingDraft } = jest.requireMock<
+      typeof import("@/features/employee-onboarding/lib/draft-storage")
+    >("@/features/employee-onboarding/lib/draft-storage");
+    (loadOnboardingDraft as jest.Mock).mockReturnValue({
+      personal: { ...PERSONAL_DRAFT, addressCountry: "India" },
+      bank: { ...BANK_DRAFT, countryCode: "" },
+    });
+
+    const { useOnboardingWizard } = jest.requireActual<
+      typeof import("@/features/employee-onboarding/hooks/use-onboarding-wizard")
+    >("@/features/employee-onboarding/hooks/use-onboarding-wizard");
+
+    const { result } = renderHook(() => useOnboardingWizard());
+
+    expect(result.current.countryCode).toBe("IN");
+  });
 });
 
 describe("useOnboardingWizard — reload survival via localStorage draft", () => {

@@ -9,8 +9,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { CreateTicketAiFieldTrigger } from "@/features/build/ai/create-ticket-ai-menu";
-import { AiInlinePreview, type AiInlineSession } from "@/components/ai";
+import { AiFieldTrigger, AiInlinePreview, type AiInlineSession } from "@/components/ai";
 import type { TicketSearchResult } from "@/types/projects";
 import type { CreateTicketFormValues } from "./use-create-ticket-form";
 
@@ -63,7 +62,7 @@ export function TicketDialogTitleField({
                 />
               </FormControl>
               {canUseAI ? (
-                <CreateTicketAiFieldTrigger
+                <AiFieldTrigger
                   {...titleTriggerProps}
                   className="mt-0.5"
                 />

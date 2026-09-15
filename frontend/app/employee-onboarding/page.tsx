@@ -4,6 +4,8 @@ export const dynamic = "force-dynamic";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
+import { cn } from "@/lib/utils";
+import { statusToneClasses } from "@/lib/design-tokens";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { EmployeeOnboardingShell } from "@/features/employee-onboarding/components/employee-onboarding-shell";
 import { StepPersonal } from "@/features/employee-onboarding/components/step-personal";
@@ -15,6 +17,8 @@ import {
   STEP_TITLES,
 } from "@/features/employee-onboarding/lib/constants";
 import { useOnboardingWizard } from "@/features/employee-onboarding/hooks/use-onboarding-wizard";
+
+const WARNING_TONE = statusToneClasses("warning");
 
 export default function EmployeeOnboardingPage() {
   const wizard = useOnboardingWizard();
@@ -72,6 +76,21 @@ export default function EmployeeOnboardingPage() {
         {`Step ${wizard.currentStepIndex + 1} of ${ONBOARDING_SEQUENCE.length}: ${STEP_TITLES[wizard.activeTab]}`}
       </div>
 
+      {wizard.prefillError ? (
+        <p
+          role="alert"
+          className={cn(
+            "mb-4 rounded-lg border px-3 py-2 text-label",
+            WARNING_TONE.surface,
+            WARNING_TONE.ink,
+            WARNING_TONE.rule,
+          )}
+        >
+          We couldn&apos;t load your saved details, so the fields below may be
+          blank. You can re-enter them and continue.
+        </p>
+      ) : null}
+
       {wizard.activeTab === STEP_IDS.PERSONAL ? (
         <StepPersonal
           onComplete={wizard.handlePersonalComplete}
@@ -96,6 +115,7 @@ export default function EmployeeOnboardingPage() {
         <StepReview
           completedSteps={wizard.completedSteps}
           draft={wizard.wizardDraft}
+          countryCode={wizard.countryCode}
           onBack={wizard.handleGoToBank}
           onEditPersonal={wizard.handleGoToPersonal}
           onEditBank={wizard.handleGoToBank}

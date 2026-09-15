@@ -92,6 +92,7 @@ function personalDraftToPayload(personal: PersonalDraft): PersonalDetailsPayload
 export interface OnboardingWizardState {
   isLoading: boolean;
   loadError: unknown;
+  prefillError: unknown;
   refetchAll: () => void;
   activeTab: StepId;
   currentStepIndex: number;
@@ -286,20 +287,21 @@ export function useOnboardingWizard(): OnboardingWizardState {
   );
 
   const countryCode = useMemo(
-    () => countryNameToCode(wizardDraft.personal.addressCountry),
-    [wizardDraft.personal.addressCountry],
+    () =>
+      wizardDraft.bank.countryCode ||
+      countryNameToCode(wizardDraft.personal.addressCountry),
+    [wizardDraft.bank.countryCode, wizardDraft.personal.addressCountry],
   );
 
   const currentStepIndex = stepIndexOf(activeTab);
 
   const navigateTo = useCallback(
-    async (id: StepId) => {
-      const persisted = await flushPersist(draftRef.current, { currentStep: id });
-      if (!persisted) return;
+    (id: StepId) => {
+      if (id === activeTab) return;
       setDirection(stepIndexOf(id) >= stepIndexOf(activeTab) ? 1 : -1);
       setLocalStep(id);
     },
-    [activeTab, flushPersist],
+    [activeTab],
   );
 
   const handlePersonalDraftChange = useCallback(
@@ -425,11 +427,11 @@ export function useOnboardingWizard(): OnboardingWizardState {
   }, [flushPersist, localCompleted, sessionCompleted, userId, orgId]);
 
   const handleGoToPersonal = useCallback(
-    () => void navigateTo(STEP_IDS.PERSONAL),
+    () => navigateTo(STEP_IDS.PERSONAL),
     [navigateTo],
   );
   const handleGoToBank = useCallback(
-    () => void navigateTo(STEP_IDS.BANK),
+    () => navigateTo(STEP_IDS.BANK),
     [navigateTo],
   );
 
@@ -447,7 +449,7 @@ export function useOnboardingWizard(): OnboardingWizardState {
     (index: number) => {
       const stepId = ONBOARDING_SEQUENCE[index];
       if (!stepId || !reachableSteps.has(stepId)) return;
-      void navigateTo(stepId);
+      navigateTo(stepId);
     },
     [navigateTo, reachableSteps],
   );
@@ -463,7 +465,8 @@ export function useOnboardingWizard(): OnboardingWizardState {
 
   return {
     isLoading: (sessionLoading && !session) || personalDetailsLoading || bankDetailsLoading,
-    loadError: sessionError ?? personalDetailsError ?? bankDetailsError,
+    loadError: sessionError,
+    prefillError: personalDetailsError ?? bankDetailsError,
     refetchAll,
     activeTab,
     currentStepIndex,

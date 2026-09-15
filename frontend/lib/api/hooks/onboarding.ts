@@ -112,7 +112,7 @@ export function useSubmitOnboardingMutation() {
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: platformCoreQueryKeys.onboardingFlow.all,
+        queryKey: platformCoreQueryKeys.onboardingFlow.session(),
       });
     },
   });
