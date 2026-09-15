@@ -319,8 +319,9 @@ function SuccessChecklistInner() {
   const onboardingCompleted = Boolean(org?.onboardingCompletedAt);
   const shouldTrackProgress =
     canSetUpWorkspace && !storedDismissed && onboardingCompleted;
+  const [progressRequested, setProgressRequested] = useState(false);
   const { completed, doneCount, isLoading } =
-    useWorkspaceChecklistProgress(shouldTrackProgress);
+    useWorkspaceChecklistProgress(shouldTrackProgress && progressRequested);
   const [collapsedChoice, setCollapsedChoice] = useState<boolean | null>(null);
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
   const collapsed = collapsedChoice ?? true;
@@ -353,7 +354,11 @@ function SuccessChecklistInner() {
   }, [orgId]);
 
   const handleToggleCollapse = useCallback(() => {
-    setCollapsedChoice((prev) => !(prev ?? true));
+    setCollapsedChoice((prev) => {
+      const next = !(prev ?? true);
+      if (!next) setProgressRequested(true);
+      return next;
+    });
   }, []);
 
   if (!isActive) return null;
@@ -378,7 +383,9 @@ function SuccessChecklistInner() {
           className="relative size-8 rounded-lg flex items-center justify-center text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <CheckCircle2 className="h-4 w-4" />
-          <ProgressBadge doneCount={doneCount} total={TOTAL} />
+          {progressRequested && !isLoading ? (
+            <ProgressBadge doneCount={doneCount} total={TOTAL} />
+          ) : null}
         </button>
         <AnimatePresence>
           {!collapsed ? (
@@ -431,7 +438,9 @@ function SuccessChecklistInner() {
                 >
                   <CheckCircle2 className="h-4 w-4" />
                 </motion.span>
-                <ProgressBadge doneCount={doneCount} total={TOTAL} compact />
+                {progressRequested && !isLoading ? (
+                  <ProgressBadge doneCount={doneCount} total={TOTAL} compact />
+                ) : null}
               </motion.button>
             </motion.div>
           ) : (

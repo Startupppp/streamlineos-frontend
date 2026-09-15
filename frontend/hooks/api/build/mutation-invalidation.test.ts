@@ -4,14 +4,14 @@ import { renderHook, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import type { ReactNode } from "react";
-import { useCreateTicket, useDeleteTicket, useBulkUpdateTickets } from "./ticket-mutations";
+import { useCreateTicket, useDeleteTicket, useBulkUpdateTickets, useUpdateTicket } from "./ticket-mutations";
 import { useUpdateSprint } from "./sprints";
 import { queryKeys } from "@/lib/query-keys";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
     post: jest.fn().mockResolvedValue({ id: 99, title: "New ticket" }),
-    patch: jest.fn().mockResolvedValue({ success: true }),
+    patch: jest.fn().mockResolvedValue({ updated: true, updatedAt: "2026-09-15T10:01:00.000Z" }),
     delete: jest.fn().mockResolvedValue({ success: true }),
   },
 }));
@@ -145,6 +145,61 @@ describe("useDeleteTicket — invalidation contract", () => {
     expect(invalidatedKeys).toContain(
       JSON.stringify(queryKeys.dashboard.myIssues()),
     );
+  });
+});
+
+describe("useUpdateTicket — invalidation contract", () => {
+  let client: QueryClient;
+  let invalidateSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    client = makeClient();
+    invalidateSpy = jest.spyOn(client, "invalidateQueries");
+  });
+
+  it("keeps the optimistic ticket cache and refreshes activity without a detail refetch", async () => {
+    client.setQueryData(queryKeys.projects.ticket(9), {
+      id: 9,
+      title: "Before",
+      updatedAt: "2026-09-15T10:00:00.000Z",
+    });
+    const { result } = renderHook(() => useUpdateTicket(42), {
+      wrapper: wrap(client),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({ ticketId: 9, title: "After" });
+    });
+
+    expect(client.getQueryData(queryKeys.projects.ticket(9))).toMatchObject({
+      title: "After",
+      updatedAt: "2026-09-15T10:01:00.000Z",
+    });
+    expect(invalidateSpy).not.toHaveBeenCalledWith(
+      expect.objectContaining({ queryKey: queryKeys.projects.ticket(9) }),
+    );
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: queryKeys.ticketActivity.list(9),
+      exact: true,
+    });
+  });
+
+  it("refreshes planning aggregates only for planning field changes", async () => {
+    const { result } = renderHook(() => useUpdateTicket(42), {
+      wrapper: wrap(client),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({ ticketId: 9, sprintId: 3 });
+    });
+
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: queryKeys.projects.sprints(42),
+    });
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: queryKeys.projects.columnCounts(42),
+    });
   });
 });
 

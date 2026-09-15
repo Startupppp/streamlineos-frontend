@@ -176,6 +176,24 @@ describe("list filter params, driven by a spec", () => {
     expect(mockReplace).toHaveBeenCalledTimes(1);
   });
 
+  it("synchronizes the input when navigation clears the search parameter", () => {
+    jest.useFakeTimers();
+    const { result, rerender } = renderWith("search=annual&runState=DRAFT");
+
+    expect(result.current.localSearch).toBe("annual");
+
+    mockSearchParams = new URLSearchParams("runState=DRAFT");
+    rerender();
+
+    expect(result.current.localSearch).toBe("");
+
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
   it("reads the current page from the parameter this spec declared", () => {
     const { result } = renderWith("offset=3");
 

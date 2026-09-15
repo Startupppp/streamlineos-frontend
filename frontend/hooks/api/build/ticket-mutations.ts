@@ -14,7 +14,7 @@ import type {
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
-import { addTicketToCollections, invalidateBuildViews, patchTicketCollections, removeTicketFromCollections, restoreTicketCollections, rollbackTicketFields, ticketRollback, type TicketSnapshots } from "./ticket-cache";
+import { addTicketToCollections, invalidateBuildViews, invalidateTicketUpdateViews, patchTicketCollections, removeTicketFromCollections, restoreTicketCollections, rollbackTicketFields, ticketRollback, type TicketSnapshots } from "./ticket-cache";
 
 
 const ticketRowLazy = lazyContract(() =>
@@ -261,8 +261,32 @@ export function useUpdateTicket(
       }
       options?.onError?.(error, variables, context, mutFnCtx);
     },
+    onSuccess: (data, variables, context, mutFnCtx) => {
+      const applyServerVersion = (ticket: Ticket) =>
+        ticket.id === variables.ticketId
+          ? { ...ticket, updatedAt: data.updatedAt }
+          : ticket;
+      patchTicketCollections(queryClient, projectId, applyServerVersion);
+      queryClient.setQueryData<Ticket | null>(
+        buildWorkQueryKeys.projects.ticket(variables.ticketId),
+        (current) => (current ? applyServerVersion(current) : current),
+      );
+      queryClient.setQueryData<ProjectWithDetails | null>(
+        buildWorkQueryKeys.projects.detail(projectId),
+        (current) =>
+          current?.tickets
+            ? { ...current, tickets: current.tickets.map(applyServerVersion) }
+            : current,
+      );
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
+    },
     onSettled: (data, error, variables, context, mutFnCtx) => {
-      invalidateBuildViews(queryClient, projectId, [variables.ticketId], variables.status !== undefined || variables.sprintId !== undefined || variables.points !== undefined || variables.startDate !== undefined || variables.dueDate !== undefined);
+      invalidateTicketUpdateViews(
+        queryClient,
+        projectId,
+        variables.ticketId,
+        variables,
+      );
       options?.onSettled?.(data, error, variables, context, mutFnCtx);
     },
   });

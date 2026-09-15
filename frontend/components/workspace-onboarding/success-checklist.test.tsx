@@ -19,11 +19,11 @@ jest.mock("@/hooks/api/organization", () => ({
 }));
 
 jest.mock("@/hooks/common/use-workspace-checklist-progress", () => ({
-  useWorkspaceChecklistProgress: () => ({
+  useWorkspaceChecklistProgress: jest.fn((_enabled?: boolean) => ({
     completed: new Set<string>(),
     doneCount: 1,
     isLoading: false,
-  }),
+  })),
 }));
 
 jest.mock("framer-motion", () => {
@@ -72,6 +72,11 @@ jest.mock("framer-motion", () => {
 });
 
 import { SuccessChecklist } from "./success-checklist";
+import { useWorkspaceChecklistProgress } from "@/hooks/common/use-workspace-checklist-progress";
+
+const mockUseWorkspaceChecklistProgress = jest.mocked(
+  useWorkspaceChecklistProgress,
+);
 
 function mountMobileHeaderSlot(): void {
   const slot = document.createElement("div");
@@ -89,6 +94,7 @@ let restoreViewport: () => void = () => {};
 
 beforeEach(() => {
   localStorage.clear();
+  mockUseWorkspaceChecklistProgress.mockClear();
   mountMobileHeaderSlot();
 });
 
@@ -115,6 +121,7 @@ describe("SuccessChecklist below md", () => {
       name: "Open getting started checklist",
     });
     expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(mockUseWorkspaceChecklistProgress).toHaveBeenLastCalledWith(false);
   });
 
   it("opens on demand and closes again from the panel's own control", async () => {
@@ -125,6 +132,7 @@ describe("SuccessChecklist below md", () => {
         name: "Open getting started checklist",
       }),
     );
+    expect(mockUseWorkspaceChecklistProgress).toHaveBeenLastCalledWith(true);
     const scope = within(mobileChrome());
     expect(scope.getByText("Getting Started")).toBeInTheDocument();
     const collapseControls = scope.getAllByRole("button", {
@@ -140,17 +148,22 @@ describe("SuccessChecklist at md and above", () => {
     restoreViewport = setViewport(1280);
   });
 
-  it("still opens its panel by default, where nothing of the page sits under it", () => {
+  it("starts collapsed without loading progress", () => {
     render(<SuccessChecklist />);
-    expect(screen.getAllByText("Getting Started").length).toBeGreaterThan(0);
-    expect(
-      screen.getAllByText("Invite your first teammate").length,
-    ).toBeGreaterThan(0);
+    expect(screen.queryAllByText("Getting Started")).toEqual([]);
+    expect(mockUseWorkspaceChecklistProgress).toHaveBeenLastCalledWith(false);
   });
 
-  it("can be collapsed to the progress FAB", async () => {
+  it("loads progress on demand and can be collapsed to the progress FAB", async () => {
     render(<SuccessChecklist />);
     const user = userEvent.setup();
+    await user.click(
+      screen.getAllByRole("button", {
+        name: "Open getting started checklist",
+      })[0],
+    );
+    expect(screen.getAllByText("Getting Started").length).toBeGreaterThan(0);
+    expect(mockUseWorkspaceChecklistProgress).toHaveBeenLastCalledWith(true);
     await user.click(screen.getAllByRole("button", { name: "Collapse checklist" })[0]);
     expect(screen.queryAllByText("Getting Started")).toEqual([]);
   });

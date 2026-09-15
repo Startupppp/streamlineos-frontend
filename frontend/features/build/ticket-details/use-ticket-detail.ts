@@ -11,7 +11,6 @@ import {
   useSprints,
   useSubtasks,
 } from "@/hooks/api";
-import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -44,6 +43,8 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   const [syncedTitleId, setSyncedTitleId] = useState<number | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedAtRef = useRef<string | undefined>(undefined);
+  const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const saveSequenceRef = useRef(0);
 
   const {
     data: ticket,
@@ -93,25 +94,11 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     }));
   }, [projectData]);
 
-  const invalidateAll = useCallback(() => {
-    queryClient.invalidateQueries({
-      queryKey: buildWorkQueryKeys.projects.detail(projectId),
-      refetchType: "none",
-    });
-    if (ticketId !== null) {
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(ticketId) });
-      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId) });
-    }
-  }, [queryClient, projectId, ticketId]);
-
   const updateTicketMutation = useUpdateTicket(projectId, {
     onSuccess: (data) => {
       lastSavedAtRef.current = data.updatedAt;
-      setSaving(false);
-      invalidateAll();
     },
     onError: (error) => {
-      setSaving(false);
       if (isApiError(error) && getApiErrorCode(error) === "PROJECTS_TICKET_CONFLICT") {
         toast.warning("This ticket was changed elsewhere — refreshed with the latest version.");
         if (ticketId !== null) {
@@ -126,7 +113,6 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   const deleteTicketMutation = useDeleteTicket(projectId, {
     onSuccess: () => {
       toast.success("Ticket deleted");
-      invalidateAll();
       onDeleted?.();
     },
     onError: (error) => toast.error(getErrorMessage(error)),
@@ -138,13 +124,36 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     }
   }, [ticket?.updatedAt]);
 
-  const autoSave = useCallback(
+  const enqueueSave = useCallback(
     (field: Record<string, unknown>) => {
       if (!ticketId) return;
+      const sequence = ++saveSequenceRef.current;
       setSaving(true);
-      updateTicketMutation.mutate({ ticketId, expectedUpdatedAt: lastSavedAtRef.current, ...field });
+      const task = saveQueueRef.current.then(() =>
+        updateTicketMutation.mutateAsync({
+          ticketId,
+          expectedUpdatedAt: lastSavedAtRef.current,
+          ...field,
+        }),
+      );
+      saveQueueRef.current = task.then(
+        () => undefined,
+        () => undefined,
+      );
+      void task
+        .finally(() => {
+          if (sequence === saveSequenceRef.current) setSaving(false);
+        })
+        .catch(() => undefined);
     },
     [ticketId, updateTicketMutation],
+  );
+
+  const autoSave = useCallback(
+    (field: Record<string, unknown>) => {
+      enqueueSave(field);
+    },
+    [enqueueSave],
   );
 
   const debouncedSave = useCallback(
@@ -152,11 +161,10 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       setSaving(true);
       debounceTimerRef.current = setTimeout(() => {
-        if (!ticketId) return;
-        updateTicketMutation.mutate({ ticketId, expectedUpdatedAt: lastSavedAtRef.current, ...field });
+        enqueueSave(field);
       }, 500);
     },
-    [ticketId, updateTicketMutation],
+    [enqueueSave],
   );
 
   if (ticket && ticket.id !== syncedTitleId) {
