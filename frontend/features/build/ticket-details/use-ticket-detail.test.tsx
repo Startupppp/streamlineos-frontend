@@ -33,6 +33,10 @@ jest.mock("sonner", () => ({
   toast: { success: jest.fn(), warning: jest.fn(), error: jest.fn() },
 }));
 
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => true,
+}));
+
 function deferred<T>() {
   let resolve!: (value: T) => void;
   let reject!: (reason?: unknown) => void;

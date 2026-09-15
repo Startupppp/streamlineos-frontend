@@ -27,8 +27,8 @@ export function useTimesheetHolidays(startDate: string, endDate: string, enabled
   const canView = useCan("timesheets:entries:view");
   return useQuery({
     queryKey: usersAndCommerceQueryKeys.timesheets.holidays(startDate, endDate),
-    queryFn: () =>
-      apiClient.get<HolidaysResponse>("/timesheets/calendar/holidays", { startDate, endDate }),
+    queryFn: ({ signal }) =>
+      apiClient.get<HolidaysResponse>("/timesheets/calendar/holidays", { startDate, endDate }, signal),
     /** Holidays for a past week never change; a long stale time is free. */
     staleTime: 10 * 60_000,
     placeholderData: (prev) => prev,

@@ -10,6 +10,9 @@ const mockRefreshSessionClaims = jest.fn();
 const mockClearAll = jest.fn();
 const mockToastError = jest.fn();
 const mockLocationReplace = jest.fn();
+const mockUseOrgSetupSessionQuery = jest.fn((_enabled: boolean) => ({
+  data: undefined,
+}));
 
 let capturedWelcomeProps: Record<string, unknown> = {};
 
@@ -57,7 +60,9 @@ jest.mock("@/hooks/common/use-confirmed-session-claims-refresh", () => ({
 
 jest.mock("@/lib/api/hooks/org", () => ({
   useSkipOrgSetupMutation: jest.fn(() => ({ mutateAsync: mockSkipOrgSetup })),
-  useOrgSetupSessionQuery: jest.fn(() => ({ data: undefined })),
+  useOrgSetupSessionQuery: jest.fn((enabled: boolean) =>
+    mockUseOrgSetupSessionQuery(enabled),
+  ),
 }));
 
 jest.mock("@/features/org-setup/lib/draft", () => ({
@@ -115,6 +120,7 @@ beforeEach(() => {
   mockClearAll.mockReset();
   mockToastError.mockReset();
   mockLocationReplace.mockReset();
+  mockUseOrgSetupSessionQuery.mockClear();
   capturedWelcomeProps = {};
 });
 
@@ -143,6 +149,12 @@ async function clickSkip() {
 }
 
 describe("OrgSetupPage — skipping the wizard releases the dashboard only on a confirmed session", () => {
+  it("does not request the server draft before local progress is checked", async () => {
+    await renderWizard();
+
+    expect(mockUseOrgSetupSessionQuery.mock.calls[0]?.[0]).toBe(false);
+  });
+
   it("asks for the provisioned org, writes the gate cookie and navigates", async () => {
     mockRefreshSessionClaims.mockResolvedValue(NEW_ORG_SESSION);
     await renderWizard();

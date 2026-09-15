@@ -68,14 +68,17 @@ export function invalidateBackendJwtSession(
   sessionId: string,
 ): void {
   const prefix = `${userId}:${sessionId}:`;
-  backendJwtSessionGenerations.set(
-    prefix,
-    (backendJwtSessionGenerations.get(prefix) ?? 0) + 1,
+  const hasInflight = [...backendJwtInflight.keys()].some((key) =>
+    key.startsWith(prefix),
   );
+  if (hasInflight)
+    backendJwtSessionGenerations.set(
+      prefix,
+      (backendJwtSessionGenerations.get(prefix) ?? 0) + 1,
+    );
+  else backendJwtSessionGenerations.delete(prefix);
   for (const key of backendJwtStore.keys())
     if (key.startsWith(prefix)) backendJwtStore.delete(key);
-  for (const key of backendJwtInflight.keys())
-    if (key.startsWith(prefix)) backendJwtInflight.delete(key);
 }
 
 export function clearBackendJwtStoreForTesting(): void {
@@ -107,6 +110,8 @@ export async function exchangeSessionForBackendJwt(
   } finally {
     if (backendJwtInflight.get(cacheKey) === exchange)
       backendJwtInflight.delete(cacheKey);
+    if (![...backendJwtInflight.keys()].some((key) => key.startsWith(sessionKey)))
+      backendJwtSessionGenerations.delete(sessionKey);
   }
 }
 
@@ -199,6 +204,7 @@ interface SessionDataEntry {
 const sessionDataStore = new Map<string, SessionDataEntry>();
 const sessionDataInflight = new Map<string, Promise<SessionData | null>>();
 const sessionDataGenerations = new Map<string, number>();
+const sessionDataPendingCounts = new Map<string, number>();
 
 function evictExpiredSessionData(): void {
   const now = Date.now();
@@ -215,10 +221,15 @@ function sessionDataKey(
 
 export function invalidateSessionData(userId: string): void {
   const prefix = `${userId}:`;
-  sessionDataGenerations.set(
-    userId,
-    (sessionDataGenerations.get(userId) ?? 0) + 1,
+  const hasInflight = [...sessionDataInflight.keys()].some((key) =>
+    key.startsWith(prefix),
   );
+  if (hasInflight)
+    sessionDataGenerations.set(
+      userId,
+      (sessionDataGenerations.get(userId) ?? 0) + 1,
+    );
+  else sessionDataGenerations.delete(userId);
   for (const key of sessionDataStore.keys())
     if (key.startsWith(prefix)) sessionDataStore.delete(key);
   for (const key of sessionDataInflight.keys())
@@ -229,6 +240,7 @@ export function clearSessionDataStoreForTesting(): void {
   sessionDataStore.clear();
   sessionDataInflight.clear();
   sessionDataGenerations.clear();
+  sessionDataPendingCounts.clear();
 }
 
 export function primeSessionData(
@@ -261,12 +273,22 @@ async function fetchSessionDataWithCache(
       primeSessionData(userId, fresh, scopeOrgId);
     return fresh;
   });
+  sessionDataPendingCounts.set(
+    userId,
+    (sessionDataPendingCounts.get(userId) ?? 0) + 1,
+  );
   sessionDataInflight.set(key, request);
   try {
     return await request;
   } finally {
     if (sessionDataInflight.get(key) === request)
       sessionDataInflight.delete(key);
+    const remaining = (sessionDataPendingCounts.get(userId) ?? 1) - 1;
+    if (remaining > 0) sessionDataPendingCounts.set(userId, remaining);
+    else {
+      sessionDataPendingCounts.delete(userId);
+      sessionDataGenerations.delete(userId);
+    }
   }
 }
 

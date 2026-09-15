@@ -13,7 +13,7 @@ export function useSignEnvelopeCertificate(
 ) {
   return useGatedQuery("sign:certificate:download", {
     queryKey: growthAndSignQueryKeys.signEnvelopes.certificate(envelopeId ?? 0),
-    queryFn: () => apiClient.get<SignCertificateResponse>(`/sign/envelopes/${envelopeId}/certificate`),
+    queryFn: ({ signal }) => apiClient.get<SignCertificateResponse>(`/sign/envelopes/${envelopeId}/certificate`, undefined, signal),
     staleTime: 60_000,
     ...options,
     enabled: envelopeId !== undefined && (options?.enabled ?? true),

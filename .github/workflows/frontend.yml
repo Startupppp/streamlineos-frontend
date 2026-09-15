@@ -508,7 +508,7 @@ jobs:
 
       - name: Icon-only buttons carry an accessible name
         if: ${{ !cancelled() }}
-        run: pnpm run check:icon-labels:self-test && pnpm run check:icon-labels
+        run: pnpm run check:icon-labels:self-test && pnpm run check:icon-button-rule && pnpm run check:icon-labels
 
       - name: Client-page ratio stays within its ceiling
         if: ${{ !cancelled() }}

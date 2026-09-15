@@ -34,8 +34,8 @@ export function useOverduePeriods(query: OverdueQueryInput = {}) {
   };
   return useQuery({
     queryKey: usersAndCommerceQueryKeys.timesheets.periodsOverdue(params),
-    queryFn: () =>
-      apiClient.get<OverdueQueueResult>("/timesheets/periods/overdue", params),
+    queryFn: ({ signal }) =>
+      apiClient.get<OverdueQueueResult>("/timesheets/periods/overdue", params, signal),
     /**
      * A queue somebody is working through, not a live counter. The underlying
      * arithmetic only changes when a period is submitted or the policy is

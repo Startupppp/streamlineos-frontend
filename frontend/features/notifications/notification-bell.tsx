@@ -20,7 +20,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useUnreadNotificationCount } from "@/hooks/api/notifications";
-import { useNotificationEvents } from "./use-notification-events";
 
 const HOVER_CLOSE_DELAY_MS = 175;
 
@@ -65,7 +64,6 @@ export function NotificationBell() {
   const { iconRef: bellIconRef, hoverHandlers: bellHoverHandlers } =
     useAnimatedIcon();
 
-  useNotificationEvents();
   const { data: unreadData } = useUnreadNotificationCount();
   const unreadCount = unreadData?.count ?? 0;
 

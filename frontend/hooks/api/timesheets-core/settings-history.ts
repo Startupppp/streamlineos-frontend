@@ -22,10 +22,10 @@ export function useSettingsHistory(enabled = true) {
   const canView = useCan("timesheets:settings:view");
   return useQuery({
     queryKey: usersAndCommerceQueryKeys.timesheets.settingsHistory(),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<SettingsHistoryEntry[]>("/timesheets/settings/history", {
         limit: SETTINGS_HISTORY_LIMIT,
-      }),
+      }, signal),
     /*
      * An append-only log that only this org's own admins write to, and a save
      * on the same screen invalidates it — so a long stale window is right.

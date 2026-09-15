@@ -86,14 +86,14 @@ export function useHandlingUnits(filters?: {
   const canView = useCan("inventory:stock:read");
   return useQuery<HandlingUnitsPage, Error>({
     queryKey: queryKeys.inventory.handlingUnits(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<HandlingUnitsPage>("/inventory/handling-units", {
         ...(filters?.locationId ? { locationId: String(filters.locationId) } : {}),
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.rootsOnly ? { rootsOnly: "true" } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
-      }),
+      }, signal),
     enabled: canView,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -104,7 +104,7 @@ export function useHandlingUnit(handlingUnitId: number | null) {
   const canView = useCan("inventory:stock:read");
   return useQuery<HandlingUnitDetail, Error>({
     queryKey: queryKeys.inventory.handlingUnit(handlingUnitId ?? 0),
-    queryFn: () => apiClient.get<HandlingUnitDetail>(`/inventory/handling-units/${handlingUnitId}`),
+    queryFn: ({ signal }) => apiClient.get<HandlingUnitDetail>(`/inventory/handling-units/${handlingUnitId}`, undefined, signal),
     enabled: canView && (handlingUnitId ?? 0) > 0,
     staleTime: 30_000,
   });

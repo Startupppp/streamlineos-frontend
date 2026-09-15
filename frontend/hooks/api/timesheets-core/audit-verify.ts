@@ -21,8 +21,8 @@ import type { AuditChainVerification } from "@/features/timesheets/types";
 export function useVerifyAuditChain() {
   const query = useGatedQuery("timesheets:audit:view", {
     queryKey: usersAndCommerceQueryKeys.timesheets.auditVerify(),
-    queryFn: () =>
-      apiClient.get<AuditChainVerification>("/timesheets/audit/verify"),
+    queryFn: ({ signal }) =>
+      apiClient.get<AuditChainVerification>("/timesheets/audit/verify", undefined, signal),
     enabled: false,
     /*
      * The chain only grows, so an answer stays true about the rows it covered.

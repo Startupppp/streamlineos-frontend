@@ -36,7 +36,9 @@ import { resolveAuthSession } from "@/lib/auth";
 import {
   clearBackendJwtStoreForTesting,
   clearSessionDataStoreForTesting,
+  fetchSessionDataCached,
   getBackendJwtFromStore,
+  invalidateSessionData,
 } from "@/lib/auth-session";
 import {
   USER,
@@ -49,6 +51,7 @@ import {
   installMintingTransport,
   makeSession,
   makeToken,
+  sessionDataPayload,
 } from "./__tests__/auth-callbacks-test-helpers";
 
 const ORIGINAL_ENV = process.env;
@@ -72,6 +75,43 @@ beforeEach(() => {
 });
 
 describe("session callback — minting, caching and two device sessions", () => {
+  it("does not let a detached stale identity request overwrite its replacement", async () => {
+    const resolvers: Array<(response: Response) => void> = [];
+    const fetchMock = jest.fn(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolvers.push(resolve);
+        }),
+    );
+    Object.defineProperty(globalThis, "fetch", {
+      value: fetchMock,
+      configurable: true,
+      writable: true,
+    });
+
+    const first = fetchSessionDataCached(USER, ORG);
+    invalidateSessionData(USER);
+    const replacement = fetchSessionDataCached(USER, ORG);
+
+    resolvers[1](
+      new Response(
+        JSON.stringify({ success: true, data: sessionDataPayload(ORG_OTHER) }),
+      ),
+    );
+    await expect(replacement).resolves.toMatchObject({ orgId: ORG_OTHER });
+
+    resolvers[0](
+      new Response(
+        JSON.stringify({ success: true, data: sessionDataPayload(ORG) }),
+      ),
+    );
+    await expect(first).resolves.toMatchObject({ orgId: ORG });
+    await expect(fetchSessionDataCached(USER, ORG)).resolves.toMatchObject({
+      orgId: ORG_OTHER,
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it("coalesces concurrent session reads and token exchanges for one device", async () => {
     const transport = installTransport({ exchangeToken: backendJwt(SESSION_A, ORG) });
 

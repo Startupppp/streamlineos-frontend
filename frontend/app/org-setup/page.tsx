@@ -55,9 +55,6 @@ function syncAppsFromGoals(data: WizardData): WizardData {
 export default function OrgSetupPage() {
   const { data: session } = useSession();
   const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
-  const { data: serverSession } = useOrgSetupSessionQuery();
-  const { mutateAsync: skipOrgSetup } = useSkipOrgSetupMutation();
-
   const userId = session?.user?.id ?? "";
 
   const [step, setStep] = useState(1);
@@ -66,9 +63,15 @@ export default function OrgSetupPage() {
   const [direction, setDirection] = useState(1);
   const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA });
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
+  const [shouldLoadServerSession, setShouldLoadServerSession] = useState(false);
   const hydratedFromServerRef = useRef(false);
   const mountedOnceRef = useRef(false);
   const skipPendingRef = useRef(false);
+
+  const { data: serverSession } = useOrgSetupSessionQuery(
+    shouldLoadServerSession,
+  );
+  const { mutateAsync: skipOrgSetup } = useSkipOrgSetupMutation();
 
   const sequence = useMemo(() => getStepSequence(), []);
   const totalSteps = sequence.length;
@@ -174,6 +177,7 @@ export default function OrgSetupPage() {
   useEffect(() => {
     if (!userId || mountedOnceRef.current) return;
     mountedOnceRef.current = true;
+    if (hasCompletionMarker(userId, session?.orgId ?? "")) return;
     const savedDraft = syncAppsFromGoals(loadDraft(userId));
     const savedSequence = getStepSequence();
     const restoredStep = clampStep(loadStep(userId), savedSequence.length);
@@ -181,8 +185,9 @@ export default function OrgSetupPage() {
     saveDraft(savedDraft, userId);
     setStep(restoredStep);
     saveStep(restoredStep, userId);
+    setShouldLoadServerSession(!hasDraftProgress(savedDraft));
     setMounted(true);
-  }, [userId]);
+  }, [userId, session?.orgId]);
 
   useEffect(() => {
     if (!mounted || hydratedFromServerRef.current || !serverSession) return;

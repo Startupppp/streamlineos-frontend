@@ -54,7 +54,7 @@ export const ListViewItem = memo(function ListViewItem({
   return (
     <motion.div
       className={cn(
-        "group flex items-center border-b border-border/50 bg-card last:border-b-0",
+        "group flex items-center border-b border-border/50 bg-card transition-colors hover:bg-primary/[0.04] last:border-b-0",
         isDragging && "shadow-lg ring-1 ring-primary/20 bg-primary/5 rounded-md",
       )}
       initial={shouldReduceMotion ? false : { opacity: 0, x: -4 }}
@@ -63,7 +63,7 @@ export const ListViewItem = memo(function ListViewItem({
       whileHover={
         isDragging || shouldReduceMotion
           ? undefined
-          : { backgroundColor: "color-mix(in srgb, var(--primary) 4%, transparent)", x: 1 }
+          : { x: 1 }
       }
     >
       {hasDragHandle && (

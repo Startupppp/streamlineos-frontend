@@ -38,8 +38,8 @@ export function useRatePreview(input: RatePreviewInput, enabled = true) {
   };
   return useQuery({
     queryKey: usersAndCommerceQueryKeys.timesheets.ratePreview(params),
-    queryFn: () =>
-      apiClient.get<ResolvedRatePreview>("/timesheets/billing/rate-preview", params),
+    queryFn: ({ signal }) =>
+      apiClient.get<ResolvedRatePreview>("/timesheets/billing/rate-preview", params, signal),
     /*
      * Cheap and derived entirely from rate cards, which are edited on the same
      * screen — a rate mutation invalidates this prefix, so a long window costs
