@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {  useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useAccess, useCan } from "@/hooks/api/access";
@@ -25,6 +25,16 @@ const orgModulesContract = lazyContract(() =>
 );
 
 const EMPTY_MODULES: string[] = [];
+
+function isAccessResponseCache(value: unknown): value is AccessResponse {
+  if (typeof value !== "object" || value === null || Array.isArray(value))
+    return false;
+  if (!("modules" in value)) return false;
+  const modules = (value as { modules: unknown }).modules;
+  return (
+    typeof modules === "object" && modules !== null && !Array.isArray(modules)
+  );
+}
 
 export function useEnabledModules(): string[] {
   const { data } = useAccess();
@@ -79,9 +89,11 @@ export function useToggleOrgModule() {
         previousValue === undefined
           ? undefined
           : normalizeOrgModulesResponse(previousValue);
-      const previousAccess = qc.getQueriesData<AccessResponse>({
-        queryKey: platformCoreQueryKeys.access.all,
-      });
+      const previousAccess = qc
+        .getQueriesData<AccessResponse>({
+          queryKey: platformCoreQueryKeys.access.all,
+        })
+        .filter(([, data]) => isAccessResponseCache(data));
 
       qc.setQueryData<OrgModule[]>(
         platformCoreQueryKeys.access.orgModules(),
@@ -92,7 +104,7 @@ export function useToggleOrgModule() {
       const canonicalKey = normalizeOrgModuleKey(moduleKey);
       for (const [queryKey] of previousAccess) {
         qc.setQueryData<AccessResponse>(queryKey, (current) =>
-          current
+          isAccessResponseCache(current)
             ? {
                 ...current,
                 modules: { ...current.modules, [canonicalKey]: enabled },

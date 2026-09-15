@@ -182,10 +182,10 @@ export function useUpdateProject(
       await queryClient.cancelQueries({ queryKey: buildWorkQueryKeys.projects.all });
       const workspaceUsers = getWorkspaceUsersFromCache(queryClient);
       const listSnapshots = queryClient.getQueriesData<ProjectListCache>({
-        queryKey: buildWorkQueryKeys.projects.all,
+        queryKey: buildWorkQueryKeys.projects.list(),
       });
       queryClient.setQueriesData<ProjectListCache>(
-        { queryKey: buildWorkQueryKeys.projects.all },
+        { queryKey: buildWorkQueryKeys.projects.list() },
         (old) => patchProjectListCache(old, projectId, patch, workspaceUsers),
       );
       const detailKey = buildWorkQueryKeys.projects.detail(projectId);

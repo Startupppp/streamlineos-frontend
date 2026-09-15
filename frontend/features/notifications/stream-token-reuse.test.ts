@@ -55,18 +55,15 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
-describe("the notification stream token is minted once, not once per mount", () => {
-  it("reuses the cached token when the bell remounts", async () => {
+describe("the notification stream token is minted once per stream, not once per mount", () => {
+  it("mints a fresh token for a genuinely new stream, because the backend deletes the token on first use (consumeToken) and expires it after 120s, so replaying the previous one only yields a 401", async () => {
     const first = renderHook(() => useNotificationEvents());
     await waitFor(() => expect(tokenMints()).toBe(1));
 
     first.unmount();
     const second = renderHook(() => useNotificationEvents());
-    await act(async () => {
-      await Promise.resolve();
-    });
+    await waitFor(() => expect(tokenMints()).toBe(2));
 
-    expect(tokenMints()).toBe(1);
     second.unmount();
   });
 

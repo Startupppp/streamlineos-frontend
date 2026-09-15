@@ -15,8 +15,8 @@ import { getBackendToken } from "@/lib/api-client";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
-const BACKOFF_CEILING_ATTEMPT = 5;
-const MAX_BACKOFF_MS = 30_000;
+const BACKOFF_CEILING_ATTEMPT = 9;
+const MAX_BACKOFF_MS = 5 * 60_000;
 
 type AppRouter = ReturnType<typeof useRouter>;
 
@@ -28,24 +28,17 @@ interface ActiveStream {
 }
 
 let activeStream: ActiveStream | null = null;
-let cachedToken: string | null = null;
-let cachedTokenOrgId: string | null = null;
-let tokenFetchedAt = 0;
 let tokenFetchPromise: Promise<string | null> | null = null;
 let tokenFetchOrgId: string | null = null;
 let tokenGeneration = 0;
-const TOKEN_CACHE_MS = 55 * 60_000;
 
 export function clearStreamToken(): void {
-  cachedToken = null;
-  cachedTokenOrgId = null;
-  tokenFetchedAt = 0;
   tokenFetchPromise = null;
   tokenFetchOrgId = null;
   tokenGeneration += 1;
 }
 
-async function mintStreamToken(orgId: string): Promise<string | null> {
+async function mintStreamToken(): Promise<string | null> {
   const generation = tokenGeneration;
   try {
     const backendJwt = await getBackendToken();
@@ -62,30 +55,22 @@ async function mintStreamToken(orgId: string): Promise<string | null> {
       return null;
     const token = typeof body.token === "string" ? body.token : null;
     if (generation !== tokenGeneration) return null;
-    if (token !== null) {
-      cachedToken = token;
-      cachedTokenOrgId = orgId;
-      tokenFetchedAt = Date.now();
-    }
     return token;
   } catch {
     return null;
   } finally {
-    if (generation === tokenGeneration) tokenFetchPromise = null;
+    if (generation === tokenGeneration) {
+      tokenFetchPromise = null;
+      tokenFetchOrgId = null;
+    }
   }
 }
 
 function fetchStreamToken(orgId: string): Promise<string | null> {
-  if (
-    cachedToken !== null &&
-    cachedTokenOrgId === orgId &&
-    Date.now() - tokenFetchedAt < TOKEN_CACHE_MS
-  )
-    return Promise.resolve(cachedToken);
-  if (tokenFetchPromise === null || tokenFetchOrgId !== orgId) {
-    tokenFetchOrgId = orgId;
-    tokenFetchPromise = mintStreamToken(orgId);
-  }
+  if (tokenFetchPromise !== null && tokenFetchOrgId === orgId)
+    return tokenFetchPromise;
+  tokenFetchOrgId = orgId;
+  tokenFetchPromise = mintStreamToken();
   return tokenFetchPromise;
 }
 
@@ -122,7 +107,7 @@ function openStream(
     retryCount += 1;
     const attempt = Math.min(retryCount, BACKOFF_CEILING_ATTEMPT);
     const delay =
-      Math.min(MAX_BACKOFF_MS, 1_000 * 2 ** attempt) +
+      Math.min(MAX_BACKOFF_MS, 1_000 * 2 ** (attempt - 1)) +
       Math.floor(Math.random() * 500);
     retryTimer = setTimeout(() => void connect(), delay);
   };
