@@ -1,10 +1,5 @@
 import { getRetryAfterSeconds, isApiError } from "@/lib/api-envelope";
 
-const ORGANIZATION_ACCESS_ERROR_CODES = new Set([
-  "ORG_MEMBERSHIP_INACTIVE",
-  "ORG_MEMBERSHIP_SUSPENDED",
-]);
-
 export function readErrorReachesBoundary(
   error: unknown,
   query: { readonly state: { readonly data: unknown } },
@@ -13,12 +8,8 @@ export function readErrorReachesBoundary(
   if (!isApiError(error)) return true;
   if (error.code === "ABORTED") return false;
   if (error.status === 401) return false;
-  if (
-    error.status === 403 &&
-    error.code !== undefined &&
-    ORGANIZATION_ACCESS_ERROR_CODES.has(error.code)
-  )
-    return false;
+  if (error.status === 402) return false;
+  if (error.status === 403) return false;
   return true;
 }
 

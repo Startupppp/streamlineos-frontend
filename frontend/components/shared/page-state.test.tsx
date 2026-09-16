@@ -61,4 +61,13 @@ describe("PageState", () => {
     );
     expect(screen.getByText("body")).toBeInTheDocument();
   });
+
+  it("forwards className to the loading branch so the skeleton fills the shell instead of stopping short", () => {
+    render(
+      <PageState resolution={{ kind: "loading" }} loading={loading} className="flex-1">
+        <div>body</div>
+      </PageState>,
+    );
+    expect(screen.getByTestId("skeleton").parentElement).toHaveClass("flex-1");
+  });
 });

@@ -1,4 +1,4 @@
-import { act, render } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { ApiError } from "@/lib/api-envelope";
 import {
   MAX_NETWORK_AUTO_RETRIES,
@@ -100,5 +100,23 @@ describe("the network auto-retry budget belongs to the route, not to the message
     });
 
     expect(reset).not.toHaveBeenCalled();
+  });
+});
+
+describe("access denials that escape a query render the shared page state instead of a generic card", () => {
+  it("names the module instead of showing Project error when a plan gate rejects the read", () => {
+    const error = Object.assign(
+      new ApiError("This module is not available on your plan.", 402, "MODULE_NOT_ENABLED", {
+        moduleKey: "feedbucket",
+        reason: "org-disabled",
+        upgradePath: null,
+      }),
+      { digest: undefined },
+    );
+
+    render(<RouteErrorBoundary error={error} reset={jest.fn()} title="Project error" />);
+
+    expect(screen.queryByText("Project error")).toBeNull();
+    expect(screen.getByRole("link", { name: /modules/i })).toBeInTheDocument();
   });
 });

@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
 import { isTransientNetworkError } from "@/lib/query-error-policy";
 import { ErrorState } from "./error-state";
 import { NoPermissionState } from "./no-permission-state";
@@ -35,7 +36,11 @@ export function PageState({
 }: PageStateProps) {
   switch (resolution.kind) {
     case "loading":
-      return <>{loading}</>;
+      return (
+        <div className={cn("flex min-h-0 flex-1 flex-col", className)}>
+          {loading}
+        </div>
+      );
     case "denied":
       return (
         <NoPermissionState

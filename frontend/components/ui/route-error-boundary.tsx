@@ -10,6 +10,8 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { PageState } from "@/components/shared/page-state";
+import { pageStateFromError } from "@/lib/page-state/resolve-page-state";
 import { isTransientNetworkError } from "@/lib/query-error-policy";
 
 interface NetworkRetryBudget {
@@ -74,6 +76,7 @@ export function RouteErrorBoundary({
   const headingId = useId();
   const isWholePage = layout === "fullscreen";
   const isNetwork = isTransientNetworkError(error);
+  const accessState = pageStateFromError(error);
   const [routeKey] = useState(() =>
     typeof window === "undefined" ? "server" : window.location.pathname,
   );
@@ -119,6 +122,13 @@ export function RouteErrorBoundary({
     : isNetwork
     ? "The server could not be reached. Please try again."
     : fallbackMessage;
+
+  if (accessState !== null && accessState.kind !== "error")
+    return (
+      <PageState resolution={accessState} loading={null} onRetry={handleRetry}>
+        {null}
+      </PageState>
+    );
 
   const content = (
     <div
