@@ -158,8 +158,6 @@ const EXPORT_VERDICTS = new Map([
    * DATA_LAYER_CONTRACT_RE, so their verdicts would never be consulted and would read as stale.
    */
 
-  ["components/shared/gated.tsx:GateState", { verdict: "KEEP", reason: "re-exports lib/rbac/gate's GateState beside <Gated>, the state Gated resolves; it is not part of GatedProps and nothing imports it from here (lib/rbac/gate.ts is its home). Deletion candidate for the components/shared owner" }],
-
   ["hooks/api/party/merges.ts:useDetectPartyDuplicates", { verdict: "WIRE", reason: "per-party 'look for duplicates' action not wired; backend POST /party/parties/:partyId/detect-duplicates exists (party-merge.controller.ts) and its results land in the /parties/duplicates queue; add the action to features/party/parties/party-detail-sheet.tsx" }],
 
 

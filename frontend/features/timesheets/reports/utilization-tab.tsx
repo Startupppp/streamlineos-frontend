@@ -7,8 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { Gated } from "@/components/shared/gated";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useUtilizationReport } from "@/hooks/api/timesheets-core/reports";
 import type { UtilizationReport, UtilizationReportUser } from "./reports-types";
 import { formatReportHours, formatReportPercent, memberLabel } from "./report-format";
@@ -83,7 +83,7 @@ function renderUtilizationMobileCard(row: UtilizationReportUser) {
 }
 
 export function UtilizationTab({ params, enabled }: UtilizationTabProps) {
-  const { data, isLoading, isError, refetch } = useUtilizationReport(params, enabled);
+  const { data, isLoading, isError, error, refetch } = useUtilizationReport(params, enabled);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -99,11 +99,17 @@ export function UtilizationTab({ params, enabled }: UtilizationTabProps) {
     [data],
   );
 
+  const state = usePageState({
+    permission: "timesheets:reports:view",
+    isLoading: !isError && (isLoading || !data),
+    isError,
+    error,
+  });
+
   return (
-    <Gated
-      permission="timesheets:reports:view"
-      isLoading={!isError && (isLoading || !data)}
-      isError={isError}
+    <PageState
+      resolution={state}
+      onRetry={handleRetry}
       loading={
         <div className="space-y-4">
           <StatCardGridSkeleton cols={5} count={5} />
@@ -111,16 +117,9 @@ export function UtilizationTab({ params, enabled }: UtilizationTabProps) {
           <DataTableSkeleton rows={8} columns={5} />
         </div>
       }
-      error={
-        <ErrorState
-          title="Couldn't load utilization"
-          description="Something went wrong while loading the utilization report."
-          onRetry={handleRetry}
-        />
-      }
     >
       {data ? <UtilizationReportBody data={data} chartData={chartData} /> : null}
-    </Gated>
+    </PageState>
   );
 }
 
@@ -169,11 +168,11 @@ function UtilizationReportBody({ data, chartData }: UtilizationReportBodyProps) 
           <ByMemberChart data={chartData} />
           <DataTable
             data={users}
-            columns={COLUMNS}
-            getRowKey={getUtilizationRowKey}
             pagination={{}}
-            mobileCard={renderUtilizationMobileCard}
+            columns={COLUMNS}
             className="flex-1 min-h-0"
+            getRowKey={getUtilizationRowKey}
+            mobileCard={renderUtilizationMobileCard}
           />
         </>
       )}

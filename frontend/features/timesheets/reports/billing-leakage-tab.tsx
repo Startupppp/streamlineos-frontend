@@ -5,8 +5,8 @@ import { AlertTriangle, Ban, Clock, Percent, Receipt } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { Gated } from "@/components/shared/gated";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBillingLeakageReport } from "@/hooks/api/timesheets-core/reports";
 import type { BillingLeakageReport } from "./reports-types";
@@ -18,17 +18,23 @@ interface BillingLeakageTabProps {
 }
 
 export function BillingLeakageTab({ params, enabled }: BillingLeakageTabProps) {
-  const { data, isLoading, isError, refetch } = useBillingLeakageReport(params, enabled);
+  const { data, isLoading, isError, error, refetch } = useBillingLeakageReport(params, enabled);
 
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
+  const state = usePageState({
+    permission: "timesheets:reports:view",
+    isLoading: !isError && (isLoading || !data),
+    isError,
+    error,
+  });
+
   return (
-    <Gated
-      permission="timesheets:reports:view"
-      isLoading={!isError && (isLoading || !data)}
-      isError={isError}
+    <PageState
+      resolution={state}
+      onRetry={handleRetry}
       loading={
         <div className="space-y-4">
           <StatCardGridSkeleton cols={4} count={4} />
@@ -38,16 +44,9 @@ export function BillingLeakageTab({ params, enabled }: BillingLeakageTabProps) {
           </div>
         </div>
       }
-      error={
-        <ErrorState
-          title="Couldn't load billing leakage"
-          description="Something went wrong while loading the billing leakage report."
-          onRetry={handleRetry}
-        />
-      }
     >
       {data ? <BillingLeakageBody data={data} /> : null}
-    </Gated>
+    </PageState>
   );
 }
 

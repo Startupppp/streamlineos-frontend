@@ -116,16 +116,19 @@ function claimsEmptiness(source: string): boolean {
  * There are two ways to state a refusal here, not one, and this only knew about
  * the first.
  *
- * `<Gated>` is the newer of them. The older is `usePermissionGate` plus
- * `<EmptyState access={gate}>`: `EmptyState` returns `NoPermissionState` when
- * `access.denied`, and the gate keeps "denied" apart from "not known yet" the
- * same way `resolveGate` does. That is the same fix, reached through a
- * different component, and a surface using it does not have this bug.
+ * `<Gated>` was the second of them, since folded into `<PageState
+ * resolution={usePageState(...)}>` (components/shared/page-state.tsx), which
+ * resolves "denied" ahead of "empty" the same way `resolveGate` did. The
+ * oldest is `usePermissionGate` plus `<EmptyState access={gate}>`:
+ * `EmptyState` returns `NoPermissionState` when `access.denied`, and the gate
+ * keeps "denied" apart from "not known yet" the same way `resolveGate` does.
+ * All three are the same fix, reached through a different component, and a
+ * surface using any of them does not have this bug.
  *
  * Recognising only `<Gated>` reported two already-correct files as broken —
  * `timesheets/approvals` (which was even listed below as unconverted, though it
  * had been converted) and `timesheets/exceptions`. A ratchet that names a fixed
- * file is a ratchet people learn to disbelieve, so it must know both.
+ * file is a ratchet people learn to disbelieve, so it must know all three.
  *
  * Note what this deliberately does NOT accept: a page-level server
  * `requirePermission()`. That does keep a denied user off the page, but it is a
@@ -135,6 +138,7 @@ function claimsEmptiness(source: string): boolean {
 function handlesDenial(source: string): boolean {
   if (source.includes("NoPermissionState")) return true;
   if (/<Gated\b/.test(source)) return true;
+  if (/<PageState\b/.test(source)) return true;
   return /usePermissionGate\(/.test(source) && /\baccess=\{/.test(source);
 }
 

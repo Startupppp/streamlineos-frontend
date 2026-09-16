@@ -16,7 +16,8 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { Gated, ErrorState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 
 const MESSAGE_CHANNELS = [
   "EMAIL",
@@ -76,6 +77,14 @@ export function MessagesTab({
     void messagesQuery.refetch();
   }
 
+  const state = usePageState({
+    permission: "hr:employees:view",
+    isLoading: messagesQuery.isLoading,
+    isError: messagesQuery.isError,
+    error: messagesQuery.error,
+    isEmpty: messages.length === 0,
+  });
+
   const handleSend = useCallback(() => {
     if (!body.trim()) return;
     send.mutate(
@@ -95,11 +104,10 @@ export function MessagesTab({
     <div className="flex flex-col rounded-xl border bg-card" style={{ minHeight: "400px", maxHeight: "600px" }}>
       <ScrollArea hideScrollbar className="min-h-0 flex-1">
         <div className="overscroll-contain space-y-3 p-4">
-        <Gated
-          permission="hr:employees:view"
-          isLoading={messagesQuery.isLoading}
-          isError={messagesQuery.isError}
-          isEmpty={messages.length === 0}
+        <PageState
+          resolution={state}
+          onRetry={handleRetryMessages}
+          compact
           loading={
             <>
               {Array.from({ length: 3 }).map((_, i) => (
@@ -107,13 +115,12 @@ export function MessagesTab({
               ))}
             </>
           }
-          error={<ErrorState onRetry={handleRetryMessages} compact />}
           empty={<p className="text-sm text-muted-foreground text-center py-8">No messages yet.</p>}
         >
           <>
             {[...messages].reverse().map((msg) => <MessageBubble key={msg.id} msg={msg} />)}
           </>
-        </Gated>
+        </PageState>
         <div ref={bottomRef} />
         </div>
       </ScrollArea>

@@ -5,8 +5,8 @@ import { AlertTriangle, Briefcase, Clock } from "lucide-react";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { Gated } from "@/components/shared/gated";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { cn } from "@/lib/utils";
 import { useClientProfitabilityReport } from "@/hooks/api/timesheets-core/reports";
 import type { ClientProfitabilityClient, ReportCurrencyAmount } from "./reports-types";
@@ -140,7 +140,7 @@ function renderClientMobileCard(row: ClientProfitabilityClient) {
 }
 
 export function ClientProfitabilityTab({ params, enabled }: ClientProfitabilityTabProps) {
-  const { data, isLoading, isError, refetch } = useClientProfitabilityReport(params, enabled);
+  const { data, isLoading, isError, error, refetch } = useClientProfitabilityReport(params, enabled);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -155,23 +155,22 @@ export function ClientProfitabilityTab({ params, enabled }: ClientProfitabilityT
     };
   }, [data]);
 
+  const state = usePageState({
+    permission: "timesheets:reports:view",
+    isLoading: !isError && (isLoading || !data),
+    isError,
+    error,
+  });
+
   return (
-    <Gated
-      permission="timesheets:reports:view"
-      isLoading={!isError && (isLoading || !data)}
-      isError={isError}
+    <PageState
+      resolution={state}
+      onRetry={handleRetry}
       loading={
         <div className="space-y-4">
           <StatCardGridSkeleton cols={3} count={3} />
           <DataTableSkeleton rows={8} columns={6} />
         </div>
-      }
-      error={
-        <ErrorState
-          title="Couldn't load client profitability"
-          description="Something went wrong while loading the client profitability report."
-          onRetry={handleRetry}
-        />
       }
     >
       {data ? (
@@ -211,6 +210,6 @@ export function ClientProfitabilityTab({ params, enabled }: ClientProfitabilityT
           )}
         </div>
       ) : null}
-    </Gated>
+    </PageState>
   );
 }

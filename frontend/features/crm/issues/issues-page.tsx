@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Gated } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { ErrorState } from "@/components/shared/error-state";
 import {
   Select,
@@ -56,19 +57,7 @@ function RaiseButton({ label, onClick }: { label: string; onClick: () => void })
   );
 }
 
-/**
- * Issues, tasks and complaints.
- *
- * One surface for three record types, and no list, table or form is written
- * here. The server sends three layout descriptions; the record-type control
- * picks one and the renderer produces its columns, its labels, its empty state,
- * its mobile card, its detail view and its form from that. A fourth record type
- * would be a server change and nothing else — which is the entire reason the
- * engine exists.
- *
- * What is hand-written is what a description cannot express: which filters this
- * domain has, what a caller is permitted to do to a row, and the stage ledger.
- */
+
 export function IssuesPage() {
   const canManage = useCan("crm:issues:manage");
   const canEscalate = useCan("crm:issues:escalate");
@@ -91,13 +80,7 @@ export function IssuesPage() {
     ...(severity === "all" ? {} : { severity }),
   });
 
-  /**
-   * The description the server sent for the selected type.
-   *
-   * Preferred from the page over the record-types call, so a list and its rows
-   * can never be one deploy apart: every read carries the layout it was
-   * projected against.
-   */
+
   const layout =
     records.data?.layout ??
     types.data?.recordTypes.find((candidate) => candidate.recordType === recordType);
@@ -152,6 +135,18 @@ export function IssuesPage() {
   function handleDetailOpenChange(open: boolean) {
     if (!open) setOpenRecordId(null);
   }
+
+  function handleRetryRecords(): void {
+    void records.refetch();
+  }
+
+  const issuesState = usePageState({
+    permission: "crm:issues:view",
+    isLoading: records.isLoading,
+    isError: records.isError,
+    error: records.error,
+    isEmpty: (records.data?.data ?? []).length === 0,
+  });
 
   if (types.isLoading)
     return (
@@ -245,32 +240,15 @@ export function IssuesPage() {
       }
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden">
-        {/*
-          * Ticket 26. `useIssues` disables itself when the caller lacks
-          * `crm:issues:view`, and a disabled query in TanStack Query v5 reports
-          * `isLoading: false` with no rows -- the same flags an empty list has.
-          * The ternary this replaced therefore reached `No issues yet` and told
-          * somebody their team had raised nothing, when the truth was that they
-          * were not allowed to look.
-          */}
-        <Gated
-          permission="crm:issues:view"
-          isLoading={records.isLoading}
-          isError={records.isError}
-          isEmpty={rows.length === 0}
+        <PageState
+          resolution={issuesState}
+          onRetry={handleRetryRecords}
           className={CONTENT_FILL_PANEL}
           loading={
             <DataTableSkeleton
               rows={12}
               columns={layout.list.columns.length}
               className="flex-1"
-            />
-          }
-          error={
-            <ErrorState
-              className={CONTENT_FILL_PANEL}
-              title={`Couldn't load ${plural}`}
-              onRetry={() => void records.refetch()}
             />
           }
           empty={
@@ -307,7 +285,7 @@ export function IssuesPage() {
               </div>
             ) : null}
           </>
-        </Gated>
+        </PageState>
       </div>
 
       {createOpen ? (
