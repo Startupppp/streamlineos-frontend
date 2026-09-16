@@ -8,6 +8,7 @@ import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-s
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { Ticket, TicketComment, TicketLabel, CreateLabelInput } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import type { z } from "zod";
 import type { ticketRelationListContract as ticketRelationListContractDef } from "@/hooks/api/build/build-tickets-schema";
@@ -273,6 +274,7 @@ export type WorkItemRelationType = TicketRelation["relationType"];
 export function useTicketRelations(ticketId: number, projectId: number) {
   const canView = useCan("build:tickets:view");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: buildWorkQueryKeys.projects.ticketRelations(ticketId),
     queryFn: ({ signal }) =>
       apiClient.get<TicketRelation[]>(`/build/${projectId}/tickets/${ticketId}/relations`, undefined, signal, ticketRelationListLazy),

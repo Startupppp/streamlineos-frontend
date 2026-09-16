@@ -80,6 +80,9 @@ export interface FeedbucketWidget {
   createdBy: string | null;
   createdAt: string;
   updatedAt: string;
+  defaultProjectId: number | null;
+  defaultAssigneeMembershipId: number | null;
+  assigneeRules: Partial<Record<FeedbucketSubmissionType, number>> | null;
   project?: { id: number; name: string; key: string } | null;
   submissionCount?: number;
   openCount?: number;
@@ -95,6 +98,9 @@ export interface CreateFeedbucketWidgetInput {
   defaultTicketType?: string;
   aiAssistEnabled?: boolean;
   theme?: FeedbucketWidgetTheme;
+  defaultProjectId?: number | null;
+  defaultAssigneeId?: string | null;
+  assigneeRules?: Partial<Record<FeedbucketSubmissionType, string>> | null;
 }
 
 export interface UpdateFeedbucketWidgetInput {
@@ -106,6 +112,9 @@ export interface UpdateFeedbucketWidgetInput {
   isActive?: boolean;
   aiAssistEnabled?: boolean;
   theme?: FeedbucketWidgetTheme;
+  defaultProjectId?: number | null;
+  defaultAssigneeId?: string | null;
+  assigneeRules?: Partial<Record<FeedbucketSubmissionType, string>> | null;
 }
 
 export interface ListFeedbucketSubmissionsQuery {

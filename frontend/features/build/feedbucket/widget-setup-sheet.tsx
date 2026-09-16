@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { RefreshCcw } from "lucide-react";
 import { CopyIcon } from "@animateicons/react/lucide";
@@ -9,6 +9,9 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Combobox } from "@/components/ui/combobox";
+import type { ComboboxOption } from "@/components/ui/combobox";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import {
   Sheet,
   SheetBody,
@@ -36,7 +39,10 @@ import {
   useRotateFeedbucketWidgetKey,
   useUpdateFeedbucketWidget,
 } from "@/hooks/api/feedbucket";
+import { useProjects } from "@/hooks/api/build";
+import { useOrgMembers } from "@/hooks/api/organization";
 import type { FeedbucketWidget } from "@/types/feedbucket";
+import { WidgetAssigneeRules } from "./widget-assignee-rules";
 
 interface WidgetSetupSheetProps {
   open: boolean;
@@ -48,6 +54,27 @@ export function WidgetSetupSheet({ open, widget, onClose }: WidgetSetupSheetProp
   const [confirmRotate, setConfirmRotate] = useState(false);
   const rotateKey = useRotateFeedbucketWidgetKey();
   const updateWidget = useUpdateFeedbucketWidget();
+
+  const projectsQuery = useProjects(undefined, { enabled: open && !widget.projectId });
+  const membersQuery = useOrgMembers(1, 100, undefined, { enabled: open });
+
+  const projectOptions = useMemo<ComboboxOption[]>(() => {
+    if (!projectsQuery.data) return [];
+    return projectsQuery.data.data.map((p) => ({ value: String(p.id), label: p.name }));
+  }, [projectsQuery.data]);
+
+  const members = useMemo(() => membersQuery.data?.data ?? [], [membersQuery.data]);
+
+  const membershipIdToUserId = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const m of members) map.set(m.membershipId, m.userId);
+    return map;
+  }, [members]);
+
+  const defaultAssigneeUserId = useMemo(() => {
+    if (!widget.defaultAssigneeMembershipId) return "";
+    return membershipIdToUserId.get(widget.defaultAssigneeMembershipId) ?? "";
+  }, [widget.defaultAssigneeMembershipId, membershipIdToUserId]);
 
   const snippet = buildFeedbucketEmbedSnippet({ publicKey: widget.publicKey });
 
@@ -94,6 +121,43 @@ export function WidgetSetupSheet({ open, widget, onClose }: WidgetSetupSheetProp
         input: { aiAssistEnabled: enabled },
       });
       toast.success(enabled ? "AI assist enabled" : "AI assist disabled");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }
+
+  async function handleToggleAutoCreate(enabled: boolean) {
+    try {
+      await updateWidget.mutateAsync({
+        widgetId: widget.id,
+        input: { autoCreateTicket: enabled },
+      });
+      toast.success(enabled ? "Auto-create ticket enabled" : "Auto-create ticket disabled");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }
+
+  async function handleDefaultProjectChange(value: string) {
+    const defaultProjectId = value ? Number(value) : null;
+    try {
+      await updateWidget.mutateAsync({
+        widgetId: widget.id,
+        input: { defaultProjectId },
+      });
+      toast.success(defaultProjectId ? "Default project updated" : "Default project cleared");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }
+
+  async function handleDefaultAssigneeChange(userId: string) {
+    try {
+      await updateWidget.mutateAsync({
+        widgetId: widget.id,
+        input: { defaultAssigneeId: userId || null },
+      });
+      toast.success(userId ? "Default assignee updated" : "Default assignee cleared");
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -202,6 +266,58 @@ export function WidgetSetupSheet({ open, widget, onClose }: WidgetSetupSheetProp
                 className="mt-0.5 shrink-0"
               />
             </div>
+
+            <div className="flex items-start justify-between gap-4 rounded-lg border border-border px-4 py-3">
+              <div className="min-w-0 space-y-0.5">
+                <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>Auto-create ticket</p>
+                <p className={cn("text-xs leading-relaxed text-muted-foreground", TEXT_BODY)}>
+                  Automatically create a ticket for every new submission received by this widget.
+                </p>
+              </div>
+              <Switch
+                id="widget-setup-auto-create"
+                checked={widget.autoCreateTicket}
+                onCheckedChange={handleToggleAutoCreate}
+                disabled={updateWidget.isPending}
+                className="mt-0.5 shrink-0"
+              />
+            </div>
+
+            {!widget.projectId ? (
+              <div className="rounded-lg border border-border px-4 py-3 space-y-2">
+                <div className="space-y-0.5">
+                  <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>Default project</p>
+                  <p className={cn("text-xs leading-relaxed text-muted-foreground", TEXT_BODY)}>
+                    Project used when converting submissions to tickets.
+                  </p>
+                </div>
+                <Combobox
+                  options={projectOptions}
+                  value={widget.defaultProjectId ? String(widget.defaultProjectId) : ""}
+                  onChange={handleDefaultProjectChange}
+                  placeholder="Select project…"
+                  aria-label="Default project"
+                />
+              </div>
+            ) : null}
+
+            <div className="rounded-lg border border-border px-4 py-3 space-y-2">
+              <div className="space-y-0.5">
+                <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>Default assignee</p>
+                <p className={cn("text-xs leading-relaxed text-muted-foreground", TEXT_BODY)}>
+                  Fallback used when no per-type assignee rule matches.
+                </p>
+              </div>
+              <UserCombobox
+                value={defaultAssigneeUserId}
+                onChange={handleDefaultAssigneeChange}
+                placeholder="Select assignee…"
+                allowUnassigned
+                disabled={updateWidget.isPending}
+              />
+            </div>
+
+            <WidgetAssigneeRules widget={widget} members={members} />
 
             <div className="rounded-lg border border-border px-4 py-3 space-y-3">
               <div className="space-y-0.5">

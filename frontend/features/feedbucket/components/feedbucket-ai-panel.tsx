@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
@@ -188,6 +189,7 @@ export function FeedbucketAiPanel({
   const [localTicketKey, setLocalTicketKey] = useState<string | null>(linkedTicketKey);
   const [aiFallbackReason, setAiFallbackReason] = useState<string | null>(null);
   const [lastAnalysisUsage, setLastAnalysisUsage] = useState<AiUsageMeta | null | undefined>(null);
+  const [selectedAssigneeId, setSelectedAssigneeId] = useState("");
 
   const analysis = localAnalysis ?? existingAnalysis;
   const ticketId = localTicketId ?? linkedTicketId;
@@ -209,7 +211,10 @@ export function FeedbucketAiPanel({
   async function handleCreateAiTicket() {
     setAiFallbackReason(null);
     try {
-      const result = await createAiTicketMutation.mutateAsync(submissionId);
+      const result = await createAiTicketMutation.mutateAsync({
+        submissionId,
+        assigneeId: selectedAssigneeId || undefined,
+      });
       setLocalTicketId(result.ticketId);
       if ("ticketKey" in result && typeof result.ticketKey === "string") {
         setLocalTicketKey(result.ticketKey);
@@ -229,7 +234,10 @@ export function FeedbucketAiPanel({
 
   async function handleCreateBasicTicket(isFallback = false) {
     try {
-      const result = await convertBasicMutation.mutateAsync(submissionId);
+      const result = await convertBasicMutation.mutateAsync({
+        submissionId,
+        assigneeId: selectedAssigneeId || undefined,
+      });
       setLocalTicketId(result.ticketId);
       onTicketCreated(result.ticketId);
       toast.success(isFallback ? "Basic ticket created (AI unavailable)" : "Ticket created");
@@ -252,6 +260,10 @@ export function FeedbucketAiPanel({
 
   function handleCreateBasicTicketClick() {
     void handleCreateBasicTicket(false);
+  }
+
+  function handleAssigneeChange(userId: string) {
+    setSelectedAssigneeId(userId);
   }
 
   if (canAi) {
@@ -321,6 +333,14 @@ export function FeedbucketAiPanel({
                 </div>
               )}
               <div className="flex items-center gap-2 flex-wrap">
+                <div className="w-48 shrink-0">
+                  <UserCombobox
+                    value={selectedAssigneeId}
+                    onChange={handleAssigneeChange}
+                    placeholder="Override assignee…"
+                    allowUnassigned
+                  />
+                </div>
                 <LoadingButton
                   size="sm"
                   isPending={isCreatingAiTicket || isCreatingBasicTicket}
@@ -386,15 +406,25 @@ export function FeedbucketAiPanel({
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <LoadingButton
-        size="sm"
-        isPending={isCreatingBasicTicket}
-        loadingText="Converting…"
-        onClick={handleCreateBasicTicketClick}
-      >
-        Convert to Ticket
-      </LoadingButton>
+    <div className="rounded-xl border border-border bg-card p-4 space-y-2">
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="w-48 shrink-0">
+          <UserCombobox
+            value={selectedAssigneeId}
+            onChange={handleAssigneeChange}
+            placeholder="Override assignee…"
+            allowUnassigned
+          />
+        </div>
+        <LoadingButton
+          size="sm"
+          isPending={isCreatingBasicTicket}
+          loadingText="Converting…"
+          onClick={handleCreateBasicTicketClick}
+        >
+          Convert to Ticket
+        </LoadingButton>
+      </div>
     </div>
   );
 }

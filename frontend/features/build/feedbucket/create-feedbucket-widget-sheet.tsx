@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateFeedbucketWidget } from "@/hooks/api/feedbucket";
 import type { CreateFeedbucketWidgetInput } from "@/types/feedbucket";
@@ -49,7 +50,7 @@ export function CreateFeedbucketWidgetSheet({
 
   const form = useForm<CreateFeedbucketWidgetFormValues>({
     resolver: zodResolver(createFeedbucketWidgetSchema),
-    defaultValues: { name: defaultName, aiAssistEnabled: false },
+    defaultValues: { name: defaultName, aiAssistEnabled: false, autoCreateTicket: false, defaultAssigneeId: "" },
   });
 
   const pendingNameRef = useRef(defaultName);
@@ -60,7 +61,7 @@ export function CreateFeedbucketWidgetSheet({
 
   useEffect(() => {
     if (!open) return;
-    form.reset({ name: pendingNameRef.current, aiAssistEnabled: false });
+    form.reset({ name: pendingNameRef.current, aiAssistEnabled: false, autoCreateTicket: false, defaultAssigneeId: "" });
   }, [open, form]);
 
   async function handleSubmit(values: CreateFeedbucketWidgetFormValues) {
@@ -68,9 +69,10 @@ export function CreateFeedbucketWidgetSheet({
       name: values.name.trim(),
       projectId,
       allowedDomains: [],
-      autoCreateTicket: false,
+      autoCreateTicket: values.autoCreateTicket ?? false,
       defaultTicketType: "BUG",
       aiAssistEnabled: values.aiAssistEnabled,
+      defaultAssigneeId: values.defaultAssigneeId || null,
     };
     try {
       await createWidget.mutateAsync(input);
@@ -133,6 +135,54 @@ export function CreateFeedbucketWidgetSheet({
                         />
                       </FormControl>
                     </div>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="autoCreateTicket"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-start justify-between gap-4 rounded-lg border border-border px-4 py-3">
+                      <div className="space-y-0.5 min-w-0">
+                        <FormLabel className="text-sm font-medium cursor-pointer">
+                          Auto-create ticket
+                        </FormLabel>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          Automatically create a ticket for every new submission received by this
+                          widget.
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value ?? false}
+                          onCheckedChange={field.onChange}
+                          className="shrink-0 mt-0.5"
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="defaultAssigneeId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Default assignee</FormLabel>
+                    <FormControl>
+                      <UserCombobox
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        placeholder="Select assignee…"
+                        allowUnassigned
+                      />
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">
+                      Fallback used when no per-type assignee rule matches.
+                    </p>
                     <FormMessage className="text-xs" />
                   </FormItem>
                 )}

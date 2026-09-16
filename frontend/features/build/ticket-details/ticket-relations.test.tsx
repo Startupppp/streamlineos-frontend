@@ -3,9 +3,16 @@ import { useProjectBoardTickets } from "@/hooks/api/build";
 import { TicketRelations } from "./ticket-relations";
 
 let mockCanUpdate = true;
+let mockRelationsResult: {
+  data: unknown[];
+  isLoading: boolean;
+  isError?: boolean;
+  error?: Error;
+  refetch?: () => void;
+} = { data: [], isLoading: false };
 
 jest.mock("@/hooks/api/build", () => ({
-  useTicketRelations: () => ({ data: [], isLoading: false }),
+  useTicketRelations: () => mockRelationsResult,
   useProjectBoardTickets: jest.fn(() => ({ data: [] })),
   useAddTicketRelation: () => ({ mutate: jest.fn(), isPending: false }),
   useRemoveTicketRelation: () => ({ mutate: jest.fn() }),
@@ -44,6 +51,7 @@ const mockUseProjectBoardTickets = jest.mocked(useProjectBoardTickets);
 beforeEach(() => {
   jest.clearAllMocks();
   mockCanUpdate = true;
+  mockRelationsResult = { data: [], isLoading: false };
 });
 
 it("does not load or offer relation mutations to a read-only member", () => {
@@ -63,4 +71,23 @@ it("loads relation candidates only after the picker opens", () => {
   fireEvent.click(screen.getByRole("button", { name: "Add" }));
 
   expect(mockUseProjectBoardTickets).toHaveBeenLastCalledWith(42);
+});
+
+it("shows an inline retry instead of a false empty state when the relations read fails, so a denied or transient error never reads as 'no relations'", () => {
+  const refetch = jest.fn();
+  mockRelationsResult = {
+    data: [],
+    isLoading: false,
+    isError: true,
+    error: new Error("Not a project member."),
+    refetch,
+  };
+
+  render(<TicketRelations ticketId={10} projectId={42} />);
+
+  expect(screen.getByText("Couldn't load relations")).toBeInTheDocument();
+  expect(screen.queryByText("No relations yet.")).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+  expect(refetch).toHaveBeenCalledTimes(1);
 });

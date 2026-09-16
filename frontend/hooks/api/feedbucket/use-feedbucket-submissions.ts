@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type { FeedbucketSubmissionRow } from "@/hooks/api/feedbucket/feedbucket-schema";
 import { lazyContract } from "@/lib/api-envelope";
@@ -75,12 +75,13 @@ export function useConvertFeedbucketToTicket() {
   const qc = useQueryClient();
   return useAuthorizedMutation("feedbucket:submissions:manage", {
     mutationKey: ["feedbucket", "submissions", "convert-to-ticket"],
-    mutationFn: (submissionId: number) =>
+    mutationFn: ({ submissionId, projectId, assigneeId }: { submissionId: number; projectId?: number; assigneeId?: string }) =>
       apiClient.post<{ ticketId: number }>(
         `/feedbucket/submissions/${submissionId}/convert-to-ticket`,
-        undefined, undefined, feedbucketConvertTicketC,
+        projectId !== undefined || assigneeId !== undefined ? { projectId, assigneeId } : undefined,
+        undefined, feedbucketConvertTicketC,
       ),
-    onSuccess: (_, submissionId) => {
+    onSuccess: (_, { submissionId }) => {
       void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.submission(submissionId) });
       void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.all });
     },

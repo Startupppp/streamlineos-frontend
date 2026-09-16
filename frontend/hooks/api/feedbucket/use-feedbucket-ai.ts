@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
@@ -33,12 +33,13 @@ export function useCreateTicketFromFeedbucketAi() {
   const qc = useQueryClient();
   return useAuthorizedMutation("feedbucket:submissions:manage", {
     mutationKey: ["feedbucket", "submissions", "ai-create-ticket"],
-    mutationFn: (submissionId: number) =>
+    mutationFn: ({ submissionId, projectId, assigneeId }: { submissionId: number; projectId?: number; assigneeId?: string }) =>
       apiClient.post<{ ticketId: number; ticketType: FeedbucketAiTicketType }>(
         `/feedbucket/submissions/${submissionId}/ai-create-ticket`,
-        undefined, undefined, feedbucketCreateTicketFromAnalysisC,
+        projectId !== undefined || assigneeId !== undefined ? { projectId, assigneeId } : undefined,
+        undefined, feedbucketCreateTicketFromAnalysisC,
       ),
-    onSuccess: (_, submissionId) => {
+    onSuccess: (_, { submissionId }) => {
       void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.submission(submissionId) });
       void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.all });
     },

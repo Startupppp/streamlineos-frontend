@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   useTicketRelations,
   useAddTicketRelation,
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/command";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState } from "@/components/shared/error-state";
 import { Link2, ArrowRight, ArrowLeft, Copy, Minus } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -85,8 +86,8 @@ function RemoveRelationButton({ onClick }: { onClick: () => void }) {
       type="button"
       onClick={handleClick}
       onKeyDown={stopProp}
-      className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive shrink-0 rounded p-0.5 hover:bg-muted/60"
       aria-label="Remove relation"
+      className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive shrink-0 rounded p-0.5 hover:bg-muted/60"
       {...hoverHandlers}
     >
       <XIcon ref={iconRef} size={12} />
@@ -96,20 +97,21 @@ function RemoveRelationButton({ onClick }: { onClick: () => void }) {
 
 export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
   const canUpdate = useCan("build:tickets:update");
-  const { data: relations, isLoading } = useTicketRelations(ticketId, projectId);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
+  const [selectedType, setSelectedType] = useState<WorkItemRelationType>("relates_to");
+  
   const { data: boardTickets } = useProjectBoardTickets(
     pickerOpen && canUpdate ? projectId : 0,
   );
   const { data: projectData } = useProject(projectId);
   const addRelation = useAddTicketRelation(ticketId, projectId);
   const removeRelation = useRemoveTicketRelation(ticketId, projectId);
+  const { data: relations, isLoading, isError, error, refetch } = useTicketRelations(ticketId, projectId);
 
   const projectKey = projectData?.key ?? null;
   const projectStatuses: ProjectStatusRecord[] = projectData?.statuses ?? [];
 
-  const [selectedType, setSelectedType] = useState<WorkItemRelationType>("relates_to");
-  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
 
   const allTickets = (boardTickets ?? []).filter((t) => t.id !== ticketId);
   const existingRelatedIds = new Set(
@@ -145,16 +147,33 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
     if (match) setSelectedType(match);
   };
 
-  if (isLoading) return null;
+  const handleRetryRelations = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
-  const grouped = (relations ?? []).reduce<Partial<Record<WorkItemRelationType, typeof relations>>>(
+  const grouped = useMemo(() => (relations ?? []).reduce<Partial<Record<WorkItemRelationType, typeof relations>>>(
     (acc, r) => {
       const t = r.relationType;
       acc[t] = [...(acc[t] ?? []), r];
       return acc;
     },
     {},
-  );
+  ), [relations]);
+
+  if (isLoading) return null;
+
+  if (isError) {
+    return (
+      <ErrorState
+        compact
+        title="Couldn't load relations"
+        description={getErrorMessage(error)}
+        onRetry={handleRetryRelations}
+      />
+    );
+  }
+
+
 
   return (
     <div>
