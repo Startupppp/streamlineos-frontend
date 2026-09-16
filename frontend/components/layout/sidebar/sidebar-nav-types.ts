@@ -35,6 +35,7 @@ export interface NavRoute {
   module?: ProductKey;
   /** Show the route when at least one of these products is enabled. */
   modulesAny?: ProductKey[];
+  locked?: boolean;
   exact?: boolean;
   /** Extra owned subpaths, used when a sibling route has a longer prefix. */
   activePrefixes?: string[];

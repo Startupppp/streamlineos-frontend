@@ -25,6 +25,7 @@ import { ProductSwitcherMenu } from "./header/product-switcher-menu";
 
 import { useAccess, useCan } from "@/hooks/api/access";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
+import { useEntitlements } from "@/hooks/api/entitlements";
 
 interface ProjectNavTreeSlotProps {
   projectId: string;
@@ -99,26 +100,32 @@ export function AppSidebar({
   const activeProduct = getProductFromPathname(pathname);
   const accent: ModuleAccent = MODULE_ACCENTS[activeProduct];
   const rawProjectId = params?.projectId;
-  const activeProjectId = useMemo(() => {
-    if (activeProduct !== "build") return null;
-    const value = Array.isArray(rawProjectId) ? rawProjectId[0] : rawProjectId;
-    return typeof value === "string" && /^\d+$/.test(value) ? value : null;
-  }, [activeProduct, rawProjectId]);
-
+  
+  const [collapsedGroups, setCollapsedGroups] = useState<
+    Record<string, boolean>
+  >({});
   const scopes = access?.scopes;
   const canApproveLeaves = useCan("hr:leaves:approve");
   const canReadChat = useCan("chat:channels:read");
   const enabledModules = useEnabledModules();
   const isHrModuleEnabled = isModuleEnabled("hrms", enabledModules);
-
+  const { data: entitlements } = useEntitlements();
+  const lockedModules = entitlements?.lockedModules ?? [];
+  
+  const activeProjectId = useMemo(() => {
+    if (activeProduct !== "build") return null;
+    const value = Array.isArray(rawProjectId) ? rawProjectId[0] : rawProjectId;
+    return typeof value === "string" && /^\d+$/.test(value) ? value : null;
+  }, [activeProduct, rawProjectId]);
   const navGroups = useMemo(() => {
     return getNavGroupsForProduct(
       activeProduct,
       effectiveRole,
       scopes,
       enabledModules,
+      lockedModules,
     );
-  }, [activeProduct, effectiveRole, scopes, enabledModules]);
+  }, [activeProduct, effectiveRole, scopes, enabledModules, lockedModules]);
 
   const firstBuildGroup = useMemo(
     () => navGroups.find((group) => group.product === "build") ?? null,
@@ -135,9 +142,6 @@ export function AppSidebar({
     return null;
   }, [navGroups, pathname]);
 
-  const [collapsedGroups, setCollapsedGroups] = useState<
-    Record<string, boolean>
-  >({});
 
   useEffect(() => {
     try {

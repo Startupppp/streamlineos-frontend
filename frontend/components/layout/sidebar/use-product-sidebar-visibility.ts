@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useAccess } from "@/hooks/api/access";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
+import { useEntitlements } from "@/hooks/api/entitlements";
 import {
   getNavGroupsForProduct,
   shouldHideProductSidebar,
@@ -25,6 +26,8 @@ export function useProductSidebarVisibility(): {
   const pathname = usePathname();
   const { data: access } = useAccess();
   const enabledModules = useEnabledModules();
+  const { data: entitlements } = useEntitlements();
+  const lockedModules = entitlements?.lockedModules ?? [];
   const scopes = access?.scopes;
 
   const isOrgOwner =
@@ -39,8 +42,9 @@ export function useProductSidebarVisibility(): {
       effectiveRole,
       scopes,
       enabledModules,
+      lockedModules,
     );
-  }, [activeProduct, effectiveRole, scopes, enabledModules]);
+  }, [activeProduct, effectiveRole, scopes, enabledModules, lockedModules]);
 
   const hideSidebar =
     status !== "loading" &&

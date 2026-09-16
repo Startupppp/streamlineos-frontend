@@ -37,6 +37,7 @@ import {
   getNavGroupsForUser,
 } from "./sidebar/sidebar-nav-items";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
+import { useEntitlements } from "@/hooks/api/entitlements";
 import { cn } from "@/lib/utils";
 import { useCommandPalette } from "@/components/command-palette";
 import {
@@ -44,14 +45,7 @@ import {
   type GlobalSearchResult,
 } from "@/components/command-palette/hooks/use-global-search";
 
-/**
- * The entity kinds a global-search hit can carry, in the order their groups render.
- *
- * Iterating this instead of `Object.entries(entityGroups)` is what lets the icon and label
- * lookups below be plain indexed reads: `Object.entries` widens its key back to `string`, and
- * recovering the union from that needs a cast. Driving the render from the union itself keeps
- * the type and also makes group order deterministic rather than first-hit-wins.
- */
+
 const ENTITY_TYPES = [
   "lead",
   "deal",
@@ -147,13 +141,15 @@ export function CommandPaletteDialogBody() {
       : "MEMBER";
   const scopes = access?.scopes;
   const enabledModules = useEnabledModules();
+  const { data: entitlements } = useEntitlements();
+  const lockedModules = entitlements?.lockedModules ?? [];
   const { paletteOpen, setPaletteOpen, openCreateTicket } = useCommandPalette();
 
   const projectId = useMemo(() => extractProjectId(pathname), [pathname]);
 
   const navGroups = useMemo(
-    () => getNavGroupsForUser(role, scopes, enabledModules),
-    [role, scopes, enabledModules],
+    () => getNavGroupsForUser(role, scopes, enabledModules, lockedModules),
+    [role, scopes, enabledModules, lockedModules],
   );
 
   const pages = useMemo(() => {

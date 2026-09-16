@@ -179,7 +179,7 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
   },
 };
 
-const PRODUCT_MODULE_KEY: Partial<Record<ProductKey, string>> = {
+export const PRODUCT_MODULE_KEY: Partial<Record<ProductKey, string>> = {
   crm: "crm",
   hrms: "hr",
   build: "build",

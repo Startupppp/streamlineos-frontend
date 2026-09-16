@@ -7,15 +7,11 @@ import {
   getAccessibleProductHref,
   getNavGroupsForProduct,
   isModuleEnabled,
+  flattenNavRoutes,
   type ProductKey,
 } from "../sidebar/sidebar-nav-items";
 import { ProductTile } from "./product-tile";
 import { hasAssignedProductAccess } from "@/lib/rbac/route-access/route-access";
-
-const PRODUCT_TO_LOCKED_MODULE: Partial<Record<ProductKey, string>> = {
-  payroll: "payroll",
-  inventory: "inventory",
-};
 
 export interface ProductGridProps {
   activeProduct: ProductKey;
@@ -51,28 +47,27 @@ export function ProductGrid({
         effectiveRole,
         scopes,
         enabledModules,
+        lockedModules,
       );
       const hasAccess = groups.some((group) => group.routes.length > 0);
       if (!hasAccess && !canManageModules) return [];
+      const planLocked = flattenNavRoutes(
+        groups.flatMap((group) => group.routes),
+      ).some((route) => route.locked === true);
       return [
         {
           ...product,
           href: hasAccess
             ? getAccessibleProductHref(groups, product.href)
             : "/settings/modules",
+          planLocked,
         },
       ];
     });
 
     return products.sort((a, b) => {
-      const aLockedKey = PRODUCT_TO_LOCKED_MODULE[a.key];
-      const bLockedKey = PRODUCT_TO_LOCKED_MODULE[b.key];
-      const aEnabled =
-        isModuleEnabled(a.key, enabledModules) &&
-        !(aLockedKey !== undefined && lockedModules.includes(aLockedKey));
-      const bEnabled =
-        isModuleEnabled(b.key, enabledModules) &&
-        !(bLockedKey !== undefined && lockedModules.includes(bLockedKey));
+      const aEnabled = isModuleEnabled(a.key, enabledModules) && !a.planLocked;
+      const bEnabled = isModuleEnabled(b.key, enabledModules) && !b.planLocked;
       if (aEnabled === bEnabled) return 0;
       return aEnabled ? -1 : 1;
     });
@@ -92,11 +87,8 @@ export function ProductGrid({
       <div className="grid grid-cols-2 gap-1">
         {visibleProducts.map((product, index) => {
           const enabled = isModuleEnabled(product.key, enabledModules);
-          const lockedKey = PRODUCT_TO_LOCKED_MODULE[product.key];
-          const planLocked = Boolean(
-            lockedKey && lockedModules.includes(lockedKey),
-          );
-          const isActive = activeProduct === product.key && enabled && !planLocked;
+          const isActive =
+            activeProduct === product.key && enabled && !product.planLocked;
           return (
             <motion.div
               key={product.key}
@@ -119,7 +111,7 @@ export function ProductGrid({
                 icon={product.icon}
                 isActive={isActive}
                 isEnabled={enabled}
-                planLocked={planLocked}
+                planLocked={product.planLocked}
                 canManageModules={canManageModules}
                 onClose={onClose}
               />
