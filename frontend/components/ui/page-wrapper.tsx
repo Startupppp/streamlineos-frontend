@@ -7,6 +7,9 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PAGE_CHROME_BOTTOM, PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { PageState } from "@/components/shared/page-state";
+import { LoadingState } from "@/components/shared/loading-state";
+import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 
 interface PageWrapperProps {
   title?: React.ReactNode;
@@ -29,6 +32,10 @@ interface PageWrapperProps {
   contentClassName?: string;
   noInternalScroll?: boolean;
   variant?: "default" | "display";
+  state?: PageStateResolution;
+  loading?: React.ReactNode;
+  empty?: React.ReactNode;
+  onRetry?: () => void;
 }
 
 const backButtonClassName = "-ml-2 size-9 shrink-0 sm:size-8";
@@ -50,8 +57,15 @@ export function PageWrapper({
   contentClassName,
   noInternalScroll = false,
   variant = "default",
+  state,
+  loading,
+  empty,
+  onRetry,
 }: PageWrapperProps) {
   const headingId = React.useId();
+  const isInterrupted = state !== undefined && state.kind !== "ready" && state.kind !== "empty";
+  const visibleActions = isInterrupted ? undefined : actions;
+  const visibleFilters = isInterrupted ? undefined : filters;
   const titleClass =
     variant === "display"
       ? "font-display text-xl sm:text-2xl lg:text-[1.7rem] font-extrabold tracking-[-0.02em] text-foreground leading-tight"
@@ -90,8 +104,23 @@ export function PageWrapper({
     backHref != null ||
     onBack != null ||
     leading != null ||
-    actions != null ||
+    visibleActions != null ||
     builtInBack != null;
+
+  const body =
+    state === undefined ? (
+      children
+    ) : (
+      <PageState
+        resolution={state}
+        loading={loading ?? <LoadingState variant="page" />}
+        empty={empty}
+        onRetry={onRetry}
+        className="flex-1"
+      >
+        {children}
+      </PageState>
+    );
 
   return (
     <div className={cn("flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden", className)}>
@@ -146,7 +175,7 @@ export function PageWrapper({
               </div>
             </div>
 
-            {actions && (
+            {visibleActions && (
               <div
                 className={cn(
                   actionsInline
@@ -154,14 +183,14 @@ export function PageWrapper({
                     : "flex w-full flex-col items-stretch gap-2 sm:w-auto sm:shrink-0 sm:flex-row sm:flex-nowrap sm:items-center sm:justify-end [&>*]:w-full sm:[&>*]:w-auto",
                 )}
               >
-                {actions}
+                {visibleActions}
               </div>
             )}
           </div>
         </div>
       ) : null}
 
-      {filters && (
+      {visibleFilters && (
         <div
           className={cn(
             // Match FILTER_TOOLBAR_ROW: grow search only, never crush selects into overlaps.
@@ -172,7 +201,7 @@ export function PageWrapper({
             filtersClassName,
           )}
         >
-          {filters}
+          {visibleFilters}
         </div>
       )}
 
@@ -185,7 +214,7 @@ export function PageWrapper({
             contentClassName,
           )}
         >
-          {children}
+          {body}
         </div>
       ) : (
         <div
@@ -204,7 +233,7 @@ export function PageWrapper({
               contentClassName,
             )}
           >
-            {children}
+            {body}
           </div>
         </div>
       )}
