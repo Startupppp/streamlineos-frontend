@@ -27,7 +27,8 @@ import {
   ChatPanelFallback,
   ChatTriggerFallback,
 } from "./chat-lazy-fallbacks";
-import type { Channel, ChannelMember, Huddle } from "@/types/chat";
+import type { ChannelMember, Huddle } from "@/types/chat";
+import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import { getInitials } from "@/lib/format-utils";
 
 const ThreadPanel = dynamic(
@@ -50,7 +51,7 @@ const AiActionsMenu = dynamic(
 interface PanelHeaderProps {
   onBack: () => void;
   displayName: string;
-  channel: Channel | undefined;
+  channel: ChatChannelDetailWire | undefined;
   otherMember:
     | { id: string; name?: string | null; image?: string | null }
     | null

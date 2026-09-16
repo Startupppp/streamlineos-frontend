@@ -9,6 +9,7 @@ import {
   chatPollPageContract,
   chatPublicChannelContract,
 } from "@/hooks/api/chat-schema";
+import { chatChannelDetailContract } from "@/hooks/api/chat-extra-schema";
 
 /**
  * Two halves, and the second one is the whole point.
@@ -182,6 +183,57 @@ describe("BITE — the payload that actually shipped is rejected", () => {
     expect(
       chatChannelPageContract(chatChannelContract).safeParse({ channels: [CHANNEL] }).success,
     ).toBe(false);
+  });
+});
+
+const CHANNEL_DETAIL = {
+  id: 7,
+  orgId: "org_1",
+  name: "Apollo",
+  description: null,
+  type: "GROUP",
+  avatarUrl: null,
+  isArchived: false,
+  entityType: "project",
+  entityId: "1",
+  isPinned: false,
+  isPrivate: true,
+  messageCount: 42,
+  lastMessageAt: "2026-09-02T12:00:00.000Z",
+  createdAt: "2026-08-01T09:00:00.000Z",
+  updatedAt: "2026-09-02T12:00:00.000Z",
+  members: [
+    {
+      ...MEMBER,
+      lastReadAt: "2026-09-01T10:00:00.000Z",
+      joinedAt: "2026-08-01T09:00:00.000Z",
+      archivedAt: null,
+      user: { ...MEMBER.user, email: "alice@example.com" },
+    },
+  ],
+};
+
+describe("the channel-detail contract mirrors channelDetailSchema, not types/chat.ts", () => {
+  it("accepts the detail payload, which carries no unreadCount and no lastMessage — both are computed by the LIST projection only", () => {
+    expect(chatChannelDetailContract.safeParse(CHANNEL_DETAIL).success).toBe(true);
+  });
+
+  it("accepts the entity-channel lookup answering null when the record has no channel", () => {
+    expect(chatChannelDetailContract.nullable().safeParse(null).success).toBe(true);
+  });
+
+  it("rejects a detail payload missing messageCount, which the chat_channels row always carries", () => {
+    const { messageCount: _messageCount, ...withoutCount } = CHANNEL_DETAIL;
+    expect(chatChannelDetailContract.safeParse(withoutCount).success).toBe(false);
+  });
+
+  it("rejects a detail payload missing lastMessageAt, which is NOT NULL on chat_channels", () => {
+    const { lastMessageAt: _lastMessageAt, ...withoutTimestamp } = CHANNEL_DETAIL;
+    expect(chatChannelDetailContract.safeParse(withoutTimestamp).success).toBe(false);
+  });
+
+  it("rejects the list row, so the two projections cannot be swapped for one another", () => {
+    expect(chatChannelDetailContract.safeParse(CHANNEL).success).toBe(false);
   });
 });
 

@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { stripPmWorkspacePrefix } from "@/lib/build/pm-workspace-path";
 import type { ProjectNavPermissions } from "./project-nav-config";
 
@@ -17,6 +17,8 @@ const ROOT_BOARD_VIEWS = new Set([
 export function useProjectNavPermissions(): ProjectNavPermissions {
   const canProjects = useCan("build:view");
   const canTickets = useCan("build:tickets:view");
+  const canViewFeedback = useCan("feedbucket:submissions:view");
+  const feedbucketEnabled = useModuleEnabled("feedbucket");
 
   return {
     canProjectData: canProjects || canTickets,
@@ -36,7 +38,7 @@ export function useProjectNavPermissions(): ProjectNavPermissions {
     canMeetings: useCan("build:meetings:view"),
     canWorkflow: useCan("build:workflow:view"),
     canChat: useCan("build:tickets:view"),
-    canFeedback: useCan("feedbucket:submissions:view"),
+    canFeedback: canViewFeedback && feedbucketEnabled,
   };
 }
 

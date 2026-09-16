@@ -18,6 +18,7 @@ import type {
   OrgUser,
   PublicChannel,
 } from "@/types/chat";
+import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export interface ChannelListResult<TChannel> {
@@ -34,18 +35,7 @@ export interface ChannelListResult<TChannel> {
   refetch: () => void;
 }
 
-/**
- * `chat.ts` is a barrel the sidebar imports, so every eager value import in this
- * file reached Zod from the dashboard shell — and therefore from every
- * authenticated route, including the ones with no chat surface at all.
- *
- * The page contracts are COMPOSED (`chatChannelPageContract(row)` builds a new
- * schema on each call), which is why these go through `lazyContract`: it
- * memoises the load, so each schema is still constructed exactly once per
- * module rather than once per request. The contract itself is unchanged and is
- * still passed to the seam, so `/chat/channels` — the route the
- * `members[].membership.user` defect shipped through — is parsed as before.
- */
+
 const myChannelsContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) =>
     m.chatChannelPageContract(m.chatChannelContract),
@@ -214,7 +204,7 @@ export function useChatChannel(channelId: number) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: collaborationQueryKeys.chat.channel(channelId),
-    queryFn: ({ signal }) => apiClient.get<Channel>(`/chat/channels/${channelId}`, undefined, signal, channelDetailContract),
+    queryFn: ({ signal }) => apiClient.get<ChatChannelDetailWire>(`/chat/channels/${channelId}`, undefined, signal, channelDetailContract),
     staleTime: 2 * 60_000,
     enabled: canRead && channelId > 0,
   });

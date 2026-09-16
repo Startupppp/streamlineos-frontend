@@ -34,7 +34,8 @@ import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import type { Channel, ChatNotificationPreference } from "@/types/chat";
+import type { ChatNotificationPreference } from "@/types/chat";
+import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export function useArchiveChannel() {
@@ -99,7 +100,7 @@ export function useEntityChannel(
   return useQuery({
     queryKey: entityChannelQueryKey(entityType, entityId),
     queryFn: ({ signal }) =>
-      apiClient.get<Channel | null>(`/chat/channels/entity/${entityType}/${entityId}`, undefined, signal, chatEntityChannelLookupContract),
+      apiClient.get<ChatChannelDetailWire | null>(`/chat/channels/entity/${entityType}/${entityId}`, undefined, signal, chatEntityChannelLookupContract),
     enabled: canRead && Boolean(entityType && entityId),
     staleTime: 5 * 60_000,
   });
@@ -112,12 +113,12 @@ export interface CreateEntityChannelInput {
 
 export function useCreateEntityChannel() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<Channel, Error, CreateEntityChannelInput>(
+  return useAuthorizedMutation<ChatChannelDetailWire, Error, CreateEntityChannelInput>(
     "chat:channels:write",
     {
       mutationKey: ["chat", "channels", "entity", "create"],
       mutationFn: ({ entityType, entityId }) =>
-        apiClient.post<Channel>(
+        apiClient.post<ChatChannelDetailWire>(
           `/chat/channels/entity/${entityType}/${entityId}`,
           undefined,
           undefined,

@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import { use } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
+import { RequireModule } from "@/components/auth/require-module";
 import { FeedbucketSubmissionDetail } from "@/features/feedbucket";
 
 interface PageProps {
@@ -14,13 +15,15 @@ export default function ProjectFeedbackSubmissionRoute({ params }: PageProps) {
   const id = Number(submissionId);
 
   return (
-    <DashboardGate permission="feedbucket:submissions:view">
-      <PageWrapper
-        title="Submission"
-        backHref={`/build/${projectId}/feedbucket`}
-      >
-        <FeedbucketSubmissionDetail submissionId={id} />
-      </PageWrapper>
-    </DashboardGate>
+    <RequireModule module="feedbucket">
+      <DashboardGate permission="feedbucket:submissions:view">
+        <PageWrapper
+          title="Submission"
+          backHref={`/build/${projectId}/feedbucket`}
+        >
+          <FeedbucketSubmissionDetail submissionId={id} />
+        </PageWrapper>
+      </DashboardGate>
+    </RequireModule>
   );
 }

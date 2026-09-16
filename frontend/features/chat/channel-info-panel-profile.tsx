@@ -17,13 +17,13 @@ const storageUploadContract = lazyContract(() =>
 );
 import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
-import type { Channel } from "@/types/chat";
+import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import { ChannelAvatar } from "./channel-avatar";
 import { resolveDirectPartner } from "./channel-member-lookup";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface ChannelInfoPanelProfileProps {
-  channel: Channel | undefined;
+  channel: ChatChannelDetailWire | undefined;
   currentUserId: string;
   isAdmin: boolean;
   onlineUserIds: Set<string>;

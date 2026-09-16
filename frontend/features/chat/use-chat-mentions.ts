@@ -1,10 +1,11 @@
 import { useMemo } from "react";
-import type { Channel, OrgUser } from "@/types/chat";
+import type { OrgUser } from "@/types/chat";
+import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import { resolveDirectPartner } from "./channel-member-lookup";
 
 type ChatMentionsInput = {
   orgUsers: OrgUser[] | undefined;
-  channel: Channel | undefined;
+  channel: ChatChannelDetailWire | undefined;
   currentUserId: string;
   query: string;
 };

@@ -2,15 +2,15 @@
 
 > In force for every change under `frontend/`. Root `CLAUDE.md` (cardinal rules, boundary, TS quality, product rules, DoD) still applies; this file adds the frontend half and **wins on UI matters**.
 > Next.js 16 App Router · React 19 · TS strict · Tailwind 4 · shadcn/ui · TanStack Query v5 · react-hook-form + Zod 4 · Sonner · Framer Motion.
-> **UI, client state and Query hooks only** — no business APIs or database access (root §5). Client validation schemas remain in their owning feature. Preserve public landing visuals unless assigned; authorized authentication/onboarding repairs may change those flows. `/signup` currently redirects to `/signin`; verify route behavior before inventing another registration screen.
+> **UI, client state and Query hooks only** — no business APIs or database access (root §5). Client validation schemas stay in their owning feature. Preserve public landing visuals unless assigned; authorized auth/onboarding repairs may change those flows. `/signup` currently redirects to `/signin`; verify route behavior before inventing another registration screen.
 
 ---
 
 ## 1. Next.js (v16)
 
 - Server Components by default; `"use client"` only for state, handlers, effects or browser APIs, pushed to the **leaves**. Pass Server Components into Client Components as `children`. Parallelize independent fetches (`Promise.all`/preload); wrap non-`fetch` server data access in React `cache()`.
-- **Caching:** Query mutations invalidate affected canonical Query keys. Add Next.js server-cache revalidation only for an actual server-cached read with documented scope/ownership. Check installed configuration before introducing Cache Components; validate server caching in a production build, not development behavior.
-- **Business Server Actions and Route Handlers are NOT used here.** The only `route.ts` is NextAuth / auth-bridge. If one ever exists, treat it as a public POST endpoint: Zod-validate, verify auth + object-level + tenant authz, keep it thin.
+- **Caching:** Query mutations invalidate affected canonical Query keys. Add Next.js server-cache revalidation only for an actual server-cached read with documented scope/ownership. Check installed configuration before introducing Cache Components; validate server caching in a production build, not dev.
+- **Business Server Actions and Route Handlers are NOT used.** The only `route.ts` is NextAuth / auth-bridge. If one ever exists, treat it as a public POST endpoint: Zod-validate, verify auth + object-level + tenant authz, keep it thin.
 - **Params are Promises:** `const { projectId } = await params`; validate bracket params as untrusted input. **Route params are descriptive, never `[id]`** — backend `:projectId`, folder `[projectId]` and the variable all match.
 - **Middleware is NOT authorization** — bypassable (CVE-2025-29927): optimistic redirects / locale / coarse routing UX only; re-verify at the data layer. Strip `x-middleware-subrequest` at the proxy.
 - **The routing layer is `proxy.ts`** (`export async function proxy`, Node runtime); `middleware.ts` is deprecated in v16 and was deleted — never recreate it. No route-permission maps there (the JWT carries no permissions claim; gating is `requirePermission()` server-side + `PermissionGuard` in the API).
@@ -19,23 +19,22 @@
 
 ## 2. Data Layer (TanStack Query v5)
 
-- Ordinary reads belong in Query hooks, not fetch effects. Necessary lifecycle-triggered mutations use the canonical mutation hook, replay protection and server idempotency; component refs alone do not protect remounts or retries.
+- Ordinary reads belong in Query hooks, not fetch effects. **All client fetching goes through hooks in `lib/api/` / `hooks/api/`** — no raw `fetch`/`axios` in components. Necessary lifecycle-triggered mutations use the canonical mutation hook, replay protection and server idempotency; a `calledRef` may suppress duplicate work within a mount but is not the correctness boundary.
 - **Zustand is NOT installed; do not add it.** Query owns all server state; genuinely shared client state uses **React Context**, co-located with its feature.
-- **All client fetching goes through Query hooks in `lib/api/` / `hooks/api/`** — no raw `fetch`/`axios` in components. Lifecycle effects follow the replay/idempotency rule above; a calledRef may suppress duplicate work within a mount but is not the correctness boundary.
 
 **Query keys** — one `queryKeys` object in `lib/query-keys.ts`, one factory per entity, `const base = ["streamlineos"]`; co-locate `queryKey` + `queryFn` + `staleTime` per entity. **Never hand-type a key array.**
-⚠️ **The tenant segment lives in the query HASH, not in `base`.** Every key is hashed as `[authenticated:<orgId>:<userId>, key]` by `scopedQueryKeyHashFn` (`lib/query-scope.ts`), which `createAppQueryClient` and `createServerQueryClient` both install, and `QueryProvider` remounts on `key={scope}` so the cache is empty the moment the scope changes. This isolates entries after scope changes, covered by `lib/query-scope-isolation.test.tsx`; it does not fence in-flight switches or late session updates. Require the intended refreshed identity before releasing tenant reads. The key ARRAY stays tenant-free on purpose: `invalidateQueries` matches the array, not the hash.
-- **Never hand-thread `orgId` into a factory for an authenticated surface.** That was a second, weaker pattern and it is collapsed: `access.me()`, `access.simulate(targetUserId)`, `access.simulationCandidates(params)`, `hr.attendanceStatus()`, `hr.hub(today)`, `dashboard.*()` and `notifications.*()` all take no org. An `orgId` argument is legitimate only where it selects a **public** tenant the viewer does not belong to — `roadmap.publicBoard(orgId)`, `kbAttachments.publicList(orgId, slug)`, `supportChatWidget.session(orgId, token)`.
-- **`queryClient.clear()` stays** at all eight call sites as defence in depth. It is no longer load-bearing; it is the last line against a provider change that drops the scope.
+⚠ **The tenant segment lives in the query HASH, not in `base`.** Every key is hashed as `[authenticated:<orgId>:<userId>, key]` by `scopedQueryKeyHashFn` (`lib/query-scope.ts`), installed by both `createAppQueryClient` and `createServerQueryClient`; `QueryProvider` remounts on `key={scope}` so the cache empties the moment scope changes. This isolates entries after a scope change (covered by `lib/query-scope-isolation.test.tsx`); it does not fence in-flight switches or late session updates. The key ARRAY stays tenant-free on purpose: `invalidateQueries` matches the array, not the hash.
+- **Never hand-thread `orgId` into a factory for an authenticated surface.** `access.me()`, `access.simulate(targetUserId)`, `access.simulationCandidates(params)`, `hr.attendanceStatus()`, `hr.hub(today)`, `dashboard.*()` and `notifications.*()` all take no org. An `orgId` argument is legitimate only where it selects a **public** tenant the viewer does not belong to — `roadmap.publicBoard(orgId)`, `kbAttachments.publicList(orgId, slug)`, `supportChatWidget.session(orgId, token)`.
+- **`queryClient.clear()` stays** at all eight call sites as defence in depth — no longer load-bearing, but the last line against a provider change that drops the scope.
 - **A cache outside Query is still a cache.** Org-owned `localStorage` (stored entity ids, per-org drafts) carries the same scope segment via `lib/org-scoped-storage.ts`; pure UI preferences (theme, density, panel-collapsed) deliberately do not.
-- `scripts/check-query-scope.mjs` fails the build on a `new QueryClient(` outside the two sanctioned factories, a stray `queryKeyHashFn`, or a prefetch that dehydrates from a client it did not get from `createServerQueryClient` — that last one is what made every authenticated route render a spinner.
+- `scripts/check-query-scope.mjs` fails the build on a `new QueryClient(` outside the two sanctioned factories, a stray `queryKeyHashFn`, or a prefetch dehydrating from a client it did not get from `createServerQueryClient`.
 
-**staleTime tiers** — live `0` + `refetchInterval` (realtime counters, in-flight jobs) · volatile `15_000` (fast queues) · standard list `30_000` (permissions, fast-changing lists) · **standard entity `60_000`** · slow list `2 * 60_000` (reference lists, aggregates) · session/org `5 * 60_000` · catalog `30 * 60_000`. The provider currently defaults to `2 * 60_000`; select freshness from the writer contract. Every `useQuery` declares one; every `useMutation` a `mutationKey`. (v5: `cacheTime` → `gcTime`.)
+**staleTime tiers** — live `0` + `refetchInterval` (realtime counters, in-flight jobs) · volatile `15_000` (fast queues) · standard list `30_000` (permissions, fast-changing lists) · **standard entity `60_000`** · slow list `2 * 60_000` (reference lists, aggregates) · session/org `5 * 60_000` · catalog `30 * 60_000`. The provider defaults to `2 * 60_000`; select freshness from the writer contract. Every `useQuery` declares one; every `useMutation` a `mutationKey`. (v5: `cacheTime` → `gcTime`.)
 
 **Hooks** — `hooks/api/<module>/<entity>.ts`. Naming `useThings` / `useThing` / `useCreateThing` / `useUpdateThing` / `useDeleteThing`. Options pass-through `options?: Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">`, spread **before** the gate — **never re-declare `enabled` after `...options`** (it silently clobbers every caller's gate); combine `enabled: !!orgId && (options?.enabled ?? true)`.
-**Never hardcode pagination params in a hook** (`?page=1&limit=100` + `select`-away-the-envelope). Hooks accept the endpoint’s canonical cursor/page/filter contract and retain its envelope; preserve continuation rather than invent totals or drain every page; per-status filter badges come from a server-side `statusCounts` aggregate so filtering paginates server-side. **Never hydrate a collection through a parent-detail endpoint** — read a dedicated paginated, column-projected endpoint (`GET /projects/:id/tickets`), never `with: { tickets: … }`.
+**Never hardcode pagination params in a hook** (`?page=1&limit=100` + `select`-away-the-envelope). Hooks accept the endpoint's canonical cursor/page/filter contract and retain its envelope; preserve continuation rather than invent totals or drain every page; per-status filter badges come from a server-side `statusCounts` aggregate so filtering paginates server-side. **Never hydrate a collection through a parent-detail endpoint** — read a dedicated paginated, column-projected endpoint (`GET /projects/:id/tickets`), never `with: { tickets: … }`.
 
-**Gating follows the actual endpoint contract** (`hooks/api/access.ts`). Permission-guarded queries combine the exact backend key through `useCan` with caller readiness and module checks where required. Authenticated universal queries use verified session/org readiness, retaining server recipient/record/source ACLs; do not invent an admin key to gate them. Public identity queries follow their validated public contract and rate limits. Service-authorized routes retain their service checks rather than an unrelated catalog gate. `useModuleEnabled` returning true while access loads is not proof of authorization. Prevent predictable 403 fetch loops; server guards and live membership remain authoritative. Denied UI uses `NoPermissionState`, not an empty-success state.
+**Gating follows the actual endpoint contract** (`hooks/api/access.ts`). Permission-guarded queries combine the exact backend key through `useCan` with caller readiness and module checks where required. Authenticated universal queries use verified session/org readiness, retaining server recipient/record/source ACLs — do not invent an admin key to gate them. Public identity queries follow their validated public contract and rate limits; service-authorized routes retain their service checks rather than an unrelated catalog gate. `useModuleEnabled` returning true while access loads is not proof of authorization. Prevent predictable 403 fetch loops; server guards and live membership remain authoritative. Denied UI uses `NoPermissionState`, not an empty-success state.
 **Roles are fixed standings, not user-created role definitions.** Present organization owner/admin/member and module owner/admin/member using the backend's current contracts. Individual permissions and record scope are separate controls. Existing internal role slugs are implementation identifiers, not permission to introduce a role-creation screen. Platform billing authority is separate from module administration.
 
 **Mutations** — invalidate by **true key prefix** (no trailing `undefined`; `exact: true` only when meant), listing every affected surface, and always re-call the caller's handler:
@@ -48,17 +47,14 @@ onSuccess: (data, variables, context, mutFnCtx) => {
 }
 ```
 
+**Prefer patching the cache over refetching** (root §9): when the response already carries the new state, `setQueryData` it — do not invalidate a broad prefix, and remember that invalidating a paginated/infinite query refetches **every loaded page**.
 **Optimistic — canonical `useUpdateTicket` (`hooks/api/build/ticket-mutations.ts`):** (1) `onMutate` cancels every key you will patch and snapshots each into a typed context; (2) patch **every cache the view renders from** — detail, single-entity, board array, all paginated pages via `getQueriesData`; (3) resolve related display objects from cached data inside the patch (assignee from `previousDetail.members`, so avatar and name appear immediately — never render an id while waiting); (4) `onError` restores every snapshot including each list snapshot; (5) `onSettled` invalidates, gating expensive aggregates behind the fields that actually move them so a title edit doesn't refetch sprint rollups.
 **Inline edits on board/list/card surfaces MUST be optimistic** — never invalidate-and-refetch for perceived speed. Quotes and revenue figures never are. Dedupe identical inflight requests with a shared Promise (token/session).
 **Never replace the app with `AppLoadingScreen` on a background refetch or ordinary mutation** — that loader is for the true initial load with no verified session/access data. Preserve stale data during refetch; show pending state only on the affected control/row. Never refresh the NextAuth session to reconcile state Query already owns.
 
 ## 3. Components & Memoization
 
-**Read locality:** reuse canonical query options for identical reads and let Query
-deduplicate consumers. Keep filtered/range lists route-owned and unopened detail/
-dialog reads disabled. Shell reads stay lightweight. Include every response-shaping
-input (including limit) in keys, preserve hydration hashing and test every writer's
-invalidation. Root §9 governs scope, switching and failure checks.
+**Read locality:** reuse canonical query options for identical reads and let Query deduplicate consumers. Keep filtered/range lists route-owned and unopened detail/dialog reads disabled. Shell reads stay lightweight. Include every response-shaping input (including limit) in keys, preserve hydration hashing and test every writer's invalidation. Root §9 governs scope, switching and failure checks.
 
 **Pages compose; they don't implement.** A route `page.tsx` fetches and composes — UI lives in `features/<feature>/components/`. Extract the moment a block owns state, repeats, or pushes the file past ~200 lines (hard limits root §7). A 600-line page with five inline sections is a bug, not a style.
 
@@ -66,15 +62,15 @@ invalidation. Root §9 governs scope, switching and failure checks.
 
 **Ownership.** A shared component lives in one place, imported through a barrel, never copied. Second consumer ⇒ promote it to `components/shared` (or `components/ui` for a primitive) and update every importer; feature → feature imports are banned (root §9). **Adding or extending a shared component means adding its row to §15 in the same change** — that index is how the next session finds it instead of writing a third variant.
 
-**Barrel exception for route-level files.** Route files under `app/**` (`page.tsx`, `error.tsx`, `loading.tsx`, `not-found.tsx`) that import only `ErrorState`, `LoadingState`, or `NoPermissionState` must deep-import from the leaf (`@/components/shared/error-state`, `@/components/shared/loading-state`, `@/components/shared/no-permission-state`) rather than the barrel. The `components/shared` barrel re-exports `EntityFormSheet` and `EntityFormDialog`, which pull in `react-hook-form`; across a `"use client"` boundary webpack cannot tree-shake them, so any barrel import adds ~10–11 KB gzipped to the route's eager chunk even when no form is present. Feature components that already use the form shells continue to import through the barrel.
+**Barrel exception for route-level files.** Route files under `app/**` (`page.tsx`, `error.tsx`, `loading.tsx`, `not-found.tsx`) that import only `ErrorState`, `LoadingState` or `NoPermissionState` must deep-import from the leaf (`@/components/shared/error-state`, `.../loading-state`, `.../no-permission-state`), not the barrel: it re-exports `EntityFormSheet`/`EntityFormDialog`, which pull in `react-hook-form`, and across a `"use client"` boundary webpack cannot tree-shake them — ~10–11 KB gzipped added to the route's eager chunk for nothing. Feature components already using the form shells keep the barrel.
 
 **Props & attributes**
 - Explicit typed props (`interface XProps`), no `any`, no `React.FC`; derive from Zod with `z.infer` where a schema exists.
 - Composition over prop drilling — never thread a prop more than 2 levels; use `children` or feature context.
-- Named handlers (`handleStatusChange`), never inline anonymous functions; callback props are `onXChange`/`onXSelect`. **The handler is declared INSIDE the component or page that uses it** and referenced by name from JSX — `onClick={handleRefresh}`, never `onClick={() => refresh()}`, `onChange={(e) => setX(e.target.value)}` or `onSelect={() => {}}`. This holds for every JSX prop that takes a function, including `render`/`cell` callbacks and `map` bodies that build one. Lift a handler out of the component only when it is genuinely pure and shared, and then it lives in the feature's own module — not as an inline closure at the call site.
+- Named handlers (`handleStatusChange`), never inline anonymous functions; callback props are `onXChange`/`onXSelect`. **The handler is declared INSIDE the component or page that uses it** and referenced by name — `onClick={handleRefresh}`, never `onClick={() => refresh()}`, `onChange={(e) => setX(e.target.value)}` or `onSelect={() => {}}`. This holds for every JSX prop taking a function, including `render`/`cell` callbacks and `map` bodies that build one. Lift a handler out only when genuinely pure and shared — then it lives in the feature's own module, not as an inline closure at the call site.
 - Accept and merge `className` with `cn()`; `forwardRef` whenever the component wraps a focusable or measurable element (and always for DataTable-cell sub-components — hooks can't run in cell callbacks).
 - Accessibility is part of the contract: `aria-label` on every icon-only control, `type="button"` on non-submit buttons, label ↔ control via the `Form*` primitives, stable `key` in every list (never the index).
-- **`streamline/no-unlabelled-icon-button` enforces the icon-only half at the call site**, which is where a component test cannot reach — `AnimatedIconButton`'s discriminated union requires a name, but that type erases the moment someone writes a raw `<button>`. It flags a `<button>` whose every JSX child is named `*Icon` and which carries no `aria-label` / `aria-labelledby` / `title`. It deliberately skips what it cannot resolve statically: `{...props}` spreads (the caller supplies the name), expression children, lowercase HTML children, and PascalCase children not named `*Icon` — `<TruncatedText>` and `<Avatar>` render visible UI, not icons. Widening it past that produced 101 findings of which one was real. For a confirmed false positive: `// eslint-disable-next-line streamline/no-unlabelled-icon-button -- <reason>`, never a bare disable.
+- **`streamline/no-unlabelled-icon-button` enforces the icon-only half at the call site**, where a component test cannot reach — `AnimatedIconButton`'s discriminated union requires a name, but that type erases the moment someone writes a raw `<button>`. It flags a `<button>` whose every JSX child is named `*Icon` and which carries no `aria-label`/`aria-labelledby`/`title`. It deliberately skips what it cannot resolve statically — `{...props}` spreads (the caller supplies the name), expression children, lowercase HTML children, and PascalCase children not named `*Icon`; widening it past that is almost all false positives. For a confirmed one: `// eslint-disable-next-line streamline/no-unlabelled-icon-button -- <reason>`, never a bare disable.
 - Spread `{...field}` for react-hook-form controls; never fork a field's state into local `useState`.
 
 **Memoize only what you measured.** Optimizing an unmeasured render costs more (comparison + cache + cognitive load) than the render it saves.
@@ -96,12 +92,10 @@ invalidation. Root §9 governs scope, switching and failure checks.
 
 ```tsx
 // canonical: features/build/sprints/create-sprint-dialog.tsx
-const handleSubmit = (data: CreateSprintInput) => {
-  createSprint.mutate(payload, {
-    onSuccess: () => { toast.success("Sprint created successfully"); setOpen(false); },
-    onError: (error) => { toast.error(getErrorMessage(error)); },
-  });
-};
+const handleSubmit = (data: CreateSprintInput) => createSprint.mutate(payload, {
+  onSuccess: () => { toast.success("Sprint created successfully"); setOpen(false); },
+  onError: (error) => { toast.error(getErrorMessage(error)); },
+});
 
 <EntityFormSheet<CreateSprintInput>
   open={open} onOpenChange={setOpen} title="Create new sprint"
@@ -116,9 +110,9 @@ Fields live in a sibling `*-form-fields.tsx` taking `{ form }`; the schema in a 
 
 **Field primitives** (`components/ui/form.tsx`): `Form` (FormProvider) · `FormField` (Controller + name context) · `FormItem` (`div.grid.gap-2`) · `FormLabel` (auto `htmlFor`, `data-[error=true]:text-destructive`) · `FormControl` (Slot wiring `id`, `aria-describedby`, `aria-invalid`) · `FormDescription` · `FormMessage` (`text-destructive text-xs`, `role="alert" aria-live="polite"`). Label above control, helper below, error below helper; `FormMessage` renders `null` with no error — never conditionally mount it. All controls inherit `h-9 / text-sm` from `FIELD_CONTROL_CLASS`.
 
-**One error-extraction function:** `getErrorMessage(error: unknown): string` (`lib/get-error-message.ts`). **Every mutation `onError` and every error-state string goes through it** — never `error instanceof Error ? …`, never raw `.message`. It surfaces the backend message and substitutes a friendly generic only for bare status lines (`"404 Not Found"`), reason phrases, network failures, stale-build chunk errors and empty/`[object Object]` errors; status fallbacks are specific (402 credit/plan, 403 permission, 409 conflict).
+**One error-extraction function:** `getErrorMessage(error: unknown): string` (`lib/get-error-message.ts`). **Every mutation `onError` and every error-state string goes through it** — never `error instanceof Error ? …`, never raw `.message`. It surfaces the backend message and substitutes a friendly generic only for bare status lines (`"404 Not Found"`), reason phrases, network failures, stale-build chunk errors and empty/`[object Object]` errors; status fallbacks are specific (402 credit/plan, 403 permission, 409 conflict, 429 names the wait and the endpoint).
 
-**One error parser:** `lib/api-client.ts` — `ApiError { status?, code?, details? }` + `isApiError()` / `getApiErrorCode()`. Error body reads `message` as `string` **or** `string[]` (NestJS validation → joined `", "`), else `error`; success body `{ success: true, data }` unwraps to `data`; `204` → `undefined`. Branch on `isApiError(e) && e.status === 409`, never on message prefixes. Timeout **30s** → `ApiError(…, "TIMEOUT")`; `401` retries once with a fresh token then signs out; `403` with `ORG_MEMBERSHIP_INACTIVE`/`SUSPENDED` redirects to `/access-suspended`.
+**One error parser:** `lib/api-client.ts` — `ApiError { status?, code?, details?, endpoint? }` + `isApiError()` / `getApiErrorCode()` / `getRetryAfterSeconds()`. Error body reads `message` as `string` **or** `string[]` (NestJS validation → joined `", "`), else `error`; success body `{ success: true, data }` unwraps to `data`; `204` → `undefined`. Branch on `isApiError(e) && e.status === 409`, never on message prefixes. Timeout **30s** → `ApiError(…, "TIMEOUT")`; `401` retries once with a fresh token then signs out; `403` with `ORG_MEMBERSHIP_INACTIVE`/`SUSPENDED` redirects to `/access-suspended`; a `429` retry waits the server's `Retry-After` (`queryRetryDelay`, `lib/query-error-policy.ts`).
 
 **Toasts (Sonner):** success toasts are used — past tense, specific; errors always `toast.error(getErrorMessage(error))`. No toast for an optimistic inline edit that already shows its result; the rollback is the error signal.
 
@@ -137,7 +131,7 @@ Fields live in a sibling `*-form-fields.tsx` taking `{ form }`; the schema in a 
 - Feature code → `features/<feature>/{components,lib,hooks}/`. **Banned:** `_components/`, `_lib/` inside `app/`. `app/` holds route files only.
 - Cross-feature UI → `components/`; shared hooks → `hooks/`; utils → `lib/`; shared types → `types/` or co-located.
 - **Feature-first.** A feature owns its components/hooks/queries/types behind its barrel `index.ts` — import through the barrel (`import { EntityFormSheet } from "@/components/shared"`), max ~3–4 folders deep. Move misplaced files when fixing a page.
-- kebab-case files/folders, PascalCase symbol inside; hooks `use-*.ts` → `useX`; server fetch helpers `get-*`; **Zod schemas in `*-schema.ts`** typed via `z.infer`. ⚠️ Legacy drift exists (inline `z.object({` in `.tsx`); new code adds none.
+- kebab-case files/folders, PascalCase symbol inside; hooks `use-*.ts` → `useX`; server fetch helpers `get-*`; **Zod schemas in `*-schema.ts`** typed via `z.infer`. ⚠ Legacy drift exists (inline `z.object({` in `.tsx`); new code adds none.
 - Tabs sharing a line with search/filters use `PageTabsToolbar` (`{ tabs, search?, filters?, actions?, tabsDensity?, collapseBelow?, className? }`); a body-filling `TabsContent` needs `TABS_CONTENT_PAGE_BODY_CLASS`.
 - Tab and filter state syncs to the URL with `router.replace(\`${pathname}?${params.toString()}\`, { scroll: false })` (canonical `features/build/all-work/use-all-work-filters.ts`), always resetting pagination.
 
@@ -153,7 +147,7 @@ Fields live in a sibling `*-form-fields.tsx` taking `{ form }`; the schema in a 
 - `--primary` ink CTA fill · `--ring` focus rings · `--brand-*` + `--gradient-signature` landing/onboarding/marketing only · `--chart-1..5` chart seeds · `--sidebar-*` sidebar chrome.
 - **`--accent` is a NEUTRAL hover wash, not brand blue** — shadcn primitives (DropdownMenuItem, SelectItem, CommandItem, CalendarDay…) paint `bg-accent text-accent-foreground` on hover/focus, so a chromatic value makes every menu hover illegible.
 - **Accent surfaces use tokens, not literals.** Unread bars/dots, selection tints, active filters, count badges and selected cards use `bg-primary`, `bg-primary/5..15`, `border-l-primary`, `--ring` — a hardcoded `blue-*` doesn't flip in dark mode and forks the accent source. Literal blue survives only for semantic info and chart seeds. **Blue replaces purple** wherever legacy violet/indigo is removed.
-- **Semantic status** — new code uses the status tokens: `statusToneClasses(tone)` from `lib/design-tokens`, giving `bg-status-<tone>-surface` / `text-status-<tone>-ink` / `border-status-<tone>-rule` for `success` · `warning` · `danger` · `info` · `neutral`. The dark pairing is built into the token, so no `dark:` twin is written by hand. Existing literals `bg-X-50 text-X-700 border-X-200` (emerald = completed/active/approved · amber = pending/expiring · red = error/rejected/overdue · blue = draft/in-progress/info · slate = closed/archived) stay valid until ticket 17 migrates them — do not add new ones. Never brand gradients for status, never status colors for decoration. **Every light tint carries `dark:bg-X-500/10 dark:text-X-300 dark:border-X-500/30`**; standalone colored icons carry `dark:text-X-400`. Never `bg-white` or raw `slate-*` chrome.
+- **Semantic status** — new code uses `statusToneClasses(tone)` from `lib/design-tokens`, giving `bg-status-<tone>-surface` / `text-status-<tone>-ink` / `border-status-<tone>-rule` for `success` · `warning` · `danger` · `info` · `neutral`; the dark pairing is built into the token, so no `dark:` twin is written by hand. Existing literals `bg-X-50 text-X-700 border-X-200` (emerald = completed/active/approved · amber = pending/expiring · red = error/rejected/overdue · blue = draft/in-progress/info · slate = closed/archived) stay valid until ticket 17 migrates them — do not add new ones. Never brand gradients for status, never status colors for decoration. **Every light tint carries `dark:bg-X-500/10 dark:text-X-300 dark:border-X-500/30`**; standalone colored icons carry `dark:text-X-400`. Never `bg-white` or raw `slate-*` chrome.
 - **Borders:** `border-border` full opacity for structure; **≥70%** on any card/panel outer boundary (`border-border/70` is compliant); `/60` only for hairline dividers inside dense rows.
 - **Per-module identity accent** — identity moments only (activity-bar icon tint, active nav indicator, module hero tint, chart seed), never buttons, hovers or body text: CRM/Sales `blue-600` · Build/PM `violet-600` · HR/People `emerald-600` · Inventory `amber-600` · Billing/Finance `cyan-700` · Support `rose-600` · Admin/Settings `slate-600`.
 
@@ -247,11 +241,11 @@ Card is `rounded-lg border border-border bg-card px-3 py-2.5` (~56px) — tinted
 | `onRowClick` · `footer` · `minWidth` · `className` · `rowClassName` | `rowClassName: (row, index) => string` |
 
 `DataTableColumn<T>` = `{ key; header; cell: (row) => ReactNode; className?; headerClassName? }`. Search and filters live in `PageWrapper`'s `filters` prop above the card; `DataTable` renders only the table + pagination footer — `search`/`toolbar` still compile, so this is enforced **in review**.
-**Sorting is the server's, and there is no client sort.** `sortState.fields` names the `key`s the endpoint accepts; a column in that list gets a header control, every other column gets none, so a header can never ask for an order the API would drop. Canonical `features/users/users-page.tsx` — one `as const` list feeds both the URL-param parse and `fields`, which is what stops the two drifting. **Never sort in the component instead:** a `DataTable` holds one page (server pagination, or a hook with its own `limit`), so a column-header sort over `data` reorders that page and presents it as a sorted table. There is no prop that makes this safe — whether the table holds the whole set is a property of the hook call, not of anything `DataTable` receives. The predecessor `sortable`/`sortValue` pair was inert for its whole life (display columns have no `accessorFn`, so table-core's `getCanSort()` was false for all 234 declarations) and is deleted; `components/ui/data-table-sorting.test.tsx` holds the line.
+**Sorting is the server's, and there is no client sort.** `sortState.fields` names the `key`s the endpoint accepts; a column in that list gets a header control, every other column gets none, so a header can never ask for an order the API would drop. Canonical `features/users/users-page.tsx` — one `as const` list feeds both the URL-param parse and `fields`, which is what stops the two drifting. **Never sort in the component instead:** a `DataTable` holds one page (server pagination, or a hook with its own `limit`), so a column-header sort over `data` reorders that page and presents it as a sorted table. No prop makes this safe — whether the table holds the whole set is a property of the hook call, not of anything `DataTable` receives. The old `sortable`/`sortValue` pair was inert (display columns have no `accessorFn`, so `getCanSort()` was always false) and is deleted; `components/ui/data-table-sorting.test.tsx` holds the line.
 Call-site rules: row-actions column `w-8` with an `h-7 w-7` ghost icon button · numeric `font-mono tabular-nums text-right`, text left with `truncate`, links `text-blue-600 hover:underline` and no other link color · status via `<Badge variant="outline">` · empty body = one `<TableRow><TableCell colSpan={N} className="p-0">` wrapping `<EmptyState className="border-0 bg-transparent min-h-[40vh]">` · scroll body `flex-1 min-h-0 overflow-auto` with a `min-w-max` inner div.
 **Fill chain:** a table filling the page body needs `className="flex-1 min-h-0"` on `DataTable` **and** a `flex min-h-0 flex-1 flex-col` ancestor chain, or it stops short of the shell edge.
 **Pagination — two components, not interchangeable:** `DataTablePagination` (`components/shared/`) is what `DataTable` renders internally (page-size + first/last) — never mount it yourself; `TablePagination` (`components/ui/`) is for every **non-`DataTable`** paginated surface. Never hand-roll a prev/next footer.
-**Both take a `mode` discriminant, and offset is the default.** Offset mode is `{ page, pageSize, total }` and renders numbers plus a "Showing 21–40 of 312" window; **cursor mode is `{ mode: "cursor", rowCount, hasMore, hasPrevious, onNext, onPrevious }` and renders prev/next only** — a keyset list has no total and no page index, so there is nothing to number and **nothing may be faked**. The inactive half of each variant is typed `never`, so the two cannot be mixed even by spreading a wider object. `DataTable`'s `pagination` prop gains the same third variant (`{ mode: "cursor", pageSize, hasMore, hasPrevious, onNext, onPrevious, onPageSizeChange? }`), which sets `aria-rowcount={-1}` (ARIA for "total unknown") rather than passing off the page length as a total. Drive it with **`useCursorPager(resetKey?)`** (`components/ui/table-pagination.tsx`) — it owns the cursor stack, because "previous" in a keyset list is the cursor that produced the previous page, not a subtraction. A cursor is only valid for the query that minted it: pass a `resetKey` summarising the active filters and page size and the stack rewinds during the render the key changes (React's adjust-state-on-input pattern, not an effect that would let a stale request out first), or call `reset()` from an existing handler.
+**Both take a `mode` discriminant; offset is the default.** Offset = `{ page, pageSize, total }`, rendering numbers + "Showing 21–40 of 312". **Cursor = `{ mode: "cursor", rowCount, hasMore, hasPrevious, onNext, onPrevious }`, prev/next only** — a keyset list has no total and no page index, so there is nothing to number and **nothing may be faked**; the inactive half of each variant is typed `never`. `DataTable`'s `pagination` takes the same cursor variant (plus `pageSize`, `onPageSizeChange?`) and sets `aria-rowcount={-1}` rather than passing the page length off as a total. Drive it with **`useCursorPager(resetKey?)`** (`components/ui/table-pagination.tsx`) — it owns the cursor stack, because "previous" in a keyset list is the cursor that produced the previous page, not a subtraction. A cursor is only valid for the query that minted it: pass a `resetKey` summarising active filters + page size and the stack rewinds during the render the key changes (adjust-state-on-input, not an effect that would let a stale request out first), or call `reset()`.
 
 **Sheets & dialogs** — three zones; header and footer never scroll:
 
@@ -374,10 +368,11 @@ If it is here, do not reimplement it. **Adding a shared component means adding a
 | Rich surface (HR + Administration) | `RichPanel`, `RichPageContent`, `RichHero`, `RichQuickAction`, `RichIconWell` — `components/shared/rich-surface.tsx` (re-exported `Hr*` from `features/hr/shared/hr-ui.tsx`) |
 | AI | `AiActionsMenu`, `AiUsageChip` — `components/ai/` |
 | Party merge (duplicates) | `PartyMergeDialog`, `DuplicatePartyCard` — `components/party-merge/` (CRM contacts and the party duplicates page both open it) |
-| Call intelligence | `CallAnalysisPanel`, `callIntelligenceHref` — `components/call-intelligence/` (the shared timeline row and the CRM intelligence surfaces) |
-| API · errors · keys | `apiClient`, `ApiError`, `isApiError`, `getApiErrorCode` — `lib/api-client.ts` · `getErrorMessage` — `lib/get-error-message.ts` · `queryKeys` — `lib/query-keys.ts` |
+| Call intelligence | `CallAnalysisPanel`, `callIntelligenceHref` — `components/call-intelligence/` |
+| API · errors · keys | `apiClient`, `ApiError`, `isApiError`, `getApiErrorCode`, `getRetryAfterSeconds` — `lib/api-client.ts` · `getErrorMessage` — `lib/get-error-message.ts` · `queryRetryDelay`, `readErrorReachesBoundary`, `INLINE_READ_ERROR` — `lib/query-error-policy.ts` · `queryKeys` — `lib/query-keys.ts` |
 | Access | `useAccess`, `useCan`, `useModuleEnabled`, `usePermissionCatalog` — `hooks/api/access.ts` · `useOrgDisplay` — `hooks/api/org-display.ts` · `<RequireModule module="…">` — `components/auth/require-module.tsx` · `requirePermission` — `lib/rbac/require-permission.ts` |
 | Design tokens | `STATUS_TONES`, `statusToneClasses`, `typeScaleClass`, `densityAttribute`, `DENSITY_MODES` — `lib/design-tokens/index.ts` (values in `globals.css`; live gallery at `/design-system`, dev only) |
+| Person display | `getUserDisplayName`, `getUserInitials` — `lib/person-display.ts` |
 | Format · motion | `formatMoney`, `formatMoneyCompact`, `MoneyDisplay`, `formatAmountInCurrency`, `formatINR`, `formatINRCompact`, `formatCurrencyFull`, `getInitials`, `formatTime`, `formatFileSize`, `calcPercent`, `numberToWords` — `lib/format-utils.ts` · `staggerContainer`, `fadeUp`, `fadeIn`, `slideInLeft`, `scaleIn` — `lib/motion-variants.ts` |
 
 Money on a tenant's records renders in **that organisation's** currency: `formatMoneyCompact(value, useOrgDisplay())` for stats and dense cells, `formatMoney` for full precision. `useOrgDisplay` reads `GET /me/org-display`, which is ungated — every member sees money somewhere, so it must not depend on `settings:view`. `Intl` compact notation already groups `en-IN` in lakhs and crores, so this is not an INR special case. **A row that stores its own `currency` column renders through `formatAmountInCurrency(amount, currency)`** — it keeps `formatINR`'s digit rules for INR, names a non-ISO code rather than throwing, and is pinned repo-wide by `lib/row-currency-render-contract.test.ts`, which fails on any `formatINR*(x.amount)`. The INR-hardcoded helpers below are legacy: `formatCurrency` aliases `formatINRCompact` (`₹1.2Cr`/`₹3.4L`/`₹12K`, for stats and dense cells); `formatINR` renders `₹1,23,456`; `formatCurrencyFull(amount, currency?, locale?, maxFrac?)` is full precision, default `INR`/`en-IN`. Dates go through `lib/date-utils.ts` + `date-fns` `format` — never inline `toLocaleDateString`; `formatShortDate` for a date, `formatDateTime` where the time is the question (logs, audit trails), `formatRelativeTime` for a feed.
@@ -433,63 +428,31 @@ A body using `space-y-4` instead of `flex flex-1 min-h-0 flex-col` leaves dead b
 `flex-1 min-h-0` on `DataTable` is not optional · `pagination` is **server** mode for anything that can exceed a page · the error branch comes **before** empty/not-found or a failure reads as "no data" · `minWidth` forces horizontal scroll rather than crushing columns · a sole filter fills mobile width (never a Drawer), 2+ filters keep search first and collapse the rest below `md` · at 375px actions become a full-width row and the table becomes cards via `mobileCard`.
 
 ### T2 · List + cards (rows aren't tabular)
-
 Same header/filters as T1; body is `<div className="flex flex-1 min-h-0 flex-col gap-3">` wrapping a `grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3` of `bg-card rounded-xl border border-border shadow-sm p-4 hover:border-primary/40 hover:shadow-md transition-all cursor-pointer` cards, then `<TablePagination />`. Only the card is `rounded-xl`; inner rows and chips stay `rounded-lg`/`rounded-md`.
 
 ### T3 · Detail + tabs
-
-```tsx
-<PageWrapper title={record.name} backHref="/crm/contacts" contentClassName="flex min-h-0 flex-1 flex-col">
-  <Tabs value={tab} onValueChange={onTabChange} className="flex min-h-0 flex-1 flex-col">
-    <TabsList>…</TabsList>
-    <TabsContent value="overview" className={TABS_CONTENT_PAGE_BODY_CLASS}>…</TabsContent>
-  </Tabs>
-</PageWrapper>
-```
-
-`backHref` only on a page with no sidebar entry (§8) · tab state syncs to the URL (§6) · every body-filling `TabsContent` uses `TABS_CONTENT_PAGE_BODY_CLASS` (hand-writing `flex-1 min-h-0 mt-0` omits the `data-[state=active]:` guards) · 5+ triggers as a status filter is **AP-2**.
+`PageWrapper` with `contentClassName="flex min-h-0 flex-1 flex-col"` → `<Tabs>` carrying the same three classes → each body-filling `TabsContent` on `TABS_CONTENT_PAGE_BODY_CLASS` (hand-writing `flex-1 min-h-0 mt-0` omits the `data-[state=active]:` guards). `backHref` only on a page with no sidebar entry (§8) · tab state syncs to the URL (§6) · 5+ triggers as a status filter is **AP-2**.
 
 ### T4 · Settings section — Administration & HR (rich surface)
-
 `features/settings/organization/organization-settings-page.tsx`: `PageWrapper` → `<RichPageContent className="flex-1 min-h-0">` → `OrgSettingsCard` (title, description, `icon`, optional `action` gated on `canEdit`) → `SettingsFieldGrid` / `SettingsField`. `OrgSettingsCard` sits on `RichPanel` + `RichIconWell`, so every section inherits the treatment from one place; `RichPageContent` supplies the `gap-3 sm:gap-4` rhythm — never `space-y-*` here.
 
 ### T5 · Module hub / landing
-
 `features/hr/hub/hr-hub-page.tsx`: `PageWrapper variant="display"` → `RichPageContent` → `RichHero` of `RichQuickAction` tiles (horizontally scrollable on mobile) → queues / today / metrics bands. Every panel self-gates on its endpoint's exact permission and renders **nothing** when unheld, so a 2-permission user gets a short clean page rather than a wall of empty states; no hero on a page whose title already says the same thing.
 
 ### T6 · Board / kanban — the one screen that owns its scroll
-
-```tsx
-<PageWrapper title="Deals" filters={…} noInternalScroll
-  className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-  <div className="flex min-h-0 flex-1 gap-3 overflow-x-auto">
-    {columns.map((col) => (
-      <div key={col.key} className="flex w-72 shrink-0 flex-col rounded-xl border border-border bg-card">
-        <div className="shrink-0 px-3 py-2">{col.label}</div>
-        <div className="flex-1 min-h-0 overflow-y-auto p-2">{/* virtualize past ~50 */}</div>
-      </div>
-    ))}
-  </div>
-</PageWrapper>
-```
-
-Column totals come from a server aggregate, never `COUNT(*)` per render. Past ~50 cards use `react-window` v2 with `Droppable mode="virtual"` + `renderClone` (§3).
+`PageWrapper … noInternalScroll className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"` → a `flex min-h-0 flex-1 gap-3 overflow-x-auto` rail → per column `flex w-72 shrink-0 flex-col rounded-xl border border-border bg-card`, with a `shrink-0` header and a `flex-1 min-h-0 overflow-y-auto p-2` body. Column totals come from a server aggregate, never `COUNT(*)` per render. Past ~50 cards use `react-window` v2 with `Droppable mode="virtual"` + `renderClone` (§3).
 
 ### T7 · The four states + the data contract behind every template
-
 ```tsx
-const canView = useCan("crm:contacts:view");            // the endpoint's EXACT @RequirePermission key
-const { data, isLoading, isError, error, refetch } = useContacts(
-  { page, limit, search },
-  { enabled: canView },                                  // never fire an API the role cannot access
-);
+const canView = useCan("crm:contacts:view");   // the endpoint's EXACT @RequirePermission key
+const { data, isLoading, isError, error, refetch } =
+  useContacts({ page, limit, search }, { enabled: canView });   // never fire an API the role cannot access
 
 if (isLoading) return <DataTableSkeleton rows={10} columns={columns.length} />;   // never a spinner
 if (isError)   return <ErrorState className="flex-1" description={getErrorMessage(error)} onRetry={refetch} />;
 if (!canView)  return <NoPermissionState permission="crm:contacts:view" />;
 if (rows.length === 0) return <EmptyState className="flex-1 min-h-0" … />;        // filter-empty ≠ data-empty
 ```
-
 Hook in `hooks/api/<module>/<entity>.ts`; key from the `queryKeys` factory; calibrated `staleTime`; `mutationKey` on every mutation; `enabled` combined **after** any `...options` spread. Search debounced ≥300ms and resets to page 1. Forms: react-hook-form + `zodResolver`, schema in a sibling `*-schema.ts`, per-field `<FormMessage>`. Every async button `<LoadingButton isPending>`, every error string `getErrorMessage`, never a raw id.
 
 ## 17. Shell & Navigation Ownership
