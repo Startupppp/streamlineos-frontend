@@ -29,7 +29,7 @@ export function usePageState(options: UsePageStateOptions): PageStateResolution 
     options.permission === undefined
       ? ("granted" as const)
       : accessState({
-          isLoading: accessLoading,
+          isLoading: accessLoading || access === undefined,
           granted: access !== undefined && grantsPermission(access, options.permission),
         });
 

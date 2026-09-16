@@ -53,4 +53,34 @@ describe("usePageState", () => {
     );
     expect(result.current).toEqual({ kind: "module-disabled", moduleKey: "payroll" });
   });
+
+  it("a permitted user must not see a denial flash before access resolves", () => {
+    mockAccess({ data: undefined, isLoading: false });
+    const { result } = renderHook(() =>
+      usePageState({ permission: "hr:employees:view", isLoading: false, isError: false }),
+    );
+    expect(result.current).toEqual({ kind: "loading" });
+  });
+
+  it("a granted permission resolves to the underlying data state, not to denied", () => {
+    mockAccess({
+      data: {
+        modules: { hr: true },
+        scopes: { "hr:employees:view": "all" },
+        isOrgOwner: false,
+      },
+    });
+    const { result } = renderHook(() =>
+      usePageState({ permission: "hr:employees:view", module: "hr", isLoading: false, isError: false }),
+    );
+    expect(result.current).toEqual({ kind: "ready" });
+  });
+
+  it("a denied permission resolves to denied and carries the permission key, not just the kind", () => {
+    mockAccess({ data: { modules: {}, scopes: {}, isOrgOwner: false } });
+    const { result } = renderHook(() =>
+      usePageState({ permission: "hr:employees:view", isLoading: false, isError: false }),
+    );
+    expect(result.current).toEqual({ kind: "denied", permission: "hr:employees:view" });
+  });
 });
