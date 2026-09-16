@@ -107,7 +107,7 @@ export function JobsPage() {
 
   const handleStatusChange = useCallback(
     (id: number, status: JobPostingStatus) => {
-      updateJob.mutate({ id, status }, {
+      updateJob.mutate({ jobId: id, status }, {
         onSuccess: () => toast.success("Status updated"),
         onError: (e) => toast.error(getErrorMessage(e)),
       });

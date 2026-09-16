@@ -134,7 +134,7 @@ export function useApproveAccommodation(accommodationId: string) {
       tasks?: Array<{ title: string; assigneeUserId?: string; dueDate?: string }>;
     }) => apiClient.post(`${BASE}/${accommodationId}/approve`, body, undefined, _approveAccommodationContract),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: accKeys.detail(id) });
+      void qc.invalidateQueries({ queryKey: accKeys.detail(accommodationId) });
       void qc.invalidateQueries({ queryKey: accKeys.all });
       toast.success("Accommodation approved");
     },

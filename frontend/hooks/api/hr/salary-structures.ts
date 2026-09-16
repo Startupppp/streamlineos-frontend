@@ -47,8 +47,8 @@ export function useUpdateSalaryTemplate() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:salary:manage", {
     mutationKey: ["hr", "salary-structure-templates", "update"],
-    mutationFn: ({ id, ...data }: Partial<CreateSalaryTemplateInput> & { id: number }) =>
-      apiClient.patch(`/hr/payroll/salary-structures/${id}`, data, undefined, salaryRowContract),
+    mutationFn: ({ salaryStructureId, ...data }: Partial<CreateSalaryTemplateInput> & { salaryStructureId: number }) =>
+      apiClient.patch(`/hr/payroll/salary-structures/${salaryStructureId}`, data, undefined, salaryRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.salaryStructureTemplates() }),
   });
 }
@@ -57,7 +57,7 @@ export function useDeleteSalaryTemplate() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:salary:manage", {
     mutationKey: ["hr", "salary-structure-templates", "delete"],
-    mutationFn: (id: number) => apiClient.delete(`/hr/payroll/salary-structures/${id}`, undefined, undefined, salaryDeleteContract),
+    mutationFn: (salaryStructureId: number) => apiClient.delete(`/hr/payroll/salary-structures/${salaryStructureId}`, undefined, undefined, salaryDeleteContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.salaryStructureTemplates() }),
   });
 }

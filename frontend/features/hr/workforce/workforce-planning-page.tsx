@@ -134,7 +134,7 @@ function PlanSheet({ open, plan, onClose }: PlanSheetProps) {
     if (isNaN(hc) || isNaN(fy)) return;
 
     if (plan) {
-      update.mutate({ id: plan.id, budgetedHeadcount: hc, note: note || undefined }, { onSuccess: onClose });
+      update.mutate({ planId: plan.id, budgetedHeadcount: hc, note: note || undefined }, { onSuccess: onClose });
     } else {
       create.mutate({ fiscalYear: fy, budgetedHeadcount: hc, note: note || undefined }, { onSuccess: onClose });
     }

@@ -73,8 +73,8 @@ export function useSubmitRequisition() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "requisitions", "submit"],
-    mutationFn: (id: number) =>
-      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${id}/submit`, undefined, undefined, submitRequisitionC),
+    mutationFn: (requisitionId: number) =>
+      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${requisitionId}/submit`, undefined, undefined, submitRequisitionC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.requisitions() }),
   });
 }
@@ -83,8 +83,8 @@ export function useApproveRequisition() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "requisitions", "approve"],
-    mutationFn: (id: number) =>
-      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${id}/approve`, undefined, undefined, approveRequisitionC),
+    mutationFn: (requisitionId: number) =>
+      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${requisitionId}/approve`, undefined, undefined, approveRequisitionC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.requisitions() }),
   });
 }
@@ -93,8 +93,8 @@ export function useRejectRequisition() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "requisitions", "reject"],
-    mutationFn: ({ id, reason }: { id: number; reason: string }) =>
-      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${id}/reject`, { reason }, undefined, rejectRequisitionC),
+    mutationFn: ({ requisitionId, reason }: { requisitionId: number; reason: string }) =>
+      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${requisitionId}/reject`, { reason }, undefined, rejectRequisitionC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.requisitions() }),
   });
 }
@@ -103,8 +103,8 @@ export function useCreateJobFromRequisition() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "requisitions", "create-job"],
-    mutationFn: (id: number) =>
-      apiClient.post<{ jobId: number; jobTitle: string }>(`/hr/recruitment/requisitions/${id}/create-job`, undefined, undefined, createJobFromRequisitionC),
+    mutationFn: (requisitionId: number) =>
+      apiClient.post<{ jobId: number; jobTitle: string }>(`/hr/recruitment/requisitions/${requisitionId}/create-job`, undefined, undefined, createJobFromRequisitionC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.requisitions() }),
   });
 }

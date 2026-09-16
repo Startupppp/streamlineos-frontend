@@ -165,7 +165,7 @@ export function SalaryStructuresPageContent() {
   function handleFormSubmit(data: CreateSalaryTemplateInput) {
     if (editingTemplate) {
       updateMutation.mutate(
-        { id: editingTemplate.id, ...data },
+        { salaryStructureId: editingTemplate.id, ...data },
         {
           onSuccess: () => {
             toast.success("Template updated successfully");

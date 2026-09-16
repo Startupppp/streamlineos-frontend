@@ -49,14 +49,14 @@ export function ShiftSwapsTab({ canManage }: Props) {
   }, [refetch]);
 
   const handleApprove = useCallback((id: number) => {
-    updateStatus.mutate({ id, status: "APPROVED" }, {
+    updateStatus.mutate({ swapId: id, status: "APPROVED" }, {
       onSuccess: () => toast.success("Swap request approved"),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [updateStatus]);
 
   const handleReject = useCallback((id: number) => {
-    updateStatus.mutate({ id, status: "REJECTED" }, {
+    updateStatus.mutate({ swapId: id, status: "REJECTED" }, {
       onSuccess: () => toast.success("Swap request rejected"),
       onError: (err) => toast.error(getErrorMessage(err)),
     });

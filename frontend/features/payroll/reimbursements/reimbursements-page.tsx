@@ -99,7 +99,7 @@ export function ReimbursementsPageContent() {
 
   function handleApprove(claimId: number) {
     processReimbursement.mutate(
-      { id: claimId, status: "APPROVED" },
+      { reimbursementId: claimId, status: "APPROVED" },
       {
         onSuccess: () => toast.success("Claim approved"),
         onError: () => toast.error("Failed to approve claim"),
@@ -109,7 +109,7 @@ export function ReimbursementsPageContent() {
 
   function handleReject(claimId: number, reason: string) {
     processReimbursement.mutate(
-      { id: claimId, status: "REJECTED", rejectionReason: reason },
+      { reimbursementId: claimId, status: "REJECTED", rejectionReason: reason },
       {
         onSuccess: () => toast.success("Claim rejected"),
         onError: () => toast.error("Failed to reject claim"),

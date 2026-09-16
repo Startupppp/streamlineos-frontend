@@ -163,12 +163,12 @@ export function useJobPostingsPage(params?: JobPostingsParams) {
   });
 }
 
-export function useJobPosting(id: number) {
-  const enabled = Number.isFinite(id) && id > 0;
+export function useJobPosting(jobId: number) {
+  const enabled = Number.isFinite(jobId) && jobId > 0;
   return useGatedQuery("hr:employees:view", {
-    queryKey: humanResourcesQueryKeys.hr.jobPosting(id),
+    queryKey: humanResourcesQueryKeys.hr.jobPosting(jobId),
     queryFn: ({ signal }) =>
-      apiClient.get<JobPosting>(`/hr/recruitment/jobs/${id}`, undefined, signal, jobPostingDetailC),
+      apiClient.get<JobPosting>(`/hr/recruitment/jobs/${jobId}`, undefined, signal, jobPostingDetailC),
     staleTime: 2 * 60_000,
     enabled,
   });
@@ -193,11 +193,11 @@ export function useUpdateJobPosting() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "update"],
-    mutationFn: ({ id, ...data }: UpdateJobPostingInput & { id: number }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/recruitment/jobs/${id}`, data, undefined, updateJobPostingC),
+    mutationFn: ({ jobId, ...data }: UpdateJobPostingInput & { jobId: number }) =>
+      apiClient.patch<{ success: boolean }>(`/hr/recruitment/jobs/${jobId}`, data, undefined, updateJobPostingC),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
-      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.jobPosting(vars.id) });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.jobPosting(vars.jobId) });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
     },
   });
@@ -207,8 +207,8 @@ export function useDeleteJobPosting() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/hr/recruitment/jobs/${id}`, undefined, undefined, noContentC),
+    mutationFn: (jobId: number) =>
+      apiClient.delete<void>(`/hr/recruitment/jobs/${jobId}`, undefined, undefined, noContentC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
@@ -220,8 +220,8 @@ export function useDuplicateJobPosting() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "duplicate"],
-    mutationFn: (id: number) =>
-      apiClient.post<JobPosting>(`/hr/recruitment/jobs/${id}/duplicate`, {}, undefined, duplicateJobPostingC),
+    mutationFn: (jobId: number) =>
+      apiClient.post<JobPosting>(`/hr/recruitment/jobs/${jobId}/duplicate`, {}, undefined, duplicateJobPostingC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });

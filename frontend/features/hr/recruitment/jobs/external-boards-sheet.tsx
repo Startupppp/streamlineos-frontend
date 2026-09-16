@@ -164,7 +164,7 @@ export function ExternalBoardsSheet({
   const handleStatusChange = useCallback(
     (id: number, status: JobBoardPostingStatus) => {
       updatePosting.mutate(
-        { id, status },
+        { boardPostingId: id, status },
         { onError: (e) => toast.error(getErrorMessage(e)) },
       );
     },

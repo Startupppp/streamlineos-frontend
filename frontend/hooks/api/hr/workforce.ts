@@ -146,7 +146,7 @@ export function useCreateHeadcountPlan() {
 }
 
 interface UpdatePlanInput {
-  id: number;
+  planId: number;
   budgetedHeadcount?: number;
   budgetedCostCents?: number;
   note?: string;
@@ -156,8 +156,8 @@ export function useUpdateHeadcountPlan() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:workforce:manage", {
     mutationKey: ["hr", "workforce", "updatePlan"],
-    mutationFn: ({ id, ...data }: UpdatePlanInput) =>
-      apiClient.patch(`/hr/analytics-plus/workforce/plans/${id}`, data, undefined, updateHeadcountPlanContract),
+    mutationFn: ({ planId, ...data }: UpdatePlanInput) =>
+      apiClient.patch(`/hr/analytics-plus/workforce/plans/${planId}`, data, undefined, updateHeadcountPlanContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: workforceKeys.plans() });
       void qc.invalidateQueries({ queryKey: workforceKeys.budgetVsActual() });

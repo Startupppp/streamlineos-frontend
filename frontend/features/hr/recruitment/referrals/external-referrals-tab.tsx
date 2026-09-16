@@ -179,7 +179,7 @@ export function ExternalReferralsTab() {
   const handleStatusChange = useCallback(async (id: number, status: ExternalReferralStatus) => {
     setPendingId(id);
     try {
-      await updateMutation.mutateAsync({ id, status });
+      await updateMutation.mutateAsync({ externalReferralId: id, status });
       toast.success("Status updated");
     } catch (e) {
       toast.error(getErrorMessage(e));

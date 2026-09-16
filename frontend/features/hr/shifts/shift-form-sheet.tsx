@@ -133,7 +133,7 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
       },
       onError: (err: unknown) => toast.error(getErrorMessage(err)),
     };
-    if (shift) updateShift.mutate({ id: shift.id, ...pendingValues }, handlers);
+    if (shift) updateShift.mutate({ shiftId: shift.id, ...pendingValues }, handlers);
     else createShift.mutate(pendingValues, handlers);
   }, [
     pendingValues,

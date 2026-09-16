@@ -87,8 +87,8 @@ export function useUpdateJobBoardPosting(jobId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "jobBoardPostings", "update", jobId],
-    mutationFn: ({ id, ...data }: UpdateJobBoardPostingInput & { id: number }) =>
-      apiClient.patch<JobBoardPosting>(`/hr/recruitment/jobs/${jobId}/board-postings/${id}`, data, undefined, updateJobBoardPostingC),
+    mutationFn: ({ boardPostingId, ...data }: UpdateJobBoardPostingInput & { boardPostingId: number }) =>
+      apiClient.patch<JobBoardPosting>(`/hr/recruitment/jobs/${jobId}/board-postings/${boardPostingId}`, data, undefined, updateJobBoardPostingC),
     onSuccess: () => qc.invalidateQueries({ queryKey: jobBoardPostingsKey(jobId) }),
   });
 }
@@ -97,8 +97,8 @@ export function useDeleteJobBoardPosting(jobId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "jobBoardPostings", "delete", jobId],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/hr/recruitment/jobs/${jobId}/board-postings/${id}`, undefined, undefined, noContentC),
+    mutationFn: (boardPostingId: number) =>
+      apiClient.delete<void>(`/hr/recruitment/jobs/${jobId}/board-postings/${boardPostingId}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: jobBoardPostingsKey(jobId) }),
   });
 }

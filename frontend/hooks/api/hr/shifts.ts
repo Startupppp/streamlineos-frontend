@@ -85,8 +85,8 @@ export function useUpdateShift() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "shifts", "update"],
-    mutationFn: ({ id, ...data }: { id: number; name?: string; type?: string; startTime?: string; endTime?: string; breakMinutes?: number; isNightShift?: boolean; gracePeriodMinutes?: number }) =>
-      apiClient.patch(`/hr/shifts/${id}`, data, undefined, shiftRowContract),
+    mutationFn: ({ shiftId, ...data }: { shiftId: number; name?: string; type?: string; startTime?: string; endTime?: string; breakMinutes?: number; isNightShift?: boolean; gracePeriodMinutes?: number }) =>
+      apiClient.patch(`/hr/shifts/${shiftId}`, data, undefined, shiftRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "shifts"] }),
   });
 }
@@ -95,7 +95,7 @@ export function useDeleteShift() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "shifts", "delete"],
-    mutationFn: (id: number) => apiClient.delete(`/hr/shifts/${id}`, undefined, undefined, shiftDeleteContract),
+    mutationFn: (shiftId: number) => apiClient.delete(`/hr/shifts/${shiftId}`, undefined, undefined, shiftDeleteContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "shifts"] }),
   });
 }
@@ -126,8 +126,8 @@ export function useUpdateSwapStatus() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "shifts", "swapStatus"],
-    mutationFn: ({ id, status }: { id: number; status: string }) =>
-      apiClient.patch(`/hr/shifts/swaps/${id}`, { status }, undefined, shiftSwapRowContract),
+    mutationFn: ({ swapId, status }: { swapId: number; status: string }) =>
+      apiClient.patch(`/hr/shifts/swaps/${swapId}`, { status }, undefined, shiftSwapRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "shiftSwaps"] }),
   });
 }

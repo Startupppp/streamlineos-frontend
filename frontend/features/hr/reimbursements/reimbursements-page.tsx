@@ -57,7 +57,7 @@ export function ReimbursementsPage() {
   const handleApprove = useCallback(
     (id: number) => {
       process.mutate(
-        { id, status: "APPROVED" },
+        { reimbursementId: id, status: "APPROVED" },
         {
           onSuccess: () => toast.success("Approved"),
           onError: (e) => toast.error(getErrorMessage(e)),
@@ -70,7 +70,7 @@ export function ReimbursementsPage() {
   const handleReject = useCallback(() => {
     if (!rejectId) return;
     process.mutate(
-      { id: rejectId, status: "REJECTED" },
+      { reimbursementId: rejectId, status: "REJECTED" },
       {
         onSuccess: () => {
           toast.success("Rejected");

@@ -45,7 +45,7 @@ function BonusSheet({ referral, onClose }: BonusSheetProps) {
       return;
     }
     try {
-      await updateMutation.mutateAsync({ id: referral.id, status: "BONUS_PAID", bonusAmount: amount });
+      await updateMutation.mutateAsync({ referralId: referral.id, status: "BONUS_PAID", bonusAmount: amount });
       toast.success("Bonus marked as paid");
       onClose();
     } catch (e) {
@@ -169,7 +169,7 @@ export function InternalReferralsTab() {
 
   const handleStatusChange = useCallback(async (id: number, status: ReferralStatus) => {
     try {
-      await updateMutation.mutateAsync({ id, status });
+      await updateMutation.mutateAsync({ referralId: id, status });
       toast.success("Status updated");
     } catch (e) {
       toast.error(getErrorMessage(e));

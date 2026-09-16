@@ -44,8 +44,8 @@ export function useUpdateReferralStatus() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "referrals", "update-status"],
-    mutationFn: ({ id, ...data }: { id: number; status?: string; bonusAmount?: number; bonusEligible?: boolean; notes?: string }) =>
-      apiClient.patch<CandidateReferral>(`/hr/recruitment/referrals/${id}`, data, undefined, updateReferralStatusC),
+    mutationFn: ({ referralId, ...data }: { referralId: number; status?: string; bonusAmount?: number; bonusEligible?: boolean; notes?: string }) =>
+      apiClient.patch<CandidateReferral>(`/hr/recruitment/referrals/${referralId}`, data, undefined, updateReferralStatusC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.referrals() });
     },

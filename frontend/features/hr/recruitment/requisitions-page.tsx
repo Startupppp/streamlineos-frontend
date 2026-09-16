@@ -86,7 +86,7 @@ export function RequisitionsPage() {
     (reason: string) => {
       if (!rejectTarget) return;
       rejectRequisition.mutate(
-        { id: rejectTarget, reason },
+        { requisitionId: rejectTarget, reason },
         {
           onSuccess: () => {
             toast.success("Requisition rejected");

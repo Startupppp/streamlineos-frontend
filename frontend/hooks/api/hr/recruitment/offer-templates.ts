@@ -55,12 +55,12 @@ export function useCreateOfferTemplate() {
   });
 }
 
-export function useUpdateOfferTemplate(id: number) {
+export function useUpdateOfferTemplate(offerTemplateId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:offers:manage", {
-    mutationKey: ["hr", "recruitment", "offer-templates", "update", id],
+    mutationKey: ["hr", "recruitment", "offer-templates", "update", offerTemplateId],
     mutationFn: (data: { name?: string; htmlContent?: string; isDefault?: boolean }) =>
-      apiClient.patch<OfferLetterTemplate>(`/hr/recruitment/offer-templates/${id}`, data, undefined, updateOfferTemplateC),
+      apiClient.patch<OfferLetterTemplate>(`/hr/recruitment/offer-templates/${offerTemplateId}`, data, undefined, updateOfferTemplateC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.offerTemplates() });
     },
@@ -71,8 +71,8 @@ export function useDeleteOfferTemplate() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:offers:manage", {
     mutationKey: ["hr", "recruitment", "offer-templates", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/recruitment/offer-templates/${id}`, undefined, undefined, deleteOfferTemplateC),
+    mutationFn: (offerTemplateId: number) =>
+      apiClient.delete<{ success: boolean }>(`/hr/recruitment/offer-templates/${offerTemplateId}`, undefined, undefined, deleteOfferTemplateC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.offerTemplates() });
     },

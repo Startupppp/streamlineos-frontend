@@ -95,7 +95,7 @@ export function useDeleteScheduledReport() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "reports", "delete-scheduled"],
-    mutationFn: (id: number) => apiClient.delete(`/hr/recruitment/reports/scheduled/${id}`, undefined, undefined, deleteScheduledReportC),
+    mutationFn: (scheduledId: number) => apiClient.delete(`/hr/recruitment/reports/scheduled/${scheduledId}`, undefined, undefined, deleteScheduledReportC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.scheduledReports() });
     },

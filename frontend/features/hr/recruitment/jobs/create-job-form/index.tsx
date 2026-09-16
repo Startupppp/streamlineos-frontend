@@ -192,7 +192,7 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
       };
 
       if (isEdit && job) {
-        updateJob.mutate({ id: job.id, ...payload }, {
+        updateJob.mutate({ jobId: job.id, ...payload }, {
           onSuccess: () => {
             toast.success("Job posting updated");
             router.push("/hr/recruitment/jobs");

@@ -63,8 +63,8 @@ export function useProcessReimbursement() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:payroll:view", {
     mutationKey: ["hr", "reimbursements", "process"],
-    mutationFn: ({ id, ...data }: { id: number; status: string; rejectionReason?: string }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/reimbursements/${id}`, data, undefined, processReimbursementC),
+    mutationFn: ({ reimbursementId, ...data }: { reimbursementId: number; status: string; rejectionReason?: string }) =>
+      apiClient.patch<{ success: boolean }>(`/hr/reimbursements/${reimbursementId}`, data, undefined, processReimbursementC),
     onSuccess: () => qc.invalidateQueries({ queryKey: reimbursementKeys.list() }),
   });
 }

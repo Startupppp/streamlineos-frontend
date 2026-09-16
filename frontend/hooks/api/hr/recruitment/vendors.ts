@@ -190,13 +190,13 @@ export function useCreateVendor() {
   });
 }
 
-export function useUpdateVendor(id: number) {
+export function useUpdateVendor(vendorId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:employees:manage", {
-    mutationKey: ["hr", "recruitment", "vendors", "update", id],
+    mutationKey: ["hr", "recruitment", "vendors", "update", vendorId],
     mutationFn: (data: UpdateVendorInput) =>
       apiClient.patch<RecruitmentVendorRow>(
-        `/hr/recruitment/vendors/${id}`,
+        `/hr/recruitment/vendors/${vendorId}`,
         data,
         undefined,
         vendorRowC,
@@ -211,9 +211,9 @@ export function useDeleteVendor() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "vendors", "delete"],
-    mutationFn: (id: number) =>
+    mutationFn: (vendorId: number) =>
       apiClient.delete<void>(
-        `/hr/recruitment/vendors/${id}`,
+        `/hr/recruitment/vendors/${vendorId}`,
         undefined,
         undefined,
         noContentContract,
