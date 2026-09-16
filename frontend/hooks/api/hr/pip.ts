@@ -57,8 +57,8 @@ export function useUpdatePIP() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "pip", "update"],
-    mutationFn: ({ id, ...data }: { id: number; status?: string; outcome?: string; notes?: string; reason?: string; objectives?: { objective: string; metric: string; deadline: string }[]; endDate?: string; hrRepId?: string | null }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/performance/pip/${id}`, data, undefined, updatePipC),
+    mutationFn: ({ pipId, ...data }: { pipId: number; status?: string; outcome?: string; notes?: string; reason?: string; objectives?: { objective: string; metric: string; deadline: string }[]; endDate?: string; hrRepId?: string | null }) =>
+      apiClient.patch<{ success: boolean }>(`/hr/performance/pip/${pipId}`, data, undefined, updatePipC),
     onSuccess: () => qc.invalidateQueries({ queryKey: pipKeys.list() }),
   });
 }

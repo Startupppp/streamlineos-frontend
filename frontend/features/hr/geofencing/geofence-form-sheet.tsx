@@ -76,7 +76,7 @@ export function GeofenceFormSheet({ open, onOpenChange, fence }: Props) {
         },
         onError: (err: unknown) => toast.error(getErrorMessage(err)),
       };
-      if (fence) updateFence.mutate({ id: fence.id, ...payload }, handlers);
+      if (fence) updateFence.mutate({ geofencingId: fence.id, ...payload }, handlers);
       else createFence.mutate(payload, handlers);
     },
     [fence, isEdit, createFence, updateFence, form, onOpenChange],

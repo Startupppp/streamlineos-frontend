@@ -164,7 +164,7 @@ export function ReviewsTab() {
 
     if (editReview) {
       updateReview.mutate(
-        { id: editReview.id, periodStart, periodEnd, cycleId: cycleId !== "none" ? Number(cycleId) : undefined },
+        { reviewId: editReview.id, periodStart, periodEnd, cycleId: cycleId !== "none" ? Number(cycleId) : undefined },
         {
           onSuccess: () => { toast.success("Review updated"); setSheetOpen(false); resetForm(); },
           onError: (e) => toast.error(getErrorMessage(e)),
@@ -197,7 +197,7 @@ export function ReviewsTab() {
   }, []);
 
   const handleComplete = useCallback((id: number) => {
-    updateReview.mutate({ id, status: "COMPLETED" }, {
+    updateReview.mutate({ reviewId: id, status: "COMPLETED" }, {
       onSuccess: () => toast.success("Review marked as completed"),
       onError: (e) => toast.error(getErrorMessage(e)),
     });

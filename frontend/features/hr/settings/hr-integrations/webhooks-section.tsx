@@ -43,7 +43,7 @@ function WebhookRow({
   const handleToggle = useCallback(
     async (isActive: boolean) => {
       try {
-        await toggle.mutateAsync({ id: sub.id, isActive });
+        await toggle.mutateAsync({ webhookId: sub.id, isActive });
       } catch (e) {
         toast.error(getErrorMessage(e));
       }

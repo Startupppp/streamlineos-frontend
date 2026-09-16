@@ -139,7 +139,7 @@ describe("useEventSeriesScope — series edits", () => {
     const seriesCalls = callsFor("series");
     expect(seriesCalls).toHaveLength(1);
     expect(seriesCalls[0]?.vars).toEqual({
-      id: 42,
+      calendarEventId: 42,
       title: PAYLOAD.title,
       startDate: PAYLOAD.startDate,
       endDate: PAYLOAD.endDate,

@@ -73,7 +73,7 @@ export function AutomationsSettingsPage() {
   function handleToggle(rule: HrAutomationRule, next: boolean) {
     setTogglingId(rule.id);
     toggle.mutate(
-      { id: rule.id, isEnabled: next },
+      { automationId: rule.id, isEnabled: next },
       {
         onSuccess: () => toast.success(next ? "Automation enabled" : "Automation disabled"),
         onError: (err) => toast.error(getErrorMessage(err)),

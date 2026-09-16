@@ -49,7 +49,7 @@ export interface CreateEmailTemplateInput {
 }
 
 export interface UpdateEmailTemplateInput {
-  id: number;
+  emailTemplateId: number;
   name: string;
   subject: string;
   body: string;
@@ -100,8 +100,8 @@ export function useUpdateEmailTemplate(
   const qc = useQueryClient();
   return useAuthorizedMutation<EmailTemplate, Error, UpdateEmailTemplateInput>("hr:email-templates:manage", {
     mutationKey: ["hr", "email-templates", "update"],
-    mutationFn: ({ id, ...data }: UpdateEmailTemplateInput) =>
-      apiClient.patch<EmailTemplate>(`/hr/email-templates/${id}`, data, undefined, emailTemplateLazy),
+    mutationFn: ({ emailTemplateId, ...data }: UpdateEmailTemplateInput) =>
+      apiClient.patch<EmailTemplate>(`/hr/email-templates/${emailTemplateId}`, data, undefined, emailTemplateLazy),
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailTemplatesList() });
@@ -116,8 +116,8 @@ export function useDeleteEmailTemplate(
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "email-templates", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/hr/email-templates/${id}`, undefined, undefined, noContentC),
+    mutationFn: (emailTemplateId: number) =>
+      apiClient.delete<void>(`/hr/email-templates/${emailTemplateId}`, undefined, undefined, noContentC),
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailTemplatesList() });

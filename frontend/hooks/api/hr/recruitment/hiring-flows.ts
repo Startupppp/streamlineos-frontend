@@ -62,11 +62,11 @@ export function useUpdateHiringFlow() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "hiring-flows", "update"],
-    mutationFn: ({ id, ...data }: UpdateHiringFlowInput & { id: number }) =>
-      apiClient.patch<HiringFlow>(`/hr/recruitment/hiring-flows/${id}`, data, undefined, hiringFlowContract),
-    onSuccess: (_, { id }) => {
+    mutationFn: ({ hiringFlowId, ...data }: UpdateHiringFlowInput & { hiringFlowId: number }) =>
+      apiClient.patch<HiringFlow>(`/hr/recruitment/hiring-flows/${hiringFlowId}`, data, undefined, hiringFlowContract),
+    onSuccess: (_, { hiringFlowId }) => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hiringFlows() });
-      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hiringFlow(id) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hiringFlow(hiringFlowId) });
     },
   });
 }
@@ -75,8 +75,8 @@ export function useDeleteHiringFlow() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "hiring-flows", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/recruitment/hiring-flows/${id}`, undefined, undefined, hiringFlowSuccessContract),
+    mutationFn: (hiringFlowId: number) =>
+      apiClient.delete<{ success: boolean }>(`/hr/recruitment/hiring-flows/${hiringFlowId}`, undefined, undefined, hiringFlowSuccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hiringFlows() });
     },

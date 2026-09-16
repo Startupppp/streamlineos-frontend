@@ -70,10 +70,10 @@ export function useUpdateTransition(projectId: number) {
   const canManage = useCan("build:workflow:manage");
   return useAuthorizedMutation("build:workflow:manage", {
     mutationKey: ["projects", projectId, "workflow", "transitions", "update"],
-    mutationFn: ({ id, ...data }: UpdateTransitionInput & { id: number }) => {
+    mutationFn: ({ transitionId, ...data }: UpdateTransitionInput & { transitionId: number }) => {
       assertPermission(canManage);
       return apiClient.patch<WorkflowTransition>(
-        `/build/${projectId}/workflow/transitions/${id}`,
+        `/build/${projectId}/workflow/transitions/${transitionId}`,
         data,
         undefined,
         workflowTransitionContract,
@@ -90,10 +90,10 @@ export function useDeleteTransition(projectId: number) {
   const canManage = useCan("build:workflow:manage");
   return useAuthorizedMutation("build:workflow:manage", {
     mutationKey: ["projects", projectId, "workflow", "transitions", "delete"],
-    mutationFn: (id: number) => {
+    mutationFn: (transitionId: number) => {
       assertPermission(canManage);
       return apiClient.delete<void>(
-        `/build/${projectId}/workflow/transitions/${id}`,
+        `/build/${projectId}/workflow/transitions/${transitionId}`,
         undefined,
         undefined,
         noContentContract,

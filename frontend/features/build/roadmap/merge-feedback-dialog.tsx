@@ -59,7 +59,7 @@ export function MergeFeedbackDialog({ post, onOpenChange }: MergeFeedbackDialogP
   const handleConfirm = useCallback(() => {
     if (!post || !targetId) return;
     merge.mutate(
-      { id: post.id, targetPostId: Number(targetId) },
+      { postId: post.id, targetPostId: Number(targetId) },
       {
         onSuccess: () => {
           toast.success("Feedback merged");

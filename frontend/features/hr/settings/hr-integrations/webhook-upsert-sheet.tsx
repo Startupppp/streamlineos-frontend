@@ -112,7 +112,7 @@ export function WebhookUpsertSheet({ open, onOpenChange, subscription }: Props) 
       try {
         if (isEdit && subscription) {
           await update.mutateAsync({
-            id: subscription.id,
+            webhookId: subscription.id,
             name: values.name,
             url: values.url,
             events: values.events as HrAutomationEvent[],

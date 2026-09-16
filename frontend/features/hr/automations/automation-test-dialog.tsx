@@ -56,7 +56,7 @@ export function AutomationTestDialog({ rule, onClose }: Props) {
     }
     setJsonError(null);
     test.mutate(
-      { id: rule.id, payload: parsed },
+      { automationId: rule.id, payload: parsed },
       {
         onSuccess: (data) => {
           setResult(data);

@@ -72,8 +72,8 @@ export function useRenameKbConversation() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "chatConversations", "rename"],
-    mutationFn: ({ id, title }: { id: number; title: string }) =>
-      apiClient.patch<KbConversation>(`/kb/ask/conversations/${id}`, { title }, undefined, kbConversationResponseContract),
+    mutationFn: ({ conversationId, title }: { conversationId: number; title: string }) =>
+      apiClient.patch<KbConversation>(`/kb/ask/conversations/${conversationId}`, { title }, undefined, kbConversationResponseContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
     },
@@ -84,8 +84,8 @@ export function useDeleteKbConversation() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "chatConversations", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/kb/ask/conversations/${id}`, undefined, undefined, kbChatSuccessContract),
+    mutationFn: (conversationId: number) =>
+      apiClient.delete<{ success: boolean }>(`/kb/ask/conversations/${conversationId}`, undefined, undefined, kbChatSuccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
     },

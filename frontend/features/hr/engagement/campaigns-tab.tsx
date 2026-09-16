@@ -102,7 +102,7 @@ export function CampaignsTab() {
       status,
     };
     if (editTarget) {
-      toast.promise(update.mutateAsync({ id: editTarget.id, ...payload }), {
+      toast.promise(update.mutateAsync({ campaignId: editTarget.id, ...payload }), {
         loading: "Updating campaign...",
         success: () => { setSheetOpen(false); handleReset(); return "Campaign updated"; },
         error: getErrorMessage,

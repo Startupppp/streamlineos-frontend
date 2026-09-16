@@ -189,7 +189,7 @@ export function IncidentSheet({
 
     if (editIncident) {
       update.mutate(
-        { ...input, id: editIncident.id },
+        { ...input, incidentId: editIncident.id },
         {
           onSuccess: () => {
             toast.success("Incident updated");

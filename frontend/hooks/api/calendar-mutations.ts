@@ -80,7 +80,7 @@ export interface CreateCalendarEventPayload {
 }
 
 interface UpdateCalendarEventPayload {
-  id: number;
+  calendarEventId: number;
   title?: string;
   description?: string | null;
   location?: string | null;
@@ -121,8 +121,8 @@ export function useUpdateCalendarEvent() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["calendar", "events", "update"],
-    mutationFn: ({ id, ...payload }: UpdateCalendarEventPayload) =>
-      apiClient.put<CalendarEvent>(`/calendar/events/${id}`, payload, undefined, calendarUpdateEventContract),
+    mutationFn: ({ calendarEventId, ...payload }: UpdateCalendarEventPayload) =>
+      apiClient.put<CalendarEvent>(`/calendar/events/${calendarEventId}`, payload, undefined, calendarUpdateEventContract),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false }),
   });
@@ -132,7 +132,7 @@ export function useDeleteCalendarEvent() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["calendar", "events", "delete"],
-    mutationFn: (id: number) => apiClient.delete<{ deleted: boolean }>(`/calendar/events/${id}`, undefined, undefined, calendarDeleteEventContract),
+    mutationFn: (calendarEventId: number) => apiClient.delete<{ deleted: boolean }>(`/calendar/events/${calendarEventId}`, undefined, undefined, calendarDeleteEventContract),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false }),
   });

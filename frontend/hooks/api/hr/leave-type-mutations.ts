@@ -35,8 +35,8 @@ export function useUpdateLeaveType() {
   const identity = useLeaveQueryIdentity();
   return useAuthorizedMutation("hr:leaves:manage", {
     mutationKey: ["hr", "leaves", "update-type"],
-    mutationFn: ({ id, ...patch }: { id: number; name?: string; daysPerYear?: number; carryForward?: boolean }) =>
-      apiClient.patch<HrLeaveType>(`/hr/leaves/types/${id}`, patch, undefined, updateLeaveTypeC),
+    mutationFn: ({ typeId, ...patch }: { typeId: number; name?: string; daysPerYear?: number; carryForward?: boolean }) =>
+      apiClient.patch<HrLeaveType>(`/hr/leaves/types/${typeId}`, patch, undefined, updateLeaveTypeC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: LEAVE_TYPES_KEY });
       void qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
@@ -49,7 +49,7 @@ export function useDeleteLeaveType() {
   const identity = useLeaveQueryIdentity();
   return useAuthorizedMutation("hr:leaves:manage", {
     mutationKey: ["hr", "leaves", "delete-type"],
-    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/hr/leaves/types/${id}`, undefined, undefined, deleteLeaveTypeC),
+    mutationFn: (typeId: number) => apiClient.delete<{ success: boolean }>(`/hr/leaves/types/${typeId}`, undefined, undefined, deleteLeaveTypeC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: LEAVE_TYPES_KEY });
       void qc.invalidateQueries({ queryKey: leaveContextKey(identity) });

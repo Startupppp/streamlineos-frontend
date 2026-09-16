@@ -97,7 +97,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
   const handleDecide = useCallback((input: DecideApprovalInput) => {
     if (!decideTarget) return;
     decideApproval.mutate(
-      { id: decideTarget.id, ...input },
+      { approvalId: decideTarget.id, ...input },
       {
         onSuccess: () => {
           toast.success("Decision submitted");
@@ -111,7 +111,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
   const handleDelegate = useCallback((approverId: string) => {
     if (!delegateTarget) return;
     updateApproval.mutate(
-      { id: delegateTarget.id, approverId },
+      { approvalId: delegateTarget.id, approverId },
       {
         onSuccess: () => {
           toast.success("Approval delegated");
@@ -124,7 +124,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
 
   const handleEscalate = useCallback((row: Approval) => {
     updateApproval.mutate(
-      { id: row.id, status: "escalated" },
+      { approvalId: row.id, status: "escalated" },
       {
         onSuccess: () => toast.success("Approval escalated"),
         onError: (e) => toast.error(getErrorMessage(e)),
@@ -135,7 +135,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
   const handleCancelConfirm = useCallback(() => {
     if (!cancelTarget) return;
     updateApproval.mutate(
-      { id: cancelTarget.id, status: "cancelled" },
+      { approvalId: cancelTarget.id, status: "cancelled" },
       {
         onSuccess: () => {
           toast.success("Approval cancelled");

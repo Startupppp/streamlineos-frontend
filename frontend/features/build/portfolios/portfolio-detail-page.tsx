@@ -173,7 +173,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
     [allProjectsRes?.data, linkedIds],
   );
 
-  function handleEdit(input: UpdatePortfolioInput & { id: number }) {
+  function handleEdit(input: UpdatePortfolioInput & { portfolioId: number }) {
     updatePortfolio.mutate(input, {
       onSuccess: () => {
         toast.success("Portfolio updated");

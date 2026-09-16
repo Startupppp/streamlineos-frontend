@@ -38,7 +38,7 @@ export function PreviewDialog({
       vars[v] = `{{${v}}}`;
     });
     preview.mutate(
-      { id: template.id, variables: vars },
+      { templateId: template.id, variables: vars },
       {
         onSuccess: (data) => setResult(data),
         onError: () => toast.error("Failed to preview template"),

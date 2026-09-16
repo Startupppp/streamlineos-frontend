@@ -111,7 +111,7 @@ export function NotificationProvidersPage() {
     (p: NotificationProvider) => {
       setTestingId(p.id);
       testProvider.mutate(
-        { id: p.id },
+        { providerId: p.id },
         {
           onSuccess: (result) => {
             const sandboxNote = result.sandbox ? " (sandbox)" : "";

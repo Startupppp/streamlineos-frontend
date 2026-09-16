@@ -98,8 +98,8 @@ export function useHrReviewResignation() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:exit:manage", {
     mutationKey: ["hr", "exit", "hr-review"],
-    mutationFn: ({ id, action, remarks }: { id: number; action: "approve" | "reject"; remarks?: string }) =>
-      apiClient.patch(`/hr/exit/${id}/hr-review`, { decision: action, remarks }, undefined, _successContract),
+    mutationFn: ({ exitId, action, remarks }: { exitId: number; action: "approve" | "reject"; remarks?: string }) =>
+      apiClient.patch(`/hr/exit/${exitId}/hr-review`, { decision: action, remarks }, undefined, _successContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
   });
 }
@@ -108,8 +108,8 @@ export function useFinalReviewResignation() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:exit:approve", {
     mutationKey: ["hr", "exit", "final-review"],
-    mutationFn: ({ id, action, remarks }: { id: number; action: "approve" | "reject"; remarks?: string }) =>
-      apiClient.patch(`/hr/exit/${id}/final-review`, { decision: action, remarks }, undefined, _successContract),
+    mutationFn: ({ exitId, action, remarks }: { exitId: number; action: "approve" | "reject"; remarks?: string }) =>
+      apiClient.patch(`/hr/exit/${exitId}/final-review`, { decision: action, remarks }, undefined, _successContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
   });
 }
@@ -118,8 +118,8 @@ export function useWithdrawResignation() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:exit:view", {
     mutationKey: ["hr", "exit", "withdraw"],
-    mutationFn: ({ id }: { id: number }) =>
-      apiClient.patch(`/hr/exit/${id}/withdraw`, {}, undefined, _successContract),
+    mutationFn: ({ exitId }: { exitId: number }) =>
+      apiClient.patch(`/hr/exit/${exitId}/withdraw`, {}, undefined, _successContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
   });
 }

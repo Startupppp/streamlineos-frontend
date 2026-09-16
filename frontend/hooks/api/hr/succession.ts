@@ -85,8 +85,8 @@ export function useDeleteSuccessionPlan() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:succession:manage", {
     mutationKey: ["hr", "succession", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/hr/succession/${id}`, undefined, undefined, noContentC),
+    mutationFn: (successionId: number) =>
+      apiClient.delete<void>(`/hr/succession/${successionId}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrSuccession.list() }),
   });
 }

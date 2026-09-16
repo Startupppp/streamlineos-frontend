@@ -158,7 +158,7 @@ export function AutomationsClient() {
 
   const handleToggle = useCallback((id: number, isActive: boolean) => {
     toggle.mutate(
-      { id, isActive: !isActive },
+      { automationId: id, isActive: !isActive },
       {
         onSuccess: () => toast.success(isActive ? "Automation disabled" : "Automation enabled"),
         onError: (e) => toast.error(getErrorMessage(e)),

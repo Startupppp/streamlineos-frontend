@@ -45,7 +45,7 @@ interface Props {
   mode: "create" | "edit";
   defaultValues?: Program;
   onSubmitCreate: (input: CreateProgramInput) => void;
-  onSubmitEdit: (input: UpdateProgramInput & { id: number }) => void;
+  onSubmitEdit: (input: UpdateProgramInput & { programId: number }) => void;
   isPending?: boolean;
 }
 
@@ -83,7 +83,7 @@ export function ProgramFormSheet({
       ...(healthValue ? { health: healthValue } : {}),
     };
     if (mode === "edit" && defaultValues) {
-      onSubmitEdit({ id: defaultValues.id, ...base });
+      onSubmitEdit({ programId: defaultValues.id, ...base });
     } else {
       onSubmitCreate(base);
     }

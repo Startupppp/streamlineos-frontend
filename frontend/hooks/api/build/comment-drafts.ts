@@ -86,8 +86,8 @@ export function useDeleteCommentDraft() {
   return useAuthorizedMutation("build:tickets:view", {
     meta: { buildCacheSync: false },
     mutationKey: ["projects", "comment-drafts", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/${id}`, undefined, undefined, commentDraftDeletedContract),
+    mutationFn: (draftId: number) =>
+      apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/${draftId}`, undefined, undefined, commentDraftDeletedContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
     },

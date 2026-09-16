@@ -152,7 +152,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
     });
   }
 
-  function handleUpdate(input: UpdateRiskInput & { id: number }) {
+  function handleUpdate(input: UpdateRiskInput & { riskId: number }) {
     updateRisk.mutate(input, {
       onSuccess: () => { toast.success("Risk updated"); setEditRisk(null); },
       onError: (e) => toast.error(getErrorMessage(e)),

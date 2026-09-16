@@ -124,8 +124,8 @@ export function useLeaveHuddle() {
 export function useHuddleHeartbeat(huddleId: number): void {
   const heartbeat = useAuthorizedMutation("chat:channels:read", {
     mutationKey: ["chat", "huddle", "heartbeat"],
-    mutationFn: (id: number) =>
-      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${id}/heartbeat`, undefined, undefined, chatOkContract),
+    mutationFn: (huddleId: number) =>
+      apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/heartbeat`, undefined, undefined, chatOkContract),
   });
   const { mutate } = heartbeat;
 

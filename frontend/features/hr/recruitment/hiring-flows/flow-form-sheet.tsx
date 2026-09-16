@@ -60,7 +60,7 @@ export function FlowFormSheet({ open, editFlow, onClose }: FlowFormSheetProps) {
     (data: FlowFormValues) => {
       if (editFlow) {
         updateFlow.mutate(
-          { id: editFlow.id, ...data },
+          { hiringFlowId: editFlow.id, ...data },
           {
             onSuccess: () => {
               toast.success("Hiring flow updated");

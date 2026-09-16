@@ -180,7 +180,7 @@ export function CyclesTab() {
 
   async function handleActivate(cycle: FeedbackCycle) {
     try {
-      await updateStatus.mutateAsync({ id: cycle.id, status: "ACTIVE" });
+      await updateStatus.mutateAsync({ cycleId: cycle.id, status: "ACTIVE" });
       toast.success("Cycle activated");
     } catch {
       toast.error("Failed to activate cycle");
@@ -189,7 +189,7 @@ export function CyclesTab() {
 
   async function handleClose(cycle: FeedbackCycle) {
     try {
-      await updateStatus.mutateAsync({ id: cycle.id, status: "CLOSED" });
+      await updateStatus.mutateAsync({ cycleId: cycle.id, status: "CLOSED" });
       toast.success("Cycle closed");
     } catch {
       toast.error("Failed to close cycle");

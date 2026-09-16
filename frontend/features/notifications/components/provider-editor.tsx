@@ -128,7 +128,7 @@ export function ProviderSheet({
       if (isEdit && provider) {
         update.mutate(
           {
-            id: provider.id,
+            providerId: provider.id,
             displayName: values.displayName,
             enabled: values.enabled,
             sandboxMode: values.sandboxMode,

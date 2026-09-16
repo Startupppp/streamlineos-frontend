@@ -124,8 +124,8 @@ export function useDeleteKbSource() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:delete", {
     mutationKey: ["delete", "kb", "source"],
-    mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/kb/sources/${id}`, undefined, undefined, kbSourceSuccessContract),
+    mutationFn: (sourceId: number) =>
+      apiClient.delete<{ success: boolean }>(`/kb/sources/${sourceId}`, undefined, undefined, kbSourceSuccessContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.sources() }),
   });
 }

@@ -77,8 +77,8 @@ export function useUpdateExternalReferral() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "external-referrals", "update"],
-    mutationFn: ({ id, ...data }: { id: number } & UpdateExternalReferralInput) =>
-      apiClient.patch<ExternalReferral>(`/hr/recruitment/external-referrals/${id}`, data, undefined, externalReferralRowContract),
+    mutationFn: ({ externalReferralId, ...data }: { externalReferralId: number } & UpdateExternalReferralInput) =>
+      apiClient.patch<ExternalReferral>(`/hr/recruitment/external-referrals/${externalReferralId}`, data, undefined, externalReferralRowContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.externalReferrals() });
     },

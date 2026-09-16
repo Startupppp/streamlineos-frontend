@@ -51,7 +51,7 @@ function RewardSheet({ referral, onClose }: RewardSheetProps) {
       return;
     }
     try {
-      await updateMutation.mutateAsync({ id: referral.id, status: "REWARD_PAID", rewardAmount: amount });
+      await updateMutation.mutateAsync({ externalReferralId: referral.id, status: "REWARD_PAID", rewardAmount: amount });
       toast.success("Reward marked as paid");
       onClose();
     } catch (e) {

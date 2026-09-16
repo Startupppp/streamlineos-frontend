@@ -45,7 +45,7 @@ export const FeedbackRow = memo(function FeedbackRow({
       const found = FEEDBACK_STATUS_OPTIONS.find((o) => o.value === value);
       if (!found) return;
       update.mutate(
-        { id: post.id, status: found.value },
+        { postId: post.id, status: found.value },
         {
           onSuccess: () => toast.success("Status updated"),
           onError: (e) => toast.error(getErrorMessage(e)),
@@ -58,7 +58,7 @@ export const FeedbackRow = memo(function FeedbackRow({
   const handleLinkChange = useCallback(
     (value: string) => {
       update.mutate(
-        { id: post.id, linkedRoadmapItemId: value === "none" ? null : Number(value) },
+        { postId: post.id, linkedRoadmapItemId: value === "none" ? null : Number(value) },
         {
           onSuccess: () => toast.success("Linked roadmap item updated"),
           onError: (e) => toast.error(getErrorMessage(e)),

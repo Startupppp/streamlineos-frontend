@@ -183,8 +183,8 @@ export function useUpdateTimeDevice() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:biometric:manage", {
     mutationKey: [...DEVICES_KEY, "update"],
-    mutationFn: ({ id, ...data }: { id: number } & Record<string, unknown>) =>
-      apiClient.patch(`/hr/enterprise/comp/devices/${id}`, data, undefined, _updateDeviceContract),
+    mutationFn: ({ deviceId, ...data }: { deviceId: number } & Record<string, unknown>) =>
+      apiClient.patch(`/hr/enterprise/comp/devices/${deviceId}`, data, undefined, _updateDeviceContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: DEVICES_KEY }),
   });
 }
@@ -193,7 +193,7 @@ export function useDeleteTimeDevice() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:biometric:manage", {
     mutationKey: [...DEVICES_KEY, "delete"],
-    mutationFn: (id: number) => apiClient.delete(`/hr/enterprise/comp/devices/${id}`, undefined, undefined, _voidContract),
+    mutationFn: (deviceId: number) => apiClient.delete(`/hr/enterprise/comp/devices/${deviceId}`, undefined, undefined, _voidContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: DEVICES_KEY }),
   });
 }
@@ -271,8 +271,8 @@ export function useCalibrateRecommendation() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:compensation:manage", {
     mutationKey: [...COMP_RECS_KEY, "calibrate"],
-    mutationFn: ({ id, hrCalibratedCents }: { id: number; hrCalibratedCents: number }) =>
-      apiClient.patch(`/hr/enterprise/comp/planning/recommendations/${id}/calibrate`, { hrCalibratedCents }, undefined, _calibrateRecommendationContract),
+    mutationFn: ({ recommendationId, hrCalibratedCents }: { recommendationId: number; hrCalibratedCents: number }) =>
+      apiClient.patch(`/hr/enterprise/comp/planning/recommendations/${recommendationId}/calibrate`, { hrCalibratedCents }, undefined, _calibrateRecommendationContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: COMP_RECS_KEY }),
   });
 }

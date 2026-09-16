@@ -89,11 +89,11 @@ export function useAccommodations(params: ListAccommodationsParams = {}) {
   });
 }
 
-export function useAccommodation(id: string) {
+export function useAccommodation(accommodationId: string) {
   return useGatedQuery("hr:accommodations:view", {
-    queryKey: accKeys.detail(id),
-    queryFn: ({ signal }) => apiClient.get(`${BASE}/${id}`, undefined, signal, _getAccommodationContract),
-    enabled: !!id,
+    queryKey: accKeys.detail(accommodationId),
+    queryFn: ({ signal }) => apiClient.get(`${BASE}/${accommodationId}`, undefined, signal, _getAccommodationContract),
+    enabled: !!accommodationId,
     staleTime: 30_000,
   });
 }
@@ -125,14 +125,14 @@ export function useCreateAccommodation() {
   });
 }
 
-export function useApproveAccommodation(id: string) {
+export function useApproveAccommodation(accommodationId: string) {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:accommodations:manage", {
-    mutationKey: ["hr-accommodations", "approve", id],
+    mutationKey: ["hr-accommodations", "approve", accommodationId],
     mutationFn: (body: {
       note?: string;
       tasks?: Array<{ title: string; assigneeUserId?: string; dueDate?: string }>;
-    }) => apiClient.post(`${BASE}/${id}/approve`, body, undefined, _approveAccommodationContract),
+    }) => apiClient.post(`${BASE}/${accommodationId}/approve`, body, undefined, _approveAccommodationContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: accKeys.detail(id) });
       void qc.invalidateQueries({ queryKey: accKeys.all });

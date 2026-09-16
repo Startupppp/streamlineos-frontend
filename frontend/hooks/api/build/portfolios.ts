@@ -52,11 +52,11 @@ export function usePortfolios(filters?: ListFilters) {
   });
 }
 
-export function usePortfolio(id: number) {
+export function usePortfolio(portfolioId: number) {
   return useGatedQuery<PortfolioDetail>("build:portfolios:view", {
-    queryKey: buildWorkQueryKeys.projects.portfolios.detail(id),
-    queryFn: ({ signal }) => apiClient.get<PortfolioDetail>(`/build/portfolios/${id}`, undefined, signal, portfolioDetailContract),
-    enabled: !!id,
+    queryKey: buildWorkQueryKeys.projects.portfolios.detail(portfolioId),
+    queryFn: ({ signal }) => apiClient.get<PortfolioDetail>(`/build/portfolios/${portfolioId}`, undefined, signal, portfolioDetailContract),
+    enabled: !!portfolioId,
     staleTime: 60_000,
   });
 }
@@ -77,11 +77,11 @@ export function useUpdatePortfolio() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", "update"],
-    mutationFn: ({ id, ...data }: UpdatePortfolioInput & { id: number }) =>
-      apiClient.patch<Portfolio>(`/build/portfolios/${id}`, data, undefined, portfolioRowContract),
+    mutationFn: ({ portfolioId, ...data }: UpdatePortfolioInput & { portfolioId: number }) =>
+      apiClient.patch<Portfolio>(`/build/portfolios/${portfolioId}`, data, undefined, portfolioRowContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.list() });
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.detail(vars.portfolioId) });
     },
   });
 }
@@ -90,8 +90,8 @@ export function useDeletePortfolio() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/build/portfolios/${id}`, undefined, undefined, noContentLazy),
+    mutationFn: (portfolioId: number) =>
+      apiClient.delete<void>(`/build/portfolios/${portfolioId}`, undefined, undefined, noContentLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.list() });
     },

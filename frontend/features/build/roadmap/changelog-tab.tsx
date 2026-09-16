@@ -87,7 +87,7 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
   const handleTogglePublish = useCallback(
     (entry: ChangelogEntry) => {
       update.mutate(
-        { id: entry.id, isPublished: !entry.isPublished },
+        { entryId: entry.id, isPublished: !entry.isPublished },
         {
           onSuccess: () =>
             toast.success(entry.isPublished ? "Entry unpublished" : "Entry published"),

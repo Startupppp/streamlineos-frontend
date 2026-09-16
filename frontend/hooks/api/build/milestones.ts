@@ -68,8 +68,8 @@ export function useUpdateMilestone(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "milestones", "update"],
-    mutationFn: ({ id, ...input }: UpdateMilestoneInput & { id: number }) =>
-      apiClient.patch<ProjectMilestone>(`/build/${projectId}/milestones/${id}`, input, undefined, milestoneRowContract),
+    mutationFn: ({ milestoneId, ...input }: UpdateMilestoneInput & { milestoneId: number }) =>
+      apiClient.patch<ProjectMilestone>(`/build/${projectId}/milestones/${milestoneId}`, input, undefined, milestoneRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: milestoneKey(projectId) }),
   });
 }
@@ -78,8 +78,8 @@ export function useDeleteMilestone(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "milestones", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/build/${projectId}/milestones/${id}`, undefined, undefined, noContentContract),
+    mutationFn: (milestoneId: number) =>
+      apiClient.delete<void>(`/build/${projectId}/milestones/${milestoneId}`, undefined, undefined, noContentContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: milestoneKey(projectId) }),
   });
 }

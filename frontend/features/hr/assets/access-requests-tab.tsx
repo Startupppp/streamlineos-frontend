@@ -87,7 +87,7 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
 
   const handleGrant = useCallback((id: string) => {
     updateMutation.mutate(
-      { id, status: "granted" },
+      { accessRequestId: id, status: "granted" },
       {
         onSuccess: () => toast.success("Access granted"),
         onError: (e) => toast.error(getErrorMessage(e)),
@@ -97,7 +97,7 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
 
   const handleRevoke = useCallback((id: string) => {
     updateMutation.mutate(
-      { id, status: "revoked" },
+      { accessRequestId: id, status: "revoked" },
       {
         onSuccess: () => toast.success("Access revoked"),
         onError: (e) => toast.error(getErrorMessage(e)),

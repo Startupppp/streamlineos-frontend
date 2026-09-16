@@ -118,7 +118,7 @@ export function LeaveTypesManager({ canManage }: { canManage: boolean }) {
     if (editor.editing) {
       update.mutate(
         {
-          id: editor.editing.id,
+          typeId: editor.editing.id,
           name: editor.name.trim(),
           daysPerYear: days,
           carryForward: editor.carryForward,

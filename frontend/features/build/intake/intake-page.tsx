@@ -108,7 +108,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
   const onAcceptSubmit = useCallback((_: AcceptForm) => {
     if (selectedItemId === null) return;
     updateMutation.mutate(
-      { id: selectedItemId, projectId, status: "accepted" },
+      { intakeRequestId: selectedItemId, projectId, status: "accepted" },
       {
         onSuccess: () => {
           setAcceptOpen(false);
@@ -123,7 +123,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
   const onDeclineSubmit = useCallback((data: DeclineForm) => {
     if (selectedItemId === null) return;
     updateMutation.mutate(
-      { id: selectedItemId, projectId, status: "declined", declineReason: data.reason },
+      { intakeRequestId: selectedItemId, projectId, status: "declined", declineReason: data.reason },
       {
         onSuccess: () => {
           setDeclineOpen(false);
@@ -149,7 +149,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
 
   const handleDuplicate = useCallback((itemId: number) => {
     updateMutation.mutate(
-      { id: itemId, projectId, status: "duplicate" },
+      { intakeRequestId: itemId, projectId, status: "duplicate" },
       {
         onSuccess: () => toast.success("Item marked as duplicate"),
         onError: (err) => toast.error(getErrorMessage(err)),

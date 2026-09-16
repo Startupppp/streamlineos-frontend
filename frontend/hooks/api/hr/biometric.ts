@@ -62,8 +62,8 @@ export function useUpdateBiometricDevice() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "biometric", "updateDevice"],
-    mutationFn: ({ id, ...data }: { id: number; name?: string; ipAddress?: string; port?: number; vendor?: string; location?: string }) =>
-      apiClient.patch<BiometricDevice>(`/hr/biometric/devices/${id}`, data, undefined, biometricDeviceC),
+    mutationFn: ({ deviceId, ...data }: { deviceId: number; name?: string; ipAddress?: string; port?: number; vendor?: string; location?: string }) =>
+      apiClient.patch<BiometricDevice>(`/hr/biometric/devices/${deviceId}`, data, undefined, biometricDeviceC),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "biometricDevices"] }),
   });
 }

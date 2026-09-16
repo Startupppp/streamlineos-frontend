@@ -360,7 +360,7 @@ export function GlobalAskOs() {
     setView("chat");
   }
   function handleRenameConversation(id: number, title: string) {
-    renameConversation.mutate({ id, title });
+    renameConversation.mutate({ conversationId: id, title });
   }
   function handleDeleteActive() {
     if (

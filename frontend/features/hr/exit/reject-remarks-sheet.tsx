@@ -66,7 +66,7 @@ export function RejectRemarksSheet({
     }
     const mutate = rejectDialog.type === "hr" ? hrReview.mutate : finalReview.mutate;
     mutate(
-      { id: rejectDialog.id, action: "reject", remarks: trimmedRemarks },
+      { exitId: rejectDialog.id, action: "reject", remarks: trimmedRemarks },
       {
         onSuccess: () => {
           toast.success("Resignation rejected");

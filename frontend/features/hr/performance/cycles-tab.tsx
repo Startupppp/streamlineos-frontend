@@ -113,7 +113,7 @@ export function CyclesTab() {
   const handleCreate = useCallback((data: CycleFormValues) => {
     if (editCycle) {
       updateCycle.mutate(
-        { id: editCycle.id, name: data.name, type: data.type, periodStart: data.periodStart, periodEnd: data.periodEnd, deadline: data.deadline },
+        { cycleId: editCycle.id, name: data.name, type: data.type, periodStart: data.periodStart, periodEnd: data.periodEnd, deadline: data.deadline },
         {
           onSuccess: () => { toast.success("Cycle updated"); setSheetOpen(false); setEditCycle(null); },
           onError: (e) => toast.error(getErrorMessage(e)),

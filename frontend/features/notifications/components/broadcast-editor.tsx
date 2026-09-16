@@ -70,7 +70,7 @@ export function BroadcastSheet({
 
     if (isEdit && broadcast) {
       update.mutate(
-        { id: broadcast.id, ...payload },
+        { broadcastId: broadcast.id, ...payload },
         {
           onSuccess: () => { toast.success("Broadcast updated"); onClose(); },
           onError: () => toast.error("Failed to update broadcast"),

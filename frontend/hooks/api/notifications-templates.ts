@@ -92,12 +92,12 @@ export const useUpdateNotificationTemplate = () => {
   return useAuthorizedMutation<
     NotificationTemplate,
     Error,
-    { id: number } & UpdateTemplateInput
+    { templateId: number } & UpdateTemplateInput
   >("notifications:templates:manage", {
     mutationKey: ["notifications", "templates", "update"],
-    mutationFn: ({ id, ...dto }) =>
+    mutationFn: ({ templateId, ...dto }) =>
       apiClient.patch<NotificationTemplate>(
-        `/notification-templates/${id}`,
+        `/notification-templates/${templateId}`,
         dto,
         undefined,
         notificationTemplateContract,
@@ -107,7 +107,7 @@ export const useUpdateNotificationTemplate = () => {
         queryKey: platformCoreQueryKeys.notifications.templates(),
       });
       queryClient.invalidateQueries({
-        queryKey: platformCoreQueryKeys.notifications.template(vars.id),
+        queryKey: platformCoreQueryKeys.notifications.template(vars.templateId),
       });
     },
   });
@@ -118,12 +118,12 @@ export const useSetTemplateApproval = () => {
   return useAuthorizedMutation<
     NotificationTemplate,
     Error,
-    { id: number } & SetTemplateApprovalInput
+    { templateId: number } & SetTemplateApprovalInput
   >("notifications:templates:manage", {
     mutationKey: ["notifications", "templates", "approval"],
-    mutationFn: ({ id, ...dto }) =>
+    mutationFn: ({ templateId, ...dto }) =>
       apiClient.patch<NotificationTemplate>(
-        `/notification-templates/${id}/approval`,
+        `/notification-templates/${templateId}/approval`,
         dto,
         undefined,
         notificationTemplateContract,
@@ -133,7 +133,7 @@ export const useSetTemplateApproval = () => {
         queryKey: platformCoreQueryKeys.notifications.templates(),
       });
       queryClient.invalidateQueries({
-        queryKey: platformCoreQueryKeys.notifications.template(vars.id),
+        queryKey: platformCoreQueryKeys.notifications.template(vars.templateId),
       });
     },
   });
@@ -145,9 +145,9 @@ export const useDeleteNotificationTemplate = () => {
     "notifications:templates:manage",
     {
       mutationKey: ["notifications", "templates", "delete"],
-      mutationFn: (id) =>
+      mutationFn: (templateId) =>
         apiClient.delete<{ success: boolean }>(
-          `/notification-templates/${id}`,
+          `/notification-templates/${templateId}`,
           undefined,
           undefined,
           notificationSuccessContract,
@@ -165,12 +165,12 @@ export const usePreviewTemplate = () => {
   return useAuthorizedMutation<
     TemplatePreviewResult,
     Error,
-    { id: number; variables: Record<string, string> }
+    { templateId: number; variables: Record<string, string> }
   >("notifications:templates:view", {
     mutationKey: ["notifications", "templates", "preview"],
-    mutationFn: ({ id, variables }) =>
+    mutationFn: ({ templateId, variables }) =>
       apiClient.post<TemplatePreviewResult>(
-        `/notification-templates/${id}/preview`,
+        `/notification-templates/${templateId}/preview`,
         { variables },
         undefined,
         templatePreviewContract,

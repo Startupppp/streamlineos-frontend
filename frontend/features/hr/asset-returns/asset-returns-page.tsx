@@ -148,7 +148,7 @@ export function AssetReturnsPage() {
   const handleMarkReturned = useCallback(() => {
     if (!returnId) return;
     markReturned.mutate(
-      { id: returnId, condition: "Good" },
+      { assetReturnId: returnId, condition: "Good" },
       {
         onSuccess: () => { toast.success("Asset marked as returned"); setReturnId(null); },
         onError: (e) => toast.error(getErrorMessage(e)),

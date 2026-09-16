@@ -59,8 +59,8 @@ export function useUpdateAutomation(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "automations", "update"],
-    mutationFn: ({ id, ...data }: Partial<ProjectAutomation> & { id: number }) =>
-      apiClient.patch<ProjectAutomation>(`/build/${projectId}/automations/${id}`, data, undefined, projectAutomationRowContract),
+    mutationFn: ({ automationId, ...data }: Partial<ProjectAutomation> & { automationId: number }) =>
+      apiClient.patch<ProjectAutomation>(`/build/${projectId}/automations/${automationId}`, data, undefined, projectAutomationRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projects.automations(projectId) }),
   });
 }
@@ -69,8 +69,8 @@ export function useDeleteAutomation(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "automations", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/build/${projectId}/automations/${id}`, undefined, undefined, noContentContract),
+    mutationFn: (automationId: number) =>
+      apiClient.delete<void>(`/build/${projectId}/automations/${automationId}`, undefined, undefined, noContentContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projects.automations(projectId) }),
   });
 }

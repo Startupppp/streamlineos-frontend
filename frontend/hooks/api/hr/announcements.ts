@@ -39,7 +39,7 @@ export interface HrAnnouncement {
 }
 
 export type CreateHrAnnouncementData = Omit<HrAnnouncement, "id" | "orgId" | "authorId" | "readCount" | "createdAt">;
-export type UpdateHrAnnouncementData = Partial<CreateHrAnnouncementData> & { id: number };
+export type UpdateHrAnnouncementData = Partial<CreateHrAnnouncementData> & { announcementId: number };
 
 export function useHrAnnouncements() {
   return useQuery<HrAnnouncement[]>({
@@ -72,8 +72,8 @@ export function useUpdateHrAnnouncement() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:announcements:manage", {
     mutationKey: ["hr", "announcements", "update"],
-    mutationFn: ({ id, ...data }: UpdateHrAnnouncementData) =>
-      apiClient.patch<HrAnnouncement>(`/org/announcements/${id}`, data, undefined, announcementC),
+    mutationFn: ({ announcementId, ...data }: UpdateHrAnnouncementData) =>
+      apiClient.patch<HrAnnouncement>(`/org/announcements/${announcementId}`, data, undefined, announcementC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.announcements() }),
   });
 }
@@ -82,7 +82,7 @@ export function useDeleteHrAnnouncement() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:announcements:manage", {
     mutationKey: ["hr", "announcements", "delete"],
-    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/org/announcements/${id}`, undefined, undefined, announcementSuccessC),
+    mutationFn: (announcementId: number) => apiClient.delete<{ success: boolean }>(`/org/announcements/${announcementId}`, undefined, undefined, announcementSuccessC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.announcements() }),
   });
 }
@@ -91,7 +91,7 @@ export function useMarkHrAnnouncementRead() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "announcements", "read"],
-    mutationFn: (id: number) => apiClient.post<{ success: boolean }>(`/org/announcements/${id}/read`, undefined, undefined, announcementSuccessC),
+    mutationFn: (announcementId: number) => apiClient.post<{ success: boolean }>(`/org/announcements/${announcementId}/read`, undefined, undefined, announcementSuccessC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.announcements() }),
   });
 }

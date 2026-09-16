@@ -60,7 +60,7 @@ export function useResignationReview(): ResignationReview {
   const confirmHrApprove = useCallback(() => {
     if (!hrApproveId) return;
     hrReview.mutate(
-      { id: hrApproveId, action: "approve" },
+      { exitId: hrApproveId, action: "approve" },
       {
         onSuccess: () => {
           toast.success("Resignation approved by HR");
@@ -74,7 +74,7 @@ export function useResignationReview(): ResignationReview {
   const confirmFinalApprove = useCallback(() => {
     if (!finalApproveId) return;
     finalReview.mutate(
-      { id: finalApproveId, action: "approve" },
+      { exitId: finalApproveId, action: "approve" },
       {
         onSuccess: () => {
           toast.success("Resignation approved by FINAL");
@@ -88,7 +88,7 @@ export function useResignationReview(): ResignationReview {
   const confirmWithdraw = useCallback(() => {
     if (!withdrawId) return;
     withdrawResignation.mutate(
-      { id: withdrawId },
+      { exitId: withdrawId },
       {
         onSuccess: () => {
           toast.success("Resignation withdrawn");

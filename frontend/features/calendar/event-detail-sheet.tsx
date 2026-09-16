@@ -80,7 +80,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const handleUnlink = useCallback(async () => {
     if (numericEventId === null) return;
     try {
-      await updateEvent({ id: numericEventId, entityType: null, entityId: null });
+      await updateEvent({ calendarEventId: numericEventId, entityType: null, entityId: null });
       toast.success("Ticket unlinked");
       setUnlinkConfirmOpen(false);
     } catch (err) {

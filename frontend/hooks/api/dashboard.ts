@@ -382,8 +382,8 @@ export const useDeleteAnnouncement = () => {
   const qc = useQueryClient();
   return useAuthorizedMutation("settings:manage", {
     mutationKey: ["dashboard", "announcements", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/dashboard/announcements?id=${id}`, undefined, undefined, dashboardSuccessContract),
+    mutationFn: (announcementId: number) =>
+      apiClient.delete<{ success: boolean }>(`/dashboard/announcements?id=${announcementId}`, undefined, undefined, dashboardSuccessContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: collaborationQueryKeys.dashboard.announcements() });
     },

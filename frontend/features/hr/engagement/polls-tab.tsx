@@ -90,7 +90,7 @@ function PollCard({
 
   const handleToggleStatus = useCallback(() => {
     const nextStatus = poll.status === "active" ? "closed" : "active";
-    toast.promise(updatePoll.mutateAsync({ id: poll.id, status: nextStatus }), {
+    toast.promise(updatePoll.mutateAsync({ pollId: poll.id, status: nextStatus }), {
       loading: "Updating poll...",
       success: "Poll updated",
       error: getErrorMessage,

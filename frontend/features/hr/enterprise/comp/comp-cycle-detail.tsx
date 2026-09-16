@@ -135,7 +135,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
     if (!val) return;
     setCalibratingId(rec.id);
     calibrateMut.mutate(
-      { id: rec.id, hrCalibratedCents: parseInt(val) },
+      { recommendationId: rec.id, hrCalibratedCents: parseInt(val) },
       {
         onSuccess: () => { toast.success("Calibrated"); setCalibratingId(null); },
         onError: (err) => { toast.error(getErrorMessage(err)); setCalibratingId(null); },

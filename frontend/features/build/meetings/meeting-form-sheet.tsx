@@ -144,7 +144,7 @@ export function MeetingFormSheet({
 
     if (mode === "edit" && defaultValues) {
       onSubmitEdit({
-        id: defaultValues.id,
+        meetingId: defaultValues.id,
         title: values.title,
         type: values.type,
         status: values.status,

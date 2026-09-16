@@ -69,7 +69,7 @@ interface RiskFormSheetProps {
   mode: "create" | "edit";
   defaultValues?: Risk;
   onSubmitCreate: (input: CreateRiskInput) => void;
-  onSubmitEdit: (input: UpdateRiskInput & { id: number }) => void;
+  onSubmitEdit: (input: UpdateRiskInput & { riskId: number }) => void;
   isPending?: boolean;
   projectId: number;
 }
@@ -94,7 +94,7 @@ export function RiskFormSheet({
   function handleSubmit(values: RiskFormValues) {
     if (mode === "edit" && defaultValues) {
       onSubmitEdit({
-        id: defaultValues.id,
+        riskId: defaultValues.id,
         title: values.title,
         ...(values.description ? { description: values.description } : {}),
         probability: values.probability,

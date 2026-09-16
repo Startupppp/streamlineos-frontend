@@ -60,12 +60,12 @@ export function useUpdateChangeRequest(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:changerequests:manage", {
     mutationKey: ["projects", projectId, "change-requests", "update"],
-    mutationFn: ({ id, ...data }: UpdateChangeRequestInput & { id: number }) =>
-      apiClient.patch<ChangeRequest>(`/build/${projectId}/change-requests/${id}`, data, undefined, changeRequestRowContract),
+    mutationFn: ({ changeRequestId, ...data }: UpdateChangeRequestInput & { changeRequestId: number }) =>
+      apiClient.patch<ChangeRequest>(`/build/${projectId}/change-requests/${changeRequestId}`, data, undefined, changeRequestRowContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.changeRequests.list(projectId) });
       qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.changeRequests.detail(projectId, vars.id),
+        queryKey: buildWorkQueryKeys.projects.changeRequests.detail(projectId, vars.changeRequestId),
       });
     },
   });

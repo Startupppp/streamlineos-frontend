@@ -129,7 +129,7 @@ export function AllWorkViewsMenu({
   const handleTogglePin = useCallback(
     (view: ProjectView) => {
       updateView.mutate(
-        { id: view.id, isPinned: !view.isPinned },
+        { viewId: view.id, isPinned: !view.isPinned },
         { onError: (err) => toast.error(getErrorMessage(err)) },
       );
     },
@@ -139,7 +139,7 @@ export function AllWorkViewsMenu({
   const handleDelete = useCallback(
     (view: ProjectView) => {
       deleteView.mutate(
-        { id: view.id },
+        { viewId: view.id },
         {
           onSuccess: () => toast.success("View deleted"),
           onError: (err) => toast.error(getErrorMessage(err)),

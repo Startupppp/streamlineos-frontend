@@ -59,7 +59,7 @@ interface CreateAutomationInput {
 }
 
 interface ToggleAutomationInput {
-  id: number;
+  automationId: number;
   isActive: boolean;
 }
 
@@ -95,8 +95,8 @@ export function useToggleRecruitmentAutomation() {
     "hr:employees:manage",
     {
       mutationKey: ["hr", "recruitment", "automations", "toggle"],
-      mutationFn: ({ id, isActive }) =>
-        apiClient.patch<PipelineAutomation>(`/hr/recruitment/automations/${id}`, { isActive }, undefined, automationContract),
+      mutationFn: ({ automationId, isActive }) =>
+        apiClient.patch<PipelineAutomation>(`/hr/recruitment/automations/${automationId}`, { isActive }, undefined, automationContract),
       onSuccess: () => {
         void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.pipelineAutomations() });
       },
@@ -108,8 +108,8 @@ export function useDeleteRecruitmentAutomation() {
   const qc = useQueryClient();
   return useAuthorizedMutation<{ success: boolean }, Error, number>("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "automations", "delete"],
-    mutationFn: (id) =>
-      apiClient.delete<{ success: boolean }>(`/hr/recruitment/automations/${id}`, undefined, undefined, automationSuccessContract),
+    mutationFn: (automationId) =>
+      apiClient.delete<{ success: boolean }>(`/hr/recruitment/automations/${automationId}`, undefined, undefined, automationSuccessContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.pipelineAutomations() });
     },

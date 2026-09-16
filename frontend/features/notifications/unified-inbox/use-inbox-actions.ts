@@ -109,7 +109,7 @@ export function useInboxActions(): InboxActions {
   const handleSnooze = useCallback(
     (id: number, snoozedUntil: string) =>
       runWhenOnline(() =>
-        snoozeMutate({ id, snoozedUntil }, { onError: reportError }),
+        snoozeMutate({ notificationId: id, snoozedUntil }, { onError: reportError }),
       ),
     [runWhenOnline, snoozeMutate],
   );

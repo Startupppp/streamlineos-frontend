@@ -48,7 +48,7 @@ export function DeviceSheet({ open, onOpenChange, device }: Props) {
   function onSubmit(values: FormValues) {
     if (isEdit && device) {
       updateMut.mutate(
-        { id: device.id, ...values },
+        { deviceId: device.id, ...values },
         {
           onSuccess: () => { toast.success("Device updated"); onOpenChange(false); },
           onError: (err) => toast.error(getErrorMessage(err)),

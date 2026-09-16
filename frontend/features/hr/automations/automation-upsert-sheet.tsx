@@ -193,7 +193,7 @@ export function AutomationUpsertSheet({ rule, onClose }: Props) {
 
     if (isEditing) {
       update.mutate(
-        { id: rule.id, ...payload },
+        { automationId: rule.id, ...payload },
         {
           onSuccess: () => { toast.success("Automation rule updated"); onClose(); },
           onError: (err) => toast.error(getErrorMessage(err)),

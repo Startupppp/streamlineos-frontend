@@ -45,7 +45,7 @@ export function MeetingNotesSection({ meeting, projectId, canManage }: MeetingNo
 
   function handleSave() {
     updateMeeting.mutate(
-      { id: meeting.id, agenda: agendaDraft || null, notes: notesDraft || null },
+      { meetingId: meeting.id, agenda: agendaDraft || null, notes: notesDraft || null },
       {
         onSuccess: () => { toast.success("Notes saved"); setDirty(false); },
         onError: (e) => toast.error(getErrorMessage(e)),

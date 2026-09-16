@@ -155,7 +155,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
   const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
     deleteBug.mutate(
-      { projectId, id: deleteTarget.id },
+      { projectId, bugId: deleteTarget.id },
       {
         onSuccess: () => { toast.success("Bug deleted"); setDeleteTarget(null); },
         onError: (error) => toast.error(getErrorMessage(error)),

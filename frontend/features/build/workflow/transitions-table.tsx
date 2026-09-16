@@ -104,7 +104,7 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
   function handleSubmit(data: CreateTransitionInput) {
     if (editTarget) {
       updateTransition.mutate(
-        { id: editTarget.id, ...data },
+        { transitionId: editTarget.id, ...data },
         {
           onSuccess: () => {
             toast.success("Transition updated");

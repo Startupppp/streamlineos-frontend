@@ -61,7 +61,7 @@ export function ViewsPage({ params }: PageProps) {
   const handleTogglePin = useCallback(
     (viewId: number, isPinned: boolean) => {
       togglePinMutation.mutate(
-        { id: viewId, projectId, isPinned },
+        { viewId, projectId, isPinned },
         { onError: (err) => toast.error(getErrorMessage(err)) },
       );
     },
@@ -71,7 +71,7 @@ export function ViewsPage({ params }: PageProps) {
   const handleDelete = useCallback(
     (viewId: number) => {
       deleteMutation.mutate(
-        { id: viewId, projectId },
+        { viewId, projectId },
         {
           onSuccess: () => toast.success("View deleted"),
           onError: (err) => toast.error(getErrorMessage(err)),

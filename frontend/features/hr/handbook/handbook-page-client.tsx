@@ -148,7 +148,7 @@ export function HandbookPageClient() {
     if (editVersion) {
       update.mutate(
         {
-          id: editVersion.id,
+          handbookId: editVersion.id,
           version: trimmedVersion,
           title: trimmedTitle,
           changelog: changelog.trim() || undefined,
@@ -244,7 +244,7 @@ export function HandbookPageClient() {
   const handlePublish = useCallback(
     (id: number) => {
       update.mutate(
-        { id, status: "PUBLISHED" },
+        { handbookId: id, status: "PUBLISHED" },
         {
           onSuccess: () => toast.success("Version published"),
           onError: (e) => toast.error(getErrorMessage(e)),
@@ -257,7 +257,7 @@ export function HandbookPageClient() {
   const handleUnpublish = useCallback(
     (id: number) => {
       update.mutate(
-        { id, status: "DRAFT" },
+        { handbookId: id, status: "DRAFT" },
         {
           onSuccess: () => toast.success("Version unpublished"),
           onError: (e) => toast.error(getErrorMessage(e)),

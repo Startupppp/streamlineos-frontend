@@ -100,21 +100,21 @@ export function useUpdateTicketVisibility(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:clientvisibility:manage", {
     mutationKey: ["projects", projectId, "client-visibility", "tickets"],
-    mutationFn: ({ id, clientVisible }: { id: number; clientVisible: boolean }) =>
+    mutationFn: ({ ticketId, clientVisible }: { ticketId: number; clientVisible: boolean }) =>
       apiClient.patch<{ success: boolean }>(
-        `/build/${projectId}/client-visibility/tickets/${id}`,
+        `/build/${projectId}/client-visibility/tickets/${ticketId}`,
         { clientVisible },
         undefined,
         toggleVisibilityContract,
       ),
-    onMutate: async ({ id, clientVisible }) => {
+    onMutate: async ({ ticketId, clientVisible }) => {
       const key = buildWorkQueryKeys.projects.clientPortal.visibility(projectId);
       await qc.cancelQueries({ queryKey: key });
       const prev = qc.getQueryData<ClientVisibilitySummary>(key);
       if (prev) {
         qc.setQueryData<ClientVisibilitySummary>(key, {
           ...prev,
-          tickets: prev.tickets.map((t) => (t.id === id ? { ...t, clientVisible } : t)),
+          tickets: prev.tickets.map((t) => (t.id === ticketId ? { ...t, clientVisible } : t)),
         });
       }
       return { prev };
@@ -134,21 +134,21 @@ export function useUpdateMilestoneVisibility(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:clientvisibility:manage", {
     mutationKey: ["projects", projectId, "client-visibility", "milestones"],
-    mutationFn: ({ id, clientVisible }: { id: number; clientVisible: boolean }) =>
+    mutationFn: ({ milestoneId, clientVisible }: { milestoneId: number; clientVisible: boolean }) =>
       apiClient.patch<{ success: boolean }>(
-        `/build/${projectId}/client-visibility/milestones/${id}`,
+        `/build/${projectId}/client-visibility/milestones/${milestoneId}`,
         { clientVisible },
         undefined,
         toggleVisibilityContract,
       ),
-    onMutate: async ({ id, clientVisible }) => {
+    onMutate: async ({ milestoneId, clientVisible }) => {
       const key = buildWorkQueryKeys.projects.clientPortal.visibility(projectId);
       await qc.cancelQueries({ queryKey: key });
       const prev = qc.getQueryData<ClientVisibilitySummary>(key);
       if (prev) {
         qc.setQueryData<ClientVisibilitySummary>(key, {
           ...prev,
-          milestones: prev.milestones.map((m) => (m.id === id ? { ...m, clientVisible } : m)),
+          milestones: prev.milestones.map((m) => (m.id === milestoneId ? { ...m, clientVisible } : m)),
         });
       }
       return { prev };

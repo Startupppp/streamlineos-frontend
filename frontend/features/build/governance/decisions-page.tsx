@@ -128,7 +128,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     });
   }
 
-  function handleUpdate(input: UpdateDecisionInput & { id: number }) {
+  function handleUpdate(input: UpdateDecisionInput & { decisionId: number }) {
     updateDecision.mutate(input, {
       onSuccess: () => { toast.success("Decision updated"); setEditDecision(null); },
       onError: (e) => toast.error(getErrorMessage(e)),

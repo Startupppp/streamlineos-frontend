@@ -232,8 +232,8 @@ export function useUpdatePoll() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:engagement:manage", {
     mutationKey: ["hr", "engagement", "polls", "update"],
-    mutationFn: ({ id, ...data }: { id: number; status?: string; question?: string }) =>
-      apiClient.patch(`/hr/engagement/polls/${id}`, data, undefined, _successContract),
+    mutationFn: ({ pollId, ...data }: { pollId: number; status?: string; question?: string }) =>
+      apiClient.patch(`/hr/engagement/polls/${pollId}`, data, undefined, _successContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.polls() }),
   });
 }
@@ -348,8 +348,8 @@ export function useUpdateCampaign() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:engagement:manage", {
     mutationKey: ["hr", "engagement", "campaigns", "update"],
-    mutationFn: ({ id, ...data }: Partial<HrCampaign> & { id: number }) =>
-      apiClient.patch(`/hr/engagement/campaigns/${id}`, data, undefined, _updateCampaignContract),
+    mutationFn: ({ campaignId, ...data }: Partial<HrCampaign> & { campaignId: number }) =>
+      apiClient.patch(`/hr/engagement/campaigns/${campaignId}`, data, undefined, _updateCampaignContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.campaigns() }),
   });
 }
@@ -358,8 +358,8 @@ export function useDeleteCampaign() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:engagement:manage", {
     mutationKey: ["hr", "engagement", "campaigns", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/hr/engagement/campaigns/${id}`, undefined, undefined, noContentC),
+    mutationFn: (campaignId: number) =>
+      apiClient.delete<void>(`/hr/engagement/campaigns/${campaignId}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.campaigns() }),
   });
 }

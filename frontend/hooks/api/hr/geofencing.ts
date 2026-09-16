@@ -51,8 +51,8 @@ export function useUpdateGeofence() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "geofencing", "update"],
-    mutationFn: ({ id, ...data }: { id: number; name?: string; lat?: string; lng?: string; radiusMeters?: number }) =>
-      apiClient.patch<Geofence>(`/hr/geofencing/${id}`, data, undefined, geofenceRowLazy),
+    mutationFn: ({ geofencingId, ...data }: { geofencingId: number; name?: string; lat?: string; lng?: string; radiusMeters?: number }) =>
+      apiClient.patch<Geofence>(`/hr/geofencing/${geofencingId}`, data, undefined, geofenceRowLazy),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "geofences"] }),
   });
 }
@@ -61,8 +61,8 @@ export function useDeleteGeofence() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "geofencing", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/hr/geofencing/${id}`, undefined, undefined, noContentLazy),
+    mutationFn: (geofencingId: number) =>
+      apiClient.delete<void>(`/hr/geofencing/${geofencingId}`, undefined, undefined, noContentLazy),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "geofences"] }),
   });
 }

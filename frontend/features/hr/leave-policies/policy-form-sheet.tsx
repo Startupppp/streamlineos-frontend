@@ -91,7 +91,7 @@ export function PolicyFormSheet({
         leaveTypeId: parseInt(values.leaveTypeId, 10),
       };
       if (editingPolicy) {
-        await updateMutation.mutateAsync({ id: editingPolicy.id, ...payload });
+        await updateMutation.mutateAsync({ leavePolicyId: editingPolicy.id, ...payload });
         toast.success("Policy updated");
       } else {
         await createMutation.mutateAsync(payload);

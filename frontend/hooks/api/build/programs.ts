@@ -58,12 +58,12 @@ export function useUpdateProgram() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:programs:manage", {
     mutationKey: ["projects", "programs", "update"],
-    mutationFn: ({ id, ...data }: UpdateProgramInput & { id: number }) =>
-      apiClient.patch<Program>(`/build/programs/${id}`, data, undefined, programRowContract),
+    mutationFn: ({ programId, ...data }: UpdateProgramInput & { programId: number }) =>
+      apiClient.patch<Program>(`/build/programs/${programId}`, data, undefined, programRowContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.programs.list() });
       qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.programs.detail(vars.id),
+        queryKey: buildWorkQueryKeys.projects.programs.detail(vars.programId),
       });
     },
   });
@@ -73,8 +73,8 @@ export function useDeleteProgram() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:programs:manage", {
     mutationKey: ["projects", "programs", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/build/programs/${id}`, undefined, undefined, noContentContract),
+    mutationFn: (programId: number) =>
+      apiClient.delete<void>(`/build/programs/${programId}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.programs.list() });
     },

@@ -83,8 +83,8 @@ export function useRenameAiConversation() {
   const qc = useQueryClient();
   return useAuthorizedMutation("ai:chat:use", {
     mutationKey: ["aiChat", "conversations", "rename"],
-    mutationFn: ({ id, title }: { id: number; title: string }) =>
-      apiClient.patch<AiConversation>(`/chat/conversations/${id}`, { title }, undefined, aiConversationContract),
+    mutationFn: ({ conversationId, title }: { conversationId: number; title: string }) =>
+      apiClient.patch<AiConversation>(`/chat/conversations/${conversationId}`, { title }, undefined, aiConversationContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: collaborationQueryKeys.aiChat.conversations() });
     },
@@ -95,8 +95,8 @@ export function useDeleteAiConversation() {
   const qc = useQueryClient();
   return useAuthorizedMutation("ai:chat:use", {
     mutationKey: ["aiChat", "conversations", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/chat/conversations/${id}`, undefined, undefined, aiDeleteConversationContract),
+    mutationFn: (conversationId: number) =>
+      apiClient.delete<{ success: boolean }>(`/chat/conversations/${conversationId}`, undefined, undefined, aiDeleteConversationContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: collaborationQueryKeys.aiChat.conversations() });
     },

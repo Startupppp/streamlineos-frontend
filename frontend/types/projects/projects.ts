@@ -291,7 +291,7 @@ export interface CreateViewInput {
 }
 
 export interface UpdateViewInput {
-  id: number;
+  viewId: number;
   name?: string;
   filters?: Record<string, unknown>;
   groupBy?: string | null;
@@ -314,7 +314,7 @@ export interface CreateWorkspaceViewInput {
 }
 
 export interface UpdateWorkspaceViewInput {
-  id: number;
+  viewId: number;
   name?: string;
   filters?: Record<string, unknown>;
   groupBy?: string | null;
@@ -337,7 +337,7 @@ export interface CreateIntakeRequestInput {
 }
 
 export interface UpdateIntakeRequestInput {
-  id: number;
+  intakeRequestId: number;
   status?: IntakeStatus;
   declineReason?: string;
   linkedWorkItemId?: number;

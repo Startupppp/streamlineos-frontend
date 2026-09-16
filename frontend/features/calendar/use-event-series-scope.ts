@@ -54,7 +54,7 @@ export function useEventSeriesScope({
           toast.success("Occurrence updated");
         } else {
           const { syncConnectionId: _sc, addConference: _ac, ...editPayload } = pendingPayload;
-          await updateEvent.mutateAsync({ id: parsed.eventId, ...editPayload });
+          await updateEvent.mutateAsync({ calendarEventId: parsed.eventId, ...editPayload });
           toast.success("Event updated");
         }
         setSeriesScopeOpen(false);

@@ -115,7 +115,7 @@ interface Props {
   mode: "create" | "edit";
   defaultValues?: ProjectTeam;
   onSubmitCreate: (input: CreateTeamInput) => void;
-  onSubmitEdit: (input: UpdateTeamInput & { id: number }) => void;
+  onSubmitEdit: (input: UpdateTeamInput & { teamId: number }) => void;
   isPending?: boolean;
 }
 
@@ -171,7 +171,7 @@ export function TeamFormSheet({
   function handleSubmit(v: TeamFormValues) {
     if (mode === "edit" && defaultValues) {
       onSubmitEdit({
-        id: defaultValues.id,
+        teamId: defaultValues.id,
         name: v.name,
         icon: v.icon || null,
         color: v.color || null,

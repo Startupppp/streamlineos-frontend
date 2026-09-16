@@ -121,7 +121,7 @@ export function useInfiniteProjects(
 }
 
 export function useProject(
-  id: number,
+  projectId: number,
   options?: Omit<
     UseQueryOptions<ProjectWithDetails | null>,
     "queryKey" | "queryFn" | "enabled"
@@ -129,9 +129,9 @@ export function useProject(
 ) {
   const canView = useCan("build:view");
   return useQuery<ProjectWithDetails | null>({
-    queryKey: buildWorkQueryKeys.projects.detail(id),
-    queryFn: ({ signal }) => apiClient.get<ProjectWithDetails | null>(`/build/${id}`, undefined, signal, projectDetailLazy),
-    enabled: canView && !!id,
+    queryKey: buildWorkQueryKeys.projects.detail(projectId),
+    queryFn: ({ signal }) => apiClient.get<ProjectWithDetails | null>(`/build/${projectId}`, undefined, signal, projectDetailLazy),
+    enabled: canView && !!projectId,
     staleTime: 30_000,
     ...options,
   });

@@ -60,13 +60,13 @@ export function useUpdateBug() {
     mutationKey: ["projects", "bugs", "update"],
     mutationFn: ({
       projectId,
-      id,
+      bugId,
       ...data
-    }: UpdateBugInput & { projectId: number; id: number }) =>
-      apiClient.patch<Bug>(`/build/${projectId}/bugs/${id}`, data, undefined, bugRowContract),
+    }: UpdateBugInput & { projectId: number; bugId: number }) =>
+      apiClient.patch<Bug>(`/build/${projectId}/bugs/${bugId}`, data, undefined, bugRowContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.bugs.list(vars.projectId) });
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.bugs.detail(vars.projectId, vars.id) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.bugs.detail(vars.projectId, vars.bugId) });
     },
   });
 }
@@ -75,8 +75,8 @@ export function useDeleteBug() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:bugs:delete", {
     mutationKey: ["projects", "bugs", "delete"],
-    mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
-      apiClient.delete<void>(`/build/${projectId}/bugs/${id}`, undefined, undefined, noContentContract),
+    mutationFn: ({ projectId, bugId }: { projectId: number; bugId: number }) =>
+      apiClient.delete<void>(`/build/${projectId}/bugs/${bugId}`, undefined, undefined, noContentContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.bugs.list(vars.projectId) });
     },

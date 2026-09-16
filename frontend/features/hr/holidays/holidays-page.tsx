@@ -85,7 +85,7 @@ export function HolidaysPage() {
     const trimmedName = values.name.trim().toLowerCase();
     if (editingHoliday) {
       updateMutation.mutate(
-        { id: editingHoliday.id, ...values },
+        { holidayId: editingHoliday.id, ...values },
         {
           onSuccess: () => {
             toast.success("Holiday updated");

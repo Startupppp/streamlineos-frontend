@@ -86,11 +86,11 @@ export function useUpdateProjectTeam() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:teams:update", {
     mutationKey: [...buildWorkQueryKeys.projects.teams.all, "update"],
-    mutationFn: ({ id, ...data }: UpdateTeamInput & { id: number }) =>
-      apiClient.patch<ProjectTeamDetail>(`/build/teams/${id}`, data, undefined, teamDetailContract),
+    mutationFn: ({ teamId, ...data }: UpdateTeamInput & { teamId: number }) =>
+      apiClient.patch<ProjectTeamDetail>(`/build/teams/${teamId}`, data, undefined, teamDetailContract),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.list() });
-      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.detail(vars.id) });
+      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.detail(vars.teamId) });
     },
   });
 }
@@ -99,8 +99,8 @@ export function useDeleteProjectTeam() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:teams:delete", {
     mutationKey: [...buildWorkQueryKeys.projects.teams.all, "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/build/teams/${id}`, undefined, undefined, noContentContract),
+    mutationFn: (teamId: number) =>
+      apiClient.delete<void>(`/build/teams/${teamId}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.all });
     },

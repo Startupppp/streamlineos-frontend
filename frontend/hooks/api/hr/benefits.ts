@@ -135,8 +135,8 @@ export function useUpdateBenefitPlan() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:benefits:manage", {
     mutationKey: ["hr", "benefits", "plans", "update"],
-    mutationFn: ({ id, ...data }: Partial<BenefitPlan> & { id: number }) =>
-      apiClient.patch<BenefitPlan>(`/hr/benefits/plans/${id}`, data, undefined, benefitPlanC),
+    mutationFn: ({ planId, ...data }: Partial<BenefitPlan> & { planId: number }) =>
+      apiClient.patch<BenefitPlan>(`/hr/benefits/plans/${planId}`, data, undefined, benefitPlanC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.benefitsAll }),
   });
 }
@@ -201,7 +201,7 @@ export function useDeleteDependent() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:benefits:view", {
     mutationKey: ["hr", "benefits", "dependents", "delete"],
-    mutationFn: (id: number) => apiClient.delete<{ ok: boolean }>(`/hr/benefits/dependents/${id}`, undefined, undefined, deleteDependentC),
+    mutationFn: (dependentId: number) => apiClient.delete<{ ok: boolean }>(`/hr/benefits/dependents/${dependentId}`, undefined, undefined, deleteDependentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.benefitDependents }),
   });
 }

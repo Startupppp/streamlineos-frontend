@@ -153,7 +153,7 @@ export function EmailTemplatesPageClient() {
 
     if (editTemplate) {
       update.mutate(
-        { id: editTemplate.id, name: trimmedName, subject: trimmedSubject, body: trimmedBody, category },
+        { emailTemplateId: editTemplate.id, name: trimmedName, subject: trimmedSubject, body: trimmedBody, category },
         {
           onSuccess: () => { toast.success("Template updated"); setSheetOpen(false); resetForm(); },
           onError: (e) => toast.error(getErrorMessage(e)),

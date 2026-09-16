@@ -204,7 +204,7 @@ export function WhiteboardPage({ projectId, initialBoardId }: WhiteboardPageProp
 
   const handleSaveAsync = useCallback(
     async (boardId: number, data: ExcalidrawSceneData) => {
-      await updateBoard.mutateAsync({ id: boardId, data });
+      await updateBoard.mutateAsync({ whiteboardId: boardId, data });
     },
     [updateBoard],
   );

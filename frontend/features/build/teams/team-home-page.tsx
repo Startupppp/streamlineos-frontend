@@ -186,7 +186,7 @@ export function TeamHomePage({ teamId }: Props) {
   const removeMember = useRemoveProjectTeamMember(teamId);
   const updateMemberRole = useUpdateProjectTeamMemberRole(teamId);
 
-  function handleEdit(input: UpdateTeamInput & { id: number }) {
+  function handleEdit(input: UpdateTeamInput & { teamId: number }) {
     updateTeam.mutate(input, {
       onSuccess: () => {
         toast.success("Team updated");

@@ -98,11 +98,11 @@ export function useUpdateHrPolicy() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:policies:manage", {
     mutationKey: ["hr", "policies", "update"],
-    mutationFn: ({ id, ...data }: UpdatePolicyInput & { id: number }) =>
-      apiClient.patch<HrPolicy>(`/hr/policies/${id}`, data, undefined, updateHrPolicyC),
+    mutationFn: ({ policyId, ...data }: UpdatePolicyInput & { policyId: number }) =>
+      apiClient.patch<HrPolicy>(`/hr/policies/${policyId}`, data, undefined, updateHrPolicyC),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPoliciesAll });
-      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPolicyDetail(vars.id) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPolicyDetail(vars.policyId) });
     },
   });
 }

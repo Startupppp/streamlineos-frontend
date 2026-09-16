@@ -70,7 +70,7 @@ interface DecisionFormSheetProps {
   mode: "create" | "edit";
   defaultValues?: Decision;
   onSubmitCreate: (input: CreateDecisionInput) => void;
-  onSubmitEdit: (input: UpdateDecisionInput & { id: number }) => void;
+  onSubmitEdit: (input: UpdateDecisionInput & { decisionId: number }) => void;
   isPending?: boolean;
   projectId: number;
 }
@@ -105,7 +105,7 @@ export function DecisionFormSheet({
       ...(values.linkedTicketId ? { linkedTicketId: parseInt(values.linkedTicketId, 10) } : {}),
     };
     if (mode === "edit" && defaultValues) {
-      onSubmitEdit({ id: defaultValues.id, ...payload });
+      onSubmitEdit({ decisionId: defaultValues.id, ...payload });
     } else {
       onSubmitCreate(payload);
     }

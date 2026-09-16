@@ -50,8 +50,8 @@ export function useUpdateLabel() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "labels", "update"],
-    mutationFn: ({ id, ...data }: { id: number; name?: string; color?: string }) =>
-      apiClient.patch<TicketLabel>(`/build/labels/${id}`, data, undefined, ticketLabelContract),
+    mutationFn: ({ labelId, ...data }: { labelId: number; name?: string; color?: string }) =>
+      apiClient.patch<TicketLabel>(`/build/labels/${labelId}`, data, undefined, ticketLabelContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: LABELS_KEY }),
   });
 }
@@ -60,8 +60,8 @@ export function useDeleteLabel() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "labels", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/build/labels/${id}`, undefined, undefined, noContentContract),
+    mutationFn: (labelId: number) =>
+      apiClient.delete<void>(`/build/labels/${labelId}`, undefined, undefined, noContentContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: LABELS_KEY }),
   });
 }

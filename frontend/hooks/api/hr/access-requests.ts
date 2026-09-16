@@ -64,8 +64,8 @@ export function useUpdateAccessRequest() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:assets:manage", {
     mutationKey: [...AR_KEY, "update"],
-    mutationFn: ({ id, ...data }: PatchAccessRequestInput & { id: string }) =>
-      apiClient.patch<AccessRequest>(`/hr/access-requests/${id}`, data, undefined, accessRequestC),
+    mutationFn: ({ accessRequestId, ...data }: PatchAccessRequestInput & { accessRequestId: string }) =>
+      apiClient.patch<AccessRequest>(`/hr/access-requests/${accessRequestId}`, data, undefined, accessRequestC),
     onSuccess: () => qc.invalidateQueries({ queryKey: AR_KEY }),
   });
 }

@@ -89,7 +89,7 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
   const availableMembers = (membersData?.data ?? []).filter((m) => !excludedIds.has(m.userId));
 
   function handleVisibilityChange(v: WhiteboardVisibility) {
-    updateSharing.mutate({ id: whiteboard.id, visibility: v }, {
+    updateSharing.mutate({ whiteboardId: whiteboard.id, visibility: v }, {
       onSuccess: () => toast.success("Visibility updated"),
       onError: (e) => toast.error(getErrorMessage(e)),
     });
@@ -97,17 +97,17 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
   function handleAddMember(userId: string) {
     const defaultRole: WhiteboardShareRole = "viewer";
     const newShares = [...shares.map((s) => ({ userId: s.userId, role: s.role })), { userId, role: defaultRole }];
-    setShares.mutate({ id: whiteboard.id, shares: newShares }, {
+    setShares.mutate({ whiteboardId: whiteboard.id, shares: newShares }, {
       onSuccess: () => { toast.success("Member added"); setPickerOpen(false); setSearchInput(""); },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
   function handleRoleChange(userId: string, role: WhiteboardShareRole) {
     const updated = shares.map((s) => ({ userId: s.userId, role: s.userId === userId ? role : s.role }));
-    setShares.mutate({ id: whiteboard.id, shares: updated }, { onError: (e) => toast.error(getErrorMessage(e)) });
+    setShares.mutate({ whiteboardId: whiteboard.id, shares: updated }, { onError: (e) => toast.error(getErrorMessage(e)) });
   }
   function handleRemoveMember(userId: string) {
-    removeShare.mutate({ id: whiteboard.id, userId }, {
+    removeShare.mutate({ whiteboardId: whiteboard.id, userId }, {
       onSuccess: () => toast.success("Member removed"),
       onError: (e) => toast.error(getErrorMessage(e)),
     });
@@ -118,10 +118,10 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
     navigator.clipboard.writeText(url).then(() => toast.success("Link copied"), (e) => toast.error(getErrorMessage(e)));
   }, [sharing?.shareToken]);
   function handlePublicAccessChange(role: WhiteboardShareRole) {
-    updateSharing.mutate({ id: whiteboard.id, publicAccess: role }, { onError: (e) => toast.error(getErrorMessage(e)) });
+    updateSharing.mutate({ whiteboardId: whiteboard.id, publicAccess: role }, { onError: (e) => toast.error(getErrorMessage(e)) });
   }
   function handleExpiryChange(preset: ExpiryPreset) {
-    updateSharing.mutate({ id: whiteboard.id, linkExpiresAt: computeExpiry(preset) }, { onError: (e) => toast.error(getErrorMessage(e)) });
+    updateSharing.mutate({ whiteboardId: whiteboard.id, linkExpiresAt: computeExpiry(preset) }, { onError: (e) => toast.error(getErrorMessage(e)) });
   }
   function selectMemberRole(userId: string) {
     return function handleMemberRoleSelected(value: string): void {
@@ -138,7 +138,7 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
     if (preset) handleExpiryChange(preset);
   }
   function handleAllowExportChange(checked: boolean) {
-    updateSharing.mutate({ id: whiteboard.id, allowExport: checked }, { onError: (e) => toast.error(getErrorMessage(e)) });
+    updateSharing.mutate({ whiteboardId: whiteboard.id, allowExport: checked }, { onError: (e) => toast.error(getErrorMessage(e)) });
   }
   function handleConfirmReset() {
     rotateToken.mutate(whiteboard.id, {

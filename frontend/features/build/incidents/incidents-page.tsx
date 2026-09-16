@@ -141,7 +141,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
   const handleDeleteConfirm = useCallback(() => {
     if (!deleteTarget) return;
     deleteIncident.mutate(
-      { projectId, id: deleteTarget.id },
+      { projectId, incidentId: deleteTarget.id },
       {
         onSuccess: () => { toast.success("Incident deleted"); setDeleteTarget(null); },
         onError: (error) => toast.error(getErrorMessage(error)),

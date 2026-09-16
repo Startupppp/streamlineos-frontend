@@ -76,7 +76,7 @@ export function ApprovalsInboxPage() {
   const handleDecideConfirm = useCallback((input: DecideApprovalInput) => {
     if (!decideTarget) return;
     decideApproval.mutate(
-      { id: decideTarget.approvalId, ...input },
+      { approvalId: decideTarget.approvalId, ...input },
       {
         onSuccess: () => {
           toast.success("Decision submitted");

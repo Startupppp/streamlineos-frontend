@@ -88,7 +88,7 @@ export function ActionItemFormSheet({
     const description = values.description || undefined;
     if (mode === "edit" && defaultValues) {
       onSubmitEdit({
-        id: defaultValues.id,
+        actionItemId: defaultValues.id,
         title: values.title,
         description: description ?? null,
         assigneeId: assigneeId ?? null,

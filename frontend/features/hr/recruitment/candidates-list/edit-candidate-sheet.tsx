@@ -94,7 +94,7 @@ export function EditCandidateSheet({
 
       updateCandidate.mutate(
         {
-          id: candidate.id,
+          candidateId: candidate.id,
           firstName: data.firstName.trim(),
           lastName: data.lastName.trim(),
           email: data.email.trim(),

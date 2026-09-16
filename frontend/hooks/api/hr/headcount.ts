@@ -58,11 +58,11 @@ export interface CreateHeadcountRequestInput {
 }
 
 export interface UpdateHeadcountRequestInput extends CreateHeadcountRequestInput {
-  id: number;
+  headcountId: number;
 }
 
 export interface RejectHeadcountRequestInput {
-  id: number;
+  headcountId: number;
   reason: string;
 }
 
@@ -109,8 +109,8 @@ export function useUpdateHeadcountRequest(
   const qc = useQueryClient();
   return useAuthorizedMutation<unknown, Error, UpdateHeadcountRequestInput>("hr:employees:view", {
     mutationKey: ["hr", "headcount", "update"],
-    mutationFn: ({ id, ...data }: UpdateHeadcountRequestInput) =>
-      apiClient.patch<HeadcountRequest>(`/hr/recruitment/headcount/${id}`, data, undefined, lazyContract(() => import("@/hooks/api/hr/headcount-schema").then(m => m.headcountRowSingleContract))),
+    mutationFn: ({ headcountId, ...data }: UpdateHeadcountRequestInput) =>
+      apiClient.patch<HeadcountRequest>(`/hr/recruitment/headcount/${headcountId}`, data, undefined, lazyContract(() => import("@/hooks/api/hr/headcount-schema").then(m => m.headcountRowSingleContract))),
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });
@@ -125,8 +125,8 @@ export function useRejectHeadcountRequest(
   const qc = useQueryClient();
   return useAuthorizedMutation<unknown, Error, RejectHeadcountRequestInput>("hr:employees:manage", {
     mutationKey: ["hr", "headcount", "reject"],
-    mutationFn: ({ id, reason }: RejectHeadcountRequestInput) =>
-      apiClient.post<HeadcountRequest>(`/hr/recruitment/headcount/${id}/reject`, { reason }, undefined, lazyContract(() => import("@/hooks/api/hr/headcount-schema").then(m => m.headcountRowSingleContract))),
+    mutationFn: ({ headcountId, reason }: RejectHeadcountRequestInput) =>
+      apiClient.post<HeadcountRequest>(`/hr/recruitment/headcount/${headcountId}/reject`, { reason }, undefined, lazyContract(() => import("@/hooks/api/hr/headcount-schema").then(m => m.headcountRowSingleContract))),
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });
@@ -141,8 +141,8 @@ export function useApproveHeadcountRequest(
   const qc = useQueryClient();
   return useAuthorizedMutation<unknown, Error, number>("hr:employees:manage", {
     mutationKey: ["hr", "headcount", "approve"],
-    mutationFn: (id: number) =>
-      apiClient.post<HeadcountRequest>(`/hr/recruitment/headcount/${id}/approve`, {}, undefined, lazyContract(() => import("@/hooks/api/hr/headcount-schema").then(m => m.headcountRowSingleContract))),
+    mutationFn: (headcountId: number) =>
+      apiClient.post<HeadcountRequest>(`/hr/recruitment/headcount/${headcountId}/approve`, {}, undefined, lazyContract(() => import("@/hooks/api/hr/headcount-schema").then(m => m.headcountRowSingleContract))),
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });
@@ -157,8 +157,8 @@ export function useCreateHeadcountJob(
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "headcount", "create-job"],
-    mutationFn: (id: number) =>
-      apiClient.post<{ jobId: number }>(`/hr/recruitment/headcount/${id}/create-job`, {}, undefined, lazyContract(() => import("@/hooks/api/hr/headcount-schema").then(m => m.createJobFromHeadcountContract))),
+    mutationFn: (headcountId: number) =>
+      apiClient.post<{ jobId: number }>(`/hr/recruitment/headcount/${headcountId}/create-job`, {}, undefined, lazyContract(() => import("@/hooks/api/hr/headcount-schema").then(m => m.createJobFromHeadcountContract))),
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });

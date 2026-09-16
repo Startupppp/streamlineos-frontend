@@ -85,11 +85,11 @@ export function useUpdateForm(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:forms:manage", {
     mutationKey: ["projects", projectId, "forms", "update"],
-    mutationFn: ({ id, ...data }: UpdateFormInput & { id: number }) =>
-      apiClient.patch<ProjectForm>(`/build/${projectId}/forms/${id}`, data, undefined, formRowContract),
+    mutationFn: ({ formId, ...data }: UpdateFormInput & { formId: number }) =>
+      apiClient.patch<ProjectForm>(`/build/${projectId}/forms/${formId}`, data, undefined, formRowContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.forms.list(projectId) });
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.forms.detail(projectId, vars.id) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.forms.detail(projectId, vars.formId) });
     },
   });
 }
@@ -98,8 +98,8 @@ export function useDeleteForm(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:forms:manage", {
     mutationKey: ["projects", projectId, "forms", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/build/${projectId}/forms/${id}`, undefined, undefined, noContentContract),
+    mutationFn: (formId: number) =>
+      apiClient.delete<void>(`/build/${projectId}/forms/${formId}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.forms.list(projectId) });
     },

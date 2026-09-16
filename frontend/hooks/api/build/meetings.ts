@@ -105,11 +105,11 @@ export function useUpdateMeeting(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", "update"],
-    mutationFn: ({ id, ...data }: UpdateMeetingInput) =>
-      apiClient.patch<Meeting>(`/build/${projectId}/meetings/${id}`, data, undefined, meetingRowContract),
+    mutationFn: ({ meetingId, ...data }: UpdateMeetingInput) =>
+      apiClient.patch<Meeting>(`/build/${projectId}/meetings/${meetingId}`, data, undefined, meetingRowContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.list(projectId) });
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, vars.id) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, vars.meetingId) });
     },
   });
 }
@@ -118,8 +118,8 @@ export function useDeleteMeeting(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/build/${projectId}/meetings/${id}`, undefined, undefined, noContentLazy),
+    mutationFn: (meetingId: number) =>
+      apiClient.delete<void>(`/build/${projectId}/meetings/${meetingId}`, undefined, undefined, noContentLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.list(projectId) });
     },
@@ -178,8 +178,8 @@ export function useUpdateActionItem(projectId: number, meetingId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "action-items", "update"],
-    mutationFn: ({ id, ...data }: UpdateActionItemInput) =>
-      apiClient.patch<ActionItem>(`/build/${projectId}/meetings/${meetingId}/action-items/${id}`, data, undefined, actionItemRowContract),
+    mutationFn: ({ actionItemId, ...data }: UpdateActionItemInput) =>
+      apiClient.patch<ActionItem>(`/build/${projectId}/meetings/${meetingId}/action-items/${actionItemId}`, data, undefined, actionItemRowContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },

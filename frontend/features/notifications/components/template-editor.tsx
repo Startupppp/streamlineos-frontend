@@ -93,7 +93,7 @@ export function TemplateSheet({
 
     if (isEdit && template) {
       update.mutate(
-        { id: template.id, ...payload },
+        { templateId: template.id, ...payload },
         {
           onSuccess: () => {
             toast.success("Template updated");

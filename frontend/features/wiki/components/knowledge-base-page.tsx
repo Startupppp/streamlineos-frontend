@@ -252,8 +252,8 @@ export default function KnowledgeBasePage() {
     });
   }
 
-  function handleRenameConversation(id: number, title: string) {
-    renameConversation.mutate({ id, title });
+  function handleRenameConversation(conversationId: number, title: string) {
+    renameConversation.mutate({ conversationId, title });
   }
 
   function handleUploadClick() { fileInputRef.current?.click(); }

@@ -28,7 +28,7 @@ export interface CreateAssetReturnInput {
 }
 
 export interface MarkAssetReturnedInput {
-  id: number;
+  assetReturnId: number;
   condition: string;
 }
 
@@ -68,8 +68,8 @@ export function useMarkAssetReturned(
   const qc = useQueryClient();
   return useAuthorizedMutation<AssetReturn, Error, MarkAssetReturnedInput>("hr:assets:manage", {
     mutationKey: ["hr", "asset-returns", "mark-returned"],
-    mutationFn: ({ id, condition }: MarkAssetReturnedInput) =>
-      apiClient.patch<AssetReturn>(`/hr/asset-returns/${id}`, {
+    mutationFn: ({ assetReturnId, condition }: MarkAssetReturnedInput) =>
+      apiClient.patch<AssetReturn>(`/hr/asset-returns/${assetReturnId}`, {
         status: "RETURNED",
         condition,
       }, undefined, assetReturnC),

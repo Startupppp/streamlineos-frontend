@@ -74,7 +74,7 @@ export function TemplateApprovalDialog({
   async function handleSave() {
     try {
       await setApproval.mutateAsync({
-        id: template.id,
+        templateId: template.id,
         approvalStatus: status,
         providerTemplateName: providerName.trim() || null,
         approvalRejectionReason: reason.trim() || null,

@@ -48,15 +48,15 @@ export function useCreateEmailSequence() {
   });
 }
 
-export function useUpdateEmailSequence(id: number) {
+export function useUpdateEmailSequence(emailSequenceId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:employees:manage", {
-    mutationKey: ["hr", "recruitment", "email-sequences", "update", id],
+    mutationKey: ["hr", "recruitment", "email-sequences", "update", emailSequenceId],
     mutationFn: (data: UpdateEmailSequenceInput) =>
-      apiClient.patch<EmailSequence>(`/hr/recruitment/email-sequences/${id}`, data, undefined, emailSequenceWithStepsContract),
+      apiClient.patch<EmailSequence>(`/hr/recruitment/email-sequences/${emailSequenceId}`, data, undefined, emailSequenceWithStepsContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailSequences() });
-      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailSequence(id) });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailSequence(emailSequenceId) });
     },
   });
 }
@@ -65,8 +65,8 @@ export function useDeleteEmailSequence() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "email-sequences", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/recruitment/email-sequences/${id}`, undefined, undefined, emailSequenceSuccessContract),
+    mutationFn: (emailSequenceId: number) =>
+      apiClient.delete<{ success: boolean }>(`/hr/recruitment/email-sequences/${emailSequenceId}`, undefined, undefined, emailSequenceSuccessContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailSequences() });
     },

@@ -238,7 +238,7 @@ export function useEventCreateDialog({
         if (numericId === null) { toast.error("Cannot edit this event type"); return; }
         const { syncConnectionId: _sc, addConference: _ac, ...editPayload } = result.payload;
         await updateEvent.mutateAsync({
-          id: numericId,
+          calendarEventId: numericId,
           ...editPayload,
           ...(editingDetail ? { expectedVersion: editingDetail.localVersion } : {}),
         });

@@ -29,7 +29,7 @@ export function EssDisciplinarySection() {
 
   function handleAcknowledge(actionId: number) {
     return function acknowledgeAction() {
-      acknowledge.mutate({ id: actionId }, { onError: handleAcknowledgeError });
+      acknowledge.mutate({ disciplinaryId: actionId }, { onError: handleAcknowledgeError });
     };
   }
 

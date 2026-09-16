@@ -75,7 +75,7 @@ export function useApproveOvertime() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "overtime", "approve"],
-    mutationFn: (id: number) => apiClient.patch<OvertimeRequest>(`/hr/overtime/${id}/approve`, {}, undefined, approveOvertimeC),
+    mutationFn: (overtimeId: number) => apiClient.patch<OvertimeRequest>(`/hr/overtime/${overtimeId}/approve`, {}, undefined, approveOvertimeC),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "overtimeRequests"] }),
   });
 }
@@ -84,7 +84,7 @@ export function useRejectOvertime() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "overtime", "reject"],
-    mutationFn: (id: number) => apiClient.patch<OvertimeRequest>(`/hr/overtime/${id}/reject`, {}, undefined, rejectOvertimeC),
+    mutationFn: (overtimeId: number) => apiClient.patch<OvertimeRequest>(`/hr/overtime/${overtimeId}/reject`, {}, undefined, rejectOvertimeC),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "overtimeRequests"] }),
   });
 }

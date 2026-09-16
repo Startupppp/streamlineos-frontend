@@ -144,7 +144,7 @@ export function EditDocumentSheet({
       if (!document) return;
       updateDocument.mutate(
         {
-          id: document.id,
+          documentId: document.id,
           name: data.name,
           description: data.description ?? null,
           type: data.type,

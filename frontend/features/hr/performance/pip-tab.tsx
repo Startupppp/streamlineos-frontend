@@ -145,7 +145,7 @@ export function PIPTab() {
 
     if (editingPip) {
       updatePIP.mutate(
-        { id: editingPip.id, ...payload },
+        { pipId: editingPip.id, ...payload },
         {
           onSuccess: () => {
             toast.success("PIP updated");
@@ -196,7 +196,7 @@ export function PIPTab() {
   const handleUpdateStatus = useCallback(
     (id: number, status: string) => {
       updatePIP.mutate(
-        { id, status },
+        { pipId: id, status },
         {
           onSuccess: () => toast.success("PIP updated"),
           onError: (e) => toast.error(getErrorMessage(e)),

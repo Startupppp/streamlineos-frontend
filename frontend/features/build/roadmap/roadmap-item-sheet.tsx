@@ -86,7 +86,7 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
     if (isEdit) {
       update.mutate(
         {
-          id: item.id,
+          roadmapItemId: item.id,
           title: payload.title,
           description: payload.description ?? null,
           status: payload.status,

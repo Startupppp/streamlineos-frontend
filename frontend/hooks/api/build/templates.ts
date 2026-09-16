@@ -85,8 +85,8 @@ export function useDeleteProjectTemplate() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "templates", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/build/templates/${id}`, undefined, undefined, noContentContract),
+    mutationFn: (templateId: number) =>
+      apiClient.delete<void>(`/build/templates/${templateId}`, undefined, undefined, noContentContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: TEMPLATES_KEY }),
   });
 }

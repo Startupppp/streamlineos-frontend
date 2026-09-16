@@ -87,8 +87,8 @@ export function useUpdateReviewCycle() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "performance", "review-cycles", "update"],
-    mutationFn: ({ id, ...data }: UpdateReviewCycleInput & { id: number }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/performance/cycles/${id}`, data, undefined, updateCycleC),
+    mutationFn: ({ cycleId, ...data }: UpdateReviewCycleInput & { cycleId: number }) =>
+      apiClient.patch<{ success: boolean }>(`/hr/performance/cycles/${cycleId}`, data, undefined, updateCycleC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.reviewCycles() }),
   });
 }
@@ -97,8 +97,8 @@ export function useDeleteReviewCycle() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "performance", "review-cycles", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/hr/performance/cycles/${id}`, undefined, undefined, noContentC),
+    mutationFn: (cycleId: number) =>
+      apiClient.delete<void>(`/hr/performance/cycles/${cycleId}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.reviewCycles() }),
   });
 }
@@ -120,8 +120,8 @@ export function useUpdatePerformanceReview() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:performance:view", {
     mutationKey: ["hr", "performance", "reviews", "update"],
-    mutationFn: ({ id, ...data }: UpdatePerformanceReviewInput & { id: number; periodStart?: string; periodEnd?: string; cycleId?: number }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/performance/reviews/${id}`, data, undefined, updateReviewC),
+    mutationFn: ({ reviewId, ...data }: UpdatePerformanceReviewInput & { reviewId: number; periodStart?: string; periodEnd?: string; cycleId?: number }) =>
+      apiClient.patch<{ success: boolean }>(`/hr/performance/reviews/${reviewId}`, data, undefined, updateReviewC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.performanceReviewsAll }),
   });
 }
@@ -130,8 +130,8 @@ export function useDeletePerformanceReview() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "performance", "reviews", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/hr/performance/reviews/${id}`, undefined, undefined, noContentC),
+    mutationFn: (reviewId: number) =>
+      apiClient.delete<void>(`/hr/performance/reviews/${reviewId}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.performanceReviewsAll }),
   });
 }
@@ -182,8 +182,8 @@ export function useUpdateOneOnOne() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:performance:view", {
     mutationKey: ["hr", "performance", "one-on-ones", "update"],
-    mutationFn: ({ id, ...data }: UpdateOneOnOneInput & { id: number }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/performance/one-on-ones/${id}`, data, undefined, updateOneOnOneC),
+    mutationFn: ({ oneOnOneId, ...data }: UpdateOneOnOneInput & { oneOnOneId: number }) =>
+      apiClient.patch<{ success: boolean }>(`/hr/performance/one-on-ones/${oneOnOneId}`, data, undefined, updateOneOnOneC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.oneOnOnes() }),
   });
 }
@@ -192,8 +192,8 @@ export function useDeleteOneOnOne() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:performance:view", {
     mutationKey: ["hr", "performance", "one-on-ones", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/hr/performance/one-on-ones/${id}`, undefined, undefined, noContentC),
+    mutationFn: (oneOnOneId: number) =>
+      apiClient.delete<void>(`/hr/performance/one-on-ones/${oneOnOneId}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.oneOnOnes() }),
   });
 }

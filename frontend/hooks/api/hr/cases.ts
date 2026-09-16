@@ -136,11 +136,11 @@ export function useHrCases(params: ListCasesParams = {}) {
   });
 }
 
-export function useHrCase(id: number) {
+export function useHrCase(caseId: number) {
   return useGatedQuery("hr:cases:view", {
-    queryKey: caseKeys.detail(id),
-    queryFn: ({ signal }) => apiClient.get<HrCase>(`/hr/cases/${id}`, undefined, signal, hrCaseLazy),
-    enabled: id > 0,
+    queryKey: caseKeys.detail(caseId),
+    queryFn: ({ signal }) => apiClient.get<HrCase>(`/hr/cases/${caseId}`, undefined, signal, hrCaseLazy),
+    enabled: caseId > 0,
     staleTime: 30_000,
   });
 }
@@ -180,10 +180,10 @@ export function useAnonymousReport() {
   });
 }
 
-export function useUpdateCase(id: number) {
+export function useUpdateCase(caseId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:cases:manage", {
-    mutationKey: ["hr-cases", "update", id],
+    mutationKey: ["hr-cases", "update", caseId],
     mutationFn: (body: Partial<{
       status: CaseStatus;
       severity: CaseSeverity;
@@ -192,9 +192,9 @@ export function useUpdateCase(id: number) {
       summary: string;
       details: string;
       confidential: boolean;
-    }>) => apiClient.patch<HrCase>(`/hr/cases/${id}`, body, undefined, hrCaseLazy),
+    }>) => apiClient.patch<HrCase>(`/hr/cases/${caseId}`, body, undefined, hrCaseLazy),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: caseKeys.detail(id) });
+      void qc.invalidateQueries({ queryKey: caseKeys.detail(caseId) });
       void qc.invalidateQueries({ queryKey: caseKeys.all });
       toast.success("Case updated");
     },
@@ -202,13 +202,13 @@ export function useUpdateCase(id: number) {
   });
 }
 
-export function useStartInvestigation(id: number) {
+export function useStartInvestigation(caseId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:cases:manage", {
-    mutationKey: ["hr-cases", "investigate", id],
-    mutationFn: () => apiClient.post<HrCase>(`/hr/cases/${id}/investigate`, {}, undefined, hrCaseLazy),
+    mutationKey: ["hr-cases", "investigate", caseId],
+    mutationFn: () => apiClient.post<HrCase>(`/hr/cases/${caseId}/investigate`, {}, undefined, hrCaseLazy),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: caseKeys.detail(id) });
+      void qc.invalidateQueries({ queryKey: caseKeys.detail(caseId) });
       void qc.invalidateQueries({ queryKey: caseKeys.all });
       toast.success("Investigation started");
     },
@@ -297,8 +297,8 @@ export function useAcknowledgeDisciplinaryAction() {
   const qc = useQueryClient();
   return useAuthorizedMutation("self:cases", {
     mutationKey: ["hr-disciplinary", "acknowledge"],
-    mutationFn: ({ id, note }: { id: number; note?: string }) =>
-      apiClient.post<DisciplinaryAction>(`/hr/cases/disciplinary/${id}/acknowledge`, { note }, undefined, hrDisciplinaryActionLazy),
+    mutationFn: ({ disciplinaryId, note }: { disciplinaryId: number; note?: string }) =>
+      apiClient.post<DisciplinaryAction>(`/hr/cases/disciplinary/${disciplinaryId}/acknowledge`, { note }, undefined, hrDisciplinaryActionLazy),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: caseKeys.disciplinary });
       toast.success("Acknowledged");

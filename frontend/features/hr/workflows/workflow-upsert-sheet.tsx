@@ -120,7 +120,7 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
 
     if (isEdit && editDefinition) {
       update.mutate(
-        { id: editDefinition.id, ...payload },
+        { workflowId: editDefinition.id, ...payload },
         {
           onSuccess: () => { toast.success("Workflow updated"); onOpenChange(false); },
           onError: (err) => toast.error(getErrorMessage(err)),

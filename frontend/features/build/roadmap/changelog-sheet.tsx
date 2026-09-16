@@ -76,7 +76,7 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
     if (isEdit) {
       update.mutate(
         {
-          id: entry.id,
+          entryId: entry.id,
           title: values.title.trim(),
           content: values.content.trim(),
           version: values.version.trim() || null,

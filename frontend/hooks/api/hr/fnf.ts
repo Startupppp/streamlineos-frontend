@@ -84,8 +84,8 @@ export function useCompleteFnfSettlement(
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr", "fnf", "complete"],
-    mutationFn: (id: number) =>
-      apiClient.patch<{ success: boolean }>(`/hr/fnf/${id}`, { status: "PAID" }, undefined, lazyContract(() => import("@/hooks/api/hr/fnf-schema").then(m => m.successResponseContract))),
+    mutationFn: (fnfId: number) =>
+      apiClient.patch<{ success: boolean }>(`/hr/fnf/${fnfId}`, { status: "PAID" }, undefined, lazyContract(() => import("@/hooks/api/hr/fnf-schema").then(m => m.successResponseContract))),
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.fnfList() });

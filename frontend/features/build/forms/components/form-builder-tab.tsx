@@ -86,7 +86,7 @@ export function FormBuilderTab({ projectId, formId }: FormBuilderTabProps) {
       isPublic: effectiveIsPublic,
     };
     updateForm.mutate(
-      { id: formId, ...payload },
+      { formId: formId, ...payload },
       {
         onSuccess: () => toast.success("Form saved"),
         onError: (e) => toast.error(getErrorMessage(e)),

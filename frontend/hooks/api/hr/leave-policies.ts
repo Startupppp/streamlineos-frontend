@@ -76,8 +76,8 @@ export function useUpdateLeavePolicy() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:leaves:manage", {
     mutationKey: ["hr", "leave-policies", "update"],
-    mutationFn: ({ id, ...data }: Partial<CreateLeavePolicyInput> & { id: number }) =>
-      apiClient.patch<LeavePolicy>(`/hr/leave-policies/${id}`, data, undefined, updateLeavePolicyC),
+    mutationFn: ({ leavePolicyId, ...data }: Partial<CreateLeavePolicyInput> & { leavePolicyId: number }) =>
+      apiClient.patch<LeavePolicy>(`/hr/leave-policies/${leavePolicyId}`, data, undefined, updateLeavePolicyC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.leavePolicies() }),
   });
 }
@@ -86,8 +86,8 @@ export function useDeleteLeavePolicy() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:leaves:manage", {
     mutationKey: ["hr", "leave-policies", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/hr/leave-policies/${id}`, undefined, undefined, deleteLeavePolicyC),
+    mutationFn: (leavePolicyId: number) =>
+      apiClient.delete<void>(`/hr/leave-policies/${leavePolicyId}`, undefined, undefined, deleteLeavePolicyC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.leavePolicies() }),
   });
 }

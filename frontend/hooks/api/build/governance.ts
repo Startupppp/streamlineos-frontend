@@ -68,11 +68,11 @@ export function useUpdateRisk(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:risks:manage", {
     mutationKey: ["projects", projectId, "risks", "update"],
-    mutationFn: ({ id, ...data }: UpdateRiskInput & { id: number }) =>
-      apiClient.patch<Risk>(`/build/${projectId}/risks/${id}`, data, undefined, riskRowContract),
+    mutationFn: ({ riskId, ...data }: UpdateRiskInput & { riskId: number }) =>
+      apiClient.patch<Risk>(`/build/${projectId}/risks/${riskId}`, data, undefined, riskRowContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.risks.list(projectId) });
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.risks.detail(projectId, vars.id) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.risks.detail(projectId, vars.riskId) });
     },
   });
 }
@@ -81,8 +81,8 @@ export function useDeleteRisk(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:risks:manage", {
     mutationKey: ["projects", projectId, "risks", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/build/${projectId}/risks/${id}`, undefined, undefined, noContentLazy),
+    mutationFn: (riskId: number) =>
+      apiClient.delete<void>(`/build/${projectId}/risks/${riskId}`, undefined, undefined, noContentLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.risks.list(projectId) });
     },
@@ -121,11 +121,11 @@ export function useUpdateDecision(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:decisions:manage", {
     mutationKey: ["projects", projectId, "decisions", "update"],
-    mutationFn: ({ id, ...data }: UpdateDecisionInput & { id: number }) =>
-      apiClient.patch<Decision>(`/build/${projectId}/decisions/${id}`, data, undefined, decisionRowContract),
+    mutationFn: ({ decisionId, ...data }: UpdateDecisionInput & { decisionId: number }) =>
+      apiClient.patch<Decision>(`/build/${projectId}/decisions/${decisionId}`, data, undefined, decisionRowContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.decisions.list(projectId) });
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.decisions.detail(projectId, vars.id) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.decisions.detail(projectId, vars.decisionId) });
     },
   });
 }
@@ -134,8 +134,8 @@ export function useDeleteDecision(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:decisions:manage", {
     mutationKey: ["projects", projectId, "decisions", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/build/${projectId}/decisions/${id}`, undefined, undefined, noContentLazy),
+    mutationFn: (decisionId: number) =>
+      apiClient.delete<void>(`/build/${projectId}/decisions/${decisionId}`, undefined, undefined, noContentLazy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.decisions.list(projectId) });
     },

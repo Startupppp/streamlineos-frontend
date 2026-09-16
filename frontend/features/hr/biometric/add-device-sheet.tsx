@@ -93,7 +93,7 @@ export function AddDeviceSheet({ open, onOpenChange, device }: Props) {
         },
         onError: (err: unknown) => toast.error(getErrorMessage(err)),
       };
-      if (device) updateDevice.mutate({ id: device.id, ...payload }, handlers);
+      if (device) updateDevice.mutate({ deviceId: device.id, ...payload }, handlers);
       else createDevice.mutate(payload, handlers);
     },
     [device, isEdit, createDevice, updateDevice, form, onOpenChange],

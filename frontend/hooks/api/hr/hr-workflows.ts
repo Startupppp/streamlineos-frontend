@@ -76,8 +76,8 @@ export function useUpdateWorkflowDefinition() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:workflows:manage", {
     mutationKey: ["hr", "workflows", "update"],
-    mutationFn: ({ id, ...data }: Partial<CreateWorkflowDefinitionPayload> & { id: number }) =>
-      apiClient.patch<HrWorkflowDefinition>(`/hr/workflows/${id}`, data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-workflows-schema").then(m => m.workflowDefinitionWithStepsContract))),
+    mutationFn: ({ workflowId, ...data }: Partial<CreateWorkflowDefinitionPayload> & { workflowId: number }) =>
+      apiClient.patch<HrWorkflowDefinition>(`/hr/workflows/${workflowId}`, data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-workflows-schema").then(m => m.workflowDefinitionWithStepsContract))),
     onSuccess: () => qc.invalidateQueries({ queryKey: WORKFLOWS_KEY }),
   });
 }
@@ -86,7 +86,7 @@ export function useActivateWorkflow() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:workflows:manage", {
     mutationKey: ["hr", "workflows", "activate"],
-    mutationFn: (id: number) => apiClient.post<HrWorkflowDefinition>(`/hr/workflows/${id}/activate`, undefined, undefined, lazyContract(() => import("@/hooks/api/hr/hr-workflows-schema").then(m => m.workflowDefinitionWithStepsContract))),
+    mutationFn: (workflowId: number) => apiClient.post<HrWorkflowDefinition>(`/hr/workflows/${workflowId}/activate`, undefined, undefined, lazyContract(() => import("@/hooks/api/hr/hr-workflows-schema").then(m => m.workflowDefinitionWithStepsContract))),
     onSuccess: () => qc.invalidateQueries({ queryKey: WORKFLOWS_KEY }),
   });
 }
@@ -95,7 +95,7 @@ export function useArchiveWorkflow() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:workflows:manage", {
     mutationKey: ["hr", "workflows", "archive"],
-    mutationFn: (id: number) => apiClient.post<HrWorkflowDefinition>(`/hr/workflows/${id}/archive`, undefined, undefined, lazyContract(() => import("@/hooks/api/hr/hr-workflows-schema").then(m => m.workflowDefinitionWithStepsContract))),
+    mutationFn: (workflowId: number) => apiClient.post<HrWorkflowDefinition>(`/hr/workflows/${workflowId}/archive`, undefined, undefined, lazyContract(() => import("@/hooks/api/hr/hr-workflows-schema").then(m => m.workflowDefinitionWithStepsContract))),
     onSuccess: () => qc.invalidateQueries({ queryKey: WORKFLOWS_KEY }),
   });
 }
@@ -104,7 +104,7 @@ export function useDuplicateWorkflow() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:workflows:manage", {
     mutationKey: ["hr", "workflows", "duplicate"],
-    mutationFn: (id: number) => apiClient.post<HrWorkflowDefinition>(`/hr/workflows/${id}/duplicate`, undefined, undefined, lazyContract(() => import("@/hooks/api/hr/hr-workflows-schema").then(m => m.workflowDefinitionWithStepsContract))),
+    mutationFn: (workflowId: number) => apiClient.post<HrWorkflowDefinition>(`/hr/workflows/${workflowId}/duplicate`, undefined, undefined, lazyContract(() => import("@/hooks/api/hr/hr-workflows-schema").then(m => m.workflowDefinitionWithStepsContract))),
     onSuccess: () => qc.invalidateQueries({ queryKey: WORKFLOWS_KEY }),
   });
 }
@@ -152,8 +152,8 @@ export function useDeleteWorkflow() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:workflows:manage", {
     mutationKey: ["hr", "workflows", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/hr/workflows/${id}`, undefined, undefined, noContentC),
+    mutationFn: (workflowId: number) =>
+      apiClient.delete<void>(`/hr/workflows/${workflowId}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: WORKFLOWS_KEY }),
   });
 }
@@ -247,8 +247,8 @@ export function useDeleteDelegation() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:workflows:view", {
     mutationKey: ["hr", "workflow-delegations", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/hr/workflows/delegations/${id}`, undefined, undefined, noContentC),
+    mutationFn: (delegationId: number) =>
+      apiClient.delete<void>(`/hr/workflows/delegations/${delegationId}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: DELEGATIONS_KEY }),
   });
 }

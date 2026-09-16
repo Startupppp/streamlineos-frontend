@@ -90,7 +90,7 @@ function RequestSheet({ initial, onClose }: RequestSheetProps) {
       targetDate: targetDate || undefined,
       status,
     };
-    if (initial) update.mutate({ id: initial.id, ...payload });
+    if (initial) update.mutate({ headcountId: initial.id, ...payload });
     else create.mutate(payload);
   }, [role, level, deptId, justification, targetDate, initial, create, update]);
 
@@ -179,7 +179,7 @@ function RejectDialog({ requestId, onClose }: RejectDialogProps) {
 
   function handleReasonChange(e: React.ChangeEvent<HTMLTextAreaElement>) { setReason(e.target.value); }
   function handleDialogOpenChange(v: boolean) { if (!v) onClose(); }
-  function handleRejectClick() { reject.mutate({ id: requestId, reason }); }
+  function handleRejectClick() { reject.mutate({ headcountId: requestId, reason }); }
 
   return (
     <AlertDialog open onOpenChange={handleDialogOpenChange}>

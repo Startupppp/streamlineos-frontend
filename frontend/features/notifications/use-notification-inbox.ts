@@ -103,7 +103,7 @@ export function useNotificationInbox({
 
   const handleSnooze = useCallback(
     (id: number, snoozedUntil: string) => {
-      runWhenOnline(() => snooze.mutate({ id, snoozedUntil }));
+      runWhenOnline(() => snooze.mutate({ notificationId: id, snoozedUntil }));
     },
     [runWhenOnline, snooze],
   );

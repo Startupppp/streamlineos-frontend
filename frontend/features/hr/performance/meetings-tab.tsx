@@ -102,7 +102,7 @@ export function MeetingsTab() {
   }, [empId, scheduledDate, scheduledTime, duration, agenda, createMeeting, meetings, resetForm]);
 
   const handleStatusChange = useCallback((id: number, status: MeetingStatus) => {
-    updateMeeting.mutate({ id, status }, {
+    updateMeeting.mutate({ oneOnOneId: id, status }, {
       onSuccess: () => toast.success("Status updated"),
       onError: (e) => toast.error(getErrorMessage(e)),
     });

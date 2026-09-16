@@ -86,8 +86,8 @@ export function useUpdateKpi() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "kpis", "update"],
-    mutationFn: ({ id, ...data }: Partial<KpiDefinition> & { id: number }) =>
-      apiClient.patch<KpiDefinition[]>(`/hr/kpis/${id}`, data, undefined, kpiArrayC),
+    mutationFn: ({ kpiId, ...data }: Partial<KpiDefinition> & { kpiId: number }) =>
+      apiClient.patch<KpiDefinition[]>(`/hr/kpis/${kpiId}`, data, undefined, kpiArrayC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.kpis() }),
   });
 }
@@ -96,8 +96,8 @@ export function useDeleteKpi() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "kpis", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/hr/kpis/${id}`, undefined, undefined, noContentC),
+    mutationFn: (kpiId: number) =>
+      apiClient.delete<void>(`/hr/kpis/${kpiId}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.kpis() }),
   });
 }

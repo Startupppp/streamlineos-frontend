@@ -156,7 +156,7 @@ function TemplateSheet({ open, onClose, editTemplate }: TemplateSheetProps) {
 
     if (editTemplate) {
       update.mutate(
-        { id: editTemplate.id, name: name.trim(), criteria: cleanCriteria },
+        { scorecardTemplateId: editTemplate.id, name: name.trim(), criteria: cleanCriteria },
         {
           onSuccess: () => { toast.success("Template updated"); onClose(); },
           onError: (e) => toast.error(getErrorMessage(e)),

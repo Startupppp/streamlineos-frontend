@@ -88,7 +88,7 @@ export interface CreateMeetingInput {
 }
 
 export interface UpdateMeetingInput {
-  id: number;
+  meetingId: number;
   title?: string;
   type?: MeetingType;
   status?: MeetingStatus;
@@ -111,7 +111,7 @@ export interface CreateActionItemInput {
 }
 
 export interface UpdateActionItemInput {
-  id: number;
+  actionItemId: number;
   title?: string;
   description?: string | null;
   assigneeId?: string | null;

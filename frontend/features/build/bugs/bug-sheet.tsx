@@ -151,7 +151,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
 
     if (editBug) {
       update.mutate(
-        { ...input, id: editBug.id },
+        { ...input, bugId: editBug.id },
         {
           onSuccess: () => { toast.success("Bug updated"); onOpenChange(false); },
           onError: (e) => toast.error(getErrorMessage(e)),

@@ -40,7 +40,7 @@ interface CreateHandbookVersionInput {
 }
 
 interface UpdateHandbookVersionInput {
-  id: number;
+  handbookId: number;
   status?: "PUBLISHED" | "DRAFT";
   title?: string;
   version?: string;
@@ -75,8 +75,8 @@ export function useUpdateHandbookVersion() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:handbook:manage", {
     mutationKey: ["hr", "handbook", "update"],
-    mutationFn: ({ id, ...data }: UpdateHandbookVersionInput) =>
-      apiClient.patch<{ success: boolean }>(`/hr/handbook/${id}`, data, undefined, handbookSuccessLazy),
+    mutationFn: ({ handbookId, ...data }: UpdateHandbookVersionInput) =>
+      apiClient.patch<{ success: boolean }>(`/hr/handbook/${handbookId}`, data, undefined, handbookSuccessLazy),
     onSuccess: () => qc.invalidateQueries({ queryKey: handbookKeys.list() }),
   });
 }
@@ -85,8 +85,8 @@ export function useDeleteHandbookVersion() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:handbook:manage", {
     mutationKey: ["hr", "handbook", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/hr/handbook/${id}`, undefined, undefined, noContentC),
+    mutationFn: (handbookId: number) =>
+      apiClient.delete<void>(`/hr/handbook/${handbookId}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: handbookKeys.list() }),
   });
 }

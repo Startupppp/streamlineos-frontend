@@ -116,7 +116,7 @@ export function KpiLibraryTab() {
 
   async function handleToggleActive(id: number, current: boolean) {
     try {
-      await updateKpi.mutateAsync({ id, isActive: !current });
+      await updateKpi.mutateAsync({ kpiId: id, isActive: !current });
       toast.success(current ? "KPI deactivated" : "KPI activated");
     } catch (e) {
       toast.error(getErrorMessage(e));

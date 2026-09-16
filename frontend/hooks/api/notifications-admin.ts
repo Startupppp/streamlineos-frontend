@@ -77,10 +77,10 @@ export const useCreateNotificationProvider = () => {
 
 export const useUpdateNotificationProvider = () => {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<NotificationProvider, Error, { id: number } & UpdateProviderInput>("notifications:providers:manage", {
+  return useAuthorizedMutation<NotificationProvider, Error, { providerId: number } & UpdateProviderInput>("notifications:providers:manage", {
     mutationKey: ["notifications", "providers", "update"],
-    mutationFn: ({ id, ...dto }) =>
-      apiClient.patch<NotificationProvider>(`/notifications/admin/providers/${id}`, dto, undefined, notificationProviderContract),
+    mutationFn: ({ providerId, ...dto }) =>
+      apiClient.patch<NotificationProvider>(`/notifications/admin/providers/${providerId}`, dto, undefined, notificationProviderContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.providers() });
     },
@@ -91,7 +91,7 @@ export const useDeleteNotificationProvider = () => {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<{ success: boolean }, Error, number>("notifications:providers:manage", {
     mutationKey: ["notifications", "providers", "delete"],
-    mutationFn: (id) => apiClient.delete<{ success: boolean }>(`/notifications/admin/providers/${id}`, undefined, undefined, notificationSuccessContract),
+    mutationFn: (providerId) => apiClient.delete<{ success: boolean }>(`/notifications/admin/providers/${providerId}`, undefined, undefined, notificationSuccessContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.providers() });
     },
@@ -100,10 +100,10 @@ export const useDeleteNotificationProvider = () => {
 
 export const useTestNotificationProvider = () => {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<TestProviderResult, Error, { id: number } & TestProviderInput>("notifications:providers:manage", {
+  return useAuthorizedMutation<TestProviderResult, Error, { providerId: number } & TestProviderInput>("notifications:providers:manage", {
     mutationKey: ["notifications", "providers", "test"],
-    mutationFn: ({ id, ...dto }) =>
-      apiClient.post<TestProviderResult>(`/notifications/admin/providers/${id}/test`, dto, undefined, notificationProviderTestContract),
+    mutationFn: ({ providerId, ...dto }) =>
+      apiClient.post<TestProviderResult>(`/notifications/admin/providers/${providerId}/test`, dto, undefined, notificationProviderTestContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.providers() });
     },

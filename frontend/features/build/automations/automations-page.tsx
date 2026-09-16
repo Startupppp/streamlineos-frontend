@@ -95,9 +95,9 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
   }, [form]);
 
   const handleToggle = useCallback(
-    (id: number, isActive: boolean) => {
+    (automationId: number, isActive: boolean) => {
       updateAutomation.mutate(
-        { id, isActive },
+        { automationId, isActive },
         { onError: (e) => toast.error(getErrorMessage(e)) },
       );
     },
@@ -118,7 +118,7 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
     (values: FormValues) => {
       if (editingAutomation) {
         updateAutomation.mutate(
-          { id: editingAutomation.id, ...values },
+          { automationId: editingAutomation.id, ...values },
           {
             onSuccess: () => {
               setSheetOpen(false);

@@ -313,7 +313,7 @@ export function TravelApprovalsPage() {
       }
       const loadingToastId = toast.loading("Rejecting travel request...");
       try {
-        await reject.mutateAsync({ id, reason: reason.trim() });
+        await reject.mutateAsync({ travelId: id, reason: reason.trim() });
         toast.success("Travel request rejected", { id: loadingToastId });
       } catch (error) {
         toast.error(getErrorMessage(error), { id: loadingToastId });

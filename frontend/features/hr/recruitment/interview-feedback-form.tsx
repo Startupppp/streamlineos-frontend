@@ -214,7 +214,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
     const validRubric = rubric.filter((r) => r.category.trim().length > 0);
     updateInterview.mutate(
       {
-        id: interview.id,
+        interviewId: interview.id,
         result: values.result,
         feedback: values.feedback || undefined,
         rating: overallRating || avgScore,

@@ -147,7 +147,7 @@ export function useDeleteProvisioningTemplate() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:identity:manage", {
     mutationKey: ["hr-identity", "template-delete"],
-    mutationFn: (id: string) => apiClient.delete(`${BASE}/templates/${id}`, undefined, undefined, _voidContract),
+    mutationFn: (templateId: string) => apiClient.delete(`${BASE}/templates/${templateId}`, undefined, undefined, _voidContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: identityKeys.templates });
       toast.success("Template deleted");

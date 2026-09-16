@@ -50,7 +50,7 @@ interface Props {
   mode: "create" | "edit";
   defaultValues?: Portfolio;
   onSubmitCreate: (input: CreatePortfolioInput) => void;
-  onSubmitEdit: (input: UpdatePortfolioInput & { id: number }) => void;
+  onSubmitEdit: (input: UpdatePortfolioInput & { portfolioId: number }) => void;
   isPending?: boolean;
 }
 
@@ -81,7 +81,7 @@ export function PortfolioFormSheet({
       ...(v.strategicGoal ? { strategicGoal: v.strategicGoal } : {}),
     };
     if (mode === "edit" && defaultValues) {
-      onSubmitEdit({ id: defaultValues.id, ...base });
+      onSubmitEdit({ portfolioId: defaultValues.id, ...base });
     } else {
       onSubmitCreate(base);
     }

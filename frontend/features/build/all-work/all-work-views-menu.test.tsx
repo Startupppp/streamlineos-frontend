@@ -56,8 +56,8 @@ it("keeps owner pin and delete clicks separate from applying the view", async ()
   await user.click(screen.getByRole("button", { name: "Views" }));
   fireEvent.click(screen.getByRole("button", { name: `Pin ${mockView.name}` }));
   fireEvent.click(screen.getByRole("button", { name: `Delete ${mockView.name}` }));
-  expect(mockUpdateView).toHaveBeenCalledWith({ id: mockView.id, isPinned: true }, expect.any(Object));
-  expect(mockDeleteView).toHaveBeenCalledWith({ id: mockView.id }, expect.any(Object));
+  expect(mockUpdateView).toHaveBeenCalledWith({ viewId: mockView.id, isPinned: true }, expect.any(Object));
+  expect(mockDeleteView).toHaveBeenCalledWith({ viewId: mockView.id }, expect.any(Object));
   expect(mockReplace).not.toHaveBeenCalled();
 });
 

@@ -168,8 +168,8 @@ export function useUpdateView(options?: Parameters<typeof useMutation>[0]) {
   return useAuthorizedMutation("build:workspace:manage", {
     ...options,
     mutationKey: ["projects", "views", "update"],
-    mutationFn: ({ id, projectId, ...data }: UpdateViewInput & { projectId: number }) =>
-      apiClient.patch<ProjectView>(`/build/${projectId}/views/${id}`, data, undefined, viewRowContract),
+    mutationFn: ({ viewId, projectId, ...data }: UpdateViewInput & { projectId: number }) =>
+      apiClient.patch<ProjectView>(`/build/${projectId}/views/${viewId}`, data, undefined, viewRowContract),
     onSuccess: (_: unknown, variables: UpdateViewInput & { projectId: number }) => {
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.views(variables.projectId),
@@ -183,9 +183,9 @@ export function useDeleteView(options?: Parameters<typeof useMutation>[0]) {
   return useAuthorizedMutation("build:workspace:manage", {
     ...options,
     mutationKey: ["projects", "views", "delete"],
-    mutationFn: ({ id, projectId }: { id: number; projectId: number }) =>
-      apiClient.delete<void>(`/build/${projectId}/views/${id}`, undefined, undefined, noContentLazy),
-    onSuccess: (_: unknown, variables: { id: number; projectId: number }) => {
+    mutationFn: ({ viewId, projectId }: { viewId: number; projectId: number }) =>
+      apiClient.delete<void>(`/build/${projectId}/views/${viewId}`, undefined, undefined, noContentLazy),
+    onSuccess: (_: unknown, variables: { viewId: number; projectId: number }) => {
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.views(variables.projectId),
       });
@@ -226,8 +226,8 @@ export function useUpdateWorkspaceView(options?: Parameters<typeof useMutation>[
   return useAuthorizedMutation("build:workspace:manage", {
     ...options,
     mutationKey: ["projects", "workspace-views", "update"],
-    mutationFn: ({ id, ...data }: UpdateWorkspaceViewInput) =>
-      apiClient.patch<ProjectView>(`/build/views/${id}`, data, undefined, viewRowContract),
+    mutationFn: ({ viewId, ...data }: UpdateWorkspaceViewInput) =>
+      apiClient.patch<ProjectView>(`/build/views/${viewId}`, data, undefined, viewRowContract),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.workspaceViews(),
@@ -241,8 +241,8 @@ export function useDeleteWorkspaceView(options?: Parameters<typeof useMutation>[
   return useAuthorizedMutation("build:workspace:manage", {
     ...options,
     mutationKey: ["projects", "workspace-views", "delete"],
-    mutationFn: ({ id }: { id: number }) =>
-      apiClient.delete<void>(`/build/views/${id}`, undefined, undefined, noContentLazy),
+    mutationFn: ({ viewId }: { viewId: number }) =>
+      apiClient.delete<void>(`/build/views/${viewId}`, undefined, undefined, noContentLazy),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.workspaceViews(),
@@ -302,9 +302,9 @@ export function useUpdateIntakeRequest(options?: Parameters<typeof useMutation>[
   return useAuthorizedMutation("build:workspace:manage", {
     ...options,
     mutationKey: ["projects", "intake", "update"],
-    mutationFn: ({ id, projectId, ...data }: UpdateIntakeRequestInput & { projectId: number }) =>
+    mutationFn: ({ intakeRequestId, projectId, ...data }: UpdateIntakeRequestInput & { projectId: number }) =>
       apiClient.patch<{ success: boolean }>(
-        `/build/${projectId}/intake/${id}`,
+        `/build/${projectId}/intake/${intakeRequestId}`,
         data,
         undefined,
         successContract,

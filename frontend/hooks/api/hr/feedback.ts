@@ -79,12 +79,12 @@ export function useUpdateFeedbackCycleStatus() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "feedback", "cycles", "updateStatus"],
-    mutationFn: ({ id, status }: { id: number; status: string }) =>
-      apiClient.patch<FeedbackCycle[]>(`/hr/feedback/cycles/${id}`, { status }, undefined, lazyContract(() => import("@/hooks/api/hr/feedback-schema").then(m => m.updateCycleStatusContract))),
+    mutationFn: ({ cycleId, status }: { cycleId: number; status: string }) =>
+      apiClient.patch<FeedbackCycle[]>(`/hr/feedback/cycles/${cycleId}`, { status }, undefined, lazyContract(() => import("@/hooks/api/hr/feedback-schema").then(m => m.updateCycleStatusContract))),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.feedbackCycles() });
       qc.invalidateQueries({
-        queryKey: humanResourcesQueryKeys.hr.feedbackCycle(variables.id),
+        queryKey: humanResourcesQueryKeys.hr.feedbackCycle(variables.cycleId),
       });
     },
   });

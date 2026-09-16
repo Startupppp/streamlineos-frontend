@@ -200,7 +200,7 @@ export function LabelsSettings() {
     (label: TicketLabel) => {
       const nextName = editName.trim() || label.name;
       updateLabel.mutate(
-        { id: label.id, name: nextName, color: resolveLabelColor(editColor) },
+        { labelId: label.id, name: nextName, color: resolveLabelColor(editColor) },
         {
           onSuccess: () => {
             setEditingId(null);

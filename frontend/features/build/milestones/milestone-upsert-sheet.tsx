@@ -96,7 +96,7 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
 
       if (isEdit) {
         update.mutate(
-          { id: milestone.id, ...payload },
+          { milestoneId: milestone.id, ...payload },
           {
             onSuccess: () => { toast.success("Milestone updated"); onClose(); },
             onError: (err) => toast.error(getErrorMessage(err)),

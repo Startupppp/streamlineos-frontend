@@ -49,8 +49,8 @@ export function useUpdateHoliday() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "holidays", "update"],
-    mutationFn: ({ id, ...data }: Partial<CreateHolidayInput> & { id: string }) =>
-      apiClient.patch<Holiday>(`/hr/attendance/holidays/${id}`, data, undefined, lazyContract(() => import("@/hooks/api/hr/holidays-schema").then(m => m.holidayRowContract))),
+    mutationFn: ({ holidayId, ...data }: Partial<CreateHolidayInput> & { holidayId: string }) =>
+      apiClient.patch<Holiday>(`/hr/attendance/holidays/${holidayId}`, data, undefined, lazyContract(() => import("@/hooks/api/hr/holidays-schema").then(m => m.holidayRowContract))),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.holidays() }),
   });
 }
@@ -59,8 +59,8 @@ export function useDeleteHoliday() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "holidays", "delete"],
-    mutationFn: (id: string) =>
-      apiClient.delete<void>(`/hr/attendance/holidays/${id}`, undefined, undefined, noContentC),
+    mutationFn: (holidayId: string) =>
+      apiClient.delete<void>(`/hr/attendance/holidays/${holidayId}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.holidays() }),
   });
 }

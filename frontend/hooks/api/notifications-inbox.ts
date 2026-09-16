@@ -194,25 +194,25 @@ export const useMarkNotificationRead = () => {
   const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
   return useMutation<NotificationAck, Error, number, NotifMutationContext>({
     mutationKey: ["notifications", "mark-read"],
-    mutationFn: (id) =>
+    mutationFn: (notificationId) =>
       apiClient.patch<NotificationAck>(
-        `/notifications/${id}/read`,
+        `/notifications/${notificationId}/read`,
         undefined,
         undefined,
         notificationAckLazy,
       ),
-    onMutate: async (id) => {
+    onMutate: async (notificationId) => {
       const { listKey, unreadKey, previousCount } =
         await beginInboxPatch(queryClient);
-      const cleared = isUnreadNow(queryClient, listKey, id) ? 1 : 0;
+      const cleared = isUnreadNow(queryClient, listKey, notificationId) ? 1 : 0;
       const previousLists = [
         ...snapshotAndPatchLists(queryClient, listKey, (n) =>
-          n.id === id ? { ...n, isRead: true } : n,
+          n.id === notificationId ? { ...n, isRead: true } : n,
         ),
         ...snapshotAndPatchUnified(
           queryClient,
           platformCoreQueryKeys.inbox.all,
-          (item) => (item.id === id ? { ...item, isRead: true } : item),
+          (item) => (item.id === notificationId ? { ...item, isRead: true } : item),
         ),
       ];
       applyUnreadDelta(queryClient, unreadKey, cleared);

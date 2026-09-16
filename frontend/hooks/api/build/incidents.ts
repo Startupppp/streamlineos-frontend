@@ -80,14 +80,14 @@ export function useUpdateIncident() {
     mutationKey: ["projects", "incidents", "update"],
     mutationFn: ({
       projectId,
-      id,
+      incidentId,
       ...data
-    }: UpdateIncidentInput & { projectId: number; id: number }) =>
-      apiClient.patch<Incident>(`/build/${projectId}/incidents/${id}`, data, undefined, incidentRowContract),
+    }: UpdateIncidentInput & { projectId: number; incidentId: number }) =>
+      apiClient.patch<Incident>(`/build/${projectId}/incidents/${incidentId}`, data, undefined, incidentRowContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.incidents.list(vars.projectId) });
       qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.incidents.detail(vars.projectId, vars.id),
+        queryKey: buildWorkQueryKeys.projects.incidents.detail(vars.projectId, vars.incidentId),
       });
     },
   });
@@ -97,8 +97,8 @@ export function useDeleteIncident() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:incidents:manage", {
     mutationKey: ["projects", "incidents", "delete"],
-    mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
-      apiClient.delete<void>(`/build/${projectId}/incidents/${id}`, undefined, undefined, noContentContract),
+    mutationFn: ({ projectId, incidentId }: { projectId: number; incidentId: number }) =>
+      apiClient.delete<void>(`/build/${projectId}/incidents/${incidentId}`, undefined, undefined, noContentContract),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.incidents.list(vars.projectId) });
     },

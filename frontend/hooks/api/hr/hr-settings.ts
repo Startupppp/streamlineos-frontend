@@ -74,8 +74,8 @@ export function useUpdateDocument() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "documents", "update"],
-    mutationFn: ({ id, ...data }: { id: number; name?: string; description?: string | null; type?: string; category?: string | null; userId?: string | null; isPublic?: boolean; tags?: string[]; expiryDate?: string | null }) =>
-      apiClient.patch<Document>(`/hr/documents/${id}`, data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.documentRowContract))),
+    mutationFn: ({ documentId, ...data }: { documentId: number; name?: string; description?: string | null; type?: string; category?: string | null; userId?: string | null; isPublic?: boolean; tags?: string[]; expiryDate?: string | null }) =>
+      apiClient.patch<Document>(`/hr/documents/${documentId}`, data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.documentRowContract))),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsAll });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsStats() });

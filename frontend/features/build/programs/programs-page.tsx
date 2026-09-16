@@ -154,7 +154,7 @@ export function ProgramsPage() {
     });
   }
 
-  function handleEdit(input: UpdateProgramInput & { id: number }) {
+  function handleEdit(input: UpdateProgramInput & { programId: number }) {
     updateProgram.mutate(input, {
       onSuccess: () => {
         toast.success("Program updated");

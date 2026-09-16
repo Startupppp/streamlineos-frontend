@@ -122,7 +122,7 @@ export function PlanUpsertSheet({ open, onOpenChange, plan }: Props) {
       };
 
       const promise = plan
-        ? updatePlan.mutateAsync({ id: plan.id, ...payload })
+        ? updatePlan.mutateAsync({ planId: plan.id, ...payload })
         : createPlan.mutateAsync(payload as Parameters<typeof createPlan.mutateAsync>[0]);
 
       toast.promise(promise, {

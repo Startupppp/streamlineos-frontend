@@ -271,14 +271,14 @@ export function useBulkShortlistCandidates() {
   });
 }
 
-export function useCandidate(id: number) {
+export function useCandidate(candidateId: number) {
   const canView = useCan("hr:employees:view");
-  const enabled = canView && Number.isFinite(id) && id > 0;
+  const enabled = canView && Number.isFinite(candidateId) && candidateId > 0;
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.candidate(id),
+    queryKey: humanResourcesQueryKeys.hr.candidate(candidateId),
     queryFn: ({ signal }) =>
       apiClient.get<CandidateDetail>(
-        `/hr/recruitment/candidates/${id}`,
+        `/hr/recruitment/candidates/${candidateId}`,
         undefined,
         signal,
         candidateDetailContract,
@@ -336,11 +336,11 @@ export function useUpdateCandidate() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "update"],
-    mutationFn: ({ id, ...data }: UpdateCandidateInput & { id: number }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/recruitment/candidates/${id}`, data, undefined, candidateSuccessContract),
-    onSuccess: (_, { id }) => {
+    mutationFn: ({ candidateId, ...data }: UpdateCandidateInput & { candidateId: number }) =>
+      apiClient.patch<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}`, data, undefined, candidateSuccessContract),
+    onSuccess: (_, { candidateId }) => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
-      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidate(id) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidate(candidateId) });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentPipeline() });
     },
   });
@@ -350,8 +350,8 @@ export function useDeleteCandidate() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<void>(`/hr/recruitment/candidates/${id}`, undefined, undefined, noContentC),
+    mutationFn: (candidateId: number) =>
+      apiClient.delete<void>(`/hr/recruitment/candidates/${candidateId}`, undefined, undefined, noContentC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });

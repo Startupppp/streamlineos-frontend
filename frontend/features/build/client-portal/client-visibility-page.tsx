@@ -46,7 +46,7 @@ function TicketRow({
 
   function handleChange(checked: boolean) {
     update.mutate(
-      { id: ticket.id, clientVisible: checked },
+      { ticketId: ticket.id, clientVisible: checked },
       { onError: (e) => toast.error(getErrorMessage(e)) },
     );
   }
@@ -81,7 +81,7 @@ function MilestoneRow({
 
   function handleChange(checked: boolean) {
     update.mutate(
-      { id: milestone.id, clientVisible: checked },
+      { milestoneId: milestone.id, clientVisible: checked },
       { onError: (e) => toast.error(getErrorMessage(e)) },
     );
   }

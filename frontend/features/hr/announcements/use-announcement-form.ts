@@ -245,7 +245,7 @@ export function useAnnouncementForm({
 
     if (editTarget) {
       toast.promise(
-        update.mutateAsync({ id: editTarget.id, ...payload }),
+        update.mutateAsync({ announcementId: editTarget.id, ...payload }),
         {
           loading: "Updating announcement...",
           success: () => {

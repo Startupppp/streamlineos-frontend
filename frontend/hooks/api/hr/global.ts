@@ -187,14 +187,14 @@ export function useCreateWorkAuth() {
   });
 }
 
-export function useUpdateWorkAuth(id: number) {
+export function useUpdateWorkAuth(workAuthorizationId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:compliance:manage", {
-    mutationKey: ["hr", "global", "workAuth", "update", id],
-    mutationFn: (body: Record<string, unknown>) => apiClient.patch(`/hr/global/work-authorizations/${id}`, body, undefined, _updateWorkAuthContract),
+    mutationKey: ["hr", "global", "workAuth", "update", workAuthorizationId],
+    mutationFn: (body: Record<string, unknown>) => apiClient.patch(`/hr/global/work-authorizations/${workAuthorizationId}`, body, undefined, _updateWorkAuthContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.workAuthorizations() });
-      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.workAuthorization(id) });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.workAuthorization(workAuthorizationId) });
       toast.success("Work authorization updated");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -205,7 +205,7 @@ export function useDeleteWorkAuth() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "workAuth", "delete"],
-    mutationFn: (id: number) => apiClient.delete(`/hr/global/work-authorizations/${id}`, undefined, undefined, _voidContract),
+    mutationFn: (workAuthorizationId: number) => apiClient.delete(`/hr/global/work-authorizations/${workAuthorizationId}`, undefined, undefined, _voidContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.workAuthorizations() });
       toast.success("Work authorization removed");
@@ -238,14 +238,14 @@ export function useCreateComplianceRequirement() {
   });
 }
 
-export function useUpdateComplianceRequirement(id: number) {
+export function useUpdateComplianceRequirement(requirementId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:compliance:manage", {
-    mutationKey: ["hr", "global", "compliance", "update", id],
-    mutationFn: (body: Record<string, unknown>) => apiClient.patch(`/hr/global/compliance/requirements/${id}`, body, undefined, _updateComplianceRequirementContract),
+    mutationKey: ["hr", "global", "compliance", "update", requirementId],
+    mutationFn: (body: Record<string, unknown>) => apiClient.patch(`/hr/global/compliance/requirements/${requirementId}`, body, undefined, _updateComplianceRequirementContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.complianceRequirements() });
-      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.complianceRequirement(id) });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.complianceRequirement(requirementId) });
       toast.success("Compliance requirement updated");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -256,7 +256,7 @@ export function useDeleteComplianceRequirement() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "compliance", "delete"],
-    mutationFn: (id: number) => apiClient.delete(`/hr/global/compliance/requirements/${id}`, undefined, undefined, _voidContract),
+    mutationFn: (requirementId: number) => apiClient.delete(`/hr/global/compliance/requirements/${requirementId}`, undefined, undefined, _voidContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.complianceRequirements() });
       toast.success("Compliance requirement deleted");
@@ -354,14 +354,14 @@ export function useCreateContract() {
   });
 }
 
-export function useUpdateContract(id: number) {
+export function useUpdateContract(contractId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:contracts:manage", {
-    mutationKey: ["hr", "global", "contracts", "update", id],
-    mutationFn: (body: Record<string, unknown>) => apiClient.patch(`/hr/global/contracts/${id}`, body, undefined, _updateContractContract),
+    mutationKey: ["hr", "global", "contracts", "update", contractId],
+    mutationFn: (body: Record<string, unknown>) => apiClient.patch(`/hr/global/contracts/${contractId}`, body, undefined, _updateContractContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.contracts() });
-      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.contract(id) });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.contract(contractId) });
       toast.success("Contract updated");
     },
     onError: (err) => toast.error(getErrorMessage(err)),

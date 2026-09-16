@@ -82,12 +82,12 @@ export const useUpdateBroadcast = () => {
   return useAuthorizedMutation<
     Broadcast,
     Error,
-    { id: number } & UpdateBroadcastInput
+    { broadcastId: number } & UpdateBroadcastInput
   >("notifications:broadcasts:manage", {
     mutationKey: ["notifications", "broadcasts", "update"],
-    mutationFn: ({ id, ...dto }) =>
+    mutationFn: ({ broadcastId, ...dto }) =>
       apiClient.patch<Broadcast>(
-        `/broadcasts/${id}`,
+        `/broadcasts/${broadcastId}`,
         dto,
         undefined,
         broadcastRowContract,
@@ -97,7 +97,7 @@ export const useUpdateBroadcast = () => {
         queryKey: platformCoreQueryKeys.notifications.broadcasts(),
       });
       queryClient.invalidateQueries({
-        queryKey: platformCoreQueryKeys.notifications.broadcast(vars.id),
+        queryKey: platformCoreQueryKeys.notifications.broadcast(vars.broadcastId),
       });
     },
   });
@@ -109,9 +109,9 @@ export const usePublishBroadcast = () => {
     "notifications:broadcasts:manage",
     {
       mutationKey: ["notifications", "broadcasts", "publish"],
-      mutationFn: (id) =>
+      mutationFn: (broadcastId) =>
         apiClient.post<{ success: boolean }>(
-          `/broadcasts/${id}/publish`,
+          `/broadcasts/${broadcastId}/publish`,
           undefined,
           undefined,
           broadcastSuccessContract,
@@ -131,9 +131,9 @@ export const useCancelBroadcast = () => {
     "notifications:broadcasts:manage",
     {
       mutationKey: ["notifications", "broadcasts", "cancel"],
-      mutationFn: (id) =>
+      mutationFn: (broadcastId) =>
         apiClient.post<{ success: boolean }>(
-          `/broadcasts/${id}/cancel`,
+          `/broadcasts/${broadcastId}/cancel`,
           undefined,
           undefined,
           broadcastSuccessContract,
@@ -175,9 +175,9 @@ export const useDeleteBroadcast = () => {
     "notifications:broadcasts:manage",
     {
       mutationKey: ["notifications", "broadcasts", "delete"],
-      mutationFn: (id) =>
+      mutationFn: (broadcastId) =>
         apiClient.delete<{ success: boolean }>(
-          `/broadcasts/${id}`,
+          `/broadcasts/${broadcastId}`,
           undefined,
           undefined,
           broadcastSuccessContract,

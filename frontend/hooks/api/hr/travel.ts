@@ -84,7 +84,7 @@ export function useManagerApproveTravelRequest() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:travel:manage", {
     mutationKey: ["hr", "travel", "manager-approve"],
-    mutationFn: (id: number) => apiClient.patch(`/hr/travel/${id}/manager-approve`, undefined, undefined, travelRowContract),
+    mutationFn: (travelId: number) => apiClient.patch(`/hr/travel/${travelId}/manager-approve`, undefined, undefined, travelRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.travelAll }),
   });
 }
@@ -93,7 +93,7 @@ export function useFinanceApproveTravelRequest() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:travel:manage", {
     mutationKey: ["hr", "travel", "finance-approve"],
-    mutationFn: (id: number) => apiClient.patch(`/hr/travel/${id}/finance-approve`, undefined, undefined, travelRowContract),
+    mutationFn: (travelId: number) => apiClient.patch(`/hr/travel/${travelId}/finance-approve`, undefined, undefined, travelRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.travelAll }),
   });
 }
@@ -102,8 +102,8 @@ export function useRejectTravelRequest() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:travel:manage", {
     mutationKey: ["hr", "travel", "reject"],
-    mutationFn: ({ id, reason }: { id: number; reason: string }) =>
-      apiClient.patch(`/hr/travel/${id}/reject`, { reason }, undefined, travelRowContract),
+    mutationFn: ({ travelId, reason }: { travelId: number; reason: string }) =>
+      apiClient.patch(`/hr/travel/${travelId}/reject`, { reason }, undefined, travelRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.travelAll }),
   });
 }

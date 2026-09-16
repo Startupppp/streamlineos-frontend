@@ -179,8 +179,8 @@ export function useUpdateInterview() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "interviews", "update"],
-    mutationFn: ({ id, ...data }: UpdateInterviewInput & { id: number }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/recruitment/interviews/${id}`, data, undefined, interviewSuccessContract),
+    mutationFn: ({ interviewId, ...data }: UpdateInterviewInput & { interviewId: number }) =>
+      apiClient.patch<{ success: boolean }>(`/hr/recruitment/interviews/${interviewId}`, data, undefined, interviewSuccessContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.interviews() });
       qc.invalidateQueries({ queryKey: INTERVIEW_STATS_KEY });
@@ -210,8 +210,8 @@ export function useUpdateScorecardTemplate() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "scorecard-templates", "update"],
-    mutationFn: ({ id, ...data }: { id: number; name?: string; criteria?: ScorecardCriterion[] }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/recruitment/scorecard-templates/${id}`, data, undefined, interviewSuccessContract),
+    mutationFn: ({ scorecardTemplateId, ...data }: { scorecardTemplateId: number; name?: string; criteria?: ScorecardCriterion[] }) =>
+      apiClient.patch<{ success: boolean }>(`/hr/recruitment/scorecard-templates/${scorecardTemplateId}`, data, undefined, interviewSuccessContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.scorecardTemplates() }),
   });
 }
@@ -220,8 +220,8 @@ export function useDeleteScorecardTemplate() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "scorecard-templates", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/recruitment/scorecard-templates/${id}`, undefined, undefined, interviewSuccessContract),
+    mutationFn: (scorecardTemplateId: number) =>
+      apiClient.delete<{ success: boolean }>(`/hr/recruitment/scorecard-templates/${scorecardTemplateId}`, undefined, undefined, interviewSuccessContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.scorecardTemplates() }),
   });
 }
@@ -298,8 +298,8 @@ export function useBulkRescheduleInterviews() {
     mutationKey: ["hr", "recruitment", "interviews", "bulk-reschedule"],
     mutationFn: async ({ ids, scheduledAt }: { ids: number[]; scheduledAt: string }) => {
       await Promise.all(
-        ids.map((id) =>
-          apiClient.patch<{ success: boolean }>(`/hr/recruitment/interviews/${id}`, { scheduledAt }, undefined, interviewSuccessContract)
+        ids.map((interviewId) =>
+          apiClient.patch<{ success: boolean }>(`/hr/recruitment/interviews/${interviewId}`, { scheduledAt }, undefined, interviewSuccessContract)
         )
       );
       return { rescheduled: ids.length };
@@ -391,8 +391,8 @@ export function useRevokeBookingLink() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "booking-links", "revoke"],
-    mutationFn: (id: number) =>
-      apiClient.patch<{ success: boolean }>(`/hr/recruitment/booking-links/${id}`, {}, undefined, bookingCancelContract),
+    mutationFn: (bookingLinkId: number) =>
+      apiClient.patch<{ success: boolean }>(`/hr/recruitment/booking-links/${bookingLinkId}`, {}, undefined, bookingCancelContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.bookingLinks() }),
   });
 }

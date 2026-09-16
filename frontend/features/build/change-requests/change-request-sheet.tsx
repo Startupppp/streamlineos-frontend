@@ -127,7 +127,7 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
     };
 
     if (editCr) {
-      update.mutate({ ...payload, id: editCr.id }, {
+      update.mutate({ ...payload, changeRequestId: editCr.id }, {
         onSuccess: () => { toast.success("Change request updated"); onOpenChange(false); },
         onError: (e) => toast.error(getErrorMessage(e)),
       });

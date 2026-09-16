@@ -66,7 +66,7 @@ export function CandidateDetailPage() {
   const handleStatusChange = useCallback(
     (status: CandidateStatus) => {
       updateCandidate.mutate(
-        { id, status },
+        { candidateId: id, status },
         {
           onSuccess: () => toast.success("Status updated"),
           onError: (e) => toast.error(getErrorMessage(e)),

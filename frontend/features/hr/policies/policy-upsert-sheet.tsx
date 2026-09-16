@@ -110,7 +110,7 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
 
       if (isEdit && policy) {
         update.mutate(
-          { id: policy.id, ...payload },
+          { policyId: policy.id, ...payload },
           {
             onSuccess: () => {
               toast.success("Policy updated");
