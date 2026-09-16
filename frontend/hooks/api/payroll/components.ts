@@ -49,7 +49,7 @@ type CreateComponentInput = {
 };
 
 type UpdateComponentInput = {
-  id: number;
+  componentId: number;
   data: Partial<CreateComponentInput>;
 };
 
@@ -83,8 +83,8 @@ export function useUpdatePayrollComponent() {
   const qc = useQueryClient();
   return useAuthorizedMutation("payroll:components:manage", {
     mutationKey: ["payroll", "components", "update"],
-    mutationFn: ({ id, data }: UpdateComponentInput) =>
-      apiClient.patch<SalaryComponent>(`/payroll/components/${id}`, data, undefined, salaryComponentC),
+    mutationFn: ({ componentId, data }: UpdateComponentInput) =>
+      apiClient.patch<SalaryComponent>(`/payroll/components/${componentId}`, data, undefined, salaryComponentC),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.components() }),
   });
@@ -94,9 +94,9 @@ export function useDeletePayrollComponent() {
   const qc = useQueryClient();
   return useAuthorizedMutation("payroll:components:manage", {
     mutationKey: ["payroll", "components", "delete"],
-    mutationFn: (id: number) =>
+    mutationFn: (componentId: number) =>
       apiClient.delete<void>(
-        `/payroll/components/${id}`, undefined, undefined, noContentC,
+        `/payroll/components/${componentId}`, undefined, undefined, noContentC,
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.components() }),

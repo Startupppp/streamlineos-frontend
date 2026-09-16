@@ -120,8 +120,8 @@ export function useManagerApproveReimbursement() {
   const invalidate = useInvalidateManagerInbox();
   return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "manager", "reimb-approve"],
-    mutationFn: (id: number) =>
-      apiClient.post(`/payroll/manager/reimbursements/${id}/approve`, undefined, undefined, updateReimbursementResultC),
+    mutationFn: (reimbursementId: number) =>
+      apiClient.post(`/payroll/manager/reimbursements/${reimbursementId}/approve`, undefined, undefined, updateReimbursementResultC),
     onSuccess: () => invalidate(),
   });
 }
@@ -130,8 +130,8 @@ export function useManagerRejectReimbursement() {
   const invalidate = useInvalidateManagerInbox();
   return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "manager", "reimb-reject"],
-    mutationFn: ({ id, reason }: { id: number; reason?: string }) =>
-      apiClient.post(`/payroll/manager/reimbursements/${id}/reject`, { reason }, undefined, updateReimbursementResultC),
+    mutationFn: ({ reimbursementId, reason }: { reimbursementId: number; reason?: string }) =>
+      apiClient.post(`/payroll/manager/reimbursements/${reimbursementId}/reject`, { reason }, undefined, updateReimbursementResultC),
     onSuccess: () => invalidate(),
   });
 }
@@ -140,8 +140,8 @@ export function useManagerApproveLoan() {
   const invalidate = useInvalidateManagerInbox();
   return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "manager", "loan-approve"],
-    mutationFn: (id: number) =>
-      apiClient.post(`/payroll/manager/loans/${id}/approve`, undefined, undefined, updateLoanResultC),
+    mutationFn: (loanId: number) =>
+      apiClient.post(`/payroll/manager/loans/${loanId}/approve`, undefined, undefined, updateLoanResultC),
     onSuccess: () => invalidate(),
   });
 }
@@ -150,8 +150,8 @@ export function useManagerRejectLoan() {
   const invalidate = useInvalidateManagerInbox();
   return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "manager", "loan-reject"],
-    mutationFn: (id: number) =>
-      apiClient.post(`/payroll/manager/loans/${id}/reject`, undefined, undefined, updateLoanResultC),
+    mutationFn: (loanId: number) =>
+      apiClient.post(`/payroll/manager/loans/${loanId}/reject`, undefined, undefined, updateLoanResultC),
     onSuccess: () => invalidate(),
   });
 }

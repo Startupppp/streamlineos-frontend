@@ -45,8 +45,8 @@ export function useUpdateTaxWindow() {
   const qc = useQueryClient();
   return useAuthorizedMutation("payroll:tax:manage", {
     mutationKey: ["payroll", "tax-windows", "update"],
-    mutationFn: ({ id, ...data }: { id: number } & UpdateTaxWindowInput) =>
-      apiClient.patch<TaxWindow>(`/payroll/tax-windows/${id}`, data, undefined, taxWindowC),
+    mutationFn: ({ taxWindowId, ...data }: { taxWindowId: number } & UpdateTaxWindowInput) =>
+      apiClient.patch<TaxWindow>(`/payroll/tax-windows/${taxWindowId}`, data, undefined, taxWindowC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.taxWindows() });
     },

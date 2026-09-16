@@ -67,8 +67,8 @@ export function useUpdateBonus() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:bonuses:manage", {
     mutationKey: ["payroll", "bonuses", "update"],
-    mutationFn: ({ id, status }: { id: number; status: "APPROVED" | "REJECTED" | "PAID" }) =>
-      apiClient.patch<BonusCreated>(`/hr/bonuses/${id}`, { status }, undefined, bonusCreatedC),
+    mutationFn: ({ bonusId, status }: { bonusId: number; status: "APPROVED" | "REJECTED" | "PAID" }) =>
+      apiClient.patch<BonusCreated>(`/hr/bonuses/${bonusId}`, { status }, undefined, bonusCreatedC),
     onSuccess: () => qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.bonuses() }),
   });
 }
@@ -94,8 +94,8 @@ export function useApproveIncentive() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:payroll:approve", {
     mutationKey: ["payroll", "incentives", "approve"],
-    mutationFn: ({ id, approvedAmount, notes }: { id: number; approvedAmount: string; notes?: string }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/incentives/${id}/approve`, { approvedAmount, notes }, undefined, bonusSuccessC),
+    mutationFn: ({ incentiveId, approvedAmount, notes }: { incentiveId: number; approvedAmount: string; notes?: string }) =>
+      apiClient.patch<{ success: boolean }>(`/hr/incentives/${incentiveId}/approve`, { approvedAmount, notes }, undefined, bonusSuccessC),
     onSuccess: () => qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.incentivesAll }),
   });
 }
@@ -104,8 +104,8 @@ export function useRejectIncentive() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:payroll:approve", {
     mutationKey: ["payroll", "incentives", "reject"],
-    mutationFn: (id: number) =>
-      apiClient.patch<{ success: boolean }>(`/hr/incentives/${id}/reject`, {}, undefined, bonusSuccessC),
+    mutationFn: (incentiveId: number) =>
+      apiClient.patch<{ success: boolean }>(`/hr/incentives/${incentiveId}/reject`, {}, undefined, bonusSuccessC),
     onSuccess: () => qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.incentivesAll }),
   });
 }

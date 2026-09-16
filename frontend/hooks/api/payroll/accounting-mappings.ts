@@ -48,8 +48,8 @@ export function useUpdateAccountingMapping() {
   const qc = useQueryClient();
   return useAuthorizedMutation("payroll:settings:manage", {
     mutationKey: ["payroll", "accounting-mappings", "update"],
-    mutationFn: ({ id, ...data }: { id: number } & UpdateAccountingMappingInput) =>
-      apiClient.patch<AccountingMapping>(`/payroll/accounting-mappings/${id}`, data, undefined, accountingMappingC),
+    mutationFn: ({ accountingMappingId, ...data }: { accountingMappingId: number } & UpdateAccountingMappingInput) =>
+      apiClient.patch<AccountingMapping>(`/payroll/accounting-mappings/${accountingMappingId}`, data, undefined, accountingMappingC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.accountingMappings() });
     },
@@ -60,8 +60,8 @@ export function useDeleteAccountingMapping() {
   const qc = useQueryClient();
   return useAuthorizedMutation("payroll:settings:manage", {
     mutationKey: ["payroll", "accounting-mappings", "delete"],
-    mutationFn: ({ id }: { id: number }) =>
-      apiClient.delete<void>(`/payroll/accounting-mappings/${id}`, undefined, undefined, noContentC),
+    mutationFn: ({ accountingMappingId }: { accountingMappingId: number }) =>
+      apiClient.delete<void>(`/payroll/accounting-mappings/${accountingMappingId}`, undefined, undefined, noContentC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.accountingMappings() });
     },
