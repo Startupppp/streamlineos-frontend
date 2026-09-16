@@ -98,7 +98,7 @@ export default function PipelinesPage() {
   }, [qc, selectedPipelineId, sortedStages, reorderStages]);
 
   const handleEditAdvanced = useCallback((stage: CrmPipelineStage) => setEditingStage(stage), []);
- 
+
   const handleDeleteRequest = useCallback((id: string) => setDeleteStageId(id), []);
 
   const handleDeleteConfirm = useCallback(() => {

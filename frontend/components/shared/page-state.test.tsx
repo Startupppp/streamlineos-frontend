@@ -70,4 +70,32 @@ describe("PageState", () => {
     );
     expect(screen.getByTestId("skeleton").parentElement).toHaveClass("flex-1");
   });
+
+  it("renders access-restricted, not the empty state, when the caller is denied — the Ticket 26 guarantee at the component boundary", () => {
+    render(
+      <PageState
+        resolution={{ kind: "denied", permission: "crm:campaigns:view" }}
+        loading={loading}
+        empty={<div>No campaigns yet</div>}
+      >
+        <div>the list</div>
+      </PageState>,
+    );
+
+    expect(screen.queryByText("No campaigns yet")).not.toBeInTheDocument();
+    expect(screen.queryByText("the list")).not.toBeInTheDocument();
+  });
+
+  it("renders an error state, not children, when the resolution is an error", () => {
+    render(
+      <PageState
+        resolution={{ kind: "error", error: new Error("network failure") }}
+        loading={loading}
+      >
+        <div>body</div>
+      </PageState>,
+    );
+
+    expect(screen.queryByText("body")).not.toBeInTheDocument();
+  });
 });
