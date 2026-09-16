@@ -97,7 +97,7 @@ function MappingForm({
 
     if (editing) {
       update.mutate(
-        { id: editing.id, ...input },
+        { accountingMappingId: editing.id, ...input },
         {
           onSuccess: () => { toast.success("Mapping updated"); onSuccess(); },
           onError: (err) => toast.error(getErrorMessage(err)),
@@ -235,9 +235,9 @@ export function AccountingMappingsSheet({ open: externalOpen, onOpenChange: exte
     setShowForm(true);
   }
 
-  function handleDelete(id: number) {
+  function handleDelete(accountingMappingId: number) {
     deleteMapping.mutate(
-      { id },
+      { accountingMappingId },
       {
         onSuccess: () => toast.success("Mapping deleted"),
         onError: () => toast.error("Failed to delete mapping"),

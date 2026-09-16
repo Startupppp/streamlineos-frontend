@@ -117,7 +117,7 @@ export function IncentivesTab() {
   function handleConfirmApprove() {
     if (!approveTarget || !approvedAmount.trim()) return;
     approveIncentive.mutate(
-      { id: approveTarget.id, approvedAmount: approvedAmount.trim() },
+      { incentiveId: approveTarget.id, approvedAmount: approvedAmount.trim() },
       {
         onSuccess: () => {
           toast.success("Incentive approved");

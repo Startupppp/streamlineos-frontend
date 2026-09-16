@@ -130,7 +130,7 @@ export function TaxWindowsTab() {
   function handleConfirmAdvance() {
     if (!advanceTarget) return;
     updateMutation.mutate(
-      { id: advanceTarget.window.id, status: advanceTarget.next },
+      { taxWindowId: advanceTarget.window.id, status: advanceTarget.next },
       {
         onSuccess: () => {
           toast.success(`Window status updated to ${advanceTarget.next}`);

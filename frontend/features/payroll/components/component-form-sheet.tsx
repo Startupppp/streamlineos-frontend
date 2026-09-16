@@ -94,7 +94,7 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
 
     if (component) {
       update.mutate(
-        { id: component.id, data: payload },
+        { componentId: component.id, data: payload },
         {
           onSuccess: () => { toast.success("Component updated"); handleOpenChange(false); },
           onError: (err) => toast.error(getErrorMessage(err)),

@@ -74,7 +74,7 @@ export function TaxWindowSheet({ window, onClose }: TaxWindowSheetProps) {
 
     if (window) {
       updateMutation.mutate(
-        { id: window.id, ...payload },
+        { taxWindowId: window.id, ...payload },
         {
           onSuccess: () => {
             toast.success("Declaration window updated");

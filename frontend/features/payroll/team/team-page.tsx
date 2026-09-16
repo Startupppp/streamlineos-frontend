@@ -167,7 +167,7 @@ export function TeamPayrollPageContent() {
 
   function onRejectClaim(row: ManagerPendingReimbursement) {
     rejectReimb.mutate(
-      { id: row.id },
+      { reimbursementId: row.id },
       {
         onSuccess: () => toast.success("Claim rejected"),
         onError: (err) => toast.error(getErrorMessage(err)),

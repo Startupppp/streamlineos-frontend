@@ -89,10 +89,10 @@ export function BonusesTab() {
     setCreateOpen(true);
   }
 
-  function makeApproveHandler(id: number) {
+  function makeApproveHandler(bonusId: number) {
     function handleApprove() {
       updateBonus.mutate(
-        { id, status: "APPROVED" },
+        { bonusId, status: "APPROVED" },
         {
           onSuccess: () => toast.success("Bonus approved"),
           onError: () => toast.error("Failed to approve bonus"),
@@ -102,10 +102,10 @@ export function BonusesTab() {
     return handleApprove;
   }
 
-  function makeRejectHandler(id: number) {
+  function makeRejectHandler(bonusId: number) {
     function handleReject() {
       updateBonus.mutate(
-        { id, status: "REJECTED" },
+        { bonusId, status: "REJECTED" },
         {
           onSuccess: () => toast.success("Bonus rejected"),
           onError: () => toast.error("Failed to reject bonus"),
