@@ -83,9 +83,15 @@ Declared, nothing links to them, no page on disk. All 404.
 
 **It never asserts that every `UNIVERSAL_ROUTES[].path` has a page.** That single missing mirror-assertion is why all nine survive.
 
-Worse: `universal-route-matrix.test.ts:94,98,103,104` **asserts four of the dead routes resolve as universal** — the suite certifies that routes which 404 are correctly accessible.
+Worse: `universal-route-matrix.test.ts` **asserts FIVE of the dead routes resolve as universal** — `:75` (`/me`, "self-service root"), `:94` (`/home`), `:98` (`/announcements`), `:103` (`/referrals`), `:104` (`/jobs`). The suite certifies that routes which 404 are correctly accessible. All five rows come out with the declarations.
+
+**A second, independently maintained inventory already agrees the nine are not real.** `lib/rbac/route-access/__tests__/page-level-gates.test.ts:19-40` holds `SESSION_ONLY_BY_DESIGN`, a hand-kept list of genuinely universal surfaces mirroring `UNIVERSAL_ROUTES`. It contains **none** of the nine — no `/home`, `/announcements`, `/referrals`, `/jobs`, `/support/my`, `/knowledge`, `/kb` or `/docs` — while it does include `/knowledge/wiki` (`:31`). It omits precisely the roots with no `page.tsx`. Deleting them aligns the two lists rather than dropping something either relies on.
+
+`/me` is declared in **three** places, all dead: `universal-routes.ts:26`, `page-level-gates.test.ts:28`, `universal-route-matrix.test.ts:75`, plus `sidebar-nav-items.ts:52` documenting it as index-only. If `/me` goes, drop `page-level-gates.test.ts:28` in the same change.
 
 **Fix order matters:** add the assertion and delete the declarations in the same change, or the new test fails on the existing nine.
+
+**Zero-consumer evidence** (whole-repo sweep, excluding `.next-baseline/` compiled bundles): `/home`, `/referrals`, `/jobs` and `/me` are referenced only by their own declaration and test rows. `/support/my` is referenced by `universal-routes.ts:100` and **nothing else, not even a test**. `/announcements`'s only third hit is a backend API path in an outage-retry fixture (`route-error-boundary.test.tsx:23`), not a frontend link.
 
 ---
 
