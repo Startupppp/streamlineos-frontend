@@ -24,8 +24,18 @@
 - **Two git repositories.** `backend/` is its own nested repo; `frontend/` and `docs/` belong to the root repo. Diff, commit and base-hash each separately.
 - **Commit by explicit pathspec — never `git add -A` or `git add .`.** The backend tree holds 20 uncommitted files from another session (`build/`, `feedbucket/`, `workflows/`, `CLAUDE.md`, `migrations/meta/_journal.json`, and an untracked migration). A blanket add commits a stranger's work under this plan's message.
 - **`pnpm check:module-gate` already fails at HEAD** with 13 pre-existing `MISSING_GATE` findings (9 HR, 3 payroll, 1 surveys), unrelated to this plan. Require **no new findings**, not exit 0.
-- **`pnpm type-check` does not see test files.** `frontend/tsconfig.json` excludes them, so a type error in any `*.test.ts(x)` this plan adds is invisible to it. Every frontend task runs **`pnpm type-check:specs`** (`tsconfig.specs.json`) as well.
-- **Backend typecheck needs `NODE_OPTIONS=--max-old-space-size=10240`.** At 8192 it dies after ~220s with exit 134 printing no type errors, which reads as a hang rather than a heap limit. The `package.json` script hardcodes 8192 — override it.
+- **`pnpm type-check` does not see test files.** `frontend/tsconfig.json` excludes them, so a type error in any `*.test.ts(x)` this plan adds is invisible to it. Every frontend task runs **`pnpm type-check:specs`** (`tsconfig.specs.json`) as well — but that program is **already red** with 15 pre-existing errors (stale mock shapes in `features/build`, `features/employee-onboarding`, `features/org-setup`, `hooks/api`, `lib/prefetch`, `lib/rbac`). Require **no error naming your own files**, not exit 0:
+
+  ```bash
+  cd frontend && pnpm type-check:specs 2>&1 | grep "<your-file-stem>"   # must print nothing
+  ```
+- **Backend typecheck needs a 10240 MB heap, and `NODE_OPTIONS` CANNOT set it.** `pnpm typecheck` runs `node --max-old-space-size=8192 …` — a CLI flag, which beats `NODE_OPTIONS`, so prefixing the pnpm script does nothing at all. At 8192 the program can die after ~220s with exit **134** printing **no type errors**, which reads as an environment fault or a hang rather than a heap limit. Invoke the compiler directly instead:
+
+  ```bash
+  cd backend && node --max-old-space-size=10240 ./node_modules/typescript/bin/tsc --noEmit -p tsconfig.build.json
+  ```
+
+  Same for the test program, swapping `-p tsconfig.test.json`. If a run exits 134 with no diagnostics, it did not pass — re-run it at the higher limit before believing it.
 
 ---
 
