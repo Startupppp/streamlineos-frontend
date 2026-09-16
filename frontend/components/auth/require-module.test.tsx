@@ -32,12 +32,12 @@ beforeEach(() => {
 describe("RequireModule", () => {
   it("shows a skeleton rather than a blank frame while access is resolving", () => {
     mockAccess({ data: undefined, isLoading: true });
-    const { container } = render(
+    render(
       <RequireModule module="kb">
         <div>body</div>
       </RequireModule>,
     );
-    expect(container).not.toBeEmptyDOMElement();
+    expect(screen.getByRole("status")).toHaveAttribute("aria-busy", "true");
     expect(screen.queryByText("body")).toBeNull();
   });
 

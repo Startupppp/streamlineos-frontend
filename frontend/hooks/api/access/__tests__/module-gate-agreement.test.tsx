@@ -100,16 +100,16 @@ describe("RequireModule — route gate loading behaviour", () => {
     mockUseEntitlements.mockReturnValue(successQueryResult({ lockedModules: [] }));
   });
 
-  it("shows a skeleton, not an empty container, while access data has not loaded", () => {
+  it("shows a skeleton, not the disabled view, while access data has not loaded", () => {
     mockUseAccess.mockReturnValue(pendingQueryResult());
 
-    const { container, queryByText } = render(
+    const { getByRole, queryByText } = render(
       <RequireModule module="build">
         <span>content</span>
       </RequireModule>,
     );
 
-    expect(container).not.toBeEmptyDOMElement();
+    expect(getByRole("status")).toHaveAttribute("aria-busy", "true");
     expect(queryByText("content")).not.toBeInTheDocument();
   });
 
