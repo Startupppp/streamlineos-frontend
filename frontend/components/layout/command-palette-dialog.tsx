@@ -45,7 +45,14 @@ import {
   type GlobalSearchResult,
 } from "@/components/command-palette/hooks/use-global-search";
 
-
+/**
+ * The entity kinds a global-search hit can carry, in the order their groups render.
+ *
+ * Iterating this instead of `Object.entries(entityGroups)` is what lets the icon and label
+ * lookups below be plain indexed reads: `Object.entries` widens its key back to `string`, and
+ * recovering the union from that needs a cast. Driving the render from the union itself keeps
+ * the type and also makes group order deterministic rather than first-hit-wins.
+ */
 const ENTITY_TYPES = [
   "lead",
   "deal",

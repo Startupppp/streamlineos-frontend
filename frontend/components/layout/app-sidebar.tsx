@@ -100,7 +100,7 @@ export function AppSidebar({
   const activeProduct = getProductFromPathname(pathname);
   const accent: ModuleAccent = MODULE_ACCENTS[activeProduct];
   const rawProjectId = params?.projectId;
-  
+
   const [collapsedGroups, setCollapsedGroups] = useState<
     Record<string, boolean>
   >({});
@@ -111,7 +111,7 @@ export function AppSidebar({
   const isHrModuleEnabled = isModuleEnabled("hrms", enabledModules);
   const { data: entitlements } = useEntitlements();
   const lockedModules = entitlements?.lockedModules ?? [];
-  
+
   const activeProjectId = useMemo(() => {
     if (activeProduct !== "build") return null;
     const value = Array.isArray(rawProjectId) ? rawProjectId[0] : rawProjectId;
