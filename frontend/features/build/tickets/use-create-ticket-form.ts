@@ -219,7 +219,7 @@ export function useCreateTicketForm({
         try {
           setIsUploading(true);
           await Promise.all([labelTask, linksTask]);
-          await Promise.all(
+          const outcomes = await Promise.allSettled(
             pendingFiles.map(async (file) => {
               const formData = new FormData();
               formData.append("file", file);
@@ -239,9 +239,27 @@ export function useCreateTicketForm({
               });
             }),
           );
-          toast.success(`Issue created with ${pendingFiles.length} attachment${pendingFiles.length > 1 ? "s" : ""}`);
-        } catch {
-          toast.error("Issue created but failed to upload attachments");
+
+          const failed = pendingFiles.filter((_, index) => outcomes[index]?.status === "rejected");
+          const succeeded = pendingFiles.length - failed.length;
+
+          if (failed.length === 0) {
+            toast.success(`Issue created with ${succeeded} attachment${succeeded > 1 ? "s" : ""}`);
+          } else {
+            const firstRejection = outcomes.find((outcome) => outcome.status === "rejected");
+            const reason =
+              firstRejection?.status === "rejected"
+                ? getErrorMessage(firstRejection.reason)
+                : "Upload failed.";
+            const names = failed.map((file) => file.name).join(", ");
+            toast.error(
+              succeeded > 0
+                ? `Issue created. ${succeeded} attached, but ${names} failed: ${reason}`
+                : `Issue created, but ${names} could not be attached: ${reason}`,
+            );
+          }
+        } catch (error) {
+          toast.error(`Issue created, but attachments failed: ${getErrorMessage(error)}`);
         } finally {
           setIsUploading(false);
           finishCreation();

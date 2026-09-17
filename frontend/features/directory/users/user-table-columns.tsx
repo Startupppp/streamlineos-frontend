@@ -2,7 +2,6 @@
 
 import { useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -13,8 +12,9 @@ import { UserActionsMenu } from "./user-actions-menu";
 import { formatRoleLabel } from "@/lib/constants/user-invite-roles";
 import { UserStatusBadge } from "./user-status-badge";
 import type { EmploymentFacts } from "@/hooks/api/directory/employment";
-import { resolveImageUrl } from "@/lib/utils";
 import { propagationShield } from "@/lib/keyboard-activation";
+import type { PresenceStatus } from "@/lib/presence";
+import { AvatarWithPresence } from "@/components/shared/presence-dot";
 
 interface UserActionCellProps {
   user: User;
@@ -35,17 +35,19 @@ export function getUserTableColumns(
   departmentNames: ReadonlyMap<string, string>,
   employmentByUserId: ReadonlyMap<string, EmploymentFacts>,
   onView: (userId: string) => void,
+  presenceMap: ReadonlyMap<string, PresenceStatus> = new Map(),
 ): DataTableColumn<User>[] {
   function renderUser(user: User) {
     const displayName = getUserDisplayName(user);
     return (
       <div className="flex items-center gap-2">
-        <Avatar className="h-6 w-6 shrink-0">
-          <AvatarImage src={resolveImageUrl(user.image)} alt={displayName} />
-          <AvatarFallback className="text-micro font-semibold">
-            {getUserInitials(user)}
-          </AvatarFallback>
-        </Avatar>
+        <AvatarWithPresence
+          src={user.image}
+          fallback={getUserInitials(user)}
+          status={presenceMap.get(user.id)}
+          avatarClassName="h-6 w-6"
+          alt={displayName}
+        />
         <div className="min-w-0">
           <TruncatedText
             text={displayName}

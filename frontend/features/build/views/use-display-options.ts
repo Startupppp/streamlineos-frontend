@@ -54,6 +54,7 @@ export function hydrateDisplayOptions(raw: unknown): DisplayOptions {
     showEstimate: pickBool(raw.showEstimate, base.showEstimate),
     showCycle: pickBool(raw.showCycle, base.showCycle),
     showLabels: pickBool(raw.showLabels, base.showLabels),
+    showDescription: pickBool(raw.showDescription, base.showDescription),
     showDueDate: pickBool(raw.showDueDate, base.showDueDate),
     showProject: pickBool(raw.showProject, base.showProject),
     showMilestone: pickBool(raw.showMilestone, base.showMilestone),

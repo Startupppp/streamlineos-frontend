@@ -76,7 +76,7 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
       ref={columnInnerRef}
       {...columnDraggableProps}
       className={cn(
-        "flex w-72 min-w-[280px] shrink-0 flex-col self-stretch rounded-2xl border bg-muted/30 min-h-0",
+        "flex w-72 min-w-[280px] shrink-0 flex-col self-stretch rounded-xl border bg-muted/30 min-h-0",
         overWip && "border-destructive/60",
         isColumnDragging && "opacity-95 shadow-lg ring-2 ring-primary/20",
       )}

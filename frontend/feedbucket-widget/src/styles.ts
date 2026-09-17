@@ -213,6 +213,9 @@ export function getStyles(): string {
   background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 13px; font-family: inherit;
   color: #475569; cursor: pointer; transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
 }
+.media-actions { display: flex; gap: 8px; }
+.media-actions .capture-btn { flex: 1 1 0; min-width: 0; }
+.upload-error { margin: 6px 0 0; font-size: 12px; color: #b91c1c; }
 .capture-btn:hover { border-color: #3b82f6; background: #eff6ff; color: #3b82f6; }
 .capture-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .capture-btn svg { width: 16px; height: 16px; }

@@ -26,6 +26,7 @@ export interface DisplayOptions {
   showEstimate: boolean;
   showCycle: boolean;
   showLabels: boolean;
+  showDescription: boolean;
   showDueDate: boolean;
   showProject: boolean;
   showMilestone: boolean;
@@ -39,6 +40,7 @@ export interface DisplayOptions {
 export interface KanbanTicket {
   id: number;
   title: string;
+  descriptionExcerpt?: string | null;
   type: string;
   status: string;
   priority?: TicketPriority | string | null;

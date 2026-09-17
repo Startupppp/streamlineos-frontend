@@ -45,6 +45,7 @@ export const DEFAULT_DISPLAY_OPTIONS: DisplayOptions = {
   showEstimate: true,
   showCycle: true,
   showLabels: true,
+  showDescription: false,
   showDueDate: true,
   showProject: false,
   showMilestone: false,
@@ -83,6 +84,7 @@ type PropertyKey = keyof Pick<
   | "showEstimate"
   | "showCycle"
   | "showLabels"
+  | "showDescription"
   | "showDueDate"
   | "showProject"
   | "showMilestone"
@@ -104,6 +106,7 @@ const PROPERTY_CHIPS: { key: PropertyKey; label: string }[] = [
   { key: "showCycle", label: "Cycle" },
   { key: "showEstimate", label: "Estimate" },
   { key: "showLabels", label: "Labels" },
+  { key: "showDescription", label: "Description" },
   { key: "showLinks", label: "Links" },
   { key: "showTimeInStatus", label: "Time in status" },
   { key: "showCreated", label: "Created" },
@@ -118,6 +121,7 @@ const BOARD_PROPERTIES: PropertyKey[] = [
   "showEstimate",
   "showCycle",
   "showLabels",
+  "showDescription",
   "showDueDate",
 ];
 

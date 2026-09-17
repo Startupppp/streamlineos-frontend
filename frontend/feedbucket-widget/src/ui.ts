@@ -13,7 +13,11 @@ function isFeedbackType(s: unknown): s is FeedbackType {
 }
 import { DragManager } from "./ui-drag";
 import { buildLauncher } from "./ui-launcher-builder";
-import { buildFeedbackPanel } from "./ui-panel-builder";
+import {
+  ALLOWED_UPLOAD_MIMES,
+  MAX_UPLOAD_BYTES,
+  buildFeedbackPanel,
+} from "./ui-panel-builder";
 
 export class FeedbucketWidget {
   private readonly hostEl: HTMLElement;
@@ -47,6 +51,10 @@ export class FeedbucketWidget {
   private readonly emailInput: HTMLInputElement;
   private readonly captureBtn: HTMLButtonElement;
   private readonly captureBtnLabel: HTMLSpanElement;
+  private readonly uploadBtn: HTMLButtonElement;
+  private readonly fileInput: HTMLInputElement;
+  private readonly uploadError: HTMLParagraphElement;
+  private readonly mediaActions: HTMLDivElement;
   private readonly previewWrap: HTMLDivElement;
   private readonly previewImg: HTMLImageElement;
   private readonly recordingBadge: HTMLDivElement;
@@ -133,6 +141,35 @@ export class FeedbucketWidget {
     this.captureBtnLabel.textContent = "Capture screenshot";
     if (blob) this.setScreenshot(blob);
   };
+  private readonly handleUploadClick = (): void => {
+    this.setUploadError(null);
+    this.fileInput.click();
+  };
+
+  private readonly handleFileSelected = (event: Event): void => {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file) return;
+
+    if (!ALLOWED_UPLOAD_MIMES.includes(file.type)) {
+      this.setUploadError("Choose a JPEG, PNG, GIF or WebP image.");
+      return;
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      this.setUploadError("That image is over 5MB. Choose a smaller one.");
+      return;
+    }
+
+    this.setUploadError(null);
+    this.setScreenshot(file);
+  };
+
+  private setUploadError(message: string | null): void {
+    this.uploadError.textContent = message ?? "";
+    this.uploadError.hidden = message === null;
+  }
+
   private readonly handleRemoveScreenshot = (): void => {
     if (this.screenshotUrl) {
       URL.revokeObjectURL(this.screenshotUrl);
@@ -141,7 +178,8 @@ export class FeedbucketWidget {
     this.screenshot = null;
     this.previewImg.src = "";
     this.previewWrap.hidden = true;
-    this.captureBtn.style.display = "";
+    this.setUploadError(null);
+    this.mediaActions.style.display = "";
   };
   private readonly handleSubmitClick = async (): Promise<void> => {
     const titleVal = this.titleInput.value.trim();
@@ -239,6 +277,8 @@ export class FeedbucketWidget {
       onClose: this.handleCloseClick,
       onTypeSelect: this.handleTypeSelect,
       onCaptureClick: this.handleCaptureClick,
+      onUploadClick: this.handleUploadClick,
+      onFileSelected: this.handleFileSelected,
       onRemoveScreenshot: this.handleRemoveScreenshot,
       onRemoveRecording: this.handleRemoveRecording,
       onSubmitClick: this.handleSubmitClick,
@@ -254,6 +294,10 @@ export class FeedbucketWidget {
     this.emailInput = panelRefs.formRefs.emailInput;
     this.captureBtn = panelRefs.formRefs.captureBtn;
     this.captureBtnLabel = panelRefs.formRefs.captureBtnLabel;
+    this.uploadBtn = panelRefs.formRefs.uploadBtn;
+    this.fileInput = panelRefs.formRefs.fileInput;
+    this.uploadError = panelRefs.formRefs.uploadError;
+    this.mediaActions = panelRefs.formRefs.mediaActions;
     this.previewWrap = panelRefs.formRefs.previewWrap;
     this.previewImg = panelRefs.formRefs.previewImg;
     this.recordingBadge = panelRefs.formRefs.recordingBadge;
@@ -413,7 +457,7 @@ export class FeedbucketWidget {
     this.screenshotUrl = URL.createObjectURL(blob);
     this.previewImg.src = this.screenshotUrl;
     this.previewWrap.hidden = false;
-    this.captureBtn.style.display = "none";
+    this.mediaActions.style.display = "none";
   }
 
   private openPanel(type: FeedbackType): void {

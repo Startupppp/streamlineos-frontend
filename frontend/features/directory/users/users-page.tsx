@@ -44,6 +44,7 @@ import { getUserTableColumns } from "./user-table-columns";
 import { UserDirectoryActions } from "./user-directory-actions";
 import { useUserBulkLifecycle } from "./use-user-bulk-lifecycle";
 import { useEmploymentFacts } from "@/hooks/api/directory/employment";
+import { usePresenceMap } from "@/hooks/api/chat-core-read";
 
 export function UsersPage() {
   const router = useRouter();
@@ -284,6 +285,7 @@ export function UsersPage() {
   const { byUserId: employmentByUserId } = useEmploymentFacts(
     users.map((user) => user.id),
   );
+  const presenceMap = usePresenceMap();
 
   const columns = useMemo(
     () =>
@@ -292,8 +294,9 @@ export function UsersPage() {
         departmentNames,
         employmentByUserId,
         handleViewUser,
+        presenceMap,
       ),
-    [branchNames, departmentNames, employmentByUserId, handleViewUser],
+    [branchNames, departmentNames, employmentByUserId, handleViewUser, presenceMap],
   );
 
   const emptyStateNode = (

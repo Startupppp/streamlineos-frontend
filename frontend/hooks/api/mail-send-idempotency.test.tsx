@@ -94,7 +94,7 @@ describe("a retried send replays instead of sending twice", () => {
   it("sends the same idempotency key when the first attempt timed out", async () => {
     post
       .mockRejectedValueOnce(new ApiError("Request timed out. Please try again.", undefined, "TIMEOUT"))
-      .mockResolvedValueOnce({ messageId: "m-1" });
+      .mockResolvedValueOnce({ sent: true });
 
     const { result } = renderHook(() => useSendMail(), {
       wrapper: wrapperFor(newClient()),
@@ -126,7 +126,7 @@ describe("a retried send replays instead of sending twice", () => {
   it("does the same for a reply", async () => {
     post
       .mockRejectedValueOnce(new ApiError("Request timed out.", undefined, "TIMEOUT"))
-      .mockResolvedValueOnce({ messageId: "m-2" });
+      .mockResolvedValueOnce({ sent: true });
 
     const { result } = renderHook(() => useReplyMail(), {
       wrapper: wrapperFor(newClient()),
@@ -143,7 +143,7 @@ describe("a retried send replays instead of sending twice", () => {
 
 describe("but two genuinely distinct sends are two operations", () => {
   it("mints a new key once a send has completed", async () => {
-    post.mockResolvedValue({ messageId: "m-1" });
+    post.mockResolvedValue({ sent: true });
 
     const { result } = renderHook(() => useSendMail(), {
       wrapper: wrapperFor(newClient()),
@@ -172,7 +172,7 @@ describe("but two genuinely distinct sends are two operations", () => {
   });
 
   it("never sends an empty key — an @Idempotent route 400s without the header", async () => {
-    post.mockResolvedValue({ messageId: "m-1" });
+    post.mockResolvedValue({ sent: true });
 
     const { result } = renderHook(() => useSendMail(), {
       wrapper: wrapperFor(newClient()),

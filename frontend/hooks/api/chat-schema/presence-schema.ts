@@ -9,7 +9,7 @@ export const chatUnreadContract = z
 export const chatOnlineUsersContract = z.array(
   z.object({
     userId: z.string(),
-    status: z.enum(["ONLINE", "AWAY", "OFFLINE"]),
+    status: z.string(),
     lastSeenAt: z.string(),
     userName: z.string().nullable(),
     userImage: z.string().nullable(),

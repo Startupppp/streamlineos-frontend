@@ -197,7 +197,6 @@ export interface UserMembership {
   departmentId: string | null;
   teamId: string | null;
   managerUserId: string | null;
-  isPrimary: boolean;
 }
 
 export interface UpdateUserMembershipPayload {

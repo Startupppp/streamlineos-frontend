@@ -1,5 +1,14 @@
 import { svgIcon, FEEDBACK_TYPES } from "./ui-icon-util";
 
+export const ALLOWED_UPLOAD_MIMES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+];
+
+export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+
 export interface FormRefs {
   formView: HTMLDivElement;
   titleInput: HTMLInputElement;
@@ -8,6 +17,10 @@ export interface FormRefs {
   emailInput: HTMLInputElement;
   captureBtn: HTMLButtonElement;
   captureBtnLabel: HTMLSpanElement;
+  uploadBtn: HTMLButtonElement;
+  fileInput: HTMLInputElement;
+  uploadError: HTMLParagraphElement;
+  mediaActions: HTMLDivElement;
   previewWrap: HTMLDivElement;
   previewImg: HTMLImageElement;
   recordingBadge: HTMLDivElement;
@@ -29,6 +42,8 @@ export interface PanelCallbacks {
   onClose(): void;
   onTypeSelect(event: Event): void;
   onCaptureClick(): void;
+  onUploadClick(): void;
+  onFileSelected(event: Event): void;
   onRemoveScreenshot(): void;
   onRemoveRecording(): void;
   onSubmitClick(): void;
@@ -161,7 +176,46 @@ export function buildFeedbackPanel(
   captureBtnLabel.textContent = "Capture screenshot";
   captureBtn.appendChild(captureBtnLabel);
   captureBtn.addEventListener("click", callbacks.onCaptureClick);
-  screenshotSection.appendChild(captureBtn);
+
+  const mediaActions = document.createElement("div");
+  mediaActions.className = "media-actions";
+  mediaActions.appendChild(captureBtn);
+
+  const uploadBtn = document.createElement("button");
+  uploadBtn.className = "capture-btn";
+  uploadBtn.type = "button";
+  uploadBtn.appendChild(
+    svgIcon({
+      size: 16,
+      paths: [
+        "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4",
+        "M17 8l-5-5-5 5",
+        "M12 3v12",
+      ],
+      stroke: true,
+    }),
+  );
+  const uploadBtnLabel = document.createElement("span");
+  uploadBtnLabel.textContent = "Upload image";
+  uploadBtn.appendChild(uploadBtnLabel);
+
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = ALLOWED_UPLOAD_MIMES.join(",");
+  fileInput.hidden = true;
+  fileInput.setAttribute("aria-label", "Upload an image");
+  fileInput.addEventListener("change", callbacks.onFileSelected);
+  uploadBtn.addEventListener("click", callbacks.onUploadClick);
+
+  mediaActions.appendChild(uploadBtn);
+  screenshotSection.appendChild(mediaActions);
+  screenshotSection.appendChild(fileInput);
+
+  const uploadError = document.createElement("p");
+  uploadError.className = "upload-error";
+  uploadError.hidden = true;
+  uploadError.setAttribute("role", "alert");
+  screenshotSection.appendChild(uploadError);
 
   const previewWrap = document.createElement("div");
   previewWrap.className = "screenshot-preview-wrap";
@@ -250,7 +304,8 @@ export function buildFeedbackPanel(
     panel,
     formRefs: {
       formView, titleInput, messageInput, nameInput, emailInput,
-      captureBtn, captureBtnLabel, previewWrap, previewImg,
+      captureBtn, captureBtnLabel, uploadBtn, fileInput, uploadError, mediaActions,
+      previewWrap, previewImg,
       recordingBadge, submitBtn, aiBtn, aiNote, typeButtons,
     },
     successView,

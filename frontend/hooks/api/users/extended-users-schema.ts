@@ -128,7 +128,6 @@ export const userMembershipContract = z.object({
   departmentId: z.string().nullable(),
   teamId: z.string().nullable(),
   managerUserId: z.string().nullable(),
-  isPrimary: z.boolean(),
 });
 
 const loginHistoryItemContract = z.object({

@@ -197,6 +197,7 @@ export const ticketListRowContract = ticketRowContract
     updatedAt: true,
   })
   .extend({
+    descriptionExcerpt: z.string(),
     assigneeId: z.string().nullable(),
     assignee: userSummarySchema,
     assignees: z.array(

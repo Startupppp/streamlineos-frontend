@@ -54,6 +54,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   const showEstimate = displayOptions?.showEstimate ?? true;
   const showCycle = displayOptions?.showCycle ?? true;
   const showLabels = displayOptions?.showLabels ?? true;
+  const showDescription = displayOptions?.showDescription ?? false;
   const showDueDate = displayOptions?.showDueDate ?? true;
 
   const points = ticket.points ?? ticket.storyPoints;
@@ -104,6 +105,12 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           className="-mr-1 -mt-0.5 opacity-0 transition-all duration-150 group-hover:opacity-100"
         />
       </div>
+
+      {showDescription && ticket.descriptionExcerpt ? (
+        <p className={cn(TEXT_TWO_LINES, "mt-1 text-xs leading-relaxed text-muted-foreground")}>
+          {ticket.descriptionExcerpt}
+        </p>
+      ) : null}
 
       <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5">
         {projectId && canUpdate ? (

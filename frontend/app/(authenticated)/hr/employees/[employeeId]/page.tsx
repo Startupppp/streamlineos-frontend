@@ -6,6 +6,7 @@ import {
 import { notFound } from "next/navigation";
 import { requirePermission } from "@/lib/rbac/require-permission";
 import { serverGet } from "@/lib/server-fetch";
+import { isApiError } from "@/lib/api-client";
 
 export default async function EditEmployeePage({
   params,
@@ -23,13 +24,14 @@ export default async function EditEmployeePage({
       `/hr/employees/${employeeId}`,
       employeeDataSchema,
     );
-  } catch {
-    return notFound();
+  } catch (error) {
+    if (isApiError(error) && error.status === 404) return notFound();
+    throw error;
   }
 
-  if (!employee) {
+  if (!employee) 
     return notFound();
-  }
+  
 
   return <EmployeeDetailsView employee={employee} />;
 }

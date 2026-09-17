@@ -7,6 +7,7 @@ import { apiClient } from "@/lib/api-client";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { userStatsContract } from "@/hooks/api/users/users-schema";
 import { lazyContract } from "@/lib/api-envelope";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const usersResponseContract = lazyContract(() =>
   import("@/hooks/api/users/extended-users-schema").then((m) => m.usersResponseContract),
@@ -51,6 +52,7 @@ export const useUsers = (
         ...(params?.sortOrder ? { sortOrder: params.sortOrder } : {}),
       }, signal, usersResponseContract),
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
     ...options,
     enabled: canView && (options?.enabled ?? true),
   });
