@@ -131,7 +131,6 @@ Resolved on 2026-09-02 (S06 — backend API prefixes, not page routes):
 ## Platform Shell (root group)
 
 - [ ] `/` · **Platform** · hooks: session redirect · §8: not a data page
-- [ ] `/access-denied` · **Platform** · hooks: none · §8: States ✓
 - [ ] `/employee-onboarding` · **Platform** · hooks: `useOnboardingWizard` · §8: L ✗ C ✗ E ✓ D ✗ F ✗ P ✗ Perm ✓ States ✓ — multi-step wizard; skeleton loading; `ErrorState` for load failure; StrictMode-safe; delegates steps to feature components; no `requiredPermission` (correct, universal)
 - [ ] `/org-setup` · **Platform** · hooks: `resolveWizardGate` · §8: States ?
 
@@ -285,7 +284,6 @@ Responsive browser acceptance remains unverified. Evidence:
 
 ### Hub & cross-project views
 - [ ] `/build` · **Build** · hooks: `enforceRouteAccess`, `→ features/build/project-list` · §8: L ? C ? E ? D ? F ? P ? Perm ✓ States ?
-- [ ] `/build/all` · **Build** · hooks: `enforceRouteAccess`, `→ features/build/project-list` · §8: L ? F ? P ? Perm ✓ States ?
 - [ ] `/build/all-work` · **Build** · hooks: `→ features/build/all-work` · §8: L ? F ? P ? Perm ? States ?
 - [ ] `/build/my-work` · **Build** · hooks: `→ features/build` · §8: L ? States ?
 - [ ] `/build/inbox` · **Build** · hooks: `→ features/build` · §8: L ? States ?
@@ -299,10 +297,9 @@ Responsive browser acceptance remains unverified. Evidence:
 
 ### PM Workspaces
 - [ ] `/build/pm-workspaces` · **Build** · hooks: `→ features/build` · §8: L ? C ? E ? D ? Perm ? States ?
-- [ ] `/build/workspaces/[pmWorkspaceId]/all` · **Build** · hooks: `→ features/build` · §8: L ? F ? P ? States ?
+- [ ] `/build/workspaces/[pmWorkspaceId]` · **Build** · hooks: `enforceRouteAccess`, `→ features/build/project-list` · §8: L ? F ? P ? States ? — workspace-scoped counterpart of `/build`; added because `withPmWorkspacePath("/build", …)` resolved here and 404'd
 - [ ] `/build/workspaces/[pmWorkspaceId]/all-work` · **Build** · hooks: `→ features/build` · §8: L ? F ? P ? States ?
 - [ ] `/build/workspaces/[pmWorkspaceId]/my-work` · **Build** · hooks: `→ features/build` · §8: L ? States ?
-- [ ] `/build/workspaces/[pmWorkspaceId]/pm-workspaces` · **Build** · hooks: `→ features/build` · §8: L ? States ?
 - [ ] `/build/workspaces/[pmWorkspaceId]/[projectId]` · **Build** · hooks: `→ features/build` · §8: L ? F ? P ? States ?
 - [ ] `/build/workspaces/[pmWorkspaceId]/[projectId]/epics` · **Build** · hooks: `→ features/build` · §8: L ? C ? E ? D ? F ? P ? States ?
 - [ ] `/build/workspaces/[pmWorkspaceId]/[projectId]/my-tickets` · **Build** · hooks: `→ features/build` · §8: L ? States ?

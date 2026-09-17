@@ -1,6 +1,10 @@
 import { collectAppRoutes } from "../app-routes";
 import { resolveRouteAccess, describeRouteAccess } from "../route-access";
-import { ROUTE_ACCESS_EXTENSIONS, matchRouteAccessExtension } from "../route-access-extensions";
+import {
+  ROUTE_ACCESS_EXTENSIONS,
+  matchRouteAccessExtension,
+  routeAccessExtensionCovers,
+} from "../route-access-extensions";
 import { UNIVERSAL_ROUTES, isUniversalRoute } from "../universal-routes";
 
 describe("every authenticated route resolves through the registry", () => {
@@ -33,12 +37,27 @@ describe("every authenticated route resolves through the registry", () => {
 
   it("every route-access extension prefix matches at least one real authenticated page — catches phantom extensions", () => {
     const phantoms = ROUTE_ACCESS_EXTENSIONS.filter(
-      (ext) =>
-        !routes.some(
-          (r) =>
-            r.path === ext.prefix || r.path.startsWith(`${ext.prefix}/`),
-        ),
+      (ext) => !routes.some((r) => routeAccessExtensionCovers(ext, r.path)),
     ).map((ext) => ext.prefix);
+    expect(phantoms).toEqual([]);
+  });
+
+  const servedPaths = ["(authenticated)", "(auth)", "(portal)", "(public)"].flatMap(
+    (group) => collectAppRoutes(group).map((r) => r.path),
+  );
+
+  it("serves a universal route declared outside the authenticated group, so the sweep below cannot call it phantom", () => {
+    expect(servedPaths).toContain("/access-suspended");
+  });
+
+  it("every universal route reaches a real page — catches phantom roots like a declared /home with nothing behind it", () => {
+    const phantoms = UNIVERSAL_ROUTES.filter((route) =>
+      route.subtree
+        ? !servedPaths.some(
+            (path) => path === route.path || path.startsWith(`${route.path}/`),
+          )
+        : !servedPaths.includes(route.path),
+    ).map((route) => route.path);
     expect(phantoms).toEqual([]);
   });
 
@@ -109,7 +128,7 @@ describe("§8 platform-core surfaces are universally accessible to every active 
     expect(resolveRouteAccess("/hr/announcements").kind).toBe("universal");
   });
 
-  it("employee referrals and job openings are universal via /me self-service", () => {
+  it("a member's own assigned interviews and hiring feedback are universal via /me self-service", () => {
     expect(isUniversalRoute("/me/recruitment")).toBe(true);
     expect(resolveRouteAccess("/me/recruitment").kind).toBe("universal");
   });

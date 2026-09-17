@@ -84,6 +84,7 @@ export async function requireModulePermission(
     const from = await getCurrentPath();
     const params = new URLSearchParams({
       required: `module:${normalizedModule}`,
+      reason: "org-disabled",
     });
     if (from) params.set("from", from);
     redirect(`/access-denied?${params.toString()}`);

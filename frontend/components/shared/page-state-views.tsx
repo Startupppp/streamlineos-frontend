@@ -5,9 +5,13 @@ import { Lock, Zap, ToggleLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 import { humanizeLimitKey, humanizeModuleKey, type GateStateProps } from "./page-state-shared";
+import { NoPermissionState } from "./no-permission-state";
+import { ModuleDeniedView, PlanRequiredView } from "./page-state-plan-views";
 
 export { humanizeModuleKey, type GateStateProps } from "./page-state-shared";
+export { ModuleDeniedView, PlanRequiredView };
 
 interface QuotaExceededViewProps extends GateStateProps {
   limitKey: string;
@@ -231,4 +235,58 @@ export function ModuleDisabledView({ moduleKey, compact, className }: ModuleDisa
   );
 }
 
-export { ModuleDeniedView, PlanRequiredView } from "./page-state-plan-views";
+export type DeniedResolution = Extract<
+  PageStateResolution,
+  { kind: "denied" | "module-disabled" | "module-denied" | "plan-required" }
+>;
+
+interface DeniedViewProps {
+  resolution: DeniedResolution;
+  compact?: boolean;
+  className?: string;
+}
+
+function assertNever(value: never): never {
+  throw new Error(`Unhandled denial kind: ${JSON.stringify(value)}`);
+}
+
+export function DeniedView({ resolution, compact = false, className }: DeniedViewProps) {
+  switch (resolution.kind) {
+    case "denied":
+      return (
+        <NoPermissionState
+          permission={resolution.permission ?? undefined}
+          description={resolution.message}
+          compact={compact}
+          className={className}
+        />
+      );
+    case "module-disabled":
+      return (
+        <ModuleDisabledView
+          moduleKey={resolution.moduleKey}
+          compact={compact}
+          className={className}
+        />
+      );
+    case "module-denied":
+      return (
+        <ModuleDeniedView
+          moduleKey={resolution.moduleKey}
+          compact={compact}
+          className={className}
+        />
+      );
+    case "plan-required":
+      return (
+        <PlanRequiredView
+          moduleKey={resolution.moduleKey}
+          upgradePath={resolution.upgradePath}
+          compact={compact}
+          className={className}
+        />
+      );
+    default:
+      return assertNever(resolution);
+  }
+}

@@ -81,4 +81,13 @@ describe("resolvePageState", () => {
   it("leaves a non-api error to the ordinary error branch", () => {
     expect(pageStateFromError(new Error("boom"))).toBeNull();
   });
+
+  it("carries the backend's own 403 message forward instead of discarding it", () => {
+    const error = new ApiError("Contact your org owner to upgrade.", 403);
+    expect(pageStateFromError(error)).toEqual({
+      kind: "denied",
+      permission: null,
+      message: "Contact your org owner to upgrade.",
+    });
+  });
 });

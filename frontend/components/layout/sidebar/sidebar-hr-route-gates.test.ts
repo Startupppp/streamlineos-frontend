@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { relative, resolve, sep } from "node:path";
 import { resolveNavRouteAccess } from "./sidebar-nav-items";
 import { collectAppRoutes } from "@/lib/rbac/route-access/app-routes";
@@ -85,7 +85,7 @@ describe("permission-aware product navigation", () => {
     expect(resolveRouteAccess("/hr/not-a-real-hr-surface").kind).toBe("unknown");
   });
 
-  it("gates the employee onboarding route by module and self-service permission", () => {
+  it("gates employee onboarding on the self-service permission alone — a module gate would deny a member their own tasks in an org without HR enabled", () => {
     const selfServiceRoute = readFileSync(
       resolve(
         process.cwd(),
@@ -97,22 +97,22 @@ describe("permission-aware product navigation", () => {
       ),
       "utf8",
     );
-    const legacyRoute = readFileSync(
-      resolve(
-        process.cwd(),
-        "app",
-        "(authenticated)",
-        "hr",
-        "onboarding",
-        "my-tasks",
-        "page.tsx",
-      ),
-      "utf8",
+
+    expect(selfServiceRoute).toContain('requirePermission("self:onboarding-tasks")');
+    expect(selfServiceRoute).not.toContain("requireModulePermission");
+  });
+
+  it("keeps no legacy /hr/onboarding/my-tasks redirect stub — it sat behind the HR manage gate its own audience lacks", () => {
+    const legacyRoute = resolve(
+      process.cwd(),
+      "app",
+      "(authenticated)",
+      "hr",
+      "onboarding",
+      "my-tasks",
+      "page.tsx",
     );
 
-    expect(selfServiceRoute).toContain(
-      'requireModulePermission("hr", "self:onboarding-tasks")',
-    );
-    expect(legacyRoute).toContain('redirect("/me/onboarding")');
+    expect(existsSync(legacyRoute)).toBe(false);
   });
 });

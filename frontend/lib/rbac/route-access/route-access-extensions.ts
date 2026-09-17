@@ -177,6 +177,114 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
       "Organisation-wide chat configuration is administrative. Only org owners and admins hold chat:org-settings:manage; it is org-only and cannot be delegated.",
   },
   {
+    prefix: "/support/kb",
+    permission: "kb:articles:view",
+    reason:
+      "Helpdesk knowledge articles. Without this entry the prefix resolved to the /support nav gate (dashboard:support:view), an unrelated key from another module, while every read the page issues declares kb:articles:view.",
+    backendRoute: { method: "get", path: "/kb/articles" },
+  },
+  {
+    prefix: "/support/kb/research-briefs",
+    permission: "kb:pages:view",
+    reason:
+      "Research briefs are Knowledge pages, not helpdesk articles. The list page already self-gated on kb:pages:view while its own [briefId] detail resolved to the Helpdesk gate by prefix, so a holder of kb:pages:view saw the list and was denied every row.",
+    backendRoute: { method: "get", path: "/kb/research-briefs" },
+  },
+  {
+    prefix: "/build/[projectId]/qa",
+    product: "build",
+    permission: "build:qa:view",
+    reason:
+      "Project-scoped QA. Without a dynamic-segment entry the whole /build/[projectId]/* tree collapsed to the generic build:view the /build nav entry owns, so the granular key the sidebar checks was never enforced on arrival.",
+    backendRoute: { method: "get", path: "/build/{projectId}/test-cases" },
+  },
+  {
+    prefix: "/build/[projectId]/bugs",
+    product: "build",
+    permission: "build:bugs:view",
+    reason: "Project-scoped defect tracking carries its own read key, not the generic build:view.",
+    backendRoute: { method: "get", path: "/build/{projectId}/bugs" },
+  },
+  {
+    prefix: "/build/[projectId]/incidents",
+    product: "build",
+    permission: "build:incidents:view",
+    reason: "Project-scoped incident records carry their own read key, not the generic build:view.",
+    backendRoute: { method: "get", path: "/build/{projectId}/incidents" },
+  },
+  {
+    prefix: "/build/[projectId]/change-requests",
+    product: "build",
+    permission: "build:changerequests:view",
+    reason: "Project-scoped change requests carry their own read key, not the generic build:view.",
+    backendRoute: { method: "get", path: "/build/{projectId}/change-requests" },
+  },
+  {
+    prefix: "/build/[projectId]/approvals",
+    product: "build",
+    permission: "build:approvals:view",
+    reason: "Project-scoped approval queues carry their own read key, not the generic build:view.",
+    backendRoute: { method: "get", path: "/build/{projectId}/approvals" },
+  },
+  {
+    prefix: "/build/[projectId]/forms",
+    product: "build",
+    permission: "build:forms:view",
+    reason: "Project-scoped intake forms carry their own read key, not the generic build:view.",
+    backendRoute: { method: "get", path: "/build/{projectId}/forms" },
+  },
+  {
+    prefix: "/build/[projectId]/risks",
+    product: "build",
+    permission: "build:risks:view",
+    reason: "Project-scoped risk register carries its own read key, not the generic build:view.",
+    backendRoute: { method: "get", path: "/build/{projectId}/risks" },
+  },
+  {
+    prefix: "/build/[projectId]/decisions",
+    product: "build",
+    permission: "build:decisions:view",
+    reason: "Project-scoped decision log carries its own read key, not the generic build:view.",
+    backendRoute: { method: "get", path: "/build/{projectId}/decisions" },
+  },
+  {
+    prefix: "/build/[projectId]/meetings",
+    product: "build",
+    permission: "build:meetings:view",
+    reason: "Project-scoped meeting records carry their own read key, not the generic build:view.",
+    backendRoute: { method: "get", path: "/build/{projectId}/meetings" },
+  },
+  {
+    prefix: "/build/[projectId]/sprints",
+    product: "build",
+    permission: "build:sprints:view",
+    reason: "Project-scoped sprint planning carries its own read key, not the generic build:view.",
+    backendRoute: { method: "get", path: "/build/{projectId}/sprints" },
+  },
+  {
+    prefix: "/build/[projectId]/budget",
+    product: "build",
+    permission: "build:manage",
+    reason: "Project budget is delivery administration, so it takes the manage key rather than any read key.",
+    backendRoute: { method: "get", path: "/build/{projectId}/budget" },
+  },
+  {
+    prefix: "/build/[projectId]/client-portal",
+    product: "build",
+    permission: "build:clientvisibility:manage",
+    reason:
+      "Controls what an external client sees of a project. It had no permission check anywhere in its render path — no server gate and no client useCan — while navigation already declared this key.",
+    backendRoute: { method: "get", path: "/build/{projectId}/client-visibility" },
+  },
+  {
+    prefix: "/build/[projectId]/feedbucket",
+    product: "build",
+    permission: "feedbucket:widgets:view",
+    reason:
+      "Feedbucket widget administration inside a project. The key is the one its own first read declares; the Feedbucket module toggle is enforced separately by the backend module guard.",
+    backendRoute: { method: "get", path: "/feedbucket/widgets" },
+  },
+  {
     prefix: "/calendar/settings",
     product: "administration",
     permission: "calendar:admin:manage",
@@ -185,18 +293,54 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
 ];
 
+function segmentsOf(value: string): string[] {
+  return value.split("/").filter((segment) => segment.length > 0);
+}
+
+function isDynamicSegment(segment: string): boolean {
+  return segment.startsWith("[") && segment.endsWith("]");
+}
+
+function prefixCovers(prefix: string[], path: string[]): boolean {
+  if (path.length < prefix.length) return false;
+  return prefix.every((segment, index) => {
+    const actual = path[index];
+    if (actual === undefined || actual.length === 0) return false;
+    return isDynamicSegment(segment) ? true : segment === actual;
+  });
+}
+
+function specificityOf(prefix: string[]): number {
+  const literals = prefix.filter((segment) => !isDynamicSegment(segment)).length;
+  return prefix.length * 1000 + literals;
+}
+
+export function routeAccessExtensionCovers(
+  entry: RouteAccessExtension,
+  pathname: string,
+): boolean {
+  const prefix = segmentsOf(entry.prefix);
+  const path = segmentsOf(pathname);
+  if (!prefixCovers(prefix, path)) return false;
+  if (entry.exact) return path.length === prefix.length;
+  if (entry.descendantsOnly) return path.length > prefix.length;
+  return true;
+}
+
 export function matchRouteAccessExtension(
   pathname: string,
 ): RouteAccessExtension | null {
+  const path = segmentsOf(pathname);
   let best: RouteAccessExtension | null = null;
+  let bestScore = -1;
   for (const entry of ROUTE_ACCESS_EXTENSIONS) {
-    const owns = entry.exact
-      ? pathname === entry.prefix
-      : entry.descendantsOnly
-        ? pathname.startsWith(`${entry.prefix}/`)
-        : pathname === entry.prefix || pathname.startsWith(`${entry.prefix}/`);
-    if (!owns) continue;
-    if (!best || entry.prefix.length > best.prefix.length) best = entry;
+    const prefix = segmentsOf(entry.prefix);
+    if (!routeAccessExtensionCovers(entry, pathname)) continue;
+    const score = specificityOf(prefix);
+    if (score > bestScore) {
+      best = entry;
+      bestScore = score;
+    }
   }
   return best;
 }

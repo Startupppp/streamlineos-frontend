@@ -18,6 +18,7 @@ export interface SessionOnlySurface {
 }
 
 const SESSION_ONLY_BY_DESIGN: readonly SessionOnlySurface[] = [
+  { path: "/access-denied", reason: "The denial destination itself. It must stay reachable by a user who was just denied, so gating it on a permission would bounce them into a redirect loop." },
   { path: "/dashboard", reason: "Home. Every active member keeps the cross-module read projection." },
   { path: "/inbox", reason: "Unified inbox. Each source is permission-filtered server-side." },
   { path: "/mail", reason: "Platform core communication surface." },
@@ -38,6 +39,11 @@ const SESSION_ONLY_BY_DESIGN: readonly SessionOnlySurface[] = [
   { path: "/knowledge/wiki/pages", subtree: true, reason: "Knowledge Base page reading is platform core; per-record ACLs gate the content." },
   { path: "/knowledge/wiki/spaces", childrenOnly: true, reason: "An individual Knowledge Base space is a reading surface; the space list itself stays gated on kb:spaces:view." },
   { path: "/hr/announcements", reason: "Company-wide announcement reading that happens to sit under the HR prefix." },
+  { path: "/home", reason: "Alias that redirects to /dashboard and renders nothing. The destination carries its own gate." },
+  { path: "/announcements", reason: "Alias that redirects to /hr/announcements and renders nothing. The destination carries its own gate." },
+  { path: "/kb", reason: "Alias that redirects to /knowledge/wiki and renders nothing. The destination carries its own gate." },
+  { path: "/docs", reason: "Alias that redirects to /knowledge/wiki and renders nothing. The destination carries its own gate." },
+  { path: "/knowledge", reason: "Module root that redirects to /knowledge/chat and renders nothing. The destination carries its own gate." },
 ];
 
 const GATED_MODULE_PREFIXES = ["/accounting", "/billing", "/blog", "/build", "/crm",

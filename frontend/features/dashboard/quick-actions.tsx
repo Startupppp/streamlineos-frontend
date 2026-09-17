@@ -30,7 +30,7 @@ export function useQuickActions(): QuickAction[] {
   return useMemo(() => {
     const actions: QuickAction[] = [];
     if (access.projectsEnabled && access.canViewTickets) {
-      actions.push({ label: "Projects", icon: Briefcase, href: "/build/all" });
+      actions.push({ label: "Projects", icon: Briefcase, href: "/build" });
     }
     if (access.hrEnabled && access.canCreateEmployees) {
       actions.push({ label: "Add Employee", icon: UserPlus, href: "/hr/onboarding" });

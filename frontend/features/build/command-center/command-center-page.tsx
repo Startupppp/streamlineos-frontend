@@ -197,7 +197,7 @@ export function CommandCenterPage() {
                 whileHover={shouldReduceMotion ? undefined : { y: -2 }}
                 transition={pmSnappy}
               >
-                <StatCard label="Projects" value={stats.activeProjects} icon={Briefcase} tone="default" index={0} href="/build/all" />
+                <StatCard label="Projects" value={stats.activeProjects} icon={Briefcase} tone="default" index={0} href="/build" />
               </motion.div>
               <motion.div
                 whileHover={shouldReduceMotion ? undefined : { y: -2 }}

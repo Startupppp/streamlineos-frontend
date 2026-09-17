@@ -5,8 +5,8 @@ interface Props {
   params: Promise<{ pmWorkspaceId: string }>;
 }
 
-export default async function AllProjectsWorkspaceRoute({ params }: Props) {
-  await enforceRouteAccess("/build/workspaces/[pmWorkspaceId]/all");
+export default async function PmWorkspaceRoute({ params }: Props) {
+  await enforceRouteAccess("/build/workspaces/[pmWorkspaceId]");
   const { pmWorkspaceId } = await params;
   return <ProjectsPage pmWorkspaceId={pmWorkspaceId} />;
 }

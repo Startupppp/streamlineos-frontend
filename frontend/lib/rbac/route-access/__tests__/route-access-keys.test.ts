@@ -2,7 +2,11 @@ import * as fs from "fs";
 import * as path from "path";
 import { resolveNavRouteAccess } from "@/components/layout/sidebar/sidebar-nav-items";
 import { collectAppRoutes } from "../app-routes";
-import { ROUTE_ACCESS_EXTENSIONS } from "../route-access-extensions";
+import {
+  ROUTE_ACCESS_EXTENSIONS,
+  matchRouteAccessExtension,
+  routeAccessExtensionCovers,
+} from "../route-access-extensions";
 import {
   UNIVERSAL_ROUTES,
   isUniversalRoute,
@@ -96,22 +100,38 @@ describe("route-access registry keys", () => {
     expect(mismatches).toEqual([]);
   });
 
-  it("never contradicts navigation for a route navigation already owns", () => {
-    const conflicts: string[] = [];
-    for (const route of routes) {
-      if (isUniversalRoute(route.path)) continue;
-      const nav = resolveNavRouteAccess(route.path);
-      if (!nav.matched || !nav.requiredPermission) continue;
-      const navKeys = Array.isArray(nav.requiredPermission)
-        ? [...nav.requiredPermission].sort()
-        : [nav.requiredPermission];
-      const registryKeys = keysOf(route.path).sort();
-      if (JSON.stringify(navKeys) !== JSON.stringify(registryKeys))
-        conflicts.push(
-          `${route.path}: nav ${navKeys.join(",")} vs registry ${registryKeys.join(",")}`,
-        );
-    }
+  function navDisagreesWithRegistry(routePath: string): boolean {
+    if (isUniversalRoute(routePath)) return false;
+    const nav = resolveNavRouteAccess(routePath);
+    if (!nav.matched || !nav.requiredPermission) return false;
+    const navKeys = Array.isArray(nav.requiredPermission)
+      ? [...nav.requiredPermission].sort()
+      : [nav.requiredPermission];
+    return JSON.stringify(navKeys) !== JSON.stringify(keysOf(routePath).sort());
+  }
+
+  it("never contradicts navigation for a route navigation already owns and the registry does not claim", () => {
+    const conflicts = routes
+      .filter((route) => !matchRouteAccessExtension(route.path))
+      .filter((route) => navDisagreesWithRegistry(route.path))
+      .map((route) => `${route.path}: nav vs registry disagree`);
     expect(conflicts).toEqual([]);
+  });
+
+  it("lets an extension outrank navigation only when it names the backend operation it mirrors, so an override cannot be invented", () => {
+    const overriding = ROUTE_ACCESS_EXTENSIONS.filter((entry) =>
+      routes.some(
+        (route) =>
+          matchRouteAccessExtension(route.path) === entry &&
+          navDisagreesWithRegistry(route.path),
+      ),
+    );
+    expect(overriding.length).toBeGreaterThan(0);
+    const unproven = overriding
+      .filter((entry) => !entry.backendRoute)
+      .map((entry) => entry.prefix)
+      .sort();
+    expect(unproven).toEqual([]);
   });
 
   it("gives every universal route and every extension a stated reason", () => {
@@ -128,12 +148,7 @@ describe("route-access registry keys", () => {
 
   it("keeps every registry extension live, so a stale entry cannot accumulate", () => {
     const stale = ROUTE_ACCESS_EXTENSIONS.filter(
-      (entry) =>
-        !routes.some(
-          (route) =>
-            route.path === entry.prefix ||
-            route.path.startsWith(`${entry.prefix}/`),
-        ),
+      (entry) => !routes.some((route) => routeAccessExtensionCovers(entry, route.path)),
     ).map((entry) => entry.prefix);
     expect(stale).toEqual([]);
   });

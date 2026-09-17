@@ -2,7 +2,7 @@
   "app/(authenticated)/build/[projectId]/analytics/page.tsx",
   "app/(authenticated)/crm/leads/distribute/page.tsx",
   "app/(authenticated)/hr/performance/analytics/page.tsx",
-  "app/(authenticated)/hr/recruitment/sla-report/page.tsx",
+  "features/hr/recruitment/sla-report/sla-report-page.tsx",
   "app/(authenticated)/hr/service-delivery/page.tsx",
   "app/(authenticated)/inventory/products/categories/page.tsx",
   "app/(authenticated)/inventory/products/uom/page.tsx",

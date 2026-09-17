@@ -39,9 +39,9 @@ import path from "node:path";
  * on the list that reads a gated hook and renders an empty state fails the
  * build. The bug stops growing today and shrinks from here.
  *
- * Fixing one means wrapping its states in `<Gated>` (`components/shared/gated.tsx`),
- * which owns the branch order, and deleting its line below. `crm/issues` is the
- * worked example.
+ * Fixing one means wrapping its states in `<PageState resolution={usePageState(...)}>`
+ * (`components/shared/page-state.tsx`), which owns the branch order, and deleting its
+ * line below. `crm/issues` is the worked example.
  */
 
 const ROOT = path.join(__dirname, "..", "..");
@@ -166,7 +166,7 @@ describe("no surface tells a denied user their data is empty", () => {
     const added = measured.filter((file) => !known.has(file));
 
     // Named rather than counted, so a failure says which file to look at.
-    // Wrap its states in `<Gated>`; see `crm/issues/issues-page.tsx`.
+    // Wrap its states in `<PageState>`; see `crm/issues/issues-page.tsx`.
     expect(added).toEqual([]);
   });
 

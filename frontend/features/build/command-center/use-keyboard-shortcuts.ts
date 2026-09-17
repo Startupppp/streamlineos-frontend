@@ -52,7 +52,7 @@ export function useKeyboardShortcuts(
 
       if (pendingKey === "g" && e.key === "p") {
         setPendingKey(null);
-        router.push("/build/all");
+        router.push("/build");
         return;
       }
 

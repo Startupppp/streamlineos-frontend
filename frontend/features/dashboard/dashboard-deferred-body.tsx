@@ -175,7 +175,7 @@ export function DashboardDeferredBody({ access, expensesSlot, publicDocumentsSlo
     setDeferredVisible(true);
   }, []);
   const handleGoToProjects = useCallback(
-    () => router.push("/build/all"),
+    () => router.push("/build"),
     [router],
   );
   const handleRetryTickets = useCallback(

@@ -1,4 +1,5 @@
 import { isApiError } from "@/lib/api-envelope";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { AccessState } from "@/lib/rbac/gate";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import {
@@ -22,7 +23,7 @@ export type PageStateResolution =
   | { kind: "loading" }
   | { kind: "ready" }
   | { kind: "empty" }
-  | { kind: "denied"; permission: PermissionKey | null }
+  | { kind: "denied"; permission: string | null; message?: string }
   | { kind: "module-disabled"; moduleKey: string }
   | { kind: "module-denied"; moduleKey: string }
   | { kind: "plan-required"; moduleKey: string; upgradePath: string }
@@ -48,11 +49,16 @@ export interface PageStateInput {
 
 const DEFAULT_UPGRADE_PATH = "/settings/billing";
 
-function fromModuleDenial(
+export type ModuleDenialResolution = Extract<
+  PageStateResolution,
+  { kind: "plan-required" | "module-denied" | "module-disabled" }
+>;
+
+export function fromModuleDenial(
   moduleKey: string,
   reason: ModuleDenialReason,
   upgradePath: string | null,
-): PageStateResolution {
+): ModuleDenialResolution {
   if (reason === "not-in-plan")
     return { kind: "plan-required", moduleKey, upgradePath: upgradePath ?? DEFAULT_UPGRADE_PATH };
   if (reason === "user-denied") return { kind: "module-denied", moduleKey };
@@ -61,7 +67,8 @@ function fromModuleDenial(
 
 export function pageStateFromError(error: unknown): PageStateResolution | null {
   if (!isApiError(error)) return null;
-  if (error.status === 403) return { kind: "denied", permission: null };
+  if (error.status === 403)
+    return { kind: "denied", permission: null, message: getErrorMessage(error) };
   if (error.status !== 402) return null;
 
   if (error.code === "MODULE_NOT_ENABLED") {

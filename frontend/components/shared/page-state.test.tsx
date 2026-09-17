@@ -86,6 +86,25 @@ describe("PageState", () => {
     expect(screen.queryByText("the list")).not.toBeInTheDocument();
   });
 
+  it("surfaces the backend's own 403 message instead of the fixed Access Restricted copy", () => {
+    render(
+      <PageState
+        resolution={{
+          kind: "denied",
+          permission: null,
+          message: "Contact your org owner to upgrade.",
+        }}
+        loading={loading}
+      >
+        <div>body</div>
+      </PageState>,
+    );
+
+    expect(
+      screen.getByText("Contact your org owner to upgrade."),
+    ).toBeInTheDocument();
+  });
+
   it("renders an error state, not children, when the resolution is an error", () => {
     render(
       <PageState

@@ -98,11 +98,6 @@ const MATRIX: readonly MatrixRow[] = [
   { path: "/announcements", universalMatch: true, decisionKind: "universal", label: "announcements root" },
   { path: "/hr/announcements", universalMatch: true, decisionKind: "universal", label: "announcements under HR prefix — universal reading" },
 
-  // ── /referrals and /jobs ────────────────────────────────────────────────────
-  // root read allowed — member self-service universal
-  { path: "/referrals", universalMatch: true, decisionKind: "universal", label: "referrals root" },
-  { path: "/jobs", universalMatch: true, decisionKind: "universal", label: "internal job openings" },
-
   // ── /settings ───────────────────────────────────────────────────────────────
   // root read allowed (personal account landing)
   { path: "/settings", universalMatch: true, decisionKind: "universal", label: "personal account landing" },
@@ -253,8 +248,6 @@ describe("universal route matrix — exact-by-default with explicit allowlist", 
       "/hr/announcements/admin-panel",
       "/kb/admin-panel",
       "/docs/admin-panel",
-      "/referrals/admin-panel",
-      "/jobs/admin-panel",
     ];
     for (const path of hypotheticalNewRoutes) {
       expect({ path, universal: isUniversalRoute(path) }).toEqual({

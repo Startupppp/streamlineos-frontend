@@ -7,22 +7,7 @@ import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-sur
 import { useCan } from "@/hooks/api/access";
 import { useKbSpaces } from "./spaces";
 import type { KbSearchParams } from "@/types/kb";
-
-export interface KbSearchResult {
-  id: number;
-  type: string;
-  title: string;
-  snippet: string | null;
-  icon: string | null;
-  spaceId: number | null;
-  score: number | null;
-}
-
-export interface KbSearchApiResponse {
-  results: KbSearchResult[];
-  total: number;
-  hasMore: boolean;
-}
+import type { KbSearchApiResponse } from "@/hooks/api/kb/kb-search-schema";
 
 const kbSearchResponseContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-search-schema").then((m) => m.kbSearchResponseContract),

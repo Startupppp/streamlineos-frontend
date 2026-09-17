@@ -224,7 +224,7 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
               description={hasActiveFilters ? undefined : "Start by creating a ticket in any project."}
               filtersActive={hasActiveFilters}
               onClearFilters={handleClearFilters}
-              action={!hasActiveFilters ? { label: "All Projects", href: "/build/all" } : undefined}
+              action={!hasActiveFilters ? { label: "All Projects", href: "/build" } : undefined}
             />
           ) : (
             <>

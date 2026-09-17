@@ -6,14 +6,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { isTransientNetworkError } from "@/lib/query-error-policy";
 import { ErrorState } from "./error-state";
-import { NoPermissionState } from "./no-permission-state";
-import {
-  FeatureLockedView,
-  ModuleDeniedView,
-  ModuleDisabledView,
-  PlanRequiredView,
-  QuotaExceededView,
-} from "./page-state-views";
+import { DeniedView, FeatureLockedView, QuotaExceededView } from "./page-state-views";
 
 export interface PageStateProps {
   resolution: PageStateResolution;
@@ -42,37 +35,11 @@ export function PageState({
         </div>
       );
     case "denied":
-      return (
-        <NoPermissionState
-          permission={resolution.permission ?? undefined}
-          className={className}
-          compact={compact}
-        />
-      );
     case "module-disabled":
-      return (
-        <ModuleDisabledView
-          moduleKey={resolution.moduleKey}
-          className={className}
-          compact={compact}
-        />
-      );
     case "module-denied":
-      return (
-        <ModuleDeniedView
-          moduleKey={resolution.moduleKey}
-          className={className}
-          compact={compact}
-        />
-      );
     case "plan-required":
       return (
-        <PlanRequiredView
-          moduleKey={resolution.moduleKey}
-          upgradePath={resolution.upgradePath}
-          className={className}
-          compact={compact}
-        />
+        <DeniedView resolution={resolution} className={className} compact={compact} />
       );
     case "quota-exceeded":
       return (

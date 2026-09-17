@@ -1,5 +1,7 @@
+import { requirePermission } from "@/lib/rbac/require-permission";
 import { InternalJobsClient } from "@/features/hr/recruitment/components/internal-jobs-client";
 
-export default function InternalJobsPage() {
+export default async function RecruitmentInternalJobsRoute() {
+  await requirePermission("hr:employees:view");
   return <InternalJobsClient />;
 }

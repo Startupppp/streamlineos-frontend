@@ -97,21 +97,6 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
       "Knowledge Base reading is platform core. Administrative surfaces (settings, import, analytics, reviews, templates, trash, space management) are explicitly gated via the extension registry.",
   },
   {
-    path: "/support/my",
-    reason:
-      "A member's own support requests, not the helpdesk queue that serves them.",
-  },
-  {
-    path: "/referrals",
-    reason:
-      "Referrals and internal job openings are universal; the candidate pipeline behind them is not.",
-  },
-  {
-    path: "/jobs",
-    reason:
-      "Internal job openings are universal; recruitment administration is not.",
-  },
-  {
     path: "/settings",
     reason:
       "The personal account landing page. Everything beneath /settings is organization administration and stays permissioned.",
