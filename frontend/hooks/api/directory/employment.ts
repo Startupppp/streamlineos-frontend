@@ -4,6 +4,7 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { lazyContract } from "@/lib/api-envelope";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const employmentFactsContract = lazyContract(() =>
   import("@/hooks/api/directory/employment-schema").then((m) => m.employmentFactsContract),
@@ -34,6 +35,7 @@ export const useEmploymentFacts = (userIds: readonly string[]) => {
         userIds: wanted.join(","),
       }, signal, employmentFactsContract),
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
     enabled: wanted.length > 0,
   });
 

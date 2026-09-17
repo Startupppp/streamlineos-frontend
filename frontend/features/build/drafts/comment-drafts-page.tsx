@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { TrashIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { useMyCommentDrafts, useDeleteCommentDraft, useDeleteAllCommentDrafts } from "@/hooks/api/build/comment-drafts";
-import type { CommentDraft } from "@/hooks/api/build/comment-drafts";
+import type { CommentDraftListItem } from "@/hooks/api/build/comment-drafts";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -69,7 +69,7 @@ export function CommentDraftsPage() {
   const drafts = useMemo(() => data ?? [], [data]);
 
   const handleOpenDraft = useCallback(
-    (draft: CommentDraft) => {
+    (draft: CommentDraftListItem) => {
       const { projectId, projectKey, ticketNumber } = draft.ticket;
       if (!projectId) return;
       router.push(getTicketDetailHref(projectId, projectKey, ticketNumber));

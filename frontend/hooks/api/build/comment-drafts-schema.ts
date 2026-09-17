@@ -25,9 +25,13 @@ export const commentDraftContract = z.object({
   body: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  ticket: commentDraftTicketSchema.optional(),
+});
+
+export const commentDraftListItemContract = commentDraftContract.extend({
   ticket: commentDraftTicketSchema,
 });
 
-export const commentDraftListContract = z.array(commentDraftContract);
+export const commentDraftListContract = z.array(commentDraftListItemContract);
 
 export const commentDraftDeletedContract = z.object({ deleted: z.boolean() });

@@ -40,6 +40,8 @@
     "check:route-access-contract:self-test": "node scripts/check-route-access-contract.mjs --self-test",
     "check:contract-vendor": "node scripts/check-contract-vendor.mjs",
     "check:contract-vendor:self-test": "node scripts/check-contract-vendor.mjs --self-test",
+    "check:contract-parity": "node --max-old-space-size=8192 scripts/check-contract-parity.mjs --backend-file contracts/openapi.json",
+    "check:contract-parity:self-test": "node scripts/check-contract-parity.mjs --self-test",
     "check:contract-drift": "node scripts/check-contract-drift.mjs",
     "check:contract-drift:self-test": "node scripts/check-contract-drift.mjs --self-test",
     "check:module-manifest": "node scripts/check-module-manifest.mjs",

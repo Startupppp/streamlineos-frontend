@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import type { feedbucketSubmissionListContract } from "@/hooks/api/feedbucket/feedbucket-schema";
 import type { feedbucketSubmissionDetailContract } from "@/hooks/api/feedbucket/feedbucket-schema";
+import type { feedbucketWidgetRowContract } from "@/hooks/api/feedbucket/feedbucket-schema";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 export type FeedbucketSubmissionType = "bug" | "idea" | "feature" | "question" | "praise" | "other";
@@ -65,28 +66,11 @@ export interface FeedbucketNetworkEntry {
   error?: string;
 }
 
-export interface FeedbucketWidget {
-  id: number;
-  orgId: string;
-  projectId: number | null;
-  name: string;
-  publicKey: string;
-  allowedDomains: string[];
-  autoCreateTicket: boolean;
-  defaultTicketType: string;
-  isActive: boolean;
-  aiAssistEnabled: boolean;
-  theme: FeedbucketWidgetTheme | null;
-  createdBy: string | null;
-  createdAt: string;
-  updatedAt: string;
-  defaultProjectId: number | null;
-  defaultAssigneeMembershipId: number | null;
-  assigneeRules: Partial<Record<FeedbucketSubmissionType, number>> | null;
+export type FeedbucketWidget = z.infer<typeof feedbucketWidgetRowContract> & {
   project?: { id: number; name: string; key: string } | null;
   submissionCount?: number;
   openCount?: number;
-}
+};
 
 export type FeedbucketSubmission = z.infer<typeof feedbucketSubmissionDetailContract>;
 

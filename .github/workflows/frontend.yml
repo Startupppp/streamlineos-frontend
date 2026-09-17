@@ -420,6 +420,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run check:contract-drift:self-test && pnpm run check:contract-drift
 
+      - name: No frontend contract requires a response field the backend does not declare
+        if: ${{ !cancelled() }}
+        run: pnpm run check:contract-parity:self-test && pnpm run check:contract-parity
+
       # CANNOT RUN IN CI — named prerequisite: a checkout of
       # Startupppp/streamlineos-backend beside this repository. Rule 1 of this
       # gate compares the manifest against the BACKEND module registry, so a

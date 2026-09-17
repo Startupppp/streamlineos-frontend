@@ -297,6 +297,7 @@ export function useChatOnlineUsers(enabled = true) {
     queryFn: ({ signal }) => apiClient.get<OnlineUser[]>("/chat/presence/online", undefined, signal, chatOnlineUsersContract),
     refetchInterval: 60_000,
     staleTime: 65_000,
+    ...INLINE_READ_ERROR,
     enabled: enabled && canRead,
   });
 }

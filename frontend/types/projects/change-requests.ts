@@ -1,3 +1,9 @@
+import type { z } from "zod";
+import type {
+  changeRequestRowContract,
+  portalChangeRequestItemContract,
+} from "@/hooks/api/build/client-portal-schema";
+
 export type ChangeRequestStatus =
   | "submitted"
   | "under_review"
@@ -8,26 +14,9 @@ export type ChangeRequestStatus =
   | "in_progress"
   | "completed";
 
-export interface ChangeRequest {
-  id: number;
-  orgId: string;
-  projectId: number;
-  crNumber: number;
-  title: string;
-  description: string | null;
-  impact: string | null;
-  estimateMinutes: number | null;
-  budgetImpactCents: number | null;
-  timelineImpactDays: number | null;
-  status: string;
-  requestedById: string | null;
-  approvalOwnerId: string | null;
-  decisionComment: string | null;
-  decidedAt: string | null;
-  deletedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+export type ChangeRequest = z.infer<typeof changeRequestRowContract>;
+
+export type PortalChangeRequest = z.infer<typeof portalChangeRequestItemContract>;
 
 export interface CreateChangeRequestInput {
   title: string;

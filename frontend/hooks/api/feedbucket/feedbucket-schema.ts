@@ -6,13 +6,13 @@ const feedbucketWidgetThemeContract = z.object({
   label: z.string().optional(),
 });
 
-const feedbucketWidgetRowContract = z.object({
+export const feedbucketWidgetRowContract = z.object({
   id: z.number(),
   orgId: z.string(),
   projectId: z.number().nullable(),
   managedProductId: z.number().nullable(),
-  defaultProjectId: z.number().nullable(),
-  defaultAssigneeMembershipId: z.number().nullable(),
+  defaultProjectId: z.number().nullable().optional(),
+  defaultAssigneeMembershipId: z.number().nullable().optional(),
   assigneeRules: z.object({
     bug: z.number().optional(),
     idea: z.number().optional(),
@@ -20,7 +20,7 @@ const feedbucketWidgetRowContract = z.object({
     question: z.number().optional(),
     praise: z.number().optional(),
     other: z.number().optional(),
-  }).nullable(),
+  }).nullable().optional(),
   name: z.string(),
   publicKey: z.string(),
   allowedDomains: z.array(z.string()),
