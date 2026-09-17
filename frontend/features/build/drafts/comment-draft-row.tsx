@@ -25,10 +25,10 @@ interface CommentDraftRowProps {
 }
 
 const PRIORITY_ICONS = {
-  URGENT: AlertTriangle,
   HIGH: ArrowUp,
   MEDIUM: Minus,
   LOW: ArrowDown,
+  URGENT: AlertTriangle,
 } as const;
 
 type PriorityKey = keyof typeof PRIORITY_ICONS;
