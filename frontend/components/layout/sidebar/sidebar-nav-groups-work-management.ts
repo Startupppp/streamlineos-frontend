@@ -125,6 +125,18 @@ export const WORK_MANAGEMENT_NAV_GROUPS: NavGroup[] = [
         requiredPermission: "build:view",
       },
       {
+        label: "Portfolios",
+        icon: LayoutGrid,
+        href: "/build/portfolios",
+        requiredPermission: "build:portfolios:view",
+      },
+      {
+        label: "Programs",
+        icon: Layers,
+        href: "/build/programs",
+        requiredPermission: "build:programs:view",
+      },
+      {
         label: "Client Access",
         icon: ShieldCheck,
         href: "/build/client-access",
@@ -177,18 +189,6 @@ export const WORK_MANAGEMENT_NAV_GROUPS: NavGroup[] = [
         icon: Target,
         href: "/build/goal",
         requiredPermission: "build:goals:view",
-      },
-      {
-        label: "Portfolios",
-        icon: LayoutGrid,
-        href: "/build/portfolios",
-        requiredPermission: "build:portfolios:view",
-      },
-      {
-        label: "Programs",
-        icon: Layers,
-        href: "/build/programs",
-        requiredPermission: "build:programs:view",
       },
       {
         label: "Managed Products",

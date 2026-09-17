@@ -63,6 +63,30 @@ export const RECRUITMENT_NAV_GROUPS: NavGroup[] = [
         requiredPermission: "hr:requisitions:view",
       },
       {
+        label: "Internal Jobs",
+        icon: Briefcase,
+        href: "/hr/recruitment/internal-jobs",
+        requiredPermission: "hr:requisitions:view",
+      },
+      {
+        label: "Recruiters",
+        icon: Users,
+        href: "/hr/recruitment/recruiters",
+        requiredPermission: "hr:requisitions:view",
+      },
+      {
+        label: "Booking Links",
+        icon: Video,
+        href: "/hr/recruitment/booking-links",
+        requiredPermission: "hr:interviews:view",
+      },
+      {
+        label: "Inbox",
+        icon: Inbox,
+        href: "/hr/recruitment/inbox",
+        requiredPermission: "hr:requisitions:view",
+      },
+      {
         label: "Vendors",
         icon: Truck,
         href: "/hr/recruitment/vendors",

@@ -177,6 +177,14 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
       "Organisation-wide chat configuration is administrative. Only org owners and admins hold chat:org-settings:manage; it is org-only and cannot be delegated.",
   },
   {
+    prefix: "/build/customers",
+    product: "build",
+    permission: "build:customers:view",
+    reason:
+      "Delivery customers are a Build entity. Navigation resolved this route to crm:leads:view, a key from an unrelated module, so a Build user without CRM was denied a Build surface and a CRM user without Build was let in.",
+    backendRoute: { method: "get", path: "/build/customers" },
+  },
+  {
     prefix: "/support/kb",
     permission: "kb:articles:view",
     reason:
@@ -260,6 +268,14 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     permission: "build:sprints:view",
     reason: "Project-scoped sprint planning carries its own read key, not the generic build:view.",
     backendRoute: { method: "get", path: "/build/{projectId}/sprints" },
+  },
+  {
+    prefix: "/build/[projectId]/settings",
+    product: "build",
+    permission: "build:update",
+    reason:
+      "Project configuration is a mutation surface, so it takes the update key its own PATCH declares. It resolved to generic build:view, letting anyone who can read a project open its settings, while navigation implied the global settings:manage — the wrong scope, since §8 keeps module configuration under the module.",
+    backendRoute: { method: "patch", path: "/build/{projectId}" },
   },
   {
     prefix: "/build/[projectId]/budget",

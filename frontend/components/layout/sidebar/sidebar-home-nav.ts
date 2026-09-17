@@ -78,6 +78,16 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         href: "/me/recruitment",
         icon: Video,
       },
+      {
+        label: "Job Openings",
+        href: "/me/job-openings",
+        icon: Briefcase,
+      },
+      {
+        label: "My Referrals",
+        href: "/me/referrals",
+        icon: Contact2,
+      },
     ],
   },
   {

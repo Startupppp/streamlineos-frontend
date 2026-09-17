@@ -284,6 +284,7 @@ Responsive browser acceptance remains unverified. Evidence:
 
 ### Hub & cross-project views
 - [ ] `/build` · **Build** · hooks: `enforceRouteAccess`, `→ features/build/project-list` · §8: L ? C ? E ? D ? F ? P ? Perm ✓ States ?
+- [x] `/build/all` · **Build** · [RETIRED app/(authenticated)/build/all/page.tsx] — byte-equivalent duplicate of `/build` (same `ProjectsPage`, zero props); 17 inbound links repointed to `/build`, its tailored loading skeleton moved to `build/loading.tsx`
 - [ ] `/build/all-work` · **Build** · hooks: `→ features/build/all-work` · §8: L ? F ? P ? Perm ? States ?
 - [ ] `/build/my-work` · **Build** · hooks: `→ features/build` · §8: L ? States ?
 - [ ] `/build/inbox` · **Build** · hooks: `→ features/build` · §8: L ? States ?
@@ -298,6 +299,8 @@ Responsive browser acceptance remains unverified. Evidence:
 ### PM Workspaces
 - [ ] `/build/pm-workspaces` · **Build** · hooks: `→ features/build` · §8: L ? C ? E ? D ? Perm ? States ?
 - [ ] `/build/workspaces/[pmWorkspaceId]` · **Build** · hooks: `enforceRouteAccess`, `→ features/build/project-list` · §8: L ? F ? P ? States ? — workspace-scoped counterpart of `/build`; added because `withPmWorkspacePath("/build", …)` resolved here and 404'd
+- [x] `/build/workspaces/[pmWorkspaceId]/all` · **Build** · [RETIRED app/(authenticated)/build/workspaces/[pmWorkspaceId]/all/page.tsx] — superseded by the workspace root above, which renders the same `ProjectsPage` with the same `pmWorkspaceId` prop
+- [x] `/build/workspaces/[pmWorkspaceId]/pm-workspaces` · **Build** · [RETIRED app/(authenticated)/build/workspaces/[pmWorkspaceId]/pm-workspaces/page.tsx] — byte-identical to `/build/pm-workspaces` and never read its own `pmWorkspaceId`; zero inbound links
 - [ ] `/build/workspaces/[pmWorkspaceId]/all-work` · **Build** · hooks: `→ features/build` · §8: L ? F ? P ? States ?
 - [ ] `/build/workspaces/[pmWorkspaceId]/my-work` · **Build** · hooks: `→ features/build` · §8: L ? States ?
 - [ ] `/build/workspaces/[pmWorkspaceId]/[projectId]` · **Build** · hooks: `→ features/build` · §8: L ? F ? P ? States ?
@@ -386,8 +389,8 @@ Responsive browser acceptance remains unverified. Evidence:
 ### Onboarding
 - [ ] `/hr/onboarding` · **HR** · hooks: `→ features/hr/onboarding` · §8: L ? C ? E ? D ? F ? P ? Perm ? States ?
 - [ ] `/hr/onboarding/[userId]` · **HR** · hooks: `→ features/hr/onboarding` · §8: E ? States ?
-- [ ] `/hr/onboarding/my-tasks` · **HR** · hooks: `→ features/hr/onboarding` · §8: L ? States ?
-- [ ] `/hr/onboarding/probation` · **HR** · hooks: `→ features/hr/onboarding` · §8: L ? F ? States ?
+- [x] `/hr/onboarding/my-tasks` · **HR** · [RETIRED app/(authenticated)/hr/onboarding/my-tasks/page.tsx] — legacy redirect stub to `/me/onboarding` sitting behind the HR layout gate its own audience lacks; §8 forbids legacy redirects
+- [ ] `/hr/onboarding/probation` · **HR** · hooks: `requirePermission("hr:probation:view")`, `→ features/hr/onboarding` · §8: L ? F ? Perm ✓ States ?
 
 ### Attendance & Time
 - [ ] `/hr/attendance` · **HR** · hooks: `→ features/hr/attendance` · §8: L ? F ? P ? Perm ? States ?
@@ -802,7 +805,9 @@ Responsive browser acceptance remains unverified. Evidence:
 - [ ] `/me/expenses` · **Self-service** · hooks: `requirePermission("self:expenses")` (server), `→ features/me/expenses` · §8: L ? C ? E ? D ? F ? P ? Perm ✗ States ? — VIOLATION: `requirePermission` on a `/me/*` route; must be removed
 - [ ] `/me/onboarding` · **Self-service** · hooks: `→ features/me/onboarding` · §8: States ?
 - [ ] `/me/pay` · **Self-service** · hooks: `requirePermission(["self:payroll","self:payslips"])` (server), `→ features/me/pay` · §8: L ? F ? Perm ✗ States ? — VIOLATION: `requirePermission` on a `/me/*` route; must be removed
-- [ ] `/me/recruitment` · **Self-service** · hooks: `requirePermission("self:recruitment")` (server), `→ features/me/recruitment` · §8: L ? Perm ✗ States ? — VIOLATION: `requirePermission` on a `/me/*` route; must be removed; internal job openings only, not the candidate pipeline
+- [ ] `/me/recruitment` · **Self-service** · hooks: `requirePermission("self:recruitment")` (server), `→ features/employee-self-service` · §8: L ? Perm ✓ States ? — serves assigned interviews and own hiring feedback. A `self:*` key is what §8 prescribes for `/me/*` and is a member default, so it denies nobody; internal job openings live at `/me/job-openings`
+- [x] `/me/job-openings` · **Self-service** · hooks: `requirePermission("self:job-openings")` (server), `useSelfJobOpenings` · §8: L ✓ Perm ✓ States ✓ — §8 member entitlement: browse internal openings and apply. Backend `GET|POST /hr/recruitment/me/job-openings*`, no `@RequireModule`
+- [x] `/me/referrals` · **Self-service** · hooks: `requirePermission("self:referrals")` (server), `useSelfReferrals` · §8: L ✓ C ✓ Perm ✓ States ✓ — §8 member entitlement: submit and track own referrals. Backend `GET|POST /hr/recruitment/me/referrals`, no `@RequireModule`
 - [ ] `/me/time-off` · **Self-service** · hooks: `requirePermission("self:leaves")` (server), `→ features/me/time-off` · §8: L ? C ? F ? Perm ✗ States ? — VIOLATION: `requirePermission` on a `/me/*` route; must be removed
 
 ---
