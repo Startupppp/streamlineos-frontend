@@ -1,10 +1,16 @@
-﻿import type { Ticket } from "@/types/projects/tasks";
+﻿import type { z } from "zod";
+import type { Ticket } from "@/types/projects/tasks";
 import type { KanbanTicket } from "@/features/build/shared/types";
+import type { ticketListRowContract } from "@/hooks/api/build/build-tickets-schema";
 
-export function mapBoardTicketToKanban(t: Ticket): KanbanTicket {
+type BoardTicket = Ticket &
+  Pick<z.infer<typeof ticketListRowContract>, "descriptionExcerpt">;
+
+export function mapBoardTicketToKanban(t: BoardTicket): KanbanTicket {
   return {
     id: t.id,
     title: t.title,
+    descriptionExcerpt: t.descriptionExcerpt ?? null,
     status: t.status ?? "TODO",
     type: t.type ?? "TASK",
     priority: t.priority ?? undefined,

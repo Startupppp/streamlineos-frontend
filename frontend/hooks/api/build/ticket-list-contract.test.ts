@@ -29,7 +29,7 @@ it("parses light ticket rows and preserves board assignees, labels and cursor", 
   expect(ticketListPageContract.safeParse({ ...result, data: [{ ...row, rank: undefined }] }).success).toBe(false);
 });
 
-it("rejects a board row missing descriptionExcerpt, so the card cannot be built against a projection the API does not send", () => {
+it("accepts a board row with no descriptionExcerpt, so a frontend shipped ahead of the API does not break every ticket screen", () => {
   const user = { id: "user-1", name: "Member", firstName: "Member", lastName: null, email: "member@example.test", image: null };
   const row = {
     id: 1, orgId: "org-1", title: "Ticket", type: "BUG", status: "OPEN", priority: "HIGH",
@@ -40,6 +40,10 @@ it("rejects a board row missing descriptionExcerpt, so the card cannot be built 
     assigneeId: user.id, assignee: user, assignees: [], labels: [], cycle: null,
   };
 
-  expect(ticketListPageContract.safeParse({ data: [row], pagination: { limit: 25, hasMore: false, nextCursor: null } }).success).toBe(false);
-  expect(ticketListPageContract.safeParse({ data: [{ ...row, descriptionExcerpt: "" }], pagination: { limit: 25, hasMore: false, nextCursor: null } }).success).toBe(true);
+  const pagination = { limit: 25, hasMore: false, nextCursor: null };
+
+  expect(ticketListPageContract.safeParse({ data: [row], pagination }).success).toBe(true);
+  expect(ticketListPageContract.safeParse({ data: [{ ...row, descriptionExcerpt: "" }], pagination }).success).toBe(true);
+  expect(ticketListPageContract.safeParse({ data: [{ ...row, descriptionExcerpt: "Body" }], pagination }).success).toBe(true);
+  expect(ticketListPageContract.safeParse({ data: [{ ...row, descriptionExcerpt: 42 }], pagination }).success).toBe(false);
 });
