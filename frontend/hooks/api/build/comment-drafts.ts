@@ -34,6 +34,10 @@ export interface CommentDraft {
   body: string;
   createdAt: string;
   updatedAt: string;
+  ticket?: CommentDraftTicket;
+}
+
+export interface CommentDraftListItem extends CommentDraft {
   ticket: CommentDraftTicket;
 }
 
@@ -50,9 +54,9 @@ const commentDraftDeletedContract = lazyContract(() =>
 
 export function useMyCommentDrafts() {
   const canView = useCan("build:tickets:view");
-  return useQuery<CommentDraft[]>({
+  return useQuery<CommentDraftListItem[]>({
     queryKey: buildWorkQueryKeys.projects.commentDrafts.mine(),
-    queryFn: ({ signal }) => apiClient.get<CommentDraft[]>("/build/comment-drafts/mine", undefined, signal, commentDraftListContract),
+    queryFn: ({ signal }) => apiClient.get<CommentDraftListItem[]>("/build/comment-drafts/mine", undefined, signal, commentDraftListContract),
     enabled: canView,
     staleTime: 60_000,
   });
@@ -66,17 +70,22 @@ export function useUpsertCommentDraft() {
     mutationFn: ({ ticketId, body }: { ticketId: number; body: string }) =>
       apiClient.put<CommentDraft>(`/build/comment-drafts/tickets/${ticketId}`, { body }, undefined, commentDraftContract),
     onSuccess: (draft) => {
-      qc.setQueryData<CommentDraft[]>(
-        buildWorkQueryKeys.projects.commentDrafts.mine(),
-        (current) => {
-          if (!current) return current;
-          const index = current.findIndex((d) => d.ticketId === draft.ticketId);
-          if (index === -1) return [draft, ...current];
-          const next = [...current];
-          next[index] = draft;
-          return next;
-        },
-      );
+      const listKey = buildWorkQueryKeys.projects.commentDrafts.mine();
+      const current = qc.getQueryData<CommentDraftListItem[]>(listKey);
+      const index = current?.findIndex((d) => d.ticketId === draft.ticketId) ?? -1;
+      const cached = index === -1 ? undefined : current?.[index];
+      const ticket = draft.ticket ?? cached?.ticket;
+
+      if (!current || !ticket) {
+        void qc.invalidateQueries({ queryKey: listKey });
+        return;
+      }
+
+      const merged: CommentDraftListItem = { ...cached, ...draft, ticket };
+      const next = [...current];
+      if (index === -1) next.unshift(merged);
+      else next[index] = merged;
+      qc.setQueryData(listKey, next);
     },
   });
 }

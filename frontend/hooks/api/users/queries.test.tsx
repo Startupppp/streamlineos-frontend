@@ -2,7 +2,8 @@ import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { apiClient } from "@/lib/api-client";
-import { useUsers } from "./queries";
+import { readErrorReachesBoundary } from "@/lib/query-error-policy";
+import { useUsers, useUserStats } from "./queries";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
@@ -79,4 +80,34 @@ describe("useUsers request hygiene", () => {
     expect(params).not.toHaveProperty("teamId");
     expect(params).not.toHaveProperty("managerUserId");
   });
+});
+
+describe("Members & Access read failures stay on the page", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockedGet.mockRejectedValue(new Error("boom"));
+  });
+
+  function boundaryClient(): QueryClient {
+    return new QueryClient({
+      defaultOptions: {
+        queries: { retry: false, throwOnError: readErrorReachesBoundary },
+        mutations: { retry: false },
+      },
+    });
+  }
+
+  it.each([
+    ["useUsers", () => useUsers()],
+    ["useUserStats", () => useUserStats()],
+  ])(
+    "%s surfaces a failed read inline instead of destroying the /settings segment boundary",
+    async (_name, callHook) => {
+      const client = boundaryClient();
+      const { result } = renderHook(callHook, { wrapper: wrapperFor(client) });
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(result.current.error).toBeInstanceOf(Error);
+    },
+  );
 });

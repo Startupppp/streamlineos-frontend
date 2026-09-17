@@ -41,8 +41,8 @@ export const portalProjectOverviewContract = z.object({
 
 export const portalChangeRequestItemContract = z.object({
   id: z.number().int(),
-  orgId: z.string(),
-  projectId: z.number().int(),
+  orgId: z.string().optional(),
+  projectId: z.number().int().optional(),
   crNumber: z.number().int(),
   title: z.string(),
   description: z.string().nullable(),
@@ -52,12 +52,12 @@ export const portalChangeRequestItemContract = z.object({
   budgetImpactCents: z.number().int().nullable(),
   timelineImpactDays: z.number().int().nullable(),
   decisionComment: z.string().nullable(),
-  requestedById: z.string().nullable(),
-  approvalOwnerId: z.string().nullable(),
-  decidedAt: z.string().nullable(),
-  deletedAt: z.string().nullable(),
+  requestedById: z.string().nullable().optional(),
+  approvalOwnerId: z.string().nullable().optional(),
+  decidedAt: z.string().nullable().optional(),
+  deletedAt: z.string().nullable().optional(),
   createdAt: z.string(),
-  updatedAt: z.string(),
+  updatedAt: z.string().optional(),
 });
 
 export const portalChangeRequestListContract = z.array(portalChangeRequestItemContract);
@@ -77,9 +77,13 @@ export const visibilitySummaryContract = z.object({
   })),
 });
 
-export const toggleVisibilityContract = z.object({
-  success: z.boolean(),
-});
+export const toggleVisibilityContract = z
+  .object({
+    id: z.number().int(),
+    clientVisible: z.boolean(),
+    success: z.boolean().optional(),
+  })
+  .transform((row) => ({ ...row, success: row.success ?? true }));
 
 export const changeRequestRowContract = z.object({
   id: z.number().int(),

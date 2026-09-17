@@ -18,6 +18,7 @@ import {
 import type { User } from "@/hooks/api/users";
 import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { UserDetailSheet } from "./user-detail-sheet";
 import { UserInviteDialog } from "./user-invite-dialog";
 import { UserBulkInviteDialog } from "./user-bulk-invite-dialog";
@@ -186,8 +187,8 @@ export function UsersPage() {
     refetch,
   } = useUsers({ ...listParams, cursor }, { placeholderData: keepPreviousData });
 
-  const { data: branchesData } = useOrgBranches();
-  const { data: departmentsData } = useOrgDepartments();
+  const { data: branchesData } = useOrgBranches(undefined, INLINE_READ_ERROR);
+  const { data: departmentsData } = useOrgDepartments(undefined, INLINE_READ_ERROR);
   const { mutate: exportUsers, isPending: isExporting } = useExportUsers();
   const canCreate = useCanManageOrganizationMembership();
   const canManage = useCan("settings:organization:manage");

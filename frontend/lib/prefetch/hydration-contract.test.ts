@@ -181,7 +181,7 @@ describe("the shipped prefetch factories honour that contract", () => {
     const response = {
       data: [{ id: 1, name: "Laptop" }],
       counts: { total: 1, available: 0, assigned: 1, maintenance: 0, retired: 0 },
-      pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+      pagination: { limit: 20, hasMore: false, nextCursor: null },
     };
     (serverGet as jest.Mock).mockResolvedValue(response);
 
@@ -189,7 +189,7 @@ describe("the shipped prefetch factories honour that contract", () => {
     const app = createAppQueryClient(authenticatedScope(ORG, USER));
     hydrate(app, state);
 
-    expect(app.getQueryData(queryKeys.hr.assets({ page: 1, limit: 20 }))).toEqual(response);
+    expect(app.getQueryData(queryKeys.hr.assets({ limit: 20 }))).toEqual(response);
   });
 
   it("prefetchPayrollRuns dehydrates data the app can actually read", async () => {

@@ -10,11 +10,14 @@ import { apiClient } from "@/lib/api-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { z } from "zod";
+import type { projectMemberRowContract } from "@/hooks/api/build/build-project-schema";
 import type {
   AddProjectMemberInput,
-  ProjectMember,
   ProjectMemberRecord,
 } from "@/types/projects";
+
+type ProjectMemberRow = z.infer<typeof projectMemberRowContract>;
 
 const memberListLazy = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then(
@@ -58,18 +61,18 @@ export function useProjectMembers(
 
 export function useAddProjectMember(
   options?: Omit<
-    UseMutationOptions<ProjectMember, Error, AddProjectMemberInput>,
+    UseMutationOptions<ProjectMemberRow, Error, AddProjectMemberInput>,
     "mutationFn"
   >,
 ) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<ProjectMember, Error, AddProjectMemberInput>(
+  return useAuthorizedMutation<ProjectMemberRow, Error, AddProjectMemberInput>(
     "build:manage",
     {
       ...options,
       mutationKey: ["projects", "members", "add"],
       mutationFn: ({ projectId, ...data }: AddProjectMemberInput) =>
-        apiClient.post<ProjectMember>(
+        apiClient.post<ProjectMemberRow>(
           `/build/${projectId}/members`,
           data,
           undefined,

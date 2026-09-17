@@ -74,7 +74,7 @@ const projectStatusRowSchema = z.object({
   updatedAt: z.string(),
 });
 
-const projectDetailMemberSchema = z.object({
+export const projectDetailMemberContract = z.object({
   id: z.number(),
   orgId: z.string(),
   projectId: z.number(),
@@ -109,7 +109,7 @@ const projectDetailMemberSchema = z.object({
 
 const projectDetailSchema = projectRowSchema.extend({
   statuses: z.array(projectStatusRowSchema),
-  members: z.array(projectDetailMemberSchema),
+  members: z.array(projectDetailMemberContract),
 });
 
 const projectMemberSchema = z.object({
@@ -133,7 +133,7 @@ const projectMemberRowSchema = z.object({
   orgId: z.string(),
   projectId: z.number(),
   membershipId: z.number(),
-  userId: z.string(),
+  userId: z.string().optional(),
   role: z.string(),
   hourlyRate: z.string(),
   hourlyRateMinor: z.number(),
@@ -327,7 +327,7 @@ export const bulkReorderStatesResultContract = bulkReorderStatesResultSchema;
 export const buildCustomFieldListContract = z.array(buildCustomFieldSchema);
 export const buildCustomFieldContract = buildCustomFieldSchema;
 export const ticketFieldValueListContract = z.array(ticketFieldValueSchema);
-export const ticketFieldValueCreateContract = z.object({ id: z.number().int() });
+export const ticketFieldValueCreateContract = z.object({ success: z.literal(true) });
 export const projectReleaseListContract = z.array(projectReleaseListItemSchema);
 export const projectReleaseRowContract = projectReleaseRowSchema;
 export const projectWebhookListContract = z.array(projectWebhookSchema);

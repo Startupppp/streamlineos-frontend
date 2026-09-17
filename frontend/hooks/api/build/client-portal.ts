@@ -9,8 +9,8 @@ import type {
   ClientPortalProject,
   ClientPortalOverview,
   ClientVisibilitySummary,
-  ChangeRequest,
   CreateChangeRequestInput,
+  PortalChangeRequest,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -24,8 +24,8 @@ const portalProjectOverviewContract = lazyContract(() =>
 const portalChangeRequestListContract = lazyContract(() =>
   import("@/hooks/api/build/client-portal-schema").then((m) => m.portalChangeRequestListContract),
 );
-const changeRequestRowContract = lazyContract(() =>
-  import("@/hooks/api/build/client-portal-schema").then((m) => m.changeRequestRowContract),
+const portalChangeRequestItemContract = lazyContract(() =>
+  import("@/hooks/api/build/client-portal-schema").then((m) => m.portalChangeRequestItemContract),
 );
 const visibilitySummaryContract = lazyContract(() =>
   import("@/hooks/api/build/client-portal-schema").then((m) => m.visibilitySummaryContract),
@@ -57,10 +57,10 @@ export function usePortalProjectOverview(projectId: number) {
 
 export function usePortalChangeRequests(projectId: number) {
   const canView = useCan("build:changerequests:view");
-  return useQuery<ChangeRequest[]>({
+  return useQuery<PortalChangeRequest[]>({
     queryKey: buildWorkQueryKeys.projects.clientPortal.changeRequests(projectId),
     queryFn: ({ signal }) =>
-      apiClient.get<ChangeRequest[]>(`/build/portal/projects/${projectId}/change-requests`, undefined, signal, portalChangeRequestListContract),
+      apiClient.get<PortalChangeRequest[]>(`/build/portal/projects/${projectId}/change-requests`, undefined, signal, portalChangeRequestListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -71,11 +71,11 @@ export function useSubmitPortalChangeRequest(projectId: number) {
   return useAuthorizedMutation("build:changerequests:create", {
     mutationKey: ["projects", "portal", projectId, "change-requests", "submit"],
     mutationFn: (data: CreateChangeRequestInput) =>
-      apiClient.post<ChangeRequest>(
+      apiClient.post<PortalChangeRequest>(
         `/build/portal/projects/${projectId}/change-requests`,
         data,
         undefined,
-        changeRequestRowContract,
+        portalChangeRequestItemContract,
       ),
     onSuccess: () => {
       qc.invalidateQueries({

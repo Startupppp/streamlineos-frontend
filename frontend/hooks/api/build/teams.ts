@@ -9,6 +9,7 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
   AddTeamMemberInput,
   CreateTeamInput,
+  ProjectTeam,
   ProjectTeamDetail,
   TeamListResponse,
   UpdateTeamInput,
@@ -20,6 +21,9 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 
 const teamPageContract = lazyContract(() =>
   import("@/hooks/api/build/teams-schema").then((m) => m.teamPageContract),
+);
+const teamRowContract = lazyContract(() =>
+  import("@/hooks/api/build/teams-schema").then((m) => m.teamRowContract),
 );
 const teamDetailContract = lazyContract(() =>
   import("@/hooks/api/build/teams-schema").then((m) => m.teamDetailContract),
@@ -75,7 +79,7 @@ export function useCreateProjectTeam() {
   return useAuthorizedMutation("build:teams:create", {
     mutationKey: [...buildWorkQueryKeys.projects.teams.all, "create"],
     mutationFn: (data: CreateTeamInput) =>
-      apiClient.post<ProjectTeamDetail>("/build/teams", data, undefined, teamDetailContract),
+      apiClient.post<ProjectTeam>("/build/teams", data, undefined, teamRowContract),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.all });
     },
@@ -87,7 +91,7 @@ export function useUpdateProjectTeam() {
   return useAuthorizedMutation("build:teams:update", {
     mutationKey: [...buildWorkQueryKeys.projects.teams.all, "update"],
     mutationFn: ({ teamId, ...data }: UpdateTeamInput & { teamId: number }) =>
-      apiClient.patch<ProjectTeamDetail>(`/build/teams/${teamId}`, data, undefined, teamDetailContract),
+      apiClient.patch<ProjectTeam>(`/build/teams/${teamId}`, data, undefined, teamRowContract),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.list() });
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.detail(vars.teamId) });
