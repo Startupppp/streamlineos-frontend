@@ -4,7 +4,7 @@ import { useState } from "react";
 import { SettingsIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DashboardGate } from "@/components/shared/dashboard-gate";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   PmPageShell,
   PmPanel,
@@ -14,7 +14,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared";
 import { EmptyTicketIllustration } from "@/components/illustrations";
 import { useFeedbucketWidgets } from "@/hooks/api/feedbucket";
 import { useProject } from "@/hooks/api/build/projects";
@@ -34,12 +33,22 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
     data: widgets,
     isLoading: widgetsLoading,
     isError: widgetsError,
+    error: widgetsErrorValue,
     refetch: refetchWidgets,
   } = useFeedbucketWidgets();
   const { data: project } = useProject(projectId);
 
   const projectWidget = widgets?.find((w) => w.projectId === projectId) ?? null;
   const defaultWidgetName = project?.name?.trim() ?? "";
+
+  const pageState = usePageState({
+    permission: "feedbucket:submissions:view",
+    module: "feedbucket",
+    isLoading: widgetsLoading,
+    isError: widgetsError,
+    error: widgetsErrorValue,
+    isEmpty: projectWidget === null,
+  });
 
   function handleRetryWidgets() {
     void refetchWidgets();
@@ -90,55 +99,56 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
   ) : undefined;
 
   return (
-    <DashboardGate permission="feedbucket:submissions:view">
-      <PageWrapper
-        title="Feedback"
-        subtitle="Collect and triage user feedback submitted via this project's widget."
-        actions={headerActions}
-      >
+    <PageWrapper
+      title="Feedback"
+      subtitle="Collect and triage user feedback submitted via this project's widget."
+      actions={headerActions}
+      state={pageState}
+      onRetry={handleRetryWidgets}
+      loading={
         <PmPageShell>
-          {widgetsLoading ? (
-            <div className="flex flex-1 min-h-0 flex-col gap-3">
-              <Skeleton className="h-48 w-full rounded-xl" />
-            </div>
-          ) : widgetsError ? (
-            <ErrorState description="Failed to load widget." onRetry={handleRetryWidgets} />
-          ) : !projectWidget ? (
-            <EmptyState
-              className={PM_FILL_PANEL}
-              illustration={<EmptyTicketIllustration className="h-24 w-24" />}
-              title="No feedback widget"
-              description="Create a widget to embed on your product and start collecting feedback for this project."
-              action={{ label: "Create feedback widget", onClick: handleOpenCreate }}
-            />
-          ) : (
-            <PmSection index={0} className="flex flex-1 min-h-0 flex-col">
-              <p className="mb-2 text-sm font-semibold text-foreground">Submissions</p>
-              <PmPanel className="flex flex-1 min-h-0 h-full flex-col p-0" solid>
-                <ProjectSubmissionsInbox
-                  widgetId={projectWidget.id}
-                  projectId={projectId}
-                />
-              </PmPanel>
-            </PmSection>
-          )}
+          <div className="flex flex-1 min-h-0 flex-col gap-3">
+            <Skeleton className="h-48 w-full rounded-xl" />
+          </div>
         </PmPageShell>
-
-        <CreateFeedbucketWidgetSheet
-          open={createOpen}
-          projectId={projectId}
-          defaultName={defaultWidgetName}
-          onClose={handleCloseCreate}
-        />
-
+      }
+    >
+      <PmPageShell>
         {projectWidget ? (
-          <WidgetSetupSheet
-            open={setupOpen}
-            widget={projectWidget}
-            onClose={handleCloseSetup}
+          <PmSection index={0} className="flex flex-1 min-h-0 flex-col">
+            <p className="mb-2 text-sm font-semibold text-foreground">Submissions</p>
+            <PmPanel className="flex flex-1 min-h-0 h-full flex-col p-0" solid>
+              <ProjectSubmissionsInbox
+                widgetId={projectWidget.id}
+                projectId={projectId}
+              />
+            </PmPanel>
+          </PmSection>
+        ) : (
+          <EmptyState
+            className={PM_FILL_PANEL}
+            illustration={<EmptyTicketIllustration className="h-24 w-24" />}
+            title="No feedback widget"
+            description="Create a widget to embed on your product and start collecting feedback for this project."
+            action={{ label: "Create feedback widget", onClick: handleOpenCreate }}
           />
-        ) : null}
-      </PageWrapper>
-    </DashboardGate>
+        )}
+      </PmPageShell>
+
+      <CreateFeedbucketWidgetSheet
+        open={createOpen}
+        projectId={projectId}
+        defaultName={defaultWidgetName}
+        onClose={handleCloseCreate}
+      />
+
+      {projectWidget ? (
+        <WidgetSetupSheet
+          open={setupOpen}
+          widget={projectWidget}
+          onClose={handleCloseSetup}
+        />
+      ) : null}
+    </PageWrapper>
   );
 }

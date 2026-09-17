@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { PlusIcon, DownloadIcon, WalletIcon } from "@animateicons/react/lucide";
@@ -78,7 +79,23 @@ export function MyPayrollPageContent() {
   const { data: fnf } = useEssFnf();
   const { data: payslips } = useEssPayslips();
   const { data: managerInbox } = useManagerInbox(payrollModuleEnabled);
-  const { data: overview, isLoading: overviewLoading } = useEssOverview();
+  const {
+    data: overview,
+    isLoading: overviewLoading,
+    isError: overviewFailed,
+    error: overviewError,
+    refetch: refetchOverview,
+  } = useEssOverview();
+
+  const pageState = usePageState({
+    isLoading: false,
+    isError: overviewFailed,
+    error: overviewError,
+  });
+
+  function handleRetryOverview() {
+    void refetchOverview();
+  }
 
   const [activeTab, setActiveTab] = useState("payslips");
   const [yearFilter, setYearFilter] = useState("all");
@@ -191,6 +208,8 @@ export function MyPayrollPageContent() {
         subtitle={`${formatMonth(currentYearMonth())} · Your payroll data only`}
         noInternalScroll
         contentClassName="flex min-h-0 flex-1 flex-col"
+        state={pageState}
+        onRetry={handleRetryOverview}
         filtersClassName="flex-col items-stretch gap-3 overflow-visible pb-3 [&>*]:w-full"
         filters={
           <>

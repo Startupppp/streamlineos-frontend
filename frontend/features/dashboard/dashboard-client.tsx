@@ -9,7 +9,6 @@ import {
 } from "@/hooks/api/dashboard";
 import { RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getErrorMessage } from "@/lib/get-error-message";
 const ClockInWidget = dynamic(
   () =>
     import("@/components/attendance/clock-in-widget").then((m) => ({
@@ -18,6 +17,8 @@ const ClockInWidget = dynamic(
   { ssr: false },
 );
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import {
   StatCard,
   StatCardGrid,
@@ -92,6 +93,13 @@ export function DashboardClient({ expensesSlot, publicDocumentsSlot }: Dashboard
     error,
     refetch,
   } = useDashboardStats({ retry: 2, retryDelay: 1000 });
+
+  const statsState = usePageState({
+    isLoading,
+    isError: Boolean(error),
+    error,
+    isEmpty: !stats,
+  });
 
   const { data: myIssuesData } = useMyIssues({
     enabled: access.projectsEnabled,
@@ -178,34 +186,20 @@ export function DashboardClient({ expensesSlot, publicDocumentsSlot }: Dashboard
         actions={hrEnabled ? <ClockInWidget /> : undefined}
       >
         <div className="flex flex-1 min-h-0 flex-col gap-4">
-          {isLoading ? (
-            <StatCardGridSkeleton cols={4} />
-          ) : error ? (
-            <div
-              className="rounded-xl border border-destructive/30 bg-destructive/5 p-6"
-              role="alert"
-            >
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-                <div className="flex-1 space-y-3">
-                  <p className="text-sm text-foreground">
-                    {getErrorMessage(error)}
-                  </p>
-                  <Button onClick={handleRefresh} size="sm">
-                    <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
-                    Retry
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ) : !stats ? (
-            <EmptyState
-              illustration={<EmptyActivityIllustration className="h-40 w-40" />}
-              title="No data available"
-              description="Dashboard statistics are not available. Please try refreshing."
-              action={{ label: "Refresh", onClick: handleRefresh }}
-            />
-          ) : statCards.length > 0 ? (
+          <PageState
+            resolution={statsState}
+            onRetry={handleRefresh}
+            loading={<StatCardGridSkeleton cols={4} />}
+            empty={
+              <EmptyState
+                illustration={<EmptyActivityIllustration className="h-40 w-40" />}
+                title="No data available"
+                description="Dashboard statistics are not available. Please try refreshing."
+                action={{ label: "Refresh", onClick: handleRefresh }}
+              />
+            }
+          >
+            {statCards.length > 0 ? (
             <motion.div
               variants={fadeUp}
               initial="hidden"
@@ -258,7 +252,8 @@ export function DashboardClient({ expensesSlot, publicDocumentsSlot }: Dashboard
                 </div>
               )}
             </motion.div>
-          ) : null}
+            ) : null}
+          </PageState>
 
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
             <QuickActions />

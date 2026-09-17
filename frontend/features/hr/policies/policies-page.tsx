@@ -22,12 +22,11 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import { useCursorPager } from "@/components/ui/table-pagination";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
 import { useHrPolicies, useSeedDefaultPolicies, useOrgPolicyConflicts } from "@/hooks/api/hr/policies";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   HR_POLICY_TYPES,
   HR_POLICY_STATUSES,
@@ -74,7 +73,6 @@ function PolicyRowActions({ row, canManage, onPreview, onEdit }: PolicyRowAction
 }
 
 export function HrPoliciesPage() {
-  const canView = useCan("hr:policies:view");
   const canManage = useCan("hr:policies:manage");
   const { data: orgConflicts } = useOrgPolicyConflicts();
   const conflictCount = orgConflicts?.conflicts.length ?? 0;
@@ -100,6 +98,13 @@ export function HrPoliciesPage() {
     search: debouncedSearch.trim() || undefined,
     type: typeFilter !== "all" ? typeFilter : undefined,
     status: statusFilter !== "all" ? statusFilter : undefined,
+  });
+
+  const pageState = usePageState({
+    permission: "hr:policies:view",
+    isLoading,
+    isError,
+    error,
   });
 
   const nextCursor = data?.pagination.nextCursor ?? null;
@@ -226,22 +231,19 @@ export function HrPoliciesPage() {
     },
   ];
 
-  if (!canView) {
-    return (
-      <PageWrapper title="HR Policies" subtitle="Configure HR rules and compliance policies">
-        <NoPermissionState
-          permission="hr:policies:view"
-          title="Access Restricted"
-          description="You don't have permission to view HR policies. HR Admin role is required."
-        />
-      </PageWrapper>
-    );
-  }
-
   return (
     <PageWrapper
       title="HR Policies"
       subtitle="Configure and manage HR rules, scopes, and compliance"
+      state={pageState}
+      onRetry={handleRetry}
+      loading={
+        <div className="space-y-2 py-4">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full rounded-lg" />
+          ))}
+        </div>
+      }
       actions={
         canManage ? (
           <div className="flex items-center gap-2">
@@ -301,20 +303,7 @@ export function HrPoliciesPage() {
         transition={{ duration: 0.22, ease: "easeOut" }}
         className="flex flex-1 min-h-0 flex-col py-4"
       >
-        {isLoading ? (
-          <div className="space-y-2">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full rounded-lg" />
-            ))}
-          </div>
-        ) : isError ? (
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load policies"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
-        ) : data?.data.length === 0 ? (
+        {data?.data.length === 0 ? (
           <EmptyState
             className="flex-1"
             illustrationPreset="documents"

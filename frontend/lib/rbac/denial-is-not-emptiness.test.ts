@@ -138,6 +138,7 @@ function claimsEmptiness(source: string): boolean {
 function handlesDenial(source: string): boolean {
   if (source.includes("NoPermissionState")) return true;
   if (/<PageState\b/.test(source)) return true;
+  if (/usePageState\(/.test(source)) return true;
   return /usePermissionGate\(/.test(source) && /\baccess=\{/.test(source);
 }
 

@@ -138,7 +138,7 @@ Resolved on 2026-09-02 (S06 — backend API prefixes, not page routes):
 
 ## Dashboard / Home
 
-- [ ] `/dashboard` · **Home** · hooks: `→ feature/dashboard` · §8: States ?
+- [x] `/dashboard` · **Home** · hooks: `usePageState` + `<PageState>` (stat section), `→ feature/dashboard` · §8: States ✓ — section-scoped so a stats failure no longer hides the widgets below it; hand-rolled error block replaced by the shared one
 
 ---
 
@@ -343,7 +343,7 @@ Responsive browser acceptance remains unverified. Evidence:
 - [ ] `/build/[projectId]/cycles/[cycleId]` · **Build** · hooks: `→ features/build/project` · §8: E ? D ? States ?
 - [ ] `/build/[projectId]/decisions` · **Build** · hooks: `→ features/build/project` · §8: L ? C ? E ? D ? States ?
 - [ ] `/build/[projectId]/epics` · **Build** · hooks: `→ features/build/project` · §8: L ? C ? E ? D ? F ? P ? States ?
-- [ ] `/build/[projectId]/feedbucket` · **Build** · hooks: `→ features/build/project` · §8: L ? F ? P ? States ?
+- [x] `/build/[projectId]/feedbucket` · **Build** · hooks: `usePageState({permission,module})` + `PageWrapper state=`, `→ features/build/feedbucket` · §8: Perm ✓ States ✓ — the captured 402. **UN-RUN CHECK:** the browser proof (load as a member of an org with `feedbucket` disabled; expect the module name and an Enable path to `/settings/modules`, and NO upgrade link and NO "Try Again") was never executed — no booted stack. A passing typecheck is not proof of that journey.
 - [ ] `/build/[projectId]/feedbucket/[submissionId]` · **Build** · hooks: `→ features/build/project` · §8: E ? D ? States ?
 - [ ] `/build/[projectId]/forms` · **Build** · hooks: `→ features/build/project` · §8: L ? C ? E ? D ? States ?
 - [ ] `/build/[projectId]/forms/[formId]` · **Build** · hooks: `→ features/build/project` · §8: E ? D ? States ?
@@ -381,7 +381,7 @@ Responsive browser acceptance remains unverified. Evidence:
 - [ ] `/hr/dashboard` · **HR** · hooks: `→ features/hr/dashboard` · §8: States ?
 
 ### Employees
-- [ ] `/hr/employees` · **HR** · hooks: `requirePermission("hr:employees:view")`, `→ features/hr/employees` · §8: L ? C ? E ? D ? F ? P ? Perm ✓ States ?
+- [x] `/hr/employees` · **HR** · hooks: `requirePermission("hr:employees:view")` (server), `usePageState` + `PageWrapper state=`, `→ features/hr/employees` · §8: Perm ✓ States ✓ — the duplicated loading-only `PageWrapper` early return is gone
 - [ ] `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees` · §8: E ? D ? Perm ? States ?
 - [ ] `/hr/employees/find-expert` · **HR** · hooks: `→ features/hr/employees` · §8: F ? States ?
 - [ ] `/hr/employees/skills-matrix` · **HR** · hooks: `→ features/hr/employees` · §8: L ? F ? States ?
@@ -530,7 +530,7 @@ Responsive browser acceptance remains unverified. Evidence:
 - [ ] `/hr/settings/forms/[formId]/submissions` · **HR** · hooks: `→ features/hr/settings` · §8: L ? F ? P ? States ?
 - [ ] `/hr/settings/import-export` · **HR** · hooks: `→ features/hr/settings` · §8: States ?
 - [ ] `/hr/settings/integrations` · **HR** · hooks: `→ features/hr/settings` · §8: L ? C ? E ? Perm ? States ?
-- [ ] `/hr/settings/policies` · **HR** · hooks: `→ features/hr/settings` · §8: L ? C ? E ? D ? Perm ? States ?
+- [x] `/hr/settings/policies` · **HR** · hooks: `usePageState({permission:"hr:policies:view"})` + `PageWrapper state=`, `→ features/hr/policies` · §8: Perm ✓ States ✓ — the separate `!canView` return that re-declared the page chrome is gone
 - [ ] `/hr/settings/preview` · **HR** · hooks: `→ features/hr/settings` · §8: States ?
 - [ ] `/hr/settings/templates` · **HR** · hooks: `→ features/hr/settings` · §8: L ? C ? E ? D ? Perm ? States ?
 - [ ] `/hr/settings/versions` · **HR** · hooks: `→ features/hr/settings` · §8: L ? F ? States ?
@@ -785,7 +785,7 @@ Responsive browser acceptance remains unverified. Evidence:
 - [ ] `/knowledge/wiki/favorites` · **Knowledge** · hooks: `→ features/wiki` · §8: L ? States ?
 - [ ] `/knowledge/wiki/private` · **Knowledge** · hooks: `→ features/wiki` · §8: L ? States ?
 - [ ] `/knowledge/wiki/shared` · **Knowledge** · hooks: `→ features/wiki` · §8: L ? Perm ? States ?
-- [ ] `/knowledge/wiki/templates` · **Knowledge** · hooks: `→ features/wiki` · §8: L ? C ? E ? D ? Perm ? States ?
+- [x] `/knowledge/wiki/templates` · **Knowledge** · hooks: `usePageState` + `<PageState>` (saved-templates section), `→ features/wiki` · §8: States ✓ — a fetch error rendered an EmptyState ("Could not load templates"); now a real error with retry, and the starter templates stay visible
 - [ ] `/knowledge/wiki/trash` · **Knowledge** · hooks: `→ features/wiki` · §8: L ? States ?
 - [ ] `/knowledge/wiki/reviews` · **Knowledge** · hooks: `→ features/wiki` · §8: L ? Perm ? States ?
 - [ ] `/knowledge/wiki/import` · **Knowledge** · hooks: `→ features/wiki` · §8: C ? States ?
@@ -804,7 +804,7 @@ Responsive browser acceptance remains unverified. Evidence:
 - [ ] `/me/documents` · **Self-service** · hooks: `requirePermission("self:onboarding-docs")` (server), `→ features/me/documents` · §8: L ? P ? Perm ✗ States ? — VIOLATION: `requirePermission` on a `/me/*` route; must be removed
 - [ ] `/me/expenses` · **Self-service** · hooks: `requirePermission("self:expenses")` (server), `→ features/me/expenses` · §8: L ? C ? E ? D ? F ? P ? Perm ✗ States ? — VIOLATION: `requirePermission` on a `/me/*` route; must be removed
 - [ ] `/me/onboarding` · **Self-service** · hooks: `→ features/me/onboarding` · §8: States ?
-- [ ] `/me/pay` · **Self-service** · hooks: `requirePermission(["self:payroll","self:payslips"])` (server), `→ features/me/pay` · §8: L ? F ? Perm ✗ States ? — VIOLATION: `requirePermission` on a `/me/*` route; must be removed
+- [x] `/me/pay` · **Self-service** · hooks: `requireSession()` (server), `usePageState` (error only) + `PageWrapper state=`, `→ features/payroll/me` · §8: Perm ✓ States ✓ — universal no-gate zone holds: NO module and NO permission passed to `usePageState`. Per-card skeletons kept deliberately, so page-level loading is not used; a failed overview read now shows an error with retry instead of silently blank cards
 - [ ] `/me/recruitment` · **Self-service** · hooks: `requirePermission("self:recruitment")` (server), `→ features/employee-self-service` · §8: L ? Perm ✓ States ? — serves assigned interviews and own hiring feedback. A `self:*` key is what §8 prescribes for `/me/*` and is a member default, so it denies nobody; internal job openings live at `/me/job-openings`
 - [x] `/me/job-openings` · **Self-service** · hooks: `requirePermission("self:job-openings")` (server), `useSelfJobOpenings` · §8: L ✓ Perm ✓ States ✓ — §8 member entitlement: browse internal openings and apply. Backend `GET|POST /hr/recruitment/me/job-openings*`, no `@RequireModule`
 - [x] `/me/referrals` · **Self-service** · hooks: `requirePermission("self:referrals")` (server), `useSelfReferrals` · §8: L ✓ C ✓ Perm ✓ States ✓ — §8 member entitlement: submit and track own referrals. Backend `GET|POST /hr/recruitment/me/referrals`, no `@RequireModule`

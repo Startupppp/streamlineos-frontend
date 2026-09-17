@@ -10,12 +10,12 @@ import {
 } from "@/hooks/api/hr";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ViewToggle } from "@/components/ui/view-toggle";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared/error-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EmployeeCard } from "@/features/hr/employees/employee-card";
 import { EmployeesDirectoryStats } from "@/features/hr/employees/employees-directory-stats";
@@ -39,7 +39,6 @@ import type { EmployeeListItem } from "@/types/hr";
 import { HrPanel, HrStatusBadge } from "@/features/hr/shared/hr-ui";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
-import { getErrorMessage } from "@/lib/get-error-message";
 
 const VIEW_MODES = ["grid", "list"] as const;
 type ViewMode = (typeof VIEW_MODES)[number];
@@ -189,6 +188,18 @@ export function EmployeesListPage() {
     [employeePages],
   );
 
+  const pageState = usePageState({
+    permission: "hr:employees:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: employees.length === 0,
+  });
+
+  function handleRetryEmployees() {
+    void refetch();
+  }
+
   const [gridPagesShown, setGridPagesShown] = useState(1);
   const gridVisibleCount = Math.min(
     employees.length,
@@ -270,20 +281,6 @@ export function EmployeesListPage() {
 
   const getDept = (emp: EmployeeListItem) => emp.department?.name ?? null;
 
-  if (isLoading) {
-    return (
-      <PageWrapper
-        title="Employee Directory"
-        subtitle="Team directory"
-        noInternalScroll
-        contentClassName="flex min-h-0 flex-1 flex-col gap-3 sm:gap-4"
-      >
-        <StatCardGridSkeleton cols={3} count={3} />
-        <EmployeesGridSkeleton />
-      </PageWrapper>
-    );
-  }
-
   return (
     <PageWrapper
       title="Employee Directory"
@@ -294,6 +291,14 @@ export function EmployeesListPage() {
       }
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col gap-3 sm:gap-4"
+      state={pageState}
+      onRetry={handleRetryEmployees}
+      loading={
+        <>
+          <StatCardGridSkeleton cols={3} count={3} />
+          <EmployeesGridSkeleton />
+        </>
+      }
       actions={
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <ViewToggle<ViewMode>
@@ -351,13 +356,7 @@ export function EmployeesListPage() {
           </div>
 
           <div className="md:min-h-0 md:flex-1 md:overflow-y-auto md:scrollbar-hide">
-            {isError ? (
-              <ErrorState
-                title="Couldn&apos;t load directory"
-                description={getErrorMessage(error)}
-                onRetry={() => void refetch()}
-              />
-            ) : employees.length === 0 ? (
+            {employees.length === 0 ? (
               <EmptyState
                 illustrationPreset="team"
                 title="No employees yet"

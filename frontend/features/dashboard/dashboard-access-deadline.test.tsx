@@ -70,6 +70,17 @@ jest.mock("./use-dashboard-access", () => ({
   useDashboardAccess: () => accessState.current,
 }));
 
+jest.mock("@/hooks/api/access", () => ({
+  useAccess: () => ({
+    data: { isOrgOwner: true, scopes: {}, modules: {} },
+    isLoading: false,
+  }),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined, isLoading: false }),
+}));
+
 jest.mock("./module-setup-banners", () => ({
   ModuleSetupBanners: () => null,
   useModuleSetupBannersPending: () => false,

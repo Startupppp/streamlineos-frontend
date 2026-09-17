@@ -25,6 +25,8 @@ import {
   useUpdateKbPage,
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { pageHref } from "@/lib/knowledge-routes";
 import {
   STARTER_TEMPLATES,
@@ -175,8 +177,25 @@ function TemplatesSkeleton() {
 
 export default function TemplatesPage() {
   const router = useRouter();
-  const { data: templates = [], isLoading, isError } = useKbPageTemplates();
+  const {
+    data: templates = [],
+    isLoading,
+    isError,
+    error,
+    refetch: refetchTemplates,
+  } = useKbPageTemplates();
   const canDelete = useCan("kb:templates:manage");
+
+  const savedTemplatesState = usePageState({
+    isLoading,
+    isError,
+    error,
+    isEmpty: templates.length === 0,
+  });
+
+  function handleRetryTemplates() {
+    void refetchTemplates();
+  }
   const createPage = useCreateKbPage();
   const updatePage = useUpdateKbPage();
 
@@ -251,31 +270,21 @@ export default function TemplatesPage() {
           title="Saved templates"
           description="Templates created from your wiki pages."
         >
-          {isLoading && <TemplatesSkeleton />}
-
-          {!isLoading && isError && (
-            <EmptyState
-              illustration={
-                <KbLayoutTemplateIcon className="w-8 text-muted-foreground" />
-              }
-              title="Could not load templates"
-              description="There was a problem fetching page templates."
-              className={CONTENT_FILL_PANEL}
-            />
-          )}
-
-          {!isLoading && !isError && templates.length === 0 && (
-            <EmptyState
-              illustration={
-                <KbLayoutTemplateIcon className="w-8 text-muted-foreground" />
-              }
-              title="No saved templates yet"
-              description="Save a page as a template to reuse its structure across your wiki."
-              className={CONTENT_FILL_PANEL}
-            />
-          )}
-
-          {!isLoading && !isError && templates.length > 0 && (
+          <PageState
+            resolution={savedTemplatesState}
+            onRetry={handleRetryTemplates}
+            loading={<TemplatesSkeleton />}
+            empty={
+              <EmptyState
+                illustration={
+                  <KbLayoutTemplateIcon className="w-8 text-muted-foreground" />
+                }
+                title="No saved templates yet"
+                description="Save a page as a template to reuse its structure across your wiki."
+                className={CONTENT_FILL_PANEL}
+              />
+            }
+          >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {templates.map((template) => (
                 <TemplateCard
@@ -287,7 +296,7 @@ export default function TemplatesPage() {
                 />
               ))}
             </div>
-          )}
+          </PageState>
         </PageSection>
       </div>
     </PageWrapper>
