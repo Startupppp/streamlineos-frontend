@@ -136,7 +136,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
   const handleToggle = useCallback(
     (connection: GitConnection) => {
       updateConnection.mutate(
-        { id: connection.id, isActive: !connection.isActive },
+        { connectionId: connection.id, isActive: !connection.isActive },
         {
           onSuccess: () =>
             toast.success(

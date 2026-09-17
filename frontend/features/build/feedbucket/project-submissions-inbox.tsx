@@ -1,16 +1,25 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { forwardRef, useCallback, useMemo, useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
+import { Trash2Icon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { useFeedbucketSubmissions } from "@/hooks/api/feedbucket";
+import { useCan } from "@/hooks/api/access";
+import {
+  useDeleteFeedbucketSubmission,
+  useFeedbucketSubmissions,
+} from "@/hooks/api/feedbucket";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type {
   PaginatedFeedbucketSubmissions,
   FeedbucketSubmissionType,
@@ -128,6 +137,35 @@ const SUBMISSION_COLUMNS: DataTableColumn<SubmissionRow>[] = [
   },
 ];
 
+interface DeleteSubmissionButtonProps {
+  submissionId: number;
+  onRequestDelete: (submissionId: number) => void;
+}
+
+const DeleteSubmissionButton = forwardRef<HTMLButtonElement, DeleteSubmissionButtonProps>(
+  function DeleteSubmissionButton({ submissionId, onRequestDelete }, ref) {
+    const { iconRef, hoverHandlers } = useAnimatedIcon();
+
+    function handleClick(event: MouseEvent<HTMLButtonElement>) {
+      event.stopPropagation();
+      onRequestDelete(submissionId);
+    }
+
+    return (
+      <button
+        ref={ref}
+        type="button"
+        onClick={handleClick}
+        aria-label="Delete submission"
+        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-status-danger-ink"
+        {...hoverHandlers}
+      >
+        <Trash2Icon ref={iconRef} size={14} />
+      </button>
+    );
+  },
+);
+
 interface ProjectSubmissionsInboxProps {
   widgetId: number;
   projectId: number;
@@ -139,6 +177,9 @@ export function ProjectSubmissionsInbox({
 }: ProjectSubmissionsInboxProps) {
   const router = useRouter();
   const [page, setPage] = useState(1);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const canDelete = useCan("feedbucket:submissions:delete");
+  const deleteSubmission = useDeleteFeedbucketSubmission();
 
   const { data, isLoading, isError, refetch } = useFeedbucketSubmissions({
     page,
@@ -153,6 +194,45 @@ export function ProjectSubmissionsInbox({
   function handleRetry() {
     void refetch();
   }
+
+  const handleRequestDelete = useCallback((submissionId: number) => {
+    setPendingDeleteId(submissionId);
+  }, []);
+
+  function handleDeleteDialogChange(open: boolean) {
+    if (!open) setPendingDeleteId(null);
+  }
+
+  function handleConfirmDelete() {
+    if (pendingDeleteId === null) return;
+    deleteSubmission.mutate(
+      { submissionId: pendingDeleteId },
+      {
+        onSuccess: () => {
+          toast.success("Submission deleted");
+          setPendingDeleteId(null);
+        },
+        onError: (error) => {
+          toast.error(getErrorMessage(error));
+        },
+      },
+    );
+  }
+
+  const columns = useMemo<DataTableColumn<SubmissionRow>[]>(() => {
+    if (!canDelete) return SUBMISSION_COLUMNS;
+    return [
+      ...SUBMISSION_COLUMNS,
+      {
+        key: "actions",
+        header: "",
+        cell: (row) => (
+          <DeleteSubmissionButton submissionId={row.id} onRequestDelete={handleRequestDelete} />
+        ),
+        className: "w-8",
+      },
+    ];
+  }, [canDelete, handleRequestDelete]);
 
   if (isLoading) {
     return (
@@ -175,28 +255,42 @@ export function ProjectSubmissionsInbox({
   }
 
   return (
-    <DataTable
-      data={data?.data ?? []}
-      columns={SUBMISSION_COLUMNS}
-      getRowKey={(row) => row.id}
-      onRowClick={handleRowClick}
-      pagination={{
-        mode: "server",
-        page,
-        pageSize: PAGE_SIZE,
-        total: data?.total ?? 0,
-        onPageChange: setPage,
-      }}
-      className="flex flex-1 min-h-0 h-full border-0 rounded-none"
-      emptyState={
-        <EmptyState
-          illustration={<EmptyInboxIllustration className="h-24 w-24" />}
-          title="No submissions yet"
-          description="Submissions from this widget will appear here once users submit feedback."
-          className="flex flex-1 min-h-0 h-full flex-col"
-        />
-      }
-      rowClassName={() => "cursor-pointer"}
-    />
+    <>
+      <DataTable
+        data={data?.data ?? []}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        onRowClick={handleRowClick}
+        pagination={{
+          mode: "server",
+          page,
+          pageSize: PAGE_SIZE,
+          total: data?.total ?? 0,
+          onPageChange: setPage,
+        }}
+        className="flex flex-1 min-h-0 h-full border-0 rounded-none"
+        emptyState={
+          <EmptyState
+            illustration={<EmptyInboxIllustration className="h-24 w-24" />}
+            title="No submissions yet"
+            description="Submissions from this widget will appear here once users submit feedback."
+            className="flex flex-1 min-h-0 h-full flex-col"
+          />
+        }
+        rowClassName={() => "cursor-pointer"}
+      />
+
+      <ConfirmDialog
+        open={pendingDeleteId !== null}
+        onOpenChange={handleDeleteDialogChange}
+        destructive
+        title="Delete this submission?"
+        description="This submission is removed from the inbox and can no longer be opened. You cannot undo this from here."
+        confirmLabel="Delete submission"
+        isPending={deleteSubmission.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleConfirmDelete}
+      />
+    </>
   );
 }

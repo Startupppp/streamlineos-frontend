@@ -133,4 +133,6 @@ export interface UpdateFeedbucketSubmissionInput {
   assigneeId?: string | null;
 }
 
+export type FeedbucketMediaKind = "screenshot" | "recording";
+
 export type PaginatedFeedbucketSubmissions = z.infer<typeof feedbucketSubmissionListContract>;

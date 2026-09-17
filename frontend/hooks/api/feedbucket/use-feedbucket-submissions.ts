@@ -6,6 +6,7 @@ import type { FeedbucketSubmissionRow } from "@/hooks/api/feedbucket/feedbucket-
 import { lazyContract } from "@/lib/api-envelope";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type {
+  FeedbucketMediaKind,
   FeedbucketSubmission,
   PaginatedFeedbucketSubmissions,
   ListFeedbucketSubmissionsQuery,
@@ -25,6 +26,9 @@ const feedbucketUpdateSubmissionC = lazyContract(() =>
 );
 const feedbucketConvertTicketC = lazyContract(() =>
   import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketConvertTicketContract),
+);
+const feedbucketDeleteSubmissionC = lazyContract(() =>
+  import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketDeleteSubmissionContract),
 );
 
 export function useFeedbucketSubmissions(params?: ListFeedbucketSubmissionsQuery) {
@@ -63,6 +67,44 @@ export function useUpdateFeedbucketSubmission() {
       apiClient.patch<FeedbucketSubmissionRow>(
         `/feedbucket/submissions/${submissionId}`,
         input, undefined, feedbucketUpdateSubmissionC,
+      ),
+    onSuccess: (_, { submissionId }) => {
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.submission(submissionId) });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.all });
+    },
+  });
+}
+
+export function useDeleteFeedbucketSubmission() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("feedbucket:submissions:delete", {
+    mutationKey: ["feedbucket", "submissions", "delete"],
+    mutationFn: ({ submissionId }: { submissionId: number }) =>
+      apiClient.delete<{ success: true }>(
+        `/feedbucket/submissions/${submissionId}`,
+        undefined, undefined, feedbucketDeleteSubmissionC,
+      ),
+    onSuccess: (_, { submissionId }) => {
+      qc.removeQueries({ queryKey: growthAndSignQueryKeys.feedbucket.submission(submissionId) });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.all });
+    },
+  });
+}
+
+export function useDeleteFeedbucketSubmissionMedia() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("feedbucket:submissions:delete", {
+    mutationKey: ["feedbucket", "submissions", "delete-media"],
+    mutationFn: ({
+      submissionId,
+      mediaKind,
+    }: {
+      submissionId: number;
+      mediaKind: FeedbucketMediaKind;
+    }) =>
+      apiClient.delete<{ success: true }>(
+        `/feedbucket/submissions/${submissionId}/media/${mediaKind}`,
+        undefined, undefined, feedbucketDeleteSubmissionC,
       ),
     onSuccess: (_, { submissionId }) => {
       void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.submission(submissionId) });

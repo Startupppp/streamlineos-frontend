@@ -5,4 +5,8 @@ export {
   useRotateFeedbucketWidgetKey,
 } from "./use-feedbucket-widgets";
 
-export { useFeedbucketSubmissions } from "./use-feedbucket-submissions";
+export {
+  useFeedbucketSubmissions,
+  useDeleteFeedbucketSubmission,
+  useDeleteFeedbucketSubmissionMedia,
+} from "./use-feedbucket-submissions";

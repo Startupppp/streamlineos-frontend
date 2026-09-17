@@ -197,4 +197,6 @@ export const feedbucketCreateTicketFromAnalysisContract = z.object({
 
 export const feedbucketUpdateSubmissionContract = feedbucketSubmissionRowContract;
 
+export const feedbucketDeleteSubmissionContract = z.object({ success: z.literal(true) });
+
 export type FeedbucketSubmissionRow = z.infer<typeof feedbucketSubmissionRowContract>;
