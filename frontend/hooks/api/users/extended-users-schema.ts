@@ -113,8 +113,9 @@ export const userPreferencesContract = z.object({
   timezone: z.string(),
   dateFormat: z.string(),
   timeFormat: z.string(),
-  numberFormat: z.string().nullable(),
-  weekStartDay: z.string().nullable(),
+  // Defaults path omits these; a stored row may send null. Accept both.
+  numberFormat: z.string().nullish(),
+  weekStartDay: z.string().nullish(),
   notificationPreferences: z.record(z.string(), z.boolean()),
   dashboardPreferences: z.record(z.string(), z.unknown()),
   updatedAt: z.string().optional(),
