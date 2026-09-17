@@ -120,6 +120,7 @@ export const userPreferencesContract = z.object({
   updatedAt: z.string().optional(),
 });
 
+/** Mirrors backend `userMembershipResponseSchema` / `UserProfileService.getMembership`. */
 export const userMembershipContract = z.object({
   userId: z.string(),
   orgId: z.string(),
@@ -128,7 +129,6 @@ export const userMembershipContract = z.object({
   departmentId: z.string().nullable(),
   teamId: z.string().nullable(),
   managerUserId: z.string().nullable(),
-  isPrimary: z.boolean(),
 });
 
 const loginHistoryItemContract = z.object({
