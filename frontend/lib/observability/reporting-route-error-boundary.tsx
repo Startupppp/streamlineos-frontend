@@ -2,9 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { RouteErrorBoundary } from "@/components/ui/route-error-boundary";
-import { reportError } from "./error-reporter";
-import { isChunkLoadError } from "./chunk-load";
+import { RouteErrorBoundary, shouldReportRouteError } from "@/components/ui/route-error-boundary";
 
 interface ReportingRouteErrorBoundaryProps {
   error: Error & { digest?: string };
@@ -26,6 +24,7 @@ export function ReportingRouteErrorBoundary({
       typeof window !== "undefined" ? window.location.pathname : undefined;
     const extra: Record<string, unknown> = { route, digest: error.digest };
     if (isChunkLoadError(error)) extra.recoverable = true;
+    if (!shouldReportRouteError(error, route ?? "server")) return;
     reportError(error, extra);
   }, [error]);
 

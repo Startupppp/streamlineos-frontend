@@ -18,15 +18,17 @@ const DENIED: AccessResponse = {
 
 export type ServerAccessResult =
   | { ok: true; access: AccessResponse }
-  | { ok: false };
+  | { ok: false; error: unknown };
 
 const RETRY_DELAYS_MS = [250, 750, 1_500] as const;
 
 function isTransientAccessFailure(error: unknown): boolean {
-  return (
-    isApiError(error) &&
-    (error.status === 502 || error.status === 503 || error.status === 504)
-  );
+  if (error instanceof DOMException && (error.name === "AbortError" || error.name === "TimeoutError"))
+    return true;
+  if (!isApiError(error)) return false;
+  if (error.code === "TIMEOUT" || error.code === "BACKEND_UNREACHABLE" || error.code === "NETWORK_ERROR")
+    return true;
+  return error.status === 502 || error.status === 503 || error.status === 504;
 }
 
 function wait(delayMs: number): Promise<void> {
@@ -43,7 +45,7 @@ async function resolveServerAccess(): Promise<ServerAccessResult> {
     } catch (error: unknown) {
       const delay = RETRY_DELAYS_MS[attempt];
       if (delay === undefined || !isTransientAccessFailure(error)) {
-        return { ok: false };
+        return { ok: false, error };
       }
       await wait(delay);
     }

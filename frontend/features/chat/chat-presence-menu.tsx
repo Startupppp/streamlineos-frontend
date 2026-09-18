@@ -71,7 +71,7 @@ export function ChatPresenceMenu({
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="start" className="w-56">
+      <DropdownMenuContent align="start" className="w-64">
         <DropdownMenuLabel className="text-micro uppercase tracking-wider text-muted-foreground">
           Availability
         </DropdownMenuLabel>

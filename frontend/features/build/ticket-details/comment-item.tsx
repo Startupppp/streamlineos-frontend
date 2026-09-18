@@ -61,7 +61,6 @@ export interface CommentItemProps {
   hideReplyButton?: boolean;
   isHighlighted?: boolean;
   permalinkUrl?: string;
-  canManage: boolean;
   canInteract: boolean;
   onSaveEdit: (commentId: number, content: string) => void;
   onDelete: (commentId: number) => void;
@@ -87,7 +86,6 @@ function CommentItemComponent({
   hideReplyButton = false,
   isHighlighted = false,
   permalinkUrl,
-  canManage,
   canInteract,
   onSaveEdit,
   onDelete,
@@ -104,8 +102,8 @@ function CommentItemComponent({
     comment.createdAt &&
     new Date(comment.updatedAt).getTime() > new Date(comment.createdAt).getTime();
 
-  const isAuthor = !!currentUserId && user?.id === currentUserId;
-  const canDelete = canInteract && (isAuthor || canManage);
+  const isAuthor = !!currentUserId && (comment.userId === currentUserId || user?.id === currentUserId);
+  const canDelete = canInteract && isAuthor;
   const reactionGroups = groupReactions(comment.reactions ?? [], currentUserId);
 
   const [showHighlight, setShowHighlight] = useState(isHighlighted);

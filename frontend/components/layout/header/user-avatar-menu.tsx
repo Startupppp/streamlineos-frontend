@@ -129,7 +129,7 @@ export function UserAvatarMenu({
       <DropdownMenuContent
         align="end"
         side="bottom"
-        className="w-56 max-w-56 min-w-0 overflow-x-hidden"
+        className="w-64 max-w-64 min-w-0 overflow-x-hidden"
         sideOffset={8}
       >
         <UserAvatarMenuBody name={name} email={email} layout="dropdown" />

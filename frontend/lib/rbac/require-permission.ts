@@ -18,15 +18,16 @@ interface RequirePermissionResult {
 }
 
 export class AccessUnavailableError extends Error {
-  constructor() {
+  constructor(cause?: unknown) {
     super("Could not load your permissions. Please try again.");
     this.name = "AccessUnavailableError";
+    if (cause !== undefined) this.cause = cause;
   }
 }
 
 async function resolveAccessOrFail(): Promise<AccessResponse> {
   const result = await getServerAccessResult();
-  if (!result.ok) throw new AccessUnavailableError();
+  if (!result.ok) throw new AccessUnavailableError(result.error);
   return result.access;
 }
 

@@ -52,6 +52,11 @@ export const ticketRowContract = z.object({
   updatedAt: z.string(),
 });
 
+const commentReactionSchema = z.object({
+  emoji: z.string(),
+  userId: z.string(),
+});
+
 const ticketDetailCommentSchema = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -62,6 +67,7 @@ const ticketDetailCommentSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   user: userSummarySchema,
+  reactions: z.array(commentReactionSchema).default([]),
 });
 
 export const ticketDetailContract = ticketRowContract.extend({

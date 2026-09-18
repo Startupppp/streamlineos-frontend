@@ -240,11 +240,24 @@ describe("inbox deep-link encoding — mail ids are provider-supplied strings, n
     expect(pushMock).toHaveBeenCalledWith("/build/approvals?projectId=4200");
   });
 
-  it("pushes a server-supplied notification deepLink unmodified, even when it contains its own query string", async () => {
-    const deepLink = "/build/tickets/900?highlight=true&from=inbox";
+  it("pushes a server-supplied notification deepLink unmodified when it is already canonical", async () => {
+    const deepLink = "/build/1/tickets/STRE-29?comment=8";
     const props = await mountInbox();
     act(() => props.onNotificationClick(makeNotificationItem(deepLink)));
 
     expect(pushMock).toHaveBeenCalledWith(deepLink);
+  });
+
+  it("rewrites a legacy /projects notification deepLink to /build before navigating", async () => {
+    const props = await mountInbox();
+    act(() =>
+      props.onNotificationClick(
+        makeNotificationItem("/projects/1/tickets/STRE-29?comment=8"),
+      ),
+    );
+
+    expect(pushMock).toHaveBeenCalledWith(
+      "/build/1/tickets/STRE-29?comment=8",
+    );
   });
 });

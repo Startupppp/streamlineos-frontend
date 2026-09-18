@@ -253,7 +253,7 @@
 - `/build/[projectId]/risks` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/settings` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/sprints` · **Build** · hooks: `useSprints, useUpdateSprint, useUpdateTicket, useSprintTicketMover` — S06: three `Promise.all` per-ticket fan-outs replaced by the bounded transactional `POST /build/:projectId/tickets/bulk` (chunked at the backend cap of 100); sprint completion now sends `sprintId: null` so "move to backlog" actually clears the sprint instead of serialising `undefined` to a no-op. 5 tests in `use-sprint-ticket-mover.test.ts`.
-- `/build/[projectId]/tickets/[ticketKey]` · **Build** · hooks: `→ features/build/project`
+- `/build/[projectId]/tickets/[ticketKey]` · **Build** · hooks: `→ features/build/project` — notification/email/search deep links emit `/build/...` (not legacy `/projects/...`); client navigation normalizes any stored `/projects` links via `normalizeBuildDeepLink`
 - `/build/[projectId]/timeline` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/triage` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/views` · **Build** · hooks: `→ features/build/project`

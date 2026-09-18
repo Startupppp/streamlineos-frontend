@@ -44,12 +44,24 @@ describe("getServerAccessResult", () => {
     expect(serverGet).toHaveBeenCalledTimes(2);
   });
 
+  it("retries a timed-out access snapshot instead of locking the layout", async () => {
+    jest.mocked(serverGet)
+      .mockRejectedValueOnce(new ApiError("slow", undefined, "TIMEOUT"))
+      .mockResolvedValueOnce(access);
+
+    const result = getServerAccessResult();
+    await jest.advanceTimersByTimeAsync(250);
+
+    await expect(result).resolves.toEqual({ ok: true, access });
+    expect(serverGet).toHaveBeenCalledTimes(2);
+  });
+
   it("does not retry authentication or authorization failures", async () => {
     jest.mocked(serverGet).mockRejectedValueOnce(
       new ApiError("Not authenticated", 401, "UNAUTHENTICATED"),
     );
 
-    await expect(getServerAccessResult()).resolves.toEqual({ ok: false });
+    await expect(getServerAccessResult()).resolves.toMatchObject({ ok: false });
     expect(serverGet).toHaveBeenCalledTimes(1);
   });
 
@@ -61,7 +73,7 @@ describe("getServerAccessResult", () => {
     const result = getServerAccessResult();
     await jest.advanceTimersByTimeAsync(2_500);
 
-    await expect(result).resolves.toEqual({ ok: false });
+    await expect(result).resolves.toMatchObject({ ok: false });
     expect(serverGet).toHaveBeenCalledTimes(4);
   });
 });

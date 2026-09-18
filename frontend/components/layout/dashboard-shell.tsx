@@ -12,6 +12,7 @@ import { usePushSubscription } from "@/hooks/common/use-push-subscription";
 import { TrialBanner } from "@/components/billing/trial-banner";
 import { ImpersonationBanner } from "@/components/impersonation/impersonation-banner";
 import { ProductSwitcherMenu } from "./header/product-switcher-menu";
+import { WorkspaceSwitcher } from "./header/org-switcher";
 import { useProductSidebarVisibility } from "./sidebar/use-product-sidebar-visibility";
 import { useAccess } from "@/hooks/api/access";
 import { LazyAppLoadingScreen } from "@/components/ui/app-loading-screen-lazy";
@@ -94,6 +95,7 @@ export function DashboardShell({
     useState(defaultCollapsed);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [productSwitcherOpen, setProductSwitcherOpen] = useState(false);
+  const [orgSwitcherOpen, setOrgSwitcherOpen] = useState(false);
   const [isChatConversationOpen, setIsChatConversationOpen] = useState(false);
   const [welcomeToastActive, setWelcomeToastActive] = useState(false);
   const [enhancementsReady, setEnhancementsReady] = useState(false);
@@ -141,6 +143,11 @@ export function DashboardShell({
 
   const handleRequestProductSwitcher = useCallback(() => {
     setProductSwitcherOpen(true);
+    deferCloseMobileMenu();
+  }, [deferCloseMobileMenu]);
+
+  const handleRequestOrgSwitcher = useCallback(() => {
+    setOrgSwitcherOpen(true);
     deferCloseMobileMenu();
   }, [deferCloseMobileMenu]);
 
@@ -268,7 +275,7 @@ export function DashboardShell({
                 id="dashboard-content"
                 aria-label="Main content"
                 className={cn(
-                  "flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden",
+                  "flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden outline-none",
                   showModuleBottomNav && "mobile-nav-active",
                 )}
               >
@@ -306,6 +313,7 @@ export function DashboardShell({
                   isMobile
                   onNavigate={handleCloseMobileMenu}
                   onRequestProductSwitcher={handleRequestProductSwitcher}
+                  onRequestOrgSwitcher={handleRequestOrgSwitcher}
                   projectNavTreeSlot={projectNavTreeSlot}
                 />
               </DrawerContent>
@@ -313,11 +321,18 @@ export function DashboardShell({
           )}
 
           {!isPortalRoute && (
-            <ProductSwitcherMenu
-              drawerOnly
-              open={productSwitcherOpen}
-              onOpenChange={setProductSwitcherOpen}
-            />
+            <>
+              <WorkspaceSwitcher
+                drawerOnly
+                open={orgSwitcherOpen}
+                onOpenChange={setOrgSwitcherOpen}
+              />
+              <ProductSwitcherMenu
+                drawerOnly
+                open={productSwitcherOpen}
+                onOpenChange={setProductSwitcherOpen}
+              />
+            </>
           )}
 
           <MobileModuleBottomNav />

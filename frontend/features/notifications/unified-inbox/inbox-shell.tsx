@@ -13,6 +13,7 @@ import { useUnifiedInbox } from "@/hooks/api/inbox";
 import { useInboxActions } from "./use-inbox-actions";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toSearchParams } from "@/lib/route-search-params";
+import { normalizeBuildDeepLink } from "@/lib/build/normalize-build-deep-link";
 import { Inbox } from "lucide-react";
 import type { Notification } from "@/types/notifications";
 import type {
@@ -90,7 +91,7 @@ export function InboxShell() {
     (item: NotificationInboxItem) => {
       if (!item.isRead) markReadOnOpen(item.id);
       if (item.deepLink) {
-        router.push(item.deepLink);
+        router.push(normalizeBuildDeepLink(item.deepLink));
         return;
       }
       setSelectedNotification(toDrawerNotification(item));
@@ -103,7 +104,7 @@ export function InboxShell() {
     (item: BroadcastInboxItem) => {
       if (!item.isRead) dismissBroadcastOnOpen(item.id);
       if (item.deepLink) {
-        router.push(item.deepLink);
+        router.push(normalizeBuildDeepLink(item.deepLink));
         return;
       }
       setSelectedNotification(toDrawerNotification(item));
@@ -132,7 +133,7 @@ export function InboxShell() {
   );
 
   const handleOpenLink = useCallback(
-    (link: string) => router.push(link),
+    (link: string) => router.push(normalizeBuildDeepLink(link)),
     [router],
   );
 

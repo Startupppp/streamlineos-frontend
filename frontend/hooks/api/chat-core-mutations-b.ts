@@ -195,7 +195,7 @@ export interface SetPresenceStatusInput {
 
 export function useSetPresenceStatus() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("chat:messages:write", {
+  return useAuthorizedMutation("chat:messages:read", {
     mutationKey: ["chat", "presence", "set-status"],
     mutationFn: (input: SetPresenceStatusInput) =>
       apiClient.put<{ ok: boolean }>("/chat/status", input, undefined, chatOkContract),

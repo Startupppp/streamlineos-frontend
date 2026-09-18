@@ -150,6 +150,18 @@ describe("serverGet", () => {
         code: "BACKEND_UNREACHABLE",
       });
     });
+
+    it("treats AbortError from AbortSignal.timeout as a backend outage, not a cancelled request", async () => {
+      const abortError = new DOMException("This operation was aborted", "AbortError");
+      mockedGetServerAuth.mockResolvedValueOnce(makeSession("token-test"));
+      mockFetch.mockRejectedValueOnce(abortError);
+
+      await expect(serverGet("/test/timeout-abort-error")).rejects.toMatchObject({
+        name: "ApiError",
+        status: 503,
+        code: "BACKEND_UNREACHABLE",
+      });
+    });
   });
 
   describe("error envelope", () => {

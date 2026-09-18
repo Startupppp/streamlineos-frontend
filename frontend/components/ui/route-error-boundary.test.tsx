@@ -5,6 +5,7 @@ import {
   NETWORK_RETRY_BUDGET_TTL_MS,
   RouteErrorBoundary,
   resetNetworkRetryBudgets,
+  shouldReportRouteError,
 } from "./route-error-boundary";
 
 function networkError(path: string): Error & { digest?: string } {
@@ -100,6 +101,30 @@ describe("the network auto-retry budget belongs to the route, not to the message
     });
 
     expect(reset).not.toHaveBeenCalled();
+  });
+});
+
+describe("shouldReportRouteError", () => {
+  it("does not report a permission snapshot miss while the route is still auto-retrying", () => {
+    const error = new Error("Could not load your permissions. Please try again.");
+    error.name = "AccessUnavailableError";
+
+    expect(shouldReportRouteError(error, "/build/command-center")).toBe(false);
+  });
+
+  it("reports a permission snapshot miss after the auto-retry budget is spent", () => {
+    const error = new Error("Could not load your permissions. Please try again.");
+    error.name = "AccessUnavailableError";
+    const reset = jest.fn();
+    const routeKey = window.location.pathname;
+
+    spendWholeBudget(reset);
+
+    expect(shouldReportRouteError(error, routeKey)).toBe(true);
+  });
+
+  it("still reports a non-transient failure immediately", () => {
+    expect(shouldReportRouteError(new Error("boom"), "/build/command-center")).toBe(true);
   });
 });
 

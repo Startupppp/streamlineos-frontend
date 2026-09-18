@@ -106,4 +106,29 @@ describe("ticketDetailContract — comments survive the contract", () => {
 
     expect(parsed.comments).toEqual([]);
   });
+
+  it("keeps comment reactions so the feed can render who reacted", () => {
+    const parsed = ticketDetailContract.parse(
+      detailPayload([
+        {
+          ...COMMENT,
+          reactions: [
+            { emoji: "👍", userId: "user-1" },
+            { emoji: "🔥", userId: "user-2" },
+          ],
+        },
+      ]),
+    );
+
+    expect(parsed.comments[0].reactions).toEqual([
+      { emoji: "👍", userId: "user-1" },
+      { emoji: "🔥", userId: "user-2" },
+    ]);
+  });
+
+  it("defaults missing reactions to an empty list instead of stripping the field", () => {
+    const parsed = ticketDetailContract.parse(detailPayload([COMMENT]));
+
+    expect(parsed.comments[0].reactions).toEqual([]);
+  });
 });

@@ -5,7 +5,11 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PAGE_CHROME_BOTTOM, PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
+import {
+  PAGE_CHROME_BOTTOM,
+  PAGE_CHROME_MOBILE_NAV_PAD,
+  PAGE_CHROME_X,
+} from "@/components/ui/content-fill-panel";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { PageState } from "@/components/shared/page-state";
 import { LoadingState } from "@/components/shared/loading-state";
@@ -211,6 +215,7 @@ export function PageWrapper({
             "flex h-full min-h-0 flex-1 flex-col overflow-hidden",
             PAGE_CHROME_X,
             PAGE_CHROME_BOTTOM,
+            PAGE_CHROME_MOBILE_NAV_PAD,
             contentClassName,
           )}
         >
@@ -222,14 +227,14 @@ export function PageWrapper({
           aria-labelledby={title != null ? headingId : undefined}
           aria-label={title == null ? "Page content" : undefined}
           tabIndex={0}
-          className="h-full min-h-0 flex-1 overflow-y-auto scrollbar-hide"
+          className="h-full min-h-0 flex-1 overflow-y-auto scrollbar-hide outline-none"
         >
           <div
             className={cn(
               "flex min-h-full w-full flex-col overscroll-contain",
               PAGE_CHROME_X,
               PAGE_CHROME_BOTTOM,
-              "max-md:[.mobile-nav-active_&]:pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]",
+              PAGE_CHROME_MOBILE_NAV_PAD,
               contentClassName,
             )}
           >

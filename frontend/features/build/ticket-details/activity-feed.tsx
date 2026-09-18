@@ -75,8 +75,6 @@ export function ActivityFeed({
   const upsertDraftMutateRef = useRef(upsertDraft.mutate);
   const canUpdate = useCan("build:tickets:update");
   const canCreate = useCan("build:tickets:create");
-  const canManageBuild = useCan("build:manage");
-  const canManage = canUpdate && canManageBuild;
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -226,16 +224,18 @@ export function ActivityFeed({
 
   const handleReact = useCallback(
     (commentId: number, emoji: string) => {
-      addReaction.mutate({ commentId, emoji });
+      if (!currentUserId) return;
+      addReaction.mutate({ commentId, emoji, userId: currentUserId });
     },
-    [addReaction],
+    [addReaction, currentUserId],
   );
 
   const handleUnreact = useCallback(
     (commentId: number, emoji: string) => {
-      removeReaction.mutate({ commentId, emoji });
+      if (!currentUserId) return;
+      removeReaction.mutate({ commentId, emoji, userId: currentUserId });
     },
-    [removeReaction],
+    [removeReaction, currentUserId],
   );
 
   const handleCancelReply = useCallback(() => {
@@ -404,7 +404,6 @@ export function ActivityFeed({
                 onUnreact={handleUnreact}
                 isHighlighted={highlightCommentId === comment.id}
                 permalinkUrl={commentPermalink(comment.id)}
-                canManage={canManage}
                 canInteract={canUpdate}
                 onSaveEdit={handleSaveEdit}
                 onDelete={handleDeleteComment}
@@ -445,7 +444,6 @@ export function ActivityFeed({
                           hideReplyButton
                           isHighlighted={highlightCommentId === reply.id}
                           permalinkUrl={commentPermalink(reply.id)}
-                          canManage={canManage}
                           canInteract={canUpdate}
                           onSaveEdit={handleSaveEdit}
                           onDelete={handleDeleteComment}

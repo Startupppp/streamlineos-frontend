@@ -1,13 +1,13 @@
 "use client";
 
-import { memo, useMemo, type Key } from "react";
-import { List, type RowComponentProps } from "react-window";
+import { memo, useCallback, useMemo, type Key } from "react";
+import { List, useDynamicRowHeight, type RowComponentProps } from "react-window";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { NotificationCard } from "./notification-card";
 import type { Notification } from "@/types/notifications";
 
-const NOTIFICATION_ROW_HEIGHT = 88;
-const LOAD_MORE_ROW_HEIGHT = 52;
+const NOTIFICATION_ROW_HEIGHT = 108;
+const ROW_GAP_PX = 8;
 const OVERSCAN_COUNT = 5;
 const DEFAULT_LIST_HEIGHT = 600;
 
@@ -30,11 +30,6 @@ interface NotificationVirtualRowData {
   onApprove: (id: number) => void;
   onReject: (id: number) => void;
   onLoadMore: () => void;
-}
-
-function getRowHeight(index: number, data: NotificationVirtualRowData): number {
-  if (index === data.items.length) return LOAD_MORE_ROW_HEIGHT;
-  return NOTIFICATION_ROW_HEIGHT;
 }
 
 function getRowKey(index: number, data: NotificationVirtualRowData): Key {
@@ -65,9 +60,11 @@ function NotificationVirtualRow({
   onReject,
   onLoadMore,
 }: RowComponentProps<NotificationVirtualRowData>) {
+  const rowStyle = { ...style, paddingBottom: ROW_GAP_PX, boxSizing: "border-box" as const };
+
   if (hasNextPage && index === items.length) {
     return (
-      <div style={style} {...ariaAttributes} className="flex items-center justify-center">
+      <div style={rowStyle} {...ariaAttributes} className="flex items-center justify-center">
         <LoadingButton
           variant="outline"
           size="sm"
@@ -81,10 +78,10 @@ function NotificationVirtualRow({
   }
 
   const n = items[index];
-  if (!n) return <div style={style} {...ariaAttributes} />;
+  if (!n) return <div style={rowStyle} {...ariaAttributes} />;
 
   return (
-    <div style={style} {...ariaAttributes} className="border-b border-border">
+    <div style={rowStyle} {...ariaAttributes}>
       <NotificationCard
         id={n.id}
         title={n.title}
@@ -160,6 +157,16 @@ export const NotificationVirtualList = memo(function NotificationVirtualList({
 }: NotificationVirtualListProps) {
   const rowCount = items.length + (hasNextPage ? 1 : 0);
 
+  const heightKey = useMemo(
+    () => `${items.map((item) => item.id).join("|")}#${hasNextPage ? 1 : 0}`,
+    [items, hasNextPage],
+  );
+
+  const rowHeight = useDynamicRowHeight({
+    defaultRowHeight: NOTIFICATION_ROW_HEIGHT,
+    key: heightKey,
+  });
+
   const rowProps = useMemo(
     (): NotificationVirtualRowData => ({
       items,
@@ -184,13 +191,19 @@ export const NotificationVirtualList = memo(function NotificationVirtualList({
     [items, selectedIds, isApprovalSection, approvingId, rejectingId, archivingId, pinningId, deletingId, hasNextPage, isFetchingNextPage, onSelect, onClick, onArchive, onPin, onDelete, onApprove, onReject, onLoadMore],
   );
 
+  const stableRowKey = useCallback(
+    (index: number, data: NotificationVirtualRowData) => getRowKey(index, data),
+    [],
+  );
+
   return (
     <List<NotificationVirtualRowData>
+      aria-label="Notifications"
       rowComponent={NotificationVirtualRow}
       rowCount={rowCount}
-      rowHeight={getRowHeight}
+      rowHeight={rowHeight}
       rowProps={rowProps}
-      rowKey={getRowKey}
+      rowKey={stableRowKey}
       defaultHeight={DEFAULT_LIST_HEIGHT}
       overscanCount={OVERSCAN_COUNT}
       style={{ height: "100%" }}

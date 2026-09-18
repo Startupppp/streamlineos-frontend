@@ -41,6 +41,11 @@ function spentNetworkRetries(routeKey: string): number {
   return budget.attempts;
 }
 
+export function shouldReportRouteError(error: unknown, routeKey: string): boolean {
+  if (!isTransientNetworkError(error)) return true;
+  return spentNetworkRetries(routeKey) >= MAX_NETWORK_AUTO_RETRIES;
+}
+
 function recordNetworkRetry(routeKey: string, attempts: number): void {
   if (
     !networkRetryBudgets.has(routeKey) &&

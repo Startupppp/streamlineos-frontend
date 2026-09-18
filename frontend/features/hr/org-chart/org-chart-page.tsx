@@ -13,7 +13,10 @@ import { ErrorState } from "@/components/shared";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import {
+  FILTER_TOOLBAR_ROW,
+  PAGE_BODY_EMPTY_CLASS,
+} from "@/components/ui/content-fill-panel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
@@ -221,7 +224,7 @@ function OrgChartCollection({ search }: { search?: string }) {
 
   if (query.isPending) {
     return (
-      <div className="flex flex-1 flex-col gap-2">
+      <div className="flex min-h-0 flex-1 flex-col gap-2">
         {Array.from({ length: 9 }, (_, index) => (
           <Skeleton key={index} className="h-14 w-full rounded-lg" />
         ))}
@@ -232,7 +235,7 @@ function OrgChartCollection({ search }: { search?: string }) {
   if (query.isError) {
     return (
       <ErrorState
-        className="flex-1"
+        className="flex-1 min-h-0"
         title="Couldn't load the organization chart"
         description={getErrorMessage(query.error)}
         onRetry={handleRetry}
@@ -243,6 +246,7 @@ function OrgChartCollection({ search }: { search?: string }) {
   if (query.data.data.length === 0) {
     return (
       <EmptyState
+        className={PAGE_BODY_EMPTY_CLASS}
         illustrationPreset="companies"
         title={search ? "No people found" : "No reporting structure found"}
         description={
@@ -255,8 +259,8 @@ function OrgChartCollection({ search }: { search?: string }) {
   }
 
   return (
-    <Card className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-      <CardContent className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto p-3">
+    <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
+      <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-auto p-3">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Network className="h-4 w-4" aria-hidden="true" />
           {search
@@ -311,10 +315,12 @@ export function OrgChartPage() {
         </div>
       }
       noInternalScroll
-      className="flex min-h-0 flex-1 flex-col overflow-hidden"
+      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+      contentClassName="flex min-h-0 flex-1 flex-col"
     >
       {debouncedSearch.length === 1 ? (
         <EmptyState
+          className={PAGE_BODY_EMPTY_CLASS}
           illustrationPreset="companies"
           title="Keep typing"
           description="Enter at least two characters to search the organization."

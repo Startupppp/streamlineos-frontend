@@ -22,6 +22,7 @@ import {
 import { formatRelativeTime } from "./format-relative-time";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { Notification } from "@/types/notifications";
+import { normalizeBuildDeepLink } from "@/lib/build/normalize-build-deep-link";
 
 function PanelSkeleton() {
   return (
@@ -130,7 +131,7 @@ export function NotificationBellPanel({
       if (!notification.isRead) markRead.mutate(notification.id);
       if (notification.link) {
         onClose();
-        router.push(notification.link);
+        router.push(normalizeBuildDeepLink(notification.link));
       }
     },
     [onClose, markRead, router],

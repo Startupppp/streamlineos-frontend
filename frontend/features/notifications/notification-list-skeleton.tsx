@@ -2,18 +2,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function NotificationListSkeleton({ count = 10 }: { count?: number }) {
   return (
-    <div className="border border-border rounded-lg divide-y divide-border">
+    <div className="flex flex-1 min-h-0 flex-col gap-2">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="flex items-start gap-2.5 px-3 py-2.5">
-          <Skeleton className="h-8 w-8 rounded-lg shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0 space-y-1.5">
+        <div
+          key={i}
+          className="flex items-start gap-3 rounded-xl border border-border/70 bg-card p-3"
+        >
+          <Skeleton className="mt-0.5 h-8 w-8 shrink-0 rounded-lg" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-3 w-full max-w-md" />
             <div className="flex items-center gap-2">
-              <Skeleton className="h-3.5 w-36" />
-              <Skeleton className="h-4 w-14 rounded-full" />
+              <Skeleton className="h-5 w-16 rounded-full" />
+              <Skeleton className="h-3 w-12" />
             </div>
-            <Skeleton className="h-3 w-full max-w-xs" />
           </div>
-          <Skeleton className="h-2 w-2 rounded-full shrink-0 mt-1.5" />
+          <Skeleton className="h-7 w-7 shrink-0 rounded-md" />
         </div>
       ))}
     </div>

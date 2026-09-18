@@ -1,13 +1,10 @@
 "use client";
 
 import { memo, useCallback } from "react";
-import { Archive, Pin, PinOff } from "lucide-react";
-import { Trash2Icon } from "@animateicons/react/lucide";
+import { Pin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import {
   NOTIFICATION_TYPE_CONFIG,
@@ -16,6 +13,11 @@ import {
   NOTIFICATION_PRIORITIES,
   type NotificationType,
 } from "@/lib/notification-types";
+import { formatRelativeTime } from "./format-relative-time";
+import { distinctNotificationBody } from "./notification-card-copy";
+import { NotificationCardActions } from "./notification-card-actions";
+import { TruncatedText } from "@/components/ui/truncated-text";
+import { CARD_ACTIVATOR_CLASS, propagationShield } from "@/lib/keyboard-activation";
 
 const NOTIFICATION_TYPES = [
   "INFO",
@@ -23,9 +25,6 @@ const NOTIFICATION_TYPES = [
   "WARNING",
   "ERROR",
 ] as const satisfies readonly NotificationType[];
-import { formatRelativeTime } from "./format-relative-time";
-import { TruncatedText } from "@/components/ui/truncated-text";
-import { CARD_ACTIVATOR_CLASS, propagationShield } from "@/lib/keyboard-activation";
 
 export interface NotificationCardProps {
   id: number;
@@ -56,29 +55,6 @@ export interface NotificationCardProps {
   onReject?: (id: number) => void;
 }
 
-function TrashButton({
-  onClick,
-  isDeleting,
-}: {
-  onClick: (e: React.MouseEvent) => void;
-  isDeleting?: boolean;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="h-6 w-6 shrink-0 hover:text-destructive"
-      aria-label="Delete notification"
-      onClick={onClick}
-      disabled={isDeleting}
-      {...hoverHandlers}
-    >
-      <Trash2Icon ref={iconRef} size={12} />
-    </Button>
-  );
-}
-
 function NotificationCardInner({
   id,
   title,
@@ -86,7 +62,6 @@ function NotificationCardInner({
   type,
   priority,
   category,
-  sourceModule,
   isRead,
   pinned,
   archivedAt,
@@ -120,6 +95,8 @@ function NotificationCardInner({
   const isUnread = !isRead;
   const isArchived = !!archivedAt;
   const isCritical = priorityKey === "CRITICAL";
+  const body = distinctNotificationBody(title, message);
+  const timestamp = formatRelativeTime(createdAt);
   const secondaryInk =
     isUnread && !isArchived
       ? "text-status-neutral-ink-strong"
@@ -158,36 +135,31 @@ function NotificationCardInner({
     onReject?.(id);
   }, [id, onReject]);
 
-  const hasHoverActions = Boolean(
-    (!isArchived && onArchive) || onPin || onDelete,
-  );
-
   return (
     <div
       className={cn(
-        "group relative flex items-start gap-2.5 px-3 py-2.5 cursor-pointer transition-colors hover:bg-muted/40 hover:shadow-md",
-        isUnread && !isArchived &&
-          "bg-primary/5 hover:bg-primary/10 border-l-[3px] border-l-primary",
-        selected && "bg-primary/10",
+        "group relative flex items-start gap-3 rounded-xl border border-border/70 bg-card p-3 transition-colors hover:border-primary/40 hover:shadow-md",
+        isUnread && !isArchived && "bg-primary/5",
+        selected && "border-primary/40 bg-primary/10",
       )}
     >
-      {onSelect && (
+      {onSelect ? (
         <div
-          className="relative z-10 flex items-center shrink-0 pt-0.5"
+          className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center"
           {...propagationShield}
         >
           <Checkbox
             checked={selected}
             onCheckedChange={handleSelectChange}
-            className="h-3.5 w-3.5"
+            className="h-4 w-4"
             aria-label={`Select notification: ${title}`}
           />
         </div>
-      )}
+      ) : null}
 
       <div
         className={cn(
-          "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg mt-0.5",
+          "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
           iconBg,
           isCritical && "ring-1 ring-status-danger-rule",
         )}
@@ -195,124 +167,105 @@ function NotificationCardInner({
         <Icon className={cn("h-4 w-4", iconColor)} />
       </div>
 
-      <div className="min-w-0 flex-1 overflow-hidden">
-        <div className="flex min-w-0 items-center gap-1.5">
-          <button type="button" onClick={handleCardClick} className={cn("min-w-0 flex-1", CARD_ACTIVATOR_CLASS)}>
+      <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 items-start gap-2">
+          <button
+            type="button"
+            onClick={handleCardClick}
+            className={cn("min-w-0 flex-1", CARD_ACTIVATOR_CLASS)}
+          >
             <TruncatedText
               text={title}
               className={cn(
-                "min-w-0 text-sm leading-snug",
-                isUnread && !isArchived ? "font-semibold text-foreground" : "font-medium text-muted-foreground",
+                "min-w-0 text-sm leading-snug text-pretty",
+                isUnread && !isArchived
+                  ? "font-semibold text-foreground"
+                  : "font-medium text-muted-foreground",
               )}
             />
           </button>
-          {pinned && <Pin className="h-3 w-3 shrink-0 text-status-warning-ink" />}
+          {pinned ? (
+            <Pin className="relative z-10 mt-1 h-3.5 w-3.5 shrink-0 text-status-warning-ink" />
+          ) : null}
+          {isUnread && !isArchived ? (
+            <span
+              className="relative z-10 mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary"
+              aria-hidden
+            />
+          ) : null}
+        </div>
+
+        {body ? (
+          <TruncatedText
+            text={body}
+            lines={2}
+            className={cn("mt-1 text-xs text-pretty", secondaryInk)}
+          />
+        ) : null}
+
+        <div className="mt-1.5 flex min-w-0 items-center gap-2">
           <Badge
             variant="outline"
             className={cn(
-              "hidden h-4 shrink-0 px-1.5 text-micro border-border/60 sm:inline-flex",
+              "h-5 shrink-0 px-2 py-0.5 text-[10px] border-border/70",
               secondaryInk,
             )}
           >
             {categoryConfig.label}
           </Badge>
-          {sourceModule && (
-            <Badge variant="secondary" className="hidden h-4 shrink-0 px-1.5 text-micro md:inline-flex">
-              {sourceModule}
-            </Badge>
-          )}
+          {timestamp ? (
+            <span
+              className={cn(
+                "shrink-0 text-dense whitespace-nowrap tabular-nums",
+                secondaryInk,
+              )}
+            >
+              {timestamp}
+            </span>
+          ) : null}
         </div>
 
-        {message && (
-          <TruncatedText
-            text={message}
-            lines={1}
-            className={cn("text-xs mt-0.5", secondaryInk)}
-          />
-        )}
-
-        {isApproval && (onApprove || onReject) && (
+        {isApproval && (onApprove || onReject) ? (
           <div
-            className="relative z-10 flex items-center gap-1.5 mt-2"
+            className="relative z-10 mt-2 flex items-center gap-1.5"
             {...propagationShield}
           >
-            {onApprove && (
+            {onApprove ? (
               <LoadingButton
                 size="sm"
                 variant="outline"
-                className="h-6 text-xs px-2.5 border-status-success-rule text-status-success-ink hover:bg-status-success-surface hover:border-status-success-rule"
+                className="h-7 px-2.5 text-xs border-status-success-rule text-status-success-ink hover:bg-status-success-surface hover:border-status-success-rule"
                 onClick={handleApprove}
                 isPending={isApproving}
               >
                 Approve
               </LoadingButton>
-            )}
-            {onReject && (
+            ) : null}
+            {onReject ? (
               <LoadingButton
                 size="sm"
                 variant="outline"
-                className="h-6 text-xs px-2.5 border-destructive/30 text-destructive hover:bg-destructive/10 hover:border-destructive/50"
+                className="h-7 px-2.5 text-xs border-destructive/30 text-destructive hover:bg-destructive/10 hover:border-destructive/50"
                 onClick={handleReject}
                 isPending={isRejecting}
               >
                 Reject
               </LoadingButton>
-            )}
+            ) : null}
           </div>
-        )}
+        ) : null}
       </div>
 
-      <div className="flex items-center gap-1.5 shrink-0 self-start pt-0.5">
-        {hasHoverActions && (
-          <div
-            className="relative z-10 flex items-center gap-0.5 w-0 overflow-hidden opacity-0 group-hover:w-auto group-hover:opacity-100 transition-all duration-150"
-            {...propagationShield}
-          >
-            {!isArchived && onArchive && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 shrink-0"
-                aria-label="Archive notification"
-                onClick={handleArchive}
-                disabled={isArchiving}
-              >
-                <Archive className="h-3 w-3 text-muted-foreground" />
-              </Button>
-            )}
-            {onPin && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 shrink-0"
-                aria-label={pinned ? "Unpin notification" : "Pin notification"}
-                onClick={handlePin}
-                disabled={isPinning}
-              >
-                {pinned ? (
-                  <PinOff className="h-3 w-3 text-status-warning-ink" />
-                ) : (
-                  <Pin className="h-3 w-3 text-muted-foreground" />
-                )}
-              </Button>
-            )}
-            {onDelete && (
-              <TrashButton onClick={handleDelete} isDeleting={isDeleting} />
-            )}
-          </div>
-        )}
-        <span
-          className={cn(
-            "text-dense whitespace-nowrap tabular-nums",
-            secondaryInk,
-          )}
-        >
-          {formatRelativeTime(createdAt)}
-        </span>
-        {isUnread && !isArchived && (
-          <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
-        )}
-      </div>
+      <NotificationCardActions
+        pinned={pinned}
+        isArchived={isArchived}
+        isArchiving={isArchiving}
+        isPinning={isPinning}
+        isDeleting={isDeleting}
+        onArchive={onArchive ? handleArchive : undefined}
+        onPin={onPin ? handlePin : undefined}
+        onDelete={onDelete ? handleDelete : undefined}
+      />
     </div>
   );
 }

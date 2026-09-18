@@ -21,46 +21,6 @@ jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
   useSetPresenceStatus: () => ({ mutate, isPending: false }),
 }));
 
-jest.mock("@/components/ui/dropdown-menu", () => ({
-  DropdownMenuItem: ({
-    children,
-    onClick,
-  }: {
-    children: React.ReactNode;
-    onClick?: () => void;
-  }) => (
-    <button type="button" onClick={onClick}>
-      {children}
-    </button>
-  ),
-}));
-
-jest.mock("@/components/ui/select", () => ({
-  Select: ({
-    value,
-    onValueChange,
-    children,
-  }: {
-    value: string;
-    onValueChange: (next: string) => void;
-    children: React.ReactNode;
-  }) => (
-    <select
-      aria-label="Clear after"
-      value={value}
-      onChange={(event) => onValueChange(event.target.value)}
-    >
-      {children}
-    </select>
-  ),
-  SelectTrigger: () => null,
-  SelectValue: () => null,
-  SelectContent: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  SelectItem: ({ value, children }: { value: string; children: React.ReactNode }) => (
-    <option value={value}>{children}</option>
-  ),
-}));
-
 beforeEach(() => {
   mutate.mockClear();
   presenceMap = new Map();
@@ -79,7 +39,7 @@ describe("PresenceStatusPicker", () => {
       "Vacation",
       "Working remotely",
     ])
-      expect(screen.getByText(label)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: label })).toBeInTheDocument();
   });
 
   it("marks the status the server reports as current, not a hardcoded Available", () => {
@@ -87,18 +47,20 @@ describe("PresenceStatusPicker", () => {
 
     render(<PresenceStatusPicker layout="list" />);
 
-    const current = screen.getByText("Do not disturb").closest("button");
-    expect(current).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByText("Available").closest("button")).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Do not disturb" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Available" })).toHaveAttribute(
       "aria-pressed",
       "false",
     );
   });
 
-  it("sends the chosen status to the server", () => {
+  it("sends the chosen status to the server without a separate save click", () => {
     render(<PresenceStatusPicker layout="list" />);
 
-    fireEvent.click(screen.getByText("On leave"));
+    fireEvent.click(screen.getByRole("button", { name: "On leave" }));
 
     expect(mutate).toHaveBeenCalledWith(
       { status: "ON_LEAVE", statusMessage: "", clearAfter: "never" },
@@ -109,9 +71,9 @@ describe("PresenceStatusPicker", () => {
   it("shows the pick immediately while the request is still in flight", () => {
     render(<PresenceStatusPicker layout="list" />);
 
-    fireEvent.click(screen.getByText("Vacation"));
+    fireEvent.click(screen.getByRole("button", { name: "Vacation" }));
 
-    expect(screen.getByText("Vacation").closest("button")).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Vacation" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
@@ -120,8 +82,8 @@ describe("PresenceStatusPicker", () => {
   it("renders the same options in menu layout, so the account menu and chat agree", () => {
     render(<PresenceStatusPicker layout="menu" />);
 
-    expect(screen.getByText("Working remotely")).toBeInTheDocument();
-    expect(screen.getByText("Set automatically from your activity")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Working remotely" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Available" })).toBeInTheDocument();
   });
 });
 
@@ -134,14 +96,14 @@ describe("PresenceStatusPicker — custom status message", () => {
     expect(screen.getByLabelText("Status message")).toHaveValue("Heads-down until 3pm");
   });
 
-  it("sends the typed message with the current status when saved", () => {
+  it("sends the typed message with the current status when the field blurs", () => {
     presenceMap = new Map([["me", "BUSY"]]);
     render(<PresenceStatusPicker layout="list" />);
 
     fireEvent.change(screen.getByLabelText("Status message"), {
       target: { value: "Heads-down until 3pm" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    fireEvent.blur(screen.getByLabelText("Status message"));
 
     expect(mutate).toHaveBeenCalledWith(
       { status: "BUSY", statusMessage: "Heads-down until 3pm", clearAfter: "never" },
@@ -155,13 +117,13 @@ describe("PresenceStatusPicker — custom status message", () => {
     expect(screen.getByLabelText("Status message")).toHaveAttribute("maxLength", "100");
   });
 
-  it("carries a typed message along when a status row is clicked, so the pick does not discard it", () => {
+  it("carries a typed message along when a status chip is clicked, so the pick does not discard it", () => {
     render(<PresenceStatusPicker layout="list" />);
 
     fireEvent.change(screen.getByLabelText("Status message"), {
       target: { value: "Back at 4" },
     });
-    fireEvent.click(screen.getByText("In a meeting"));
+    fireEvent.click(screen.getByRole("button", { name: "In a meeting" }));
 
     expect(mutate).toHaveBeenCalledWith(
       { status: "IN_A_MEETING", statusMessage: "Back at 4", clearAfter: "never" },
@@ -169,11 +131,14 @@ describe("PresenceStatusPicker — custom status message", () => {
     );
   });
 
-  it("clears the message by sending an empty one rather than leaving a stale line on every avatar", () => {
+  it("clears the message by sending an empty one when the field is emptied and blurred", () => {
     customStatus = { statusMessage: "Heads-down until 3pm", statusExpiresAt: null };
     render(<PresenceStatusPicker layout="list" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Clear" }));
+    fireEvent.change(screen.getByLabelText("Status message"), {
+      target: { value: "" },
+    });
+    fireEvent.blur(screen.getByLabelText("Status message"));
 
     expect(mutate).toHaveBeenCalledWith(
       { status: "ONLINE", statusMessage: "", clearAfter: "never" },
@@ -187,14 +152,13 @@ describe("PresenceStatusPicker — auto-clear duration", () => {
     render(<PresenceStatusPicker layout="list" />);
 
     for (const label of ["1 hour", "Today", "This week", "Until I clear it"])
-      expect(screen.getByText(label)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: label })).toBeInTheDocument();
   });
 
   it("sends a NAMED duration rather than a number of minutes, so the server owns the clock", () => {
     render(<PresenceStatusPicker layout="list" />);
 
-    fireEvent.change(screen.getByLabelText("Clear after"), { target: { value: "1h" } });
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    fireEvent.click(screen.getByRole("button", { name: "1 hour" }));
 
     expect(mutate).toHaveBeenCalledWith(
       { status: "ONLINE", statusMessage: "", clearAfter: "1h" },
@@ -202,13 +166,13 @@ describe("PresenceStatusPicker — auto-clear duration", () => {
     );
   });
 
-  it("keeps the chosen duration when a status row is clicked", () => {
+  it("keeps the chosen duration when a status chip is clicked", () => {
     render(<PresenceStatusPicker layout="list" />);
 
-    fireEvent.change(screen.getByLabelText("Clear after"), { target: { value: "today" } });
-    fireEvent.click(screen.getByText("Busy"));
+    fireEvent.click(screen.getByRole("button", { name: "Today" }));
+    fireEvent.click(screen.getByRole("button", { name: "Busy" }));
 
-    expect(mutate).toHaveBeenCalledWith(
+    expect(mutate).toHaveBeenLastCalledWith(
       { status: "BUSY", statusMessage: "", clearAfter: "today" },
       expect.anything(),
     );

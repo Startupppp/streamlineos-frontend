@@ -22,6 +22,7 @@ import {
 } from "./sidebar/sidebar-nav-items";
 import { SidebarSection } from "./sidebar/sidebar-section";
 import { ProductSwitcherMenu } from "./header/product-switcher-menu";
+import { WorkspaceSwitcher } from "./header/org-switcher";
 
 import { useAccess, useCan } from "@/hooks/api/access";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
@@ -38,6 +39,7 @@ interface AppSidebarProps {
   isCollapsed?: boolean;
   onNavigate?: () => void;
   onRequestProductSwitcher?: () => void;
+  onRequestOrgSwitcher?: () => void;
   isMobile?: boolean;
   projectNavTreeSlot?: (props: ProjectNavTreeSlotProps) => React.ReactNode;
 }
@@ -87,6 +89,7 @@ export function AppSidebar({
   isCollapsed = false,
   onNavigate,
   onRequestProductSwitcher,
+  onRequestOrgSwitcher,
   isMobile = false,
   projectNavTreeSlot,
 }: AppSidebarProps) {
@@ -234,7 +237,12 @@ export function AppSidebar({
         )}
       >
         {isMobile && (
-          <div className="shrink-0 border-b border-sidebar-border px-2.5 py-2">
+          <div className="shrink-0 space-y-1 border-b border-sidebar-border px-2.5 py-2">
+            <WorkspaceSwitcher
+              variant="sidebar"
+              triggerOnly
+              onRequestOpen={onRequestOrgSwitcher}
+            />
             <ProductSwitcherMenu
               variant="sidebar"
               triggerOnly
