@@ -174,7 +174,7 @@ export function TimesheetPayrollPageClient() {
     <PayrollFilters payPeriod={settings.payPeriod} rows={rows} />
   ) : null;
 
-  if (settingsLoading && summaryLoading) return <PayrollPageSkeleton />;
+  if (settingsLoading || summaryLoading) return <PayrollPageSkeleton />;
 
   if (!canView) {
     return (

@@ -267,11 +267,13 @@ export function usePageAutosave({
 
   const keepLocalEdits = useCallback(() => {
     const detail = conflictRef.current;
-    if (detail !== null && detail.currentContentRevision !== null)
-      adoptRevision(pageIdRef.current, detail.currentContentRevision);
+    const revisionAdopted =
+      detail !== null && detail.currentContentRevision !== null;
+    if (revisionAdopted)
+      adoptRevision(pageIdRef.current, detail!.currentContentRevision!);
     conflictRef.current = null;
     setConflict(null);
-    flush();
+    if (revisionAdopted) flush();
   }, [adoptRevision, flush]);
 
   return { saveState, conflict, schedule, discardLocalEdits, keepLocalEdits };

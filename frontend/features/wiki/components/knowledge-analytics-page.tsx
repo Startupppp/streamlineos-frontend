@@ -18,7 +18,9 @@ import {
   useKnowledgeGaps,
   useCreateKbPage,
 } from "@/hooks/api/kb";
-import { useCan } from "@/hooks/api/access";
+import { useCanState } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { resolveGate } from "@/lib/rbac/gate";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { pageHref } from "@/lib/knowledge-routes";
 import {
@@ -27,7 +29,6 @@ import {
   KbThumbsUpIcon,
   KbFileTextIcon,
   KbEyeIcon,
-  KbLockIcon,
   KbPlusIcon,
 } from "@/features/wiki/lib/kb-icons";
 import type { KbNoResultRow, KbPageAnalyticsRow, KbGapRow } from "@/types/kb";
@@ -144,6 +145,11 @@ const GapTableRow = memo(function GapTableRow({
   );
 });
 
+function formatRatioAsPercent(ratio: number): string {
+  if (!Number.isFinite(ratio)) return "0%";
+  return `${Math.round(Math.min(Math.max(ratio, 0), 1) * 100)}%`;
+}
+
 function AnalyticsSkeleton() {
   return (
     <div className="space-y-4">
@@ -161,7 +167,7 @@ function AnalyticsSkeleton() {
 }
 
 export default function KnowledgeAnalyticsPage() {
-  const canView = useCan("kb:analytics:view");
+  const access = useCanState("kb:analytics:view");
   const { data: overview, isLoading: overviewLoading, isError: overviewError, error: overviewQueryError, refetch: refetchOverview } =
     useKbAnalyticsOverview();
   const { data: noResults = [], isLoading: noResultsLoading, isError: noResultsError, refetch: refetchNoResults } =
@@ -190,21 +196,14 @@ export default function KnowledgeAnalyticsPage() {
     );
   }
 
-  if (!canView) {
-    return (
-      <PageWrapper title="Analytics">
-        <EmptyState
-          illustration={
-            <KbLockIcon className="w-8 text-muted-foreground" />
-          }
-          title="Access restricted"
-          description="You don't have permission to view knowledge base analytics."
-        />
-      </PageWrapper>
-    );
-  }
+  const gate = resolveGate({
+    access,
+    isLoading: overviewLoading || noResultsLoading || pagesLoading || gapsLoading,
+    isError: overviewError || noResultsError || pagesError || gapsError,
+    isEmpty: false,
+  });
 
-  if (overviewLoading || noResultsLoading || pagesLoading || gapsLoading) {
+  if (gate === "loading") {
     return (
       <PageWrapper title="Analytics">
         <AnalyticsSkeleton />
@@ -212,7 +211,15 @@ export default function KnowledgeAnalyticsPage() {
     );
   }
 
-  if (overviewError || noResultsError || pagesError || gapsError) {
+  if (gate === "denied") {
+    return (
+      <PageWrapper title="Analytics">
+        <NoPermissionState permission="kb:analytics:view" />
+      </PageWrapper>
+    );
+  }
+
+  if (gate === "error") {
     return (
       <PageWrapper title="Analytics">
         <ErrorState
@@ -225,42 +232,53 @@ export default function KnowledgeAnalyticsPage() {
     );
   }
 
+  if (!overview) {
+    return (
+      <PageWrapper title="Analytics">
+        <ErrorState
+          title="Analytics didn't finish loading"
+          description="The request was interrupted before the figures arrived, so nothing here would be accurate."
+          onRetry={handleRetry}
+          className="flex-1"
+        />
+      </PageWrapper>
+    );
+  }
+
   return (
     <PageWrapper title="Analytics">
-      {overview && (
-        <StatCardGrid cols={5} className="mb-4">
-          <StatCard
-            label="Total pages"
-            value={overview.totalCount}
-            icon={KbFileTextIcon}
-            tone="default"
-          />
-          <StatCard
-            label="Total views"
-            value={overview.totalViews}
-            icon={KbEyeIcon}
-            tone="blue"
-          />
-          <StatCard
-            label="Searches"
-            value={overview.searches}
-            icon={KbSearchIcon}
-            tone="violet"
-          />
-          <StatCard
-            label="Helpful votes"
-            value={overview.helpfulUp}
-            icon={KbThumbsUpIcon}
-            tone="emerald"
-          />
-          <StatCard
-            label="Search success"
-            value={`${Math.round(overview.searchSuccessRate)}%`}
-            icon={KbBarChart2Icon}
-            tone="amber"
-          />
-        </StatCardGrid>
-      )}
+      <StatCardGrid cols={5} className="mb-4">
+        <StatCard
+          label="Help centre articles"
+          value={overview.totalCount}
+          icon={KbFileTextIcon}
+          tone="default"
+        />
+        <StatCard
+          label="Article views"
+          value={overview.totalViews}
+          icon={KbEyeIcon}
+          tone="blue"
+        />
+        <StatCard
+          label="Searches"
+          value={overview.searches}
+          icon={KbSearchIcon}
+          tone="violet"
+        />
+        <StatCard
+          label="Helpful votes"
+          value={overview.helpfulUp}
+          icon={KbThumbsUpIcon}
+          tone="emerald"
+        />
+        <StatCard
+          label="Search success"
+          value={formatRatioAsPercent(overview.searchSuccessRate)}
+          icon={KbBarChart2Icon}
+          tone="amber"
+        />
+      </StatCardGrid>
 
       <div className="space-y-4">
         <section className="space-y-2">

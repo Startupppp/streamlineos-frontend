@@ -16,6 +16,7 @@ import type {
   TimesheetEntry,
 } from "@/features/timesheets/types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
 const timerNullableC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-timer-schema").then((m) => m.timerNullableResponseContract),
@@ -141,10 +142,22 @@ export function useDiscardTimer() {
 
 export function useConvertTimer() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("timesheets:entries:create", {
+  return useAuthorizedIdempotentMutation<
+    TimesheetEntry,
+    Error,
+    { timerId: number; data: ConvertTimerInput }
+  >("timesheets:entries:create", {
     mutationKey: ["timesheets", "timer", "convert"],
-    mutationFn: ({ timerId, data }: { timerId: number; data: ConvertTimerInput }) =>
-      apiClient.post<TimesheetEntry>(`/timesheets/timer/${timerId}/convert`, data, undefined, entryC),
+    mutationFn: (
+      { timerId, data }: { timerId: number; data: ConvertTimerInput },
+      idempotencyKey: string,
+    ) =>
+      apiClient.post<TimesheetEntry>(
+        `/timesheets/timer/${timerId}/convert`,
+        data,
+        { headers: { "Idempotency-Key": idempotencyKey } },
+        entryC,
+      ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.timerActive() });
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });

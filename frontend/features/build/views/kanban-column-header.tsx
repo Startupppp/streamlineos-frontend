@@ -5,7 +5,6 @@ import { GripVertical, Pencil, Trash2 } from "lucide-react";
 import type { DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { Input } from "@/components/ui/input";
-import { isActivationKey } from "@/lib/keyboard-activation";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -180,19 +179,6 @@ export function KanbanColumnHeader({
     e.stopPropagation();
   }, []);
 
-  const handleTitleClick = useCallback(() => {
-    if (isEditable) handleStartRename();
-  }, [isEditable, handleStartRename]);
-
-  const handleTitleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (!isEditable || !isActivationKey(e)) return;
-      e.preventDefault();
-      handleStartRename();
-    },
-    [isEditable, handleStartRename],
-  );
-
   const handleColorChange = useCallback(
     (newColor: string) => {
       const statusId = column.statusId;
@@ -279,18 +265,21 @@ export function KanbanColumnHeader({
             )}
           </div>
         ) : (
-          <h3
-            className={cn(
-              "truncate text-[11px] font-semibold uppercase tracking-wider text-foreground",
-              isEditable && "cursor-text transition-colors hover:text-muted-foreground",
+          <h3 className="min-w-0 truncate text-[11px] font-semibold uppercase tracking-wider text-foreground">
+            {isEditable ? (
+              <button
+                type="button"
+                className="max-w-full cursor-text truncate transition-colors hover:text-muted-foreground"
+                onClick={handleStartRename}
+                title="Click to rename"
+              >
+                {column.name}
+              </button>
+            ) : (
+              <span className="truncate" title={column.name}>
+                {column.name}
+              </span>
             )}
-            role={isEditable ? "button" : undefined}
-            tabIndex={isEditable ? 0 : undefined}
-            onClick={handleTitleClick}
-            onKeyDown={handleTitleKeyDown}
-            title={isEditable ? "Click to rename" : column.name}
-          >
-            {column.name}
           </h3>
         )}
         <KanbanColumnWip count={displayCount} wipLimit={wipLimit} />

@@ -128,7 +128,7 @@ function RequestLoanDialog({ open, onClose }: LoanDialogProps) {
                 <FormItem>
                   <FormLabel>Amount (₹) <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
-                    <Input type="number" min="0" step="0.01" placeholder="0.00" {...field} />
+                    <Input type="number" min={LOAN_AMOUNT_MIN} max={LOAN_AMOUNT_MAX} step="0.01" placeholder="0.00" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -141,7 +141,7 @@ function RequestLoanDialog({ open, onClose }: LoanDialogProps) {
                 <FormItem>
                   <FormLabel>Repayment months <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
-                    <Input type="number" min="1" max="60" placeholder="e.g. 12" {...field} />
+                    <Input type="number" min={1} max={LOAN_EMIS_MAX} placeholder="e.g. 12" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -25,6 +25,9 @@ const storageUploadContract = lazyContract(() =>
   import("@/hooks/api/chat-extra-schema").then((m) => m.storageUploadContract),
 );
 
+const MAX_ATTACHMENT_MB = 10;
+const MAX_ATTACHMENT_BYTES = MAX_ATTACHMENT_MB * 1024 * 1024;
+
 const formSchema = createTicketInputSchema.omit({ projectId: true, labelIds: true });
 
 export type CreateTicketFormValues = z.infer<typeof formSchema>;
@@ -298,8 +301,8 @@ export function useCreateTicketForm({
 
   const addFiles = useCallback((incoming: File[]) => {
     const valid = incoming.filter((f) => {
-      if (f.size > 25 * 1024 * 1024) {
-        toast.error(`${f.name} exceeds 25MB limit`);
+      if (f.size > MAX_ATTACHMENT_BYTES) {
+        toast.error(`${f.name} exceeds ${MAX_ATTACHMENT_MB}MB limit`);
         return false;
       }
       return true;

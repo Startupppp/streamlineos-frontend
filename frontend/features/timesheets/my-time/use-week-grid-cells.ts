@@ -68,7 +68,7 @@ export function useWeekGridCells({
    * the success and in-flight halves.
    */
   const [cellError, setCellError] = useState<string | null>(null);
-  const suppressBlurForCell = useRef<string | null>(null);
+  const lastCommitted = useRef<{ cellKey: string; value: string } | null>(null);
 
   const saveStatus = useMemo(() => {
     if (cellError) return cellError;
@@ -123,6 +123,7 @@ export function useWeekGridCells({
     setEditingCell(e.currentTarget.dataset.cellKey ?? "");
     setEditingValue(e.currentTarget.dataset.hours ?? "");
     setCellError(null);
+    lastCommitted.current = null;
   }, []);
 
   const handleCellChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,10 +133,8 @@ export function useWeekGridCells({
   const handleCellBlur = useCallback(
     (e: React.FocusEvent<HTMLInputElement>) => {
       const cellKey = e.currentTarget.dataset.cellKey ?? "";
-      if (suppressBlurForCell.current === cellKey) {
-        suppressBlurForCell.current = null;
-        return;
-      }
+      const committed = lastCommitted.current;
+      if (committed?.cellKey === cellKey && committed.value === editingValue) return;
       const row = rowFromDataset(e.currentTarget.dataset);
       if (!row) return;
       commitCell(
@@ -198,7 +197,10 @@ export function useWeekGridCells({
         const row = rowFromDataset(e.currentTarget.dataset);
         if (!row) return;
         if (!commitCell(rowKey, date, editingValue, row)) return;
-        suppressBlurForCell.current = e.currentTarget.dataset.cellKey ?? "";
+        lastCommitted.current = {
+          cellKey: e.currentTarget.dataset.cellKey ?? "",
+          value: editingValue,
+        };
         focusCell(rowIdx + 1, dayIdx);
         return;
       }

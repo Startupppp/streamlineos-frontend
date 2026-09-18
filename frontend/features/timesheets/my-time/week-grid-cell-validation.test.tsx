@@ -129,4 +129,37 @@ describe("pressing Enter commits a cell once, not twice", () => {
 
     expect(createEntry.mutate).toHaveBeenCalledTimes(1);
   });
+
+  it("still commits a NEW value typed into the same cell after Enter, so the edit is not swallowed on the last row", () => {
+    const { view, createEntry } = setup();
+    const cellKey = `${ROW.rowKey}-${DAYS[0]}`;
+
+    act(() => view.result.current.handleCellFocus(focusEvent(cellKey, "")));
+    act(() => view.result.current.handleCellChange(changeEvent("2")));
+
+    const keyEvent = {
+      key: "Enter",
+      preventDefault: jest.fn(),
+      currentTarget: {
+        dataset: {
+          cellKey,
+          rowKey: ROW.rowKey,
+          date: DAYS[0],
+          row: JSON.stringify(ROW),
+        },
+        selectionStart: null,
+        selectionEnd: null,
+        value: "2",
+      },
+    } as unknown as React.KeyboardEvent<HTMLInputElement>;
+
+    act(() => view.result.current.handleCellKeyDown(keyEvent));
+    act(() => view.result.current.handleCellChange(changeEvent("5")));
+    act(() => view.result.current.handleCellBlur(blurEvent(cellKey)));
+
+    expect(createEntry.mutate).toHaveBeenCalledTimes(2);
+    expect(createEntry.mutate).toHaveBeenLastCalledWith(
+      expect.objectContaining({ hours: 5 }),
+    );
+  });
 });

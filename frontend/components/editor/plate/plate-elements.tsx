@@ -6,6 +6,15 @@ import type { PlateElementProps, PlateLeafProps } from 'platejs/react';
 import type { TElement } from 'platejs';
 import { useTodoListElement, useTodoListElementState } from '@platejs/list/react';
 import { useEditorPageContext } from './plate-context';
+import {
+  LIST_STYLE_DECIMAL,
+  LIST_STYLE_DISC,
+  LIST_STYLE_TODO,
+  isListItemChecked,
+  listOrdinalLabel,
+  listPaddingRem,
+  listStyleTypeOf,
+} from './plate-list-model';
 import { activationProps } from '@/lib/keyboard-activation';
 
 type ListElement = TElement & { listStyleType?: string; indent?: number; checked?: boolean; textAlign?: string };
@@ -13,40 +22,31 @@ type ListElement = TElement & { listStyleType?: string; indent?: number; checked
 export function ParagraphElement({ element, children, ...props }: PlateElementProps) {
   const el = element as ListElement;
   const readOnly = useReadOnly();
-  const todoState = useTodoListElementState({ element: el });
-  useTodoListElement(todoState);
+  const listStyle = listStyleTypeOf(element);
 
-  if (el.listStyleType === 'disc') {
+  if (listStyle === LIST_STYLE_DISC || listStyle === LIST_STYLE_DECIMAL) {
+    const marker =
+      listStyle === LIST_STYLE_DECIMAL ? listOrdinalLabel(element) : '•';
     return (
       <PlateElement
         {...props}
         element={element}
         as="div"
         className="flex items-start my-0.5 leading-7"
-        style={{ paddingLeft: `${(el.indent ?? 1) * 1.5}rem` }}
+        style={{ paddingLeft: listPaddingRem(element) }}
       >
-        <span className="mr-2 shrink-0 mt-1 text-foreground" contentEditable={false}>•</span>
+        <span
+          className="mr-2 shrink-0 mt-1 text-foreground tabular-nums"
+          contentEditable={false}
+        >
+          {marker}
+        </span>
         <span className="flex-1 min-w-0">{children}</span>
       </PlateElement>
     );
   }
 
-  if (el.listStyleType === 'decimal') {
-    return (
-      <PlateElement
-        {...props}
-        element={element}
-        as="div"
-        className="flex items-start my-0.5 leading-7"
-        style={{ paddingLeft: `${(el.indent ?? 1) * 1.5}rem` }}
-      >
-        <span className="mr-2 shrink-0 mt-1 text-foreground tabular-nums" contentEditable={false}>1.</span>
-        <span className="flex-1 min-w-0">{children}</span>
-      </PlateElement>
-    );
-  }
-
-  if (el.listStyleType === 'todo') {
+  if (listStyle === LIST_STYLE_TODO) {
     return (
       <TodoListItemElement {...props} element={element} readOnly={readOnly}>
         {children}
@@ -73,6 +73,7 @@ function TodoListItemElement({
   const el = element as ListElement;
   const state = useTodoListElementState({ element: el });
   const { checkboxProps } = useTodoListElement(state);
+  const checked = checkboxProps.checked ?? isListItemChecked(element);
 
   function handleCheckedChange(e: React.ChangeEvent<HTMLInputElement>) {
     checkboxProps.onCheckedChange(e.target.checked);
@@ -84,20 +85,20 @@ function TodoListItemElement({
       element={element}
       as="div"
       className="flex items-start my-0.5 leading-7"
-      style={{ paddingLeft: `${(el.indent ?? 1) * 1.5}rem` }}
+      style={{ paddingLeft: listPaddingRem(element) }}
     >
       <span className="mr-2 shrink-0 mt-1" contentEditable={false}>
         <input
           type="checkbox"
           aria-label="Toggle task item"
-          checked={checkboxProps.checked ?? false}
+          checked={checked}
           onChange={handleCheckedChange}
           onMouseDown={checkboxProps.onMouseDown}
           disabled={readOnly}
           className="cursor-pointer accent-primary"
         />
       </span>
-      <span className={`flex-1 min-w-0 ${checkboxProps.checked ? 'line-through text-muted-foreground' : ''}`}>
+      <span className={`flex-1 min-w-0 ${checked ? 'line-through text-muted-foreground' : ''}`}>
         {children}
       </span>
     </PlateElement>

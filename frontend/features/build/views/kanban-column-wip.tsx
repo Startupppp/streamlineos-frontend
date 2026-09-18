@@ -33,7 +33,7 @@ export const KanbanColumnWip = memo(function KanbanColumnWip({
 }: KanbanColumnWipProps) {
   const state = resolveWipState(count, wipLimit);
 
-  if (state === "none" || wipLimit == null) {
+  if (state === "none") {
     return (
       <span
         role="img"

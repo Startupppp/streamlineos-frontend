@@ -16,10 +16,7 @@ const LIST_STYLE_TYPES: readonly ListStyleType[] = [
 export const LIST_INDENT_REM = 1.5;
 
 export interface ListNodeShape {
-  listStyleType?: unknown;
-  indent?: unknown;
-  listStart?: unknown;
-  checked?: unknown;
+  readonly [property: string]: unknown;
 }
 
 export function listStyleTypeOf(node: ListNodeShape): ListStyleType | null {

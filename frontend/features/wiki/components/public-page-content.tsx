@@ -2,6 +2,7 @@
 
 import { Fragment } from "react";
 import Image from "next/image";
+import { isRecord } from "@/lib/is-record";
 import {
   LIST_STYLE_DECIMAL,
   LIST_STYLE_TODO,
@@ -151,19 +152,19 @@ function renderSlateLeafNode(node: SlateLeaf, idx: number): React.ReactNode {
 }
 
 function listStyleOfNode(node: unknown): ListStyleType | null {
-  if (typeof node !== "object" || node === null) return null;
-  if (isSlateLeaf(node)) return null;
+  if (!isRecord(node) || isSlateLeaf(node)) return null;
   return listStyleTypeOf(node);
 }
 
-function renderListItem(node: unknown, idx: number): React.ReactNode {
-  const el = node as SlateElement;
+function renderListItem(node: Record<string, unknown>, idx: number): React.ReactNode {
+  const el = node;
   const children = Array.isArray(el.children)
     ? el.children.map((child, i) => renderSlateNode(child, i))
     : [];
   const style = { paddingLeft: listPaddingRem(el) };
+  const listStyle = listStyleTypeOf(el);
 
-  if (listStyleTypeOf(el) === LIST_STYLE_TODO) {
+  if (listStyle === LIST_STYLE_TODO) {
     const checked = isListItemChecked(el);
     return (
       <li key={idx} className="flex items-start gap-2 text-sm" style={style}>
@@ -182,8 +183,7 @@ function renderListItem(node: unknown, idx: number): React.ReactNode {
     );
   }
 
-  const marker =
-    listStyleTypeOf(el) === LIST_STYLE_DECIMAL ? listOrdinalLabel(el) : "•";
+  const marker = listStyle === LIST_STYLE_DECIMAL ? listOrdinalLabel(el) : "•";
 
   return (
     <li key={idx} className="flex items-start gap-2 text-sm" style={style}>
@@ -195,7 +195,7 @@ function renderListItem(node: unknown, idx: number): React.ReactNode {
 
 function renderListRun(
   style: ListStyleType,
-  items: unknown[],
+  items: Record<string, unknown>[],
   idx: number,
 ): React.ReactNode {
   const listItems = items.map((item, i) => renderListItem(item, i));
@@ -222,9 +222,11 @@ function renderSlateBlocks(nodes: unknown[]): React.ReactNode[] {
       continue;
     }
     const runStart = index;
-    const run: unknown[] = [];
-    while (index < nodes.length && listStyleOfNode(nodes[index]) === style) {
-      run.push(nodes[index]);
+    const run: Record<string, unknown>[] = [];
+    while (index < nodes.length) {
+      const item = nodes[index];
+      if (!isRecord(item) || listStyleOfNode(item) !== style) break;
+      run.push(item);
       index += 1;
     }
     blocks.push(renderListRun(style, run, runStart));

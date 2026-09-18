@@ -40,18 +40,28 @@ import type { KbPageTemplate } from "@/hooks/api/kb/page-templates";
 import type { StarterTemplate } from "@/features/wiki/lib/starter-templates";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
+function savedTemplateKey(templateId: number): string {
+  return `saved:${templateId}`;
+}
+
+function starterTemplateKey(template: StarterTemplate): string {
+  return `starter:${template.key}`;
+}
+
 interface TemplateCardProps {
   template: KbPageTemplate;
   canDelete: boolean;
   onUse: (templateId: number) => void;
-  isCreating: boolean;
+  isPending: boolean;
+  isDisabled: boolean;
 }
 
 function TemplateCard({
   template,
   canDelete,
   onUse,
-  isCreating,
+  isPending,
+  isDisabled,
 }: TemplateCardProps) {
   const deleteTemplate = useDeleteKbPageTemplate();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -89,7 +99,8 @@ function TemplateCard({
           <LoadingButton
             size="sm"
             onClick={handleUseClick}
-            isPending={isCreating}
+            isPending={isPending}
+            disabled={isDisabled}
             className="text-xs"
           >
             Use
@@ -137,10 +148,11 @@ function TemplateCard({
 interface StarterCardProps {
   template: StarterTemplate;
   onUse: (template: StarterTemplate) => void;
-  isCreating: boolean;
+  isPending: boolean;
+  isDisabled: boolean;
 }
 
-function StarterCard({ template, onUse, isCreating }: StarterCardProps) {
+function StarterCard({ template, onUse, isPending, isDisabled }: StarterCardProps) {
   function handleUseClick() {
     onUse(template);
   }
@@ -156,7 +168,8 @@ function StarterCard({ template, onUse, isCreating }: StarterCardProps) {
         size="sm"
         variant="outline"
         onClick={handleUseClick}
-        isPending={isCreating}
+        isPending={isPending}
+        disabled={isDisabled}
         className="text-xs shrink-0"
       >
         Use
@@ -199,10 +212,11 @@ export default function TemplatesPage() {
   const createPage = useCreateKbPage();
   const updatePage = useUpdateKbPage();
 
-  const isCreating = createPage.isPending || updatePage.isPending;
+  const [pendingTemplateKey, setPendingTemplateKey] = useState<string | null>(null);
 
   const handleUseTemplate = useCallback(
     (templateId: number) => {
+      setPendingTemplateKey(savedTemplateKey(templateId));
       createPage.mutate(
         { templateId },
         {
@@ -210,6 +224,7 @@ export default function TemplatesPage() {
             router.push(pageHref(page.id));
           },
           onError: () => {
+            setPendingTemplateKey(null);
             toast.error("Failed to create page from template");
           },
         },
@@ -220,6 +235,7 @@ export default function TemplatesPage() {
 
   const handleUseStarter = useCallback(
     (template: StarterTemplate) => {
+      setPendingTemplateKey(starterTemplateKey(template));
       createPage.mutate(
         { title: template.name },
         {
@@ -239,6 +255,7 @@ export default function TemplatesPage() {
             );
           },
           onError: () => {
+            setPendingTemplateKey(null);
             toast.error("Failed to create page from starter template");
           },
         },
@@ -260,7 +277,8 @@ export default function TemplatesPage() {
                 key={t.key}
                 template={t}
                 onUse={handleUseStarter}
-                isCreating={isCreating}
+                isPending={pendingTemplateKey === starterTemplateKey(t)}
+                isDisabled={pendingTemplateKey !== null && pendingTemplateKey !== starterTemplateKey(t)}
               />
             ))}
           </div>
@@ -292,7 +310,8 @@ export default function TemplatesPage() {
                   template={template}
                   canDelete={canDelete}
                   onUse={handleUseTemplate}
-                  isCreating={isCreating}
+                  isPending={pendingTemplateKey === savedTemplateKey(template.id)}
+                  isDisabled={pendingTemplateKey !== null && pendingTemplateKey !== savedTemplateKey(template.id)}
                 />
               ))}
             </div>
