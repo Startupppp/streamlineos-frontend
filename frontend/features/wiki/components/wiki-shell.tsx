@@ -2,19 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 import { useKbPagesTree, useKbPagesFavorites, useCreateKbPage } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -22,19 +13,14 @@ import PageTree from "./page-tree";
 import QuickFindDialog from "./quick-find-dialog";
 import WikiSidebarNav, { WikiSidebarFooter } from "./wiki-sidebar-nav";
 import {
-  WikiMobileNavProvider,
-  WikiMobileNavTrigger,
-} from "./wiki-mobile-nav-context";
+  WikiDesktopSidebarChrome,
+  WikiSidebarCollapseControl,
+} from "./wiki-sidebar-chrome";
 import {
   KNOWLEDGE_BASE,
   pageHref,
 } from "@/lib/knowledge-routes";
-import {
-  KbPanelLeftCloseIcon,
-  KbPanelLeftOpenIcon,
-  KbPlusIcon,
-  KbStarIcon,
-} from "@/features/wiki/lib/kb-icons";
+import { KbStarIcon } from "@/features/wiki/lib/kb-icons";
 
 export default function WikiShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -46,7 +32,6 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   const canViewReviews = useCan("kb:reviews:view");
   const canManageSettings = useCan("kb:settings:manage");
   const [quickFindOpen, setQuickFindOpen] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const createParamConsumedRef = useRef(false);
   const [collapsed, setCollapsed] = useState(
     () => typeof window !== "undefined" && localStorage.getItem("wiki-tree-collapsed") === "true"
@@ -80,20 +65,8 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
     setQuickFindOpen(true);
   }, []);
 
-  const handleCloseMobile = useCallback(() => {
-    setMobileOpen(false);
-  }, []);
-
-  const handleOpenMobile = useCallback(() => {
-    setMobileOpen(true);
-  }, []);
-
   const handleQuickFindOpenChange = useCallback((open: boolean) => {
     setQuickFindOpen(open);
-  }, []);
-
-  const handleMobileOpenChange = useCallback((open: boolean) => {
-    setMobileOpen(open);
   }, []);
 
   function handleToggleCollapsed() {
@@ -121,8 +94,8 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
     canManageSettings,
   };
 
-  const sidebarInner = (forceExpanded = false) => {
-    const isCollapsedView = collapsed && !forceExpanded;
+  const sidebarInner = () => {
+    const isCollapsedView = collapsed;
 
     return (
       <>
@@ -152,7 +125,6 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
                 <PageTree
                   nodes={treeNodes}
                   isLoading={treeLoading}
-                  onCloseMobile={handleCloseMobile}
                 />
               </div>
             )}
@@ -166,135 +138,41 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const mobileSidebarContent = (
-    <div className="flex h-full flex-col">
-      <div className="flex shrink-0 items-center justify-between px-3 py-2">
-        <span className="text-sm font-semibold text-foreground">Wiki</span>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6"
-          onClick={handleNewPage}
-          disabled={createPage.isPending}
-          aria-label="New page"
-        >
-          <KbPlusIcon className="h-4 w-4" />
-        </Button>
-      </div>
-      {sidebarInner(true)}
-    </div>
-  );
-
   return (
     <TooltipProvider delayDuration={0}>
-      <WikiMobileNavProvider onOpen={handleOpenMobile}>
-        <div className="flex min-h-0 flex-1 overflow-hidden bg-background">
-          <aside
-            className={`hidden md:flex flex-col shrink-0 border-r border-border bg-card/50 overflow-hidden transition-[width] duration-300 ease-in-out ${
-              collapsed ? "w-10" : "w-[260px]"
-            }`}
-          >
-            <div className="flex h-full min-w-0 flex-col">
-              <div
-                className={`flex shrink-0 items-center py-2 ${
-                  collapsed ? "flex-col gap-1 px-0" : "justify-between px-3"
-                }`}
-              >
-                {collapsed ? (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-7"
-                      onClick={handleToggleCollapsed}
-                      aria-label="Expand sidebar"
-                    >
-                      <KbPanelLeftOpenIcon className="size-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-7"
-                      onClick={handleNewPage}
-                      disabled={createPage.isPending}
-                      aria-label="New page"
-                    >
-                      <KbPlusIcon className="size-4" />
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href={KNOWLEDGE_BASE}
-                      className="text-sm font-semibold text-foreground hover:text-foreground/80 transition-colors"
-                    >
-                      Wiki
-                    </Link>
-                    <div className="flex items-center gap-0.5">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-7"
-                        onClick={handleToggleCollapsed}
-                        aria-label="Collapse sidebar"
-                      >
-                        <KbPanelLeftCloseIcon className="size-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-6"
-                        onClick={handleNewPage}
-                        disabled={createPage.isPending}
-                        aria-label="New page"
-                      >
-                        <KbPlusIcon className="size-4" />
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </div>
-              {sidebarInner()}
-            </div>
-          </aside>
-
-          <Drawer
-            open={mobileOpen}
-            onOpenChange={handleMobileOpenChange}
-            direction="bottom"
-            shouldScaleBackground={false}
-          >
-            <DrawerContent
-              className={cn(
-                "flex max-h-[min(92dvh,40rem)] w-full flex-col gap-0 overflow-hidden rounded-t-xl border border-border bg-card p-0 shadow-lg",
-                "pb-[max(0.5rem,env(safe-area-inset-bottom))]",
-                "motion-reduce:transition-none",
-                "[&>[data-slot=drawer-handle]]:mt-2 [&>[data-slot=drawer-handle]]:mb-1 [&>[data-slot=drawer-handle]]:h-1.5 [&>[data-slot=drawer-handle]]:w-10 [&>[data-slot=drawer-handle]]:bg-muted-foreground/25",
-              )}
-            >
-              <DrawerHeader className="sr-only">
-                <DrawerTitle>Wiki navigation</DrawerTitle>
-              </DrawerHeader>
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                {mobileSidebarContent}
-              </div>
-            </DrawerContent>
-          </Drawer>
-
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-            <div className="flex shrink-0 items-center gap-1 border-b border-border/60 px-3 py-2 md:hidden">
-              <WikiMobileNavTrigger />
-            </div>
-            <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
-              <div className="flex min-h-full flex-1 flex-col overscroll-contain">
-                {children}
-              </div>
-            </ScrollArea>
+      <div className="flex min-h-0 flex-1 overflow-hidden bg-background">
+        <aside
+          className={`relative hidden md:flex flex-col shrink-0 border-r border-border bg-card/50 overflow-hidden transition-[width] duration-300 ease-in-out ${
+            collapsed ? "w-10" : "w-[260px]"
+          }`}
+        >
+          <div className="flex h-full min-w-0 flex-col overflow-hidden">
+            <WikiDesktopSidebarChrome
+              collapsed={collapsed}
+              createPending={createPage.isPending}
+              onToggleCollapsed={handleToggleCollapsed}
+              onNewPage={handleNewPage}
+            />
+            {sidebarInner()}
           </div>
+          {collapsed ? null : (
+            <WikiSidebarCollapseControl
+              collapsed={false}
+              onToggleCollapsed={handleToggleCollapsed}
+            />
+          )}
+        </aside>
 
-          <QuickFindDialog open={quickFindOpen} onOpenChange={handleQuickFindOpenChange} />
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+            <div className="flex min-h-full flex-1 flex-col overscroll-contain">
+              {children}
+            </div>
+          </ScrollArea>
         </div>
-      </WikiMobileNavProvider>
+
+        <QuickFindDialog open={quickFindOpen} onOpenChange={handleQuickFindOpenChange} />
+      </div>
     </TooltipProvider>
   );
 }

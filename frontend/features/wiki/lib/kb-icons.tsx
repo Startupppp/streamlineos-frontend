@@ -11,8 +11,6 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   ChevronUpIcon,
-  ChevronsLeftIcon,
-  ChevronsRightIcon,
   CircleCheckIcon,
   ClipboardIcon,
   CopyIcon,
@@ -162,8 +160,6 @@ export const KbFileTextIcon = createAnimatedIcon(BookOpenTextIcon);
 export const KbLayoutTemplateIcon = createAnimatedIcon(LayoutListIcon);
 export const KbMessageCircleIcon = createAnimatedIcon(MessageCircleIcon);
 export const KbMessageSquareIcon = createAnimatedIcon(MessageCircleIcon);
-export const KbPanelLeftCloseIcon = createAnimatedIcon(ChevronsLeftIcon);
-export const KbPanelLeftOpenIcon = createAnimatedIcon(ChevronsRightIcon);
 export const KbClipboardCheckIcon = createAnimatedIcon(BookOpenCheckIcon);
 export const KbPencilIcon = createAnimatedIcon(UserPenIcon);
 export const KbEdit2Icon = createAnimatedIcon(UserPenIcon);

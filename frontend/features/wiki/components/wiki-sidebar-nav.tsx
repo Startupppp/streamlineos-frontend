@@ -11,6 +11,7 @@ import {
   KbLayoutGridIcon,
   KbLayoutTemplateIcon,
   KbLockIcon,
+  KbMessageSquareIcon,
   KbSearchIcon,
   KbSettingsIcon,
   KbStarIcon,
@@ -36,6 +37,7 @@ import {
 import {
   KNOWLEDGE_BASE,
   KB_ANALYTICS,
+  KB_CHAT,
   KB_FAVORITES,
   KB_IMPORT,
   KB_PRIVATE,
@@ -73,6 +75,10 @@ interface WikiSidebarNavProps {
 interface WikiSidebarFooterProps {
   isCollapsed?: boolean;
   onQuickFind: () => void;
+}
+
+function buildAskKbItem(): WikiNavItem {
+  return { label: "Ask KB", href: KB_CHAT, icon: KbMessageSquareIcon };
 }
 
 function buildPrimaryItems(): WikiNavItem[] {
@@ -136,6 +142,12 @@ function isNavItemActive(
     return pathname === href || pathname === `${href}/`;
   }
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function sameOpenGroups(current: string[], next: string[]): boolean {
+  if (current.length !== next.length) return false;
+  const nextSet = new Set(next);
+  return current.every((groupId) => nextSet.has(groupId));
 }
 
 function readStoredOpenGroups(): string[] | null {
@@ -321,6 +333,7 @@ export default function WikiSidebarNav({
   canManageSettings,
 }: WikiSidebarNavProps) {
   const pathname = usePathname();
+  const askKbItem = useMemo(() => buildAskKbItem(), []);
   const primaryItems = useMemo(() => buildPrimaryItems(), []);
   const groups = useMemo(
     () =>
@@ -349,9 +362,8 @@ export default function WikiSidebarNav({
 
   useEffect(() => {
     const stored = readStoredOpenGroups();
-    if (stored) {
-      setOpenGroups(stored);
-    }
+    if (!stored) return;
+    setOpenGroups((prev) => (sameOpenGroups(prev, stored) ? prev : stored));
   }, []);
 
   useEffect(() => {
@@ -365,13 +377,22 @@ export default function WikiSidebarNav({
   }, [activeGroupId]);
 
   const handleOpenGroupsChange = useCallback((next: string[]) => {
-    setOpenGroups(next);
-    localStorage.setItem(WIKI_NAV_GROUPS_KEY, JSON.stringify(next));
+    setOpenGroups((prev) => {
+      if (sameOpenGroups(prev, next)) return prev;
+      localStorage.setItem(WIKI_NAV_GROUPS_KEY, JSON.stringify(next));
+      return next;
+    });
   }, []);
 
   if (isCollapsed) {
     return (
       <div className="flex flex-col items-center gap-0.5 px-1 py-1">
+        <WikiNavLink
+          item={askKbItem}
+          isActive={isNavItemActive(pathname, askKbItem.href)}
+          isCollapsed
+        />
+        <Separator className="my-1 w-6" />
         {primaryItems.map((item) => (
           <WikiNavLink
             key={item.href}
@@ -394,6 +415,13 @@ export default function WikiSidebarNav({
 
   return (
     <div className="px-2 pb-1 pt-1">
+      <div className="space-y-0.5">
+        <WikiNavLink
+          item={askKbItem}
+          isActive={isNavItemActive(pathname, askKbItem.href)}
+        />
+      </div>
+      <Separator className="my-1" />
       <div className="space-y-0.5">
         {primaryItems.map((item) => (
           <WikiNavLink

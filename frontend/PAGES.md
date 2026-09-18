@@ -667,7 +667,7 @@
 
 ## Knowledge (Wiki / KB)
 
-- `/knowledge/wiki` · **Knowledge** · hooks: `requireSession`, `RequireModule module="kb"`, `→ features/wiki`
+- `/knowledge/wiki` · **Knowledge** · hooks: `requireSession`, `RequireModule module="kb"`, `→ features/wiki` — WikiShell hides the Documents product sidebar; Ask KB is a wiki-nav row to `/knowledge/chat`
 - `/knowledge/wiki/spaces` · **Knowledge** · hooks: `→ features/wiki`
 - `/knowledge/wiki/spaces/[spaceId]` · **Knowledge** · hooks: `→ features/wiki`
 - `/knowledge/wiki/pages/[pageId]` · **Knowledge** · hooks: `→ features/wiki`
