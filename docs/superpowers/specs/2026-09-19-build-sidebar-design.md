@@ -87,11 +87,15 @@ It supports:
 - Permission-filtered results
 - Bounded and virtualized large collections
 
+Starred and recent scopes appear as compact groups above hierarchical browsing. Starred is hidden when empty. Recents is capped, ordered by last access, and never mixed with search results.
+
 Selecting a scope opens that scope's Overview. The selector never copies an arbitrary subpath from the previous scope.
 
 Browser Back restores the previous scope and destination. A deep link may preserve its requested destination only when the target scope supports that destination and the user remains authorized.
 
 Duplicate names include their parent path and project key. Long names truncate visually while preserving an accessible full label.
+
+Every scope row exposes the same bounded actions through an ellipsis menu and an equivalent context menu: open, open in a new tab, star or unstar, and settings when authorized. Neither menu introduces hierarchy mutations.
 
 ## Sidebar Anatomy
 
@@ -109,6 +113,8 @@ The sidebar has four zones:
 - Drafts
 
 These labels never change meaning with scope. Counts are loaded independently and remain bounded.
+
+Badges represent unread or actionable states, never total task, project, or record counts. A zero badge is omitted.
 
 ### Organization Scope
 
@@ -203,13 +209,18 @@ More tools may contain:
 
 Scope admins enable applicable tools. A user may pin at most three enabled More tools. Shared primary order remains canonical.
 
+More tools is searchable. Personal pins are actor- and organization-scoped, appear after the shared primary destinations, and disappear without stale shortcuts when the tool is disabled or access is revoked.
+
 ### Utilities
 
+- Quick create
 - More tools
 - Scope settings
 - Browse all Build
 
 Scope settings use the exact scope-specific permission. Project settings must not depend on organization-wide settings permission.
+
+Quick create is one compact control whose menu is derived from the active scope and exact create permissions. It offers only valid destinations, preselects the active scope, requires an explicit scope choice when context is ambiguous, and is hidden when no action is available.
 
 ## Consolidation Decisions
 
@@ -347,6 +358,7 @@ Internal preview and the real external portal are visually and semantically dist
 - Reuse the shared filtered navigation model.
 - Bottom navigation exposes at most five actions: Overview, My Work, Issues or Work, Updates, and More.
 - Scope switching, full navigation, Agent Pulse, and settings live in the navigation drawer.
+- Quick create is available from the drawer and may occupy a bottom action only when product testing proves it is more frequent than a listed destination.
 - No critical information or action depends on hover.
 - Touch targets are at least 44 by 44 CSS pixels.
 
@@ -444,6 +456,7 @@ The model resolves:
 - Active state
 - Mobile priority
 - Optional unread or prepared-draft count
+- Available create actions
 
 Route parsing and link creation use one canonical Build scope resolver. Components do not infer scope independently from arbitrary URL segments.
 
@@ -479,6 +492,7 @@ The implementation plan must reserve shared navigation, permission, route-access
 - Standalone and product-linked projects are both first-class.
 - No normal scope shows more than nine primary destinations.
 - More tools is permission-filtered, searchable, and customizable within the three-pin limit.
+- Scope favorites, recents, row actions, badges, and quick create remain permission-correct after access or capability changes.
 - Product scope has a real contextual navigation model.
 - Mobile shows at most five bottom destinations and reaches all other tools through the drawer.
 - Internal collaborators and client stakeholders use separate access experiences.
@@ -490,7 +504,7 @@ The implementation plan must reserve shared navigation, permission, route-access
 
 ## Validation Plan
 
-- Unit tests for scope resolution, link creation, active state, permission filtering, pin limits, and fallback behavior
+- Unit tests for scope resolution, link creation, active state, permission filtering, favorites and recents, pin limits, row actions, badge semantics, create-action filtering, and fallback behavior
 - Regression test proving project switching never preserves an unsupported subpath
 - Permission coverage tests for every primary and More tools route
 - Cross-tenant and cross-workspace negative tests
@@ -504,6 +518,24 @@ The implementation plan must reserve shared navigation, permission, route-access
 - Freelancer test with one workspace and standalone projects
 - Contractor test with one explicitly shared project
 - Client test with one granted project and restricted fields
+
+## ClickUp Sidebar Inspiration
+
+Research basis: current ClickUp 4.0 first-party Help Center documentation reviewed in September 2026. The comparison uses behavior, not ClickUp's information architecture or terminology.
+
+- **Global navigation and personal work — adopt the stability, reject the extra rail.** ClickUp keeps Home permanently available and groups Inbox, assigned work, due work, and personal work in a stable personal area ([Global Navigation](https://help.clickup.com/hc/en-us/articles/32050886697495-What-is-Global-Navigation), [My Tasks](https://help.clickup.com/hc/en-us/articles/31007956275863-My-Tasks), [Inbox](https://help.clickup.com/hc/en-us/articles/33947959867543-What-is-the-Inbox)). This reinforces stable StreamlineOS My Work labels. ClickUp's always-open vertical Global Navigation plus feature sidebars is rejected because StreamlineOS preserves one existing collapsible sidebar and no second rail.
+- **Hierarchy navigation — adopt progressive disclosure, reject the model.** ClickUp expands nested locations on demand and supports browsing from its Home or Spaces sidebars ([Hierarchy](https://help.clickup.com/hc/en-us/articles/13856392825367-Intro-to-the-Hierarchy), [Spaces Sidebar](https://help.clickup.com/hc/en-us/articles/32490148963479-What-is-the-Spaces-Sidebar)). StreamlineOS adopts compact collapsed groups and explicit hierarchical browsing inside the unified selector, but does not copy Workspace → Space → Folder → List, does not add a dedicated hierarchy sidebar, and keeps Organization → PM workspace → managed product or standalone project semantics.
+- **Favorites, recents, and customization — adopt focused personalization, reject user-built navigation.** ClickUp hides Favorites until used, provides a Recents section, lets users reorder sections, and supports up to 100 Home Sidebar sections ([Home Sidebar](https://help.clickup.com/hc/en-us/articles/32057009861271-What-is-the-Home-Sidebar), [default sections](https://help.clickup.com/hc/en-us/articles/32854720651543-Default-Home-Sidebar-sections-and-settings), [customization](https://help.clickup.com/hc/en-us/articles/35709363436823-Customize-your-ClickUp-experience)). StreamlineOS adopts an empty-hidden Starred group, bounded Recents, and personal pins, but rejects arbitrary sections and shared-primary reordering because canonical navigation must remain supportable at enterprise scale.
+- **Search — adopt both local and global discovery.** ClickUp filters sidebar contents as the user types and also exposes permission-aware Workspace search ([sidebar search](https://help.clickup.com/hc/en-us/articles/32490367010839-Create-and-search-items-in-the-Home-and-Spaces-Sidebars), [Workspace search](https://help.clickup.com/hc/en-us/articles/6311703331479-Search-your-Workspace)). StreamlineOS keeps server-backed selector search for scopes, searchable More tools for local discovery, and the command bar for cross-scope resources and actions.
+- **More — adopt overflow with constrained pinning.** ClickUp opens unpinned features from More and lets each user pin features to Global Navigation ([Global Navigation](https://help.clickup.com/hc/en-us/articles/32050886697495-What-is-Global-Navigation)). StreamlineOS keeps specialist capabilities in searchable More tools and allows at most three personal pins after canonical primary destinations; disabled or unauthorized tools cannot remain pinned.
+- **Quick create — adopt one contextual, permission-aware entry point.** ClickUp exposes a create control from its sidebars and varies available item types by the active tab and role ([Create items](https://help.clickup.com/hc/en-us/articles/6309854442391-Create-items), [navigation availability](https://help.clickup.com/hc/en-us/articles/36429761512599-Global-Navigation-and-Home-Sidebar-availability-and-limits)). StreamlineOS adds one compact Quick create utility derived from active scope and exact permissions, without duplicating create buttons throughout navigation.
+- **Context menus — adopt parity with visible actions.** ClickUp offers favorite and settings actions through either an ellipsis or right-click menu ([Favorites](https://help.clickup.com/hc/en-us/articles/6308862167575-Favorites)). StreamlineOS gives scope rows matching ellipsis and context menus, but limits them to navigation, starring, and authorized settings; structural moves remain deliberate workflows.
+- **Counts — adopt semantic badges only.** ClickUp's Inbox badge is specifically the unread Primary count, and Home notifications distinguish unread states ([Inbox](https://help.clickup.com/hc/en-us/articles/33947959867543-What-is-the-Inbox), [Home Sidebar](https://help.clickup.com/hc/en-us/articles/32057009861271-What-is-the-Home-Sidebar)). StreamlineOS badges show unread or actionable states and omit zero; it rejects decorative total-record counts that add noise and expensive broad queries.
+- **Collapse and sizing — reject free resizing and feature sidebars.** ClickUp sidebars can close, reopen, resize by dragging, and reset by double-clicking ([sidebar sizing](https://help.clickup.com/hc/en-us/articles/32490367010839-Create-and-search-items-in-the-Home-and-Spaces-Sidebars)). StreamlineOS retains the approved persisted `17rem` and `3.5rem` states so layout, tooltips, and responsive behavior remain deterministic.
+- **Guest visibility — adopt deny-by-default filtering, keep the portal boundary.** ClickUp guests and limited members see only shared locations and items in Shared with me, and search only returns permitted items ([guest navigation](https://help.clickup.com/hc/en-us/articles/6311803642903-Use-ClickUp-as-a-guest), [Spaces Sidebar](https://help.clickup.com/hc/en-us/articles/32490148963479-What-is-the-Spaces-Sidebar)). StreamlineOS applies the same permission-filtered discovery to internal contractors, while rejecting an internal shared-items experience for clients; client stakeholders remain in the separate grant-scoped portal.
+- **Mobile — adopt compact stable destinations plus overflow, reject dynamic labels.** ClickUp mobile centralizes work in Home, exposes Inbox, Search, Brain, My Tasks, and hierarchy navigation, and moves additional pages into More ([mobile app](https://help.clickup.com/hc/en-us/articles/15145935126679-Intro-to-the-mobile-app), [mobile More](https://help.clickup.com/hc/en-us/articles/34981300374679-Access-your-work-from-the-More-menu-on-mobile)). StreamlineOS keeps at most five bottom destinations and a complete drawer. ClickUp's behavior of replacing the More label with the most recently opened page is rejected because destination labels must stay predictable.
+- **AI and Brain placement — adopt contextual access, reject AI as permanent navigation.** ClickUp exposes Brain through a dedicated AI sidebar, Home sections, the command bar, and contextual entry points ([ClickUp 4.0](https://help.clickup.com/hc/en-us/articles/31142608907543-Intro-to-ClickUp-4-0), [Brain AI](https://help.clickup.com/hc/en-us/articles/20658787666071-Use-AI-from-anywhere-in-ClickUp)). StreamlineOS keeps the global command bar, contextual Prepared for You drafts, and a quiet Agent Pulse; it rejects a permanent AI rail, persistent chat section, and autonomous agents to preserve the approved draft-first contract.
+- **Enterprise scaling — adopt bounded discovery, reject unlimited personal structure.** ClickUp describes a hierarchy intended to expand as an organization grows, permission-aware search, role-dependent navigation, and up to 100 custom sidebar sections ([Hierarchy](https://help.clickup.com/hc/en-us/articles/13856392825367-Intro-to-the-Hierarchy), [Workspace search](https://help.clickup.com/hc/en-us/articles/6311703331479-Search-your-Workspace), [Home Sidebar](https://help.clickup.com/hc/en-us/articles/32057009861271-What-is-the-Home-Sidebar)). StreamlineOS scales through server-backed search, bounded and virtualized collections, parent-path disambiguation, exact permissions, fixed primary destinations, and three pins—not a fully user-authored sidebar.
 
 ## External Pattern Check
 
