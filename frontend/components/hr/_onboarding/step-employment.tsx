@@ -18,45 +18,17 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DepartmentCombobox } from "@/components/hr/department-combobox";
 import { useCan } from "@/hooks/api/access";
-import { useSeedDefaultRoles } from "@/hooks/api/roles";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { USER_INVITE_ROLES } from "@/lib/constants/user-invite-roles";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
-interface Role { slug: string; name: string }
-
 interface StepEmploymentProps {
   form: UseFormReturn<FormValues>;
-  assignableRoles: Role[];
   departments: Array<{ id: string; name: string }>;
 }
 
-export function StepEmployment({
-  form,
-  assignableRoles,
-  departments,
-}: StepEmploymentProps) {
+export function StepEmployment({ form, departments }: StepEmploymentProps) {
   const canCreateDept = useCan("hr:employees:manage");
-  const canManageRbac = useCan("settings:rbac:manage");
-  const seedRoles = useSeedDefaultRoles();
-  const onlyAdminAvailable =
-    assignableRoles.length > 0 &&
-    assignableRoles.every((r) => r.slug === "ADMINISTRATOR" || r.slug === "ADMIN");
-
-  function handleSeedRoles() {
-    seedRoles.mutate(undefined, {
-      onSuccess: (result) => {
-        toast.success(
-          result.created.length > 0
-            ? `Added ${result.created.length} standard roles`
-            : "Standard roles already exist",
-        );
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  }
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -100,52 +72,21 @@ export function StepEmployment({
         name="role"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>System Role <span className="text-destructive">*</span></FormLabel>
+            <FormLabel>Organization Role <span className="text-destructive">*</span></FormLabel>
             <Select value={field.value} onValueChange={field.onChange}>
               <FormControl>
                 <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
               </FormControl>
               <SelectContent>
-                {assignableRoles.length > 0 ? (
-                  assignableRoles.map((role) => (
-                    <SelectItem key={role.slug} value={role.slug}>{role.name}</SelectItem>
-                  ))
-                ) : (
-                  <>
-                    <SelectItem value="ENGINEERING">Engineering</SelectItem>
-                    <SelectItem value="HR">HR</SelectItem>
-                    <SelectItem value="SALES">Sales</SelectItem>
-                    <SelectItem value="CUSTOMER_SUPPORT">Customer Support</SelectItem>
-                    <SelectItem value="DESIGN">Design</SelectItem>
-                    <SelectItem value="VIDEO_EDITOR">Video Editor</SelectItem>
-                    <SelectItem value="DIGITAL_MARKETING">Digital Marketing</SelectItem>
-                  </>
-                )}
+                {USER_INVITE_ROLES.map((role) => (
+                  <SelectItem key={role.value} value={role.value}>{role.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            <FormDescription className="text-xs">Permission level for system access</FormDescription>
-            {onlyAdminAvailable && (
-              <div className="flex flex-col gap-1.5 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2">
-                <p className="text-xs text-status-warning-ink">
-                  Only the Administrator role exists — every hire would get full access.
-                  {canManageRbac
-                    ? " Add the standard department roles first."
-                    : " Ask an admin to add standard roles in Settings → Roles."}
-                </p>
-                {canManageRbac && (
-                  <LoadingButton
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="w-fit"
-                    isPending={seedRoles.isPending}
-                    onClick={handleSeedRoles}
-                  >
-                    Add standard roles
-                  </LoadingButton>
-                )}
-              </div>
-            )}
+            <FormDescription className="text-xs">
+              Member covers everyday access. Org Admin can administer the organization.
+              Module access is granted afterwards in Settings → Roles.
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}

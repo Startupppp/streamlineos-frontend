@@ -32,10 +32,6 @@ jest.mock("@/hooks/api/hr/onboarding", () => ({
   useOnboardingTemplateDepartments: () => ({ data: [] }),
 }));
 
-jest.mock("@/hooks/api/roles", () => ({
-  useRoles: () => ({ data: [{ id: 1, slug: "MEMBER", name: "Member" }] }),
-}));
-
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
 }));

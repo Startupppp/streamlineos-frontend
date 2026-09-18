@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { Check, ChevronRight, ChevronLeft, Loader2 } from "lucide-react";
 import { useOnboardEmployee } from "@/hooks/api/hr";
 import { useOnboardingTemplateDepartments } from "@/hooks/api/hr/onboarding";
-import { useRoles } from "@/hooks/api/roles";
+import { DEFAULT_INVITE_ROLE } from "@/lib/constants/user-invite-roles";
 import { useRouter } from "next/navigation";
 import {
   employeeAdmissionGuidance,
@@ -66,13 +66,7 @@ export function OnboardingWizard() {
   const submittingRef = useRef(false);
   const router = useRouter();
   const { data: departments } = useOnboardingTemplateDepartments();
-  const { data: orgRoles } = useRoles();
   const onboardEmployee = useOnboardEmployee();
-
-  const assignableRoles = useMemo(
-    () => (orgRoles ?? []).filter((r) => r.slug !== "FINAL"),
-    [orgRoles]
-  );
 
   const allDepartmentOptions = useMemo(() => {
     const dbNames = new Set(departments?.map((d) => d.name.toLowerCase()) ?? []);
@@ -89,7 +83,7 @@ export function OnboardingWizard() {
       firstName: "", lastName: "", email: "", phone: "",
       whatsappSameAsPhone: true, whatsappNumber: "", gender: "MALE",
       designation: "", departmentId: undefined,
-      role: "ENGINEERING", employeeId: "", attachToExistingMember: false, joiningDate: new Date(),
+      role: DEFAULT_INVITE_ROLE, employeeId: "", attachToExistingMember: false, joiningDate: new Date(),
       dateOfBirth: undefined,
       taxId: "", monthlySalary: undefined,
       bankDetails: {
@@ -217,11 +211,7 @@ export function OnboardingWizard() {
             <div className="overscroll-contain">
             {currentStep === 1 && <StepPersonalInfo form={form} />}
             {currentStep === 2 && (
-              <StepEmployment
-                form={form}
-                assignableRoles={assignableRoles}
-                departments={departments ?? []}
-              />
+              <StepEmployment form={form} departments={departments ?? []} />
             )}
             {currentStep === 3 && <StepSkillsPay form={form} />}
             {currentStep === 4 && <StepBanking form={form} />}

@@ -1,4 +1,5 @@
 import type { BulkOnboardEmployeeRow } from "@/types/hr";
+import { isUserInviteRole } from "@/lib/constants/user-invite-roles";
 
 /** Canonical template columns — keep in sync with backend bulkOnboardEmployeeRowSchema. */
 export const BULK_ONBOARD_COLUMNS = [
@@ -56,7 +57,7 @@ export const BULK_ONBOARD_COLUMNS = [
     header: "role",
     required: false,
     width: 16,
-    sample: "ENGINEERING",
+    sample: "MEMBER",
   },
   {
     key: "employeeId",
@@ -242,7 +243,7 @@ export function validateAndMap(
   const department = cell(raw, "department");
   const phone = cell(raw, "phone");
   const genderRaw = cell(raw, "gender").toUpperCase();
-  const role = cell(raw, "role");
+  const roleRaw = cell(raw, "role").toUpperCase();
   const employeeId = cell(raw, "employeeId");
   const joiningDate = cell(raw, "joiningDate");
   const dateOfBirth = cell(raw, "dateOfBirth");
@@ -272,6 +273,9 @@ export function validateAndMap(
   }
   if (genderRaw && !GENDER_VALUES.has(genderRaw)) {
     errors.push("gender must be MALE, FEMALE, or OTHER");
+  }
+  if (roleRaw && !isUserInviteRole(roleRaw)) {
+    errors.push("role must be MEMBER or ORG_ADMIN");
   }
 
   if (dateOfBirth) {
@@ -329,7 +333,7 @@ export function validateAndMap(
     ...(departmentName ? { department: departmentName } : {}),
     ...(phone ? { phone } : {}),
     ...(genderRaw ? { gender: genderRaw as "MALE" | "FEMALE" | "OTHER" } : {}),
-    ...(role ? { role } : {}),
+    ...(roleRaw ? { role: roleRaw } : {}),
     ...(employeeId ? { employeeId } : {}),
     ...(joiningDate ? { joiningDate } : {}),
     ...(dateOfBirth ? { dateOfBirth } : {}),

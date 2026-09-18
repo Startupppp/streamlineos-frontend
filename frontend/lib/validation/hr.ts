@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isValidPhoneNumber } from "react-phone-number-input";
+import { USER_INVITE_ROLE_VALUES } from "@/lib/constants/user-invite-roles";
 
 function hasLetterOrDigit(value: string): boolean {
   return /[\p{L}\p{N}]/u.test(value);
@@ -40,7 +41,7 @@ export const onboardEmployeeInputSchema = z.object({
     .max(120, "Designation must be at most 120 characters")
     .refine(hasLetterOrDigit, "Designation must contain a letter or number"),
   departmentId: z.string().min(1, "Department is required"),
-  role: z.string().min(1),
+  role: z.enum(USER_INVITE_ROLE_VALUES),
   employeeId: z
     .string()
     .trim()

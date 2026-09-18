@@ -146,11 +146,6 @@ export const setRolePermissionsContract = z.object({
   version: z.number(),
 });
 
-export const seedDefaultRolesContract = z.object({
-  created: z.array(z.string()),
-  skipped: z.array(z.string()),
-});
-
 export const rolePermissionGrantsContract = z.array(
   z.object({
     permissionKey: z.string(),
