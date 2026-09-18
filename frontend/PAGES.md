@@ -667,11 +667,11 @@
 
 ## Knowledge (Wiki / KB)
 
-- `/knowledge/wiki` · **Knowledge** · hooks: `requireSession`, `RequireModule module="kb"`, `→ features/wiki` — WikiShell hides the Documents product sidebar; Ask KB is a wiki-nav row to `/knowledge/chat`
+- `/knowledge/wiki` · **Knowledge** · hooks: `requireSession`, `RequireModule module="kb"`, `→ features/wiki` — WikiShell hides the Documents product sidebar; Ask KB is a wiki-nav row to `/knowledge/chat`; expanded rail has no Wiki title bar (New page is the home header primary)
 - `/knowledge/wiki/spaces` · **Knowledge** · hooks: `→ features/wiki`
 - `/knowledge/wiki/spaces/[spaceId]` · **Knowledge** · hooks: `→ features/wiki`
-- `/knowledge/wiki/pages/[pageId]` · **Knowledge** · hooks: `→ features/wiki`
-- `/knowledge/wiki/pages/[pageId]/history` · **Knowledge** · hooks: `→ features/wiki`
+- `/knowledge/wiki/doc/[pageId]` · **Knowledge** · hooks: `→ features/wiki`
+- `/knowledge/wiki/doc/[pageId]/history` · **Knowledge** · hooks: `→ features/wiki`
 - `/knowledge/wiki/recent` · **Knowledge** · hooks: `→ features/wiki`
 - `/knowledge/wiki/favorites` · **Knowledge** · hooks: `→ features/wiki`
 - `/knowledge/wiki/private` · **Knowledge** · hooks: `→ features/wiki`

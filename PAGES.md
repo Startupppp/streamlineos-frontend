@@ -466,7 +466,7 @@ balance until 2026-08-25.
 - **Core access:** Home, `/me/documents`, and the Knowledge Base read experience are available to every active organization member. Roles still control authoring, administration, analytics, and settings.
 - [x] `/knowledge/wiki` — Home (recents, favorites, root pages, templates) with collapsible page-tree panel
 - [x] `/knowledge/chat` — Ask KB
-- [x] `/knowledge/wiki/pages/[pageId]` · `/knowledge/wiki/pages/[pageId]/history` — Plate document editor (slash commands, tables, R2 media) + two-pane version history with restore
+- [x] `/knowledge/wiki/doc/[pageId]` · `/knowledge/wiki/doc/[pageId]/history` — Plate document editor (slash commands, tables, R2 media) + two-pane version history with restore
 - [x] `/knowledge/wiki/recent` · `/knowledge/wiki/favorites` · `/knowledge/wiki/trash` · `/knowledge/wiki/private` · `/knowledge/wiki/shared` · `/knowledge/wiki/templates` · `/knowledge/wiki/import`
 - [x] `/knowledge/wiki/spaces` · `/knowledge/wiki/spaces/[spaceId]` · `/knowledge/wiki/reviews` · `/knowledge/wiki/analytics` · `/knowledge/wiki/settings`
 - [x] `/knowledge-base` — Back-compat redirect

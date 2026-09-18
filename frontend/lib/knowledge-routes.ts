@@ -3,7 +3,7 @@ export const KB_CHAT = `${KNOWLEDGE_ROOT}/chat`;
 export const KNOWLEDGE_BASE = `${KNOWLEDGE_ROOT}/wiki`;
 
 export function pageHref(id: number): string {
-  return `${KNOWLEDGE_BASE}/pages/${id}`;
+  return `${KNOWLEDGE_BASE}/doc/${id}`;
 }
 
 export function projectPageHref(projectId: number, pageId: number): string {
@@ -11,7 +11,7 @@ export function projectPageHref(projectId: number, pageId: number): string {
 }
 
 export function pageHistoryHref(id: number): string {
-  return `${KNOWLEDGE_BASE}/pages/${id}/history`;
+  return `${KNOWLEDGE_BASE}/doc/${id}/history`;
 }
 
 export const KB_RECENT = `${KNOWLEDGE_BASE}/recent`;

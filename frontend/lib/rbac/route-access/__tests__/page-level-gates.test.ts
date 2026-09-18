@@ -36,7 +36,7 @@ const SESSION_ONLY_BY_DESIGN: readonly SessionOnlySurface[] = [
   { path: "/knowledge/wiki/recent", subtree: true, reason: "A member's own Knowledge Base reading history." },
   { path: "/knowledge/wiki/shared", subtree: true, reason: "Knowledge Base pages already shared with the member." },
   { path: "/knowledge/wiki/private", subtree: true, reason: "A member's own private Knowledge Base pages." },
-  { path: "/knowledge/wiki/pages", subtree: true, reason: "Knowledge Base page reading is platform core; per-record ACLs gate the content." },
+  { path: "/knowledge/wiki/doc", subtree: true, reason: "Knowledge Base page reading is platform core; per-record ACLs gate the content." },
   { path: "/knowledge/wiki/spaces", childrenOnly: true, reason: "An individual Knowledge Base space is a reading surface; the space list itself stays gated on kb:spaces:view." },
   { path: "/hr/announcements", reason: "Company-wide announcement reading that happens to sit under the HR prefix." },
   { path: "/home", reason: "Alias that redirects to /dashboard and renders nothing. The destination carries its own gate." },

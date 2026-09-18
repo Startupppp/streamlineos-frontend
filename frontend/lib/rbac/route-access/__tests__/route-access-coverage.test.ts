@@ -139,8 +139,8 @@ describe("§8 platform-core surfaces are universally accessible to every active 
   });
 
   it("knowledge-base reading is universal via /knowledge/wiki pages", () => {
-    expect(isUniversalRoute("/knowledge/wiki/pages/1")).toBe(true);
-    expect(resolveRouteAccess("/knowledge/wiki/pages/1").kind).toBe("universal");
+    expect(isUniversalRoute("/knowledge/wiki/doc/1")).toBe(true);
+    expect(resolveRouteAccess("/knowledge/wiki/doc/1").kind).toBe("universal");
   });
 
   it("knowledge AI chat is universal", () => {

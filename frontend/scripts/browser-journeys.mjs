@@ -101,7 +101,7 @@ const JOURNEYS = [
     steps: [
       "/knowledge/wiki",
       "/knowledge/wiki/recent",
-      "/knowledge/wiki/pages/{pageId}",
+      "/knowledge/wiki/doc/{pageId}",
       "/knowledge/chat",
     ],
   },
@@ -480,12 +480,12 @@ const DISCOVERIES = [
     token: "pageId",
     from: "/knowledge/wiki/recent",
     /**
-     * Recent pages renders hrefs of the form /knowledge/wiki/pages/<id>. The id
+     * Recent pages renders hrefs of the form /knowledge/wiki/doc/<id>. The id
      * may be a UUID, a slug, or a numeric string depending on the backend — the
      * pattern captures everything up to a query or hash so it works for all three.
      */
     extract: `(() => {
-      for (const a of document.querySelectorAll('a[href^="/knowledge/wiki/pages/"]')) {
+      for (const a of document.querySelectorAll('a[href^="/knowledge/wiki/doc/"]')) {
         const m = /^\\/knowledge\\/wiki\\/pages\\/([^/?#]+)/.exec(a.getAttribute("href") || "");
         if (m) return m[1];
       }
@@ -1488,13 +1488,13 @@ async function main() {
         await evaluate(clickSelector(DOC_CITATION_SELECTOR));
         await sleep(settleMs);
         const landed = String(await evaluate("location.pathname") ?? "");
-        if (!landed.startsWith("/knowledge/wiki/pages/"))
+        if (!landed.startsWith("/knowledge/wiki/doc/"))
           findings.push({
             journey: "documents",
             route: "/knowledge/chat",
             kind: "docs-citation-nav-failed",
             landed,
-            expected: "/knowledge/wiki/pages/*",
+            expected: "/knowledge/wiki/doc/*",
           });
       }
     } catch (e) {
@@ -1522,7 +1522,7 @@ async function main() {
       findings.push({ journey: "documents", route: "/knowledge/wiki", kind: "docs-keyboard-probe-error", reason: String(e.message ?? e) });
     }
 
-    const docPagePath = expandStep("/knowledge/wiki/pages/{pageId}", tokens).path;
+    const docPagePath = expandStep("/knowledge/wiki/doc/{pageId}", tokens).path;
     if (docPagePath !== null) {
       let docUnsubscribe = null;
       let docIntercepted = 0;

@@ -84,9 +84,7 @@ describe("TruncatedText ResizeObserver does not set state synchronously in its c
     const span = document.querySelector<HTMLSpanElement>("span");
     expect(span).not.toBeNull();
 
-    // jsdom returns scrollWidth = clientWidth = 0, so isOverflowing returns
-    // false on initial mount and tabIndex is absent.
-    expect(span?.hasAttribute("tabindex")).toBe(false);
+    expect(span?.hasAttribute("title")).toBe(false);
 
     // Simulate a layout change where the element now overflows its container.
     if (span) setSpanWidths(span, 400, 100);
@@ -99,15 +97,15 @@ describe("TruncatedText ResizeObserver does not set state synchronously in its c
 
     // State MUST NOT have changed yet — the update is deferred via
     // requestAnimationFrame, so no React re-render has run yet.
-    expect(span?.hasAttribute("tabindex")).toBe(false);
+    expect(span?.hasAttribute("title")).toBe(false);
 
-    // Advance fake timers to run the pending requestAnimationFrame callback.
     act(() => {
       jest.runAllTimers();
     });
 
-    // Now the state update has been applied — truncated=true adds tabIndex=0.
-    expect(span?.getAttribute("tabindex")).toBe("0");
+    expect(span?.getAttribute("title")).toBe(
+      "a very long channel name that overflows its container",
+    );
   });
 
   it("cancels the previous requestAnimationFrame when the observer fires again before the frame runs", () => {
@@ -132,7 +130,7 @@ describe("TruncatedText ResizeObserver does not set state synchronously in its c
     });
 
     // Still settles correctly: truncated=true after the RAF that was NOT cancelled.
-    expect(span?.getAttribute("tabindex")).toBe("0");
+    expect(span?.getAttribute("title")).toBe("overflow text that will keep resizing");
 
     cancelSpy.mockRestore();
   });
@@ -154,5 +152,10 @@ describe("TruncatedText ResizeObserver does not set state synchronously in its c
     expect(cancelSpy).toHaveBeenCalled();
 
     cancelSpy.mockRestore();
+  });
+
+  it("does not render a button trigger that would swallow clicks on a wrapping link", () => {
+    renderText("signos");
+    expect(document.querySelector('[role="button"]')).toBeNull();
   });
 });

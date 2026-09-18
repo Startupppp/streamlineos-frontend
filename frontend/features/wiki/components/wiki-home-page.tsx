@@ -13,6 +13,7 @@ import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useCan } from "@/hooks/api/access";
 import {
   useKbPagesRecent,
   useKbPagesFavorites,
@@ -98,6 +99,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   const treeRefetch = treeQuery.refetch;
 
   const createPage = useCreateKbPage();
+  const canCreate = useCan("kb:pages:create");
   const { staggerContainer, fadeUp } = useMotionVariants();
 
   const rootPages: KbPageTreeNode[] = treeNodes.filter(
@@ -121,19 +123,19 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
     );
   }, [createPage, router, projectId, isProjectScoped, resolvePageHref]);
 
-  const newPageAction = (
+  const newPageAction = canCreate ? (
     <AnimatedIconButton
       type="button"
-      variant="ghost"
-      size="icon"
       icon={KbPlusIcon}
       iconSize={16}
-      className="h-8 w-8 shrink-0"
-      aria-label="New page"
+      iconClassName="mr-1.5"
+      size="sm"
       onClick={handleNewPage}
       disabled={createPage.isPending}
-    />
-  );
+    >
+      New page
+    </AnimatedIconButton>
+  ) : undefined;
 
   if (isLoading) {
     return (

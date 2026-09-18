@@ -10,7 +10,7 @@ import { EmptyTimeIllustration } from "@/components/illustrations";
 import { useKbPagesRecent } from "@/hooks/api/kb";
 import {
   pageHref,
-  KB_FAVORITES,
+  KNOWLEDGE_BASE,
 } from "@/lib/knowledge-routes";
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
 import {
@@ -76,7 +76,7 @@ export default function RecentPage() {
           illustration={<EmptyTimeIllustration />}
           title="No recent pages"
           description="Pages you visit will appear here."
-          action={{ label: "Browse favorites", href: KB_FAVORITES }}
+          action={{ label: "Browse wiki", href: KNOWLEDGE_BASE }}
           className={CONTENT_FILL_PANEL}
         />
       )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -67,7 +68,8 @@ const PageTreeItem = memo(function PageTreeItemInner({
   const [renameValue, setRenameValue] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const renameInputRef = useRef<HTMLInputElement>(null);
-  const isActive = pathname === pageHref(node.id);
+  const nodeHref = pageHref(node.id);
+  const isActive = pathname === nodeHref || pathname.startsWith(`${nodeHref}/`);
   const canCreate = useCan("kb:pages:create");
   const canDelete = useCan("kb:pages:delete");
   const createPage = useCreateKbPage();
@@ -86,9 +88,11 @@ const PageTreeItem = memo(function PageTreeItemInner({
   const hasActiveDescendant = children.some(
     (c) =>
       pathname === pageHref(c.id) ||
+      pathname.startsWith(`${pageHref(c.id)}/`) ||
       allNodes.some(
         (n) =>
-          n.parentPageId === c.id && pathname === pageHref(n.id)
+          n.parentPageId === c.id &&
+          (pathname === pageHref(n.id) || pathname.startsWith(`${pageHref(n.id)}/`))
       )
   );
   const [autoExpandedPath, setAutoExpandedPath] = useState<string | null>(null);
@@ -98,8 +102,6 @@ const PageTreeItem = memo(function PageTreeItemInner({
   }
 
   function handleNavigate() {
-    if (renaming) return;
-    router.push(pageHref(node.id));
     onCloseMobile?.();
   }
 
@@ -275,8 +277,8 @@ const PageTreeItem = memo(function PageTreeItemInner({
               />
             </>
           ) : (
-            <button
-              type="button"
+            <Link
+              href={nodeHref}
               aria-current={isActive ? "page" : undefined}
               className="flex min-w-0 flex-1 items-center gap-1 cursor-pointer text-left"
               onClick={handleNavigate}
@@ -293,7 +295,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
                 )}
               </span>
               <TruncatedText text={node.title || "Untitled"} className="flex-1" />
-            </button>
+            </Link>
           )}
 
           {!renaming && (

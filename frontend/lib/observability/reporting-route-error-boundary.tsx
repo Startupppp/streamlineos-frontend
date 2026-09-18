@@ -3,6 +3,7 @@
 import { useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { RouteErrorBoundary, shouldReportRouteError } from "@/components/ui/route-error-boundary";
+import { isChunkLoadError, reportError } from "@/lib/observability";
 
 interface ReportingRouteErrorBoundaryProps {
   error: Error & { digest?: string };

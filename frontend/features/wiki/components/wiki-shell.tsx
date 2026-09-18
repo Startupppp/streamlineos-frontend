@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -13,7 +14,7 @@ import PageTree from "./page-tree";
 import QuickFindDialog from "./quick-find-dialog";
 import WikiSidebarNav, { WikiSidebarFooter } from "./wiki-sidebar-nav";
 import {
-  WikiDesktopSidebarChrome,
+  WikiCollapsedSidebarChrome,
   WikiSidebarCollapseControl,
 } from "./wiki-sidebar-chrome";
 import {
@@ -108,14 +109,14 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
                   Favorites
                 </p>
                 {favorites.map((page) => (
-                  <a
+                  <Link
                     key={page.id}
                     href={pageHref(page.id)}
                     className="flex items-center gap-2 px-2 py-1 text-sm rounded-md hover:bg-muted transition-colors"
                   >
                     <KbStarIcon className="h-3 w-3 text-status-warning-ink fill-amber-500 shrink-0" />
                     <TruncatedText text={`${page.icon ? `${page.icon} ` : ""}${page.title || "Untitled"}`} />
-                  </a>
+                  </Link>
                 ))}
                 <Separator className="my-2" />
               </div>
@@ -147,12 +148,13 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
           }`}
         >
           <div className="flex h-full min-w-0 flex-col overflow-hidden">
-            <WikiDesktopSidebarChrome
-              collapsed={collapsed}
-              createPending={createPage.isPending}
-              onToggleCollapsed={handleToggleCollapsed}
-              onNewPage={handleNewPage}
-            />
+            {collapsed ? (
+              <WikiCollapsedSidebarChrome
+                createPending={createPage.isPending}
+                onToggleCollapsed={handleToggleCollapsed}
+                onNewPage={handleNewPage}
+              />
+            ) : null}
             {sidebarInner()}
           </div>
           {collapsed ? null : (

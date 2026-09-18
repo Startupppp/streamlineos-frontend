@@ -89,7 +89,7 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
       { path: "/knowledge/wiki/recent", subtree: true },
       { path: "/knowledge/wiki/shared", subtree: true },
       { path: "/knowledge/wiki/private", subtree: true },
-      { path: "/knowledge/wiki/pages", subtree: true },
+      { path: "/knowledge/wiki/doc", subtree: true },
       { path: "/knowledge/wiki/spaces", childrenOnly: true },
       { path: "/knowledge/chat", subtree: true },
     ],

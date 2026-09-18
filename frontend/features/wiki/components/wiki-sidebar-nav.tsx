@@ -144,12 +144,6 @@ function isNavItemActive(
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function sameOpenGroups(current: string[], next: string[]): boolean {
-  if (current.length !== next.length) return false;
-  const nextSet = new Set(next);
-  return current.every((groupId) => nextSet.has(groupId));
-}
-
 function readStoredOpenGroups(): string[] | null {
   if (typeof window === "undefined") return null;
   try {
@@ -161,6 +155,14 @@ function readStoredOpenGroups(): string[] | null {
   } catch {
     return null;
   }
+}
+
+function resolveInitialOpenGroups(groupIds: string[]): string[] {
+  const stored = readStoredOpenGroups();
+  if (!stored) return groupIds;
+  const allowed = new Set(groupIds);
+  const filtered = stored.filter((groupId) => allowed.has(groupId));
+  return filtered.length > 0 ? filtered : groupIds;
 }
 
 function WikiNavLink({
@@ -176,31 +178,25 @@ function WikiNavLink({
 
   if (isCollapsed) {
     return (
-      <Tooltip delayDuration={0}>
-        <TooltipTrigger asChild>
-          <Link
-            href={item.href}
-            aria-current={isActive ? "page" : undefined}
-            aria-label={item.label}
-            {...animatedNavHoverHandlers}
-            className={cn(
-              "flex size-8 items-center justify-center rounded-md transition-colors",
-              isActive
-                ? "bg-muted text-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground",
-            )}
-          >
-            <SidebarAnimatedNavIcon
-              icon={item.icon}
-              iconRef={iconRef}
-              className="size-4 shrink-0"
-            />
-          </Link>
-        </TooltipTrigger>
-        <TooltipContent side="right" sideOffset={8} className="text-xs">
-          {item.label}
-        </TooltipContent>
-      </Tooltip>
+      <Link
+        href={item.href}
+        aria-current={isActive ? "page" : undefined}
+        aria-label={item.label}
+        title={item.label}
+        {...animatedNavHoverHandlers}
+        className={cn(
+          "flex size-8 items-center justify-center rounded-md transition-colors",
+          isActive
+            ? "bg-muted text-foreground"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+        )}
+      >
+        <SidebarAnimatedNavIcon
+          icon={item.icon}
+          iconRef={iconRef}
+          className="size-4 shrink-0"
+        />
+      </Link>
     );
   }
 
@@ -257,31 +253,25 @@ export function WikiSidebarFooter({ isCollapsed, onQuickFind }: WikiSidebarFoote
             Quick find
           </TooltipContent>
         </Tooltip>
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            <Link
-              href={KB_TRASH}
-              aria-current={trashActive ? "page" : undefined}
-              aria-label="Trash"
-              {...trashIcon.animatedNavHoverHandlers}
-              className={cn(
-                "flex size-8 items-center justify-center rounded-md transition-colors",
-                trashActive
-                  ? "bg-muted text-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
-              )}
-            >
-              <SidebarAnimatedNavIcon
-                icon={KbTrash2Icon}
-                iconRef={trashIcon.iconRef}
-                className="size-4"
-              />
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent side="right" sideOffset={8} className="text-xs">
-            Trash
-          </TooltipContent>
-        </Tooltip>
+        <Link
+          href={KB_TRASH}
+          aria-current={trashActive ? "page" : undefined}
+          aria-label="Trash"
+          title="Trash"
+          {...trashIcon.animatedNavHoverHandlers}
+          className={cn(
+            "flex size-8 items-center justify-center rounded-md transition-colors",
+            trashActive
+              ? "bg-muted text-foreground"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground",
+          )}
+        >
+          <SidebarAnimatedNavIcon
+            icon={KbTrash2Icon}
+            iconRef={trashIcon.iconRef}
+            className="size-4"
+          />
+        </Link>
       </div>
     );
   }
@@ -348,40 +338,19 @@ export default function WikiSidebarNav({
     () => groups.flatMap((group) => group.items),
     [groups],
   );
-  const defaultOpenGroups = useMemo(() => groups.map((group) => group.id), [groups]);
-  const [openGroups, setOpenGroups] = useState<string[]>(defaultOpenGroups);
-
-  const activeGroupId = useMemo(() => {
-    for (const group of groups) {
-      if (group.items.some((item) => isNavItemActive(pathname, item.href, item.exact))) {
-        return group.id;
-      }
-    }
-    return null;
-  }, [groups, pathname]);
+  const groupIds = useMemo(
+    () => groups.map((group) => group.id),
+    [groups],
+  );
+  const [openGroups, setOpenGroups] = useState(groupIds);
 
   useEffect(() => {
-    const stored = readStoredOpenGroups();
-    if (!stored) return;
-    setOpenGroups((prev) => (sameOpenGroups(prev, stored) ? prev : stored));
-  }, []);
-
-  useEffect(() => {
-    if (!activeGroupId) return;
-    setOpenGroups((prev) => {
-      if (prev.includes(activeGroupId)) return prev;
-      const next = [...prev, activeGroupId];
-      localStorage.setItem(WIKI_NAV_GROUPS_KEY, JSON.stringify(next));
-      return next;
-    });
-  }, [activeGroupId]);
+    setOpenGroups(resolveInitialOpenGroups(groupIds));
+  }, [groupIds]);
 
   const handleOpenGroupsChange = useCallback((next: string[]) => {
-    setOpenGroups((prev) => {
-      if (sameOpenGroups(prev, next)) return prev;
-      localStorage.setItem(WIKI_NAV_GROUPS_KEY, JSON.stringify(next));
-      return next;
-    });
+    setOpenGroups(next);
+    localStorage.setItem(WIKI_NAV_GROUPS_KEY, JSON.stringify(next));
   }, []);
 
   if (isCollapsed) {

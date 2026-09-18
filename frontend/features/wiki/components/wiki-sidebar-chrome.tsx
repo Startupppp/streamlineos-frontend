@@ -4,13 +4,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { KbPlusIcon } from "@/features/wiki/lib/kb-icons";
 
-interface WikiSidebarChromeProps {
-  collapsed: boolean;
-  createPending: boolean;
-  onToggleCollapsed: () => void;
-  onNewPage: () => void;
-}
-
 export function WikiSidebarCollapseControl({
   collapsed,
   onToggleCollapsed,
@@ -46,37 +39,21 @@ export function WikiSidebarCollapseControl({
   );
 }
 
-export function WikiDesktopSidebarChrome({
-  collapsed,
+export function WikiCollapsedSidebarChrome({
   createPending,
   onToggleCollapsed,
   onNewPage,
-}: WikiSidebarChromeProps) {
-  if (collapsed) {
-    return (
-      <div className="flex shrink-0 flex-col items-center gap-1 px-0 py-2">
-        <WikiSidebarCollapseControl
-          collapsed
-          onToggleCollapsed={onToggleCollapsed}
-        />
-        <AnimatedIconButton
-          type="button"
-          variant="ghost"
-          size="icon"
-          icon={KbPlusIcon}
-          iconSize={16}
-          className="size-7"
-          onClick={onNewPage}
-          disabled={createPending}
-          aria-label="New page"
-        />
-      </div>
-    );
-  }
-
+}: {
+  createPending: boolean;
+  onToggleCollapsed: () => void;
+  onNewPage: () => void;
+}) {
   return (
-    <div className="flex shrink-0 items-center justify-between gap-0.5 px-3 py-2">
-      <p className="min-w-0 text-sm font-semibold text-foreground">Wiki</p>
+    <div className="flex shrink-0 flex-col items-center gap-1 px-0 py-2">
+      <WikiSidebarCollapseControl
+        collapsed
+        onToggleCollapsed={onToggleCollapsed}
+      />
       <AnimatedIconButton
         type="button"
         variant="ghost"
@@ -91,4 +68,3 @@ export function WikiDesktopSidebarChrome({
     </div>
   );
 }
-

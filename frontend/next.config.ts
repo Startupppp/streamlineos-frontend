@@ -103,6 +103,16 @@ const nextConfig: NextConfig = {
       destination: "/build/:projectId?view=workload",
       permanent: false,
     },
+    {
+      source: "/knowledge/wiki/pages/:pageId",
+      destination: "/knowledge/wiki/doc/:pageId",
+      permanent: false,
+    },
+    {
+      source: "/knowledge/wiki/pages/:pageId/history",
+      destination: "/knowledge/wiki/doc/:pageId/history",
+      permanent: false,
+    },
   ],
   images: {
     formats: ["image/webp"],

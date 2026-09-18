@@ -33,8 +33,8 @@ const MATRIX: readonly MatrixRow[] = [
   { path: "/knowledge/wiki/recent", universalMatch: true, decisionKind: "universal", label: "wiki recent pages" },
   { path: "/knowledge/wiki/shared", universalMatch: true, decisionKind: "universal", label: "wiki shared pages" },
   { path: "/knowledge/wiki/private", universalMatch: true, decisionKind: "universal", label: "wiki private pages" },
-  { path: "/knowledge/wiki/pages/123", universalMatch: true, decisionKind: "universal", label: "individual wiki page reading" },
-  { path: "/knowledge/wiki/pages/123/history", universalMatch: true, decisionKind: "universal", label: "wiki page history" },
+  { path: "/knowledge/wiki/doc/123", universalMatch: true, decisionKind: "universal", label: "individual wiki page reading" },
+  { path: "/knowledge/wiki/doc/123/history", universalMatch: true, decisionKind: "universal", label: "wiki page history" },
   { path: "/knowledge/chat", universalMatch: true, decisionKind: "universal", label: "knowledge AI chat" },
   { path: "/knowledge/wiki/spaces/1", universalMatch: true, decisionKind: "universal", label: "individual space page reading — extension is exact so only the list is gated" },
   // administrative descendants DENIED

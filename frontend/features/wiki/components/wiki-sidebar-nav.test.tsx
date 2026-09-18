@@ -22,6 +22,19 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
     expect(screen.queryByRole("navigation", { name: "Documents" })).toBeNull();
   });
 
+  it("mounts wiki accordion groups without looping", () => {
+    renderWithProviders(
+      <WikiSidebarNav
+        canViewAnalytics={false}
+        canViewReviews={false}
+        canManageSettings={false}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Private" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Templates" })).toBeInTheDocument();
+  });
+
   it("keeps Ask KB in the collapsed wiki rail", () => {
     renderWithProviders(
       <WikiSidebarNav
