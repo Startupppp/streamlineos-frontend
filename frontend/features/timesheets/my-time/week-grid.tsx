@@ -7,7 +7,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ProjectTicketSelect } from "./project-ticket-select";
-import { describeCell, describeDayColumn } from "./day-label";
+import { describeCell } from "./day-label";
 import {
   useCreateTimesheetEntry,
   useUpdateTimesheetEntry,
@@ -104,6 +104,7 @@ export function WeekGrid({
     cellRefs,
     editingCell,
     editingValue,
+    cellError,
     saveStatus,
     handleCellFocus,
     handleCellChange,
@@ -207,6 +208,12 @@ export function WeekGrid({
       <p aria-live="polite" className="sr-only">
         {saveStatus}
       </p>
+
+      {cellError ? (
+        <p role="alert" className="text-xs text-destructive">
+          {cellError}
+        </p>
+      ) : null}
 
       <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-xs" style={{ minWidth: 640 }}>

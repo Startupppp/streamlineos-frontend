@@ -24,14 +24,15 @@ export function ChatPresenceMenu({
   className,
 }: ChatPresenceMenuProps) {
   const { data: session } = useSession();
-  const { status } = usePresenceSelection();
+  const { status, statusMessage } = usePresenceSelection();
+  const availability = statusMessage === "" ? presenceLabel(status) : statusMessage;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          aria-label={`Your availability: ${presenceLabel(status)}. Change it`}
+          aria-label={`Your availability: ${availability}. Change it`}
           className={cn(
             "flex items-center rounded-lg transition-colors hover:bg-muted/60",
             compact ? "min-w-11 flex-col gap-0.5 py-1" : "w-full gap-2.5 px-2 py-1.5",
@@ -61,7 +62,10 @@ export function ChatPresenceMenu({
                 text={session?.user?.name ?? "You"}
                 className="text-xs font-medium"
               />
-              <p className="text-micro text-muted-foreground">{presenceLabel(status)}</p>
+              <TruncatedText
+                text={availability}
+                className="text-micro text-muted-foreground"
+              />
             </div>
           )}
         </button>

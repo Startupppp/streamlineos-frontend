@@ -2,6 +2,15 @@
 
 import { Fragment } from "react";
 import Image from "next/image";
+import {
+  LIST_STYLE_DECIMAL,
+  LIST_STYLE_TODO,
+  isListItemChecked,
+  listOrdinalLabel,
+  listPaddingRem,
+  listStyleTypeOf,
+  type ListStyleType,
+} from "@/components/editor/plate/plate-list-model";
 
 type TipTapMark = { type: string; attrs?: Record<string, unknown> };
 type TipTapNode = {
@@ -139,6 +148,88 @@ function renderSlateLeafNode(node: SlateLeaf, idx: number): React.ReactNode {
       <code className="bg-muted px-1 py-0.5 rounded text-[0.85em] font-mono">{el}</code>
     );
   return <Fragment key={idx}>{el}</Fragment>;
+}
+
+function listStyleOfNode(node: unknown): ListStyleType | null {
+  if (typeof node !== "object" || node === null) return null;
+  if (isSlateLeaf(node)) return null;
+  return listStyleTypeOf(node);
+}
+
+function renderListItem(node: unknown, idx: number): React.ReactNode {
+  const el = node as SlateElement;
+  const children = Array.isArray(el.children)
+    ? el.children.map((child, i) => renderSlateNode(child, i))
+    : [];
+  const style = { paddingLeft: listPaddingRem(el) };
+
+  if (listStyleTypeOf(el) === LIST_STYLE_TODO) {
+    const checked = isListItemChecked(el);
+    return (
+      <li key={idx} className="flex items-start gap-2 text-sm" style={style}>
+        <input
+          type="checkbox"
+          checked={checked}
+          disabled
+          readOnly
+          aria-label="Task item"
+          className="mt-1.5 shrink-0 accent-primary"
+        />
+        <span className={checked ? "line-through text-muted-foreground" : undefined}>
+          {children}
+        </span>
+      </li>
+    );
+  }
+
+  const marker =
+    listStyleTypeOf(el) === LIST_STYLE_DECIMAL ? listOrdinalLabel(el) : "•";
+
+  return (
+    <li key={idx} className="flex items-start gap-2 text-sm" style={style}>
+      <span className="shrink-0 tabular-nums text-foreground">{marker}</span>
+      <span className="min-w-0">{children}</span>
+    </li>
+  );
+}
+
+function renderListRun(
+  style: ListStyleType,
+  items: unknown[],
+  idx: number,
+): React.ReactNode {
+  const listItems = items.map((item, i) => renderListItem(item, i));
+  const className = "mb-4 list-none space-y-1";
+  return style === LIST_STYLE_DECIMAL ? (
+    <ol key={`list-${idx}`} className={className}>
+      {listItems}
+    </ol>
+  ) : (
+    <ul key={`list-${idx}`} className={className}>
+      {listItems}
+    </ul>
+  );
+}
+
+function renderSlateBlocks(nodes: unknown[]): React.ReactNode[] {
+  const blocks: React.ReactNode[] = [];
+  let index = 0;
+  while (index < nodes.length) {
+    const style = listStyleOfNode(nodes[index]);
+    if (style === null) {
+      blocks.push(renderSlateNode(nodes[index], index));
+      index += 1;
+      continue;
+    }
+    const runStart = index;
+    const run: unknown[] = [];
+    while (index < nodes.length && listStyleOfNode(nodes[index]) === style) {
+      run.push(nodes[index]);
+      index += 1;
+    }
+    blocks.push(renderListRun(style, run, runStart));
+  }
+  return blocks;
 }
 
 function renderSlateNode(node: unknown, idx: number): React.ReactNode {
@@ -292,7 +383,7 @@ export default function PublicPageContent({ content }: PublicPageContentProps) {
   }
 
   if (Array.isArray(content)) {
-    return <div>{content.map((node, i) => renderSlateNode(node, i))}</div>;
+    return <div>{renderSlateBlocks(content)}</div>;
   }
 
   if (isTipTapDoc(content)) {
@@ -312,7 +403,7 @@ export default function PublicPageContent({ content }: PublicPageContentProps) {
         : [];
 
   if (rootNodes.length > 0) {
-    return <div>{rootNodes.map((node, i) => renderSlateNode(node, i))}</div>;
+    return <div>{renderSlateBlocks(rootNodes)}</div>;
   }
 
   return <p className="text-sm text-muted-foreground">Unable to render content.</p>;

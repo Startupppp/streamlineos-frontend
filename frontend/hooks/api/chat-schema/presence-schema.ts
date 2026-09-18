@@ -10,11 +10,15 @@ export const chatOnlineUsersContract = z.array(
   z.object({
     userId: z.string(),
     status: z.string(),
+    statusMessage: z.string().nullable().optional(),
+    statusExpiresAt: z.string().nullable().optional(),
     lastSeenAt: z.string(),
     userName: z.string().nullable(),
     userImage: z.string().nullable(),
   }),
 );
+
+export type ChatOnlineUser = z.infer<typeof chatOnlineUsersContract>[number];
 
 /** `chatUsersResponseSchema` */
 export const chatOrgUsersContract = z.array(

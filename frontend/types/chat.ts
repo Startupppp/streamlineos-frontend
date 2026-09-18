@@ -179,14 +179,6 @@ export interface TypingIndicator {
   name: string;
 }
 
-export interface OnlineUser {
-  userId: string;
-  status: string;
-  lastSeenAt: Date | string | null;
-  userName: string | null;
-  userImage: string | null;
-}
-
 export interface OrgUser {
   id: string;
   name: string | null;

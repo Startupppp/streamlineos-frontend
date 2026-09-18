@@ -52,7 +52,7 @@ export function PayrollFilters({ payPeriod, rows }: PayrollFiltersProps) {
     (value: string) => {
       const p = resolvePeriodPreset(value);
       if (p === "custom") {
-        updateParams({ preset: "custom" });
+        updateParams({ preset: "custom", start: null, end: null });
         return;
       }
       const range = getPresetRange(p, payPeriod);

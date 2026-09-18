@@ -304,6 +304,24 @@ export function useCreateKbPage() {
   });
 }
 
+function applyUpdatedKbPage(updated: KbPage) {
+  return function patchCachedDetail(
+    cached: KbPageDetail | undefined,
+  ): KbPageDetail | undefined {
+    if (!cached) return cached;
+    return { ...cached, ...updated };
+  };
+}
+
+function touchesKbPageListings(variables: UpdateKbPageInput): boolean {
+  return (
+    variables.title !== undefined ||
+    variables.icon !== undefined ||
+    variables.spaceId !== undefined ||
+    variables.status !== undefined
+  );
+}
+
 export function useUpdateKbPage() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:update", {
@@ -315,10 +333,12 @@ export function useUpdateKbPage() {
         undefined,
         kbPageContract,
       ),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.page(variables.pageId),
-      });
+    onSuccess: (updated, variables) => {
+      qc.setQueryData<KbPageDetail>(
+        knowledgeAndSurveysQueryKeys.kb.page(variables.pageId),
+        applyUpdatedKbPage(updated),
+      );
+      if (!touchesKbPageListings(variables)) return;
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree(),
       });

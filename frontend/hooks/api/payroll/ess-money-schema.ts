@@ -59,11 +59,15 @@ export const essReimbursementContract = z.object({
   createdAt: z.string(),
 });
 
-/**
- * A bare array. The route takes `page` and `limit` and returns no `total`, no
- * `hasMore` and no cursor, so the page count is not recoverable from the body.
- */
-export const essReimbursementsContract = z.array(essReimbursementContract);
+export const essReimbursementsContract = z.object({
+  items: z.array(essReimbursementContract),
+  total: z.number().int(),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  totalPages: z.number().int(),
+});
+
+export type EssReimbursementsPage = z.infer<typeof essReimbursementsContract>;
 
 export const essLoanStatusContract = z.enum([
   "PENDING",

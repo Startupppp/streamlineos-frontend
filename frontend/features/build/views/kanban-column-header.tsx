@@ -31,6 +31,7 @@ import {
 import type { KanbanColumn } from "../shared/types";
 import { ColumnColorPicker } from "../shared/column-color-picker";
 import { resolveColumnColor } from "@/lib/column-colors";
+import { KanbanColumnWip } from "./kanban-column-wip";
 
 const MAX_COLUMN_NAME = 50;
 
@@ -50,6 +51,7 @@ interface KanbanColumnHeaderProps {
   projectId: number;
   ticketCount: number;
   serverCount?: number;
+  wipLimit?: number | null;
   canManage: boolean;
   existingNames?: string[];
   onRename?: (oldName: string, newName: string) => void;
@@ -63,6 +65,7 @@ export function KanbanColumnHeader({
   projectId,
   ticketCount,
   serverCount,
+  wipLimit,
   canManage,
   existingNames = [],
   onRename,
@@ -221,7 +224,7 @@ export function KanbanColumnHeader({
   const columnColor = resolveColumnColor(column.color);
 
   return (
-    <div className="relative flex items-center justify-between px-3 py-2 gap-1">
+    <div className="relative flex shrink-0 items-center justify-between gap-1 border-b border-border/60 px-3 py-2">
       <div className="flex items-center gap-1.5 min-w-0 flex-1">
         {dragHandleProps ? (
           <button
@@ -278,8 +281,8 @@ export function KanbanColumnHeader({
         ) : (
           <h3
             className={cn(
-              "font-medium text-label text-foreground truncate",
-              isEditable && "cursor-text hover:text-foreground/80",
+              "truncate text-[11px] font-semibold uppercase tracking-wider text-foreground",
+              isEditable && "cursor-text transition-colors hover:text-muted-foreground",
             )}
             role={isEditable ? "button" : undefined}
             tabIndex={isEditable ? 0 : undefined}
@@ -290,9 +293,7 @@ export function KanbanColumnHeader({
             {column.name}
           </h3>
         )}
-        <span className="text-xs text-muted-foreground tabular-nums shrink-0">
-          {displayCount}
-        </span>
+        <KanbanColumnWip count={displayCount} wipLimit={wipLimit} />
       </div>
 
       <div className="flex items-center gap-0.5 shrink-0">

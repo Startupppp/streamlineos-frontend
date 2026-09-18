@@ -29,9 +29,8 @@ import {
 import { getPresetRange } from "@/features/timesheets/payroll/lib/period-presets";
 import type { PayrollSummaryRow } from "@/features/timesheets/payroll/types";
 import { DEFAULT_PAYROLL_MAPPING } from "@/features/timesheets/payroll/types";
-import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { EmptyReportIllustration } from "@/components/illustrations";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 
 const MAX_RANGE_DAYS = 92;
 
@@ -180,23 +179,21 @@ export function TimesheetPayrollPageClient() {
   if (!canView) {
     return (
       <PageWrapper title="Payroll">
-        <EmptyState
-          illustration={<EmptyReportIllustration className="h-32 w-32" />}
-          title="Access restricted"
-          description="You don't have permission to view payroll data."
-        />
+        <NoPermissionState permission="timesheets:payroll:view" />
       </PageWrapper>
     );
   }
 
   const rangeError =
-    rangeState === "invalid"
-      ? "The selected dates are invalid."
-      : rangeState === "reversed"
-        ? "End date must be after start date."
-        : rangeState === "too-long"
-          ? "Date range cannot exceed 92 days."
-          : null;
+    rangeState === "incomplete"
+      ? "Choose a start and end date to load the payroll queue."
+      : rangeState === "invalid"
+        ? "The selected dates are invalid."
+        : rangeState === "reversed"
+          ? "End date must be after start date."
+          : rangeState === "too-long"
+            ? "Date range cannot exceed 92 days."
+            : null;
 
   const motionProps = shouldReduceMotion
     ? {}

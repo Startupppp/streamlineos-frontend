@@ -13,7 +13,7 @@ import type {
   UpdateChannelInput,
 } from "@/types/chat";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
-import type { PresenceStatus } from "@/lib/presence";
+import type { PresenceClearAfter, PresenceStatus } from "@/lib/presence";
 import { refreshRealtimeCapability } from "./chat-shared";
 
 const chatOkContract = lazyContract(() =>
@@ -187,12 +187,18 @@ export function useChatHeartbeat() {
   });
 }
 
+export interface SetPresenceStatusInput {
+  status: PresenceStatus;
+  statusMessage?: string;
+  clearAfter?: PresenceClearAfter;
+}
+
 export function useSetPresenceStatus() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "presence", "set-status"],
-    mutationFn: (status: PresenceStatus) =>
-      apiClient.put<{ ok: boolean }>("/chat/status", { status }, undefined, chatOkContract),
+    mutationFn: (input: SetPresenceStatusInput) =>
+      apiClient.put<{ ok: boolean }>("/chat/status", input, undefined, chatOkContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.onlineUsers() });
     },

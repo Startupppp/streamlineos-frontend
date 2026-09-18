@@ -24,16 +24,20 @@ import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import type { EssLoan } from "@/types/payroll/ess";
 import { cn } from "@/lib/utils";
 
+const LOAN_AMOUNT_MIN = 1000;
+const LOAN_AMOUNT_MAX = 10_000_000;
+const LOAN_EMIS_MAX = 360;
+
 const loanSchema = z.object({
   amount: z.string().min(1, "Amount required").refine((v) => {
     const n = parseFloat(v);
-    return Number.isFinite(n) && n > 0;
-  }, "Amount must be positive"),
+    return Number.isFinite(n) && n >= LOAN_AMOUNT_MIN && n <= LOAN_AMOUNT_MAX;
+  }, `Between ₹${LOAN_AMOUNT_MIN.toLocaleString("en-IN")} and ₹${LOAN_AMOUNT_MAX.toLocaleString("en-IN")}`),
   reason: z.string().min(1, "Reason required").max(500),
   totalEmis: z.string().min(1, "EMI count required").refine((v) => {
     const n = parseInt(v, 10);
-    return Number.isFinite(n) && n >= 1 && n <= 60;
-  }, "Between 1 and 60 EMIs"),
+    return Number.isFinite(n) && n >= 1 && n <= LOAN_EMIS_MAX;
+  }, `Between 1 and ${LOAN_EMIS_MAX} EMIs`),
 });
 
 type LoanFormValues = z.infer<typeof loanSchema>;

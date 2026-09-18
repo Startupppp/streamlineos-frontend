@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { cursorPaginationContract } from "@/hooks/api/cursor-page-schema";
 
-const assetRowContract = z.object({
-  id: z.number(),
+export const assetRowContract = z.object({
+  id: z.number().int(),
   orgId: z.string(),
   name: z.string(),
   type: z.string(),
@@ -10,7 +10,7 @@ const assetRowContract = z.object({
   model: z.string().nullable(),
   serialNumber: z.string().nullable(),
   assignedTo: z.string().nullable(),
-  assignedToMembershipId: z.number().nullable(),
+  assignedToMembershipId: z.number().int().nullable(),
   status: z.string(),
   purchaseDate: z.string().nullable(),
   purchaseCost: z.string().nullable(),

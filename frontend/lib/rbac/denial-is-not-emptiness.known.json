@@ -322,7 +322,6 @@
   "features/support/settings/automations/support-automations-settings.tsx",
   "features/support/settings/routing-page.tsx",
   "features/timesheets/billing/billing-view.tsx",
-  "features/timesheets/payroll/payroll-page-client.tsx",
   "features/timesheets/reports/project-budgets-tab.tsx",
   "features/timesheets/reports/reports-view.tsx",
   "features/timesheets/settings/rates-tab.tsx",

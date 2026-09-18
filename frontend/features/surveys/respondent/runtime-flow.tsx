@@ -19,7 +19,7 @@ interface RuntimeFlowProps {
   sections: PublicSurveySection[];
   logicRules: PublicSurveyLogicRule[];
   onSaveAnswer: (questionId: number, answer: AnswerValue) => Promise<void>;
-  onFinish: (outcome: "completed" | "disqualified") => void;
+  onFinish: (outcome: "completed" | "disqualified") => Promise<void>;
 }
 
 export function RuntimeFlow({
@@ -117,6 +117,7 @@ export function RuntimeFlow({
   }
 
   async function handleNext() {
+    if (saving) return;
     const answer = answers[current.id];
     if (current.required && !isContentBlock) {
       const hasAnswer =
@@ -137,11 +138,11 @@ export function RuntimeFlow({
 
       const outcome = evaluateQuestionLogic(current, answer, logicRules, cumulativeScore);
       if (outcome.disqualified) {
-        onFinish("disqualified");
+        await onFinish("disqualified");
         return;
       }
       if (outcome.endSurvey) {
-        onFinish("completed");
+        await onFinish("completed");
         return;
       }
 
@@ -151,7 +152,7 @@ export function RuntimeFlow({
         outcome.skipToSectionId,
       );
       if (nextId === undefined) {
-        onFinish("completed");
+        await onFinish("completed");
       } else {
         goToQuestion(nextId, 1);
       }
@@ -220,7 +221,7 @@ export function RuntimeFlow({
         <LoadingButton
           onClick={handleNext}
           isPending={saving}
-          loadingText="Saving…"
+          loadingText={isLast ? "Submitting…" : "Saving…"}
           className="h-11 min-w-[140px] gap-2 font-medium sm:ml-auto"
         >
           {isLast ? (

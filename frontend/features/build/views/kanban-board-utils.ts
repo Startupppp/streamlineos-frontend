@@ -13,6 +13,18 @@ export type StatusEntry = {
 
 export const COLUMN_DND_TYPE = "COLUMN";
 
+export type WipState = "none" | "under" | "at" | "over";
+
+export function resolveWipState(
+  count: number,
+  wipLimit: number | null | undefined,
+): WipState {
+  if (wipLimit == null || wipLimit <= 0) return "none";
+  if (count > wipLimit) return "over";
+  if (count === wipLimit) return "at";
+  return "under";
+}
+
 export function compareByRank<T extends { rank?: string | null; id: number }>(
   a: T,
   b: T,

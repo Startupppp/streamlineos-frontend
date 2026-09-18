@@ -14,17 +14,9 @@ import { IDEMPOTENCY_HEADER, newIdempotencyKey } from "@/lib/idempotency-key";
 if (!process.env.NEXT_PUBLIC_API_URL)
   throw new Error("NEXT_PUBLIC_API_URL is not set");
 
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
+const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 const REQUEST_TIMEOUT_MS = 30_000;
 
-/**
- * `AbortSignal.any` is Chrome 116 / Safari 17.4 / Firefox 124. Falling back to
- * the timeout alone dropped the caller's signal, which made every cancel in the
- * app a silent no-op on an older browser — the request ran to completion after
- * the user pressed Stop, and on an AI surface it kept spending credits. Linking
- * by hand keeps both sources, and forwarding `reason` preserves the
- * `TimeoutError` that the catch below branches on.
- */
 function linkAbortSignals(sources: readonly AbortSignal[]): AbortSignal {
   const controller = new AbortController();
   for (const source of sources) {
@@ -306,39 +298,39 @@ export async function authedFetch(
     if (token) headers.set("Authorization", `Bearer ${token}`);
   }
 
-  try {
-    let res = await fetch(url, {
-      ...requestInit,
-      headers,
-      credentials: "omit",
-      signal: combinedSignal,
-    });
+  let res = await fetchOrThrowTransportError(url, requestInit, headers, combinedSignal, path);
 
-    if (!isPublic && res.status === 401) {
-      clearBackendTokenCache();
-      const token = await getBackendToken(tokenOptions);
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
-        res = await fetch(url, {
-          ...requestInit,
-          headers,
-          credentials: "omit",
-          signal: combinedSignal,
-        });
-      }
-      if (
-        res.status === 401 &&
-        typeof window !== "undefined" &&
-        !autoSignOutSuppressed
-      ) {
-        clearRegisteredQueryCache();
-        void import("next-auth/react").then(({ signOut }) => {
-          void signOut({ callbackUrl: "/signin" });
-        });
-      }
+  if (!isPublic && res.status === 401) {
+    clearBackendTokenCache();
+    const token = await getBackendToken(tokenOptions);
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+      res = await fetchOrThrowTransportError(url, requestInit, headers, combinedSignal, path);
     }
-    if (!isPublic) await redirectForOrganizationAccessError(res);
-    return res;
+    if (
+      res.status === 401 &&
+      typeof window !== "undefined" &&
+      !autoSignOutSuppressed
+    ) {
+      clearRegisteredQueryCache();
+      void import("next-auth/react").then(({ signOut }) => {
+        void signOut({ callbackUrl: "/signin" });
+      });
+    }
+  }
+  if (!isPublic) await redirectForOrganizationAccessError(res);
+  return res;
+}
+
+async function fetchOrThrowTransportError(
+  url: string,
+  requestInit: Omit<RequestInit, "headers" | "signal" | "credentials">,
+  headers: Headers,
+  signal: AbortSignal,
+  path: string,
+): Promise<Response> {
+  try {
+    return await fetch(url, { ...requestInit, headers, credentials: "omit", signal });
   } catch (error: unknown) {
     if (error instanceof DOMException && error.name === "TimeoutError") {
       throw new ApiError(
@@ -351,14 +343,15 @@ export async function authedFetch(
       throw new ApiError("Request was cancelled.", undefined, "ABORTED");
     }
     const host = requestHost(url);
-    const method = (init.method ?? "GET").toUpperCase();
+    const upperMethod = (requestInit.method ?? "GET").toUpperCase();
     const cause = error instanceof Error ? error.message : String(error);
     const target = host ? `contacting ${host} ` : "";
     throw new ApiError(
-      `Network error ${target}(${method} ${path}). Check your connection and try again.`,
+      `Network error ${target}(${upperMethod} ${path}). Check your connection and try again.`,
       undefined,
       "NETWORK_ERROR",
-      { method, path, host, cause },
+      { method: upperMethod, path, host, cause },
+      path,
     );
   }
 }
@@ -407,13 +400,7 @@ function beginContract<T>(
   return pending;
 }
 
-/**
- * Pass `contract` and the response body is validated at runtime, so a backend
- * rename fails the read instead of arriving as an undefined field. Omit it and
- * the body is cast unchecked — see `assertUnchecked` in `lib/api-envelope.ts`.
- * A `ContractSource` may be the schema itself or a `lazyContract` thunk that
- * loads it; both parse, and the thunk keeps Zod out of the importer's chunk.
- */
+
 async function get<T>(
   url: string,
   params?: QueryParams,

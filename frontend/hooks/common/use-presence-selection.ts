@@ -3,34 +3,51 @@
 import { useCallback, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { usePresenceMap } from "@/hooks/api/chat-core-read";
-import { useSetPresenceStatus } from "@/hooks/api/chat-core-mutations-b";
+import { usePresenceCustomStatus, usePresenceMap } from "@/hooks/api/chat-core-read";
+import {
+  useSetPresenceStatus,
+  type SetPresenceStatusInput,
+} from "@/hooks/api/chat-core-mutations-b";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { PresenceStatus } from "@/lib/presence";
 
 interface PresenceSelection {
   status: PresenceStatus;
-  selectStatus: (next: PresenceStatus) => void;
+  statusMessage: string;
+  statusExpiresAt: string | null;
+  selectStatus: (next: SetPresenceStatusInput) => void;
   isPending: boolean;
+}
+
+interface PendingSelection {
+  status: PresenceStatus;
+  statusMessage: string;
 }
 
 export function usePresenceSelection(): PresenceSelection {
   const { data: session } = useSession();
   const userId = session?.user?.id;
   const presenceMap = usePresenceMap();
+  const { statusMessage, statusExpiresAt } = usePresenceCustomStatus(userId);
   const setPresenceStatus = useSetPresenceStatus();
-  const [pendingStatus, setPendingStatus] = useState<PresenceStatus | null>(null);
+  const [pending, setPending] = useState<PendingSelection | null>(null);
 
   const serverStatus = userId ? presenceMap.get(userId) : undefined;
+  const serverMessage = statusMessage ?? "";
 
-  if (pendingStatus !== null && serverStatus === pendingStatus) setPendingStatus(null);
+  if (
+    pending !== null &&
+    serverStatus === pending.status &&
+    serverMessage === pending.statusMessage
+  )
+    setPending(null);
 
   const selectStatus = useCallback(
-    (next: PresenceStatus) => {
-      setPendingStatus(next);
+    (next: SetPresenceStatusInput) => {
+      setPending({ status: next.status, statusMessage: next.statusMessage ?? "" });
       setPresenceStatus.mutate(next, {
         onError: (error) => {
-          setPendingStatus(null);
+          setPending(null);
           toast.error(getErrorMessage(error));
         },
       });
@@ -39,7 +56,9 @@ export function usePresenceSelection(): PresenceSelection {
   );
 
   return {
-    status: pendingStatus ?? serverStatus ?? "ONLINE",
+    status: pending?.status ?? serverStatus ?? "ONLINE",
+    statusMessage: pending?.statusMessage ?? serverMessage,
+    statusExpiresAt,
     selectStatus,
     isPending: setPresenceStatus.isPending,
   };

@@ -3,13 +3,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useAssessmentAttempts, useSurveyCertificates } from "@/hooks/api/surveys/assessment";
 
 export function AssessmentResultsCard({ surveyId }: { surveyId: number }) {
-  const { data: attempts, isLoading: attemptsLoading } = useAssessmentAttempts(surveyId, { pageSize: 100 });
-  const { data: certificates, isLoading: certificatesLoading } = useSurveyCertificates(surveyId);
+  const attemptsQuery = useAssessmentAttempts(surveyId, { pageSize: 100 });
+  const certificatesQuery = useSurveyCertificates(surveyId);
+  const attempts = attemptsQuery.data;
+  const certificates = certificatesQuery.data;
 
-  if (attemptsLoading || certificatesLoading) {
+  if (attemptsQuery.access.denied) {
+    return <NoPermissionState permission="surveys:assessments:manage" compact />;
+  }
+
+  if (
+    attemptsQuery.access.pending ||
+    attemptsQuery.isLoading ||
+    certificatesQuery.isLoading
+  ) {
     return <Skeleton className="h-32 w-full" />;
   }
 

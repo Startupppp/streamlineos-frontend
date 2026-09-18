@@ -4,6 +4,10 @@ import { nanoid } from "nanoid";
 import { toast } from "sonner";
 import type { Path, TElement } from "platejs";
 import type { PlateEditor } from "platejs/react";
+import { getErrorMessage } from "@/lib/get-error-message";
+
+export const PLACEHOLDER_NODE_TYPE = "placeholder";
+
 export interface UploadedEditorMedia {
   key: string;
   size: number;
@@ -20,6 +24,23 @@ export function mediaTypeForFile(file: File): EditorMediaType {
   if (file.type.startsWith("video/")) return "video";
   if (file.type.startsWith("audio/")) return "audio";
   return "file";
+}
+
+function isNodeLike(node: unknown): node is { type?: unknown; children?: unknown } {
+  return typeof node === "object" && node !== null;
+}
+
+function keepPersistedNode(node: unknown): unknown[] {
+  if (!isNodeLike(node)) return [node];
+  if (node.type === PLACEHOLDER_NODE_TYPE) return [];
+  if (!Array.isArray(node.children)) return [node];
+  const children = node.children.flatMap(keepPersistedNode);
+  return [{ ...node, children: children.length > 0 ? children : [{ text: "" }] }];
+}
+
+export function withoutPendingUploads(value: unknown): unknown {
+  if (!Array.isArray(value)) return value;
+  return value.flatMap(keepPersistedNode);
 }
 
 function findPlaceholderPath(
@@ -42,7 +63,7 @@ export async function uploadEditorMedia(
 ): Promise<void> {
   const placeholderId = nanoid();
   const placeholderNode: TElement = {
-    type: "placeholder",
+    type: PLACEHOLDER_NODE_TYPE,
     placeholderId,
     mediaType,
     name: file.name,
@@ -59,9 +80,9 @@ export async function uploadEditorMedia(
       { at: path },
     );
     editor.tf.unsetNodes(["placeholderId", "mediaType"], { at: path });
-  } catch {
+  } catch (error) {
     const path = findPlaceholderPath(editor, placeholderId);
     if (path) editor.tf.removeNodes({ at: path });
-    toast.error(`Upload failed: ${file.name}`);
+    toast.error(`Upload failed: ${file.name}`, { description: getErrorMessage(error) });
   }
 }

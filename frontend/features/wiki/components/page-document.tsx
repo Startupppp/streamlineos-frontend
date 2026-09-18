@@ -7,12 +7,17 @@ import { toast } from "sonner";
 import { KbAlertCircleIcon } from "@/features/wiki/lib/kb-icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api-client";
-import { chatUsersContract, kbPageSearchContract } from "@/features/wiki/lib/wiki-schema";
+import {
+  chatUsersContract,
+  kbPageSearchContract,
+  type KbPageEditConflict,
+} from "@/features/wiki/lib/wiki-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { KbPageNotFound } from "./kb-page-not-found";
+import PageEditConflict from "./page-edit-conflict";
 import { usePageAutosave, type PageAutosavePatch } from "./use-page-autosave";
-import { Button } from "@/components/ui/button";
 import { uploadKbMedia } from "@/features/wiki/lib/upload-kb-media";
+import { withoutPendingUploads } from "@/components/editor/plate/upload-media";
 import {
   useKbPage,
   useUpdateKbPage,
@@ -62,6 +67,10 @@ interface PageDocumentProps {
   onNavigateToPage?: (targetPageId: number) => void;
 }
 
+function nextReload(current: number): number {
+  return current + 1;
+}
+
 export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentProps) {
   const router = useRouter();
   const { data: page, isLoading, isError, error, refetch } = useKbPage(pageId);
@@ -73,6 +82,8 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
     pageId: number;
     value: string;
   } | null>(null);
+  const [reloadNonce, setReloadNonce] = useState(0);
+  const [isReloading, setIsReloading] = useState(false);
   const visitedRef = useRef<number | null>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
 
@@ -81,16 +92,16 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
       updatePage.mutateAsync(payload),
     [updatePage],
   );
-  const handleConflict = useCallback(() => {
-    toast.error("Page edited by someone else", {
-      description: "Your unsaved changes were not applied. Reload to see the latest version.",
+  const handleConflict = useCallback((detail: KbPageEditConflict) => {
+    toast.error("This page changed while you were editing", {
+      description: `${detail.lastEditedByName ?? "Someone else"} saved a newer version. Your edits are kept — choose which version wins.`,
     });
   }, []);
   const handleSaveFailure = useCallback((error: unknown) => {
     toast.error("Failed to save page", { description: getErrorMessage(error) });
   }, []);
 
-  const { saveState, conflict, schedule, resolveConflict } = usePageAutosave({
+  const { saveState, conflict, schedule, discardLocalEdits, keepLocalEdits } = usePageAutosave({
     pageId,
     contentRevision: page?.contentRevision,
     save: handleSavePage,
@@ -125,10 +136,16 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
     [router, onNavigateToPage]
   );
 
-  const handleReload = useCallback(() => {
-    resolveConflict();
-    void refetch();
-  }, [resolveConflict, refetch]);
+  const handleDiscardMine = useCallback(() => {
+    setIsReloading(true);
+    function applyServerVersion() {
+      discardLocalEdits();
+      setTitleDraft(null);
+      setReloadNonce(nextReload);
+      setIsReloading(false);
+    }
+    void refetch().then(applyServerVersion, applyServerVersion);
+  }, [discardLocalEdits, refetch]);
 
   const handleUploadFile = useCallback(
     (file: File) => uploadKbMedia(file, pageId),
@@ -145,7 +162,7 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
   }
 
   function handleEditorChange(value: unknown, plainText: string) {
-    schedule({ content: value, contentText: plainText });
+    schedule({ content: withoutPendingUploads(value), contentText: plainText });
   }
 
   function handleApplyImprovement(text: string) {
@@ -226,25 +243,13 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
             />
           </div>
 
-          {/*
-            The 409 latch blocks every further autosave, so the editor keeps
-            accepting keystrokes while saving nothing. A toast is dismissible and
-            the state is not — this banner stands for as long as the latch does.
-          */}
           {conflict && (
-            <div
-              role="alert"
-              className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-status-danger-rule bg-status-danger-surface px-3 py-2.5"
-            >
-              <KbAlertCircleIcon className="h-4 w-4 shrink-0 text-status-danger-ink" />
-              <span className="text-sm text-status-danger-ink">
-                Someone else edited this page. Autosave is paused — reload to
-                continue editing the latest version.
-              </span>
-              <Button size="sm" variant="outline" className="h-7" onClick={handleReload}>
-                Reload
-              </Button>
-            </div>
+            <PageEditConflict
+              conflict={conflict}
+              isReloading={isReloading}
+              onKeepMine={keepLocalEdits}
+              onDiscardMine={handleDiscardMine}
+            />
           )}
 
           {page.isLocked && !canManage && (
@@ -256,7 +261,7 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
 
           <PlateDocumentEditor
             value={page.content ?? undefined}
-            contentKey={pageId}
+            contentKey={`${pageId}:${reloadNonce}`}
             editable={isEditable}
             placeholder="Start writing…"
             onChange={handleEditorChange}

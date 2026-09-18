@@ -8,6 +8,18 @@ import type {
 import type { TimesheetEntry } from "@/features/timesheets";
 import { isCellLocked, type GridRow } from "./week-grid-rows";
 
+export const GRID_MAX_HOURS_PER_DAY = 24;
+const INVALID_HOURS_MESSAGE = `Hours must be between 0 and ${GRID_MAX_HOURS_PER_DAY}.`;
+
+function parseHoursInput(value: string): number | null {
+  const trimmed = value.trim();
+  if (trimmed === "") return 0;
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed)) return null;
+  if (parsed < 0 || parsed > GRID_MAX_HOURS_PER_DAY) return null;
+  return parsed;
+}
+
 const NAV_KEYS = [
   "Enter",
   "ArrowUp",
@@ -55,7 +67,11 @@ export function useWeekGridCells({
    * had been saved, or that it had failed. Errors already toast; this covers
    * the success and in-flight halves.
    */
+  const [cellError, setCellError] = useState<string | null>(null);
+  const suppressBlurForCell = useRef<string | null>(null);
+
   const saveStatus = useMemo(() => {
+    if (cellError) return cellError;
     const pending =
       createEntry.isPending || updateEntry.isPending || voidEntry.isPending;
     if (pending) return "Saving hours…";
@@ -64,18 +80,26 @@ export function useWeekGridCells({
     if (createEntry.isSuccess || updateEntry.isSuccess || voidEntry.isSuccess)
       return "Hours saved.";
     return "";
-  }, [createEntry, updateEntry, voidEntry]);
+  }, [cellError, createEntry, updateEntry, voidEntry]);
 
   const commitCell = useCallback(
-    (rowKey: string, date: string, value: string, row: GridRow) => {
-      const hours = parseFloat(value) || 0;
+    (rowKey: string, date: string, value: string, row: GridRow): boolean => {
       const existing = entryMap.get(`${rowKey}-${date}`);
       // A locked cell is read-only rather than disabled now, so it can be
       // focused and left; nothing it reports may reach a mutation.
       if (isCellLocked(existing)) {
         setEditingCell(null);
-        return;
+        setCellError(null);
+        return true;
       }
+
+      const hours = parseHoursInput(value);
+      if (hours === null) {
+        setCellError(INVALID_HOURS_MESSAGE);
+        return false;
+      }
+      setCellError(null);
+
       if (hours > 0 && !existing) {
         createEntry.mutate({
           date,
@@ -90,6 +114,7 @@ export function useWeekGridCells({
         voidEntry.mutate({ entryId: existing.id, reason: "Cleared via grid" });
       }
       setEditingCell(null);
+      return true;
     },
     [entryMap, createEntry, updateEntry, voidEntry],
   );
@@ -97,6 +122,7 @@ export function useWeekGridCells({
   const handleCellFocus = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
     setEditingCell(e.currentTarget.dataset.cellKey ?? "");
     setEditingValue(e.currentTarget.dataset.hours ?? "");
+    setCellError(null);
   }, []);
 
   const handleCellChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,6 +131,11 @@ export function useWeekGridCells({
 
   const handleCellBlur = useCallback(
     (e: React.FocusEvent<HTMLInputElement>) => {
+      const cellKey = e.currentTarget.dataset.cellKey ?? "";
+      if (suppressBlurForCell.current === cellKey) {
+        suppressBlurForCell.current = null;
+        return;
+      }
       const row = rowFromDataset(e.currentTarget.dataset);
       if (!row) return;
       commitCell(
@@ -166,7 +197,8 @@ export function useWeekGridCells({
       if (e.key === "Enter") {
         const row = rowFromDataset(e.currentTarget.dataset);
         if (!row) return;
-        commitCell(rowKey, date, editingValue, row);
+        if (!commitCell(rowKey, date, editingValue, row)) return;
+        suppressBlurForCell.current = e.currentTarget.dataset.cellKey ?? "";
         focusCell(rowIdx + 1, dayIdx);
         return;
       }
@@ -185,6 +217,7 @@ export function useWeekGridCells({
     cellRefs,
     editingCell,
     editingValue,
+    cellError,
     saveStatus,
     handleCellFocus,
     handleCellChange,
