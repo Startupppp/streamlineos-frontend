@@ -1,6 +1,6 @@
 export const LIST_STYLE_DISC = "disc";
-export const LIST_STYLE_DECIMAL = "decimal";
 export const LIST_STYLE_TODO = "todo";
+export const LIST_STYLE_DECIMAL = "decimal";
 
 export type ListStyleType =
   | typeof LIST_STYLE_DISC
