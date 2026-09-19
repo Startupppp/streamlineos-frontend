@@ -225,6 +225,8 @@ export const buildWorkQueryKeys = {
       params === undefined
         ? ([...base, "projects", "managed-products", "list"] as const)
         : ([...base, "projects", "managed-products", "list", params] as const),
+      listInfinite: (filters: QueryKeyParams) =>
+        [...base, "projects", "managed-products", "list", filters, "infinite"] as const,
       detail: (managedProductId: number) =>
         [...base, "projects", "managed-products", "detail", managedProductId] as const,
       insights: (managedProductId: number) =>
@@ -235,6 +237,8 @@ export const buildWorkQueryKeys = {
       params === undefined
         ? ([...base, "projects", "pm-workspaces", "list"] as const)
         : ([...base, "projects", "pm-workspaces", "list", params] as const),
+      listInfinite: (filters: QueryKeyParams) =>
+        [...base, "projects", "pm-workspaces", "list", filters, "infinite"] as const,
       detail: (workspaceId: string) =>
         [...base, "projects", "pm-workspaces", "detail", workspaceId] as const,
       members: (workspaceId: string, params?: QueryKeyParams) =>

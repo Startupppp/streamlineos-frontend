@@ -2,8 +2,14 @@ import { act, renderHook } from "@testing-library/react";
 import { useBuildScopeDirectory } from "./use-build-scope-directory";
 import { useCanState } from "@/hooks/api/access";
 import { useInfiniteProjects } from "@/hooks/api/build/projects";
-import { useManagedProducts } from "@/hooks/api/build/managed-products";
-import { usePmWorkspaces } from "@/hooks/api/build/pm-workspaces";
+import {
+  useManagedProducts,
+  useInfiniteManagedProducts,
+} from "@/hooks/api/build/managed-products";
+import {
+  usePmWorkspaces,
+  useInfinitePmWorkspaces,
+} from "@/hooks/api/build/pm-workspaces";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import type { AccessState } from "@/lib/rbac/gate";
 import type { ProjectListResponse } from "@/types/projects";
@@ -17,7 +23,9 @@ jest.mock("@/hooks/common/use-debounce");
 const mockUseCanState = useCanState as jest.MockedFunction<typeof useCanState>;
 const mockUseInfiniteProjects = useInfiniteProjects as jest.MockedFunction<typeof useInfiniteProjects>;
 const mockUseManagedProducts = useManagedProducts as jest.MockedFunction<typeof useManagedProducts>;
+const mockUseInfiniteManagedProducts = useInfiniteManagedProducts as jest.MockedFunction<typeof useInfiniteManagedProducts>;
 const mockUsePmWorkspaces = usePmWorkspaces as jest.MockedFunction<typeof usePmWorkspaces>;
+const mockUseInfinitePmWorkspaces = useInfinitePmWorkspaces as jest.MockedFunction<typeof useInfinitePmWorkspaces>;
 const mockUseDebouncedValue = useDebouncedValue as jest.MockedFunction<typeof useDebouncedValue>;
 
 function makeEmptyQuery(overrides: Record<string, unknown> = {}) {
@@ -69,6 +77,28 @@ function makeManagedProductsPage(
   };
 }
 
+function makeInfiniteWsData(
+  pages: ReturnType<typeof makePmWorkspacesPage>[],
+): { pages: ReturnType<typeof makePmWorkspacesPage>[]; pageParams: (string | undefined)[] } {
+  return {
+    pages,
+    pageParams: pages.map((_, i) =>
+      i === 0 ? undefined : pages[i - 1]?.pagination.nextCursor ?? undefined,
+    ),
+  };
+}
+
+function makeInfiniteProductsData(
+  pages: ReturnType<typeof makeManagedProductsPage>[],
+): { pages: ReturnType<typeof makeManagedProductsPage>[]; pageParams: (string | undefined)[] } {
+  return {
+    pages,
+    pageParams: pages.map((_, i) =>
+      i === 0 ? undefined : pages[i - 1]?.pagination.nextCursor ?? undefined,
+    ),
+  };
+}
+
 function makeProjectsInfiniteData(
   pages: { data: { id: number; name: string; key: string; status: string; managedProductId: number | null; pmWorkspaceId: string | undefined }[]; hasMore: boolean; nextCursor: number | null }[],
 ): { pages: typeof pages; pageParams: (number | undefined)[] } {
@@ -83,7 +113,9 @@ function setupGrantedAccessMocks(debounced = "") {
   mockUseDebouncedValue.mockReturnValue(debounced);
   mockUseInfiniteProjects.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteProjects>);
   mockUseManagedProducts.mockReturnValue(makeEmptyQuery() as ReturnType<typeof useManagedProducts>);
+  mockUseInfiniteManagedProducts.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteManagedProducts>);
   mockUsePmWorkspaces.mockReturnValue(makeEmptyQuery() as ReturnType<typeof usePmWorkspaces>);
+  mockUseInfinitePmWorkspaces.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfinitePmWorkspaces>);
 }
 
 beforeEach(() => {
@@ -96,7 +128,9 @@ describe("BSN-02-015 — stale request isolation via debounced search", () => {
     mockUseDebouncedValue.mockReturnValue("debounced");
     mockUseInfiniteProjects.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteProjects>);
     mockUseManagedProducts.mockReturnValue(makeEmptyQuery() as ReturnType<typeof useManagedProducts>);
+    mockUseInfiniteManagedProducts.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteManagedProducts>);
     mockUsePmWorkspaces.mockReturnValue(makeEmptyQuery() as ReturnType<typeof usePmWorkspaces>);
+    mockUseInfinitePmWorkspaces.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfinitePmWorkspaces>);
 
     renderHook(() => useBuildScopeDirectory("raw-rapidly-typed", false));
 
@@ -175,7 +209,9 @@ describe("BSN-02-017 — isDenied and isLoading correctly distinguish access sta
     mockUseDebouncedValue.mockReturnValue("");
     mockUseInfiniteProjects.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteProjects>);
     mockUseManagedProducts.mockReturnValue(makeEmptyQuery() as ReturnType<typeof useManagedProducts>);
+    mockUseInfiniteManagedProducts.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteManagedProducts>);
     mockUsePmWorkspaces.mockReturnValue(makeEmptyQuery() as ReturnType<typeof usePmWorkspaces>);
+    mockUseInfinitePmWorkspaces.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfinitePmWorkspaces>);
 
     const { result } = renderHook(() => useBuildScopeDirectory("", false));
 
@@ -188,7 +224,9 @@ describe("BSN-02-017 — isDenied and isLoading correctly distinguish access sta
     mockUseDebouncedValue.mockReturnValue("");
     mockUseInfiniteProjects.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteProjects>);
     mockUseManagedProducts.mockReturnValue(makeEmptyQuery() as ReturnType<typeof useManagedProducts>);
+    mockUseInfiniteManagedProducts.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteManagedProducts>);
     mockUsePmWorkspaces.mockReturnValue(makeEmptyQuery() as ReturnType<typeof usePmWorkspaces>);
+    mockUseInfinitePmWorkspaces.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfinitePmWorkspaces>);
 
     const { result } = renderHook(() => useBuildScopeDirectory("", false));
 
@@ -282,7 +320,9 @@ describe("BSN-02-014 — project continuation: no duplicates, no reorder, cursor
     mockUseDebouncedValue.mockReturnValue("alpha");
     mockUseInfiniteProjects.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteProjects>);
     mockUseManagedProducts.mockReturnValue(makeEmptyQuery() as ReturnType<typeof useManagedProducts>);
+    mockUseInfiniteManagedProducts.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteManagedProducts>);
     mockUsePmWorkspaces.mockReturnValue(makeEmptyQuery() as ReturnType<typeof usePmWorkspaces>);
+    mockUseInfinitePmWorkspaces.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfinitePmWorkspaces>);
 
     const { rerender } = renderHook(
       ({ search }: { search: string }) => useBuildScopeDirectory(search, false),
@@ -299,18 +339,21 @@ describe("BSN-02-014 — project continuation: no duplicates, no reorder, cursor
   });
 });
 
-describe("BSN-02-014 — hierarchy continuation: no duplicates, cursor reset on filter change", () => {
-  test("hasMoreHierarchy is true when workspace page-1 has more and page-2 cursor is not yet loaded", () => {
+describe("BSN-02-014 — hierarchy continuation: infinite queries eliminate the two-page cursor ceiling", () => {
+  test("hasMoreHierarchy is true when the workspace infinite query reports hasNextPage", () => {
     setupGrantedAccessMocks();
-    mockUsePmWorkspaces.mockReturnValue(
-      makeEmptyQuery({
-        data: makePmWorkspacesPage(
-          [{ pmWorkspaceId: "ws1", name: "WS 1", status: "active" }],
-          true,
-          "ws-cursor-1",
-        ),
+    mockUseInfinitePmWorkspaces.mockReturnValue(
+      makeEmptyInfiniteQuery({
+        hasNextPage: true,
         isSuccess: true,
-      }) as ReturnType<typeof usePmWorkspaces>,
+        data: makeInfiniteWsData([
+          makePmWorkspacesPage(
+            [{ pmWorkspaceId: "ws1", name: "WS 1", status: "active" }],
+            true,
+            "ws-cursor-2",
+          ),
+        ]),
+      }) as ReturnType<typeof useInfinitePmWorkspaces>,
     );
 
     const { result } = renderHook(() => useBuildScopeDirectory("", false));
@@ -318,106 +361,183 @@ describe("BSN-02-014 — hierarchy continuation: no duplicates, cursor reset on 
     expect(result.current.hasMoreHierarchy).toBe(true);
   });
 
-  test("hasMoreHierarchy is false once workspace page-2 cursor has been loaded (no more after page 2)", () => {
+  test("hasMoreHierarchy is true when the product infinite query reports hasNextPage", () => {
     setupGrantedAccessMocks();
-    const p1Data = makePmWorkspacesPage(
-      [{ pmWorkspaceId: "ws1", name: "WS 1", status: "active" }],
-      true,
-      "ws-cursor-1",
-    );
-    const p2Data = makePmWorkspacesPage(
-      [{ pmWorkspaceId: "ws2", name: "WS 2", status: "active" }],
-      false,
-      null,
-    );
-    mockUsePmWorkspaces.mockImplementation((params) =>
-      params?.cursor === "ws-cursor-1"
-        ? (makeEmptyQuery({ data: p2Data, isSuccess: true }) as ReturnType<typeof usePmWorkspaces>)
-        : (makeEmptyQuery({ data: p1Data, isSuccess: true }) as ReturnType<typeof usePmWorkspaces>),
+    mockUseInfiniteManagedProducts.mockReturnValue(
+      makeEmptyInfiniteQuery({
+        hasNextPage: true,
+        isSuccess: true,
+        data: makeInfiniteProductsData([
+          makeManagedProductsPage(
+            [{ id: 1, name: "Prod 1", status: "active", pmWorkspaceId: null, key: "P1" }],
+            true,
+            "prod-cursor-2",
+          ),
+        ]),
+      }) as ReturnType<typeof useInfiniteManagedProducts>,
     );
 
     const { result } = renderHook(() => useBuildScopeDirectory("", false));
 
-    act(() => { result.current.fetchMoreHierarchy(); });
+    expect(result.current.hasMoreHierarchy).toBe(true);
+  });
+
+  test("a third page of workspaces is still reachable, so a large org is never silently truncated", () => {
+    setupGrantedAccessMocks();
+    mockUseInfinitePmWorkspaces.mockReturnValue(
+      makeEmptyInfiniteQuery({
+        hasNextPage: true,
+        isSuccess: true,
+        data: makeInfiniteWsData([
+          makePmWorkspacesPage(
+            [{ pmWorkspaceId: "ws1", name: "WS 1", status: "active" }],
+            true,
+            "ws-cursor-2",
+          ),
+          makePmWorkspacesPage(
+            [{ pmWorkspaceId: "ws2", name: "WS 2", status: "active" }],
+            true,
+            "ws-cursor-3",
+          ),
+        ]),
+      }) as ReturnType<typeof useInfinitePmWorkspaces>,
+    );
+
+    const { result } = renderHook(() => useBuildScopeDirectory("", false));
+
+    expect(result.current.hasMoreHierarchy).toBe(true);
+    expect(result.current.workspaces.map((w) => w.id)).toEqual(["ws1", "ws2"]);
+  });
+
+  test("a third page of products is still reachable, so a large org is never silently truncated", () => {
+    setupGrantedAccessMocks();
+    mockUseInfiniteManagedProducts.mockReturnValue(
+      makeEmptyInfiniteQuery({
+        hasNextPage: true,
+        isSuccess: true,
+        data: makeInfiniteProductsData([
+          makeManagedProductsPage(
+            [{ id: 1, name: "Prod 1", status: "active", pmWorkspaceId: null, key: "P1" }],
+            true,
+            "prod-cursor-2",
+          ),
+          makeManagedProductsPage(
+            [{ id: 2, name: "Prod 2", status: "active", pmWorkspaceId: null, key: "P2" }],
+            true,
+            "prod-cursor-3",
+          ),
+        ]),
+      }) as ReturnType<typeof useInfiniteManagedProducts>,
+    );
+
+    const { result } = renderHook(() => useBuildScopeDirectory("", false));
+
+    expect(result.current.hasMoreHierarchy).toBe(true);
+  });
+
+  test("hasMoreHierarchy is false when both the workspace and product infinite queries have no next page", () => {
+    setupGrantedAccessMocks();
+
+    const { result } = renderHook(() => useBuildScopeDirectory("", false));
 
     expect(result.current.hasMoreHierarchy).toBe(false);
   });
 
-  test("workspace rows from page-1 and page-2 combine without duplicates and page-1 rows come first", () => {
+  test("workspace rows from all loaded infinite pages combine without duplicates in load order", () => {
     setupGrantedAccessMocks();
-    const p1Data = makePmWorkspacesPage(
-      [{ pmWorkspaceId: "ws1", name: "WS 1", status: "active" }],
-      true,
-      "ws-cursor-1",
+    mockUseInfinitePmWorkspaces.mockReturnValue(
+      makeEmptyInfiniteQuery({
+        hasNextPage: false,
+        isSuccess: true,
+        data: makeInfiniteWsData([
+          makePmWorkspacesPage(
+            [{ pmWorkspaceId: "ws1", name: "WS 1", status: "active" }],
+            true,
+            "ws-cursor-2",
+          ),
+          makePmWorkspacesPage(
+            [{ pmWorkspaceId: "ws2", name: "WS 2", status: "active" }],
+            false,
+            null,
+          ),
+        ]),
+      }) as ReturnType<typeof useInfinitePmWorkspaces>,
     );
-    const p2Data = makePmWorkspacesPage(
-      [{ pmWorkspaceId: "ws2", name: "WS 2", status: "active" }],
-      false,
-      null,
+
+    const { result } = renderHook(() => useBuildScopeDirectory("", false));
+
+    const wsIds = result.current.workspaces.map((w) => w.id);
+    const uniqueIds = [...new Set(wsIds)];
+    expect(wsIds).toEqual(uniqueIds);
+    expect(wsIds).toEqual(["ws1", "ws2"]);
+  });
+
+  test("fetchMoreHierarchy calls fetchNextPage on both workspace and product infinite queries", () => {
+    setupGrantedAccessMocks();
+    const wsFetchNextPage = jest.fn().mockResolvedValue(undefined);
+    const productsFetchNextPage = jest.fn().mockResolvedValue(undefined);
+    mockUseInfinitePmWorkspaces.mockReturnValue(
+      makeEmptyInfiniteQuery({
+        hasNextPage: true,
+        fetchNextPage: wsFetchNextPage,
+      }) as ReturnType<typeof useInfinitePmWorkspaces>,
     );
-    mockUsePmWorkspaces.mockImplementation((params) =>
-      params?.cursor === "ws-cursor-1"
-        ? (makeEmptyQuery({ data: p2Data, isSuccess: true }) as ReturnType<typeof usePmWorkspaces>)
-        : (makeEmptyQuery({ data: p1Data, isSuccess: true }) as ReturnType<typeof usePmWorkspaces>),
+    mockUseInfiniteManagedProducts.mockReturnValue(
+      makeEmptyInfiniteQuery({
+        hasNextPage: true,
+        fetchNextPage: productsFetchNextPage,
+      }) as ReturnType<typeof useInfiniteManagedProducts>,
     );
 
     const { result } = renderHook(() => useBuildScopeDirectory("", false));
 
     act(() => { result.current.fetchMoreHierarchy(); });
 
-    const wsIds = result.current.workspaces.map((w) => w.id);
-    const uniqueIds = [...new Set(wsIds)];
-    expect(wsIds).toEqual(uniqueIds);
-    expect(wsIds[0]).toBe("ws1");
-    expect(wsIds[1]).toBe("ws2");
+    expect(wsFetchNextPage).toHaveBeenCalledTimes(1);
+    expect(productsFetchNextPage).toHaveBeenCalledTimes(1);
   });
 
-  test("changing the search term resets the workspace page-2 cursor so page-2 entries from the old search do not appear in the new search results", () => {
+  test("isFetchingMoreHierarchy mirrors isFetchingNextPage from the workspace infinite query", () => {
+    setupGrantedAccessMocks();
+    mockUseInfinitePmWorkspaces.mockReturnValue(
+      makeEmptyInfiniteQuery({ isFetchingNextPage: true }) as ReturnType<typeof useInfinitePmWorkspaces>,
+    );
+
+    const { result } = renderHook(() => useBuildScopeDirectory("", false));
+
+    expect(result.current.isFetchingMoreHierarchy).toBe(true);
+  });
+
+  test("isFetchingMoreHierarchy mirrors isFetchingNextPage from the product infinite query", () => {
+    setupGrantedAccessMocks();
+    mockUseInfiniteManagedProducts.mockReturnValue(
+      makeEmptyInfiniteQuery({ isFetchingNextPage: true }) as ReturnType<typeof useInfiniteManagedProducts>,
+    );
+
+    const { result } = renderHook(() => useBuildScopeDirectory("", false));
+
+    expect(result.current.isFetchingMoreHierarchy).toBe(true);
+  });
+
+  test("changing the search term calls useInfinitePmWorkspaces with the new search so stale cursors from the previous query do not persist", () => {
     mockUseCanState.mockReturnValue("granted" as AccessState);
     mockUseDebouncedValue.mockReturnValue("alpha");
     mockUseInfiniteProjects.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteProjects>);
     mockUseManagedProducts.mockReturnValue(makeEmptyQuery() as ReturnType<typeof useManagedProducts>);
+    mockUseInfiniteManagedProducts.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteManagedProducts>);
+    mockUsePmWorkspaces.mockReturnValue(makeEmptyQuery() as ReturnType<typeof usePmWorkspaces>);
+    mockUseInfinitePmWorkspaces.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfinitePmWorkspaces>);
 
-    const p1AlphaData = makePmWorkspacesPage(
-      [{ pmWorkspaceId: "ws-alpha", name: "Alpha WS", status: "active" }],
-      true,
-      "ws-cursor-1",
-    );
-    const p2AlphaData = makePmWorkspacesPage(
-      [{ pmWorkspaceId: "ws-alpha-2", name: "Alpha WS 2", status: "active" }],
-      false,
-      null,
-    );
-    const p1BetaData = makePmWorkspacesPage(
-      [{ pmWorkspaceId: "ws-beta", name: "Beta WS", status: "active" }],
-      false,
-      null,
-    );
-
-    mockUsePmWorkspaces.mockImplementation((params) => {
-      if (params?.search === "beta")
-        return makeEmptyQuery({ data: p1BetaData, isSuccess: true }) as ReturnType<typeof usePmWorkspaces>;
-      if (params?.cursor === "ws-cursor-1")
-        return makeEmptyQuery({ data: p2AlphaData, isSuccess: true }) as ReturnType<typeof usePmWorkspaces>;
-      return makeEmptyQuery({ data: p1AlphaData, isSuccess: true }) as ReturnType<typeof usePmWorkspaces>;
-    });
-
-    const { result, rerender } = renderHook(
+    const { rerender } = renderHook(
       ({ search }: { search: string }) => useBuildScopeDirectory(search, false),
       { initialProps: { search: "alpha" } },
     );
 
-    act(() => { result.current.fetchMoreHierarchy(); });
-
-    const beforeIds = result.current.workspaces.map((w) => w.id);
-    expect(beforeIds).toContain("ws-alpha");
-    expect(beforeIds).toContain("ws-alpha-2");
-
     mockUseDebouncedValue.mockReturnValue("beta");
     rerender({ search: "beta" });
 
-    const afterIds = result.current.workspaces.map((w) => w.id);
-    expect(afterIds).toContain("ws-beta");
-    expect(afterIds).not.toContain("ws-alpha-2");
+    const calls = mockUseInfinitePmWorkspaces.mock.calls;
+    const lastCall = calls[calls.length - 1];
+    expect(lastCall?.[0]).toMatchObject({ search: "beta" });
   });
 });

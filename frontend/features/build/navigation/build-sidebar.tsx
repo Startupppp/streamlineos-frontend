@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBuildNotificationUnreadCount } from "@/hooks/api/build/approvals";
 import {
@@ -13,6 +14,7 @@ import {
   isBuildNavModelEmpty,
 } from "@/lib/build/build-nav-model";
 import type { BuildNavDestination } from "@/lib/build/nav/build-nav-destination";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { BuildAgentPulse } from "./build-agent-pulse";
 import { BuildSidebarSkeleton } from "./build-sidebar-skeleton";
 import { BuildMoreToolsMenu } from "./build-more-tools-menu";
@@ -62,7 +64,22 @@ export function BuildSidebar({ isCollapsed, onNavigate }: BuildSidebarProps) {
   });
 
   if (!isAccessReady) return <BuildSidebarSkeleton isCollapsed={isCollapsed} />;
-  if (isBuildNavModelEmpty(model)) return null;
+  if (isBuildNavModelEmpty(model))
+    return isCollapsed ? (
+      <div className="px-1 py-2">
+        <ShieldAlert
+          role="img"
+          aria-label="Build access required"
+          className="mx-auto h-5 w-5 text-muted-foreground/60"
+        />
+      </div>
+    ) : (
+      <NoPermissionState
+        compact
+        title="Build access required"
+        description="Ask your admin for access to Build features."
+      />
+    );
 
   function badgeFor(destination: BuildNavDestination): number {
     if (destination.badge !== "inbox-unread") return 0;

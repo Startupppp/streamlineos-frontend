@@ -134,7 +134,7 @@ export function BuildQuickCreate({
           <Button
             variant="ghost"
             {...animatedNavHoverHandlers}
-            aria-label={isCollapsed ? "Create in Build" : undefined}
+            aria-label={isCollapsed ? "Create" : undefined}
             className={cn(
               "h-8 w-full justify-start gap-2.5 rounded-md px-2.5 text-label font-medium text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-foreground",
               isCollapsed && "mx-auto h-8 w-8 justify-center px-0",

@@ -1,10 +1,16 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useInfiniteProjects } from "@/hooks/api/build/projects";
-import { useManagedProducts } from "@/hooks/api/build/managed-products";
-import { usePmWorkspaces } from "@/hooks/api/build/pm-workspaces";
+import {
+  useManagedProducts,
+  useInfiniteManagedProducts,
+} from "@/hooks/api/build/managed-products";
+import {
+  usePmWorkspaces,
+  useInfinitePmWorkspaces,
+} from "@/hooks/api/build/pm-workspaces";
 import { useCanState } from "@/hooks/api/access";
 import { BUILD_ROOT_PATH } from "@/lib/build/build-scope";
 import {
@@ -65,17 +71,6 @@ export function useBuildScopeDirectory(
   const searchParam =
     debouncedSearch.length > 0 ? { search: debouncedSearch } : {};
 
-  const [wsPage2Cursor, setWsPage2Cursor] = useState<string | null>(null);
-  const [productPage2Cursor, setProductPage2Cursor] = useState<string | null>(null);
-  const filterKey = `${debouncedSearch}|${String(includeArchived)}`;
-  const [lastFilterKey, setLastFilterKey] = useState(filterKey);
-
-  if (lastFilterKey !== filterKey) {
-    setLastFilterKey(filterKey);
-    setWsPage2Cursor(null);
-    setProductPage2Cursor(null);
-  }
-
   const hierarchyWorkspacesQuery = usePmWorkspaces({
     limit: BUILD_SCOPE_PAGE_LIMIT,
   });
@@ -83,25 +78,14 @@ export function useBuildScopeDirectory(
     limit: BUILD_SCOPE_PAGE_LIMIT,
   });
 
-  const workspacesP1 = usePmWorkspaces({
+  const wsInfinite = useInfinitePmWorkspaces({
     limit: BUILD_SCOPE_PAGE_LIMIT,
     ...searchParam,
   });
-  const productsP1 = useManagedProducts({
+  const productsInfinite = useInfiniteManagedProducts({
     limit: BUILD_SCOPE_PAGE_LIMIT,
     ...searchParam,
   });
-
-  const workspacesP2 = usePmWorkspaces(
-    wsPage2Cursor
-      ? { limit: BUILD_SCOPE_PAGE_LIMIT, cursor: wsPage2Cursor, ...searchParam }
-      : { limit: BUILD_SCOPE_PAGE_LIMIT, ...searchParam },
-  );
-  const productsP2 = useManagedProducts(
-    productPage2Cursor
-      ? { limit: BUILD_SCOPE_PAGE_LIMIT, cursor: productPage2Cursor, ...searchParam }
-      : { limit: BUILD_SCOPE_PAGE_LIMIT, ...searchParam },
-  );
 
   const projectsInfiniteQuery = useInfiniteProjects({
     limit: BUILD_SCOPE_PAGE_LIMIT,
@@ -141,9 +125,7 @@ export function useBuildScopeDirectory(
   );
 
   const workspaces = useMemo<BuildScopeDirectoryEntry[]>(() => {
-    const p1 = workspacesP1.data?.data ?? [];
-    const p2 = wsPage2Cursor ? (workspacesP2.data?.data ?? []) : [];
-    const rows = [...p1, ...p2];
+    const rows = wsInfinite.data?.pages.flatMap((p) => p.data) ?? [];
     return rows
       .filter((row) => includeArchived || row.status !== "archived")
       .map((row) => ({
@@ -157,12 +139,10 @@ export function useBuildScopeDirectory(
         href: `${BUILD_ROOT_PATH}/workspaces/${row.pmWorkspaceId}`,
         isArchived: row.status === "archived",
       }));
-  }, [workspacesP1.data, wsPage2Cursor, workspacesP2.data, includeArchived]);
+  }, [wsInfinite.data, includeArchived]);
 
   const products = useMemo<BuildScopeDirectoryEntry[]>(() => {
-    const p1 = productsP1.data?.data ?? [];
-    const p2 = productPage2Cursor ? (productsP2.data?.data ?? []) : [];
-    const rows = [...p1, ...p2];
+    const rows = productsInfinite.data?.pages.flatMap((p) => p.data) ?? [];
     return rows
       .filter((row) => includeArchived || row.status !== "archived")
       .filter(
@@ -188,13 +168,11 @@ export function useBuildScopeDirectory(
         href: `${BUILD_ROOT_PATH}/managed-products/${row.id}`,
         isArchived: row.status === "archived",
       }));
-  }, [productsP1.data, productPage2Cursor, productsP2.data, includeArchived, workspaceNames, hierarchyIsComplete]);
+  }, [productsInfinite.data, includeArchived, workspaceNames, hierarchyIsComplete]);
 
   const quarantinedProducts = useMemo<BuildScopeDirectoryEntry[]>(() => {
     if (!hierarchyIsComplete) return [];
-    const p1 = productsP1.data?.data ?? [];
-    const p2 = productPage2Cursor ? (productsP2.data?.data ?? []) : [];
-    const rows = [...p1, ...p2];
+    const rows = productsInfinite.data?.pages.flatMap((p) => p.data) ?? [];
     return rows
       .filter((row) => includeArchived || row.status !== "archived")
       .filter((row) =>
@@ -215,7 +193,7 @@ export function useBuildScopeDirectory(
         href: `${BUILD_ROOT_PATH}/managed-products/${row.id}`,
         isArchived: row.status === "archived",
       }));
-  }, [productsP1.data, productPage2Cursor, productsP2.data, includeArchived, workspaceNames, hierarchyIsComplete]);
+  }, [productsInfinite.data, includeArchived, workspaceNames, hierarchyIsComplete]);
 
   const projects = useMemo<BuildScopeDirectoryEntry[]>(() => {
     const rows = projectsInfiniteQuery.data?.pages.flatMap((p) => p.data) ?? [];
@@ -310,29 +288,22 @@ export function useBuildScopeDirectory(
   ]);
 
   const hasMoreHierarchy =
-    (!wsPage2Cursor && (workspacesP1.data?.pagination.hasMore ?? false)) ||
-    (!productPage2Cursor && (productsP1.data?.pagination.hasMore ?? false));
+    (wsInfinite.hasNextPage ?? false) || (productsInfinite.hasNextPage ?? false);
 
   const handleFetchMoreProjects = useCallback(() => {
     void projectsInfiniteQuery.fetchNextPage();
   }, [projectsInfiniteQuery.fetchNextPage]);
 
   const handleFetchMoreHierarchy = useCallback(() => {
-    if (!wsPage2Cursor) {
-      const next = workspacesP1.data?.pagination.nextCursor;
-      if (next) setWsPage2Cursor(next);
-    }
-    if (!productPage2Cursor) {
-      const next = productsP1.data?.pagination.nextCursor;
-      if (next) setProductPage2Cursor(next);
-    }
-  }, [wsPage2Cursor, productPage2Cursor, workspacesP1.data, productsP1.data]);
+    void wsInfinite.fetchNextPage();
+    void productsInfinite.fetchNextPage();
+  }, [wsInfinite.fetchNextPage, productsInfinite.fetchNextPage]);
 
   function handleRefetch() {
     void hierarchyWorkspacesQuery.refetch();
     void hierarchyProductsQuery.refetch();
-    void workspacesP1.refetch();
-    void productsP1.refetch();
+    void wsInfinite.refetch();
+    void productsInfinite.refetch();
     void projectsInfiniteQuery.refetch();
   }
 
@@ -344,25 +315,24 @@ export function useBuildScopeDirectory(
     quarantinedProjects,
     isLoading:
       canViewState === "loading" ||
-      workspacesP1.isLoading ||
-      productsP1.isLoading ||
+      wsInfinite.isLoading ||
+      productsInfinite.isLoading ||
       projectsInfiniteQuery.isLoading,
     isRefreshing:
-      (workspacesP1.isFetching && !workspacesP1.isLoading) ||
-      (productsP1.isFetching && !productsP1.isLoading) ||
+      (wsInfinite.isFetching && !wsInfinite.isLoading && !wsInfinite.isFetchingNextPage) ||
+      (productsInfinite.isFetching && !productsInfinite.isLoading && !productsInfinite.isFetchingNextPage) ||
       (projectsInfiniteQuery.isFetching &&
         !projectsInfiniteQuery.isLoading &&
         !projectsInfiniteQuery.isFetchingNextPage),
     isError:
-      workspacesP1.isError || productsP1.isError || projectsInfiniteQuery.isError,
+      wsInfinite.isError || productsInfinite.isError || projectsInfiniteQuery.isError,
     isDenied: canViewState === "denied",
     hasMoreProjects: projectsInfiniteQuery.hasNextPage ?? false,
     isFetchingMoreProjects: projectsInfiniteQuery.isFetchingNextPage,
     fetchMoreProjects: handleFetchMoreProjects,
     hasMoreHierarchy,
     isFetchingMoreHierarchy:
-      (wsPage2Cursor !== null && workspacesP2.isFetching) ||
-      (productPage2Cursor !== null && productsP2.isFetching),
+      wsInfinite.isFetchingNextPage || productsInfinite.isFetchingNextPage,
     fetchMoreHierarchy: handleFetchMoreHierarchy,
     refetch: handleRefetch,
   };

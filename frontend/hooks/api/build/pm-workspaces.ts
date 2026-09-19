@@ -1,6 +1,12 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+import type { UseInfiniteQueryOptions, InfiniteData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -15,6 +21,7 @@ import type {
   AddPmWorkspaceMemberInput,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 
 const pmWorkspacePageContract = lazyContract(() =>
@@ -58,6 +65,49 @@ export function usePmWorkspaces(params?: ListPmWorkspacesParams) {
     queryFn: ({ signal }) => apiClient.get<PmWorkspacesPage>("/build/workspaces", queryParams, signal, pmWorkspacePageContract),
     enabled: canView,
     staleTime: 60_000,
+  });
+}
+
+type InfinitePmWorkspacesParams = Omit<ListPmWorkspacesParams, "cursor">;
+
+export function useInfinitePmWorkspaces(
+  params: InfinitePmWorkspacesParams,
+  options?: Omit<
+    UseInfiniteQueryOptions<
+      PmWorkspacesPage,
+      Error,
+      InfiniteData<PmWorkspacesPage>,
+      readonly unknown[],
+      string | undefined
+    >,
+    "queryKey" | "queryFn" | "initialPageParam" | "getNextPageParam"
+  >,
+) {
+  const canView = useCan("build:workspaces:view");
+  const { enabled: enabledOption, ...restOptions } = options ?? {};
+  const queryParams: Record<string, string> = {};
+  if (params.status) queryParams["status"] = params.status;
+  if (params.search) queryParams["search"] = params.search;
+  if (params.limit) queryParams["limit"] = String(params.limit);
+
+  return useInfiniteQuery({
+    queryKey: buildWorkQueryKeys.projects.pmWorkspaces.listInfinite(queryParams),
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get<PmWorkspacesPage>(
+        "/build/workspaces",
+        {
+          ...queryParams,
+          ...(pageParam !== undefined ? { cursor: pageParam } : {}),
+        },
+        signal,
+        pmWorkspacePageContract,
+      ),
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage: PmWorkspacesPage) =>
+      lastPage.pagination.nextCursor ?? undefined,
+    staleTime: 60_000,
+    ...restOptions,
+    enabled: canView && (enabledOption ?? true),
   });
 }
 
