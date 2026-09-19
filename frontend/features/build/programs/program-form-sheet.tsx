@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -64,6 +65,7 @@ export function ProgramFormSheet({
     resolver: zodResolver(programFormSchema),
     defaultValues: DEFAULTS,
   });
+  useRegisterBuildDirtyState(open && form.formState.isDirty);
   const { data: portfoliosPage } = usePortfolios();
   const portfolios = portfoliosPage?.data ?? [];
 

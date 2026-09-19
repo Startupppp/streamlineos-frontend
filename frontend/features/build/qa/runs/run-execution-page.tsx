@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useCallback, useState } from "react";
+import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -122,6 +123,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
     resolver: zodResolver(createBugFromResultSchema),
     defaultValues: { bugTitle: "", bugSeverity: "major" },
   });
+  useRegisterBuildDirtyState(bugSheetOpen && bugForm.formState.isDirty);
 
   const handleCompleteRun = useCallback(() => {
     if (!run) return;

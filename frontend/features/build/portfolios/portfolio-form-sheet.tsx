@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -64,6 +65,7 @@ export function PortfolioFormSheet({
   isPending,
 }: Props) {
   const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: DEFAULTS });
+  useRegisterBuildDirtyState(open && form.formState.isDirty);
 
   useEffect(() => {
     if (open) form.reset(mode === "edit" && defaultValues ? toForm(defaultValues) : DEFAULTS);

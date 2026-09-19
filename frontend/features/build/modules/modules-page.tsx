@@ -26,6 +26,7 @@ import { ProjectMemberSelect } from "@/components/members/project-member-select"
 import { Calendar, Package, Activity, CheckCircle2 } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
 import { useForm, Controller } from "react-hook-form";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -84,6 +85,7 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
     resolver: zodResolver(createModuleSchema),
     defaultValues: FORM_DEFAULTS,
   });
+  useRegisterBuildDirtyState(createOpen && form.formState.isDirty);
 
   const descValue = form.watch("description") ?? "";
   const startDateValue = form.watch("startDate") ?? "";

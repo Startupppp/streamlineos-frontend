@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence } from "framer-motion";
@@ -99,6 +100,7 @@ export function ProjectWebhooksPage({ projectId: projectIdStr }: ProjectWebhooks
     resolver: zodResolver(webhookSchema),
     defaultValues: { url: "", events: [], secret: "" },
   });
+  useRegisterBuildDirtyState(sheetOpen && form.formState.isDirty);
 
   const handleSubmit = useCallback(
     (values: WebhookFormValues) => {

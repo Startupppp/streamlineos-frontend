@@ -100,31 +100,7 @@ duplicated as TODO checkboxes.
 
 ### Frontend Directory and Hierarchy
 
-- [ ] **BSN-02-014** Support bounded pagination or virtualization without
-  duplicate, skipped, or reordered rows. **Rebuilt in the fifth pass after a
-  concurrent session reverted the first implementation.** The
-  "Showing the first … only" hint is gone, replaced by per-section load-more
-  controls (`build-scope-browser.tsx`).
-  **Projects are CLOSED.** They move to `useInfiniteProjects`, so TanStack owns
-  accumulation, ordering and de-duplication and there is no page ceiling. Proven
-  by a test asserting two loaded pages yield unique ids in page order.
-  **Cursor reset is CLOSED.** A cursor is only valid for the query that minted
-  it, so a filter change resets it via adjust-state-on-input rather than an
-  effect — an effect runs *after* the render that already appended, which is
-  exactly how page two of the previous search leaks into new results. Pinned by
-  a test asserting the old page-2 row is absent and the new row present.
-  ⚠ **Workspaces and products remain OPEN, and the reason is a silent
-  truncation — the precise thing this requirement forbids.** Neither has an
-  infinite-query variant, so the hook accumulates a single extra page, and
-  `hasMoreHierarchy` is computed as `!wsPage2Cursor && page1.hasMore`
-  (`use-build-scope-directory.ts:312-314`). Once page 2 loads, the flag is
-  **false regardless of whether page 2 itself reports `hasMore: true`** — so an
-  organization with three or more pages of workspaces loses the control and is
-  cut off with no indication. That is better than the old hint, which offered
-  nothing, but it is still "silently filter only the first N records" with N
-  doubled. Closing it needs `useInfinitePmWorkspaces` / `useInfiniteManagedProducts`
-  alongside the existing project variant, which is a `hooks/api/build` change
-  outside the file ownership this work was scoped to.
+BSN-02-014 CLOSED in the sixth pass - see the Evidence Log.
 
 ### Keyboard and Responsive Interaction
 
@@ -144,6 +120,28 @@ duplicated as TODO checkboxes.
   query engine.
 
 ## Completed Implementation Inventory
+
+### Closed in the sixth pass (2026-09-20)
+
+- **BSN-02-014** Bounded pagination without duplicate, skipped or reordered rows.
+  The fifth pass closed Projects and cursor reset but left workspaces and products
+  open on a silent truncation: `hasMoreHierarchy` read
+  `!wsPage2Cursor && page1.hasMore`, so once page 2 loaded the continuation
+  control vanished **regardless of whether page 2 itself reported more** — an org
+  with three or more pages was cut off with no indication, which is the exact
+  failure this requirement forbids, with N merely doubled.
+  `useInfinitePmWorkspaces` and `useInfiniteManagedProducts` now mirror the
+  existing `useInfiniteProjects`, and `hasMoreHierarchy` is
+  `wsInfinite.hasNextPage || productsInfinite.hasNextPage`, correct at any depth.
+  The cursor-reset machinery was deleted rather than reimplemented: a filter
+  change now changes the query key, so TanStack starts a fresh entry and page two
+  of the previous search cannot leak into new results.
+  `listInfinite` appends its `"infinite"` discriminator **after** the filters, so
+  the existing `pmWorkspaces.list()` / `managedProducts.list()` invalidations
+  still prefix-match it — had the discriminator gone earlier in the key array,
+  every workspace rename would have left the directory stale.
+  The four continuation tests were verified to bite by forcing
+  `hasMoreHierarchy = false` and confirming all four fail. 24 tests.
 
 ### Closed in the fifth pass (2026-09-19)
 

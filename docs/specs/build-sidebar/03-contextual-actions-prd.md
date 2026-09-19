@@ -348,8 +348,19 @@ Closed in the fourth pass (2026-09-19):
      with and cannot intercept a row the `WHERE` clause should have excluded. What
      is proven is that the service passes `projectId` through unchanged rather
      than fabricating it; cross-org exclusion needs live seed rows.
-- [ ] **BSN-03-A08** Collapsed and expanded controls have equivalent accessible
-  names and behavior.
+- [x] **BSN-03-A08** Collapsed and expanded controls have equivalent accessible
+  names and behavior. CLOSED in the sixth pass. One control actually differed:
+  `BuildQuickCreate` announced "Create in Build" collapsed and "Create" expanded,
+  so a screen-reader user met one control under two names depending on rail state.
+  The collapsed label now matches the visible one, which is also the direction
+  WCAG 2.2 SC 2.5.3 wants - the accessible name should match the visible label,
+  not exceed it. `BuildNavLink`, `BuildMoreToolsMenu`, `BuildAgentPulse` and
+  `BuildScopeSelector` were already correct.
+  `build-collapsed-accessible-name.test.tsx` renders each control in **both**
+  states and compares names, deriving the expected string from the expanded
+  state's own text rather than hardcoding it twice, so the assertion cannot drift
+  from the label. An `afterAll` floor guard requires at least three controls
+  inspected, so a broken selector cannot pass green.
 - [ ] **BSN-03-A09** Focused contract, component, permission, cache, and browser
   tests pass.
 

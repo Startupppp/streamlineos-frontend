@@ -20,6 +20,7 @@ import { Calendar, CheckCircle2, Clock, ArrowRight, AlertTriangle } from "lucide
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PlusIcon, ChevronDownIcon, ChevronRightIcon } from "@animateicons/react/lucide";
+import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -101,6 +102,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     resolver: zodResolver(createCycleSchema),
     defaultValues: FORM_DEFAULTS,
   });
+  useRegisterBuildDirtyState(createOpen && form.formState.isDirty);
 
   const watchedName = form.watch("name");
   const watchedDescription = form.watch("description") ?? "";

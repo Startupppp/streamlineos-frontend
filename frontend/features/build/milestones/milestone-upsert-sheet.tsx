@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useCallback } from "react";
+import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -70,6 +71,7 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
       status: milestone?.status ?? "PENDING",
     },
   });
+  useRegisterBuildDirtyState(form.formState.isDirty);
 
   const targetDateValue = form.watch("targetDate");
 

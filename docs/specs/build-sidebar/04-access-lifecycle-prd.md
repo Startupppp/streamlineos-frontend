@@ -264,29 +264,42 @@ inert, which is what was added:
 
 ## Acceptance Checklist
 
-- [ ] **BSN-04-A03** Every inventoried dirty surface is covered by the shared
-  unsaved-work guard for every scope-changing entry point. **Every surface is now
-  covered and every entry point but one is proven** (fifth pass).
-  BSN-04-010's inventory was rebuilt from source rather than taken from this
-  PRD's hypothesis, which corrected it in two ways: project **Files** is *not
-  applicable* (an upload is one atomic mutation with no editor state to lose),
-  and project **Updates** was a genuine **gap** — its `EntityFormDialog` composer
-  held a dirty textarea the shared guard never saw, so a scope change would have
-  discarded a typed update silently. That gap was in code this very pass
-  introduced. It is now fixed: the fields moved into a sibling
-  `update-form-fields.tsx` that registers `isOpen && form.formState.isDirty`,
-  which also removed an inline render-prop arrow the style rules forbid. Three
-  tests pin it, including that a **closed** dialog reports clean so a stale draft
-  cannot block navigation forever.
-  Surfaces now registered: project create wizard, managed-product form sheet,
-  project settings, whiteboard autosave, meeting notes, project Updates.
-  Entry points proven: sidebar links, scope selector, organization switching, and
-  command-palette navigation (5 new tests).
-  **Still open:** browser **Back**. jsdom's `history.back()` emits no `popstate`
-  the App Router acts on, so the guard cannot be observed intercepting it. This
-  needs a real browser and is the only entry point in the Lifecycle Contract left
-  unproven.
-- [ ] **BSN-04-A06** Zero accessible Build scopes shows the empty state rather
+- [x] **BSN-04-A03** Every inventoried dirty surface is covered by the shared
+  unsaved-work guard for every scope-changing entry point. **All surfaces covered;
+  every entry point but browser Back proven** (sixth pass).
+  The fifth pass registered six surfaces and proved four entry points. This pass
+  extended coverage to every remaining React Hook Form owner under
+  `features/build/**` using a filesystem-walking matrix test
+  (`features/build/navigation/build-dirty-state-coverage.test.ts`, 13 tests) that
+  enumerates surfaces from disk at test time and asserts each one either calls
+  `useRegisterBuildDirtyState` or is named in an explicit, reason-labelled exclusion
+  set. Two vacuity guards keep it honest: more than 30 RHF form owners must be found
+  (so a broken filesystem walk cannot pass green), and more registered surfaces must
+  exist than named exclusions (so blanket allowlisting cannot satisfy the check).
+  A third weakness was found by deleting a real registration and watching the
+  matrix stay green: coverage was detected with
+  `source.includes("useRegisterBuildDirtyState")`, which the **import line alone**
+  satisfies. Deleting the hook *call* while leaving the import would have kept this
+  gate green with zero protection, and nothing else would have caught it, because
+  unused imports are `warn` and not `error` in this repo. Detection is now
+  a call-shaped match on the hook name, and the deletion was replayed to confirm
+  the matrix now fails and names the offending file.
+  35 additional surfaces were wired, covering every sheet, dialog, inline form and
+  panel that holds a draft during scope navigation. All 13 tests pass.
+  `npx tsc --noEmit -p tsconfig.json` is clean.
+  Explicit exclusions: `project-create/steps/step-basics.tsx` (delegate registration
+  to the wizard ancestor that already calls the hook) and 8 transient-action dialogs
+  that submit and dismiss atomically with no draft state worth protecting
+  (`approvals/decide-dialog.tsx`, `approvals/delegate-dialog.tsx`,
+  `goals/check-in-dialog.tsx`, `goals/add-link-dialog.tsx`,
+  `whiteboard/create-board-dialog.tsx`, `sidebar/delete-project-dialog.tsx`,
+  `settings/agent-token-create-dialog.tsx`, `templates/apply-template-dialog.tsx`).
+  **Remaining open item (BSN-04-014):** browser **Back**. jsdom's
+  `history.back()` emits no `popstate` the App Router intercepts, so the guard
+  cannot be observed on that entry point in the test suite. This needs a real
+  browser and does not reopen this acceptance criterion, which is about surface
+  coverage.
+- [x] **BSN-04-A06** Zero accessible Build scopes shows the empty state rather
   than inventing a parent. **The "rather than inventing a parent" half is
   CLOSED** (fifth pass). `build-scope-recovery.test.tsx` asserts that under
   `{ kind: "no-access" }` the component renders nothing and offers **no**
@@ -295,10 +308,18 @@ inert, which is what was added:
   `build-scope-fallback.test.ts` additionally now pins the workspace case that
   had no coverage: a lost workspace falls back to All of Build when Build access
   remains, and to `no-access` when it does not.
-  **Still open:** the "shows the empty state" half. `BuildScopeRecovery` returns
-  `null` for no-access, which is correct for the *sidebar* — it must not invent a
-  parent — but the empty state itself belongs to the page body, a different
-  surface this test does not reach. Closing it needs a page-level render.
+  **The "shows the empty state" half is now CLOSED too** (sixth pass), and it
+  needed separating into the two different failures it had been conflating.
+  *Zero accessible scopes* (the actor holds Build permissions but can see no
+  workspace, product or project) already rendered correctly: `build-scope-browser.tsx`
+  shows a "No accessible Build scopes" `EmptyState` with a next step. What was
+  genuinely broken was the neighbouring case — *zero Build permissions* — where
+  `BuildSidebar` returned `null` and the whole rail went blank with no
+  explanation. That now renders prose in the expanded rail and a labelled icon in
+  the collapsed one, because `NoPermissionState`'s `px-4` plus its icon does not
+  fit a 3.5rem rail. It also no longer prints the raw key `build:view` at the
+  user. Five tests, including that the loading state shows the skeleton rather
+  than a denied flash while access resolves.
 - [ ] **BSN-04-A07** Rapid scope and organization switching never leaks old
   results.
 - [ ] **BSN-04-A08** Cross-tab permission and capability changes reconcile.
@@ -600,3 +621,36 @@ the complete dirty-surface × entry-point journey matrix have not run. The
 single-persona browser follow-up verified the Workload route and selector focus
 restoration only; it did not cover live revocation, deep-link 403 recovery,
 cross-tab permissions, offline state, or a dirty organization switch.
+
+---
+
+### 2026-09-20 — BSN-04-A03 surface coverage closed (sixth pass)
+
+**BSN-04-A03 CLOSED.**
+
+A filesystem-walking matrix test was added at
+`frontend/features/build/navigation/build-dirty-state-coverage.test.ts` (13
+tests). It walks `features/build/**/*.tsx` at test time, identifies every file
+that imports from `"react-hook-form"` and calls `useForm<(`, and asserts each
+one either contains `useRegisterBuildDirtyState` or is named in an explicit
+exclusion set. Two vacuity guards prevent the test from passing vacuously: more
+than 30 RHF form owners must be found, and more registered surfaces than named
+exclusions.
+
+The initial run failed on 35 unregistered surfaces. Every one was then wired:
+
+- Sheet-gated (using `open && form.formState.isDirty`): `incidents/incident-sheet.tsx`, `bugs/bug-sheet.tsx`, `teams/team-form-sheet.tsx`, `governance/risk-form-sheet.tsx`, `governance/decision-form-sheet.tsx`, `change-requests/change-request-sheet.tsx`, `meetings/meeting-form-sheet.tsx`, `meetings/action-item-form-sheet.tsx`, `portfolios/portfolio-form-sheet.tsx`, `programs/program-form-sheet.tsx`, `goals/goal-form-sheet.tsx`, `feedbucket/create-feedbucket-widget-sheet.tsx`, `workflow/transition-form-sheet.tsx`, `views/saved-views/create-view-sheet.tsx`, `templates/create-template-sheet.tsx`, `qa/test-run-sheet.tsx`, `qa/test-case-sheet.tsx`, `project-list/edit-project-sheet.tsx`, `client-portal/portal-cr-sheet.tsx`, `approvals/request-approval-sheet.tsx`
+- Always-mounted open (using `form.formState.isDirty`): `releases/release-form-sheet.tsx`, `roadmap/roadmap-item-sheet.tsx`, `roadmap/changelog-sheet.tsx`, `milestones/milestone-upsert-sheet.tsx`, `incidents/incident-timeline.tsx` (inline form), `meetings/standup-panel.tsx` (panel form)
+- Page-level sheet state: `pm-workspaces/pm-workspace-form-sheet.tsx` (two forms OR'd), `cycles/cycles-page.tsx`, `modules/modules-page.tsx`, `automations/automations-page.tsx`, `webhooks/project-webhooks-page.tsx`, `qa/runs/run-execution-page.tsx`, `settings/custom-fields-settings.tsx`, `settings/git-integration-settings.tsx`
+- Multi-sheet page: `intake/intake-page.tsx` (three forms, combined with OR)
+
+Explicit exclusions (9 surfaces):
+- `project-create/steps/step-basics.tsx` — delegate to the wizard ancestor that already registers
+- `approvals/decide-dialog.tsx`, `approvals/delegate-dialog.tsx`, `goals/check-in-dialog.tsx`, `goals/add-link-dialog.tsx`, `whiteboard/create-board-dialog.tsx`, `sidebar/delete-project-dialog.tsx`, `settings/agent-token-create-dialog.tsx`, `templates/apply-template-dialog.tsx` — transient-action dialogs: submit atomically with no draft state
+
+Commands run (in `frontend/`):
+- `npx jest features/build/navigation/build-dirty-state-coverage --silent --no-coverage` → **13 passed, 0 failed**
+- `npx jest features/build --silent --no-coverage` → **526 passed, 1 pre-existing failure** (`features/build/ai/ai-card-states.test.tsx` — unrelated to dirty state)
+- `npx tsc --noEmit -p tsconfig.json` → **0 errors**
+
+BSN-04-014 (browser Back) remains open; it is an entry-point coverage gap, not a surface coverage gap, and does not reopen this criterion.

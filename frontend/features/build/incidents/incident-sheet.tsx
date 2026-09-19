@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect } from "react";
+import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -137,6 +138,7 @@ export function IncidentSheet({
     resolver: zodResolver(schema),
     defaultValues: DEFAULT_VALUES,
   });
+  useRegisterBuildDirtyState(open && form.formState.isDirty);
 
   const INCIDENT_SEVERITIES = ["critical", "high", "medium", "low"] as const;
   const INCIDENT_STATUSES = ["detected", "investigating", "mitigating", "resolved", "postmortem", "closed"] as const;

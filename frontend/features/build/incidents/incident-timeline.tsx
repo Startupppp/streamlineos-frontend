@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { memo, useMemo } from "react";
+import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -56,6 +57,7 @@ function AddUpdateForm({ projectId, incidentId }: AddUpdateFormProps) {
     resolver: zodResolver(updateSchema),
     defaultValues: { message: "", newStatus: "none" },
   });
+  useRegisterBuildDirtyState(form.formState.isDirty);
 
   function handleSubmit(values: UpdateFormValues) {
     addUpdate.mutate(

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -52,6 +53,7 @@ export function CreateFeedbucketWidgetSheet({
     resolver: zodResolver(createFeedbucketWidgetSchema),
     defaultValues: { name: defaultName, aiAssistEnabled: false, autoCreateTicket: false, defaultAssigneeId: "" },
   });
+  useRegisterBuildDirtyState(open && form.formState.isDirty);
 
   const pendingNameRef = useRef(defaultName);
 
