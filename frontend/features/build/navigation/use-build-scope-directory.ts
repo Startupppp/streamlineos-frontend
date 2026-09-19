@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { useProjects } from "@/hooks/api/build/projects";
+import { useInfiniteProjects } from "@/hooks/api/build/projects";
 import { useManagedProducts } from "@/hooks/api/build/managed-products";
 import { usePmWorkspaces } from "@/hooks/api/build/pm-workspaces";
 import { useCanState } from "@/hooks/api/access";
@@ -43,7 +43,11 @@ export interface BuildScopeDirectory {
   isError: boolean;
   isDenied: boolean;
   hasMoreProjects: boolean;
+  isFetchingMoreProjects: boolean;
+  fetchMoreProjects: () => void;
   hasMoreHierarchy: boolean;
+  isFetchingMoreHierarchy: boolean;
+  fetchMoreHierarchy: () => void;
   refetch: () => void;
 }
 
@@ -61,6 +65,17 @@ export function useBuildScopeDirectory(
   const searchParam =
     debouncedSearch.length > 0 ? { search: debouncedSearch } : {};
 
+  const [wsPage2Cursor, setWsPage2Cursor] = useState<string | null>(null);
+  const [productPage2Cursor, setProductPage2Cursor] = useState<string | null>(null);
+  const filterKey = `${debouncedSearch}|${String(includeArchived)}`;
+  const [lastFilterKey, setLastFilterKey] = useState(filterKey);
+
+  if (lastFilterKey !== filterKey) {
+    setLastFilterKey(filterKey);
+    setWsPage2Cursor(null);
+    setProductPage2Cursor(null);
+  }
+
   const hierarchyWorkspacesQuery = usePmWorkspaces({
     limit: BUILD_SCOPE_PAGE_LIMIT,
   });
@@ -68,15 +83,27 @@ export function useBuildScopeDirectory(
     limit: BUILD_SCOPE_PAGE_LIMIT,
   });
 
-  const workspacesQuery = usePmWorkspaces({
+  const workspacesP1 = usePmWorkspaces({
     limit: BUILD_SCOPE_PAGE_LIMIT,
     ...searchParam,
   });
-  const productsQuery = useManagedProducts({
+  const productsP1 = useManagedProducts({
     limit: BUILD_SCOPE_PAGE_LIMIT,
     ...searchParam,
   });
-  const projectsQuery = useProjects({
+
+  const workspacesP2 = usePmWorkspaces(
+    wsPage2Cursor
+      ? { limit: BUILD_SCOPE_PAGE_LIMIT, cursor: wsPage2Cursor, ...searchParam }
+      : { limit: BUILD_SCOPE_PAGE_LIMIT, ...searchParam },
+  );
+  const productsP2 = useManagedProducts(
+    productPage2Cursor
+      ? { limit: BUILD_SCOPE_PAGE_LIMIT, cursor: productPage2Cursor, ...searchParam }
+      : { limit: BUILD_SCOPE_PAGE_LIMIT, ...searchParam },
+  );
+
+  const projectsInfiniteQuery = useInfiniteProjects({
     limit: BUILD_SCOPE_PAGE_LIMIT,
     ...searchParam,
     ...(includeArchived ? { status: "ALL" as const } : {}),
@@ -114,7 +141,9 @@ export function useBuildScopeDirectory(
   );
 
   const workspaces = useMemo<BuildScopeDirectoryEntry[]>(() => {
-    const rows = workspacesQuery.data?.data ?? [];
+    const p1 = workspacesP1.data?.data ?? [];
+    const p2 = wsPage2Cursor ? (workspacesP2.data?.data ?? []) : [];
+    const rows = [...p1, ...p2];
     return rows
       .filter((row) => includeArchived || row.status !== "archived")
       .map((row) => ({
@@ -128,10 +157,12 @@ export function useBuildScopeDirectory(
         href: `${BUILD_ROOT_PATH}/workspaces/${row.pmWorkspaceId}`,
         isArchived: row.status === "archived",
       }));
-  }, [workspacesQuery.data, includeArchived]);
+  }, [workspacesP1.data, wsPage2Cursor, workspacesP2.data, includeArchived]);
 
   const products = useMemo<BuildScopeDirectoryEntry[]>(() => {
-    const rows = productsQuery.data?.data ?? [];
+    const p1 = productsP1.data?.data ?? [];
+    const p2 = productPage2Cursor ? (productsP2.data?.data ?? []) : [];
+    const rows = [...p1, ...p2];
     return rows
       .filter((row) => includeArchived || row.status !== "archived")
       .filter(
@@ -157,11 +188,13 @@ export function useBuildScopeDirectory(
         href: `${BUILD_ROOT_PATH}/managed-products/${row.id}`,
         isArchived: row.status === "archived",
       }));
-  }, [productsQuery.data, includeArchived, workspaceNames, hierarchyIsComplete]);
+  }, [productsP1.data, productPage2Cursor, productsP2.data, includeArchived, workspaceNames, hierarchyIsComplete]);
 
   const quarantinedProducts = useMemo<BuildScopeDirectoryEntry[]>(() => {
     if (!hierarchyIsComplete) return [];
-    const rows = productsQuery.data?.data ?? [];
+    const p1 = productsP1.data?.data ?? [];
+    const p2 = productPage2Cursor ? (productsP2.data?.data ?? []) : [];
+    const rows = [...p1, ...p2];
     return rows
       .filter((row) => includeArchived || row.status !== "archived")
       .filter((row) =>
@@ -182,10 +215,10 @@ export function useBuildScopeDirectory(
         href: `${BUILD_ROOT_PATH}/managed-products/${row.id}`,
         isArchived: row.status === "archived",
       }));
-  }, [productsQuery.data, includeArchived, workspaceNames, hierarchyIsComplete]);
+  }, [productsP1.data, productPage2Cursor, productsP2.data, includeArchived, workspaceNames, hierarchyIsComplete]);
 
   const projects = useMemo<BuildScopeDirectoryEntry[]>(() => {
-    const rows = projectsQuery.data?.data ?? [];
+    const rows = projectsInfiniteQuery.data?.pages.flatMap((p) => p.data) ?? [];
     return rows
       .filter((row) => includeArchived || row.status !== "ARCHIVED")
       .filter(
@@ -234,7 +267,7 @@ export function useBuildScopeDirectory(
         };
       });
   }, [
-    projectsQuery.data,
+    projectsInfiniteQuery.data,
     includeArchived,
     productNames,
     productWorkspaceIds,
@@ -244,7 +277,7 @@ export function useBuildScopeDirectory(
 
   const quarantinedProjects = useMemo<BuildScopeDirectoryEntry[]>(() => {
     if (!hierarchyIsComplete) return [];
-    const rows = projectsQuery.data?.data ?? [];
+    const rows = projectsInfiniteQuery.data?.pages.flatMap((p) => p.data) ?? [];
     return rows
       .filter((row) => includeArchived || row.status !== "ARCHIVED")
       .filter((row) =>
@@ -268,7 +301,7 @@ export function useBuildScopeDirectory(
         isArchived: row.status === "ARCHIVED",
       }));
   }, [
-    projectsQuery.data,
+    projectsInfiniteQuery.data,
     includeArchived,
     productNames,
     productWorkspaceIds,
@@ -276,12 +309,31 @@ export function useBuildScopeDirectory(
     hierarchyIsComplete,
   ]);
 
+  const hasMoreHierarchy =
+    (!wsPage2Cursor && (workspacesP1.data?.pagination.hasMore ?? false)) ||
+    (!productPage2Cursor && (productsP1.data?.pagination.hasMore ?? false));
+
+  const handleFetchMoreProjects = useCallback(() => {
+    void projectsInfiniteQuery.fetchNextPage();
+  }, [projectsInfiniteQuery.fetchNextPage]);
+
+  const handleFetchMoreHierarchy = useCallback(() => {
+    if (!wsPage2Cursor) {
+      const next = workspacesP1.data?.pagination.nextCursor;
+      if (next) setWsPage2Cursor(next);
+    }
+    if (!productPage2Cursor) {
+      const next = productsP1.data?.pagination.nextCursor;
+      if (next) setProductPage2Cursor(next);
+    }
+  }, [wsPage2Cursor, productPage2Cursor, workspacesP1.data, productsP1.data]);
+
   function handleRefetch() {
     void hierarchyWorkspacesQuery.refetch();
     void hierarchyProductsQuery.refetch();
-    void workspacesQuery.refetch();
-    void productsQuery.refetch();
-    void projectsQuery.refetch();
+    void workspacesP1.refetch();
+    void productsP1.refetch();
+    void projectsInfiniteQuery.refetch();
   }
 
   return {
@@ -292,20 +344,26 @@ export function useBuildScopeDirectory(
     quarantinedProjects,
     isLoading:
       canViewState === "loading" ||
-      workspacesQuery.isLoading ||
-      productsQuery.isLoading ||
-      projectsQuery.isLoading,
+      workspacesP1.isLoading ||
+      productsP1.isLoading ||
+      projectsInfiniteQuery.isLoading,
     isRefreshing:
-      (workspacesQuery.isFetching && !workspacesQuery.isLoading) ||
-      (productsQuery.isFetching && !productsQuery.isLoading) ||
-      (projectsQuery.isFetching && !projectsQuery.isLoading),
+      (workspacesP1.isFetching && !workspacesP1.isLoading) ||
+      (productsP1.isFetching && !productsP1.isLoading) ||
+      (projectsInfiniteQuery.isFetching &&
+        !projectsInfiniteQuery.isLoading &&
+        !projectsInfiniteQuery.isFetchingNextPage),
     isError:
-      workspacesQuery.isError || productsQuery.isError || projectsQuery.isError,
+      workspacesP1.isError || productsP1.isError || projectsInfiniteQuery.isError,
     isDenied: canViewState === "denied",
-    hasMoreProjects: projectsQuery.data?.hasMore ?? false,
-    hasMoreHierarchy:
-      (workspacesQuery.data?.pagination.hasMore ?? false) ||
-      (productsQuery.data?.pagination.hasMore ?? false),
+    hasMoreProjects: projectsInfiniteQuery.hasNextPage ?? false,
+    isFetchingMoreProjects: projectsInfiniteQuery.isFetchingNextPage,
+    fetchMoreProjects: handleFetchMoreProjects,
+    hasMoreHierarchy,
+    isFetchingMoreHierarchy:
+      (wsPage2Cursor !== null && workspacesP2.isFetching) ||
+      (productPage2Cursor !== null && productsP2.isFetching),
+    fetchMoreHierarchy: handleFetchMoreHierarchy,
     refetch: handleRefetch,
   };
 }

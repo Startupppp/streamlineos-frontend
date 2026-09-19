@@ -7,6 +7,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -155,6 +156,14 @@ export function BuildScopeBrowser({
     () => setIncludeArchived((current) => !current),
     [],
   );
+
+  const handleFetchMoreProjects = useCallback(() => {
+    directory.fetchMoreProjects();
+  }, [directory.fetchMoreProjects]);
+
+  const handleFetchMoreHierarchy = useCallback(() => {
+    directory.fetchMoreHierarchy();
+  }, [directory.fetchMoreHierarchy]);
 
   const rootProjects = useMemo(
     () => directory.projects.filter((entry) => entry.parentKey === null),
@@ -365,6 +374,34 @@ export function BuildScopeBrowser({
               {rootProjects.map(renderRootRow)}
             </div>
 
+            {directory.hasMoreHierarchy ? (
+              <div className="flex justify-center py-1">
+                <LoadingButton
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  isPending={directory.isFetchingMoreHierarchy}
+                  onClick={handleFetchMoreHierarchy}
+                >
+                  Load more workspaces / products
+                </LoadingButton>
+              </div>
+            ) : null}
+
+            {directory.hasMoreProjects ? (
+              <div className="flex justify-center py-1">
+                <LoadingButton
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  isPending={directory.isFetchingMoreProjects}
+                  onClick={handleFetchMoreProjects}
+                >
+                  Load more projects
+                </LoadingButton>
+              </div>
+            ) : null}
+
             {!hasBrowseContent && !hasQuarantinedItems ? (
               <EmptyState
                 className="min-h-0 border-0 bg-transparent py-6"
@@ -387,14 +424,6 @@ export function BuildScopeBrowser({
         )}
       </ScrollArea>
 
-      {directory.hasMoreProjects || directory.hasMoreHierarchy ? (
-        <>
-          <Separator />
-          <p className="shrink-0 px-3 py-2 text-micro text-muted-foreground">
-            Showing the first {directory.hasMoreProjects ? "projects" : "workspaces or products"} only. Search to find any scope you can access.
-          </p>
-        </>
-      ) : null}
     </>
   );
 }

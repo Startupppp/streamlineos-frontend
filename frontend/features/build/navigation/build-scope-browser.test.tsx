@@ -57,7 +57,11 @@ function makeDirectory(overrides: Partial<BuildScopeDirectory> = {}): BuildScope
     isError: false,
     isDenied: false,
     hasMoreProjects: false,
+    isFetchingMoreProjects: false,
+    fetchMoreProjects: jest.fn(),
     hasMoreHierarchy: false,
+    isFetchingMoreHierarchy: false,
+    fetchMoreHierarchy: jest.fn(),
     refetch: jest.fn(),
     ...overrides,
   };
@@ -357,5 +361,59 @@ describe("BSN-02-034 — reduced motion (class assertion — not browser-verifie
     renderBrowser();
     const spinner = screen.getByLabelText("Refreshing scopes");
     expect(spinner.getAttribute("class") ?? "").toContain("motion-reduce:animation-none");
+  });
+});
+
+describe("BSN-02-014 — real load-more buttons replace the old silent truncation hint", () => {
+  test("Load more projects button is present when hasMoreProjects is true", () => {
+    const project = makeEntry({ key: "project:1", name: "Alpha" });
+    setupMocks({ projects: [project], hasMoreProjects: true });
+    renderBrowser();
+    expect(screen.getByRole("button", { name: /Load more projects/i })).toBeInTheDocument();
+  });
+
+  test("Load more projects button is absent when hasMoreProjects is false", () => {
+    const project = makeEntry({ key: "project:1", name: "Alpha" });
+    setupMocks({ projects: [project], hasMoreProjects: false });
+    renderBrowser();
+    expect(screen.queryByRole("button", { name: /Load more projects/i })).not.toBeInTheDocument();
+  });
+
+  test("clicking Load more projects calls fetchMoreProjects so the next cursor page is requested", async () => {
+    const fetchMoreProjects = jest.fn();
+    const project = makeEntry({ key: "project:1", name: "Alpha" });
+    setupMocks({ projects: [project], hasMoreProjects: true, fetchMoreProjects });
+    renderBrowser();
+    await userEvent.click(screen.getByRole("button", { name: /Load more projects/i }));
+    expect(fetchMoreProjects).toHaveBeenCalledTimes(1);
+  });
+
+  test("Load more projects button is disabled and shows a spinner while isFetchingMoreProjects is true", () => {
+    const project = makeEntry({ key: "project:1", name: "Alpha" });
+    setupMocks({ projects: [project], hasMoreProjects: true, isFetchingMoreProjects: true });
+    renderBrowser();
+    expect(screen.getByRole("button", { name: /Load more projects/i })).toBeDisabled();
+  });
+
+  test("Load more workspaces / products button is present when hasMoreHierarchy is true", () => {
+    const workspace = makeEntry({ key: "workspace:ws1", type: "workspace", name: "WS", parentKey: null });
+    setupMocks({ workspaces: [workspace], hasMoreHierarchy: true });
+    renderBrowser();
+    expect(screen.getByRole("button", { name: /Load more workspaces/i })).toBeInTheDocument();
+  });
+
+  test("clicking Load more workspaces / products calls fetchMoreHierarchy so the next cursor page is requested", async () => {
+    const fetchMoreHierarchy = jest.fn();
+    const workspace = makeEntry({ key: "workspace:ws1", type: "workspace", name: "WS", parentKey: null });
+    setupMocks({ workspaces: [workspace], hasMoreHierarchy: true, fetchMoreHierarchy });
+    renderBrowser();
+    await userEvent.click(screen.getByRole("button", { name: /Load more workspaces/i }));
+    expect(fetchMoreHierarchy).toHaveBeenCalledTimes(1);
+  });
+
+  test("neither load-more button appears when both hasMoreProjects and hasMoreHierarchy are false", () => {
+    setupMocks({ hasMoreProjects: false, hasMoreHierarchy: false });
+    renderBrowser();
+    expect(screen.queryByRole("button", { name: /Load more/i })).not.toBeInTheDocument();
   });
 });
