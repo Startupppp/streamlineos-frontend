@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, authedFetch, buildUrl, getApiErrorCode } from "@/lib/api-client";
-import { isRecord } from "@/lib/is-record";
+import { apiErrorFromResponse } from "@/lib/api-envelope";
 import {
   createAiUiMessageStreamDecoder,
   isAiUiMessageStream,
@@ -35,22 +35,6 @@ export function isAiStreamAbort(error: unknown): boolean {
   );
 }
 
-export async function readAiStreamError(res: Response, path: string): Promise<ApiError> {
-  let message = `${res.status} ${res.statusText}`;
-  let code: string | undefined;
-  try {
-    const body: unknown = await res.json();
-    if (isRecord(body)) {
-      if (typeof body.message === "string") message = body.message;
-      else if (typeof body.error === "string") message = body.error;
-      if (typeof body.code === "string") code = body.code;
-    }
-  } catch {
-    message = `${res.status} ${res.statusText}`;
-  }
-  return new ApiError(message || path, res.status, code);
-}
-
 /**
  * The signal belongs in `authedFetch`'s fourth argument, never in `init`. `authedFetch`
  * builds its own combined signal and spreads `init` underneath it, so an `init.signal`
@@ -81,7 +65,7 @@ export async function streamAiText({
       { timeoutMs: AI_STREAM_TIMEOUT_MS },
     );
 
-    if (!res.ok) throw await readAiStreamError(res, path);
+    if (!res.ok) throw await apiErrorFromResponse(res, path);
 
     onHeaders?.(res.headers);
 

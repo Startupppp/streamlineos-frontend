@@ -31,7 +31,9 @@ import { classifyAiError, type AiFailureState } from "@/components/ai";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import {
+  askOsComposerRefusal,
   boundedAskOsContext,
+  prepareAskOsSend,
   type PersonaId,
 } from "./ask-os-request-policy";
 import { AskOsChatComposer } from "./ask-os-chat-composer";
@@ -59,6 +61,7 @@ export function GlobalAskOs() {
   const queryClient = useQueryClient();
 
   const [input, setInput] = useState("");
+  const [composerError, setComposerError] = useState<string | null>(null);
   const [failure, setFailure] = useState<AiFailureState | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [inFlightDirective, setInFlightDirective] = useState<AskOsDirective | null>(null);
@@ -70,6 +73,7 @@ export function GlobalAskOs() {
   >(null);
   const [convSearch, setConvSearch] = useState("");
   const [selectedPersona, setSelectedPersona] = useState<PersonaId | null>(null);
+  const [expanded, setExpanded] = useState(false);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
@@ -116,19 +120,20 @@ export function GlobalAskOs() {
 
   const isConversations = view === "conversations";
   const showEmpty = activeConversationId === null && !draft;
+  const fillViewport = isMobile || expanded;
   const panelTransition = reduce
     ? { duration: 0 }
     : { duration: 0.25, ease: "easeOut" as const };
   const anchorClassName = cn(
     "fixed flex flex-col items-stretch",
-    isMobile
+    fillViewport
       ? cn("inset-0 z-[60] w-full", !open && "hidden")
       : cn(
           "right-0 bottom-[env(safe-area-inset-bottom,0px)] z-50",
           open ? "w-[min(100vw,400px)]" : "hidden w-[min(100vw,130px)] md:flex",
         ),
   );
-  const panelMotionProps = isMobile
+  const panelMotionProps = fillViewport
     ? {
         initial: reduce ? false : { opacity: 0, y: 24 },
         animate: { opacity: 1, y: 0 },
@@ -187,13 +192,23 @@ export function GlobalAskOs() {
     element.scrollTop = element.scrollHeight;
   }, [draft]);
   useEffect(() => {
-    if (!isMobile || !open) return;
+    if (!fillViewport || !open) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [isMobile, open]);
+  }, [fillViewport, open]);
+  useEffect(() => {
+    if (!open || !expanded || isMobile) return;
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setExpanded(false);
+    }
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [expanded, isMobile, open]);
   const handleDirectiveData = useCallback(
     (name: string, data: unknown) => {
       if (name !== "askos-directive") return;
@@ -207,11 +222,19 @@ export function GlobalAskOs() {
 
   const send = useCallback(
     async (override?: string) => {
-      const text = (override ?? input).trim();
-      if (!text || isStreaming || sendingRef.current) return;
+      const prepared = prepareAskOsSend(override ?? input);
+      if (prepared.status === "empty" || isStreaming || sendingRef.current)
+        return;
+      if (prepared.status === "invalid") {
+        setInput(override ?? input);
+        setComposerError(prepared.error);
+        return;
+      }
+      const text = prepared.text;
       sendingRef.current = true;
       lastSentRef.current = text;
       setInput("");
+      setComposerError(null);
       setFailure(null);
       inFlightDirectiveRef.current = null;
       setInFlightDirective(null);
@@ -226,6 +249,12 @@ export function GlobalAskOs() {
           setActiveConversationId(conversation.id);
         } catch (error) {
           sendingRef.current = false;
+          const refusal = askOsComposerRefusal(error);
+          if (refusal) {
+            setInput(text);
+            setComposerError(refusal);
+            return;
+          }
           setFailure(classifyAiError(error));
           return;
         }
@@ -315,8 +344,15 @@ export function GlobalAskOs() {
         inFlightDirectiveRef.current = null;
         setInFlightDirective(null);
       } catch (error) {
-        setFailure(classifyAiError(error));
-        setDraft(null);
+        const refusal = askOsComposerRefusal(error);
+        if (refusal) {
+          setInput(text);
+          setComposerError(refusal);
+          setDraft(null);
+        } else {
+          setFailure(classifyAiError(error));
+          setDraft(null);
+        }
       } finally {
         sendingRef.current = false;
       }
@@ -359,6 +395,7 @@ export function GlobalAskOs() {
   }
   function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
     setInput(event.target.value);
+    if (composerError) setComposerError(null);
   }
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -370,6 +407,16 @@ export function GlobalAskOs() {
   function handleClose() {
     setOpen(false);
     setView("chat");
+    setConvSearch("");
+  }
+  function handleToggleExpanded() {
+    setExpanded((previous) => !previous);
+  }
+  function handleBackToChat() {
+    setView("chat");
+  }
+  function handleOpenConversations() {
+    setView("conversations");
     setConvSearch("");
   }
   function handleNewChat() {
@@ -415,13 +462,13 @@ export function GlobalAskOs() {
             transition={panelTransition}
             className={cn(
               "overflow-hidden",
-              isMobile && "flex h-full min-h-0 w-full flex-1 flex-col",
+              fillViewport && "flex h-full min-h-0 w-full flex-1 flex-col",
             )}
           >
             <div
               className={cn(
                 "flex flex-col overflow-hidden bg-card",
-                isMobile
+                fillViewport
                   ? "h-full min-h-0 w-full rounded-none border-0 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]"
                   : "h-[min(70dvh,560px)] rounded-tl-2xl border border-b-0 border-border shadow-2xl",
               )}
@@ -431,14 +478,14 @@ export function GlobalAskOs() {
                 deletePending={deleteConversation.isPending}
                 isConversations={isConversations}
                 isStreaming={isStreaming}
-                onBackToChat={() => setView("chat")}
+                expanded={expanded}
+                showExpand={!isMobile}
+                onToggleExpanded={handleToggleExpanded}
+                onBackToChat={handleBackToChat}
                 onClose={handleClose}
                 onDeleteActive={handleDeleteActive}
                 onNewChat={handleNewChat}
-                onOpenConversations={() => {
-                  setView("conversations");
-                  setConvSearch("");
-                }}
+                onOpenConversations={handleOpenConversations}
               />
               <AnimatePresence initial={false} mode="wait">
                 {isConversations ? (
@@ -494,6 +541,7 @@ export function GlobalAskOs() {
                       directive={inFlightDirective}
                     />
                     <AskOsChatComposer
+                      error={composerError}
                       input={input}
                       isStreaming={isStreaming}
                       onInputChange={handleInputChange}
@@ -509,7 +557,7 @@ export function GlobalAskOs() {
           </motion.div>
         )}
       </AnimatePresence>
-      <AskOsLauncher />
+      {!(expanded && open) ? <AskOsLauncher /> : null}
     </div>,
     document.body,
   );

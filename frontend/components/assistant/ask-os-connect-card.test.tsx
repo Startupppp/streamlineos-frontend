@@ -68,6 +68,17 @@ describe("a mail gap renders an actionable card, never dead-end prose", () => {
     expect(screen.getByText("Ask an admin to connect your Outlook account.")).toBeInTheDocument();
   });
 
+  it("paints the gap as an action banner so it cannot be read as another assistant message", () => {
+    render(
+      <AskOsConnectCard toolkit="gmail" reason="no-connection" summary="Connect a mail account to send emails." />,
+    );
+
+    const banner = screen.getByRole("region", { name: "Connect Gmail" });
+    expect(banner.className).toContain("bg-status-info-surface");
+    expect(banner.className).toContain("border-status-info-rule");
+    expect(screen.getByText("Connect account")).toBeInTheDocument();
+  });
+
   it("surfaces a failed handoff as a toast and stays on the page rather than navigating nowhere", async () => {
     mutateAsync.mockRejectedValue(new Error("Composio is unavailable"));
 

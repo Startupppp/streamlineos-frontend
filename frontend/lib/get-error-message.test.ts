@@ -1,4 +1,5 @@
-import { getErrorMessage } from "./get-error-message";
+import { ApiError } from "./api-envelope";
+import { getErrorMessage, isValidationRefusal } from "./get-error-message";
 
 describe("getErrorMessage", () => {
   it("returns the real backend message untouched", () => {
@@ -160,5 +161,21 @@ describe("getErrorMessage on a validation refusal", () => {
     expect(getErrorMessage(new Error("Quote is pending approval and cannot be sent"))).toBe(
       "Quote is pending approval and cannot be sent",
     );
+  });
+
+  it("flags a Zod refusal so the composer can keep the typed message", () => {
+    const error = new ApiError("Validation failed.", 400, "VALIDATION_FAILED", [
+      { path: "messages.0.content", message: "Too big: expected string to have <=10000 characters" },
+    ]);
+    expect(isValidationRefusal(error)).toBe(true);
+    expect(getErrorMessage(error)).toBe(
+      "messages.0.content: Too big: expected string to have <=10000 characters",
+    );
+  });
+
+  it("does not treat credit exhaustion as a composer validation", () => {
+    expect(
+      isValidationRefusal(new ApiError("AI credits exhausted", 402, "INSUFFICIENT_CREDITS")),
+    ).toBe(false);
   });
 });

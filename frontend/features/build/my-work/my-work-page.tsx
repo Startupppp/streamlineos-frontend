@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,6 +19,7 @@ import { useDisplayOptions } from "@/features/build/views/use-display-options";
 import { Button } from "@/components/ui/button";
 import { PanelRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCan } from "@/hooks/api/access";
 import { useAfterLoad } from "@/hooks/common/use-after-load";
 import { useOrgCustomStates } from "@/hooks/api/build/custom-states";
 import { MY_WORK_VIEWS } from "./my-work-view";
@@ -54,6 +56,7 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const canViewWork = useCan("build:tickets:view");
 
   const activeTab = parseWorkTab(searchParams.get("tab"));
   const activeView = parseMyWorkView(searchParams.get("view"));
@@ -133,6 +136,13 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
       <PanelRight className="h-3.5 w-3.5" />
     </Button>
   );
+
+  if (!canViewWork)
+    return (
+      <PageWrapper title="My Issues">
+        <NoPermissionState permission="build:tickets:view" />
+      </PageWrapper>
+    );
 
   return (
     <Tabs

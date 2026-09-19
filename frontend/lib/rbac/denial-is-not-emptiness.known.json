@@ -32,7 +32,6 @@
   "features/build/change-requests/change-requests-page.tsx",
   "features/build/client-portal/portal-dashboard-page.tsx",
   "features/build/client-portal/portal-list-page.tsx",
-  "features/build/customers/project-customers-page.tsx",
   "features/build/cycles/cycle-detail-page.tsx",
   "features/build/cycles/cycles-page.tsx",
   "features/build/drafts/comment-drafts-page.tsx",

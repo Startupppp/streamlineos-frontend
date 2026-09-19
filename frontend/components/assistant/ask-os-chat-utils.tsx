@@ -154,6 +154,12 @@ export function AskOsBubble({
     directive?.kind === "connect-integration" ? directive : null;
   const showProse =
     Boolean(prose) && confirmDirective === null && !confirmedResult && !cancelled;
+  const showMessageChrome =
+    Boolean(confirmDirective) ||
+    Boolean(confirmedResult) ||
+    cancelled ||
+    showProse ||
+    (streaming && !connectDirective);
 
   return (
     <motion.div
@@ -166,28 +172,35 @@ export function AskOsBubble({
         gradient
         className="mt-0.5 shrink-0 rounded-full"
       />
-      <div className="min-w-0 max-w-[92%] space-y-2 rounded-2xl rounded-bl-sm bg-muted/50 px-2.5 py-2 text-sm text-foreground">
-        {confirmDirective ? (
-          <AskOsConfirmationCard
-            action={confirmDirective.action}
-            summary={confirmDirective.summary}
-            preview={confirmDirective.preview}
-            token={confirmDirective.token}
-            onConfirmed={setConfirmedResult}
-            onCancelled={handleCancelled}
-          />
-        ) : confirmedResult ? (
-          <p className="text-[13px] text-muted-foreground">
-            {confirmOutcomeCopy(
-              directive?.kind === "confirm-action" ? directive.action : undefined,
-            )}
-          </p>
-        ) : cancelled ? (
-          <p className="text-[13px] text-muted-foreground">Cancelled.</p>
-        ) : null}
-        {showProse ? (
-          <div className="break-words">
-            <MarkdownContent content={prose} />
+      <div className="min-w-0 max-w-[92%] space-y-2 text-sm text-foreground">
+        {showMessageChrome ? (
+          <div className="space-y-2 rounded-2xl rounded-bl-sm bg-muted/50 px-2.5 py-2">
+            {confirmDirective ? (
+              <AskOsConfirmationCard
+                action={confirmDirective.action}
+                summary={confirmDirective.summary}
+                preview={confirmDirective.preview}
+                token={confirmDirective.token}
+                onConfirmed={setConfirmedResult}
+                onCancelled={handleCancelled}
+              />
+            ) : confirmedResult ? (
+              <p className="text-[13px] text-muted-foreground">
+                {confirmOutcomeCopy(
+                  directive?.kind === "confirm-action" ? directive.action : undefined,
+                )}
+              </p>
+            ) : cancelled ? (
+              <p className="text-[13px] text-muted-foreground">Cancelled.</p>
+            ) : null}
+            {showProse ? (
+              <div className="break-words">
+                <MarkdownContent content={prose} />
+              </div>
+            ) : null}
+            {streaming && !connectDirective && !showProse && !confirmDirective && !confirmedResult && !cancelled ? (
+              <TypingDots reduce={reduce} />
+            ) : null}
           </div>
         ) : null}
         {connectDirective ? (
@@ -196,14 +209,6 @@ export function AskOsBubble({
             reason={connectDirective.reason}
             summary={connectDirective.summary}
           />
-        ) : null}
-        {!confirmDirective &&
-        !connectDirective &&
-        !showProse &&
-        !confirmedResult &&
-        !cancelled &&
-        streaming ? (
-          <TypingDots reduce={reduce} />
         ) : null}
       </div>
     </motion.div>

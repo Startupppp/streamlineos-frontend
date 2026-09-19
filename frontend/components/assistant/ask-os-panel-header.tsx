@@ -5,6 +5,7 @@ import {
   Trash2Icon,
   XIcon,
 } from "@animateicons/react/lucide";
+import { Maximize2, Minimize2 } from "lucide-react";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
@@ -13,6 +14,9 @@ interface AskOsPanelHeaderProps {
   deletePending: boolean;
   isConversations: boolean;
   isStreaming: boolean;
+  expanded: boolean;
+  showExpand: boolean;
+  onToggleExpanded: () => void;
   onBackToChat: () => void;
   onClose: () => void;
   onDeleteActive: () => void;
@@ -20,11 +24,36 @@ interface AskOsPanelHeaderProps {
   onOpenConversations: () => void;
 }
 
+function ExpandToggleButton({
+  expanded,
+  onToggle,
+}: {
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const Icon = expanded ? Minimize2 : Maximize2;
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={expanded}
+      aria-label={expanded ? "Exit full screen" : "Expand Ask OS"}
+      title={expanded ? "Exit full screen" : "Full screen"}
+      className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+    >
+      <Icon className="h-3.5 w-3.5" />
+    </button>
+  );
+}
+
 export function AskOsPanelHeader({
   activeConversationId,
   deletePending,
   isConversations,
   isStreaming,
+  expanded,
+  showExpand,
+  onToggleExpanded,
   onBackToChat,
   onClose,
   onDeleteActive,
@@ -99,6 +128,9 @@ export function AskOsPanelHeader({
             )}
           </>
         )}
+        {showExpand ? (
+          <ExpandToggleButton expanded={expanded} onToggle={onToggleExpanded} />
+        ) : null}
         <AnimatedIconButton
           type="button"
           icon={XIcon}

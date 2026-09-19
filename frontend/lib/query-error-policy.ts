@@ -15,6 +15,15 @@ export function readErrorReachesBoundary(
 
 export const INLINE_READ_ERROR = { throwOnError: false } as const;
 
+export async function optionalSignalRead<T>(read: Promise<T>): Promise<T | null> {
+  try {
+    return await read;
+  } catch (error) {
+    if (isApiError(error) && error.status === 404) return null;
+    throw error;
+  }
+}
+
 export function isTransientNetworkError(error: unknown): boolean {
   if (error instanceof Error && error.name === "AccessUnavailableError")
     return true;
