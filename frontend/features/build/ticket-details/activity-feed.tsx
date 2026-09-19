@@ -17,6 +17,8 @@ import {
   useUpsertCommentDraft,
   useDeleteCommentDraftByTicket,
 } from "@/hooks/api/build/comment-drafts";
+import { AiActionsMenu } from "@/components/ai/ai-actions-menu";
+import { useDraftCommentAction } from "./use-draft-comment-action";
 import {
   useAddReaction,
   useRemoveReaction,
@@ -75,6 +77,7 @@ export function ActivityFeed({
   const upsertDraftMutateRef = useRef(upsertDraft.mutate);
   const canUpdate = useCan("build:tickets:update");
   const canCreate = useCan("build:tickets:create");
+  const canAi = useCan("build:ai:use");
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -284,6 +287,9 @@ export function ActivityFeed({
     [createTicket, projectId, ticketId, ticketNumber, projectKey],
   );
 
+  const handleApplyDraft = useCallback((text: string) => setNewComment(text), []);
+  const draftAction = useDraftCommentAction(ticketId, handleApplyDraft);
+
   const { repliesMap, sortedTopLevel } = useMemo(() => {
     const topLevel = comments.filter((c) => !c.parentCommentId);
     const built = comments.reduce<Record<number, TicketComment[]>>((acc, r) => {
@@ -336,6 +342,7 @@ export function ActivityFeed({
             </span>
           )}
           {activityAiActions}
+          {canAi ? <AiActionsMenu actions={[draftAction]} triggerLabel="Draft comment" align="end" /> : null}
         </h4>
 
         {canUpdate ? <div className="flex w-full min-w-0 flex-row items-end gap-2">

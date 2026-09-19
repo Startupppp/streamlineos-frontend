@@ -101,18 +101,30 @@ duplicated as TODO checkboxes.
 ### Frontend Directory and Hierarchy
 
 - [ ] **BSN-02-014** Support bounded pagination or virtualization without
-  duplicate, skipped, or reordered rows. Browse still exposes one page plus a
-  search hint (`build-scope-browser.tsx:390-394` renders "Showing the first …
-  only. Search to find any scope you can access."), not a continuation control.
-  ⚠ **This was IMPLEMENTED in the fifth pass and then LOST.** An agent replaced
-  the hint with per-section `LoadingButton` continuation over
-  `useInfiniteProjects` plus cursor accumulation for workspaces and products,
-  with tests for de-duplication, page order, and cursor reset on filter change —
-  and reported 384 passing tests. A concurrent session then reverted every
-  uncommitted tracked modification in the frontend repo, and file inspection
-  confirms neither the source change nor the tests survive. Re-checked at
-  `build-scope-browser.tsx:390-394`: the hint is back. **Item remains open and
-  must be rebuilt**; see the README Evidence Log for the incident.
+  duplicate, skipped, or reordered rows. **Rebuilt in the fifth pass after a
+  concurrent session reverted the first implementation.** The
+  "Showing the first … only" hint is gone, replaced by per-section load-more
+  controls (`build-scope-browser.tsx`).
+  **Projects are CLOSED.** They move to `useInfiniteProjects`, so TanStack owns
+  accumulation, ordering and de-duplication and there is no page ceiling. Proven
+  by a test asserting two loaded pages yield unique ids in page order.
+  **Cursor reset is CLOSED.** A cursor is only valid for the query that minted
+  it, so a filter change resets it via adjust-state-on-input rather than an
+  effect — an effect runs *after* the render that already appended, which is
+  exactly how page two of the previous search leaks into new results. Pinned by
+  a test asserting the old page-2 row is absent and the new row present.
+  ⚠ **Workspaces and products remain OPEN, and the reason is a silent
+  truncation — the precise thing this requirement forbids.** Neither has an
+  infinite-query variant, so the hook accumulates a single extra page, and
+  `hasMoreHierarchy` is computed as `!wsPage2Cursor && page1.hasMore`
+  (`use-build-scope-directory.ts:312-314`). Once page 2 loads, the flag is
+  **false regardless of whether page 2 itself reports `hasMore: true`** — so an
+  organization with three or more pages of workspaces loses the control and is
+  cut off with no indication. That is better than the old hint, which offered
+  nothing, but it is still "silently filter only the first N records" with N
+  doubled. Closing it needs `useInfinitePmWorkspaces` / `useInfiniteManagedProducts`
+  alongside the existing project variant, which is a `hooks/api/build` change
+  outside the file ownership this work was scoped to.
 
 ### Keyboard and Responsive Interaction
 

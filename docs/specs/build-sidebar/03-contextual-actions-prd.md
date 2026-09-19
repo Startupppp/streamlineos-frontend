@@ -30,9 +30,9 @@ The user can change any preselected value before submit.
 
 | Active scope | Issue | Project | Product |
 |---|---|---|---|
-| Organization | Hidden unless a project is chosen first | Requires explicit PM workspace; product optional | Requires explicit PM workspace |
+| Organization | Hidden unless a project is chosen first | Workspace and product are optional explicit choices; `No workspace` is valid | Workspace is optional; never invent a default |
 | PM workspace | Hidden unless a project is chosen first | Preselects that workspace; product optional | Preselects that workspace |
-| Managed product | Hidden unless a linked project is chosen first | Preselects the product's workspace and product | Hidden |
+| Managed product | Hidden unless a linked project is chosen first | Preselects the product and its workspace when present | Hidden |
 | Project | Preselects that project | Preselects the project's workspace and product when present | Hidden |
 
 Ambiguous organization context never invents a default workspace or product.
@@ -119,22 +119,7 @@ BSN-03-016 CLOSED in the fourth pass — see the Evidence Log.
 
 ### Agent Pulse
 
-- [ ] **BSN-03-043** Show evidence, affected records, proposed change, impact,
-  and confidence on generated drafts. **The display half is CLOSED** (fifth
-  pass): migration `1124_build_comment_draft_evidence` adds `evidence`,
-  `proposed_change`, `impact`, `confidence` and `affected_record_ids` to
-  `build.comment_drafts`; `AgentPulseService.findCommentDraft` projects them;
-  the backend and frontend contracts match field for field, all
-  `.nullable().optional()` so the four non-draft signal types still parse; and
-  `build-agent-pulse.tsx` renders a confidence badge plus a tooltip carrying
-  evidence, proposed change, impact and the affected-record count (16 tests).
-  **Still open, and it is not a display gap:** *nothing writes these columns.*
-  `CommentDraftsService.upsert` is the only writer and it persists
-  `{ orgId, membershipId, ticketId, body }` only — there is no draft
-  **generator** anywhere in the module, so in production every one of these
-  fields is NULL and the tooltip never renders. Closing this needs an AI
-  generation path that produces the fields, which no item in this PRD owns.
-BSN-03-044 CLOSED in the fourth pass — see the Evidence Log.
+BSN-03-043 and BSN-03-044 CLOSED — see the Evidence Log.
 
 ### Client Portal Capability
 
@@ -147,6 +132,25 @@ BSN-03-052 CLOSED in the fourth pass — see the Evidence Log.
 Each item below was verified against source before closing; the evidence is the
 reason it is here rather than in the checklist above.
 
+- **BSN-03-043** Evidence, affected records, proposed change, impact and
+  confidence on generated drafts. The whole chain is now wired end to end, and it
+  is worth naming each link because the previous pass closed the display half and
+  left the item open on the grounds that *nothing wrote the columns*:
+  `AiActionsMenu` in `activity-feed.tsx` (gated on `useCan("build:ai:use")`) →
+  `useDraftCommentAction` → `useGenerateCommentDraft` →
+  `POST /build/comment-drafts/tickets/:ticketId/generate-draft`
+  (`@RequirePermission("build:ai:use")`, matching the frontend gate exactly) →
+  `CommentDraftGeneratorService.generate` → `CommentDraftsService.upsertGenerated`,
+  which persists all five columns on both the insert and the `onConflictDoUpdate`
+  branch (`comment-drafts.service.ts:212-250`). `AgentPulseService.findCommentDraft`
+  projects them and `build-agent-pulse.tsx` renders the badge and tooltip.
+  The contract mirrors the backend `generatedCommentDraftSchema` field for field
+  including the required `aiUsage`, so a dropped spend meta throws rather than
+  silently rendering a free-looking action. Draft-first by construction: `onApply`
+  writes the text into the composer and never posts a comment.
+  16 display tests + 4 contract tests + 4 surface tests.
+  ⚠ Whether the model populates `evidence`/`impact` *well* is a live-AI question
+  no static check can answer; the columns being written is what was proven here.
 - **BSN-03-A02** Build Inbox and global Notifications can show different counts
   and each remains correct against its own data owner. The optional
   `sourceModule` made this provable: the bell calls `unreadCount()` and the Build
@@ -246,8 +250,9 @@ reason it is here rather than in the checklist above.
   `confidence < COMMENT_DRAFT_MIN_CONFIDENCE` (50) in the SQL predicate, while
   `confidence IS NULL` passes through so drafts predating the column are not
   silently dropped. Pinned by a named test in `agent-pulse.service.spec.ts`.
-  Note this verifies the *quietness rule*; it cannot verify real low-confidence
-  drafts until BSN-03-043's generator exists to produce a score.
+  Note this verifies the *quietness rule* against constructed rows; the generator
+  now writes real `confidence` values (BSN-03-043), so an end-to-end check of a
+  genuinely low-confidence draft is available but needs a database and live AI.
 - **BSN-03-A01** Every Quick Create Matrix cell opens with the stated
   editable defaults or remains correctly hidden. CLOSED in the fifth pass.
   `build-quick-create.test.tsx` covers the dialog layer directly: at PM workspace

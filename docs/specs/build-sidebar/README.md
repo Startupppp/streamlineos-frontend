@@ -22,7 +22,8 @@ The 2026-09-19 verification established that the current implementation already:
 
 - Uses the existing single sidebar and global `17rem` / `3.5rem` collapse.
 - Renders the organization scope as **All of Build**.
-- Keeps Inbox, Assigned to me, and Drafts in stable My Work navigation.
+- Keeps Inbox, Assigned to me, and Drafts in stable My Work navigation; Drafts
+  opens the canonical `/build/inbox?view=drafts` view.
 - Renders organization primary navigation and the utility area.
 - Provides searchable More tools with a three-pin limit.
 - Passes the focused navigation tests, frontend type-check, and cycle gates.
@@ -55,9 +56,11 @@ required checkbox in that PRD is checked and its evidence section is populated.
 
 The Build sidebar is complete only when all five parent checkboxes are checked.
 
-Current state after the fifth pass (2026-09-19): **113 open, 25 closed.**
-The implementation queue is exhausted — every remaining implementation item is
-DONE-PENDING-MIGRATION or blocked on hardware this machine does not have.
+Current state after the fifth pass (2026-09-19): the historical checkbox count
+must be reconciled against the current source and the normative Build-module
+decisions before it is quoted as release status. Remaining work includes source
+implementation, migration/database proof, and real-browser evidence; it is not
+all externally blocked.
 
 **What closed in the fifth pass:** all remaining buildable features (product
 Insights, product Feedback, project Updates, project Files, the Agent Pulse
@@ -155,15 +158,15 @@ another owner holds its reservation.
 Rewritten 2026-09-19 (third pass) to measured current behavior. Resolved gaps are
 not listed; see the Evidence Log for what closed them.
 
-- Managed-product **Insights** has no scope dimension in the backend (no product
-  analytics endpoint exists), so that destination remains unshipped.
-  **Feedback is no longer blocked** — see the fourth-pass entry; the recorded
-  "no scope dimension" claim was true of the query, never of the schema.
-- **Project Updates and Files** do not exist as a collection in schema or API.
-- **Managed-product membership is not enforced** in the scope directory, because
-  **no managed-product membership table exists at all**. Workspace membership IS
-  now enforced there via `pmWorkspaceMemberships`, alongside products and teams.
-  BSN-02-005 stays open on the product half only.
+- Managed-product Insights and Feedback require current endpoint, product-scope,
+  permission, pagination, and browser evidence; earlier absence claims are
+  historical and cannot override newer source.
+- Project Updates and Files have authored source and registered migrations, but
+  remain incomplete until those migrations are applied in the named
+  environment and endpoint/page journeys pass.
+- Managed-product membership requires current schema, migration, scope-directory
+  enforcement, and cross-product/cross-tenant evidence; do not infer completion
+  or absence from an earlier pass.
 - The **workspace and product Overview** pages omit project count and product
   count: those lists are cursor-paginated with no `total`, so the numbers cannot
   be sourced without a new aggregate. Fields are omitted rather than rendered as
@@ -174,12 +177,12 @@ not listed; see the Evidence Log for what closed them.
   Sidebar links, command navigation, scope selection, organization switching,
   and `beforeunload` now use the shared dirty-state owner.
 - ~~**Agent Pulse drafts carry no evidence, confidence or proposed change**, and
-  have no retry path~~ — superseded in the fifth pass. `build.comment_drafts`
-  now has all seven columns (migration `1124`), the Pulse projects and renders
-  them, and the bounded retry path is closed end to end (BSN-03-045/046). What
-  remains under BSN-03-043 is **not** the display: nothing **writes** the
-  evidence fields, because the module has no draft generator — `upsert` persists
-  `{ orgId, membershipId, ticketId, body }` and nothing else.
+  have no retry path~~ — CLOSED. `build.comment_drafts` has all seven columns
+  (migration `1124`), the Pulse projects and renders them, the bounded retry path
+  is closed end to end (BSN-03-045/046), and the writer gap that kept BSN-03-043
+  open through the fifth pass is gone: `CommentDraftGeneratorService` populates
+  all five evidence fields via `upsertGenerated`, reachable from the ticket
+  Activity feed's `AiActionsMenu`.
 - Migrations `1122` (workspace scope indexes), `1124`, `1125` and `1126` are all
   **authored and journal-registered but unapplied** — no database was available.
   A migration is unverified until applied.
@@ -280,13 +283,13 @@ accepted:**
    another org's draft instead of silently no-op'ing, so the id is not an
    existence oracle.
 
-**Not ticked despite an agent reporting them done.** BSN-03-043 stays open: the
-display half is complete and tested, but `CommentDraftsService.upsert` is the
-only writer of `comment_drafts` and it persists `body` alone, so the evidence,
-proposed-change, impact and confidence fields are NULL in production forever
-until a draft **generator** exists. Rendering a field nothing writes is not
-showing it. BSN-01-024 stays open for the same class of reason on its Files
-half — there is no general-purpose attachment domain to wire to.
+**Not ticked despite an agent reporting them done.** BSN-03-043 was held open one
+extra pass on exactly this principle — *rendering a field nothing writes is not
+showing it* — while the display half sat complete and tested and
+`CommentDraftsService.upsert` persisted `body` alone. It is now closed because the
+writer exists and is reachable from the UI, not because the renderer got better.
+BSN-01-024 stays open for the same class of reason on its Files half — there is no
+general-purpose attachment domain to wire to.
 
 **Two long-standing "pre-existing" failures were FIXED rather than allowlisted.**
 Both had been carried for several passes as somebody else's problem:
@@ -546,8 +549,9 @@ omitted the `build` schema qualification, and set no `lock_timeout`.
 
 **Known-false claims rejected from lane reports rather than accepted:** that
 organization switching is covered because `QueryProvider` remounts (remounting
-*destroys* unsaved work silently — BSN-04-014 stays open); and that BSN-03-043 is
-done when the confidence/proposed-change data does not exist in the schema.
+*destroys* unsaved work silently — BSN-04-014 stays open); and that BSN-03-043 was
+done when the confidence/proposed-change data had no writer. That second claim was
+rejected twice before the generator and its UI entry point actually landed.
 
 **Environment hazards unchanged:** the backend repo now carries **five** `UU`
 merge-conflicted files from other lanes (including `turnstile.service.ts`), whose

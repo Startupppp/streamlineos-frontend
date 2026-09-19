@@ -6,6 +6,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { GeneratedCommentDraft } from "./comment-drafts-schema";
 
 export interface CommentDraftAssignee {
   id: string;
@@ -50,6 +51,9 @@ const commentDraftContract = lazyContract(() =>
 );
 const commentDraftDeletedContract = lazyContract(() =>
   import("@/hooks/api/build/comment-drafts-schema").then((m) => m.commentDraftDeletedContract),
+);
+const generatedCommentDraftContract = lazyContract(() =>
+  import("@/hooks/api/build/comment-drafts-schema").then((m) => m.generatedCommentDraftSchema),
 );
 
 export function useMyCommentDrafts() {
@@ -123,6 +127,23 @@ export function useDeleteAllCommentDrafts() {
     mutationKey: ["projects", "comment-drafts", "delete-all"],
     mutationFn: () =>
       apiClient.delete<{ deleted: boolean }>("/build/comment-drafts/mine", undefined, undefined, commentDraftDeletedContract),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
+    },
+  });
+}
+
+export function useGenerateCommentDraft() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:ai:use", {
+    mutationKey: ["projects", "comment-drafts", "generate"],
+    mutationFn: ({ ticketId, signal }: { ticketId: number; signal?: AbortSignal }) =>
+      apiClient.post<GeneratedCommentDraft>(
+        `/build/comment-drafts/tickets/${ticketId}/generate-draft`,
+        undefined,
+        signal ? { signal } : undefined,
+        generatedCommentDraftContract,
+      ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
     },

@@ -71,10 +71,13 @@ loading, empty, error, denied, and populated states:
 
 ### Hierarchy Ownership
 
-- Every project row has a non-null PM workspace.
-- A project's managed product, when present, belongs to the same PM workspace.
-- Orphan projects and cross-workspace product links are blocked at write time
-  and repaired or reported by a one-time audit before directory nesting ships.
+- A project may have a null PM workspace; this is a valid standalone project,
+  not an orphan.
+- When a managed product has a PM workspace, a linked project uses that same
+  workspace.
+- Invalid non-null workspace references and incompatible cross-workspace
+  product links are blocked at write time and repaired or reported by a
+  one-time audit before directory nesting ships.
 - Portfolios, programs, and teams remain organization rollups, not selector
   parents.
 
@@ -98,8 +101,10 @@ duplicated as TODO checkboxes.
 BSN-01-011, BSN-01-013, BSN-01-014, BSN-01-015 and BSN-01-016 CLOSED in the
 fourth pass — see the Evidence Log.
 
-- [ ] **BSN-01-018** Audit existing rows for orphan projects and cross-workspace
-  product links; repair or quarantine before shipping nesting consumers.
+- [ ] **BSN-01-018** Audit existing rows for invalid non-null workspace
+  references and incompatible cross-workspace product links; repair or
+  quarantine before shipping nesting consumers. Null workspace projects remain
+  valid standalone records.
   **Requires a database.** None exists on this machine, and the audit is a query
   over real rows — it cannot be satisfied by a mocked test. The client-side
   quarantine path for invalid hierarchy rows is already implemented and tested,
@@ -300,8 +305,9 @@ Closed in the fourth pass (2026-09-19):
   distinct destinations with correct active states.
 - [ ] **BSN-01-A05** Standalone and product-linked projects both navigate
   correctly.
-- [ ] **BSN-01-A08** Create and update reject orphan projects and cross-workspace
-  product links; the orphan audit reports zero unresolved rows or a named
+- [ ] **BSN-01-A08** Create and update accept standalone projects, reject
+  invalid workspace references and incompatible cross-workspace product links,
+  and the hierarchy audit reports zero unresolved invalid rows or a named
   quarantine list.
 
 ## Evidence Required to Close
@@ -376,7 +382,7 @@ organization-wide data" this PRD forbids.
 
 ### Unrun / open
 
-Every Overview page (BSN-01-020..027), the orphan audit (BSN-01-018), and all acceptance
+Every Overview page (BSN-01-020..027), the hierarchy audit (BSN-01-018), and all acceptance
 checks BSN-01-A01..A12. No browser evidence was captured.
 
 
