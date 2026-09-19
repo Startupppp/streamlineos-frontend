@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions, UseQueryResult } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
@@ -25,6 +26,14 @@ import {
 } from "@/lib/rbac/permission-gate";
 
 export type { PermissionGate };
+
+export const ACCESS_INVALIDATION_KEY_PREFIX = "access:invalidated";
+
+export function signalAccessInvalidation(orgId: string): void {
+  try {
+    localStorage.setItem(`${ACCESS_INVALIDATION_KEY_PREFIX}:${orgId}`, Date.now().toString());
+  } catch {}
+}
 
 /**
  * `access-schema` is the shortest path from the dashboard shell to Zod, and the
@@ -61,6 +70,18 @@ export const useAccess = (
   const orgId = session?.orgId;
   const userId = session?.user?.id;
   const { enabled: enabledOption, ...restOptions } = options ?? {};
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!orgId) return;
+    const storageKey = `${ACCESS_INVALIDATION_KEY_PREFIX}:${orgId}`;
+    function handleStorage(event: StorageEvent) {
+      if (event.key !== storageKey) return;
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
+    }
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [queryClient, orgId]);
 
   return useQuery<AccessResponse, Error>({
     staleTime: 5 * 60_000,

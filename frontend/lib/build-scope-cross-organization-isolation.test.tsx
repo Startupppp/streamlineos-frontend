@@ -9,6 +9,7 @@ import {
 import type { BuildScopeRef } from "@/features/build/navigation/use-build-nav-preferences";
 import { QueryClient } from "@tanstack/react-query";
 import { scopedQueryKeyHashFn, authenticatedScope } from "@/lib/query-scope";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 
 const SCOPE_A = "authenticated:org-alpha:user-1";
 const SCOPE_B = "authenticated:org-beta:user-1";
@@ -225,5 +226,70 @@ describe("BSN-04-042 — Query cache does not cross org boundaries", () => {
     orgAClient.clear();
     orgBClient.clear();
     plainClient.clear();
+  });
+});
+
+describe("BSN-04-042 — direct route access cannot use another org's permissions", () => {
+  it("org B's scoped QueryClient cannot read org A's cached access data, so direct route access for org B routes cannot be satisfied by org A's permissions", () => {
+    const orgAScope = authenticatedScope("org-alpha", "user-1");
+    const orgBScope = authenticatedScope("org-beta", "user-1");
+    const accessKey = platformCoreQueryKeys.access.me();
+    const orgAAccessData = {
+      isOrgOwner: false,
+      scopes: { "build:view": "all" },
+      modules: { build: true },
+      canManageOrganizationMembership: false,
+    };
+
+    const clientA = new QueryClient({
+      defaultOptions: { queries: { queryKeyHashFn: scopedQueryKeyHashFn(orgAScope) } },
+    });
+    const clientB = new QueryClient({
+      defaultOptions: { queries: { queryKeyHashFn: scopedQueryKeyHashFn(orgBScope) } },
+    });
+
+    clientA.setQueryData(accessKey, orgAAccessData);
+
+    expect(clientB.getQueryData(accessKey)).toBeUndefined();
+
+    clientA.clear();
+    clientB.clear();
+  });
+
+  it("isolation bites: a plain QueryClient without a scope hash CAN read the access data, which is the failure mode the scoped hash prevents for direct route access", () => {
+    const orgAScope = authenticatedScope("org-alpha", "user-1");
+    const accessKey = platformCoreQueryKeys.access.me();
+    const orgAAccessData = {
+      isOrgOwner: false,
+      scopes: { "build:view": "all" },
+      modules: {},
+      canManageOrganizationMembership: false,
+    };
+
+    const plainClient = new QueryClient();
+    const scopedClientA = new QueryClient({
+      defaultOptions: { queries: { queryKeyHashFn: scopedQueryKeyHashFn(orgAScope) } },
+    });
+
+    plainClient.setQueryData(accessKey, orgAAccessData);
+    expect(plainClient.getQueryData(accessKey)).toEqual(orgAAccessData);
+
+    scopedClientA.setQueryData(accessKey, orgAAccessData);
+    const orgBScope = authenticatedScope("org-beta", "user-1");
+    const scopedClientB = new QueryClient({
+      defaultOptions: { queries: { queryKeyHashFn: scopedQueryKeyHashFn(orgBScope) } },
+    });
+    expect(scopedClientB.getQueryData(accessKey)).toBeUndefined();
+
+    plainClient.clear();
+    scopedClientA.clear();
+    scopedClientB.clear();
+  });
+
+  it("access keys for two orgs produce distinct hashes so the route access check in org B returns undefined, not org A's granted permissions", () => {
+    const hashA = scopedQueryKeyHashFn(authenticatedScope("org-alpha", "user-1"));
+    const hashB = scopedQueryKeyHashFn(authenticatedScope("org-beta", "user-1"));
+    const accessKey = platformCoreQueryKeys.access.me();
+    expect(hashA(accessKey)).not.toBe(hashB(accessKey));
   });
 });

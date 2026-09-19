@@ -265,7 +265,8 @@ export const buildWorkQueryKeys = {
       [...base, "projects", projectId, "webhooks", webhookId, "deliveries"] as const,
     workspaceViews: () => [...base, "projects", "workspace-views"] as const,
     agentTokens: () => [...base, "projects", "agent-tokens"] as const,
-    agentPulse: () => [...base, "projects", "agent-pulse"] as const,
+    agentPulse: (scopeKey: string) =>
+      [...base, "projects", "agent-pulse", scopeKey] as const,
     commentDrafts: {
       mine: () => [...base, "projects", "comment-drafts", "mine"] as const,
     },

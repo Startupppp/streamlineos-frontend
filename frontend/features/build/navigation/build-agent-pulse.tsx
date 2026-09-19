@@ -1,6 +1,8 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -9,7 +11,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useAgentPulse } from "@/hooks/api/build/agent-pulse";
-import { BUILD_ROOT_PATH } from "@/lib/build/build-scope";
+import { BUILD_ROOT_PATH, resolveBuildScope } from "@/lib/build/build-scope";
 import type { AgentPulseSignal, AgentPulseSignalType } from "@/hooks/api/build/agent-pulse-schema";
 
 interface BuildAgentPulseProps {
@@ -77,7 +79,9 @@ export function BuildAgentPulse({
   isCollapsed,
   onNavigate,
 }: BuildAgentPulseProps) {
-  const { data: signal } = useAgentPulse();
+  const pathname = usePathname();
+  const scope = useMemo(() => resolveBuildScope(pathname ?? ""), [pathname]);
+  const { data: signal } = useAgentPulse(scope);
 
   if (!signal) return null;
 

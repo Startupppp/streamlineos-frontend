@@ -2,6 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 import { useAgentPulse } from "./agent-pulse";
+import type { BuildScope } from "@/lib/build/build-scope";
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn().mockReturnValue(true),
@@ -18,6 +19,14 @@ jest.mock("@/lib/api-envelope", () => ({
 jest.mock("@/hooks/api/build/agent-pulse-schema", () => ({
   agentPulseContract: null,
 }));
+
+const ORG_SCOPE: BuildScope = {
+  type: "organization",
+  pmWorkspaceId: null,
+  managedProductId: null,
+  projectId: null,
+  basePath: "/build",
+};
 
 function getApiGet(): jest.Mock {
   return (jest.requireMock("@/lib/api-client") as { apiClient: { get: jest.Mock } }).apiClient.get;
@@ -37,7 +46,7 @@ describe("useAgentPulse", () => {
 
   it("returns null when the API reports no active signal", async () => {
     getApiGet().mockResolvedValue(null);
-    const { result } = renderHook(() => useAgentPulse(), {
+    const { result } = renderHook(() => useAgentPulse(ORG_SCOPE), {
       wrapper: makeWrapper(),
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -53,7 +62,7 @@ describe("useAgentPulse", () => {
       dueAt: "2026-09-01T10:00:00.000Z",
     };
     getApiGet().mockResolvedValue(signal);
-    const { result } = renderHook(() => useAgentPulse(), {
+    const { result } = renderHook(() => useAgentPulse(ORG_SCOPE), {
       wrapper: makeWrapper(),
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -65,10 +74,42 @@ describe("useAgentPulse", () => {
       useCan: jest.Mock;
     };
     useCan.mockReturnValue(false);
-    const { result } = renderHook(() => useAgentPulse(), {
+    const { result } = renderHook(() => useAgentPulse(ORG_SCOPE), {
       wrapper: makeWrapper(),
     });
     expect(result.current.fetchStatus).toBe("idle");
     expect(getApiGet()).not.toHaveBeenCalled();
+  });
+
+  it("two different scopes produce different cache entries — each scope fires its own independent fetch (BSN-03-040)", async () => {
+    const orgSignal = { type: "overdue_approval", entityId: 1, projectId: 10, title: "Org approval", dueAt: null };
+    const projectSignal = { type: "blocked_milestone", entityId: 2, projectId: 7, title: "Project milestone", dueAt: null };
+
+    const projectScope: BuildScope = {
+      type: "project",
+      pmWorkspaceId: null,
+      managedProductId: null,
+      projectId: 7,
+      basePath: "/build/7",
+    };
+
+    getApiGet().mockResolvedValue(orgSignal);
+    const { result: orgResult } = renderHook(() => useAgentPulse(ORG_SCOPE), {
+      wrapper: makeWrapper(),
+    });
+    await waitFor(() => expect(orgResult.current.isSuccess).toBe(true));
+    expect(orgResult.current.data).toMatchObject({ type: "overdue_approval" });
+
+    jest.resetAllMocks();
+    const { useCan } = jest.requireMock("@/hooks/api/access") as { useCan: jest.Mock };
+    useCan.mockReturnValue(true);
+    getApiGet().mockResolvedValue(projectSignal);
+    const { result: projectResult } = renderHook(() => useAgentPulse(projectScope), {
+      wrapper: makeWrapper(),
+    });
+    await waitFor(() => expect(projectResult.current.isSuccess).toBe(true));
+    expect(projectResult.current.data).toMatchObject({ type: "blocked_milestone" });
+
+    expect(orgResult.current.data).not.toMatchObject({ type: "blocked_milestone" });
   });
 });

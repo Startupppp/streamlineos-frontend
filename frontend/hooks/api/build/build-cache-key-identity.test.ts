@@ -6,6 +6,15 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { usePmWorkspaces, useUpdatePmWorkspace } from "@/hooks/api/build/pm-workspaces";
 import { useManagedProducts, useUpdateManagedProduct } from "@/hooks/api/build/managed-products";
 import { useAgentPulse } from "@/hooks/api/build/agent-pulse";
+import type { BuildScope } from "@/lib/build/build-scope";
+
+const ORG_SCOPE: BuildScope = {
+  type: "organization",
+  pmWorkspaceId: null,
+  managedProductId: null,
+  projectId: null,
+  basePath: "/build",
+};
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn().mockReturnValue(true),
@@ -140,7 +149,7 @@ describe("BSN-04-032 — queryFns pass the AbortSignal to apiClient", () => {
 
   it("useAgentPulse delivers the React Query abort signal as the third argument to apiClient.get", async () => {
     const client = makeClient();
-    renderHook(() => useAgentPulse(), { wrapper: wrap(client) });
+    renderHook(() => useAgentPulse(ORG_SCOPE), { wrapper: wrap(client) });
     await waitFor(() => expect(getApiClient().get).toHaveBeenCalled());
     const thirdArg: unknown = getApiClient().get.mock.calls[0]?.[2];
     expect(thirdArg).toBeInstanceOf(AbortSignal);

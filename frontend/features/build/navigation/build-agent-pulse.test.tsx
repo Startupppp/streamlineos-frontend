@@ -8,6 +8,18 @@ jest.mock("@/hooks/api/build/agent-pulse", () => ({
 
 jest.mock("@/lib/build/build-scope", () => ({
   BUILD_ROOT_PATH: "/build",
+  resolveBuildScope: jest.fn().mockReturnValue({
+    type: "organization",
+    pmWorkspaceId: null,
+    managedProductId: null,
+    projectId: null,
+    basePath: "/build",
+  }),
+  buildScopeKey: jest.fn().mockReturnValue("organization"),
+}));
+
+jest.mock("next/navigation", () => ({
+  usePathname: jest.fn().mockReturnValue("/build"),
 }));
 
 jest.mock("@/lib/utils", () => ({
@@ -172,5 +184,24 @@ describe("BuildAgentPulse", () => {
     mockUseAgentPulse.mockReturnValue({ data: null });
     const { container } = render(<BuildAgentPulse isCollapsed={false} />);
     expect(container.firstChild).toBeNull();
+  });
+
+  it("resolves scope from pathname and passes it to useAgentPulse — two scopes must not share a cache (BSN-03-040)", () => {
+    const { resolveBuildScope } = jest.requireMock("@/lib/build/build-scope") as {
+      resolveBuildScope: jest.Mock;
+    };
+    const projectScope = {
+      type: "project" as const,
+      pmWorkspaceId: null,
+      managedProductId: null,
+      projectId: 7,
+      basePath: "/build/7",
+    };
+    resolveBuildScope.mockReturnValue(projectScope);
+    mockUseAgentPulse.mockReturnValue({ data: null });
+    const { usePathname } = jest.requireMock("next/navigation") as { usePathname: jest.Mock };
+    usePathname.mockReturnValue("/build/7");
+    render(<BuildAgentPulse isCollapsed={false} />);
+    expect(mockUseAgentPulse).toHaveBeenCalledWith(projectScope);
   });
 });

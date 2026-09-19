@@ -194,6 +194,33 @@ describe("resolveBuildNavModel — pin resolution", () => {
     expect(pinnedIds).toContain("project-triage");
   });
 
+  it("resolves no pins when none are stored, so an unpinned actor sees no pin group", () => {
+    const model = resolveBuildNavModel({ scope: projectScope, access, pinnedIds: [] });
+    expect(model.pinned).toEqual([]);
+  });
+
+  it("resolves exactly one pin when one is stored", () => {
+    const model = resolveBuildNavModel({
+      scope: projectScope,
+      access,
+      pinnedIds: ["project-triage"],
+    });
+    expect(model.pinned.map((d) => d.id)).toEqual(["project-triage"]);
+  });
+
+  it("resolves exactly three pins when three are stored, so the ceiling does not truncate a legal set", () => {
+    const model = resolveBuildNavModel({
+      scope: projectScope,
+      access,
+      pinnedIds: ["project-triage", "project-epics", "project-milestones"],
+    });
+    expect(model.pinned.map((d) => d.id)).toEqual([
+      "project-triage",
+      "project-epics",
+      "project-milestones",
+    ]);
+  });
+
   it("resolves at most BUILD_NAV_MAX_PINS pins and honours the stored order when more ids are provided", () => {
     const model = resolveBuildNavModel({
       scope: projectScope,
