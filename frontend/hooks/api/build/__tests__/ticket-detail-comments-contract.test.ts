@@ -57,7 +57,7 @@ function detailPayload(comments: unknown[]) {
     epic: null,
     assignee: null,
     reporter: AUTHOR,
-    members: [],
+    assignees: [],
     watchers: [],
     attachments: [],
     labels: [],

@@ -2,7 +2,7 @@ import React from "react";
 import { screen } from "@testing-library/react";
 import { renderWithProviders } from "@/test-utils/render";
 import { expectNoAxeViolations } from "@/test-utils/axe";
-import { ChatBubble, type ChatMessage } from "../kb-chat-parts";
+import { ChatBubble, type ChatMessage } from "@/components/kb/kb-chat-bubble";
 import { KbSourcesSheet } from "../kb-sources-sheet";
 import type { KbSource } from "@/hooks/api/kb/sources";
 

@@ -40,6 +40,11 @@ import {
 import { MyIssuesPanel } from "./command-center-my-issues-panel";
 import { ProjectsPanel } from "./command-center-projects-panel";
 
+export function resolveProjectsStatValue(count: number, hasMore: boolean): string | number {
+  if (hasMore) return `${count}+`;
+  return count;
+}
+
 export function CommandCenterPage() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const { openCreateTicket } = useCommandPalette();
@@ -113,7 +118,7 @@ export function CommandCenterPage() {
   const stats = useMemo(() => {
     const projectList = projectsData?.data ?? [];
     return {
-      activeProjects: projectList.length,
+      activeProjects: resolveProjectsStatValue(projectList.length, projectsData?.hasMore ?? false),
       openIssues: openIssuesSummary?.total ?? openIssuesSummary?.data.length ?? 0,
       overdueIssues: overdueIssuesSummary?.total ?? overdueIssuesSummary?.data.length ?? 0,
     };

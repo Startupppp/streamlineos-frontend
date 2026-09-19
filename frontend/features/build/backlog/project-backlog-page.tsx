@@ -291,6 +291,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
           <TicketFilterBar
             className="w-full"
             members={members}
+            statuses={data?.statuses}
             showSprintFilter={false}
           />
         </div>

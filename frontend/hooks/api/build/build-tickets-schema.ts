@@ -98,11 +98,18 @@ export const ticketDetailContract = ticketRowContract.extend({
     .nullable()
     .transform((a) => a?.user ?? null),
   reporter: userSummarySchema,
-  members: z.array(
-    z.object({
-      user: z.object({ user: userSummarySchema }),
-    }),
-  ),
+  assignees: z
+    .array(
+      z.object({
+        user: z.object({ userId: z.string(), user: userSummarySchema }),
+      }),
+    )
+    .transform((items) =>
+      items.map((assignment) => ({
+        userId: assignment.user.userId,
+        user: assignment.user.user,
+      })),
+    ),
   watchers: z
     .array(
       z.object({

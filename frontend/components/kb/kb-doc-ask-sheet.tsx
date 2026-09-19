@@ -1,19 +1,27 @@
 "use client";
 
-import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type MouseEvent,
+} from "react";
+import { useReducedMotion } from "framer-motion";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { MessageSquare, Square } from "lucide-react";
+import { Square } from "lucide-react";
 import { SendIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
-import { AiDraftCard } from "@/components/ai/ai-draft-card";
 import { AiQuotaEmptyState } from "@/components/ai/ai-quota-empty-state";
 import { AiPermissionDenied } from "@/components/ai/ai-permission-denied";
 import {
@@ -25,6 +33,7 @@ import {
 import { classifyAiError, type AiFailureState } from "@/components/ai";
 import { useAiTextStream } from "@/hooks/api/ai-text-stream";
 import { streamKbDocAi, type KbDocAiScope } from "@/hooks/api/kb/doc-ai-stream";
+import { ChatBubble, TypingBubble, type ChatMessage } from "@/components/kb/kb-chat-bubble";
 
 interface KbDocAskSheetProps {
   scope: KbDocAiScope;
@@ -35,19 +44,14 @@ interface KbDocAskSheetProps {
   description: string;
 }
 
-type AskState =
-  | { status: "input" }
-  | { status: "streaming"; text: string }
-  | { status: "ready"; text: string }
-  | AiFailureState;
+const PAGE_ASK_SUGGESTIONS = [
+  "Summarize this page",
+  "What are the key points?",
+  "What should I do next?",
+] as const;
 
-/**
- * The ask affordance for both KB document surfaces. The answer streams, so the
- * panel appends what has arrived rather than holding a skeleton until the last
- * token, and Stop keeps the partial answer — the tokens that arrived were paid
- * for. The wiki page and help-centre article panels rendered two copies of this
- * with two slightly different state machines; this is the one.
- */
+type AskPanel = { status: "idle" } | { status: "streaming"; text: string } | AiFailureState;
+
 export function KbDocAskSheet({
   scope,
   docId,
@@ -56,16 +60,36 @@ export function KbDocAskSheet({
   title,
   description,
 }: KbDocAskSheetProps) {
-  const [state, setState] = useState<AskState>({ status: "input" });
+  const [panel, setPanel] = useState<AskPanel>({ status: "idle" });
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [question, setQuestion] = useState("");
   const [lastQuestion, setLastQuestion] = useState("");
   const invokeRef = useRef(0);
+  const idRef = useRef(0);
+  const threadEndRef = useRef<HTMLDivElement>(null);
   const ask = useAiTextStream();
+  const reduce = Boolean(useReducedMotion());
 
-  async function runAsk(q: string) {
+  useLayoutEffect(() => {
+    threadEndRef.current?.scrollIntoView({ block: "end" });
+  }, [messages, panel]);
+
+  function nextId(): string {
+    idRef.current += 1;
+    return `ask-${idRef.current}`;
+  }
+
+  async function runAsk(q: string, retry = false) {
     const stamp = ++invokeRef.current;
     setLastQuestion(q);
-    setState({ status: "streaming", text: "" });
+    setQuestion("");
+    if (!retry) {
+      setMessages((prev) => [
+        ...prev,
+        { id: nextId(), role: "user", content: q },
+      ]);
+    }
+    setPanel({ status: "streaming", text: "" });
     try {
       const outcome = await ask.run((signal) =>
         streamKbDocAi({
@@ -75,26 +99,35 @@ export function KbDocAskSheet({
           question: q,
           onToken: (token) => {
             if (invokeRef.current !== stamp) return;
-            setState((prev) =>
-              prev.status === "streaming" ? { status: "streaming", text: prev.text + token } : prev,
+            setPanel((prev) =>
+              prev.status === "streaming"
+                ? { status: "streaming", text: prev.text + token }
+                : prev,
             );
           },
           signal,
         }),
       );
       if (invokeRef.current !== stamp || outcome.status === "busy") return;
-      if (outcome.status === "cancelled") setState({ status: "cancelled" });
-      else setState({ status: "ready", text: outcome.text });
+      if (outcome.status === "cancelled") {
+        setPanel({ status: "cancelled" });
+        return;
+      }
+      setMessages((prev) => [
+        ...prev,
+        { id: nextId(), role: "assistant", content: outcome.text },
+      ]);
+      setPanel({ status: "idle" });
     } catch (error) {
       if (invokeRef.current !== stamp) return;
-      setState(classifyAiError(error));
+      setPanel(classifyAiError(error));
     }
   }
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     const trimmed = question.trim();
-    if (trimmed.length < 3) return;
+    if (trimmed.length < 3 || ask.isStreaming) return;
     void runAsk(trimmed);
   }
 
@@ -102,16 +135,11 @@ export function KbDocAskSheet({
     if (!ask.isStreaming) return;
     invokeRef.current += 1;
     ask.stop();
-    setState({ status: "cancelled" });
+    setPanel({ status: "cancelled" });
   }
 
   function handleRetry() {
-    if (lastQuestion) void runAsk(lastQuestion);
-  }
-
-  function handleAskAnother() {
-    setState({ status: "input" });
-    setQuestion("");
+    if (lastQuestion) void runAsk(lastQuestion, true);
   }
 
   function handleOpenChange(next: boolean) {
@@ -119,129 +147,128 @@ export function KbDocAskSheet({
     if (next) return;
     invokeRef.current += 1;
     ask.stop();
-    setState({ status: "input" });
+    setPanel({ status: "idle" });
+    setMessages([]);
     setQuestion("");
+    setLastQuestion("");
   }
 
-  function handleQuestionChange(e: ChangeEvent<HTMLInputElement>) {
-    setQuestion(e.target.value);
+  function handleQuestionChange(event: ChangeEvent<HTMLInputElement>) {
+    setQuestion(event.target.value);
   }
+
+  function handleSuggestionClick(event: MouseEvent<HTMLButtonElement>) {
+    const next = event.currentTarget.dataset.suggestion;
+    if (!next || ask.isStreaming) return;
+    void runAsk(next);
+  }
+
+  const isStreaming = panel.status === "streaming";
+  const showEmpty = messages.length === 0 && !isStreaming && panel.status === "idle";
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
-        <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
+      <SheetContent className="flex h-full w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4 pr-12">
           <SheetTitle className="text-base font-semibold">{title}</SheetTitle>
           <SheetDescription className="text-label text-muted-foreground">
             {description}
           </SheetDescription>
         </SheetHeader>
 
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4">
-          {state.status === "input" && (
-            <form onSubmit={handleSubmit} className="flex items-center gap-2">
-              <div className="relative min-w-0 flex-1">
-                <MessageSquare
-                  className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                  aria-hidden
-                />
-                <Input
-                  autoFocus
-                  value={question}
-                  onChange={handleQuestionChange}
-                  placeholder="Ask about this page…"
-                  aria-label="Question"
-                  className="h-9 pl-9"
-                />
-              </div>
-              <AnimatedIconButton
-                type="submit"
-                size="icon"
-                icon={SendIcon}
-                iconSize={16}
-                disabled={question.trim().length < 3}
-                className="h-9 w-9 shrink-0"
-                aria-label="Ask"
-              />
-            </form>
-          )}
-
-          {state.status === "streaming" && (
-            <div className="space-y-3">
-              <p
-                className="whitespace-pre-wrap text-label leading-relaxed text-foreground"
-                aria-live="polite"
-              >
-                {state.text}
+        <SheetBody className="flex flex-col gap-3 px-4 py-4">
+          {showEmpty ? (
+            <div className="flex min-h-full flex-col items-center justify-center gap-4 text-center">
+              <p className="text-sm font-semibold text-foreground">Ask this page</p>
+              <p className="max-w-[18rem] text-xs text-muted-foreground">
+                Answers stay grounded in this document only.
               </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={handleCancel}
-                className="h-9 w-9"
-                aria-label="Stop"
-              >
-                <Square className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          )}
-
-          {state.status === "quota" && <AiQuotaEmptyState variant="fill" />}
-          {state.status === "denied" && <AiPermissionDenied reason={state.reason} />}
-          {state.status === "queued" && (
-            <AiQueuedNotice message={state.message} onRetry={handleRetry} />
-          )}
-          {state.status === "unavailable" && (
-            <AiUnavailableNotice message={state.message} onRetry={handleRetry} />
-          )}
-          {state.status === "offline" && (
-            <AiOfflineNotice message={state.message} onRetry={handleRetry} />
-          )}
-          {state.status === "cancelled" && <AiCancelledNotice onRetry={handleRetry} />}
-
-          {state.status === "error" && (
-            <div className="flex flex-col items-start gap-3 py-4">
-              <p className="text-sm text-muted-foreground">{state.message}</p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleRetry}
-                className="h-8 text-xs"
-              >
-                Retry
-              </Button>
-            </div>
-          )}
-
-          {state.status === "ready" && (
-            <>
-              <div className="mb-3">
-                <p className="text-xs font-medium text-muted-foreground">Your question</p>
-                <p className="text-label text-foreground mt-0.5">{lastQuestion}</p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {PAGE_ASK_SUGGESTIONS.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    data-suggestion={suggestion}
+                    onClick={handleSuggestionClick}
+                    className="rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-accent hover:text-foreground"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
               </div>
-              <AiDraftCard>
-                <p className="whitespace-pre-wrap text-label leading-relaxed text-foreground">
-                  {state.text}
-                </p>
-              </AiDraftCard>
-              <AnimatedIconButton
-                type="button"
-                variant="ghost"
-                size="sm"
-                icon={SendIcon}
-                iconSize={14}
-                iconClassName="mr-1.5"
-                className="h-9"
-                onClick={handleAskAnother}
-                aria-label="Ask another question"
-              >
-                Ask another
-              </AnimatedIconButton>
+            </div>
+          ) : (
+            <>
+              {messages.map((message) => (
+                <ChatBubble key={message.id} message={message} reduce={reduce} />
+              ))}
+              {isStreaming && panel.text ? (
+                <ChatBubble
+                  message={{ id: "draft", role: "assistant", content: panel.text }}
+                  reduce={reduce}
+                />
+              ) : null}
+              {isStreaming && !panel.text ? <TypingBubble reduce={reduce} /> : null}
             </>
           )}
-        </div>
+
+          {panel.status === "quota" && <AiQuotaEmptyState variant="fill" />}
+          {panel.status === "denied" && <AiPermissionDenied reason={panel.reason} />}
+          {panel.status === "queued" && (
+            <AiQueuedNotice message={panel.message} onRetry={handleRetry} />
+          )}
+          {panel.status === "unavailable" && (
+            <AiUnavailableNotice message={panel.message} onRetry={handleRetry} />
+          )}
+          {panel.status === "offline" && (
+            <AiOfflineNotice message={panel.message} onRetry={handleRetry} />
+          )}
+          {panel.status === "cancelled" && <AiCancelledNotice onRetry={handleRetry} />}
+          {panel.status === "error" && (
+            <ChatBubble
+              message={{ id: "error", role: "assistant", content: panel.message, isError: true }}
+              reduce={reduce}
+            />
+          )}
+          <div ref={threadEndRef} />
+        </SheetBody>
+
+        <form
+          onSubmit={handleSubmit}
+          className="flex shrink-0 items-center gap-2 border-t border-border bg-background px-4 py-3"
+        >
+          <Input
+            autoFocus
+            value={question}
+            onChange={handleQuestionChange}
+            placeholder="Ask about this page…"
+            aria-label="Question"
+            disabled={isStreaming}
+            className="min-w-0 flex-1 rounded-xl"
+          />
+          {isStreaming ? (
+            <Button
+              type="button"
+              size="icon"
+              variant="outline"
+              onClick={handleCancel}
+              className="h-9 w-9 shrink-0 rounded-xl"
+              aria-label="Stop"
+            >
+              <Square className="h-3.5 w-3.5" />
+            </Button>
+          ) : (
+            <AnimatedIconButton
+              type="submit"
+              size="icon"
+              icon={SendIcon}
+              iconSize={16}
+              disabled={question.trim().length < 3}
+              className="h-9 w-9 shrink-0 rounded-xl"
+              aria-label="Send"
+            />
+          )}
+        </form>
       </SheetContent>
     </Sheet>
   );

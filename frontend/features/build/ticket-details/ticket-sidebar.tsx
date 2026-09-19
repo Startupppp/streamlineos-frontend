@@ -112,7 +112,7 @@ export function TicketSidebar({
   const handlePriorityChange = (v: string) => onAutoSave({ priority: v });
   const handleTypeChange = (v: string) => onAutoSave({ type: v });
   const handleSprintChange = (v: string) =>
-    onAutoSave({ sprintId: v === "none" ? undefined : parseInt(v) });
+    onAutoSave({ sprintId: v === "none" ? null : parseInt(v) });
   const handleEpicChange = (v: string) =>
     onAutoSave({ epicId: v === "none" ? null : parseInt(v) });
   const handleModuleChange = (v: string) =>
