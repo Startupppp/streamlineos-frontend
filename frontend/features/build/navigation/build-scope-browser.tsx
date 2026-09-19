@@ -17,13 +17,13 @@ import {
   type BuildScopeDirectoryEntry,
 } from "./use-build-scope-directory";
 import {
+  useBuildScopeRecents,
   useBuildScopeStars,
   type BuildScopeRef,
 } from "./use-build-nav-preferences";
 
 interface BuildScopeBrowserProps {
   currentScopeKey: string;
-  recents: readonly BuildScopeRef[];
   settingsHrefFor: (scope: BuildScopeRef) => string | null;
   onSelect: (scope: BuildScopeRef) => void;
 }
@@ -38,7 +38,6 @@ function SectionLabel({ children }: { children: string }) {
 
 export function BuildScopeBrowser({
   currentScopeKey,
-  recents,
   settingsHrefFor,
   onSelect,
 }: BuildScopeBrowserProps) {
@@ -47,12 +46,17 @@ export function BuildScopeBrowser({
   const [expandedKeys, setExpandedKeys] = useState<ReadonlySet<string>>(
     () => new Set<string>(),
   );
-  const { isStarred, toggleStar, starred, replaceStarred } =
-    useBuildScopeStars();
-  const { entries: liveStarred } = useReconciledBuildScopes(
-    starred,
-    replaceStarred,
-  );
+  const recentsStore = useBuildScopeRecents();
+  const liveRecents = useReconciledBuildScopes(
+    recentsStore.recents,
+    recentsStore.replaceRecents,
+  ).entries;
+  const stars = useBuildScopeStars();
+  const { isStarred, toggleStar } = stars;
+  const liveStarred = useReconciledBuildScopes(
+    stars.starred,
+    stars.replaceStarred,
+  ).entries;
   const directory = useBuildScopeDirectory(search, includeArchived);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -262,10 +266,10 @@ export function BuildScopeBrowser({
               </>
             ) : null}
 
-            {recents.length > 0 ? (
+            {liveRecents.length > 0 ? (
               <>
                 <SectionLabel>Recent</SectionLabel>
-                {recents.map(renderRef)}
+                {liveRecents.map(renderRef)}
               </>
             ) : null}
 
@@ -292,9 +296,8 @@ export function BuildScopeBrowser({
         <>
           <Separator />
           <p className="shrink-0 px-3 py-2 text-micro text-muted-foreground">
-            {directory.hasMoreHierarchy
-              ? "More scopes exist than are listed. Search finds any project; workspaces and products are filtered within the first 50."
-              : "More projects exist than are listed. Search to narrow the list."}
+            More scopes exist than are listed. Search to find any workspace,
+            product or project you can access.
           </p>
         </>
       ) : null}

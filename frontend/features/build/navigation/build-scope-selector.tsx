@@ -51,7 +51,7 @@ export function BuildScopeSelector({
 }: BuildScopeSelectorProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const { recents, recordScope } = useBuildScopeRecents();
+  const { recordScope } = useBuildScopeRecents();
   const identity = useBuildScopeIdentity(scope);
   const canUpdateProject = useCan("build:update");
   const canManageIntegrations = useCan("integrations:git:view");
@@ -184,7 +184,6 @@ export function BuildScopeSelector({
         >
           <BuildScopeBrowser
             currentScopeKey={currentRef.key}
-            recents={recents}
             settingsHrefFor={settingsHrefFor}
             onSelect={handleSelect}
           />
