@@ -94,6 +94,20 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
         requiredPermission: "build:view",
       },
       {
+        id: "project-updates",
+        label: "Updates",
+        href: `${basePath}/updates`,
+        icon: Megaphone,
+        requiredPermission: "build:updates:view",
+      },
+      {
+        id: "project-files",
+        label: "Files",
+        href: `${basePath}/files`,
+        icon: Paperclip,
+        requiredPermission: "build:files:view",
+      },
+      {
         id: "project-client-portal",
         label: "Client portal",
         href: `${basePath}/client-portal`,
@@ -165,20 +179,6 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
         href: `${basePath}/incidents`,
         icon: TriangleAlert,
         requiredPermission: "build:incidents:view",
-      },
-      {
-        id: "project-updates",
-        label: "Updates",
-        href: `${basePath}/updates`,
-        icon: Megaphone,
-        requiredPermission: "build:updates:view",
-      },
-      {
-        id: "project-files",
-        label: "Files",
-        href: `${basePath}/files`,
-        icon: Paperclip,
-        requiredPermission: "build:files:view",
       },
       {
         id: "project-change-requests",

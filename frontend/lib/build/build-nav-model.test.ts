@@ -76,6 +76,8 @@ const ALL_BUILD_PERMISSIONS: PermissionKey[] = [
   "build:workflow:view",
   "build:clientvisibility:manage",
   "build:ai:use",
+  "build:updates:view",
+  "build:files:view",
   "integrations:git:view",
   "feedbucket:submissions:view",
   "feedbucket:widgets:view",
