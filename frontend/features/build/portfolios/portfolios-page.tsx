@@ -105,7 +105,7 @@ export function PortfoliosPage() {
   const [editTarget, setEditTarget] = useState<Portfolio | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Portfolio | null>(null);
 
-  const { data, isLoading, isError, refetch } = usePortfolios({
+  const { data, isLoading, isError, error, refetch } = usePortfolios({
     cursor,
     limit: 20,
     status: statusFilter !== "all" ? statusFilter : undefined,
@@ -333,7 +333,12 @@ export function PortfoliosPage() {
           {isLoading ? (
             <DataTableSkeleton rows={12} columns={7} className="flex-1" />
           ) : isError ? (
-            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
+            <ErrorState
+              className={PM_FILL_PANEL}
+              title="Couldn't load portfolios"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+            />
           ) : displayed.length === 0 ? (
             <EmptyState
               className={PM_FILL_PANEL}

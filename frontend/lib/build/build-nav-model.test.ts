@@ -79,6 +79,7 @@ const ALL_BUILD_PERMISSIONS: PermissionKey[] = [
   "build:ai:use",
   "integrations:git:view",
   "feedbucket:submissions:view",
+  "feedbucket:widgets:view",
 ];
 
 const projectScope = resolveBuildScope("/build/42");

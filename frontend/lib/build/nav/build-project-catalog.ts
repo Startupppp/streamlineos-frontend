@@ -173,7 +173,7 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
         label: "Feedback",
         href: `${basePath}/feedbucket`,
         icon: MessageSquareText,
-        requiredPermission: "feedbucket:submissions:view",
+        requiredPermission: "feedbucket:widgets:view",
         requiredOrgModule: BUILD_FEEDBACK_ORG_MODULE,
       },
       {

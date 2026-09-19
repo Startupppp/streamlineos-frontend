@@ -17,6 +17,8 @@ import {
   ResponsivePopoverContent,
   ResponsivePopoverTrigger,
 } from "@/components/ui/responsive-popover";
+import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
+import { useUnsavedChangesGuard } from "@/hooks/common/use-unsaved-changes-guard";
 import { useCan } from "@/hooks/api/access";
 import {
   BUILD_SCOPE_TYPE_LABELS,
@@ -29,6 +31,7 @@ import {
   type BuildScopeRef,
 } from "./use-build-nav-preferences";
 import { useBuildScopeIdentity } from "./use-build-scope-identity";
+import { useBuildHasUnsavedWork } from "./build-dirty-state-context";
 
 interface BuildScopeSelectorProps {
   scope: BuildScope;
@@ -52,6 +55,10 @@ export function BuildScopeSelector({
   const identity = useBuildScopeIdentity(scope);
   const canUpdateProject = useCan("build:update");
   const canManageIntegrations = useCan("integrations:git:view");
+  const hasUnsavedWork = useBuildHasUnsavedWork();
+  const { requestLeave, dialogProps } = useUnsavedChangesGuard({
+    isDirty: hasUnsavedWork,
+  });
 
   const currentRef = identity.ref;
   const hasName = currentRef.name.length > 0;
@@ -74,14 +81,21 @@ export function BuildScopeSelector({
     [canUpdateProject, canManageIntegrations],
   );
 
-  const handleSelect = useCallback(
+  const navigateToScope = useCallback(
     (target: BuildScopeRef) => {
-      setOpen(false);
       recordScope(target);
       onNavigate?.();
       router.push(target.href);
     },
-    [recordScope, router, onNavigate],
+    [recordScope, onNavigate, router],
+  );
+
+  const handleSelect = useCallback(
+    (target: BuildScopeRef) => {
+      setOpen(false);
+      requestLeave(() => navigateToScope(target));
+    },
+    [requestLeave, navigateToScope],
   );
 
   const handleOpenChange = useCallback((next: boolean) => setOpen(next), []);
@@ -147,33 +161,40 @@ export function BuildScopeSelector({
   );
 
   return (
-    <ResponsivePopover open={open} onOpenChange={handleOpenChange}>
-      {isCollapsed ? (
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            <ResponsivePopoverTrigger asChild>{trigger}</ResponsivePopoverTrigger>
-          </TooltipTrigger>
-          <TooltipContent side="right" sideOffset={10} className="text-xs font-medium">
-            {currentRef.name || BUILD_SCOPE_TYPE_LABELS[currentRef.type]}
-          </TooltipContent>
-        </Tooltip>
-      ) : (
-        <ResponsivePopoverTrigger asChild>{trigger}</ResponsivePopoverTrigger>
-      )}
-      <ResponsivePopoverContent
-        title="Switch scope"
-        align="start"
-        side={isCollapsed ? "right" : "bottom"}
-        sideOffset={8}
-        className={cn("flex w-80 flex-col overflow-hidden p-0")}
-      >
-        <BuildScopeBrowser
-          currentScopeKey={currentRef.key}
-          recents={recents}
-          settingsHrefFor={settingsHrefFor}
-          onSelect={handleSelect}
-        />
-      </ResponsivePopoverContent>
-    </ResponsivePopover>
+    <>
+      <ResponsivePopover open={open} onOpenChange={handleOpenChange}>
+        {isCollapsed ? (
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <ResponsivePopoverTrigger asChild>{trigger}</ResponsivePopoverTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={10} className="text-xs font-medium">
+              {currentRef.name || BUILD_SCOPE_TYPE_LABELS[currentRef.type]}
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <ResponsivePopoverTrigger asChild>{trigger}</ResponsivePopoverTrigger>
+        )}
+        <ResponsivePopoverContent
+          title="Switch scope"
+          align="start"
+          side={isCollapsed ? "right" : "bottom"}
+          sideOffset={8}
+          className={cn("flex w-80 flex-col overflow-hidden p-0")}
+        >
+          <BuildScopeBrowser
+            currentScopeKey={currentRef.key}
+            recents={recents}
+            settingsHrefFor={settingsHrefFor}
+            onSelect={handleSelect}
+          />
+        </ResponsivePopoverContent>
+      </ResponsivePopover>
+      <UnsavedChangesDialog
+        {...dialogProps}
+        title="Unsaved changes in Build"
+        description="You have unsaved changes on this page. Discard them to switch scope, or keep editing."
+      />
+    </>
   );
 }

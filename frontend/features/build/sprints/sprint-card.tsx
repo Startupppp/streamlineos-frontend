@@ -91,7 +91,7 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, projectS
     for (const t of tix) {
       const pts = t.points || 0;
       total += pts;
-      if (completedNames.has(t.status)) { completed += pts; done++; }
+      if (t.status !== null && completedNames.has(t.status)) { completed += pts; done++; }
     }
     return {
       tickets: tix,
