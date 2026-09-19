@@ -158,9 +158,9 @@ describe("§8 platform-core surfaces are universally accessible to every active 
     expect(resolveRouteAccess("/notifications/providers").kind).toBe("permission");
   });
 
-  it("KB administration is NOT universal — gated on settings permission", () => {
-    expect(isUniversalRoute("/knowledge/wiki/settings")).toBe(false);
-    expect(resolveRouteAccess("/knowledge/wiki/settings").kind).toBe("permission");
+  it("KB administration is NOT universal — gated on import permission", () => {
+    expect(isUniversalRoute("/knowledge/wiki/import")).toBe(false);
+    expect(resolveRouteAccess("/knowledge/wiki/import").kind).toBe("permission");
   });
 });
 

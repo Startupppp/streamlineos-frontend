@@ -108,12 +108,6 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     reason: "Broadcast administration is not a universal communication read surface.",
   },
   {
-    prefix: "/knowledge/wiki/settings",
-    product: "administration",
-    permission: "kb:settings:manage",
-    reason: "Knowledge settings are administrative, not universal reading.",
-  },
-  {
     prefix: "/knowledge/wiki/import",
     product: "administration",
     permission: "kb:pages:import",
@@ -175,6 +169,30 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     permission: "chat:org-settings:manage",
     reason:
       "Organisation-wide chat configuration is administrative. Only org owners and admins hold chat:org-settings:manage; it is org-only and cannot be delegated.",
+  },
+  {
+    prefix: "/build/workspaces/[pmWorkspaceId]/products",
+    product: "build",
+    permission: "build:managed-products:view",
+    reason:
+      "Workspace-scoped product list. Without a dynamic-segment entry the whole /build/workspaces/* tree collapses to the generic build:view, so a caller holding build:view but not build:managed-products:view would be hidden the sidebar link and still reach the URL.",
+    backendRoute: { method: "get", path: "/build/managed-products" },
+  },
+  {
+    prefix: "/build/workspaces/[pmWorkspaceId]/teams",
+    product: "build",
+    permission: "build:teams:view",
+    reason:
+      "Workspace-scoped team list carries the team read key, not the generic build:view the /build nav entry owns.",
+    backendRoute: { method: "get", path: "/build/teams" },
+  },
+  {
+    prefix: "/build/managed-products/[managedProductId]/projects",
+    product: "build",
+    permission: "build:view",
+    reason:
+      "Linked projects under a product read the project list, so the gate is the project read key rather than the build:managed-products:view the parent product route owns.",
+    backendRoute: { method: "get", path: "/build" },
   },
   {
     prefix: "/build/customers",

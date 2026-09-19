@@ -12,7 +12,6 @@ import {
   KbLockIcon,
   KbMessageSquareIcon,
   KbSearchIcon,
-  KbSettingsIcon,
   KbTrash2Icon,
   KbUploadIcon,
   KbUsersIcon,
@@ -39,7 +38,6 @@ import {
   KB_IMPORT,
   KB_PRIVATE,
   KB_REVIEWS,
-  KB_SETTINGS,
   KB_SHARED,
   KB_SPACES,
   KB_TEMPLATES,
@@ -65,7 +63,6 @@ interface WikiSidebarNavProps {
   isCollapsed?: boolean;
   canViewAnalytics: boolean;
   canViewReviews: boolean;
-  canManageSettings: boolean;
 }
 
 interface WikiSidebarFooterProps {
@@ -86,10 +83,9 @@ function buildPrimaryItems(): WikiNavItem[] {
 function buildNavGroups({
   canViewAnalytics,
   canViewReviews,
-  canManageSettings,
 }: Pick<
   WikiSidebarNavProps,
-  "canViewAnalytics" | "canViewReviews" | "canManageSettings"
+  "canViewAnalytics" | "canViewReviews"
 >): WikiNavGroup[] {
   const manageItems: WikiNavItem[] = [
     { label: "Templates", href: KB_TEMPLATES, icon: KbLayoutTemplateIcon },
@@ -99,14 +95,10 @@ function buildNavGroups({
     manageItems.push({ label: "Reviews", href: KB_REVIEWS, icon: KbClipboardCheckIcon });
   }
 
-  manageItems.push({ label: "Import", href: KB_IMPORT, icon: KbUploadIcon });
+  manageItems.push({ label: "Import & Export", href: KB_IMPORT, icon: KbUploadIcon });
 
   if (canViewAnalytics) {
     manageItems.push({ label: "Analytics", href: KB_ANALYTICS, icon: KbBarChart2Icon });
-  }
-
-  if (canManageSettings) {
-    manageItems.push({ label: "Settings", href: KB_SETTINGS, icon: KbSettingsIcon });
   }
 
   return [
@@ -314,7 +306,6 @@ export default function WikiSidebarNav({
   isCollapsed = false,
   canViewAnalytics,
   canViewReviews,
-  canManageSettings,
 }: WikiSidebarNavProps) {
   const pathname = usePathname();
   const askKbItem = useMemo(() => buildAskKbItem(), []);
@@ -324,9 +315,8 @@ export default function WikiSidebarNav({
       buildNavGroups({
         canViewAnalytics,
         canViewReviews,
-        canManageSettings,
       }),
-    [canViewAnalytics, canViewReviews, canManageSettings],
+    [canViewAnalytics, canViewReviews],
   );
   const accordionItems = useMemo(
     () => groups.flatMap((group) => group.items),

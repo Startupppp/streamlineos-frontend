@@ -25,17 +25,22 @@ const noContentContract = lazyContract(() =>
 );
 
 interface ListManagedProductsParams {
-  cursor?: string;
   limit?: number;
+  cursor?: string;
   status?: string;
+  search?: string;
+  pmWorkspaceId?: string;
 }
 
 export function useManagedProducts(params?: ListManagedProductsParams) {
   const canView = useCan("build:managed-products:view");
   const queryParams: Record<string, string> = {};
+  
   if (params?.cursor) queryParams["cursor"] = params.cursor;
-  if (params?.limit) queryParams["limit"] = String(params.limit);
   if (params?.status) queryParams["status"] = params.status;
+  if (params?.search) queryParams["search"] = params.search;
+  if (params?.limit) queryParams["limit"] = String(params.limit);
+  if (params?.pmWorkspaceId) queryParams["pmWorkspaceId"] = params.pmWorkspaceId;
 
   return useQuery<ManagedProductsPage>({
     queryKey: buildWorkQueryKeys.projects.managedProducts.list(

@@ -1,6 +1,9 @@
 ﻿"use client";
 
+import { useMemo } from "react";
 import { useProjectTemplates } from "@/hooks/api/build/templates";
+import { useOrgMembers } from "@/hooks/api/organization";
+import { getUserDisplayName } from "@/lib/person-display";
 import type { WizardDraft } from "../use-project-create";
 
 interface StepReviewProps {
@@ -18,6 +21,28 @@ const WORKFLOW_LABELS: Record<string, string> = {
 
 export function StepReview({ draft }: StepReviewProps) {
   const { data: templates } = useProjectTemplates();
+  const { data: membersData } = useOrgMembers(1, 100);
+  const members = useMemo(() => membersData?.data ?? [], [membersData]);
+
+  const selectedLabels = useMemo(
+    () =>
+      draft.memberIds.map((id) => {
+        const m = members.find((x) => x.userId === id);
+        if (!m) return "Unknown member";
+        return getUserDisplayName({ name: m.name, email: m.email });
+      }),
+    [draft.memberIds, members],
+  );
+
+  const teamLabel =
+    selectedLabels.length === 0
+      ? "No members added"
+      : [
+          ...selectedLabels.slice(0, 2),
+          ...(selectedLabels.length > 2
+            ? [`+${selectedLabels.length - 2} more`]
+            : []),
+        ].join(", ");
   const templateName =
     draft.templateId !== null
       ? (templates ?? []).find((t) => t.id === draft.templateId)?.name ?? "Unknown template"
@@ -59,11 +84,7 @@ export function StepReview({ draft }: StepReviewProps) {
         />
         <ReviewRow
           label="Team"
-          value={
-            draft.memberIds.length > 0
-              ? `${draft.memberIds.length} member${draft.memberIds.length !== 1 ? "s" : ""} added`
-              : "No members added"
-          }
+          value={teamLabel}
           muted={draft.memberIds.length === 0}
         />
       </div>

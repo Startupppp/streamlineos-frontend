@@ -4,15 +4,16 @@ import type {
   PermissionRequirement,
 } from "@/components/layout/sidebar/sidebar-nav-types";
 import type { PermissionKey } from "@/lib/rbac/permissions";
+import { splitDestinationHref } from "./build-nav-model";
+import { buildOrganizationCatalog } from "./nav/build-organization-catalog";
 import {
   BUILD_BROWSE_ALL_DESTINATION,
   BUILD_MY_WORK_DESTINATIONS,
-  buildOrganizationCatalog,
-  buildScopeCatalog,
-  splitDestinationHref,
-  type BuildNavDestination,
-  type BuildNavModel,
-} from "./build-nav-model";
+} from "./nav/build-stable-destinations";
+import type {
+  BuildNavDestination,
+  BuildNavModel,
+} from "./nav/build-nav-destination";
 import type { BuildScope } from "./build-scope";
 
 const MOBILE_PRIORITY_FALLBACK = 1_000;
@@ -127,15 +128,4 @@ export function buildScopeGroupLabel(scope: BuildScope): string {
     default:
       return "Build";
   }
-}
-
-export function buildScopeDestinations(
-  scope: BuildScope,
-): BuildNavDestination[] {
-  const catalog = buildScopeCatalog(scope);
-  return [
-    ...catalog.primary,
-    ...catalog.moreTools,
-    ...(catalog.settings ? [catalog.settings] : []),
-  ];
 }

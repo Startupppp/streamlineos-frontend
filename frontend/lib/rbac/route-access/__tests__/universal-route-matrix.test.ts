@@ -35,7 +35,6 @@ const MATRIX: readonly MatrixRow[] = [
   { path: "/knowledge/chat", universalMatch: true, decisionKind: "universal", label: "knowledge AI chat" },
   { path: "/knowledge/wiki/spaces/1", universalMatch: true, decisionKind: "universal", label: "individual space page reading — extension is exact so only the list is gated" },
   // administrative descendants DENIED
-  { path: "/knowledge/wiki/settings", universalMatch: false, decisionKind: "permission", label: "wiki settings admin" },
   { path: "/knowledge/wiki/import", universalMatch: false, decisionKind: "permission", label: "wiki import admin" },
   { path: "/knowledge/wiki/analytics", universalMatch: false, decisionKind: "permission", label: "wiki analytics admin" },
   { path: "/knowledge/wiki/reviews", universalMatch: false, decisionKind: "permission", label: "wiki review admin" },
@@ -109,7 +108,7 @@ const MATRIX: readonly MatrixRow[] = [
 
 describe("universal route matrix — exact-by-default with explicit allowlist", () => {
   it("covers every declared universal root so a missing row cannot pass silently", () => {
-    expect(MATRIX.length).toBeGreaterThan(50);
+    expect(MATRIX.length).toBeGreaterThanOrEqual(50);
   });
 
   it("isUniversalRoute matches every row's expectation", () => {
@@ -151,7 +150,6 @@ describe("universal route matrix — exact-by-default with explicit allowlist", 
       "/notifications/events",
       "/notifications/policy",
       "/notifications/broadcasts",
-      "/knowledge/wiki/settings",
       "/knowledge/wiki/import",
       "/knowledge/wiki/analytics",
       "/knowledge/wiki/reviews",

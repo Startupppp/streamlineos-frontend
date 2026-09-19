@@ -26,5 +26,4 @@ export function spaceHref(id: number): string {
 }
 
 export const KB_REVIEWS = `${KNOWLEDGE_BASE}/reviews`;
-export const KB_SETTINGS = `${KNOWLEDGE_BASE}/settings`;
 export const KB_IMPORT = `${KNOWLEDGE_BASE}/import`;

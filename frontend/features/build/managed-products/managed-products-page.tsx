@@ -105,7 +105,13 @@ function ProductRowActions({
   );
 }
 
-export function ManagedProductsPage() {
+interface ManagedProductsPageProps {
+  pmWorkspaceId?: string;
+}
+
+export function ManagedProductsPage({
+  pmWorkspaceId,
+}: ManagedProductsPageProps = {}) {
   const canCreate = useCan("build:managed-products:create");
   const canUpdate = useCan("build:managed-products:update");
   const canDelete = useCan("build:managed-products:delete");
@@ -123,6 +129,8 @@ export function ManagedProductsPage() {
     cursor,
     limit: PAGE_SIZE,
     status: statusFilter !== "all" ? statusFilter : undefined,
+    search: search.trim() || undefined,
+    ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
   });
 
   const { data: membersRes } = useOrgMembers(1, 100);

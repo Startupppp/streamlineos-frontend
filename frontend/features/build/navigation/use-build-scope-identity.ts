@@ -53,6 +53,7 @@ export function useBuildScopeIdentity(scope: BuildScope): BuildScopeIdentity {
       id: scopeKey,
       name: known?.name ?? "",
       parentPath: known?.parentPath ?? null,
+      parentKey: known?.parentKey ?? null,
       projectKey: known?.projectKey ?? null,
       href,
     };

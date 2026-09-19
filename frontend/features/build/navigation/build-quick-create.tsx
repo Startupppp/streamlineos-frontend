@@ -24,7 +24,7 @@ import type { CreateManagedProductInput } from "@/types/projects";
 import type {
   BuildCreateAction,
   BuildCreateActionId,
-} from "@/lib/build/build-nav-model";
+} from "@/lib/build/nav/build-nav-destination";
 import type { BuildScope } from "@/lib/build/build-scope";
 
 const NewProjectDialog = dynamic(

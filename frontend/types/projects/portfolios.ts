@@ -11,7 +11,7 @@ export interface Portfolio {
   health: string | null;
   strategicGoal: string | null;
   createdBy: string | null;
-  deletedAt: string | null;
+  deletedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   projectCount?: number;

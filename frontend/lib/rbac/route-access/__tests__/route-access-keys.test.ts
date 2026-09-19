@@ -180,7 +180,6 @@ describe("route-access registry keys", () => {
       "/notifications/events",
       "/notifications/policy",
       "/notifications/broadcasts",
-      "/knowledge/wiki/settings",
       "/knowledge/wiki/import",
       "/knowledge/wiki/analytics",
       "/knowledge/wiki/reviews",

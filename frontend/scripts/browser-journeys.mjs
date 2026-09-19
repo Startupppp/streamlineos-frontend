@@ -100,7 +100,6 @@ const JOURNEYS = [
     name: "documents",
     steps: [
       "/knowledge/wiki",
-      "/knowledge/wiki/recent",
       "/knowledge/wiki/doc/{pageId}",
       "/knowledge/chat",
     ],
@@ -236,9 +235,7 @@ const WRITE_JOURNEYS = [
         label: "open the column composer",
         expression: `(() => {
           const button = Array.from(document.querySelectorAll("button")).find(
-            (el) =>
-              (el.textContent || "").trim() === "Add ticket" ||
-              el.getAttribute("aria-label") === "Add ticket to column",
+            (el) => el.getAttribute("aria-label") === "Add ticket to column",
           );
           if (!button) return false;
           button.click();
@@ -478,9 +475,9 @@ export function writesIncomplete(asserted, planned) {
 const DISCOVERIES = [
   {
     token: "pageId",
-    from: "/knowledge/wiki/recent",
+    from: "/knowledge/wiki",
     /**
-     * Recent pages renders hrefs of the form /knowledge/wiki/doc/<id>. The id
+     * Wiki home renders hrefs of the form /knowledge/wiki/doc/<id>. The id
      * may be a UUID, a slug, or a numeric string depending on the backend — the
      * pattern captures everything up to a query or hash so it works for all three.
      */

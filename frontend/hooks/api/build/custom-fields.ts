@@ -60,6 +60,34 @@ export function useCreateProjectCustomField(projectId: number) {
   });
 }
 
+export function useUpdateProjectCustomField(projectId: number) {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:manage", {
+    mutationKey: ["projects", projectId, "custom-fields", "update"],
+    mutationFn: ({
+      fieldId,
+      data,
+    }: {
+      fieldId: number;
+      data: {
+        name?: string;
+        type?: CustomFieldType;
+        options?: string[] | null;
+        required?: boolean;
+        position?: number;
+      };
+    }) =>
+      apiClient.patch<ProjectCustomField>(
+        `/build/${projectId}/custom-fields/${fieldId}`,
+        data,
+        undefined,
+        cfLazy,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.projects.customFields(projectId) }),
+  });
+}
+
 export function useDeleteProjectCustomField(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:manage", {

@@ -12,7 +12,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { useNavIntentPrefetch } from "@/components/layout/nav-intent-prefetch";
 import { NavPendingIndicator } from "@/components/layout/nav-pending-indicator";
 import type { ModuleAccent } from "@/components/layout/sidebar/sidebar-nav-items";
-import type { BuildNavDestination } from "@/lib/build/build-nav-model";
+import type { BuildNavDestination } from "@/lib/build/nav/build-nav-destination";
 
 export const BUILD_NAV_BADGE_CAP = 99;
 

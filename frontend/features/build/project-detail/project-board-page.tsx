@@ -50,6 +50,9 @@ export function ProjectBoardPage({ params }: PageProps) {
     ticketsError,
     ticketsErrorValue,
     refetchTickets,
+    isTruncated,
+    fetchMoreTickets,
+    isFetchingMoreTickets,
     filteredTickets,
     statuses,
     members,
@@ -232,6 +235,9 @@ export function ProjectBoardPage({ params }: PageProps) {
           onBulkParent={handleBulkParent}
           onClearSelection={handleClearSelection}
           onSelectionChange={handleSelectionChange}
+          isTruncated={isTruncated}
+          isFetchingMore={isFetchingMoreTickets}
+          onLoadMore={fetchMoreTickets}
         />
       )}
       <SaveViewDialog

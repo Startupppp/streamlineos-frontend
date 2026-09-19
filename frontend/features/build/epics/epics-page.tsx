@@ -26,6 +26,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ModuleDisabledState } from "@/features/build/shared/module-disabled-state";
+import { getCompletedStatusNames } from "@/features/build/shared/completed-status";
 import { useCan } from "@/hooks/api/access";
 import {
   PmPageShell,
@@ -77,9 +78,9 @@ export function EpicsPage({ params }: PageProps) {
   const tasks = tickets.filter((t) => t.type === "TASK");
 
   const handleDeleteEpic = useCallback((epicId: number) => {
-    const children = stories.filter(s => s.epicId === epicId);
-    const unlinkPromises = children.map(s =>
-      updateTicket.mutateAsync({ ticketId: s.id, epicId: undefined })
+    const children = tickets.filter(t => t.type !== "EPIC" && t.epicId === epicId);
+    const unlinkPromises = children.map(t =>
+      updateTicket.mutateAsync({ ticketId: t.id, epicId: undefined })
     );
     Promise.all(unlinkPromises)
       .then(() => {
@@ -94,7 +95,7 @@ export function EpicsPage({ params }: PageProps) {
       .catch(() => {
         toast.error("Failed to unlink stories from epic");
       });
-  }, [stories, updateTicket, deleteTicket]);
+  }, [tickets, updateTicket, deleteTicket]);
 
   const handleLinkStory = useCallback((storyId: number, epicId: number) => {
     updateTicket.mutate({ ticketId: storyId, epicId });
@@ -150,6 +151,7 @@ export function EpicsPage({ params }: PageProps) {
   }
 
   const unlinkedStories = stories.filter((s) => !s.epicId);
+  const completedStatusNames = getCompletedStatusNames(project?.statuses);
 
   return (
     <PageWrapper
@@ -170,7 +172,7 @@ export function EpicsPage({ params }: PageProps) {
               <StatCard label="Tasks" value={tasks.length} icon={Wrench} tone="default" index={2} />
               <StatCard
                 label="Completed"
-                value={tickets.filter((t) => t.status === "DONE").length}
+                value={tickets.filter((t) => completedStatusNames.has(t.status)).length}
                 icon={CheckCircle2}
                 tone="emerald"
                 index={3}
@@ -192,7 +194,7 @@ export function EpicsPage({ params }: PageProps) {
                   <EpicCard
                     key={epic.id}
                     epic={epic}
-                    stories={stories.filter((s) => s.epicId === epic.id)}
+                    stories={tickets.filter((t) => t.type !== "EPIC" && t.epicId === epic.id)}
                     projectId={projectId}
                     projectKey={project?.key}
                     projectStatuses={project?.statuses}

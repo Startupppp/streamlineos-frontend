@@ -49,8 +49,8 @@ const DETAIL_RESPONSE = {
   assignee: { user: person("user-a", "Ada") },
   reporter: person("user-a", "Ada"),
   assignees: [
-    { user: { userId: "user-a", user: person("user-a", "Ada") } },
-    { user: { userId: "user-b", user: person("user-b", "Blair") } },
+    { id: 1, ticketId: 12, assignedAt: "2026-09-18T10:00:00.000Z", assignedBy: "user-a", user: { userId: "user-a", user: person("user-a", "Ada") } },
+    { id: 2, ticketId: 12, assignedAt: "2026-09-18T10:05:00.000Z", assignedBy: "user-a", user: { userId: "user-b", user: person("user-b", "Blair") } },
   ],
   watchers: [],
   attachments: [],

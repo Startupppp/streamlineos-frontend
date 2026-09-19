@@ -35,6 +35,7 @@ import {
   WikiPageCard,
   WIKI_PAGE_CARD_GRID_CLASS,
 } from "@/features/wiki/components/wiki-page-card";
+import { TrashRetentionSection } from "@/features/wiki/components/trash-retention-section";
 
 function TrashRow({ page }: { page: KbPageListItem }) {
   const restore = useRestoreKbPage();
@@ -136,6 +137,7 @@ export default function TrashPage() {
   const { data: pages = [], isLoading, isError } = useKbPagesTrash();
   const emptyTrash = useEmptyKbTrash();
   const canPurge = useCan("kb:pages:purge");
+  const canManageSettings = useCan("kb:settings:manage");
   const [emptyConfirmOpen, setEmptyConfirmOpen] = useState(false);
 
   function handleEmptyTrashClick() {
@@ -174,34 +176,37 @@ export default function TrashPage() {
         subtitle="Deleted pages can be restored or permanently removed"
         actions={actions}
       >
-        {isLoading && <TrashSkeleton />}
-        {!isLoading && isError && (
-          <EmptyState
-            illustration={
-              <KbTrash2Icon className="w-8 text-muted-foreground" />
-            }
-            title="Could not load trash"
-            description="There was a problem fetching deleted pages."
-            className={CONTENT_FILL_PANEL}
-          />
-        )}
-        {!isLoading && !isError && pages.length === 0 && (
-          <EmptyState
-            illustration={
-              <KbTrash2Icon className="w-8 text-muted-foreground" />
-            }
-            title="Trash is empty"
-            description="Deleted pages will appear here and can be restored or permanently removed."
-            className={CONTENT_FILL_PANEL}
-          />
-        )}
-        {!isLoading && !isError && pages.length > 0 && (
-          <div className={WIKI_PAGE_CARD_GRID_CLASS}>
-            {pages.map((page) => (
-              <TrashRow key={page.id} page={page} />
-            ))}
-          </div>
-        )}
+        <div className="space-y-4">
+          {canManageSettings ? <TrashRetentionSection /> : null}
+          {isLoading && <TrashSkeleton />}
+          {!isLoading && isError && (
+            <EmptyState
+              illustration={
+                <KbTrash2Icon className="w-8 text-muted-foreground" />
+              }
+              title="Could not load trash"
+              description="There was a problem fetching deleted pages."
+              className={CONTENT_FILL_PANEL}
+            />
+          )}
+          {!isLoading && !isError && pages.length === 0 && (
+            <EmptyState
+              illustration={
+                <KbTrash2Icon className="w-8 text-muted-foreground" />
+              }
+              title="Trash is empty"
+              description="Deleted pages will appear here and can be restored or permanently removed."
+              className={CONTENT_FILL_PANEL}
+            />
+          )}
+          {!isLoading && !isError && pages.length > 0 && (
+            <div className={WIKI_PAGE_CARD_GRID_CLASS}>
+              {pages.map((page) => (
+                <TrashRow key={page.id} page={page} />
+              ))}
+            </div>
+          )}
+        </div>
       </PageWrapper>
 
       <AlertDialog open={emptyConfirmOpen} onOpenChange={handleEmptyConfirmOpenChange}>

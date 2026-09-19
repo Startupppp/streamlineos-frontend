@@ -3,13 +3,17 @@
 import { useCallback, useMemo } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useAccess, useModuleEnabled } from "@/hooks/api/access";
+import { useProject } from "@/hooks/api/build/projects";
 import type { PermissionKey } from "@/lib/rbac/permissions";
-import { buildScopeDestinations } from "@/lib/build/build-nav-groups";
 import {
+  resolveAuthorizedToolIds,
   resolveBuildNavModel,
-  type BuildNavAccess,
-  type BuildNavModel,
 } from "@/lib/build/build-nav-model";
+import type {
+  BuildNavAccess,
+  BuildNavCapability,
+  BuildNavModel,
+} from "@/lib/build/nav/build-nav-destination";
 import { resolveBuildScope, type BuildScope } from "@/lib/build/build-scope";
 import { useBuildNavPins } from "./use-build-nav-preferences";
 
@@ -35,13 +39,8 @@ export function useBuildNavModel(): {
   const scope = useBuildScope();
   const { data: access } = useAccess();
   const isFeedbackEnabled = useModuleEnabled(FEEDBACK_ORG_MODULE);
-
-  const scopeToolIds = useMemo(
-    () => buildScopeDestinations(scope).map((destination) => destination.id),
-    [scope],
-  );
-  const { pinnedIds, isPinned, canPinMore, togglePin } =
-    useBuildNavPins(scopeToolIds);
+  const { data: activeProject } = useProject(scope.projectId ?? 0);
+  const projectFeatures = activeProject?.settings?.features;
 
   const isOrgOwner = access?.isOrgOwner === true;
   const scopes = access?.scopes;
@@ -58,10 +57,25 @@ export function useBuildNavModel(): {
     [isFeedbackEnabled],
   );
 
-  const navAccess = useMemo<BuildNavAccess>(
-    () => ({ can, isOrgModuleEnabled }),
-    [can, isOrgModuleEnabled],
+  const isCapabilityEnabled = useCallback(
+    (capability: BuildNavCapability) =>
+      capability === "client-portal"
+        ? projectFeatures?.["clientPortal"] !== false
+        : true,
+    [projectFeatures],
   );
+
+  const navAccess = useMemo<BuildNavAccess>(
+    () => ({ can, isOrgModuleEnabled, isCapabilityEnabled }),
+    [can, isOrgModuleEnabled, isCapabilityEnabled],
+  );
+
+  const authorizedToolIds = useMemo(
+    () => resolveAuthorizedToolIds(scope, navAccess),
+    [scope, navAccess],
+  );
+  const { pinnedIds, isPinned, canPinMore, togglePin } =
+    useBuildNavPins(authorizedToolIds);
 
   const model = useMemo(
     () => resolveBuildNavModel({ scope, access: navAccess, pinnedIds }),

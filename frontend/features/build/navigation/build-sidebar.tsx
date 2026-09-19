@@ -12,14 +12,17 @@ import { buildScopeGroupLabel } from "@/lib/build/build-nav-groups";
 import {
   isBuildDestinationActive,
   isBuildNavModelEmpty,
-  type BuildNavDestination,
 } from "@/lib/build/build-nav-model";
+import type { BuildNavDestination } from "@/lib/build/nav/build-nav-destination";
 import { BuildAgentPulse } from "./build-agent-pulse";
 import { BuildSidebarSkeleton } from "./build-sidebar-skeleton";
 import { BuildMoreToolsMenu } from "./build-more-tools-menu";
 import { BuildNavLink } from "./build-nav-link";
 import { BuildQuickCreate } from "./build-quick-create";
+import { BuildScopeRecovery } from "./build-scope-recovery";
 import { BuildScopeSelector } from "./build-scope-selector";
+import { useBuildScopeIdentity } from "./use-build-scope-identity";
+import { useBuildScopeRecovery } from "./use-build-scope-recovery";
 import { useBuildNavModel, useBuildNavView } from "./use-build-nav-model";
 
 const BUILD_ACCENT: ModuleAccent = MODULE_ACCENTS.build;
@@ -54,6 +57,13 @@ export function BuildSidebar({ isCollapsed, onNavigate }: BuildSidebarProps) {
     refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS,
     refetchIntervalInBackground: false,
     throwOnError: false,
+  });
+  const identity = useBuildScopeIdentity(model.scope);
+  const fallback = useBuildScopeRecovery({
+    scope: model.scope,
+    isInaccessible: identity.isInaccessible,
+    hasAnyBuildAccess: !isBuildNavModelEmpty(model),
+    parentKey: identity.ref.parentKey,
   });
 
   if (!isAccessReady) return <BuildSidebarSkeleton isCollapsed={isCollapsed} />;
@@ -96,6 +106,11 @@ export function BuildSidebar({ isCollapsed, onNavigate }: BuildSidebarProps) {
     <div className={cn("flex flex-col", isCollapsed ? "px-1 py-2" : "px-2.5 py-2")}>
       <BuildScopeSelector
         scope={model.scope}
+        isCollapsed={isCollapsed}
+        onNavigate={onNavigate}
+      />
+      <BuildScopeRecovery
+        fallback={fallback}
         isCollapsed={isCollapsed}
         onNavigate={onNavigate}
       />

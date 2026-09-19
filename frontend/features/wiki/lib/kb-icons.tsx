@@ -15,7 +15,6 @@ import {
   ClipboardIcon,
   CopyIcon,
   EllipsisIcon,
-  ExternalLinkIcon,
   GlobeIcon,
   InfoIcon,
   LayoutGridIcon,
@@ -26,9 +25,7 @@ import {
   MoveRightIcon,
   PlusIcon,
   SearchIcon,
-  SettingsIcon,
   ShareIcon,
-  ShieldCheckIcon,
   ShieldXIcon,
   StarIcon,
   ThumbsUpIcon,
@@ -131,7 +128,6 @@ export const KbLockIcon = createAnimatedIcon(LockIcon);
 export const KbUsersIcon = createAnimatedIcon(UsersIcon);
 export const KbLayoutGridIcon = createAnimatedIcon(LayoutGridIcon);
 export const KbBarChart2Icon = createAnimatedIcon(ChartBarIcon);
-export const KbSettingsIcon = createAnimatedIcon(SettingsIcon);
 export const KbUploadIcon = createAnimatedIcon(UploadIcon);
 export const KbClipboardIcon = createAnimatedIcon(ClipboardIcon);
 export const KbChevronDownIcon = createAnimatedIcon(ChevronDownIcon);
@@ -142,8 +138,6 @@ export const KbCheckIcon = createAnimatedIcon(CheckIcon);
 export const KbCopyIcon = createAnimatedIcon(CopyIcon);
 export const KbGlobeIcon = createAnimatedIcon(GlobeIcon);
 export const KbShare2Icon = createAnimatedIcon(ShareIcon);
-export const KbExternalLinkIcon = createAnimatedIcon(ExternalLinkIcon);
-export const KbShieldCheckIcon = createAnimatedIcon(ShieldCheckIcon);
 export const KbInfoIcon = createAnimatedIcon(InfoIcon);
 export const KbDownloadIcon = createAnimatedIcon(DownloadIcon);
 export const KbTriangleAlertIcon = createAnimatedIcon(TriangleAlertIcon);

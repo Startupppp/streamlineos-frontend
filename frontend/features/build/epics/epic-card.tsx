@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { getColorSafe, priorityColors } from "@/lib/theme-constants";
 import type { ProjectStatusRecord, Ticket } from "@/types/projects";
 import { PM_PANEL } from "@/components/pm-chrome";
+import { getCompletedStatusNames } from "@/features/build/shared/completed-status";
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
@@ -55,6 +56,44 @@ export interface EpicCardProps {
   onLinkStory: (storyId: number, epicId: number) => void;
   onCreateStory: (title: string, epicId: number) => void;
   isDeleting?: boolean;
+}
+
+export function computeEpicRollup(
+  children: Ticket[],
+  projectStatuses: ProjectStatusRecord[] | undefined,
+): {
+  totalItems: number;
+  completedItems: number;
+  inProgressItems: number;
+  todoItems: number;
+  totalPoints: number;
+  completedPoints: number;
+} {
+  const completedNames = getCompletedStatusNames(projectStatuses);
+  const hasConfiguredStatuses = projectStatuses != null && projectStatuses.length > 0;
+  const startedNames: Set<string> = hasConfiguredStatuses
+    ? new Set(projectStatuses.filter((s) => s.type === "started").map((s) => s.name))
+    : new Set(["IN_PROGRESS", "IN_REVIEW"]);
+
+  let done = 0, inProgress = 0, totalPts = 0, completedPts = 0;
+  for (const child of children) {
+    const pts = child.points ?? 0;
+    totalPts += pts;
+    if (completedNames.has(child.status)) {
+      done++;
+      completedPts += pts;
+    } else if (startedNames.has(child.status)) {
+      inProgress++;
+    }
+  }
+  return {
+    totalItems: children.length,
+    completedItems: done,
+    inProgressItems: inProgress,
+    todoItems: children.length - done - inProgress,
+    totalPoints: totalPts,
+    completedPoints: completedPts,
+  };
 }
 
 export interface LinkStoryItemProps {
@@ -88,23 +127,10 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
   const { iconRef: expandIconRef, hoverHandlers: expandHoverHandlers } = useAnimatedIcon();
   const { iconRef: addIconRef, hoverHandlers: addHoverHandlers } = useAnimatedIcon();
 
-  const { totalItems, completedItems, inProgressItems, todoItems, totalPoints, completedPoints } = useMemo(() => {
-    let done = 0, inProgress = 0, totalPts = 0, completedPts = 0;
-    for (const s of stories) {
-      const pts = s.points || 0;
-      totalPts += pts;
-      if (s.status === "DONE") { done++; completedPts += pts; }
-      else if (s.status === "IN_PROGRESS" || s.status === "IN_REVIEW") inProgress++;
-    }
-    return {
-      totalItems: stories.length,
-      completedItems: done,
-      inProgressItems: inProgress,
-      todoItems: stories.length - done - inProgress,
-      totalPoints: totalPts,
-      completedPoints: completedPts,
-    };
-  }, [stories]);
+  const { totalItems, completedItems, inProgressItems, todoItems, totalPoints, completedPoints } = useMemo(
+    () => computeEpicRollup(stories, projectStatuses),
+    [stories, projectStatuses],
+  );
 
   const epicCardId = `epic-stories-${epic.id}`;
 

@@ -1,24 +1,31 @@
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import {
+  buildScopeCatalog,
+  countBuildScopePins,
+  isBuildDestinationActive,
+  resolveAuthorizedToolIds,
+  resolveBuildNavModel,
+} from "./build-nav-model";
+import {
   BUILD_NAV_MAX_PINS,
   BUILD_NAV_MAX_PRIMARY,
-  buildScopeCatalog,
-  isBuildDestinationActive,
-  resolveBuildNavModel,
   type BuildNavAccess,
+  type BuildNavCapability,
   type BuildNavDestination,
-} from "./build-nav-model";
+} from "./nav/build-nav-destination";
 import { buildOrganizationNavGroups, toBuildNavGroups } from "./build-nav-groups";
 import { ORGANIZATION_BUILD_SCOPE, resolveBuildScope } from "./build-scope";
 
 function accessWith(
   keys: PermissionKey[],
   modules: Record<string, boolean> = {},
+  capabilities: Partial<Record<BuildNavCapability, boolean>> = {},
 ): BuildNavAccess {
   const keySet = new Set<PermissionKey>(keys);
   return {
     can: (key) => keySet.has(key),
     isOrgModuleEnabled: (module) => modules[module] ?? false,
+    isCapabilityEnabled: (capability) => capabilities[capability] ?? true,
   };
 }
 
@@ -354,5 +361,77 @@ describe("buildOrganizationNavGroups", () => {
     const keys = toPermissionKeys(customersRoute.requiredPermission);
     expect(keys).toContain("build:customers:view");
     expect(keys).not.toContain("crm:leads:view");
+  });
+});
+
+describe("client portal capability gate", () => {
+  const projectScope = resolveBuildScope("/build/42");
+  const portalKeys: PermissionKey[] = [
+    "build:tickets:view",
+    "build:clientvisibility:manage",
+  ];
+
+  function portalDestination(capabilityEnabled: boolean | undefined) {
+    const capabilities =
+      capabilityEnabled === undefined ? {} : { "client-portal": capabilityEnabled };
+    const model = resolveBuildNavModel({
+      scope: projectScope,
+      access: accessWith(portalKeys, {}, capabilities),
+      pinnedIds: [],
+    });
+    return model.primary.find(
+      (destination) => destination.id === "project-client-portal",
+    );
+  }
+
+  it("shows client portal when the project capability is enabled", () => {
+    expect(portalDestination(true)).toBeDefined();
+  });
+
+  it("hides client portal when the project capability is disabled even though the permission is held", () => {
+    expect(portalDestination(false)).toBeUndefined();
+  });
+
+  it("keeps client portal visible for projects that never recorded the capability flag", () => {
+    expect(portalDestination(undefined)).toBeDefined();
+  });
+
+  it("hides client portal when the capability is enabled but the permission is absent", () => {
+    const model = resolveBuildNavModel({
+      scope: projectScope,
+      access: accessWith(["build:tickets:view"], {}, { "client-portal": true }),
+      pinnedIds: [],
+    });
+    expect(
+      model.primary.find((d) => d.id === "project-client-portal"),
+    ).toBeUndefined();
+  });
+});
+
+describe("countBuildScopePins", () => {
+  it("does not let a pin the actor cannot see consume one of the three slots", () => {
+    const stored = ["project-budget", "project-qa"];
+    const authorized = ["project-qa"];
+    expect(countBuildScopePins(stored, authorized)).toBe(1);
+  });
+
+  it("ignores pins belonging to another scope", () => {
+    expect(countBuildScopePins(["org-roadmap"], ["project-qa"])).toBe(0);
+  });
+
+  it("counts every authorized pin", () => {
+    const ids = ["project-qa", "project-bugs", "project-risks"];
+    expect(countBuildScopePins(ids, ids)).toBe(BUILD_NAV_MAX_PINS);
+  });
+});
+
+describe("resolveAuthorizedToolIds", () => {
+  it("returns only tools the actor may open, so the pin ceiling counts real slots", () => {
+    const ids = resolveAuthorizedToolIds(
+      resolveBuildScope("/build/42"),
+      accessWith(["build:qa:view"]),
+    );
+    expect(ids).toContain("project-qa");
+    expect(ids).not.toContain("project-budget");
   });
 });

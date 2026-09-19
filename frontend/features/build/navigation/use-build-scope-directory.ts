@@ -17,6 +17,7 @@ export const ORGANIZATION_SCOPE_REF: BuildScopeRef = {
   id: "organization",
   name: "All of Build",
   parentPath: null,
+  parentKey: null,
   projectKey: null,
   href: `${BUILD_ROOT_PATH}/command-center`,
 };

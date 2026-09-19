@@ -118,6 +118,9 @@ export function useBoardUrlState(projectId: number) {
     isError: ticketsError,
     error: ticketsErrorValue,
     refetch: refetchTickets,
+    isTruncated,
+    fetchNextPage: fetchMoreTickets,
+    isFetchingNextPage: isFetchingMoreTickets,
   } = useProjectBoardTickets(projectId, boardFilters);
   const { data } = useProject(projectId);
   const { data: views } = useViews(projectId);
@@ -432,6 +435,9 @@ export function useBoardUrlState(projectId: number) {
     ticketsError,
     ticketsErrorValue,
     refetchTickets,
+    isTruncated,
+    fetchMoreTickets,
+    isFetchingMoreTickets,
     allTickets,
     filteredTickets,
     statuses,

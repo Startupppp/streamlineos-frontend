@@ -24,6 +24,20 @@ import { MY_TICKETS_VIEWS, parseMyTicketsView } from "./my-tickets-view";
 import { MyTicketsViewBody } from "./my-tickets-view-body";
 import { MyTicketsSkeleton } from "./my-tickets-skeleton";
 
+const MY_TICKETS_FILTER_PARAMS = [
+  "q",
+  "status",
+  "priority",
+  "type",
+  "assigneeId",
+  "labels",
+  "cycle",
+  "projectIds",
+  "sprintId",
+  "dueDateFrom",
+  "dueDateTo",
+] as const;
+
 interface PageProps {
   params: Promise<{ projectId: string }>;
 }
@@ -58,7 +72,7 @@ export function MyTicketsPage({ params }: PageProps) {
   const filterStatus = searchParams.get("status") ?? "";
   const filterPriority = searchParams.get("priority") ?? "";
   const filterType = searchParams.get("type") ?? "";
-  const hasActiveFilters = Boolean(q || filterStatus || filterPriority || filterType);
+  const hasActiveFilters = MY_TICKETS_FILTER_PARAMS.some((p) => Boolean(searchParams.get(p)));
 
   const statuses = useMemo(() => {
     if (!data || !("statuses" in data)) return undefined;
@@ -146,10 +160,7 @@ export function MyTicketsPage({ params }: PageProps) {
 
   const handleClearFilters = useCallback(() => {
     const p = new URLSearchParams(searchParams.toString());
-    p.delete("q");
-    p.delete("status");
-    p.delete("priority");
-    p.delete("type");
+    for (const param of MY_TICKETS_FILTER_PARAMS) p.delete(param);
     const qs = p.toString();
     router.replace(qs ? `?${qs}` : "?", { scroll: false });
   }, [router, searchParams]);

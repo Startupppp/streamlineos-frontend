@@ -69,7 +69,11 @@ export function ChatHomePage() {
     const parsed = raw ? Number(raw) : NaN;
     return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
   });
-  const [showMobileList, setShowMobileList] = useState(true);
+  const [showMobileList, setShowMobileList] = useState(() => {
+    const raw = searchParams.get("channel");
+    const parsed = raw ? Number(raw) : NaN;
+    return !(Number.isFinite(parsed) && parsed > 0);
+  });
   const [showInfoPanel, setShowInfoPanel] = useState(false);
   const [pendingCallAction, setPendingCallAction] = useState<{
     channelId: number;
@@ -84,15 +88,9 @@ export function ChatHomePage() {
   const handleSelectChannel = useCallback((channelId: number) => {
     setActiveChannelId(channelId);
     setShowMobileList(false);
-  }, []);
-
-  const consumedChannelParamRef = useRef(false);
-  useEffect(() => {
-    if (consumedChannelParamRef.current) return;
-    if (!searchParams.get("channel")) return;
-    consumedChannelParamRef.current = true;
-    setShowMobileList(false);
-    router.replace("/chat");
+    const next = new URLSearchParams(searchParams.toString());
+    next.set("channel", String(channelId));
+    router.replace(`/chat?${next.toString()}`, { scroll: false });
   }, [searchParams, router]);
 
   const consumedDmParamRef = useRef(false);
@@ -120,27 +118,39 @@ export function ChatHomePage() {
     setActiveChannelId(null);
     setShowInfoPanel(false);
     setShowMobileList(true);
-  }, []);
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("channel");
+    router.replace(`/chat${next.size > 0 ? `?${next.toString()}` : ""}`, { scroll: false });
+  }, [searchParams, router]);
 
   const handleArchived = useCallback(() => {
     setActiveChannelId(null);
     setShowInfoPanel(false);
     setShowMobileList(true);
-  }, []);
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("channel");
+    router.replace(`/chat${next.size > 0 ? `?${next.toString()}` : ""}`, { scroll: false });
+  }, [searchParams, router]);
 
   const handleOpenChannelSettings = useCallback((channelId: number) => {
     setActiveChannelId(channelId);
     setShowMobileList(false);
     setShowInfoPanel(true);
-  }, []);
+    const next = new URLSearchParams(searchParams.toString());
+    next.set("channel", String(channelId));
+    router.replace(`/chat?${next.toString()}`, { scroll: false });
+  }, [searchParams, router]);
 
   const handleStartCallFromSidebar = useCallback(
     (channelId: number, type: "huddle") => {
       setActiveChannelId(channelId);
       setShowMobileList(false);
       setPendingCallAction({ channelId, type });
+      const next = new URLSearchParams(searchParams.toString());
+      next.set("channel", String(channelId));
+      router.replace(`/chat?${next.toString()}`, { scroll: false });
     },
-    [],
+    [searchParams, router],
   );
 
   const handleAutoStartHandled = useCallback(() => setPendingCallAction(null), []);

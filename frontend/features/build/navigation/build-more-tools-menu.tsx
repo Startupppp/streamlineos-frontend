@@ -17,11 +17,11 @@ import {
   SidebarAnimatedNavIcon,
   useAnimatedNavIconHover,
 } from "@/components/layout/sidebar/sidebar-animated-nav";
+import { isBuildDestinationActive } from "@/lib/build/build-nav-model";
 import {
   BUILD_NAV_MAX_PINS,
-  isBuildDestinationActive,
   type BuildNavDestination,
-} from "@/lib/build/build-nav-model";
+} from "@/lib/build/nav/build-nav-destination";
 
 interface BuildMoreToolsMenuProps {
   tools: BuildNavDestination[];

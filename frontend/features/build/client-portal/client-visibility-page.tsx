@@ -1,6 +1,8 @@
 ﻿"use client";
 
 import { useState } from "react";
+import { useCan } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import {
   useClientVisibility,
   useUpdateTicketVisibility,
@@ -100,6 +102,7 @@ function MilestoneRow({
 }
 
 export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
+  const canManage = useCan("build:clientvisibility:manage");
   const { data, isLoading, isError, refetch } = useClientVisibility(projectId);
   const [activeTab, setActiveTab] = useState<VisibilityTab>("tickets");
 
@@ -134,7 +137,9 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
         </PmSection>
 
         <PmSection index={1}>
-          {isLoading ? (
+          {!canManage ? (
+            <NoPermissionState permission="build:clientvisibility:manage" />
+          ) : isLoading ? (
             <div className="flex flex-col gap-2">
               {Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton key={i} className="h-10 w-full rounded-md" />

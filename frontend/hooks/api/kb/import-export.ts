@@ -74,10 +74,30 @@ export function useImportKbPages() {
     mutationKey: ["kb", "pages", "import"],
     mutationFn: (input: ImportKbPagesInput) =>
       apiClient.post<ImportResult>("/kb/pages/import", input, undefined, kbImportResultContract),
-    onSuccess: () => {
+    onSuccess: (result, variables) => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree() });
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.kbPages() });
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs() });
+      void qc
+        .invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs() })
+        .then(() => {
+          const itemTitles = variables.items.map((item) => item.title);
+          qc.setQueryData<KbImportJob[]>(
+            knowledgeAndSurveysQueryKeys.kb.importJobs(),
+            (previous) => {
+              if (!previous) return previous;
+              return previous.map((job) => {
+                if (job.id !== result.jobId) return job;
+                return {
+                  ...job,
+                  errorReport: {
+                    ...(job.errorReport ?? {}),
+                    itemTitles,
+                  },
+                };
+              });
+            },
+          );
+        });
     },
   });
 }
@@ -86,7 +106,8 @@ export function useKbImportJobs() {
   const canImport = useCan("kb:pages:import");
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs(),
-    queryFn: ({ signal }) => apiClient.get<KbImportJob[]>("/kb/import-jobs", undefined, signal, kbImportJobListContract),
+    queryFn: ({ signal }) =>
+      apiClient.get<KbImportJob[]>("/kb/import-jobs", undefined, signal, kbImportJobListContract),
     enabled: canImport,
     staleTime: 30_000,
   });
@@ -96,7 +117,8 @@ export function useKbExportJobs() {
   const canExport = useCan("kb:pages:export");
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.exportJobs(),
-    queryFn: ({ signal }) => apiClient.get<KbExportJob[]>("/kb/export-jobs", undefined, signal, kbExportJobListContract),
+    queryFn: ({ signal }) =>
+      apiClient.get<KbExportJob[]>("/kb/export-jobs", undefined, signal, kbExportJobListContract),
     enabled: canExport,
     staleTime: 30_000,
   });

@@ -51,13 +51,15 @@ export interface TeamProject {
 
 export function useProjectTeams(params?: {
   cursor?: string;
-  pageSize?: number;
   search?: string;
+  pageSize?: number;
+  pmWorkspaceId?: string;
 }) {
   const query: Record<string, string> = {};
   if (params?.cursor) query["cursor"] = params.cursor;
   if (params?.pageSize) query["pageSize"] = String(params.pageSize);
   if (params?.search) query["search"] = params.search;
+  if (params?.pmWorkspaceId) query["pmWorkspaceId"] = params.pmWorkspaceId;
   return useGatedQuery<TeamListResponse>("build:teams:view", {
     queryKey: buildWorkQueryKeys.projects.teams.list(Object.keys(query).length ? query : undefined),
     queryFn: ({ signal }) => apiClient.get<TeamListResponse>("/build/teams", query, signal, teamPageContract),

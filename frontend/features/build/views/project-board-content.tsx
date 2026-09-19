@@ -4,6 +4,8 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ListTruncationNotice } from "@/components/ui/list-truncation-notice";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { TableView } from "./table-view";
 import { CalendarView } from "./calendar-view";
 import { GanttView } from "./gantt-view";
@@ -61,6 +63,9 @@ interface ProjectBoardContentProps {
   onBulkParent: (parentTicketId: number | null) => void;
   onClearSelection: () => void;
   onSelectionChange: (sel: Set<string | number>) => void;
+  isTruncated: boolean;
+  isFetchingMore: boolean;
+  onLoadMore: () => void;
 }
 
 export function ProjectBoardContent({
@@ -88,6 +93,9 @@ export function ProjectBoardContent({
   onBulkParent,
   onClearSelection,
   onSelectionChange,
+  isTruncated,
+  isFetchingMore,
+  onLoadMore,
 }: ProjectBoardContentProps) {
   const shouldReduceMotion = useReducedMotion();
   const canUpdate = useCan("build:tickets:update");
@@ -284,6 +292,24 @@ export function ProjectBoardContent({
           </motion.div>
         ) : null}
       </AnimatePresence>
+      {isTruncated ? (
+        <div className="shrink-0 flex items-center justify-between gap-3 border-t border-border/40 py-2">
+          <ListTruncationNotice
+            shown={filteredTickets.length}
+            hint="Load more to see additional tickets, or narrow your filters."
+            className="flex-1 border-0 px-0 py-0"
+          />
+          <LoadingButton
+            type="button"
+            variant="outline"
+            size="sm"
+            isPending={isFetchingMore}
+            onClick={onLoadMore}
+          >
+            Load more
+          </LoadingButton>
+        </div>
+      ) : null}
     </div>
   );
 }

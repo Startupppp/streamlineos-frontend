@@ -5,7 +5,8 @@ import {
   orgScopedStorageKey,
   useOrgStorageScope,
 } from "@/lib/org-scoped-storage";
-import { BUILD_NAV_MAX_PINS } from "@/lib/build/build-nav-model";
+import { countBuildScopePins } from "@/lib/build/build-nav-model";
+import { BUILD_NAV_MAX_PINS } from "@/lib/build/nav/build-nav-destination";
 import type { BuildScopeType } from "@/lib/build/build-scope";
 
 export const BUILD_SCOPE_RECENTS_LIMIT = 6;
@@ -24,6 +25,7 @@ export interface BuildScopeRef {
   id: string;
   name: string;
   parentPath: string | null;
+  parentKey: string | null;
   projectKey: string | null;
   href: string;
 }
@@ -159,10 +161,13 @@ function isScopeRef(entry: unknown): entry is BuildScopeRef {
 
 function parseScopeRefs(raw: unknown): readonly BuildScopeRef[] {
   if (!Array.isArray(raw)) return EMPTY_SCOPES;
-  return raw.filter(isScopeRef);
+  return raw.filter(isScopeRef).map((entry) => ({
+    ...entry,
+    parentKey: typeof entry.parentKey === "string" ? entry.parentKey : null,
+  }));
 }
 
-export function useBuildNavPins(scopeToolIds: readonly string[]): {
+export function useBuildNavPins(authorizedToolIds: readonly string[]): {
   pinnedIds: readonly string[];
   isPinned: (toolId: string) => boolean;
   canPinMore: boolean;
@@ -174,10 +179,9 @@ export function useBuildNavPins(scopeToolIds: readonly string[]): {
     EMPTY_IDS,
   );
 
-  const scopeToolIdSet = useMemo(() => new Set(scopeToolIds), [scopeToolIds]);
   const scopePinCount = useMemo(
-    () => pinnedIds.filter((id) => scopeToolIdSet.has(id)).length,
-    [pinnedIds, scopeToolIdSet],
+    () => countBuildScopePins(pinnedIds, authorizedToolIds),
+    [pinnedIds, authorizedToolIds],
   );
 
   const isPinned = useCallback(

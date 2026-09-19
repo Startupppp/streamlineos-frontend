@@ -92,7 +92,7 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
       { path: "/knowledge/chat", subtree: true },
     ],
     reason:
-      "Knowledge Base reading is platform core. Administrative surfaces (settings, import, analytics, reviews, templates, trash, space management) are explicitly gated via the extension registry.",
+      "Knowledge Base reading is platform core. Administrative surfaces (import, analytics, reviews, templates, trash, space management) are explicitly gated via the extension registry.",
   },
   {
     path: "/settings",

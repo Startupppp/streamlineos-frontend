@@ -12,7 +12,6 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
       <WikiSidebarNav
         canViewAnalytics={false}
         canViewReviews={false}
-        canManageSettings={false}
       />,
     );
 
@@ -27,12 +26,12 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
       <WikiSidebarNav
         canViewAnalytics={false}
         canViewReviews={false}
-        canManageSettings={false}
       />,
     );
 
     expect(screen.getByRole("link", { name: "Private" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Templates" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Settings" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Recent" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Favorites" })).toBeNull();
   });
@@ -43,7 +42,6 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
         isCollapsed
         canViewAnalytics={false}
         canViewReviews={false}
-        canManageSettings={false}
       />,
     );
 

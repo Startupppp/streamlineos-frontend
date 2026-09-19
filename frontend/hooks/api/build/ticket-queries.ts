@@ -27,7 +27,7 @@ import type {
 } from "@/types/projects";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
-const BOARD_PAGE_SIZE = 100;
+export const BOARD_PAGE_SIZE = 100;
 const BOARD_AUTOLOAD_LIMIT = 500;
 
 export function useTickets(

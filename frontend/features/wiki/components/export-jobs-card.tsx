@@ -1,16 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageSection } from "@/components/ui/page-wrapper";
+import { ErrorState } from "@/components/shared/error-state";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { useKbExportJobs } from "@/hooks/api/kb";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   KbDownloadIcon,
   KbFileTextIcon,
 } from "@/features/wiki/lib/kb-icons";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import type { KbExportJob } from "@/hooks/api/kb/import-export";
+
+const PAGE_SIZE = 10;
 
 function JobRow({ job }: { job: KbExportJob }) {
   return (
@@ -28,22 +33,46 @@ function JobRow({ job }: { job: KbExportJob }) {
 }
 
 export function ExportJobsCard() {
-  const { data: jobs = [], isLoading } = useKbExportJobs();
+  const [page, setPage] = useState(1);
+  const {
+    data: jobs = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useKbExportJobs();
+
+  const total = jobs.length;
+  const pageJobs = jobs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  function handleRetry() {
+    void refetch();
+  }
+
+  function handlePageChange(nextPage: number) {
+    setPage(nextPage);
+  }
 
   return (
-    <PageSection
-      title="Export History"
-      description="Per-page export is available from the ⋯ menu on any wiki page."
-    >
+    <>
       {isLoading && (
         <div className="space-y-1.5">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-9 w-full rounded-lg" />
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Skeleton key={index} className="h-9 w-full rounded-lg" />
           ))}
         </div>
       )}
 
-      {!isLoading && jobs.length === 0 && (
+      {!isLoading && isError && (
+        <ErrorState
+          compact
+          title="Couldn't load export history"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      )}
+
+      {!isLoading && !isError && jobs.length === 0 && (
         <EmptyState
           compact
           illustration={
@@ -54,13 +83,22 @@ export function ExportJobsCard() {
         />
       )}
 
-      {!isLoading && jobs.length > 0 && (
+      {!isLoading && !isError && jobs.length > 0 && (
         <div className="space-y-1.5">
-          {jobs.map((job) => (
+          {pageJobs.map((job) => (
             <JobRow key={job.id} job={job} />
           ))}
+          {total > PAGE_SIZE ? (
+            <TablePagination
+              page={page}
+              pageSize={PAGE_SIZE}
+              total={total}
+              onPageChange={handlePageChange}
+              className="px-1"
+            />
+          ) : null}
         </div>
       )}
-    </PageSection>
+    </>
   );
 }
