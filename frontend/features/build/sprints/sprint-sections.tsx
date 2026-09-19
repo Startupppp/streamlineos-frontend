@@ -4,9 +4,11 @@ import { PmSection, PmStaggerList } from "@/components/pm-chrome";
 import { SprintCard } from "@/features/build/sprints/sprint-card";
 import { VelocityChart } from "@/features/build/sprints/velocity-chart";
 import type { Sprint } from "@/types/projects";
+import type { ProjectStatusRecord } from "@/types/projects/projects";
 
 interface SprintSectionsProps {
   projectId: number;
+  projectStatuses?: ProjectStatusRecord[];
   activeSprints: Sprint[];
   plannedSprints: Sprint[];
   completedSprints: Sprint[];
@@ -18,6 +20,7 @@ interface SprintSectionsProps {
 
 export function SprintSections({
   projectId,
+  projectStatuses,
   activeSprints,
   plannedSprints,
   completedSprints,
@@ -39,6 +42,7 @@ export function SprintSections({
                 <SprintCard
                   sprint={sprint}
                   projectId={projectId}
+                  projectStatuses={projectStatuses}
                   onComplete={onComplete}
                   onPlan={onPlan}
                   isUpdating={isUpdating}
@@ -64,6 +68,7 @@ export function SprintSections({
                 key={sprint.id}
                 sprint={sprint}
                 projectId={projectId}
+                projectStatuses={projectStatuses}
                 onStart={onStart}
                 onPlan={onPlan}
                 isUpdating={isUpdating}
@@ -89,6 +94,7 @@ export function SprintSections({
                   key={sprint.id}
                   sprint={sprint}
                   projectId={projectId}
+                  projectStatuses={projectStatuses}
                   isUpdating={isUpdating}
                 />
               ))}

@@ -8,7 +8,15 @@ import { useApplyProjectTemplate } from "@/hooks/api/build/templates";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { WizardDraft } from "./use-project-create";
 
-export function useProjectProvisioning(onSuccess: () => void) {
+export interface ProjectCreateScope {
+  pmWorkspaceId?: string;
+  managedProductId?: number;
+}
+
+export function useProjectProvisioning(
+  onSuccess: () => void,
+  scope?: ProjectCreateScope,
+) {
   const [isProvisioning, setIsProvisioning] = useState(false);
   const router = useRouter();
   const createProject = useCreateProject();
@@ -60,6 +68,10 @@ export function useProjectProvisioning(onSuccess: () => void) {
           projectType: draft.projectType || undefined,
           workflow: draft.workflow || undefined,
           features: draft.features,
+          ...(scope?.pmWorkspaceId ? { pmWorkspaceId: scope.pmWorkspaceId } : {}),
+          ...(scope?.managedProductId !== undefined
+            ? { managedProductId: scope.managedProductId }
+            : {}),
         });
         projectId = project.id;
       }

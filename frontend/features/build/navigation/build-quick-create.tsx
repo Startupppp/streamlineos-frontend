@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -26,6 +26,7 @@ import type {
   BuildCreateActionId,
 } from "@/lib/build/nav/build-nav-destination";
 import type { BuildScope } from "@/lib/build/build-scope";
+import type { ProjectCreateScope } from "@/features/build/project-create/use-project-provisioning";
 
 const NewProjectDialog = dynamic(
   () =>
@@ -64,6 +65,18 @@ export function BuildQuickCreate({
   const [productMounted, setProductMounted] = useState(false);
   const { iconRef, animatedNavHoverHandlers } = useAnimatedNavIconHover();
 
+  const createScope = useMemo<ProjectCreateScope>(
+    () => ({
+      ...(scope.pmWorkspaceId !== null
+        ? { pmWorkspaceId: scope.pmWorkspaceId }
+        : {}),
+      ...(scope.managedProductId !== null
+        ? { managedProductId: scope.managedProductId }
+        : {}),
+    }),
+    [scope.pmWorkspaceId, scope.managedProductId],
+  );
+
   const handleAction = useCallback(
     (actionId: BuildCreateActionId) => {
       onNavigate?.();
@@ -84,7 +97,13 @@ export function BuildQuickCreate({
 
   const handleCreateProduct = useCallback(
     (input: CreateManagedProductInput) => {
-      createProduct.mutate(input, {
+      const payload: CreateManagedProductInput = {
+        ...input,
+        ...(scope.pmWorkspaceId !== null
+          ? { pmWorkspaceId: scope.pmWorkspaceId }
+          : {}),
+      };
+      createProduct.mutate(payload, {
         onSuccess: () => {
           toast.success("Product created");
           setProductOpen(false);
@@ -92,7 +111,7 @@ export function BuildQuickCreate({
         onError: (error) => toast.error(getErrorMessage(error)),
       });
     },
-    [createProduct],
+    [createProduct, scope.pmWorkspaceId],
   );
 
   function renderAction(action: BuildCreateAction) {
@@ -146,6 +165,7 @@ export function BuildQuickCreate({
           trigger={null}
           open={projectOpen}
           onOpenChange={setProjectOpen}
+          scope={createScope}
         />
       ) : null}
 

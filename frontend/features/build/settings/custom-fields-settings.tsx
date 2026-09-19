@@ -10,7 +10,7 @@ import {
   useUpdateProjectCustomField,
   useDeleteProjectCustomField,
 } from "@/hooks/api/build/custom-fields";
-import { useCanManageProject } from "@/hooks/api/build/use-can-manage-project";
+import { useCan } from "@/hooks/api/access";
 import {
   Form,
   FormField,
@@ -238,7 +238,7 @@ interface CustomFieldsSettingsProps {
 }
 
 export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
-  const canManage = useCanManageProject(projectId);
+  const canManage = useCan("build:manage");
   const [showForm, setShowForm] = useState(false);
   const [editingField, setEditingField] = useState<CustomFieldItem | null>(null);
 

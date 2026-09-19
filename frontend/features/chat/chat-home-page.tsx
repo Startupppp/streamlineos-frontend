@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, type ReadonlyURLSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ChannelSidebar } from "@/features/chat/channel-sidebar";
@@ -59,21 +59,23 @@ const NewGroupDialog = dynamic(
   { ssr: false, loading: () => <ChatOverlayFallback label="Loading new channel" /> },
 );
 
+function readChannelParam(params: ReadonlyURLSearchParams): number | null {
+  const raw = params.get("channel");
+  const parsed = raw ? Number(raw) : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
 export function ChatHomePage() {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeChannelId, setActiveChannelId] = useState<number | null>(() => {
-    const raw = searchParams.get("channel");
-    const parsed = raw ? Number(raw) : NaN;
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-  });
-  const [showMobileList, setShowMobileList] = useState(() => {
-    const raw = searchParams.get("channel");
-    const parsed = raw ? Number(raw) : NaN;
-    return !(Number.isFinite(parsed) && parsed > 0);
-  });
+  const [activeChannelId, setActiveChannelId] = useState<number | null>(() =>
+    readChannelParam(searchParams),
+  );
+  const [showMobileList, setShowMobileList] = useState(
+    () => readChannelParam(searchParams) === null,
+  );
   const [showInfoPanel, setShowInfoPanel] = useState(false);
   const [pendingCallAction, setPendingCallAction] = useState<{
     channelId: number;
@@ -85,13 +87,19 @@ export function ChatHomePage() {
   const { sidebarCollapsed, handleToggleSidebar } = useChatSidebarCollapse();
   const isMobile = useShellVariant() === "mobile";
 
+  const writeChannelParam = useCallback((channelId: number | null) => {
+    const next = new URLSearchParams(searchParams.toString());
+    if (channelId === null) next.delete("channel");
+    else next.set("channel", String(channelId));
+    const query = next.toString();
+    router.replace(`/chat${query ? `?${query}` : ""}`, { scroll: false });
+  }, [searchParams, router]);
+
   const handleSelectChannel = useCallback((channelId: number) => {
     setActiveChannelId(channelId);
     setShowMobileList(false);
-    const next = new URLSearchParams(searchParams.toString());
-    next.set("channel", String(channelId));
-    router.replace(`/chat?${next.toString()}`, { scroll: false });
-  }, [searchParams, router]);
+    writeChannelParam(channelId);
+  }, [writeChannelParam]);
 
   const consumedDmParamRef = useRef(false);
   useEffect(() => {
@@ -101,7 +109,8 @@ export function ChatHomePage() {
     setEmptyDMOpen(true);
     const next = new URLSearchParams(searchParams.toString());
     next.delete("dm");
-    router.replace(`/chat${next.size > 0 ? `?${next.toString()}` : ""}`);
+    const query = next.toString();
+    router.replace(`/chat${query ? `?${query}` : ""}`);
   }, [searchParams, router]);
 
   const handleSearchFocused = useCallback(() => setShowSearchFocus(false), []);
@@ -118,39 +127,31 @@ export function ChatHomePage() {
     setActiveChannelId(null);
     setShowInfoPanel(false);
     setShowMobileList(true);
-    const next = new URLSearchParams(searchParams.toString());
-    next.delete("channel");
-    router.replace(`/chat${next.size > 0 ? `?${next.toString()}` : ""}`, { scroll: false });
-  }, [searchParams, router]);
+    writeChannelParam(null);
+  }, [writeChannelParam]);
 
   const handleArchived = useCallback(() => {
     setActiveChannelId(null);
     setShowInfoPanel(false);
     setShowMobileList(true);
-    const next = new URLSearchParams(searchParams.toString());
-    next.delete("channel");
-    router.replace(`/chat${next.size > 0 ? `?${next.toString()}` : ""}`, { scroll: false });
-  }, [searchParams, router]);
+    writeChannelParam(null);
+  }, [writeChannelParam]);
 
   const handleOpenChannelSettings = useCallback((channelId: number) => {
     setActiveChannelId(channelId);
     setShowMobileList(false);
     setShowInfoPanel(true);
-    const next = new URLSearchParams(searchParams.toString());
-    next.set("channel", String(channelId));
-    router.replace(`/chat?${next.toString()}`, { scroll: false });
-  }, [searchParams, router]);
+    writeChannelParam(channelId);
+  }, [writeChannelParam]);
 
   const handleStartCallFromSidebar = useCallback(
     (channelId: number, type: "huddle") => {
       setActiveChannelId(channelId);
       setShowMobileList(false);
       setPendingCallAction({ channelId, type });
-      const next = new URLSearchParams(searchParams.toString());
-      next.set("channel", String(channelId));
-      router.replace(`/chat?${next.toString()}`, { scroll: false });
+      writeChannelParam(channelId);
     },
-    [searchParams, router],
+    [writeChannelParam],
   );
 
   const handleAutoStartHandled = useCallback(() => setPendingCallAction(null), []);

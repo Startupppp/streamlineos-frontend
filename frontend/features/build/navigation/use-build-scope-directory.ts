@@ -9,7 +9,7 @@ import { BUILD_ROOT_PATH } from "@/lib/build/build-scope";
 import type { BuildScopeRef } from "./use-build-nav-preferences";
 
 export const BUILD_SCOPE_SEARCH_DEBOUNCE_MS = 300;
-export const BUILD_SCOPE_PAGE_LIMIT = 50;
+export const BUILD_SCOPE_PAGE_LIMIT = 100;
 
 export const ORGANIZATION_SCOPE_REF: BuildScopeRef = {
   key: "organization",
@@ -24,7 +24,6 @@ export const ORGANIZATION_SCOPE_REF: BuildScopeRef = {
 
 export interface BuildScopeDirectoryEntry extends BuildScopeRef {
   isArchived: boolean;
-  parentKey: string | null;
 }
 
 export interface BuildScopeDirectory {
@@ -40,13 +39,6 @@ export interface BuildScopeDirectory {
 
 const ORGANIZATION_PARENT = "Organization";
 
-function matches(query: string, ...values: (string | null)[]): boolean {
-  if (query.length === 0) return true;
-  return values.some(
-    (value) => value !== null && value.toLowerCase().includes(query),
-  );
-}
-
 export function useBuildScopeDirectory(
   search: string,
   includeArchived: boolean,
@@ -55,71 +47,82 @@ export function useBuildScopeDirectory(
     search.trim(),
     BUILD_SCOPE_SEARCH_DEBOUNCE_MS,
   );
-  const query = debouncedSearch.toLowerCase();
+  const searchParam =
+    debouncedSearch.length > 0 ? { search: debouncedSearch } : {};
 
-  const workspacesQuery = usePmWorkspaces({ limit: BUILD_SCOPE_PAGE_LIMIT });
-  const productsQuery = useManagedProducts({ limit: BUILD_SCOPE_PAGE_LIMIT });
+  const hierarchyWorkspacesQuery = usePmWorkspaces({
+    limit: BUILD_SCOPE_PAGE_LIMIT,
+  });
+  const hierarchyProductsQuery = useManagedProducts({
+    limit: BUILD_SCOPE_PAGE_LIMIT,
+  });
+
+  const workspacesQuery = usePmWorkspaces({
+    limit: BUILD_SCOPE_PAGE_LIMIT,
+    ...searchParam,
+  });
+  const productsQuery = useManagedProducts({
+    limit: BUILD_SCOPE_PAGE_LIMIT,
+    ...searchParam,
+  });
   const projectsQuery = useProjects({
     limit: BUILD_SCOPE_PAGE_LIMIT,
-    ...(debouncedSearch.length > 0 ? { search: debouncedSearch } : {}),
+    ...searchParam,
     ...(includeArchived ? { status: "ALL" as const } : {}),
   });
+
+  const workspaceNames = useMemo(() => {
+    const rows = hierarchyWorkspacesQuery.data?.data ?? [];
+    return new Map(rows.map((row) => [row.pmWorkspaceId, row.name]));
+  }, [hierarchyWorkspacesQuery.data]);
+
+  const productNames = useMemo(() => {
+    const rows = hierarchyProductsQuery.data?.data ?? [];
+    return new Map(rows.map((row) => [row.id, row.name]));
+  }, [hierarchyProductsQuery.data]);
 
   const workspaces = useMemo<BuildScopeDirectoryEntry[]>(() => {
     const rows = workspacesQuery.data?.data ?? [];
     return rows
       .filter((row) => includeArchived || row.status !== "archived")
-      .filter((row) => matches(query, row.name, row.slug))
       .map((row) => ({
         key: `workspace:${row.pmWorkspaceId}`,
         type: "workspace" as const,
         id: row.pmWorkspaceId,
         name: row.name,
         parentPath: ORGANIZATION_PARENT,
+        parentKey: null,
         projectKey: null,
         href: `${BUILD_ROOT_PATH}/workspaces/${row.pmWorkspaceId}`,
         isArchived: row.status === "archived",
-        parentKey: null,
       }));
-  }, [workspacesQuery.data, includeArchived, query]);
-
-  const workspaceNames = useMemo(() => {
-    const rows = workspacesQuery.data?.data ?? [];
-    return new Map(rows.map((row) => [row.pmWorkspaceId, row.name]));
-  }, [workspacesQuery.data]);
+  }, [workspacesQuery.data, includeArchived]);
 
   const products = useMemo<BuildScopeDirectoryEntry[]>(() => {
     const rows = productsQuery.data?.data ?? [];
     return rows
       .filter((row) => includeArchived || row.status !== "archived")
-      .filter((row) => matches(query, row.name, row.key))
       .map((row) => ({
         key: `product:${row.id}`,
         type: "product" as const,
         id: String(row.id),
         name: row.name,
         parentPath:
-          (row.pmWorkspaceId !== null
-            ? workspaceNames.get(row.pmWorkspaceId)
-            : undefined) ?? ORGANIZATION_PARENT,
+          row.pmWorkspaceId === null
+            ? ORGANIZATION_PARENT
+            : (workspaceNames.get(row.pmWorkspaceId) ?? ORGANIZATION_PARENT),
+        parentKey:
+          row.pmWorkspaceId === null ? null : `workspace:${row.pmWorkspaceId}`,
         projectKey: row.key,
         href: `${BUILD_ROOT_PATH}/managed-products/${row.id}`,
         isArchived: row.status === "archived",
-        parentKey:
-          row.pmWorkspaceId !== null ? `workspace:${row.pmWorkspaceId}` : null,
       }));
-  }, [productsQuery.data, includeArchived, query, workspaceNames]);
-
-  const productNames = useMemo(() => {
-    const rows = productsQuery.data?.data ?? [];
-    return new Map(rows.map((row) => [row.id, row.name]));
-  }, [productsQuery.data]);
+  }, [productsQuery.data, includeArchived, workspaceNames]);
 
   const projects = useMemo<BuildScopeDirectoryEntry[]>(() => {
     const rows = projectsQuery.data?.data ?? [];
     return rows
       .filter((row) => includeArchived || row.status !== "ARCHIVED")
-      .filter((row) => matches(query, row.name, row.key))
       .map((row) => ({
         key: `project:${row.id}`,
         type: "project" as const,
@@ -129,17 +132,19 @@ export function useBuildScopeDirectory(
           (row.managedProductId !== null
             ? productNames.get(row.managedProductId)
             : undefined) ?? ORGANIZATION_PARENT,
-        projectKey: row.key,
-        href: `${BUILD_ROOT_PATH}/${row.id}`,
-        isArchived: row.status === "ARCHIVED",
         parentKey:
           row.managedProductId !== null
             ? `product:${row.managedProductId}`
             : null,
+        projectKey: row.key,
+        href: `${BUILD_ROOT_PATH}/${row.id}`,
+        isArchived: row.status === "ARCHIVED",
       }));
-  }, [projectsQuery.data, includeArchived, query, productNames]);
+  }, [projectsQuery.data, includeArchived, productNames]);
 
   function handleRefetch() {
+    void hierarchyWorkspacesQuery.refetch();
+    void hierarchyProductsQuery.refetch();
     void workspacesQuery.refetch();
     void productsQuery.refetch();
     void projectsQuery.refetch();
@@ -150,6 +155,8 @@ export function useBuildScopeDirectory(
     products,
     projects,
     isLoading:
+      hierarchyWorkspacesQuery.isLoading ||
+      hierarchyProductsQuery.isLoading ||
       workspacesQuery.isLoading ||
       productsQuery.isLoading ||
       projectsQuery.isLoading,

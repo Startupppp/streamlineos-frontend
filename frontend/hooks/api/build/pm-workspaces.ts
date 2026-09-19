@@ -40,14 +40,16 @@ interface ListPmWorkspacesParams {
   cursor?: string;
   limit?: number;
   status?: string;
+  search?: string;
 }
 
 export function usePmWorkspaces(params?: ListPmWorkspacesParams) {
   const canView = useCan("build:workspaces:view");
   const queryParams: Record<string, string> = {};
   if (params?.cursor) queryParams["cursor"] = params.cursor;
-  if (params?.limit) queryParams["limit"] = String(params.limit);
   if (params?.status) queryParams["status"] = params.status;
+  if (params?.search) queryParams["search"] = params.search;
+  if (params?.limit) queryParams["limit"] = String(params.limit);
 
   return useQuery<PmWorkspacesPage>({
     queryKey: buildWorkQueryKeys.projects.pmWorkspaces.list(

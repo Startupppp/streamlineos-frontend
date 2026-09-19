@@ -4,7 +4,7 @@ import { LabelsSettings } from "./labels-settings";
 let mockCanManage = false;
 
 jest.mock("@/hooks/api/access", () => ({
-  useCan: () => mockCanManage,
+  useCan: (permission: string) => permission === "build:manage" && mockCanManage,
 }));
 
 jest.mock("@/hooks/api/build/labels", () => ({

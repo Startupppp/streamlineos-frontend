@@ -15,7 +15,7 @@ import {
   useProjectMembers,
   useUpdateProjectMemberRole,
 } from "@/hooks/api/build";
-import { useCanManageProject } from "@/hooks/api/build/use-can-manage-project";
+import { useCan } from "@/hooks/api/access";
 import {
   getUserDisplayName,
   getUserInitials,
@@ -116,7 +116,7 @@ interface ProjectMemberRolesSectionProps {
 export function ProjectMemberRolesSection({
   projectId,
 }: ProjectMemberRolesSectionProps) {
-  const canManage = useCanManageProject(projectId);
+  const canManage = useCan("build:manage");
   const { data: members, isLoading } = useProjectMembers(projectId);
 
   if (isLoading) {

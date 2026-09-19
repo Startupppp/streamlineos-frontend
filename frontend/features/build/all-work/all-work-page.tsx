@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { BulkActionBar } from "@/features/build/backlog/bulk-action-bar";
 import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
 import { useInfiniteAllWork, useProjects } from "@/hooks/api/build";
+import { useOrgCustomStates } from "@/hooks/api/build/custom-states";
 import { cn } from "@/lib/utils";
 import {
   PmPageShell,
@@ -69,6 +70,7 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
     fetchNextPage,
   } = useInfiniteAllWork(workspaceFilters);
   const { data: projectsData } = useProjects({ limit: 100, ...(pmWorkspaceId ? { pmWorkspaceId } : {}) });
+  const { data: orgStates } = useOrgCustomStates();
 
   const tickets = useMemo(
     () => infiniteData?.pages.flatMap((p) => p.data) ?? [],
@@ -199,6 +201,7 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
                 showTypeFilter
                 showSprintFilter={false}
                 showAssigneeFilter
+                statuses={orgStates}
               />
             }
           />

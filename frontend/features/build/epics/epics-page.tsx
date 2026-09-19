@@ -93,7 +93,7 @@ export function EpicsPage({ params }: PageProps) {
         );
       })
       .catch(() => {
-        toast.error("Failed to unlink stories from epic");
+        toast.error("Failed to unlink tickets from epic");
       });
   }, [tickets, updateTicket, deleteTicket]);
 

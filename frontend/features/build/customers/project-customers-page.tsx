@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { useProjectCustomers } from "@/hooks/api/build/customers";
@@ -142,13 +142,10 @@ export function ProjectCustomersPage() {
         subtitle="CRM companies linked to this workspace"
         noInternalScroll
       >
-        <EmptyState
-          illustration={
-            <EmptyCompaniesIllustration className="h-full w-full" />
-          }
-          title="Access restricted"
+        <NoPermissionState
+          permission="build:customers:view"
           description="You don't have permission to view customers."
-          className="border-0 bg-transparent min-h-[40dvh]"
+          className="flex-1 min-h-0"
         />
       </PageWrapper>
     );

@@ -32,6 +32,7 @@ export interface CreateManagedProductInput {
   key: string;
   description?: string;
   ownerId?: string;
+  pmWorkspaceId?: string;
 }
 
 export interface UpdateManagedProductInput {

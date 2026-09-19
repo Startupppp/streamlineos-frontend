@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { PanelRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAfterLoad } from "@/hooks/common/use-after-load";
+import { useOrgCustomStates } from "@/hooks/api/build/custom-states";
 import { MY_WORK_VIEWS } from "./my-work-view";
 import { MyWorkViewBody } from "./my-work-view-body-lazy";
 import { BucketSection, AllWorkListSkeleton, BUCKET_ORDER } from "./my-work-rows";
@@ -61,6 +62,7 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
   const [groupingMounted, setGroupingMounted] = useState(false);
   const [displayOptions, setDisplayOptions] = useDisplayOptions(DISPLAY_STORAGE_ID);
   const filterBarReady = useAfterLoad();
+  const { data: orgStates } = useOrgCustomStates();
 
   const {
     hasActiveFilters,
@@ -159,6 +161,7 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
                 <TicketFilterBar
                   showSprintFilter={false}
                   showAssigneeFilter={false}
+                  statuses={orgStates}
                 />
               ) : (
                 <div className={cn("flex w-full flex-col gap-1.5", hasActiveFilters && "pb-1")}>

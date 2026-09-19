@@ -260,15 +260,54 @@ describe("isBuildDestinationActive — non-exact destination (project QA) owns i
 });
 
 describe("resolveBuildNavModel — createActions", () => {
-  it("includes the issue and project actions when the caller holds both creation permissions", () => {
+  const allCreateKeys: PermissionKey[] = [
+    "build:tickets:create",
+    "build:create",
+    "build:managed-products:create",
+  ];
+
+  function actionIdsAt(path: string): string[] {
+    return resolveBuildNavModel({
+      scope: resolveBuildScope(path),
+      access: accessWith(allCreateKeys),
+      pinnedIds: [],
+    }).createActions.map((action) => action.id);
+  }
+
+  it("offers Issue only at project scope, because no other scope names an unambiguous project", () => {
+    expect(actionIdsAt("/build/42")).toContain("issue");
+    expect(actionIdsAt("/build")).not.toContain("issue");
+    expect(actionIdsAt("/build/workspaces/ws-1")).not.toContain("issue");
+    expect(actionIdsAt("/build/managed-products/7")).not.toContain("issue");
+  });
+
+  it("offers Project at every scope", () => {
+    for (const path of [
+      "/build",
+      "/build/workspaces/ws-1",
+      "/build/managed-products/7",
+      "/build/42",
+    ])
+      expect(actionIdsAt(path)).toContain("project");
+  });
+
+  it("offers Product only where a workspace can own it, never under a product or project", () => {
+    expect(actionIdsAt("/build")).toContain("managed-product");
+    expect(actionIdsAt("/build/workspaces/ws-1")).toContain("managed-product");
+    expect(actionIdsAt("/build/managed-products/7")).not.toContain(
+      "managed-product",
+    );
+    expect(actionIdsAt("/build/42")).not.toContain("managed-product");
+  });
+
+  it("still hides an action the caller lacks the create permission for", () => {
     const model = resolveBuildNavModel({
-      scope: orgScope,
-      access: accessWith(["build:tickets:create", "build:create"]),
+      scope: resolveBuildScope("/build/42"),
+      access: accessWith(["build:create"]),
       pinnedIds: [],
     });
-    const actionIds = model.createActions.map((a) => a.id);
-    expect(actionIds).toContain("issue");
-    expect(actionIds).toContain("project");
+    const ids = model.createActions.map((action) => action.id);
+    expect(ids).toEqual(["project"]);
   });
 
   it("omits the managed-product action at project scope even when build:managed-products:create is held", () => {
@@ -433,5 +472,73 @@ describe("resolveAuthorizedToolIds", () => {
     );
     expect(ids).toContain("project-qa");
     expect(ids).not.toContain("project-budget");
+  });
+});
+
+describe("workspace and product scope catalogs", () => {
+  const workspaceScope = resolveBuildScope("/build/workspaces/ws-1");
+  const productScope = resolveBuildScope("/build/managed-products/7");
+  const fullAccess = accessWith(ALL_BUILD_PERMISSIONS, { feedbucket: true });
+
+  it("exposes workspace Projects, Products, Teams and All work under the workspace base path", () => {
+    const model = resolveBuildNavModel({
+      scope: workspaceScope,
+      access: fullAccess,
+      pinnedIds: [],
+    });
+    expect(model.primary.map((d) => d.href)).toEqual([
+      "/build/workspaces/ws-1",
+      "/build/workspaces/ws-1/products",
+      "/build/workspaces/ws-1/teams",
+      "/build/workspaces/ws-1/all-work",
+    ]);
+  });
+
+  it("labels the workspace base path Projects rather than Overview, because it renders the project list", () => {
+    const model = resolveBuildNavModel({
+      scope: workspaceScope,
+      access: fullAccess,
+      pinnedIds: [],
+    });
+    const root = model.primary.find((d) => d.href === "/build/workspaces/ws-1");
+    expect(root?.label).toBe("Projects");
+  });
+
+  it("hides workspace Products from a caller without the managed-product read key", () => {
+    const model = resolveBuildNavModel({
+      scope: workspaceScope,
+      access: accessWith(["build:view", "build:teams:view"]),
+      pinnedIds: [],
+    });
+    const ids = model.primary.map((d) => d.id);
+    expect(ids).not.toContain("workspace-products");
+    expect(ids).toContain("workspace-teams");
+  });
+
+  it("exposes Linked projects under the managed product base path", () => {
+    const model = resolveBuildNavModel({
+      scope: productScope,
+      access: fullAccess,
+      pinnedIds: [],
+    });
+    expect(model.primary.map((d) => d.href)).toEqual([
+      "/build/managed-products/7",
+      "/build/managed-products/7/projects",
+    ]);
+  });
+
+  it("keeps every workspace and product destination inside its own scope base path", () => {
+    for (const scope of [workspaceScope, productScope]) {
+      const model = resolveBuildNavModel({
+        scope,
+        access: fullAccess,
+        pinnedIds: [],
+      });
+      for (const destination of model.primary)
+        expect(
+          destination.href === scope.basePath ||
+            destination.href.startsWith(`${scope.basePath}/`),
+        ).toBe(true);
+    }
   });
 });

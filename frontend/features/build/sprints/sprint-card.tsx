@@ -13,6 +13,8 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { EditSprintDialog } from "@/features/build/sprints/edit-sprint-dialog";
+import { getCompletedStatusNames } from "@/features/build/shared/completed-status";
+import type { ProjectStatusRecord } from "@/types/projects/projects";
 import { PM_PANEL } from "@/components/pm-chrome";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -46,6 +48,7 @@ export interface SprintData {
 interface SprintCardProps {
   sprint: SprintData;
   projectId: number;
+  projectStatuses?: ProjectStatusRecord[];
   onStart?: (id: number) => void;
   onComplete?: (id: number) => void;
   onPlan?: (id: number) => void;
@@ -80,14 +83,15 @@ const STATUS_STYLES: Record<string, StatusStyle> = {
   },
 };
 
-export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isUpdating }: SprintCardProps) {
+export const SprintCard = memo(function SprintCard({ sprint, projectId, projectStatuses, onStart, onComplete, onPlan, isUpdating }: SprintCardProps) {
   const { tickets, totalPoints, completedPoints, progress, doneTickets } = useMemo(() => {
     const tix = sprint.tickets ?? [];
+    const completedNames = getCompletedStatusNames(projectStatuses);
     let total = 0, completed = 0, done = 0;
     for (const t of tix) {
       const pts = t.points || 0;
       total += pts;
-      if (t.status === "DONE") { completed += pts; done++; }
+      if (completedNames.has(t.status)) { completed += pts; done++; }
     }
     return {
       tickets: tix,
@@ -96,7 +100,7 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
       progress: total > 0 ? (completed / total) * 100 : 0,
       doneTickets: done,
     };
-  }, [sprint.tickets]);
+  }, [sprint.tickets, projectStatuses]);
 
   const endDate = new Date(sprint.endDate);
   const startDate = new Date(sprint.startDate);

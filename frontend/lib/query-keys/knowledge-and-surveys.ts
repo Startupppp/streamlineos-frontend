@@ -46,14 +46,8 @@ export const knowledgeAndSurveysQueryKeys = {
     pageReviewsDue: () => [...base, "kb", "pageReviewsDue"] as const,
     pageRecordLinks: (pageId: number) =>
       [...base, "kb", "pages", pageId, "record-links"] as const,
-    importJobs: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "kb", "import-jobs"] as const)
-        : ([...base, "kb", "import-jobs", params] as const),
-    exportJobs: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "kb", "export-jobs"] as const)
-        : ([...base, "kb", "export-jobs", params] as const),
+    importJobs: () => [...base, "kb", "import-jobs"] as const,
+    exportJobs: () => [...base, "kb", "export-jobs"] as const,
     articleMigrationPreview: () =>
       [...base, "kb", "article-migration", "preview"] as const,
     pageAnalytics: () => [...base, "kb", "pageAnalytics"] as const,

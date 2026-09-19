@@ -221,6 +221,7 @@ export function MyTicketsPage({ params }: PageProps) {
           showSprintFilter={false}
           showAssigneeFilter={false}
           mobileSearchFirst
+          statuses={statuses}
           leading={
             <ViewSwitcher
               activeView={view}

@@ -18,7 +18,10 @@ import {
   STEP_LABELS,
 } from "./use-project-create";
 import type { StepSharedProps } from "./use-project-create";
-import { useProjectProvisioning } from "./use-project-provisioning";
+import {
+  useProjectProvisioning,
+  type ProjectCreateScope,
+} from "./use-project-provisioning";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { StepBasics } from "./steps/step-basics";
 import type { BasicsHandle } from "./steps/step-basics";
@@ -32,11 +35,13 @@ import { StepReview } from "./steps/step-review";
 interface ProjectCreateWizardProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  scope?: ProjectCreateScope;
 }
 
 export function ProjectCreateWizard({
   open,
   onOpenChange,
+  scope,
 }: ProjectCreateWizardProps) {
   const { step, direction, draft, updateDraft, goNext, goBack, reset } =
     useProjectCreate();
@@ -67,7 +72,10 @@ export function ProjectCreateWizard({
     handleOpenChange(false);
   }
 
-  const { provision, isProvisioning } = useProjectProvisioning(handleSuccess);
+  const { provision, isProvisioning } = useProjectProvisioning(
+    handleSuccess,
+    scope,
+  );
 
   function handleNextFromBasics(): void {
     void basicsRef.current?.validate()?.then((ok) => {

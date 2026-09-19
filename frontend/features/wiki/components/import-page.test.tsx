@@ -18,14 +18,14 @@ jest.mock("@/hooks/api/kb", () => ({
   useKbPagesTree: () => ({ data: [] }),
   useImportKbPages: () => ({ mutate: jest.fn(), isPending: false }),
   useKbImportJobs: () => ({
-    data: { data: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } },
+    data: [],
     isLoading: false,
     isError: false,
     error: null,
     refetch: jest.fn(),
   }),
   useKbExportJobs: () => ({
-    data: { data: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } },
+    data: [],
     isLoading: false,
     isError: false,
     error: null,
@@ -61,7 +61,8 @@ describe("ImportPage — Import / Export tabs", () => {
       "data-state",
       "active",
     );
-    expect(screen.getByRole("heading", { name: /^exports$/i })).toBeInTheDocument();
+    expect(screen.getByText("No exports yet")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /^exports$/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /choose files/i })).toBeNull();
     expect(screen.queryByRole("heading", { name: /recent imports/i })).toBeNull();
   });

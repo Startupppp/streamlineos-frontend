@@ -5,7 +5,8 @@ import TemplatesPage from "./templates-page";
 const createMutate = jest.fn();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 jest.mock("@/hooks/api/kb", () => ({

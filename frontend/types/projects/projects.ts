@@ -235,6 +235,8 @@ export interface CreateProjectInput {
   projectType?: string;
   workflow?: string;
   features?: Record<string, boolean>;
+  pmWorkspaceId?: string;
+  managedProductId?: number;
 }
 
 export interface UpdateProjectInput {
@@ -358,6 +360,7 @@ export interface ProjectFilters {
   search?: string;
   status?: "ALL" | ProjectStatusValue;
   pmWorkspaceId?: string;
+  managedProductId?: number;
 }
 
 /** What `GET /build` actually answers. */

@@ -29,9 +29,7 @@ const VALID_TABS = ["import", "export"] as const;
 type ImportExportTab = (typeof VALID_TABS)[number];
 
 function resolveTab(tabParam: string | null): ImportExportTab {
-  if (tabParam && VALID_TABS.some((candidate) => candidate === tabParam))
-    return tabParam;
-  return "import";
+  return VALID_TABS.find((t) => t === tabParam) ?? "import";
 }
 
 export default function ImportPage() {

@@ -228,6 +228,7 @@ export function ProjectSprintsPage({ projectId: projectIdStr }: ProjectSprintsPa
         {hasSections ? (
           <SprintSections
             projectId={projectId}
+            projectStatuses={project?.statuses}
             activeSprints={activeSprints}
             plannedSprints={plannedSprints}
             completedSprints={completedSprints}

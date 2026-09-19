@@ -52,6 +52,8 @@ interface AccountingMappingsSheetProps {
   onOpenChange?: (v: boolean) => void;
 }
 
+const NO_COMPONENT = "none";
+
 const mappingSchema = z.object({
   componentId: z.string().optional(),
   category: z.string().optional(),
@@ -78,7 +80,7 @@ function MappingForm({
   const form = useForm<MappingFormValues>({
     resolver: zodResolver(mappingSchema),
     defaultValues: {
-      componentId: editing?.componentId != null ? String(editing.componentId) : "",
+      componentId: editing?.componentId != null ? String(editing.componentId) : NO_COMPONENT,
       category: editing?.category ?? "",
       ledgerName: editing?.ledgerName ?? "",
       costCenterSource: editing?.costCenterSource ?? "",
@@ -89,7 +91,10 @@ function MappingForm({
   function onSubmit(values: MappingFormValues) {
     const input = {
       ledgerName: values.ledgerName,
-      componentId: values.componentId ? parseInt(values.componentId, 10) : undefined,
+      componentId:
+        values.componentId && values.componentId !== NO_COMPONENT
+          ? parseInt(values.componentId, 10)
+          : undefined,
       category: values.category || undefined,
       costCenterSource: values.costCenterSource || undefined,
       notes: values.notes || undefined,
@@ -129,7 +134,7 @@ function MappingForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value={NO_COMPONENT}>None</SelectItem>
                   {components.map((c) => (
                     <SelectItem key={c.id} value={String(c.id)}>
                       {c.name}

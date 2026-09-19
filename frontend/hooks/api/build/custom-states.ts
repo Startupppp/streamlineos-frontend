@@ -1,9 +1,9 @@
 "use client";
 
-import type { z } from "zod";
+import { z } from "zod";
 
 import { useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -26,6 +26,17 @@ const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 export type CustomState = z.infer<typeof projectCustomStateContractDef>;
+
+const orgCustomStateItemSchema = z.object({
+  name: z.string(),
+  color: z.string().nullable(),
+  type: z.string().nullable(),
+});
+export type OrgCustomStateItem = z.infer<typeof orgCustomStateItemSchema>;
+
+const orgCustomStateListContract = lazyContract(() =>
+  Promise.resolve(z.array(orgCustomStateItemSchema)),
+);
 
 type StateUpdateInput = {
   stateId: number;
@@ -185,5 +196,19 @@ export function useDeleteCustomState(projectId: number) {
     onSettled: () => {
       invalidateStateCaches(qc, projectId);
     },
+  });
+}
+
+export function useOrgCustomStates(
+  options?: Omit<UseQueryOptions<OrgCustomStateItem[], Error>, "queryKey" | "queryFn">,
+) {
+  const canView = useCan("build:view");
+  return useQuery<OrgCustomStateItem[], Error>({
+    ...options,
+    queryKey: buildWorkQueryKeys.projects.orgCustomStates(),
+    queryFn: ({ signal }) =>
+      apiClient.get<OrgCustomStateItem[]>("/build/org-custom-states", undefined, signal, orgCustomStateListContract),
+    enabled: canView && (options?.enabled ?? true),
+    staleTime: 30 * 60_000,
   });
 }

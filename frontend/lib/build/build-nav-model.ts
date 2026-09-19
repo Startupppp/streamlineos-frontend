@@ -69,11 +69,19 @@ function createActionsFor(
   scope: BuildScope,
   access: BuildNavAccess,
 ): BuildCreateAction[] {
-  const actions: BuildCreateAction[] = [
-    { id: "issue", label: "Issue", requiredPermission: "build:tickets:create" },
-    { id: "project", label: "Project", requiredPermission: "build:create" },
-  ];
-  if (scope.type !== "project")
+  const actions: BuildCreateAction[] = [];
+  if (scope.type === "project")
+    actions.push({
+      id: "issue",
+      label: "Issue",
+      requiredPermission: "build:tickets:create",
+    });
+  actions.push({
+    id: "project",
+    label: "Project",
+    requiredPermission: "build:create",
+  });
+  if (scope.type === "organization" || scope.type === "workspace")
     actions.push({
       id: "managed-product",
       label: "Product",

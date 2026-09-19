@@ -271,7 +271,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
           <div className="ml-7 mt-2 space-y-1">
             <div className="flex items-center justify-between gap-2 text-micro tabular-nums text-muted-foreground">
               <span className="min-w-0 truncate">
-                {completedItems} of {totalItems} stories
+                {completedItems} of {totalItems} items
               </span>
               <span className="shrink-0">
                 {completedPoints} / {totalPoints} pts
@@ -283,7 +283,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
               aria-valuenow={totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-label={`Epic progress: ${completedItems} of ${totalItems} stories completed`}
+              aria-label={`Epic progress: ${completedItems} of ${totalItems} items completed`}
               aria-valuetext={`${totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0}% complete`}
             >
               {totalItems > 0 ? (

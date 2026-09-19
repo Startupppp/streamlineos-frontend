@@ -5,8 +5,13 @@ import { CustomFieldsSettings } from "./custom-fields-settings";
 let mockCanManage = false;
 const mockUpdateMutate = jest.fn();
 
-jest.mock("@/hooks/api/build/use-can-manage-project", () => ({
-  useCanManageProject: () => mockCanManage,
+const mockPermissionsAsked: string[] = [];
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (permission: string) => {
+    mockPermissionsAsked.push(permission);
+    return permission === "build:manage" && mockCanManage;
+  },
 }));
 
 jest.mock("@/hooks/api/build/custom-fields", () => ({
@@ -57,6 +62,13 @@ describe("CustomFieldsSettings — build:manage gates", () => {
     render(<CustomFieldsSettings projectId={1} />);
     expect(screen.getByText("Story Points")).toBeInTheDocument();
     expect(screen.getByText("Priority Label")).toBeInTheDocument();
+  });
+
+  it("gates on build:manage itself, not on a project-manager standing the backend does not accept", () => {
+    mockCanManage = true;
+    mockPermissionsAsked.length = 0;
+    render(<CustomFieldsSettings projectId={1} />);
+    expect(mockPermissionsAsked).toContain("build:manage");
   });
 });
 
