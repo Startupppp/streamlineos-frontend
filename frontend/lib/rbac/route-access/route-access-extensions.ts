@@ -1,9 +1,6 @@
 import { ROUTE_ACCESS_EXTENSIONS } from "./route-access-extension-entries";
 import type { RouteAccessExtension } from "./route-access-extension-types";
 
-export type { BackendRouteRef, RouteAccessExtension } from "./route-access-extension-types";
-export { ROUTE_ACCESS_EXTENSIONS } from "./route-access-extension-entries";
-
 function segmentsOf(value: string): string[] {
   return value.split("/").filter((segment) => segment.length > 0);
 }
@@ -41,7 +38,6 @@ export function routeAccessExtensionCovers(
 export function matchRouteAccessExtension(
   pathname: string,
 ): RouteAccessExtension | null {
-  const path = segmentsOf(pathname);
   let best: RouteAccessExtension | null = null;
   let bestScore = -1;
   for (const entry of ROUTE_ACCESS_EXTENSIONS) {

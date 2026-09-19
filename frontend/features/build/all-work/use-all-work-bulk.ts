@@ -12,7 +12,7 @@ import { lazyContract } from "@/lib/api-envelope";
 
 
 const bulkUpdateResultLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.bulkUpdateResultContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.bulkUpdateResultContract),
 );
 
 type BulkPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";

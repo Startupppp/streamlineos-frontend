@@ -10,7 +10,7 @@ export type { TicketSearchResult } from "@/types/projects";
 import { useCan } from "@/hooks/api/access";
 
 const ticketSearchResultListLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketSearchResultListContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.ticketSearchResultListContract),
 );
 
 export function useTicketSearch(

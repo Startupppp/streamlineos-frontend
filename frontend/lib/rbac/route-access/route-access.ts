@@ -4,6 +4,7 @@ import type {
   ProductKey,
 } from "@/components/layout/sidebar/sidebar-nav-types";
 import { moduleByProductKey } from "@/lib/module-manifest";
+import { namespaceOf } from "@/lib/rbac/administering-module";
 import permissionCatalog from "@/contracts/permission-catalog.json";
 import { matchRouteAccessExtension } from "./route-access-extensions";
 import { matchUniversalRoute } from "./universal-routes";
@@ -46,10 +47,7 @@ export function hasAssignedProductAccess(
   ]);
   return Object.keys(scopes).some((permission) => {
     if (MEMBER_DEFAULT_PERMISSIONS.has(permission)) return false;
-    const separator = permission.indexOf(":");
-    const namespace =
-      separator === -1 ? permission : permission.slice(0, separator);
-    return namespaces.has(namespace);
+    return namespaces.has(namespaceOf(permission));
   });
 }
 

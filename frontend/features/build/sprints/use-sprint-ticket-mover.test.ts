@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { createElement } from "react";
 import { apiClient } from "@/lib/api-client";
-import { bulkUpdateResultContract } from "@/hooks/api/build/build-tickets-schema";
+import { bulkUpdateResultContract } from "@/hooks/api/build/build-tickets-subresource-schema";
 import { useSprintTicketMover } from "./use-sprint-ticket-mover";
 
 jest.mock("@/lib/api-client", () => ({

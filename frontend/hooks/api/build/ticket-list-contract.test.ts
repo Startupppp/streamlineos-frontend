@@ -1,4 +1,5 @@
-import { allWorkPageContract, ticketListPageContract, ticketRowContract } from "./build-tickets-schema";
+import { ticketListPageContract, ticketRowContract } from "./build-tickets-core-schema";
+import { allWorkPageContract } from "./build-tickets-subresource-schema";
 
 it("parses the actual all-work projection without unreturned tenant or membership fields", () => {
   const row = { id: 1, title: "Ticket", type: "BUG", status: "OPEN", priority: "HIGH", projectId: 42, projectKey: "BUILD", projectName: "Project", ticketNumber: 1, dueDate: null, startDate: null, points: null, estimate: null, rank: "a0", sprintId: null, cycleId: null, epicId: null, assigneeId: null, assignee: null, labels: [], createdAt: "2026-09-09T00:00:00Z", updatedAt: "2026-09-09T00:00:00Z" };

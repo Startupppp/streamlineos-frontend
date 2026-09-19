@@ -1,4 +1,4 @@
-import { ticketDetailContract } from "./build-tickets-schema";
+import { ticketDetailContract } from "./build-tickets-core-schema";
 
 function person(id: string, name: string) {
   return { id, name, firstName: name, lastName: null, email: `${id}@example.com`, image: null };

@@ -9,16 +9,16 @@ import { lazyContract } from "@/lib/api-envelope";
 
 
 const checklistListLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.checklistListContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.checklistListContract),
 );
 const checklistRowLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.checklistRowContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.checklistRowContract),
 );
 const checklistItemLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.checklistItemContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.checklistItemContract),
 );
 const successLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.successContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.successContract),
 );
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),

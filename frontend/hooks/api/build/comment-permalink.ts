@@ -5,14 +5,14 @@ import { queryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import type { commentPermalinkContract as commentPermalinkContractDef } from "@/hooks/api/build/build-tickets-schema";
+import type { commentPermalinkContract as commentPermalinkContractDef } from "@/hooks/api/build/build-tickets-subresource-schema";
 
 const ticketDetailLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketDetailContract),
+  import("@/hooks/api/build/build-tickets-core-schema").then((m) => m.ticketDetailContract),
 );
 
 export const commentPermalinkLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.commentPermalinkContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.commentPermalinkContract),
 );
 
 export type CommentPermalinkData = z.infer<typeof commentPermalinkContractDef>;

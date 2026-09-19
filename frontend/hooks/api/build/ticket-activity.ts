@@ -8,10 +8,10 @@ import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
-import type { ticketActivityPageContract as ticketActivityPageContractDef } from "@/hooks/api/build/build-tickets-schema";
+import type { ticketActivityPageContract as ticketActivityPageContractDef } from "@/hooks/api/build/build-tickets-core-schema";
 
 const ticketActivityPageLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketActivityPageContract),
+  import("@/hooks/api/build/build-tickets-core-schema").then((m) => m.ticketActivityPageContract),
 );
 
 type TicketActivityPage = z.infer<typeof ticketActivityPageContractDef>;

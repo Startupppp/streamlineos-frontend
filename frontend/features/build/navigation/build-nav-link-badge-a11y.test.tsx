@@ -3,7 +3,9 @@ import { FolderIcon } from "lucide-react";
 import { BuildNavLink, BUILD_NAV_BADGE_CAP } from "./build-nav-link";
 import { BuildDirtyStateProvider } from "./build-dirty-state-context";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import type { BuildNavDestination } from "@/lib/build/nav/build-nav-destination";
+import { resolveBuildNavModel } from "@/lib/build/build-nav-model";
+import { resolveBuildScope } from "@/lib/build/build-scope";
+import type { BuildNavAccess, BuildNavDestination } from "@/lib/build/nav/build-nav-destination";
 import type { ModuleAccent } from "@/components/layout/sidebar/sidebar-nav-items";
 
 jest.mock("next/navigation", () => ({
@@ -126,5 +128,54 @@ describe("BuildNavLink badge — BSN-03-023 zero-omission and accessible labels"
       expect(expandedPendingText).toContain("7 pending");
       expect(collapsedLabel).toContain("7 pending");
     });
+  });
+});
+
+describe("BSN-03-A07 — client portal link absent at component layer when capability disabled", () => {
+  const PROJECT_SCOPE = resolveBuildScope("/build/42");
+
+  function portalAccess(clientPortalEnabled: boolean): BuildNavAccess {
+    return {
+      can: (key) => key === "build:clientvisibility:manage",
+      isOrgModuleEnabled: () => false,
+      isCapabilityEnabled: (cap) =>
+        cap === "client-portal" ? clientPortalEnabled : true,
+    };
+  }
+
+  function NavGroup({ enabled }: { enabled: boolean }) {
+    const model = resolveBuildNavModel({
+      scope: PROJECT_SCOPE,
+      access: portalAccess(enabled),
+      pinnedIds: [],
+    });
+    return (
+      <BuildDirtyStateProvider>
+        {model.primary.map((dest) => (
+          <BuildNavLink
+            key={dest.id}
+            destination={dest}
+            isActive={false}
+            isCollapsed={false}
+            accent={accent}
+          />
+        ))}
+      </BuildDirtyStateProvider>
+    );
+  }
+
+  it("no link with /client-portal href renders when the project capability is disabled even though the permission is held", () => {
+    render(<NavGroup enabled={false} />);
+    const links = screen.queryAllByRole("link");
+    for (const link of links)
+      expect(link.getAttribute("href")).not.toMatch(/client-portal/);
+  });
+
+  it("a link with /client-portal href renders when the project capability is enabled and the permission is held — proves the negative test is not vacuous", () => {
+    render(<NavGroup enabled={true} />);
+    const portalLink = screen
+      .queryAllByRole("link")
+      .find((link) => (link.getAttribute("href") ?? "").includes("client-portal"));
+    expect(portalLink).toBeDefined();
   });
 });

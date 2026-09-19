@@ -1,4 +1,4 @@
-import { ticketDetailContract } from "@/hooks/api/build/build-tickets-schema";
+import { ticketDetailContract } from "@/hooks/api/build/build-tickets-core-schema";
 
 const TICKET_ROW = {
   id: 7,

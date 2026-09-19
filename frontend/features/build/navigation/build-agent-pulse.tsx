@@ -106,7 +106,7 @@ export function BuildAgentPulse({
             {summary}
           </span>
           {showConfidence && (
-            <span className="shrink-0 rounded px-1 py-0.5 text-[9px] font-bold tabular-nums bg-primary/10 text-primary">
+            <span className="shrink-0 rounded px-1 py-0.5 text-micro font-bold tabular-nums bg-primary/10 text-primary">
               {signal.confidence}%
             </span>
           )}

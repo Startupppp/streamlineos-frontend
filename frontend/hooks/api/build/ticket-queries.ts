@@ -9,16 +9,16 @@ import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 
 const ticketListPageLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketListPageContract),
+  import("@/hooks/api/build/build-tickets-core-schema").then((m) => m.ticketListPageContract),
 );
 const ticketDetailLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketDetailContract),
+  import("@/hooks/api/build/build-tickets-core-schema").then((m) => m.ticketDetailContract),
 );
 const columnCountsLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.columnCountsContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.columnCountsContract),
 );
 const subtaskListLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.subtaskListContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.subtaskListContract),
 );
 import type {
   Ticket,

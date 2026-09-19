@@ -7,7 +7,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const relatedLinkCreateLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.relatedLinkCreateContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.relatedLinkCreateContract),
 );
 
 export interface TicketRelatedLink {

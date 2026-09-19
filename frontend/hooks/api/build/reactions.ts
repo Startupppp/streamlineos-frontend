@@ -8,7 +8,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import type { Ticket, TicketComment, CommentReaction } from "@/types/projects";
 
 const reactionLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.reactionContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.reactionContract),
 );
 
 const noContentLazy = lazyContract(() =>

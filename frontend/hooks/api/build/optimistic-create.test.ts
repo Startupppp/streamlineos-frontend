@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import type { ReactNode } from "react";
 import type { Ticket, CursorPageResponse } from "@/types/projects";
-import { useCreateTicket } from "./ticket-mutations";
+import { useCreateTicket } from "./ticket-create-rank-mutations";
 import { useAddComment } from "./ticket-sub-resources";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 

@@ -4,7 +4,8 @@ import { renderHook, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import type { ReactNode } from "react";
-import { useCreateTicket, useDeleteTicket, useBulkUpdateTickets, useUpdateTicket } from "./ticket-mutations";
+import { useUpdateTicket } from "./ticket-update-mutation";
+import { useCreateTicket, useDeleteTicket, useBulkUpdateTickets } from "./ticket-create-rank-mutations";
 import { useUpdateSprint } from "./sprints";
 import { queryKeys } from "@/lib/query-keys";
 

@@ -2,8 +2,8 @@ import * as fs from "fs";
 import * as path from "path";
 import { resolveNavRouteAccess } from "@/components/layout/sidebar/sidebar-nav-items";
 import { collectAppRoutes } from "../app-routes";
+import { ROUTE_ACCESS_EXTENSIONS } from "../route-access-extension-entries";
 import {
-  ROUTE_ACCESS_EXTENSIONS,
   matchRouteAccessExtension,
   routeAccessExtensionCovers,
 } from "../route-access-extensions";

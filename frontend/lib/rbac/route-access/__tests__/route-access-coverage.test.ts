@@ -1,7 +1,7 @@
 import { collectAppRoutes } from "../app-routes";
 import { resolveRouteAccess, describeRouteAccess } from "../route-access";
+import { ROUTE_ACCESS_EXTENSIONS } from "../route-access-extension-entries";
 import {
-  ROUTE_ACCESS_EXTENSIONS,
   matchRouteAccessExtension,
   routeAccessExtensionCovers,
 } from "../route-access-extensions";

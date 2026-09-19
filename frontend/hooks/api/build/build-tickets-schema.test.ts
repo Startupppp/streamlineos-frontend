@@ -1,4 +1,4 @@
-import { ticketRelationListContract } from "./build-tickets-schema";
+import { ticketRelationListContract } from "./build-tickets-subresource-schema";
 
 it("accepts the joined relation shape listRelations actually returns, not the raw work_item_relations row", () => {
   const result = ticketRelationListContract.parse([

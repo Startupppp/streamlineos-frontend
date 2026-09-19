@@ -4,7 +4,8 @@ import { createElement, type ReactNode } from "react";
 import { createAppQueryClient } from "@/components/providers/query-provider";
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient } from "@/lib/api-client";
-import { useUpdateTicket, useBulkUpdateTickets, useRankTicket } from "./ticket-mutations";
+import { useUpdateTicket } from "./ticket-update-mutation";
+import { useBulkUpdateTickets, useRankTicket } from "./ticket-create-rank-mutations";
 
 jest.mock("@/lib/api-client", () => ({ apiClient: { patch: jest.fn(), post: jest.fn() } }));
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true, useAccess: () => ({ data: { isOrgOwner: true }, refetch: jest.fn() }) }));

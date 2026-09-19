@@ -2,7 +2,7 @@ import {
   checklistItemContract,
   checklistListContract,
   checklistRowContract,
-} from "@/hooks/api/build/build-tickets-schema";
+} from "@/hooks/api/build/build-tickets-subresource-schema";
 
 const ITEM = {
   id: 11,

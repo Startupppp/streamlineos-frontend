@@ -12,6 +12,7 @@ import { TablePagination } from "@/components/ui/table-pagination";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
 import { useKbImportJobs } from "@/hooks/api/kb";
+import { usePermissionGate } from "@/hooks/api/access";
 import { KbFileTextIcon } from "@/features/wiki/lib/kb-icons";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import { importJobDisplayName } from "@/features/wiki/lib/import-job-label";
@@ -48,6 +49,7 @@ function ImportJobRow({ job }: { job: KbImportJob }) {
 
 export function ImportHistorySection() {
   const [page, setPage] = useState(1);
+  const importGate = usePermissionGate("kb:pages:import");
   const {
     data: jobs = [],
     isLoading,
@@ -89,6 +91,7 @@ export function ImportHistorySection() {
       {!isLoading && !isError && jobs.length === 0 && (
         <EmptyState
           compact
+          access={importGate}
           illustration={
             <KbFileTextIcon className="h-5 w-5 text-muted-foreground" />
           }

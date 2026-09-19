@@ -19,7 +19,6 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { EntityFormDialog } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Card, CardContent } from "@/components/ui/card";
-import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -67,7 +66,7 @@ function UpdateCard({
       <CardContent className="p-4 space-y-2">
         <p className="text-sm text-foreground whitespace-pre-wrap">{update.body}</p>
         <div className="flex items-center justify-between pt-1">
-          <span className="text-[11px] font-medium text-muted-foreground tabular-nums">{date}</span>
+          <span className="text-dense font-medium text-muted-foreground tabular-nums">{date}</span>
           {canManage ? (
             <Button
               variant="ghost"

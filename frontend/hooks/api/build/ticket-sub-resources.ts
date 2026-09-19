@@ -11,26 +11,26 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import type { z } from "zod";
-import type { ticketRelationListContract as ticketRelationListContractDef } from "@/hooks/api/build/build-tickets-schema";
+import type { ticketRelationListContract as ticketRelationListContractDef } from "@/hooks/api/build/build-tickets-subresource-schema";
 
 
 const successLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.successContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.successContract),
 );
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
 const attachmentCreateResultLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.attachmentCreateResultContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.attachmentCreateResultContract),
 );
 
 const commentRowLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.commentRowContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.commentRowContract),
 );
 
 const ticketRelationListLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketRelationListContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.ticketRelationListContract),
 );
 
 const ticketLabelLazy = lazyContract(() =>

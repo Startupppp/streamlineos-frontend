@@ -9,7 +9,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { Ticket, TicketComment } from "@/types/projects";
 
 const commentEditResultLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.commentEditResultContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.commentEditResultContract),
 );
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),

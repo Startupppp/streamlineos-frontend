@@ -11,7 +11,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 
 const allWorkPageContract = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.allWorkPageContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.allWorkPageContract),
 );
 import type { AllWorkFilters, AllWorkTicket, CursorPaginatedResponse } from "@/types/projects";
 import { useCan } from "@/hooks/api/access";
