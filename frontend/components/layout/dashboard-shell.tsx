@@ -24,7 +24,8 @@ import { getChatMobileContentPaddingClassName } from "./mobile/chat-mobile-chrom
 import { MobileModuleBottomNav } from "./mobile/mobile-module-bottom-nav";
 import { MobileShellFab } from "./mobile/mobile-shell-fab";
 import { shouldShowMobileModuleBottomNav } from "./mobile/mobile-module-nav-items";
-import { isPortalChromelessPath, type ModuleAccent } from "./sidebar/sidebar-nav-items";
+import { isPortalChromelessPath } from "./sidebar/sidebar-nav-items";
+import type { BuildSidebarSlot } from "./sidebar/build-sidebar-slot";
 import { ShellOfflineBanner } from "./shell-offline-banner";
 import { ShellVariantProvider } from "./shell-variant-context";
 import { ShellSidebarCollapseProvider } from "./shell-sidebar-collapse-context";
@@ -58,20 +59,13 @@ function setSidebarCookie(collapsed: boolean) {
   document.cookie = `${SIDEBAR_COOKIE}=${collapsed}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
 }
 
-interface ProjectNavTreeSlotProps {
-  projectId: string;
-  collapsed: boolean;
-  accent: ModuleAccent;
-  onNavigate: () => void;
-}
-
 interface DashboardShellProps {
   userId: string;
   defaultCollapsed: boolean;
   shellVariant?: ShellVariant;
   children: React.ReactNode;
   createTicketDialog?: React.ReactNode;
-  projectNavTreeSlot?: (props: ProjectNavTreeSlotProps) => React.ReactNode;
+  buildSidebarSlot?: BuildSidebarSlot;
   notificationBellSlot?: React.ReactNode;
   chatMobileNavSlot?: (onOpenMobileMenu: () => void) => React.ReactNode;
 }
@@ -82,7 +76,7 @@ export function DashboardShell({
   shellVariant = "desktop",
   children,
   createTicketDialog,
-  projectNavTreeSlot,
+  buildSidebarSlot,
   notificationBellSlot,
   chatMobileNavSlot,
 }: DashboardShellProps) {
@@ -273,7 +267,10 @@ export function DashboardShell({
                     style={{ width: sidebarW }}
                     className="relative z-50 hidden h-full shrink-0 flex-col overflow-visible border-r border-sidebar-border bg-sidebar transition-[width] duration-300 ease-in-out md:flex"
                   >
-                    <AppSidebar isCollapsed={isSidebarCollapsed} projectNavTreeSlot={projectNavTreeSlot} />
+                    <AppSidebar
+                      isCollapsed={isSidebarCollapsed}
+                      buildSidebarSlot={buildSidebarSlot}
+                    />
                   </aside>
                 )}
 
@@ -321,7 +318,7 @@ export function DashboardShell({
                   onNavigate={handleCloseMobileMenu}
                   onRequestProductSwitcher={handleRequestProductSwitcher}
                   onRequestOrgSwitcher={handleRequestOrgSwitcher}
-                  projectNavTreeSlot={projectNavTreeSlot}
+                  buildSidebarSlot={buildSidebarSlot}
                 />
               </DrawerContent>
             </Drawer>

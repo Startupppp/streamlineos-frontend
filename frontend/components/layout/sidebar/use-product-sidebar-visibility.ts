@@ -1,11 +1,15 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import { useAccess } from "@/hooks/api/access";
+import { useAccess, useModuleEnabled } from "@/hooks/api/access";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { useEntitlements } from "@/hooks/api/entitlements";
+import type { PermissionKey } from "@/lib/rbac/permissions";
+import { toBuildNavGroups } from "@/lib/build/build-nav-groups";
+import { resolveBuildNavModel } from "@/lib/build/build-nav-model";
+import { resolveBuildScope } from "@/lib/build/build-scope";
 import {
   getNavGroupsForProduct,
   shouldHideProductSidebar,
@@ -16,6 +20,9 @@ import {
   type NavGroup,
   type ProductKey,
 } from "./sidebar-nav-items";
+
+const BUILD_FEEDBACK_ORG_MODULE = "feedbucket";
+const EMPTY_PINS: readonly string[] = [];
 
 export function useProductSidebarVisibility(): {
   hideSidebar: boolean;
@@ -37,8 +44,28 @@ export function useProductSidebarVisibility(): {
   const effectiveRole = isOrgOwner ? "OWNER" : "MEMBER";
 
   const activeProduct = getProductFromPathname(pathname);
+  const isFeedbackEnabled = useModuleEnabled(BUILD_FEEDBACK_ORG_MODULE);
+
+  const can = useCallback(
+    (permission: PermissionKey) =>
+      isOrgOwner || (scopes !== undefined && permission in scopes),
+    [isOrgOwner, scopes],
+  );
+  const isOrgModuleEnabled = useCallback(
+    (orgModuleKey: string) =>
+      orgModuleKey === BUILD_FEEDBACK_ORG_MODULE ? isFeedbackEnabled : true,
+    [isFeedbackEnabled],
+  );
 
   const navGroups = useMemo(() => {
+    if (activeProduct === "build")
+      return toBuildNavGroups(
+        resolveBuildNavModel({
+          scope: resolveBuildScope(pathname),
+          access: { can, isOrgModuleEnabled },
+          pinnedIds: EMPTY_PINS,
+        }),
+      );
     return getNavGroupsForProduct(
       activeProduct,
       effectiveRole,
@@ -46,7 +73,16 @@ export function useProductSidebarVisibility(): {
       enabledModules,
       lockedModules,
     );
-  }, [activeProduct, effectiveRole, scopes, enabledModules, lockedModules]);
+  }, [
+    activeProduct,
+    pathname,
+    can,
+    isOrgModuleEnabled,
+    effectiveRole,
+    scopes,
+    enabledModules,
+    lockedModules,
+  ]);
 
   const { hideSidebar, showSidebarToggle } = resolveProductSidebarChrome({
     sessionReady: status !== "loading",

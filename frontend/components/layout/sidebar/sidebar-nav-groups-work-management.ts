@@ -1,7 +1,8 @@
-import { AlarmClock, LayoutDashboard, Users, Briefcase, Receipt, FileText, Timer, BarChart3, Network, ShieldCheck, Target, ClipboardCheck, Map, ListChecks, Inbox, Building2, SlidersHorizontal, ShieldAlert, LayoutTemplate, LayoutGrid, CheckSquare, Plug, Banknote, Layers, Boxes } from "lucide-react";
+import { AlarmClock, Users, Receipt, Timer, BarChart3, ShieldCheck, ListChecks, SlidersHorizontal, ShieldAlert, Banknote } from "lucide-react";
+import { buildOrganizationNavGroups } from "@/lib/build/build-nav-groups";
 import type { NavGroup } from "./sidebar-nav-types";
 
-export const WORK_MANAGEMENT_NAV_GROUPS: NavGroup[] = [
+const TIMESHEETS_NAV_GROUPS: NavGroup[] = [
 {
     label: "Timesheets",
     product: "timesheets",
@@ -81,151 +82,9 @@ export const WORK_MANAGEMENT_NAV_GROUPS: NavGroup[] = [
       },
     ],
   },
-{
-    label: "Delivery",
-    product: "build",
-    module: "build",
-    requiredPermission: ["build:view", "build:tickets:view", "build:portal:view"],
-    routes: [
-      {
-        label: "Home",
-        icon: LayoutDashboard,
-        href: "/build/command-center",
-        requiredPermission: "build:view",
-      },
-      {
-        label: "Inbox",
-        icon: Inbox,
-        href: "/build/inbox",
-        requiredPermission: "build:tickets:view",
-      },
-      {
-        label: "My issues",
-        icon: CheckSquare,
-        href: "/build/my-work",
-        requiredPermission: "build:tickets:view",
-      },
-      {
-        label: "Drafts",
-        icon: FileText,
-        href: "/build/drafts",
-        requiredPermission: "build:tickets:view",
-      },
-      {
-        label: "All issues",
-        icon: Layers,
-        href: "/build/all-work",
-        requiredPermission: "build:tickets:view",
-      },
-      {
-        label: "Projects",
-        icon: Briefcase,
-        href: "/build",
-        exact: true,
-        requiredPermission: "build:view",
-      },
-      {
-        label: "Portfolios",
-        icon: LayoutGrid,
-        href: "/build/portfolios",
-        requiredPermission: "build:portfolios:view",
-      },
-      {
-        label: "Programs",
-        icon: Layers,
-        href: "/build/programs",
-        requiredPermission: "build:programs:view",
-      },
-      {
-        label: "Client Access",
-        icon: ShieldCheck,
-        href: "/build/client-access",
-        requiredPermission: "build:portal:view",
-      },
-      {
-        label: "Delivery Teams",
-        icon: Network,
-        href: "/build/teams",
-        requiredPermission: "build:teams:view",
-      },
-      {
-        label: "Members",
-        icon: Users,
-        href: "/build/members",
-        requiredPermission: "build:members:view",
-      },
-      {
-        label: "Customers",
-        icon: Building2,
-        href: "/build/customers",
-        requiredPermission: "crm:leads:view",
-      },
-    ],
-  },
-{
-    label: "Product",
-    product: "build",
-    module: "build",
-    defaultCollapsed: true,
-    requiredPermission: [
-      "build:roadmap:view",
-      "build:goals:view",
-      "build:portfolios:view",
-      "build:managed-products:view",
-      "build:workspaces:view",
-      "build:approvals:view",
-      "build:create",
-      "integrations:git:view",
-    ],
-    routes: [
-      {
-        label: "Roadmap",
-        icon: Map,
-        href: "/build/roadmap",
-        requiredPermission: "build:roadmap:view",
-      },
-      {
-        label: "Goals",
-        icon: Target,
-        href: "/build/goal",
-        requiredPermission: "build:goals:view",
-      },
-      {
-        label: "Managed Products",
-        icon: Layers,
-        href: "/build/managed-products",
-        requiredPermission: "build:managed-products:view",
-      },
-      {
-        label: "PM Workspaces",
-        icon: Boxes,
-        href: "/build/pm-workspaces",
-        requiredPermission: "build:workspaces:view",
-      },
-      {
-        label: "Approvals",
-        icon: ClipboardCheck,
-        href: "/build/approvals",
-        requiredPermission: "build:approvals:view",
-      },
-      {
-        label: "Templates",
-        icon: LayoutTemplate,
-        href: "/build/templates",
-        requiredPermission: "build:create",
-      },
-      {
-        label: "Settings",
-        icon: Plug,
-        href: "/build/settings/integrations",
-        requiredPermission: "integrations:git:view",
-      },
-      {
-        label: "Access",
-        icon: ShieldCheck,
-        href: "/build/access",
-        requiredPermission: "build:access:view",
-      },
-    ],
-  },
+];
+
+export const WORK_MANAGEMENT_NAV_GROUPS: NavGroup[] = [
+  ...TIMESHEETS_NAV_GROUPS,
+  ...buildOrganizationNavGroups(),
 ];

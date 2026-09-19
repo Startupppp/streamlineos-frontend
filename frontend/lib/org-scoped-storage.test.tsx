@@ -1,10 +1,3 @@
-jest.mock("@/features/build/sidebar/project-nav-config", () => ({
-  DEFAULT_HIDDEN_PROJECT_NAV_IDS: new Set(["triage", "analytics"]),
-  isProjectNavPinned: (id: string) => id === "issues",
-  isDefaultProjectNavHidden: (ids: ReadonlySet<string>) =>
-    ids.size === 2 && ids.has("triage") && ids.has("analytics"),
-}));
-
 import { act, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import {
@@ -13,7 +6,7 @@ import {
   orgScopedStorageKey,
 } from "./org-scoped-storage";
 import { useCalendarAccountFilters } from "@/features/calendar/use-calendar-account-filters";
-import { useProjectNavVisibility } from "@/features/build/sidebar/use-project-nav-visibility";
+import { useBuildNavPins } from "@/features/build/navigation/use-build-nav-preferences";
 
 const SCOPE_A = "authenticated:test-org-a:test-user-1";
 const SCOPE_B = "authenticated:test-org-b:test-user-1";
@@ -85,38 +78,43 @@ describe("useCalendarAccountFilters — cross-org isolation", () => {
   });
 });
 
-describe("useProjectNavVisibility — cross-org isolation", () => {
+const PIN_SCOPE_TOOL_IDS = ["project-triage", "project-analytics"];
+
+describe("useBuildNavPins — cross-org isolation", () => {
   it("value written under Org A is invisible under Org B", () => {
-    const { result: resultA } = renderHook(() => useProjectNavVisibility(), {
-      wrapper: wrapWith(SCOPE_A),
-    });
-
-    act(() => {
-      resultA.current.setVisible("triage", true);
-    });
-    expect(resultA.current.isVisible("triage")).toBe(true);
-
-    const { result: resultB } = renderHook(() => useProjectNavVisibility(), {
-      wrapper: wrapWith(SCOPE_B),
-    });
-    expect(resultB.current.isVisible("triage")).toBe(false);
-  });
-
-  it("module-level cache does not leak: Org B returns default after Org A writes", () => {
-    const { result: resultA, unmount: unmountA } = renderHook(
-      () => useProjectNavVisibility(),
+    const { result: resultA } = renderHook(
+      () => useBuildNavPins(PIN_SCOPE_TOOL_IDS),
       { wrapper: wrapWith(SCOPE_A) },
     );
 
     act(() => {
-      resultA.current.setVisible("analytics", true);
+      resultA.current.togglePin("project-triage");
     });
-    expect(resultA.current.isVisible("analytics")).toBe(true);
+    expect(resultA.current.isPinned("project-triage")).toBe(true);
+
+    const { result: resultB } = renderHook(
+      () => useBuildNavPins(PIN_SCOPE_TOOL_IDS),
+      { wrapper: wrapWith(SCOPE_B) },
+    );
+    expect(resultB.current.isPinned("project-triage")).toBe(false);
+  });
+
+  it("module-level cache does not leak: Org B returns default after Org A writes", () => {
+    const { result: resultA, unmount: unmountA } = renderHook(
+      () => useBuildNavPins(PIN_SCOPE_TOOL_IDS),
+      { wrapper: wrapWith(SCOPE_A) },
+    );
+
+    act(() => {
+      resultA.current.togglePin("project-analytics");
+    });
+    expect(resultA.current.isPinned("project-analytics")).toBe(true);
     unmountA();
 
-    const { result: resultB } = renderHook(() => useProjectNavVisibility(), {
-      wrapper: wrapWith(SCOPE_B),
-    });
-    expect(resultB.current.isVisible("analytics")).toBe(false);
+    const { result: resultB } = renderHook(
+      () => useBuildNavPins(PIN_SCOPE_TOOL_IDS),
+      { wrapper: wrapWith(SCOPE_B) },
+    );
+    expect(resultB.current.isPinned("project-analytics")).toBe(false);
   });
 });

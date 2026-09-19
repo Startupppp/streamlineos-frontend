@@ -59,6 +59,24 @@ export function usePmWorkspaces(params?: ListPmWorkspacesParams) {
   });
 }
 
+export function usePmWorkspace(pmWorkspaceId: string | null) {
+  const canView = useCan("build:workspaces:view");
+  return useQuery<PmWorkspace>({
+    queryKey: buildWorkQueryKeys.projects.pmWorkspaces.detail(
+      pmWorkspaceId ?? "",
+    ),
+    queryFn: ({ signal }) =>
+      apiClient.get<PmWorkspace>(
+        `/build/workspaces/${pmWorkspaceId}`,
+        undefined,
+        signal,
+        pmWorkspaceRowContract,
+      ),
+    enabled: canView && !!pmWorkspaceId,
+    staleTime: 60_000,
+  });
+}
+
 export function useCreatePmWorkspace() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:workspaces:create", {

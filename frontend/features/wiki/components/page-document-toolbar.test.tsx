@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { PageDocumentToolbar } from "./page-document-toolbar";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 
@@ -79,5 +80,59 @@ describe("PageDocumentToolbar", () => {
     );
 
     expect(screen.getByRole("button", { name: "More options" })).toBeInTheDocument();
+  });
+
+  it("labels favorite as remove when the page is already favorited", async () => {
+    const user = userEvent.setup();
+    render(
+      <PageDocumentToolbar
+        page={{ ...page, isFavorite: true }}
+        pageId={5}
+        isEditable
+        onOpenMetaSheet={noop}
+        onOpenComments={noop}
+        onOpenHistory={noop}
+        onOpenMove={noop}
+        onOpenSaveAsTemplate={noop}
+        onOpenCover={noop}
+        onDelete={noop}
+        onNavigate={noop}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "More options" }));
+
+    expect(
+      screen.getByRole("menuitem", { name: /remove from favorites/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("menuitemcheckbox", { name: /favorite/i }),
+    ).toBeNull();
+  });
+
+  it("labels lock as unlock when the page is already locked", async () => {
+    const user = userEvent.setup();
+    render(
+      <PageDocumentToolbar
+        page={{ ...page, isLocked: true }}
+        pageId={5}
+        isEditable
+        onOpenMetaSheet={noop}
+        onOpenComments={noop}
+        onOpenHistory={noop}
+        onOpenMove={noop}
+        onOpenSaveAsTemplate={noop}
+        onOpenCover={noop}
+        onDelete={noop}
+        onNavigate={noop}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "More options" }));
+
+    expect(
+      screen.getByRole("menuitem", { name: /unlock page/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("menuitemcheckbox")).toBeNull();
   });
 });

@@ -57,10 +57,12 @@ export const kbPageTreeItemContract = z.object({
   projectId: z.number().int().nullable(),
   title: z.string(),
   icon: z.string().nullable(),
+  coverImage: z.string().nullable().optional(),
   sortOrder: z.number().int().nullable(),
   visibility: z.string(),
   createdById: z.string().nullable(),
   status: z.string(),
+  updatedAt: z.string().optional(),
   hasChildren: z.boolean(),
 });
 

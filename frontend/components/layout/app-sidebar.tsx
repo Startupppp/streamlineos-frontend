@@ -1,8 +1,8 @@
 "use client";
 
-import { Fragment, useMemo, useCallback, useEffect, useState } from "react";
+import { useMemo, useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { usePathname, useParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,6 +20,7 @@ import {
   MODULE_ACCENTS,
   type ModuleAccent,
 } from "./sidebar/sidebar-nav-items";
+import type { BuildSidebarSlotProps } from "./sidebar/build-sidebar-slot";
 import { SidebarSection } from "./sidebar/sidebar-section";
 import { ProductSwitcherMenu } from "./header/product-switcher-menu";
 import { WorkspaceSwitcher } from "./header/org-switcher";
@@ -28,20 +29,13 @@ import { useAccess, useCan } from "@/hooks/api/access";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { useEntitlements } from "@/hooks/api/entitlements";
 
-interface ProjectNavTreeSlotProps {
-  projectId: string;
-  collapsed: boolean;
-  accent: ModuleAccent;
-  onNavigate: () => void;
-}
-
 interface AppSidebarProps {
   isCollapsed?: boolean;
   onNavigate?: () => void;
   onRequestProductSwitcher?: () => void;
   onRequestOrgSwitcher?: () => void;
   isMobile?: boolean;
-  projectNavTreeSlot?: (props: ProjectNavTreeSlotProps) => React.ReactNode;
+  buildSidebarSlot?: (props: BuildSidebarSlotProps) => React.ReactNode;
 }
 
 interface SidebarSkeletonProps {
@@ -91,7 +85,7 @@ export function AppSidebar({
   onRequestProductSwitcher,
   onRequestOrgSwitcher,
   isMobile = false,
-  projectNavTreeSlot,
+  buildSidebarSlot,
 }: AppSidebarProps) {
   const { data: session, status } = useSession();
   const { data: access } = useAccess();
@@ -99,10 +93,9 @@ export function AppSidebar({
   const effectiveRole = isOrgOwner ? "OWNER" : "MEMBER";
 
   const pathname = usePathname();
-  const params = useParams();
   const activeProduct = getProductFromPathname(pathname);
   const accent: ModuleAccent = MODULE_ACCENTS[activeProduct];
-  const rawProjectId = params?.projectId;
+  const isBuildProduct = activeProduct === "build";
 
   const [collapsedGroups, setCollapsedGroups] = useState<
     Record<string, boolean>
@@ -115,12 +108,8 @@ export function AppSidebar({
   const { data: entitlements } = useEntitlements();
   const lockedModules = entitlements?.lockedModules ?? [];
 
-  const activeProjectId = useMemo(() => {
-    if (activeProduct !== "build") return null;
-    const value = Array.isArray(rawProjectId) ? rawProjectId[0] : rawProjectId;
-    return typeof value === "string" && /^\d+$/.test(value) ? value : null;
-  }, [activeProduct, rawProjectId]);
   const navGroups = useMemo(() => {
+    if (isBuildProduct) return [];
     return getNavGroupsForProduct(
       activeProduct,
       effectiveRole,
@@ -128,12 +117,14 @@ export function AppSidebar({
       enabledModules,
       lockedModules,
     );
-  }, [activeProduct, effectiveRole, scopes, enabledModules, lockedModules]);
-
-  const firstBuildGroup = useMemo(
-    () => navGroups.find((group) => group.product === "build") ?? null,
-    [navGroups],
-  );
+  }, [
+    isBuildProduct,
+    activeProduct,
+    effectiveRole,
+    scopes,
+    enabledModules,
+    lockedModules,
+  ]);
 
   const activeGroupLabel = useMemo(() => {
     for (const group of navGroups) {
@@ -252,12 +243,20 @@ export function AppSidebar({
         )}
 
         <ScrollArea className="flex-1 min-h-0">
-          <nav className={cn("py-2", effectiveCollapsed ? "px-1" : "px-2.5")}>
-            {navGroups.map((group, i) => {
-              const multiGroup = navGroups.length > 1;
-              return (
-                <Fragment key={group.label}>
+          {isBuildProduct ? (
+            <nav aria-label="Build navigation">
+              {buildSidebarSlot?.({
+                isCollapsed: effectiveCollapsed,
+                onNavigate: onNavigate ?? noop,
+              })}
+            </nav>
+          ) : (
+            <nav className={cn("py-2", effectiveCollapsed ? "px-1" : "px-2.5")}>
+              {navGroups.map((group, i) => {
+                const multiGroup = navGroups.length > 1;
+                return (
                   <SidebarSection
+                    key={group.label}
                     group={group}
                     groupIndex={i}
                     isCollapsed={effectiveCollapsed}
@@ -274,20 +273,10 @@ export function AppSidebar({
                     onNavigate={onNavigate}
                     accent={accent}
                   />
-                  {activeProjectId &&
-                  group === firstBuildGroup &&
-                  projectNavTreeSlot
-                    ? projectNavTreeSlot({
-                        projectId: activeProjectId,
-                        collapsed: effectiveCollapsed,
-                        accent,
-                        onNavigate: onNavigate ?? noop,
-                      })
-                    : null}
-                </Fragment>
-              );
-            })}
-          </nav>
+                );
+              })}
+            </nav>
+          )}
         </ScrollArea>
       </div>
     </TooltipProvider>

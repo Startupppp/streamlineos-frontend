@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -13,18 +12,17 @@ import {
   KNOWLEDGE_BASE,
 } from "@/lib/knowledge-routes";
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
+import { KbStarIcon } from "@/features/wiki/lib/kb-icons";
+import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import {
-  KbFileTextIcon,
-  KbStarIcon,
-} from "@/features/wiki/lib/kb-icons";
-import { TruncatedText } from "@/components/ui/truncated-text";
+  WikiPageCard,
+  WIKI_PAGE_CARD_GRID_CLASS,
+} from "@/features/wiki/components/wiki-page-card";
 
-function FavoriteRow({ page }: { page: KbPageListItem }) {
+function FavoriteCard({ page }: { page: KbPageListItem }) {
   const toggleFavorite = useToggleFavoriteKbPage();
 
-  function handleRemoveFavorite(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
+  function handleRemoveFavorite() {
     toggleFavorite.mutate(
       { pageId: page.id, isFavorite: true },
       {
@@ -35,35 +33,33 @@ function FavoriteRow({ page }: { page: KbPageListItem }) {
   }
 
   return (
-    <Link
+    <WikiPageCard
       href={pageHref(page.id)}
-      className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors group"
+      title={page.title}
+      icon={page.icon}
+      coverImage={page.coverImage}
+      subtitle={kbTimeAgo(page.updatedAt)}
     >
-      <span className="text-base shrink-0 w-5 text-center">
-        {page.icon ?? (
-          <KbFileTextIcon className="h-4 w-4 text-muted-foreground" />
-        )}
-      </span>
-      <TruncatedText text={page.title || "Untitled"} className="flex-1 text-sm font-medium" />
       <Button
+        type="button"
         variant="ghost"
         size="icon"
-        className="w-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="h-7 w-7 shrink-0"
         onClick={handleRemoveFavorite}
         disabled={toggleFavorite.isPending}
         aria-label="Remove from favorites"
       >
         <KbStarIcon className="h-3.5 w-3.5 fill-amber-400 text-status-warning-ink" />
       </Button>
-    </Link>
+    </WikiPageCard>
   );
 }
 
 function FavoritesSkeleton() {
   return (
-    <div className="space-y-2">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <Skeleton key={i} className="h-11 w-full rounded-lg" />
+    <div className={WIKI_PAGE_CARD_GRID_CLASS}>
+      {Array.from({ length: 6 }).map((_, skeletonIndex) => (
+        <Skeleton key={skeletonIndex} className="h-28 w-full rounded-lg" />
       ))}
     </div>
   );
@@ -100,9 +96,9 @@ export default function FavoritesPage() {
       )}
 
       {!isLoading && !isError && pages.length > 0 && (
-        <div className="space-y-1.5">
+        <div className={WIKI_PAGE_CARD_GRID_CLASS}>
           {pages.map((page) => (
-            <FavoriteRow key={page.id} page={page} />
+            <FavoriteCard key={page.id} page={page} />
           ))}
         </div>
       )}

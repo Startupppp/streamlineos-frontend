@@ -22,7 +22,6 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
@@ -131,14 +130,6 @@ export function PageDocumentToolbar({
     onNavigate(Number(id));
   }
 
-  function handleFavoriteCheckedChange() {
-    handleToggleFavorite();
-  }
-
-  function handleLockCheckedChange() {
-    handleToggleLock();
-  }
-
   return (
     <div className="flex items-center gap-1.5 shrink-0">
       <KbPageAiActions
@@ -172,14 +163,10 @@ export function PageDocumentToolbar({
             <KbInfoIcon className="mr-2 h-4 w-4" />
             Page info
           </DropdownMenuItem>
-          <DropdownMenuCheckboxItem
-            checked={page.isFavorite}
-            onCheckedChange={handleFavoriteCheckedChange}
-            aria-label={page.isFavorite ? "Favorited" : "Add to favorites"}
-          >
+          <DropdownMenuItem onSelect={handleToggleFavorite}>
             <KbStarIcon className="mr-2 h-4 w-4" />
-            {page.isFavorite ? "Favorited" : "Add to favorites"}
-          </DropdownMenuCheckboxItem>
+            {page.isFavorite ? "Remove from favorites" : "Add to favorites"}
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           {isEditable && (
             <DropdownMenuItem onSelect={onOpenCover}>
@@ -201,18 +188,14 @@ export function PageDocumentToolbar({
             Move
           </DropdownMenuItem>
           {canManage && (
-            <DropdownMenuCheckboxItem
-              checked={page.isLocked}
-              onCheckedChange={handleLockCheckedChange}
-              aria-label={page.isLocked ? "Locked" : "Lock page"}
-            >
+            <DropdownMenuItem onSelect={handleToggleLock}>
               {page.isLocked ? (
                 <KbUnlockIcon className="mr-2 h-4 w-4" />
               ) : (
                 <KbLockIcon className="mr-2 h-4 w-4" />
               )}
-              {page.isLocked ? "Locked" : "Lock page"}
-            </DropdownMenuCheckboxItem>
+              {page.isLocked ? "Unlock page" : "Lock page"}
+            </DropdownMenuItem>
           )}
           {canTemplates && (
             <DropdownMenuItem onSelect={onOpenSaveAsTemplate}>
@@ -227,7 +210,7 @@ export function PageDocumentToolbar({
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
               <KbLink2Icon className="mr-2 h-4 w-4" />
-              Backlinks ({backlinks.length})
+              Backlinks
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="w-56">
               {backlinks.length === 0 ? (

@@ -2,7 +2,6 @@
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 
-import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,38 +12,29 @@ import {
   KNOWLEDGE_BASE,
 } from "@/lib/knowledge-routes";
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
-import {
-  KbClockIcon,
-  KbFileTextIcon,
-} from "@/features/wiki/lib/kb-icons";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
+import {
+  WikiPageCard,
+  WIKI_PAGE_CARD_GRID_CLASS,
+} from "@/features/wiki/components/wiki-page-card";
 
-function RecentRow({ page }: { page: KbPageListItem }) {
+function RecentCard({ page }: { page: KbPageListItem }) {
   return (
-    <Link
+    <WikiPageCard
       href={pageHref(page.id)}
-      className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
-    >
-      <span className="text-base shrink-0 w-5 text-center">
-        {page.icon ?? (
-          <KbFileTextIcon className="h-4 w-4 text-muted-foreground" />
-        )}
-      </span>
-      <TruncatedText text={page.title || "Untitled"} className="flex-1 text-sm font-medium" />
-      <span className="text-xs text-muted-foreground shrink-0 flex items-center gap-1">
-        <KbClockIcon className="h-3 w-3" />
-        {kbTimeAgo(page.updatedAt)}
-      </span>
-    </Link>
+      title={page.title}
+      icon={page.icon}
+      coverImage={page.coverImage}
+      subtitle={kbTimeAgo(page.updatedAt)}
+    />
   );
 }
 
 function RecentSkeleton() {
   return (
-    <div className="space-y-2">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <Skeleton key={i} className="h-11 w-full rounded-lg" />
+    <div className={WIKI_PAGE_CARD_GRID_CLASS}>
+      {Array.from({ length: 6 }).map((_, skeletonIndex) => (
+        <Skeleton key={skeletonIndex} className="h-28 w-full rounded-lg" />
       ))}
     </div>
   );
@@ -82,9 +72,9 @@ export default function RecentPage() {
       )}
 
       {!isLoading && !isError && pages.length > 0 && (
-        <div className="space-y-1.5">
+        <div className={WIKI_PAGE_CARD_GRID_CLASS}>
           {pages.map((page) => (
-            <RecentRow key={page.id} page={page} />
+            <RecentCard key={page.id} page={page} />
           ))}
         </div>
       )}

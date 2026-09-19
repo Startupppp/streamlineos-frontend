@@ -9,7 +9,7 @@ const confirmActionDirectiveSchema = z.object({
   token: z.string(),
   action: z.string(),
   summary: z.string(),
-  preview: z.record(z.unknown()),
+  preview: z.record(z.string(), z.unknown()),
 });
 
 const connectIntegrationDirectiveSchema = z.object({

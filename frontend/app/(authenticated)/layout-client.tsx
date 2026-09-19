@@ -6,16 +6,15 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";
 import { useAccessVersionSync } from "@/hooks/common/use-access-version-sync";
 import { useNotificationEvents } from "@/features/notifications/use-notification-events";
-import { ProjectNavTreeSkeleton } from "@/features/build/sidebar/project-nav-tree-skeleton";
-import type { ModuleAccent } from "@/components/layout/sidebar/sidebar-nav-items";
+import type { BuildSidebarSlotProps } from "@/components/layout/sidebar/build-sidebar-slot";
 import type { ShellVariant } from "@/lib/shell-variant";
 
-const ProjectNavTree = dynamic(
+const BuildSidebar = dynamic(
   () =>
-    import("@/features/build/sidebar/project-nav-tree").then(
-      (m) => m.ProjectNavTree,
+    import("@/features/build/navigation/build-sidebar").then(
+      (m) => m.BuildSidebar,
     ),
-  { ssr: false, loading: () => <ProjectNavTreeSkeleton /> },
+  { ssr: false },
 );
 
 const NotificationBell = dynamic(
@@ -34,13 +33,8 @@ interface LayoutClientProps {
   createTicketDialog?: ReactNode;
 }
 
-function renderProjectNavTree(props: {
-  projectId: string;
-  collapsed: boolean;
-  accent: ModuleAccent;
-  onNavigate: () => void;
-}) {
-  return <ProjectNavTree {...props} />;
+function renderBuildSidebar(props: BuildSidebarSlotProps) {
+  return <BuildSidebar {...props} />;
 }
 
 function renderChatMobileNav(onOpenMobileMenu: () => void) {
@@ -59,7 +53,7 @@ export function LayoutClient({ children, ...shellProps }: LayoutClientProps) {
   return (
     <DashboardShell
       {...shellProps}
-      projectNavTreeSlot={renderProjectNavTree}
+      buildSidebarSlot={renderBuildSidebar}
       chatMobileNavSlot={renderChatMobileNav}
       notificationBellSlot={notificationBellSlot}
     >

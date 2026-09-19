@@ -18,7 +18,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   useKbPagesTrash,
   useRestoreKbPage,
@@ -32,6 +31,10 @@ import {
 } from "@/features/wiki/lib/kb-icons";
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
+import {
+  WikiPageCard,
+  WIKI_PAGE_CARD_GRID_CLASS,
+} from "@/features/wiki/components/wiki-page-card";
 
 function TrashRow({ page }: { page: KbPageListItem }) {
   const restore = useRestoreKbPage();
@@ -62,39 +65,37 @@ function TrashRow({ page }: { page: KbPageListItem }) {
 
   return (
     <>
-      <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border bg-card hover:bg-muted/30 transition-colors">
-        <span className="text-base shrink-0 w-5 text-center">
-          {page.icon ?? "📄"}
-        </span>
-        <div className="flex-1 min-w-0">
-          <TruncatedText text={page.title || "Untitled"} className="text-sm font-medium" />
-          <p className="text-xs text-muted-foreground">
-            Deleted {page.deletedAt ? kbTimeAgo(page.deletedAt) : ""}
-          </p>
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
+      <WikiPageCard
+        title={page.title}
+        icon={page.icon}
+        coverImage={page.coverImage}
+        subtitle={`Deleted ${page.deletedAt ? kbTimeAgo(page.deletedAt) : ""}`}
+      >
+        <div className="flex shrink-0 items-center gap-1">
           <Button
+            type="button"
             size="sm"
             variant="ghost"
             onClick={handleRestore}
             disabled={restore.isPending}
-            className="text-xs gap-1"
+            className="gap-1 text-xs"
           >
             <KbRotateCcwIcon className="h-3 w-3" />
             Restore
           </Button>
           <Button
+            type="button"
             size="sm"
             variant="ghost"
             onClick={handleDeleteForeverClick}
             disabled={hardDelete.isPending}
-            className="text-xs gap-1 text-destructive hover:text-destructive"
+            className="gap-1 text-xs text-destructive hover:text-destructive"
           >
             <KbTrash2Icon className="h-3 w-3" />
             Delete forever
           </Button>
         </div>
-      </div>
+      </WikiPageCard>
 
       <AlertDialog open={confirmOpen} onOpenChange={handleConfirmOpenChange}>
         <AlertDialogContent>
@@ -123,9 +124,9 @@ function TrashRow({ page }: { page: KbPageListItem }) {
 
 function TrashSkeleton() {
   return (
-    <div className="space-y-2">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Skeleton key={i} className="h-14 w-full rounded-lg" />
+    <div className={WIKI_PAGE_CARD_GRID_CLASS}>
+      {Array.from({ length: 5 }).map((_, skeletonIndex) => (
+        <Skeleton key={skeletonIndex} className="h-28 w-full rounded-lg" />
       ))}
     </div>
   );
@@ -195,7 +196,7 @@ export default function TrashPage() {
           />
         )}
         {!isLoading && !isError && pages.length > 0 && (
-          <div className="space-y-1.5">
+          <div className={WIKI_PAGE_CARD_GRID_CLASS}>
             {pages.map((page) => (
               <TrashRow key={page.id} page={page} />
             ))}
