@@ -11,6 +11,7 @@ import type {
   CreateManagedProductInput,
   UpdateManagedProductInput,
 } from "@/types/projects";
+import type { ManagedProductInsights } from "@/hooks/api/build/managed-products-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 
@@ -19,6 +20,9 @@ const managedProductPageContract = lazyContract(() =>
 );
 const managedProductRowContract = lazyContract(() =>
   import("@/hooks/api/build/managed-products-schema").then((m) => m.managedProductRowContract),
+);
+const managedProductInsightsContractLazy = lazyContract(() =>
+  import("@/hooks/api/build/managed-products-schema").then((m) => m.managedProductInsightsContract),
 );
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -61,6 +65,22 @@ export function useManagedProduct(managedProductId: number) {
       apiClient.get<ManagedProduct>(`/build/managed-products/${managedProductId}`, undefined, signal, managedProductRowContract),
     enabled: canView && !!managedProductId,
     staleTime: 60_000,
+  });
+}
+
+export function useManagedProductInsights(managedProductId: number) {
+  const canView = useCan("build:managed-products:view");
+  return useQuery<ManagedProductInsights>({
+    queryKey: buildWorkQueryKeys.projects.managedProducts.insights(managedProductId),
+    queryFn: ({ signal }) =>
+      apiClient.get<ManagedProductInsights>(
+        `/build/managed-products/${managedProductId}/insights`,
+        undefined,
+        signal,
+        managedProductInsightsContractLazy,
+      ),
+    enabled: canView && managedProductId > 0,
+    staleTime: 2 * 60_000,
   });
 }
 

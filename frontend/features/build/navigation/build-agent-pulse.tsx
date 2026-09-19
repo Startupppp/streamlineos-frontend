@@ -46,6 +46,33 @@ function resolveSignalSummary(signal: AgentPulseSignal): string {
   return signalTypeToSummary[signalType];
 }
 
+function CommentDraftTooltipBody({ signal, summary }: { signal: AgentPulseSignal; summary: string }) {
+  return (
+    <div className="space-y-1">
+      <div>{summary}</div>
+      {signal.evidence != null && (
+        <div className="text-muted-foreground">Evidence: {signal.evidence}</div>
+      )}
+      {signal.proposedChange != null && (
+        <div className="text-muted-foreground">Proposed: {signal.proposedChange}</div>
+      )}
+      {signal.impact != null && (
+        <div className="text-muted-foreground">Impact: {signal.impact}</div>
+      )}
+      {signal.affectedRecordIds != null && signal.affectedRecordIds.length > 0 && (
+        <div className="text-muted-foreground">
+          {signal.affectedRecordIds.length} affected record{signal.affectedRecordIds.length !== 1 ? "s" : ""}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function resolveTooltipContent(signal: AgentPulseSignal, summary: string): React.ReactNode {
+  if (signal.type !== "comment_draft") return summary;
+  return <CommentDraftTooltipBody signal={signal} summary={summary} />;
+}
+
 export function BuildAgentPulse({
   isCollapsed,
   onNavigate,
@@ -56,6 +83,11 @@ export function BuildAgentPulse({
 
   const href = resolveSignalHref(signal);
   const summary = resolveSignalSummary(signal);
+  const tooltipContent = resolveTooltipContent(signal, summary);
+
+  const showConfidence =
+    signal.type === "comment_draft" &&
+    signal.confidence != null;
 
   const link = (
     <Link
@@ -69,9 +101,16 @@ export function BuildAgentPulse({
     >
       <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
       {isCollapsed ? null : (
-        <span className="min-w-0 flex-1 truncate text-micro font-medium text-foreground">
-          {summary}
-        </span>
+        <>
+          <span className="min-w-0 flex-1 truncate text-micro font-medium text-foreground">
+            {summary}
+          </span>
+          {showConfidence && (
+            <span className="shrink-0 rounded px-1 py-0.5 text-[9px] font-bold tabular-nums bg-primary/10 text-primary">
+              {signal.confidence}%
+            </span>
+          )}
+        </>
       )}
     </Link>
   );
@@ -81,8 +120,8 @@ export function BuildAgentPulse({
   return (
     <Tooltip delayDuration={0}>
       <TooltipTrigger asChild>{link}</TooltipTrigger>
-      <TooltipContent side="right" sideOffset={10} className="text-xs font-medium">
-        {summary}
+      <TooltipContent side="right" sideOffset={10} className="text-xs font-medium max-w-[220px]">
+        {tooltipContent}
       </TooltipContent>
     </Tooltip>
   );

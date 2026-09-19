@@ -30,3 +30,20 @@ export const managedProductPageContract = z.object({
     nextCursor: z.string().nullable(),
   }),
 });
+
+export const managedProductInsightsContract = z.object({
+  linkedProjectCount: z.number().int(),
+  projectsByStatus: z.object({
+    active: z.number().int(),
+    completed: z.number().int(),
+    archived: z.number().int(),
+  }),
+  submissionsByStatus: z.object({
+    open: z.number().int(),
+    in_progress: z.number().int(),
+    resolved: z.number().int(),
+    archived: z.number().int(),
+  }),
+});
+
+export type ManagedProductInsights = z.infer<typeof managedProductInsightsContract>;

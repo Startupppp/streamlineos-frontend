@@ -445,6 +445,30 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
       "Product-scoped goals and OKRs. Without this entry the route falls back to the managed-products permission, allowing callers who hold build:managed-products:view but not build:goals:view to reach the goals board. First read is GET /goals, which carries build:goals:view.",
     backendRoute: { method: "get", path: "/goals" },
   },
+  {
+    prefix: "/build/managed-products/[managedProductId]/feedback",
+    product: "build",
+    permission: "feedbucket:submissions:view",
+    reason:
+      "Product-scoped feedback submission list. First read is GET /feedbucket/submissions?managedProductId=:id, which requires feedbucket:submissions:view. Without this entry the route inherits the parent managed-products gate (build:managed-products:view), letting callers who hold build:managed-products:view but not feedbucket:submissions:view reach the inbox.",
+    backendRoute: { method: "get", path: "/feedbucket/submissions" },
+  },
+  {
+    prefix: "/build/managed-products/[managedProductId]/insights",
+    product: "build",
+    permission: "build:managed-products:view",
+    reason:
+      "Product insights aggregates. First read is GET /build/managed-products/{managedProductId}/insights, which requires build:managed-products:view. The parent product route already carries this key; this entry keeps the nav key and route-access resolution in agreement for the parity gate.",
+    backendRoute: { method: "get", path: "/build/managed-products/{managedProductId}/insights" },
+  },
+  {
+    prefix: "/build/[projectId]/updates",
+    product: "build",
+    permission: "build:updates:view",
+    reason:
+      "Project updates feed. First read is GET /build/{projectId}/updates, which requires build:updates:view. Without this entry the route inherits the project gate (build:tickets:view), so a caller holding tickets but not updates would reach the feed and the nav key would disagree with the route key.",
+    backendRoute: { method: "get", path: "/build/{projectId}/updates" },
+  },
 ];
 
 function segmentsOf(value: string): string[] {

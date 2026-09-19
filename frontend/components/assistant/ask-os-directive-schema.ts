@@ -25,7 +25,6 @@ export const askOsDirectiveSchema = z.discriminatedUnion("kind", [
 ]);
 
 export type AskOsDirective = z.infer<typeof askOsDirectiveSchema>;
-export type ConfirmActionDirective = z.infer<typeof confirmActionDirectiveSchema>;
 export type ConnectIntegrationDirective = z.infer<typeof connectIntegrationDirectiveSchema>;
 
 const DIRECTIVE_PREFIXES: Array<{ prefix: string; kind: AskOsDirective["kind"] }> = [

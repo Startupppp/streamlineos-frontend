@@ -77,6 +77,8 @@ export async function streamAiText({
       ? createAiUiMessageStreamDecoder()
       : null;
 
+    let lastToolError: string | null = null;
+
     function emit(text: string) {
       if (!text) return;
       received += text;
@@ -86,6 +88,10 @@ export async function streamAiText({
     function drain(events: readonly AiUiMessageStreamEvent[]) {
       for (const event of events) {
         if (event.type === "error") throw new ApiError(event.message, 502);
+        if (event.type === "tool-error") {
+          lastToolError = event.message;
+          continue;
+        }
         if (event.type === "data") {
           onData?.(event.name, event.data);
           continue;
@@ -109,6 +115,9 @@ export async function streamAiText({
 
     consume(decoder.decode());
     if (frames) drain(frames.flush());
+
+    if (received.length === 0 && lastToolError !== null)
+      throw new ApiError(lastToolError, 502);
 
     return { status: "completed", text: received, headers: res.headers };
   } catch (error) {

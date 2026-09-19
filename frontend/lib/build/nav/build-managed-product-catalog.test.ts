@@ -30,11 +30,31 @@ describe("buildManagedProductCatalog (BSN-01-032)", () => {
     expect(roadmapEntry?.requiredPermission).toBe("build:roadmap:view");
   });
 
-  it("does NOT include a Feedback destination because the backend feedbackListQuerySchema has no managedProductId filter", () => {
-    const feedbackEntry = catalog.primary.find(
-      (d) => d.href.includes("feedback"),
-    );
-    expect(feedbackEntry).toBeUndefined();
+  it("includes a Feedback destination scoped to the product base path (BSN-01-012)", () => {
+    const feedbackEntry = catalog.primary.find((d) => d.id === "product-feedback");
+    expect(feedbackEntry).toBeDefined();
+    expect(feedbackEntry?.href).toBe(`${BASE}/feedback`);
+  });
+
+  it("gates Feedback on feedbucket:submissions:view (BSN-01-012)", () => {
+    const feedbackEntry = catalog.primary.find((d) => d.id === "product-feedback");
+    expect(feedbackEntry?.requiredPermission).toBe("feedbucket:submissions:view");
+  });
+
+  it("gates Feedback behind the feedbucket org module so it is hidden when feedbucket is not enabled (BSN-01-012)", () => {
+    const feedbackEntry = catalog.primary.find((d) => d.id === "product-feedback");
+    expect(feedbackEntry?.requiredOrgModule).toBe("feedbucket");
+  });
+
+  it("includes an Insights destination scoped to the product base path (BSN-01-022)", () => {
+    const insightsEntry = catalog.primary.find((d) => d.id === "product-insights");
+    expect(insightsEntry).toBeDefined();
+    expect(insightsEntry?.href).toBe(`${BASE}/insights`);
+  });
+
+  it("gates Insights on build:managed-products:view (BSN-01-022)", () => {
+    const insightsEntry = catalog.primary.find((d) => d.id === "product-insights");
+    expect(insightsEntry?.requiredPermission).toBe("build:managed-products:view");
   });
 
   it("does NOT include a Changelog destination because the backend changelogListQuerySchema has no managedProductId filter", () => {

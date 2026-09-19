@@ -175,6 +175,8 @@
     "build:timesheets:manage",
     "build:timesheets:view",
     "build:update",
+    "build:updates:manage",
+    "build:updates:view",
     "build:view",
     "build:whiteboards:manage",
     "build:workflow:manage",

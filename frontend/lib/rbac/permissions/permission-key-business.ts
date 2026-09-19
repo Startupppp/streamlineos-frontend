@@ -107,6 +107,8 @@ export type BusinessPermissionKey =
   | "build:meetings:manage"
   | "build:incidents:view"
   | "build:incidents:manage"
+  | "build:updates:view"
+  | "build:updates:manage"
   | "build:forms:view"
   | "build:forms:manage"
   | "build:portfolios:view"

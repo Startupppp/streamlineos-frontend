@@ -17,7 +17,7 @@ jest.mock("@/lib/utils", () => ({
 jest.mock("@/components/ui/tooltip", () => ({
   Tooltip: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   TooltipTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  TooltipContent: () => null,
+  TooltipContent: ({ children }: { children: React.ReactNode }) => <div data-testid="tooltip-content">{children}</div>,
 }));
 
 import { useAgentPulse } from "@/hooks/api/build/agent-pulse";
@@ -92,9 +92,85 @@ describe("BuildAgentPulse", () => {
     expect(screen.getByRole("link")).toHaveAttribute("href", "/build/drafts");
   });
 
-  it("shows only the icon in collapsed mode", () => {
+  it("shows only the icon in collapsed mode — summary text is absent from the link itself", () => {
     mockUseAgentPulse.mockReturnValue({ data: makeSignal() });
     render(<BuildAgentPulse isCollapsed />);
-    expect(screen.queryByText(/Overdue approval/)).not.toBeInTheDocument();
+    const link = screen.getByRole("link");
+    expect(link.textContent).toBe("");
+  });
+
+  it("renders confidence badge for comment_draft with a set confidence value (BSN-03-043)", () => {
+    const signal = makeSignal({ type: "comment_draft", title: "Add test coverage", confidence: 75 });
+    mockUseAgentPulse.mockReturnValue({ data: signal });
+    render(<BuildAgentPulse isCollapsed={false} />);
+    expect(screen.getByText("75%")).toBeInTheDocument();
+  });
+
+  it("does not render confidence badge when confidence is null for comment_draft (BSN-03-043)", () => {
+    const signal = makeSignal({ type: "comment_draft", title: "Add test coverage", confidence: null });
+    mockUseAgentPulse.mockReturnValue({ data: signal });
+    render(<BuildAgentPulse isCollapsed={false} />);
+    expect(screen.queryByText(/%$/)).not.toBeInTheDocument();
+  });
+
+  it("does not render confidence badge for non-comment_draft signals even if confidence field is present (BSN-03-043)", () => {
+    const signal = makeSignal({ type: "overdue_approval", confidence: 90 });
+    mockUseAgentPulse.mockReturnValue({ data: signal });
+    render(<BuildAgentPulse isCollapsed={false} />);
+    expect(screen.queryByText("90%")).not.toBeInTheDocument();
+  });
+
+  it("renders evidence, proposed change and impact in tooltip for comment_draft (BSN-03-043)", () => {
+    const signal = makeSignal({
+      type: "comment_draft",
+      title: "Add test coverage",
+      evidence: "Ticket open 14 days",
+      proposedChange: "Assign to senior dev",
+      impact: "Unblocks Q4 milestone",
+    });
+    mockUseAgentPulse.mockReturnValue({ data: signal });
+    render(<BuildAgentPulse isCollapsed />);
+    const tooltip = screen.getByTestId("tooltip-content");
+    expect(tooltip).toHaveTextContent("Evidence: Ticket open 14 days");
+    expect(tooltip).toHaveTextContent("Proposed: Assign to senior dev");
+    expect(tooltip).toHaveTextContent("Impact: Unblocks Q4 milestone");
+  });
+
+  it("renders affected record count in tooltip for comment_draft with affected records (BSN-03-043)", () => {
+    const signal = makeSignal({
+      type: "comment_draft",
+      title: "Add test coverage",
+      affectedRecordIds: [1, 2, 3],
+    });
+    mockUseAgentPulse.mockReturnValue({ data: signal });
+    render(<BuildAgentPulse isCollapsed />);
+    const tooltip = screen.getByTestId("tooltip-content");
+    expect(tooltip).toHaveTextContent("3 affected records");
+  });
+
+  it("renders singular form for a single affected record (BSN-03-043)", () => {
+    const signal = makeSignal({
+      type: "comment_draft",
+      title: "Add test coverage",
+      affectedRecordIds: [7],
+    });
+    mockUseAgentPulse.mockReturnValue({ data: signal });
+    render(<BuildAgentPulse isCollapsed />);
+    const tooltip = screen.getByTestId("tooltip-content");
+    expect(tooltip).toHaveTextContent("1 affected record");
+  });
+
+  it("does not render evidence details in tooltip for non-comment_draft signals (BSN-03-043)", () => {
+    const signal = makeSignal({ type: "overdue_approval", evidence: "some evidence" });
+    mockUseAgentPulse.mockReturnValue({ data: signal });
+    render(<BuildAgentPulse isCollapsed />);
+    const tooltip = screen.getByTestId("tooltip-content");
+    expect(tooltip).not.toHaveTextContent("Evidence:");
+  });
+
+  it("renders nothing when signal has no evidence fields — quiet low-confidence draft is excluded upstream (BSN-03-046)", () => {
+    mockUseAgentPulse.mockReturnValue({ data: null });
+    const { container } = render(<BuildAgentPulse isCollapsed={false} />);
+    expect(container.firstChild).toBeNull();
   });
 });

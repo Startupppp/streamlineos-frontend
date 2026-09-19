@@ -8,6 +8,7 @@ const TERMINATOR = "[DONE]";
 export type AiUiMessageStreamEvent =
   | { type: "text"; text: string }
   | { type: "error"; message: string }
+  | { type: "tool-error"; toolName: string | null; message: string }
   | { type: "data"; name: string; data: unknown };
 
 export function isAiUiMessageStream(headers: Headers | undefined): boolean {
@@ -36,6 +37,15 @@ function readFrame(payload: string): AiUiMessageStreamEvent | null {
     return { type: "text", text: frame.delta };
   if (frame.type === "error" && typeof frame.errorText === "string")
     return { type: "error", message: frame.errorText };
+  if (frame.type === "tool-output-error" || frame.type === "tool-input-error")
+    return {
+      type: "tool-error",
+      toolName: typeof frame.toolName === "string" ? frame.toolName : null,
+      message:
+        typeof frame.errorText === "string"
+          ? frame.errorText
+          : "A tool call could not be completed.",
+    };
   if (typeof frame.type === "string" && frame.type.startsWith("data-"))
     return { type: "data", name: frame.type.slice(5), data: frame.data };
   return null;

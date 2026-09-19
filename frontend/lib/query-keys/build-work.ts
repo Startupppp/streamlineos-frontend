@@ -173,6 +173,12 @@ export const buildWorkQueryKeys = {
       detail: (projectId: number, incidentId: number) =>
         [...base, "projects", projectId, "incidents", incidentId] as const,
     },
+    updates: {
+      list: (projectId: number, cursor?: string) =>
+        cursor === undefined
+          ? ([...base, "projects", projectId, "updates"] as const)
+          : ([...base, "projects", projectId, "updates", cursor] as const),
+    },
     forms: {
       list: (projectId: number, params?: QueryKeyParams) =>
         params === undefined
@@ -213,6 +219,8 @@ export const buildWorkQueryKeys = {
         : ([...base, "projects", "managed-products", "list", params] as const),
       detail: (managedProductId: number) =>
         [...base, "projects", "managed-products", "detail", managedProductId] as const,
+      insights: (managedProductId: number) =>
+        [...base, "projects", "managed-products", "insights", managedProductId] as const,
     },
     pmWorkspaces: {
       list: (params?: QueryKeyParams) =>

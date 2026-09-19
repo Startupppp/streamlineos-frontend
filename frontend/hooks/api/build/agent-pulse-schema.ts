@@ -15,6 +15,12 @@ export const agentPulseContract = z
     projectId: z.number().int(),
     dueAt: z.string().nullable(),
     type: agentPulseSignalTypeSchema,
+    evidence: z.string().nullable().optional(),
+    proposedChange: z.string().nullable().optional(),
+    impact: z.string().nullable().optional(),
+    confidence: z.number().int().min(0).max(100).nullable().optional(),
+    affectedRecordIds: z.array(z.number().int()).nullable().optional(),
+    retryCount: z.number().int().nonnegative().optional(),
   })
   .nullable();
 

@@ -1,5 +1,6 @@
-import { LayoutDashboard, LayoutGrid, Map, Target } from "lucide-react";
+import { BarChart2, LayoutDashboard, LayoutGrid, Map, MessageSquare, Target } from "lucide-react";
 import type { BuildScopeCatalog } from "./build-nav-destination";
+import { BUILD_FEEDBACK_ORG_MODULE } from "./build-nav-destination";
 
 export function buildManagedProductCatalog(basePath: string): BuildScopeCatalog {
   return {
@@ -36,6 +37,23 @@ export function buildManagedProductCatalog(basePath: string): BuildScopeCatalog 
         icon: Target,
         requiredPermission: "build:goals:view",
         mobilePriority: 40,
+      },
+      {
+        id: "product-feedback",
+        label: "Feedback",
+        href: `${basePath}/feedback`,
+        icon: MessageSquare,
+        requiredPermission: "feedbucket:submissions:view",
+        requiredOrgModule: BUILD_FEEDBACK_ORG_MODULE,
+        mobilePriority: 50,
+      },
+      {
+        id: "product-insights",
+        label: "Insights",
+        href: `${basePath}/insights`,
+        icon: BarChart2,
+        requiredPermission: "build:managed-products:view",
+        mobilePriority: 60,
       },
     ],
     moreTools: [],

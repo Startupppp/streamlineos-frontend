@@ -22,6 +22,7 @@ import {
   LayoutDashboard,
   LayoutGrid,
   LayoutList,
+  Megaphone,
   MessageCircle,
   MessageSquareText,
   PackageOpen,
@@ -163,6 +164,13 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
         href: `${basePath}/incidents`,
         icon: TriangleAlert,
         requiredPermission: "build:incidents:view",
+      },
+      {
+        id: "project-updates",
+        label: "Updates",
+        href: `${basePath}/updates`,
+        icon: Megaphone,
+        requiredPermission: "build:updates:view",
       },
       {
         id: "project-change-requests",

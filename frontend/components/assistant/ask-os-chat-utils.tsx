@@ -19,7 +19,7 @@ const AskOsConnectCard = dynamic(
   { ssr: false },
 );
 
-export const SUGGESTIONS = [
+const SUGGESTIONS = [
   "Summarize my day",
   "What are my hot leads right now?",
   "Search the knowledge base for our leave policy",
@@ -215,7 +215,7 @@ export function AskOsBubble({
   );
 }
 
-export function TypingDots({ reduce }: { reduce: boolean }) {
+function TypingDots({ reduce }: { reduce: boolean }) {
   return (
     <div className="flex items-center gap-1 py-1">
       {[0, 1, 2].map((i) => (

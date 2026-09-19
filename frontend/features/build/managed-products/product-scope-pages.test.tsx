@@ -1,6 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { ProductGoalsPage } from "./product-goals-page";
 import { ProductRoadmapPage } from "./product-roadmap-page";
+import { ProductFeedbackPage } from "./product-feedback-page";
+import { ProductInsightsPage } from "./product-insights-page";
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
@@ -16,6 +18,14 @@ jest.mock("@/hooks/api/access", () => ({
     denied: true,
     pending: false,
   })),
+}));
+
+jest.mock("@/hooks/api/feedbucket", () => ({
+  useFeedbucketSubmissions: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/build/managed-products", () => ({
+  useManagedProductInsights: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/goals", () => ({
@@ -120,6 +130,21 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
 jest.mock("@/components/illustrations", () => ({
   EmptyTargetIllustration: () => null,
   EmptyProjectsIllustration: () => null,
+  EmptyInboxIllustration: () => null,
+}));
+
+jest.mock("@/components/ui/data-table", () => ({
+  DataTable: ({ emptyState, isLoading }: { emptyState?: React.ReactNode; isLoading?: boolean }) =>
+    isLoading ? <div data-testid="data-table-loading" /> : emptyState ?? <div data-testid="data-table" />,
+}));
+
+jest.mock("@/lib/utils", () => ({
+  resolveImageUrl: (url: string) => url,
+  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
+}));
+
+jest.mock("date-fns", () => ({
+  formatDistanceToNow: () => "2 days ago",
 }));
 
 jest.mock("@/hooks/common/use-debounce", () => ({
@@ -232,5 +257,114 @@ describe("ProductRoadmapPage — denied state (BSN-01-027)", () => {
     });
     render(<ProductRoadmapPage managedProductId={7} />);
     expect(screen.queryByRole("button", { name: /new item/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("ProductFeedbackPage — denied state (BSN-01-012)", () => {
+  const { useFeedbucketSubmissions } = jest.requireMock("@/hooks/api/feedbucket") as {
+    useFeedbucketSubmissions: jest.Mock;
+  };
+
+  const DENIED_FEEDBACK_RESULT = {
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+    access: {
+      permission: "feedbucket:submissions:view" as const,
+      allowed: false,
+      denied: true,
+      pending: false,
+    },
+  };
+
+  const EMPTY_FEEDBACK_RESULT = {
+    data: { data: [], total: 0 },
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+    access: {
+      permission: "feedbucket:submissions:view" as const,
+      allowed: true,
+      denied: false,
+      pending: false,
+    },
+  };
+
+  it("shows NoPermissionState when feedbucket:submissions:view is denied", () => {
+    useFeedbucketSubmissions.mockReturnValue(DENIED_FEEDBACK_RESULT);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    expect(screen.getByTestId("no-permission")).toBeInTheDocument();
+    expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+  });
+
+  it("passes feedbucket:submissions:view as the permission key to NoPermissionState", () => {
+    useFeedbucketSubmissions.mockReturnValue(DENIED_FEEDBACK_RESULT);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    expect(screen.getByTestId("no-permission")).toHaveAttribute(
+      "data-permission",
+      "feedbucket:submissions:view",
+    );
+  });
+
+  it("passes managedProductId to useFeedbucketSubmissions so the query is product-scope-filtered (BSN-01-012)", () => {
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBACK_RESULT);
+    render(<ProductFeedbackPage managedProductId={7} />);
+    const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).toMatchObject({ managedProductId: 7 });
+  });
+});
+
+describe("ProductInsightsPage — denied state (BSN-01-022)", () => {
+  const { usePermissionGate, useCan } = jest.requireMock("@/hooks/api/access") as {
+    usePermissionGate: jest.Mock;
+    useCan: jest.Mock;
+  };
+
+  const { useManagedProductInsights } = jest.requireMock(
+    "@/hooks/api/build/managed-products",
+  ) as { useManagedProductInsights: jest.Mock };
+
+  it("shows NoPermissionState when build:managed-products:view is denied", () => {
+    usePermissionGate.mockReturnValue({
+      permission: "build:managed-products:view",
+      allowed: false,
+      denied: true,
+      pending: false,
+    });
+    useCan.mockReturnValue(false);
+    useManagedProductInsights.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    render(<ProductInsightsPage managedProductId={7} />);
+    expect(screen.getByTestId("no-permission")).toBeInTheDocument();
+  });
+
+  it("passes build:managed-products:view as the permission key to NoPermissionState", () => {
+    usePermissionGate.mockReturnValue({
+      permission: "build:managed-products:view",
+      allowed: false,
+      denied: true,
+      pending: false,
+    });
+    useCan.mockReturnValue(false);
+    useManagedProductInsights.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    render(<ProductInsightsPage managedProductId={7} />);
+    expect(screen.getByTestId("no-permission")).toHaveAttribute(
+      "data-permission",
+      "build:managed-products:view",
+    );
   });
 });
