@@ -1,6 +1,7 @@
 import {
   createAiUiMessageStreamDecoder,
   isAiUiMessageStream,
+  type AiUiMessageStreamEvent,
 } from "./ai-ui-message-stream";
 
 function frame(payload: unknown): string {
@@ -8,7 +9,11 @@ function frame(payload: unknown): string {
 }
 
 function textOf(events: ReturnType<ReturnType<typeof createAiUiMessageStreamDecoder>["decode"]>) {
-  return events.map((event) => (event.type === "text" ? event.text : `!${event.message}`)).join("");
+  return events.map((event) => {
+    if (event.type === "text") return event.text;
+    if (event.type === "error") return `!${event.message}`;
+    return "";
+  }).join("");
 }
 
 describe("detecting which of the two wire formats a stream response is", () => {
@@ -111,5 +116,35 @@ describe("decoding the UI message stream the Ask OS chat route now sends", () =>
       frame({ type: "text-delta", id: "a", delta: "two" });
 
     expect(textOf(decoder.decode(wire))).toBe("one two");
+  });
+
+  it("surfaces a data-askos-directive frame as a data event with the suffix as name, not dropped", () => {
+    const decoder = createAiUiMessageStreamDecoder();
+    const payload = { kind: "confirm-action", proposalId: 9, token: "t", action: "act", summary: "s", preview: {} };
+    const wire = frame({ type: "data-askos-directive", data: payload, transient: true });
+
+    const events = decoder.decode(wire);
+    const dataEvents = events.filter((e): e is Extract<AiUiMessageStreamEvent, { type: "data" }> => e.type === "data");
+    expect(dataEvents).toHaveLength(1);
+    expect(dataEvents[0]?.name).toBe("askos-directive");
+    expect(dataEvents[0]?.data).toEqual(payload);
+  });
+
+  it("does not add a data frame's payload to the visible text, keeping the reply clean", () => {
+    const decoder = createAiUiMessageStreamDecoder();
+    const wire =
+      frame({ type: "data-askos-directive", data: { kind: "connect-integration" }, transient: true }) +
+      frame({ type: "text-delta", id: "a", delta: "Please connect." });
+
+    expect(textOf(decoder.decode(wire))).toBe("Please connect.");
+  });
+
+  it("extracts the name suffix from any data- frame type, not just askos-directive", () => {
+    const decoder = createAiUiMessageStreamDecoder();
+    const wire = frame({ type: "data-custom-event", data: { foo: "bar" }, transient: true });
+
+    const events = decoder.decode(wire);
+    const dataEvent = events.find((e): e is Extract<AiUiMessageStreamEvent, { type: "data" }> => e.type === "data");
+    expect(dataEvent?.name).toBe("custom-event");
   });
 });

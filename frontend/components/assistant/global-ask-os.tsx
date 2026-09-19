@@ -42,6 +42,11 @@ import { AskOsConversationList } from "./ask-os-conversation-list";
 import { useAskOs } from "./ask-os-context";
 import { AskOsPanelHeader } from "./ask-os-panel-header";
 import { AskOsLauncher } from "./ask-os-launcher";
+import { AskOsBubble } from "./ask-os-chat-utils";
+import {
+  parseAskOsDirectivePayload,
+  type AskOsDirective,
+} from "./ask-os-directive-schema";
 
 interface Draft {
   assistant: string;
@@ -59,6 +64,7 @@ export function GlobalAskOs() {
   const [input, setInput] = useState("");
   const [failure, setFailure] = useState<AiFailureState | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [inFlightDirective, setInFlightDirective] = useState<AskOsDirective | null>(null);
   const [atBottom, setAtBottom] = useState(true);
   const [view, setView] = useState<"chat" | "conversations">("chat");
   const [activeConversationId, setActiveConversationId] = useState<
@@ -194,6 +200,15 @@ export function GlobalAskOs() {
       document.body.style.overflow = previousOverflow;
     };
   }, [isMobile, open]);
+  const handleDirectiveData = useCallback(
+    (name: string, data: unknown) => {
+      if (name !== "askos-directive") return;
+      const parsed = parseAskOsDirectivePayload(data);
+      if (parsed !== null) setInFlightDirective(parsed);
+    },
+    [],
+  );
+
   const send = useCallback(
     async (override?: string) => {
       const text = (override ?? input).trim();
@@ -202,6 +217,7 @@ export function GlobalAskOs() {
       lastSentRef.current = text;
       setInput("");
       setFailure(null);
+      setInFlightDirective(null);
       isNearBottomRef.current = true;
       let conversationId = activeConversationId;
       if (conversationId === null) {
@@ -237,6 +253,7 @@ export function GlobalAskOs() {
           },
           conversationId,
           selectedPersona ?? undefined,
+          handleDirectiveData,
         );
         if (outcome.status === "busy") {
           setDraft(null);
@@ -304,6 +321,7 @@ export function GlobalAskOs() {
     [
       activeConversationId,
       createConversation,
+      handleDirectiveData,
       input,
       isStreaming,
       persisted,
@@ -471,6 +489,17 @@ export function GlobalAskOs() {
                       showEmpty={showEmpty}
                       topSentinelRef={topSentinelRef}
                     />
+                    {inFlightDirective !== null && (
+                      <div className="border-t border-border/60 px-3 py-2">
+                        <AskOsBubble
+                          role="assistant"
+                          content=""
+                          streaming={false}
+                          reduce={Boolean(reduce)}
+                          directive={inFlightDirective}
+                        />
+                      </div>
+                    )}
                     <AskOsChatComposer
                       input={input}
                       isStreaming={isStreaming}

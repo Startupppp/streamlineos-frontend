@@ -127,7 +127,7 @@ export function BuildScopeSelector({
           {identity.isArchived ? (
             <Badge
               variant="outline"
-              className="h-4 shrink-0 px-1.5 py-0 text-[9px]"
+              className="h-4 shrink-0 px-1.5 py-0 text-micro"
             >
               Archived
             </Badge>

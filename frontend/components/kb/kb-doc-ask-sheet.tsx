@@ -8,7 +8,10 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { MessageSquare, Square } from "lucide-react";
+import { SendIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { AiDraftCard } from "@/components/ai/ai-draft-card";
 import { AiQuotaEmptyState } from "@/components/ai/ai-quota-empty-state";
@@ -136,22 +139,30 @@ export function KbDocAskSheet({
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4">
           {state.status === "input" && (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-              <Input
-                autoFocus
-                value={question}
-                onChange={handleQuestionChange}
-                placeholder="e.g. What are the prerequisites?"
-                className="text-label"
-              />
-              <Button
+            <form onSubmit={handleSubmit} className="flex items-center gap-2">
+              <div className="relative min-w-0 flex-1">
+                <MessageSquare
+                  className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden
+                />
+                <Input
+                  autoFocus
+                  value={question}
+                  onChange={handleQuestionChange}
+                  placeholder="Ask about this page…"
+                  aria-label="Question"
+                  className="h-9 pl-9"
+                />
+              </div>
+              <AnimatedIconButton
                 type="submit"
-                size="sm"
+                size="icon"
+                icon={SendIcon}
+                iconSize={16}
                 disabled={question.trim().length < 3}
-                className="self-start"
-              >
-                Ask
-              </Button>
+                className="h-9 w-9 shrink-0"
+                aria-label="Ask"
+              />
             </form>
           )}
 
@@ -165,12 +176,13 @@ export function KbDocAskSheet({
               </p>
               <Button
                 type="button"
-                variant="ghost"
-                size="sm"
+                variant="outline"
+                size="icon"
                 onClick={handleCancel}
-                className="h-7 text-xs text-muted-foreground"
+                className="h-9 w-9"
+                aria-label="Stop"
               >
-                Stop
+                <Square className="h-3.5 w-3.5" />
               </Button>
             </div>
           )}
@@ -214,15 +226,19 @@ export function KbDocAskSheet({
                   {state.text}
                 </p>
               </AiDraftCard>
-              <Button
+              <AnimatedIconButton
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-7 text-xs"
+                icon={SendIcon}
+                iconSize={14}
+                iconClassName="mr-1.5"
+                className="h-9"
                 onClick={handleAskAnother}
+                aria-label="Ask another question"
               >
-                Ask another question
-              </Button>
+                Ask another
+              </AnimatedIconButton>
             </>
           )}
         </div>

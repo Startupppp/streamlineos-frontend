@@ -1,4 +1,4 @@
-import { parseAskOsDirective } from "./ask-os-directive-schema";
+import { parseAskOsDirective, parseAskOsDirectivePayload } from "./ask-os-directive-schema";
 
 describe("parseAskOsDirective", () => {
   it("parses a valid CONFIRM_ACTION directive", () => {
@@ -69,5 +69,68 @@ describe("parseAskOsDirective", () => {
       preview: {},
     });
     expect(parseAskOsDirective(`CONFIRM_ACTION:${bodyMissingToken}`)).toBeNull();
+  });
+});
+
+describe("parseAskOsDirectivePayload — typed object path for stream data frames", () => {
+  it("parses a confirm-action object directly without any text prefix, reusing the same schema", () => {
+    const result = parseAskOsDirectivePayload({
+      kind: "confirm-action",
+      proposalId: 3,
+      token: "tok-abc",
+      action: "create_task",
+      summary: "Create a task for Alice",
+      preview: { title: "Follow up" },
+    });
+    expect(result).toEqual({
+      kind: "confirm-action",
+      proposalId: 3,
+      token: "tok-abc",
+      action: "create_task",
+      summary: "Create a task for Alice",
+      preview: { title: "Follow up" },
+    });
+  });
+
+  it("parses a connect-integration object directly without any text prefix", () => {
+    const result = parseAskOsDirectivePayload({
+      kind: "connect-integration",
+      toolkit: "gmail",
+      reason: "no-connection",
+      summary: "Connect Gmail to continue.",
+    });
+    expect(result).toEqual({
+      kind: "connect-integration",
+      toolkit: "gmail",
+      reason: "no-connection",
+      summary: "Connect Gmail to continue.",
+    });
+  });
+
+  it("returns null for a malformed payload missing required fields, so invalid server data is safe", () => {
+    expect(parseAskOsDirectivePayload({ kind: "confirm-action" })).toBeNull();
+  });
+
+  it("returns null for an unrecognised kind, so future server additions don't crash older clients", () => {
+    expect(parseAskOsDirectivePayload({ kind: "unknown-directive", data: {} })).toBeNull();
+  });
+
+  it("returns null when the payload is not an object, guarding against primitive data frames", () => {
+    expect(parseAskOsDirectivePayload("some string")).toBeNull();
+    expect(parseAskOsDirectivePayload(null)).toBeNull();
+    expect(parseAskOsDirectivePayload(42)).toBeNull();
+  });
+
+  it("the historical text-sentinel path still works for already-persisted messages via parseAskOsDirective", () => {
+    const body = JSON.stringify({
+      proposalId: 7,
+      token: "tok-xyz",
+      action: "send_email",
+      summary: "Send email to Jane",
+      preview: { to: "jane@example.com" },
+    });
+    const result = parseAskOsDirective(`CONFIRM_ACTION:${body}`);
+    expect(result?.kind).toBe("confirm-action");
+    expect(result?.token).toBe("tok-xyz");
   });
 });

@@ -33,6 +33,7 @@ export interface BuildScopeDirectory {
   isLoading: boolean;
   isError: boolean;
   hasMoreProjects: boolean;
+  hasMoreHierarchy: boolean;
   refetch: () => void;
 }
 
@@ -154,6 +155,9 @@ export function useBuildScopeDirectory(
     isError:
       workspacesQuery.isError || productsQuery.isError || projectsQuery.isError,
     hasMoreProjects: projectsQuery.data?.hasMore ?? false,
+    hasMoreHierarchy:
+      (workspacesQuery.data?.pagination.hasMore ?? false) ||
+      (productsQuery.data?.pagination.hasMore ?? false),
     refetch: handleRefetch,
   };
 }

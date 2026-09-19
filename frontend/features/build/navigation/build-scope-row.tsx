@@ -105,7 +105,7 @@ export function BuildScopeRow({
           </span>
         </span>
         {isArchived ? (
-          <Badge variant="outline" className="h-4 shrink-0 px-1.5 py-0 text-[9px]">
+          <Badge variant="outline" className="h-4 shrink-0 px-1.5 py-0 text-micro">
             Archived
           </Badge>
         ) : null}

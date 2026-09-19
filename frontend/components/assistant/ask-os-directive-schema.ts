@@ -47,3 +47,8 @@ export function parseAskOsDirective(content: string): AskOsDirective | null {
   }
   return null;
 }
+
+export function parseAskOsDirectivePayload(data: unknown): AskOsDirective | null {
+  const result = askOsDirectiveSchema.safeParse(data);
+  return result.success ? result.data : null;
+}

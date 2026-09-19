@@ -28,9 +28,6 @@ const MATRIX: readonly MatrixRow[] = [
   { path: "/knowledge", universalMatch: true, decisionKind: "universal", label: "knowledge root" },
   // approved descendants allowed (wiki reading surfaces)
   { path: "/knowledge/wiki", universalMatch: true, decisionKind: "universal", label: "wiki reading root" },
-  { path: "/knowledge/wiki/favorites", universalMatch: true, decisionKind: "universal", label: "wiki favorites" },
-  { path: "/knowledge/wiki/favorites/sub", universalMatch: true, decisionKind: "universal", label: "wiki favorites sub-page" },
-  { path: "/knowledge/wiki/recent", universalMatch: true, decisionKind: "universal", label: "wiki recent pages" },
   { path: "/knowledge/wiki/shared", universalMatch: true, decisionKind: "universal", label: "wiki shared pages" },
   { path: "/knowledge/wiki/private", universalMatch: true, decisionKind: "universal", label: "wiki private pages" },
   { path: "/knowledge/wiki/doc/123", universalMatch: true, decisionKind: "universal", label: "individual wiki page reading" },

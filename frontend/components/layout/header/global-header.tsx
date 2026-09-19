@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils";
 import { HeaderBrand } from "./header-brand";
 import { ProductSwitcherMenu } from "./product-switcher-menu";
 import { WorkspaceSwitcher } from "./org-switcher";
-import { PmWorkspaceContextChip } from "./pm-workspace-context-chip";
 import { QuickCreateButton } from "./quick-create-button";
 import { UserAvatarMenu } from "./user-avatar-menu";
 import { SidebarCollapseToggle } from "./sidebar-collapse-toggle";
@@ -114,7 +113,6 @@ function DesktopHeader({
             )}
             <div className="w-px h-4 bg-sidebar-border" />
             <WorkspaceSwitcher variant="header" />
-            <PmWorkspaceContextChip />
           </>
         )}
         {hideAdminChrome && showSidebarToggle && onToggleSidebar && (

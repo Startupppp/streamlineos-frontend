@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { Archive, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
@@ -48,6 +48,41 @@ export function BuildScopeBrowser({
   );
   const { isStarred, toggleStar, starred } = useBuildScopeStars();
   const directory = useBuildScopeDirectory(search, includeArchived);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const moveFocus = useCallback((step: number) => {
+    const container = listRef.current;
+    if (!container) return false;
+    const options = [
+      ...container.querySelectorAll<HTMLButtonElement>('[role="option"]'),
+    ];
+    if (options.length === 0) return false;
+    const current = options.findIndex((option) => option === document.activeElement);
+    const nextIndex =
+      current === -1
+        ? step > 0
+          ? 0
+          : options.length - 1
+        : (current + step + options.length) % options.length;
+    options[nextIndex]?.focus();
+    return true;
+  }, []);
+
+  const handleListKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+      if (moveFocus(event.key === "ArrowDown" ? 1 : -1)) event.preventDefault();
+    },
+    [moveFocus],
+  );
+
+  const handleSearchKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key !== "ArrowDown") return;
+      if (moveFocus(1)) event.preventDefault();
+    },
+    [moveFocus],
+  );
 
   const isSearching = search.trim().length > 0;
 
@@ -104,7 +139,7 @@ export function BuildScopeBrowser({
               >
                 <ChevronRight
                   className={cn(
-                    "h-3 w-3 transition-transform duration-150",
+                    "h-3 w-3 transition-transform duration-150 motion-reduce:transition-none",
                     expanded && "rotate-90",
                   )}
                 />
@@ -157,7 +192,10 @@ export function BuildScopeBrowser({
 
   return (
     <>
-      <div className="shrink-0 border-b border-border/60 p-2">
+      <div
+        className="shrink-0 border-b border-border/60 p-2"
+        onKeyDown={handleSearchKeyDown}
+      >
         <SearchInput
           value={search}
           onValueChange={setSearch}
@@ -180,7 +218,11 @@ export function BuildScopeBrowser({
         </button>
       </div>
 
-      <ScrollArea className="max-h-80 min-h-0 flex-1">
+      <ScrollArea
+        className="max-h-80 min-h-0 flex-1"
+        viewportRef={listRef}
+        onKeyDown={handleListKeyDown}
+      >
         {directory.isError ? (
           <ErrorState
             className="border-0 bg-transparent"
@@ -240,12 +282,13 @@ export function BuildScopeBrowser({
         )}
       </ScrollArea>
 
-      {directory.hasMoreProjects ? (
+      {directory.hasMoreProjects || directory.hasMoreHierarchy ? (
         <>
           <Separator />
           <p className="shrink-0 px-3 py-2 text-micro text-muted-foreground">
-            Showing the first {directory.projects.length} projects — search to
-            narrow the list.
+            {directory.hasMoreHierarchy
+              ? "More scopes exist than are listed. Search finds any project; workspaces and products are filtered within the first 50."
+              : "More projects exist than are listed. Search to narrow the list."}
           </p>
         </>
       ) : null}

@@ -81,12 +81,13 @@ function writeStore<TValue>(
   next: TValue,
 ): void {
   if (typeof window === "undefined") return;
+  const serialized = JSON.stringify(next);
   try {
-    window.localStorage.setItem(storageKey, JSON.stringify(next));
+    window.localStorage.setItem(storageKey, serialized);
   } catch {
     return;
   }
-  store.raw = undefined;
+  store.raw = serialized;
   store.value = next;
   store.listeners.forEach((listener) => listener());
 }

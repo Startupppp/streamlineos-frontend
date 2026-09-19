@@ -301,7 +301,6 @@ export function KanbanBoard({
                       wipLimit={wipLimits?.[col.id]}
                       serverCount={hasActiveFilters ? undefined : columnCountsData?.[col.id]}
                       displayOptions={displayOptions}
-                      showQuickAdd
                       showHeaderQuickAdd
                       dragHandleProps={
                         canReorderColumn ? columnProvided.dragHandleProps : null

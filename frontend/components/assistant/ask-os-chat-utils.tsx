@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
 import type { AskAiHistoryMessage } from "@/hooks/api/chat-ai-assistant";
-import { parseAskOsDirective } from "./ask-os-directive-schema";
+import { parseAskOsDirective, type AskOsDirective } from "./ask-os-directive-schema";
 
 const AskOsConfirmationCard = dynamic(
   () =>
@@ -108,11 +108,13 @@ export function AskOsBubble({
   content,
   streaming,
   reduce,
+  directive: directiveProp,
 }: {
   role: "user" | "assistant";
   content: string;
   streaming: boolean;
   reduce: boolean;
+  directive?: AskOsDirective | null;
 }) {
   const [confirmedResult, setConfirmedResult] = useState<Record<
     string,
@@ -134,7 +136,7 @@ export function AskOsBubble({
     );
   }
 
-  const directive = parseAskOsDirective(content);
+  const directive = directiveProp ?? parseAskOsDirective(content);
 
   function handleCancelled() {
     setCancelled(true);

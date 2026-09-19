@@ -3,7 +3,7 @@ import { renderWithProviders } from "@/test-utils/render";
 import WikiSidebarNav from "./wiki-sidebar-nav";
 
 jest.mock("next/navigation", () => ({
-  usePathname: () => "/knowledge/wiki/recent",
+  usePathname: () => "/knowledge/wiki",
 }));
 
 describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
@@ -33,6 +33,8 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
 
     expect(screen.getByRole("link", { name: "Private" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Templates" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Recent" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Favorites" })).toBeNull();
   });
 
   it("keeps Ask KB in the collapsed wiki rail", () => {

@@ -31,7 +31,6 @@ export interface KanbanBoardColumnProps {
   displayOptions?: DisplayOptions;
   dragHandleProps?: DraggableProvidedDragHandleProps | null;
   isColumnDragging?: boolean;
-  showQuickAdd?: boolean;
   showHeaderQuickAdd?: boolean;
   stretch?: boolean;
   minHeightClass?: string;
@@ -57,7 +56,6 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
   displayOptions,
   dragHandleProps,
   isColumnDragging = false,
-  showQuickAdd = false,
   showHeaderQuickAdd = false,
   stretch = true,
   minHeightClass = "min-h-[100px]",
@@ -96,7 +94,7 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
         onColorChange={onColorChange}
         quickAdd={
           showHeaderQuickAdd ? (
-            <QuickAddInput columnId={column.id} projectId={projectId} headerMode />
+            <QuickAddInput columnId={column.id} projectId={projectId} />
           ) : undefined
         }
         dragHandleProps={dragHandleProps}
@@ -139,12 +137,6 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
           />
         </div>
       )}
-
-      {showQuickAdd ? (
-        <div className="border-t">
-          <QuickAddInput columnId={column.id} projectId={projectId} />
-        </div>
-      ) : null}
     </div>
   );
 });

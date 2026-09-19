@@ -32,8 +32,6 @@ const SESSION_ONLY_BY_DESIGN: readonly SessionOnlySurface[] = [
   { path: "/settings", reason: "The personal account landing page. Everything beneath it is organization administration." },
   { path: "/knowledge/chat", subtree: true, reason: "Knowledge Base reading is platform core." },
   { path: "/knowledge/wiki", reason: "Knowledge Base reading is platform core; space and record ACLs still apply." },
-  { path: "/knowledge/wiki/favorites", subtree: true, reason: "A member's own Knowledge Base favourites." },
-  { path: "/knowledge/wiki/recent", subtree: true, reason: "A member's own Knowledge Base reading history." },
   { path: "/knowledge/wiki/shared", subtree: true, reason: "Knowledge Base pages already shared with the member." },
   { path: "/knowledge/wiki/private", subtree: true, reason: "A member's own private Knowledge Base pages." },
   { path: "/knowledge/wiki/doc", subtree: true, reason: "Knowledge Base page reading is platform core; per-record ACLs gate the content." },

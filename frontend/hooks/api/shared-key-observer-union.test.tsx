@@ -35,14 +35,6 @@ jest.mock("@/lib/api-client", () => ({
   apiClient: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), delete: jest.fn() },
 }));
 
-const pathnameMock = jest.fn<string, []>(() => "/");
-
-jest.mock("next/navigation", () => ({
-  usePathname: () => pathnameMock(),
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), prefetch: jest.fn() }),
-  useSearchParams: () => new URLSearchParams(),
-}));
-
 const { apiClient } = jest.requireMock("@/lib/api-client") as {
   apiClient: { get: jest.Mock };
 };
@@ -195,74 +187,5 @@ describe("BusinessPulseWidget gates its mount, not an enabled flag it cannot own
     );
     await new Promise((resolve) => setTimeout(resolve, 10));
     expect(urlsFor("/dashboard/executive")).toHaveLength(0);
-  });
-});
-
-/**
- * The same rule one level up: the PM workspace chip lives in the GLOBAL header,
- * so it renders on every authenticated page. Its route test used to sit below
- * the hook, which made `build:workspaces:view` the only thing standing between
- * an HR or CRM page load and a GET /build/pm-workspaces for a chip that returns
- * null. A permission gate is not a surface gate.
- */
-describe("PmWorkspaceContextChip gates its mount on the route, not the hook", () => {
-  beforeEach(() => {
-    pathnameMock.mockReturnValue("/");
-  });
-
-  it("reads no PM workspaces on a non-build route, even holding build:workspaces:view", async () => {
-    pathnameMock.mockReturnValue("/hr/employees");
-    const client = makeClient(["build:workspaces:view"]);
-    const Wrapper = wrap(client);
-    const { PmWorkspaceContextChip } = await import(
-      "@/components/layout/header/pm-workspace-context-chip"
-    );
-
-    render(
-      <Wrapper>
-        <PmWorkspaceContextChip />
-      </Wrapper>,
-    );
-
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    expect(urlsFor("/build/workspaces")).toHaveLength(0);
-    expect(
-      client.getQueryCache().getAll().filter((q) => JSON.stringify(q.queryKey).includes("pm-workspaces")),
-    ).toHaveLength(0);
-  });
-
-  it("still reads them on a build route", async () => {
-    pathnameMock.mockReturnValue("/build/roadmap");
-    const client = makeClient(["build:workspaces:view"]);
-    const Wrapper = wrap(client);
-    const { PmWorkspaceContextChip } = await import(
-      "@/components/layout/header/pm-workspace-context-chip"
-    );
-
-    render(
-      <Wrapper>
-        <PmWorkspaceContextChip />
-      </Wrapper>,
-    );
-
-    await waitFor(() => expect(urlsFor("/build/workspaces")).toHaveLength(1));
-  });
-
-  it("and reads nothing on a build route without the permission", async () => {
-    pathnameMock.mockReturnValue("/build/roadmap");
-    const client = makeClient([]);
-    const Wrapper = wrap(client);
-    const { PmWorkspaceContextChip } = await import(
-      "@/components/layout/header/pm-workspace-context-chip"
-    );
-
-    render(
-      <Wrapper>
-        <PmWorkspaceContextChip />
-      </Wrapper>,
-    );
-
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    expect(urlsFor("/build/workspaces")).toHaveLength(0);
   });
 });

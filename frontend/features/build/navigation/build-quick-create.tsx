@@ -59,7 +59,9 @@ export function BuildQuickCreate({
   const { openCreateTicket } = useCommandPalette();
   const createProduct = useCreateManagedProduct();
   const [projectOpen, setProjectOpen] = useState(false);
+  const [projectMounted, setProjectMounted] = useState(false);
   const [productOpen, setProductOpen] = useState(false);
+  const [productMounted, setProductMounted] = useState(false);
   const { iconRef, animatedNavHoverHandlers } = useAnimatedNavIconHover();
 
   const handleAction = useCallback(
@@ -70,9 +72,11 @@ export function BuildQuickCreate({
         return;
       }
       if (actionId === "project") {
+        setProjectMounted(true);
         setProjectOpen(true);
         return;
       }
+      setProductMounted(true);
       setProductOpen(true);
     },
     [openCreateTicket, scope.projectId, onNavigate],
@@ -111,7 +115,7 @@ export function BuildQuickCreate({
           <Button
             variant="ghost"
             {...animatedNavHoverHandlers}
-            aria-label="Quick create"
+            aria-label={isCollapsed ? "Create in Build" : undefined}
             className={cn(
               "h-8 w-full justify-start gap-2.5 rounded-md px-2.5 text-label font-medium text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-foreground",
               isCollapsed && "mx-auto h-8 w-8 justify-center px-0",
@@ -137,7 +141,7 @@ export function BuildQuickCreate({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {projectOpen ? (
+      {projectMounted ? (
         <NewProjectDialog
           trigger={null}
           open={projectOpen}
@@ -145,7 +149,7 @@ export function BuildQuickCreate({
         />
       ) : null}
 
-      {productOpen ? (
+      {productMounted ? (
         <ManagedProductFormSheet
           open={productOpen}
           onOpenChange={setProductOpen}
