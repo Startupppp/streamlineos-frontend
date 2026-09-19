@@ -1,9 +1,11 @@
 ﻿"use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { UnreadCount } from "@/types/notifications";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useCan } from "@/hooks/api/access";
 import type {
   Approval,
@@ -13,13 +15,11 @@ import type {
   UpdateApprovalInput,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import { INLINE_READ_ERROR, optionalSignalRead } from "@/lib/query-error-policy";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { NOTIFICATION_FALLBACK_INTERVAL_MS } from "@/lib/query-request-policies";
 
 const approvalInboxListContract = lazyContract(() =>
   import("@/hooks/api/build/approvals-schema").then((m) => m.approvalInboxListContract),
-);
-const approvalInboxCountContract = lazyContract(() =>
-  import("@/hooks/api/build/approvals-schema").then((m) => m.approvalInboxCountContract),
 );
 const approvalListContract = lazyContract(() =>
   import("@/hooks/api/build/approvals-schema").then((m) => m.approvalListContract),
@@ -29,6 +29,9 @@ const approvalRowContract = lazyContract(() =>
 );
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+const notificationCountContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.notificationCountContract),
 );
 
 interface ApprovalFilters {
@@ -48,23 +51,20 @@ export function useApprovalInbox() {
   });
 }
 
-export function useBuildInboxCount() {
-  const canView = useCan("build:approvals:view");
-  const query = useQuery<{ count: number } | null>({
-    queryKey: buildWorkQueryKeys.projects.approvals.inboxCount(),
+export function useBuildNotificationUnreadCount() {
+  const canView = useCan("build:tickets:view");
+  const query = useQuery<UnreadCount>({
+    queryKey: platformCoreQueryKeys.notifications.unreadCount("build"),
     queryFn: ({ signal }) =>
-      optionalSignalRead(
-        apiClient.get<{ count: number }>(
-          "/build/approvals/inbox/count",
-          undefined,
-          signal,
-          approvalInboxCountContract,
-        ),
+      apiClient.get<UnreadCount>(
+        "/notifications/unread-count",
+        { sourceModule: "build" },
+        signal,
+        notificationCountContract,
       ),
     enabled: canView,
-    staleTime: 120_000,
-    refetchInterval: 120_000,
-    refetchIntervalInBackground: false,
+    staleTime: NOTIFICATION_FALLBACK_INTERVAL_MS,
+    refetchOnWindowFocus: false,
     ...INLINE_READ_ERROR,
   });
   return canView ? query : { ...query, data: undefined };

@@ -23,6 +23,7 @@ import {
   LayoutGrid,
   LayoutList,
   Megaphone,
+  Paperclip,
   MessageCircle,
   MessageSquareText,
   PackageOpen,
@@ -171,6 +172,13 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
         href: `${basePath}/updates`,
         icon: Megaphone,
         requiredPermission: "build:updates:view",
+      },
+      {
+        id: "project-files",
+        label: "Files",
+        href: `${basePath}/files`,
+        icon: Paperclip,
+        requiredPermission: "build:files:view",
       },
       {
         id: "project-change-requests",

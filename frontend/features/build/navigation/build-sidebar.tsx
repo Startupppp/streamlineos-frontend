@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useBuildInboxCount } from "@/hooks/api/build/approvals";
+import { useBuildNotificationUnreadCount } from "@/hooks/api/build/approvals";
 import {
   MODULE_ACCENTS,
   type ModuleAccent,
@@ -52,7 +52,7 @@ export function BuildSidebar({ isCollapsed, onNavigate }: BuildSidebarProps) {
   const view = useBuildNavView();
   const { model, isAccessReady, isPinned, canPinMore, togglePin } =
     useBuildNavModel();
-  const { data: buildInbox } = useBuildInboxCount();
+  const { data: buildInbox } = useBuildNotificationUnreadCount();
   const identity = useBuildScopeIdentity(model.scope);
   const fallback = useBuildScopeRecovery({
     scope: model.scope,

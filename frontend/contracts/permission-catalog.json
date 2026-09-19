@@ -132,6 +132,8 @@
     "build:decisions:manage",
     "build:decisions:view",
     "build:delete",
+    "build:files:manage",
+    "build:files:view",
     "build:forms:manage",
     "build:forms:view",
     "build:goals:manage",

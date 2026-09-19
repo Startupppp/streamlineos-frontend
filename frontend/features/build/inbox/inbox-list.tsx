@@ -96,6 +96,7 @@ export function InboxList({
   } = useInfiniteNotifications({
     section: querySection,
     category: activeTab === "MENTIONS" ? "PROJECTS" : undefined,
+    sourceModule: "build",
     limit: INBOX_FETCH_PAGE_SIZE,
   });
 

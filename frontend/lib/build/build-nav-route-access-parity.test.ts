@@ -77,9 +77,8 @@ describe("every Build navigation destination is reachable by its own key", () =>
     expect(drifted()).toEqual(KNOWN_KEY_DRIFT);
   });
 
-  it("keeps no known-drift entry that has since been aligned", () => {
-    const live = new Set(drifted());
-    expect(KNOWN_KEY_DRIFT.filter((entry) => !live.has(entry))).toEqual([]);
+  it("tolerates no allowlisted drift, so a disagreement must be fixed rather than suppressed", () => {
+    expect(KNOWN_KEY_DRIFT).toEqual([]);
   });
 });
 

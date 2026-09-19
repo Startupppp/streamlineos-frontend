@@ -2,8 +2,9 @@ import { renderHook, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import type { ReactNode } from "react";
-import { useBuildInboxCount, useDecideApproval, useDeleteApproval } from "./approvals";
+import { useBuildNotificationUnreadCount, useDecideApproval, useDeleteApproval } from "./approvals";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
@@ -39,6 +40,7 @@ jest.mock("@/hooks/api/access", () => ({
     data: {
       isOrgOwner: false,
       scopes: {
+        "build:tickets:view": "all",
         "build:approvals:view": "all",
         "build:approvals:decide": "all",
         "build:approvals:manage": "all",
@@ -49,6 +51,7 @@ jest.mock("@/hooks/api/access", () => ({
       data: {
         isOrgOwner: false,
         scopes: {
+          "build:tickets:view": "all",
           "build:approvals:view": "all",
           "build:approvals:decide": "all",
           "build:approvals:manage": "all",
@@ -64,9 +67,12 @@ jest.mock("@/lib/api-envelope", () => ({
 }));
 
 jest.mock("@/hooks/api/build/approvals-schema", () => ({
-  approvalInboxCountContract: { parse: (v: unknown) => v },
   approvalInboxListContract: { parse: (v: unknown) => v },
   approvalRowContract: { parse: (v: unknown) => v },
+}));
+
+jest.mock("@/hooks/api/notifications-schema", () => ({
+  notificationCountContract: { parse: (v: unknown) => v },
 }));
 
 jest.mock("@/hooks/api/cursor-page-schema", () => ({
@@ -85,7 +91,7 @@ function wrap(client: QueryClient) {
   };
 }
 
-describe("useBuildInboxCount — BSN-03-024 permission-revocation drops the badge", () => {
+describe("useBuildNotificationUnreadCount — badge permission gate", () => {
   let client: QueryClient;
 
   beforeEach(() => {
@@ -94,25 +100,25 @@ describe("useBuildInboxCount — BSN-03-024 permission-revocation drops the badg
     client = makeClient();
   });
 
-  it("returns query data when canView is true", () => {
-    mockUseCan.mockReturnValue(true);
+  it("returns build notification count when build:tickets:view is held", () => {
+    mockUseCan.mockImplementation((key) => key === "build:tickets:view");
     client.setQueryData(
-      buildWorkQueryKeys.projects.approvals.inboxCount(),
+      platformCoreQueryKeys.notifications.unreadCount("build"),
       { count: 5 },
     );
-    const { result } = renderHook(() => useBuildInboxCount(), {
+    const { result } = renderHook(() => useBuildNotificationUnreadCount(), {
       wrapper: wrap(client),
     });
     expect(result.current.data).toEqual({ count: 5 });
   });
 
-  it("returns undefined data when canView is false so stale count does not persist in the badge", () => {
+  it("returns undefined when build:tickets:view is not held so stale count does not persist in the badge", () => {
     client.setQueryData(
-      buildWorkQueryKeys.projects.approvals.inboxCount(),
+      platformCoreQueryKeys.notifications.unreadCount("build"),
       { count: 5 },
     );
     mockUseCan.mockReturnValue(false);
-    const { result } = renderHook(() => useBuildInboxCount(), {
+    const { result } = renderHook(() => useBuildNotificationUnreadCount(), {
       wrapper: wrap(client),
     });
     expect(result.current.data).toBeUndefined();

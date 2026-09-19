@@ -32,6 +32,32 @@ describe("resolveBuildScopeFallback", () => {
     });
   });
 
+  it("falls back to All of Build when a workspace is lost, because a workspace has no parent scope to offer", () => {
+    expect(
+      resolveBuildScopeFallback({
+        scope: workspaceScope,
+        isInaccessible: true,
+        hasAnyBuildAccess: true,
+        accessibleParent: null,
+      }),
+    ).toEqual({
+      kind: "recover",
+      href: "/build/command-center",
+      label: "Go to All of Build",
+    });
+  });
+
+  it("offers no recovery when a workspace is lost and no Build access remains", () => {
+    expect(
+      resolveBuildScopeFallback({
+        scope: workspaceScope,
+        isInaccessible: true,
+        hasAnyBuildAccess: false,
+        accessibleParent: null,
+      }),
+    ).toEqual({ kind: "no-access" });
+  });
+
   it("offers the parent workspace when a standalone project is lost", () => {
     expect(
       resolveBuildScopeFallback({

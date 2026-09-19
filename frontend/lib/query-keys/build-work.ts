@@ -179,6 +179,14 @@ export const buildWorkQueryKeys = {
           ? ([...base, "projects", projectId, "updates"] as const)
           : ([...base, "projects", projectId, "updates", cursor] as const),
     },
+    files: {
+      list: (projectId: number, cursor?: string) =>
+        cursor === undefined
+          ? ([...base, "projects", projectId, "files"] as const)
+          : ([...base, "projects", projectId, "files", cursor] as const),
+      signedUrl: (projectId: number, fileId: number) =>
+        [...base, "projects", projectId, "files", fileId, "url"] as const,
+    },
     forms: {
       list: (projectId: number, params?: QueryKeyParams) =>
         params === undefined
