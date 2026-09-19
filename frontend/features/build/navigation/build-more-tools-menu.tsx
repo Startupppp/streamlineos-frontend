@@ -68,6 +68,7 @@ function ToolRow({
       <Link
         href={tool.href}
         onClick={onNavigate}
+        aria-current={isActive ? "page" : undefined}
         className={cn(
           "flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-label transition-colors",
           isActive

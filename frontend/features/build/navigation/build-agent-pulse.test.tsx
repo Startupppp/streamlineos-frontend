@@ -1,0 +1,100 @@
+import { render, screen } from "@testing-library/react";
+import { BuildAgentPulse } from "./build-agent-pulse";
+import type { AgentPulseSignal } from "@/hooks/api/build/agent-pulse-schema";
+
+jest.mock("@/hooks/api/build/agent-pulse", () => ({
+  useAgentPulse: jest.fn(),
+}));
+
+jest.mock("@/lib/build/build-scope", () => ({
+  BUILD_ROOT_PATH: "/build",
+}));
+
+jest.mock("@/lib/utils", () => ({
+  cn: (...args: string[]) => args.filter(Boolean).join(" "),
+}));
+
+jest.mock("@/components/ui/tooltip", () => ({
+  Tooltip: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  TooltipTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  TooltipContent: () => null,
+}));
+
+import { useAgentPulse } from "@/hooks/api/build/agent-pulse";
+
+const mockUseAgentPulse = useAgentPulse as jest.Mock;
+
+function makeSignal(overrides: Partial<AgentPulseSignal> = {}): AgentPulseSignal {
+  return {
+    type: "overdue_approval",
+    entityId: 1,
+    projectId: 10,
+    title: "Budget approval",
+    dueAt: "2026-09-01T10:00:00.000Z",
+    ...overrides,
+  };
+}
+
+describe("BuildAgentPulse", () => {
+  beforeEach(() => jest.resetAllMocks());
+
+  it("renders nothing when there is no signal — empty state is quiet", () => {
+    mockUseAgentPulse.mockReturnValue({ data: null });
+    const { container } = render(
+      <BuildAgentPulse isCollapsed={false} />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it("renders nothing when data is undefined", () => {
+    mockUseAgentPulse.mockReturnValue({ data: undefined });
+    const { container } = render(
+      <BuildAgentPulse isCollapsed={false} />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it("renders overdue_approval signal with correct href and summary", () => {
+    mockUseAgentPulse.mockReturnValue({ data: makeSignal() });
+    render(<BuildAgentPulse isCollapsed={false} />);
+    const link = screen.getByRole("link");
+    expect(link).toHaveAttribute("href", "/build/approvals");
+    expect(link).toHaveAttribute("aria-label", "Overdue approval: Budget approval");
+    expect(screen.getByText("Overdue approval: Budget approval")).toBeInTheDocument();
+  });
+
+  it("renders blocked_milestone with project-scoped href", () => {
+    const signal = makeSignal({ type: "blocked_milestone", projectId: 20, title: "v2.0 release" });
+    mockUseAgentPulse.mockReturnValue({ data: signal });
+    render(<BuildAgentPulse isCollapsed={false} />);
+    const link = screen.getByRole("link");
+    expect(link).toHaveAttribute("href", "/build/20/milestones");
+  });
+
+  it("renders delivery_risk with project risks href", () => {
+    const signal = makeSignal({ type: "delivery_risk", projectId: 30, title: "Auth outage risk" });
+    mockUseAgentPulse.mockReturnValue({ data: signal });
+    render(<BuildAgentPulse isCollapsed={false} />);
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/build/30/risks");
+  });
+
+  it("renders dependency_change linking to project board", () => {
+    const signal = makeSignal({ type: "dependency_change", projectId: 40, title: "Fix auth" });
+    mockUseAgentPulse.mockReturnValue({ data: signal });
+    render(<BuildAgentPulse isCollapsed={false} />);
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/build/40");
+  });
+
+  it("renders comment_draft linking to drafts surface", () => {
+    const signal = makeSignal({ type: "comment_draft", title: "Add test coverage" });
+    mockUseAgentPulse.mockReturnValue({ data: signal });
+    render(<BuildAgentPulse isCollapsed={false} />);
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/build/drafts");
+  });
+
+  it("shows only the icon in collapsed mode", () => {
+    mockUseAgentPulse.mockReturnValue({ data: makeSignal() });
+    render(<BuildAgentPulse isCollapsed />);
+    expect(screen.queryByText(/Overdue approval/)).not.toBeInTheDocument();
+  });
+});

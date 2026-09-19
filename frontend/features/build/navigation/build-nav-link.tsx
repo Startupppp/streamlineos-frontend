@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, type MouseEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useBuildRequestLeave } from "./build-dirty-state-context";
 import {
   Tooltip,
   TooltipContent,
@@ -36,12 +38,29 @@ export function BuildNavLink({
   onNavigate,
 }: BuildNavLinkProps) {
   const prefetchOnIntent = useNavIntentPrefetch();
+  const requestLeave = useBuildRequestLeave();
+  const router = useRouter();
   const Icon = destination.icon;
   const hasBadge = badgeCount > 0;
 
   const handleIntent = useCallback(
     () => prefetchOnIntent(destination.href),
     [prefetchOnIntent, destination.href],
+  );
+
+  const handleClick = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>) => {
+      if (event.defaultPrevented) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+        return;
+      if (event.button !== 0) return;
+      event.preventDefault();
+      requestLeave(() => {
+        onNavigate?.();
+        router.push(destination.href);
+      });
+    },
+    [requestLeave, onNavigate, router, destination.href],
   );
 
   const link = (
@@ -51,7 +70,7 @@ export function BuildNavLink({
       onMouseEnter={handleIntent}
       onFocus={handleIntent}
       onTouchStart={handleIntent}
-      onClick={onNavigate}
+      onClick={handleClick}
       aria-current={isActive ? "page" : undefined}
       aria-label={isCollapsed ? destination.label : undefined}
       className={cn(

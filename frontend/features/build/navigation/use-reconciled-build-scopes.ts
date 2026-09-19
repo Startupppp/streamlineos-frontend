@@ -13,6 +13,25 @@ function hrefFor(ref: BuildScopeResolvedRef): string {
   return `${BUILD_ROOT_PATH}/${ref.id}`;
 }
 
+function matchesStoredScopes(
+  entries: readonly BuildScopeRef[],
+  stored: readonly BuildScopeRef[],
+): boolean {
+  if (entries.length !== stored.length) return false;
+  return entries.every((entry, index) => {
+    const previous = stored[index];
+    if (previous === undefined) return false;
+    return (
+      entry.key === previous.key &&
+      entry.name === previous.name &&
+      entry.parentKey === previous.parentKey &&
+      entry.parentPath === previous.parentPath &&
+      entry.projectKey === previous.projectKey &&
+      entry.href === previous.href
+    );
+  });
+}
+
 export interface ReconciledBuildScopes {
   entries: readonly BuildScopeRef[];
   isReconciled: boolean;
@@ -42,7 +61,7 @@ export function useReconciledBuildScopes(
         type: fresh.type,
         id: fresh.id,
         name: fresh.name,
-        parentPath: entry.parentPath,
+        parentPath: fresh.parentPath,
         parentKey: fresh.parentKey,
         projectKey: fresh.projectKey,
         href: hrefFor(fresh),
@@ -53,9 +72,9 @@ export function useReconciledBuildScopes(
 
   useEffect(() => {
     if (!isSuccess) return;
-    if (entries.length === stored.length) return;
+    if (matchesStoredScopes(entries, stored)) return;
     onPrune(entries);
-  }, [isSuccess, entries, stored.length, onPrune]);
+  }, [isSuccess, entries, stored, onPrune]);
 
   return { entries, isReconciled: isSuccess };
 }

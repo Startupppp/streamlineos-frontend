@@ -9,6 +9,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const projectCustomStateListContract = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.projectCustomStateListContract),
@@ -210,5 +211,6 @@ export function useOrgCustomStates(
       apiClient.get<OrgCustomStateItem[]>("/build/org-custom-states", undefined, signal, orgCustomStateListContract),
     enabled: canView && (options?.enabled ?? true),
     staleTime: 30 * 60_000,
+    ...INLINE_READ_ERROR,
   });
 }

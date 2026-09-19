@@ -1,9 +1,17 @@
-import { Boxes, LayoutGrid, LayoutList, Users } from "lucide-react";
+import { Boxes, LayoutDashboard, LayoutGrid, LayoutList, Users } from "lucide-react";
 import type { BuildScopeCatalog } from "./build-nav-destination";
 
 export function buildWorkspaceCatalog(basePath: string): BuildScopeCatalog {
   return {
     primary: [
+      {
+        id: "workspace-overview",
+        label: "Overview",
+        href: `${basePath}/overview`,
+        icon: LayoutDashboard,
+        requiredPermission: "build:workspaces:view",
+        mobilePriority: 5,
+      },
       {
         id: "workspace-projects",
         label: "Projects",

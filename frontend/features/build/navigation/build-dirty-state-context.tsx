@@ -10,11 +10,14 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useUnsavedChangesGuard } from "@/hooks/common/use-unsaved-changes-guard";
+import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 
 interface BuildDirtyStateContextValue {
   registerDirty: (id: string, isDirty: boolean) => void;
   unregisterDirty: (id: string) => void;
   hasUnsavedWork: boolean;
+  requestLeave: (action: () => void) => void;
 }
 
 const BuildDirtyStateContext =
@@ -51,18 +54,25 @@ export function BuildDirtyStateProvider({
     });
   }, []);
 
+  const hasUnsavedWork = dirtyIds.size > 0;
+  const { requestLeave, dialogProps } = useUnsavedChangesGuard({
+    isDirty: hasUnsavedWork,
+  });
+
   const value = useMemo(
     () => ({
       registerDirty,
       unregisterDirty,
-      hasUnsavedWork: dirtyIds.size > 0,
+      hasUnsavedWork,
+      requestLeave,
     }),
-    [registerDirty, unregisterDirty, dirtyIds],
+    [registerDirty, unregisterDirty, hasUnsavedWork, requestLeave],
   );
 
   return (
     <BuildDirtyStateContext.Provider value={value}>
       {children}
+      <UnsavedChangesDialog {...dialogProps} />
     </BuildDirtyStateContext.Provider>
   );
 }
@@ -87,4 +97,19 @@ export function useRegisterBuildDirtyState(isDirty: boolean): void {
 export function useBuildHasUnsavedWork(): boolean {
   const context = useContext(BuildDirtyStateContext);
   return context?.hasUnsavedWork ?? false;
+}
+
+export function useBuildRequestLeave(): (action: () => void) => void {
+  const context = useContext(BuildDirtyStateContext);
+  const requestLeave = context?.requestLeave;
+  return useCallback(
+    (action: () => void) => {
+      if (!requestLeave) {
+        action();
+        return;
+      }
+      requestLeave(action);
+    },
+    [requestLeave],
+  );
 }

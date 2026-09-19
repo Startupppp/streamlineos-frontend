@@ -19,6 +19,7 @@ import {
   Inbox,
   IndianRupee,
   Layers,
+  LayoutDashboard,
   LayoutGrid,
   LayoutList,
   MessageCircle,
@@ -43,12 +44,20 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
   return {
     primary: [
       {
+        id: "project-overview",
+        label: "Overview",
+        href: basePath,
+        icon: LayoutDashboard,
+        requiredPermission: "build:view",
+        exact: true,
+        mobilePriority: 5,
+      },
+      {
         id: "project-issues",
         label: "Issues",
-        href: basePath,
+        href: `${basePath}/issues`,
         icon: LayoutGrid,
         requiredPermission: "build:tickets:view",
-        exact: true,
         boardViews: true,
         mobilePriority: 10,
       },

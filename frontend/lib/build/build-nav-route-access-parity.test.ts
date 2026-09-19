@@ -60,24 +60,16 @@ function drifted(): string[] {
 
 const KNOWN_KEY_DRIFT: readonly string[] = [
   "project-analytics -> /build/42/analytics",
-  "project-backlog -> /build/42/backlog",
   "project-chat -> /build/42/chat",
-  "project-epics -> /build/42/epics",
   "project-intake -> /build/42/intake",
   "project-issues -> /build/42",
   "project-milestones -> /build/42/milestones",
+  "project-releases -> /build/42/releases",
   "project-reports -> /build/42/reports",
-  "project-timeline -> /build/42/timeline",
-  "project-triage -> /build/42/triage",
   "project-views -> /build/42/views",
-  "project-webhooks -> /build/42/webhooks",
   "project-whiteboard -> /build/42/whiteboard",
   "project-wiki -> /build/42/wiki",
-  "project-workflow -> /build/42/workflow",
   "project-workload -> /build/42",
-  "project-ai -> /build/42/ai",
-  "project-releases -> /build/42/releases",
-  "workspace-work -> /build/workspaces/ws-1/all-work",
 ].toSorted();
 
 describe("every Build navigation destination is reachable by its own key", () => {

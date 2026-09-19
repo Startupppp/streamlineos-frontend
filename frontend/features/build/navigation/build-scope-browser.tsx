@@ -132,6 +132,15 @@ export function BuildScopeBrowser({
     [directory.workspaces, directory.products, directory.projects],
   );
 
+  const hasQuarantinedItems =
+    directory.quarantinedProducts.length > 0 ||
+    directory.quarantinedProjects.length > 0;
+
+  const hasBrowseContent =
+    directory.workspaces.length > 0 ||
+    rootProducts.length > 0 ||
+    rootProjects.length > 0;
+
   function renderRow(entry: BuildScopeDirectoryEntry, depth: number) {
     const expandable = !isSearching && childrenOf(entry.key).length > 0;
     const expanded = expandedKeys.has(entry.key);
@@ -279,14 +288,21 @@ export function BuildScopeBrowser({
             {rootProducts.map(renderRootRow)}
             {rootProjects.map(renderRootRow)}
 
-            {directory.workspaces.length === 0 &&
-            rootProducts.length === 0 &&
-            rootProjects.length === 0 ? (
+            {!hasBrowseContent && !hasQuarantinedItems ? (
               <EmptyState
                 className="min-h-0 border-0 bg-transparent py-6"
-                title="No scopes yet"
+                title="No accessible Build scopes"
                 description="Create a project or ask an admin for access to one."
               />
+            ) : null}
+
+            {hasQuarantinedItems ? (
+              <>
+                <Separator className="my-1" />
+                <SectionLabel>Hierarchy issues</SectionLabel>
+                {directory.quarantinedProducts.map(renderRootRow)}
+                {directory.quarantinedProjects.map(renderRootRow)}
+              </>
             ) : null}
           </div>
         )}
@@ -296,8 +312,7 @@ export function BuildScopeBrowser({
         <>
           <Separator />
           <p className="shrink-0 px-3 py-2 text-micro text-muted-foreground">
-            More scopes exist than are listed. Search to find any workspace,
-            product or project you can access.
+            Showing the first {directory.hasMoreProjects ? "projects" : "workspaces or products"} only. Search to find any scope you can access.
           </p>
         </>
       ) : null}

@@ -55,6 +55,7 @@ import {
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
 
 const BOARDS_COLLAPSED_KEY = "streamlineos:whiteboard:boards-collapsed";
 
@@ -217,6 +218,8 @@ export function WhiteboardPage({ projectId, initialBoardId }: WhiteboardPageProp
     saveAsync: handleSaveAsync,
     onSaveError: handleSaveError,
   });
+
+  useRegisterBuildDirtyState(saveStatus === "dirty");
 
   const handleToggleFullscreen = useCallback(() => setIsFullscreen((prev) => !prev), []);
   const handleExitFullscreen = useCallback(() => setIsFullscreen(false), []);

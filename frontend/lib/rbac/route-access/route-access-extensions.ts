@@ -325,6 +325,95 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     reason:
       "Organisation-wide calendar configuration (source integrations, defaults) is administration, so it takes the admin key. calendar:write cannot gate it: that key sits in EMPLOYEE_SELF_SERVICE, which is merged before any role is read, so every active member holds it unrevokably.",
   },
+  {
+    prefix: "/build/[projectId]/backlog",
+    product: "build",
+    permission: "build:tickets:view",
+    reason:
+      "Project backlog renders the same ticket dataset as the issues board. First read is GET /build/{projectId}/tickets, which requires build:tickets:view.",
+    backendRoute: { method: "get", path: "/build/{projectId}/tickets" },
+  },
+  {
+    prefix: "/build/[projectId]/epics",
+    product: "build",
+    permission: "build:tickets:view",
+    reason:
+      "Epics page calls useProjectBoardTickets, whose first read is GET /build/{projectId}/tickets requiring build:tickets:view.",
+    backendRoute: { method: "get", path: "/build/{projectId}/tickets" },
+  },
+  {
+    prefix: "/build/[projectId]/timeline",
+    product: "build",
+    permission: "build:tickets:view",
+    reason:
+      "Timeline page calls useProjectBoardTickets, whose first read is GET /build/{projectId}/tickets requiring build:tickets:view.",
+    backendRoute: { method: "get", path: "/build/{projectId}/tickets" },
+  },
+  {
+    prefix: "/build/[projectId]/triage",
+    product: "build",
+    permission: "build:tickets:view",
+    reason:
+      "Triage page calls useTickets, whose first read is GET /build/{projectId}/tickets requiring build:tickets:view.",
+    backendRoute: { method: "get", path: "/build/{projectId}/tickets" },
+  },
+  {
+    prefix: "/build/[projectId]/workflow",
+    product: "build",
+    permission: "build:workflow:view",
+    reason:
+      "Workflow page first reads GET /build/{projectId}/workflow/transitions, which carries @RequirePermission('build:workflow:view'). The nav already declares this key; this entry closes the direct-navigation gap.",
+    backendRoute: { method: "get", path: "/build/{projectId}/workflow/transitions" },
+  },
+  {
+    prefix: "/build/[projectId]/webhooks",
+    product: "build",
+    permission: "build:manage",
+    reason:
+      "Webhooks are delivery administration. First read is GET /build/{projectId}/webhooks, which carries @RequirePermission('build:manage'). The nav already declares this key.",
+    backendRoute: { method: "get", path: "/build/{projectId}/webhooks" },
+  },
+  {
+    prefix: "/build/[projectId]/ai",
+    product: "build",
+    permission: "build:ai:use",
+    reason:
+      "Project AI settings surface. The projects-ai.controller has a class-level @RequirePermission('build:ai:use') covering all its endpoints. The nav already declares this key.",
+    backendRoute: { method: "post", path: "/ai/projects/{projectId}/summary" },
+  },
+  {
+    prefix: "/build/workspaces/[pmWorkspaceId]/all-work",
+    product: "build",
+    permission: "build:tickets:view",
+    reason:
+      "Workspace all-work aggregates tickets across projects. First read is GET /build/all-work, which carries @RequirePermission('build:tickets:view'). The workspace-work nav destination already declares this key.",
+    backendRoute: { method: "get", path: "/build/all-work" },
+  },
+  {
+    prefix: "/build/[projectId]",
+    exact: true,
+    product: "build",
+    permission: "build:view",
+    reason:
+      "Project overview (the project root). The overview reads GET /build/{projectId}, which declares build:view. Exact match keeps /build/[projectId]/issues and other sub-routes from inheriting this gate; the issues sub-route carries its own build:tickets:view entry.",
+    backendRoute: { method: "get", path: "/build/{projectId}" },
+  },
+  {
+    prefix: "/build/[projectId]/issues",
+    product: "build",
+    permission: "build:tickets:view",
+    reason:
+      "Project issues board. Moved from the project root to /issues as part of BSN-01-023 so the root can serve the project overview. First read is GET /build/{projectId}/tickets, which declares build:tickets:view.",
+    backendRoute: { method: "get", path: "/build/{projectId}/tickets" },
+  },
+  {
+    prefix: "/build/workspaces/[pmWorkspaceId]/overview",
+    product: "build",
+    permission: "build:workspaces:view",
+    reason:
+      "PM Workspace overview. The overview reads GET /build/workspaces/{pmWorkspaceId}, which declares build:workspaces:view. Without this entry the route inherits the generic build:view the workspace base path owns.",
+    backendRoute: { method: "get", path: "/build/workspaces/{pmWorkspaceId}" },
+  },
 ];
 
 function segmentsOf(value: string): string[] {

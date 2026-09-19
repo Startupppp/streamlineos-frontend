@@ -141,13 +141,14 @@ describe("workspace and product scope catalogs", () => {
   const productScope = resolveBuildScope("/build/managed-products/7");
   const fullAccess = accessWith(ALL_BUILD_PERMISSIONS, { feedbucket: true });
 
-  it("exposes workspace Projects, Products, Teams and All work under the workspace base path", () => {
+  it("exposes workspace Overview, Projects, Products, Teams and All work under the workspace base path", () => {
     const model = resolveBuildNavModel({
       scope: workspaceScope,
       access: fullAccess,
       pinnedIds: [],
     });
     expect(model.primary.map((d) => d.href)).toEqual([
+      "/build/workspaces/ws-1/overview",
       "/build/workspaces/ws-1",
       "/build/workspaces/ws-1/products",
       "/build/workspaces/ws-1/teams",

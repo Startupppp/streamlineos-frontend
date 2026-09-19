@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   Sheet,
@@ -45,6 +46,9 @@ export function ProjectCreateWizard({
 }: ProjectCreateWizardProps) {
   const { step, direction, draft, updateDraft, goNext, goBack, reset } =
     useProjectCreate();
+
+  useRegisterBuildDirtyState(open && (step > 1 || draft.name.trim() !== ""));
+
   const basicsRef = useRef<BasicsHandle>(null);
   const shouldReduceMotion = useReducedMotion();
 

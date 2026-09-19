@@ -74,8 +74,11 @@ export function useBuildNavModel(): {
     () => resolveAuthorizedToolIds(scope, navAccess),
     [scope, navAccess],
   );
-  const { pinnedIds, isPinned, canPinMore, togglePin } =
-    useBuildNavPins(authorizedToolIds);
+  
+  const { pinnedIds, isPinned, canPinMore, togglePin } = useBuildNavPins(
+    authorizedToolIds,
+    access !== undefined,
+  );
 
   const model = useMemo(
     () => resolveBuildNavModel({ scope, access: navAccess, pinnedIds }),

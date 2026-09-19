@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 import {
   orgScopedStorageKey,
   useOrgStorageScope,
@@ -167,7 +167,10 @@ function parseScopeRefs(raw: unknown): readonly BuildScopeRef[] {
   }));
 }
 
-export function useBuildNavPins(authorizedToolIds: readonly string[]): {
+export function useBuildNavPins(
+  authorizedToolIds: readonly string[],
+  isAccessResolved: boolean,
+): {
   pinnedIds: readonly string[];
   isPinned: (toolId: string) => boolean;
   canPinMore: boolean;
@@ -200,6 +203,14 @@ export function useBuildNavPins(authorizedToolIds: readonly string[]): {
     },
     [pinnedIds, scopePinCount, write],
   );
+
+  useEffect(() => {
+    if (!isAccessResolved) return;
+    const authorized = new Set(authorizedToolIds);
+    const pruned = pinnedIds.filter((id) => authorized.has(id));
+    if (pruned.length === pinnedIds.length) return;
+    write(pruned);
+  }, [isAccessResolved, authorizedToolIds, pinnedIds, write]);
 
   return {
     pinnedIds,

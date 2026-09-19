@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { BuildScopeType } from "@/lib/build/build-scope";
 
 export const BUILD_SCOPE_RESOLVE_LIMIT = 26;
@@ -17,6 +18,8 @@ export interface BuildScopeResolvedRef {
   parentKey: string | null;
   projectKey: string | null;
   isArchived: boolean;
+  parentPath: string | null;
+  clientPortalEnabled: boolean | null;
 }
 
 const scopeDirectoryResolveContract = lazyContract(() =>
@@ -39,5 +42,6 @@ export function useBuildScopeResolve(keys: readonly string[]) {
       ),
     enabled: canView && bounded.length > 0,
     staleTime: 60_000,
+    ...INLINE_READ_ERROR,
   });
 }

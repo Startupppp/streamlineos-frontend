@@ -40,19 +40,13 @@ import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { useEntitlements } from "@/hooks/api/entitlements";
 import { cn } from "@/lib/utils";
 import { useCommandPalette } from "@/components/command-palette";
+import { useBuildRequestLeave } from "@/features/build/navigation/build-dirty-state-context";
 import {
   useGlobalSearch,
   type GlobalSearchResult,
 } from "@/components/command-palette/hooks/use-global-search";
 
-/**
- * The entity kinds a global-search hit can carry, in the order their groups render.
- *
- * Iterating this instead of `Object.entries(entityGroups)` is what lets the icon and label
- * lookups below be plain indexed reads: `Object.entries` widens its key back to `string`, and
- * recovering the union from that needs a cast. Driving the render from the union itself keeps
- * the type and also makes group order deterministic rather than first-hit-wins.
- */
+
 const ENTITY_TYPES = [
   "lead",
   "deal",
@@ -138,12 +132,14 @@ const PROJECT_NAV_ITEMS: ProjectNavItem[] = [
 ];
 
 export function CommandPaletteDialogBody() {
-  const [query, setQuery] = useState("");
   const router = useRouter();
   const pathname = usePathname();
   const { data: access } = useAccess();
+  const requestLeave = useBuildRequestLeave();
+  const [query, setQuery] = useState("");
+  
   const role =
-    access?.isOrgOwner === true
+    access?.isOrgOwner
       ? "OWNER"
       : "MEMBER";
   const scopes = access?.scopes;
@@ -185,9 +181,9 @@ export function CommandPaletteDialogBody() {
     (href: string) => {
       setPaletteOpen(false);
       setQuery("");
-      router.push(href);
+      requestLeave(() => router.push(href));
     },
-    [router, setPaletteOpen],
+    [router, setPaletteOpen, requestLeave],
   );
 
   const handleOpenChange = useCallback(

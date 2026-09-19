@@ -13,6 +13,7 @@ import type {
   UpdateApprovalInput,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const approvalInboxListContract = lazyContract(() =>
   import("@/hooks/api/build/approvals-schema").then((m) => m.approvalInboxListContract),
@@ -62,6 +63,7 @@ export function useBuildInboxCount() {
     staleTime: 120_000,
     refetchInterval: 120_000,
     refetchIntervalInBackground: false,
+    ...INLINE_READ_ERROR,
   });
 }
 

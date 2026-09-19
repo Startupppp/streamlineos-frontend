@@ -65,6 +65,7 @@ interface GoalsParams {
   level?: GoalLevel;
   ownerId?: string;
   projectId?: number;
+  managedProductId?: number;
   search?: string;
 }
 
@@ -128,6 +129,17 @@ export function useGoals(params?: GoalsParams) {
     queryKey: accountingAndSupportQueryKeys.goals.list(queryParams),
     queryFn: async ({ signal }) =>
       (await apiClient.get<GoalsListPage>("/goals", queryParams, signal, goalsListContract)).items,
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useGoalsPage(params?: GoalsParams) {
+  const queryParams = toQueryParams(params);
+  return useGatedQuery("build:goals:view", {
+    queryKey: [...accountingAndSupportQueryKeys.goals.list(queryParams), "page"] as const,
+    queryFn: async ({ signal }) =>
+      apiClient.get<GoalsListPage>("/goals", queryParams, signal, goalsListContract),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });

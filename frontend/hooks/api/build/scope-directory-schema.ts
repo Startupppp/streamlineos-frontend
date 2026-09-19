@@ -8,6 +8,8 @@ export const scopeDirectoryRefSchema = z.object({
   parentKey: z.string().nullable(),
   projectKey: z.string().nullable(),
   isArchived: z.boolean(),
+  parentPath: z.string().nullable(),
+  clientPortalEnabled: z.boolean().nullable(),
 });
 
 export const scopeDirectoryResolveContract = z.object({

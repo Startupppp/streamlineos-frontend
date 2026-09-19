@@ -8,33 +8,58 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useApprovalInbox } from "@/hooks/api/build/approvals";
+import { useAgentPulse } from "@/hooks/api/build/agent-pulse";
 import { BUILD_ROOT_PATH } from "@/lib/build/build-scope";
-
-const PULSE_HREF = `${BUILD_ROOT_PATH}/approvals`;
+import type { AgentPulseSignal, AgentPulseSignalType } from "@/hooks/api/build/agent-pulse-schema";
 
 interface BuildAgentPulseProps {
   isCollapsed: boolean;
   onNavigate?: () => void;
 }
 
+function resolveSignalHref(signal: AgentPulseSignal): string {
+  const base = BUILD_ROOT_PATH;
+  const signalType: AgentPulseSignalType = signal.type;
+
+  const signalTypeToHref: Record<AgentPulseSignalType, string> = {
+    "overdue_approval": `${base}/approvals`,
+    "blocked_milestone": `${base}/${signal.projectId}/milestones`,
+    "delivery_risk": `${base}/${signal.projectId}/risks`,
+    "dependency_change": `${base}/${signal.projectId}`,
+    "comment_draft": `${base}/drafts`,
+  };
+
+  return signalTypeToHref[signalType];
+}
+
+function resolveSignalSummary(signal: AgentPulseSignal): string {
+  const signalType: AgentPulseSignalType = signal.type;
+
+  const signalTypeToSummary: Record<AgentPulseSignalType, string> = {
+    "overdue_approval": `Overdue approval: ${signal.title}`,
+    "blocked_milestone": `Milestone overdue: ${signal.title}`,
+    "delivery_risk": `High risk: ${signal.title}`,
+    "dependency_change": `New blocker on: ${signal.title}`,
+    "comment_draft": `Draft awaiting review: ${signal.title}`,
+  };
+
+  return signalTypeToSummary[signalType];
+}
+
 export function BuildAgentPulse({
   isCollapsed,
   onNavigate,
 }: BuildAgentPulseProps) {
-  const { data: inbox } = useApprovalInbox();
-  const pending = inbox?.length ?? 0;
+  const { data: signal } = useAgentPulse();
 
-  if (pending === 0) return null;
+  if (!signal) return null;
 
-  const summary =
-    pending === 1
-      ? "1 approval is waiting on you"
-      : `${pending} approvals are waiting on you`;
+  const href = resolveSignalHref(signal);
+  const summary = resolveSignalSummary(signal);
 
   const link = (
     <Link
-      href={PULSE_HREF}
+      href={href}
       onClick={onNavigate}
       aria-label={summary}
       className={cn(

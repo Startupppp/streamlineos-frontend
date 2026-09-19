@@ -6,6 +6,11 @@ import { useProjects } from "@/hooks/api/build/projects";
 import { useManagedProducts } from "@/hooks/api/build/managed-products";
 import { usePmWorkspaces } from "@/hooks/api/build/pm-workspaces";
 import { BUILD_ROOT_PATH } from "@/lib/build/build-scope";
+import {
+  resolveLinkedProjectParentPath,
+  detectsQuarantinedProduct,
+  detectsQuarantinedProject,
+} from "./build-scope-tree";
 import type { BuildScopeRef } from "./use-build-nav-preferences";
 
 export const BUILD_SCOPE_SEARCH_DEBOUNCE_MS = 300;
@@ -30,6 +35,8 @@ export interface BuildScopeDirectory {
   workspaces: BuildScopeDirectoryEntry[];
   products: BuildScopeDirectoryEntry[];
   projects: BuildScopeDirectoryEntry[];
+  quarantinedProducts: BuildScopeDirectoryEntry[];
+  quarantinedProjects: BuildScopeDirectoryEntry[];
   isLoading: boolean;
   isError: boolean;
   hasMoreProjects: boolean;
@@ -81,6 +88,27 @@ export function useBuildScopeDirectory(
     return new Map(rows.map((row) => [row.id, row.name]));
   }, [hierarchyProductsQuery.data]);
 
+  const productWorkspaceIds = useMemo(() => {
+    const rows = hierarchyProductsQuery.data?.data ?? [];
+    return new Map<number, string | null>(
+      rows.map((row) => [row.id, row.pmWorkspaceId]),
+    );
+  }, [hierarchyProductsQuery.data]);
+
+  const hierarchyIsComplete = useMemo(
+    () =>
+      hierarchyWorkspacesQuery.isSuccess &&
+      hierarchyProductsQuery.isSuccess &&
+      !(hierarchyWorkspacesQuery.data?.pagination.hasMore ?? false) &&
+      !(hierarchyProductsQuery.data?.pagination.hasMore ?? false),
+    [
+      hierarchyWorkspacesQuery.isSuccess,
+      hierarchyWorkspacesQuery.data,
+      hierarchyProductsQuery.isSuccess,
+      hierarchyProductsQuery.data,
+    ],
+  );
+
   const workspaces = useMemo<BuildScopeDirectoryEntry[]>(() => {
     const rows = workspacesQuery.data?.data ?? [];
     return rows
@@ -102,6 +130,14 @@ export function useBuildScopeDirectory(
     const rows = productsQuery.data?.data ?? [];
     return rows
       .filter((row) => includeArchived || row.status !== "archived")
+      .filter(
+        (row) =>
+          !detectsQuarantinedProduct(
+            row.pmWorkspaceId,
+            workspaceNames,
+            hierarchyIsComplete,
+          ),
+      )
       .map((row) => ({
         key: `product:${row.id}`,
         type: "product" as const,
@@ -117,30 +153,120 @@ export function useBuildScopeDirectory(
         href: `${BUILD_ROOT_PATH}/managed-products/${row.id}`,
         isArchived: row.status === "archived",
       }));
-  }, [productsQuery.data, includeArchived, workspaceNames]);
+  }, [productsQuery.data, includeArchived, workspaceNames, hierarchyIsComplete]);
+
+  const quarantinedProducts = useMemo<BuildScopeDirectoryEntry[]>(() => {
+    if (!hierarchyIsComplete) return [];
+    const rows = productsQuery.data?.data ?? [];
+    return rows
+      .filter((row) => includeArchived || row.status !== "archived")
+      .filter((row) =>
+        detectsQuarantinedProduct(
+          row.pmWorkspaceId,
+          workspaceNames,
+          hierarchyIsComplete,
+        ),
+      )
+      .map((row) => ({
+        key: `product:${row.id}`,
+        type: "product" as const,
+        id: String(row.id),
+        name: row.name,
+        parentPath: ORGANIZATION_PARENT,
+        parentKey: null,
+        projectKey: row.key,
+        href: `${BUILD_ROOT_PATH}/managed-products/${row.id}`,
+        isArchived: row.status === "archived",
+      }));
+  }, [productsQuery.data, includeArchived, workspaceNames, hierarchyIsComplete]);
 
   const projects = useMemo<BuildScopeDirectoryEntry[]>(() => {
     const rows = projectsQuery.data?.data ?? [];
     return rows
       .filter((row) => includeArchived || row.status !== "ARCHIVED")
+      .filter(
+        (row) =>
+          !detectsQuarantinedProject(
+            row.managedProductId,
+            productNames,
+            productWorkspaceIds,
+            workspaceNames,
+            hierarchyIsComplete,
+          ),
+      )
+      .map((row) => {
+        const productName =
+          row.managedProductId !== null
+            ? productNames.get(row.managedProductId)
+            : undefined;
+        const productWorkspaceId =
+          row.managedProductId !== null
+            ? (productWorkspaceIds.get(row.managedProductId) ?? null)
+            : null;
+        const workspaceName =
+          productWorkspaceId !== null
+            ? workspaceNames.get(productWorkspaceId)
+            : undefined;
+        return {
+          key: `project:${row.id}`,
+          type: "project" as const,
+          id: String(row.id),
+          name: row.name,
+          parentPath:
+            row.managedProductId !== null
+              ? resolveLinkedProjectParentPath(productName, workspaceName)
+              : (workspaceNames.get(row.pmWorkspaceId) ?? ORGANIZATION_PARENT),
+          parentKey:
+            row.managedProductId !== null
+              ? `product:${row.managedProductId}`
+              : `workspace:${row.pmWorkspaceId}`,
+          projectKey: row.key,
+          href: `${BUILD_ROOT_PATH}/${row.id}`,
+          isArchived: row.status === "ARCHIVED",
+        };
+      });
+  }, [
+    projectsQuery.data,
+    includeArchived,
+    productNames,
+    productWorkspaceIds,
+    workspaceNames,
+    hierarchyIsComplete,
+  ]);
+
+  const quarantinedProjects = useMemo<BuildScopeDirectoryEntry[]>(() => {
+    if (!hierarchyIsComplete) return [];
+    const rows = projectsQuery.data?.data ?? [];
+    return rows
+      .filter((row) => includeArchived || row.status !== "ARCHIVED")
+      .filter((row) =>
+        detectsQuarantinedProject(
+          row.managedProductId,
+          productNames,
+          productWorkspaceIds,
+          workspaceNames,
+          hierarchyIsComplete,
+        ),
+      )
       .map((row) => ({
         key: `project:${row.id}`,
         type: "project" as const,
         id: String(row.id),
         name: row.name,
-        parentPath:
-          (row.managedProductId !== null
-            ? productNames.get(row.managedProductId)
-            : undefined) ?? ORGANIZATION_PARENT,
-        parentKey:
-          row.managedProductId !== null
-            ? `product:${row.managedProductId}`
-            : null,
+        parentPath: ORGANIZATION_PARENT,
+        parentKey: null,
         projectKey: row.key,
         href: `${BUILD_ROOT_PATH}/${row.id}`,
         isArchived: row.status === "ARCHIVED",
       }));
-  }, [projectsQuery.data, includeArchived, productNames]);
+  }, [
+    projectsQuery.data,
+    includeArchived,
+    productNames,
+    productWorkspaceIds,
+    workspaceNames,
+    hierarchyIsComplete,
+  ]);
 
   function handleRefetch() {
     void hierarchyWorkspacesQuery.refetch();
@@ -154,9 +280,9 @@ export function useBuildScopeDirectory(
     workspaces,
     products,
     projects,
+    quarantinedProducts,
+    quarantinedProjects,
     isLoading:
-      hierarchyWorkspacesQuery.isLoading ||
-      hierarchyProductsQuery.isLoading ||
       workspacesQuery.isLoading ||
       productsQuery.isLoading ||
       projectsQuery.isLoading,
