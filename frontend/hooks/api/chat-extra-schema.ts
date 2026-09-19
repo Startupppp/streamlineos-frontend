@@ -52,7 +52,6 @@ export const aiConversationMessagesContract = z.object({
   messages: z.array(
     z.object({
       id: z.number().int(),
-      conversationId: z.number().int(),
       role: z.enum(["user", "assistant"]),
       content: z.string(),
       createdAt: z.string(),

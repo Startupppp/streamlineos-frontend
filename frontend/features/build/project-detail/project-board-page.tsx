@@ -16,12 +16,14 @@ import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallba
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { notFound } from "next/navigation";
+import type { ViewType } from "@/features/build/views/view-switcher";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
+  defaultView?: ViewType;
 }
 
-export function ProjectBoardPage({ params }: PageProps) {
+export function ProjectBoardPage({ params, defaultView }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
   const {
@@ -75,7 +77,7 @@ export function ProjectBoardPage({ params }: PageProps) {
     handleTicketSelect,
     handleSelectionChange,
     handleClearSelection,
-  } = useBoardUrlState(projectId);
+  } = useBoardUrlState(projectId, defaultView);
 
   const isLoading = projectLoading || ticketsLoading;
 

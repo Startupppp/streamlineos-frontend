@@ -1,3 +1,4 @@
+import { Users } from "lucide-react";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import {
   buildScopeCatalog,
@@ -226,19 +227,38 @@ describe("isBuildDestinationActive — boardViews destination (project Issues)",
   });
 });
 
-describe("isBuildDestinationActive — view-parameterised destination (project Workload)", () => {
+describe("isBuildDestinationActive — project Workload owns a route rather than a view parameter", () => {
   const workload = requireDestination(projectCatalog.moreTools, "project-workload");
 
-  it("is active only when the pathname matches and view equals workload", () => {
-    expect(isBuildDestinationActive(workload, "/build/42", "workload")).toBe(true);
+  it("is active on its own path regardless of the view parameter, because the href carries no view", () => {
+    expect(isBuildDestinationActive(workload, "/build/42/workload", "workload")).toBe(true);
+    expect(isBuildDestinationActive(workload, "/build/42/workload", null)).toBe(true);
   });
 
-  it("is inactive when view does not match the expected view even on the same base path", () => {
-    expect(isBuildDestinationActive(workload, "/build/42", "board")).toBe(false);
+  it("is inactive on the project base path, so Overview and Workload are never both active", () => {
+    expect(isBuildDestinationActive(workload, "/build/42", "workload")).toBe(false);
+  });
+});
+
+describe("isBuildDestinationActive — a view-parameterised href still matches on the view", () => {
+  const viewScoped: BuildNavDestination = {
+    id: "project-workload",
+    label: "Workload",
+    href: "/build/42?view=workload",
+    icon: Users,
+    requiredPermission: "build:tickets:view",
+  };
+
+  it("is active only when the pathname matches and the view equals the encoded view", () => {
+    expect(isBuildDestinationActive(viewScoped, "/build/42", "workload")).toBe(true);
   });
 
-  it("is inactive when no view parameter is present because the destination encodes a required view", () => {
-    expect(isBuildDestinationActive(workload, "/build/42", null)).toBe(false);
+  it("is inactive when the view differs even on the same base path", () => {
+    expect(isBuildDestinationActive(viewScoped, "/build/42", "board")).toBe(false);
+  });
+
+  it("is inactive when no view is present because the href encodes a required view", () => {
+    expect(isBuildDestinationActive(viewScoped, "/build/42", null)).toBe(false);
   });
 });
 

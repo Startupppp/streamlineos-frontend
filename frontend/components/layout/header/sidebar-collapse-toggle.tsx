@@ -21,7 +21,7 @@ export function SidebarCollapseToggle({
       onClick={handleClick}
       aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
       aria-expanded={!isCollapsed}
-      className="size-8 rounded-lg flex items-center justify-center shrink-0 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+      className="size-8 rounded-lg flex items-center justify-center shrink-0 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors motion-reduce:transition-none outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
     >
       {isCollapsed ? (
         <ChevronRight className="h-4 w-4" />

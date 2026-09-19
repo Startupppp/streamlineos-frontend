@@ -254,10 +254,11 @@ describe("BSN-02-034 — prefers-reduced-motion", () => {
     expect(btn.className).not.toContain("transition-transform");
   });
 
-  test("outer row wrapper carries only transition-colors which respects the CSS prefers-reduced-motion media query via Tailwind defaults — no Framer Motion animation on the row", () => {
+  test("outer row disables its color transition when reduced motion is requested", () => {
     const { container } = renderRow();
     const outer = container.firstChild as HTMLElement;
     expect(outer.className).toContain("transition-colors");
+    expect(outer.className).toContain("motion-reduce:transition-none");
     expect(outer.className).not.toContain("animate-");
   });
 });

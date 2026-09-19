@@ -81,14 +81,14 @@ export function SidebarSection({
           <button
             type="button"
             onClick={onToggleGroup}
-            className="w-full flex items-center justify-between px-2 py-1 mb-0.5 group/header rounded-md hover:bg-sidebar-accent transition-colors"
+            className="w-full flex items-center justify-between px-2 py-1 mb-0.5 group/header rounded-md hover:bg-sidebar-accent transition-colors motion-reduce:transition-none"
           >
-            <span className="text-micro font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/65 select-none transition-colors">
+            <span className="text-micro font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/65 select-none transition-colors motion-reduce:transition-none">
               {group.label}
             </span>
             <ChevronDown
               className={cn(
-                "h-3 w-3 text-sidebar-foreground/20 group-hover/header:text-sidebar-foreground/40 transition-all duration-200 shrink-0",
+                "h-3 w-3 text-sidebar-foreground/20 group-hover/header:text-sidebar-foreground/40 transition-all duration-200 shrink-0 motion-reduce:transition-none",
                 isGroupCollapsed && "-rotate-90",
               )}
             />
@@ -181,7 +181,7 @@ function CollapsedItem({ route, pathname, pendingLeaves, onNavigate, accent }: I
           )}
           <route.icon
             className={cn(
-              "nav-icon transition-colors duration-150 h-4 w-4 relative z-[1]",
+              "nav-icon transition-colors duration-150 h-4 w-4 relative z-[1] motion-reduce:transition-none",
               isActive && accent.text,
               route.locked && "opacity-50",
             )}
@@ -255,7 +255,7 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accen
         )}
         <route.icon
           className={cn(
-            "nav-icon transition-colors duration-150 shrink-0",
+            "nav-icon transition-colors duration-150 shrink-0 motion-reduce:transition-none",
             depth > 0 ? "h-3.5 w-3.5" : "h-4 w-4",
             isActive && accent.text,
             route.locked && "opacity-50",
@@ -281,10 +281,13 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accen
             onClick={toggle}
             aria-label={expanded ? "Collapse" : "Expand"}
             aria-expanded={expanded}
-            className="ml-auto -mr-1 h-5 w-5 flex items-center justify-center rounded text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+            className="ml-auto -mr-1 h-5 w-5 flex items-center justify-center rounded text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors motion-reduce:transition-none"
           >
             <ChevronRight
-              className={cn("h-3 w-3 transition-transform duration-150", expanded && "rotate-90")}
+              className={cn(
+                "h-3 w-3 transition-transform duration-150 motion-reduce:transition-none",
+                expanded && "rotate-90",
+              )}
             />
           </button>
         )}

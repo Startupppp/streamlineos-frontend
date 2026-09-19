@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useGetOrganizations, useSwitchOrg } from "@/hooks/common/auth-hooks";
 import { useAccess } from "@/hooks/api/access";
+import { useBuildRequestLeave } from "@/features/build/navigation/build-dirty-state-context";
 
 /**
  * Mounted only once someone asks to leave — the confirmation carries its own
@@ -85,6 +86,7 @@ function OrganizationSwitcher({
   const { data: session } = useSession();
   const { data: access } = useAccess();
   const switchOrg = useSwitchOrg();
+  const requestLeave = useBuildRequestLeave();
   const [createOpen, setCreateOpen] = useState(false);
   const [createMounted, setCreateMounted] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -122,9 +124,9 @@ function OrganizationSwitcher({
 
   const handleSwitch = useCallback(
     (orgId: string) => {
-      switchOrg.mutate(orgId);
+      requestLeave(() => switchOrg.mutate(orgId));
     },
-    [switchOrg],
+    [requestLeave, switchOrg],
   );
 
   const handleCreateWorkspace = useCallback(() => {
@@ -202,7 +204,7 @@ function OrganizationSwitcher({
       }
       className={cn(
         identityClassName,
-        "focus-visible:ring-2 focus-visible:ring-ring transition-colors",
+        "focus-visible:ring-2 focus-visible:ring-ring transition-colors motion-reduce:transition-none",
         isLabelHidden
           ? "hover:text-sidebar-foreground hover:bg-sidebar-accent"
           : "hover:text-sidebar-foreground hover:bg-sidebar-accent",

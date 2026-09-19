@@ -5,6 +5,7 @@ import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useManagedProducts } from "@/hooks/api/build/managed-products";
 import { usePmWorkspaces } from "@/hooks/api/build/pm-workspaces";
+import { useCanState } from "@/hooks/api/access";
 import { BUILD_ROOT_PATH } from "@/lib/build/build-scope";
 import {
   resolveLinkedProjectParentPath,
@@ -38,7 +39,9 @@ export interface BuildScopeDirectory {
   quarantinedProducts: BuildScopeDirectoryEntry[];
   quarantinedProjects: BuildScopeDirectoryEntry[];
   isLoading: boolean;
+  isRefreshing: boolean;
   isError: boolean;
+  isDenied: boolean;
   hasMoreProjects: boolean;
   hasMoreHierarchy: boolean;
   refetch: () => void;
@@ -50,6 +53,7 @@ export function useBuildScopeDirectory(
   search: string,
   includeArchived: boolean,
 ): BuildScopeDirectory {
+  const canViewState = useCanState("build:view");
   const debouncedSearch = useDebouncedValue(
     search.trim(),
     BUILD_SCOPE_SEARCH_DEBOUNCE_MS,
@@ -215,11 +219,15 @@ export function useBuildScopeDirectory(
           parentPath:
             row.managedProductId !== null
               ? resolveLinkedProjectParentPath(productName, workspaceName)
-              : (workspaceNames.get(row.pmWorkspaceId) ?? ORGANIZATION_PARENT),
+              : row.pmWorkspaceId === undefined
+                ? ORGANIZATION_PARENT
+                : (workspaceNames.get(row.pmWorkspaceId) ?? ORGANIZATION_PARENT),
           parentKey:
             row.managedProductId !== null
               ? `product:${row.managedProductId}`
-              : `workspace:${row.pmWorkspaceId}`,
+              : row.pmWorkspaceId === undefined
+                ? null
+                : `workspace:${row.pmWorkspaceId}`,
           projectKey: row.key,
           href: `${BUILD_ROOT_PATH}/${row.id}`,
           isArchived: row.status === "ARCHIVED",
@@ -283,11 +291,17 @@ export function useBuildScopeDirectory(
     quarantinedProducts,
     quarantinedProjects,
     isLoading:
+      canViewState === "loading" ||
       workspacesQuery.isLoading ||
       productsQuery.isLoading ||
       projectsQuery.isLoading,
+    isRefreshing:
+      (workspacesQuery.isFetching && !workspacesQuery.isLoading) ||
+      (productsQuery.isFetching && !productsQuery.isLoading) ||
+      (projectsQuery.isFetching && !projectsQuery.isLoading),
     isError:
       workspacesQuery.isError || productsQuery.isError || projectsQuery.isError,
+    isDenied: canViewState === "denied",
     hasMoreProjects: projectsQuery.data?.hasMore ?? false,
     hasMoreHierarchy:
       (workspacesQuery.data?.pagination.hasMore ?? false) ||

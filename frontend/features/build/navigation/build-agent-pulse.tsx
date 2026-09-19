@@ -63,7 +63,7 @@ export function BuildAgentPulse({
       onClick={onNavigate}
       aria-label={summary}
       className={cn(
-        "group relative flex items-center gap-2 rounded-md border border-primary/25 bg-primary/5 transition-colors hover:bg-primary/10",
+        "group relative flex items-center gap-2 rounded-md border border-primary/25 bg-primary/5 transition-colors hover:bg-primary/10 motion-reduce:transition-none",
         isCollapsed ? "mx-auto h-8 w-8 justify-center" : "px-2 py-1.5",
       )}
     >

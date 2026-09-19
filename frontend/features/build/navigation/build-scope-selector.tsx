@@ -113,7 +113,7 @@ export function BuildScopeSelector({
       aria-label={triggerLabel}
       aria-expanded={open}
       aria-haspopup="listbox"
-      className="mx-auto flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-micro font-bold text-primary transition-colors hover:bg-primary/15"
+      className="mx-auto flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-micro font-bold text-primary transition-colors hover:bg-primary/15 motion-reduce:transition-none"
     >
       {scopeAvatarText(currentRef)}
     </button>
@@ -124,7 +124,7 @@ export function BuildScopeSelector({
       aria-label={triggerLabel}
       aria-expanded={open}
       aria-haspopup="listbox"
-      className="flex w-full min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-sidebar-accent"
+      className="flex w-full min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-sidebar-accent motion-reduce:transition-none"
     >
       <span
         aria-hidden
@@ -184,7 +184,9 @@ export function BuildScopeSelector({
           align="start"
           side={isCollapsed ? "right" : "bottom"}
           sideOffset={8}
-          className={cn("flex w-80 flex-col overflow-hidden p-0")}
+          className={cn(
+            "flex w-80 flex-col overflow-hidden p-0 motion-reduce:data-[state=open]:animate-none motion-reduce:data-[state=closed]:animate-none",
+          )}
         >
           <BuildScopeBrowser
             currentScopeKey={currentRef.key}

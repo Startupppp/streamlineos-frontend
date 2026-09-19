@@ -4,7 +4,6 @@ import { useCallback } from "react";
 import { cn } from "@/lib/utils";
 import type { PersonaId } from "./ask-os-request-policy";
 
-export type { PersonaId } from "./ask-os-request-policy";
 
 interface PersonaChip {
   id: PersonaId;

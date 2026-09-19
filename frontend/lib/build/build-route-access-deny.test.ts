@@ -16,6 +16,7 @@ const PROJECT_CASES: PermissionCase[] = [
   ["/build/42/epics", "build:tickets:view"],
   ["/build/42/timeline", "build:tickets:view"],
   ["/build/42/triage", "build:tickets:view"],
+  ["/build/42/workload", "build:tickets:view"],
   ["/build/42/sprints", "build:sprints:view"],
   ["/build/42/workflow", "build:workflow:view"],
   ["/build/42/webhooks", "build:manage"],

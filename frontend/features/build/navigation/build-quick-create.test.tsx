@@ -371,6 +371,25 @@ describe("permission denial and edge cases", () => {
   });
 });
 
+describe("invalid-target combination — upstream guard bypass", () => {
+  it("calls openCreateTicket with null when Issue action is present at organization scope where no projectId exists", async () => {
+    const user = userEvent.setup();
+    renderQuickCreate(ORG_SCOPE, [ISSUE_ACTION, PROJECT_ACTION]);
+    await user.click(screen.getByRole("button", { name: "Create" }));
+    await user.click(screen.getByText("Issue"));
+    expect(mockOpenCreateTicket).toHaveBeenCalledTimes(1);
+    expect(mockOpenCreateTicket).toHaveBeenCalledWith(null);
+  });
+
+  it("calls openCreateTicket with null when Issue action is present at workspace scope where no projectId exists", async () => {
+    const user = userEvent.setup();
+    renderQuickCreate(WORKSPACE_SCOPE, [ISSUE_ACTION, PROJECT_ACTION]);
+    await user.click(screen.getByRole("button", { name: "Create" }));
+    await user.click(screen.getByText("Issue"));
+    expect(mockOpenCreateTicket).toHaveBeenCalledWith(null);
+  });
+});
+
 describe("cancellation", () => {
   it("closes the project dialog when the dialog calls onOpenChange with false", async () => {
     const user = userEvent.setup();

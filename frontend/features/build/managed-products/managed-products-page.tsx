@@ -44,6 +44,9 @@ import type {
   UpdateManagedProductInput,
 } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { NoPermissionState } from "@/components/shared";
+import { usePermissionGate } from "@/hooks/api/access";
+import { resolveGate } from "@/lib/rbac/gate";
 import {
   PmPageShell,
   PmSection,
@@ -112,6 +115,7 @@ interface ManagedProductsPageProps {
 export function ManagedProductsPage({
   pmWorkspaceId,
 }: ManagedProductsPageProps = {}) {
+  const viewGate = usePermissionGate("build:managed-products:view");
   const canCreate = useCan("build:managed-products:create");
   const canUpdate = useCan("build:managed-products:update");
   const canDelete = useCan("build:managed-products:delete");
@@ -313,6 +317,13 @@ export function ManagedProductsPage({
     },
   ];
 
+  const gate = resolveGate({
+    access: viewGate.pending ? "loading" : viewGate.denied ? "denied" : "granted",
+    isLoading,
+    isError,
+    isEmpty: displayed.length === 0,
+  });
+
   const isFiltered = statusFilter !== "all" || !!search.trim();
   const hasPrev = cursorStack.length > 0;
   const hasNext = !!data?.pagination.hasMore;
@@ -353,11 +364,13 @@ export function ManagedProductsPage({
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          {isLoading ? (
+          {gate === "loading" ? (
             <DataTableSkeleton rows={12} columns={6} className="flex-1" />
-          ) : isError ? (
+          ) : gate === "denied" ? (
+            <NoPermissionState permission="build:managed-products:view" className={PM_FILL_PANEL} />
+          ) : gate === "error" ? (
             <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
-          ) : displayed.length === 0 ? (
+          ) : gate === "empty" ? (
             <EmptyState
               className={PM_FILL_PANEL}
               illustrationPreset="projects"

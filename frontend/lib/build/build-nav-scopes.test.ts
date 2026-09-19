@@ -141,7 +141,7 @@ describe("workspace and product scope catalogs", () => {
   const productScope = resolveBuildScope("/build/managed-products/7");
   const fullAccess = accessWith(ALL_BUILD_PERMISSIONS, { feedbucket: true });
 
-  it("exposes workspace Overview, Projects, Products, Teams and All work under the workspace base path", () => {
+  it("exposes workspace Overview, Projects, Products, Teams, All work, Roadmap and Goals under the workspace base path", () => {
     const model = resolveBuildNavModel({
       scope: workspaceScope,
       access: fullAccess,
@@ -153,6 +153,8 @@ describe("workspace and product scope catalogs", () => {
       "/build/workspaces/ws-1/products",
       "/build/workspaces/ws-1/teams",
       "/build/workspaces/ws-1/all-work",
+      "/build/workspaces/ws-1/roadmap",
+      "/build/workspaces/ws-1/goals",
     ]);
   });
 
@@ -177,7 +179,7 @@ describe("workspace and product scope catalogs", () => {
     expect(ids).toContain("workspace-teams");
   });
 
-  it("exposes Linked projects under the managed product base path", () => {
+  it("exposes Overview, Linked projects, Roadmap and Goals under the managed product base path", () => {
     const model = resolveBuildNavModel({
       scope: productScope,
       access: fullAccess,
@@ -186,6 +188,8 @@ describe("workspace and product scope catalogs", () => {
     expect(model.primary.map((d) => d.href)).toEqual([
       "/build/managed-products/7",
       "/build/managed-products/7/projects",
+      "/build/managed-products/7/roadmap",
+      "/build/managed-products/7/goals",
     ]);
   });
 

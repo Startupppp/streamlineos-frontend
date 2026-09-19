@@ -15,7 +15,6 @@ import { DownloadIcon, PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PortalCrSheet } from "./portal-cr-sheet";
-import type { ChangeRequestStatus } from "@/types/projects";
 import {
   PmPageShell,
   PmPanel,

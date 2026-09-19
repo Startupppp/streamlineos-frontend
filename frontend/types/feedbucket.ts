@@ -105,6 +105,7 @@ export interface ListFeedbucketSubmissionsQuery {
   page?: number;
   limit?: number;
   widgetId?: number;
+  managedProductId?: number;
   type?: FeedbucketSubmissionType;
   status?: FeedbucketSubmissionStatus;
   assigneeId?: string;

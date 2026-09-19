@@ -45,7 +45,6 @@
   "features/build/incidents/incidents-page.tsx",
   "features/build/intake/intake-page.tsx",
   "features/build/managed-products/managed-product-detail-page.tsx",
-  "features/build/managed-products/managed-products-page.tsx",
   "features/build/meetings/meetings-list-page.tsx",
   "features/build/milestones/project-milestones-page.tsx",
   "features/build/modules/modules-page.tsx",

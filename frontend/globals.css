@@ -748,6 +748,13 @@ button.goal-everything-chip[aria-checked="true"]::before {
   color: color-mix(in srgb, var(--sidebar-primary) 80%, transparent);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .nav-item,
+  .nav-item .nav-icon {
+    transition: none;
+  }
+}
+
 /* â”€â”€â”€ React Big Calendar overrides â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .calendar-container {
   scrollbar-width: none;

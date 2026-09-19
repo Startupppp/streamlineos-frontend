@@ -53,11 +53,14 @@ export type BoardMember = {
   image: string | null;
 };
 
-export function useBoardUrlState(projectId: number) {
+export function useBoardUrlState(
+  projectId: number,
+  defaultView: ViewType = "board",
+) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const view: ViewType = parseViewType(searchParams.get("view"));
+  const view: ViewType = parseViewType(searchParams.get("view") ?? defaultView);
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
   const commentParam = searchParams.get("comment");

@@ -40,10 +40,12 @@ export function useIntegrationConnections(options?: { enabled?: boolean }) {
   });
 }
 
+export type IntegrationReturnPath = "/calendar" | "/mail";
+
 export function useInitiateIntegrationConnection() {
   return useAuthorizedMutation("integrations:connections:manage", {
     mutationKey: ["integrations", "connections", "initiate"],
-    mutationFn: ({ toolkit, returnPath }: { toolkit: IntegrationToolkit; returnPath?: string }) =>
+    mutationFn: ({ toolkit, returnPath }: { toolkit: IntegrationToolkit; returnPath?: IntegrationReturnPath }) =>
       apiClient.post<{ redirectUrl: string }>("/integrations/connections/initiate", {
         toolkit,
         ...(returnPath !== undefined && { returnPath }),

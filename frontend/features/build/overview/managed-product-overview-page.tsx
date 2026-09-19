@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useManagedProduct } from "@/hooks/api/build/managed-products";
 import { useProjects } from "@/hooks/api/build/projects";
+import { useRoadmapItems } from "@/hooks/api/build/roadmap";
 import { useGoalsPage } from "@/hooks/api/goals";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -11,7 +12,7 @@ import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/st
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, Target } from "lucide-react";
+import { Briefcase, Map, Target } from "lucide-react";
 
 interface ManagedProductOverviewPageProps {
   managedProductId: number;
@@ -20,7 +21,7 @@ interface ManagedProductOverviewPageProps {
 function ManagedProductOverviewSkeleton() {
   return (
     <div className="flex flex-1 min-h-0 flex-col gap-6">
-      <StatCardGridSkeleton cols={2} count={2} />
+      <StatCardGridSkeleton cols={2} count={1} />
       <Skeleton className="h-40 rounded-xl" />
     </div>
   );
@@ -32,13 +33,12 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
     { managedProductId, limit: 10 },
     { enabled: !!managedProductId },
   );
-  const goalsPageQuery = useGoalsPage({ managedProductId });
+  const roadmapQuery = useRoadmapItems({ managedProductId, limit: 5 });
+  const goalsQuery = useGoalsPage({ managedProductId });
 
-  const isLoading =
-    productQuery.isLoading || projectsQuery.isLoading || goalsPageQuery.isLoading;
+  const isLoading = productQuery.isLoading || projectsQuery.isLoading;
 
-  const isError =
-    productQuery.isError || projectsQuery.isError || goalsPageQuery.isError;
+  const isError = productQuery.isError || projectsQuery.isError;
 
   const resolution = usePageState({
     permission: "build:managed-products:view",
@@ -49,7 +49,6 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
 
   const product = productQuery.data;
   const projectsPage = projectsQuery.data;
-  const goalsPage = goalsPageQuery.data;
 
   const firstPageProjectCount = projectsPage?.data?.length ?? 0;
   const hasMoreProjects = projectsPage?.hasMore ?? false;
@@ -57,15 +56,17 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
     ? `${firstPageProjectCount}+`
     : String(firstPageProjectCount);
 
-  const goalsTotal = goalsPage?.total ?? null;
-
   function handleRetry() {
     void productQuery.refetch();
     void projectsQuery.refetch();
-    void goalsPageQuery.refetch();
+    void roadmapQuery.refetch();
+    void goalsQuery.refetch();
   }
 
   const linkedProjects = projectsPage?.data ?? [];
+  const roadmapItems = roadmapQuery.data?.data ?? [];
+  const hasMoreRoadmap = roadmapQuery.data?.pagination?.hasMore ?? false;
+  const goalsLabel = String(goalsQuery.data?.total ?? 0);
 
   return (
     <PageWrapper
@@ -90,16 +91,51 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
               hint={hasMoreProjects ? "First page shown" : undefined}
               href={`/build/managed-products/${managedProductId}/projects`}
             />
-            {goalsTotal !== null ? (
-              <StatCard
-                label="Goals"
-                value={goalsTotal}
-                icon={Target}
-                tone="violet"
-                isLoading={goalsPageQuery.isLoading}
-              />
-            ) : null}
+            <StatCard
+              label="Goals"
+              value={goalsLabel}
+              icon={Target}
+              tone="emerald"
+              isLoading={goalsQuery.isLoading}
+              href={`/build/managed-products/${managedProductId}/goals`}
+            />
           </StatCardGrid>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Map className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                <h2 className="text-sm font-semibold">Roadmap</h2>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {roadmapItems.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No roadmap items for this product yet.
+                </p>
+              ) : (
+                roadmapItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between gap-2 text-sm"
+                  >
+                    <span className="truncate">{item.title}</span>
+                    <Badge variant="outline" className="h-5 shrink-0 px-2 py-0.5 text-micro">
+                      {item.status}
+                    </Badge>
+                  </div>
+                ))
+              )}
+              {hasMoreRoadmap && (
+                <Link
+                  href={`/build/managed-products/${managedProductId}/roadmap`}
+                  className="block text-dense text-primary hover:underline"
+                >
+                  View full roadmap
+                </Link>
+              )}
+            </CardContent>
+          </Card>
 
           {linkedProjects.length > 0 && (
             <Card>
@@ -114,14 +150,14 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
                   >
                     <Link
                       href={`/build/${proj.id}`}
-                      className="truncate text-blue-600 hover:underline"
+                      className="truncate text-primary hover:underline"
                     >
                       {proj.name}
                     </Link>
                     <div className="flex shrink-0 items-center gap-2">
-                      <span className="font-mono text-[11px] text-muted-foreground">{proj.key}</span>
+                      <span className="font-mono text-dense text-muted-foreground">{proj.key}</span>
                       {proj.status && (
-                        <Badge variant="outline" className="h-5 px-2 py-0.5 text-[10px]">
+                        <Badge variant="outline" className="h-5 px-2 py-0.5 text-micro">
                           {proj.status}
                         </Badge>
                       )}
@@ -131,7 +167,7 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
                 {hasMoreProjects && (
                   <Link
                     href={`/build/managed-products/${managedProductId}/projects`}
-                    className="block text-[11px] text-blue-600 hover:underline"
+                    className="block text-dense text-primary hover:underline"
                   >
                     View all linked projects
                   </Link>

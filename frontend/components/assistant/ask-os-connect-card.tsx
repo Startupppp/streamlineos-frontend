@@ -33,10 +33,7 @@ export function AskOsConnectCard({ toolkit, reason, summary }: AskOsConnectCardP
 
   async function handleConnect() {
     try {
-      const { redirectUrl } = await initiate.mutateAsync({
-        toolkit,
-        returnPath: window.location.pathname,
-      });
+      const { redirectUrl } = await initiate.mutateAsync({ toolkit });
       window.location.assign(redirectUrl);
     } catch (error) {
       toast.error(getErrorMessage(error));

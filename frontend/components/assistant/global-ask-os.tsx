@@ -44,6 +44,7 @@ import { AskOsPanelHeader } from "./ask-os-panel-header";
 import { AskOsLauncher } from "./ask-os-launcher";
 import {
   appendAskOsDirective,
+  extractAskOsDirective,
   parseAskOsDirectivePayload,
   type AskOsDirective,
 } from "./ask-os-directive-schema";
@@ -120,6 +121,7 @@ export function GlobalAskOs() {
 
   const isConversations = view === "conversations";
   const showEmpty = activeConversationId === null && !draft;
+  const threadBusy = isStreaming || draft !== null;
   const fillViewport = isMobile || expanded;
   const panelTransition = reduce
     ? { duration: 0 }
@@ -239,6 +241,7 @@ export function GlobalAskOs() {
       inFlightDirectiveRef.current = null;
       setInFlightDirective(null);
       isNearBottomRef.current = true;
+      setDraft({ user: text, assistant: "" });
       let conversationId = activeConversationId;
       if (conversationId === null) {
         try {
@@ -246,9 +249,17 @@ export function GlobalAskOs() {
             title: text.substring(0, 60).trim(),
           });
           conversationId = conversation.id;
+          queryClient.setQueryData<InfiniteData<AskAiHistoryPage>>(
+            collaborationQueryKeys.aiChat.conversationMessages(conversation.id),
+            {
+              pages: [{ messages: [], nextCursor: null }],
+              pageParams: [undefined],
+            },
+          );
           setActiveConversationId(conversation.id);
         } catch (error) {
           sendingRef.current = false;
+          setDraft(null);
           const refusal = askOsComposerRefusal(error);
           if (refusal) {
             setInput(text);
@@ -262,11 +273,10 @@ export function GlobalAskOs() {
       const context = boundedAskOsContext<AskAIMessage>([
         ...persisted.map((message) => ({
           role: message.role,
-          content: message.content,
+          content: extractAskOsDirective(message.content).prose,
         })),
         { role: "user", content: text },
       ]);
-      setDraft({ user: text, assistant: "" });
       try {
         const outcome = await sendMessage(
           context,
@@ -295,6 +305,18 @@ export function GlobalAskOs() {
           return;
         }
         if (outcome.status === "cancelled") setFailure({ status: "cancelled" });
+        if (
+          outcome.status === "completed" &&
+          outcome.text.trim().length === 0 &&
+          inFlightDirectiveRef.current === null
+        ) {
+          setDraft(null);
+          setFailure({
+            status: "error",
+            message: "The assistant returned nothing. Try rephrasing your question.",
+          });
+          return;
+        }
         const userMessage: AskAiHistoryMessage = {
           id: (temporaryIdRef.current -= 1),
           role: "user",
@@ -421,6 +443,8 @@ export function GlobalAskOs() {
   }
   function handleNewChat() {
     setActiveConversationId(null);
+    setDraft(null);
+    setFailure(null);
     setView("chat");
   }
   function handleSelectConversation(id: number) {
@@ -433,7 +457,7 @@ export function GlobalAskOs() {
   function handleDeleteActive() {
     if (
       activeConversationId === null ||
-      isStreaming ||
+      threadBusy ||
       deleteConversation.isPending
     )
       return;
@@ -477,7 +501,7 @@ export function GlobalAskOs() {
                 activeConversationId={activeConversationId}
                 deletePending={deleteConversation.isPending}
                 isConversations={isConversations}
-                isStreaming={isStreaming}
+                isStreaming={threadBusy}
                 expanded={expanded}
                 showExpand={!isMobile}
                 onToggleExpanded={handleToggleExpanded}
@@ -543,7 +567,7 @@ export function GlobalAskOs() {
                     <AskOsChatComposer
                       error={composerError}
                       input={input}
-                      isStreaming={isStreaming}
+                      isStreaming={threadBusy}
                       onInputChange={handleInputChange}
                       onSelectPersona={setSelectedPersona}
                       onStop={stop}

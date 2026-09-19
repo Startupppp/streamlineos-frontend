@@ -70,7 +70,7 @@ function ToolRow({
         onClick={onNavigate}
         aria-current={isActive ? "page" : undefined}
         className={cn(
-          "flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-label transition-colors",
+          "flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-label transition-colors motion-reduce:transition-none",
           isActive
             ? "bg-primary/10 font-medium text-foreground"
             : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
@@ -86,7 +86,7 @@ function ToolRow({
         aria-label={pinLabel}
         title={pinLabel}
         className={cn(
-          "flex h-6 w-6 shrink-0 items-center justify-center rounded transition-opacity disabled:cursor-not-allowed disabled:opacity-30",
+          "flex h-6 w-6 shrink-0 items-center justify-center rounded transition-opacity motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-30",
           isPinned
             ? "text-primary opacity-100"
             : "text-muted-foreground opacity-0 hover:bg-muted hover:text-foreground focus-visible:opacity-100 group-hover/tool:opacity-100",

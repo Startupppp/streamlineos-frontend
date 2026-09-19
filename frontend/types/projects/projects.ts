@@ -95,7 +95,7 @@ export interface ProjectListItem {
   priority: ProjectPriority | null;
   health: ProjectHealth;
   managedProductId: number | null;
-  pmWorkspaceId: string;
+  pmWorkspaceId?: string;
   startDate: string | Date | null;
   endDate: string | Date | null;
   manager: {

@@ -4,6 +4,7 @@ import { BUILD_MY_WORK_DESTINATIONS } from "./nav/build-stable-destinations";
 import { resolveBuildScope } from "./build-scope";
 import type { BuildNavDestination } from "./nav/build-nav-destination";
 import type { PermissionKey } from "@/lib/rbac/permissions";
+import { backendPermissionNames } from "@/test-utils/permission-catalog";
 
 const SCOPE_PATHS = [
   "/build",
@@ -58,18 +59,7 @@ function drifted(): string[] {
   return found.sort();
 }
 
-const KNOWN_KEY_DRIFT: readonly string[] = [
-  "project-analytics -> /build/42/analytics",
-  "project-chat -> /build/42/chat",
-  "project-intake -> /build/42/intake",
-  "project-milestones -> /build/42/milestones",
-  "project-releases -> /build/42/releases",
-  "project-reports -> /build/42/reports",
-  "project-views -> /build/42/views",
-  "project-whiteboard -> /build/42/whiteboard",
-  "project-wiki -> /build/42/wiki",
-  "project-workload -> /build/42",
-].toSorted();
+const KNOWN_KEY_DRIFT: readonly string[] = [];
 
 describe("every Build navigation destination is reachable by its own key", () => {
   it("covers a non-trivial number of destinations, so a catalog that stopped loading cannot pass vacuously", () => {
@@ -91,4 +81,82 @@ describe("every Build navigation destination is reachable by its own key", () =>
     const live = new Set(drifted());
     expect(KNOWN_KEY_DRIFT.filter((entry) => !live.has(entry))).toEqual([]);
   });
+});
+
+describe("BSN-04-001 permission matrix — every primary destination across all four scopes", () => {
+  it("every destination declares a required permission so useCan gates are never vacuous", () => {
+    const withoutPermission = destinations
+      .filter((destination) => {
+        const req = destination.requiredPermission;
+        return !req || (Array.isArray(req) && req.length === 0);
+      })
+      .map((destination) => destination.id);
+    expect(withoutPermission).toEqual([]);
+  });
+
+  it("the backend catalog has enough keys that a missing import cannot pass vacuously", () => {
+    expect(backendPermissionNames().size).toBeGreaterThan(200);
+  });
+
+  it("every nav permission key exists in the backend catalog so useCan is never permanently false", () => {
+    const catalog = backendPermissionNames();
+    const missing = destinations.flatMap((destination) =>
+      keysOf(destination.requiredPermission).filter((key) => !catalog.has(key)),
+    );
+    expect(missing).toEqual([]);
+  });
+});
+
+type CrossScopeCase = [
+  crossScopePath: string,
+  scopeLocalPermission: PermissionKey,
+  basePermission: PermissionKey,
+];
+
+const CROSS_SCOPE_CASES: CrossScopeCase[] = [
+  [
+    "/build/workspaces/ws-1/feedbucket",
+    "feedbucket:widgets:view",
+    "build:view",
+  ],
+  [
+    "/build/workspaces/ws-1/sprints",
+    "build:sprints:view",
+    "build:view",
+  ],
+  [
+    "/build/workspaces/ws-1/bugs",
+    "build:bugs:view",
+    "build:view",
+  ],
+  [
+    "/build/managed-products/7/feedbucket",
+    "feedbucket:widgets:view",
+    "build:managed-products:view",
+  ],
+  [
+    "/build/managed-products/7/sprints",
+    "build:sprints:view",
+    "build:managed-products:view",
+  ],
+];
+
+describe("BSN-01-026 cross-scope deep links — project extensions do not over-match workspace or product URLs", () => {
+  it("covers representative cross-scope paths so a missing entry cannot pass vacuously", () => {
+    expect(CROSS_SCOPE_CASES.length).toBeGreaterThan(3);
+  });
+
+  it.each(CROSS_SCOPE_CASES)(
+    "%s resolves to the base scope key %s, not the project-local key %s",
+    (crossScopePath, scopeLocalPermission, basePermission) => {
+      const decision = resolveRouteAccess(crossScopePath);
+      expect(decision.kind).toBe("permission");
+      if (decision.kind !== "permission") return;
+      const resolved = decision.permission
+        ? keysOf(decision.permission)
+        : [];
+      expect(resolved).not.toContain(scopeLocalPermission);
+      expect(resolved).toContain(basePermission);
+    },
+  );
 });

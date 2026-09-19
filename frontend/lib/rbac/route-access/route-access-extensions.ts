@@ -398,12 +398,52 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     backendRoute: { method: "get", path: "/build/{projectId}/tickets" },
   },
   {
+    prefix: "/build/[projectId]/workload",
+    product: "build",
+    permission: "build:tickets:view",
+    reason:
+      "Project workload renders the project ticket dataset. First read is GET /build/{projectId}/tickets, which requires build:tickets:view.",
+    backendRoute: { method: "get", path: "/build/{projectId}/tickets" },
+  },
+  {
     prefix: "/build/workspaces/[pmWorkspaceId]/overview",
     product: "build",
     permission: "build:workspaces:view",
     reason:
       "PM Workspace overview. Without this entry the route inherits the workspace base path nav resolution which returns the generic build:view, letting in callers who hold build:view but not build:workspaces:view. First read is GET /build/workspaces/{pmWorkspaceId}, which carries build:workspaces:view.",
     backendRoute: { method: "get", path: "/build/workspaces/{pmWorkspaceId}" },
+  },
+  {
+    prefix: "/build/workspaces/[pmWorkspaceId]/roadmap",
+    product: "build",
+    permission: "build:roadmap:view",
+    reason:
+      "Workspace-scoped roadmap. Without this entry the route falls back to the generic build:view the main /build nav entry owns, allowing callers who hold build:view but not build:roadmap:view to reach the roadmap board. First read is GET /build/roadmap, which carries build:roadmap:view.",
+    backendRoute: { method: "get", path: "/build/roadmap" },
+  },
+  {
+    prefix: "/build/workspaces/[pmWorkspaceId]/goals",
+    product: "build",
+    permission: "build:goals:view",
+    reason:
+      "Workspace-scoped goals and OKRs. Without this entry the route falls back to the generic build:view, allowing callers who hold build:view but not build:goals:view to reach the goals board. First read is GET /goals, which carries build:goals:view.",
+    backendRoute: { method: "get", path: "/goals" },
+  },
+  {
+    prefix: "/build/managed-products/[managedProductId]/roadmap",
+    product: "build",
+    permission: "build:roadmap:view",
+    reason:
+      "Product-scoped roadmap. Without this entry the route falls back to the managed-products permission, allowing callers who hold build:managed-products:view but not build:roadmap:view to reach the roadmap board. First read is GET /build/roadmap, which carries build:roadmap:view.",
+    backendRoute: { method: "get", path: "/build/roadmap" },
+  },
+  {
+    prefix: "/build/managed-products/[managedProductId]/goals",
+    product: "build",
+    permission: "build:goals:view",
+    reason:
+      "Product-scoped goals and OKRs. Without this entry the route falls back to the managed-products permission, allowing callers who hold build:managed-products:view but not build:goals:view to reach the goals board. First read is GET /goals, which carries build:goals:view.",
+    backendRoute: { method: "get", path: "/goals" },
   },
 ];
 

@@ -50,6 +50,119 @@ function setResolved(refs: BuildScopeResolvedRef[]): void {
   } as ReturnType<typeof useBuildScopeResolve>);
 }
 
+describe("BSN-04-020/021 — reconciliation excludes revoked scopes before the caller renders them", () => {
+  beforeEach(() => {
+    mockResolve.mockReset();
+  });
+
+  it("when access changes and one of two stored scopes is revoked, only the accessible scope appears in entries", () => {
+    const accessible = storedRef();
+    const revoked = storedRef({
+      key: "project:8",
+      id: "8",
+      name: "Revoked",
+      href: "/build/8",
+    });
+    setResolved([resolvedRef()]);
+    const { result } = renderHook(() =>
+      useReconciledBuildScopes([accessible, revoked], jest.fn()),
+    );
+    expect(result.current.entries).toHaveLength(1);
+    expect(result.current.entries[0]?.key).toBe("project:7");
+  });
+
+  it("entries is pruned before onPrune fires so no caller can render the revoked scope in reconciled state", () => {
+    const accessible = storedRef();
+    const revoked = storedRef({
+      key: "project:8",
+      id: "8",
+      name: "Revoked",
+      href: "/build/8",
+    });
+    const onPrune = jest.fn();
+    setResolved([resolvedRef()]);
+    const { result } = renderHook(() =>
+      useReconciledBuildScopes([accessible, revoked], onPrune),
+    );
+    expect(result.current.entries.some((e) => e.key === "project:8")).toBe(false);
+    expect(onPrune).toHaveBeenCalledWith(
+      expect.not.arrayContaining([
+        expect.objectContaining({ key: "project:8" }),
+      ]),
+    );
+  });
+});
+
+describe("BSN-04-027 — stored preferences cannot resurrect an inaccessible scope after reconciliation", () => {
+  beforeEach(() => {
+    mockResolve.mockReset();
+  });
+
+  it("when the resolve response omits all stored keys, entries is empty and onPrune receives an empty list so storage is cleared", () => {
+    const stale = storedRef();
+    const onPrune = jest.fn();
+    setResolved([]);
+    const { result } = renderHook(() =>
+      useReconciledBuildScopes([stale], onPrune),
+    );
+    expect(result.current.entries).toHaveLength(0);
+    expect(onPrune).toHaveBeenCalledWith([]);
+  });
+
+  it("while resolve is pending stored entries are returned unchanged so the guard cannot cause a false empty state during loading", () => {
+    const stored = storedRef();
+    mockResolve.mockReturnValue({
+      data: undefined,
+      isSuccess: false,
+    } as ReturnType<typeof useBuildScopeResolve>);
+    const onPrune = jest.fn();
+    const { result } = renderHook(() =>
+      useReconciledBuildScopes([stored], onPrune),
+    );
+    expect(result.current.entries).toHaveLength(1);
+    expect(onPrune).not.toHaveBeenCalled();
+  });
+});
+
+describe("BSN-02-027 — starred off-page scope survives reconcile by id; revoked scope is pruned", () => {
+  beforeEach(() => {
+    mockResolve.mockReset();
+  });
+
+  it("a starred scope not on browse page one is found by the resolve-by-id call and kept in entries", () => {
+    const offPage = storedRef({
+      key: "project:999",
+      id: "999",
+      name: "Off-page",
+      href: "/build/999",
+    });
+    setResolved([
+      resolvedRef({ key: "project:999", id: "999", name: "Off-page" }),
+    ]);
+    const onPrune = jest.fn();
+    const { result } = renderHook(() =>
+      useReconciledBuildScopes([offPage], onPrune),
+    );
+    expect(result.current.entries).toHaveLength(1);
+    expect(result.current.entries[0]?.key).toBe("project:999");
+    expect(onPrune).not.toHaveBeenCalled();
+  });
+
+  it("when the resolve-by-id call does not return a stored key that scope is absent from entries even if it was starred", () => {
+    const revokedStar = storedRef({
+      key: "project:999",
+      id: "999",
+      name: "Revoked Star",
+      href: "/build/999",
+    });
+    setResolved([]);
+    const { result } = renderHook(() =>
+      useReconciledBuildScopes([revokedStar], jest.fn()),
+    );
+    expect(result.current.entries).toHaveLength(0);
+  });
+});
+
 describe("useReconciledBuildScopes — BSN-02-022 rename and move write-back", () => {
   beforeEach(() => {
     mockResolve.mockReset();
@@ -114,5 +227,27 @@ describe("useReconciledBuildScopes — BSN-02-022 rename and move write-back", (
 
     expect(result.current.entries).toHaveLength(1);
     expect(onPrune).not.toHaveBeenCalled();
+  });
+
+  it("keeps a starred scope that resolves by id even when it is outside the browse page", () => {
+    const offPage = storedRef({
+      key: "project:999",
+      id: "999",
+      name: "Off-page project",
+      href: "/build/999",
+    });
+    setResolved([
+      resolvedRef({
+        key: "project:999",
+        id: "999",
+        name: "Off-page project",
+      }),
+    ]);
+
+    const { result } = renderHook(() =>
+      useReconciledBuildScopes([offPage], jest.fn()),
+    );
+
+    expect(result.current.entries).toEqual([offPage]);
   });
 });

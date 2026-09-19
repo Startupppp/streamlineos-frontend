@@ -33,8 +33,20 @@ describe("a mail gap renders an actionable card, never dead-end prose", () => {
     const button = screen.getByRole("button", { name: "Connect Gmail" });
     await userEvent.click(button);
 
-    expect(mutateAsync).toHaveBeenCalledWith({ toolkit: "gmail", returnPath: "/crm/leads" });
+    expect(mutateAsync).toHaveBeenCalledWith({ toolkit: "gmail" });
     expect(assign).toHaveBeenCalledWith("https://composio.test/oauth/gmail");
+  });
+
+  it("sends no returnPath, because the backend only accepts /calendar or /mail and Ask OS opens anywhere", async () => {
+    render(
+      <AskOsConnectCard toolkit="gmail" reason="no-connection" summary="Connect a mail account." />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Connect Gmail" }));
+
+    expect(mutateAsync).toHaveBeenCalledWith(
+      expect.not.objectContaining({ returnPath: expect.anything() }),
+    );
   });
 
   it("says Reconnect rather than Connect for an expired grant, so the two gaps are not confused", () => {

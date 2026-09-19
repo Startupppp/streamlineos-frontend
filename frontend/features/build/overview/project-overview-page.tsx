@@ -151,11 +151,11 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
                 <CardContent className="space-y-2">
                   <p className="text-sm font-medium truncate">{nextMilestone.name}</p>
                   {nextMilestone.targetDate && (
-                    <p className="text-[13px] text-muted-foreground">
+                    <p className="text-label text-muted-foreground">
                       Due {formatShortDate(nextMilestone.targetDate)}
                     </p>
                   )}
-                  <Badge variant="outline" className="h-5 px-2 py-0.5 text-[10px]">
+                  <Badge variant="outline" className="h-5 px-2 py-0.5 text-micro">
                     {nextMilestone.status}
                   </Badge>
                 </CardContent>
@@ -166,19 +166,19 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
           <div className="flex items-center gap-3 text-sm">
             <Link
               href={`${basePath}/issues`}
-              className="text-blue-600 hover:underline"
+              className="text-primary hover:underline"
             >
               Issues
             </Link>
             <Link
               href={`${basePath}/sprints`}
-              className="text-blue-600 hover:underline"
+              className="text-primary hover:underline"
             >
               Cycles
             </Link>
             <Link
               href={`${basePath}/milestones`}
-              className="text-blue-600 hover:underline"
+              className="text-primary hover:underline"
             >
               Milestones
             </Link>

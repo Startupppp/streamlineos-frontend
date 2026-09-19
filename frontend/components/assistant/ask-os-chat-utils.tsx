@@ -74,22 +74,22 @@ export function EmptyAskOs({
   onSuggestion: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
   return (
-    <div className="flex min-h-full flex-col items-center justify-center gap-3 py-4 text-center">
-      <AnimatedLogo size={28} gradient className="rounded-full" />
-      <div>
-        <p className="text-sm font-semibold tracking-tight text-foreground">How can I help?</p>
-        <p className="mx-auto mt-1 max-w-[16rem] text-[13px] leading-5 text-muted-foreground">
+    <div className="flex min-h-full flex-col items-center justify-center gap-5 px-2 py-8 text-center">
+      <AnimatedLogo size={36} gradient className="rounded-full" />
+      <div className="space-y-1.5">
+        <p className="text-lg font-semibold tracking-tight text-foreground">How can I help?</p>
+        <p className="mx-auto max-w-[18rem] text-[13px] leading-5 text-muted-foreground">
           CRM, HR, Build, mail, calendar, and your knowledge base.
         </p>
       </div>
-      <div className="flex w-full flex-col gap-1.5">
+      <div className="flex w-full max-w-[28rem] flex-wrap justify-center gap-2">
         {SUGGESTIONS.map((s) => (
           <button
             key={s}
             type="button"
             data-suggestion={s}
             onClick={onSuggestion}
-            className="w-full rounded-md bg-muted/60 px-3 py-1.5 text-left text-[13px] text-foreground transition-colors hover:bg-muted"
+            className="rounded-full border border-border bg-background px-3 py-1.5 text-[13px] text-foreground transition-colors hover:bg-muted"
           >
             {s}
           </button>
@@ -131,7 +131,7 @@ export function AskOsBubble({
         animate={{ opacity: 1, y: 0 }}
         className="flex justify-end"
       >
-        <div className="max-w-[92%] whitespace-pre-wrap break-words rounded-2xl rounded-br-sm bg-primary px-2.5 py-1.5 text-[13px] leading-5 text-primary-foreground">
+        <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-primary px-3.5 py-2 text-sm leading-6 text-primary-foreground">
           {content}
         </div>
       </motion.div>
@@ -172,9 +172,9 @@ export function AskOsBubble({
         gradient
         className="mt-0.5 shrink-0 rounded-full"
       />
-      <div className="min-w-0 max-w-[92%] space-y-2 text-sm text-foreground">
+      <div className="min-w-0 max-w-[92%] flex-1 space-y-2 text-sm leading-6 text-foreground">
         {showMessageChrome ? (
-          <div className="space-y-2 rounded-2xl rounded-bl-sm bg-muted/50 px-2.5 py-2">
+          <div className="space-y-2">
             {confirmDirective ? (
               <AskOsConfirmationCard
                 action={confirmDirective.action}

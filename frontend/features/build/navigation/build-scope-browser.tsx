@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import { Archive, ChevronRight } from "lucide-react";
+import { Archive, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { BuildScopeRow } from "./build-scope-row";
 import { useReconciledBuildScopes } from "./use-reconciled-build-scopes";
@@ -46,6 +47,7 @@ export function BuildScopeBrowser({
   const [expandedKeys, setExpandedKeys] = useState<ReadonlySet<string>>(
     () => new Set<string>(),
   );
+  const treeRef = useRef<HTMLDivElement>(null);
   const recentsStore = useBuildScopeRecents();
   const liveRecents = useReconciledBuildScopes(
     recentsStore.recents,
@@ -63,43 +65,20 @@ export function BuildScopeBrowser({
   const moveFocus = useCallback((step: number) => {
     const container = listRef.current;
     if (!container) return false;
-    const options = [
-      ...container.querySelectorAll<HTMLButtonElement>('[role="option"]'),
+    const items = [
+      ...container.querySelectorAll<HTMLButtonElement>('[role="option"], [role="treeitem"]'),
     ];
-    if (options.length === 0) return false;
-    const current = options.findIndex((option) => option === document.activeElement);
+    if (items.length === 0) return false;
+    const current = items.findIndex((item) => item === document.activeElement);
     const nextIndex =
       current === -1
         ? step > 0
           ? 0
-          : options.length - 1
-        : (current + step + options.length) % options.length;
-    options[nextIndex]?.focus();
+          : items.length - 1
+        : (current + step + items.length) % items.length;
+    items[nextIndex]?.focus();
     return true;
   }, []);
-
-  const handleListKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
-      if (moveFocus(event.key === "ArrowDown" ? 1 : -1)) event.preventDefault();
-    },
-    [moveFocus],
-  );
-
-  const handleSearchKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.key !== "ArrowDown") return;
-      if (moveFocus(1)) event.preventDefault();
-    },
-    [moveFocus],
-  );
-
-  const isSearching = search.trim().length > 0;
-
-  const handleToggleArchived = useCallback(
-    () => setIncludeArchived((current) => !current),
-    [],
-  );
 
   const handleToggleExpanded = useCallback((scopeKey: string) => {
     setExpandedKeys((current) => {
@@ -116,6 +95,65 @@ export function BuildScopeBrowser({
       ...directory.projects.filter((entry) => entry.parentKey === parentKey),
     ],
     [directory.products, directory.projects],
+  );
+
+  const handleListKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      const { key } = event;
+      if (key === "ArrowDown" || key === "ArrowUp") {
+        if (moveFocus(key === "ArrowDown" ? 1 : -1)) event.preventDefault();
+        return;
+      }
+      const container = listRef.current;
+      if (!container) return;
+      if (key === "Home") {
+        const first = container.querySelector<HTMLButtonElement>('[role="option"], [role="treeitem"]');
+        if (first) { first.focus(); event.preventDefault(); }
+        return;
+      }
+      if (key === "End") {
+        const all = container.querySelectorAll<HTMLButtonElement>('[role="option"], [role="treeitem"]');
+        const last = all[all.length - 1];
+        if (last) { last.focus(); event.preventDefault(); }
+        return;
+      }
+      if (key === "ArrowRight" || key === "ArrowLeft") {
+        const focused = document.activeElement as HTMLElement | null;
+        if (!focused || !treeRef.current?.contains(focused)) return;
+        const scopeKey = focused.dataset["scopeKey"];
+        if (!scopeKey) return;
+        if (key === "ArrowRight") {
+          const hasChildren = childrenOf(scopeKey).length > 0;
+          if (hasChildren && !expandedKeys.has(scopeKey)) {
+            handleToggleExpanded(scopeKey);
+            event.preventDefault();
+          } else if (hasChildren && expandedKeys.has(scopeKey)) {
+            moveFocus(1);
+            event.preventDefault();
+          }
+        }
+        if (key === "ArrowLeft" && expandedKeys.has(scopeKey)) {
+          handleToggleExpanded(scopeKey);
+          event.preventDefault();
+        }
+      }
+    },
+    [moveFocus, expandedKeys, handleToggleExpanded, childrenOf],
+  );
+
+  const handleSearchKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key !== "ArrowDown") return;
+      if (moveFocus(1)) event.preventDefault();
+    },
+    [moveFocus],
+  );
+
+  const isSearching = search.trim().length > 0;
+
+  const handleToggleArchived = useCallback(
+    () => setIncludeArchived((current) => !current),
+    [],
   );
 
   const rootProjects = useMemo(
@@ -146,42 +184,45 @@ export function BuildScopeBrowser({
     const expanded = expandedKeys.has(entry.key);
     const handleExpand = () => handleToggleExpanded(entry.key);
     return (
-        <div key={entry.key} style={{ paddingLeft: `${depth * 0.75}rem` }}>
-          <div className="flex items-center gap-0.5">
-            {expandable ? (
-              <button
-                type="button"
-                onClick={handleExpand}
-                aria-expanded={expanded}
-                aria-label={`${expanded ? "Collapse" : "Expand"} ${entry.name}`}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground md:h-5 md:w-5"
-              >
-                <ChevronRight
-                  className={cn(
-                    "h-3 w-3 transition-transform duration-150 motion-reduce:transition-none",
-                    expanded && "rotate-90",
-                  )}
-                />
-              </button>
-            ) : (
-              <span aria-hidden className="h-11 w-11 shrink-0 md:h-5 md:w-5" />
-            )}
-            <div className="min-w-0 flex-1">
-              <BuildScopeRow
-                scope={entry}
-                isCurrent={entry.key === currentScopeKey}
-                isStarred={isStarred(entry.key)}
-                isArchived={entry.isArchived}
-                settingsHref={settingsHrefFor(entry)}
-                onSelect={onSelect}
-                onToggleStar={toggleStar}
+      <div key={entry.key} style={{ paddingLeft: `${depth * 0.75}rem` }}>
+        <div className="flex items-center gap-0.5">
+          {expandable ? (
+            <button
+              type="button"
+              onClick={handleExpand}
+              aria-expanded={expanded}
+              aria-label={`${expanded ? "Collapse" : "Expand"} ${entry.name}`}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground md:h-5 md:w-5"
+            >
+              <ChevronRight
+                className={cn(
+                  "h-3 w-3 transition-transform duration-150 motion-reduce:transition-none",
+                  expanded && "rotate-90",
+                )}
               />
-            </div>
+            </button>
+          ) : (
+            <span aria-hidden className="h-11 w-11 shrink-0 md:h-5 md:w-5" />
+          )}
+          <div className="min-w-0 flex-1">
+            <BuildScopeRow
+              scope={entry}
+              isCurrent={entry.key === currentScopeKey}
+              isStarred={isStarred(entry.key)}
+              isArchived={entry.isArchived}
+              itemRole="treeitem"
+              settingsHref={settingsHrefFor(entry)}
+              onSelect={onSelect}
+              onToggleStar={toggleStar}
+            />
           </div>
-          {expandable && expanded
-            ? childrenOf(entry.key).map(renderChildRow(depth + 1))
-            : null}
         </div>
+        {expandable && expanded ? (
+          <div role="group">
+            {childrenOf(entry.key).map(renderChildRow(depth + 1))}
+          </div>
+        ) : null}
+      </div>
     );
   }
 
@@ -209,6 +250,21 @@ export function BuildScopeBrowser({
     );
   }
 
+  function renderBrowseRef(entry: BuildScopeRef) {
+    return (
+      <BuildScopeRow
+        key={entry.key}
+        scope={entry}
+        isCurrent={entry.key === currentScopeKey}
+        isStarred={isStarred(entry.key)}
+        itemRole="treeitem"
+        settingsHref={settingsHrefFor(entry)}
+        onSelect={onSelect}
+        onToggleStar={toggleStar}
+      />
+    );
+  }
+
   return (
     <>
       <div
@@ -221,20 +277,28 @@ export function BuildScopeBrowser({
           placeholder="Search projects, products, workspaces…"
           autoFocus
         />
-        <button
-          type="button"
-          onClick={handleToggleArchived}
-          aria-pressed={includeArchived}
-          className={cn(
-            "mt-1.5 flex items-center gap-1.5 rounded-md px-2 py-1 text-micro font-medium transition-colors",
-            includeArchived
-              ? "bg-primary/10 text-foreground"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground",
-          )}
-        >
-          <Archive className="h-3 w-3" />
-          Include archived
-        </button>
+        <div className="mt-1.5 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={handleToggleArchived}
+            aria-pressed={includeArchived}
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-2 py-1 text-micro font-medium transition-colors motion-reduce:transition-none",
+              includeArchived
+                ? "bg-primary/10 text-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            <Archive className="h-3 w-3" />
+            Include archived
+          </button>
+          {directory.isRefreshing ? (
+            <Loader2
+              className="h-3 w-3 animate-spin text-muted-foreground motion-reduce:animation-none"
+              aria-label="Refreshing scopes"
+            />
+          ) : null}
+        </div>
       </div>
 
       <ScrollArea
@@ -242,18 +306,25 @@ export function BuildScopeBrowser({
         viewportRef={listRef}
         onKeyDown={handleListKeyDown}
       >
-        {directory.isError ? (
-          <ErrorState
-            className="border-0 bg-transparent"
-            title="Couldn't load your Build scopes"
-            onRetry={directory.refetch}
-          />
-        ) : directory.isLoading ? (
+        {directory.isLoading ? (
           <div className="space-y-1 p-2">
             {Array.from({ length: 5 }).map((_, index) => (
               <Skeleton key={index} className="h-9 w-full rounded-md" />
             ))}
           </div>
+        ) : directory.isDenied ? (
+          <NoPermissionState
+            compact
+            permission="build:view"
+            title="Build access required"
+            description="Ask your admin for access to Build scopes."
+          />
+        ) : directory.isError ? (
+          <ErrorState
+            className="border-0 bg-transparent"
+            title="Couldn't load your Build scopes"
+            onRetry={directory.refetch}
+          />
         ) : isSearching ? (
           <div className="p-1.5" role="listbox" aria-label="Scope search results">
             {searchResults.length === 0 ? (
@@ -267,26 +338,32 @@ export function BuildScopeBrowser({
             )}
           </div>
         ) : (
-          <div className="p-1.5" role="listbox" aria-label="Build scopes">
+          <div className="p-1.5">
             {liveStarred.length > 0 ? (
               <>
                 <SectionLabel>Starred</SectionLabel>
-                {liveStarred.map(renderRef)}
+                <div role="listbox" aria-label="Starred scopes">
+                  {liveStarred.map(renderRef)}
+                </div>
               </>
             ) : null}
 
             {liveRecents.length > 0 ? (
               <>
                 <SectionLabel>Recent</SectionLabel>
-                {liveRecents.map(renderRef)}
+                <div role="listbox" aria-label="Recent scopes">
+                  {liveRecents.map(renderRef)}
+                </div>
               </>
             ) : null}
 
             <SectionLabel>Browse</SectionLabel>
-            {renderRef(ORGANIZATION_SCOPE_REF)}
-            {directory.workspaces.map(renderRootRow)}
-            {rootProducts.map(renderRootRow)}
-            {rootProjects.map(renderRootRow)}
+            <div role="tree" aria-label="Build scopes" ref={treeRef}>
+              {renderBrowseRef(ORGANIZATION_SCOPE_REF)}
+              {directory.workspaces.map(renderRootRow)}
+              {rootProducts.map(renderRootRow)}
+              {rootProjects.map(renderRootRow)}
+            </div>
 
             {!hasBrowseContent && !hasQuarantinedItems ? (
               <EmptyState
@@ -300,8 +377,10 @@ export function BuildScopeBrowser({
               <>
                 <Separator className="my-1" />
                 <SectionLabel>Hierarchy issues</SectionLabel>
-                {directory.quarantinedProducts.map(renderRootRow)}
-                {directory.quarantinedProjects.map(renderRootRow)}
+                <div role="tree" aria-label="Hierarchy issue scopes">
+                  {directory.quarantinedProducts.map(renderRootRow)}
+                  {directory.quarantinedProjects.map(renderRootRow)}
+                </div>
               </>
             ) : null}
           </div>

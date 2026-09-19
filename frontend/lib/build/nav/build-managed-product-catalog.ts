@@ -1,4 +1,4 @@
-import { LayoutDashboard, LayoutGrid } from "lucide-react";
+import { LayoutDashboard, LayoutGrid, Map, Target } from "lucide-react";
 import type { BuildScopeCatalog } from "./build-nav-destination";
 
 export function buildManagedProductCatalog(basePath: string): BuildScopeCatalog {
@@ -20,6 +20,22 @@ export function buildManagedProductCatalog(basePath: string): BuildScopeCatalog 
         icon: LayoutGrid,
         requiredPermission: "build:view",
         mobilePriority: 20,
+      },
+      {
+        id: "product-roadmap",
+        label: "Roadmap",
+        href: `${basePath}/roadmap`,
+        icon: Map,
+        requiredPermission: "build:roadmap:view",
+        mobilePriority: 30,
+      },
+      {
+        id: "product-goals",
+        label: "Goals",
+        href: `${basePath}/goals`,
+        icon: Target,
+        requiredPermission: "build:goals:view",
+        mobilePriority: 40,
       },
     ],
     moreTools: [],

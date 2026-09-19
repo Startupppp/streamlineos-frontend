@@ -65,6 +65,7 @@ interface GoalsParams {
   level?: GoalLevel;
   ownerId?: string;
   projectId?: number;
+  pmWorkspaceId?: string;
   managedProductId?: number;
   search?: string;
 }

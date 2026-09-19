@@ -25,7 +25,7 @@ const projectListItemSchema = z.object({
   startDate: z.string().nullable(),
   endDate: z.string().nullable(),
   managedProductId: z.number().nullable(),
-  pmWorkspaceId: z.string(),
+  pmWorkspaceId: z.string().optional(),
   manager: z.object({ id: z.string(), firstName: z.string().nullable(), lastName: z.string().nullable(), image: z.string().nullable() }).nullable(),
   progress: z.object({ total: z.number(), done: z.number(), percentage: z.number() }),
   health: z.enum(['on_track', 'at_risk', 'off_track']),

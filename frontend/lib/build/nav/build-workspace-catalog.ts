@@ -1,4 +1,4 @@
-import { Boxes, LayoutDashboard, LayoutGrid, LayoutList, Users } from "lucide-react";
+import { Boxes, LayoutDashboard, LayoutGrid, LayoutList, Map, Target, Users } from "lucide-react";
 import type { BuildScopeCatalog } from "./build-nav-destination";
 
 export function buildWorkspaceCatalog(basePath: string): BuildScopeCatalog {
@@ -44,6 +44,22 @@ export function buildWorkspaceCatalog(basePath: string): BuildScopeCatalog {
         icon: LayoutList,
         requiredPermission: "build:tickets:view",
         mobilePriority: 30,
+      },
+      {
+        id: "workspace-roadmap",
+        label: "Roadmap",
+        href: `${basePath}/roadmap`,
+        icon: Map,
+        requiredPermission: "build:roadmap:view",
+        mobilePriority: 35,
+      },
+      {
+        id: "workspace-goals",
+        label: "Goals",
+        href: `${basePath}/goals`,
+        icon: Target,
+        requiredPermission: "build:goals:view",
+        mobilePriority: 40,
       },
     ],
     moreTools: [],

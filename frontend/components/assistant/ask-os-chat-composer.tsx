@@ -7,11 +7,8 @@ import {
   FIELD_CONTROL_DISABLED_CLASS,
   FIELD_CONTROL_INVALID_CLASS,
 } from "@/components/ui/field-control";
-import { askOsInputError } from "./ask-os-request-policy";
-import {
-  PersonaChipStrip,
-  type PersonaId,
-} from "./persona-chip-strip";
+import { askOsInputError, type PersonaId } from "./ask-os-request-policy";
+import { PersonaChipStrip } from "./persona-chip-strip";
 
 const COMPOSER_INPUT_ID = "ask-os-message";
 const COMPOSER_ERROR_ID = "ask-os-message-error";
@@ -51,7 +48,12 @@ export function AskOsChatComposer({
         onSelect={onSelectPersona}
         className="pb-2"
       />
-      <div className="flex items-center gap-2">
+      <div
+        className={cn(
+          "flex items-center gap-2 rounded-2xl border bg-card px-2 py-1.5 shadow-sm",
+          shownError ? "border-destructive" : "border-border",
+        )}
+      >
         <input
           id={COMPOSER_INPUT_ID}
           type="text"
@@ -65,7 +67,7 @@ export function AskOsChatComposer({
             FIELD_CONTROL_CLASS,
             FIELD_CONTROL_DISABLED_CLASS,
             FIELD_CONTROL_INVALID_CLASS,
-            "min-w-0 flex-1 px-3",
+            "h-8 min-w-0 flex-1 border-0 bg-transparent px-2 shadow-none focus-visible:border-transparent focus-visible:ring-0",
           )}
         />
         {isStreaming ? (
@@ -74,7 +76,7 @@ export function AskOsChatComposer({
             icon={PauseIcon}
             variant="outline"
             size="icon"
-            className="h-9 w-9 shrink-0"
+            className="h-8 w-8 shrink-0 rounded-full"
             onClick={onStop}
             aria-label="Stop"
           />
@@ -83,7 +85,7 @@ export function AskOsChatComposer({
             type="submit"
             icon={SendIcon}
             size="icon"
-            className="h-9 w-9 shrink-0"
+            className="h-8 w-8 shrink-0 rounded-full"
             disabled={sendBlocked}
             aria-label="Send"
           />

@@ -28,6 +28,7 @@ interface BuildScopeRowProps {
   isCurrent: boolean;
   isStarred: boolean;
   isArchived?: boolean;
+  itemRole?: "option" | "treeitem";
   settingsHref: string | null;
   onSelect: (scope: BuildScopeRef) => void;
   onToggleStar: (scope: BuildScopeRef) => void;
@@ -43,6 +44,7 @@ export function BuildScopeRow({
   isCurrent,
   isStarred,
   isArchived = false,
+  itemRole = "option",
   settingsHref,
   onSelect,
   onToggleStar,
@@ -82,7 +84,7 @@ export function BuildScopeRow({
   return (
     <div
       className={cn(
-        "group/scope flex items-center gap-1 rounded-md pr-1 transition-colors",
+        "group/scope flex items-center gap-1 rounded-md pr-1 transition-colors motion-reduce:transition-none",
         isCurrent ? "bg-muted" : "hover:bg-muted/70",
         isArchived && "opacity-60",
       )}
@@ -90,9 +92,10 @@ export function BuildScopeRow({
     >
       <button
         type="button"
-        role="option"
-        aria-selected={isCurrent}
+        role={itemRole}
+        aria-selected={itemRole === "option" ? isCurrent : undefined}
         aria-label={accessibleLabel}
+        data-scope-key={scope.key}
         onClick={handleSelect}
         className="flex min-h-[44px] min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-left md:min-h-0"
       >
@@ -131,7 +134,7 @@ export function BuildScopeRow({
           <button
             type="button"
             aria-label={`Actions for ${scope.name}`}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded text-muted-foreground transition-opacity hover:bg-muted hover:text-foreground max-md:opacity-100 md:h-6 md:w-6 md:opacity-0 focus-visible:opacity-100 group-hover/scope:opacity-100 data-[state=open]:opacity-100"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded text-muted-foreground transition-opacity hover:bg-muted hover:text-foreground motion-reduce:transition-none max-md:opacity-100 md:h-6 md:w-6 md:opacity-0 focus-visible:opacity-100 group-hover/scope:opacity-100 data-[state=open]:opacity-100"
           >
             <Ellipsis className="h-3.5 w-3.5" />
           </button>

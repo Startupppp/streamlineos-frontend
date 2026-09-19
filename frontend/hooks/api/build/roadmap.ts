@@ -76,6 +76,8 @@ interface RoadmapItemFilters {
   search?: string;
   cursor?: string;
   limit?: number;
+  pmWorkspaceId?: string;
+  managedProductId?: number;
 }
 
 interface CreateRoadmapItemInput {

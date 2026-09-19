@@ -52,7 +52,8 @@ function SidebarSkeleton({ isCollapsed, isMobile }: SidebarSkeletonProps) {
     <div
       className={cn(
         "relative flex flex-col h-full overflow-visible bg-sidebar text-sidebar-foreground",
-        !isMobile && "transition-[width] duration-300 ease-in-out",
+        !isMobile &&
+          "transition-[width] duration-300 ease-in-out motion-reduce:transition-none",
         isMobile ? "w-full" : effectiveCollapsed ? "w-[3.5rem]" : "w-[17rem]",
       )}
     >
@@ -223,7 +224,8 @@ export function AppSidebar({
           isMobile
             ? "h-full w-full flex-1 overflow-hidden"
             : "h-full overflow-visible",
-          !isMobile && "transition-[width] duration-300 ease-in-out",
+          !isMobile &&
+            "transition-[width] duration-300 ease-in-out motion-reduce:transition-none",
           !isMobile && (effectiveCollapsed ? "w-[3.5rem]" : "w-[17rem]"),
         )}
       >

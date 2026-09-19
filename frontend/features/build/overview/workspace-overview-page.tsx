@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePmWorkspace, usePmWorkspaceMembers } from "@/hooks/api/build/pm-workspaces";
 import { useAllWork } from "@/hooks/api/build/all-work";
+import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -10,6 +12,9 @@ import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/st
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ProjectCreateWizard } from "@/features/build/project-create/project-create-wizard";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { Users, LayoutGrid } from "lucide-react";
 
 interface WorkspaceOverviewPageProps {
@@ -26,6 +31,8 @@ function WorkspaceOverviewSkeleton() {
 }
 
 export function WorkspaceOverviewPage({ pmWorkspaceId }: WorkspaceOverviewPageProps) {
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const canCreate = useCan("build:create");
   const workspaceQuery = usePmWorkspace(pmWorkspaceId);
   const membersQuery = usePmWorkspaceMembers(pmWorkspaceId, { limit: 5 });
   const myWorkQuery = useAllWork({
@@ -66,10 +73,31 @@ export function WorkspaceOverviewPage({ pmWorkspaceId }: WorkspaceOverviewPagePr
     void myWorkQuery.refetch();
   }
 
+  function handleOpenWizard() {
+    setWizardOpen(true);
+  }
+
+  function handleWizardOpenChange(open: boolean) {
+    setWizardOpen(open);
+  }
+
   return (
     <PageWrapper
       title={workspace?.name ?? "Workspace overview"}
       badge={workspace?.status}
+      actions={
+        canCreate ? (
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={16}
+            iconClassName="mr-1.5"
+            size="sm"
+            onClick={handleOpenWizard}
+          >
+            New project
+          </AnimatedIconButton>
+        ) : null
+      }
     >
       <PageState
         resolution={resolution}
@@ -111,11 +139,11 @@ export function WorkspaceOverviewPage({ pmWorkspaceId }: WorkspaceOverviewPagePr
                     <span className="truncate">{item.title}</span>
                     <div className="flex shrink-0 items-center gap-2">
                       {item.projectKey && (
-                        <span className="font-mono text-[11px] text-muted-foreground shrink-0">
+                        <span className="font-mono text-dense text-muted-foreground shrink-0">
                           {item.projectKey}
                         </span>
                       )}
-                      <Badge variant="outline" className="h-5 px-2 py-0.5 text-[10px] shrink-0">
+                      <Badge variant="outline" className="h-5 px-2 py-0.5 text-micro shrink-0">
                         {item.status}
                       </Badge>
                     </div>
@@ -124,7 +152,7 @@ export function WorkspaceOverviewPage({ pmWorkspaceId }: WorkspaceOverviewPagePr
                 {(myWork?.hasMore ?? false) && (
                   <Link
                     href={`/build/workspaces/${pmWorkspaceId}/all-work`}
-                    className="block text-[11px] text-blue-600 hover:underline"
+                    className="block text-dense text-primary hover:underline"
                   >
                     View all in All work
                   </Link>
@@ -134,6 +162,14 @@ export function WorkspaceOverviewPage({ pmWorkspaceId }: WorkspaceOverviewPagePr
           )}
         </div>
       </PageState>
+
+      {canCreate && (
+        <ProjectCreateWizard
+          open={wizardOpen}
+          onOpenChange={handleWizardOpenChange}
+          scope={{ pmWorkspaceId }}
+        />
+      )}
     </PageWrapper>
   );
 }
