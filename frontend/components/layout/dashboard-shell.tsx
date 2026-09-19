@@ -20,6 +20,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AskOsProvider } from "@/components/assistant/ask-os-provider";
 import { CommandPaletteProvider } from "@/components/command-palette";
+import { BuildDirtyStateProvider } from "@/features/build/navigation/build-dirty-state-context";
 import { getChatMobileContentPaddingClassName } from "./mobile/chat-mobile-chrome-layout";
 import { MobileModuleBottomNav } from "./mobile/mobile-module-bottom-nav";
 import { MobileShellFab } from "./mobile/mobile-shell-fab";
@@ -49,7 +50,6 @@ const WelcomeToast = dynamic(
     ),
   { ssr: false },
 );
-
 
 const SIDEBAR_COOKIE = "sidebar-collapsed";
 const SIDEBAR_COLLAPSED_W = "3.5rem";
@@ -238,116 +238,118 @@ export function DashboardShell({
       </Link>
 
       <CommandPaletteProvider createTicketDialog={createTicketDialog}>
-        <AskOsProvider>
-          <CommandPalette />
-          <TrialBanner />
-          <ImpersonationBanner />
+        <BuildDirtyStateProvider>
+          <AskOsProvider>
+            <CommandPalette />
+            <TrialBanner />
+            <ImpersonationBanner />
 
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <ShellSidebarCollapseProvider
-              isCollapsed={isSidebarCollapsed}
-              onToggle={handleToggleSidebar}
-            >
-              <GlobalHeader
-                isSidebarCollapsed={isSidebarCollapsed}
-                onToggleSidebar={handleToggleSidebar}
-                showSidebarToggle={showSidebarToggle}
-                mobileNavOpen={mobileMenuOpen}
-                hideAdminChrome={isPortalRoute}
-                shellVariant={shellVariant}
-                notificationBellSlot={notificationBellSlot}
-              />
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <ShellSidebarCollapseProvider
+                isCollapsed={isSidebarCollapsed}
+                onToggle={handleToggleSidebar}
+              >
+                <GlobalHeader
+                  isSidebarCollapsed={isSidebarCollapsed}
+                  onToggleSidebar={handleToggleSidebar}
+                  showSidebarToggle={showSidebarToggle}
+                  mobileNavOpen={mobileMenuOpen}
+                  hideAdminChrome={isPortalRoute}
+                  shellVariant={shellVariant}
+                  notificationBellSlot={notificationBellSlot}
+                />
 
-              <ShellOfflineBanner />
+                <ShellOfflineBanner />
 
-              <div className="flex min-h-0 flex-1 overflow-hidden">
-                {shellVariant === "desktop" && !hideSidebar && (
-                  <aside
-                    aria-label="Sidebar"
-                    style={{ width: sidebarW }}
-                    className="relative z-50 hidden h-full shrink-0 flex-col overflow-visible border-r border-sidebar-border bg-sidebar transition-[width] duration-300 ease-in-out md:flex"
-                  >
-                    <AppSidebar
-                      isCollapsed={isSidebarCollapsed}
-                      buildSidebarSlot={buildSidebarSlot}
-                    />
-                  </aside>
-                )}
-
-                <main
-                  id="dashboard-content"
-                  aria-label="Main content"
-                  className={cn(
-                    "flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden outline-none",
-                    showModuleBottomNav && "mobile-nav-active",
+                <div className="flex min-h-0 flex-1 overflow-hidden">
+                  {shellVariant === "desktop" && !hideSidebar && (
+                    <aside
+                      aria-label="Sidebar"
+                      style={{ width: sidebarW }}
+                      className="relative z-50 hidden h-full shrink-0 flex-col overflow-visible border-r border-sidebar-border bg-sidebar transition-[width] duration-300 ease-in-out md:flex"
+                    >
+                      <AppSidebar
+                        isCollapsed={isSidebarCollapsed}
+                        buildSidebarSlot={buildSidebarSlot}
+                      />
+                    </aside>
                   )}
-                >
-                  <div
+
+                  <main
+                    id="dashboard-content"
+                    aria-label="Main content"
                     className={cn(
-                      "flex h-full min-h-0 flex-1 flex-col overflow-hidden",
-                      isChatRoute &&
-                        getChatMobileContentPaddingClassName(
-                          isChatConversationOpen,
-                        ),
+                      "flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden outline-none",
+                      showModuleBottomNav && "mobile-nav-active",
                     )}
                   >
-                    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden [&>:first-child]:h-full [&>:first-child]:min-h-0 [&>:first-child]:flex-1">
-                      <ShellVariantProvider variant={shellVariant}>
-                        {children}
-                      </ShellVariantProvider>
+                    <div
+                      className={cn(
+                        "flex h-full min-h-0 flex-1 flex-col overflow-hidden",
+                        isChatRoute &&
+                          getChatMobileContentPaddingClassName(
+                            isChatConversationOpen,
+                          ),
+                      )}
+                    >
+                      <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden [&>:first-child]:h-full [&>:first-child]:min-h-0 [&>:first-child]:flex-1">
+                        <ShellVariantProvider variant={shellVariant}>
+                          {children}
+                        </ShellVariantProvider>
+                      </div>
+                      {welcomeToastActive && <WelcomeToast />}
+                      {enhancementsReady ? <SuccessChecklist /> : null}
                     </div>
-                    {welcomeToastActive && <WelcomeToast />}
-                    {enhancementsReady ? <SuccessChecklist /> : null}
-                  </div>
-                </main>
-              </div>
-            </ShellSidebarCollapseProvider>
-          </div>
+                  </main>
+                </div>
+              </ShellSidebarCollapseProvider>
+            </div>
 
-          {!hideSidebar && (
-            <Drawer
-              open={mobileMenuOpen}
-              onOpenChange={setMobileMenuOpen}
-              direction="bottom"
-              modal
-            >
-              <DrawerContent className="z-[100] flex h-[96dvh] max-h-[96dvh] w-full flex-col gap-0 overflow-hidden rounded-t-xl border-t border-sidebar-border bg-sidebar p-0 pb-[env(safe-area-inset-bottom)]">
-                <DrawerTitle className="sr-only">Navigation</DrawerTitle>
-                <AppSidebar
-                  isMobile
-                  onNavigate={handleCloseMobileMenu}
-                  onRequestProductSwitcher={handleRequestProductSwitcher}
-                  onRequestOrgSwitcher={handleRequestOrgSwitcher}
-                  buildSidebarSlot={buildSidebarSlot}
+            {!hideSidebar && (
+              <Drawer
+                open={mobileMenuOpen}
+                onOpenChange={setMobileMenuOpen}
+                direction="bottom"
+                modal
+              >
+                <DrawerContent className="z-[100] flex h-[96dvh] max-h-[96dvh] w-full flex-col gap-0 overflow-hidden rounded-t-xl border-t border-sidebar-border bg-sidebar p-0 pb-[env(safe-area-inset-bottom)]">
+                  <DrawerTitle className="sr-only">Navigation</DrawerTitle>
+                  <AppSidebar
+                    isMobile
+                    onNavigate={handleCloseMobileMenu}
+                    onRequestProductSwitcher={handleRequestProductSwitcher}
+                    onRequestOrgSwitcher={handleRequestOrgSwitcher}
+                    buildSidebarSlot={buildSidebarSlot}
+                  />
+                </DrawerContent>
+              </Drawer>
+            )}
+
+            {!isPortalRoute && (
+              <>
+                <WorkspaceSwitcher
+                  drawerOnly
+                  open={orgSwitcherOpen}
+                  onOpenChange={setOrgSwitcherOpen}
                 />
-              </DrawerContent>
-            </Drawer>
-          )}
+                <ProductSwitcherMenu
+                  drawerOnly
+                  open={productSwitcherOpen}
+                  onOpenChange={setProductSwitcherOpen}
+                />
+              </>
+            )}
 
-          {!isPortalRoute && (
-            <>
-              <WorkspaceSwitcher
-                drawerOnly
-                open={orgSwitcherOpen}
-                onOpenChange={setOrgSwitcherOpen}
+            <MobileModuleBottomNav />
+            {isChatRoute && chatMobileNavSlot?.(handleOpenMobileMenu)}
+            {!(isChatRoute && isChatConversationOpen) && (
+              <MobileShellFab
+                onOpenMobileMenu={handleOpenMobileMenu}
+                showAboveBottomNav={showAboveBottomNav}
               />
-              <ProductSwitcherMenu
-                drawerOnly
-                open={productSwitcherOpen}
-                onOpenChange={setProductSwitcherOpen}
-              />
-            </>
-          )}
-
-          <MobileModuleBottomNav />
-          {isChatRoute && chatMobileNavSlot?.(handleOpenMobileMenu)}
-          {!(isChatRoute && isChatConversationOpen) && (
-            <MobileShellFab
-              onOpenMobileMenu={handleOpenMobileMenu}
-              showAboveBottomNav={showAboveBottomNav}
-            />
-          )}
-        </AskOsProvider>
+            )}
+          </AskOsProvider>
+        </BuildDirtyStateProvider>
       </CommandPaletteProvider>
     </div>
   );

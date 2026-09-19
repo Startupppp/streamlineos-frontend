@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { BuildScopeRow } from "./build-scope-row";
+import { useReconciledBuildScopes } from "./use-reconciled-build-scopes";
 import {
   useBuildScopeDirectory,
   ORGANIZATION_SCOPE_REF,
@@ -46,7 +47,12 @@ export function BuildScopeBrowser({
   const [expandedKeys, setExpandedKeys] = useState<ReadonlySet<string>>(
     () => new Set<string>(),
   );
-  const { isStarred, toggleStar, starred } = useBuildScopeStars();
+  const { isStarred, toggleStar, starred, replaceStarred } =
+    useBuildScopeStars();
+  const { entries: liveStarred } = useReconciledBuildScopes(
+    starred,
+    replaceStarred,
+  );
   const directory = useBuildScopeDirectory(search, includeArchived);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -249,10 +255,10 @@ export function BuildScopeBrowser({
           </div>
         ) : (
           <div className="p-1.5" role="listbox" aria-label="Build scopes">
-            {starred.length > 0 ? (
+            {liveStarred.length > 0 ? (
               <>
                 <SectionLabel>Starred</SectionLabel>
-                {starred.map(renderRef)}
+                {liveStarred.map(renderRef)}
               </>
             ) : null}
 

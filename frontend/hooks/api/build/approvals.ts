@@ -17,6 +17,9 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 const approvalInboxListContract = lazyContract(() =>
   import("@/hooks/api/build/approvals-schema").then((m) => m.approvalInboxListContract),
 );
+const approvalInboxCountContract = lazyContract(() =>
+  import("@/hooks/api/build/approvals-schema").then((m) => m.approvalInboxCountContract),
+);
 const approvalListContract = lazyContract(() =>
   import("@/hooks/api/build/approvals-schema").then((m) => m.approvalListContract),
 );
@@ -37,6 +40,24 @@ export function useApprovalInbox() {
   return useQuery<ApprovalInboxItem[]>({
     queryKey: buildWorkQueryKeys.projects.approvals.inbox(),
     queryFn: ({ signal }) => apiClient.get<ApprovalInboxItem[]>("/build/approvals/inbox", undefined, signal, approvalInboxListContract),
+    enabled: canView,
+    staleTime: 120_000,
+    refetchInterval: 120_000,
+    refetchIntervalInBackground: false,
+  });
+}
+
+export function useBuildInboxCount() {
+  const canView = useCan("build:approvals:view");
+  return useQuery<{ count: number }>({
+    queryKey: buildWorkQueryKeys.projects.approvals.inboxCount(),
+    queryFn: ({ signal }) =>
+      apiClient.get<{ count: number }>(
+        "/build/approvals/inbox/count",
+        undefined,
+        signal,
+        approvalInboxCountContract,
+      ),
     enabled: canView,
     staleTime: 120_000,
     refetchInterval: 120_000,

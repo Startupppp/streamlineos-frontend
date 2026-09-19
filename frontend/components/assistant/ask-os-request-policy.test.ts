@@ -1,29 +1,4 @@
-import {
-  boundedAskOsContext,
-  personaForPathname,
-} from "./ask-os-request-policy";
-
-describe("personaForPathname", () => {
-  it.each([
-    ["/support/inbox", "support"],
-    ["/crm/leads", "sales"],
-    ["/build/5/tickets/LBR-1", "project"],
-    ["/inventory/stock", "operations"],
-    ["/accounting/reports", "operations"],
-    ["/purchases/orders", "operations"],
-    ["/hr/employees", "hr-policy"],
-    ["/payroll/runs", "hr-policy"],
-    ["/timesheets/reports", "hr-policy"],
-    ["/directory/workers", "hr-policy"],
-  ] as const)("maps %s to %s", (pathname, expected) => {
-    expect(personaForPathname(pathname)).toBe(expected);
-  });
-
-  it("does not match similar route names", () => {
-    expect(personaForPathname("/builder")).toBeNull();
-    expect(personaForPathname("/settings")).toBeNull();
-  });
-});
+import { boundedAskOsContext } from "./ask-os-request-policy";
 
 describe("boundedAskOsContext", () => {
   it("keeps only the newest twenty messages in chronological order", () => {

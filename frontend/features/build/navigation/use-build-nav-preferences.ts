@@ -213,6 +213,7 @@ export function useBuildScopeStars(): {
   starred: readonly BuildScopeRef[];
   isStarred: (scopeKey: string) => boolean;
   toggleStar: (scope: BuildScopeRef) => void;
+  replaceStarred: (next: readonly BuildScopeRef[]) => void;
 } {
   const { value: starred, write } = useStoredJson(
     STARS_STORAGE_NAME,
@@ -236,12 +237,18 @@ export function useBuildScopeStars(): {
     [starred, write],
   );
 
-  return { starred, isStarred, toggleStar };
+  const replaceStarred = useCallback(
+    (next: readonly BuildScopeRef[]) => write(next),
+    [write],
+  );
+
+  return { starred, isStarred, toggleStar, replaceStarred };
 }
 
 export function useBuildScopeRecents(): {
   recents: readonly BuildScopeRef[];
   recordScope: (scope: BuildScopeRef) => void;
+  replaceRecents: (next: readonly BuildScopeRef[]) => void;
 } {
   const { value: recents, write } = useStoredJson(
     RECENTS_STORAGE_NAME,
@@ -263,5 +270,10 @@ export function useBuildScopeRecents(): {
     [recents, write],
   );
 
-  return { recents, recordScope };
+  const replaceRecents = useCallback(
+    (next: readonly BuildScopeRef[]) => write(next),
+    [write],
+  );
+
+  return { recents, recordScope, replaceRecents };
 }

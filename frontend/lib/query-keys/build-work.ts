@@ -117,8 +117,14 @@ export const buildWorkQueryKeys = {
       visibility: (projectId: number) =>
         [...base, "projects", projectId, "client-visibility"] as const,
     },
+    scopeDirectory: {
+      resolve: (keys: readonly string[]) =>
+        [...base, "projects", "scope-directory", "resolve", [...keys].sort()] as const,
+    },
     approvals: {
       inbox: () => [...base, "projects", "approvals", "inbox"] as const,
+      inboxCount: () =>
+        [...base, "projects", "approvals", "inbox", "count"] as const,
       list: (projectId: number, params?: QueryKeyParams) =>
         params === undefined
           ? ([...base, "projects", projectId, "approvals"] as const)

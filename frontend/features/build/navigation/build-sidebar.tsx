@@ -2,8 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useUnreadNotificationCount } from "@/hooks/api/notifications-inbox";
-import { NOTIFICATION_FALLBACK_INTERVAL_MS } from "@/lib/query-request-policies";
+import { useBuildInboxCount } from "@/hooks/api/build/approvals";
 import {
   MODULE_ACCENTS,
   type ModuleAccent,
@@ -53,11 +52,7 @@ export function BuildSidebar({ isCollapsed, onNavigate }: BuildSidebarProps) {
   const view = useBuildNavView();
   const { model, isAccessReady, isPinned, canPinMore, togglePin } =
     useBuildNavModel();
-  const { data: unreadNotifications } = useUnreadNotificationCount({
-    refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS,
-    refetchIntervalInBackground: false,
-    throwOnError: false,
-  });
+  const { data: buildInbox } = useBuildInboxCount();
   const identity = useBuildScopeIdentity(model.scope);
   const fallback = useBuildScopeRecovery({
     scope: model.scope,
@@ -71,7 +66,7 @@ export function BuildSidebar({ isCollapsed, onNavigate }: BuildSidebarProps) {
 
   function badgeFor(destination: BuildNavDestination): number {
     if (destination.badge !== "inbox-unread") return 0;
-    return unreadNotifications?.count ?? 0;
+    return buildInbox?.count ?? 0;
   }
 
   function renderDestination(destination: BuildNavDestination) {

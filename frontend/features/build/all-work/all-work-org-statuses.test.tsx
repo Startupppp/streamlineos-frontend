@@ -31,14 +31,20 @@ jest.mock("@/hooks/api/build", () => ({
   }),
   useProjects: () => ({ data: undefined }),
 }));
-const mockUseOrgCustomStates = jest.fn(() => ({ data: CUSTOM_STATUSES as typeof CUSTOM_STATUSES | undefined }));
+type OrgStates = typeof CUSTOM_STATUSES | undefined;
+
+const mockUseOrgCustomStates = jest.fn<{ data: OrgStates }, []>(() => ({ data: CUSTOM_STATUSES }));
 jest.mock("@/hooks/api/build/custom-states", () => ({
-  useOrgCustomStates: (...args: unknown[]) => mockUseOrgCustomStates(...args),
+  useOrgCustomStates: () => mockUseOrgCustomStates(),
 }));
 
-const mockTicketFilterBar = jest.fn(() => null);
+interface FilterBarProps {
+  statuses?: OrgStates;
+}
+
+const mockTicketFilterBar = jest.fn<null, [FilterBarProps]>(() => null);
 jest.mock("@/features/build/shared/ticket-filter-bar", () => ({
-  TicketFilterBar: (props: Record<string, unknown>) => {
+  TicketFilterBar: (props: FilterBarProps) => {
     mockTicketFilterBar(props);
     return null;
   },
@@ -121,9 +127,8 @@ describe("AllWorkPage — org-wide statuses passed to TicketFilterBar", () => {
     render(<AllWorkPage />);
     const calls = mockTicketFilterBar.mock.calls;
     expect(calls.length).toBeGreaterThan(0);
-    const props = calls[0]?.[0] as Record<string, unknown>;
-    expect(props).toBeDefined();
-    expect(props.statuses).toEqual(CUSTOM_STATUSES);
+    expect(calls[0]?.[0]).toBeDefined();
+    expect(calls[0]?.[0]?.statuses).toEqual(CUSTOM_STATUSES);
   });
 
   it("passes undefined statuses (not the hardcoded four) when useOrgCustomStates has not loaded yet", () => {
@@ -131,7 +136,6 @@ describe("AllWorkPage — org-wide statuses passed to TicketFilterBar", () => {
     render(<AllWorkPage />);
     const calls = mockTicketFilterBar.mock.calls;
     expect(calls.length).toBeGreaterThan(0);
-    const props = calls[0]?.[0] as Record<string, unknown>;
-    expect(props.statuses).toBeUndefined();
+    expect(calls[0]?.[0]?.statuses).toBeUndefined();
   });
 });

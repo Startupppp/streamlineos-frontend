@@ -14,7 +14,6 @@ import {
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
-import { usePathname } from "next/navigation";
 import {
   useAskAI,
   useAiConversations,
@@ -33,7 +32,6 @@ import { useHydrated } from "@/hooks/common/use-hydrated";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import {
   boundedAskOsContext,
-  personaForPathname,
   type PersonaId,
 } from "./ask-os-request-policy";
 import { AskOsChatComposer } from "./ask-os-chat-composer";
@@ -57,10 +55,9 @@ export function GlobalAskOs() {
   const reduce = useReducedMotion();
   const hydrated = useHydrated();
   const isMobile = useIsMobile();
-  const pathname = usePathname();
-  const routePersona = personaForPathname(pathname);
   const { open, setOpen } = useAskOs();
   const queryClient = useQueryClient();
+
   const [input, setInput] = useState("");
   const [failure, setFailure] = useState<AiFailureState | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -71,18 +68,8 @@ export function GlobalAskOs() {
     number | null
   >(null);
   const [convSearch, setConvSearch] = useState("");
-  const [personaSelection, setPersonaSelection] = useState<{
-    pathname: string;
-    persona: PersonaId | null;
-  }>(() => ({ pathname, persona: routePersona }));
-  const selectedPersona =
-    personaSelection.pathname === pathname
-      ? personaSelection.persona
-      : routePersona;
-  const setSelectedPersona = useCallback(
-    (persona: PersonaId | null) => setPersonaSelection({ pathname, persona }),
-    [pathname],
-  );
+  const [selectedPersona, setSelectedPersona] = useState<PersonaId | null>(null);
+  
   const scrollRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
   const previousScrollHeightRef = useRef(0);
@@ -111,10 +98,12 @@ export function GlobalAskOs() {
     activeConversationId,
     open && activeConversationId !== null,
   );
+
   const conversations = useMemo(
     () => (conversationData?.pages ?? []).flatMap((page) => page.conversations),
     [conversationData],
   );
+
   const persisted = useMemo<AskAiHistoryMessage[]>(
     () =>
       (messageData?.pages ?? [])
@@ -123,6 +112,7 @@ export function GlobalAskOs() {
         .reverse(),
     [messageData],
   );
+
   const isConversations = view === "conversations";
   const showEmpty = activeConversationId === null && !draft;
   const panelTransition = reduce
@@ -148,6 +138,7 @@ export function GlobalAskOs() {
         animate: { height: "auto" as const, opacity: 1 },
         exit: reduce ? undefined : { height: 0, opacity: 0 },
       };
+
   const loadOlder = useCallback(() => {
     const element = scrollRef.current;
     if (
@@ -161,6 +152,7 @@ export function GlobalAskOs() {
     loadingOlderRef.current = true;
     void fetchNextPage();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
   useEffect(() => {
     const sentinel = topSentinelRef.current;
     const root = scrollRef.current;
@@ -174,6 +166,7 @@ export function GlobalAskOs() {
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [hasNextPage, loadOlder, open]);
+
   useLayoutEffect(() => {
     const element = scrollRef.current;
     if (!element || !open) return;
