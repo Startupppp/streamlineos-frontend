@@ -119,25 +119,30 @@ Evidence Log.
 
 ### Cache and Concurrency
 
-- [ ] **BSN-04-035** Verify cross-tab storage and Query reconciliation.
-  **The storage half is CLOSED** (fourth pass): a simulated cross-tab
-  `StorageEvent` updates recents and pins, a null-key event resets them, and an
-  event carrying another org's key is ignored — each with an "isolation bites"
-  case that fails if the key filter is removed. **Still open:** TanStack Query
-  permission state is still not SYNCHRONIZED across tabs. The fourth-pass work
-  proved per-org *isolation* (two clients on one scoped hash do not share
-  post-creation writes), which is the opposite property; a permission change in
-  one tab still does not propagate to another.
+- [x] **BSN-04-035** Verify cross-tab storage and Query reconciliation. CLOSED
+  in the fifth pass, and the open half was **synchronization**, which the fourth
+  pass had mistakenly substituted isolation for. That gap is now real code, not
+  a test: `signalAccessInvalidation(orgId)` writes an org-scoped key, and
+  `useAccess` listens for `storage` events on it and invalidates
+  `access.me()` — the **narrowest** true key, never a broad prefix. Seven tests
+  pin it, and the ones that matter are the negatives: a signal carrying another
+  org's prefix does **not** invalidate, a key without the prefix does not, and
+  the listener is removed on unmount so stale listeners cannot fire after the
+  hook is gone. The storage half from the fourth pass is unchanged.
 
 ### Portal and Tenant Isolation
 
-- [ ] **BSN-04-042** Add cross-organization tests for selector search, direct
-  route access, recents, stars, pins, counts, Pulse, and Quick Create.
-  **Covered (fourth pass):** stars, recents, pins, selector hrefs, workspace
-  data, and Pulse/inbox-count key hashing — 10 tests, including one proving a
-  plain unscoped `QueryClient` is the failure mode, so the scoped hash is the
-  guard rather than the client container. **Still open:** direct route access
-  and Quick Create have no cross-organization test.
+- [x] **BSN-04-042** Add cross-organization tests for selector search, direct
+  route access, recents, stars, pins, counts, Pulse, and Quick Create. CLOSED in
+  the fifth pass. The fourth pass covered stars, recents, pins, selector hrefs,
+  workspace data and Pulse/inbox-count hashing. The two gaps are now closed:
+  **direct route access** — org B's scoped client cannot read org A's cached
+  access data, so a route check in B cannot be satisfied by A's permissions; and
+  **Quick Create** — org B's workspace and product scopes preselect B's
+  identifiers, never A's. Each carries an "isolation bites" counterpart, one of
+  which shows a plain unscoped `QueryClient` *can* read the data — naming the
+  failure mode is what proves the scoped hash is the guard rather than the client
+  container.
 
 ## Completed Implementation Inventory
 

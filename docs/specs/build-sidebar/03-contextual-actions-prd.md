@@ -150,11 +150,15 @@ BSN-03-016 CLOSED in the fourth pass — see the Evidence Log.
   index was added. This is a planner argument, not a measurement — it is
   unverified until run against a real database with `EXPLAIN (ANALYZE, BUFFERS)`
   as `streamline_app` with the tenant GUC set.
-- [ ] **BSN-03-024** Verify acknowledgement, new-event, permission-revocation,
-  reconnect, and cross-tab update behavior. **Acknowledgement, new-event
-  (pending and escalated), permission-revocation and cross-TENANT isolation are
-  CLOSED** (fourth pass, 5 specs). **Still open:** reconnect and cross-TAB
-  update behavior.
+- [x] **BSN-03-024** Verify acknowledgement, new-event, permission-revocation,
+  reconnect, and cross-tab update behavior. CLOSED in the fifth pass. The fourth
+  pass closed acknowledgement, new-event (pending and escalated),
+  permission-revocation and cross-tenant isolation. Reconnect and cross-tab are
+  now covered by 7 tests: the badge is not disabled on reconnect, does not
+  refetch on window focus, and pauses offline then resumes once online; and a
+  `signalBuildInboxInvalidation()` storage event invalidates the Build-filtered
+  unread count in a sibling tab while an unrelated key does not, with the
+  listener removed on unmount.
 
 ### Agent Pulse
 

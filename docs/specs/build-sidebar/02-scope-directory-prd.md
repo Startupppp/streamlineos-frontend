@@ -104,9 +104,15 @@ duplicated as TODO checkboxes.
   duplicate, skipped, or reordered rows. Browse still exposes one page plus a
   search hint (`build-scope-browser.tsx:390-394` renders "Showing the first …
   only. Search to find any scope you can access."), not a continuation control.
-  Re-checked fourth pass: still open. The fourth-pass backend work on bounded,
-  projected, index-served directory queries is a DIFFERENT concern and does not
-  close this.
+  ⚠ **This was IMPLEMENTED in the fifth pass and then LOST.** An agent replaced
+  the hint with per-section `LoadingButton` continuation over
+  `useInfiniteProjects` plus cursor accumulation for workspaces and products,
+  with tests for de-duplication, page order, and cursor reset on filter change —
+  and reported 384 passing tests. A concurrent session then reverted every
+  uncommitted tracked modification in the frontend repo, and file inspection
+  confirms neither the source change nor the tests survive. Re-checked at
+  `build-scope-browser.tsx:390-394`: the hint is back. **Item remains open and
+  must be rebuilt**; see the README Evidence Log for the incident.
 
 ### Keyboard and Responsive Interaction
 

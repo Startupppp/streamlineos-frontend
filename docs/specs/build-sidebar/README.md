@@ -321,6 +321,31 @@ lane's call, because it would also make the sibling "lists every file on disk"
 assertion fire on whatever else the broader pattern catches. Left failing and
 documented. It is the only failure in 272 backend suites.
 
+⚠ **INCIDENT — a concurrent session reverted uncommitted work mid-pass.**
+Between two agent waves, every *uncommitted modification to a tracked file* in
+the frontend repo was reverted. New untracked files survived; tracked edits did
+not — the signature of a `git checkout`/`reset` in another session. Two peer
+sessions were active in this same working tree at the time.
+
+It was caught by checking agent reports against source rather than trusting
+them. The continuation-control agent reported 384 passing tests and a clean
+typecheck; both were probably true when it ran, and none of its work existed
+minutes later.
+
+**Lost and rebuilt:** the pin-ceiling cases, the `useCan` component matrix
+(BSN-04-001), and the `agentPulse` query-key factory — whose loss was silent
+except for one `tsc` error, because the hook passed a scope argument to a
+factory that had reverted to taking none. Had that gone unnoticed, the scope
+would have vanished from the key array and no scoped Pulse entry could ever be
+invalidated.
+**Lost and NOT rebuilt:** BSN-02-014's continuation control, which is reopened
+with the incident recorded against it rather than left ticked.
+
+Everything verified was then committed as `7f178e318`, by explicit pathspec so
+no other session's files were swept in. **The lesson is in the ordering:**
+uncommitted work in a shared tree is not durable, and a passing test run proves
+nothing about a file that no longer exists.
+
 **Residual limitations.** Four migrations remain unapplied; no database, no
 browser, and no named disposable environment exists on this machine. Nothing
 below the implementation layer has been verified against a running system.
