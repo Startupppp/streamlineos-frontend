@@ -40,8 +40,8 @@ import { AskOsConversationList } from "./ask-os-conversation-list";
 import { useAskOs } from "./ask-os-context";
 import { AskOsPanelHeader } from "./ask-os-panel-header";
 import { AskOsLauncher } from "./ask-os-launcher";
-import { AskOsBubble } from "./ask-os-chat-utils";
 import {
+  appendAskOsDirective,
   parseAskOsDirectivePayload,
   type AskOsDirective,
 } from "./ask-os-directive-schema";
@@ -62,6 +62,7 @@ export function GlobalAskOs() {
   const [failure, setFailure] = useState<AiFailureState | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [inFlightDirective, setInFlightDirective] = useState<AskOsDirective | null>(null);
+  const inFlightDirectiveRef = useRef<AskOsDirective | null>(null);
   const [atBottom, setAtBottom] = useState(true);
   const [view, setView] = useState<"chat" | "conversations">("chat");
   const [activeConversationId, setActiveConversationId] = useState<
@@ -197,7 +198,9 @@ export function GlobalAskOs() {
     (name: string, data: unknown) => {
       if (name !== "askos-directive") return;
       const parsed = parseAskOsDirectivePayload(data);
-      if (parsed !== null) setInFlightDirective(parsed);
+      if (parsed === null) return;
+      inFlightDirectiveRef.current = parsed;
+      setInFlightDirective(parsed);
     },
     [],
   );
@@ -210,6 +213,7 @@ export function GlobalAskOs() {
       lastSentRef.current = text;
       setInput("");
       setFailure(null);
+      inFlightDirectiveRef.current = null;
       setInFlightDirective(null);
       isNearBottomRef.current = true;
       let conversationId = activeConversationId;
@@ -250,10 +254,14 @@ export function GlobalAskOs() {
         );
         if (outcome.status === "busy") {
           setDraft(null);
+          inFlightDirectiveRef.current = null;
+          setInFlightDirective(null);
           return;
         }
         if (outcome.status === "cancelled" && outcome.text.length === 0) {
           setDraft(null);
+          inFlightDirectiveRef.current = null;
+          setInFlightDirective(null);
           setFailure({ status: "cancelled" });
           return;
         }
@@ -267,7 +275,7 @@ export function GlobalAskOs() {
         const assistantMessage: AskAiHistoryMessage = {
           id: (temporaryIdRef.current -= 1),
           role: "assistant",
-          content: outcome.text,
+          content: appendAskOsDirective(outcome.text, inFlightDirectiveRef.current),
           createdAt: new Date().toISOString(),
         };
         queryClient.setQueryData<InfiniteData<AskAiHistoryPage>>(
@@ -304,6 +312,8 @@ export function GlobalAskOs() {
           queryKey: collaborationQueryKeys.aiChat.conversations(),
         });
         setDraft(null);
+        inFlightDirectiveRef.current = null;
+        setInFlightDirective(null);
       } catch (error) {
         setFailure(classifyAiError(error));
         setDraft(null);
@@ -481,18 +491,8 @@ export function GlobalAskOs() {
                       scrollRef={scrollRef}
                       showEmpty={showEmpty}
                       topSentinelRef={topSentinelRef}
+                      directive={inFlightDirective}
                     />
-                    {inFlightDirective !== null && (
-                      <div className="border-t border-border/60 px-3 py-2">
-                        <AskOsBubble
-                          role="assistant"
-                          content=""
-                          streaming={false}
-                          reduce={Boolean(reduce)}
-                          directive={inFlightDirective}
-                        />
-                      </div>
-                    )}
                     <AskOsChatComposer
                       input={input}
                       isStreaming={isStreaming}

@@ -58,6 +58,7 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
         href: `${basePath}/issues`,
         icon: LayoutGrid,
         requiredPermission: "build:tickets:view",
+        exact: true,
         boardViews: true,
         mobilePriority: 10,
       },

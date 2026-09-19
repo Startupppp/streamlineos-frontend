@@ -53,6 +53,16 @@ export function BuildScopeRow({
     .filter((value): value is string => value !== null && value.length > 0)
     .join(" · ");
 
+  const accessibleLabel = [
+    scope.name,
+    BUILD_SCOPE_TYPE_LABELS[scope.type],
+    secondary.length > 0 ? secondary : null,
+    isCurrent ? "current" : null,
+    isArchived ? "archived" : null,
+  ]
+    .filter((part): part is string => part !== null)
+    .join(", ");
+
   const handleSelect = useCallback(() => onSelect(scope), [onSelect, scope]);
 
   const handleToggleStar = useCallback(() => {
@@ -74,6 +84,7 @@ export function BuildScopeRow({
       className={cn(
         "group/scope flex items-center gap-1 rounded-md pr-1 transition-colors",
         isCurrent ? "bg-muted" : "hover:bg-muted/70",
+        isArchived && "opacity-60",
       )}
       onContextMenu={handleContextMenu}
     >
@@ -81,8 +92,9 @@ export function BuildScopeRow({
         type="button"
         role="option"
         aria-selected={isCurrent}
+        aria-label={accessibleLabel}
         onClick={handleSelect}
-        className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-left"
+        className="flex min-h-[44px] min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-left md:min-h-0"
       >
         <span
           aria-hidden
@@ -119,7 +131,7 @@ export function BuildScopeRow({
           <button
             type="button"
             aria-label={`Actions for ${scope.name}`}
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 group-hover/scope:opacity-100 data-[state=open]:opacity-100"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded text-muted-foreground transition-opacity hover:bg-muted hover:text-foreground max-md:opacity-100 md:h-6 md:w-6 md:opacity-0 focus-visible:opacity-100 group-hover/scope:opacity-100 data-[state=open]:opacity-100"
           >
             <Ellipsis className="h-3.5 w-3.5" />
           </button>

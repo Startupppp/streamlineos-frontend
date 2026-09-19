@@ -209,19 +209,19 @@ describe("resolveBuildNavModel — pin resolution", () => {
 describe("isBuildDestinationActive — boardViews destination (project Issues)", () => {
   const issues = requireDestination(projectCatalog.primary, "project-issues");
 
-  it("is active on the base path with no view parameter", () => {
-    expect(isBuildDestinationActive(issues, "/build/42", null)).toBe(true);
+  it("is active on the /issues path with no view parameter", () => {
+    expect(isBuildDestinationActive(issues, "/build/42/issues", null)).toBe(true);
   });
 
-  it("is active on the base path with view=board because board is in the allowed board views set", () => {
-    expect(isBuildDestinationActive(issues, "/build/42", "board")).toBe(true);
+  it("is active on the /issues path with view=board because board is in the allowed board views set", () => {
+    expect(isBuildDestinationActive(issues, "/build/42/issues", "board")).toBe(true);
   });
 
   it("is inactive when view=workload because workload is not in the board views set", () => {
-    expect(isBuildDestinationActive(issues, "/build/42", "workload")).toBe(false);
+    expect(isBuildDestinationActive(issues, "/build/42/issues", "workload")).toBe(false);
   });
 
-  it("is inactive on the backlog path because the destination is exact", () => {
+  it("is inactive on the backlog path because the destination does not own /backlog", () => {
     expect(isBuildDestinationActive(issues, "/build/42/backlog", null)).toBe(false);
   });
 });
@@ -353,15 +353,15 @@ describe("toBuildNavGroups", () => {
     expect(hasViewParam).toBe(false);
   });
 
-  it("orders the Project work group by mobilePriority: Issues, Assigned-to-me, Backlog, Inbox are first four", () => {
+  it("orders the Project work group by mobilePriority: Overview, Issues, Assigned-to-me, Backlog are first four", () => {
     const projectGroup = groups.find((g) => g.label === "Project");
     expect(projectGroup).toBeDefined();
     if (!projectGroup) return;
     const first4 = projectGroup.routes.slice(0, 4).map((r) => r.href);
     expect(first4[0]).toBe("/build/42");
-    expect(first4[1]).toBe("/build/my-work");
-    expect(first4[2]).toBe("/build/42/backlog");
-    expect(first4[3]).toBe("/build/inbox");
+    expect(first4[1]).toBe("/build/42/issues");
+    expect(first4[2]).toBe("/build/my-work");
+    expect(first4[3]).toBe("/build/42/backlog");
   });
 });
 

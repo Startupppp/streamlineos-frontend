@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
 import type { AskAiHistoryMessage } from "@/hooks/api/chat-ai-assistant";
-import { parseAskOsDirective, type AskOsDirective } from "./ask-os-directive-schema";
+import { extractAskOsDirective, type AskOsDirective } from "./ask-os-directive-schema";
 
 const AskOsConfirmationCard = dynamic(
   () =>
@@ -74,25 +74,22 @@ export function EmptyAskOs({
   onSuggestion: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
   return (
-    <div className="flex min-h-full flex-col items-center justify-center gap-4 py-6 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10">
-        <AnimatedLogo size={28} gradient className="rounded-xl" />
-      </div>
+    <div className="flex min-h-full flex-col items-center justify-center gap-3 py-4 text-center">
+      <AnimatedLogo size={28} gradient className="rounded-full" />
       <div>
-        <p className="text-sm font-semibold text-foreground">How can I help?</p>
-        <p className="mx-auto mt-1 max-w-[16rem] text-xs text-muted-foreground">
-          I can help across CRM, HR, Build, Inventory & Ops, calendars, support,
-          and your knowledge base.
+        <p className="text-sm font-semibold tracking-tight text-foreground">How can I help?</p>
+        <p className="mx-auto mt-1 max-w-[16rem] text-[13px] leading-5 text-muted-foreground">
+          CRM, HR, Build, mail, calendar, and your knowledge base.
         </p>
       </div>
-      <div className="w-full space-y-1.5">
+      <div className="flex w-full flex-col gap-1.5">
         {SUGGESTIONS.map((s) => (
           <button
             key={s}
             type="button"
             data-suggestion={s}
             onClick={onSuggestion}
-            className="w-full rounded-lg bg-muted/60 px-3 py-2 text-left text-xs text-foreground transition-colors hover:bg-muted"
+            className="w-full rounded-md bg-muted/60 px-3 py-1.5 text-left text-[13px] text-foreground transition-colors hover:bg-muted"
           >
             {s}
           </button>
@@ -102,6 +99,11 @@ export function EmptyAskOs({
   );
 }
 
+
+function confirmOutcomeCopy(action: string | undefined): string {
+  if (action === "email.send" || action === "mail.send") return "Email sent.";
+  return "Done.";
+}
 
 export function AskOsBubble({
   role,
@@ -129,18 +131,29 @@ export function AskOsBubble({
         animate={{ opacity: 1, y: 0 }}
         className="flex justify-end"
       >
-        <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-br-sm bg-primary px-3 py-2 text-sm text-primary-foreground shadow-sm">
+        <div className="max-w-[92%] whitespace-pre-wrap break-words rounded-2xl rounded-br-sm bg-primary px-2.5 py-1.5 text-[13px] leading-5 text-primary-foreground">
           {content}
         </div>
       </motion.div>
     );
   }
 
-  const directive = directiveProp ?? parseAskOsDirective(content);
+  const extracted = extractAskOsDirective(content);
+  const directive = directiveProp ?? extracted.directive;
+  const prose = extracted.prose;
 
   function handleCancelled() {
     setCancelled(true);
   }
+
+  const confirmDirective =
+    directive?.kind === "confirm-action" && !confirmedResult && !cancelled
+      ? directive
+      : null;
+  const connectDirective =
+    directive?.kind === "connect-integration" ? directive : null;
+  const showProse =
+    Boolean(prose) && confirmDirective === null && !confirmedResult && !cancelled;
 
   return (
     <motion.div
@@ -149,35 +162,47 @@ export function AskOsBubble({
       className="flex justify-start gap-2"
     >
       <AnimatedLogo
-        size={24}
+        size={20}
         gradient
         className="mt-0.5 shrink-0 rounded-full"
       />
-      <div className="min-w-0 max-w-[85%] rounded-2xl rounded-bl-sm border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm">
-        {directive?.kind === "confirm-action" && !confirmedResult && !cancelled ? (
+      <div className="min-w-0 max-w-[92%] space-y-2 rounded-2xl rounded-bl-sm bg-muted/50 px-2.5 py-2 text-sm text-foreground">
+        {confirmDirective ? (
           <AskOsConfirmationCard
-            action={directive.action}
-            summary={directive.summary}
-            preview={directive.preview}
-            token={directive.token}
+            action={confirmDirective.action}
+            summary={confirmDirective.summary}
+            preview={confirmDirective.preview}
+            token={confirmDirective.token}
             onConfirmed={setConfirmedResult}
             onCancelled={handleCancelled}
           />
-        ) : directive?.kind === "connect-integration" ? (
-          <AskOsConnectCard
-            toolkit={directive.toolkit}
-            reason={directive.reason}
-            summary={directive.summary}
-          />
         ) : confirmedResult ? (
-          <p className="text-xs text-muted-foreground">Action completed.</p>
+          <p className="text-[13px] text-muted-foreground">
+            {confirmOutcomeCopy(
+              directive?.kind === "confirm-action" ? directive.action : undefined,
+            )}
+          </p>
         ) : cancelled ? (
-          <p className="text-xs text-muted-foreground">Cancelled.</p>
-        ) : content ? (
+          <p className="text-[13px] text-muted-foreground">Cancelled.</p>
+        ) : null}
+        {showProse ? (
           <div className="break-words">
-            <MarkdownContent content={content} />
+            <MarkdownContent content={prose} />
           </div>
-        ) : streaming ? (
+        ) : null}
+        {connectDirective ? (
+          <AskOsConnectCard
+            toolkit={connectDirective.toolkit}
+            reason={connectDirective.reason}
+            summary={connectDirective.summary}
+          />
+        ) : null}
+        {!confirmDirective &&
+        !connectDirective &&
+        !showProse &&
+        !confirmedResult &&
+        !cancelled &&
+        streaming ? (
           <TypingDots reduce={reduce} />
         ) : null}
       </div>

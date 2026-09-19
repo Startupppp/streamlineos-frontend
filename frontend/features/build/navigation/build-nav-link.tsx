@@ -18,6 +18,11 @@ import type { BuildNavDestination } from "@/lib/build/nav/build-nav-destination"
 
 export const BUILD_NAV_BADGE_CAP = 99;
 
+function badgePendingLabel(count: number): string {
+  if (count > BUILD_NAV_BADGE_CAP) return `more than ${BUILD_NAV_BADGE_CAP} pending`;
+  return `${count} pending`;
+}
+
 interface BuildNavLinkProps {
   destination: BuildNavDestination;
   isActive: boolean;
@@ -72,7 +77,13 @@ export function BuildNavLink({
       onTouchStart={handleIntent}
       onClick={handleClick}
       aria-current={isActive ? "page" : undefined}
-      aria-label={isCollapsed ? destination.label : undefined}
+      aria-label={
+        isCollapsed
+          ? hasBadge
+            ? `${destination.label}, ${badgePendingLabel(badgeCount)}`
+            : destination.label
+          : undefined
+      }
       className={cn(
         "nav-item group relative flex gap-2.5",
         isCollapsed
@@ -120,11 +131,17 @@ export function BuildNavLink({
         />
       ) : null}
       {!isCollapsed && hasBadge ? (
-        <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-status-danger-fill px-1 text-micro font-bold leading-none tabular-nums text-white">
-          {badgeCount > BUILD_NAV_BADGE_CAP
-            ? `${BUILD_NAV_BADGE_CAP}+`
-            : badgeCount}
-        </span>
+        <>
+          <span
+            aria-hidden
+            className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-status-danger-fill px-1 text-micro font-bold leading-none tabular-nums text-white"
+          >
+            {badgeCount > BUILD_NAV_BADGE_CAP
+              ? `${BUILD_NAV_BADGE_CAP}+`
+              : badgeCount}
+          </span>
+          <span className="sr-only">{`, ${badgePendingLabel(badgeCount)}`}</span>
+        </>
       ) : null}
       <NavPendingIndicator className="z-[2]" />
     </Link>

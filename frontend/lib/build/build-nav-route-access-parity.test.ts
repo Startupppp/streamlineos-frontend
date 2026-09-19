@@ -62,7 +62,6 @@ const KNOWN_KEY_DRIFT: readonly string[] = [
   "project-analytics -> /build/42/analytics",
   "project-chat -> /build/42/chat",
   "project-intake -> /build/42/intake",
-  "project-issues -> /build/42",
   "project-milestones -> /build/42/milestones",
   "project-releases -> /build/42/releases",
   "project-reports -> /build/42/reports",

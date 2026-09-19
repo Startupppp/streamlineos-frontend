@@ -137,7 +137,7 @@ export function useGoals(params?: GoalsParams) {
 export function useGoalsPage(params?: GoalsParams) {
   const queryParams = toQueryParams(params);
   return useGatedQuery("build:goals:view", {
-    queryKey: [...accountingAndSupportQueryKeys.goals.list(queryParams), "page"] as const,
+    queryKey: [...accountingAndSupportQueryKeys.goals.list(queryParams), "full-page"],
     queryFn: async ({ signal }) =>
       apiClient.get<GoalsListPage>("/goals", queryParams, signal, goalsListContract),
     staleTime: 30_000,

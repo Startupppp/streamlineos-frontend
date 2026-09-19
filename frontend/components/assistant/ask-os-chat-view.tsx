@@ -1,8 +1,10 @@
 import type { MouseEvent, RefObject } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import type { AskAiHistoryMessage } from "@/hooks/api";
 import { AiActionResultBody, type AiFailureState } from "@/components/ai";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { AskOsDirective } from "./ask-os-directive-schema";
 import {
   AskOsBubble,
   buildMsgRows,
@@ -34,6 +36,7 @@ interface AskOsChatViewProps {
   scrollRef: RefObject<HTMLDivElement | null>;
   showEmpty: boolean;
   topSentinelRef: RefObject<HTMLDivElement | null>;
+  directive?: AskOsDirective | null;
 }
 
 export function AskOsChatView({
@@ -54,6 +57,7 @@ export function AskOsChatView({
   scrollRef,
   showEmpty,
   topSentinelRef,
+  directive = null,
 }: AskOsChatViewProps) {
   const msgRows = buildMsgRows(persisted);
   const lastPersisted =
@@ -69,20 +73,22 @@ export function AskOsChatView({
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="absolute inset-0 overflow-y-auto overscroll-contain p-4 scrollbar-hide"
+        className="absolute inset-0 overflow-y-auto overscroll-contain p-3 scrollbar-hide"
       >
         {isLoading ? (
-          <div className="flex min-h-full items-center justify-center">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <div className="flex flex-col gap-3">
+            <Skeleton className="ml-auto h-8 w-2/3 rounded-2xl" />
+            <Skeleton className="h-16 w-4/5 rounded-2xl" />
+            <Skeleton className="ml-auto h-8 w-1/2 rounded-2xl" />
           </div>
         ) : showEmpty ? (
           <EmptyAskOs onSuggestion={onSuggestion} />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {hasNextPage ? (
               <div ref={topSentinelRef} className="flex justify-center pb-1">
                 {isFetchingNextPage ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <Skeleton className="h-6 w-28 rounded-full" />
                 ) : (
                   <button
                     type="button"
@@ -133,6 +139,7 @@ export function AskOsChatView({
                 content={draft.assistant}
                 streaming={isStreaming}
                 reduce={reduce}
+                directive={directive}
               />
             )}
             {failure && (

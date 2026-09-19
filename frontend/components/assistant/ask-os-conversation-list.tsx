@@ -1,9 +1,10 @@
 "use client";
 
 import { forwardRef, useState, type ComponentPropsWithoutRef } from "react";
-import { MessageCircle, PenLine } from "lucide-react";
-import { EllipsisIcon } from "@animateicons/react/lucide";
+import { MessageCircle } from "lucide-react";
+import { EllipsisIcon, PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { SearchInput } from "@/components/ui/search-input";
@@ -124,10 +125,15 @@ export function AskOsConversationList({
           className="flex-1"
           inputClassName="h-9 text-xs"
         />
-        <button type="button" onClick={onNewChat} aria-label="New chat"
-          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted">
-          <PenLine className="h-4 w-4" />
-        </button>
+        <AnimatedIconButton
+          type="button"
+          icon={PlusIcon}
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9"
+          aria-label="New chat"
+          onClick={onNewChat}
+        />
       </div>
 
       <ScrollArea hideScrollbar className="min-h-0 flex-1">
@@ -159,7 +165,7 @@ export function AskOsConversationList({
                       </button>
                     )}
                     {editingId !== conv.id && (
-                      <div className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100">
+                      <div className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <ConversationOptionsButton />

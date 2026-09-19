@@ -19,7 +19,7 @@ interface WorkspaceOverviewPageProps {
 function WorkspaceOverviewSkeleton() {
   return (
     <div className="flex flex-1 min-h-0 flex-col gap-6">
-      <StatCardGridSkeleton count={2} />
+      <StatCardGridSkeleton cols={2} count={2} />
       <Skeleton className="h-48 rounded-xl" />
     </div>
   );

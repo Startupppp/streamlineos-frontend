@@ -48,6 +48,45 @@ export function parseAskOsDirective(content: string): AskOsDirective | null {
   return null;
 }
 
+export function serializeAskOsDirective(directive: AskOsDirective): string {
+  switch (directive.kind) {
+    case "confirm-action": {
+      const { kind: _kind, ...body } = directive;
+      return `${CONFIRM_ACTION_PREFIX}${JSON.stringify(body)}`;
+    }
+    case "connect-integration": {
+      const { kind: _kind, ...body } = directive;
+      return `${CONNECT_INTEGRATION_PREFIX}${JSON.stringify(body)}`;
+    }
+  }
+}
+
+export function extractAskOsDirective(content: string): {
+  directive: AskOsDirective | null;
+  prose: string;
+} {
+  const leading = parseAskOsDirective(content);
+  if (leading !== null) return { directive: leading, prose: "" };
+
+  const separator = content.lastIndexOf("\n");
+  if (separator === -1) return { directive: null, prose: content };
+
+  const tail = parseAskOsDirective(content.slice(separator + 1));
+  if (tail === null) return { directive: null, prose: content };
+  return { directive: tail, prose: content.slice(0, separator) };
+}
+
+export function appendAskOsDirective(
+  content: string,
+  directive: AskOsDirective | null,
+): string {
+  if (directive === null) return content;
+  if (extractAskOsDirective(content).directive !== null) return content;
+  const encoded = serializeAskOsDirective(directive);
+  const trimmed = content.trimEnd();
+  return trimmed.length === 0 ? encoded : `${trimmed}\n${encoded}`;
+}
+
 export function parseAskOsDirectivePayload(data: unknown): AskOsDirective | null {
   const result = askOsDirectiveSchema.safeParse(data);
   return result.success ? result.data : null;

@@ -390,20 +390,11 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     backendRoute: { method: "get", path: "/build/all-work" },
   },
   {
-    prefix: "/build/[projectId]",
-    exact: true,
-    product: "build",
-    permission: "build:view",
-    reason:
-      "Project overview (the project root). The overview reads GET /build/{projectId}, which declares build:view. Exact match keeps /build/[projectId]/issues and other sub-routes from inheriting this gate; the issues sub-route carries its own build:tickets:view entry.",
-    backendRoute: { method: "get", path: "/build/{projectId}" },
-  },
-  {
     prefix: "/build/[projectId]/issues",
     product: "build",
     permission: "build:tickets:view",
     reason:
-      "Project issues board. Moved from the project root to /issues as part of BSN-01-023 so the root can serve the project overview. First read is GET /build/{projectId}/tickets, which declares build:tickets:view.",
+      "Project issues board moved from the project root to /issues as part of BSN-01-023. Without this entry the route inherits the parent project scope resolution which returns build:view, letting in callers who hold build:view but not build:tickets:view. First read is GET /build/{projectId}/tickets, which carries build:tickets:view.",
     backendRoute: { method: "get", path: "/build/{projectId}/tickets" },
   },
   {
@@ -411,7 +402,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     product: "build",
     permission: "build:workspaces:view",
     reason:
-      "PM Workspace overview. The overview reads GET /build/workspaces/{pmWorkspaceId}, which declares build:workspaces:view. Without this entry the route inherits the generic build:view the workspace base path owns.",
+      "PM Workspace overview. Without this entry the route inherits the workspace base path nav resolution which returns the generic build:view, letting in callers who hold build:view but not build:workspaces:view. First read is GET /build/workspaces/{pmWorkspaceId}, which carries build:workspaces:view.",
     backendRoute: { method: "get", path: "/build/workspaces/{pmWorkspaceId}" },
   },
 ];

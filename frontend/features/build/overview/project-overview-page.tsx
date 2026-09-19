@@ -22,7 +22,7 @@ interface ProjectOverviewPageProps {
 function ProjectOverviewSkeleton() {
   return (
     <div className="flex flex-1 min-h-0 flex-col gap-6">
-      <StatCardGridSkeleton count={3} />
+      <StatCardGridSkeleton cols={3} count={3} />
       <div className="grid gap-4 md:grid-cols-2">
         <Skeleton className="h-32 rounded-xl" />
         <Skeleton className="h-32 rounded-xl" />

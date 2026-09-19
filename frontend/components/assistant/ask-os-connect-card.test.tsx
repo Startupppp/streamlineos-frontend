@@ -44,7 +44,8 @@ describe("a mail gap renders an actionable card, never dead-end prose", () => {
 
     expect(screen.getByRole("button", { name: "Reconnect Gmail" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Connect Gmail" })).not.toBeInTheDocument();
-    expect(screen.getByText("Your Gmail connection needs to be refreshed.")).toBeInTheDocument();
+    expect(screen.getByText("Reconnect your mail account.")).toBeInTheDocument();
+    expect(screen.queryByText("AI-generated")).not.toBeInTheDocument();
   });
 
   it("names the provider from the toolkit rather than printing the raw toolkit slug", () => {

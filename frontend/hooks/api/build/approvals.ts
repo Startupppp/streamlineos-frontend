@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -50,7 +50,7 @@ export function useApprovalInbox() {
 
 export function useBuildInboxCount() {
   const canView = useCan("build:approvals:view");
-  return useQuery<{ count: number }>({
+  const query = useQuery<{ count: number }>({
     queryKey: buildWorkQueryKeys.projects.approvals.inboxCount(),
     queryFn: ({ signal }) =>
       apiClient.get<{ count: number }>(
@@ -65,6 +65,7 @@ export function useBuildInboxCount() {
     refetchIntervalInBackground: false,
     ...INLINE_READ_ERROR,
   });
+  return canView ? query : { ...query, data: undefined };
 }
 
 export function useProjectApprovals(projectId: number, filters?: ApprovalFilters) {
@@ -104,9 +105,16 @@ export function useDecideApproval(projectId: number) {
     mutationFn: ({ approvalId, ...data }: DecideApprovalInput & { approvalId: number }) =>
       apiClient.patch<Approval>(`/build/${projectId}/approvals/${approvalId}/decide`, data, undefined, approvalRowContract),
     onSuccess: (_, vars) => {
+      qc.setQueryData<{ count: number }>(
+        buildWorkQueryKeys.projects.approvals.inboxCount(),
+        (old) => (old !== undefined ? { count: Math.max(0, old.count - 1) } : old),
+      );
+      qc.setQueryData<ApprovalInboxItem[]>(
+        buildWorkQueryKeys.projects.approvals.inbox(),
+        (old) => old?.filter((item) => item.id !== vars.approvalId),
+      );
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.list(projectId) });
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.detail(projectId, vars.approvalId) });
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.inbox() });
     },
   });
 }
@@ -131,9 +139,16 @@ export function useDeleteApproval(projectId: number) {
     mutationKey: ["projects", projectId, "approvals", "delete"],
     mutationFn: (approvalId: number) =>
       apiClient.delete<void>(`/build/${projectId}/approvals/${approvalId}`, undefined, undefined, noContentContract),
-    onSuccess: () => {
+    onSuccess: (_, approvalId) => {
+      qc.setQueryData<{ count: number }>(
+        buildWorkQueryKeys.projects.approvals.inboxCount(),
+        (old) => (old !== undefined ? { count: Math.max(0, old.count - 1) } : old),
+      );
+      qc.setQueryData<ApprovalInboxItem[]>(
+        buildWorkQueryKeys.projects.approvals.inbox(),
+        (old) => old?.filter((item) => item.id !== approvalId),
+      );
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.list(projectId) });
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.inbox() });
     },
   });
 }

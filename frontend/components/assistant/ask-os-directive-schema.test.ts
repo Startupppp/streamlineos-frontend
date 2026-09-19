@@ -1,4 +1,10 @@
-import { parseAskOsDirective, parseAskOsDirectivePayload } from "./ask-os-directive-schema";
+import {
+  appendAskOsDirective,
+  extractAskOsDirective,
+  parseAskOsDirective,
+  parseAskOsDirectivePayload,
+  serializeAskOsDirective,
+} from "./ask-os-directive-schema";
 
 describe("parseAskOsDirective", () => {
   it("parses a valid CONFIRM_ACTION directive", () => {
@@ -132,5 +138,32 @@ describe("parseAskOsDirectivePayload — typed object path for stream data frame
     const result = parseAskOsDirective(`CONFIRM_ACTION:${body}`);
     expect(result?.kind).toBe("confirm-action");
     expect(result?.token).toBe("tok-xyz");
+  });
+});
+
+describe("Ask OS directive encoding stays on the message, not a separate footer", () => {
+  const connect = {
+    kind: "connect-integration" as const,
+    toolkit: "gmail" as const,
+    reason: "no-connection" as const,
+    summary: "Connect a mail account to read your inbox.",
+  };
+
+  it("round-trips a connect directive so a persisted assistant turn can render the same action", () => {
+    expect(parseAskOsDirective(serializeAskOsDirective(connect))).toEqual(connect);
+  });
+
+  it("keeps assistant prose and hangs the encoded connect action off the last line", () => {
+    const encoded = appendAskOsDirective("I can search the knowledge base after you connect mail.", connect);
+
+    expect(extractAskOsDirective(encoded)).toEqual({
+      directive: connect,
+      prose: "I can search the knowledge base after you connect mail.",
+    });
+  });
+
+  it("does not duplicate an already-encoded connect action when the stream also sent a data frame", () => {
+    const encoded = serializeAskOsDirective(connect);
+    expect(appendAskOsDirective(encoded, connect)).toBe(encoded);
   });
 });

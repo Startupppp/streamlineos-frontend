@@ -154,7 +154,7 @@ export function BuildScopeBrowser({
                 onClick={handleExpand}
                 aria-expanded={expanded}
                 aria-label={`${expanded ? "Collapse" : "Expand"} ${entry.name}`}
-                className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground md:h-5 md:w-5"
               >
                 <ChevronRight
                   className={cn(
@@ -164,7 +164,7 @@ export function BuildScopeBrowser({
                 />
               </button>
             ) : (
-              <span aria-hidden className="h-5 w-5 shrink-0" />
+              <span aria-hidden className="h-11 w-11 shrink-0 md:h-5 md:w-5" />
             )}
             <div className="min-w-0 flex-1">
               <BuildScopeRow

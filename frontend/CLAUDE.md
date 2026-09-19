@@ -368,6 +368,7 @@ If it is here, do not reimplement it. **Adding a shared component means adding a
 | Rich surface (HR + Administration) | `RichPanel`, `RichPageContent`, `RichHero`, `RichQuickAction`, `RichIconWell` — `components/shared/rich-surface.tsx` (re-exported `Hr*` from `features/hr/shared/hr-ui.tsx`) |
 | AI | `AiActionsMenu`, `AiUsageChip` — `components/ai/` |
 | Plate list model (KB Wiki) | `listStyleTypeOf`, `listIndentOf`, `listPaddingRem`, `listOrdinalOf`, `listOrdinalLabel`, `isListItemChecked` — `components/editor/plate/plate-list-model.ts` (the ONE definition of the indent list model; both the editor and the public reader consume it) |
+| KB chat bubbles | `ChatBubble`, `TypingBubble`, `ChatMessage` — `components/kb/kb-chat-bubble.tsx` (wiki Ask KB and the page-ask sheet) |
 | Party merge (duplicates) | `PartyMergeDialog`, `DuplicatePartyCard` — `components/party-merge/` (CRM contacts and the party duplicates page both open it) |
 | Call intelligence | `CallAnalysisPanel`, `callIntelligenceHref` — `components/call-intelligence/` |
 | API · errors · keys | `apiClient`, `ApiError`, `isApiError`, `getApiErrorCode`, `getRetryAfterSeconds` — `lib/api-client.ts` · `getErrorMessage` — `lib/get-error-message.ts` · `queryRetryDelay`, `readErrorReachesBoundary`, `INLINE_READ_ERROR` — `lib/query-error-policy.ts` · `queryKeys` — `lib/query-keys.ts` |

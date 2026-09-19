@@ -1,7 +1,7 @@
 "use client";
 
 import { toast } from "sonner";
-import { AiDraftCard } from "@/components/ai/ai-draft-card";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useInitiateIntegrationConnection, type IntegrationToolkit } from "@/hooks/api/integrations";
 import { useCan } from "@/hooks/api/access";
@@ -41,26 +41,23 @@ export function AskOsConnectCard({ toolkit, reason, summary }: AskOsConnectCardP
 
   if (!canManage) {
     return (
-      <AiDraftCard title={summary} hideFooter>
-        <p className="text-xs text-muted-foreground">
-          Ask an admin to connect your {providerLabel} account.
-        </p>
-      </AiDraftCard>
+      <p className="text-[13px] text-muted-foreground">
+        Ask an admin to connect your {providerLabel} account.
+      </p>
     );
   }
 
   return (
-    <AiDraftCard
-      title={summary}
-      onAccept={handleConnect}
-      acceptLabel={actionLabel}
-      isAcceptPending={initiate.isPending}
-    >
-      <p className="text-xs text-muted-foreground">
-        {reason === "needs-reauth"
-          ? `Your ${providerLabel} connection needs to be refreshed.`
-          : `Connect your ${providerLabel} account to continue.`}
-      </p>
-    </AiDraftCard>
+    <div className="flex flex-wrap items-center gap-2">
+      <p className="min-w-0 flex-1 text-[13px] leading-5 text-foreground">{summary}</p>
+      <LoadingButton
+        size="sm"
+        isPending={initiate.isPending}
+        onClick={handleConnect}
+        className="h-7 shrink-0 px-2.5 text-xs"
+      >
+        {actionLabel}
+      </LoadingButton>
+    </div>
   );
 }

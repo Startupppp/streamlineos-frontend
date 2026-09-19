@@ -173,6 +173,11 @@
 
 ## Build (Project & Product Management)
 
+### Navigation model (2026-09-19)
+Build no longer renders the generic sidebar groups or the old project nav tree. One canonical, permission-filtered model — `lib/build/build-nav-model.ts` over the scope resolver `lib/build/build-scope.ts` — feeds every surface: the desktop sidebar and mobile drawer via `features/build/navigation/build-sidebar.tsx` (injected as `buildSidebarSlot` through `dashboard-shell` → `app-sidebar`), the mobile bottom nav and `hideSidebar` via `toBuildNavGroups` in `use-product-sidebar-visibility`, and the static route-access / product-path index via `buildOrganizationNavGroups()` in `sidebar-nav-groups-work-management.ts`. Scopes are organization · PM workspace · managed product · project; the unified scope selector opens the selected scope's Overview and never copies the previous scope's subpath. The global-header `PmWorkspaceContextChip` is deleted — workspace switching lives only in that sidebar scope selector. Existing `17rem` / `3.5rem` collapse is reused unchanged. Permission drift repaired in navigation: `/build/customers` now `build:customers:view` (was `crm:leads:view`), project Settings now `build:update` (was global `settings:manage`), project Budget/Webhooks `build:manage` and Automations/Modules `build:view`, matching their controllers.
+`EXPECTED_NAVIGATION_INVENTORY_DIGEST` moved to `2191548372bfec84…` for this change — the Build catalog's two groups are now `Build` (Overview · Projects · Products · Portfolios · Programs · Teams · Inbox · Assigned to me · Drafts · Browse all Build) and `Build settings` (Workspaces · Roadmap · Goals · Approvals · Customers · Templates · Client access · Members · Build access · Build settings), replacing the old `Delivery` / `Product` pair. Every href in the previous pair is still present, so no route lost its server-side gate; the three permission repairs above are the only access changes.
+OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + All work, and managed product only Overview, because `GET /build/managed-products`, `/build/teams`, `/build/roadmap` and `/build/goals` accept no `pmWorkspaceId`/`managedProductId` filter (verified in `backend/src/modules/build/**/dto`). The design's fuller workspace/product destination lists need those backend filters plus route files first; the model adds them as one catalog entry each.
+
 ### Hub & cross-project views
 - `/build` · **Build** · hooks: `enforceRouteAccess`, `→ features/build/project-list`
 - `/build/all` · **Build** · [RETIRED app/(authenticated)/build/all/page.tsx] — byte-equivalent duplicate of `/build` (same `ProjectsPage`, zero props); 17 inbound links repointed to `/build`, its tailored loading skeleton moved to `build/loading.tsx`
@@ -194,11 +199,7 @@
 - `/build/workspaces/[pmWorkspaceId]/pm-workspaces` · **Build** · [RETIRED app/(authenticated)/build/workspaces/[pmWorkspaceId]/pm-workspaces/page.tsx] — byte-identical to `/build/pm-workspaces` and never read its own `pmWorkspaceId`; zero inbound links
 - `/build/workspaces/[pmWorkspaceId]/all-work` · **Build** · hooks: `→ features/build`
 - `/build/workspaces/[pmWorkspaceId]/my-work` · **Build** · hooks: `→ features/build`
-- `/build/workspaces/[pmWorkspaceId]/[projectId]` · **Build** · hooks: `→ features/build`
-- `/build/workspaces/[pmWorkspaceId]/[projectId]/epics` · **Build** · hooks: `→ features/build`
-- `/build/workspaces/[pmWorkspaceId]/[projectId]/my-tickets` · **Build** · hooks: `→ features/build`
-- `/build/workspaces/[pmWorkspaceId]/[projectId]/views` · **Build** · hooks: `→ features/build`
-- `/build/workspaces/[pmWorkspaceId]/[projectId]/settings` · **Build** · hooks: `→ features/build`
+- `/build/workspaces/[pmWorkspaceId]/[projectId]*` · **Build** · [NOT IMPLEMENTED] — corrected 2026-09-19: `app/(authenticated)/build/workspaces/[pmWorkspaceId]/` holds only `page.tsx`, `all-work/` and `my-work/`, so the five nested project entries previously listed here resolved to 404. `resolveBuildScope` therefore reads a project scope only from `/build/[projectId]`, and the scope selector links projects there.
 
 ### Programs, Portfolios, Goals, Roadmap, Teams
 - `/build/programs` · **Build** · hooks: `→ features/build`
@@ -229,7 +230,7 @@
 - `/build/[projectId]/bugs` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/change-requests` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/chat` · **Build** · hooks: `→ features/build/project`
-- `/build/[projectId]/client-portal` · **Build** · hooks: `→ features/build/project`
+- `/build/[projectId]/client-portal` · **Build** · hooks: `→ features/build/project` · renders `NoPermissionState` without `build:clientvisibility:manage` (2026-09-19: previously showed an empty list, since the disabled query left `data` undefined — denial read as emptiness). Sidebar entry is additionally hidden when the project stores `settings.features.clientPortal === false`; an absent flag counts as enabled, and the backend does not enforce that flag.
 - `/build/[projectId]/cycles` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/cycles/[cycleId]` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/decisions` · **Build** · hooks: `→ features/build/project`
@@ -253,7 +254,7 @@
 - `/build/[projectId]/risks` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/settings` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/sprints` · **Build** · hooks: `useSprints, useUpdateSprint, useUpdateTicket, useSprintTicketMover` — S06: three `Promise.all` per-ticket fan-outs replaced by the bounded transactional `POST /build/:projectId/tickets/bulk` (chunked at the backend cap of 100); sprint completion now sends `sprintId: null` so "move to backlog" actually clears the sprint instead of serialising `undefined` to a no-op. 5 tests in `use-sprint-ticket-mover.test.ts`.
-- `/build/[projectId]/tickets/[ticketKey]` · **Build** · hooks: `→ features/build/project` — notification/email/search deep links emit `/build/...` (not legacy `/projects/...`); client navigation normalizes any stored `/projects` links via `normalizeBuildDeepLink`
+- `/build/[projectId]/tickets/[ticketKey]` · **Build** · hooks: `→ features/build/project` — notification/email/search deep links emit `/build/...` (not legacy `/projects/...`); client navigation normalizes any stored `/projects` links via `normalizeBuildDeepLink`; main column uses `min-h-0 flex-1 basis-0 overflow-y-auto` inside an `overflow-hidden` split so long descriptions scroll (parity with inbox preview; `ticket-detail-scroll-chain.test.ts`)
 - `/build/[projectId]/timeline` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/triage` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/views` · **Build** · hooks: `→ features/build/project`
@@ -667,21 +668,18 @@
 
 ## Knowledge (Wiki / KB)
 
-- `/knowledge/wiki` · **Knowledge** · hooks: `requireSession`, `RequireModule module="kb"`, `→ features/wiki` — WikiShell hides the Documents product sidebar; Ask KB is a wiki-nav row to `/knowledge/chat`; expanded rail has no Wiki title bar (New page is the home header primary)
+- `/knowledge/wiki` · **Knowledge** · hooks: `requireSession`, `RequireModule module="kb"`, `→ features/wiki` — WikiShell hides the Documents product sidebar; header Collapse sidebar toggles the wiki rail; Ask KB is a wiki-nav row to `/knowledge/chat`; expanded rail has no Wiki title bar (New page is the home header primary); recents and favorites live on this home surface plus sidebar shortcuts, not as separate destinations; cards show the page cover strip when one is set; Quick find snippets render `ts_headline` matches as emphasis, not raw `<b>` tags
 - `/knowledge/wiki/spaces` · **Knowledge** · hooks: `→ features/wiki`
 - `/knowledge/wiki/spaces/[spaceId]` · **Knowledge** · hooks: `→ features/wiki`
-- `/knowledge/wiki/doc/[pageId]` · **Knowledge** · hooks: `→ features/wiki`
+- `/knowledge/wiki/doc/[pageId]` · **Knowledge** · hooks: `→ features/wiki` — title and More live outside the editor so they stay clickable; AI / Share / More are icon-only; cover banner, Cover/Favorite badges, and home-card cover strips show whether a cover is set; Ask about this page is a chat thread with a pinned composer, not a one-shot form; the format bar font-size control is a compact − / size / + group, not a native number stepper
 - `/knowledge/wiki/doc/[pageId]/history` · **Knowledge** · hooks: `→ features/wiki`
-- `/knowledge/wiki/recent` · **Knowledge** · hooks: `→ features/wiki`
-- `/knowledge/wiki/favorites` · **Knowledge** · hooks: `→ features/wiki`
 - `/knowledge/wiki/private` · **Knowledge** · hooks: `→ features/wiki`
 - `/knowledge/wiki/shared` · **Knowledge** · hooks: `→ features/wiki`
-- `/knowledge/wiki/templates` · **Knowledge** · hooks: `usePageState` + `<PageState>` (saved-templates section), `→ features/wiki` — a fetch error rendered an EmptyState ("Could not load templates"); now a real error with retry, and the starter templates stay visible
-- `/knowledge/wiki/trash` · **Knowledge** · hooks: `→ features/wiki`
+- `/knowledge/wiki/templates` · **Knowledge** · hooks: `usePageState` + `<PageState>` (saved-templates tab), `→ features/wiki` — Starters and Saved are URL-synced tabs (`?tab=saved`); a fetch error on Saved is a real error with retry, and Starters stay available on their own tab
+- `/knowledge/wiki/trash` · **Knowledge** · hooks: `→ features/wiki` — Trash retention (auto-purge days) lives here for managers; there is no separate wiki Settings page
 - `/knowledge/wiki/reviews` · **Knowledge** · hooks: `→ features/wiki`
-- `/knowledge/wiki/import` · **Knowledge** · hooks: `→ features/wiki`
+- `/knowledge/wiki/import` · **Knowledge** · hooks: `→ features/wiki` — sidebar label is Import & Export; Import and Export are URL-synced tabs (`?tab=export`); Choose files and Paste text are Import-tab header actions; recent imports show uploaded page titles (from job `errorReport.itemTitles`) with client-side pagination
 - `/knowledge/wiki/analytics` · **Knowledge** · hooks: `→ features/wiki`
-- `/knowledge/wiki/settings` · **Knowledge** · hooks: `→ features/wiki`
 - `/knowledge/chat` · **Knowledge** · hooks: `→ features/wiki`
 
 ### Legacy

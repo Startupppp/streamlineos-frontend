@@ -90,11 +90,24 @@ export function useUpdateManagedProduct() {
         undefined,
         managedProductRowContract,
       ),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.managedProducts.list() });
-      qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.detail(vars.managedProductId),
+    onSuccess: (updated, vars) => {
+      qc.setQueryData(
+        buildWorkQueryKeys.projects.managedProducts.detail(vars.managedProductId),
+        updated,
+      );
+      const loadedPages = qc.getQueriesData<ManagedProductsPage>({
+        queryKey: buildWorkQueryKeys.projects.managedProducts.list(),
       });
+      for (const [key, page] of loadedPages) {
+        if (page === undefined) continue;
+        if (!page.data.some((row) => row.id === vars.managedProductId)) continue;
+        qc.setQueryData<ManagedProductsPage>(key, {
+          ...page,
+          data: page.data.map((row) =>
+            row.id === vars.managedProductId ? updated : row,
+          ),
+        });
+      }
     },
   });
 }

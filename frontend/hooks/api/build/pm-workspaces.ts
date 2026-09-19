@@ -100,11 +100,25 @@ export function useUpdatePmWorkspace() {
       ...data
     }: UpdatePmWorkspaceInput & { pmWorkspaceId: string }) =>
       apiClient.patch<PmWorkspace>(`/build/workspaces/${pmWorkspaceId}`, data, undefined, pmWorkspaceRowContract),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.pmWorkspaces.list() });
-      qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.pmWorkspaces.detail(vars.pmWorkspaceId),
+    onSuccess: (updated, vars) => {
+      qc.setQueryData(
+        buildWorkQueryKeys.projects.pmWorkspaces.detail(vars.pmWorkspaceId),
+        updated,
+      );
+      const loadedPages = qc.getQueriesData<PmWorkspacesPage>({
+        queryKey: buildWorkQueryKeys.projects.pmWorkspaces.list(),
       });
+      for (const [key, page] of loadedPages) {
+        if (page === undefined) continue;
+        if (!page.data.some((row) => row.pmWorkspaceId === vars.pmWorkspaceId))
+          continue;
+        qc.setQueryData<PmWorkspacesPage>(key, {
+          ...page,
+          data: page.data.map((row) =>
+            row.pmWorkspaceId === vars.pmWorkspaceId ? updated : row,
+          ),
+        });
+      }
     },
   });
 }

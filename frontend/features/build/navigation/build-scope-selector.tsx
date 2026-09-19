@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -51,6 +51,7 @@ export function BuildScopeSelector({
 }: BuildScopeSelectorProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const { recordScope } = useBuildScopeRecents();
   const identity = useBuildScopeIdentity(scope);
   const canUpdateProject = useCan("build:update");
@@ -93,6 +94,7 @@ export function BuildScopeSelector({
   const handleSelect = useCallback(
     (target: BuildScopeRef) => {
       setOpen(false);
+      requestAnimationFrame(() => triggerRef.current?.focus());
       requestLeave(() => navigateToScope(target));
     },
     [requestLeave, navigateToScope],
@@ -106,6 +108,7 @@ export function BuildScopeSelector({
 
   const trigger = isCollapsed ? (
     <button
+      ref={triggerRef}
       type="button"
       aria-label={triggerLabel}
       aria-expanded={open}
@@ -116,6 +119,7 @@ export function BuildScopeSelector({
     </button>
   ) : (
     <button
+      ref={triggerRef}
       type="button"
       aria-label={triggerLabel}
       aria-expanded={open}
