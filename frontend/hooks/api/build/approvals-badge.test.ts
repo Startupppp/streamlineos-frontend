@@ -215,6 +215,45 @@ describe("useDecideApproval — BSN-03-024 cache-patch approach", () => {
   });
 });
 
+describe("BSN-03-A02 — Build badge and global notification count keys are structurally distinct", () => {
+  it("the Build badge key contains a 'build' segment while the global key does not so they cannot share a cache entry", () => {
+    const globalKey = platformCoreQueryKeys.notifications.unreadCount();
+    const buildKey = platformCoreQueryKeys.notifications.unreadCount("build");
+    expect(globalKey).not.toEqual(buildKey);
+    expect(buildKey[buildKey.length - 1]).toBe("build");
+  });
+
+  it("a QueryClient holds distinct values under the global and Build keys simultaneously so counts never collide", () => {
+    const client = makeClient();
+    client.setQueryData(platformCoreQueryKeys.notifications.unreadCount(), { count: 10 });
+    client.setQueryData(platformCoreQueryKeys.notifications.unreadCount("build"), { count: 3 });
+
+    expect(client.getQueryData(platformCoreQueryKeys.notifications.unreadCount())).toEqual({ count: 10 });
+    expect(client.getQueryData(platformCoreQueryKeys.notifications.unreadCount("build"))).toEqual({ count: 3 });
+  });
+});
+
+describe("BSN-04-A04 — revoking build:tickets:view stops rendering data without a manual invalidation call", () => {
+  it("when build:tickets:view is revoked mid-session the hook returns undefined data without any explicit invalidateQueries call", () => {
+    mockUseCan.mockReturnValue(true);
+    const client = makeClient();
+    client.setQueryData(platformCoreQueryKeys.notifications.unreadCount("build"), { count: 7 });
+
+    const { result, rerender } = renderHook(() => useBuildNotificationUnreadCount(), {
+      wrapper: wrap(client),
+    });
+
+    expect(result.current.data).toEqual({ count: 7 });
+
+    const invalidateSpy = jest.spyOn(client, "invalidateQueries");
+    mockUseCan.mockReturnValue(false);
+    rerender();
+
+    expect(result.current.data).toBeUndefined();
+    expect(invalidateSpy).not.toHaveBeenCalled();
+  });
+});
+
 describe("useDeleteApproval — BSN-03-024 cache-patch on delete", () => {
   let client: QueryClient;
 

@@ -118,10 +118,22 @@ describe("BSN-04-031 — all response-shaping inputs appear in cache keys", () =
     expect(JSON.stringify(ab)).toEqual(JSON.stringify(ba));
   });
 
-  it("agent-pulse key is stable with no shaping parameters because it returns one computed top signal", () => {
-    const k1 = buildWorkQueryKeys.projects.agentPulse();
-    const k2 = buildWorkQueryKeys.projects.agentPulse();
+  it("agent-pulse keys differ per Build scope so one scope's top signal is never served to another", () => {
+    const project = buildWorkQueryKeys.projects.agentPulse("project:42");
+    const workspace = buildWorkQueryKeys.projects.agentPulse("workspace:ws-1");
+    expect(JSON.stringify(project)).not.toEqual(JSON.stringify(workspace));
+  });
+
+  it("agent-pulse key is stable for one scope so repeated renders share a cache entry", () => {
+    const k1 = buildWorkQueryKeys.projects.agentPulse("project:42");
+    const k2 = buildWorkQueryKeys.projects.agentPulse("project:42");
     expect(JSON.stringify(k1)).toEqual(JSON.stringify(k2));
+  });
+
+  it("agent-pulse scope segment carries no literal undefined, so an invalidation prefix still matches", () => {
+    const key = buildWorkQueryKeys.projects.agentPulse("organization");
+    expect(key).not.toContain(undefined);
+    expect(key[key.length - 1]).toBe("organization");
   });
 });
 

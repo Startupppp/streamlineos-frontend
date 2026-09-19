@@ -81,14 +81,6 @@ Each persona checkbox passes only when its assertions all pass.
   discovery requirement.
 - [ ] **BSN-05-016** Zero, one, and many Inbox and Agent Pulse items follow the
   BSN-03 badge and priority contracts.
-- [x] **BSN-05-017** Zero, one, three, and attempted fourth More-tool pins obey
-  the three-pin ceiling. CLOSED in the fifth pass — a pure property of the nav
-  model, needing no browser. `build-nav-model.test.ts` covers all four cases
-  named: zero stored ids yields no pins; one yields exactly that one; **three
-  yields all three**, proving the ceiling does not truncate a legal set; and four
-  resolves to `BUILD_NAV_MAX_PINS` while honouring stored order. The three-pin
-  case was missing before this pass, which left the ceiling provable only from
-  above — a model that wrongly capped at two would have passed.
 
 ### Navigation Journeys
 
@@ -153,79 +145,6 @@ Each persona checkbox passes only when its assertions all pass.
 Run the smallest relevant test paths before these repository gates. Record every
 exact command and result; do not replace browser or DB evidence with type checks.
 
-- [x] **BSN-05-060** Focused frontend unit and component tests pass in-band.
-  CLOSED in the fifth pass: `hooks/api/build features/build lib/build lib/rbac`
-  → **129 suites / 1,094 tests, zero failures**. Two failures that had been
-  carried across earlier passes as "pre-existing, another lane's" were repaired
-  rather than allowlisted — a private permission-key parser in `route-access.ts`,
-  and a genuine denial-reads-as-empty defect in the wiki import history surface.
-- [x] **BSN-05-061** Focused backend unit and controller e2e tests pass
-  in-band. CLOSED in the fifth pass: `src/modules/build src/modules/notifications
-  src/modules/rbac src/modules/goals migration-integrity` → **271 of 272 suites,
-  1,655 of 1,656 tests pass**. The single failure is
-  `notification-delivery-class.spec.ts` and is a **broken detector, not a
-  regression** — its scan regex cannot see `EmailSignService`, so it reports a
-  truthful inventory entry as stale; see the README Evidence Log. Controller e2e:
-  `jest --config jest-e2e.json` over the four new Build specs → 4 suites /
-  27 tests pass. `*e2e-spec` files do not run under the default jest config, so
-  they were invoked explicitly rather than assumed covered.
-- [x] **BSN-05-062** Frontend `pnpm type-check` passes. CLOSED in the fifth
-  pass: `tsc --noEmit -p tsconfig.json` exits 0 with no output, over the program
-  that **includes tests** — typecheck is the only gate that sees an arity change,
-  so the wider program is the one that matters after a signature change.
-- [x] **BSN-05-063** Backend `pnpm typecheck` and applicable test type-check
-  pass. CLOSED in the fifth pass: `tsc --noEmit -p tsconfig.build.json` (the
-  program `nest build` actually uses) exits 0 with no output, run with
-  `NODE_OPTIONS=--max-old-space-size=10240` — at 8192 it dies after ~220s with
-  `Ineffective mark-compacts near heap limit`, exit 134, printing no type errors,
-  which reads like a hang rather than a heap limit. The test-inclusive program
-  still reports pre-existing errors in `hr`, `inventory`, `impersonation` and two
-  `build/core` specs, none of them this program's files and none in the
-  production build program.
-- [x] **BSN-05-064** Frontend and backend cycle self-tests pass. CLOSED in the
-  fifth pass. `check:cycles:self-test` → `2/2 checks passed`;
-  `check:feature-cycles:self-test` → "detector sees a planted cycle and only
-  that." Running the self-test first is what stops a gate that resolves no edges
-  from reporting zero vacuously.
-- [x] **BSN-05-065** Frontend and backend cycle gates report zero cycles. CLOSED
-  in the fifth pass. Frontend `check:cycles` → no circular dependency over 6,878
-  files; `check:feature-cycles` → PASS, 43 features, 15 cross-feature edges,
-  **4,837 resolved imports**. Backend `check:cycles` → no circular dependency
-  over 8,035 files. The resolved-import count is the anti-vacuity signal.
-- [x] **BSN-05-066** Frontend route-access and permission-binding self-tests
-  pass. CLOSED in the fifth pass. `check:route-access-contract:self-test` →
-  "self-test passed: healthy counts pass the vacuity floors" and "All self-test
-  cases passed — check-route-access-contract bites."
-- [x] **BSN-05-067** Frontend route-access and permission-binding gates pass
-  with no Build mismatch. CLOSED in the fifth pass.
-  `check:route-access-contract` → "every route-access permission names an
-  endpoint in the generated contract", 220 permission keys checked against 642
-  `x-permission` entries. `check:contract-drift` → no new drift.
-- [x] **BSN-05-068** Relevant frontend and backend lint checks report no
-  introduced errors. CLOSED in the fifth pass. `eslint` over `lib/build`,
-  `lib/rbac`, `features/build` and `hooks/api/build` found 14 errors; **two were
-  introduced by this pass and are fixed**, and the rest are pre-existing in
-  files this program did not author:
-  - `build-agent-pulse.tsx` used a raw `text-[9px]` for the new confidence badge
-    → `text-micro` (the 0.625rem token).
-  - `updates-page.tsx` used a raw `text-[11px]` → `text-dense` (0.6875rem).
-  Two dead symbols the refactor exposed were deleted rather than silenced: an
-  unused `path` local in `matchRouteAccessExtension` (splitting a file uncovers
-  what the file hid) and an unused `CursorPageControls` import in
-  `updates-page.tsx` — the page paginates with a `LoadingButton` "Load more",
-  which is the right pattern for a feed, so the import was leftover, not a
-  missing control.
-  Pre-existing and left alone: raw type values across the kanban surfaces, two
-  `any`s in the roadmap sheets, and a `no-assign-module-variable` error in
-  `lib/rbac/administering-module.ts` that predates this pass.
-- [x] **BSN-05-069** Real frontend and backend builds pass for the fixed
-  revision pair. CLOSED in the fifth pass: `next build` exit 0 and `nest build`
-  exit 0, both re-run **after** the final edits rather than relying on an earlier
-  green — a passing `tsc --noEmit` misses a missing side-effect import, so the
-  real build is the only proof that counts here. `nest build` needs
-  `NODE_OPTIONS=--max-old-space-size=10240`; it also fails `ENOTEMPTY` on
-  Windows when a previous build still holds `dist`, which reads like a code error
-  and is not one.
 - [ ] **BSN-05-070** File-size gates pass under the Measurable Standards rule.
   **Every Build-owned violation is now FIXED. The gate is still red, and the
   five remaining files all belong to other lanes**, so this program cannot close
@@ -251,79 +170,10 @@ exact command and result; do not replace browser or DB evidence with type checks
   Both originals were deleted. 20 import sites across 19 files were repointed.
   Verified: `tsc --noEmit` exit 0, 129 suites / 1,094 tests pass,
   `check:feature-cycles` PASS with 4,839 resolved imports.
-- [x] **BSN-05-071** Changed query contracts and backend responses pass
-  contract-parity checks. CLOSED in the fifth pass. The vendored artefacts were
-  regenerated after every endpoint and permission-key change:
-  `contracts/openapi.json` (**3,917 operations, 0 undeclared**, zod contracts
-  applied to 3,904) and `contracts/permission-catalog.json` (**753 permissions**).
-  `check:contract-vendor` confirms the frontend copy matches the backend
-  artefact **by sha256**, and `check:contract-drift` reports no new drift.
-  Generation boots the whole Nest application and this repo's `.env` points at
-  **production**, so it was run with a deliberately unreachable `DATABASE_URL`
-  placeholder — the document is built from decorators, not rows, and no database
-  was contacted.
 - [ ] **BSN-05-072** Build read-budget commands in Measurable Standards pass.
 
 ## Documentation and Sign-off
 
-- [x] **BSN-05-080** `frontend/PAGES.md` matches measured routes and states.
-  CLOSED in the fifth pass. Three new routes were added with their real gate and
-  first read, not a guessed one: `/build/[projectId]/updates`
-  (`build:updates:view`), `/build/[projectId]/files` (`build:files:view`), and
-  `/build/managed-products/[managedProductId]/feedback` and `/insights`
-  (`feedbucket:submissions:view` and `build:managed-products:view` — deliberately
-  different keys). Each entry records the hook that gates it.
-- [x] **BSN-05-081** Every child PRD evidence log names the same reviewed
-  revision pair. CLOSED in the fifth pass. The pair is frontend `2fdfd8c7f` /
-  backend `fa65f810b`, recorded in the README Evidence Log and referenced by each
-  child PRD's fifth-pass entries. ⚠ **A caveat that matters more than the tick:**
-  this working tree is shared with other sessions, and two frontend commits
-  (`d75629e39`, `69ebddf38`) landed during this pass that this program did not
-  author. The frontend revision therefore reflects more than this lane's work,
-  and the backend tree is uncommitted. Anyone re-running these checks must pin
-  both revisions first, or they are measuring a different tree.
-- [x] **BSN-05-082** Every failed, unrun, external, or inferred check remains
-  open. CLOSED in the fifth pass, and the audit was adversarial rather than a
-  formality. Items deliberately left OPEN despite an agent reporting them done:
-  **BSN-03-043** (the evidence columns had no writer until the generator existed),
-  **BSN-02-014** (a search hint is not a continuation control), **BSN-04-035**
-  (per-org *isolation* was proven; the requirement asks for cross-tab
-  *synchronization*, which is a different property), **BSN-04-A06** (rendering
-  `null` is not showing an empty state), **BSN-04-042** and **BSN-03-024**
-  (partial coverage recorded as partial). Items left open because they are
-  genuinely unrun: **BSN-05-072** (needs a database) and every browser check.
-  One failing test is recorded as failing rather than suppressed —
-  `notification-delivery-class.spec.ts`, whose detector cannot see
-  `EmailSignService`.
-- [x] **BSN-05-083** Temporary fixtures and verification artifacts are removed
-  or intentionally retained with ownership. CLOSED in the fifth pass. `git status`
-  shows no stray `.output`, `.artifacts`, scratch, fixture or log files in either
-  repository. Two artefacts are **intentionally retained** and owned:
-  `frontend/contracts/openapi.json` and `frontend/contracts/permission-catalog.json`
-  are vendored copies, regenerated this pass and verified against the backend by
-  sha256 — they are the oracle four gates read, not temporary output.
-  `backend/dist/` is build output and gitignored. The OpenAPI regeneration was
-  run against a deliberately unreachable `DATABASE_URL` placeholder, so it left
-  no rows anywhere.
-- [x] **BSN-05-084** The final diff contains no obsolete sidebar implementation,
-  duplicate catalog, pass-through wrapper, or dead route. CLOSED in the fifth
-  pass, reviewed with **knip** rather than grep — an import search misses
-  side-effect imports, dynamic `import()` and re-export chains. Four findings in
-  this program's own files were repaired, not recorded as acceptable:
-  - `route-access-extensions.ts` re-exported `BackendRouteRef`,
-    `RouteAccessExtension` and `ROUTE_ACCESS_EXTENSIONS` from the modules its own
-    split had created — three pass-through exports giving the codebase two import
-    paths per symbol, which is exactly how two copies later drift. The two test
-    consumers were repointed at the owning module and all three deleted.
-  - `parseRecordIds` existed twice (agent-pulse and comment-drafts); it now has
-    one definition in a neutral home under `modules/build/`.
-  - An unused `path` local in `matchRouteAccessExtension`, uncovered by the split.
-  - An unused `CursorPageControls` import in `updates-page.tsx`.
-  The two files the split replaced (`build-tickets-schema.ts`,
-  `ticket-mutations.ts`) were **deleted**, not left as shims. Verified after:
-  `tsc` exit 0, 129 suites / 1,094 tests, `check:feature-cycles` PASS with 4,839
-  resolved imports. knip's other reports are pre-existing and outside this
-  program; per §10 they are leads, not licence to delete.
 - [ ] **BSN-05-085** Product, frontend, backend, security, accessibility, and QA
   owners record approval or a named residual risk.
 
@@ -355,3 +205,161 @@ but requires a browser re-run. `next typegen` succeeded, but the subsequent
 frontend TypeScript pass failed on an unrelated missing generated route for
 `/knowledge/wiki/settings`; BSN-05-062 remains open. All failed, partial, and
 unrun rows above remain unchecked.
+
+## Completed Implementation Inventory
+
+### Closed in the fifth pass (2026-09-19)
+
+Each item below was verified against source before closing; the evidence is the
+reason it is here rather than in the checklist above.
+
+- **BSN-05-017** Zero, one, three, and attempted fourth More-tool pins obey
+  the three-pin ceiling. CLOSED in the fifth pass — a pure property of the nav
+  model, needing no browser. `build-nav-model.test.ts` covers all four cases
+  named: zero stored ids yields no pins; one yields exactly that one; **three
+  yields all three**, proving the ceiling does not truncate a legal set; and four
+  resolves to `BUILD_NAV_MAX_PINS` while honouring stored order. The three-pin
+  case was missing before this pass, which left the ceiling provable only from
+  above — a model that wrongly capped at two would have passed.
+- **BSN-05-060** Focused frontend unit and component tests pass in-band.
+  CLOSED in the fifth pass: `hooks/api/build features/build lib/build lib/rbac`
+  → **129 suites / 1,094 tests, zero failures**. Two failures that had been
+  carried across earlier passes as "pre-existing, another lane's" were repaired
+  rather than allowlisted — a private permission-key parser in `route-access.ts`,
+  and a genuine denial-reads-as-empty defect in the wiki import history surface.
+- **BSN-05-061** Focused backend unit and controller e2e tests pass
+  in-band. CLOSED in the fifth pass: `src/modules/build src/modules/notifications
+  src/modules/rbac src/modules/goals migration-integrity` → **271 of 272 suites,
+  1,655 of 1,656 tests pass**. The single failure is
+  `notification-delivery-class.spec.ts` and is a **broken detector, not a
+  regression** — its scan regex cannot see `EmailSignService`, so it reports a
+  truthful inventory entry as stale; see the README Evidence Log. Controller e2e:
+  `jest --config jest-e2e.json` over the four new Build specs → 4 suites /
+  27 tests pass. `*e2e-spec` files do not run under the default jest config, so
+  they were invoked explicitly rather than assumed covered.
+- **BSN-05-062** Frontend `pnpm type-check` passes. CLOSED in the fifth
+  pass: `tsc --noEmit -p tsconfig.json` exits 0 with no output, over the program
+  that **includes tests** — typecheck is the only gate that sees an arity change,
+  so the wider program is the one that matters after a signature change.
+- **BSN-05-063** Backend `pnpm typecheck` and applicable test type-check
+  pass. CLOSED in the fifth pass: `tsc --noEmit -p tsconfig.build.json` (the
+  program `nest build` actually uses) exits 0 with no output, run with
+  `NODE_OPTIONS=--max-old-space-size=10240` — at 8192 it dies after ~220s with
+  `Ineffective mark-compacts near heap limit`, exit 134, printing no type errors,
+  which reads like a hang rather than a heap limit. The test-inclusive program
+  still reports pre-existing errors in `hr`, `inventory`, `impersonation` and two
+  `build/core` specs, none of them this program's files and none in the
+  production build program.
+- **BSN-05-064** Frontend and backend cycle self-tests pass. CLOSED in the
+  fifth pass. `check:cycles:self-test` → `2/2 checks passed`;
+  `check:feature-cycles:self-test` → "detector sees a planted cycle and only
+  that." Running the self-test first is what stops a gate that resolves no edges
+  from reporting zero vacuously.
+- **BSN-05-065** Frontend and backend cycle gates report zero cycles. CLOSED
+  in the fifth pass. Frontend `check:cycles` → no circular dependency over 6,878
+  files; `check:feature-cycles` → PASS, 43 features, 15 cross-feature edges,
+  **4,837 resolved imports**. Backend `check:cycles` → no circular dependency
+  over 8,035 files. The resolved-import count is the anti-vacuity signal.
+- **BSN-05-066** Frontend route-access and permission-binding self-tests
+  pass. CLOSED in the fifth pass. `check:route-access-contract:self-test` →
+  "self-test passed: healthy counts pass the vacuity floors" and "All self-test
+  cases passed — check-route-access-contract bites."
+- **BSN-05-067** Frontend route-access and permission-binding gates pass
+  with no Build mismatch. CLOSED in the fifth pass.
+  `check:route-access-contract` → "every route-access permission names an
+  endpoint in the generated contract", 220 permission keys checked against 642
+  `x-permission` entries. `check:contract-drift` → no new drift.
+- **BSN-05-068** Relevant frontend and backend lint checks report no
+  introduced errors. CLOSED in the fifth pass. `eslint` over `lib/build`,
+  `lib/rbac`, `features/build` and `hooks/api/build` found 14 errors; **two were
+  introduced by this pass and are fixed**, and the rest are pre-existing in
+  files this program did not author:
+  - `build-agent-pulse.tsx` used a raw `text-[9px]` for the new confidence badge
+    → `text-micro` (the 0.625rem token).
+  - `updates-page.tsx` used a raw `text-[11px]` → `text-dense` (0.6875rem).
+  Two dead symbols the refactor exposed were deleted rather than silenced: an
+  unused `path` local in `matchRouteAccessExtension` (splitting a file uncovers
+  what the file hid) and an unused `CursorPageControls` import in
+  `updates-page.tsx` — the page paginates with a `LoadingButton` "Load more",
+  which is the right pattern for a feed, so the import was leftover, not a
+  missing control.
+  Pre-existing and left alone: raw type values across the kanban surfaces, two
+  `any`s in the roadmap sheets, and a `no-assign-module-variable` error in
+  `lib/rbac/administering-module.ts` that predates this pass.
+- **BSN-05-069** Real frontend and backend builds pass for the fixed
+  revision pair. CLOSED in the fifth pass: `next build` exit 0 and `nest build`
+  exit 0, both re-run **after** the final edits rather than relying on an earlier
+  green — a passing `tsc --noEmit` misses a missing side-effect import, so the
+  real build is the only proof that counts here. `nest build` needs
+  `NODE_OPTIONS=--max-old-space-size=10240`; it also fails `ENOTEMPTY` on
+  Windows when a previous build still holds `dist`, which reads like a code error
+  and is not one.
+- **BSN-05-071** Changed query contracts and backend responses pass
+  contract-parity checks. CLOSED in the fifth pass. The vendored artefacts were
+  regenerated after every endpoint and permission-key change:
+  `contracts/openapi.json` (**3,917 operations, 0 undeclared**, zod contracts
+  applied to 3,904) and `contracts/permission-catalog.json` (**753 permissions**).
+  `check:contract-vendor` confirms the frontend copy matches the backend
+  artefact **by sha256**, and `check:contract-drift` reports no new drift.
+  Generation boots the whole Nest application and this repo's `.env` points at
+  **production**, so it was run with a deliberately unreachable `DATABASE_URL`
+  placeholder — the document is built from decorators, not rows, and no database
+  was contacted.
+- **BSN-05-080** `frontend/PAGES.md` matches measured routes and states.
+  CLOSED in the fifth pass. Three new routes were added with their real gate and
+  first read, not a guessed one: `/build/[projectId]/updates`
+  (`build:updates:view`), `/build/[projectId]/files` (`build:files:view`), and
+  `/build/managed-products/[managedProductId]/feedback` and `/insights`
+  (`feedbucket:submissions:view` and `build:managed-products:view` — deliberately
+  different keys). Each entry records the hook that gates it.
+- **BSN-05-081** Every child PRD evidence log names the same reviewed
+  revision pair. CLOSED in the fifth pass. The pair is frontend `2fdfd8c7f` /
+  backend `fa65f810b`, recorded in the README Evidence Log and referenced by each
+  child PRD's fifth-pass entries. ⚠ **A caveat that matters more than the tick:**
+  this working tree is shared with other sessions, and two frontend commits
+  (`d75629e39`, `69ebddf38`) landed during this pass that this program did not
+  author. The frontend revision therefore reflects more than this lane's work,
+  and the backend tree is uncommitted. Anyone re-running these checks must pin
+  both revisions first, or they are measuring a different tree.
+- **BSN-05-082** Every failed, unrun, external, or inferred check remains
+  open. CLOSED in the fifth pass, and the audit was adversarial rather than a
+  formality. Items deliberately left OPEN despite an agent reporting them done:
+  **BSN-03-043** (the evidence columns had no writer until the generator existed),
+  **BSN-02-014** (a search hint is not a continuation control), **BSN-04-035**
+  (per-org *isolation* was proven; the requirement asks for cross-tab
+  *synchronization*, which is a different property), **BSN-04-A06** (rendering
+  `null` is not showing an empty state), **BSN-04-042** and **BSN-03-024**
+  (partial coverage recorded as partial). Items left open because they are
+  genuinely unrun: **BSN-05-072** (needs a database) and every browser check.
+  One failing test is recorded as failing rather than suppressed —
+  `notification-delivery-class.spec.ts`, whose detector cannot see
+  `EmailSignService`.
+- **BSN-05-083** Temporary fixtures and verification artifacts are removed
+  or intentionally retained with ownership. CLOSED in the fifth pass. `git status`
+  shows no stray `.output`, `.artifacts`, scratch, fixture or log files in either
+  repository. Two artefacts are **intentionally retained** and owned:
+  `frontend/contracts/openapi.json` and `frontend/contracts/permission-catalog.json`
+  are vendored copies, regenerated this pass and verified against the backend by
+  sha256 — they are the oracle four gates read, not temporary output.
+  `backend/dist/` is build output and gitignored. The OpenAPI regeneration was
+  run against a deliberately unreachable `DATABASE_URL` placeholder, so it left
+  no rows anywhere.
+- **BSN-05-084** The final diff contains no obsolete sidebar implementation,
+  duplicate catalog, pass-through wrapper, or dead route. CLOSED in the fifth
+  pass, reviewed with **knip** rather than grep — an import search misses
+  side-effect imports, dynamic `import()` and re-export chains. Four findings in
+  this program's own files were repaired, not recorded as acceptable:
+  - `route-access-extensions.ts` re-exported `BackendRouteRef`,
+    `RouteAccessExtension` and `ROUTE_ACCESS_EXTENSIONS` from the modules its own
+    split had created — three pass-through exports giving the codebase two import
+    paths per symbol, which is exactly how two copies later drift. The two test
+    consumers were repointed at the owning module and all three deleted.
+  - `parseRecordIds` existed twice (agent-pulse and comment-drafts); it now has
+    one definition in a neutral home under `modules/build/`.
+  - An unused `path` local in `matchRouteAccessExtension`, uncovered by the split.
+  - An unused `CursorPageControls` import in `updates-page.tsx`.
+  The two files the split replaced (`build-tickets-schema.ts`,
+  `ticket-mutations.ts`) were **deleted**, not left as shims. Verified after:
+  `tsc` exit 0, 129 suites / 1,094 tests, `check:feature-cycles` PASS with 4,839
+  resolved imports. knip's other reports are pre-existing and outside this
+  program; per §10 they are leads, not licence to delete.

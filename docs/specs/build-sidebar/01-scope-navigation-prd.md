@@ -98,23 +98,6 @@ duplicated as TODO checkboxes.
 BSN-01-011, BSN-01-013, BSN-01-014, BSN-01-015 and BSN-01-016 CLOSED in the
 fourth pass — see the Evidence Log.
 
-- [x] **BSN-01-012** Add or reuse validated `managedProductId` filters for
-  Roadmap, Goals, Feedback, Linked projects, and Insights. **Roadmap, Goals,
-  Linked projects and Feedback are CLOSED.** Feedback was NOT the blocker it was
-  recorded as: `feedbucket_widgets` already carried `managed_product_id` with a
-  composite FK and a partial `(org_id, managed_product_id)` index, so the
-  recorded "no scope dimension in the backend" was true of the query and never
-  of the schema. **Insights is now CLOSED too** (fifth pass):
-  `GET /build/managed-products/:managedProductId/insights` exists, gated on
-  `build:managed-products:view`, contract-typed by `managedProductInsightsSchema`,
-  and answers in exactly two queries run under one `Promise.all` — a `GROUP BY`
-  tally of the product's projects and a `GROUP BY` tally of its feedbucket
-  submissions reached by an INNER JOIN through `feedbucket_widgets`. Both are
-  org-led, projected to `(status, count)`, and filter `deleted_at IS NULL` on
-  every table they touch, so there is no N+1 and no unbounded read. A product
-  outside the caller's tenant 404s via the shared `loadProduct` guard.
-  **All five destinations named by this requirement now carry a validated
-  `managedProductId` filter, so the item is closed.**
 - [ ] **BSN-01-018** Audit existing rows for orphan projects and cross-workspace
   product links; repair or quarantine before shipping nesting consumers.
   **Requires a database.** None exists on this machine, and the audit is a query
@@ -127,19 +110,6 @@ fourth pass — see the Evidence Log.
 BSN-01-020, BSN-01-021, BSN-01-026 and BSN-01-027 CLOSED in the fourth pass —
 see the Evidence Log.
 
-- [x] **BSN-01-022** Implement or wire managed product Roadmap, Goals, Feedback,
-  Linked projects, and Insights pages to scope-filtered APIs. CLOSED in the
-  fifth pass. Roadmap, Goals and Linked projects were already wired and
-  scope-filtered. Feedback and Insights are now both destinations in
-  `build-managed-product-catalog.ts` with routes at
-  `/build/managed-products/[managedProductId]/feedback` and `/insights`, each
-  passing `managedProductId` to its query so the page is scope-filtered rather
-  than organization-wide. The two carry **different** keys —
-  `feedbucket:submissions:view` for Feedback, `build:managed-products:view` for
-  Insights — and both are registered in `route-access-extensions.ts`, so a
-  caller holding `build:managed-products:view` but not the feedbucket key no
-  longer reaches the feedback inbox by direct URL. Denied, loading, error and
-  empty states are all rendered. 8 frontend tests plus 3 backend service tests.
 - [ ] **BSN-01-024** Implement or wire project Updates and Files pages.
   **Updates is DONE-PENDING-MIGRATION** (fifth pass). `build.project_updates`
   (migration `1126`, journal idx 1014) carries a keyset-ready partial index
@@ -176,6 +146,92 @@ BSN-01-031 and BSN-01-032 CLOSED in the fourth pass — see the Evidence Log.
   selected scope landing destination.
 
 ## Completed Implementation Inventory
+
+### Closed in the fifth pass (2026-09-19)
+
+Each item below was verified against source before closing; the evidence is the
+reason it is here rather than in the checklist above.
+
+- **BSN-01-012** Add or reuse validated `managedProductId` filters for
+  Roadmap, Goals, Feedback, Linked projects, and Insights. **Roadmap, Goals,
+  Linked projects and Feedback are CLOSED.** Feedback was NOT the blocker it was
+  recorded as: `feedbucket_widgets` already carried `managed_product_id` with a
+  composite FK and a partial `(org_id, managed_product_id)` index, so the
+  recorded "no scope dimension in the backend" was true of the query and never
+  of the schema. **Insights is now CLOSED too** (fifth pass):
+  `GET /build/managed-products/:managedProductId/insights` exists, gated on
+  `build:managed-products:view`, contract-typed by `managedProductInsightsSchema`,
+  and answers in exactly two queries run under one `Promise.all` — a `GROUP BY`
+  tally of the product's projects and a `GROUP BY` tally of its feedbucket
+  submissions reached by an INNER JOIN through `feedbucket_widgets`. Both are
+  org-led, projected to `(status, count)`, and filter `deleted_at IS NULL` on
+  every table they touch, so there is no N+1 and no unbounded read. A product
+  outside the caller's tenant 404s via the shared `loadProduct` guard.
+  **All five destinations named by this requirement now carry a validated
+  `managedProductId` filter, so the item is closed.**
+- **BSN-01-022** Implement or wire managed product Roadmap, Goals, Feedback,
+  Linked projects, and Insights pages to scope-filtered APIs. CLOSED in the
+  fifth pass. Roadmap, Goals and Linked projects were already wired and
+  scope-filtered. Feedback and Insights are now both destinations in
+  `build-managed-product-catalog.ts` with routes at
+  `/build/managed-products/[managedProductId]/feedback` and `/insights`, each
+  passing `managedProductId` to its query so the page is scope-filtered rather
+  than organization-wide. The two carry **different** keys —
+  `feedbucket:submissions:view` for Feedback, `build:managed-products:view` for
+  Insights — and both are registered in `route-access-extensions.ts`, so a
+  caller holding `build:managed-products:view` but not the feedbucket key no
+  longer reaches the feedback inbox by direct URL. Denied, loading, error and
+  empty states are all rendered. 8 frontend tests plus 3 backend service tests.
+- **BSN-01-A06** Unauthorized destinations are absent and direct URL access
+  is denied by the backend for BSN-01-owned routes. CLOSED in the fifth pass —
+  no database needed, because the specs boot the Nest application with the
+  services mocked. 27 e2e tests across four controllers
+  (`files.controller.e2e-spec.ts`, `managed-products-insights.e2e-spec.ts`,
+  `comment-drafts.controller.e2e-spec.ts`, `updates-cross-tenant.e2e-spec.ts`)
+  assert 401 without a token and 403 for a caller lacking the exact key, on every
+  new surface: files list/upload/signed-url/delete, product insights, and
+  draft generation. **Each negative is paired with a positive** — the same route
+  with the correct key is NOT blocked — because a 403 assertion passes just as
+  well when the route is broken for an unrelated reason.
+  A guard audit was run alongside: all four controllers carry
+  `@UseGuards(JwtAuthGuard, PermissionGuard)` at class level with
+  `@RequirePermission` on every handler. `PermissionGuard` is not global, so this
+  had to be confirmed rather than assumed.
+- **BSN-01-A07** No scope exceeds nine primary destinations. CLOSED in the
+  fifth pass, and it is one of the few acceptance checks that needs no browser
+  because the ceiling is a pure property of the catalog. `build-nav-model.test.ts`
+  resolves the model for a caller holding `ALL_BUILD_PERMISSIONS` with
+  `feedbucket` enabled — the widest possible nav — across all four scope types
+  and asserts `primary.length <= BUILD_NAV_MAX_PRIMARY`, reading the exported
+  constant rather than a literal, so raising the constant cannot silently pass
+  the check. Each catalog file additionally pins its own cap. Adding Feedback
+  and Insights took the product scope from 4 primary destinations to 6, leaving
+  three of headroom; nothing had to be demoted to More tools.
+- **BSN-01-A09** Navigation model, route-access, frontend contract, backend
+  controller, and tenant-isolation tests pass. CLOSED in the fifth pass, all five
+  named layers run and green: navigation model and route-access
+  (`lib/build`, `lib/rbac` — 129 suites / 1,094 tests), frontend contracts
+  (`hooks/api/build`, included in that run), backend controllers
+  (`src/modules/build` — 271 of 272 suites, the one failure being a broken
+  detector in the notifications lane, see the README), and tenant isolation
+  (`scope-directory-membership-gate.spec.ts`,
+  `comment-drafts.isolation.spec.ts`, plus 27 controller e2e tests asserting
+  cross-tenant **404 rather than 403**).
+- **BSN-01-A10** Frontend and backend type checks pass. CLOSED in the fifth
+  pass: frontend `tsc --noEmit -p tsconfig.json` exit 0 over the **test-inclusive**
+  program, backend `tsc --noEmit -p tsconfig.build.json` exit 0 with a 10240 MB
+  heap. Typecheck is the only gate that sees an arity change, so the wider
+  program is the one that matters after a signature change.
+- **BSN-01-A11** Cycle self-tests and cycle gates pass in both repositories.
+  CLOSED in the fifth pass. **Self-tests first**, because a gate that resolves no
+  edges reports zero vacuously: backend `check:cycles:self-test` → "madge names
+  the cycle files in its output", 2/2; frontend `check:feature-cycles:self-test`
+  → "detector sees a planted cycle and only that". Then the gates: no circular
+  dependency in either repo, and `check:feature-cycles` PASS over **4,839
+  resolved imports** — the resolved-import count being the anti-vacuity signal.
+- **BSN-01-A12** `frontend/PAGES.md` records the routes and measured status.
+  CLOSED in the fifth pass — see BSN-05-080 for the entries added.
+
 
 Closed in the fourth pass (2026-09-19):
 
@@ -244,58 +300,9 @@ Closed in the fourth pass (2026-09-19):
   distinct destinations with correct active states.
 - [ ] **BSN-01-A05** Standalone and product-linked projects both navigate
   correctly.
-- [x] **BSN-01-A06** Unauthorized destinations are absent and direct URL access
-  is denied by the backend for BSN-01-owned routes. CLOSED in the fifth pass —
-  no database needed, because the specs boot the Nest application with the
-  services mocked. 27 e2e tests across four controllers
-  (`files.controller.e2e-spec.ts`, `managed-products-insights.e2e-spec.ts`,
-  `comment-drafts.controller.e2e-spec.ts`, `updates-cross-tenant.e2e-spec.ts`)
-  assert 401 without a token and 403 for a caller lacking the exact key, on every
-  new surface: files list/upload/signed-url/delete, product insights, and
-  draft generation. **Each negative is paired with a positive** — the same route
-  with the correct key is NOT blocked — because a 403 assertion passes just as
-  well when the route is broken for an unrelated reason.
-  A guard audit was run alongside: all four controllers carry
-  `@UseGuards(JwtAuthGuard, PermissionGuard)` at class level with
-  `@RequirePermission` on every handler. `PermissionGuard` is not global, so this
-  had to be confirmed rather than assumed.
-- [x] **BSN-01-A07** No scope exceeds nine primary destinations. CLOSED in the
-  fifth pass, and it is one of the few acceptance checks that needs no browser
-  because the ceiling is a pure property of the catalog. `build-nav-model.test.ts`
-  resolves the model for a caller holding `ALL_BUILD_PERMISSIONS` with
-  `feedbucket` enabled — the widest possible nav — across all four scope types
-  and asserts `primary.length <= BUILD_NAV_MAX_PRIMARY`, reading the exported
-  constant rather than a literal, so raising the constant cannot silently pass
-  the check. Each catalog file additionally pins its own cap. Adding Feedback
-  and Insights took the product scope from 4 primary destinations to 6, leaving
-  three of headroom; nothing had to be demoted to More tools.
 - [ ] **BSN-01-A08** Create and update reject orphan projects and cross-workspace
   product links; the orphan audit reports zero unresolved rows or a named
   quarantine list.
-- [x] **BSN-01-A09** Navigation model, route-access, frontend contract, backend
-  controller, and tenant-isolation tests pass. CLOSED in the fifth pass, all five
-  named layers run and green: navigation model and route-access
-  (`lib/build`, `lib/rbac` — 129 suites / 1,094 tests), frontend contracts
-  (`hooks/api/build`, included in that run), backend controllers
-  (`src/modules/build` — 271 of 272 suites, the one failure being a broken
-  detector in the notifications lane, see the README), and tenant isolation
-  (`scope-directory-membership-gate.spec.ts`,
-  `comment-drafts.isolation.spec.ts`, plus 27 controller e2e tests asserting
-  cross-tenant **404 rather than 403**).
-- [x] **BSN-01-A10** Frontend and backend type checks pass. CLOSED in the fifth
-  pass: frontend `tsc --noEmit -p tsconfig.json` exit 0 over the **test-inclusive**
-  program, backend `tsc --noEmit -p tsconfig.build.json` exit 0 with a 10240 MB
-  heap. Typecheck is the only gate that sees an arity change, so the wider
-  program is the one that matters after a signature change.
-- [x] **BSN-01-A11** Cycle self-tests and cycle gates pass in both repositories.
-  CLOSED in the fifth pass. **Self-tests first**, because a gate that resolves no
-  edges reports zero vacuously: backend `check:cycles:self-test` → "madge names
-  the cycle files in its output", 2/2; frontend `check:feature-cycles:self-test`
-  → "detector sees a planted cycle and only that". Then the gates: no circular
-  dependency in either repo, and `check:feature-cycles` PASS over **4,839
-  resolved imports** — the resolved-import count being the anti-vacuity signal.
-- [x] **BSN-01-A12** `frontend/PAGES.md` records the routes and measured status.
-  CLOSED in the fifth pass — see BSN-05-080 for the entries added.
 
 ## Evidence Required to Close
 

@@ -133,6 +133,29 @@ duplicated as TODO checkboxes.
 
 ## Completed Implementation Inventory
 
+### Closed in the fifth pass (2026-09-19)
+
+Each item below was verified against source before closing; the evidence is the
+reason it is here rather than in the checklist above.
+
+- **BSN-02-A06** A starred off-page scope survives reconcile and a revoked
+  stored scope disappears. CLOSED in the fifth pass — no browser needed, because
+  reconciliation is resolve-by-id, not browse-page-dependent.
+  `use-reconciled-build-scopes.test.tsx` seeds `project:999`, a key absent from
+  any browse page, mocks the resolve hook to return it, and asserts it survives
+  in `entries` with `onPrune` never called. The revoked half is the same test's
+  mirror: a stored scope the resolve call does not return is pruned.
+- **BSN-02-A12** Focused frontend, backend, cache-isolation, and
+  cross-tenant tests pass. CLOSED in the fifth pass. Focused frontend and backend
+  runs are recorded under BSN-01-A09. Cache isolation and cross-tenant are named
+  explicitly here because they are the ones that fail silently:
+  `build-scope-cross-organization-isolation`, `build-scope-cross-tab-reconciliation`,
+  `query-scope-isolation` and `build-cache-sync` → 4 suites / 40 tests pass. The
+  first of those proves the **scoped query hash** is the guard — it includes a
+  case showing a plain unscoped `QueryClient` is the failure mode — rather than
+  the client container, which is the distinction that makes the test meaningful.
+
+
 - **BSN-02-001/002/004/007/008** — one bounded, validated, server-searched
   directory and resolve contract exists with deterministic page caps.
 - **BSN-02-010/011/012/013/018** — the client uses server search, nests valid
@@ -187,13 +210,6 @@ behavior regresses:
   screen-reader users.
 - [ ] **BSN-02-A05** Revoking access removes a scope from search, stars, and
   recents without requiring local-storage cleanup.
-- [x] **BSN-02-A06** A starred off-page scope survives reconcile and a revoked
-  stored scope disappears. CLOSED in the fifth pass — no browser needed, because
-  reconciliation is resolve-by-id, not browse-page-dependent.
-  `use-reconciled-build-scopes.test.tsx` seeds `project:999`, a key absent from
-  any browse page, mocks the resolve hook to return it, and asserts it survives
-  in `entries` with `onPrune` never called. The revoked half is the same test's
-  mirror: a stored scope the resolve call does not return is pruned.
 - [ ] **BSN-02-A07** Rename, move, archive, restore, and delete behavior matches
   the lifecycle contract.
 - [ ] **BSN-02-A08** Rapid queries and organization switches never render late
@@ -202,15 +218,6 @@ behavior regresses:
 - [ ] **BSN-02-A10** Desktop, tablet, and mobile selector journeys pass.
 - [ ] **BSN-02-A11** Directory and resolve queries remain bounded and use
   verified indexes.
-- [x] **BSN-02-A12** Focused frontend, backend, cache-isolation, and
-  cross-tenant tests pass. CLOSED in the fifth pass. Focused frontend and backend
-  runs are recorded under BSN-01-A09. Cache isolation and cross-tenant are named
-  explicitly here because they are the ones that fail silently:
-  `build-scope-cross-organization-isolation`, `build-scope-cross-tab-reconciliation`,
-  `query-scope-isolation` and `build-cache-sync` → 4 suites / 40 tests pass. The
-  first of those proves the **scoped query hash** is the guard — it includes a
-  case showing a plain unscoped `QueryClient` is the failure mode — rather than
-  the client container, which is the distinction that makes the test meaningful.
 
 ## Evidence Required to Close
 

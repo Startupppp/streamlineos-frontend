@@ -1,8 +1,9 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { createElement } from "react";
 import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useAccess, signalAccessInvalidation, ACCESS_INVALIDATION_KEY_PREFIX } from "@/hooks/api/access";
+import { useAccess, signalAccessInvalidation, ACCESS_INVALIDATION_KEY_PREFIX, useModuleEnabled } from "@/hooks/api/access";
+import { apiClient } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 
 let mockOrgId = "org-alpha";
@@ -147,7 +148,7 @@ describe("BSN-04-035 — access permission cross-tab invalidation", () => {
     });
   });
 
-  it("the storage listener is removed on unmount so stale listeners do not accumulate and fire after the hook is gone", () => {
+  it("the storage listener is removed on unmount so stale listeners do not accumulate and fire after hook is gone", () => {
     const client = makeClient();
     const invalidateSpy = jest.spyOn(client, "invalidateQueries");
 
@@ -164,5 +165,39 @@ describe("BSN-04-035 — access permission cross-tab invalidation", () => {
     });
 
     expect(invalidateSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("BSN-04-A08 — useModuleEnabled shares the access invalidation path so capability changes reconcile cross-tab", () => {
+  it("after a storage event for the same org, useModuleEnabled reflects the updated module state without a manual refresh", async () => {
+    jest.mocked(apiClient.get).mockResolvedValueOnce({
+      isOrgOwner: false,
+      scopes: {},
+      modules: { build: true },
+      canManageOrganizationMembership: false,
+    });
+
+    const client = makeClient();
+    const { result } = renderHook(() => useModuleEnabled("build"), { wrapper: wrap(client) });
+
+    await waitFor(() => expect(result.current).toBe(true));
+
+    jest.mocked(apiClient.get).mockResolvedValueOnce({
+      isOrgOwner: false,
+      scopes: {},
+      modules: { build: false },
+      canManageOrganizationMembership: false,
+    });
+
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: `${ACCESS_INVALIDATION_KEY_PREFIX}:org-alpha`,
+          newValue: Date.now().toString(),
+        }),
+      );
+    });
+
+    await waitFor(() => expect(result.current).toBe(false));
   });
 });

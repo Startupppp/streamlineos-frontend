@@ -81,7 +81,44 @@ duplicated as TODO checkboxes.
 
 ### Permission Matrix
 
-- [x] **BSN-04-001** Complete the source-anchored matrix for every primary
+
+### Unsaved Work
+
+- [ ] **BSN-04-014** Cover browser Back, sidebar links, command navigation,
+  organization switching, and scope selection for every inventoried surface.
+  Organization switching now uses the shared guard; **Browser Back still needs a
+  real browser** — jsdom cannot intercept history navigation — and the full
+  surface-by-entry-point journey matrix remains.
+
+### Revocation and Fallback
+
+BSN-04-020, BSN-04-021 and BSN-04-027 CLOSED in the fourth pass — see the
+Evidence Log.
+
+### Cache and Concurrency
+
+
+### Portal and Tenant Isolation
+
+
+## Completed Implementation Inventory
+
+### Closed in the fifth pass (2026-09-19)
+
+Each item below was verified against source before closing; the evidence is the
+reason it is here rather than in the checklist above.
+
+- **BSN-04-A04** Revoking access removes stale UI and data without a manual
+  refresh. The nav half closed in the fourth pass (the pin prune fires on
+  `isAccessResolved`, and `entries` is computed before the prune effect so a
+  revoked scope never renders). The **data** half is now closed too: with the
+  Build count cache holding `{ count: 7 }`, flipping `useCan("build:tickets:view")`
+  to false makes the hook return `undefined` data **and** `invalidateQueries` is
+  spied on and receives zero calls. That is the "without a manual refresh" clause
+  proven literally rather than assumed. The seam is `approvals.ts:92` —
+  `canView ? query : { ...query, data: undefined }` — so the hook gates its own
+  return rather than depending on anyone remembering to evict the cache.
+- **BSN-04-001** Complete the source-anchored matrix for every primary
   destination, More tool, row action, create action, setting, badge, Pulse, and
   command. CLOSED in the fifth pass. Destinations, More tools and My Work closed
   in the fourth. The remaining categories — row actions, create actions,
@@ -103,23 +140,7 @@ duplicated as TODO checkboxes.
   `build:updates:view`, `build:approvals:decide`, `integrations:git:view`) and
   commands (`command-center-actions.tsx` — tickets, projects, teams, portfolios,
   goals).
-
-### Unsaved Work
-
-- [ ] **BSN-04-014** Cover browser Back, sidebar links, command navigation,
-  organization switching, and scope selection for every inventoried surface.
-  Organization switching now uses the shared guard; **Browser Back still needs a
-  real browser** — jsdom cannot intercept history navigation — and the full
-  surface-by-entry-point journey matrix remains.
-
-### Revocation and Fallback
-
-BSN-04-020, BSN-04-021 and BSN-04-027 CLOSED in the fourth pass — see the
-Evidence Log.
-
-### Cache and Concurrency
-
-- [x] **BSN-04-035** Verify cross-tab storage and Query reconciliation. CLOSED
+- **BSN-04-035** Verify cross-tab storage and Query reconciliation. CLOSED
   in the fifth pass, and the open half was **synchronization**, which the fourth
   pass had mistakenly substituted isolation for. That gap is now real code, not
   a test: `signalAccessInvalidation(orgId)` writes an org-scoped key, and
@@ -129,10 +150,7 @@ Evidence Log.
   org's prefix does **not** invalidate, a key without the prefix does not, and
   the listener is removed on unmount so stale listeners cannot fire after the
   hook is gone. The storage half from the fourth pass is unchanged.
-
-### Portal and Tenant Isolation
-
-- [x] **BSN-04-042** Add cross-organization tests for selector search, direct
+- **BSN-04-042** Add cross-organization tests for selector search, direct
   route access, recents, stars, pins, counts, Pulse, and Quick Create. CLOSED in
   the fifth pass. The fourth pass covered stars, recents, pins, selector hrefs,
   workspace data and Pulse/inbox-count hashing. The two gaps are now closed:
@@ -143,8 +161,71 @@ Evidence Log.
   which shows a plain unscoped `QueryClient` *can* read the data — naming the
   failure mode is what proves the scoped hash is the guard rather than the client
   container.
+- **BSN-04-A01** Navigation and route-access permission catalogs agree for
+  every Build destination, including separate product and project Feedback
+  rows. CLOSED in the fifth pass — and it needs no browser, because catalog
+  agreement is a static property. `lib/build/build-nav-route-access-parity.test.ts`
+  enumerates every destination across all four scope types plus My Work, then
+  asserts three things that each fail on regression: no href resolves to an
+  `unknown` route (so none falls through to access-denied); `drifted()` is
+  empty, where a destination lands in that list whenever its sidebar key is
+  absent from the key `resolveRouteAccess` returns for its path; and every nav
+  key exists in the backend catalog, so no `useCan` gate can be permanently
+  false. Two anti-vacuity guards keep it honest — `destinations.length > 30`
+  and `backendPermissionNames().size > 200` — so a catalog that stopped loading
+  fails rather than passing green. The separate-Feedback-rows clause is covered
+  because `SCOPE_PATHS` includes `/build/managed-products/7`, whose Feedback row
+  resolves to `feedbucket:submissions:view` while the org-scope row resolves to
+  its own owner key.
+  One weakness was found and repaired rather than recorded: the sibling test
+  `"keeps no known-drift entry that has since been aligned"` evaluated
+  `KNOWN_KEY_DRIFT.filter(...)` against an **empty** allowlist, which is `[]`
+  unconditionally — it could not fail and proved nothing. It now asserts the
+  allowlist is empty, which bites precisely when someone suppresses a drift by
+  allowlisting it instead of fixing it.
+- **BSN-04-A02** A user cannot reach a hidden destination by entering its
+  URL directly. CLOSED in the fifth pass. `page-level-gates.test.ts` walks every
+  route file under `app/(authenticated)/build/**` and `/portal/**` **from disk**
+  — never a hand-written list, which is how this class of test goes stale and
+  passes green forever — and asserts every one resolves to a `permission` gate,
+  none session-only or ungated. The mechanism is `enforceRouteAccess` in
+  `build/layout.tsx` and `portal/layout.tsx`, which reads the real request path
+  from headers at runtime, so the layout gate is always as specific as the
+  registry demands for the sub-path. Where a page *additionally* names a key
+  itself, the key must match what `resolveRouteAccess` returns for that path;
+  **zero mismatches**. Two anti-vacuity floors guard it: >60 pages enumerated,
+  and >5 pages naming a key explicitly, so neither a broken glob nor a regex that
+  matches nothing can pass.
+  Note this is the **frontend** half. Backend direct-URL denial is BSN-01-A06,
+  proven separately by 27 controller e2e tests — and the frontend gate is not the
+  boundary in any case: middleware is bypassable in this stack, so
+  `requirePermission()` server-side and `PermissionGuard` in the API are what
+  actually enforce.
+- **BSN-04-A05** Project, product, and workspace loss follow the Lifecycle
+  Contract fallback order. CLOSED in the fifth pass. `build-scope-fallback.test.ts`
+  now covers all three scope types against the contract's ordered rules: a lost
+  **linked project** offers its managed-product parent; a lost **standalone
+  project** offers its PM workspace parent; a lost **product** with no accessible
+  parent falls back to All of Build; a lost **workspace** does the same, because
+  a workspace has no parent scope to offer — that case had no coverage before
+  this pass. The two terminal rules are pinned beside them: zero Build access
+  yields the empty state rather than a recovery link, and the organization root
+  never invents a parent above itself.
+- **BSN-04-A09** Cross-tenant, contractor, and portal negative tests pass.
+  CLOSED in the fifth pass. Contractor and portal negatives were already covered
+  (BSN-04-040/041/043/044). The cross-tenant half is now covered on the four new
+  surfaces: a caller signed into another org with the **correct** permission key
+  passes the guard and receives **404, never 403**, asserted on files, product
+  insights, draft generation and updates. A no-membership case is asserted
+  beside it — `MembershipStateService.resolve` returning `{ active: false }`
+  yields 403 `ORG_MEMBERSHIP_INACTIVE`.
+  **Stated limitation:** these specs mock the service layer, so what is proven is
+  that the *controller* propagates 404 rather than 403 — the existence oracle is
+  closed at the HTTP boundary. That the real services return 404 for a
+  cross-tenant id is proven separately by their unit specs
+  (`scope-directory-membership-gate.spec.ts`, `comment-drafts.isolation.spec.ts`),
+  not by these. An end-to-end proof over real rows still needs a database.
 
-## Completed Implementation Inventory
 
 - **BSN-04-002/003/004/005/006/007/008** — destination keys, Feedback owners,
   settings/client-portal authority, drift detection, and direct-route denial
@@ -183,46 +264,6 @@ inert, which is what was added:
 
 ## Acceptance Checklist
 
-- [x] **BSN-04-A01** Navigation and route-access permission catalogs agree for
-  every Build destination, including separate product and project Feedback
-  rows. CLOSED in the fifth pass — and it needs no browser, because catalog
-  agreement is a static property. `lib/build/build-nav-route-access-parity.test.ts`
-  enumerates every destination across all four scope types plus My Work, then
-  asserts three things that each fail on regression: no href resolves to an
-  `unknown` route (so none falls through to access-denied); `drifted()` is
-  empty, where a destination lands in that list whenever its sidebar key is
-  absent from the key `resolveRouteAccess` returns for its path; and every nav
-  key exists in the backend catalog, so no `useCan` gate can be permanently
-  false. Two anti-vacuity guards keep it honest — `destinations.length > 30`
-  and `backendPermissionNames().size > 200` — so a catalog that stopped loading
-  fails rather than passing green. The separate-Feedback-rows clause is covered
-  because `SCOPE_PATHS` includes `/build/managed-products/7`, whose Feedback row
-  resolves to `feedbucket:submissions:view` while the org-scope row resolves to
-  its own owner key.
-  One weakness was found and repaired rather than recorded: the sibling test
-  `"keeps no known-drift entry that has since been aligned"` evaluated
-  `KNOWN_KEY_DRIFT.filter(...)` against an **empty** allowlist, which is `[]`
-  unconditionally — it could not fail and proved nothing. It now asserts the
-  allowlist is empty, which bites precisely when someone suppresses a drift by
-  allowlisting it instead of fixing it.
-- [x] **BSN-04-A02** A user cannot reach a hidden destination by entering its
-  URL directly. CLOSED in the fifth pass. `page-level-gates.test.ts` walks every
-  route file under `app/(authenticated)/build/**` and `/portal/**` **from disk**
-  — never a hand-written list, which is how this class of test goes stale and
-  passes green forever — and asserts every one resolves to a `permission` gate,
-  none session-only or ungated. The mechanism is `enforceRouteAccess` in
-  `build/layout.tsx` and `portal/layout.tsx`, which reads the real request path
-  from headers at runtime, so the layout gate is always as specific as the
-  registry demands for the sub-path. Where a page *additionally* names a key
-  itself, the key must match what `resolveRouteAccess` returns for that path;
-  **zero mismatches**. Two anti-vacuity floors guard it: >60 pages enumerated,
-  and >5 pages naming a key explicitly, so neither a broken glob nor a regex that
-  matches nothing can pass.
-  Note this is the **frontend** half. Backend direct-URL denial is BSN-01-A06,
-  proven separately by 27 controller e2e tests — and the frontend gate is not the
-  boundary in any case: middleware is bypassable in this stack, so
-  `requirePermission()` server-side and `PermissionGuard` in the API are what
-  actually enforce.
 - [ ] **BSN-04-A03** Every inventoried dirty surface is covered by the shared
   unsaved-work guard for every scope-changing entry point. **Every surface is now
   covered and every entry point but one is proven** (fifth pass).
@@ -245,18 +286,6 @@ inert, which is what was added:
   the App Router acts on, so the guard cannot be observed intercepting it. This
   needs a real browser and is the only entry point in the Lifecycle Contract left
   unproven.
-- [ ] **BSN-04-A04** Revoking access removes stale UI and data without a manual
-  storage reset.
-- [x] **BSN-04-A05** Project, product, and workspace loss follow the Lifecycle
-  Contract fallback order. CLOSED in the fifth pass. `build-scope-fallback.test.ts`
-  now covers all three scope types against the contract's ordered rules: a lost
-  **linked project** offers its managed-product parent; a lost **standalone
-  project** offers its PM workspace parent; a lost **product** with no accessible
-  parent falls back to All of Build; a lost **workspace** does the same, because
-  a workspace has no parent scope to offer — that case had no coverage before
-  this pass. The two terminal rules are pinned beside them: zero Build access
-  yields the empty state rather than a recovery link, and the organization root
-  never invents a parent above itself.
 - [ ] **BSN-04-A06** Zero accessible Build scopes shows the empty state rather
   than inventing a parent. **The "rather than inventing a parent" half is
   CLOSED** (fifth pass). `build-scope-recovery.test.tsx` asserts that under
@@ -273,20 +302,24 @@ inert, which is what was added:
 - [ ] **BSN-04-A07** Rapid scope and organization switching never leaks old
   results.
 - [ ] **BSN-04-A08** Cross-tab permission and capability changes reconcile.
-- [x] **BSN-04-A09** Cross-tenant, contractor, and portal negative tests pass.
-  CLOSED in the fifth pass. Contractor and portal negatives were already covered
-  (BSN-04-040/041/043/044). The cross-tenant half is now covered on the four new
-  surfaces: a caller signed into another org with the **correct** permission key
-  passes the guard and receives **404, never 403**, asserted on files, product
-  insights, draft generation and updates. A no-membership case is asserted
-  beside it — `MembershipStateService.resolve` returning `{ active: false }`
-  yields 403 `ORG_MEMBERSHIP_INACTIVE`.
-  **Stated limitation:** these specs mock the service layer, so what is proven is
-  that the *controller* propagates 404 rather than 403 — the existence oracle is
-  closed at the HTTP boundary. That the real services return 404 for a
-  cross-tenant id is proven separately by their unit specs
-  (`scope-directory-membership-gate.spec.ts`, `comment-drafts.isolation.spec.ts`),
-  not by these. An end-to-end proof over real rows still needs a database.
+  **The permission half and the module-capability half are CLOSED** (fifth pass).
+  `signalAccessInvalidation(orgId)` plus the `storage` listener in `useAccess`
+  invalidates `access.me()`, and `useModuleEnabled` reads
+  `data.modules[...]` from that same query (`access.ts:149-153`), so a module
+  being enabled or disabled in one tab reconciles in another with no extra
+  wiring — proven by a test that flips `modules.build` between two fetches and
+  waits for the value to follow.
+  ⚠ **Still open, and it is a real defect rather than missing coverage:**
+  `useEntitlements` is **not** on that path. `entitlements.ts:19-29` fetches
+  `/billing/entitlements` under `growthAndSignQueryKeys.billing.entitlements()`
+  with `staleTime: 900_000`, while the listener invalidates only
+  `platformCoreQueryKeys.access.me()` — a different key. So a **plan** change
+  (FREE → PAID, or a downgrade) made in one tab does not reach another tab for up
+  to **15 minutes**, during which the stale tab can offer paid surfaces the plan
+  no longer covers. Closing it means either widening the access listener to the
+  billing key or adding a parallel entitlements signal; both are design decisions
+  about which cache the billing lane owns, so this was reported rather than
+  patched from the Build lane.
 - [ ] **BSN-04-A10** Offline state identifies stale data and blocks unsafe
   writes.
 - [ ] **BSN-04-A11** Permission, route-access, module, cycle, cache-isolation,

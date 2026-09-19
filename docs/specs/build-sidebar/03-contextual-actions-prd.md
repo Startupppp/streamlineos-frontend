@@ -116,7 +116,72 @@ BSN-03-016 CLOSED in the fourth pass — see the Evidence Log.
 > amending this PRD. Implementing on the current wording would ship a spurious
 > endpoint.
 
-- [x] **BSN-03-020** Implement the Build Inbox badge semantics defined above.
+
+### Agent Pulse
+
+- [ ] **BSN-03-043** Show evidence, affected records, proposed change, impact,
+  and confidence on generated drafts. **The display half is CLOSED** (fifth
+  pass): migration `1124_build_comment_draft_evidence` adds `evidence`,
+  `proposed_change`, `impact`, `confidence` and `affected_record_ids` to
+  `build.comment_drafts`; `AgentPulseService.findCommentDraft` projects them;
+  the backend and frontend contracts match field for field, all
+  `.nullable().optional()` so the four non-draft signal types still parse; and
+  `build-agent-pulse.tsx` renders a confidence badge plus a tooltip carrying
+  evidence, proposed change, impact and the affected-record count (16 tests).
+  **Still open, and it is not a display gap:** *nothing writes these columns.*
+  `CommentDraftsService.upsert` is the only writer and it persists
+  `{ orgId, membershipId, ticketId, body }` only — there is no draft
+  **generator** anywhere in the module, so in production every one of these
+  fields is NULL and the tooltip never renders. Closing this needs an AI
+  generation path that produces the fields, which no item in this PRD owns.
+BSN-03-044 CLOSED in the fourth pass — see the Evidence Log.
+
+### Client Portal Capability
+
+BSN-03-052 CLOSED in the fourth pass — see the Evidence Log.
+
+## Completed Implementation Inventory
+
+### Closed in the fifth pass (2026-09-19)
+
+Each item below was verified against source before closing; the evidence is the
+reason it is here rather than in the checklist above.
+
+- **BSN-03-A02** Build Inbox and global Notifications can show different counts
+  and each remains correct against its own data owner. The optional
+  `sourceModule` made this provable: the bell calls `unreadCount()` and the Build
+  badge calls `unreadCount("build")`, which emit key arrays of different length
+  (`platform-core.ts:24-27`). The risk here was never the arithmetic, it was
+  **cache collision** — a shared key would silently force the two numbers equal,
+  the same defect the backend guards with its `unread-count:${sourceModule}`
+  sub-key. So the test does not merely compare keys: it seeds one `QueryClient`
+  with `{ count: 10 }` globally and `{ count: 3 }` for Build and asserts both
+  survive side by side. With one key, the second `setQueryData` would overwrite
+  the first and the test would fail.
+- **BSN-03-040** Bind every Pulse query and cache key to organization, actor,
+  active scope, filters, and authority version. Organization and actor binding
+  closed in the fourth pass. **Active scope and filters closed in the fifth**:
+  the endpoint now accepts a `.strict()`-validated optional
+  `projectId`/`managedProductId`/`pmWorkspaceId`, and all five tier queries bind
+  it as an **indexed org-led SQL predicate** — an `innerJoin` onto `projects` for
+  product and workspace scope, an `and()` condition for project scope — never a
+  JS post-filter. Standing in one project can no longer surface a signal about
+  another.
+  The frontend half is the part that is easy to get wrong: the scope goes in the
+  query key **ARRAY**, not just the tenant hash. `invalidateQueries` matches the
+  array, so a scope that only affected the hash could never be invalidated, and
+  two scopes would share one cached signal. `agentPulse(scopeKey)` now takes the
+  scope and `useAgentPulse(scope)` derives it from the pathname. A cache-isolation
+  test proves two scopes issue independent fetches. 22 backend tests.
+  ⚠ This factory change was reverted once by a concurrent session and restored;
+  its loss surfaced only as a single `tsc` arity error, which is how close it came
+  to silently shipping unscoped.
+  **Authority version is NOT included, and the reason is structural:**
+  `access_versions.permissionsVersion` is backend-only, Redis-cached, and exposed
+  by no endpoint. Putting it in a frontend query key would require surfacing it
+  through the access response first — a redesign outside this item. Recorded as a
+  known limitation rather than silently dropped.
+- **BSN-03-020** Implement the Build Inbox badge semantics defined above.
   CLOSED in the fifth pass. The contradiction recorded above was real and had
   **three** disagreeing definitions, not two: `/build/inbox` rendered the
   platform-wide notifications feed, the badge counted pending approvals from a
@@ -132,7 +197,7 @@ BSN-03-016 CLOSED in the fourth pass — see the Evidence Log.
   `notification-events-build.catalog.ts` declares `sourceModule: "build"` and
   `notification-dispatch-persistence.service.ts:125` persists it, so the filter
   selects real rows rather than yielding a permanently-zero badge.
-- [x] **BSN-03-021** Replace the global notification unread count with the
+- **BSN-03-021** Replace the global notification unread count with the
   canonical Build Inbox count. CLOSED in the fifth pass.
   `GET /notifications/unread-count` now accepts an **optional** `sourceModule`,
   validated by a `.strict()` schema. Optional is load-bearing: the header bell
@@ -150,7 +215,7 @@ BSN-03-016 CLOSED in the fourth pass — see the Evidence Log.
   index was added. This is a planner argument, not a measurement — it is
   unverified until run against a real database with `EXPLAIN (ANALYZE, BUFFERS)`
   as `streamline_app` with the tenant GUC set.
-- [x] **BSN-03-024** Verify acknowledgement, new-event, permission-revocation,
+- **BSN-03-024** Verify acknowledgement, new-event, permission-revocation,
   reconnect, and cross-tab update behavior. CLOSED in the fifth pass. The fourth
   pass closed acknowledgement, new-event (pending and escalated),
   permission-revocation and cross-tenant isolation. Reconnect and cross-tab are
@@ -159,34 +224,7 @@ BSN-03-016 CLOSED in the fourth pass — see the Evidence Log.
   `signalBuildInboxInvalidation()` storage event invalidates the Build-filtered
   unread count in a sibling tab while an unrelated key does not, with the
   listener removed on unmount.
-
-### Agent Pulse
-
-- [ ] **BSN-03-040** Bind every Pulse query and cache key to organization,
-  actor, active scope, filters, and authority version. **Organization and actor
-  binding is CLOSED** (fourth pass): all five signal queries were audited at
-  source and each binds `orgId` plus the actor's membership or user id, and
-  `CACHE_KEYS` holds no agent-pulse entry at all, so there is no cache key to
-  leak through. **Still open:** active scope, filters and authority-version
-  segments are not represented — the endpoint is still organization-wide rather
-  than Build-scope-aware.
-- [ ] **BSN-03-043** Show evidence, affected records, proposed change, impact,
-  and confidence on generated drafts. **The display half is CLOSED** (fifth
-  pass): migration `1124_build_comment_draft_evidence` adds `evidence`,
-  `proposed_change`, `impact`, `confidence` and `affected_record_ids` to
-  `build.comment_drafts`; `AgentPulseService.findCommentDraft` projects them;
-  the backend and frontend contracts match field for field, all
-  `.nullable().optional()` so the four non-draft signal types still parse; and
-  `build-agent-pulse.tsx` renders a confidence badge plus a tooltip carrying
-  evidence, proposed change, impact and the affected-record count (16 tests).
-  **Still open, and it is not a display gap:** *nothing writes these columns.*
-  `CommentDraftsService.upsert` is the only writer and it persists
-  `{ orgId, membershipId, ticketId, body }` only — there is no draft
-  **generator** anywhere in the module, so in production every one of these
-  fields is NULL and the tooltip never renders. Closing this needs an AI
-  generation path that produces the fields, which no item in this PRD owns.
-BSN-03-044 CLOSED in the fourth pass — see the Evidence Log.
-- [x] **BSN-03-045** Preserve failed drafts and provide a bounded retry path.
+- **BSN-03-045** Preserve failed drafts and provide a bounded retry path.
   CLOSED in the fifth pass. Preservation: `retry_count` and `last_error` are
   additive nullable columns in `1124`, and a failure records the error against
   the draft rather than deleting it. Bound: `COMMENT_DRAFT_MAX_RETRIES = 3` is a
@@ -202,7 +240,7 @@ BSN-03-044 CLOSED in the fourth pass — see the Evidence Log.
   Cross-tenant and no-membership cases are pinned: another org's draft **404s**
   without mutating (never 403 — the id is not an existence oracle) and a caller
   with no membership is refused before any draft is read. 25 backend tests.
-- [x] **BSN-03-046** Verify that low-confidence and empty states stay quiet.
+- **BSN-03-046** Verify that low-confidence and empty states stay quiet.
   CLOSED in the fifth pass. Empty was already quiet; confidence is now
   represented and filtered — `findCommentDraft` excludes
   `confidence < COMMENT_DRAFT_MIN_CONFIDENCE` (50) in the SQL predicate, while
@@ -210,12 +248,43 @@ BSN-03-044 CLOSED in the fourth pass — see the Evidence Log.
   silently dropped. Pinned by a named test in `agent-pulse.service.spec.ts`.
   Note this verifies the *quietness rule*; it cannot verify real low-confidence
   drafts until BSN-03-043's generator exists to produce a score.
+- **BSN-03-A01** Every Quick Create Matrix cell opens with the stated
+  editable defaults or remains correctly hidden. CLOSED in the fifth pass.
+  `build-quick-create.test.tsx` covers the dialog layer directly: at PM workspace
+  scope the project dialog opens with `{ pmWorkspaceId: "ws-1" }`, and at product
+  scope with `{ pmWorkspaceId: "ws-1", managedProductId: 7 }`. The hidden cells
+  are covered at the nav-model layer in `build-nav-model.test.ts`, so the matrix
+  is proven on both the "opens preselected" and "stays hidden" axes.
+- **BSN-03-A04** Revoked or disabled tools disappear from More tools and
+  pins immediately after reconciliation. CLOSED in the fifth pass, with the two
+  causes kept **distinct** because they fail differently: a *revoked* tool has
+  lost its permission key, while a *disabled* tool's module is off and the key is
+  still held. `build-nav-model.test.ts` proves both remove the tool from
+  `moreTools` **and** from `pinned` even when the id is still in stored
+  `pinnedIds` — the pin half at the model layer had no coverage before this pass,
+  and a stale pin is the more dangerous of the two because it survives in storage.
+  The component layer was already covered by `build-more-tools-menu.test.tsx`.
+- **BSN-03-A06** Agent proposals cannot perform meaningful writes without
+  explicit approval. CLOSED in the fifth pass. The generator's only write is a
+  **draft**; it never posts a comment or touches a ticket's assignment, dates,
+  status, scope, budget, permissions or client-visible publication — the list this
+  PRD calls meaningful. Proven by an assertion that **bites** rather than one that
+  merely confirms the happy path: the `Db` double carries tracked `update`,
+  `delete` and `insert` mocks, so any mutation added to the service later fails
+  the test. A second test pins the delegate call exactly once with the caller's
+  own org, membership and ticket; a third asserts `CommentDraftsService` exposes
+  no `publishDraft`/`applyDraft`/`publishProposal`/`applyProposal` on its
+  prototype, so an approval-bypassing method cannot be added unnoticed.
+- **BSN-03-A07** Client portal appears only when both enabled and
+  authorized. CLOSED in the fifth pass at the **component** layer, not just the
+  model layer. `build-nav-link-badge-a11y.test.tsx` renders the real nav group
+  through `resolveBuildNavModel` + `BuildNavLink` and asserts no link whose href
+  matches `/client-portal` is in the DOM when the project capability is disabled
+  **even though the permission is held** — separating the two conditions, which
+  a permission-only test would not. A paired test asserts the link IS present
+  when the capability is enabled, so the negative assertion cannot pass
+  vacuously.
 
-### Client Portal Capability
-
-BSN-03-052 CLOSED in the fourth pass — see the Evidence Log.
-
-## Completed Implementation Inventory
 
 Closed in the fourth pass (2026-09-19):
 
@@ -257,25 +326,7 @@ Closed in the fourth pass (2026-09-19):
 
 ## Acceptance Checklist
 
-- [x] **BSN-03-A01** Every Quick Create Matrix cell opens with the stated
-  editable defaults or remains correctly hidden. CLOSED in the fifth pass.
-  `build-quick-create.test.tsx` covers the dialog layer directly: at PM workspace
-  scope the project dialog opens with `{ pmWorkspaceId: "ws-1" }`, and at product
-  scope with `{ pmWorkspaceId: "ws-1", managedProductId: 7 }`. The hidden cells
-  are covered at the nav-model layer in `build-nav-model.test.ts`, so the matrix
-  is proven on both the "opens preselected" and "stays hidden" axes.
-- [ ] **BSN-03-A02** Build Inbox and global Notifications can show different
-  counts and each remains correct against its own data owner.
 - [ ] **BSN-03-A03** Zero-count and no-action states add no visual noise.
-- [x] **BSN-03-A04** Revoked or disabled tools disappear from More tools and
-  pins immediately after reconciliation. CLOSED in the fifth pass, with the two
-  causes kept **distinct** because they fail differently: a *revoked* tool has
-  lost its permission key, while a *disabled* tool's module is off and the key is
-  still held. `build-nav-model.test.ts` proves both remove the tool from
-  `moreTools` **and** from `pinned` even when the id is still in stored
-  `pinnedIds` — the pin half at the model layer had no coverage before this pass,
-  and a stale pin is the more dangerous of the two because it survives in storage.
-  The component layer was already covered by `build-more-tools-menu.test.tsx`.
 - [ ] **BSN-03-A05** Agent Pulse never links to an unrelated scope and follows
   the priority order under concurrent signals. **The priority half is CLOSED**
   (fifth pass) and proven by a stronger technique than a return-value check:
@@ -292,26 +343,6 @@ Closed in the fourth pass (2026-09-19):
      with and cannot intercept a row the `WHERE` clause should have excluded. What
      is proven is that the service passes `projectId` through unchanged rather
      than fabricating it; cross-org exclusion needs live seed rows.
-- [x] **BSN-03-A06** Agent proposals cannot perform meaningful writes without
-  explicit approval. CLOSED in the fifth pass. The generator's only write is a
-  **draft**; it never posts a comment or touches a ticket's assignment, dates,
-  status, scope, budget, permissions or client-visible publication — the list this
-  PRD calls meaningful. Proven by an assertion that **bites** rather than one that
-  merely confirms the happy path: the `Db` double carries tracked `update`,
-  `delete` and `insert` mocks, so any mutation added to the service later fails
-  the test. A second test pins the delegate call exactly once with the caller's
-  own org, membership and ticket; a third asserts `CommentDraftsService` exposes
-  no `publishDraft`/`applyDraft`/`publishProposal`/`applyProposal` on its
-  prototype, so an approval-bypassing method cannot be added unnoticed.
-- [x] **BSN-03-A07** Client portal appears only when both enabled and
-  authorized. CLOSED in the fifth pass at the **component** layer, not just the
-  model layer. `build-nav-link-badge-a11y.test.tsx` renders the real nav group
-  through `resolveBuildNavModel` + `BuildNavLink` and asserts no link whose href
-  matches `/client-portal` is in the DOM when the project capability is disabled
-  **even though the permission is held** — separating the two conditions, which
-  a permission-only test would not. A paired test asserts the link IS present
-  when the capability is enabled, so the negative assertion cannot pass
-  vacuously.
 - [ ] **BSN-03-A08** Collapsed and expanded controls have equivalent accessible
   names and behavior.
 - [ ] **BSN-03-A09** Focused contract, component, permission, cache, and browser
