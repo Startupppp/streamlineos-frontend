@@ -7,14 +7,12 @@ import {
   KbBarChart2Icon,
   KbBookOpenTextIcon,
   KbClipboardCheckIcon,
-  KbClockIcon,
   KbLayoutGridIcon,
   KbLayoutTemplateIcon,
   KbLockIcon,
   KbMessageSquareIcon,
   KbSearchIcon,
   KbSettingsIcon,
-  KbStarIcon,
   KbTrash2Icon,
   KbUploadIcon,
   KbUsersIcon,
@@ -38,10 +36,8 @@ import {
   KNOWLEDGE_BASE,
   KB_ANALYTICS,
   KB_CHAT,
-  KB_FAVORITES,
   KB_IMPORT,
   KB_PRIVATE,
-  KB_RECENT,
   KB_REVIEWS,
   KB_SETTINGS,
   KB_SHARED,
@@ -84,8 +80,6 @@ function buildAskKbItem(): WikiNavItem {
 function buildPrimaryItems(): WikiNavItem[] {
   return [
     { label: "Wiki", href: KNOWLEDGE_BASE, icon: KbBookOpenTextIcon, exact: true },
-    { label: "Recent", href: KB_RECENT, icon: KbClockIcon },
-    { label: "Favorites", href: KB_FAVORITES, icon: KbStarIcon },
   ];
 }
 

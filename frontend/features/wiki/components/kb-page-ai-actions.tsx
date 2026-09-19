@@ -1,6 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import {
+  Lightbulb,
+  ListTree,
+  MessageSquareText,
+  PenLine,
+} from "lucide-react";
 import { AiActionsMenu, type AiAction, type AiActionResult } from "@/components/ai";
 import { KbDocAskSheet } from "@/components/kb/kb-doc-ask-sheet";
 import { streamKbDocAi, type KbDocAiAction } from "@/hooks/api/kb/doc-ai-stream";
@@ -36,6 +42,11 @@ export function KbPageAiActions({
     onInsertSummary?.(text);
   }
 
+  async function runAsk(): Promise<AiActionResult> {
+    setAskOpen(true);
+    return { text: "" };
+  }
+
   function streamAction(action: KbDocAiAction) {
     return async (signal?: AbortSignal, onToken?: (chunk: string) => void): Promise<AiActionResult> => {
       const outcome = await streamKbDocAi({
@@ -52,8 +63,9 @@ export function KbPageAiActions({
   const actions: AiAction[] = [
     {
       key: "summarize",
-      label: "Summarize this page",
-      description: "Concise bullet-point summary",
+      label: "Summarize",
+      description: "Key points as concise bullets",
+      icon: ListTree,
       run: streamAction("summarize"),
       onApply: onInsertSummary ? handleInsertSummary : undefined,
       applyLabel: "Insert at top",
@@ -61,16 +73,15 @@ export function KbPageAiActions({
     {
       key: "ask",
       label: "Ask about this page",
-      description: "Question scoped to this document only",
-      run: async (): Promise<AiActionResult> => {
-        setAskOpen(true);
-        return { text: "" };
-      },
+      description: "Answers grounded in this page only",
+      icon: MessageSquareText,
+      run: runAsk,
     },
     {
       key: "improve",
       label: "Improve writing",
-      description: "Get a rewritten draft — you apply it",
+      description: "Rewritten draft you review and apply",
+      icon: PenLine,
       run: streamAction("improve"),
       onApply: onApplyImprovement ? handleApplyImprovement : undefined,
       applyLabel: "Replace page draft",
@@ -78,7 +89,8 @@ export function KbPageAiActions({
     {
       key: "suggest-related",
       label: "Suggest related topics",
-      description: "Topics that complement this page",
+      description: "Ideas that extend this page",
+      icon: Lightbulb,
       run: streamAction("suggest-related"),
     },
   ];

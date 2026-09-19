@@ -19,6 +19,8 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useMyDelegations, useCreateDelegation, useDeleteDelegation } from "@/hooks/api/hr/hr-workflows";
 import { HR_WORKFLOW_OBJECT_TYPES, HR_WORKFLOW_OBJECT_TYPE_LABELS } from "@/types/hr/workflows";
 
+const ALL_OBJECT_TYPES = "all";
+
 const schema = z.object({
   delegateUserId: z.string().min(1, "Delegate is required"),
   objectType: z.string().optional(),
@@ -41,14 +43,14 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { delegateUserId: "", objectType: "", startsAt: "", endsAt: "", reason: "" },
+    defaultValues: { delegateUserId: "", objectType: ALL_OBJECT_TYPES, startsAt: "", endsAt: "", reason: "" },
   });
 
   const onSubmit = useCallback((data: FormValues) => {
     create.mutate(
       {
         delegateUserId: data.delegateUserId,
-        objectType: data.objectType || undefined,
+        objectType: data.objectType === ALL_OBJECT_TYPES ? undefined : data.objectType || undefined,
         startsAt: new Date(data.startsAt).toISOString(),
         endsAt: new Date(data.endsAt).toISOString(),
         reason: data.reason,
@@ -145,7 +147,7 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
                       <SelectTrigger><SelectValue placeholder="All types" /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">All types</SelectItem>
+                      <SelectItem value={ALL_OBJECT_TYPES}>All types</SelectItem>
                       {HR_WORKFLOW_OBJECT_TYPES.map((t) => (
                         <SelectItem key={t} value={t} className="text-xs">{HR_WORKFLOW_OBJECT_TYPE_LABELS[t]}</SelectItem>
                       ))}

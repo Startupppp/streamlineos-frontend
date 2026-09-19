@@ -165,7 +165,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
             </h2>
           </div>
           <div className={WIKI_PAGE_CARD_GRID_CLASS}>
-            {recentPages.slice(0, 6).map((page) => (
+            {recentPages.map((page) => (
               <WikiPageCard
                 key={page.id}
                 icon={page.icon}
@@ -186,7 +186,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
             <h2 className="text-sm font-semibold text-foreground">Favorites</h2>
           </div>
           <div className={WIKI_PAGE_CARD_GRID_CLASS}>
-            {favoritePages.slice(0, 6).map((page) => (
+            {favoritePages.map((page) => (
               <WikiPageCard
                 key={page.id}
                 icon={page.icon}

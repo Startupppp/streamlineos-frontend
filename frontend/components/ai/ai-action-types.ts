@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import type { AiActionResult, AiActionResultState } from "./ai-action-result-body";
 import type { AiInlineSession } from "./ai-inline-preview";
 
@@ -7,6 +8,7 @@ export interface AiAction {
   key: string;
   label: string;
   description?: string;
+  icon?: LucideIcon;
   run: (
     signal?: AbortSignal,
     onToken?: (chunk: string) => void,

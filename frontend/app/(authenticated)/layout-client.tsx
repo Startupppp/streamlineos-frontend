@@ -6,6 +6,7 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";
 import { useAccessVersionSync } from "@/hooks/common/use-access-version-sync";
 import { useNotificationEvents } from "@/features/notifications/use-notification-events";
+import { BuildSidebarSkeleton } from "@/features/build/navigation/build-sidebar-skeleton";
 import type { BuildSidebarSlotProps } from "@/components/layout/sidebar/build-sidebar-slot";
 import type { ShellVariant } from "@/lib/shell-variant";
 
@@ -14,7 +15,7 @@ const BuildSidebar = dynamic(
     import("@/features/build/navigation/build-sidebar").then(
       (m) => m.BuildSidebar,
     ),
-  { ssr: false },
+  { ssr: false, loading: () => <BuildSidebarSkeleton /> },
 );
 
 const NotificationBell = dynamic(

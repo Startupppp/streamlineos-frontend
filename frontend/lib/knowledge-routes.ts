@@ -14,8 +14,6 @@ export function pageHistoryHref(id: number): string {
   return `${KNOWLEDGE_BASE}/doc/${id}/history`;
 }
 
-export const KB_RECENT = `${KNOWLEDGE_BASE}/recent`;
-export const KB_FAVORITES = `${KNOWLEDGE_BASE}/favorites`;
 export const KB_TRASH = `${KNOWLEDGE_BASE}/trash`;
 export const KB_TEMPLATES = `${KNOWLEDGE_BASE}/templates`;
 export const KB_ANALYTICS = `${KNOWLEDGE_BASE}/analytics`;

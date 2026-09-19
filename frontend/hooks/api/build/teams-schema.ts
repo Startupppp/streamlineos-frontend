@@ -14,8 +14,12 @@ export const teamRowContract = z.object({
   deletedAt: z.string().nullable(),
 });
 
+export const teamListItemContract = teamRowContract
+  .omit({ pmWorkspaceId: true, deletedAt: true })
+  .extend({ memberCount: z.number().int() });
+
 export const teamPageContract = z.object({
-  data: z.array(teamRowContract),
+  data: z.array(teamListItemContract),
   pagination: z.object({
     limit: z.number().int(),
     hasMore: z.boolean(),

@@ -50,11 +50,7 @@ import {
   Zap,
 } from "lucide-react";
 import type { PermissionKey } from "@/lib/rbac/permissions";
-import {
-  BUILD_ROOT_PATH,
-  ORGANIZATION_BUILD_SCOPE,
-  type BuildScope,
-} from "./build-scope";
+import { BUILD_ROOT_PATH, type BuildScope } from "./build-scope";
 
 export const BUILD_NAV_MAX_PINS = 3;
 export const BUILD_NAV_MAX_PRIMARY = 9;
@@ -578,16 +574,13 @@ function projectCatalog(basePath: string): ScopeCatalog {
 }
 
 export function buildScopeCatalog(scope: BuildScope): ScopeCatalog {
-  switch (scope.type) {
-    case "workspace":
-      return workspaceCatalog(scope.basePath);
-    case "product":
-      return managedProductCatalog(scope.basePath);
-    case "project":
-      return projectCatalog(scope.basePath);
-    default:
-      return organizationCatalog();
-  }
+  const buildScopeCatalog = {
+    workspace: workspaceCatalog,
+    product: managedProductCatalog,
+    project: projectCatalog,
+    organization: organizationCatalog,
+  };
+  return buildScopeCatalog[scope.type](scope.basePath) ?? organizationCatalog();
 }
 
 export function buildOrganizationCatalog(): ScopeCatalog {
@@ -670,18 +663,6 @@ export function resolveBuildNavModel({
   };
 }
 
-export function emptyBuildNavModel(): BuildNavModel {
-  return {
-    scope: ORGANIZATION_BUILD_SCOPE,
-    myWork: [],
-    primary: [],
-    pinned: [],
-    moreTools: [],
-    settings: null,
-    browseAll: null,
-    createActions: [],
-  };
-}
 
 export function isBuildNavModelEmpty(model: BuildNavModel): boolean {
   return (
@@ -719,15 +700,3 @@ export function isBuildDestinationActive(
   return pathname === path || pathname.startsWith(`${path}/`);
 }
 
-export function findActiveBuildDestination(
-  destinations: BuildNavDestination[],
-  pathname: string,
-  view: string | null,
-): BuildNavDestination | null {
-  let best: BuildNavDestination | null = null;
-  for (const destination of destinations) {
-    if (!isBuildDestinationActive(destination, pathname, view)) continue;
-    if (!best || destination.href.length > best.href.length) best = destination;
-  }
-  return best;
-}

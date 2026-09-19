@@ -22,7 +22,7 @@ export interface AiTextStreamRequest {
   path: string;
   body: unknown;
   onToken?: (token: string) => void;
-
+  onData?: (name: string, data: unknown) => void;
   onHeaders?: (headers: Headers) => void;
   signal?: AbortSignal;
 }
@@ -61,6 +61,7 @@ export async function streamAiText({
   path,
   body,
   onToken,
+  onData,
   onHeaders,
   signal,
 }: AiTextStreamRequest): Promise<AiTextStreamResult> {
@@ -101,6 +102,10 @@ export async function streamAiText({
     function drain(events: readonly AiUiMessageStreamEvent[]) {
       for (const event of events) {
         if (event.type === "error") throw new ApiError(event.message, 502);
+        if (event.type === "data") {
+          onData?.(event.name, event.data);
+          continue;
+        }
         emit(event.text);
       }
     }

@@ -106,6 +106,3 @@ export function buildScopeKey(scope: BuildScope): string {
   }
 }
 
-export function isSameBuildScope(left: BuildScope, right: BuildScope): boolean {
-  return buildScopeKey(left) === buildScopeKey(right);
-}

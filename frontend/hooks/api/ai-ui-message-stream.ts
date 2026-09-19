@@ -7,7 +7,8 @@ const TERMINATOR = "[DONE]";
 
 export type AiUiMessageStreamEvent =
   | { type: "text"; text: string }
-  | { type: "error"; message: string };
+  | { type: "error"; message: string }
+  | { type: "data"; name: string; data: unknown };
 
 export function isAiUiMessageStream(headers: Headers | undefined): boolean {
   if (!headers) return false;
@@ -35,6 +36,8 @@ function readFrame(payload: string): AiUiMessageStreamEvent | null {
     return { type: "text", text: frame.delta };
   if (frame.type === "error" && typeof frame.errorText === "string")
     return { type: "error", message: frame.errorText };
+  if (typeof frame.type === "string" && frame.type.startsWith("data-"))
+    return { type: "data", name: frame.type.slice(5), data: frame.data };
   return null;
 }
 
