@@ -4,7 +4,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { KbAlertCircleIcon } from "@/features/wiki/lib/kb-icons";
+import { KbAlertCircleIcon, KbImageIcon } from "@/features/wiki/lib/kb-icons";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api-client";
 import {
@@ -26,9 +27,16 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { pageHref } from "@/lib/knowledge-routes";
 import PageCover from "./page-cover";
+import { PageCoverPickerDialog } from "./page-cover-picker";
 import PageIconPicker from "./page-icon-picker";
 import PageDocumentHeader from "./page-document-header";
 import PageRightPanel from "./page-right-panel";
+import {
+  normalizePlateValue,
+  getPlainText,
+  plainTextToPlateValue,
+  prependPlateValue,
+} from "@/components/editor/plate/plate-value-convert";
 
 const PlateDocumentEditor = dynamic(
   () => import("@/components/editor/plate/plate-document-editor"),
@@ -84,8 +92,11 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
   } | null>(null);
   const [reloadNonce, setReloadNonce] = useState(0);
   const [isReloading, setIsReloading] = useState(false);
+  const [coverPickerOpen, setCoverPickerOpen] = useState(false);
+  const [editorDraft, setEditorDraft] = useState<unknown>(null);
   const visitedRef = useRef<number | null>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
+  const [toolbarHost, setToolbarHost] = useState<HTMLDivElement | null>(null);
 
   const handleSavePage = useCallback(
     (payload: PageAutosavePatch & { pageId: number; expectedContentRevision: number }) =>
@@ -125,6 +136,10 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
     recordVisit.mutate(pageId);
   }, [pageId, recordVisit]);
 
+  useEffect(() => {
+    setEditorDraft(null);
+  }, [pageId]);
+
   const handleNavigateToPage = useCallback(
     (targetPageId: number) => {
       if (onNavigateToPage) {
@@ -141,6 +156,7 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
     function applyServerVersion() {
       discardLocalEdits();
       setTitleDraft(null);
+      setEditorDraft(null);
       setReloadNonce(nextReload);
       setIsReloading(false);
     }
@@ -152,6 +168,10 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
     [pageId]
   );
 
+  function handleTitleMouseDown(e: React.MouseEvent<HTMLTextAreaElement>) {
+    e.stopPropagation();
+  }
+
   function handleTitleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setTitleDraft({ pageId, value: e.target.value });
     schedule({ title: e.target.value });
@@ -162,22 +182,50 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
   }
 
   function handleEditorChange(value: unknown, plainText: string) {
+    setEditorDraft(value);
     schedule({ content: withoutPendingUploads(value), contentText: plainText });
   }
 
+  function applyEditorValue(next: unknown, plainText: string) {
+    setEditorDraft(next);
+    setReloadNonce(nextReload);
+    schedule({ content: withoutPendingUploads(next), contentText: plainText });
+    toast.success("Draft updated in the page");
+  }
+
   function handleApplyImprovement(text: string) {
-    void navigator.clipboard.writeText(text).then(() => {
-      toast.success("Improved draft copied to clipboard — paste it into the editor");
-    }).catch(() => {
-      toast.info("Copy this draft and paste it into the editor", { description: text.slice(0, 100) });
-    });
+    const next = plainTextToPlateValue(text);
+    applyEditorValue(next, text);
+  }
+
+  function handleInsertSummary(text: string) {
+    const summary = plainTextToPlateValue(text);
+    const body = normalizePlateValue(editorDraft ?? page?.content);
+    const next = prependPlateValue(summary, body);
+    applyEditorValue(next, getPlainText(next));
+  }
+
+  function handleOpenCover() {
+    setCoverPickerOpen(true);
+  }
+
+  function handleCoverPickerOpenChange(open: boolean) {
+    setCoverPickerOpen(open);
   }
 
   function handleCoverChange(coverImage: string | null) {
     updatePage.mutate(
       { pageId, coverImage },
-      { onError: () => toast.error("Failed to update cover") }
+      {
+        onSuccess: () =>
+          toast.success(coverImage ? "Cover updated" : "Cover removed"),
+        onError: () => toast.error("Failed to update cover"),
+      },
     );
+  }
+
+  function handleToolbarHost(node: HTMLDivElement | null) {
+    setToolbarHost(node);
   }
 
   function handleIconChange(icon: string | null) {
@@ -207,69 +255,106 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
     .filter(Boolean).length;
 
   return (
-    <div className="min-h-full flex flex-col">
+    <div className="flex min-h-full flex-col">
       <PageCover
         coverImage={page.coverImage}
         isEditable={isEditable}
         onCoverChange={handleCoverChange}
+        onChangeCover={handleOpenCover}
+      />
+      <PageCoverPickerDialog
+        open={coverPickerOpen}
+        onOpenChange={handleCoverPickerOpenChange}
+        onCoverChange={handleCoverChange}
+        pageId={pageId}
       />
 
-      <div className="flex flex-1 min-w-0">
-        <div className="flex-1 min-w-0 w-full px-3 pt-3 pb-16">
-          <PageDocumentHeader
-            page={page}
-            pageId={pageId}
-            saveState={saveState}
-            onNavigate={handleNavigateToPage}
-            onApplyImprovement={handleApplyImprovement}
-          />
-
-          <div className="flex flex-row items-center mt-4 mb-4 gap-2 overflow-hidden">
-            <PageIconPicker
-              icon={page.icon}
-              isEditable={isEditable}
-              onIconChange={handleIconChange}
-            />
-            <textarea
-              ref={titleRef}
-              value={localTitle}
-              onChange={handleTitleChange}
-              onKeyDown={handleTitleKeyDown}
-              placeholder="Untitled"
-              className="flex-1 min-w-0 w-full resize-none overflow-hidden bg-transparent border-0 outline-none text-3xl font-bold text-left text-foreground placeholder:text-muted-foreground leading-tight"
-              rows={1}
-              style={{ height: "auto" }}
-              readOnly={!isEditable}
-            />
+      <div className="flex min-w-0 flex-1">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="sticky top-0 z-40 border-b border-border bg-background">
+            <div className="mx-auto w-full max-w-[46rem] px-4 py-2 sm:px-6">
+              <PageDocumentHeader
+                page={page}
+                pageId={pageId}
+                saveState={saveState}
+                isEditable={isEditable}
+                onNavigate={handleNavigateToPage}
+                onApplyImprovement={handleApplyImprovement}
+                onInsertSummary={handleInsertSummary}
+                onOpenCover={handleOpenCover}
+              />
+            </div>
+            {isEditable ? (
+              <div
+                ref={handleToolbarHost}
+                className="mx-auto w-full max-w-[46rem] px-4 sm:px-6"
+              />
+            ) : null}
           </div>
 
-          {conflict && (
-            <PageEditConflict
-              conflict={conflict}
-              isReloading={isReloading}
-              onKeepMine={keepLocalEdits}
-              onDiscardMine={handleDiscardMine}
-            />
-          )}
-
-          {page.isLocked && !canManage && (
-            <div className="mb-4 flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
-              <KbAlertCircleIcon className="h-4 w-4 shrink-0" />
-              <span>This page is locked and is read-only.</span>
+          <div className="mx-auto w-full min-w-0 max-w-[46rem] px-4 pb-24 pt-6 sm:px-6">
+            <div className="mb-6 flex items-start gap-2">
+              <PageIconPicker
+                icon={page.icon}
+                isEditable={isEditable}
+                onIconChange={handleIconChange}
+              />
+              <textarea
+                ref={titleRef}
+                value={localTitle}
+                onChange={handleTitleChange}
+                onKeyDown={handleTitleKeyDown}
+                onMouseDown={handleTitleMouseDown}
+                placeholder="Untitled"
+                className="min-w-0 flex-1 resize-none overflow-hidden border-0 bg-transparent text-left text-2xl font-semibold leading-tight text-foreground outline-none placeholder:text-muted-foreground sm:text-3xl"
+                rows={1}
+                style={{ height: "auto" }}
+                readOnly={!isEditable}
+                aria-label="Page title"
+              />
             </div>
-          )}
+            {isEditable && !page.coverImage ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="mb-4 h-8 px-2 text-muted-foreground"
+                onClick={handleOpenCover}
+              >
+                <KbImageIcon className="mr-1.5 h-4 w-4" />
+                Add cover
+              </Button>
+            ) : null}
 
-          <PlateDocumentEditor
-            value={page.content ?? undefined}
-            contentKey={`${pageId}:${reloadNonce}`}
-            editable={isEditable}
-            placeholder="Start writing…"
-            onChange={handleEditorChange}
-            fetchMentionUsers={fetchMentionUsers}
-            fetchPageLinks={fetchPageLinks}
-            onNavigateToPage={handleNavigateToPage}
-            uploadFile={isEditable ? handleUploadFile : undefined}
-          />
+            {conflict && (
+              <PageEditConflict
+                conflict={conflict}
+                isReloading={isReloading}
+                onKeepMine={keepLocalEdits}
+                onDiscardMine={handleDiscardMine}
+              />
+            )}
+
+            {page.isLocked && !canManage && (
+              <div className="mb-4 flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
+                <KbAlertCircleIcon className="h-4 w-4 shrink-0" />
+                <span>This page is locked and is read-only.</span>
+              </div>
+            )}
+
+            <PlateDocumentEditor
+              value={editorDraft ?? page.content ?? undefined}
+              contentKey={`${pageId}:${reloadNonce}`}
+              editable={isEditable}
+              placeholder="Start writing…"
+              onChange={handleEditorChange}
+              fetchMentionUsers={fetchMentionUsers}
+              fetchPageLinks={fetchPageLinks}
+              onNavigateToPage={handleNavigateToPage}
+              uploadFile={isEditable ? handleUploadFile : undefined}
+              toolbarHost={toolbarHost}
+            />
+          </div>
         </div>
 
         <PageRightPanel

@@ -291,6 +291,24 @@ export function isKnowledgeWikiPath(pathname: string): boolean {
   );
 }
 
+export function resolveProductSidebarChrome({
+  sessionReady,
+  emptyNav,
+  isWikiPath,
+  isPortalPath,
+}: {
+  sessionReady: boolean;
+  emptyNav: boolean;
+  isWikiPath: boolean;
+  isPortalPath: boolean;
+}): { hideSidebar: boolean; showSidebarToggle: boolean } {
+  const hideSidebar =
+    sessionReady && (emptyNav || isWikiPath || isPortalPath);
+  const showSidebarToggle =
+    !sessionReady || isWikiPath || (!emptyNav && !isPortalPath);
+  return { hideSidebar, showSidebarToggle };
+}
+
 function routeOwnsPath(route: NavRoute, pathname: string): boolean {
   if (pathname === route.href) return true;
   if (route.href === "/hr") return false;

@@ -6,10 +6,16 @@ import dynamic from "next/dynamic";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
 import type { AskAiHistoryMessage } from "@/hooks/api/chat-ai-assistant";
+import { parseAskOsDirective } from "./ask-os-directive-schema";
 
 const AskOsConfirmationCard = dynamic(
   () =>
     import("./ask-os-confirmation-card").then((m) => m.AskOsConfirmationCard),
+  { ssr: false },
+);
+
+const AskOsConnectCard = dynamic(
+  () => import("./ask-os-connect-card").then((m) => m.AskOsConnectCard),
   { ssr: false },
 );
 
@@ -96,47 +102,6 @@ export function EmptyAskOs({
   );
 }
 
-interface ConfirmPayload {
-  requiresConfirmation: true;
-  proposalId: number;
-  token: string;
-  action: string;
-  summary: string;
-  preview: Record<string, unknown>;
-}
-
-function parseConfirmPayload(content: string): ConfirmPayload | null {
-  const prefix = "CONFIRM_ACTION:";
-  if (!content.startsWith(prefix)) return null;
-  try {
-    const parsed: unknown = JSON.parse(content.slice(prefix.length).trim());
-    if (
-      typeof parsed !== "object" ||
-      parsed === null ||
-      !("token" in parsed) ||
-      typeof (parsed as Record<string, unknown>)["token"] !== "string" ||
-      !("action" in parsed) ||
-      typeof (parsed as Record<string, unknown>)["action"] !== "string" ||
-      !("summary" in parsed) ||
-      typeof (parsed as Record<string, unknown>)["summary"] !== "string" ||
-      !("preview" in parsed) ||
-      typeof (parsed as Record<string, unknown>)["preview"] !== "object"
-    ) {
-      return null;
-    }
-    const p = parsed as Record<string, unknown>;
-    return {
-      requiresConfirmation: true,
-      proposalId: Number(p["proposalId"]),
-      token: p["token"] as string,
-      action: p["action"] as string,
-      summary: p["summary"] as string,
-      preview: (p["preview"] ?? {}) as Record<string, unknown>,
-    };
-  } catch {
-    return null;
-  }
-}
 
 export function AskOsBubble({
   role,
@@ -169,7 +134,11 @@ export function AskOsBubble({
     );
   }
 
-  const confirmPayload = parseConfirmPayload(content);
+  const directive = parseAskOsDirective(content);
+
+  function handleCancelled() {
+    setCancelled(true);
+  }
 
   return (
     <motion.div
@@ -183,14 +152,20 @@ export function AskOsBubble({
         className="mt-0.5 shrink-0 rounded-full"
       />
       <div className="min-w-0 max-w-[85%] rounded-2xl rounded-bl-sm border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm">
-        {confirmPayload && !confirmedResult && !cancelled ? (
+        {directive?.kind === "confirm-action" && !confirmedResult && !cancelled ? (
           <AskOsConfirmationCard
-            action={confirmPayload.action}
-            summary={confirmPayload.summary}
-            preview={confirmPayload.preview}
-            token={confirmPayload.token}
+            action={directive.action}
+            summary={directive.summary}
+            preview={directive.preview}
+            token={directive.token}
             onConfirmed={setConfirmedResult}
-            onCancelled={() => setCancelled(true)}
+            onCancelled={handleCancelled}
+          />
+        ) : directive?.kind === "connect-integration" ? (
+          <AskOsConnectCard
+            toolkit={directive.toolkit}
+            reason={directive.reason}
+            summary={directive.summary}
           />
         ) : confirmedResult ? (
           <p className="text-xs text-muted-foreground">Action completed.</p>

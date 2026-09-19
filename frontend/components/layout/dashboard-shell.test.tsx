@@ -152,6 +152,7 @@ jest.mock("./header/org-switcher", () => ({
 jest.mock("./sidebar/use-product-sidebar-visibility", () => ({
   useProductSidebarVisibility: () => ({
     hideSidebar: false,
+    showSidebarToggle: true,
     navGroups: [
       {
         label: "Projects",

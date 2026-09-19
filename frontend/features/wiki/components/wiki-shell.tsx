@@ -10,13 +10,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useKbPagesTree, useKbPagesFavorites, useCreateKbPage } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useShellSidebarCollapse } from "@/components/layout/shell-sidebar-collapse-context";
 import PageTree from "./page-tree";
 import QuickFindDialog from "./quick-find-dialog";
 import WikiSidebarNav, { WikiSidebarFooter } from "./wiki-sidebar-nav";
-import {
-  WikiCollapsedSidebarChrome,
-  WikiSidebarCollapseControl,
-} from "./wiki-sidebar-chrome";
+import { WikiCollapsedSidebarChrome } from "./wiki-sidebar-chrome";
 import {
   KNOWLEDGE_BASE,
   pageHref,
@@ -34,9 +32,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   const canManageSettings = useCan("kb:settings:manage");
   const [quickFindOpen, setQuickFindOpen] = useState(false);
   const createParamConsumedRef = useRef(false);
-  const [collapsed, setCollapsed] = useState(
-    () => typeof window !== "undefined" && localStorage.getItem("wiki-tree-collapsed") === "true"
-  );
+  const { isCollapsed: collapsed } = useShellSidebarCollapse();
 
   const handleNewPage = useCallback(() => {
     createPage.mutate(
@@ -69,14 +65,6 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   const handleQuickFindOpenChange = useCallback((open: boolean) => {
     setQuickFindOpen(open);
   }, []);
-
-  function handleToggleCollapsed() {
-    setCollapsed((prev) => {
-      const next = !prev;
-      localStorage.setItem("wiki-tree-collapsed", String(next));
-      return next;
-    });
-  }
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -151,22 +139,15 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
             {collapsed ? (
               <WikiCollapsedSidebarChrome
                 createPending={createPage.isPending}
-                onToggleCollapsed={handleToggleCollapsed}
                 onNewPage={handleNewPage}
               />
             ) : null}
             {sidebarInner()}
           </div>
-          {collapsed ? null : (
-            <WikiSidebarCollapseControl
-              collapsed={false}
-              onToggleCollapsed={handleToggleCollapsed}
-            />
-          )}
         </aside>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+          <ScrollArea fill hideScrollbar className="min-h-0 flex-1" viewportClassName="scroll-pt-28">
             <div className="flex min-h-full flex-1 flex-col overscroll-contain">
               {children}
             </div>

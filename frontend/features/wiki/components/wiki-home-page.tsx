@@ -33,6 +33,7 @@ import {
 } from "@/features/wiki/lib/kb-icons";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
+import { coverSurfaceStyle } from "@/features/wiki/components/page-cover";
 
 interface PageCardProps {
   id: number;
@@ -40,6 +41,7 @@ interface PageCardProps {
   title: string;
   updatedAt: string;
   href: string;
+  coverImage: string | null;
 }
 
 const PageCard = memo(function PageCard({
@@ -47,13 +49,21 @@ const PageCard = memo(function PageCard({
   title,
   updatedAt,
   href,
+  coverImage,
 }: PageCardProps) {
   return (
     <Link
       href={href}
-      className="block p-3 rounded-lg border border-border bg-card shadow-panel hover:bg-muted/50 transition-colors"
+      className="block overflow-hidden rounded-lg border border-border bg-card shadow-panel hover:bg-muted/50 transition-colors"
     >
-      <div className="flex items-start gap-3">
+      {coverImage ? (
+        <div
+          className="h-16 w-full"
+          style={coverSurfaceStyle(coverImage)}
+          aria-hidden
+        />
+      ) : null}
+      <div className="flex items-start gap-3 p-3">
         <span className="text-xl shrink-0">
           {icon ?? (
             <KbFileTextIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
@@ -64,7 +74,10 @@ const PageCard = memo(function PageCard({
             text={title || "Untitled"}
             className="font-medium text-sm"
           />
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p
+            className="text-xs text-muted-foreground mt-0.5"
+            suppressHydrationWarning
+          >
             {kbTimeAgo(updatedAt)}
           </p>
         </div>
@@ -132,6 +145,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
       size="sm"
       onClick={handleNewPage}
       disabled={createPage.isPending}
+      suppressHydrationWarning
     >
       New page
     </AnimatedIconButton>
@@ -203,6 +217,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
                 title={page.title}
                 updatedAt={page.updatedAt}
                 href={resolvePageHref(page.id)}
+                coverImage={page.coverImage}
               />
             ))}
           </div>
@@ -224,6 +239,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
                 title={page.title}
                 updatedAt={page.updatedAt}
                 href={resolvePageHref(page.id)}
+                coverImage={page.coverImage}
               />
             ))}
           </div>

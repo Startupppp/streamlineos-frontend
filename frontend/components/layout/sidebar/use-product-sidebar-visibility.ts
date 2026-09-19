@@ -12,12 +12,14 @@ import {
   getProductFromPathname,
   isKnowledgeWikiPath,
   isPortalChromelessPath,
+  resolveProductSidebarChrome,
   type NavGroup,
   type ProductKey,
 } from "./sidebar-nav-items";
 
 export function useProductSidebarVisibility(): {
   hideSidebar: boolean;
+  showSidebarToggle: boolean;
   navGroups: NavGroup[];
   activeProduct: ProductKey;
   isLoading: boolean;
@@ -46,14 +48,16 @@ export function useProductSidebarVisibility(): {
     );
   }, [activeProduct, effectiveRole, scopes, enabledModules, lockedModules]);
 
-  const hideSidebar =
-    status !== "loading" &&
-    (shouldHideProductSidebar(navGroups) ||
-      isKnowledgeWikiPath(pathname) ||
-      isPortalChromelessPath(pathname));
+  const { hideSidebar, showSidebarToggle } = resolveProductSidebarChrome({
+    sessionReady: status !== "loading",
+    emptyNav: shouldHideProductSidebar(navGroups),
+    isWikiPath: isKnowledgeWikiPath(pathname),
+    isPortalPath: isPortalChromelessPath(pathname),
+  });
 
   return {
     hideSidebar,
+    showSidebarToggle,
     navGroups,
     activeProduct,
     isLoading: status === "loading",

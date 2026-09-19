@@ -27,6 +27,7 @@ import { shouldShowMobileModuleBottomNav } from "./mobile/mobile-module-nav-item
 import { isPortalChromelessPath, type ModuleAccent } from "./sidebar/sidebar-nav-items";
 import { ShellOfflineBanner } from "./shell-offline-banner";
 import { ShellVariantProvider } from "./shell-variant-context";
+import { ShellSidebarCollapseProvider } from "./shell-sidebar-collapse-context";
 import { useRouteFocus } from "@/hooks/common/use-route-focus";
 import { cn } from "@/lib/utils";
 import { WELCOME_POP_KEY } from "@/lib/welcome-pop";
@@ -100,7 +101,8 @@ export function DashboardShell({
   const [welcomeToastActive, setWelcomeToastActive] = useState(false);
   const [enhancementsReady, setEnhancementsReady] = useState(false);
 
-  const { hideSidebar, navGroups } = useProductSidebarVisibility();
+  const { hideSidebar, showSidebarToggle, navGroups } =
+    useProductSidebarVisibility();
   const {
     data: access,
     error: accessErr,
@@ -248,56 +250,61 @@ export function DashboardShell({
           <ImpersonationBanner />
 
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <GlobalHeader
-              isSidebarCollapsed={isSidebarCollapsed}
-              onToggleSidebar={handleToggleSidebar}
-              showSidebarToggle={!hideSidebar}
-              mobileNavOpen={mobileMenuOpen}
-              hideAdminChrome={isPortalRoute}
-              shellVariant={shellVariant}
-              notificationBellSlot={notificationBellSlot}
-            />
+            <ShellSidebarCollapseProvider
+              isCollapsed={isSidebarCollapsed}
+              onToggle={handleToggleSidebar}
+            >
+              <GlobalHeader
+                isSidebarCollapsed={isSidebarCollapsed}
+                onToggleSidebar={handleToggleSidebar}
+                showSidebarToggle={showSidebarToggle}
+                mobileNavOpen={mobileMenuOpen}
+                hideAdminChrome={isPortalRoute}
+                shellVariant={shellVariant}
+                notificationBellSlot={notificationBellSlot}
+              />
 
-            <ShellOfflineBanner />
+              <ShellOfflineBanner />
 
-            <div className="flex min-h-0 flex-1 overflow-hidden">
-              {shellVariant === "desktop" && !hideSidebar && (
-                <aside
-                  aria-label="Sidebar"
-                  style={{ width: sidebarW }}
-                  className="relative z-50 hidden h-full shrink-0 flex-col overflow-visible border-r border-sidebar-border bg-sidebar transition-[width] duration-300 ease-in-out md:flex"
-                >
-                  <AppSidebar isCollapsed={isSidebarCollapsed} projectNavTreeSlot={projectNavTreeSlot} />
-                </aside>
-              )}
-
-              <main
-                id="dashboard-content"
-                aria-label="Main content"
-                className={cn(
-                  "flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden outline-none",
-                  showModuleBottomNav && "mobile-nav-active",
+              <div className="flex min-h-0 flex-1 overflow-hidden">
+                {shellVariant === "desktop" && !hideSidebar && (
+                  <aside
+                    aria-label="Sidebar"
+                    style={{ width: sidebarW }}
+                    className="relative z-50 hidden h-full shrink-0 flex-col overflow-visible border-r border-sidebar-border bg-sidebar transition-[width] duration-300 ease-in-out md:flex"
+                  >
+                    <AppSidebar isCollapsed={isSidebarCollapsed} projectNavTreeSlot={projectNavTreeSlot} />
+                  </aside>
                 )}
-              >
-                <div
+
+                <main
+                  id="dashboard-content"
+                  aria-label="Main content"
                   className={cn(
-                    "flex h-full min-h-0 flex-1 flex-col overflow-hidden",
-                    isChatRoute &&
-                      getChatMobileContentPaddingClassName(
-                        isChatConversationOpen,
-                      ),
+                    "flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden outline-none",
+                    showModuleBottomNav && "mobile-nav-active",
                   )}
                 >
-                  <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden [&>:first-child]:h-full [&>:first-child]:min-h-0 [&>:first-child]:flex-1">
-                    <ShellVariantProvider variant={shellVariant}>
-                      {children}
-                    </ShellVariantProvider>
+                  <div
+                    className={cn(
+                      "flex h-full min-h-0 flex-1 flex-col overflow-hidden",
+                      isChatRoute &&
+                        getChatMobileContentPaddingClassName(
+                          isChatConversationOpen,
+                        ),
+                    )}
+                  >
+                    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden [&>:first-child]:h-full [&>:first-child]:min-h-0 [&>:first-child]:flex-1">
+                      <ShellVariantProvider variant={shellVariant}>
+                        {children}
+                      </ShellVariantProvider>
+                    </div>
+                    {welcomeToastActive && <WelcomeToast />}
+                    {enhancementsReady ? <SuccessChecklist /> : null}
                   </div>
-                  {welcomeToastActive && <WelcomeToast />}
-                  {enhancementsReady ? <SuccessChecklist /> : null}
-                </div>
-              </main>
-            </div>
+                </main>
+              </div>
+            </ShellSidebarCollapseProvider>
           </div>
 
           {!hideSidebar && (

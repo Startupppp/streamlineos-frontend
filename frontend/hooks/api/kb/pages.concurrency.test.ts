@@ -177,6 +177,32 @@ describe("useUpdateKbPage — optimistic concurrency", () => {
     });
   });
 
+  it("refetches recent and favorite cards after a cover change", async () => {
+    const invalidate = jest.spyOn(client, "invalidateQueries");
+    patchMock.mockResolvedValueOnce({
+      id: 1,
+      contentRevision: 3,
+      title: "T",
+      coverImage: "gradient:ocean",
+      orgId: "o",
+    });
+
+    const { result } = renderHook(() => useUpdateKbPage(), {
+      wrapper: wrapper(client),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({ pageId: 1, coverImage: "gradient:ocean" });
+    });
+
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: knowledgeAndSurveysQueryKeys.kb.pagesRecent(),
+    });
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: knowledgeAndSurveysQueryKeys.kb.pagesFavorites(),
+    });
+  });
+
   it("always carries the precondition — an unguarded page write is not expressible", async () => {
     const updatedPage = { id: 2, contentRevision: 4, title: "U", orgId: "o" };
     patchMock.mockResolvedValueOnce(updatedPage);

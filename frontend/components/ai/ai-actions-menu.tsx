@@ -38,6 +38,7 @@ interface AiActionsMenuProps {
   className?: string;
   asSubmenu?: boolean;
   defaultSurface?: AiResultSurface;
+  iconOnly?: boolean;
 }
 
 export function AiActionsMenu({
@@ -49,6 +50,7 @@ export function AiActionsMenu({
   className,
   asSubmenu = false,
   defaultSurface,
+  iconOnly = false,
 }: AiActionsMenuProps) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   const {
@@ -143,12 +145,16 @@ export function AiActionsMenu({
         >
           <DropdownMenuSub>
             <ResponsivePopoverTrigger asChild>
-              <DropdownMenuSubTrigger disabled={disabled} className={className}>
+              <DropdownMenuSubTrigger
+                disabled={disabled}
+                className={className}
+                aria-label={iconOnly ? triggerLabel : undefined}
+              >
                 <SparklesIcon
                   ref={iconRef}
                   className="h-3.5 w-3.5 text-primary"
                 />
-                {triggerLabel}
+                {iconOnly ? null : triggerLabel}
               </DropdownMenuSubTrigger>
             </ResponsivePopoverTrigger>
             <DropdownMenuSubContent className="w-56">
@@ -177,14 +183,19 @@ export function AiActionsMenu({
                 variant="outline"
                 size="sm"
                 disabled={disabled}
-                className={cn("h-8 gap-1.5 text-xs", className)}
+                aria-label={iconOnly ? triggerLabel : undefined}
+                className={cn(
+                  "h-8 gap-1.5 text-xs",
+                  iconOnly && "h-9 w-9 px-0",
+                  className,
+                )}
                 {...hoverHandlers}
               >
                 <SparklesIcon
                   ref={iconRef}
                   className="h-3.5 w-3.5 text-primary"
                 />
-                {triggerLabel}
+                {iconOnly ? null : triggerLabel}
               </Button>
             </DropdownMenuTrigger>
           </ResponsivePopoverTrigger>

@@ -1,22 +1,16 @@
 'use client';
 
-import { Minus } from 'lucide-react';
-import { useEditorReadOnly, useEditorRef } from 'platejs/react';
+import { useEditorReadOnly } from 'platejs/react';
 import { Separator } from '@/components/ui/separator';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import type { UploadedEditorMedia } from '@/components/editor/plate/upload-media';
-import { ToolbarButton } from './toolbar-button';
 import { HistoryButtons } from './history-buttons';
 import { TurnIntoDropdown } from './turn-into-dropdown';
 import { FontSizeInput } from './font-size-input';
 import { MarkButtons } from './mark-buttons';
-import { ColorButtons } from './color-buttons';
-import { AlignDropdown } from './align-dropdown';
 import { ListButtons } from './list-buttons';
 import { LinkButton } from './link-button';
-import { TableDropdown } from './table-dropdown';
-import { EmojiButton } from './emoji-button';
-import { MediaButtons } from './media-buttons';
+import { FormattingMore } from './formatting-more';
 
 interface FixedToolbarProps {
   uploadFile?: (file: File) => Promise<UploadedEditorMedia>;
@@ -26,25 +20,13 @@ function VSep() {
   return <Separator orientation="vertical" className="mx-0.5 h-5 shrink-0" />;
 }
 
-function HrButton() {
-  const editor = useEditorRef();
-  function handleClick() {
-    editor.tf.insertNodes({ type: 'hr', children: [{ text: '' }] });
-  }
-  return (
-    <ToolbarButton tooltip="Divider" onClick={handleClick} aria-label="Insert horizontal rule">
-      <Minus className="size-4" />
-    </ToolbarButton>
-  );
-}
-
 export function FixedToolbar({ uploadFile }: FixedToolbarProps) {
   const readOnly = useEditorReadOnly();
   if (readOnly) return null;
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="sticky top-0 z-30 flex items-center gap-0.5 overflow-x-auto scrollbar-hide border-b border-border bg-background px-2 py-1">
+      <div className="flex min-w-0 items-center gap-0.5 overflow-x-auto py-1 scrollbar-hide">
         <HistoryButtons />
         <VSep />
         <TurnIntoDropdown />
@@ -53,22 +35,10 @@ export function FixedToolbar({ uploadFile }: FixedToolbarProps) {
         <VSep />
         <MarkButtons />
         <VSep />
-        <ColorButtons />
-        <VSep />
-        <AlignDropdown />
-        <VSep />
         <ListButtons />
         <VSep />
         <LinkButton />
-        <TableDropdown />
-        <EmojiButton />
-        <HrButton />
-        {uploadFile && (
-          <>
-            <VSep />
-            <MediaButtons uploadFile={uploadFile} />
-          </>
-        )}
+        <FormattingMore uploadFile={uploadFile} />
       </div>
     </TooltipProvider>
   );

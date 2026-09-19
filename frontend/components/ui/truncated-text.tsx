@@ -66,7 +66,7 @@ export function TruncatedText({
       cancelAnimationFrame(rafRef.current);
       observerRef.current = null;
       if (!node) return;
-      measure(node);
+      rafRef.current = requestAnimationFrame(() => measure(node));
       const observer = new ResizeObserver(() => {
         cancelAnimationFrame(rafRef.current);
         rafRef.current = requestAnimationFrame(() => measure(node));

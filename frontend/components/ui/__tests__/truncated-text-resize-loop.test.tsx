@@ -78,6 +78,24 @@ afterEach(() => {
  * notifications — breaking the loop condition.
  */
 describe("TruncatedText ResizeObserver does not set state synchronously in its callback", () => {
+  it("does not apply truncation on the attaching ref until requestAnimationFrame", () => {
+    renderText("a very long channel name that overflows its container");
+
+    const span = document.querySelector<HTMLSpanElement>("span");
+    expect(span).not.toBeNull();
+    if (span) setSpanWidths(span, 400, 100);
+
+    expect(span?.hasAttribute("title")).toBe(false);
+
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    expect(span?.getAttribute("title")).toBe(
+      "a very long channel name that overflows its container",
+    );
+  });
+
   it("defers the truncation state update to requestAnimationFrame, not synchronously in the observer callback", () => {
     renderText("a very long channel name that overflows its container");
 

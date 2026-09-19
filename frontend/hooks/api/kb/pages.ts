@@ -317,6 +317,7 @@ function touchesKbPageListings(variables: UpdateKbPageInput): boolean {
   return (
     variables.title !== undefined ||
     variables.icon !== undefined ||
+    variables.coverImage !== undefined ||
     variables.spaceId !== undefined ||
     variables.status !== undefined
   );
@@ -344,6 +345,9 @@ export function useUpdateKbPage() {
       });
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesRecent(),
+      });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.pagesFavorites(),
       });
     },
   });

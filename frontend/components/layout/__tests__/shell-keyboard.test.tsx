@@ -98,7 +98,11 @@ jest.mock("@/components/layout/mobile/mobile-module-nav-items", () => {
 });
 
 jest.mock("@/components/layout/sidebar/use-product-sidebar-visibility", () => ({
-  useProductSidebarVisibility: () => ({ navGroups: [], hideSidebar: false }),
+  useProductSidebarVisibility: () => ({
+    navGroups: [],
+    hideSidebar: false,
+    showSidebarToggle: true,
+  }),
 }));
 
 // DashboardShell mocks (for skip-to-content test)

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { Variants } from "framer-motion";
 import { useReducedMotion } from "framer-motion";
 
@@ -59,11 +60,18 @@ const reducedStagger: Variants = {
 
 export function useMotionVariants() {
   const prefersReduced = useReducedMotion();
+  const [motionReady, setMotionReady] = useState(false);
+
+  useEffect(() => {
+    setMotionReady(true);
+  }, []);
+
+  const reduce = motionReady && Boolean(prefersReduced);
   return {
-    staggerContainer: prefersReduced ? reducedStagger : staggerContainer,
-    fadeUp: prefersReduced ? reducedFade : fadeUp,
-    fadeIn: prefersReduced ? reducedFade : fadeIn,
-    slideInLeft: prefersReduced ? reducedFade : slideInLeft,
-    scaleIn: prefersReduced ? reducedFade : scaleIn,
+    staggerContainer: reduce ? reducedStagger : staggerContainer,
+    fadeUp: reduce ? reducedFade : fadeUp,
+    fadeIn: reduce ? reducedFade : fadeIn,
+    slideInLeft: reduce ? reducedFade : slideInLeft,
+    scaleIn: reduce ? reducedFade : scaleIn,
   };
 }

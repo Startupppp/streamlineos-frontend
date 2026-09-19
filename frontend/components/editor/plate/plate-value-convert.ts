@@ -43,6 +43,24 @@ export function normalizePlateValue(value: unknown): Value {
   return [{ type: 'p', children: [{ text: '' }] }] as Value;
 }
 
+export function plainTextToPlateValue(text: string): Value {
+  const lines = text.replace(/\r\n/g, "\n").split("\n");
+  const blocks = lines.map((line) => ({
+    type: "p",
+    children: [{ text: line }],
+  }));
+  if (blocks.length === 0) {
+    return [{ type: "p", children: [{ text: "" }] }] as Value;
+  }
+  return blocks as Value;
+}
+
+export function prependPlateValue(prefix: Value, body: Value): Value {
+  if (prefix.length === 0) return body;
+  if (body.length === 0) return prefix;
+  return [...prefix, ...body] as Value;
+}
+
 export function getPlainText(value: Value): string {
   return value.map(nodeToText).join('\n');
 }
