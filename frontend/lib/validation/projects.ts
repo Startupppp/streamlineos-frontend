@@ -25,7 +25,7 @@ export const createTicketInputSchema = z.object({
     .max(500)
     .refine((v) => v.trim().length >= 3, { message: "Title must be at least 3 characters" })
     .refine((v) => /[a-zA-Z0-9]/.test(v.trim()), { message: "Title must contain at least one letter or number" }),
-  description: z.string().max(5000).optional(),
+  description: z.string().max(100_000).optional(),
   type: ticketTypeSchema,
   priority: ticketPrioritySchema.optional(),
   assigneeId: z.string().optional(),
