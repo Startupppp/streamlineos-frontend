@@ -15,14 +15,16 @@ describe("validateEventTitle", () => {
     expect(validateEventTitle("   ")).toBe("Event title is required");
   });
 
-  it("rejects a title starting with a special character", () => {
-    expect(validateEventTitle("!meeting")).toBe(
-      "Event title must start with a letter or number",
-    );
+  it("rejects punctuation-only title (no letters or numbers)", () => {
+    expect(validateEventTitle("[[[")).toBe("Event title must contain at least one letter or number");
   });
 
-  it("rejects a single-character title", () => {
-    expect(validateEventTitle("a")).toBe("Event title must be at least 2 characters");
+  it("rejects symbols-only title", () => {
+    expect(validateEventTitle("!!!")).toBe("Event title must contain at least one letter or number");
+  });
+
+  it("accepts a single-character title with letter/number", () => {
+    expect(validateEventTitle("A")).toBeNull();
   });
 
   it("rejects a title over 100 characters", () => {
@@ -39,6 +41,44 @@ describe("validateEventTitle", () => {
 
   it("accepts a valid title", () => {
     expect(validateEventTitle("Team sync")).toBeNull();
+  });
+
+  // Principal CAL-003 spec: titles may start with brackets, punctuation, etc.
+  it("accepts title starting with [ bracket (QA required case)", () => {
+    expect(validateEventTitle("[QA] Module 4 audit event")).toBeNull();
+  });
+
+  it("accepts title starting with ( parenthesis", () => {
+    expect(validateEventTitle("(Draft) Planning meeting")).toBeNull();
+  });
+
+  it("accepts title starting with # hash", () => {
+    expect(validateEventTitle("#123 Feature implementation")).toBeNull();
+  });
+
+  it("accepts title starting with @ mention", () => {
+    expect(validateEventTitle("@team standup")).toBeNull();
+  });
+
+  it("accepts title starting with quote", () => {
+    expect(validateEventTitle("\"Important\" client call")).toBeNull();
+  });
+
+  it("accepts title starting with dash", () => {
+    expect(validateEventTitle("- Follow up with design")).toBeNull();
+  });
+
+  it("accepts title with emoji", () => {
+    expect(validateEventTitle("🎉 Launch party")).toBeNull();
+  });
+
+  it("trims leading and trailing whitespace", () => {
+    expect(validateEventTitle("  Team meeting  ")).toBeNull();
+  });
+
+  it("preserves brackets and punctuation in title (no stripping)", () => {
+    const title = "[WIP] Design review (draft)";
+    expect(validateEventTitle(title)).toBeNull();
   });
 });
 
