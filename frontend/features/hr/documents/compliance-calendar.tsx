@@ -7,6 +7,8 @@ import { format, parseISO } from "date-fns";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useComplianceCalendar } from "@/hooks/api/hr/compliance-calendar";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -26,7 +28,7 @@ export function ComplianceCalendar() {
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
 
-  const { data, isLoading } = useComplianceCalendar(year, month);
+  const { data, isLoading, isError, error, refetch } = useComplianceCalendar(year, month);
 
   const handlePrev = useCallback(() => {
     if (month === 1) { setYear((y) => y - 1); setMonth(12); }
@@ -71,6 +73,14 @@ export function ComplianceCalendar() {
             <Skeleton key={i} className="h-10 w-full rounded-xl" />
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load compliance calendar"
+          description={getErrorMessage(error)}
+          onRetry={refetch}
+          compact
+        />
       ) : events.length === 0 ? (
         <EmptyState
           illustration={<Calendar className="w-8 text-muted-foreground" />}

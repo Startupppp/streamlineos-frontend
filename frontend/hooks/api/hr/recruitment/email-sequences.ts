@@ -29,7 +29,7 @@ const emailSequenceSuccessContract = lazyContract(() =>
 );
 
 export function useEmailSequences() {
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:requisitions:view", {
     queryKey: humanResourcesQueryKeys.hr.emailSequences(),
     queryFn: ({ signal }) => apiClient.get<EmailSequence[]>("/hr/recruitment/email-sequences", undefined, signal, emailSequenceListContract),
     staleTime: 2 * 60_000,
@@ -38,7 +38,7 @@ export function useEmailSequences() {
 
 export function useCreateEmailSequence() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "email-sequences", "create"],
     mutationFn: (data: CreateEmailSequenceInput) =>
       apiClient.post<EmailSequence>("/hr/recruitment/email-sequences", data, undefined, emailSequenceWithStepsContract),
@@ -50,7 +50,7 @@ export function useCreateEmailSequence() {
 
 export function useUpdateEmailSequence(emailSequenceId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "email-sequences", "update", emailSequenceId],
     mutationFn: (data: UpdateEmailSequenceInput) =>
       apiClient.patch<EmailSequence>(`/hr/recruitment/email-sequences/${emailSequenceId}`, data, undefined, emailSequenceWithStepsContract),
@@ -63,7 +63,7 @@ export function useUpdateEmailSequence(emailSequenceId: number) {
 
 export function useDeleteEmailSequence() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "email-sequences", "delete"],
     mutationFn: (emailSequenceId: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/email-sequences/${emailSequenceId}`, undefined, undefined, emailSequenceSuccessContract),

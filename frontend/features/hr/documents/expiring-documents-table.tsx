@@ -3,6 +3,8 @@
 import { AlertTriangle } from "lucide-react";
 import { format, differenceInDays, parseISO } from "date-fns";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -26,6 +28,9 @@ interface ExpiringDocumentsTableProps {
   expiringDocuments: ExpiringDoc[];
   expiringCertifications: ExpiringCert[];
   isLoading: boolean;
+  isError?: boolean;
+  error?: unknown;
+  onRetry?: () => void;
   className?: string;
 }
 
@@ -99,8 +104,23 @@ export function ExpiringDocumentsTable({
   expiringDocuments,
   expiringCertifications,
   isLoading,
+  isError,
+  error,
+  onRetry,
   className,
 }: ExpiringDocumentsTableProps) {
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load expiring documents"
+        description={getErrorMessage(error)}
+        onRetry={onRetry}
+        compact
+      />
+    );
+  }
+
   const allItems: MergedItem[] = [
     ...expiringDocuments.map((d) => ({
       id: d.id,
