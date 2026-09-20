@@ -23,6 +23,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { Shield, Lock } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { ErrorState } from "@/components/shared";
 import { EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
 import type { Control } from "react-hook-form";
 import {
@@ -105,8 +106,8 @@ export function EmployeeSensitiveTab({ userId }: Props) {
   const canManage = useCan("hr:sensitive:manage");
   const [editMode, setEditMode] = useState(false);
 
-  const { data: employment, isLoading: empLoading } = useEmployeeEmployment(userId);
-  const { data: sensitive, isLoading: sensitiveLoading } = useEmployeeSensitive(
+  const { data: employment, isLoading: empLoading, isError: empError, error: empErrorValue, refetch: refetchEmp } = useEmployeeEmployment(userId);
+  const { data: sensitive, isLoading: sensitiveLoading, isError: sensitiveError, error: sensitiveErrorValue, refetch: refetchSensitive } = useEmployeeSensitive(
     canView ? employment?.id : undefined
   );
 
@@ -147,6 +148,21 @@ export function EmployeeSensitiveTab({ userId }: Props) {
           <Skeleton key={i} className="h-14 w-full rounded-xl" />
         ))}
       </div>
+    );
+  }
+
+  if (empError || sensitiveError) {
+    const handleRetry = () => {
+      void refetchEmp();
+      void refetchSensitive();
+    };
+    return (
+      <ErrorState
+        title="Couldn't load employee data"
+        description={getErrorMessage(empErrorValue ?? sensitiveErrorValue)}
+        onRetry={handleRetry}
+        className="py-16"
+      />
     );
   }
 

@@ -243,7 +243,7 @@ export function usePublishJobToBoards() {
 }
 
 export function useSourcePortals() {
-  return useGatedQuery("hr:employees:manage", {
+  return useGatedQuery("hr:requisitions:manage", {
     queryKey: [...humanResourcesQueryKeys.hr.all, "sourcePortals"] as const,
     queryFn: ({ signal }) => apiClient.get<SourcePortal[]>("/hr/recruitment/portals", undefined, signal, sourcePortalsListC),
     staleTime: 2 * 60_000,
@@ -252,7 +252,7 @@ export function useSourcePortals() {
 
 export function useUpsertSourcePortal() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "portals", "upsert"],
     mutationFn: (data: UpsertPortalInput) =>
       apiClient.post<SourcePortal>("/hr/recruitment/portals", data, undefined, upsertSourcePortalC),

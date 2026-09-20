@@ -82,10 +82,15 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
     isFetchingNextPage: isLoadingMoreMyRequests,
     fetchNextPage: fetchMoreMyRequests,
   } = useHrMyLeaveRequestsInfinite();
-  const { data: approvalsData, isLoading: approvalsLoading } =
-    useHrLeaveApprovals({
-      enabled: isAdmin,
-    });
+  const {
+    data: approvalsData,
+    isLoading: approvalsLoading,
+    isError: approvalsError,
+    error: approvalsErrorValue,
+    refetch: refetchApprovals,
+  } = useHrLeaveApprovals({
+    enabled: isAdmin,
+  });
   const { data: thisWeekData } = useHrLeavesThisWeek({
     enabled: !selfService,
   });
@@ -363,12 +368,20 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
 
             {isAdmin ? (
               <TabsContent value="approvals" className={TAB_PANEL_CLASS}>
-                <LeaveApprovalsContent
-                  incomingLeaveRequests={incomingLeaveRequests}
-                  allIncomingLeaveRequests={allIncomingLeaveRequests}
-                  currentUserId={session?.user?.id}
-                  isLoading={approvalsLoading}
-                />
+                {approvalsError ? (
+                  <ErrorState
+                    description={getErrorMessage(approvalsErrorValue)}
+                    onRetry={refetchApprovals}
+                    className="flex-1"
+                  />
+                ) : (
+                  <LeaveApprovalsContent
+                    incomingLeaveRequests={incomingLeaveRequests}
+                    allIncomingLeaveRequests={allIncomingLeaveRequests}
+                    currentUserId={session?.user?.id}
+                    isLoading={approvalsLoading}
+                  />
+                )}
               </TabsContent>
             ) : null}
           </div>

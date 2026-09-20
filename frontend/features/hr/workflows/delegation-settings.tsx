@@ -37,7 +37,7 @@ interface Props {
 }
 
 export function DelegationSettings({ open, onOpenChange }: Props) {
-  const { data: delegations, isLoading } = useMyDelegations({ enabled: open });
+  const { data: delegations, isLoading, isError, error, refetch } = useMyDelegations({ enabled: open });
   const create = useCreateDelegation();
   const remove = useDeleteDelegation();
 
@@ -81,11 +81,24 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
 
         <ScrollArea className="max-h-64 pr-2">
           {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
-          {!isLoading && !delegations?.length && (
+          {isError && (
+            <div className="text-sm text-status-danger-ink">
+              <p className="font-medium">Couldn't load delegations</p>
+              <p className="text-xs mt-1">{getErrorMessage(error)}</p>
+              <button
+                onClick={() => void refetch()}
+                className="text-xs underline mt-2"
+                type="button"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+          {!isLoading && !isError && !delegations?.length && (
             <p className="text-sm text-muted-foreground">No active delegations</p>
           )}
           <div className="space-y-2">
-            {delegations?.map((d) => (
+            {!isError && delegations?.map((d) => (
               <div key={d.id} className="flex items-center gap-2 rounded-lg border p-2.5 text-xs">
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">{d.delegateName ?? d.delegateEmail?.split("@")[0] ?? "Unknown user"}</p>
