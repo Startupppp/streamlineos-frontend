@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useWorkflowInstanceDetail,
@@ -56,7 +57,7 @@ const ACTION_ICONS: Record<HrWorkflowAction, ReactNode> = {
 };
 
 export function InstanceDetailSheet({ instanceId, onClose, showActions = false }: Props) {
-  const { data: instance, isLoading } = useWorkflowInstanceDetail(instanceId);
+  const { data: instance, isLoading, isError, error, refetch } = useWorkflowInstanceDetail(instanceId);
   const approve = useApproveInstance();
   const reject = useRejectInstance();
   const [showRejectForm, setShowRejectForm] = useState(false);
@@ -65,6 +66,8 @@ export function InstanceDetailSheet({ instanceId, onClose, showActions = false }
     resolver: zodResolver(rejectSchema),
     defaultValues: { comment: "" },
   });
+
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const handleApprove = useCallback(() => {
     if (!instanceId) return;
@@ -123,7 +126,17 @@ export function InstanceDetailSheet({ instanceId, onClose, showActions = false }
               </div>
             )}
 
-            {instance && (
+            {isError && (
+              <ErrorState
+                compact
+                className="border-0 bg-transparent shadow-none"
+                title="Couldn't load instance detail"
+                description={getErrorMessage(error)}
+                onRetry={handleRetry}
+              />
+            )}
+
+            {!isLoading && !isError && instance && (
               <>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
