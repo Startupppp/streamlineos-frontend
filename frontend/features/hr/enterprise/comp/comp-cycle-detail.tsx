@@ -75,7 +75,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
     error: recsError,
     refetch: refetchRecs,
   } = useCompRecommendations(cycleId, { cursor });
-  const { data: pools, isLoading: poolsLoading } = useBudgetPools(cycleId);
+  const { data: pools, isLoading: poolsLoading, isError: poolsIsError, error: poolsError, refetch: refetchPools } = useBudgetPools(cycleId);
   const calibrateMut = useCalibrateRecommendation();
   const { data: membersData } = useOrgMembers(1, 200);
 
@@ -146,14 +146,21 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
   return (
     <div className="space-y-6">
       {/* Budget Pools */}
-      {!poolsLoading && pools && pools.length > 0 && (
+      {poolsIsError ? (
+        <ErrorState
+          title="Couldn't load budget pools"
+          description={getErrorMessage(poolsError)}
+          onRetry={refetchPools}
+          compact
+        />
+      ) : !poolsLoading && pools && pools.length > 0 ? (
         <div className="p-4 rounded-xl border bg-card space-y-3">
           <p className="text-sm font-semibold">Budget Pools</p>
           {pools.map((pool) => (
             <BudgetBar key={pool.id} allocated={pool.allocatedCents} used={pool.usedCents} />
           ))}
         </div>
-      )}
+      ) : null}
 
       {/* Merit Matrix */}
       {cycle?.meritMatrix && Object.keys(cycle.meritMatrix).length > 0 && (

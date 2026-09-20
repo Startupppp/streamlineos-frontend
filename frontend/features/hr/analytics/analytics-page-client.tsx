@@ -8,7 +8,8 @@ import {
 import { useRecruitmentStats } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   CONTENT_FILL_PANEL,
   FILTER_SELECT_TRIGGER,
@@ -175,7 +176,7 @@ export function AnalyticsPageClient() {
     return 1;
   }, [dateRange]);
 
-  const { data, isLoading: isAnalyticsLoading, isError, refetch } = useHrAnalytics();
+  const { data, isLoading: isAnalyticsLoading, isError, error, refetch } = useHrAnalytics();
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const { data: recruitmentStats, isLoading: isRecruitmentLoading } =
     useRecruitmentStats();
@@ -199,12 +200,11 @@ export function AnalyticsPageClient() {
       <PageWrapper
         title="HR Analytics"
         subtitle="Workforce insights and operational metrics">
-        <EmptyState
-          illustrationPreset="alert"
+        <ErrorState
+          className="flex-1"
           title="Failed to load analytics"
-          description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: handleRetry }}
-          className={CONTENT_FILL_PANEL}
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
         />
       </PageWrapper>
     );

@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatINR } from "@/lib/format-utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -133,7 +134,7 @@ const TemplateCard = memo(function TemplateCard({ template, index, onEdit, onDel
 
 export function SalaryStructuresPageContent() {
   const shouldReduceMotion = useReducedMotion();
-  const { data: page, isLoading, isError, refetch } = useSalaryStructureTemplates();
+  const { data: page, isLoading, isError, error, refetch } = useSalaryStructureTemplates();
   const templates = page?.data;
   const createMutation = useCreateSalaryTemplate();
   const updateMutation = useUpdateSalaryTemplate();
@@ -256,10 +257,11 @@ export function SalaryStructuresPageContent() {
       </div>
 
       {isError ? (
-        <EmptyState
+        <ErrorState
+          className="flex-1"
           title="Failed to load templates"
-          description="Something went wrong while fetching salary structure templates."
-          action={{ label: "Retry", onClick: handleRetry }}
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
         />
       ) : !templates || templates.length === 0 ? (
         <motion.div

@@ -2,6 +2,8 @@
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyPayroll } from "@/components/illustrations";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll";
 import { PolicyProfileSection } from "./policy-profile-section";
@@ -12,7 +14,7 @@ import { FxRatesSection } from "./fx-rates-section";
 import { EntitiesSection } from "./entities-section";
 
 export function SettingsPageContent() {
-  const { data, isLoading, isError, refetch } = usePayrollPolicyCurrent();
+  const { data, isLoading, isError, error, refetch } = usePayrollPolicyCurrent();
 
   if (isLoading) {
     return (
@@ -29,9 +31,11 @@ export function SettingsPageContent() {
   if (isError) {
     return (
       <PageWrapper title="Payroll Settings">
-        <EmptyState
+        <ErrorState
+          className="flex-1"
           title="Failed to load settings"
-          action={{ label: "Retry", onClick: () => void refetch() }}
+          description={getErrorMessage(error)}
+          onRetry={refetch}
         />
       </PageWrapper>
     );
