@@ -30,16 +30,25 @@ export const essSalaryComponentContract = z.object({
   percent: z.string().nullable(),
 });
 
-export const essSalaryStructureContract = z.object({
-  profile: z.object({
-    annualCtc: z.string(),
-    workerType: z.string(),
-    taxRegime: z.enum(["OLD", "NEW"]).nullable(),
-    costCenter: z.string().nullable(),
-    effectiveFrom: z.string(),
+export const essSalaryStructureContract = z.union([
+  z.object({
+    setupRequired: z.literal(false).or(z.undefined()),
+    profile: z.object({
+      annualCtc: z.string(),
+      workerType: z.string(),
+      taxRegime: z.enum(["OLD", "NEW"]).nullable(),
+      costCenter: z.string().nullable(),
+      effectiveFrom: z.string(),
+    }),
+    components: z.array(essSalaryComponentContract),
   }),
-  components: z.array(essSalaryComponentContract),
-});
+  z.object({
+    setupRequired: z.literal(true),
+    profile: z.null(),
+    components: z.array(essSalaryComponentContract),
+    message: z.string().optional(),
+  }),
+]);
 
 export const essReimbursementStatusContract = z.enum([
   "PENDING",

@@ -36,7 +36,7 @@ function SalaryStructureSkeleton() {
 }
 
 export function EssSalarySection() {
-  const { data, isLoading, isError } = useEssSalaryStructure();
+  const { data, isLoading, isError, error } = useEssSalaryStructure();
 
   if (isLoading) {
     return (
@@ -46,13 +46,26 @@ export function EssSalarySection() {
     );
   }
 
-  if (isError || !data) {
+  if (isError) {
     return (
       <section id="salary" className="flex min-h-0 w-full flex-1 flex-col">
         <EmptyState
           illustrationPreset="payroll"
-          title="Salary structure unavailable"
-          description="Your salary structure is not visible yet or has not been configured."
+          title="Something went wrong"
+          description={error?.message ?? "Unable to load salary structure. Please try again."}
+          className={PAGE_BODY_EMPTY_CLASS}
+        />
+      </section>
+    );
+  }
+
+  if (!data || (data.setupRequired === true)) {
+    return (
+      <section id="salary" className="flex min-h-0 w-full flex-1 flex-col">
+        <EmptyState
+          illustrationPreset="payroll"
+          title="Salary structure not set up"
+          description={data?.message ?? "Your salary structure has not been configured yet. Please contact your HR department."}
           className={PAGE_BODY_EMPTY_CLASS}
         />
       </section>
