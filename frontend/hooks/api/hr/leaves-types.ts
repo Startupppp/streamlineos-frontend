@@ -37,11 +37,6 @@ export interface LeaveContextResult {
   }>;
 }
 
-export interface LeaveApprovalsResult {
-  pending: unknown[];
-  all: unknown[];
-}
-
 export interface LeaveRequestsPage {
   data: unknown[];
   pageInfo: {

@@ -128,10 +128,18 @@ export const leaveContextContract = z.object({
   ),
 });
 
-export const leaveApprovalsContract = z.object({
-  pending: z.array(leavesTeamItemSchema),
-  all: z.array(leavesTeamItemSchema),
+const idCursorPageInfoSchema = z.object({
+  limit: z.number().int(),
+  hasMore: z.boolean(),
+  nextCursor: z.number().int().nullable(),
 });
+
+export const leaveApprovalsContract = z.object({
+  data: z.array(leavesTeamItemSchema),
+  pageInfo: idCursorPageInfoSchema,
+});
+
+export type LeavesTeamPage = z.infer<typeof leaveApprovalsContract>;
 
 export const leavesThisWeekContract = z.array(
   leaveRequestRowSchema.extend({
@@ -151,11 +159,7 @@ export const leavesThisWeekContract = z.array(
 
 export const leaveRequestsPageContract = z.object({
   data: z.array(leaveRequestWithRelationsSchema),
-  pageInfo: z.object({
-    limit: z.number().int(),
-    hasMore: z.boolean(),
-    nextCursor: z.number().int().nullable(),
-  }),
+  pageInfo: idCursorPageInfoSchema,
 });
 
 const orgHolidayRowSchema = z.object({

@@ -83,7 +83,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
     fetchNextPage: fetchMoreMyRequests,
   } = useHrMyLeaveRequestsInfinite();
   const {
-    data: approvalsData,
+    data: approvalPages,
     isLoading: approvalsLoading,
     isError: approvalsError,
     error: approvalsErrorValue,
@@ -125,9 +125,12 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
 
   const myLeaveRequests = (myPages?.pages.flatMap((page) => page.data) ??
     []) as LeaveRequest[];
-  const incomingLeaveRequests = (approvalsData?.pending ??
-    []) as LeaveRequest[];
-  const allIncomingLeaveRequests = (approvalsData?.all ?? []) as LeaveRequest[];
+  const allIncomingLeaveRequests = (approvalPages?.pages.flatMap(
+    (page) => page.data,
+  ) ?? []) as LeaveRequest[];
+  const incomingLeaveRequests = allIncomingLeaveRequests.filter(
+    (r) => r.status === "PENDING",
+  );
   const approvedLeavesThisWeek = (thisWeekData ?? []) as ApprovedLeave[];
 
   const totalPendingApprovals =
