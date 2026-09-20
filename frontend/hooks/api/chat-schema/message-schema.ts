@@ -81,17 +81,20 @@ const chatMessageMetadataContract = z
  * timeline selected five columns and not that one, so every forward of a
  * message with an attachment posted `fileUrl: undefined` and came back 400.
  * `MessageAttachment` declared it all along — the cast made both sides compile.
+ *
+ * NOT `.strict()` as of CHAT-002 fix: the backend may send additional
+ * attachment metadata fields (timestamps, upload context) that the client
+ * doesn't need to read. Like messages, attachments are selected from the full
+ * row rather than an enumerated projection, so extra fields are legitimate.
  */
-export const chatMessageAttachmentContract = z
-  .object({
-    id: z.number(),
-    fileName: z.string(),
-    fileUrl: z.string(),
-    fileKey: z.string(),
-    fileSize: z.number(),
-    mimeType: z.string(),
-  })
-  .strict();
+export const chatMessageAttachmentContract = z.object({
+  id: z.number(),
+  fileName: z.string(),
+  fileUrl: z.string(),
+  fileKey: z.string(),
+  fileSize: z.number(),
+  mimeType: z.string(),
+});
 
 const chatMessageSenderContract = z.object({
   id: z.string().nullable(),
