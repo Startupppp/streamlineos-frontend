@@ -10,6 +10,9 @@ const confirmActionDirectiveSchema = z.object({
   action: z.string(),
   summary: z.string(),
   preview: z.record(z.string(), z.unknown()),
+  expiresAt: z.string().optional(),
+  title: z.string().optional(),
+  confirmLabel: z.string().optional(),
 });
 
 const connectIntegrationDirectiveSchema = z.object({
@@ -61,27 +64,33 @@ export function serializeAskOsDirective(directive: AskOsDirective): string {
 }
 
 export function extractAskOsDirective(content: string): {
-  directive: AskOsDirective | null;
+  directives: AskOsDirective[];
   prose: string;
 } {
-  const leading = parseAskOsDirective(content);
-  if (leading !== null) return { directive: leading, prose: "" };
+  const lines = content.split("\n");
+  const directives: AskOsDirective[] = [];
+  let proseEnd = lines.length;
 
-  const separator = content.lastIndexOf("\n");
-  if (separator === -1) return { directive: null, prose: content };
+  for (let i = lines.length - 1; i >= 0; i -= 1) {
+    const line = lines[i] ?? "";
+    const d = parseAskOsDirective(line);
+    if (d === null) break;
+    directives.unshift(d);
+    proseEnd = i;
+  }
 
-  const tail = parseAskOsDirective(content.slice(separator + 1));
-  if (tail === null) return { directive: null, prose: content };
-  return { directive: tail, prose: content.slice(0, separator) };
+  const prose = lines.slice(0, proseEnd).join("\n");
+  return { directives, prose };
 }
 
 export function appendAskOsDirective(
   content: string,
-  directive: AskOsDirective | null,
+  directives: AskOsDirective[],
 ): string {
-  if (directive === null) return content;
-  if (extractAskOsDirective(content).directive !== null) return content;
-  const encoded = serializeAskOsDirective(directive);
+  if (directives.length === 0) return content;
+  const { directives: existing } = extractAskOsDirective(content);
+  if (existing.length > 0) return content;
+  const encoded = directives.map(serializeAskOsDirective).join("\n");
   const trimmed = content.trimEnd();
   return trimmed.length === 0 ? encoded : `${trimmed}\n${encoded}`;
 }

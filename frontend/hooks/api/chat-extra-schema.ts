@@ -55,9 +55,6 @@ export const aiConversationMessagesContract = z.object({
       role: z.enum(["user", "assistant"]),
       content: z.string(),
       createdAt: z.string(),
-      aiUsage: z
-        .object({ inputTokens: z.number().int(), outputTokens: z.number().int() })
-        .optional(),
     }),
   ),
   nextCursor: z.number().int().nullable(),

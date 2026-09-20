@@ -18,13 +18,7 @@ const UNAVAILABLE_MESSAGE =
 const OFFLINE_MESSAGE =
   "You appear to be offline. Reconnect and try again.";
 
-/**
- * The concurrency cap and the circuit breaker both answer 503 and neither
- * carries a `code`, so this phrase is the only thing that separates "back off,
- * the queue is full" from "the provider is down". Replace it with a code check
- * the moment the backend gives those exceptions distinct codes.
- */
-const CONCURRENCY_CAP_PHRASE = "too many concurrent";
+const AI_CONCURRENCY_LIMIT_CODE = "AI_CONCURRENCY_LIMIT";
 
 const CLIENT_PERMISSION_PREFIX = "Missing permission:";
 
@@ -71,7 +65,7 @@ export function classifyAiError(error: unknown): AiFailureState {
   if (status === 429) return { status: "queued", message: QUEUE_MESSAGE };
 
   if (status === 503) {
-    return error.message.toLowerCase().includes(CONCURRENCY_CAP_PHRASE)
+    return error.code === AI_CONCURRENCY_LIMIT_CODE
       ? { status: "queued", message: QUEUE_MESSAGE }
       : { status: "unavailable", message: UNAVAILABLE_MESSAGE };
   }

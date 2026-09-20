@@ -6,50 +6,6 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useConfirmAction } from "@/hooks/api/ai-confirm-action";
 
-const ACTION_TITLES: Record<string, string> = {
-  "email.send": "Send email",
-  "mail.send": "Send email",
-  "mail.reply": "Reply to email",
-  "chat.postChannel": "Post to channel",
-  "hr.grantRecognition": "Send kudos",
-  "hr.grantBonus": "Grant bonus",
-  "crm.createLead": "Create lead",
-  "crm.logActivity": "Log activity",
-  "ticket.assign": "Assign ticket",
-  "ticket.moveToSprint": "Move to sprint",
-  "calendar.createEvent": "Create event",
-  "ticket.create": "Create ticket",
-  "ticket.updateStatus": "Update status",
-  "ticket.addComment": "Add comment",
-  "calendar.createReminder": "Set reminder",
-  "self.applyLeave": "Request leave",
-  "self.submitExpense": "Submit expense",
-  "self.logTimesheet": "Log time",
-  "self.submitReferral": "Submit referral",
-};
-
-const CONFIRM_LABELS: Record<string, string> = {
-  "email.send": "Send",
-  "mail.send": "Send",
-  "mail.reply": "Reply",
-  "chat.postChannel": "Post",
-  "hr.grantRecognition": "Send",
-  "hr.grantBonus": "Grant",
-  "crm.createLead": "Create",
-  "crm.logActivity": "Log",
-  "ticket.assign": "Assign",
-  "ticket.moveToSprint": "Move",
-  "calendar.createEvent": "Create",
-  "ticket.create": "Create",
-  "ticket.updateStatus": "Update",
-  "ticket.addComment": "Comment",
-  "calendar.createReminder": "Remind",
-  "self.applyLeave": "Submit",
-  "self.submitExpense": "Submit",
-  "self.logTimesheet": "Log",
-  "self.submitReferral": "Submit",
-};
-
 const PREVIEW_LABELS: Record<string, string> = {
   toEmail: "To",
   subject: "Subject",
@@ -65,6 +21,9 @@ interface ConfirmationCardProps {
   summary: string;
   preview: Record<string, unknown>;
   token: string;
+  expiresAt?: string;
+  title?: string;
+  confirmLabel?: string;
   onConfirmed: (result: Record<string, unknown>) => void;
   onCancelled: () => void;
 }
@@ -90,17 +49,26 @@ function PreviewFields({ preview }: { preview: Record<string, unknown> }) {
   );
 }
 
+function isExpired(expiresAt: string | undefined): boolean {
+  if (!expiresAt) return false;
+  return new Date(expiresAt) <= new Date();
+}
+
 export function AskOsConfirmationCard({
-  action,
+  action: _action,
   summary,
   preview,
   token,
+  expiresAt,
+  title,
+  confirmLabel,
   onConfirmed,
   onCancelled,
 }: ConfirmationCardProps) {
   const { mutate, isPending } = useConfirmAction();
-  const title = ACTION_TITLES[action] ?? summary;
-  const confirmLabel = CONFIRM_LABELS[action] ?? "Confirm";
+  const cardTitle = title ?? summary;
+  const buttonLabel = confirmLabel ?? "Confirm";
+  const expired = isExpired(expiresAt);
 
   function handleConfirm() {
     mutate(token, {
@@ -115,14 +83,18 @@ export function AskOsConfirmationCard({
 
   return (
     <div className="space-y-2">
-      <p className="text-[13px] font-medium leading-5 text-foreground">{title}</p>
-      <PreviewFields preview={preview} />
+      <p className="text-[13px] font-medium leading-5 text-foreground">{cardTitle}</p>
+      {expired ? (
+        <p className="text-[11px] text-muted-foreground">This action has expired.</p>
+      ) : (
+        <PreviewFields preview={preview} />
+      )}
       <div className="flex items-center justify-end gap-2">
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          disabled={isPending}
+          disabled={isPending || expired}
           onClick={onCancelled}
           className="h-7 px-2.5 text-xs text-muted-foreground hover:text-foreground"
         >
@@ -132,10 +104,11 @@ export function AskOsConfirmationCard({
           type="button"
           size="sm"
           isPending={isPending}
+          disabled={expired}
           onClick={handleConfirm}
           className="h-7 px-2.5 text-xs"
         >
-          {confirmLabel}
+          {expired ? "Expired" : buttonLabel}
         </LoadingButton>
       </div>
     </div>

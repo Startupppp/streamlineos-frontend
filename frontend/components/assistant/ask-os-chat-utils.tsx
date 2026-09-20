@@ -99,24 +99,17 @@ export function EmptyAskOs({
   );
 }
 
+type ConfirmActionDirective = Extract<AskOsDirective, { kind: "confirm-action" }>;
 
-function confirmOutcomeCopy(action: string | undefined): string {
+function confirmOutcomeCopy(action: string): string {
   if (action === "email.send" || action === "mail.send") return "Email sent.";
   return "Done.";
 }
 
-export function AskOsBubble({
-  role,
-  content,
-  streaming,
-  reduce,
-  directive: directiveProp,
+function ConfirmDirectiveSlot({
+  directive,
 }: {
-  role: "user" | "assistant";
-  content: string;
-  streaming: boolean;
-  reduce: boolean;
-  directive?: AskOsDirective | null;
+  directive: ConfirmActionDirective;
 }) {
   const [confirmedResult, setConfirmedResult] = useState<Record<
     string,
@@ -124,6 +117,47 @@ export function AskOsBubble({
   > | null>(null);
   const [cancelled, setCancelled] = useState(false);
 
+  function handleCancelled() {
+    setCancelled(true);
+  }
+
+  if (confirmedResult !== null)
+    return (
+      <p className="text-[13px] text-muted-foreground">
+        {confirmOutcomeCopy(directive.action)}
+      </p>
+    );
+  if (cancelled)
+    return <p className="text-[13px] text-muted-foreground">Cancelled.</p>;
+
+  return (
+    <AskOsConfirmationCard
+      action={directive.action}
+      summary={directive.summary}
+      preview={directive.preview}
+      token={directive.token}
+      expiresAt={directive.expiresAt}
+      title={directive.title}
+      confirmLabel={directive.confirmLabel}
+      onConfirmed={setConfirmedResult}
+      onCancelled={handleCancelled}
+    />
+  );
+}
+
+export function AskOsBubble({
+  role,
+  content,
+  streaming,
+  reduce,
+  directives: directivesProp,
+}: {
+  role: "user" | "assistant";
+  content: string;
+  streaming: boolean;
+  reduce: boolean;
+  directives?: AskOsDirective[];
+}) {
   if (role === "user") {
     return (
       <motion.div
@@ -138,28 +172,21 @@ export function AskOsBubble({
     );
   }
 
-  const extracted = extractAskOsDirective(content);
-  const directive = directiveProp ?? extracted.directive;
-  const prose = extracted.prose;
+  const { directives: extracted, prose } = extractAskOsDirective(content);
+  const directives = directivesProp ?? extracted;
 
-  function handleCancelled() {
-    setCancelled(true);
-  }
+  const confirmDirectives = directives.filter(
+    (d): d is ConfirmActionDirective => d.kind === "confirm-action",
+  );
+  const connectDirectives = directives.filter(
+    (d): d is Extract<AskOsDirective, { kind: "connect-integration" }> =>
+      d.kind === "connect-integration",
+  );
 
-  const confirmDirective =
-    directive?.kind === "confirm-action" && !confirmedResult && !cancelled
-      ? directive
-      : null;
-  const connectDirective =
-    directive?.kind === "connect-integration" ? directive : null;
-  const showProse =
-    Boolean(prose) && confirmDirective === null && !confirmedResult && !cancelled;
-  const showMessageChrome =
-    Boolean(confirmDirective) ||
-    Boolean(confirmedResult) ||
-    cancelled ||
-    showProse ||
-    (streaming && !connectDirective);
+  const showTyping =
+    streaming && !prose && confirmDirectives.length === 0 && connectDirectives.length === 0;
+  const showChrome =
+    Boolean(prose) || confirmDirectives.length > 0 || showTyping;
 
   return (
     <motion.div
@@ -173,43 +200,30 @@ export function AskOsBubble({
         className="mt-0.5 shrink-0 rounded-full"
       />
       <div className="min-w-0 max-w-[92%] flex-1 space-y-2 text-sm leading-6 text-foreground">
-        {showMessageChrome ? (
+        {showChrome ? (
           <div className="space-y-2">
-            {confirmDirective ? (
-              <AskOsConfirmationCard
-                action={confirmDirective.action}
-                summary={confirmDirective.summary}
-                preview={confirmDirective.preview}
-                token={confirmDirective.token}
-                onConfirmed={setConfirmedResult}
-                onCancelled={handleCancelled}
+            {confirmDirectives.map((directive) => (
+              <ConfirmDirectiveSlot
+                key={directive.proposalId}
+                directive={directive}
               />
-            ) : confirmedResult ? (
-              <p className="text-[13px] text-muted-foreground">
-                {confirmOutcomeCopy(
-                  directive?.kind === "confirm-action" ? directive.action : undefined,
-                )}
-              </p>
-            ) : cancelled ? (
-              <p className="text-[13px] text-muted-foreground">Cancelled.</p>
-            ) : null}
-            {showProse ? (
+            ))}
+            {prose ? (
               <div className="break-words">
                 <MarkdownContent content={prose} />
               </div>
             ) : null}
-            {streaming && !connectDirective && !showProse && !confirmDirective && !confirmedResult && !cancelled ? (
-              <TypingDots reduce={reduce} />
-            ) : null}
+            {showTyping ? <TypingDots reduce={reduce} /> : null}
           </div>
         ) : null}
-        {connectDirective ? (
+        {connectDirectives.map((directive) => (
           <AskOsConnectCard
-            toolkit={connectDirective.toolkit}
-            reason={connectDirective.reason}
-            summary={connectDirective.summary}
+            key={directive.toolkit}
+            toolkit={directive.toolkit}
+            reason={directive.reason}
+            summary={directive.summary}
           />
-        ) : null}
+        ))}
       </div>
     </motion.div>
   );

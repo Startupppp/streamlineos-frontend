@@ -65,8 +65,8 @@ export function GlobalAskOs() {
   const [composerError, setComposerError] = useState<string | null>(null);
   const [failure, setFailure] = useState<AiFailureState | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
-  const [inFlightDirective, setInFlightDirective] = useState<AskOsDirective | null>(null);
-  const inFlightDirectiveRef = useRef<AskOsDirective | null>(null);
+  const [inFlightDirective, setInFlightDirective] = useState<AskOsDirective[]>([]);
+  const inFlightDirectiveRef = useRef<AskOsDirective[]>([]);
   const [atBottom, setAtBottom] = useState(true);
   const [view, setView] = useState<"chat" | "conversations">("chat");
   const [activeConversationId, setActiveConversationId] = useState<
@@ -216,8 +216,8 @@ export function GlobalAskOs() {
       if (name !== "askos-directive") return;
       const parsed = parseAskOsDirectivePayload(data);
       if (parsed === null) return;
-      inFlightDirectiveRef.current = parsed;
-      setInFlightDirective(parsed);
+      inFlightDirectiveRef.current = [...inFlightDirectiveRef.current, parsed];
+      setInFlightDirective((previous) => [...previous, parsed]);
     },
     [],
   );
@@ -238,8 +238,8 @@ export function GlobalAskOs() {
       setInput("");
       setComposerError(null);
       setFailure(null);
-      inFlightDirectiveRef.current = null;
-      setInFlightDirective(null);
+      inFlightDirectiveRef.current = [];
+      setInFlightDirective([]);
       isNearBottomRef.current = true;
       setDraft({ user: text, assistant: "" });
       let conversationId = activeConversationId;
@@ -293,14 +293,14 @@ export function GlobalAskOs() {
         );
         if (outcome.status === "busy") {
           setDraft(null);
-          inFlightDirectiveRef.current = null;
-          setInFlightDirective(null);
+          inFlightDirectiveRef.current = [];
+          setInFlightDirective([]);
           return;
         }
         if (outcome.status === "cancelled" && outcome.text.length === 0) {
           setDraft(null);
-          inFlightDirectiveRef.current = null;
-          setInFlightDirective(null);
+          inFlightDirectiveRef.current = [];
+          setInFlightDirective([]);
           setFailure({ status: "cancelled" });
           return;
         }
@@ -308,7 +308,7 @@ export function GlobalAskOs() {
         if (
           outcome.status === "completed" &&
           outcome.text.trim().length === 0 &&
-          inFlightDirectiveRef.current === null
+          inFlightDirectiveRef.current.length === 0
         ) {
           setDraft(null);
           setFailure({
@@ -363,8 +363,8 @@ export function GlobalAskOs() {
           queryKey: collaborationQueryKeys.aiChat.conversations(),
         });
         setDraft(null);
-        inFlightDirectiveRef.current = null;
-        setInFlightDirective(null);
+        inFlightDirectiveRef.current = [];
+        setInFlightDirective([]);
       } catch (error) {
         const refusal = askOsComposerRefusal(error);
         if (refusal) {
@@ -562,7 +562,7 @@ export function GlobalAskOs() {
                       scrollRef={scrollRef}
                       showEmpty={showEmpty}
                       topSentinelRef={topSentinelRef}
-                      directive={inFlightDirective}
+                      directives={inFlightDirective}
                     />
                     <AskOsChatComposer
                       error={composerError}

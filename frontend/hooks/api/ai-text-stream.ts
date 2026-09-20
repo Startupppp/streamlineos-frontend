@@ -10,7 +10,8 @@ import {
 } from "@/hooks/api/ai-ui-message-stream";
 
 
-export const AI_STREAM_TIMEOUT_MS = 180_000;
+const CHAT_STREAM_SERVER_DEADLINE_MS = 120_000;
+export const AI_STREAM_TIMEOUT_MS = CHAT_STREAM_SERVER_DEADLINE_MS + 5_000;
 
 export type AiTextStreamResult =
   | { status: "completed"; text: string; headers: Headers }
@@ -79,6 +80,10 @@ export async function streamAiText({
 
     let lastToolError: string | null = null;
 
+    function assertNever(x: never): never {
+      throw new ApiError(`Unhandled stream event: ${JSON.stringify(x)}`, 502);
+    }
+
     function emit(text: string) {
       if (!text) return;
       received += text;
@@ -87,16 +92,26 @@ export async function streamAiText({
 
     function drain(events: readonly AiUiMessageStreamEvent[]) {
       for (const event of events) {
-        if (event.type === "error") throw new ApiError(event.message, 502);
-        if (event.type === "tool-error") {
-          lastToolError = event.message;
-          continue;
+        switch (event.type) {
+          case "error":
+            throw new ApiError(event.message, 502);
+          case "abort":
+            throw new ApiError(
+              "The assistant's response was cut short. Please try again.",
+              502,
+            );
+          case "tool-error":
+            lastToolError = event.message;
+            break;
+          case "data":
+            onData?.(event.name, event.data);
+            break;
+          case "text":
+            emit(event.text);
+            break;
+          default:
+            assertNever(event);
         }
-        if (event.type === "data") {
-          onData?.(event.name, event.data);
-          continue;
-        }
-        emit(event.text);
       }
     }
 

@@ -26,6 +26,31 @@ describe("parseAskOsDirective", () => {
     });
   });
 
+  it("parses a valid CONFIRM_ACTION directive with optional expiresAt, title and confirmLabel", () => {
+    const body = JSON.stringify({
+      proposalId: 7,
+      token: "tok-xyz",
+      action: "email.send",
+      summary: "Send email to Jane",
+      preview: { to: "jane@example.com" },
+      expiresAt: "2026-09-19T10:00:00.000Z",
+      title: "Send email",
+      confirmLabel: "Send",
+    });
+    const result = parseAskOsDirective(`CONFIRM_ACTION:${body}`);
+    expect(result).toEqual({
+      kind: "confirm-action",
+      proposalId: 7,
+      token: "tok-xyz",
+      action: "email.send",
+      summary: "Send email to Jane",
+      preview: { to: "jane@example.com" },
+      expiresAt: "2026-09-19T10:00:00.000Z",
+      title: "Send email",
+      confirmLabel: "Send",
+    });
+  });
+
   it("parses a valid CONNECT_INTEGRATION directive with no-connection reason", () => {
     const body = JSON.stringify({
       toolkit: "gmail",
@@ -98,6 +123,25 @@ describe("parseAskOsDirectivePayload — typed object path for stream data frame
     });
   });
 
+  it("parses a confirm-action with expiresAt, title and confirmLabel from the stream data frame", () => {
+    const result = parseAskOsDirectivePayload({
+      kind: "confirm-action",
+      proposalId: 3,
+      token: "tok-abc",
+      action: "email.send",
+      summary: "Send email to Alice",
+      preview: { to: "alice@example.com" },
+      expiresAt: "2026-09-19T10:00:00.000Z",
+      title: "Send email",
+      confirmLabel: "Send",
+    });
+    expect(result?.kind).toBe("confirm-action");
+    if (result?.kind !== "confirm-action") throw new Error("narrowing");
+    expect(result.expiresAt).toBe("2026-09-19T10:00:00.000Z");
+    expect(result.title).toBe("Send email");
+    expect(result.confirmLabel).toBe("Send");
+  });
+
   it("parses a connect-integration object directly without any text prefix", () => {
     const result = parseAskOsDirectivePayload({
       kind: "connect-integration",
@@ -149,21 +193,52 @@ describe("Ask OS directive encoding stays on the message, not a separate footer"
     summary: "Connect a mail account to read your inbox.",
   };
 
+  const confirmEmail = {
+    kind: "confirm-action" as const,
+    proposalId: 1,
+    token: "tok-1",
+    action: "email.send",
+    summary: "Send email to jane@example.com",
+    preview: { to: "jane@example.com" },
+    title: "Send email",
+    confirmLabel: "Send",
+  };
+
   it("round-trips a connect directive so a persisted assistant turn can render the same action", () => {
     expect(parseAskOsDirective(serializeAskOsDirective(connect))).toEqual(connect);
   });
 
   it("keeps assistant prose and hangs the encoded connect action off the last line", () => {
-    const encoded = appendAskOsDirective("I can search the knowledge base after you connect mail.", connect);
+    const encoded = appendAskOsDirective(
+      "I can search the knowledge base after you connect mail.",
+      [connect],
+    );
 
     expect(extractAskOsDirective(encoded)).toEqual({
-      directive: connect,
+      directives: [connect],
       prose: "I can search the knowledge base after you connect mail.",
     });
   });
 
   it("does not duplicate an already-encoded connect action when the stream also sent a data frame", () => {
     const encoded = serializeAskOsDirective(connect);
-    expect(appendAskOsDirective(encoded, connect)).toBe(encoded);
+    expect(appendAskOsDirective(encoded, [connect])).toBe(encoded);
+  });
+
+  it("accumulates N directives in order so a multi-action turn persists correctly", () => {
+    const encoded = appendAskOsDirective("", [confirmEmail, connect]);
+    const { directives, prose } = extractAskOsDirective(encoded);
+    expect(prose).toBe("");
+    expect(directives).toHaveLength(2);
+    expect(directives[0]?.kind).toBe("confirm-action");
+    expect(directives[1]?.kind).toBe("connect-integration");
+  });
+
+  it("preserves prose when multiple directives are appended on consecutive final lines", () => {
+    const prose = "I have two things to show you.";
+    const encoded = appendAskOsDirective(prose, [confirmEmail, connect]);
+    const extracted = extractAskOsDirective(encoded);
+    expect(extracted.prose).toBe(prose);
+    expect(extracted.directives).toHaveLength(2);
   });
 });

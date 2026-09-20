@@ -7,6 +7,7 @@ const TERMINATOR = "[DONE]";
 
 export type AiUiMessageStreamEvent =
   | { type: "text"; text: string }
+  | { type: "abort" }
   | { type: "error"; message: string }
   | { type: "tool-error"; toolName: string | null; message: string }
   | { type: "data"; name: string; data: unknown };
@@ -35,6 +36,7 @@ function readFrame(payload: string): AiUiMessageStreamEvent | null {
   if (!isRecord(frame)) return null;
   if (frame.type === "text-delta" && typeof frame.delta === "string")
     return { type: "text", text: frame.delta };
+  if (frame.type === "abort") return { type: "abort" };
   if (frame.type === "error" && typeof frame.errorText === "string")
     return { type: "error", message: frame.errorText };
   if (frame.type === "tool-output-error" || frame.type === "tool-input-error")

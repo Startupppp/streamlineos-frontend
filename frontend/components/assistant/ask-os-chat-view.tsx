@@ -36,7 +36,7 @@ interface AskOsChatViewProps {
   scrollRef: RefObject<HTMLDivElement | null>;
   showEmpty: boolean;
   topSentinelRef: RefObject<HTMLDivElement | null>;
-  directive?: AskOsDirective | null;
+  directives?: AskOsDirective[];
 }
 
 export function AskOsChatView({
@@ -57,7 +57,7 @@ export function AskOsChatView({
   scrollRef,
   showEmpty,
   topSentinelRef,
-  directive = null,
+  directives = [],
 }: AskOsChatViewProps) {
   const msgRows = buildMsgRows(persisted);
   const lastPersisted =
@@ -141,7 +141,7 @@ export function AskOsChatView({
                 content={draft.assistant}
                 streaming={isStreaming || awaitingReply}
                 reduce={reduce}
-                directive={directive}
+                directives={directives}
               />
             )}
             {failure && (
