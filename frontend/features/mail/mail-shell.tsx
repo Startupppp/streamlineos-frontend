@@ -226,8 +226,8 @@ export function MailShell() {
       <div className="flex flex-1 min-h-0 min-w-0">
         <div
           className={cn(
-            "flex flex-col h-full shrink-0 border-r border-border/40 bg-card/40 w-full md:w-[280px] lg:w-[320px]",
-            !showMobileList && "hidden md:flex",
+            "flex flex-col h-full shrink-0 border-r border-border/40 bg-card/40 w-full lg:w-[320px]",
+            !showMobileList && "hidden lg:flex",
           )}
         >
           <MailListPane
@@ -242,7 +242,7 @@ export function MailShell() {
         <div
           className={cn(
             "flex flex-1 min-h-0 min-w-0 bg-muted/15",
-            showMobileList && "hidden md:flex",
+            showMobileList && "hidden lg:flex",
           )}
         >
           {!hasAccounts && !accountsLoading ? (
