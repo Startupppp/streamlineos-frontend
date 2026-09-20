@@ -163,6 +163,7 @@ export function EventCreateForm({
                   )}
                 </div>
               </div>
+              </div>
             </ScrollArea>
             <div className="px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] border-t bg-muted/20 shrink-0 flex flex-row items-center justify-end gap-2">
               <Button type="button" variant="outline" size="sm" className="text-xs px-3 font-normal text-muted-foreground hover:text-foreground" onClick={onClose} disabled={isPending}>Discard</Button>
