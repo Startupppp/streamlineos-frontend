@@ -12,11 +12,13 @@ import { useHrCommandCenter } from "@/hooks/api/hr";
 interface EmployeesDirectoryStatsProps {
   loadedCount: number;
   hasMore: boolean;
+  statusFilter: "all" | "active" | "inactive";
 }
 
 export function EmployeesDirectoryStats({
   loadedCount,
   hasMore,
+  statusFilter,
 }: EmployeesDirectoryStatsProps) {
   const canAnalytics = useCan("hr:analytics:read");
   const commandCenter = useHrCommandCenter();
@@ -39,25 +41,25 @@ export function EmployeesDirectoryStats({
         tone="default"
         hint={hasMore ? "More results available" : "Current filters"}
       />
-      {showOrgStatus ? (
-        <>
-          <StatCard
-            label="Active"
-            value={headcount.active}
-            icon={UserCheck}
-            tone="emerald"
-            hint="Org-wide"
-            href="/hr/employees?status=active"
-          />
-          <StatCard
-            label="Inactive"
-            value={inactive}
-            icon={UserX}
-            tone={inactive > 0 ? "amber" : "default"}
-            hint="Org-wide"
-            href="/hr/employees?status=inactive"
-          />
-        </>
+      {showOrgStatus && statusFilter !== "inactive" ? (
+        <StatCard
+          label="Active"
+          value={headcount.active}
+          icon={UserCheck}
+          tone="emerald"
+          hint="Org-wide"
+          href="/hr/employees?status=active"
+        />
+      ) : null}
+      {showOrgStatus && statusFilter !== "active" ? (
+        <StatCard
+          label="Inactive"
+          value={inactive}
+          icon={UserX}
+          tone={inactive > 0 ? "amber" : "default"}
+          hint="Org-wide"
+          href="/hr/employees?status=inactive"
+        />
       ) : null}
     </StatCardGrid>
   );
