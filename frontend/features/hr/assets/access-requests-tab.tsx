@@ -21,6 +21,7 @@ import { format } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { SecurityIllustration } from "@/components/illustrations";
+import { ErrorState } from "@/components/shared";
 
 const STATUS_META: Record<string, { label: string; badge: string }> = {
   requested: {
@@ -54,7 +55,7 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
   const [systemName, setSystemName] = useState("");
   const [accessLevel, setAccessLevel] = useState("");
 
-  const { data: requests = [], isLoading } = useAccessRequests();
+  const { data: requests = [], isLoading, isError, error, refetch } = useAccessRequests();
   const createMutation = useCreateAccessRequest();
   const updateMutation = useUpdateAccessRequest();
 
@@ -115,6 +116,17 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
           <Skeleton key={i} className="h-14 w-full rounded-xl" />
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Couldn't load access requests"
+        description={getErrorMessage(error)}
+        onRetry={refetch}
+        className="py-16"
+      />
     );
   }
 

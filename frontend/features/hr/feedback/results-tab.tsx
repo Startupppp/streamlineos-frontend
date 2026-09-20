@@ -3,18 +3,20 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useFeedbackResults } from "@/hooks/api/hr";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { BarChart3, CheckCircle2, Star, TrendingUp } from "lucide-react";
 
 export function ResultsTab() {
   const [subjectId, setSubjectId] = useState("");
   const [searched, setSearched] = useState("");
 
-  const { data: results, isLoading, isError } = useFeedbackResults(searched);
+  const { data: results, isLoading, isError, error, refetch } = useFeedbackResults(searched);
 
   function handleSearch() {
     setSearched(subjectId.trim());
@@ -59,9 +61,12 @@ export function ResultsTab() {
       )}
 
       {searched && isError && (
-        <div className="bg-card rounded-2xl border border-status-danger-rule p-6 text-center text-status-danger-ink">
-          No results found for this employee
-        </div>
+        <ErrorState
+          title="Couldn't load feedback results"
+          description={getErrorMessage(error)}
+          onRetry={refetch}
+          className={CONTENT_FILL_PANEL}
+        />
       )}
 
       {results && (
