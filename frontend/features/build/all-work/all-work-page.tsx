@@ -11,10 +11,13 @@ import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { Button } from "@/components/ui/button";
 import { BulkActionBar } from "@/features/build/backlog/bulk-action-bar";
 import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
 import { useInfiniteAllWork, useProjects } from "@/hooks/api/build";
+import { useCanState } from "@/hooks/api/access";
+import { resolveGate } from "@/lib/rbac/gate";
 import { useOrgCustomStates } from "@/hooks/api/build/custom-states";
 import { cn } from "@/lib/utils";
 import {
@@ -58,6 +61,7 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
     handleClearFilters,
   } = useAllWorkFilters();
 
+  const access = useCanState("build:tickets:view");
   const workspaceFilters = pmWorkspaceId ? { ...filters, pmWorkspaceId } : filters;
   const {
     data: infiniteData,
@@ -79,6 +83,13 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
   const loadedCount = tickets.length;
 
   const projectGroups = useMemo(() => groupByProject(tickets), [tickets]);
+
+  const gate = resolveGate({
+    access,
+    isLoading,
+    isError,
+    isEmpty: loadedCount === 0,
+  });
 
   const allProjects = useMemo(() => projectsData?.data ?? [], [projectsData]);
 
@@ -146,7 +157,7 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
     void fetchNextPage();
   }, [fetchNextPage]);
 
-  const subtitleText = isLoading
+  const subtitleText = gate === "loading"
     ? "Loading tickets…"
     : `${loadedCount} ticket${loadedCount === 1 ? "" : "s"} loaded`;
 
@@ -206,20 +217,25 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
             }
           />
 
-          {isLoading ? (
+          {gate === "loading" ? (
             <PmPanel solid className="mb-2 mt-2 flex-1 overflow-auto">
               <div className="py-2">
                 <AllWorkSkeleton view={view} />
               </div>
             </PmPanel>
-          ) : isError ? (
+          ) : gate === "denied" ? (
+            <NoPermissionState
+              permission="build:tickets:view"
+              className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
+            />
+          ) : gate === "error" ? (
             <ErrorState
               className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
               title="Failed to load work items"
               description={getErrorMessage(error)}
               onRetry={handleRetry}
             />
-          ) : tickets.length === 0 ? (
+          ) : gate === "empty" ? (
             <EmptyState
               className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
               illustrationPreset="projects"

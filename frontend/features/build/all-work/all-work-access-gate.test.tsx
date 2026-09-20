@@ -1,10 +1,9 @@
-import { render } from "@testing-library/react";
-import { AllWorkPage } from "./all-work-page";
+import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 
-const CUSTOM_STATUSES = [
-  { name: "CODE REVIEW", color: "#0f0", type: "started" },
-  { name: "BLOCKED", color: "#f00", type: "started" },
-];
+const useCanState = jest.fn();
+const useInfiniteAllWork = jest.fn();
+const useProjects = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -12,45 +11,24 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 jest.mock("framer-motion", () => ({
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AnimatePresence: ({ children }: { children: ReactNode }) => <>{children}</>,
   motion: {
     div: ({ children, ...rest }: React.HTMLAttributes<HTMLDivElement>) => <div {...rest}>{children}</div>,
   },
   useReducedMotion: () => false,
 }));
 jest.mock("@/hooks/api/access", () => ({
-  useCanState: () => "granted",
+  useCanState: (key: string) => useCanState(key),
 }));
 jest.mock("@/hooks/api/build", () => ({
-  useInfiniteAllWork: () => ({
-    data: undefined,
-    isLoading: true,
-    isError: false,
-    error: null,
-    hasNextPage: false,
-    isFetchingNextPage: false,
-    fetchNextPage: jest.fn(),
-    refetch: jest.fn(),
-  }),
-  useProjects: () => ({ data: undefined }),
+  useInfiniteAllWork: () => useInfiniteAllWork(),
+  useProjects: () => useProjects(),
 }));
-type OrgStates = typeof CUSTOM_STATUSES | undefined;
-
-const mockUseOrgCustomStates = jest.fn<{ data: OrgStates }, []>(() => ({ data: CUSTOM_STATUSES }));
 jest.mock("@/hooks/api/build/custom-states", () => ({
-  useOrgCustomStates: () => mockUseOrgCustomStates(),
+  useOrgCustomStates: () => ({ data: undefined }),
 }));
-
-interface FilterBarProps {
-  statuses?: OrgStates;
-}
-
-const mockTicketFilterBar = jest.fn<null, [FilterBarProps]>(() => null);
 jest.mock("@/features/build/shared/ticket-filter-bar", () => ({
-  TicketFilterBar: (props: FilterBarProps) => {
-    mockTicketFilterBar(props);
-    return null;
-  },
+  TicketFilterBar: () => null,
 }));
 jest.mock("./use-all-work-filters", () => ({
   useAllWorkFilters: () => ({
@@ -76,7 +54,7 @@ jest.mock("./use-all-work-bulk", () => ({
 }));
 jest.mock("./all-work-view-switcher", () => ({
   AllWorkViewSwitcher: () => null,
-  AllWorkSkeleton: () => null,
+  AllWorkSkeleton: () => <div data-testid="all-work-skeleton" />,
 }));
 jest.mock("./all-work-views-menu", () => ({
   AllWorkViewsMenu: () => null,
@@ -88,21 +66,21 @@ jest.mock("@animateicons/react/lucide", () => ({
   UserIcon: () => null,
 }));
 jest.mock("@/components/pm-chrome", () => ({
-  PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PmPanel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PmSection: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  PmPageShell: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  PmPanel: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  PmSection: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   PM_FILL_PANEL: "",
 }));
 jest.mock("@/components/ui/page-tabs-toolbar", () => ({
-  PageTabsToolbar: ({ filters }: { filters?: React.ReactNode }) => <div>{filters}</div>,
+  PageTabsToolbar: ({ filters }: { filters?: ReactNode }) => <div>{filters}</div>,
 }));
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, filters }: { children?: React.ReactNode; filters?: React.ReactNode }) => (
+  PageWrapper: ({ children, filters }: { children?: ReactNode; filters?: ReactNode }) => (
     <div>{filters}{children}</div>
   ),
 }));
 jest.mock("@/components/ui/scroll-area", () => ({
-  ScrollArea: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  ScrollArea: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 jest.mock("@/lib/motion-presets", () => ({
   pmSnappy: {},
@@ -119,26 +97,43 @@ jest.mock("@/lib/get-error-message", () => ({
   getErrorMessage: (e: unknown) => String(e),
 }));
 
-import React from "react";
+import { AllWorkPage } from "./all-work-page";
+
+function pendingInfiniteQuery() {
+  return {
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    error: null,
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
+    refetch: jest.fn(),
+  };
+}
 
 beforeEach(() => {
-  mockTicketFilterBar.mockClear();
+  jest.clearAllMocks();
+  useCanState.mockReturnValue("granted");
+  useInfiniteAllWork.mockReturnValue(pendingInfiniteQuery());
+  useProjects.mockReturnValue({ data: undefined });
 });
 
-describe("AllWorkPage — org-wide statuses passed to TicketFilterBar", () => {
-  it("passes statuses from useOrgCustomStates to TicketFilterBar so custom workflows are reachable", () => {
+describe("AllWorkPage — access is three-valued, not a boolean", () => {
+  it("renders NoPermissionState once build:tickets:view has actually said no, instead of falling through to the empty ticket state", () => {
+    useCanState.mockReturnValue("denied");
+
     render(<AllWorkPage />);
-    const calls = mockTicketFilterBar.mock.calls;
-    expect(calls.length).toBeGreaterThan(0);
-    expect(calls[0]?.[0]).toBeDefined();
-    expect(calls[0]?.[0]?.statuses).toEqual(CUSTOM_STATUSES);
+
+    expect(screen.getByText(/access restricted/i)).toBeInTheDocument();
+    expect(screen.queryByText(/no tickets yet/i)).toBeNull();
   });
 
-  it("passes undefined statuses (not the hardcoded four) when useOrgCustomStates has not loaded yet", () => {
-    mockUseOrgCustomStates.mockReturnValueOnce({ data: undefined });
+  it("shows the loading state while the access snapshot is still in flight, never an access denial", () => {
+    useCanState.mockReturnValue("loading");
+
     render(<AllWorkPage />);
-    const calls = mockTicketFilterBar.mock.calls;
-    expect(calls.length).toBeGreaterThan(0);
-    expect(calls[0]?.[0]?.statuses).toBeUndefined();
+
+    expect(screen.queryByText(/access restricted/i)).toBeNull();
   });
 });

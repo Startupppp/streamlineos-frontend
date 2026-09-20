@@ -6,9 +6,12 @@ import { TrashIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { useMyCommentDrafts, useDeleteCommentDraft, useDeleteAllCommentDrafts } from "@/hooks/api/build/comment-drafts";
 import type { CommentDraftListItem } from "@/hooks/api/build/comment-drafts";
+import { useCanState } from "@/hooks/api/access";
+import { resolveGate } from "@/lib/rbac/gate";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -61,12 +64,14 @@ function DraftsLoadingSkeleton() {
 
 export function CommentDraftsPage() {
   const router = useRouter();
+  const access = useCanState("build:tickets:view");
   const { data, isLoading, isError, refetch } = useMyCommentDrafts();
   const deleteDraft = useDeleteCommentDraft();
   const deleteAll = useDeleteAllCommentDrafts();
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
 
   const drafts = useMemo(() => data ?? [], [data]);
+  const gate = resolveGate({ access, isLoading, isError, isEmpty: drafts.length === 0 });
 
   const handleOpenDraft = useCallback(
     (draft: CommentDraftListItem) => {
@@ -103,9 +108,19 @@ export function CommentDraftsPage() {
   const handleOpenDeleteAll = useCallback(() => setConfirmDeleteAll(true), []);
   const handleCloseDeleteAll = useCallback((open: boolean) => setConfirmDeleteAll(open), []);
 
-  if (isLoading) return <DraftsLoadingSkeleton />;
+  if (gate === "loading") return <DraftsLoadingSkeleton />;
 
-  if (isError) {
+  if (gate === "denied") {
+    return (
+      <PageWrapper title="Comment Drafts" subtitle="Your saved in-progress ticket comments">
+        <PmPageShell withGlow={false}>
+          <NoPermissionState permission="build:tickets:view" />
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (gate === "error") {
     return (
       <PageWrapper title="Comment Drafts" subtitle="Your saved in-progress ticket comments">
         <PmPageShell withGlow={false}>
@@ -138,7 +153,7 @@ export function CommentDraftsPage() {
       >
         <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            {drafts.length === 0 ? (
+            {gate === "empty" ? (
               <EmptyState
                 illustrationPreset="default"
                 title="No drafts saved"

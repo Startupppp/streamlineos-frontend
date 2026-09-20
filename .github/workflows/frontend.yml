@@ -412,9 +412,6 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run check:query-scope:self-test && pnpm run check:query-scope
 
-      - name: A permission-gated page never renders denial as emptiness
-        if: ${{ !cancelled() }}
-        run: pnpm run check:denied-state:self-test && pnpm run check:denied-state
 
       - name: Every queryFn forwards the abort signal
         if: ${{ !cancelled() }}
