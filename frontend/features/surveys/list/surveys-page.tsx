@@ -27,6 +27,12 @@ export function SurveysPage() {
     pageSize: 100,
   });
 
+  const filteredSurveys = surveys?.filter((survey) => {
+    if (status !== "all" && survey.status !== status) return false;
+    if (mode !== "all" && survey.mode !== mode) return false;
+    return true;
+  });
+
   const hasAnySurveys = (surveys?.length ?? 0) > 0 || Boolean(debouncedSearch) || status !== "all" || mode !== "all";
 
   return (
@@ -67,9 +73,9 @@ export function SurveysPage() {
               </div>
             ) : isError ? (
               <ErrorState description="Failed to load surveys." onRetry={refetch} />
-            ) : surveys && surveys.length > 0 ? (
+            ) : filteredSurveys && filteredSurveys.length > 0 ? (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {surveys.map((survey) => (
+                {filteredSurveys.map((survey) => (
                   <SurveyCard key={survey.id} survey={survey} />
                 ))}
               </div>

@@ -17,7 +17,7 @@ const CORE_MODES: SurveyMode[] = ["survey", "assessment", "live_session", "lead_
 export default function NewSurveyPage() {
   const router = useRouter();
   const templatesQuery = useSurveyTemplates();
-  const { data: templates, isLoading } = templatesQuery;
+  const { data: templates, isLoading, isPending } = templatesQuery;
   const createSurvey = useCreateSurvey();
 
   function handleTemplatesRetry() {
@@ -34,6 +34,7 @@ export default function NewSurveyPage() {
   }
 
   const customTemplates = (templates ?? []).filter((t) => !t.key.startsWith("blank_"));
+  const isTemplatesLoading = isLoading || (isPending && templatesQuery.access.pending);
 
   return (
     <DashboardGate permission="surveys:create">
@@ -43,7 +44,7 @@ export default function NewSurveyPage() {
           subtitle="Start from a template or build from scratch."
           backHref="/surveys"
         >
-          {isLoading ? (
+          {isTemplatesLoading ? (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="h-28 rounded-xl" />
