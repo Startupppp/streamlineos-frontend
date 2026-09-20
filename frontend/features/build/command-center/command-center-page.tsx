@@ -7,8 +7,9 @@ import { Briefcase, CheckSquare, AlertCircle } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useProjects } from "@/hooks/api/build/projects";
 import {
   COMMAND_CENTER_MY_ISSUES_FILTERS,
@@ -58,6 +59,7 @@ export function CommandCenterPage() {
     data: projectsData,
     isLoading: projectsLoading,
     isError: projectsError,
+    error: projectsRawError,
     refetch: refetchProjects,
   } = useProjects({ status: "ACTIVE" });
 
@@ -65,6 +67,7 @@ export function CommandCenterPage() {
     data: myIssuesPages,
     isLoading: myIssuesLoading,
     isError: myIssuesError,
+    error: myIssuesRawError,
     refetch: refetchMyIssues,
     fetchNextPage,
     hasNextPage,
@@ -147,7 +150,24 @@ export function CommandCenterPage() {
     [hasNextPage, isFetchingNextPage, fetchNextPage],
   );
 
-  if (projectsLoading) {
+  const pageState = usePageState({
+    permission: "build:view",
+    isLoading: projectsLoading,
+    isError: projectsError,
+    error: projectsRawError,
+  });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "loading") {
+    return (
+      <PageWrapper title="Home" contentClassName="pb-0 sm:pb-0">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+  }
+
+  if (pageState.kind === "loading") {
     return (
       <PageWrapper title="Home" contentClassName="pb-0 sm:pb-0">
         <PmPageShell className={COMMAND_CENTER_PAGE_SHELL}>
@@ -161,20 +181,6 @@ export function CommandCenterPage() {
               <Skeleton key={i} className={cn("h-28 rounded-xl", PM_PANEL)} />
             ))}
           </div>
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
-  if (projectsError) {
-    return (
-      <PageWrapper title="Home" contentClassName="pb-0 sm:pb-0">
-        <PmPageShell withGlow={false} className={COMMAND_CENTER_PAGE_SHELL}>
-          <ErrorState
-            title="Failed to load home"
-            description="Could not fetch project data. Please try again."
-            onRetry={handleRetry}
-          />
         </PmPageShell>
       </PageWrapper>
     );
@@ -239,6 +245,7 @@ export function CommandCenterPage() {
               projects={projects}
               isLoading={myIssuesLoading}
               isError={myIssuesError}
+              error={myIssuesRawError}
               isFetchingNextPage={isFetchingNextPage}
               emptyActions={myIssuesEmpty}
               onRetry={handleMyIssuesRetry}
