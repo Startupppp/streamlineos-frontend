@@ -252,7 +252,13 @@ function OverviewTab() {
 }
 
 function RecognitionTab() {
-  const { data: recognitions, isLoading } = useRecognitions();
+  const {
+    data: recognitions,
+    isLoading: recLoading,
+    isError: recError,
+    error: recErrorData,
+    refetch: refetchRec,
+  } = useRecognitions();
   const createRecognition = useCreateRecognition();
   const [kudosOpen, setKudosOpen] = useState(false);
 
