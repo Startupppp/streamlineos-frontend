@@ -19,7 +19,14 @@ jest.mock("framer-motion", () => ({
   useReducedMotion: () => false,
 }));
 jest.mock("@/hooks/api/access", () => ({
-  useCanState: () => "granted",
+  useAccess: () => ({
+    data: { isOrgOwner: false, scopes: { "build:tickets:view": "all" }, modules: {} },
+    isLoading: false,
+  }),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
 }));
 jest.mock("@/hooks/api/build", () => ({
   useInfiniteAllWork: () => ({

@@ -10,14 +10,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { Button } from "@/components/ui/button";
 import { BulkActionBar } from "@/features/build/backlog/bulk-action-bar";
 import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
 import { useInfiniteAllWork, useProjects } from "@/hooks/api/build";
-import { useCanState } from "@/hooks/api/access";
-import { resolveGate } from "@/lib/rbac/gate";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useOrgCustomStates } from "@/hooks/api/build/custom-states";
 import { cn } from "@/lib/utils";
 import {
@@ -33,7 +31,6 @@ import {
 } from "@/lib/motion-presets";
 import { groupByProject } from "./all-work-ticket-utils";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { AllWorkViewSwitcher, AllWorkSkeleton } from "./all-work-view-switcher";
 import { AllWorkListSection } from "./all-work-list-section";
 import { AllWorkTableSection } from "./all-work-table-section";
@@ -61,7 +58,6 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
     handleClearFilters,
   } = useAllWorkFilters();
 
-  const access = useCanState("build:tickets:view");
   const workspaceFilters = pmWorkspaceId ? { ...filters, pmWorkspaceId } : filters;
   const {
     data: infiniteData,
@@ -84,10 +80,11 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
 
   const projectGroups = useMemo(() => groupByProject(tickets), [tickets]);
 
-  const gate = resolveGate({
-    access,
+  const pageState = usePageState({
+    permission: "build:tickets:view",
     isLoading,
     isError,
+    error,
     isEmpty: loadedCount === 0,
   });
 
@@ -157,7 +154,7 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
     void fetchNextPage();
   }, [fetchNextPage]);
 
-  const subtitleText = gate === "loading"
+  const subtitleText = pageState.kind === "loading"
     ? "Loading tickets…"
     : `${loadedCount} ticket${loadedCount === 1 ? "" : "s"} loaded`;
 
@@ -217,35 +214,29 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
             }
           />
 
-          {gate === "loading" ? (
-            <PmPanel solid className="mb-2 mt-2 flex-1 overflow-auto">
-              <div className="py-2">
-                <AllWorkSkeleton view={view} />
-              </div>
-            </PmPanel>
-          ) : gate === "denied" ? (
-            <NoPermissionState
-              permission="build:tickets:view"
-              className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
-            />
-          ) : gate === "error" ? (
-            <ErrorState
-              className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
-              title="Failed to load work items"
-              description={getErrorMessage(error)}
-              onRetry={handleRetry}
-            />
-          ) : gate === "empty" ? (
-            <EmptyState
-              className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
-              illustrationPreset="projects"
-              title="No tickets yet"
-              description={hasActiveFilters ? undefined : "Start by creating a ticket in any project."}
-              filtersActive={hasActiveFilters}
-              onClearFilters={handleClearFilters}
-              action={!hasActiveFilters ? { label: "All Projects", href: "/build" } : undefined}
-            />
-          ) : (
+          <PageState
+            resolution={pageState}
+            className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
+            onRetry={handleRetry}
+            loading={
+              <PmPanel solid className="mb-2 mt-2 flex-1 overflow-auto">
+                <div className="py-2">
+                  <AllWorkSkeleton view={view} />
+                </div>
+              </PmPanel>
+            }
+            empty={
+              <EmptyState
+                className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
+                illustrationPreset="projects"
+                title="No tickets yet"
+                description={hasActiveFilters ? undefined : "Start by creating a ticket in any project."}
+                filtersActive={hasActiveFilters}
+                onClearFilters={handleClearFilters}
+                action={!hasActiveFilters ? { label: "All Projects", href: "/build" } : undefined}
+              />
+            }
+          >
             <>
               {tableSelection.size > 0 ? (
                 <BulkActionBar
@@ -332,7 +323,7 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
                 ) : null}
               </div>
             </>
-          )}
+          </PageState>
         </PmSection>
       </PmPageShell>
     </PageWrapper>

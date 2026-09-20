@@ -2,14 +2,11 @@
 
 import { useCallback, useMemo, type ReactNode } from "react";
 import { useProjectAnalytics } from "@/hooks/api/build";
-import { useCanState } from "@/hooks/api/access";
-import { resolveGate } from "@/lib/rbac/gate";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { getErrorMessage } from "@/lib/get-error-message";
 import {
   AnalyticsKpiStrip,
   AnalyticsKpiStripSkeleton,
@@ -46,7 +43,6 @@ function ChartShell({ title, children }: { title: string; children: ReactNode })
 }
 
 export function ProjectAnalyticsPage({ projectId }: ProjectAnalyticsPageProps) {
-  const access = useCanState("build:view");
   const {
     data: analytics,
     isLoading,
@@ -55,10 +51,11 @@ export function ProjectAnalyticsPage({ projectId }: ProjectAnalyticsPageProps) {
     refetch,
   } = useProjectAnalytics(projectId);
 
-  const gate = resolveGate({
-    access,
+  const pageState = usePageState({
+    permission: "build:view",
     isLoading,
     isError,
+    error,
     isEmpty: !analytics,
   });
 
@@ -128,81 +125,37 @@ export function ProjectAnalyticsPage({ projectId }: ProjectAnalyticsPageProps) {
     }));
   }, [analytics?.estimateVsActual]);
 
-  if (gate === "loading") {
-    return (
-      <PageWrapper
-        title="Analytics"
-        subtitle="Velocity, health, and ticket insights"
-      >
-        <PmPageShell>
-          <AnalyticsKpiStripSkeleton />
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-[296px] w-full rounded-xl" />
-            ))}
-          </div>
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
-  if (gate === "denied") {
-    return (
-      <PageWrapper
-        title="Analytics"
-        subtitle="Velocity, health, and ticket insights"
-      >
-        <PmPageShell>
-          <NoPermissionState permission="build:view" className={PM_FILL_PANEL} />
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
-  if (gate === "error") {
-    return (
-      <PageWrapper
-        title="Analytics"
-        subtitle="Velocity, health, and ticket insights"
-      >
-        <PmPageShell>
-          <ErrorState
-            className={PM_FILL_PANEL}
-            title="Couldn't load analytics"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
-  if (gate === "empty" || !analytics) {
-    return (
-      <PageWrapper
-        title="Analytics"
-        subtitle="Velocity, health, and ticket insights"
-      >
-        <PmPageShell>
-          <EmptyState
-            className={PM_FILL_PANEL}
-            illustrationPreset="chart"
-            title="No analytics yet"
-            description="Analytics will appear once your project has tickets."
-          />
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
   return (
     <PageWrapper
       title="Analytics"
       subtitle="Velocity, health, and ticket insights"
     >
       <PmPageShell>
+        <PageState
+          resolution={pageState}
+          className={PM_FILL_PANEL}
+          onRetry={handleRetry}
+          loading={
+            <>
+              <AnalyticsKpiStripSkeleton />
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-[296px] w-full rounded-xl" />
+                ))}
+              </div>
+            </>
+          }
+          empty={
+            <EmptyState
+              className={PM_FILL_PANEL}
+              illustrationPreset="chart"
+              title="No analytics yet"
+              description="Analytics will appear once your project has tickets."
+            />
+          }
+        >
         <PmSection index={0}>
-          <AnalyticsKpiStrip analytics={analytics} />
+          {analytics ? <AnalyticsKpiStrip analytics={analytics} /> : null}
         </PmSection>
 
         <PmSection index={1}>
@@ -232,6 +185,7 @@ export function ProjectAnalyticsPage({ projectId }: ProjectAnalyticsPageProps) {
             </ChartShell>
           </div>
         </PmSection>
+        </PageState>
       </PmPageShell>
     </PageWrapper>
   );

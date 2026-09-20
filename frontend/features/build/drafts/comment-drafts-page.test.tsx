@@ -1,13 +1,27 @@
 import { render, screen } from "@testing-library/react";
 
-const useCanState = jest.fn();
+const useAccess = jest.fn();
 const useMyCommentDrafts = jest.fn();
 const useDeleteCommentDraft = jest.fn();
 const useDeleteAllCommentDrafts = jest.fn();
 const push = jest.fn();
 
+const accessLoading = { data: undefined, isLoading: true };
+const accessGranted = {
+  data: { isOrgOwner: false, scopes: { "build:tickets:view": "all" }, modules: {} },
+  isLoading: false,
+};
+const accessDenied = {
+  data: { isOrgOwner: false, scopes: {}, modules: {} },
+  isLoading: false,
+};
+
 jest.mock("@/hooks/api/access", () => ({
-  useCanState: (key: string) => useCanState(key),
+  useAccess: () => useAccess(),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
 }));
 
 jest.mock("@/hooks/api/build/comment-drafts", () => ({
@@ -24,7 +38,7 @@ import { CommentDraftsPage } from "./comment-drafts-page";
 
 beforeEach(() => {
   jest.clearAllMocks();
-  useCanState.mockReturnValue("granted");
+  useAccess.mockReturnValue(accessGranted);
   useMyCommentDrafts.mockReturnValue({
     data: [],
     isLoading: false,
@@ -37,7 +51,7 @@ beforeEach(() => {
 
 describe("CommentDraftsPage — access is three-valued, not a boolean", () => {
   it("shows the loading skeleton while the access snapshot is still in flight, never a denial", () => {
-    useCanState.mockReturnValue("loading");
+    useAccess.mockReturnValue(accessLoading);
     useMyCommentDrafts.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -52,7 +66,7 @@ describe("CommentDraftsPage — access is three-valued, not a boolean", () => {
   });
 
   it("renders NoPermissionState once build:tickets:view has actually said no, instead of the empty-drafts state", () => {
-    useCanState.mockReturnValue("denied");
+    useAccess.mockReturnValue(accessDenied);
     useMyCommentDrafts.mockReturnValue({
       data: undefined,
       isLoading: false,

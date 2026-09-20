@@ -6,12 +6,10 @@ import { TrashIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { useMyCommentDrafts, useDeleteCommentDraft, useDeleteAllCommentDrafts } from "@/hooks/api/build/comment-drafts";
 import type { CommentDraftListItem } from "@/hooks/api/build/comment-drafts";
-import { useCanState } from "@/hooks/api/access";
-import { resolveGate } from "@/lib/rbac/gate";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -36,42 +34,42 @@ import { CommentDraftRow } from "./comment-draft-row";
 
 function DraftsLoadingSkeleton() {
   return (
-    <PageWrapper title="Comment Drafts" subtitle="Your saved in-progress ticket comments">
-      <PmPageShell>
-        <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          <PmPanel solid className="flex-1 min-h-0">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="flex items-start gap-2 border-b border-border/70 px-3 py-2.5 last:border-b-0 sm:items-center sm:gap-2.5 sm:py-2"
-              >
-                <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-2.5">
-                  <Skeleton className="h-5 w-16 shrink-0 rounded-md" />
-                  <div className="min-w-0 flex-1 space-y-1.5">
-                    <Skeleton className="h-3.5 w-48" />
-                    <Skeleton className="h-3 w-full max-w-xs" />
-                  </div>
-                </div>
-                <Skeleton className="h-7 w-16 shrink-0 rounded-md" />
-              </div>
-            ))}
-          </PmPanel>
-        </PmSection>
-      </PmPageShell>
-    </PageWrapper>
+    <PmPanel solid className="flex-1 min-h-0">
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          className="flex items-start gap-2 border-b border-border/70 px-3 py-2.5 last:border-b-0 sm:items-center sm:gap-2.5 sm:py-2"
+        >
+          <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-2.5">
+            <Skeleton className="h-5 w-16 shrink-0 rounded-md" />
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <Skeleton className="h-3.5 w-48" />
+              <Skeleton className="h-3 w-full max-w-xs" />
+            </div>
+          </div>
+          <Skeleton className="h-7 w-16 shrink-0 rounded-md" />
+        </div>
+      ))}
+    </PmPanel>
   );
 }
 
 export function CommentDraftsPage() {
   const router = useRouter();
-  const access = useCanState("build:tickets:view");
-  const { data, isLoading, isError, refetch } = useMyCommentDrafts();
+  const { data, isLoading, isError, error, refetch } = useMyCommentDrafts();
   const deleteDraft = useDeleteCommentDraft();
   const deleteAll = useDeleteAllCommentDrafts();
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
 
   const drafts = useMemo(() => data ?? [], [data]);
-  const gate = resolveGate({ access, isLoading, isError, isEmpty: drafts.length === 0 });
+  const pageState = usePageState({
+    permission: "build:tickets:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: drafts.length === 0,
+  });
+  const showsContent = pageState.kind === "ready" || pageState.kind === "loading";
 
   const handleOpenDraft = useCallback(
     (draft: CommentDraftListItem) => {
@@ -108,28 +106,6 @@ export function CommentDraftsPage() {
   const handleOpenDeleteAll = useCallback(() => setConfirmDeleteAll(true), []);
   const handleCloseDeleteAll = useCallback((open: boolean) => setConfirmDeleteAll(open), []);
 
-  if (gate === "loading") return <DraftsLoadingSkeleton />;
-
-  if (gate === "denied") {
-    return (
-      <PageWrapper title="Comment Drafts" subtitle="Your saved in-progress ticket comments">
-        <PmPageShell withGlow={false}>
-          <NoPermissionState permission="build:tickets:view" />
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
-  if (gate === "error") {
-    return (
-      <PageWrapper title="Comment Drafts" subtitle="Your saved in-progress ticket comments">
-        <PmPageShell withGlow={false}>
-          <ErrorState onRetry={handleRetry} />
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
   return (
     <>
       <PageWrapper
@@ -137,7 +113,7 @@ export function CommentDraftsPage() {
         subtitle="Your saved in-progress ticket comments"
         actionsInline
         actions={
-          drafts.length > 0 ? (
+          pageState.kind === "ready" && drafts.length > 0 ? (
             <AnimatedIconButton
               icon={TrashIcon}
               variant="outline"
@@ -151,15 +127,20 @@ export function CommentDraftsPage() {
           ) : undefined
         }
       >
-        <PmPageShell>
+        <PmPageShell withGlow={showsContent}>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            {gate === "empty" ? (
-              <EmptyState
-                illustrationPreset="default"
-                title="No drafts saved"
-                description="Start typing a comment on a ticket and it will be saved here automatically."
-              />
-            ) : (
+            <PageState
+              resolution={pageState}
+              loading={<DraftsLoadingSkeleton />}
+              onRetry={handleRetry}
+              empty={
+                <EmptyState
+                  illustrationPreset="default"
+                  title="No drafts saved"
+                  description="Start typing a comment on a ticket and it will be saved here automatically."
+                />
+              }
+            >
               <PmPanel solid className="flex-1 min-h-0 overflow-hidden">
                 {drafts.map((draft) => (
                   <CommentDraftRow
@@ -170,7 +151,7 @@ export function CommentDraftsPage() {
                   />
                 ))}
               </PmPanel>
-            )}
+            </PageState>
           </PmSection>
         </PmPageShell>
       </PageWrapper>
