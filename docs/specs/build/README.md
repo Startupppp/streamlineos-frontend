@@ -184,6 +184,90 @@ Migration journal note: `migrations/meta/_journal.json` carries an uncommitted
 idx 1011 (`1123_ai_action_proposals_rls`) owned by another session. The batched
 Build migration packet cannot reserve the journal until that entry lands.
 
+## Cycle 11 — 2026-09-20 — a whole defect class, and one gate becomes one
+
+Packets `BLD-X-FE-PRODUCT-001`, `-WORKSPACE-001`, `-TICKET-001`, `-DELIVERY-001`
+plus the four pages cycle 9 had already repaired. Commits `3e5cdb720`,
+`164ebe551`, `f1093f6f3`, and — see below — part of `4263ed551`.
+
+**A 402 was rendering as "Something went wrong" on at least fourteen pages.**
+`ModuleGuard` (`common/rbac/module.guard.ts:37`) and `PermissionGuard`
+(`modules/access/permission.guard.ts:59`) both throw `ModuleDisabledException`
+(`common/http/api-exceptions.ts:42`): HTTP **402**, `code:
+"MODULE_NOT_ENABLED"`, `details: { moduleKey, reason, upgradePath }` where
+`reason` is `not-in-plan` | `org-disabled` | `user-denied`. **The backend was
+already sending the upgrade path.** Every page branching on raw `isError` threw
+it away and told a paying customer their software was broken rather than that
+their plan did not include it. Verified against backend source, not inferred
+from a report.
+
+The fix is one argument: `usePageState({ permission, isLoading, isError,
+error })`. Omit `error` and `pageStateFromError` never runs — all 402/403
+classification is silently off and the page still compiles and still passes its
+tests. That is the trap to watch for in review.
+
+**`resolveGate` is deleted.** It and `resolvePageState` decided the same thing
+in the same order; the second also classifies errors and module availability, so
+every page written against the first had the 402 bug **by construction**. The
+denial ratchet's own docstring had named `<PageState resolution={usePageState(...)}>`
+as the canonical fix since 2026-08-27 — cycle 9 grew the minority pattern
+instead, twelve consumers to the canonical thirty-eight. The three ordering
+assertions `gate.test.ts` alone held moved to `resolve-page-state.test.ts`;
+`accessState` and its two tests stay. Swapping the error and empty branches
+fails the ported assertion.
+
+Ratchet **340 → 331**. Nine surfaces converted: portfolios, programs,
+pm-workspaces, portfolio-detail, cycles, cycle-detail, releases, milestones,
+sprints.
+
+**Two agent claims did not survive checking.**
+
+- `BLD-X-FE-WORKSPACE-001` reported `pnpm type-check` clean. **It was failing.**
+  `portfolios-page.tsx` called `usePageState` with `isEmpty: displayed.length
+  === 0` *above* the `const displayed` it reads — a temporal-dead-zone crash on
+  every render. A packet that self-reports a green gate can still be red.
+- The same packet reported the frontend `PERMISSIONS` array as "missing 8
+  entries". It is a subset **by design**: `catalog-sync.test.ts` asserts array ⊆
+  union and union ≡ backend, and deliberately never backend ⊆ array. Ten of ten
+  pass. This is the third time it has been raised, once as a CI checker that
+  would have failed the build on 195 false positives.
+
+**`BLD-X-FE-DELIVERY-001` introduced the defect the codebase documents against.**
+It guarded five pages with `useCan(...)` + `if (!canView) return
+<NoPermissionState/>`. `useCan` returns `false` while the access snapshot is in
+flight, so that renders "Access Restricted" to a *permitted* user until their
+rights arrive — the docstring directly above `useCanState` in `hooks/api/access.ts`
+says exactly this. It also skipped the 402 item, which was first in its brief.
+All five rewritten onto `usePageState`; their four specs now drive denial from
+the access snapshot rather than a stubbed boolean, so the gate decision is no
+longer mocked out. `cycles-page.test.tsx` carries the two tests that prove both
+halves: the skeleton shows while access is in flight, and a 402 renders a link
+to `/settings/billing`.
+
+**A concurrent session committed two of these packets mid-flight.** `4263ed551`
+ran a broad `git add` that swept the TICKET and DELIVERY agents' in-progress
+edits into it alongside unrelated work, so that packet's history sits under
+someone else's message. Nothing was lost. Worse, the same commit added
+permission handling to `cycles-page.tsx` with a **second** `import { useCan }`
+34 lines below the existing one — `TS2300`, build red at HEAD, fixed in
+`164ebe551`. Both sessions were independently doing permission work on the same
+five files. **Reserve a file in the indexed lane before editing it.**
+
+Verification: 343 tests / 32 suites across the touched areas, `pnpm type-check`
+clean, denial ratchet green at 331. `check:import-direction` remains **red at
+HEAD and not from this work** — 3 violations, `components/layout/*` importing
+`@/features/build/navigation/build-dirty-state-context` against a baseline of 0.
+The honest fix moves that context to a neutral home, but **58 files import it**,
+spanning nearly every remaining packet's write set, so it needs a dedicated pass
+once the packets land rather than a collision with five live agents.
+
+Two backend findings recorded, not fixed: managed-product search covers `name`
+only (`managed-products.service.ts:60`), so searching by product key returns
+nothing — and that predicate is a leading-wildcard `ILIKE`, which backend §3
+bans outright. The correct fix needs a trigram index and therefore a migration,
+which is blocked on a disposable Postgres; patching the frontend alone would
+deepen a banned pattern.
+
 ## Cycle 10 — 2026-09-20 — three coordinator-owned shared-file fixes
 
 Findings the cycle-9 ALLWORK and INBOX agents surfaced and correctly declined to
