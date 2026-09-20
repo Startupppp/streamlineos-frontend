@@ -41,7 +41,13 @@ const signEnvelopeRowContract = z.object({
   updatedAt: z.string(),
 });
 
-export const signEnvelopeMutationContract = signEnvelopeRowContract;
+/**
+ * SIGN-001 resilience: Allow the backend to return extra fields during
+ * envelope mutations. The server may include computed/derived fields
+ * (e.g., counts, display names) that the client doesn't use but
+ * shouldn't reject.
+ */
+export const signEnvelopeMutationContract = signEnvelopeRowContract.passthrough();
 
 export const signEnvelopesListContract = z.object({
   items: z.array(signEnvelopeRowContract),
