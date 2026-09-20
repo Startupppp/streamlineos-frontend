@@ -14,11 +14,14 @@ interface SurveyDetailContentProps {
 }
 
 export function SurveyDetailContent({ surveyId }: SurveyDetailContentProps) {
-  const { data: survey, isLoading, isError, refetch } = useSurvey(surveyId);
+  const surveyQuery = useSurvey(surveyId);
+  const { data: survey, isLoading, isPending, isError, refetch } = surveyQuery;
 
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const isSurveyLoading = isLoading || (isPending && surveyQuery.access.pending);
 
   return (
     <PageWrapper
@@ -27,7 +30,7 @@ export function SurveyDetailContent({ surveyId }: SurveyDetailContentProps) {
       actions={survey ? <SurveyBuilderHeader survey={survey} /> : undefined}
     >
       <div className="flex flex-1 min-h-0 flex-col">
-        {isLoading ? (
+        {isSurveyLoading ? (
           <div className="flex flex-col gap-3">
             <Skeleton className="h-8 w-64" />
             <Skeleton className="h-48 w-full" />
