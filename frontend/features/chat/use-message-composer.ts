@@ -132,7 +132,6 @@ export function useMessageComposer({
     const metadata = entities.length ? { entities } : undefined;
     const mentions = new Map(pendingMentionsRef.current);
     const mentionedUserIds = [...new Set([...mentions].filter(([name]) => content.includes(`@${name}`)).map(([, id]) => id))];
-    setMessageInput(""); localStorage.removeItem(draftKey); setReplyTo(null); setPendingAttachments([]); pendingEntitiesRef.current = []; pendingMentionsRef.current.clear();
     const signature = sendSignature(content, replyToId, attachments);
     const clientKey = pendingSendRef.current?.signature === signature ? pendingSendRef.current.clientKey : crypto.randomUUID();
     pendingSendRef.current = { signature, clientKey };
