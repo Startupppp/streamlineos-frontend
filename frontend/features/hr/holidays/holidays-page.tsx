@@ -36,7 +36,7 @@ export function HolidaysPage() {
   const createMutation = useCreateHoliday();
   const updateMutation = useUpdateHoliday();
   const deleteMutation = useDeleteHoliday();
-  const canManage = useCan("hr:leaves:manage");
+  const canManage = useCan("hr:attendance:manage");
 
   const [viewMode, setViewMode] = useState<ViewMode>("calendar");
   const [viewDate, setViewDate] = useState(new Date());

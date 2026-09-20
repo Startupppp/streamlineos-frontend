@@ -5,6 +5,8 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Clock, Building2, CalendarCheck } from "lucide-react";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   AnalyticsChartCard,
   AnalyticsSectionHeader,
@@ -24,7 +26,7 @@ interface AttendanceSectionProps {
 }
 
 export function AttendanceSection({ year, month }: AttendanceSectionProps) {
-  const { data, isLoading } = useHrAttendanceAnalytics(year, month);
+  const { data, isLoading, isError, error, refetch } = useHrAttendanceAnalytics(year, month);
 
   if (isLoading) {
     return (
@@ -35,6 +37,16 @@ export function AttendanceSection({ year, month }: AttendanceSectionProps) {
           <SectionSkeleton rows={8} />
         </div>
       </section>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Couldn't load attendance analytics"
+        description={getErrorMessage(error)}
+        onRetry={() => void refetch()}
+      />
     );
   }
 
