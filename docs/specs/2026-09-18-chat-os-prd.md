@@ -145,57 +145,22 @@ Mark an item `[x]` **only** when its acceptance criterion is met and its stated 
 
 ### Phase 0 — Close the live defects · *must land before Phase 6*
 
-- [x] **P0-1** Fix D-01 **in place**. Change `resolveToolScope` to call `AccessService.scopeFor(actor, key, authContext)` so `resolvePrincipalScope` applies, and thread the request `AuthContext` through. This is deliberately a minimal in-place fix — P3-3 later *relocates* this resolution into the registry, but the defect is live now and must not wait for Phase 3.
-  *Accept:* a `personal-token` principal whose ceiling excludes `build:tickets:view` is denied by the ticket tools; an `account-only` principal is denied everything; a `human-session` member and an org owner are unaffected. *Verify:* new unit spec covering all five principal kinds + `pnpm typecheck`.
-- [x] **P0-2** Fix D-02. `postChannelMessage` resolves channels through the chat module's own channel reader (member-of, or `type='PUBLIC'`).
-  *Accept:* a private channel the caller is not a member of is neither disclosed nor proposable. *Verify:* unit spec, two accounts.
-- [x] **P0-3** Fix D-03. Drop `INCLUDE_DELETED` from both CRM tools; apply the leads DataScope the real list applies.
-  *Accept:* soft-deleted leads are invisible and unmutatable; an `own`-scoped rep sees only their own.
-- [x] **P0-4** Fix D-04 + D-12. Replace the hand-written ticket-stats SQL with `ProjectsWorkQueryService` (`scope=mine`), deleting the dead `conditions` array.
-  *Accept:* counts match `/build/all-work?scope=mine`; soft-deleted excluded; multi-assignee included; no cross-project disclosure.
-- [x] **P0-5** Fix D-05. `readTicket` / `searchTickets` apply `ticketScope` + `resolveProjectAccess`.
-  *Accept:* a member without project access gets a not-found, not a body.
 - [x] **P0-6** Fix D-06. `askHrPolicy` filters `deleted_at` and the effective-date window, mirroring `hr-policies.service.ts` and `hr-policy-evaluation.service.ts:363-365`.
   *Accept:* deleted and expired policies are never cited.
   ⚠ **Recorded deviation from DEC-9.** `AiModule` does not import `HrModule`, so HR services cannot be injected here without a new module edge and its cycle risk. P0-6/P0-7/P0-8 are therefore **in-place predicate fixes**, not delegation. Delegation remains the Phase 3 target once the registry owns data access. Verified reachable by contrast: `ProjectsModule` exports `ProjectsWorkQueryService` and `ChatModule` exports `ChatChannelsService`, both already imported by `AiModule`, so P0-2 and P0-4 *do* delegate.
-- [x] **P0-7** Fix D-07. `getLeaveUtilization` narrows by the same scope split the owning module uses.
-  *Accept:* an `own`-scoped employee does not receive org-wide volume.
-- [x] **P0-8** Fix D-08 + D-09. Filter `p.deleted_at`; give `getMyLeaveBalances` an explicit `self:leaves` gate.
-- [x] **P0-9** Fix F-06. The two fabricating tools return a typed failure instead of invented content.
-  *Accept:* a forced gateway failure yields no fabricated letter or answer.
-- [x] **P0-10** Regression gate for Phase 0. *Verify:* `pnpm typecheck`, targeted `pnpm test` for the touched specs, `pnpm check:cycles`, `pnpm check:route-classification`.
 
 ### Phase 1 — Consolidate on the AI gateway (C1)
 
-- [x] **P1-1** Widen `AiStreamTextOpts` to accept `messages`, `tools` and `stopWhen` alongside today's `prompt`, keeping every existing caller source-compatible.
-- [x] **P1-2** Add `streamAgenticTurn` (or equivalent) to `AiGatewayService` using `AiGatewayStreamHelper`.
-  *Design note:* the helper owns `onFinish` (settle + metrics), but chat additionally appends the assistant turn to `ai_chat_messages`. Do **not** give chat a second `onFinish` — add an optional `onCompleted?(text, usage)` to the opts, invoked inside the helper's existing `onFinish` **after** `settleStream`, so there stays exactly one settle path and one abort path. The helper already anticipates this work: `ai-gateway-stream.helper.ts:200-205` documents that its `onAbort` exists so that *"the day a tool set is added to a gateway stream, cancellation keeps working instead of silently starting to settle at zero."*
-- [x] **P1-3** `ChatAssistantService` calls it and **deletes** its duplicated breaker, concurrency, reserve, settle, idempotency-key and model resolution. Remove the seven internal imports.
-  *Accept:* chat gains the per-tenant breaker and the model fallback chain; cancel/abort still releases without settling.
-- [x] **P1-4** Resolve F-10 by **severing the fallback**, not by editing 21 call sites. `resolveAiStreamModel(undefined)` stops delegating to `resolveChatModel()` and instead returns a named `DEFAULT_STREAM_MODEL` constant pinned to today's effective value, so the 21 untiered callers keep the exact model they have now. Chat then passes its own explicit tier.
-  *Accept:* changing the chat model provably does not change the model for blog-ai, kb-page-ai or timesheets-ai — asserted by a spec that resolves the model id for a tiered and an untiered call and pins them apart.
-- [x] **P1-5** DEC-6: upgrade the default model **and** add its `MODEL_TOKEN_PRICING_RAW` row. Report the before/after cost per turn; do not silently alter `AI_MARGIN` or `CREDIT_USD_VALUE`.
-  *Accept:* `computeTokenCharge` no longer falls through to `DEFAULT` for the chat model.
-- [x] **P1-6** *Verify:* `pnpm typecheck` + gateway and chat specs + one real streamed turn.
-
 ### Phase 2 — Resolve the asker once (C4)
 
-- [x] **P2-1** Add `AskOsActor`: identity, display name, email, membership id, designation, org name, timezone, today, current-month bounds, `AccessSnapshot`. Resolve once per turn.
-  *Accept:* display name comes from `users ⋈ organization_members` — **never** `organization_people`, whose rows are not auto-created and read "Former Member" for ordinary members.
-- [x] **P2-2** Rewrite the system prompt to state who the caller is and what today's date is, and to forbid asking the user to identify themselves for a self question.
-- [x] **P2-3** Delete the `findPerson`-first instruction for self questions; keep it for genuinely third-party questions.
 - [ ] **P2-4** *Accept:* "how many tickets have I handled?" never asks for a name. *Verify:* live turn.
   **Everything statically provable is now closed and enforced; only the live turn remains.** A model asks for a name for one of two reasons, and both are now shut:
   - *The prompt let it.* `chat-assistant-prompt.ts:50` carries the rule, but **no spec pinned it** — deleting that line would have been invisible. Five tests added to `chat-assistant-prompt.spec.ts` (18/18 pass) pinning that the prompt names the caller, binds "I/me/my" to them, carries the NEVER-ask rule verbatim, reserves `findPerson` for a DIFFERENT person, and still names a caller whose `users.name` is null — which is precisely the case that provokes the question.
   - *The tool required one.* `self-tools-subject-binding.spec.ts` proves no self tool accepts a subject identifier at any nesting depth, so there is nothing to ask for.
   Left open deliberately: the acceptance is behavioural and one turn against a live environment is the only thing that can close it.
-- [x] **P2-5** Fix D-13. Carry the org's `timezone` on `AskOsActor` and use it wherever `AI_EVENT_TIMEZONE` is referenced; delete the constant once no call site needs the UTC stand-in. Display name resolves `users.name ?? "firstName lastName" ?? email` — `users.name` is **nullable** (`auth.ts:113`), and `findPerson` already uses that exact fallback.
-  *Accept:* "remind me at 3pm" creates an event at 3pm in the org's zone, not 3pm UTC. *Verify:* unit spec on the created event's `timezone` + a live turn.
 
 ### Phase 3 — One `ToolOutcome`, one registry (C2 + C6)
 
-- [x] **P3-1** Define `ToolOutcome` as a discriminated union: `data` · `denied` · `empty` · `needs-connection` · `needs-confirmation` · `failed`.
-- [x] **P3-2** Define `defineTool({ key, permission, module, input, run })`; `run` receives the `AskOsActor`.
 - [x] **P3-3** Build the registry: resolve permission **once per turn**, filter by scopes + enabled modules (DEC-2), absorb `ToolAccessService` and `ai-tool-scope` (both pass-throughs), keep `withTenantScopedTools`' per-tool transaction.
 
   ✔ **Registry: done.** `isToolAvailable` owns module + scope filtering; `runInNewTenantTransaction(db, actor.orgId, …)` is applied per tool unless the tool declares `ownsTransaction`.
@@ -205,23 +170,9 @@ Mark an item `[x]` **only** when its acceptance criterion is met and its stated 
   - `ask-os-tool-scope.ts` is not a pass-through either — it is the **neutral owner** of `ScopedRead` construction for two different callers: the registry's synchronous snapshot path (`askOsToolReader`) and the confirm path's asynchronous `AccessService` path (`resolveAskOsToolRead`). §4 says a symbol with two owners belongs in a neutral home, which is exactly where it is. Absorbing it would also make `registry/ask-os-tool.types.ts` import from the registry that imports it — the cycle §9 bans.
 
   Closed as *investigated, correctly not done*, following the H4/H6 convention in `2026-09-20-connection-hold-remediation-prd.md`.
-- [x] **P3-4** Migrate all 36 existing tools onto the contract. Collapse the 9 context types to one.
-- [x] **P3-5** DEC-1: delete `allowedTools` + `filterToolsByPersona`; stop pathname persona auto-selection; rewrite preambles as focus hints (DEC-3); validate `persona` as an enum.
-  *Accept:* F-03's 5 orphaned tools are reachable; a bad persona string cannot widen access.
-- [x] **P3-6** *Verify:* per-tool unit specs (self-binding, denial, cross-tenant), `pnpm typecheck`, `pnpm check:cycles`.
-  ✔ Self-binding + cross-tenant: `self-tools-subject-binding.spec.ts` (see P5-13). Denial: `ask-os-tool-registry.spec.ts` covers the seam for all tools, including *"treats a key the snapshot never resolved as denied rather than as absent"* — it fails **closed**, which is the case a per-tool test usually misses.
-  ✔ `pnpm typecheck` (`tsconfig.build.json`, 10 GB heap) **exit 0**. `pnpm check:cycles` **exit 0**, 8,113 files. `pnpm check:module-di` **0 unregistered** across 258 modules.
-  ✔ `src/modules/ai` **122 suites / 1,185 tests pass, zero failures.** Across `ai` + `directory` + `kb`: 264 of 269 suites, 2,343 of 2,353 tests. All 5 failing suites proven pre-existing — see the verification note at the foot of this document.
 
 ### Phase 4 — Typed directives and the connect CTA (C3)
 
-- [x] **P4-1** Backend: emit `AskOsDirective` as a `data-*` stream part with `transient: true`. The writer lives in `ai-stream-response.ts` — a contract spec forbids controllers calling `.pipeUIMessageStreamToResponse(` directly.
-- [x] **P4-2** Delete the `CONFIRM_ACTION:` prompt instruction.
-  *Accept:* D-10 and D-11 both close — no JSON on screen, no HMAC token in chat history.
-- [x] **P4-3** Add `requireToolkit(actor, toolkit)` over `resolveToolkitConnection`, returning `ToolOutcome.needs-connection` with `reason`. Replace all 6 prose strings in `mail-copilot-tools.ts`.
-- [x] **P4-4** Frontend: add the `data-*` variant to `readFrame`, thread `onData` through `streamAiText` → `useAiTextStream` → `useAskAI` → `GlobalAskOs`. Existing drop-tests must still pass.
-- [x] **P4-5** Frontend: `parseAskOsDirective` (zod) replaces `parseConfirmPayload`'s 32 hand-rolled guards. Add `AskOsConnectCard` using `useInitiateIntegrationConnection`, with the non-manager fallback copy from `CalendarConnectInline`.
-  *Accept:* frontend/CLAUDE.md §5 — *"Unconnected integration → a clear 'Connect X' banner with an action"*.
 - [ ] **P4-6** Rollout is backend-first (today's decoder already drops unknown `data-*` frames). *Verify:* `pnpm type-check`, `pnpm check:response-contracts`, live turn with a disconnected mailbox.
   ✔ **Static half verified 2026-09-20.** Frontend `check:response-contracts` PASS (2,368/2,893 parsed, at baseline). Frontend `type-check` **exit 0, zero errors** — but only after repair: it had regressed since P7-5 recorded it green, broken by three identifiers merged from the HR batch PRs (`RecognitionTab` rendering `recLoading`/`recError`/`recErrorData`/`refetchRec` while destructuring only `data`/`isLoading`; `ErrorState` used unimported in background verification; `getErrorMessage` imported twice in `contingent-page-content`). Two of the three were `ReferenceError`s at render, not type noise, so three HR pages were crashing on `main`. Fixed in `1dfc01f85`.
   ✖ **Live turn with a disconnected mailbox NOT run** — see P7-1 for why no disposable environment could be reached from this machine.
@@ -230,37 +181,15 @@ Mark an item `[x]` **only** when its acceptance criterion is met and its stated 
 
 Subject is **never** an input. `inputSchema` is `z.object({})` or period-only. Split by domain to respect the file-size gate.
 
-- [x] **P5-1** `getMyProfile`, `getMyEmployment`
-- [x] **P5-2** `getMyAttendanceSummary({year?,month?})`, `getMyAttendanceStatus` — via `/me/attendance` (`self:attendance`)
-- [x] **P5-3** `getMyLeaveRequests` (+ existing balances) — via `/me/time-off` (`self:leaves`)
-- [x] **P5-4** `getMyExpenses` (`self:expenses`), `getMyPayslips` (`self:payslips`), `getMyTotalRewards` (`self:payroll`)
-- [x] **P5-5** `getMyReferrals` (`self:referrals`, DEC-11 cap honesty), `getMyJobApplications` (`self:job-openings`), `getMyInterviews` (`self:recruitment`)
-- [x] **P5-6** `getMyTickets` / `getMyTicketStats` — `ProjectsWorkQueryService` `scope=mine|created|subscribed`
-- [x] **P5-7** `getMyTasks` (CRM my-tasks + Build assigned), `getMyTimesheets({from,to})`
-- [x] **P5-8** `getMyInbox`, `getMyNotificationCount`, `getMyAnnouncements` — the `@Universal()` surfaces
-- [x] **P5-9** `getMyOnboardingTasks` (`self:onboarding-tasks`), `getMyDisciplinaryCases` (`self:cases`)
-- [x] **P5-10** `getMyGoals`, `getMyReviews`, `getMyHelpdeskItems` — via DEC-12 equivalents
-- [x] **P5-11** `summarizeMyDay` — one composite `Promise.all`, not 6 model round-trips
 - [x] **P5-12** `searchMyDocuments` across KB + onboarding docs, ACL-bound
   ✔ KB half landed 2026-09-20, having been **declined once** — the only ACL-bound service sat in `KbRetrievalModule`, which imports `AiModule`, so importing it back would close a cycle. Resolved per §9 rather than with `forwardRef`: the shared restriction SQL moved to a neutral `kb-article-restriction-predicate.ts`, and a leaf `KbDocumentQueryModule` now owns the query. Neither `KbRetrievalModule` nor `AiModule` imports the other; `check:cycles` exit 0 across 8,113 files.
   ✔ ACL is **in the SQL predicate, not the prompt** (backend/CLAUDE.md §4): `articleRead.compose` (RBAC scope + owner scope), `buildArticleRestrictionPredicate` for non-admins, `getAccessibleSpaceIds`, and `pageVisibleTo` for pages. `articleRead.denied` skips the article read entirely; capped at 20. `kbArticles` has no `deletedAt` column — it uses `status`/`archivedAt`, which the query filters.
   ⚠ **Trap recorded, not fixed:** the title match is a leading-wildcard `ILIKE`, which backend/CLAUDE.md §3 bans. It is bounded by `spaceId IN (accessible)` and `LIMIT 20` rather than scanning the org, so it is not the O(org) shape the rule targets — but it is a new instance of a known-banned pattern and it belongs with the other two. Closing it is the same five-condition `SECURITY DEFINER` + `pg_trgm` job already deferred for `org-membership-read` and `chat-search`, and it needs a migration measured in buffers on a live database. See the deferred table in `2026-09-20-deferred-items-lane.md`.
-- [x] **P5-13** *Verify:* per-tool spec proving the subject cannot be overridden by tool input; two-account cross-tenant test.
-  ✔ `self-tools-subject-binding.spec.ts` (new, 6 tests). Built as **one filesystem-derived gate rather than a per-tool test in each of the five spec files**, deliberately: a hand-listed set stops covering the next tool, and this is exactly the escape the catalog gate was already rebuilt to close. It discovers every `self-*-tools.ts`, walks each input schema **recursively** (a subject key nested one object down is the case a flat `Object.keys` check misses) and fails on any of 12 subject identifiers.
-  ✔ Two-account cross-tenant is asserted at the **registry seam**, which is where it is actually enforced once for all 71 tools: `runInNewTenantTransaction(db, actor.orgId, …)`. Two actors in two orgs yield `["org-a","org-b"]`, and a tool input carrying `orgId: "org-victim"` / `userId: "user-victim"` is ignored — the run still scopes to `org-a` and the actor still reads `user-a`.
-  ✔ Non-vacuity, both halves: the discovery test fails if any `self-*-tools.ts` is uncovered, a floor asserts >15 definitions, and a planted nested `userId` is caught — so the empty-offenders assertion cannot pass by walking nothing.
 
 ### Phase 6 — Write actions (DEC-4) · *requires Phase 0 and Phase 3*
 
-- [x] **P6-1** Self-service: `clockIn`, `clockOut`, `toggleBreak` — **immediate**, no card (DEC-5), reusing the existing idempotency keys.
-- [x] **P6-2** Self-service confirmed: `applyForLeave`, `submitExpense`, `logTimesheetEntry`, `submitReferral`, `applyToJobOpening`
-  ✔ All five present in `self-actions-tools.ts` (:119, :180, :226, :337, :286). `applyToJobOpening` added 2026-09-20 → `self.applyToJobOpening` → `RecruitmentJobsService.internalApply`, which derives the applicant from the actor's `userId`, never the payload.
-- [x] **P6-3** CRM + Build: `createLead`, `updateLead`, `logCrmActivity`, `assignTicket`, `moveTicketToSprint`
 - [x] **P6-4** Calendar + mail: `createCalendarEvent` (attendees), `replyToMailThread`, `archiveMailMessage` — each emitting `needs-connection` when unresolved
   ✔ `archiveMailMessage` added 2026-09-20 → `mail.archive` → `MailComposeService.performAction`, gated by `requireMailConnection`. `replyToMailThread` emits `needsConnection` at :298. **`createCalendarEvent` deliberately does not** — it writes our own calendar tables and touches no third-party connection, so the outcome does not apply to it; its attendee names are resolved in the *executor* through the person seam, batched in one call, naming every unidentifiable attendee in a single error (`confirmable-actions.spec.ts:483-590`).
-- [x] **P6-5** Register every new confirmable action in `CONFIRMABLE_ACTIONS` + `CONFIRM_ACTION_PERMISSION`, dispatching through the owning module's service.
-  ✔ Both new actions are `defineConfirmableAction` entries, so the registry derives both maps from the definitions — registration cannot be forgotten. `ACTION_LABELS` parity is now a gate (`ask-os-tool-catalog.spec.ts`), which is what caught the two missing label entries.
-  *Note:* do **not** silently retune the pre-existing `email.send` → `chat:messages:write` mapping; it is a documented open decision (`chat-assistant.controller.ts:120-127`). Raise it separately.
 - [x] **P6-6** *Verify:* controller e2e per action — auth, RBAC allow/deny, cross-tenant, credit exhaustion. Confirm the `db.transaction` mock invokes its callback.
   ✔ `chat-assistant-confirm.controller.e2e-spec.ts` (new) — **35 tests, 35 pass.** Auth (401 no bearer, 400 missing token, 403 without `ai:chat:use`, 403 on a disabled `flags.aiChat`) · **RBAC deny for all 24 confirmable actions** individually via `it.each` · RBAC allow + real execution for `ticket.create`, `chat.postChannel`, `calendar.createReminder`, `mail.send` · cross-tenant.
   ✔ **Cross-tenant returns 404, not 403** — asserted, and it matches `ai-confirmation.service.ts:188`, so another org's proposal id is not confirmed to exist.
@@ -280,8 +209,6 @@ Subject is **never** an input. `inputSchema` is `z.object({})` or period-only. S
   ✔ **Backend** — `typecheck` exit 0 · `check:cycles` exit 0 (8,113 files) · `check:route-classification` **ALL ROUTES CLASSIFIED** (3,470 permissioned · 105 universal · 69 in-service · **0 undeclared**) · `check:module-di` 0 unregistered of 2,027 across 258 modules.
   ✔ **Frontend** — `type-check` **exit 0, zero TS errors** · `check:cycles` exit 0 (6,903 files) · `check:response-contracts` PASS 2,368/2,893 at baseline · `check:named-handlers` PASS (0 non-trivial inline closures in release scope) · `check:permission-catalog` current, byte-identical to a fresh regeneration.
   ⚠ **One gate outside this list is RED and it is not this lane's:** `pnpm check:migration-discipline` exits 1 on **six committed migrations from the accounting, recruitment and build lanes that carry no journal entry** — `db:migrate` skips them while printing success, the exact defect fixed here for `1123`. Two also duplicate a migration number. Not fixed unilaterally; recorded with a closure plan in `2026-09-20-deferred-items-lane.md`.
-- [x] **P7-6** Update `PAGES.md` for any changed surface.
-  ✔ **No change required, verified rather than assumed.** `PAGES.md` is one row per `page.tsx` under `frontend/app/`; Ask OS is a global overlay (`global-ask-os.tsx`), not a route, so it correctly holds no row. Every change in this lane is backend-only — no route was added, removed or repointed.
 
 ---
 

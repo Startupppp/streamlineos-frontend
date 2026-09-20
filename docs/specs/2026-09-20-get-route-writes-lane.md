@@ -41,32 +41,6 @@ Five of the 15 are `AuditService.logCritical` on a read path. `logCritical` awai
   ⚠️ *Coordinator finding the agent flagged and I confirmed against schema:* `onboarding_flow_sessions` (`db/schema/common/onboarding.ts:38-40`) has only a plain `index` on `(orgId, membershipId, type)` — the sole `unique` is `(orgId, id)`, the tenant key. So `getOrCreateSession`'s find-then-insert **can genuinely double-insert** under concurrent first access. This is pre-existing and unchanged by the move (the race window sits between the read and the insert either way), but it is a real defect and closing it needs a partial unique index, i.e. a migration.
   *Verified:* 7 suites, 65 tests pass. 6 pre-existing HR failures in untouched files, unrelated.
 
-- [x] **W2 — e-sign: a read-path audit write and a lazy settings seed**
-  *Files touched:* `sign-finalization.service.ts` · `sign-settings.service.ts` (new `get`) · `sign-admin.controller.ts` · `sign-reports.service.ts` (coordinator) · `__tests__/e-sign-services-tenant-isolation.spec.ts` (coordinator) · 2 spec files
-  *Result:* the `document_downloaded` audit now commits in its own `runInNewTenantTransaction`. `SignSettingsService.get` reads without seeding; `getSettings` uses it, while all 6 mutation callers keep `getOrCreate`.
-  **The agent found two GET routes the original audit missed** — `sign-reports.service.ts:38` (`getDashboard`) and `:128` (`getSummary`) both called `getOrCreate`. It correctly reported rather than reaching outside its scope; I fixed both. Each reads only `orgSettings.expirationWarningDays`, so neither depends on the row existing. **The set was 15; it is at least 17.** This is exactly the under-detection the R4 audit warned about in its own limitations section.
-  *Coordinator check on the one risky part — the synthesised defaults.* `get` returns `{ id: 0, createdAt: new Date(), updatedAt: new Date(), ...defaults }` when no row exists, which is fabricated data. I verified it is inert: the backend PATCH keys on `u.orgId` from the token and never reads `id` (`sign-admin.controller.ts:60`), and the frontend renders none of `id`, `createdAt` or `updatedAt` (`frontend/hooks/api/sign/sign-schema.ts:211-232` types them but no component consumes them). The contract is satisfied — `id: z.number().int()` accepts 0, and the `Date`s serialise to the `z.string()` the frontend expects. Acceptable, and recorded because a fabricated id is the kind of thing that grows teeth later.
-  *Also verified:* `sign-auth-method.policy.ts:45` keeps `getOrCreate` — its only callers are `sign-recipients.service.ts` and `sign-templates.service.ts`, both mutation paths, so it is not GET-reachable.
-  *Verified:* 39 suites, 297 tests pass.
-
-- [x] **W3 — inventory: a cache-gated lazy seed reached from four GET routes**
-  *Files touched:* `src/modules/inventory/stock-engine/inventory-settings.service.ts` (`get`, :110-114) · `src/modules/inventory/stock-engine/__tests__/inventory-settings-get-no-write.spec.ts` (new, 2 tests)
-  *Repair: option (a) — the write is gone, not relocated.* On a cache miss with no row, `get()` inserted defaults, re-read them, and fell back to `toSettingsRow(seeded ?? buildDefaults(orgId))`. That fallback was **already correct on its own**, so the whole insert-and-re-read collapses to it. Net diff is 5 lines out, 1 in.
-  *Also removes two queries.* The miss-with-no-row path went `findFirst` → `insert` → `findFirst` (3 round trips) → now a single `findFirst`.
-  *Caller evidence that this is safe:* `update()` (`:137-143`) creates the row itself with `insert(...).onConflictDoUpdate(...)` seeded from `{ ...buildDefaults(orgId), ...patch }`, so first-save still persists regardless of whether a read ever seeded it — and it invalidates the cache key, so the next read picks up the real row. Every other caller consumes only the returned `InvSettingsRow`.
-  *Coordinator verification of the "pre-existing failures" claim — not taken on trust:* I reverted **only** this file to HEAD and re-ran `jest src/modules/inventory`. The **same 9 suites** failed (`quantity.property` is missing the `fast-check` package entirely, plus 8 unrelated), **and** the agent's new spec failed — which proves the new test is a genuine failing-first test rather than a tautology. With the change applied, the new spec passes and the 9 remain. File restored and diff confirmed present.
-  *The comment that was the trap:* `inv-products.controller.ts:169` says *"A read — it computes and returns, and writes nothing."* It was true of the handler and false of its call graph. It is now true of both. Left untouched, as §6 requires.
-  *Not certified:* that `update()`'s `onConflictDoUpdate` creates the row correctly on a fresh org. Mocked tests cover the branch, not the SQL.
-
-- [x] **W4 — billing, calls, calendar, surveys: four conditional writers**
-  *Files touched:* `ai-credits-reservation.service.ts` · `call-recording-consent.service.ts` · `external-calendar-events.service.ts` · `survey-version.service.ts` · 6 spec files (3 new)
-  *Result:* all four writes moved into `runInNewTenantTransaction`. Coordinator-verified: each of the four imports from the direct module path (not a barrel) and uses the **escaping** primitive, not the joining one.
-  *Both traps I warned it about were confirmed against source, not assumed:*
-  1. **`runInTenantTransaction` joins rather than escapes.** `run-in-tenant-transaction.ts:73` is `if (ambient) return fn(ambient.tx)` — when the explicit `orgId` matches the request's, it hands back the *request's* transaction. `ensureWalletForOrg` used it, so its inner `db.transaction` was only a SAVEPOINT, which inherits read-only. The "it already has its own transaction" reading was wrong, and only `runInNewTenantTransaction` (via `runOutsideTenantContext`) actually escapes.
-  2. **`.catch(() => undefined)` does not save the calendar write.** Swallowing the JS rejection cannot un-abort a Postgres transaction: after `25006` every later statement returns `25P02` and COMMIT becomes ROLLBACK. It would have converted a bookkeeping failure into a 500 for the whole GET.
-  *Each test drives its conditional branch, which is the only way these are testable:* no wallet row, `verdict.allowed = false` (with an allowed-case anti-vacuity control), a `ComposioToolError(isAuthError)`, and a null active version.
-  *Verified:* 16 new tests pass.
-
 - [x] **W5 — payroll: the one route that mutates business state on a GET**
   *Files touched:* `src/modules/payroll/insights/journal-outbox.service.ts` (`markExported`) · `src/modules/payroll/insights/__tests__/journal-outbox.service.spec.ts` (+1 test)
   *The write is NOT forced, and that is the right call.* `markExported` (`journal-outbox.service.ts:294`) implements a real business rule — downloading the CSV is what marks a payroll journal batch `EXPORTED`, stamping `exportedAt`/`exportedBy`. It is guarded (`:296`, only a `POSTED` or `EXPORTED` batch may export) and effectively idempotent. Relocating it to its own transaction would not help: the route would still write during a read-intent request, so it would still have to be excluded from read-only and from replica routing. **This is the one genuine write-on-read in the set.**
@@ -75,8 +49,6 @@ Five of the 15 are `AuditService.logCritical` on a read path. `logCritical` awai
   **Export path: 7 queries → 5** (the controller's own `get` is 2, `requireBatch` 1, the UPDATE 1, the membership lookup 1).
   *Verified:* no comment added, no cast added. `jest src/modules/payroll/insights` → **134 passed / 134**, 22 suites. New test is non-vacuous — it queues exactly the two reads the method still needs, so before the change the removed re-read would have drained the queue and thrown `NotFoundException`.
   *Noted, not changed:* `requireBatch:479` uses an unprojected `.select()`, which backend/CLAUDE.md §3 bans. Pre-existing and shared by many callers — out of scope for this lane.
-
-- [x] **W6 — integration, verification, and what remains**
 
 ---
 
