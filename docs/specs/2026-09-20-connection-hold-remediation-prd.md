@@ -242,6 +242,23 @@ no link — and the retry (no `@Idempotent`, no unique constraint) makes another
 fence first. Its sibling `analyzeSubmission` also holds the `org_ai_credits` row locked for the whole 60s,
 since credits are reserved before the provider call and settled after, both on the ambient transaction.
 
+### H12 — periodic sweeps have no budget ⚠ CEILINGED, not fixed
+
+`forEachOrg` opens one tenant transaction per organisation, sequentially, against a pool of 10. It
+already exposes `stopWhen` — consulted **before** each transaction is opened — and `startAfterOrgId` to
+resume. **50 periodic sweeps use neither**, including all 38 under `modules/cron/`.
+
+⚠ **The obvious fix is harmful.** Giving `forEachOrg` a default budget would silently truncate sweeps
+that have no durable cursor: they restart at the first organisation next tick and the tail is *never*
+reached. `for-each-org.ts:40-44` says so in its own words — "Rotating the entry point turns 'eventually,
+maybe' into 'within one pass'". A budget without a cursor is worse than no budget. Making `stopWhen`
+required is also wrong: it would force a budget onto one-shot administrative callers that legitimately
+want every org.
+
+So this is genuinely per-caller work. `check:sweep-budget` holds the ground at 50 in the meantime — a
+ceiling that may fall and never rise, not a claim that the 50 are safe. Self-tested and bite-checked with
+a planted sweep. Commit `432f0ef2d`.
+
 ### H10 — the gate is blind to AI provider calls ⚠ OPEN, measured
 
 The LLM leaves the process through `ChatOpenAI` (`@langchain/openai`,
