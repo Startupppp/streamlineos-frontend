@@ -99,10 +99,10 @@ boundaries, not write permission.
 
 | Packet | Owner/session | Root/frontend revision | Backend revision | Exact write set | Acquired | Expires | Status |
 |---|---|---|---|---|---|---|---|
-| `BLD-X-BE-APPROVAL-001` | cycle-5 agent N | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `bbf4fd71d` | prod: `build/approvals/approvals.controller.ts`, `approvals.service.ts`, `approvals-read.service.ts`, `approval-lookup.ts`, `build-approvals-inbox.service.ts`, `build-inbox-count.service.ts`, `dto/approvals.schemas.ts`, `dto/approvals-response.schemas.ts` · test: `approvals.service.spec.ts`, `approvals.controller.e2e-spec.ts`, `build-approvals-inbox.isolation.spec.ts`, `build-inbox-count.spec.ts` | 2026-09-20T10:05Z | 2026-09-20T13:05Z | `RESERVED` |
-| `BLD-X-BE-DRAFT-001` | cycle-5 agent O | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `bbf4fd71d` | prod: `build/comment-drafts/comment-drafts.controller.ts`, `comment-drafts.service.ts`, `comment-draft-generator.service.ts`, `comment-drafts.constants.ts`, `dto/comment-drafts.schemas.ts`, `dto/comment-drafts-response.schemas.ts` · test: `comment-drafts.isolation.spec.ts`, `comment-draft-generator.service.spec.ts`, `comment-drafts.controller.e2e-spec.ts` | 2026-09-20T10:05Z | 2026-09-20T13:05Z | `RESERVED` |
-| `BLD-X-BE-FILES-001` | cycle-5 agent P | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `bbf4fd71d` | prod: `build/files/files.controller.ts`, `files.service.ts`, `dto/files.schemas.ts`, `dto/files-response.schemas.ts` · test: `files.service.spec.ts`, `files.controller.e2e-spec.ts` | 2026-09-20T10:05Z | 2026-09-20T13:05Z | `RESERVED` |
-| `BLD-X-BE-SCOPE-DIR-001` | cycle-5 agent Q | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `bbf4fd71d` | prod: `build/scope-directory/scope-directory.controller.ts`, `scope-directory.service.ts`, `dto/scope-directory.schemas.ts` · test: `scope-directory.service.spec.ts`, `scope-directory-membership-gate.spec.ts`, `__tests__/scope-directory-spec-helpers.ts` | 2026-09-20T10:05Z | 2026-09-20T13:05Z | `RESERVED` |
+| `BLD-X-BE-APPROVAL-001` | cycle-5 agent N | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `bbf4fd71d` | prod: `build/approvals/approvals.controller.ts`, `approvals.service.ts`, `approvals-read.service.ts`, `approval-lookup.ts`, `build-approvals-inbox.service.ts`, `build-inbox-count.service.ts`, `dto/approvals.schemas.ts`, `dto/approvals-response.schemas.ts` · test: `approvals.service.spec.ts`, `approvals.controller.e2e-spec.ts`, `build-approvals-inbox.isolation.spec.ts`, `build-inbox-count.spec.ts` | 2026-09-20T10:05Z | 2026-09-20T13:05Z | `INTEGRATED` |
+| `BLD-X-BE-DRAFT-001` | cycle-5 agent O | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `bbf4fd71d` | prod: `build/comment-drafts/comment-drafts.controller.ts`, `comment-drafts.service.ts`, `comment-draft-generator.service.ts`, `comment-drafts.constants.ts`, `dto/comment-drafts.schemas.ts`, `dto/comment-drafts-response.schemas.ts` · test: `comment-drafts.isolation.spec.ts`, `comment-draft-generator.service.spec.ts`, `comment-drafts.controller.e2e-spec.ts` | 2026-09-20T10:05Z | 2026-09-20T13:05Z | `INTEGRATED` |
+| `BLD-X-BE-FILES-001` | cycle-5 agent P | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `bbf4fd71d` | prod: `build/files/files.controller.ts`, `files.service.ts`, `dto/files.schemas.ts`, `dto/files-response.schemas.ts` · test: `files.service.spec.ts`, `files.controller.e2e-spec.ts` | 2026-09-20T10:05Z | 2026-09-20T13:05Z | `INTEGRATED` |
+| `BLD-X-BE-SCOPE-DIR-001` | cycle-5 agent Q | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `bbf4fd71d` | prod: `build/scope-directory/scope-directory.controller.ts`, `scope-directory.service.ts`, `dto/scope-directory.schemas.ts` · test: `scope-directory.service.spec.ts`, `scope-directory-membership-gate.spec.ts`, `__tests__/scope-directory-spec-helpers.ts` | 2026-09-20T10:05Z | 2026-09-20T13:05Z | `EVIDENCE_PENDING` |
 | `BLD-X-BE-PRODUCT-001` | cycle-4 agent K | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `d27f57cc3` | prod: `build/managed-products/managed-products.controller.ts`, `managed-products.service.ts`, `dto/managed-products.schemas.ts`, `dto/managed-products-response.schemas.ts` · test: `managed-products.service.spec.ts`, `managed-products-keyset.spec.ts`, `managed-products-workspace-membership.spec.ts`, `managed-products.controller.e2e-spec.ts`, `managed-products-insights.e2e-spec.ts` | 2026-09-20T09:10Z | 2026-09-20T12:10Z | `RESERVED` |
 | `BLD-X-BE-TEAM-001` | cycle-4 agent L | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `d27f57cc3` | prod: `build/teams/teams.controller.ts`, `teams.service.ts`, `team-members.service.ts`, `team-projects.service.ts`, `dto/teams.schemas.ts`, `dto/teams-response.schemas.ts` · test: `teams-tenant-isolation.spec.ts`, `teams-keyset.spec.ts`, `team-members.isolation.spec.ts`, `team-projects.isolation.spec.ts`, `team-members-keyset.spec.ts`, `teams-workspace-membership.spec.ts` | 2026-09-20T09:10Z | 2026-09-20T12:10Z | `RESERVED` |
 | `BLD-X-BE-PULSE-001` | cycle-4 agent M | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `d27f57cc3` | prod: `build/agent-pulse/agent-pulse.controller.ts`, `agent-pulse.service.ts`, `dto/agent-pulse.schema.ts` · test: `agent-pulse.service.spec.ts` | 2026-09-20T09:10Z | 2026-09-20T12:10Z | `RESERVED` |
@@ -178,6 +178,66 @@ test-double helper or an explicit spec-only exception.
 Migration journal note: `migrations/meta/_journal.json` carries an uncommitted
 idx 1011 (`1123_ai_action_proposals_rls`) owned by another session. The batched
 Build migration packet cannot reserve the journal until that entry lands.
+
+## Cycle 5 Outcome — 2026-09-20
+
+Frontend `449511be15d0b67bd65bf4b5a9a0aa6730374f9c`. Backend work landed in
+`00c4d3b4f` (see the Git note below) plus `2450c3c94`.
+
+| Packet | Status | Result |
+|---|---|---|
+| `BLD-X-BE-FILES-001` | `INTEGRATED` | Signed-URL fetch and file delete were returning **400 to every caller**; list returned **500** whenever non-empty |
+| `BLD-X-BE-DRAFT-001` | `INTEGRATED` | `/build/drafts` **threw for any user holding a draft** |
+| `BLD-X-BE-APPROVAL-001` | `INTEGRATED` | BOLA on `getApproval`; two soft-delete TOCTOUs; inbox count/list predicate consolidated |
+| `BLD-X-BE-SCOPE-DIR-001` | `EVIDENCE_PENDING` | Backend paged search delivered; star/recent still blocked on tables; cursor SQL unproven against a real database |
+
+Evidence: 112 unit tests / 8 suites and 60 e2e / 3 suites green;
+`tsc -p tsconfig.build.json` **zero errors under `modules/build/`** (one error
+remains in another session's `hr/automations/hr-webhooks.service.ts`);
+`check:permission-keys` OK; `check:route-classification` all classified;
+`check:cycles` clean across 8,115 files with self-test 2/2.
+
+Three live P1s, each sitting behind a green suite:
+
+- **`build/:projectId/files/:fileId` — `@Validate({ params })` declared a
+  `.strict()` schema containing only `fileId`.** The interceptor runs
+  `schemas.params.parse(req.params)` and `req.params` also carries `projectId`,
+  so strict mode rejected it: **400 on every signed-URL fetch and every
+  delete.** The e2e test asserted `not.toBe(401)`, and 400 is neither.
+- **`GET /build/comment-drafts/mine` stripped its own payload.** The service
+  builds a nested `ticket` via four joins; the `@ResponseSchema` had no
+  `ticket` field, so Zod removed it, and the frontend contract requires it
+  non-optional. Empty list rendered fine; one draft threw.
+- **`getApproval` checked ids, not access.** It verified org, project id,
+  approval id and soft-delete but never the caller's project membership, so any
+  holder of `build:approvals:view` could read any approval in the org by
+  guessing ids. Now behind `assertProjectAccess`.
+
+Not claimed, deliberately:
+
+- The approvals cursor criterion stays **open**. Cursor *inputs* were added and
+  the `ORDER BY … , id ASC` tiebreaker is a real fix, but the responses are
+  still bare arrays — **no cursor is emitted**, so deep pagination is not
+  reachable. Emitting one is a coordinated frontend contract change.
+- `GET /build/scope-directory/search` has **no frontend consumer yet**. It is
+  the backend half of `BLD-X-SB-DIR-001`; if that packet does not land, this is
+  dead surface.
+- The search keyset uses a SQL row-constructor comparison over a `(rank, name,
+  id)` tuple whose `id` is a string for workspaces and a number for products.
+  Mocked specs cannot catch a SQL type mismatch there. Needs the database tier.
+
+Investigated and **refuted**: 14 Build endpoints carry `@Idempotent(...)` with
+the header required, and no Build frontend hook sets `Idempotency-Key` — which
+reads as create-ticket and create-project being dead. They are not.
+`frontend/lib/api-client.ts:289` generates a key when the caller omits one. The
+observed 400 was supertest bypassing that client.
+
+Git note: another session ran a blanket `git add -A`, so `00c4d3b4f` — titled
+"Remove obsolete probe scripts…" — actually contains 23 Build files from this
+cycle alongside that session's AI and accounting work. All 23 were verified
+present and intact; history was **not** rewritten, because three sessions share
+this working tree and a rebase there is more dangerous than a wrong message.
+Commit by explicit pathspec, never `-A`/`-a`.
 
 ## Ready Pool
 
