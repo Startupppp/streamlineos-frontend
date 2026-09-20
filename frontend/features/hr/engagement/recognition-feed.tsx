@@ -192,7 +192,7 @@ export function RecognitionFeed({ recognitions, isLoading, onGiveKudos }: Recogn
 }
 
 export function BadgesGrid() {
-  const { data: badges, isLoading } = useEngagementBadges();
+  const { data: badges, isLoading, isError, refetch } = useEngagementBadges();
   const canManage = useCan("hr:engagement:manage");
   const award = useAwardBadge();
   const [awardBadgeId, setAwardBadgeId] = useState<number | null>(null);
@@ -227,6 +227,18 @@ export function BadgesGrid() {
         {Array.from({ length: 12 }).map((_, i) => (
           <Skeleton key={i} className="h-24 rounded-lg" />
         ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-border bg-muted/20">
+        <Award className="w-7 text-status-danger-ink mb-2" />
+        <p className="text-sm text-foreground">Unable to load badges</p>
+        <Button size="sm" variant="outline" className="mt-3" onClick={() => void refetch()}>
+          Retry
+        </Button>
       </div>
     );
   }
@@ -304,7 +316,7 @@ export function BadgesGrid() {
 }
 
 export function PointsLeaderboard() {
-  const { data: entries, isLoading } = useLeaderboard(20);
+  const { data: entries, isLoading, isError, refetch } = useLeaderboard(20);
   const { resolveMemberName, resolveMemberInitials } = useMemberLookup();
 
   if (isLoading) {
@@ -318,6 +330,18 @@ export function PointsLeaderboard() {
             <Skeleton className="h-3 w-12" />
           </div>
         ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10">
+        <Trophy className="w-7 text-status-danger-ink mb-2" />
+        <p className="text-sm text-foreground">Unable to load leaderboard</p>
+        <Button size="sm" variant="outline" className="mt-3" onClick={() => void refetch()}>
+          Retry
+        </Button>
       </div>
     );
   }
