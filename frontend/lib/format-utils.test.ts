@@ -11,6 +11,7 @@ import {
   formatDecimal,
   formatMoneyRounded,
   formatRatioAsPercent,
+  formatDayCount,
   DEFAULT_MONEY_DISPLAY,
 } from "./format-utils";
 
@@ -305,5 +306,34 @@ describe("formatAmountInCurrency — a stored row renders in the currency it sto
 
   it("renders a non-numeric amount as zero instead of NaN", () => {
     expect(formatAmountInCurrency("not-a-number", "USD")).not.toContain("NaN");
+  });
+});
+
+describe("formatDayCount — display leave days without floating-point noise", () => {
+  it("formats a whole number without decimal places", () => {
+    expect(formatDayCount(10)).toBe("10");
+    expect(formatDayCount(0)).toBe("0");
+  });
+
+  it("formats a decimal with one decimal place", () => {
+    expect(formatDayCount(10.5)).toBe("10.5");
+    expect(formatDayCount(94.2)).toBe("94.2");
+  });
+
+  it("rounds floating-point precision errors to 1 decimal place", () => {
+    expect(formatDayCount(94.19999999999999)).toBe("94.2");
+    expect(formatDayCount(10.00000000000001)).toBe("10");
+    expect(formatDayCount(5.666666666666667)).toBe("5.7");
+  });
+
+  it("handles edge cases without throwing", () => {
+    expect(formatDayCount(NaN)).toBe("0");
+    expect(formatDayCount(Infinity)).toBe("0");
+    expect(formatDayCount(-Infinity)).toBe("0");
+  });
+
+  it("formats negative values correctly", () => {
+    expect(formatDayCount(-5.5)).toBe("-5.5");
+    expect(formatDayCount(-10)).toBe("-10");
   });
 });
