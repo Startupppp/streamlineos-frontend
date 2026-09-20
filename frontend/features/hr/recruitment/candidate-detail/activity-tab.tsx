@@ -9,6 +9,7 @@ import {
   Activity as ActivityIcon,
 } from "lucide-react";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -39,7 +40,7 @@ interface Props {
 }
 
 export function ActivityTab({ candidateId }: Props) {
-  const { data: events, isLoading } = useCandidateActivity(candidateId);
+  const { data: events, isLoading, isError, refetch } = useCandidateActivity(candidateId);
 
   if (isLoading) {
     return (
@@ -48,6 +49,16 @@ export function ActivityTab({ candidateId }: Props) {
           <Skeleton key={i} className="h-14 w-full rounded-xl" />
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Unable to load activity"
+        description="Try again. If this keeps happening, contact an admin."
+        onRetry={() => void refetch()}
+      />
     );
   }
 
