@@ -14,7 +14,7 @@ import {
   type NotificationType,
 } from "@/lib/notification-types";
 import { formatRelativeTime } from "./format-relative-time";
-import { distinctNotificationBody } from "./notification-card-copy";
+import { distinctNotificationBody } from "@/lib/notification-copy";
 import { NotificationCardActions } from "./notification-card-actions";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { CARD_ACTIVATOR_CLASS, propagationShield } from "@/lib/keyboard-activation";

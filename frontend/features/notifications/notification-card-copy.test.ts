@@ -1,4 +1,4 @@
-import { distinctNotificationBody } from "./notification-card-copy";
+import { distinctNotificationBody } from "@/lib/notification-copy";
 
 describe("distinctNotificationBody", () => {
   it("hides a body that repeats the title", () => {
