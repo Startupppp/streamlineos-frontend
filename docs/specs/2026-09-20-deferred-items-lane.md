@@ -1,7 +1,8 @@
 # Deferred-items lane — closing out the two prior lanes
 
 **Opened:** 2026-09-20 · **Owner:** backend
-**Closes:** `2026-09-19-tenant-connection-hold-prd.md` §7 · `2026-09-20-read-cost-lane.md` "Not in this lane"
+**Absorbs and replaces:** `2026-09-19-tenant-connection-hold-prd.md` · `2026-09-20-read-cost-lane.md`
+Both were 100% ticked with their acceptance met, so they were deleted on 2026-09-20 and their durable content folded in below (§A, §B). Recover either with `git show HEAD:docs/specs/<name>.md`.
 
 Both prior lanes are 100% ticked. What remains is their **deferred** tables. A deferral is a claim, and a claim can be wrong — so each item below is re-tested against source before it is either implemented or re-deferred with a sharper reason.
 
@@ -74,7 +75,7 @@ The governing constraint is unchanged: `DB_POOL_MAX` is 15, and an authenticated
 | Read-replica routing for 1,646 GET routes | Infrastructure. `DB_REPLICA_URL` is unset and `runInReplicaTenantRead` has 3 call sites. | Provision the RDS/Aurora **reader endpoint**, set `DB_REPLICA_URL`, then measure cold/warm buffers per route as `streamline_app` with the tenant GUC. Largest remaining capacity win — it is the only item that raises the concurrency ceiling rather than shortening the hold. Note it shares R4's hazard: a GET that writes cannot be served by a reader either, so **fix the 15 first**. |
 | The 15 writing GET routes | Product decision on audit semantics. | `logCritical` commits with the request on purpose. Moving those 5 to `logCriticalOutsideTransaction` changes what a rolled-back request records. Needs a decision, not a refactor. |
 | `projects-members.service.ts` `limit(500)`, `projects-labels.service.ts` `limit(300)` | Frontend contract. | Capping needs a cursor and matching frontend paging work — a two-repo lane, not a backend fix. |
-| `org-membership-read.service.ts` keyset on `coalesce(name, email)`; `chat-search.service.ts:153-167` leading-wildcard `ILIKE` | A migration **and** a live measurement. | Both want `pg_trgm`. Per backend/CLAUDE.md §3 a text index is **unusable under RLS** unless reached through a `SECURITY DEFINER` function owned by the BYPASSRLS owner — the `app.search_ticket_ids` pattern. So this is not "add an index"; it is that whole five-condition pattern, measured in buffers on a real database. |
+| `org-membership-read.service.ts` keyset on `coalesce(name, email)`; `chat-search.service.ts:153-167` leading-wildcard `ILIKE`; `kb-document-query.service.ts:73,115` leading-wildcard `ILIKE` on `kb_articles.title` / `kb_pages.title` (added 2026-09-20 for Ask OS `searchMyDocuments`) | A migration **and** a live measurement. | Both want `pg_trgm`. Per backend/CLAUDE.md §3 a text index is **unusable under RLS** unless reached through a `SECURITY DEFINER` function owned by the BYPASSRLS owner — the `app.search_ticket_ids` pattern. So this is not "add an index"; it is that whole five-condition pattern, measured in buffers on a real database. The KB one is the least urgent of the three: it is bounded by `spaceId IN (accessible spaces)` and `LIMIT 20`, so it scans the caller's spaces rather than the org. Recorded here rather than shipped silently. |
 | `calendar-event-source.loader.ts` indexed `OR` + semi-join | Nothing — already done. | Measured and annotated by its author; buffer counts are recorded in the file. |
 
 ---
@@ -111,3 +112,69 @@ Three request paths no longer hold one of the 15 pooled connections while waitin
 ## Not certified
 
 Nothing in this lane was exercised against a live database. No disposable environment was available and production credentials were not loaded to make a check pass. Every change is verified by typecheck, unit test, gate and source review only. Before trusting the `@NoTenantTransaction()` changes in production, exercise one real upload, one real download and one automation-triggered email against an RLS-enabled database and confirm no `42501`.
+
+---
+
+## ⚠ Cross-lane hazard found 2026-09-20 — six committed migrations will never run
+
+`pnpm check:migration-discipline` exits **1**. Six `.sql` files are committed but absent from `migrations/meta/_journal.json`, so **`db:migrate` skips them while printing success** — the exact defect found and fixed for `1123_ai_action_proposals_rls` the same day, where the consequence was a table holding leave reasons, candidate emails and bonus amounts running with no RLS.
+
+| File | Committed in | Problem |
+|---|---|---|
+| `1120_add_landed_cost_tag.sql` | `b37dbf487` | no journal entry · number 1120 also claimed by `1120_feedbucket_widget_defaults.sql` |
+| `1121_requisition_headcount_link.sql` | `71ae380be` | no journal entry · number 1121 also claimed by `1121_chat_presence_custom_status.sql` |
+| `1124_build_comment_draft_evidence.sql` | `7960c2e6e` | no journal entry |
+| `1125_build_managed_product_memberships.sql` | `7960c2e6e` | no journal entry |
+| `1126_build_project_updates.sql` | `7960c2e6e` | no journal entry |
+| `1127_build_project_attachments.sql` | `7960c2e6e` | no journal entry |
+
+**Not fixed here, deliberately.** Journalling a migration asserts it *should* run; if any was already applied out-of-band, adding it replays it. The two duplicate prefixes need a rename, which rewrites files the accounting, recruitment and build lanes own. This needs each owning lane to confirm its file's applied state first.
+
+**What closes it:** per file, check whether its end state is already live (query the catalog for the objects it creates, as was done for 1123), then either append a journal entry with a strictly-increasing `when`, or add it to the gate baseline with the evidence that it is already applied. Renumber the two duplicates in their owning lane.
+
+---
+
+## §A — Absorbed from `2026-09-19-tenant-connection-hold-prd.md`
+
+That lane's five todos (T1–T5) were all ticked and its acceptance met: `check:outbound-timeouts` 17 calls all bounded, `check:ai-route-tenant-optout` 66 frozen, both bite-checked; jest 3,391/3,392. Two sections are kept because they are decisions, not status.
+
+### A1 — Rejected approach: per-query borrow inside the tenant proxy
+
+**Recorded so a future review does not re-propose it.**
+
+The obvious deepening is to relocate the connection borrow into `createTenantAwareDb`: acquire a connection per unit of work, set the GUC, run, release. The proxy already intercepts every query in the codebase, so 557 service files would not change.
+
+**This is not implementable with Drizzle.** `db.select()` returns a query builder bound to its target at call time, and that builder executes lazily on `await`. To route a query into a fresh transaction the proxy would have to hand back a builder already bound to a `tx` — which means acquiring a connection *synchronously* inside the proxy's `get`/apply trap. Connection acquisition is async. The builder cannot be rebound afterwards, and replaying a recorded method chain onto a real `tx` at `then` time would mean reimplementing Drizzle's builder surface.
+
+Revisit only if Drizzle gains a deferred-execution binding.
+
+### A2 — Why the AI-route opt-out stopped at two routes
+
+The audit named five files with the same shape. Three were left alone on evidence, not fatigue, and they remain in the ratchet's frozen list so the debt is recorded and cannot grow:
+
+- `inv-ai-explain.controller.ts` carries a docblock stating that four handlers **keep** the request transaction and that the class-level interceptor is "strictly an improvement and never a behaviour change" for them. `getDigest` / `getSupplierDelayBriefing` interleave their reads with the model call rather than loading evidence up front, so the wrap is not the mechanical one-liner it is for the other two.
+- `kb-ask.controller.ts` has both asking routes already opted out; what remains is `getHistory` / `clearHistory`, which make no model call and correctly stay inside the transaction.
+- `chat-assistant.controller.ts` and `inv-report-builder.controller.ts` likewise leave only non-model routes behind.
+
+### A3 — Residual risk on the two routes that were sunk
+
+`POST /payroll/me/payslips/:publicationId/ai/explain` and `POST /inventory/ai/insights/:insightId/explain` are verified by typecheck, unit test and structural equivalence to a deployed streaming sibling — **not** by a live request. The opt-out **requires** `@UseInterceptors(AiRequestAbortInterceptor)`: `@NoTenantTransaction()` removes the tenant context `getAmbientAiAbortSignal` reads, so without it the released connection is bought with an uncancellable, still-billed provider call. Certify with one real request per route.
+
+---
+
+## §B — Absorbed from `2026-09-20-read-cost-lane.md`
+
+All six of that lane's todos were ticked; its four "Not in this lane" items are already carried in the R6 table above. Kept here: the aggregate result, and two defects that matter more than the lane itself.
+
+### B1 — Round-trip reduction achieved
+
+e-sign summary 9 → 2 · e-sign list 2 → 1 per page · timesheets `verifyChain` 2 → 1 · chat DM lookup 2 queries over O(channels × members) rows → 1 query returning at most 1 row · chat thread open one round trip saved · chat channel search unbounded → capped at 501 · marketplace 5 single-row reads no longer materialise a full result set.
+
+Two reads were **correctly left whole**: `marketplaceAppSchema` and `appInstallationSchema` require all 17 / all 8 columns, so nothing was droppable, and `sign-envelope-lookup.ts` was left untouched because every caller passes the whole envelope onward — guessing a projection there throws a contract error rather than speeding a page.
+
+### B2 — Two defects the coordinator caught in agent output, neither visible from the agents' own green test runs
+
+These are the reason a peer's green run is not integration proof.
+
+1. **A silent behaviour narrowing.** Reusing `listMemberChannelIds` also inherited its `isArchived = false` filter, which `searchChannels` never had. An archived private channel the caller belongs to stopped being findable — and search is exactly how a person finds one. Fixed with an `includeArchived` option defaulting to `false`, so the Ably token route keeps its old behaviour.
+2. **A constructor arity break.** Adding `ChatChannelListService` as a third constructor parameter broke four `new ChatSearchService(...)` call sites in two **unmodified** specs. Every chat jest run stayed green because ts-jest does not fail on type errors — **only the typecheck sees arity.**

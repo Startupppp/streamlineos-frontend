@@ -99,6 +99,13 @@ boundaries, not write permission.
 
 | Packet | Owner/session | Root/frontend revision | Backend revision | Exact write set | Acquired | Expires | Status |
 |---|---|---|---|---|---|---|---|
+| `BLD-X-BE-APPROVAL-001` | cycle-5 agent N | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `bbf4fd71d` | prod: `build/approvals/approvals.controller.ts`, `approvals.service.ts`, `approvals-read.service.ts`, `approval-lookup.ts`, `build-approvals-inbox.service.ts`, `build-inbox-count.service.ts`, `dto/approvals.schemas.ts`, `dto/approvals-response.schemas.ts` · test: `approvals.service.spec.ts`, `approvals.controller.e2e-spec.ts`, `build-approvals-inbox.isolation.spec.ts`, `build-inbox-count.spec.ts` | 2026-09-20T10:05Z | 2026-09-20T13:05Z | `RESERVED` |
+| `BLD-X-BE-DRAFT-001` | cycle-5 agent O | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `bbf4fd71d` | prod: `build/comment-drafts/comment-drafts.controller.ts`, `comment-drafts.service.ts`, `comment-draft-generator.service.ts`, `comment-drafts.constants.ts`, `dto/comment-drafts.schemas.ts`, `dto/comment-drafts-response.schemas.ts` · test: `comment-drafts.isolation.spec.ts`, `comment-draft-generator.service.spec.ts`, `comment-drafts.controller.e2e-spec.ts` | 2026-09-20T10:05Z | 2026-09-20T13:05Z | `RESERVED` |
+| `BLD-X-BE-FILES-001` | cycle-5 agent P | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `bbf4fd71d` | prod: `build/files/files.controller.ts`, `files.service.ts`, `dto/files.schemas.ts`, `dto/files-response.schemas.ts` · test: `files.service.spec.ts`, `files.controller.e2e-spec.ts` | 2026-09-20T10:05Z | 2026-09-20T13:05Z | `RESERVED` |
+| `BLD-X-BE-SCOPE-DIR-001` | cycle-5 agent Q | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `bbf4fd71d` | prod: `build/scope-directory/scope-directory.controller.ts`, `scope-directory.service.ts`, `dto/scope-directory.schemas.ts` · test: `scope-directory.service.spec.ts`, `scope-directory-membership-gate.spec.ts`, `__tests__/scope-directory-spec-helpers.ts` | 2026-09-20T10:05Z | 2026-09-20T13:05Z | `RESERVED` |
+| `BLD-X-BE-PRODUCT-001` | cycle-4 agent K | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `d27f57cc3` | prod: `build/managed-products/managed-products.controller.ts`, `managed-products.service.ts`, `dto/managed-products.schemas.ts`, `dto/managed-products-response.schemas.ts` · test: `managed-products.service.spec.ts`, `managed-products-keyset.spec.ts`, `managed-products-workspace-membership.spec.ts`, `managed-products.controller.e2e-spec.ts`, `managed-products-insights.e2e-spec.ts` | 2026-09-20T09:10Z | 2026-09-20T12:10Z | `RESERVED` |
+| `BLD-X-BE-TEAM-001` | cycle-4 agent L | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `d27f57cc3` | prod: `build/teams/teams.controller.ts`, `teams.service.ts`, `team-members.service.ts`, `team-projects.service.ts`, `dto/teams.schemas.ts`, `dto/teams-response.schemas.ts` · test: `teams-tenant-isolation.spec.ts`, `teams-keyset.spec.ts`, `team-members.isolation.spec.ts`, `team-projects.isolation.spec.ts`, `team-members-keyset.spec.ts`, `teams-workspace-membership.spec.ts` | 2026-09-20T09:10Z | 2026-09-20T12:10Z | `RESERVED` |
+| `BLD-X-BE-PULSE-001` | cycle-4 agent M | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `d27f57cc3` | prod: `build/agent-pulse/agent-pulse.controller.ts`, `agent-pulse.service.ts`, `dto/agent-pulse.schema.ts` · test: `agent-pulse.service.spec.ts` | 2026-09-20T09:10Z | 2026-09-20T12:10Z | `RESERVED` |
 | `BLD-X-BE-WORKFLOW-001` | cycle-3 agent H | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `cd36386a6` | prod: `build/workflow/workflow.controller.ts`, `workflow.service.ts`, `dto/workflow.schemas.ts`, `dto/workflow-response.schemas.ts` · test: `workflow-tenant-isolation.spec.ts`, `build-workflow.controller.e2e-spec.ts` | 2026-09-20T07:25Z | 2026-09-20T10:25Z | `RESERVED` |
 | `BLD-X-BE-PORTFOLIO-001` | cycle-3 agent I | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `cd36386a6` | prod: `build/portfolios/portfolios.controller.ts`, `portfolios.service.ts`, `programs.controller.ts`, `programs.service.ts`, `portfolio-project-counts.ts`, `dto/portfolios.schemas.ts`, `dto/portfolios-response.schemas.ts` · test: `portfolios.service.spec.ts`, `portfolios-keyset.spec.ts`, `portfolios-list-response-contract.spec.ts`, `programs-tenant-isolation.spec.ts`, `build-portfolios.controller.e2e-spec.ts` | 2026-09-20T07:25Z | 2026-09-20T10:25Z | `RESERVED` |
 | `BLD-X-BE-PORTAL-001` | cycle-3 agent J | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `cd36386a6` | prod: `build/client-portal/client-portal.controller.ts`, `client-portal.service.ts`, `client-visibility.controller.ts`, `client-visibility.service.ts`, `dto/client-portal.schemas.ts`, `dto/client-portal-response.schemas.ts` · test: `client-portal.service.spec.ts`, `client-visibility.isolation.spec.ts`, `client-portal.controller.e2e-spec.ts` | 2026-09-20T07:25Z | 2026-09-20T10:25Z | `RESERVED` |
@@ -128,6 +135,49 @@ Process rules this cycle added: ban `stash`/`pop`/`checkout`/`reset` **by name**
 Reclaim a reservation only after the coordinator confirms the prior agent is
 idle, reviews any surviving diff, and either preserves or reverts nothing
 outside that exact write set. Never use reset/checkout to reclaim work.
+
+## Cycles 2–4 Outcome — 2026-09-20
+
+Frontend revision `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` throughout.
+
+| Cycle | Backend commit | Packets | Status |
+|---|---|---|---|
+| 2 | `cd36386a6` | `BLD-X-BE-QA-001`, `BLD-X-BE-GOV-001`, `BLD-X-BE-MEETINGS-001` | `INTEGRATED` |
+| 3 | `cccf06090` | `BLD-X-BE-WORKFLOW-001`, `BLD-X-BE-PORTFOLIO-001`, `BLD-X-BE-PORTAL-001` | `INTEGRATED` |
+| 4 | `151789113` | `BLD-X-BE-PRODUCT-001`, `BLD-X-BE-TEAM-001`, `BLD-X-BE-PULSE-001` | `INTEGRATED` |
+
+Cycle 4 evidence: 93 unit tests / 11 suites; 15 controller e2e / 2 suites;
+`tsc -p tsconfig.build.json` reports zero errors under `modules/build/` (the two
+remaining errors are another session's `src/scripts/seed-permissions.ts` and
+`src/test/db-spec-crm-fixture.ts`, both clean at HEAD and untouched here).
+
+Defects worth carrying forward:
+
+- **A green `*e2e-spec` proves auth wiring only.** `managed-products-insights`
+  returned 500 on every call — its mocked service shape had drifted from
+  `managedProductInsightsSchema`, raising a `ResponseContractViolation` — while
+  its test passed, because the test asserted only `not.toBe(401)`/`not.toBe(403)`
+  and 500 is neither. **139 such assertions across 52 spec files** remain; each
+  can hide a live 500. Sweeping them is packet `BLD-X-BE-E2E-STATUS-001`.
+- **Agent Pulse trusted stored scope.** Apply-time now re-authorizes against org,
+  membership and draft ownership and rejects drafts whose ticket was since
+  deleted, rather than replaying the authorization captured when the AI proposed
+  the write.
+- **A correlated count without `org_id` is a cross-tenant leak.** `teams`
+  counted members on `teamId` alone; member add accepted membership of any
+  workspace rather than the team's own.
+- **A soft-delete check missing from an UPDATE `WHERE` is a TOCTOU**, not a
+  cosmetic omission — `managed-products` could overwrite a concurrently deleted
+  row.
+
+Convention conflict to settle: specs use `as unknown as Db` **1,810 times across
+953 files**. §6 forbids the cast; §12 defers to the established pattern. Agents
+hit this contradiction every cycle. It needs one ruling, either a sanctioned
+test-double helper or an explicit spec-only exception.
+
+Migration journal note: `migrations/meta/_journal.json` carries an uncommitted
+idx 1011 (`1123_ai_action_proposals_rls`) owned by another session. The batched
+Build migration packet cannot reserve the journal until that entry lands.
 
 ## Ready Pool
 
@@ -162,6 +212,8 @@ pool deliberately contains more READY work than execution slots:
 | Backend leaf | `BLD-X-BE-MEETINGS-001` | `READY` | Current contract unchanged; module-local files |
 | Backend leaf | `BLD-X-BE-DRAFT-001` | `READY` | Current contract unchanged; module-local files |
 | Backend leaf | `BLD-X-BE-PULSE-001` | `READY` | Current contract unchanged; module-local files |
+| Backend sweep | `BLD-X-BE-E2E-STATUS-001` | `READY` | Replace 139 `not.toBe(401)`/`not.toBe(403)` pairs across 52 spec files with the exact expected status; fix each endpoint or mock the change exposes. Split per owning module; never one agent across all 52 |
+| Backend migration | `BLD-X-DB-BUILD-VERSION-001` | `BLOCKED` | Journal reserved by another session's uncommitted idx 1011. Batches: `version` on `pm_workspaces`, `project_updates`, `test_run_results`/`runs`/`suites`/`cases`, `project_incidents`, `risks`, `decisions`; `audience`/`status`/`publishedAt` on `project_updates`; `reviewDate`/`category` on `risks`; `supersededById` FK on `project_decisions`; index `(org_id, run_id, id)` on `build.test_run_results` |
 
 Ticket/Cycle/BUG/portal canonicalization packets wait only for their named
 contract or migration child. Frontend packets wait only when they change the

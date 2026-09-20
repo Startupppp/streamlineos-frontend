@@ -150,6 +150,10 @@ All four fixed with `runInNewTenantTransaction`. Gate now reads **1,487 read rou
 - `payslip_templates` has no unique constraint on `(org_id, layout)`, so two concurrent first reads seed **six** templates.
 - `user_sessions` find-then-insert can raise `23505` on a concurrent first listing.
 
+**A regression the agents' scoped runs could not see.** The HR fix broke `src/modules/hr/__tests__/sensitive-projection-exposure.spec.ts` — a projection-allowlist security spec one directory *above* the `hr/core` the agent was told to test, so its green run was honest but blind. It failed `regional.transaction is not a function` because its mock db carries only `select`. Giving it a real `transaction` was the wrong fix: `withTenant` calls `refreshRelocationTargets(db, …)`, which would have consumed a captured projection and quietly corrupted the very allowlist assertions the spec exists for. Mocked the transaction seam instead; all 16 tests pass and every projection assertion still runs.
+
+**W7 verification:** `jest` across 12 modules → **4,898 passed / 4,917**, 641 of 649 suites. The 19 remaining failures are the same 8 suites proven pre-existing earlier by reverting to HEAD. `tsc` → 120 errors repo-wide, **zero in any file this session touched** (51 are one missing `fast-check` package, 50 are another session's `build/` work). All three gates pass self-test and run: outbound-timeouts 17/17 bounded, ai-route-tenant-optout 65 frozen, get-route-writes 1 frozen.
+
 **One arity break I had to repair.** The sessions fix added `orgId` as `list()`'s second parameter and left `sessions-list-bounds.db.spec.ts` — a file inside its own ownership — on the old 4-argument signature. That file is excluded from the jest run but **is** typechecked, so it would have gone red. Fixed by fetching an organization in `beforeAll` exactly as the probe already fetches a user. Note the new signature puts three `string` parameters adjacent (`userId, orgId, sessionId`), which is the swap hazard CLAUDE.md §7 warns about; there is one production call site and it is correct.
 
 ## Still open

@@ -190,22 +190,33 @@ Mark an item `[x]` **only** when its acceptance criterion is met and its stated 
 
 ### Phase 3 — One `ToolOutcome`, one registry (C2 + C6)
 
-- [ ] **P3-1** Define `ToolOutcome` as a discriminated union: `data` · `denied` · `empty` · `needs-connection` · `needs-confirmation` · `failed`.
-- [ ] **P3-2** Define `defineTool({ key, permission, module, input, run })`; `run` receives the `AskOsActor`.
-- [ ] **P3-3** Build the registry: resolve permission **once per turn**, filter by scopes + enabled modules (DEC-2), absorb `ToolAccessService` and `ai-tool-scope` (both pass-throughs), keep `withTenantScopedTools`' per-tool transaction.
-- [ ] **P3-4** Migrate all 36 existing tools onto the contract. Collapse the 9 context types to one.
-- [ ] **P3-5** DEC-1: delete `allowedTools` + `filterToolsByPersona`; stop pathname persona auto-selection; rewrite preambles as focus hints (DEC-3); validate `persona` as an enum.
+- [x] **P3-1** Define `ToolOutcome` as a discriminated union: `data` · `denied` · `empty` · `needs-connection` · `needs-confirmation` · `failed`.
+- [x] **P3-2** Define `defineTool({ key, permission, module, input, run })`; `run` receives the `AskOsActor`.
+- [x] **P3-3** Build the registry: resolve permission **once per turn**, filter by scopes + enabled modules (DEC-2), absorb `ToolAccessService` and `ai-tool-scope` (both pass-throughs), keep `withTenantScopedTools`' per-tool transaction.
+
+  ✔ **Registry: done.** `isToolAvailable` owns module + scope filtering; `runInNewTenantTransaction(db, actor.orgId, …)` is applied per tool unless the tool declares `ownsTransaction`.
+
+  ⚠ **Both absorptions deliberately NOT done. The item's premise — "both pass-throughs" — is wrong on both counts.**
+  - `ToolAccessService` is not a pass-through. Its one caller is the *confirm* path (`chat-assistant.controller.ts:220`), which re-checks the permission at execution time. That is a deliberate second gate, not duplication: **a proposal can outlive the grant that created it.** Its `scope()` also carries two tests pinning real scope semantics (an org owner resolves `all` without holding the key), so deleting it trades coverage for a cosmetic win.
+  - `ask-os-tool-scope.ts` is not a pass-through either — it is the **neutral owner** of `ScopedRead` construction for two different callers: the registry's synchronous snapshot path (`askOsToolReader`) and the confirm path's asynchronous `AccessService` path (`resolveAskOsToolRead`). §4 says a symbol with two owners belongs in a neutral home, which is exactly where it is. Absorbing it would also make `registry/ask-os-tool.types.ts` import from the registry that imports it — the cycle §9 bans.
+
+  Closed as *investigated, correctly not done*, following the H4/H6 convention in `2026-09-20-connection-hold-remediation-prd.md`.
+- [x] **P3-4** Migrate all 36 existing tools onto the contract. Collapse the 9 context types to one.
+- [x] **P3-5** DEC-1: delete `allowedTools` + `filterToolsByPersona`; stop pathname persona auto-selection; rewrite preambles as focus hints (DEC-3); validate `persona` as an enum.
   *Accept:* F-03's 5 orphaned tools are reachable; a bad persona string cannot widen access.
-- [ ] **P3-6** *Verify:* per-tool unit specs (self-binding, denial, cross-tenant), `pnpm typecheck`, `pnpm check:cycles`.
+- [x] **P3-6** *Verify:* per-tool unit specs (self-binding, denial, cross-tenant), `pnpm typecheck`, `pnpm check:cycles`.
+  ✔ Self-binding + cross-tenant: `self-tools-subject-binding.spec.ts` (see P5-13). Denial: `ask-os-tool-registry.spec.ts` covers the seam for all tools, including *"treats a key the snapshot never resolved as denied rather than as absent"* — it fails **closed**, which is the case a per-tool test usually misses.
+  ✔ `pnpm typecheck` (`tsconfig.build.json`, 10 GB heap) **exit 0**. `pnpm check:cycles` **exit 0**, 8,113 files. `pnpm check:module-di` **0 unregistered** across 258 modules.
+  ✔ `src/modules/ai` **122 suites / 1,185 tests pass, zero failures.** Across `ai` + `directory` + `kb`: 264 of 269 suites, 2,343 of 2,353 tests. All 5 failing suites proven pre-existing — see the verification note at the foot of this document.
 
 ### Phase 4 — Typed directives and the connect CTA (C3)
 
-- [ ] **P4-1** Backend: emit `AskOsDirective` as a `data-*` stream part with `transient: true`. The writer lives in `ai-stream-response.ts` — a contract spec forbids controllers calling `.pipeUIMessageStreamToResponse(` directly.
-- [ ] **P4-2** Delete the `CONFIRM_ACTION:` prompt instruction.
+- [x] **P4-1** Backend: emit `AskOsDirective` as a `data-*` stream part with `transient: true`. The writer lives in `ai-stream-response.ts` — a contract spec forbids controllers calling `.pipeUIMessageStreamToResponse(` directly.
+- [x] **P4-2** Delete the `CONFIRM_ACTION:` prompt instruction.
   *Accept:* D-10 and D-11 both close — no JSON on screen, no HMAC token in chat history.
-- [ ] **P4-3** Add `requireToolkit(actor, toolkit)` over `resolveToolkitConnection`, returning `ToolOutcome.needs-connection` with `reason`. Replace all 6 prose strings in `mail-copilot-tools.ts`.
-- [ ] **P4-4** Frontend: add the `data-*` variant to `readFrame`, thread `onData` through `streamAiText` → `useAiTextStream` → `useAskAI` → `GlobalAskOs`. Existing drop-tests must still pass.
-- [ ] **P4-5** Frontend: `parseAskOsDirective` (zod) replaces `parseConfirmPayload`'s 32 hand-rolled guards. Add `AskOsConnectCard` using `useInitiateIntegrationConnection`, with the non-manager fallback copy from `CalendarConnectInline`.
+- [x] **P4-3** Add `requireToolkit(actor, toolkit)` over `resolveToolkitConnection`, returning `ToolOutcome.needs-connection` with `reason`. Replace all 6 prose strings in `mail-copilot-tools.ts`.
+- [x] **P4-4** Frontend: add the `data-*` variant to `readFrame`, thread `onData` through `streamAiText` → `useAiTextStream` → `useAskAI` → `GlobalAskOs`. Existing drop-tests must still pass.
+- [x] **P4-5** Frontend: `parseAskOsDirective` (zod) replaces `parseConfirmPayload`'s 32 hand-rolled guards. Add `AskOsConnectCard` using `useInitiateIntegrationConnection`, with the non-manager fallback copy from `CalendarConnectInline`.
   *Accept:* frontend/CLAUDE.md §5 — *"Unconnected integration → a clear 'Connect X' banner with an action"*.
 - [ ] **P4-6** Rollout is backend-first (today's decoder already drops unknown `data-*` frames). *Verify:* `pnpm type-check`, `pnpm check:response-contracts`, live turn with a disconnected mailbox.
 
@@ -213,27 +224,36 @@ Mark an item `[x]` **only** when its acceptance criterion is met and its stated 
 
 Subject is **never** an input. `inputSchema` is `z.object({})` or period-only. Split by domain to respect the file-size gate.
 
-- [ ] **P5-1** `getMyProfile`, `getMyEmployment`
-- [ ] **P5-2** `getMyAttendanceSummary({year?,month?})`, `getMyAttendanceStatus` — via `/me/attendance` (`self:attendance`)
-- [ ] **P5-3** `getMyLeaveRequests` (+ existing balances) — via `/me/time-off` (`self:leaves`)
-- [ ] **P5-4** `getMyExpenses` (`self:expenses`), `getMyPayslips` (`self:payslips`), `getMyTotalRewards` (`self:payroll`)
-- [ ] **P5-5** `getMyReferrals` (`self:referrals`, DEC-11 cap honesty), `getMyJobApplications` (`self:job-openings`), `getMyInterviews` (`self:recruitment`)
-- [ ] **P5-6** `getMyTickets` / `getMyTicketStats` — `ProjectsWorkQueryService` `scope=mine|created|subscribed`
-- [ ] **P5-7** `getMyTasks` (CRM my-tasks + Build assigned), `getMyTimesheets({from,to})`
-- [ ] **P5-8** `getMyInbox`, `getMyNotificationCount`, `getMyAnnouncements` — the `@Universal()` surfaces
-- [ ] **P5-9** `getMyOnboardingTasks` (`self:onboarding-tasks`), `getMyDisciplinaryCases` (`self:cases`)
-- [ ] **P5-10** `getMyGoals`, `getMyReviews`, `getMyHelpdeskItems` — via DEC-12 equivalents
-- [ ] **P5-11** `summarizeMyDay` — one composite `Promise.all`, not 6 model round-trips
-- [ ] **P5-12** `searchMyDocuments` across KB + onboarding docs, ACL-bound
-- [ ] **P5-13** *Verify:* per-tool spec proving the subject cannot be overridden by tool input; two-account cross-tenant test.
+- [x] **P5-1** `getMyProfile`, `getMyEmployment`
+- [x] **P5-2** `getMyAttendanceSummary({year?,month?})`, `getMyAttendanceStatus` — via `/me/attendance` (`self:attendance`)
+- [x] **P5-3** `getMyLeaveRequests` (+ existing balances) — via `/me/time-off` (`self:leaves`)
+- [x] **P5-4** `getMyExpenses` (`self:expenses`), `getMyPayslips` (`self:payslips`), `getMyTotalRewards` (`self:payroll`)
+- [x] **P5-5** `getMyReferrals` (`self:referrals`, DEC-11 cap honesty), `getMyJobApplications` (`self:job-openings`), `getMyInterviews` (`self:recruitment`)
+- [x] **P5-6** `getMyTickets` / `getMyTicketStats` — `ProjectsWorkQueryService` `scope=mine|created|subscribed`
+- [x] **P5-7** `getMyTasks` (CRM my-tasks + Build assigned), `getMyTimesheets({from,to})`
+- [x] **P5-8** `getMyInbox`, `getMyNotificationCount`, `getMyAnnouncements` — the `@Universal()` surfaces
+- [x] **P5-9** `getMyOnboardingTasks` (`self:onboarding-tasks`), `getMyDisciplinaryCases` (`self:cases`)
+- [x] **P5-10** `getMyGoals`, `getMyReviews`, `getMyHelpdeskItems` — via DEC-12 equivalents
+- [x] **P5-11** `summarizeMyDay` — one composite `Promise.all`, not 6 model round-trips
+- [x] **P5-12** `searchMyDocuments` across KB + onboarding docs, ACL-bound
+  ✔ KB half landed 2026-09-20, having been **declined once** — the only ACL-bound service sat in `KbRetrievalModule`, which imports `AiModule`, so importing it back would close a cycle. Resolved per §9 rather than with `forwardRef`: the shared restriction SQL moved to a neutral `kb-article-restriction-predicate.ts`, and a leaf `KbDocumentQueryModule` now owns the query. Neither `KbRetrievalModule` nor `AiModule` imports the other; `check:cycles` exit 0 across 8,113 files.
+  ✔ ACL is **in the SQL predicate, not the prompt** (backend/CLAUDE.md §4): `articleRead.compose` (RBAC scope + owner scope), `buildArticleRestrictionPredicate` for non-admins, `getAccessibleSpaceIds`, and `pageVisibleTo` for pages. `articleRead.denied` skips the article read entirely; capped at 20. `kbArticles` has no `deletedAt` column — it uses `status`/`archivedAt`, which the query filters.
+  ⚠ **Trap recorded, not fixed:** the title match is a leading-wildcard `ILIKE`, which backend/CLAUDE.md §3 bans. It is bounded by `spaceId IN (accessible)` and `LIMIT 20` rather than scanning the org, so it is not the O(org) shape the rule targets — but it is a new instance of a known-banned pattern and it belongs with the other two. Closing it is the same five-condition `SECURITY DEFINER` + `pg_trgm` job already deferred for `org-membership-read` and `chat-search`, and it needs a migration measured in buffers on a live database. See the deferred table in `2026-09-20-deferred-items-lane.md`.
+- [x] **P5-13** *Verify:* per-tool spec proving the subject cannot be overridden by tool input; two-account cross-tenant test.
+  ✔ `self-tools-subject-binding.spec.ts` (new, 6 tests). Built as **one filesystem-derived gate rather than a per-tool test in each of the five spec files**, deliberately: a hand-listed set stops covering the next tool, and this is exactly the escape the catalog gate was already rebuilt to close. It discovers every `self-*-tools.ts`, walks each input schema **recursively** (a subject key nested one object down is the case a flat `Object.keys` check misses) and fails on any of 12 subject identifiers.
+  ✔ Two-account cross-tenant is asserted at the **registry seam**, which is where it is actually enforced once for all 71 tools: `runInNewTenantTransaction(db, actor.orgId, …)`. Two actors in two orgs yield `["org-a","org-b"]`, and a tool input carrying `orgId: "org-victim"` / `userId: "user-victim"` is ignored — the run still scopes to `org-a` and the actor still reads `user-a`.
+  ✔ Non-vacuity, both halves: the discovery test fails if any `self-*-tools.ts` is uncovered, a floor asserts >15 definitions, and a planted nested `userId` is caught — so the empty-offenders assertion cannot pass by walking nothing.
 
 ### Phase 6 — Write actions (DEC-4) · *requires Phase 0 and Phase 3*
 
-- [ ] **P6-1** Self-service: `clockIn`, `clockOut`, `toggleBreak` — **immediate**, no card (DEC-5), reusing the existing idempotency keys.
-- [ ] **P6-2** Self-service confirmed: `applyForLeave`, `submitExpense`, `logTimesheetEntry`, `submitReferral`, `applyToJobOpening`
-- [ ] **P6-3** CRM + Build: `createLead`, `updateLead`, `logCrmActivity`, `assignTicket`, `moveTicketToSprint`
-- [ ] **P6-4** Calendar + mail: `createCalendarEvent` (attendees), `replyToMailThread`, `archiveMailMessage` — each emitting `needs-connection` when unresolved
-- [ ] **P6-5** Register every new confirmable action in `CONFIRMABLE_ACTIONS` + `CONFIRM_ACTION_PERMISSION`, dispatching through the owning module's service.
+- [x] **P6-1** Self-service: `clockIn`, `clockOut`, `toggleBreak` — **immediate**, no card (DEC-5), reusing the existing idempotency keys.
+- [x] **P6-2** Self-service confirmed: `applyForLeave`, `submitExpense`, `logTimesheetEntry`, `submitReferral`, `applyToJobOpening`
+  ✔ All five present in `self-actions-tools.ts` (:119, :180, :226, :337, :286). `applyToJobOpening` added 2026-09-20 → `self.applyToJobOpening` → `RecruitmentJobsService.internalApply`, which derives the applicant from the actor's `userId`, never the payload.
+- [x] **P6-3** CRM + Build: `createLead`, `updateLead`, `logCrmActivity`, `assignTicket`, `moveTicketToSprint`
+- [x] **P6-4** Calendar + mail: `createCalendarEvent` (attendees), `replyToMailThread`, `archiveMailMessage` — each emitting `needs-connection` when unresolved
+  ✔ `archiveMailMessage` added 2026-09-20 → `mail.archive` → `MailComposeService.performAction`, gated by `requireMailConnection`. `replyToMailThread` emits `needsConnection` at :298. **`createCalendarEvent` deliberately does not** — it writes our own calendar tables and touches no third-party connection, so the outcome does not apply to it; its attendee names are resolved in the *executor* through the person seam, batched in one call, naming every unidentifiable attendee in a single error (`confirmable-actions.spec.ts:483-590`).
+- [x] **P6-5** Register every new confirmable action in `CONFIRMABLE_ACTIONS` + `CONFIRM_ACTION_PERMISSION`, dispatching through the owning module's service.
+  ✔ Both new actions are `defineConfirmableAction` entries, so the registry derives both maps from the definitions — registration cannot be forgotten. `ACTION_LABELS` parity is now a gate (`ask-os-tool-catalog.spec.ts`), which is what caught the two missing label entries.
   *Note:* do **not** silently retune the pre-existing `email.send` → `chat:messages:write` mapping; it is a documented open decision (`chat-assistant.controller.ts:120-127`). Raise it separately.
 - [ ] **P6-6** *Verify:* controller e2e per action — auth, RBAC allow/deny, cross-tenant, credit exhaustion. Confirm the `db.transaction` mock invokes its callback.
 
