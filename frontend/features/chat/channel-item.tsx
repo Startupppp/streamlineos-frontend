@@ -182,7 +182,7 @@ export function ChannelItem({
               )}
             >
               {channel.lastMessage?.content
-                ? `${channel.type === "GROUP" ? `${channel.lastMessage.senderName?.split(" ")[0]}: ` : ""}${channel.lastMessage.content}`
+                ? `${channel.type === "GROUP" && channel.lastMessage.senderName ? `${channel.lastMessage.senderName.split(" ")[0]}: ` : ""}${channel.lastMessage.content}`
                 : "No messages yet"}
             </p>
             {hasUnread && (

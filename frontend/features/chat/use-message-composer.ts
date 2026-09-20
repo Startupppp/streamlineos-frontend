@@ -132,12 +132,22 @@ export function useMessageComposer({
     const metadata = entities.length ? { entities } : undefined;
     const mentions = new Map(pendingMentionsRef.current);
     const mentionedUserIds = [...new Set([...mentions].filter(([name]) => content.includes(`@${name}`)).map(([, id]) => id))];
-    setMessageInput(""); localStorage.removeItem(draftKey); setReplyTo(null); setPendingAttachments([]); pendingEntitiesRef.current = []; pendingMentionsRef.current.clear();
     const signature = sendSignature(content, replyToId, attachments);
     const clientKey = pendingSendRef.current?.signature === signature ? pendingSendRef.current.clientKey : crypto.randomUUID();
     pendingSendRef.current = { signature, clientKey };
     if (!isOnline) { messageQueue.current.push({ content, replyToId, attachments: attachments.length ? attachments : undefined, metadata, mentionedUserIds: mentionedUserIds.length ? mentionedUserIds : undefined, clientKey }); pendingSendRef.current = null; toast.info("You're offline — message will be sent when you reconnect"); return; }
-    try { await sendMessage.mutateAsync({ channelId, clientKey, content: content || undefined, replyToId, attachments: attachments.length ? attachments : undefined, metadata, mentionedUserIds: mentionedUserIds.length ? mentionedUserIds : undefined }); pendingSendRef.current = null; markRead.mutate({ channelId }); scrollToBottom("smooth"); }
+    try {
+      await sendMessage.mutateAsync({ channelId, clientKey, content: content || undefined, replyToId, attachments: attachments.length ? attachments : undefined, metadata, mentionedUserIds: mentionedUserIds.length ? mentionedUserIds : undefined });
+      pendingSendRef.current = null;
+      setMessageInput("");
+      setPendingAttachments([]);
+      setReplyTo(null);
+      pendingEntitiesRef.current = [];
+      pendingMentionsRef.current.clear();
+      localStorage.removeItem(draftKey);
+      markRead.mutate({ channelId });
+      scrollToBottom("smooth");
+    }
     catch (error) {
       setMessageInput(content); setPendingAttachments(attachments); setReplyTo(replyToMessage); pendingEntitiesRef.current = entities; pendingMentionsRef.current = mentions;
       toast.error(getErrorMessage(error));
