@@ -118,10 +118,9 @@ function claimsEmptiness(source: string): boolean {
  *
  * `<Gated>` was the second of them, since folded into `<PageState
  * resolution={usePageState(...)}>` (components/shared/page-state.tsx), which
- * resolves "denied" ahead of "empty" the same way `resolveGate` did. The
- * oldest is `usePermissionGate` plus `<EmptyState access={gate}>`:
- * `EmptyState` returns `NoPermissionState` when `access.denied`, and the gate
- * keeps "denied" apart from "not known yet" the same way `resolveGate` does.
+ * resolves "denied" ahead of "empty". The oldest is `usePermissionGate` plus
+ * `<EmptyState access={gate}>`: `EmptyState` returns `NoPermissionState` when
+ * `access.denied`, and the gate keeps "denied" apart from "not known yet".
  * All three are the same fix, reached through a different component, and a
  * surface using any of them does not have this bug.
  *
