@@ -27,7 +27,7 @@ export function ChannelSidebarCollapseButton({
       title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
       {...hoverHandlers}
       className={cn(
-        "hidden md:flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground",
+        "hidden lg:flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground",
         className,
       )}
     >
