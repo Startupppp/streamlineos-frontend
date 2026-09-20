@@ -27,7 +27,7 @@ export function RecruitmentInboxPage() {
   }
 
   const state = usePageState({
-    permission: "hr:employees:view",
+    permission: "hr:requisitions:view",
     isLoading: threadsQuery.isLoading,
     isError: threadsQuery.isError,
     error: threadsQuery.error,

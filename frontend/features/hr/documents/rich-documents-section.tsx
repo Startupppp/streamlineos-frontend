@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
+import { ErrorState } from "@/components/shared/error-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -88,7 +89,7 @@ export function RichDocumentsSection() {
   const [cursorTrail, setCursorTrail] = useState<string[]>([]);
   const canManage = useCan("hr:documents:manage");
   const cursor = cursorTrail[cursorTrail.length - 1];
-  const { data, isLoading } = useRichDocuments({ cursor, limit: 20 });
+  const { data, isLoading, isError, error, refetch } = useRichDocuments({ cursor, limit: 20 });
   const deleteMutation = useDeleteRichDocument();
 
   const richDocs = data?.data ?? [];
@@ -124,6 +125,21 @@ export function RichDocumentsSection() {
               <Skeleton key={i} className="h-11 w-full rounded-xl" />
             ))}
           </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
+        <CardContent className="p-4">
+          <ErrorState
+            title="Couldn't load documents"
+            description={getErrorMessage(error)}
+            onRetry={refetch}
+            compact
+          />
         </CardContent>
       </Card>
     );
