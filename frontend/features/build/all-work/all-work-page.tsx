@@ -252,6 +252,7 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
                   selectedCount={tableSelection.size}
                   members={deduplicatedMembers}
                   sprints={[]}
+                  statuses={orgStates}
                   hideSprint
                   onBulkStatus={handleBulkStatus}
                   onBulkPriority={handleBulkPriority}

@@ -64,8 +64,8 @@ export interface NotificationTicketContext {
   ticketId: number;
   ticketKey: string;
   priority: string | null;
-  status: string;
-  type: string;
+  status: string | null;
+  type: string | null;
   assignee: NotificationTicketAssignee | null;
 }
 

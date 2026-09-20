@@ -18,7 +18,6 @@ export function invalidateNotificationInbox(queryClient: QueryClient): void {
   });
   void queryClient.invalidateQueries({
     queryKey: platformCoreQueryKeys.notifications.unreadCount(),
-    exact: true,
   });
   void queryClient.invalidateQueries({
     queryKey: platformCoreQueryKeys.inbox.all,

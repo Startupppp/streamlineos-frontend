@@ -213,6 +213,7 @@ export function ProjectBoardContent({
                     selectedCount={selectedIds.size}
                     members={members}
                     sprints={sprints}
+                    statuses={statuses}
                     projectId={projectId}
                     excludeIds={selectedIds}
                     onBulkStatus={onBulkStatus}

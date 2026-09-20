@@ -303,6 +303,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
             selectedCount={selectedIds.size}
             members={members}
             sprints={sprints ?? []}
+            statuses={data?.statuses}
             projectId={projectId}
             excludeIds={selectedIds}
             onBulkStatus={handleBulkStatus}

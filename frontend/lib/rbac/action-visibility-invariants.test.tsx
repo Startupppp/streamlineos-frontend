@@ -233,6 +233,7 @@ describe("Build ticket mutation controls", () => {
         selectedCount={1}
         members={[]}
         sprints={[]}
+        statuses={undefined}
         onBulkStatus={noopString}
         onBulkPriority={noopString}
         onBulkAssignee={noopString}
