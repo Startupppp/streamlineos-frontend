@@ -381,6 +381,65 @@ The four rule-test / send-test routes are deliberate synchronous pings where the
 delivery result. Each needs its own product decision about whether that result is worth a pooled
 connection, rather than a blanket opt-out.
 
+### H14 — the four frozen send-tests, capped rather than detached ✅ DONE
+
+Decision: keep the synchronous result the user is shown, bound the wait.
+
+| Route | Before | After |
+|---|---|---|
+| `projects-webhooks#sendTest` | 10s | **5s** |
+| `feedbucket#analyzeSubmission` | 60s (standard tier) | **25s** explicit `AbortSignal` |
+| `automation#testAutomation` | — | **already 5s**, verified, unchanged |
+| `support-automations#testAutomation` | — | **already 5s**, verified, unchanged |
+
+The two rule-tests reach the network through **email**, not a webhook. Their action sends only
+`to`/`subject`/`html`, so `rowReproducesSend` is true and `INLINE_SEND_BUDGET_MS` (5s) applies —
+the cap this item would have added is already there.
+
+⚠ **That budget is conditional.** `email-outbox.service.ts:195` passes
+`reproducible ? INLINE_SEND_BUDGET_MS : undefined`, and `email.provider.ts:298` does
+`if (budgetMs === undefined) { await send; return; }`. An email carrying cc, bcc, `replyTo`,
+custom headers or attachments therefore gets **no timeout at all**. Deliberate — an outbox row
+that cannot reproduce the send must not be retried — but it means "email is bounded at 5s" is
+true only for the reproducible shape.
+
+`AiInvokeBaseOpts.signal` already reaches the provider (`resolveSignal` →
+`gate.signal` → `invokeStructuredWithImageWithUsage`), so feedbucket needed no change to the
+shared AI gateway. The attempts cap and timeout became one `DeliveryBudget` value rather than two
+adjacent `number` parameters. Commit `83148d72e`.
+
+### H15 — `landed_cost`: a required role and a declared purpose that nothing resolves ✅ DONE
+
+`INVENTORY_SEAM_ROLES` required `landed_cost` and `INVENTORY_JOURNAL_PURPOSES` declared
+`INVENTORY_LANDED_COST`, but **no account seeds that tag and no call site posts that purpose** —
+`landed-cost-journal.ts` posts `INVENTORY_ASSET` / `INVENTORY_COGS` / `AP`. `resolveAccountCodes`
+queried a seventh role and returned `null` forever; provisioning reported a gap no operator could
+close. Four specs red.
+
+Not a missing account — an entry no call site backs, which is exactly what that list's own
+docstring forbids. Both removed.
+
+The bridge's `names no purpose it has no call site for` test **hand-listed three names**, which is
+how this got in. It now also derives the rule: no purpose may resolve to a role outside the seam
+list. Bite-checked by restoring the dead purpose — it fails naming the exact purpose → role pair.
+Commit `5e65e7cc0`.
+
+### H16 — the email-caller scan was blind, and red ✅ DONE
+
+Two defects in `notification-delivery-class.spec.ts`:
+
+1. The predicate matched `*EmailService`, so **`EmailSignService` was invisible**. The inventory
+   already carried `modules/e-sign/sign-notifications.service.ts`, so the staleness test reported a
+   classified file as one that had *stopped* reaching `EmailService` — **the suite was already
+   failing**. 38 → 39; no new classification needed.
+2. The comment stripper split on `\n` then applied `/\/\/.*$/` per line. On CRLF every line keeps a
+   trailing `\r`, which `.` cannot match and `$` then requires end-of-input, so **no line comment
+   was ever stripped** and a commented mention counted as a call. The same defect class as the
+   `india-compliance` and `ledger-boundary` scans.
+
+Still under-detects by design: `Email[A-Za-z]*Service` reaches 49 files and needs ten
+delivery-class decisions from the notifications owner. Commit `bd3c63996`.
+
 ### ⚠ Known recall gaps in the gate — one closed, one open
 
 Two misses, by construction, both confirmed against real code:
