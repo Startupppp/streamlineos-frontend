@@ -440,18 +440,72 @@ Two defects in `notification-delivery-class.spec.ts`:
 Still under-detects by design: `Email[A-Za-z]*Service` reaches 49 files and needs ten
 delivery-class decisions from the notifications owner. Commit `bd3c63996`.
 
-### ⚠ Known recall gaps in the gate — one closed, one open
+### H17 — the CRM mailbox sweep, the worst hold in the tree ✅ DONE
 
-Two misses, by construction, both confirmed against real code:
-1. **A service arriving as a parameter.** `compliance.controller.ts#submitDocument` reached `fetch` via
-   `adapter.submit(payload)`, where `adapter` is a local — so H3's own site was invisible to the gate
-   while it was still a defect. H3 is fixed, but the blind spot is not: the next route that reaches the
-   network through a local or an injected-at-call-time port will be missed the same way.
-2. **A free function wrapping the client.** `crm-mailbox.controller.ts#sync` reaches Gmail/Outlook through
-   `fetchGmailMessages(this.gmail, …)` and then `gmail.listMessages(…)` on a *parameter*. The gate now
-   indexes exported functions and resolves declared parameter types, so both hops are followed — but this
-   route is still missed, because the receiver is a Composio client whose own outbound call is further
-   away than the depth limit. **Still open, still a real hold.**
+`POST /crm-mailbox/:id/sync` and `POST /crm-mailbox/sync` read a mailbox over the network **inside the
+request transaction**. `sweepAll` does it once per mailbox, up to **fifty times on one borrowed
+connection** out of a pool of ten.
+
+Invisible to the gate, for the reason recorded below as gap 2.
+
+`sync` is now three phases — one transaction for the row/connection/plan, the provider fetch in none,
+one more to accept messages and move the watermark — with the failure path opening its own. Both routes
+carry `@NoTenantTransaction()`; `sweepAll`'s due-list read is wrapped because it no longer has an
+ambient context. `push()` dropped its `runInNewTenantTransaction` wrapper, which would otherwise have
+become exactly the ambient transaction the fetch needed to escape.
+
+`crm-mailbox-connection-hold.spec.ts` runs the real primitive against a recording double: no context
+during the fetch, two transactions, the GUC set in each. Bite-checked by moving the fetch back inside a
+transaction — two of three fail. The existing sweep spec needed `primeRelocationTrafficTracker`, because
+`withTenant`'s `refreshRelocationTargets` issues its own `select` and was consuming the double's call
+counter. Commit `8595d784a`.
+
+### H18 — the walk went to depth 8, and three strip defects fell out ✅ DONE
+
+Depth 6 was hiding real holds. At depth 8 the scan surfaced **16 more routes**. Reading every one
+produced two real defects and three reasons the gate lies — each now pinned by a self-test case that
+fails on the old code.
+
+| Defect | Effect |
+|---|---|
+| A service arriving as a **method parameter** was never followed | The walk carried only constructor-injected types, so `adapter.submit(payload)` was invisible — **this is what hid H3's own site while it was still a defect** |
+| A deferral **named before it is handed over** escaped the strip | `const dispatch = () => …; if (!registerAfterCommit(dispatch)) void dispatch();` — the detacher's argument region is just an identifier. **9 of the 16 were false positives from this alone** |
+| A **voided async IIFE** survived | The void strip ended at the first `;`, and an IIFE body is full of them. Now depth-aware, and excluded from matching a `: void {` return annotation |
+
+**Two real holds, fixed at the root:**
+
+- **`HrAutomationEngineService.emit` awaited `runEvent`**, which reaches `callWebhook`. Six routes across
+  contracts, exit, probation and termination held a pooled connection across a *customer's* webhook
+  endpoint. `emit` already swallowed every error and returned `void`, so no caller could depend on the
+  result — deferring changes no contract, and stops rules observing uncommitted state.
+- **`exit-write`'s private `deferAfterCommit`** duplicated logic living in three other files, and being
+  private it was invisible to any gate. Moved to `common/tenant/defer-after-commit.ts` and named in
+  `DETACHERS`. The per-file `Logger.error` channel is kept via `reportDeferred`, because
+  `exit-write-deferred-failure.spec` pins that level and message.
+
+**Net: non-AI holds stay at the frozen 8 — now verified at depth 8 rather than 6 — and the AI ceiling
+falls 24 → 18.** Two frozen reasons were rewritten: `sendTest` and `analyzeSubmission` are now bounded,
+and a frozen entry describing a budget that no longer applies is worse than no entry.
+
+`--explain` prints the hop chain behind each reported route. **Every verdict above came from it**, not
+from reading services one at a time — the manual approach had already produced one wrong guess.
+Commit `b2ab4f361`.
+
+### ⚠ Known recall gaps in the gate — both now closed
+
+Two misses, by construction, both confirmed against real code — **both closed by H18/H17**:
+1. ~~**A service arriving as a parameter.**~~ `compliance.controller.ts#submitDocument` reached `fetch`
+   via `adapter.submit(payload)`, where `adapter` is a parameter — so H3's own site was invisible while
+   it was still a defect. **Closed:** every hop now carries its own parameter types, pinned by a
+   self-test that plants a two-file chain and fails on the old walk.
+2. ~~**A free function wrapping the client.**~~ `crm-mailbox.controller.ts#sync` reaches Gmail/Outlook
+   through `fetchGmailMessages(this.gmail, …)` and then `gmail.listMessages(…)` on a *parameter*, behind
+   a Composio client further away than the depth limit. **Closed twice over:** the limit is now 8, and
+   the route itself was fixed in H17.
+
+Recall is measured, not assumed. Closing these two does not make it 100% — it makes the two known holes
+shut. The gate's baseline was wrong in **both** directions until it was checked against source, and the
+depth-8 sweep found 9 more false positives on top of that.
 
 Recall is measured, not assumed, and it is not 100%. A green gate is not a licence to assume the rule
 holds — the gate's own baseline was wrong in both directions until it was checked against source.
