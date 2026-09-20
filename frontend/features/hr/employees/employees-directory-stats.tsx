@@ -35,7 +35,7 @@ export function EmployeesDirectoryStats({
   return (
     <StatCardGrid>
       <StatCard
-        label="Loaded"
+        label="Showing"
         value={loadedCount}
         icon={Users}
         tone="default"
