@@ -99,6 +99,11 @@ boundaries, not write permission.
 
 | Packet | Owner/session | Root/frontend revision | Backend revision | Exact write set | Acquired | Expires | Status |
 |---|---|---|---|---|---|---|---|
+| `BLD-X-BE-SUBMISSIONS-001` | cycle-6 agent R | `1b311a280` | `f1915defd` | prod: `build/forms/submissions.controller.ts`, `submissions.service.ts`, `dto/forms.schemas.ts` (submission exports only), `dto/forms-response.schemas.ts` (submission exports only) · test: `submissions.service.spec.ts`, `submissions-tenant-isolation.spec.ts`, new `forms/*.spec.ts` | 2026-09-20T14:10Z | 2026-09-20T17:10Z | `RESERVED` |
+| `BLD-X-BE-BUG-001` | cycle-6 agent S | `1b311a280` | `f1915defd` | prod: `build/qa/bugs.controller.ts`, `bugs.service.ts`, `dto/bugs.schemas.ts` · test: `bugs.service.spec.ts`, `bugs.controller.e2e-spec.ts`, new `qa/*.spec.ts` | 2026-09-20T14:10Z | 2026-09-20T17:10Z | `RESERVED` |
+| `BLD-X-BE-CHANGE-001` | cycle-6 agent T | `1b311a280` | `f1915defd` | prod: `build/client-portal/change-requests.controller.ts`, `change-requests.service.ts`, `dto/change-requests.schemas.ts`, `dto/change-requests-response.schemas.ts` · test: `change-requests.isolation.spec.ts`, new `client-portal/change-*.spec.ts` | 2026-09-20T14:10Z | 2026-09-20T17:10Z | `RESERVED` |
+| `BLD-X-BE-TIMESHEET-001` | cycle-6 agent U | `1b311a280` | `f1915defd` | prod: `build/execution/timesheets.controller.ts`, `timesheets.service.ts`, `timesheets-pagination.ts`, `timesheets-scope.ts`, `dto/timesheets.schemas.ts`, `dto/timesheets-response.schemas.ts` · test: `timesheets-cursor.spec.ts`, `timesheet-self-approval.spec.ts`, `timesheets-scope.spec.ts`, `timesheets-scope.e2e-spec.ts`, `timesheets-tenant-isolation.spec.ts`, new `execution/timesheet*.spec.ts` | 2026-09-20T14:10Z | 2026-09-20T17:10Z | `RESERVED` |
+| `BLD-X-BE-WHITEBOARD-001` | cycle-6 agent V | `1b311a280` | `f1915defd` | prod: `build/execution/whiteboards.service.ts`, `whiteboard-access.ts`, `whiteboard-board-helpers.ts`, `whiteboard-sharing.controller.ts`, `whiteboard-sharing.service.ts` · test: `whiteboard-access.spec.ts`, `whiteboard-sharing.service.spec.ts`, `whiteboard-sharing-tenant-isolation.spec.ts`, `whiteboards-tenant-isolation.spec.ts`, new `execution/whiteboard*.spec.ts` | 2026-09-20T14:10Z | 2026-09-20T17:10Z | `RESERVED` |
 | `BLD-X-BE-APPROVAL-001` | cycle-5 agent N | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `bbf4fd71d` | prod: `build/approvals/approvals.controller.ts`, `approvals.service.ts`, `approvals-read.service.ts`, `approval-lookup.ts`, `build-approvals-inbox.service.ts`, `build-inbox-count.service.ts`, `dto/approvals.schemas.ts`, `dto/approvals-response.schemas.ts` · test: `approvals.service.spec.ts`, `approvals.controller.e2e-spec.ts`, `build-approvals-inbox.isolation.spec.ts`, `build-inbox-count.spec.ts` | 2026-09-20T10:05Z | 2026-09-20T13:05Z | `INTEGRATED` |
 | `BLD-X-BE-DRAFT-001` | cycle-5 agent O | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `bbf4fd71d` | prod: `build/comment-drafts/comment-drafts.controller.ts`, `comment-drafts.service.ts`, `comment-draft-generator.service.ts`, `comment-drafts.constants.ts`, `dto/comment-drafts.schemas.ts`, `dto/comment-drafts-response.schemas.ts` · test: `comment-drafts.isolation.spec.ts`, `comment-draft-generator.service.spec.ts`, `comment-drafts.controller.e2e-spec.ts` | 2026-09-20T10:05Z | 2026-09-20T13:05Z | `INTEGRATED` |
 | `BLD-X-BE-FILES-001` | cycle-5 agent P | `449511be15d0b67bd65bf4b5a9a0aa6730374f9c` | `bbf4fd71d` | prod: `build/files/files.controller.ts`, `files.service.ts`, `dto/files.schemas.ts`, `dto/files-response.schemas.ts` · test: `files.service.spec.ts`, `files.controller.e2e-spec.ts` | 2026-09-20T10:05Z | 2026-09-20T13:05Z | `INTEGRATED` |
@@ -178,6 +183,79 @@ test-double helper or an explicit spec-only exception.
 Migration journal note: `migrations/meta/_journal.json` carries an uncommitted
 idx 1011 (`1123_ai_action_proposals_rls`) owned by another session. The batched
 Build migration packet cannot reserve the journal until that entry lands.
+
+## Cycle 6 Outcome — 2026-09-20
+
+All five agents were killed when the session's process exited; four had already
+written to disk, one (`TIMESHEET`) had written nothing and was redispatched.
+No agent returned an evidence report, so every outcome below was derived by the
+coordinator from the committed diff, not from an agent's claim.
+
+Their work was swept into `bec45096e` by a third actor (empty `Co-Authored-By`
+trailer) under a message naming only submissions. Content verified intact.
+
+| Packet | Status | Result |
+|---|---|---|
+| `BLD-X-BE-BUG-001` | `INTEGRATED` | `.strict()` `bugIdParams` omitted `projectId` → **400 on every** bug read/update/delete. BOLA on all three (no `assertProjectAccess`). `assigneeId` was written to the `assigneeMembershipId` column — a user id into a membership column |
+| `BLD-X-BE-WHITEBOARD-001` | `INTEGRATED` | **Share tokens were stored in plaintext.** Now SHA-256 at rest, lookup by hash, raw token returned once at creation; token removed from a read projection; `isNull(deletedAt)` added to the token lookup |
+| `BLD-X-BE-CHANGE-001` | `INTEGRATED` | BOLA on get/update/delete; explicit `ALLOWED_TRANSITIONS` state machine replacing unguarded status writes; keyset cursor |
+| `BLD-X-BE-TIMESHEET-001` | `INTEGRATED` | **Fail-open approval.** `canActOnPeriod` gated self-approval on `actor.membershipId !== null`, so an agent-token / system-job / account-only principal skipped the check, was not privileged, and fell through to `allowed: true` whenever no approver was assigned. Fixed at the shared guard — `modules/timesheets` `approvals.service` and `approvals-bulk.service` pass a nullable membership too, so all four call sites were exposed. Also: `isNull(voidedAt)` was missing from every read and from the update/delete/approve/reject `WHERE`; billing-summary moved to `cachedVersioned` with matching `invalidateNamespace`. **`timesheets-scope.e2e-spec.ts` needs `RBAC_E2E_DATABASE_URL` and DID NOT RUN** |
+| `BLD-X-GATE-PARAMS-001` | `INTEGRATED` | Eleven more `.strict()` params schemas across nine controllers, plus the gate — see below |
+| `BLD-X-BE-SUBMISSIONS-001` | `RESOLVED` | `.strict()` `submissionIdParams` omitted `projectId` AND `formId` → **400 on every** submission read. Status filter now `z.enum(enumValues)`, cursor added. It also added `SubmissionsPublicController`, broken twice over — never registered in `build-forms.module.ts`, and its loader read `project_forms` through a bare `db.query` with no `withPublicToken`, which migration `0384`'s public-token RLS policy would have denied anyway. Consolidated onto the live `POST /public/forms/:token/submit`, whose URL and response contract are unchanged; `PublicFormsService` now delegates to `SubmissionsService`, so a public submission finally runs the form's actions and writes an audit entry — previously it inserted a bare row and fired neither. Four bare `db.transaction` mocks in the submissions specs were voiding every assertion inside their callbacks |
+
+**The `.strict()` params defect reached 15 instances, and is now gated.**
+`files`, `bugs`, `submissions` and the original, plus eleven more found by the
+sweep: qa test-cases/test-suites/test-runs (2), updates, incidents, governance
+decisions, governance risks, forms, and workflow (3). Every one returned **400
+to 100% of callers** on a live registered route, and every one sat behind a
+green suite, because the specs asserted `not.toBe(401)`/`not.toBe(403)` and 400
+is neither — and `tsc` cannot see it, since the handler's `@Param` binding
+type-checks regardless of what the Zod schema says.
+
+`pnpm check:params-schema-completeness` now resolves the controller prefix and
+method path for every `@Validate({ params })` and fails when a `.strict()`
+schema omits one. Verified non-vacuous three ways: the self-test covers both
+the flagged and the clean fixture; removing `projectId` from a real schema
+makes the gate name that exact route; and it exits 1 on violation, 0 when
+clean. It refuses to report success on fewer than 30 resolved routes, so it
+cannot pass vacuously. Current scan: 46 controllers, 245 parameterised routes,
+0 violations. **`hr/` and `accounting/` nest the same way and have not been
+swept** — the gate currently scans `modules/build/**` only.
+
+Evidence: `tsc -p tsconfig.build.json` **0 errors repo-wide**; 85 unit tests /
+6 suites green; `bugs.controller.e2e-spec.ts` 34/34 with its negative-only
+assertions replaced by real `toBe(404)`. 46 spec files still carry
+`not.toBe(401)`/`not.toBe(403)`, down from 52.
+
+## Six Migrations Were Stranded Outside the Journal — 2026-09-20
+
+`pnpm check:migration-discipline` **was already failing** (exit 1) before this
+cycle and nobody had acted on it. Six `.sql` files existed in `migrations/`
+with no `_journal.json` entry, so `db:migrate` skipped every one of them while
+printing success:
+
+| File | Committed by | Consequence |
+|---|---|---|
+| `1124_build_comment_draft_evidence` | `7960c2e6e` | 7 `comment_drafts` columns absent |
+| `1125_build_managed_product_memberships` | `7960c2e6e` | table absent |
+| `1126_build_project_updates` | `7960c2e6e` | `project_updates` absent |
+| `1127_build_project_attachments` | `7960c2e6e` | `project_attachments` absent |
+| `1120_add_landed_cost_tag` | `b37dbf487` (2026-09-17) | **not Build; left alone** |
+| `1121_requisition_headcount_link` | `71ae380be` (2026-09-17) | **not Build; left alone** |
+
+**This invalidates the database tier of two packets previously marked
+`INTEGRATED`.** `BLD-X-BE-FILES-001` reads and writes `project_attachments`
+and `BLD-X-BE-UPDATES-001` reads and writes `project_updates`; neither table
+exists on any database migrated from the journal. Their unit and e2e evidence
+used a mocked `Db`, so nothing in those suites could have detected it — the
+code-tier verdict stands, the data-tier verdict was never established.
+
+The four Build files are now registered at idx 1012–1015, preserving the other
+session's idx 1011 entry verbatim. The two 2026-09-17 files belong to another
+author and also collide on their numeric prefix (`1120` and `1121` each name
+two different files); they are left untouched and the gate still fails on them
+by design. The gate's `--self-test` passes, so this is a real signal, not a
+vacuous one.
 
 ## Cycle 5 Outcome — 2026-09-20
 
@@ -272,8 +350,10 @@ pool deliberately contains more READY work than execution slots:
 | Backend leaf | `BLD-X-BE-MEETINGS-001` | `READY` | Current contract unchanged; module-local files |
 | Backend leaf | `BLD-X-BE-DRAFT-001` | `READY` | Current contract unchanged; module-local files |
 | Backend leaf | `BLD-X-BE-PULSE-001` | `READY` | Current contract unchanged; module-local files |
+| Backend leaf | `BLD-X-BE-ITERATION-001` + `BLD-X-BE-PLANNING-001` | `READY`, **one owner only** | Both are sprints/cycles/modules/epics inside the single `execution/iterations.controller.ts` and the single `execution/dto/execution-response.schemas.ts`. They are NOT parallelisable — dispatch as one packet or serially, never as two concurrent agents |
+| Backend leaf | `BLD-X-BE-PROJECT-DIR-001`, `-PROJECT-WRITE-001`, `-TICKET-LIST-001`, `-TICKET-DETAIL-001`, `-TICKET-WRITE-001`, `-BULK-001`, `-REPORT-001` | `READY` after file enumeration | All under `build/core/` (93 production files). `core/dto/` is split per resource and IS disjointable. The real contention is `projects-tickets.controller.ts`, shared by TICKET-LIST, TICKET-DETAIL and TICKET-WRITE — give it to exactly one of the three and let the other two own service + DTO only, or run them serially |
 | Backend sweep | `BLD-X-BE-E2E-STATUS-001` | `READY` | Replace 139 `not.toBe(401)`/`not.toBe(403)` pairs across 52 spec files with the exact expected status; fix each endpoint or mock the change exposes. Split per owning module; never one agent across all 52 |
-| Backend migration | `BLD-X-DB-BUILD-VERSION-001` | `BLOCKED` | Journal reserved by another session's uncommitted idx 1011. Batches: `version` on `pm_workspaces`, `project_updates`, `test_run_results`/`runs`/`suites`/`cases`, `project_incidents`, `risks`, `decisions`; `audience`/`status`/`publishedAt` on `project_updates`; `reviewDate`/`category` on `risks`; `supersededById` FK on `project_decisions`; index `(org_id, run_id, id)` on `build.test_run_results` |
+| Backend migration | `BLD-X-DB-BUILD-VERSION-001` | `CODE_COMPLETE`, **unapplied** | Authored as `1128_build_optimistic_concurrency_and_update_publication.sql`, journal idx 1016. `version` on all 9 tables; `audience`/`status`/`published_at` + publication CHECK + partial published-audience cursor index on `project_updates`; `review_date`/`category` + review-date index on `project_risks`; self-referencing composite `superseded_by_id` FK (PostgreSQL 15 column-list `SET NULL`), self-supersession CHECK and partial index on `project_decisions`; `(org_id, run_id, id)` on `test_run_results`. Drizzle schema updated to match. **Application and reconciliation remain a separate `BLD-X-DB-MIG-*` packet** — needs the named disposable database |
 
 Ticket/Cycle/BUG/portal canonicalization packets wait only for their named
 contract or migration child. Frontend packets wait only when they change the
