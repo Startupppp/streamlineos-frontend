@@ -14,8 +14,13 @@ jest.mock("@/hooks/api/build/ticket-queries", () => ({
   useTicketColumnCounts: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
+  useAccess: jest.fn(),
 }));
 
 jest.mock("next/navigation", () => ({
@@ -90,7 +95,7 @@ jest.mock("@/features/build/ticket-details/build-ticket-detail-url", () => ({
 import { useProject } from "@/hooks/api";
 import { useCycles, useProjectBoardTickets } from "@/hooks/api/build";
 import { useTicketColumnCounts } from "@/hooks/api/build/ticket-queries";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useAccess } from "@/hooks/api/access";
 import { notFound } from "next/navigation";
 
 const mockUseProject = useProject as jest.Mock;
@@ -98,6 +103,16 @@ const mockUseCycles = useCycles as jest.Mock;
 const mockUseProjectBoardTickets = useProjectBoardTickets as jest.Mock;
 const mockUseTicketColumnCounts = useTicketColumnCounts as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
+const mockUseAccess = useAccess as jest.Mock;
+
+const ACCESS_GRANTED = {
+  data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} },
+  isLoading: false,
+};
+const ACCESS_DENIED = {
+  data: { isOrgOwner: false, scopes: {}, modules: {} },
+  isLoading: false,
+};
 const mockNotFound = notFound as jest.Mock;
 
 function baseQueryResult(overrides = {}) {
@@ -130,6 +145,7 @@ const CYCLE_ROW = {
 
 beforeEach(() => {
   mockUseCan.mockReturnValue(true);
+  mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseProject.mockReturnValue(
     baseQueryResult({ data: { id: 1, key: "PROJ", statuses: [], settings: null } }),
   );
@@ -140,7 +156,7 @@ beforeEach(() => {
 });
 
 it("renders NoPermissionState when build:view is denied instead of calling notFound", () => {
-  mockUseCan.mockReturnValue(false);
+  mockUseAccess.mockReturnValue(ACCESS_DENIED);
   mockUseProject.mockReturnValue(baseQueryResult());
   mockUseCycles.mockReturnValue(baseQueryResult());
   mockUseProjectBoardTickets.mockReturnValue(baseQueryResult());

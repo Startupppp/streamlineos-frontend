@@ -7,8 +7,8 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { formatShortDate } from "@/lib/date-utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
@@ -89,10 +89,15 @@ interface CyclesPageProps {
 
 export function CyclesPage({ projectId }: CyclesPageProps) {
   const [createOpen, setCreateOpen] = useState(false);
-  const canView = useCan("build:view");
   const canManage = useCan("build:workspace:manage");
 
   const { data: cycles, isLoading, isError, error, refetch } = useCycles(projectId);
+  const pageState = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError,
+    error,
+  });
   const activeCycles = cycles?.filter((c) => c.status === "active") ?? [];
   const upcomingCycles = cycles?.filter((c) => c.status === "draft") ?? [];
   const completedCycles = cycles?.filter((c) => c.status === "completed") ?? [];
@@ -166,15 +171,17 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     [createMutation, projectId, form],
   );
 
-  if (!canView) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
       <PageWrapper title="Cycles">
-        <NoPermissionState permission="build:view" className="flex-1" />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
   }
 
-  if (isLoading) {
+  if (pageState.kind === "loading") {
     return (
       <PageWrapper title="Cycles">
         <div className="flex flex-1 min-h-0 flex-col gap-6">
@@ -207,19 +214,6 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
             ))}
           </div>
         </div>
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper title="Cycles">
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load cycles"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
       </PageWrapper>
     );
   }

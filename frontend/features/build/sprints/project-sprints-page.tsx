@@ -12,6 +12,8 @@ import { CreateSprintDialog } from "@/features/build/sprints/create-sprint-dialo
 import { EmptySprintIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -30,7 +32,6 @@ interface ProjectSprintsPageProps {
 
 export function ProjectSprintsPage({ projectId: projectIdStr }: ProjectSprintsPageProps) {
   const projectId = parseInt(projectIdStr);
-
   const {
     data: sprints,
     isLoading,
@@ -38,6 +39,12 @@ export function ProjectSprintsPage({ projectId: projectIdStr }: ProjectSprintsPa
     error,
     refetch,
   } = useSprints(projectId);
+  const pageState = usePageState({
+    permission: "build:sprints:view",
+    isLoading,
+    isError,
+    error,
+  });
   const { data: project } = useProject(projectId);
   const { data: boardTickets } = useProjectBoardTickets(projectId);
 
@@ -145,6 +152,20 @@ export function ProjectSprintsPage({ projectId: projectIdStr }: ProjectSprintsPa
       .then(() => toast.success(`${ticketIds.length} ticket${ticketIds.length !== 1 ? "s" : ""} removed from sprint`))
       .catch((err) => toast.error(getErrorMessage(err)));
   }, [moveTickets]);
+
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "error" &&
+    pageState.kind !== "loading"
+  )
+    return (
+      <PageWrapper title="Sprints">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
 
   if (project?.settings?.modules?.sprints === false) {
     return <ModuleDisabledState moduleName="Sprints" projectId={projectId} />;

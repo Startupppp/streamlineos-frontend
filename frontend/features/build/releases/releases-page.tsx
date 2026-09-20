@@ -2,11 +2,12 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -37,7 +38,6 @@ interface ReleasesPageProps {
 }
 
 export function ReleasesPage({ projectId }: ReleasesPageProps) {
-  const canView = useCan("build:view");
   const {
     data: releases,
     isLoading,
@@ -45,6 +45,12 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
     error,
     refetch,
   } = useReleases(projectId);
+  const pageState = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError,
+    error,
+  });
   const canManage = useCan("build:manage");
   const deleteRelease = useDeleteRelease(projectId);
 
@@ -182,10 +188,17 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
     [handleOpenEdit, handleDeleteTarget],
   );
 
-  if (!canView)
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "error")
     return (
       <PageWrapper title="Releases">
-        <NoPermissionState permission="build:view" className="flex-1" />
+        <PageState
+          resolution={pageState}
+          loading={<DataTableSkeleton rows={8} columns={5} className="flex-1" />}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
 

@@ -6,8 +6,13 @@ jest.mock("@/hooks/api/build", () => ({
   useDeleteMilestone: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
+  useAccess: jest.fn(),
 }));
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
@@ -80,11 +85,21 @@ jest.mock("./milestone-card", () => ({
 }));
 
 import { useProjectMilestones, useDeleteMilestone } from "@/hooks/api/build";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useAccess } from "@/hooks/api/access";
 
 const mockUseProjectMilestones = useProjectMilestones as jest.Mock;
 const mockUseDeleteMilestone = useDeleteMilestone as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
+const mockUseAccess = useAccess as jest.Mock;
+
+const ACCESS_GRANTED = {
+  data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} },
+  isLoading: false,
+};
+const ACCESS_DENIED = {
+  data: { isOrgOwner: false, scopes: {}, modules: {} },
+  isLoading: false,
+};
 
 function baseQueryResult(overrides = {}) {
   return {
@@ -99,12 +114,13 @@ function baseQueryResult(overrides = {}) {
 
 beforeEach(() => {
   mockUseCan.mockReturnValue(true);
+  mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseProjectMilestones.mockReturnValue(baseQueryResult({ data: [] }));
   mockUseDeleteMilestone.mockReturnValue({ mutate: jest.fn(), isPending: false });
 });
 
 it("renders NoPermissionState when build:view is denied instead of empty milestone list", () => {
-  mockUseCan.mockReturnValue(false);
+  mockUseAccess.mockReturnValue(ACCESS_DENIED);
   mockUseProjectMilestones.mockReturnValue(baseQueryResult());
   render(<ProjectMilestonesPage projectId="1" />);
   expect(screen.getByTestId("no-permission")).toBeInTheDocument();

@@ -6,8 +6,13 @@ jest.mock("@/hooks/api/build/releases", () => ({
   useDeleteRelease: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
+  useAccess: jest.fn(),
 }));
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
@@ -87,11 +92,21 @@ jest.mock("./release-form-sheet", () => ({
 }));
 
 import { useReleases, useDeleteRelease } from "@/hooks/api/build/releases";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useAccess } from "@/hooks/api/access";
 
 const mockUseReleases = useReleases as jest.Mock;
 const mockUseDeleteRelease = useDeleteRelease as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
+const mockUseAccess = useAccess as jest.Mock;
+
+const ACCESS_GRANTED = {
+  data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} },
+  isLoading: false,
+};
+const ACCESS_DENIED = {
+  data: { isOrgOwner: false, scopes: {}, modules: {} },
+  isLoading: false,
+};
 
 function baseQueryResult(overrides = {}) {
   return {
@@ -106,12 +121,13 @@ function baseQueryResult(overrides = {}) {
 
 beforeEach(() => {
   mockUseCan.mockReturnValue(true);
+  mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseReleases.mockReturnValue(baseQueryResult({ data: [] }));
   mockUseDeleteRelease.mockReturnValue({ mutate: jest.fn(), isPending: false });
 });
 
 it("renders NoPermissionState when build:view is denied instead of empty releases table", () => {
-  mockUseCan.mockReturnValue(false);
+  mockUseAccess.mockReturnValue(ACCESS_DENIED);
   mockUseReleases.mockReturnValue(baseQueryResult());
   render(<ReleasesPage projectId={1} />);
   expect(screen.getByTestId("no-permission")).toBeInTheDocument();

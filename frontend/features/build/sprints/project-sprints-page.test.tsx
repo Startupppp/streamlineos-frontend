@@ -9,8 +9,13 @@ jest.mock("@/hooks/api/build", () => ({
   useProjectBoardTickets: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
+  useAccess: jest.fn(),
 }));
 
 jest.mock("./use-sprint-ticket-mover", () => ({
@@ -102,7 +107,7 @@ import {
   useUpdateTicket,
   useProjectBoardTickets,
 } from "@/hooks/api/build";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useAccess } from "@/hooks/api/access";
 import { useSprintTicketMover } from "./use-sprint-ticket-mover";
 
 const mockUseSprints = useSprints as jest.Mock;
@@ -111,6 +116,16 @@ const mockUseUpdateSprint = useUpdateSprint as jest.Mock;
 const mockUseUpdateTicket = useUpdateTicket as jest.Mock;
 const mockUseProjectBoardTickets = useProjectBoardTickets as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
+const mockUseAccess = useAccess as jest.Mock;
+
+const ACCESS_GRANTED = {
+  data: { isOrgOwner: false, scopes: { "build:sprints:view": "all" }, modules: {} },
+  isLoading: false,
+};
+const ACCESS_DENIED = {
+  data: { isOrgOwner: false, scopes: {}, modules: {} },
+  isLoading: false,
+};
 const mockUseSprintTicketMover = useSprintTicketMover as jest.Mock;
 
 function baseQueryResult(overrides = {}) {
@@ -126,6 +141,7 @@ function baseQueryResult(overrides = {}) {
 
 beforeEach(() => {
   mockUseCan.mockReturnValue(true);
+  mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseSprints.mockReturnValue(baseQueryResult({ data: [] }));
   mockUseProject.mockReturnValue(baseQueryResult({ data: { key: "PROJ", settings: null, statuses: [] } }));
   mockUseProjectBoardTickets.mockReturnValue(baseQueryResult({ data: [] }));
@@ -135,7 +151,7 @@ beforeEach(() => {
 });
 
 it("renders NoPermissionState when build:sprints:view is denied instead of blank page", () => {
-  mockUseCan.mockReturnValue(false);
+  mockUseAccess.mockReturnValue(ACCESS_DENIED);
   mockUseSprints.mockReturnValue(baseQueryResult());
   render(<ProjectSprintsPage projectId="1" />);
   expect(screen.getByTestId("no-permission")).toBeInTheDocument();

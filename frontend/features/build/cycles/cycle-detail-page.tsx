@@ -15,7 +15,10 @@ import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import { buildTicketDetailUrl } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "lucide-react";
@@ -67,6 +70,12 @@ export function CycleDetailPage({
   const isLoading = projectLoading || cyclesLoading || ticketsLoading;
   const isError = projectFailed || cyclesFailed || ticketsFailed;
   const loadError = projectError ?? cyclesError ?? ticketsError;
+  const pageState = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError,
+    error: loadError,
+  });
 
   const cycle = useMemo(
     () => cycles?.find((c) => c.id === cycleId) ?? null,
@@ -165,7 +174,21 @@ export function CycleDetailPage({
     [router, searchParams],
   );
 
-  if (isLoading) {
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "error" &&
+    pageState.kind !== "loading"
+  )
+    return (
+      <PageWrapper title="Cycle" backHref={`/build/${projectId}/cycles`}>
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+
+  if (pageState.kind === "loading" || isLoading) {
     return (
       <PageWrapper title="Cycle" noInternalScroll>
         <KanbanBoardSkeleton />
@@ -192,7 +215,7 @@ export function CycleDetailPage({
 
   const cycleTitle = cycle?.name ?? "Cycle";
   const cycleDateRange = cycle
-    ? `${new Date(cycle.startDate).toLocaleDateString("en-IN", { month: "short", day: "numeric" })} — ${new Date(cycle.endDate).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })}`
+    ? `${formatShortDate(cycle.startDate)} — ${formatShortDate(cycle.endDate)}`
     : undefined;
 
   return (

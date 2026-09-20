@@ -7,7 +7,8 @@ import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/st
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,7 +26,6 @@ import {
   useDeleteMilestone,
   type ProjectMilestone,
 } from "@/hooks/api/build";
-import { useCan } from "@/hooks/api/access";
 import { MilestoneUpsertSheet } from "@/features/build/milestones/milestone-upsert-sheet";
 import { MilestoneCard } from "@/features/build/milestones/milestone-card";
 import { toast } from "sonner";
@@ -55,7 +55,6 @@ interface ProjectMilestonesPageProps {
 
 export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilestonesPageProps) {
   const projectId = Number(projectIdStr);
-  const canView = useCan("build:view");
   const {
     data: milestones,
     isLoading,
@@ -63,6 +62,12 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
     error,
     refetch,
   } = useProjectMilestones(projectId);
+  const pageState = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError,
+    error,
+  });
   const deleteMilestone = useDeleteMilestone(projectId);
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -103,10 +108,17 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
     });
   }, [deleteTarget, deleteMilestone]);
 
-  if (!canView)
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "error" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="Milestones">
-        <NoPermissionState permission="build:view" className="flex-1" />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
 

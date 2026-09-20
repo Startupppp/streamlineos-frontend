@@ -1,13 +1,19 @@
 import { render, screen } from "@testing-library/react";
 import { CyclesPage } from "./cycles-page";
+import { ApiError } from "@/lib/api-envelope";
 
 jest.mock("@/hooks/api/build", () => ({
   useCycles: jest.fn(),
   useCreateCycle: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
+  useAccess: jest.fn(),
 }));
 
 jest.mock("@/features/build/navigation/build-dirty-state-context", () => ({
@@ -55,7 +61,7 @@ jest.mock("@/components/shared/no-permission-state", () => ({
   ),
 }));
 
-jest.mock("@/components/shared", () => ({
+jest.mock("@/components/shared/error-state", () => ({
   ErrorState: ({ description }: { description?: string }) => (
     <div data-testid="error-state">{description}</div>
   ),
@@ -95,11 +101,21 @@ jest.mock("@/components/ui/date-picker", () => ({
 }));
 
 import { useCycles, useCreateCycle } from "@/hooks/api/build";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useAccess } from "@/hooks/api/access";
 
 const mockUseCycles = useCycles as jest.Mock;
 const mockUseCreateCycle = useCreateCycle as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
+const mockUseAccess = useAccess as jest.Mock;
+
+const ACCESS_GRANTED = {
+  data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} },
+  isLoading: false,
+};
+const ACCESS_DENIED = {
+  data: { isOrgOwner: false, scopes: {}, modules: {} },
+  isLoading: false,
+};
 
 function baseQueryResult(overrides = {}) {
   return {
@@ -114,12 +130,13 @@ function baseQueryResult(overrides = {}) {
 
 beforeEach(() => {
   mockUseCan.mockReturnValue(true);
+  mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseCycles.mockReturnValue(baseQueryResult({ data: [] }));
   mockUseCreateCycle.mockReturnValue({ mutate: jest.fn(), isPending: false });
 });
 
 it("renders NoPermissionState when build:view is denied instead of empty state", () => {
-  mockUseCan.mockReturnValue(false);
+  mockUseAccess.mockReturnValue(ACCESS_DENIED);
   mockUseCycles.mockReturnValue(baseQueryResult());
   render(<CyclesPage projectId={1} />);
   expect(screen.getByTestId("no-permission")).toBeInTheDocument();
@@ -133,4 +150,31 @@ it("shows actual query error message on failure instead of hardcoded text", () =
   render(<CyclesPage projectId={1} />);
   const errorEl = screen.getByTestId("error-state");
   expect(errorEl.textContent).toContain("Build module is not enabled");
+});
+
+it("shows the skeleton, not a denial, while the access snapshot is still in flight, because useCan answers false before it lands", () => {
+  mockUseAccess.mockReturnValue({ data: undefined, isLoading: true });
+  mockUseCycles.mockReturnValue(baseQueryResult());
+  render(<CyclesPage projectId={1} />);
+  expect(screen.queryByTestId("no-permission")).not.toBeInTheDocument();
+  expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+});
+
+it("offers the upgrade path the backend sent with a 402 rather than a generic failure", () => {
+  mockUseCycles.mockReturnValue(
+    baseQueryResult({
+      isError: true,
+      error: new ApiError("Build is not included in your current plan.", 402, "MODULE_NOT_ENABLED", {
+        moduleKey: "build",
+        reason: "not-in-plan",
+        upgradePath: "/settings/billing",
+      }),
+    }),
+  );
+  render(<CyclesPage projectId={1} />);
+  expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+  expect(screen.getByRole("link", { name: /plan|billing|upgrade/i })).toHaveAttribute(
+    "href",
+    "/settings/billing",
+  );
 });
