@@ -184,6 +184,64 @@ Migration journal note: `migrations/meta/_journal.json` carries an uncommitted
 idx 1011 (`1123_ai_action_proposals_rls`) owned by another session. The batched
 Build migration packet cannot reserve the journal until that entry lands.
 
+## Cycle 10 — 2026-09-20 — three coordinator-owned shared-file fixes
+
+Findings the cycle-9 ALLWORK and INBOX agents surfaced and correctly declined to
+fix, because each lives in a file outside any one packet's write set. Commit
+`380268681`.
+
+- **Every module's unread badge was stale for five minutes.**
+  `invalidateNotificationInbox` passed `exact: true` on
+  `notifications.unreadCount()`, a **three**-element key. The Build sidebar badge
+  reads `unreadCount("build")`, **four** elements. `exact: true` matches only the
+  literal key, never a longer key it merely prefixes — so no inbox action
+  (mark-read, mark-all-read, bulk, archive, pin, snooze) ever told the badge it
+  was stale. It carries `staleTime: 5 * 60_000` and `refetchOnWindowFocus:
+  false`, so it sat wrong until that elapsed. Dropping `exact` fixes every
+  module-scoped badge at once; a third test pins that the wider match does not
+  reach `notifications.preferences()`.
+- **`ticketContext` was stripped from every notification row.** The backend
+  declares it required-and-nullable on `notificationListResponseSchema` and
+  always emits it; `notificationItemContract` omitted the field, so Zod dropped
+  it silently and `inbox-notification-item.tsx:59` fell back to whatever the URL
+  yielded — losing priority, status, type and assignee on every row. The
+  hand-written `NotificationTicketContext` also declared `status` and `type`
+  non-nullable where the backend declares both nullable; the component already
+  handled `null`, so only the type was wrong.
+- **Bulk "Set Status" could not reach an org's own workflow states.** The menu
+  hardcoded `TODO / IN_PROGRESS / IN_REVIEW / DONE`. The contrary claim in the
+  ALLWORK report — that an unknown status is *silently applied* — is **false**:
+  `build-ticket-batch-workflow.ts:14` throws
+  `ProjectsInvalidTicketStatusException`. The real defect is the inverse, and
+  worse for the customer: an org on custom states cannot bulk-set any of them.
+  All three callers already held the correct list and simply never passed it, so
+  `statuses` is a **required** prop — a caller cannot forget it. The fallback to
+  the legacy four lived privately inside `TicketFilterBar`; it is now
+  `resolveStatusOptions` in `features/build/shared/types.ts`, beside the
+  `statusConfig` that defines those four, and both components read it.
+
+Verification: 43 suites / 214 tests across `notifications`, `inbox`,
+`ticket-filter-bar`, `bulk-action`, `all-work`, `board-content` and
+`action-visibility`. Both shared-file fixes were mutation-checked — reverting
+`exact: true` and the `ticketContext` field fails 6 of those 7 new assertions,
+the survivor being the one that asserts the *absence* of over-invalidation.
+`pnpm type-check` clean. `pnpm type-check:specs` 99 errors, all pre-existing and
+none in a touched file. `check:cycles` and `check:feature-cycles` pass.
+
+Two open items this cycle did not take:
+
+- **`check:import-direction` is RED at `HEAD` and not from this work** — 3
+  violations, all `components/layout/*` importing
+  `@/features/build/navigation/build-dirty-state-context` (baseline 0).
+- **The Build inbox cross-tab refresh has never run.**
+  `signalBuildInboxInvalidation` (`hooks/api/build/approvals.ts:40`) has no
+  production caller — only its own test — so the `storage` listener beside it is
+  registered on every Build page and never fires. It is also redundant:
+  `useNotificationEvents()` mounts once per tab in
+  `app/(authenticated)/layout-client.tsx`, so each tab already invalidates from
+  its own stream. Left for the packet that owns `navigation/`, rather than
+  deleted from under it.
+
 ## Cycle 9 Outcome — 2026-09-20 — the frontend lane opens
 
 Four frontend packets, run two at a time on disjoint write sets. Every agent
