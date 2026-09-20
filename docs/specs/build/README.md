@@ -184,6 +184,63 @@ Migration journal note: `migrations/meta/_journal.json` carries an uncommitted
 idx 1011 (`1123_ai_action_proposals_rls`) owned by another session. The batched
 Build migration packet cannot reserve the journal until that entry lands.
 
+## Cycle 8 Outcome — 2026-09-20
+
+The last two `build/core/` packets, run as two concurrent agents on disjoint
+files. **This closes the Build backend core lane.**
+
+| Packet | Status | Result |
+|---|---|---|
+| `BLD-X-BE-REPORT-001` | `INTEGRATED` | Three agent findings, two more found in review — see below |
+| `BLD-X-BE-BULK-001` | `INTEGRATED` | **No live defect.** The bulk surface is bounded (1–100), authorized through `authorizeTicketMutation`, advisory-locked, and its reads are scoped to `orgId + projectId` with a count check, so a foreign ticket id 404s. Contracts, DTO fields and transition prefetch all check out |
+
+Reporting carried the cycle's real defects, and they are the kind static
+checks cannot see — **wrong numbers**:
+
+- `getOrgProjectHealthSummary` joined tickets to cycles with **no
+  `deleted_at` filter**, so every soft-deleted ticket inflated org-wide
+  completed points. 40 live + 20 deleted points reported as 60.
+- `assigneeCompletion` counted only `tickets.assignee_membership_id`, so
+  anyone assigned through `ticket_assignees` — the standard multi-assign path,
+  honoured by notifications and workload — showed `0 / 0` against real work.
+  Now a `UNION` of both sources with `COUNT(DISTINCT ticket_id)`.
+- `resourceAllocation` merged the two assignment sources with
+  `Math.max(existing, incoming)`. That avoids double-counting the overlap by
+  **undercounting everything that does not overlap**: 3 primary-only + 5
+  co-assigned in one project reported as **5 open, not 8**. Replaced by the
+  same `UNION` + `COUNT(DISTINCT)`, which also dropped a round trip and a join
+  edge missing `org_id`. The agent reported this and declined to fix it as
+  "a large concurrent change"; the file was already open and it is the same
+  defect class as the fix beside it.
+- `resourceAllocationItemSchema` declared five all-optional keys
+  (`userId`, `name`, `projectId`, `projectName`, `assignedTickets`) that the
+  service never emits, and survived only because of `.passthrough()`. Removing
+  that passthrough — the obvious cleanup — would have blanked the chart.
+
+**Two agent tests were named for behavior they did not check.** The cycleStats
+test claimed to pin "soft-deleted tickets never inflate cycle velocity"; the
+soft-delete guard was removed and **the test still passed**, because it only
+ever asserted the `org_id` half. The `assigneeCompletion` test named
+`ticket_assignees` while asserting only an org parameter. A correct fix under a
+test that does not cover it is worse than no test: the defect reads as
+protected. Both now assert what their names claim, re-verified by mutation.
+
+The BULK agent's headline "defect" was honestly qualified in its own body and
+is **not** one: `validateBatchTransition` passed `rows.length` with all row ids
+excluded where it meant `changed.length` with only the changing ids excluded.
+Traced through `reserveTicketCapacity`'s SQL, the two are arithmetically
+identical — the join counts only tickets already at the target status, so
+excluding a changing id subtracts nothing. Kept as a contract correction, not
+counted as a customer-visible fix. Its real value was coverage:
+`build-ticket-batch-workflow.ts` had **no spec at all**, and the invariants
+harness was missing a `sprints` mock, so any test touching `sprintId` would
+have died on a `TypeError` instead of reaching the rejection it meant to prove.
+
+Evidence: `tsc -p tsconfig.build.json --noEmit` **exit 0**;
+`tsc -p tsconfig.json --noEmit` **111 errors**, none in any file this cycle
+touched; `pnpm check:cycles` clean over 8,137 files; analytics 13/13, reports
+contract 4/4, bulk packet 29/29 across four suites. Every fix mutation-tested.
+
 ## Cycle 7 Outcome — 2026-09-20
 
 Six packets under `build/core/` and `build/execution/`, each holding an
@@ -421,7 +478,7 @@ pool deliberately contains more READY work than execution slots:
 | Backend leaf | `BLD-X-BE-PULSE-001` | `READY` | Current contract unchanged; module-local files |
 | Backend leaf | `BLD-X-BE-ITERATION-001` + `BLD-X-BE-PLANNING-001` | `INTEGRATED` (cycle 7), **one owner only** | Both are sprints/cycles/modules/epics inside the single `execution/iterations.controller.ts` and the single `execution/dto/execution-response.schemas.ts`. They are NOT parallelisable — dispatch as one packet or serially, never as two concurrent agents |
 | Backend leaf | `BLD-X-BE-PROJECT-DIR-001`, `-PROJECT-WRITE-001`, `-TICKET-LIST-001`, `-TICKET-DETAIL-001`, `-TICKET-WRITE-001` | `INTEGRATED` (cycle 7) | All under `build/core/` (93 production files). `core/dto/` is split per resource and IS disjointable. The real contention is `projects-tickets.controller.ts`, shared by TICKET-LIST, TICKET-DETAIL and TICKET-WRITE — give it to exactly one of the three and let the other two own service + DTO only, or run them serially |
-| Backend leaf | `BLD-X-BE-BULK-001`, `-REPORT-001` | `READY` | The last two `build/core/` packets. BULK owns `build-ticket-bulk-mutation*` and `build-ticket-batch-workflow*`; REPORT owns `projects-reports*`, `projects-analytics*`, `projects-velocity-report` and `projects-burnup.util`. Disjoint — safe to run as two concurrent agents |
+| Backend leaf | `BLD-X-BE-BULK-001`, `-REPORT-001` | `INTEGRATED` (cycle 8) | The last two `build/core/` packets. **The Build backend core lane is closed** — remaining Build work is the 19 frontend packets, the negative-assertion sweep and the unapplied migration |
 | Backend sweep | `BLD-X-BE-E2E-STATUS-001` | `READY` | Replace negative-only status assertions with the exact expected status; fix each endpoint or mock the change exposes. **The 52-file figure counted only `not.toBe(401)`/`not.toBe(403)`. Counting every evasive form — `not.toBe(4xx)`, `not.toEqual(4xx)`, `not.toBe(HttpStatus.*)` — the real inventory is 73 files**, so a `400` from a broken `.strict()` schema passes them all. Clusters: `build` 13, `kb` 6, `test/` 5, `inventory` 4, then `timesheets`/`organization`/`invoices`/`hr`/`e-sign`/`deals`/`crm`/`autonomy`/`ai` at 2 each and 30 modules at 1. Split per owning module; never one agent across the sweep |
 | Backend migration | `BLD-X-DB-BUILD-VERSION-001` | `CODE_COMPLETE`, **unapplied** | Authored as `1128_build_optimistic_concurrency_and_update_publication.sql`, journal idx 1016. `version` on all 9 tables; `audience`/`status`/`published_at` + publication CHECK + partial published-audience cursor index on `project_updates`; `review_date`/`category` + review-date index on `project_risks`; self-referencing composite `superseded_by_id` FK (PostgreSQL 15 column-list `SET NULL`), self-supersession CHECK and partial index on `project_decisions`; `(org_id, run_id, id)` on `test_run_results`. Drizzle schema updated to match. **Application and reconciliation remain a separate `BLD-X-DB-MIG-*` packet** — needs the named disposable database |
 
