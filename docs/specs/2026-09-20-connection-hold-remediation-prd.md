@@ -156,8 +156,25 @@ five sites already known.**
 
 ## Out of scope
 
-- **C2**, separating tenant scope from transaction lifetime, is the deeper fix and touches tenant
-  isolation. It follows this lane; it does not join it.
+- **C2 / "move the tenant seam off the request"** — the 2026-09-19 architecture review's top
+  recommendation. **It is not implementable as specified**, and the blocker is mechanical, not a matter
+  of effort:
+  - The tenant GUC is set with `set_config(…, true)` — `SET LOCAL`, cleared on commit. Borrowing a
+    connection *without* a transaction means a session-level GUC that outlives the borrow: the next
+    borrower of that connection inherits the previous tenant's scope. A silent cross-tenant read that
+    passes every static check.
+  - Keeping `SET LOCAL` means a transaction per unit of work — and a drizzle query builder is bound to
+    the session it was created on, so the proxy cannot rebuild a already-built query against a fresh
+    transaction. Intercepting at `.then()` would mean a recording query-builder shim over drizzle's
+    whole surface.
+  - The consistency argument for the request-long transaction does not exist either way: no isolation
+    level is configured anywhere, so it is **READ COMMITTED**, where each *statement* takes its own
+    snapshot. The request transaction never provided cross-statement read consistency.
+
+  What it *does* provide is GUC propagation for the 557 service files that open no transaction — which
+  is exactly what `tenant-db.ts:7-13` says it is for. So the achievable form of the recommendation is
+  what this lane has been doing: release the connection at the call sites that hold it across non-DB
+  work, and let a gate hold the line.
 - **Exit-code diagnosis** (`137` OOM vs `143` failed probe) needs a running deployment; no manifests live
   in this repo.
 
@@ -258,6 +275,33 @@ want every org.
 So this is genuinely per-caller work. `check:sweep-budget` holds the ground at 50 in the meantime — a
 ceiling that may fall and never rise, not a claim that the 50 are safe. Self-tested and bite-checked with
 a planted sweep. Commit `432f0ef2d`.
+
+### H13 — five AI routes now release the connection ✅ DONE
+
+Each read phase commits before the provider call; the call runs in no transaction; the writes open their
+own. Commit `690b8f229`.
+
+`kb-from-ticket#draftFromTicket` · `support-kb-engagement#askQuestion` · `support-kb-gap#proposeDraft` ·
+`inv-ai-explain#getDigest` · `inv-ai-explain#getSupplierDelayBriefing`
+
+**Use `runInTenantTransaction` with an explicit `orgId`, not `runInNewTenantTransaction`.** The first
+reuses an ambient transaction when one exists, so if a decorator is ever removed the service degrades to
+today's behaviour. The second forces a new transaction and would open a **second** connection beside the
+one the request still holds — worse than the defect. `inv-ai-read-evidence.ts` already documented this;
+reusing it beat writing a third variant.
+
+`KbAskService` needed only the decorator — it was already three-phased with explicit orgIds, because
+`POST /kb/ask` had been through this before.
+
+⚠ **`inv-ai-explain#getReorderProposal` is deliberately left holding.** `inv-ai-proposal.spec.ts:572`
+pins that `InvAiProposalService` injects no `DRIZZLE` and imports no schema table — *"there is no handle
+a write could be issued on"*. Splitting its read phase requires exactly that handle. I injected one,
+the invariant caught it, and I reverted: a deliberate safety property outranks a capacity win. The fix
+is to move the read into `ForecastPersistenceService` / `PoBatchService`, which already own a handle.
+
+`mail#aiInboxSummary` is also still open, for a different reason: `MailService.listMessages` falls
+through to a **Gmail/Outlook fetch** when metadata cannot serve the page, so wrapping its read in a
+transaction would create a new hold rather than remove one. Mail needs its own lane.
 
 ### H10 — the gate is blind to AI provider calls ⚠ OPEN, measured
 
