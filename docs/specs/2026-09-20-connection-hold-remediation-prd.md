@@ -49,13 +49,8 @@ Fix: `@NoTenantTransaction()` on the handler + each `db.transaction` becomes `ru
 ⚠ This makes the compensation path **load-bearing** where a rollback currently masks it.
 **Write the compensation tests first.**
 
-- [x] H1a — tests pinning `abandonIntent` + `releaseReservation` on provider failure
-- [x] H1b — split the transaction, verify no connection is held across `createOrder`
-
 ### H2 — Billing marketplace addon order
 `modules/billing/core/billing-marketplace.ts:38` — same shape, same 10s budget.
-
-- [x] H2
 
 ### H3 — GST e-invoice filing — ✅ DONE
 
@@ -113,8 +108,6 @@ passes every static check."
    depends on no statement escaping a tenant transaction, which is structural and testable here. The
    blocker generalised a rule past what it says.
 
-- [x] H3 — shipped, see above
-
 ### H3 — carried forward
 
 `compliance-transport.spec.ts` text-scanned for `this.compliance.submitToTransport(` in two places, one
@@ -127,30 +120,20 @@ asserting posting does not contain it.
 repeats the transaction-hold / TOCTOU-SSRF defects the automation copy had.
 ⚠ `build/` carries another session's uncommitted work — **audit read-only, do not edit**.
 
-- [x] H4
-
 ### H5 — Only one replica runs the org sweep
 The sweep left the boot path but still runs on **every** replica. Needs a lease. No reusable primitive
 exists; session-scoped advisory locks over a pool are not safe as-is.
-
-- [x] H5
 
 ### H6 — Container heap — ✅ NOT A DEFECT
 Closed on inspection, correcting my own earlier framing. `start:prod` is used only by the local runner
 (`scripts/run.mjs:21`); the container's flagless `CMD` lets Node 22 size its heap from the cgroup limit,
 which is the correct behaviour. The two *should* differ, and no change is warranted.
 
-- [x] H6
-
 ### H7 — Ratchet: no outbound network call inside the request transaction
 The rule exists in `backend/CLAUDE.md` §4 and nothing enforces it, which is how it drifted at five sites.
 Build the gate the way `check:get-route-writes` was built: `--self-test`, vacuity floors, a frozen
 baseline, wired into the CI `gates` job. **Recall must be established by a systematic sweep, not by the
 five sites already known.**
-
-- [x] H7a — enumeration produced by the gate itself (reproducible), not by an agent
-- [x] H7b — the gate, self-tested and bite-checked
-- [x] H7c — wired into `package.json` + CI
 
 ---
 

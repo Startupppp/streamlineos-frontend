@@ -7,6 +7,7 @@ import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/st
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +25,7 @@ import {
   useDeleteMilestone,
   type ProjectMilestone,
 } from "@/hooks/api/build";
+import { useCan } from "@/hooks/api/access";
 import { MilestoneUpsertSheet } from "@/features/build/milestones/milestone-upsert-sheet";
 import { MilestoneCard } from "@/features/build/milestones/milestone-card";
 import { toast } from "sonner";
@@ -53,6 +55,7 @@ interface ProjectMilestonesPageProps {
 
 export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilestonesPageProps) {
   const projectId = Number(projectIdStr);
+  const canView = useCan("build:view");
   const {
     data: milestones,
     isLoading,
@@ -99,6 +102,13 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
       onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [deleteTarget, deleteMilestone]);
+
+  if (!canView)
+    return (
+      <PageWrapper title="Milestones">
+        <NoPermissionState permission="build:view" className="flex-1" />
+      </PageWrapper>
+    );
 
   if (isLoading) {
     return (
