@@ -113,8 +113,14 @@ export function BulkSendList() {
   const [createOpen, setCreateOpen] = useState(false);
   const [openJob, setOpenJob] = useState<SignBulkSendJob | null>(null);
   const { data: templates } = useSignTemplates();
-  const { data: jobs, isLoading, isError, refetch } = useBulkSendJobs();
+  const { data: jobs, isLoading, isFetching, isError, error, refetch, access } = useBulkSendJobs();
   const hasPublished = (templates ?? []).some((t) => t.status === "published");
+
+  /** SIGN-003: Show error if query is stuck pending due to permission denial */
+  const showError = isError || (access && !access.allowed && !isFetching);
+  const effectiveError = !access?.allowed && !isFetching
+    ? new Error("You don't have permission to view bulk send jobs")
+    : error;
 
   function templateNameFor(job: SignBulkSendJob): string | undefined {
     return (templates ?? []).find((template) => template.id === job.templateId)?.name;
@@ -122,6 +128,10 @@ export function BulkSendList() {
 
   function handleJobSheetOpenChange(next: boolean) {
     if (!next) setOpenJob(null);
+  }
+
+  async function handleRetry() {
+    await refetch();
   }
 
   return (
@@ -134,14 +144,19 @@ export function BulkSendList() {
         </AnimatedIconButton>
       }
     >
-      {isLoading ? (
+      {isLoading || isFetching ? (
         <div className="space-y-3">
           {Array.from({ length: 9 }).map((_, i) => (
             <Skeleton key={i} className="h-16 w-full" />
           ))}
         </div>
-      ) : isError ? (
-        <ErrorState title="Failed to load bulk send jobs" onRetry={() => void refetch()} />
+      ) : showError ? (
+        <ErrorState 
+          className="flex-1"
+          title="Failed to load bulk send jobs" 
+          description={getErrorMessage(effectiveError)}
+          onRetry={handleRetry} 
+        />
       ) : !jobs || jobs.length === 0 ? (
         <EmptyState
           illustration={<IllustrationImage name="empty-upload" className="h-40 w-40" />}
