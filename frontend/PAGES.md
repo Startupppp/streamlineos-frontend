@@ -222,7 +222,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 ### Per-project views (`/build/[projectId]/*`)
 - `/build/[projectId]` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/ai` · **Build** · hooks: `→ features/build/project`
-- `/build/[projectId]/analytics` · **Build** · hooks: `→ features/build/project`
+- `/build/[projectId]/analytics` · **Build** · hooks: `→ features/build/analytics/project-analytics-page` (`useProjectAnalytics`) · renders `NoPermissionState` without `build:view` (2026-09-20: previously the page had no permission gate of its own — a denied user fell through the disabled query's `data: undefined` straight to "No analytics yet", denial read as emptiness). Route file is now a thin server wrapper delegating to the feature component, matching the `/build/[projectId]/budget` pattern.
 - `/build/[projectId]/approvals` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/automations` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/backlog` · **Build** · hooks: `→ features/build/project`

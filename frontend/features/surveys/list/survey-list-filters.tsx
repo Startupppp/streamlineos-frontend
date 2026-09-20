@@ -43,9 +43,10 @@ export function SurveyListFilters({
         placeholder="Search surveys..."
         value={search}
         onValueChange={onSearchChange}
+        className="min-w-0 flex-1 sm:flex-initial sm:min-w-[200px]"
       />
       <Select value={status} onValueChange={handleStatusSelect}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-32")}><SelectValue placeholder="Status" /></SelectTrigger>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-[120px] w-fit")}><SelectValue placeholder="Status" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All statuses</SelectItem>
           <SelectItem value="draft">Draft</SelectItem>
@@ -57,7 +58,7 @@ export function SurveyListFilters({
         </SelectContent>
       </Select>
       <Select value={mode} onValueChange={handleModeSelect}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-40")}><SelectValue placeholder="Mode" /></SelectTrigger>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-[140px] w-fit")}><SelectValue placeholder="Mode" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All modes</SelectItem>
           <SelectItem value="survey">Survey</SelectItem>

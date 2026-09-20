@@ -9,6 +9,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState as UiEmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
 import {
   useLeavePolicies,
@@ -39,7 +40,7 @@ function LeavePoliciesEmptyState({ onCreateClick }: { onCreateClick: () => void 
 }
 
 export function LeavePoliciesPage() {
-  const { data: policies, isLoading } = useLeavePolicies();
+  const { data: policies, isLoading, isError, error, refetch } = useLeavePolicies();
   const { data: leaveTypesData } = useLeaveTypesAdmin();
   const leaveTypeOptions = leaveTypesData ?? [];
   const deleteMutation = useDeleteLeavePolicy();
@@ -106,6 +107,13 @@ export function LeavePoliciesPage() {
             <Skeleton key={i} className="h-52 rounded-lg" />
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load leave policies"
+          description={getErrorMessage(error)}
+          onRetry={refetch}
+        />
       ) : !policies?.length ? (
         <LeavePoliciesEmptyState onCreateClick={handleCreateClick} />
       ) : (

@@ -115,18 +115,35 @@ function TemplateRow({ template }: { template: SignTemplate }) {
 }
 
 export function TemplateList() {
-  const { data: templates, isLoading, isError, refetch } = useSignTemplates();
+  const { data: templates, isLoading, isFetching, isError, error, refetch, access } = useSignTemplates();
+  
+  /** SIGN-003: Show error if query is stuck pending due to permission denial */
+  const showError = isError || (access && !access.allowed && !isFetching);
+  const effectiveError = !access?.allowed && !isFetching
+    ? new Error("You don't have permission to view templates")
+    : error;
+  /** Only show skeleton on initial load, not on background refetch */
+  const showSkeleton = !templates && (isLoading || isFetching);
+
+  async function handleRetry() {
+    await refetch();
+  }
 
   return (
     <PageWrapper title="Templates" subtitle="Reusable envelope layouts you can send again and again">
-      {isLoading ? (
+      {showSkeleton ? (
         <div className="space-y-3">
           {Array.from({ length: 9 }).map((_, i) => (
             <Skeleton key={i} className="h-20 w-full" />
           ))}
         </div>
-      ) : isError ? (
-        <ErrorState title="Failed to load templates" onRetry={() => void refetch()} />
+      ) : showError ? (
+        <ErrorState 
+          className="flex-1"
+          title="Failed to load templates" 
+          description={getErrorMessage(effectiveError)}
+          onRetry={handleRetry} 
+        />
       ) : !templates || templates.length === 0 ? (
         <EmptyState
           illustrationPreset="documents"

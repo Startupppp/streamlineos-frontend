@@ -138,69 +138,73 @@ export function MyTimeView() {
   ) : null;
 
   const weekNavActions = (
-    <div className="flex items-center gap-2">
-      <AiActionsMenu
-        actions={aiActions}
-        disabled={!period}
-        menuLabel="Timesheet AI"
-        align="end"
-      />
-
-      <div className="flex items-center rounded-md border border-border overflow-hidden">
-        <AnimatedIconButton
-          icon={ChevronLeftIcon}
-          iconSize={16}
-          variant="ghost"
-          size="icon"
-          className="rounded-none border-r border-border"
-          aria-label="Previous week"
-          onClick={goToPrev}
+    <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-row sm:items-center">
+      <div className="flex items-center gap-2 flex-wrap">
+        <AiActionsMenu
+          actions={aiActions}
+          disabled={!period}
+          menuLabel="Timesheet AI"
+          align="end"
         />
-        <Button
-          variant="ghost"
-          className={cn("px-3 rounded-none", isCurrentWeek && "text-primary font-medium")}
-          onClick={goToCurrent}
-        >
-          This week
-        </Button>
-        <AnimatedIconButton
-          icon={ChevronRightIcon}
-          iconSize={16}
-          variant="ghost"
-          size="icon"
-          className="rounded-none border-l border-border"
-          aria-label="Next week"
-          onClick={goToNext}
+
+        <div className="flex items-center rounded-md border border-border overflow-hidden">
+          <AnimatedIconButton
+            icon={ChevronLeftIcon}
+            iconSize={16}
+            variant="ghost"
+            size="icon"
+            className="rounded-none border-r border-border"
+            aria-label="Previous week"
+            onClick={goToPrev}
+          />
+          <Button
+            variant="ghost"
+            className={cn("px-3 rounded-none whitespace-nowrap", isCurrentWeek && "text-primary font-medium")}
+            onClick={goToCurrent}
+          >
+            This week
+          </Button>
+          <AnimatedIconButton
+            icon={ChevronRightIcon}
+            iconSize={16}
+            variant="ghost"
+            size="icon"
+            className="rounded-none border-l border-border"
+            aria-label="Next week"
+            onClick={goToNext}
+          />
+        </div>
+
+        <FillFromClockButton
+          weekStart={weekStart}
+          weekEnd={weekEnd}
+          onResult={(result) => setDraftResult({ week: weekStart, result })}
         />
       </div>
 
-      <FillFromClockButton
-        weekStart={weekStart}
-        weekEnd={weekEnd}
-        onResult={(result) => setDraftResult({ week: weekStart, result })}
-      />
-
-      {canRecall ? (
-        <LoadingButton
-          variant="outline"
-          size="sm"
-          className="gap-1.5"
-          onClick={handleRecall}
-          isPending={recallPeriod.isPending}
-        >
-          Recall
-        </LoadingButton>
-      ) : (
-        <LoadingButton
-          size="sm"
-          className="gap-1.5"
-          onClick={handleSubmit}
-          isPending={submitPeriod.isPending}
-          disabled={!canSubmit}
-        >
-          Submit week
-        </LoadingButton>
-      )}
+      <div className="flex w-full sm:w-auto">
+        {canRecall ? (
+          <LoadingButton
+            variant="outline"
+            size="sm"
+            className="gap-1.5 w-full sm:w-auto"
+            onClick={handleRecall}
+            isPending={recallPeriod.isPending}
+          >
+            Recall
+          </LoadingButton>
+        ) : (
+          <LoadingButton
+            size="sm"
+            className="gap-1.5 w-full sm:w-auto"
+            onClick={handleSubmit}
+            isPending={submitPeriod.isPending}
+            disabled={!canSubmit}
+          >
+            Submit week
+          </LoadingButton>
+        )}
+      </div>
     </div>
   );
 

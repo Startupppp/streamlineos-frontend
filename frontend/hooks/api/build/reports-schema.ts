@@ -1,23 +1,5 @@
 import { z } from "zod";
 
-export const analyticsContract = z.object({
-  stateDistribution: z.unknown(),
-  priorityBreakdown: z.unknown(),
-  assigneeCompletion: z.unknown(),
-  volumeOverTime: z.unknown(),
-  cycleVelocity: z.unknown(),
-  estimateVsActual: z.unknown(),
-  healthScore: z.number().int(),
-  healthStatus: z.string(),
-  healthBreakdown: z.object({
-    completionPct: z.number().int(),
-    onTimePct: z.number().int(),
-    velocityScore: z.number().int(),
-    overdueTickets: z.number().int(),
-    totalTickets: z.number().int(),
-  }),
-});
-
 export const velocityContract = z.array(z.object({
   sprintId: z.number().int(),
   name: z.string(),

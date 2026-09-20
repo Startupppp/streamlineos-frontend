@@ -192,6 +192,7 @@ export function PositionsTable() {
             description={filtersActive ? undefined : "Create positions to track roles, incumbents, and org structure."}
             filtersActive={filtersActive}
             onClearFilters={handleClearFilters}
+            action={!filtersActive && canManage ? { label: "Create position", onClick: () => {}} : undefined}
             compact
           />
         }

@@ -3,6 +3,8 @@
 import { format } from "date-fns";
 import { FileText } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { LetterRender } from "@/hooks/api/hr/letters";
 import { cn } from "@/lib/utils";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -33,6 +35,9 @@ function LetterTypeBadge({ type }: { type: string | null }) {
 interface LettersHistoryTableProps {
   letters: LetterRender[];
   isLoading: boolean;
+  isError?: boolean;
+  error?: unknown;
+  onRetry?: () => void;
   className?: string;
 }
 
@@ -74,7 +79,19 @@ const columns: DataTableColumn<LetterRender>[] = [
   },
 ];
 
-export function LettersHistoryTable({ letters, isLoading, className }: LettersHistoryTableProps) {
+export function LettersHistoryTable({ letters, isLoading, isError, error, onRetry, className }: LettersHistoryTableProps) {
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load letters"
+        description={getErrorMessage(error)}
+        onRetry={onRetry}
+        compact
+      />
+    );
+  }
+
   const emptyState = (
     <EmptyState
       illustrationPreset="documents"
