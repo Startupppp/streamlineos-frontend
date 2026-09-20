@@ -524,6 +524,56 @@ helper does the same thing under another name.
 `refreshRelocationTargets`, which issues its own `select`, so a double that counts `select` calls
 silently answers the **wrong row**. That is what made a mailbox sweep read `disabled` in H17.
 
+### H20 — the outbox writer now fails closed ✅ DONE
+
+`resolveScope` fell back to `PLATFORM` whenever neither an explicit `organizationId` nor an ambient
+tenant context supplied one. A tenant send that merely ran without a context was therefore attributed to
+**no tenant instead of failing**, and the suppression read silently missed that org's entries. That is
+the defect that kept `notifications-dispatch#dispatch` frozen.
+
+`EmailOptions.organizationId` is `string | null | undefined`, so *omitted* was already distinguishable
+from *deliberately null* — the fix needed no new field:
+
+| Input | Result |
+|---|---|
+| explicit org id | `TENANT` |
+| explicit `null` | `PLATFORM` — mail that genuinely predates any tenant (verification, password reset) |
+| omitted, ambient context present | `TENANT` from the context |
+| omitted, **no** context | **throws** |
+
+The change immediately caught a spec fixture: `PLAIN_SEND` ("Approval needed") is tenant mail that was
+relying on the PLATFORM fallback. Two tests pin the rule by name. Email suite 159/159.
+
+### H21 — the email-caller scan detects senders, not mentions ✅ DONE
+
+Widening to `Email[A-Za-z]*Service` was going to add **10** files. Reading them found the predicate was
+wrong in two ways, and only **2** are genuinely new direct senders:
+
+| File | Verdict |
+|---|---|
+| `ai/core/confirm-actions/comms-confirm-actions.ts:26` | **PENDING_MIGRATION** — real `outbox.enqueueAndTry` |
+| `reporting/report-schedule.consumer.ts:92` | **PENDING_MIGRATION** — real `this.email.enqueueAndTry` |
+| `cron/cron-email-outbox.service.ts` | EXEMPT — calls `processRetries()`; it drains what the seam already accepted and originates nothing |
+| `autonomy/lib/outbound-send.types.ts` · `autonomy/outbound.workflow.ts` · `hr/onboarding/core/onboarding-admin.service.ts` | EXEMPT — name the port type, issue no send |
+| `autonomy/**` (2 files), `data-quality-producers.service.ts` | **not callers at all** — matched only `EmailSuppressionService`, which is the *gate* that decides whether a send happens |
+| `notifications/providers/notification-email.provider.ts` | **not a caller** — that directory IS the dispatch seam, excluded like `modules/email/` |
+
+The predicate is now an explicit sender list, and `modules/notifications/providers/` is skipped for the
+same reason `modules/email/` is. Detection 39 → 45. 36/36.
+
+### ⚠ `feedbucket#createTicketFromAnalysis` — the recorded blocker is narrower than it reads
+
+The freeze says an idempotency fence is needed first. Re-reading the code, **it is not**:
+`ProjectsTicketsCreateService.createFromFeedback` uses `db.transaction`, which nests as a savepoint — so
+putting `createFromFeedback` **and** the `linkedTicketId` update in ONE `runInTenantTransaction` after
+the AI call keeps them atomic, which is exactly what the ambient transaction does today. The duplicate
+ticket only appears in a *naive* split that separates them. A retry after a committed phase 3 already
+hits the `submission.linkedTicketId` guard and gets a 409.
+
+The real prerequisite is different and bigger: `createTicketFromAnalysis` calls `this.analyze(...)`, so
+opting it out requires three-phasing `analyze` — which is the same work that would un-freeze
+`feedbucket#analyzeSubmission`. Doing it once clears **both** frozen entries.
+
 ### ⚠ Known recall gaps in the gate — both now closed
 
 Two misses, by construction, both confirmed against real code — **both closed by H18/H17**:
