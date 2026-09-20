@@ -129,7 +129,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
     incomingLeaveRequests.length + (pendingWfhRequests?.length || 0);
 
   const totalAvailable = balances.reduce(
-    (sum, b) => sum + Number(b.balance ?? 0),
+    (sum, b) => Math.round((sum + Number(b.balance ?? 0)) * 10) / 10,
     0,
   );
   const availableHint = buildAvailableHint(balances, joiningDate);
