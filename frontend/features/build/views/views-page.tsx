@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
@@ -24,6 +23,8 @@ import {
 } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -47,6 +48,12 @@ export function ViewsPage({ params }: PageProps) {
   } = useViews(projectId);
   const togglePinMutation = useUpdateView();
   const deleteMutation = useDeleteView();
+  const pageState = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError,
+    error,
+  });
 
   const handleNavigateToView = useCallback(
     (view: { id: number; layoutType: string }) => {
@@ -91,7 +98,31 @@ export function ViewsPage({ params }: PageProps) {
   const pinnedViews = (views ?? []).filter((v) => v.isPinned);
   const unpinnedViews = (views ?? []).filter((v) => !v.isPinned);
 
-  if (isLoading) {
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  ) {
+    return (
+      <PageWrapper
+        title="Views"
+        subtitle="Saved filters and layouts for this project"
+      >
+        <PmPageShell>
+          <PageState
+            resolution={pageState}
+            loading={null}
+            onRetry={handleRetry}
+            className="flex-1"
+          >
+            {null}
+          </PageState>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (pageState.kind === "loading") {
     return (
       <PageWrapper title="Views">
         <PmPageShell>
@@ -105,45 +136,34 @@ export function ViewsPage({ params }: PageProps) {
     );
   }
 
-  if (isError) {
-    return (
-      <PageWrapper title="Views" subtitle="Saved filters and layouts for this project">
-        <PmPageShell>
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load views"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
   return (
     <PageWrapper
       title="Views"
       subtitle="Saved filters and layouts for this project"
       actions={
-        canManage ? <Button size="sm" onClick={handleOpenCreate}>
-          <Plus className="h-4 w-4 mr-1" /> New View
-        </Button> : undefined
+        canManage ? (
+          <Button size="sm" onClick={handleOpenCreate}>
+            <Plus className="h-4 w-4 mr-1" /> New View
+          </Button>
+        ) : undefined
       }
     >
       <PmPageShell>
         {!views?.length ? (
           <EmptyState
-              className={PM_FILL_PANEL}
-              illustration={<EmptySearchIllustration />}
-              title="No saved views"
-              description="Create custom views with saved filters and layouts."
-              action={{ label: "Create First View", onClick: handleOpenCreate }}
-            />
+            className={PM_FILL_PANEL}
+            illustration={<EmptySearchIllustration />}
+            title="No saved views"
+            description="Create custom views with saved filters and layouts."
+            action={{ label: "Create First View", onClick: handleOpenCreate }}
+          />
         ) : (
           <div className="flex flex-1 min-h-0 flex-col gap-4">
             {pinnedViews.length > 0 ? (
               <PmSection index={0}>
-                <h2 className={`mb-2 px-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${TEXT_ONE_LINE}`}>
+                <h2
+                  className={`mb-2 px-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${TEXT_ONE_LINE}`}
+                >
                   Pinned
                 </h2>
                 <PmPanel className="space-y-0.5 p-1.5" solid>
@@ -167,7 +187,9 @@ export function ViewsPage({ params }: PageProps) {
             {unpinnedViews.length > 0 ? (
               <PmSection index={1}>
                 {pinnedViews.length > 0 ? (
-                  <h2 className={`mb-2 px-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${TEXT_ONE_LINE}`}>
+                  <h2
+                    className={`mb-2 px-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${TEXT_ONE_LINE}`}
+                  >
                     All Views
                   </h2>
                 ) : null}

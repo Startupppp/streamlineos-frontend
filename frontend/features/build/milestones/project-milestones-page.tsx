@@ -9,16 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Diamond, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import {
@@ -93,7 +84,7 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
   const handleCloseEdit = useCallback(() => setEditTarget(null), []);
   const handleDeleteTarget = useCallback((m: ProjectMilestone) => setDeleteTarget(m), []);
 
-  const handleAlertDialogOpenChange = useCallback((open: boolean) => {
+  const handleDeleteDialogOpenChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
   }, []);
 
@@ -216,26 +207,16 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
           />
         ) : null}
 
-        <AlertDialog open={!!deleteTarget} onOpenChange={handleAlertDialogOpenChange}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete milestone?</AlertDialogTitle>
-              <AlertDialogDescription>
-                &ldquo;{deleteTarget?.name}&rdquo; will be permanently deleted.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={deleteMilestone.isPending}>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                onClick={handleDelete}
-                disabled={deleteMilestone.isPending}
-              >
-                {deleteMilestone.isPending ? "Deleting…" : "Delete"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ConfirmDialog
+          open={!!deleteTarget}
+          onOpenChange={handleDeleteDialogOpenChange}
+          title="Delete milestone?"
+          description={`“${deleteTarget?.name ?? ""}” will be permanently deleted.`}
+          confirmLabel="Delete"
+          destructive
+          isPending={deleteMilestone.isPending}
+          onConfirm={handleDelete}
+        />
       </PmPageShell>
     </PageWrapper>
   );

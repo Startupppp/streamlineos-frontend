@@ -4,21 +4,15 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, Clock } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { ChevronDownIcon, SendIcon, Trash2Icon } from "@animateicons/react/lucide";
+import {
+  ChevronDownIcon,
+  SendIcon,
+  Trash2Icon,
+} from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -42,7 +36,10 @@ function DeliveryRow({ delivery }: { delivery: WebhookDelivery }) {
     <div className="py-2 px-3 border-b last:border-0">
       <div className="flex items-center gap-3 text-sm">
         <div className={cn("h-2 w-2 rounded-full shrink-0", statusColor)} />
-        <span className="min-w-0 flex-1 font-mono text-xs text-muted-foreground truncate" title={delivery.event}>
+        <span
+          className="min-w-0 flex-1 font-mono text-xs text-muted-foreground truncate"
+          title={delivery.event}
+        >
           {delivery.event}
         </span>
         <Badge variant="outline" className="text-micro shrink-0 font-mono">
@@ -58,7 +55,12 @@ function DeliveryRow({ delivery }: { delivery: WebhookDelivery }) {
         </span>
       </div>
       {delivery.lastError && delivery.status === "failed" && (
-        <p className="mt-0.5 ml-5 text-micro text-status-danger-ink truncate" title={delivery.lastError}>{delivery.lastError}</p>
+        <p
+          className="mt-0.5 ml-5 text-micro text-status-danger-ink truncate"
+          title={delivery.lastError}
+        >
+          {delivery.lastError}
+        </p>
       )}
     </div>
   );
@@ -68,9 +70,15 @@ interface WebhookCardProps {
   webhook: ProjectWebhook;
   projectId: number;
   onDelete: (id: number) => void;
+  canManage?: boolean;
 }
 
-export function WebhookCard({ webhook, projectId, onDelete }: WebhookCardProps) {
+export function WebhookCard({
+  webhook,
+  projectId,
+  onDelete,
+  canManage = false,
+}: WebhookCardProps) {
   const [expanded, setExpanded] = useState(false);
   const { data: deliveries = [], isLoading } = useWebhookDeliveries(
     projectId,
@@ -78,14 +86,19 @@ export function WebhookCard({ webhook, projectId, onDelete }: WebhookCardProps) 
     expanded,
   );
   const sendTest = useSendTestWebhook(projectId);
-  const { iconRef: sendIconRef, hoverHandlers: sendHoverHandlers } = useAnimatedIcon();
-  const { iconRef: chevronIconRef, hoverHandlers: chevronHoverHandlers } = useAnimatedIcon();
+  const { iconRef: sendIconRef, hoverHandlers: sendHoverHandlers } =
+    useAnimatedIcon();
+  const { iconRef: chevronIconRef, hoverHandlers: chevronHoverHandlers } =
+    useAnimatedIcon();
 
   const handleToggle = useCallback(() => {
     setExpanded((v) => !v);
   }, []);
 
-  const handleConfirmDelete = useCallback(() => onDelete(webhook.id), [onDelete, webhook.id]);
+  const handleConfirmDelete = useCallback(
+    () => onDelete(webhook.id),
+    [onDelete, webhook.id],
+  );
 
   const handleSendTest = useCallback(() => {
     sendTest.mutate(webhook.id, {
@@ -93,7 +106,9 @@ export function WebhookCard({ webhook, projectId, onDelete }: WebhookCardProps) 
         if (result.success) {
           toast.success("Test delivery succeeded");
         } else {
-          toast.error(`Test delivery failed (HTTP ${result.responseCode ?? "—"})`);
+          toast.error(
+            `Test delivery failed (HTTP ${result.responseCode ?? "—"})`,
+          );
         }
         setExpanded(true);
       },
@@ -104,14 +119,20 @@ export function WebhookCard({ webhook, projectId, onDelete }: WebhookCardProps) 
   return (
     <motion.div
       layout
-      className={cn(PM_PANEL, "overflow-hidden transition-[border-color,box-shadow] duration-200 hover:border-primary/35 hover:shadow-md")}
+      className={cn(
+        PM_PANEL,
+        "overflow-hidden transition-[border-color,box-shadow] duration-200 hover:border-primary/35 hover:shadow-md",
+      )}
     >
       <div className="flex items-center gap-3 p-3.5">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
           <Zap className="h-4 w-4 text-muted-foreground" />
         </div>
         <div className="min-w-0 flex-1">
-          <TruncatedText text={webhook.url} className="text-sm font-medium text-foreground" />
+          <TruncatedText
+            text={webhook.url}
+            className="text-sm font-medium text-foreground"
+          />
           <div className="flex flex-wrap gap-1 mt-1">
             {webhook.events.slice(0, 3).map((e) => (
               <Badge
@@ -137,7 +158,11 @@ export function WebhookCard({ webhook, projectId, onDelete }: WebhookCardProps) 
           className="w-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
           {...sendHoverHandlers}
         >
-          <SendIcon ref={sendIconRef} size={14} className="text-muted-foreground" />
+          <SendIcon
+            ref={sendIconRef}
+            size={14}
+            className="text-muted-foreground"
+          />
         </button>
         <button
           type="button"
@@ -146,39 +171,36 @@ export function WebhookCard({ webhook, projectId, onDelete }: WebhookCardProps) 
           className="w-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
           {...chevronHoverHandlers}
         >
-          <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-            <ChevronDownIcon ref={chevronIconRef} size={16} className="text-muted-foreground" />
+          <motion.div
+            animate={{ rotate: expanded ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ChevronDownIcon
+              ref={chevronIconRef}
+              size={16}
+              className="text-muted-foreground"
+            />
           </motion.div>
         </button>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <AnimatedIconButton
-              variant="ghost"
-              size="icon"
-              aria-label="Delete webhook"
-              className="w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-              icon={Trash2Icon}
-              iconSize={14}
-            />
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete webhook?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Deliveries will stop immediately. This cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleConfirmDelete}
-                variant="destructive"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {canManage && (
+          <ConfirmDialog
+            title="Delete webhook?"
+            description="Deliveries will stop immediately. This cannot be undone."
+            confirmLabel="Delete"
+            destructive
+            onConfirm={handleConfirmDelete}
+            trigger={
+              <AnimatedIconButton
+                variant="ghost"
+                size="icon"
+                aria-label="Delete webhook"
+                className="w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                icon={Trash2Icon}
+                iconSize={14}
+              />
+            }
+          />
+        )}
       </div>
 
       <AnimatePresence>

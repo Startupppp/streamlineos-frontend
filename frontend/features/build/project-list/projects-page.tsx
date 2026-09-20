@@ -26,8 +26,8 @@ import { EmptySearchIllustration } from "@/components/illustrations";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   PmPageShell,
   PmPanel,
@@ -232,7 +232,6 @@ export function ProjectsPage({
   const [, startTransition] = useTransition();
   const shouldReduceMotion = useReducedMotion();
   const { prefs, setPrefs, toggle } = useDisplayPrefs();
-  const canView = useCan("build:view");
   const canCreate = useCan("build:create");
 
   const createFromUrl = searchParams.get("create") === "1";
@@ -350,6 +349,13 @@ export function ProjectsPage({
     ...(managedProductId !== undefined ? { managedProductId } : {}),
   });
 
+  const pageState = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError,
+    error,
+  });
+
   const handleRetry = useCallback(() => {
     refetch();
   }, [refetch]);
@@ -430,23 +436,15 @@ export function ProjectsPage({
             />
           </PmSection>
 
-          {isLoading ? (
-            viewMode === "grid" ? (
-              <GridSkeleton />
-            ) : (
-              <ListSkeleton />
-            )
-          ) : isError ? (
-            <PmPanel className="flex flex-1 items-center justify-center">
-              <ErrorState
-                title="Couldn't load projects"
-                description={getErrorMessage(error)}
-                onRetry={handleRetry}
-                className="border-0 bg-transparent"
-              />
-            </PmPanel>
-          ) : !canView ? (
-            <NoPermissionState permission="build:view" className="flex-1" />
+          {pageState.kind !== "ready" ? (
+            <PageState
+              resolution={pageState}
+              loading={viewMode === "grid" ? <GridSkeleton /> : <ListSkeleton />}
+              onRetry={handleRetry}
+              className="flex-1"
+            >
+              {null}
+            </PageState>
           ) : allProjects.length === 0 && !hasFiltersOrSearch ? (
             <ProjectsEmptyState onCreate={handleOpenCreate} />
           ) : visibleProjects.length === 0 ? (

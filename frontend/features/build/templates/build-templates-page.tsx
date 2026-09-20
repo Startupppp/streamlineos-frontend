@@ -9,16 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RequireModule } from "@/components/auth/require-module";
 import {
@@ -152,26 +143,15 @@ export function BuildTemplatesPage() {
           <ApplyTemplateDialog template={applyTarget} onClose={handleCloseApply} />
         ) : null}
 
-        <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete template?</AlertDialogTitle>
-              <AlertDialogDescription>
-                &ldquo;{deleteTarget?.name}&rdquo; will be permanently deleted. Projects created
-                from it will not be affected.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                onClick={handleDelete}
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ConfirmDialog
+          open={!!deleteTarget}
+          onOpenChange={handleDeleteDialogChange}
+          title="Delete template?"
+          description={`“${deleteTarget?.name ?? ""}” will be permanently deleted. Projects created from it will not be affected.`}
+          confirmLabel="Delete"
+          destructive
+          onConfirm={handleDelete}
+        />
       </PageWrapper>
     </RequireModule>
   );

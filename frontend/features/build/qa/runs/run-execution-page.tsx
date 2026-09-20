@@ -7,6 +7,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTestRunDetail, useUpdateTestRun, useCreateBugFromResult } from "@/hooks/api/build/qa";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -112,7 +114,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
   const canExecute = useCan("build:qa:execute");
   const canCreateBug = useCan("build:bugs:create");
 
-  const { data: run, isLoading, isError, refetch } = useTestRunDetail(projectId, runId);
+  const { data: run, isLoading, isError, error, refetch } = useTestRunDetail(projectId, runId);
   const updateRun = useUpdateTestRun();
   const createBugFromResult = useCreateBugFromResult();
 
@@ -166,7 +168,21 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
     void refetch();
   }, [refetch]);
 
-  if (isLoading) {
+  const pageState = usePageState({ permission: "build:qa:view", isLoading, isError, error });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+    return (
+      <PageWrapper title="Run" backHref={`/build/${projectId}/qa`}>
+        <PmPageShell>
+          <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+            {null}
+          </PageState>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (pageState.kind === "loading") {
     return (
       <PageWrapper title="Loading…" backHref={`/build/${projectId}/qa`}>
         <PmPageShell>
@@ -180,7 +196,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
     );
   }
 
-  if (isError || !run) {
+  if (!run) {
     return (
       <PageWrapper title="Run" backHref={`/build/${projectId}/qa`}>
         <PmPageShell withGlow={false}>

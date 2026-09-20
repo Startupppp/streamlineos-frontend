@@ -7,6 +7,8 @@ import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useProjectRisks, useCreateRisk, useUpdateRisk, useDeleteRisk, useProjectMembers } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { getUserDisplayName } from "@/lib/person-display";
 import type { Risk, RiskStatus, RiskProbability, RiskImpact, CreateRiskInput, UpdateRiskInput } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -14,7 +16,6 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -110,9 +111,11 @@ export function RisksPage({ projectId }: RisksPageProps) {
   const [editRisk, setEditRisk] = useState<Risk | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Risk | null>(null);
 
-  const { data, isLoading, isError, refetch } = useProjectRisks(projectId, {
+  const { data, isLoading, isError, error, refetch } = useProjectRisks(projectId, {
     status: statusFilter !== "all" ? statusFilter : undefined,
   });
+
+  const pageState = usePageState({ permission: "build:risks:view", isLoading, isError, error });
   const { data: members = [] } = useProjectMembers(projectId);
 
   const createRisk = useCreateRisk(projectId);
@@ -243,6 +246,16 @@ export function RisksPage({ projectId }: RisksPageProps) {
     },
   ], [canManage, memberName]);
 
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+    return (
+      <PageWrapper title="Risk Register" subtitle="Identify, assess, and mitigate project risks">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+  }
+
   const isFiltered = statusFilter !== "all" || !!search.trim() || !!matrixCell;
 
   const filtersBar = (
@@ -282,13 +295,13 @@ export function RisksPage({ projectId }: RisksPageProps) {
       <PmPageShell>
         <PmSection index={0} className="shrink-0">
           <StatCardGrid cols={3}>
-            <StatCard label="Open" value={openCount} icon={ShieldAlert} tone="default" isLoading={isLoading} />
-            <StatCard label="High / Critical" value={highCritCount} icon={AlertTriangle} tone="red" isLoading={isLoading} />
-            <StatCard label="Closed" value={closedCount} icon={CheckCircle2} tone="emerald" isLoading={isLoading} />
+            <StatCard label="Open" value={openCount} icon={ShieldAlert} tone="default" isLoading={isLoading || pageState.kind === "loading"} />
+            <StatCard label="High / Critical" value={highCritCount} icon={AlertTriangle} tone="red" isLoading={isLoading || pageState.kind === "loading"} />
+            <StatCard label="Closed" value={closedCount} icon={CheckCircle2} tone="emerald" isLoading={isLoading || pageState.kind === "loading"} />
           </StatCardGrid>
         </PmSection>
 
-        {!isLoading && !isError ? (
+        {!isLoading && pageState.kind !== "loading" ? (
           <PmSection index={1} className="shrink-0">
             <PmPanel className="p-3" solid>
               <RiskMatrix risks={allRisks} onCellClick={handleCellClick} selectedCell={matrixCell} />
@@ -297,10 +310,8 @@ export function RisksPage({ projectId }: RisksPageProps) {
         ) : null}
 
         <PmSection index={2} className="flex min-h-0 flex-1 flex-col">
-          {isLoading ? (
+          {isLoading || pageState.kind === "loading" ? (
             <DataTableSkeleton rows={12} columns={8} className="flex-1" />
-          ) : isError ? (
-            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : displayed.length === 0 ? (
             <EmptyState
               className={PM_FILL_PANEL}

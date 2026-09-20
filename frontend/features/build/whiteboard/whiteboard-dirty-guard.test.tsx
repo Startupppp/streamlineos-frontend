@@ -25,6 +25,14 @@ jest.mock("@/hooks/api/build", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
+  useAccess: () => ({
+    data: { isOrgOwner: true, scopes: {}, modules: {}, canManageOrganizationMembership: true, membershipId: null },
+    isLoading: false,
+  }),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
 }));
 
 function MockExcalidrawCanvas() {

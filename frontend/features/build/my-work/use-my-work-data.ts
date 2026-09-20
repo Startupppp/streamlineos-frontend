@@ -160,24 +160,28 @@ export function useMyWorkData({ activeTab, activeView, pmWorkspaceId }: UseMyWor
     data: assignedData,
     isLoading: assignedLoading,
     isError: assignedError,
+    error: assignedFailure,
     refetch: refetchAssigned,
   } = useAllWork(assignedFilters, { enabled: activeTab === "assigned" });
   const {
     data: createdData,
     isLoading: createdLoading,
     isError: createdError,
+    error: createdFailure,
     refetch: refetchCreated,
   } = useAllWork(createdFilters, { enabled: activeTab === "created" });
   const {
     data: subscribedData,
     isLoading: subscribedLoading,
     isError: subscribedError,
+    error: subscribedFailure,
     refetch: refetchSubscribed,
   } = useAllWork(subscribedFilters, { enabled: activeTab === "subscribed" });
   const {
     data: activityData,
     isLoading: activityLoading,
     isError: activityError,
+    error: activityFailure,
     refetch: refetchActivity,
   } = useAllWork(activityFilters, { enabled: activeTab === "activity" });
 
@@ -198,6 +202,15 @@ export function useMyWorkData({ activeTab, activeView, pmWorkspaceId }: UseMyWor
         : activeTab === "subscribed"
           ? subscribedError
           : activityError;
+
+  const error =
+    activeTab === "assigned"
+      ? assignedFailure
+      : activeTab === "created"
+        ? createdFailure
+        : activeTab === "subscribed"
+          ? subscribedFailure
+          : activityFailure;
 
   const activeData =
     activeTab === "assigned"
@@ -265,6 +278,7 @@ export function useMyWorkData({ activeTab, activeView, pmWorkspaceId }: UseMyWor
     hasActiveFilters,
     isLoading,
     isError,
+    error,
     activeData,
     handleRetry,
     filtersActive,

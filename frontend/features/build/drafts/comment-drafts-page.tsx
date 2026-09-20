@@ -10,19 +10,9 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import {
@@ -156,30 +146,16 @@ export function CommentDraftsPage() {
         </PmPageShell>
       </PageWrapper>
 
-      <AlertDialog open={confirmDeleteAll} onOpenChange={handleCloseDeleteAll}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Clear all drafts?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete all {drafts.length} saved comment draft
-              {drafts.length !== 1 ? "s" : ""}. This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <LoadingButton
-                variant="destructive"
-                isPending={deleteAll.isPending}
-                loadingText="Clearing…"
-                onClick={handleDeleteAllConfirm}
-              >
-                Clear all
-              </LoadingButton>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={confirmDeleteAll}
+        onOpenChange={handleCloseDeleteAll}
+        title="Clear all drafts?"
+        description={`This will permanently delete all ${drafts.length} saved comment draft${drafts.length !== 1 ? "s" : ""}. This cannot be undone.`}
+        confirmLabel="Clear all"
+        destructive
+        isPending={deleteAll.isPending}
+        onConfirm={handleDeleteAllConfirm}
+      />
     </>
   );
 }

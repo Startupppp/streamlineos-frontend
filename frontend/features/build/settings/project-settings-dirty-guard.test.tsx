@@ -41,6 +41,7 @@ jest.mock("@/hooks/api/build", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => false,
+  useCanState: () => "denied" as const,
 }));
 
 jest.mock("@/features/build/settings/project-members-section", () => ({

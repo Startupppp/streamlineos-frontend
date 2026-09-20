@@ -1,6 +1,12 @@
 ﻿"use client";
 
-import { useState, useMemo, memo, useCallback, type ComponentType } from "react";
+import {
+  useState,
+  useMemo,
+  memo,
+  useCallback,
+  type ComponentType,
+} from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { format, addDays, isSameDay, parseISO } from "date-fns";
 import {
@@ -36,10 +42,16 @@ interface WorkloadViewProps {
   projectKey?: string | null;
   members: WorkloadMember[];
   filters: FilterState;
-  onFilterChange: <K extends keyof FilterState>(key: K, value: FilterState[K]) => void;
+  onFilterChange: <K extends keyof FilterState>(
+    key: K,
+    value: FilterState[K],
+  ) => void;
 }
 
-function applyTicketFilters(tickets: KanbanTicket[], filters: FilterState): KanbanTicket[] {
+function applyTicketFilters(
+  tickets: KanbanTicket[],
+  filters: FilterState,
+): KanbanTicket[] {
   let result = tickets;
   if (filters.sprintId !== "all") {
     result = result.filter((t) => t.sprintId === Number(filters.sprintId));
@@ -89,11 +101,73 @@ interface WorkloadStat {
 }
 
 const STATS: readonly WorkloadStat[] = [
-  { id: "all", label: "Total Tickets", icon: TrendingUp, bg: "bg-primary/10", text: "text-primary" },
-  { id: "assigned", label: "Assigned", icon: CheckCircle2, bg: "bg-status-success-surface", text: "text-status-success-ink" },
-  { id: "unassigned", label: "Unassigned", icon: Users, bg: "bg-status-warning-surface", text: "text-status-warning-ink" },
-  { id: "over-capacity", label: "Over Capacity", icon: AlertTriangle, bg: "bg-status-danger-surface", text: "text-status-danger-ink" },
+  {
+    id: "all",
+    label: "Total Tickets",
+    icon: TrendingUp,
+    bg: "bg-primary/10",
+    text: "text-primary",
+  },
+  {
+    id: "assigned",
+    label: "Assigned",
+    icon: CheckCircle2,
+    bg: "bg-status-success-surface",
+    text: "text-status-success-ink",
+  },
+  {
+    id: "unassigned",
+    label: "Unassigned",
+    icon: Users,
+    bg: "bg-status-warning-surface",
+    text: "text-status-warning-ink",
+  },
+  {
+    id: "over-capacity",
+    label: "Over Capacity",
+    icon: AlertTriangle,
+    bg: "bg-status-danger-surface",
+    text: "text-status-danger-ink",
+  },
 ];
+
+interface StatButtonProps {
+  stat: WorkloadStat;
+  value: number;
+  isActive: boolean;
+  onToggle: (id: StatFilter) => void;
+}
+
+function StatButton({ stat, value, isActive, onToggle }: StatButtonProps) {
+  function handleClick() {
+    onToggle(stat.id);
+  }
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={cn(
+        "bg-card rounded-lg border border-border p-3 flex h-full items-center gap-3 shadow-sm text-left transition-colors hover:bg-muted/40",
+        isActive && stat.id !== "all" && "ring-2 ring-primary/30 bg-primary/5",
+      )}
+    >
+      <div
+        className={cn(
+          "h-8 w-8 rounded-md flex items-center justify-center shrink-0",
+          stat.bg,
+        )}
+      >
+        <stat.icon className={cn("h-4 w-4", stat.text)} />
+      </div>
+      <div>
+        <p className="text-lg font-semibold text-foreground tabular-nums">
+          {value}
+        </p>
+        <p className="text-dense text-muted-foreground">{stat.label}</p>
+      </div>
+    </button>
+  );
+}
 
 export const WorkloadView = memo(function WorkloadView({
   tickets,
@@ -104,19 +178,26 @@ export const WorkloadView = memo(function WorkloadView({
   onFilterChange,
 }: WorkloadViewProps) {
   const shouldReduceMotion = useReducedMotion();
-  const [expandedMembers, setExpandedMembers] = useState<Set<string>>(new Set());
+  const [expandedMembers, setExpandedMembers] = useState<Set<string>>(
+    new Set(),
+  );
   const days = useMemo(() => {
     const today = new Date();
     return Array.from({ length: 14 }, (_, i) => addDays(today, i));
   }, []);
 
-  const filteredTickets = useMemo(() => applyTicketFilters(tickets, filters), [tickets, filters]);
+  const filteredTickets = useMemo(
+    () => applyTicketFilters(tickets, filters),
+    [tickets, filters],
+  );
 
   const memberWorkload = useMemo(() => {
     let memberList = members;
     if (filters.statCard === "over-capacity") {
       memberList = members.filter((m) => {
-        const count = filteredTickets.filter((t) => t.assigneeId === m.id).length;
+        const count = filteredTickets.filter(
+          (t) => t.assigneeId === m.id,
+        ).length;
         return count > 5;
       });
     }
@@ -124,9 +205,13 @@ export const WorkloadView = memo(function WorkloadView({
       memberList = memberList.filter((m) => m.id === filters.assigneeId);
     }
     return memberList.map((member) => {
-      const memberTickets = filteredTickets.filter((t) => t.assigneeId === member.id);
+      const memberTickets = filteredTickets.filter(
+        (t) => t.assigneeId === member.id,
+      );
       const ticketsByDay = days.map((day) => {
-        const count = memberTickets.filter((t) => ticketMatchesDay(t, day)).length;
+        const count = memberTickets.filter((t) =>
+          ticketMatchesDay(t, day),
+        ).length;
         return { day, count };
       });
       const total = memberTickets.length;
@@ -162,8 +247,17 @@ export const WorkloadView = memo(function WorkloadView({
     });
   }, []);
 
-  function handleStatCardClick(card: StatFilter) {
-    onFilterChange("statCard", filters.statCard === card ? "all" : card);
+  const handleToggleUnassigned = useCallback(
+    () => handleToggleExpand("__unassigned__"),
+    [handleToggleExpand],
+  );
+
+  function handleUnassignedKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter") handleToggleUnassigned();
+  }
+
+  function handleStatCardToggle(id: StatFilter) {
+    onFilterChange("statCard", filters.statCard === id ? "all" : id);
   }
 
   const hasActiveFilters = hasActiveWorkloadFilters(filters);
@@ -178,23 +272,13 @@ export const WorkloadView = memo(function WorkloadView({
     <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="grid w-full min-w-0 shrink-0 gap-3 overflow-x-auto overscroll-x-contain touch-pan-x scrollbar-hide grid-cols-[repeat(4,minmax(176px,1fr))]">
         {STATS.map((stat) => (
-          <button
+          <StatButton
             key={stat.id}
-            type="button"
-            onClick={() => handleStatCardClick(stat.id)}
-            className={cn(
-              "bg-card rounded-lg border border-border p-3 flex h-full items-center gap-3 shadow-sm text-left transition-colors hover:bg-muted/40",
-              filters.statCard === stat.id && stat.id !== "all" && "ring-2 ring-primary/30 bg-primary/5",
-            )}
-          >
-            <div className={cn("h-8 w-8 rounded-md flex items-center justify-center shrink-0", stat.bg)}>
-              <stat.icon className={cn("h-4 w-4", stat.text)} />
-            </div>
-            <div>
-              <p className="text-lg font-semibold text-foreground tabular-nums">{statValues[stat.id]}</p>
-              <p className="text-dense text-muted-foreground">{stat.label}</p>
-            </div>
-          </button>
+            stat={stat}
+            value={statValues[stat.id]}
+            isActive={filters.statCard === stat.id}
+            onToggle={handleStatCardToggle}
+          />
         ))}
       </div>
 
@@ -222,7 +306,14 @@ export const WorkloadView = memo(function WorkloadView({
                   <p className="text-micro font-bold text-muted-foreground uppercase tracking-wider">
                     {format(day, "EEE")}
                   </p>
-                  <p className={cn("text-dense", isSameDay(day, new Date()) ? "text-primary font-bold" : "text-muted-foreground")}>
+                  <p
+                    className={cn(
+                      "text-dense",
+                      isSameDay(day, new Date())
+                        ? "text-primary font-bold"
+                        : "text-muted-foreground",
+                    )}
+                  >
                     {format(day, "d")}
                   </p>
                 </div>
@@ -241,40 +332,61 @@ export const WorkloadView = memo(function WorkloadView({
                 </div>
               </div>
             ) : (
-              memberWorkload.map(({ member, memberTickets, ticketsByDay, total, overdue, points }, idx) => (
-                <WorkloadMemberRow
-                  key={member.id}
-                  member={member}
-                  memberTickets={memberTickets}
-                  ticketsByDay={ticketsByDay}
-                  total={total}
-                  overdue={overdue}
-                  points={points}
-                  days={days}
-                  projectId={projectId}
-                  projectKey={projectKey}
-                  expanded={expandedMembers.has(member.id)}
-                  motionDelay={idx * 0.04}
-                  reducedMotion={shouldReduceMotion}
-                  onToggle={handleToggleExpand}
-                />
-              ))
+              memberWorkload.map(
+                (
+                  {
+                    member,
+                    memberTickets,
+                    ticketsByDay,
+                    total,
+                    overdue,
+                    points,
+                  },
+                  idx,
+                ) => (
+                  <WorkloadMemberRow
+                    key={member.id}
+                    member={member}
+                    memberTickets={memberTickets}
+                    ticketsByDay={ticketsByDay}
+                    total={total}
+                    overdue={overdue}
+                    points={points}
+                    days={days}
+                    projectId={projectId}
+                    projectKey={projectKey}
+                    expanded={expandedMembers.has(member.id)}
+                    motionDelay={idx * 0.04}
+                    reducedMotion={shouldReduceMotion}
+                    onToggle={handleToggleExpand}
+                  />
+                ),
+              )
             )}
 
             {showUnassignedRow && (
               <motion.div
-                initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
-                animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-                transition={{ delay: memberWorkload.length * 0.04, duration: 0.2, ease: "easeOut" }}
+                initial={
+                  shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }
+                }
+                animate={
+                  shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }
+                }
+                transition={{
+                  delay: memberWorkload.length * 0.04,
+                  duration: 0.2,
+                  ease: "easeOut",
+                }}
               >
                 <div
                   className={cn(
                     "flex items-center border-b cursor-pointer hover:bg-muted/30 transition-colors bg-muted/20",
-                    expandedMembers.has("__unassigned__") && "bg-status-warning-surface",
+                    expandedMembers.has("__unassigned__") &&
+                      "bg-status-warning-surface",
                   )}
                   role="button"
-                  onClick={() => handleToggleExpand("__unassigned__")}
-                  onKeyDown={(e) => e.key === "Enter" && handleToggleExpand("__unassigned__")}
+                  onClick={handleToggleUnassigned}
+                  onKeyDown={handleUnassignedKeyDown}
                   tabIndex={0}
                   aria-expanded={expandedMembers.has("__unassigned__")}
                 >
@@ -287,10 +399,14 @@ export const WorkloadView = memo(function WorkloadView({
                     <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center shrink-0">
                       <Users className="h-3 w-3 text-muted-foreground" />
                     </div>
-                    <span className="text-sm text-muted-foreground">Unassigned</span>
+                    <span className="text-sm text-muted-foreground">
+                      Unassigned
+                    </span>
                   </div>
                   <div className="w-20 shrink-0 px-2 py-3 text-center">
-                    <span className="text-sm font-semibold text-status-warning-ink">{unassigned.length}</span>
+                    <span className="text-sm font-semibold text-status-warning-ink">
+                      {unassigned.length}
+                    </span>
                   </div>
                   <div className="w-20 shrink-0 px-2 py-3 text-center">
                     <span className="text-sm text-muted-foreground">—</span>
@@ -302,7 +418,9 @@ export const WorkloadView = memo(function WorkloadView({
                     className={cn(
                       "grid transition-[grid-template-rows] ease-in-out",
                       shouldReduceMotion ? "duration-0" : "duration-200",
-                      expandedMembers.has("__unassigned__") ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+                      expandedMembers.has("__unassigned__")
+                        ? "grid-rows-[1fr]"
+                        : "grid-rows-[0fr]",
                     )}
                   >
                     <div className="overflow-hidden bg-status-warning-surface">
@@ -314,7 +432,10 @@ export const WorkloadView = memo(function WorkloadView({
                           <span className="w-12 shrink-0 font-mono text-xs text-muted-foreground">
                             #{ticket.ticketNumber}
                           </span>
-                          <TruncatedText text={ticket.title} className="min-w-0 flex-1 text-xs text-foreground" />
+                          <TruncatedText
+                            text={ticket.title}
+                            className="min-w-0 flex-1 text-xs text-foreground"
+                          />
                           {ticket.points != null && (
                             <span className="shrink-0 text-micro tabular-nums text-muted-foreground">
                               {ticket.points}pt
@@ -323,7 +444,11 @@ export const WorkloadView = memo(function WorkloadView({
                           <Link
                             href={
                               ticket.ticketNumber != null
-                                ? getTicketDetailHref(projectId, projectKey, ticket.ticketNumber)
+                                ? getTicketDetailHref(
+                                    projectId,
+                                    projectKey,
+                                    ticket.ticketNumber,
+                                  )
                                 : `/build/${projectId}`
                             }
                             onMouseDown={stopEvent}

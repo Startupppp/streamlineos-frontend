@@ -14,7 +14,6 @@ import { RequireModule } from "@/components/auth/require-module";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTargetIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared/error-state";
 import {
   Target,
   Users,
@@ -63,7 +62,8 @@ import {
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 
 function NewGoalButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -215,6 +215,23 @@ export function GoalsPage() {
 
   function handleRetry() { void refetch(); }
 
+  const pageState = usePageState({ permission: "build:goals:view", isLoading, isError, error });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+    return (
+      <PageWrapper
+        title="Goals & OKRs"
+        subtitle="Track company, team, and individual objectives and their key results"
+      >
+        <PmPageShell>
+          <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+            {null}
+          </PageState>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
   return (
     <RequireModule module="build">
       <PageWrapper
@@ -286,15 +303,8 @@ export function GoalsPage() {
           </PmSection>
 
           <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
-            {isLoading ? (
+            {pageState.kind === "loading" ? (
               <GoalsGridSkeleton />
-            ) : isError ? (
-              <ErrorState
-                className={PM_FILL_PANEL}
-                title="Couldn't load goals"
-                description={getErrorMessage(error)}
-                onRetry={handleRetry}
-              />
             ) : !hasGoals ? (
               <EmptyState
                 className={PM_FILL_PANEL}

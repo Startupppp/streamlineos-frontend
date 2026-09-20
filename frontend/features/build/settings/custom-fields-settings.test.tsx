@@ -1,8 +1,9 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { AccessState } from "@/lib/rbac/gate";
 import { CustomFieldsSettings } from "./custom-fields-settings";
 
-let mockCanManage = false;
+let mockAccessState: AccessState = "denied";
 const mockUpdateMutate = jest.fn();
 
 const mockPermissionsAsked: string[] = [];
@@ -10,7 +11,11 @@ const mockPermissionsAsked: string[] = [];
 jest.mock("@/hooks/api/access", () => ({
   useCan: (permission: string) => {
     mockPermissionsAsked.push(permission);
-    return permission === "build:manage" && mockCanManage;
+    return permission === "build:manage" && mockAccessState === "granted";
+  },
+  useCanState: (permission: string): AccessState => {
+    mockPermissionsAsked.push(permission);
+    return mockAccessState;
   },
 }));
 
@@ -31,13 +36,13 @@ jest.mock("@/hooks/api/build/custom-fields", () => ({
 }));
 
 beforeEach(() => {
-  mockCanManage = false;
+  mockAccessState = "denied";
   mockUpdateMutate.mockReset();
 });
 
 describe("CustomFieldsSettings — build:manage gates", () => {
   it("shows the Add Custom Field button when the viewer holds build:manage", () => {
-    mockCanManage = true;
+    mockAccessState = "granted";
     render(<CustomFieldsSettings projectId={1} />);
     expect(screen.getByRole("button", { name: /add custom field/i })).toBeInTheDocument();
   });
@@ -48,7 +53,7 @@ describe("CustomFieldsSettings — build:manage gates", () => {
   });
 
   it("shows a Delete button on every field row when the viewer holds build:manage", () => {
-    mockCanManage = true;
+    mockAccessState = "granted";
     render(<CustomFieldsSettings projectId={1} />);
     expect(screen.getAllByRole("button", { name: "Delete field" })).toHaveLength(2);
   });
@@ -65,16 +70,22 @@ describe("CustomFieldsSettings — build:manage gates", () => {
   });
 
   it("gates on build:manage itself, not on a project-manager standing the backend does not accept", () => {
-    mockCanManage = true;
+    mockAccessState = "granted";
     mockPermissionsAsked.length = 0;
     render(<CustomFieldsSettings projectId={1} />);
     expect(mockPermissionsAsked).toContain("build:manage");
+  });
+
+  it("hides the Add Custom Field button while the access snapshot is in flight, because a mutation control that appears and then vanishes offers authority the caller may not hold", () => {
+    mockAccessState = "loading";
+    render(<CustomFieldsSettings projectId={1} />);
+    expect(screen.queryByRole("button", { name: /add custom field/i })).not.toBeInTheDocument();
   });
 });
 
 describe("CustomFieldsSettings — edit control visibility", () => {
   it("shows an Edit button on every field row when the viewer holds build:manage", () => {
-    mockCanManage = true;
+    mockAccessState = "granted";
     render(<CustomFieldsSettings projectId={1} />);
     expect(screen.getByRole("button", { name: "Edit field Story Points" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Edit field Priority Label" })).toBeInTheDocument();
@@ -89,7 +100,7 @@ describe("CustomFieldsSettings — edit control visibility", () => {
 describe("CustomFieldsSettings — edit form submits with changed values", () => {
   it("opening the edit dialog for a field pre-fills the field name", async () => {
     const user = userEvent.setup();
-    mockCanManage = true;
+    mockAccessState = "granted";
     render(<CustomFieldsSettings projectId={1} />);
 
     await user.click(screen.getByRole("button", { name: "Edit field Story Points" }));
@@ -99,7 +110,7 @@ describe("CustomFieldsSettings — edit form submits with changed values", () =>
 
   it("submitting the edit form calls the update mutation with the field id and the changed name", async () => {
     const user = userEvent.setup();
-    mockCanManage = true;
+    mockAccessState = "granted";
     render(<CustomFieldsSettings projectId={1} />);
 
     await user.click(screen.getByRole("button", { name: "Edit field Story Points" }));

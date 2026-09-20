@@ -14,7 +14,8 @@ import { EpicStoryRow } from "@/features/build/epics/epic-story-row";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   Layers,
   AlertCircle,
@@ -111,11 +112,25 @@ export function EpicsPage({ params }: PageProps) {
     );
   }, [createTicket, projectId]);
 
+  const pageState = usePageState({ permission: "build:view", isLoading, isError, error: loadError });
+
   if (project?.settings?.modules?.epics === false) {
     return <ModuleDisabledState moduleName="Epics" projectId={projectId} />;
   }
 
-  if (isLoading) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+    return (
+      <PageWrapper title="Epics" subtitle="Organize related stories and tasks into larger themes">
+        <PmPageShell>
+          <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+            {null}
+          </PageState>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (pageState.kind === "loading") {
     return (
       <PageWrapper title="Epics">
         <PmPageShell>
@@ -127,24 +142,6 @@ export function EpicsPage({ params }: PageProps) {
               ))}
             </div>
           </div>
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper
-        title="Epics"
-        subtitle="Organize related stories and tasks into larger themes"
-      >
-        <PmPageShell>
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load epics"
-            description={getErrorMessage(loadError)}
-            onRetry={handleRetry}
-          />
         </PmPageShell>
       </PageWrapper>
     );

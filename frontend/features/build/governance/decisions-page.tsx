@@ -6,13 +6,14 @@ import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useProjectDecisions, useCreateDecision, useUpdateDecision, useDeleteDecision, useProjectMembers } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { getUserDisplayName } from "@/lib/person-display";
 import type { Decision, DecisionStatus, CreateDecisionInput, UpdateDecisionInput } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -96,10 +97,11 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
   const [editDecision, setEditDecision] = useState<Decision | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Decision | null>(null);
 
-  const { data, isLoading, isError, refetch } = useProjectDecisions(projectId, {
+  const { data, isLoading, isError, error, refetch } = useProjectDecisions(projectId, {
     status: statusFilter !== "all" ? statusFilter : undefined,
   });
   const { data: members = [] } = useProjectMembers(projectId);
+  const pageState = usePageState({ permission: "build:decisions:view", isLoading, isError, error });
 
   const createDecision = useCreateDecision(projectId);
   const updateDecision = useUpdateDecision(projectId);
@@ -212,6 +214,16 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     },
   ], [canManage, memberName]);
 
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+    return (
+      <PageWrapper title="Decisions Log" subtitle="Log and track key project decisions for accountability and audit">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+  }
+
   const isFiltered = statusFilter !== "all" || !!search.trim();
 
   return (
@@ -248,10 +260,8 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          {isLoading ? (
+          {isLoading || pageState.kind === "loading" ? (
             <DataTableSkeleton rows={12} columns={7} className="flex-1" />
-          ) : isError ? (
-            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : displayed.length === 0 ? (
             <EmptyState
               className={PM_FILL_PANEL}

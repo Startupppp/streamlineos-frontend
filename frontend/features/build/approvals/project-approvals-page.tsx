@@ -11,12 +11,12 @@ import {
   useDeleteApproval,
 } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DecideDialog } from "./decide-dialog";
 import { DelegateDialog } from "./delegate-dialog";
@@ -57,7 +57,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
   const [cancelTarget, setCancelTarget] = useState<Approval | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Approval | null>(null);
 
-  const { data, isLoading, isError, refetch } = useProjectApprovals(projectId, {
+  const { data, isLoading, isError, error, refetch } = useProjectApprovals(projectId, {
     status: status === "all" ? undefined : status,
     entityType: entityType === "all" ? undefined : entityType,
   });
@@ -192,6 +192,18 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     setDeleteTarget,
   });
 
+  const pageState = usePageState({ permission: "build:approvals:view", isLoading, isError, error });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+    return (
+      <PageWrapper title="Approvals" subtitle="Review and manage approval requests for this project">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+  }
+
   const items = data ?? [];
   const isFiltered = status !== "all" || entityType !== "all";
 
@@ -219,10 +231,8 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          {isLoading ? (
+          {isLoading || pageState.kind === "loading" ? (
             <DataTableSkeleton rows={12} columns={7} className="flex-1" />
-          ) : isError ? (
-            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : items.length === 0 ? (
             <EmptyState
               className={PM_FILL_PANEL}

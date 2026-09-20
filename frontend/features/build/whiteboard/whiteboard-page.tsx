@@ -4,16 +4,7 @@ import { memo, useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -40,6 +31,8 @@ import {
   type ExcalidrawSceneData,
 } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { toast } from "sonner";
 import { CreateBoardDialog } from "./create-board-dialog";
 import { useWhiteboardAutosave } from "./use-whiteboard-autosave";
@@ -86,7 +79,10 @@ const BoardItem = memo(function BoardItem({
   onSelect,
   onDelete,
 }: BoardItemProps) {
-  const handleSelect = useCallback(() => onSelect(board.id), [onSelect, board.id]);
+  const handleSelect = useCallback(
+    () => onSelect(board.id),
+    [onSelect, board.id],
+  );
   const handleDelete = useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
       event.stopPropagation();
@@ -100,9 +96,15 @@ const BoardItem = memo(function BoardItem({
 
   const visibilityIcon =
     board.visibility === "private" ? (
-      <Lock className="h-3 w-3 shrink-0 text-muted-foreground" aria-label="Private" />
+      <Lock
+        className="h-3 w-3 shrink-0 text-muted-foreground"
+        aria-label="Private"
+      />
     ) : board.visibility === "public" ? (
-      <Globe className="h-3 w-3 shrink-0 text-muted-foreground" aria-label="Public" />
+      <Globe
+        className="h-3 w-3 shrink-0 text-muted-foreground"
+        aria-label="Public"
+      />
     ) : null;
 
   return (
@@ -153,13 +155,18 @@ const MobileBoardChip = memo(function MobileBoardChip({
   isSelected: boolean;
   onSelect: (id: number) => void;
 }) {
-  const handleClick = useCallback(() => onSelect(board.id), [onSelect, board.id]);
+  const handleClick = useCallback(
+    () => onSelect(board.id),
+    [onSelect, board.id],
+  );
   return (
     <button
       onClick={handleClick}
       className={cn(
         "px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors",
-        isSelected ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted",
+        isSelected
+          ? "bg-primary/10 text-primary"
+          : "text-muted-foreground hover:bg-muted",
       )}
     >
       {board.name}
@@ -172,15 +179,34 @@ interface WhiteboardPageProps {
   initialBoardId: number | null;
 }
 
-export function WhiteboardPage({ projectId, initialBoardId }: WhiteboardPageProps) {
+export function WhiteboardPage({
+  projectId,
+  initialBoardId,
+}: WhiteboardPageProps) {
   const canManage = useCan("build:whiteboards:manage");
-  const { data: boards, isLoading, isError, refetch } = useWhiteboards(projectId);
+  const {
+    data: boards,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useWhiteboards(projectId);
+  const pageState = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError,
+    error,
+  });
   const createBoard = useCreateWhiteboard(projectId);
   const deleteBoard = useDeleteWhiteboard(projectId);
 
-  const [chosenBoardId, setChosenBoardId] = useState<number | null>(initialBoardId);
+  const [chosenBoardId, setChosenBoardId] = useState<number | null>(
+    initialBoardId,
+  );
   const [createOpen, setCreateOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<WhiteboardSummary | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<WhiteboardSummary | null>(
+    null,
+  );
   const [listCollapsed, setListCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem(BOARDS_COLLAPSED_KEY) === "true";
@@ -209,9 +235,16 @@ export function WhiteboardPage({ projectId, initialBoardId }: WhiteboardPageProp
     },
     [updateBoard],
   );
-  const handleSaveError = useCallback(() => toast.error("Failed to save board"), []);
+  const handleSaveError = useCallback(
+    () => toast.error("Failed to save board"),
+    [],
+  );
 
-  const { status: saveStatus, handleSceneChange, manualSave } = useWhiteboardAutosave({
+  const {
+    status: saveStatus,
+    handleSceneChange,
+    manualSave,
+  } = useWhiteboardAutosave({
     boardId: selectedBoard?.id ?? null,
     access: detail?.access ?? "view",
     initialVersion,
@@ -221,14 +254,26 @@ export function WhiteboardPage({ projectId, initialBoardId }: WhiteboardPageProp
 
   useRegisterBuildDirtyState(saveStatus === "dirty");
 
-  const handleToggleFullscreen = useCallback(() => setIsFullscreen((prev) => !prev), []);
+  const handleToggleFullscreen = useCallback(
+    () => setIsFullscreen((prev) => !prev),
+    [],
+  );
   const handleExitFullscreen = useCallback(() => setIsFullscreen(false), []);
   const handleOpenShare = useCallback(() => setShareOpen(true), []);
-  const handleShareOpenChange = useCallback((open: boolean) => setShareOpen(open), []);
+  const handleShareOpenChange = useCallback(
+    (open: boolean) => setShareOpen(open),
+    [],
+  );
   const handleDetailRetry = useCallback(() => refetchDetail(), [refetchDetail]);
-  const handleBoardSelect = useCallback((id: number) => setChosenBoardId(id), []);
-  const handleBoardDelete = useCallback((board: WhiteboardSummary) => setDeleteTarget(board), []);
-  const handleAlertOpenChange = useCallback((open: boolean) => {
+  const handleBoardSelect = useCallback(
+    (id: number) => setChosenBoardId(id),
+    [],
+  );
+  const handleBoardDelete = useCallback(
+    (board: WhiteboardSummary) => setDeleteTarget(board),
+    [],
+  );
+  const handleDeleteDialogOpenChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
   }, []);
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
@@ -280,7 +325,11 @@ export function WhiteboardPage({ projectId, initialBoardId }: WhiteboardPageProp
         onClick={handleToggleList}
         aria-label={listCollapsed ? "Show boards panel" : "Hide boards panel"}
       >
-        {listCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+        {listCollapsed ? (
+          <PanelLeftOpen className="h-4 w-4" />
+        ) : (
+          <PanelLeftClose className="h-4 w-4" />
+        )}
       </Button>
     ) : undefined;
 
@@ -318,26 +367,42 @@ export function WhiteboardPage({ projectId, initialBoardId }: WhiteboardPageProp
       actions={headerActions}
     >
       <PmPageShell className="h-full min-h-0 gap-3" withGlow={false}>
-        {isLoading ? (
+        {pageState.kind === "loading" ? (
           <div className="flex-1">
             <LoadingState variant="page" />
           </div>
-        ) : isError ? (
-          <ErrorState className={PM_FILL_PANEL} onRetry={handleRefetch} />
+        ) : pageState.kind !== "ready" && pageState.kind !== "empty" ? (
+          <PageState
+            resolution={pageState}
+            loading={null}
+            onRetry={handleRefetch}
+            className={PM_FILL_PANEL}
+          >
+            {null}
+          </PageState>
         ) : !boards || boards.length === 0 ? (
           <EmptyState
             illustration={<EmptyUploadIllustration />}
             title="Create your first board"
             description="Whiteboards let your team brainstorm visually with sticky notes, shapes, arrows, and freehand drawing."
-            action={canManage ? { label: "New Board", onClick: handleOpenCreate } : undefined}
+            action={
+              canManage
+                ? { label: "New Board", onClick: handleOpenCreate }
+                : undefined
+            }
             className={PM_FILL_PANEL}
           />
         ) : (
           <div className="flex min-h-0 flex-1 gap-3">
             {!listCollapsed ? (
-              <PmPanel className="hidden w-48 shrink-0 flex-col rounded-xl p-2 md:flex" solid>
+              <PmPanel
+                className="hidden w-48 shrink-0 flex-col rounded-xl p-2 md:flex"
+                solid
+              >
                 <div className="mb-1 flex shrink-0 items-center px-1">
-                  <span className="text-xs font-medium text-muted-foreground">Boards</span>
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Boards
+                  </span>
                 </div>
                 <ScrollArea hideScrollbar className="min-h-0 flex-1">
                   <ul className="space-y-0.5">
@@ -384,7 +449,10 @@ export function WhiteboardPage({ projectId, initialBoardId }: WhiteboardPageProp
                   />
                 )
               ) : (
-                <PmPanel className="flex flex-1 items-center justify-center" solid>
+                <PmPanel
+                  className="flex flex-1 items-center justify-center"
+                  solid
+                >
                   <EmptyState
                     illustration={<EmptyUploadIllustration />}
                     title="Select a board"
@@ -407,34 +475,26 @@ export function WhiteboardPage({ projectId, initialBoardId }: WhiteboardPageProp
         />
       )}
 
-      {detail !== undefined && detail.access === "manage" && detail.sharing !== null && (
-        <ShareDialog
-          projectId={projectId}
-          whiteboard={detail}
-          open={shareOpen}
-          onOpenChange={handleShareOpenChange}
-        />
-      )}
+      {detail !== undefined &&
+        detail.access === "manage" &&
+        detail.sharing !== null && (
+          <ShareDialog
+            projectId={projectId}
+            whiteboard={detail}
+            open={shareOpen}
+            onOpenChange={handleShareOpenChange}
+          />
+        )}
 
-      <AlertDialog open={canManage && !!deleteTarget} onOpenChange={handleAlertOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete board?</AlertDialogTitle>
-            <AlertDialogDescription>
-              &ldquo;{deleteTarget?.name}&rdquo; and all of its content will be permanently deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleConfirmDelete}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={canManage && !!deleteTarget}
+        onOpenChange={handleDeleteDialogOpenChange}
+        title="Delete board?"
+        description={`“${deleteTarget?.name ?? ""}” and all of its content will be permanently deleted.`}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleConfirmDelete}
+      />
     </PageWrapper>
   );
 }

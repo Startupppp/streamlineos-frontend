@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { RefreshCcw } from "lucide-react";
 import { CopyIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -21,15 +20,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { TEXT_BODY, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
@@ -341,27 +332,16 @@ export function WidgetSetupSheet({ open, widget, onClose }: WidgetSetupSheetProp
         </SheetContent>
       </Sheet>
 
-      <AlertDialog open={confirmRotate} onOpenChange={setConfirmRotate}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Rotate widget key?</AlertDialogTitle>
-            <AlertDialogDescription>
-              The old key will stop working immediately. Update the embed snippet on your site.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <LoadingButton
-              variant="destructive"
-              isPending={rotateKey.isPending}
-              loadingText="Rotating…"
-              onClick={handleConfirmRotate}
-            >
-              Rotate key
-            </LoadingButton>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={confirmRotate}
+        onOpenChange={setConfirmRotate}
+        title="Rotate widget key?"
+        description="The old key will stop working immediately. Update the embed snippet on your site."
+        confirmLabel="Rotate key"
+        destructive
+        isPending={rotateKey.isPending}
+        onConfirm={handleConfirmRotate}
+      />
     </>
   );
 }

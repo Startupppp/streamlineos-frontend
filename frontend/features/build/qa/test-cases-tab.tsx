@@ -4,6 +4,8 @@ import { useCallback, useMemo, useState } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useTestCases, useTestSuites, useDeleteTestCase } from "@/hooks/api/build/qa";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { TestCase } from "@/types/projects";
 import { DataTable } from "@/components/ui/data-table";
@@ -94,6 +96,8 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
     void refetch();
   }, [refetch]);
 
+  const pageState = usePageState({ permission: "build:qa:view", isLoading, isError, error });
+
   const filtersActive = search.trim() !== "" || suiteFilter !== "all";
 
   const handleClearFilters = useCallback(() => {
@@ -106,16 +110,15 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
     [canManage, handleEdit],
   );
 
-  if (isLoading) return <DataTableSkeleton rows={12} columns={5} className="flex-1" />;
-  if (isError)
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
-      <ErrorState
-        className="flex-1"
-        title="Couldn't load test cases"
-        description={getErrorMessage(error)}
-        onRetry={handleRetry}
-      />
+      <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        {null}
+      </PageState>
     );
+  }
+
+  if (pageState.kind === "loading") return <DataTableSkeleton rows={12} columns={5} className="flex-1" />;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col space-y-3">
