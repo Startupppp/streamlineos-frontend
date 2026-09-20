@@ -303,7 +303,25 @@ is to move the read into `ForecastPersistenceService` / `PoBatchService`, which 
 through to a **Gmail/Outlook fetch** when metadata cannot serve the page, so wrapping its read in a
 transaction would create a new hold rather than remove one. Mail needs its own lane.
 
-### H10 — the gate is blind to AI provider calls ⚠ OPEN, measured
+### H10 — the gate is blind to AI provider calls ✅ CLOSED, ceilinged at 24
+
+The gate now sees them. **Two tiers, because the evidence differs:**
+
+| Tier | Rule | Why |
+|---|---|---|
+| Non-AI outbound | frozen list, **8** | Each entry carries the decision that put it there. |
+| AI provider calls | ceiling, **24** | 24 have not been read hop by hop. A frozen entry claiming a decision nobody made is worse than a number. |
+
+A route reaching both is re-walked with the non-AI predicate, so it is reported where the stricter rule
+applies rather than counted twice. Bite-checked with a planted controller calling
+`invokeTextWithUsage` — exit 1 naming it, exit 0 once given `@NoTenantTransaction()`. Commit `c14abfb30`.
+
+The ceiling also locks in H13: revert any of those five and the count rises to 25 and CI fails.
+
+**The original H10 text is kept below, because the reasoning for not shipping it earlier still holds —
+what changed is that a ceiling says something true about 24 unverified routes, and a frozen list does not.**
+
+### H10 — the measurement that found it
 
 The LLM leaves the process through `ChatOpenAI` (`@langchain/openai`,
 `ai/core/providers/llm.service.ts:2`), not `fetch`/`axios`. Nothing in `OUTBOUND` matches it, so **every
