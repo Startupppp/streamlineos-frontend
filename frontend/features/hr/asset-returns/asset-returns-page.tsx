@@ -71,6 +71,7 @@ export function AssetReturnsPage() {
   const [condition, setCondition] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [notesError, setNotesError] = useState("");
+  const [validationError, setValidationError] = useState("");
 
   const selectedAsset = useMemo<Asset | undefined>(
     () => allAssignedAssets.find((a) => String(a.id) === selectedAssetId),
@@ -95,6 +96,7 @@ export function AssetReturnsPage() {
     setCondition("");
     setNotes("");
     setNotesError("");
+    setValidationError("");
   }, []);
 
   const handleSheetOpenChange = useCallback(
@@ -130,12 +132,25 @@ export function AssetReturnsPage() {
   );
 
   const handleCreate = useCallback(() => {
-    if (!selectedAssetId) { toast.error("Please select an asset to return"); return; }
-    if (!resolvedUserId) { toast.error("Please select an employee"); return; }
-    if (!condition) { toast.error("Please select the asset condition"); return; }
-    if (notes.length > 1000) { toast.error("Notes must be at most 1000 characters"); return; }
+    if (!selectedAssetId) {
+      setValidationError("Please select an asset to return");
+      return;
+    }
+    if (!resolvedUserId) {
+      setValidationError("Please select an employee");
+      return;
+    }
+    if (!condition) {
+      setValidationError("Please select the asset condition");
+      return;
+    }
+    if (notes.length > 1000) {
+      setValidationError("Notes must be at most 1000 characters");
+      return;
+    }
     const asset = allAssignedAssets.find((a) => String(a.id) === selectedAssetId);
     if (!asset) return;
+    setValidationError("");
     create.mutate(
       { userId: resolvedUserId, assetName: asset.name, assetId: asset.id, condition, notes: notes.trim() || undefined },
       {
@@ -201,6 +216,7 @@ export function AssetReturnsPage() {
         condition={condition}
         notes={notes}
         notesError={notesError}
+        validationError={validationError}
         isPending={create.isPending}
         onAssetChange={handleAssetChange}
         onEmployeeOverrideChange={handleEmployeeOverrideChange}
