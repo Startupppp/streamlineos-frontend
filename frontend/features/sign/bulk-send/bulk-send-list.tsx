@@ -121,6 +121,8 @@ export function BulkSendList() {
   const effectiveError = !access?.allowed && !isFetching
     ? new Error("You don't have permission to view bulk send jobs")
     : error;
+  /** Only show skeleton on initial load, not on background refetch */
+  const showSkeleton = !jobs && (isLoading || isFetching);
 
   function templateNameFor(job: SignBulkSendJob): string | undefined {
     return (templates ?? []).find((template) => template.id === job.templateId)?.name;
@@ -144,7 +146,7 @@ export function BulkSendList() {
         </AnimatedIconButton>
       }
     >
-      {isLoading || isFetching ? (
+      {showSkeleton ? (
         <div className="space-y-3">
           {Array.from({ length: 9 }).map((_, i) => (
             <Skeleton key={i} className="h-16 w-full" />
