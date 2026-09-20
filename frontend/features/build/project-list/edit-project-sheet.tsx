@@ -153,6 +153,14 @@ export function EditProjectSheet({
     }
   }
 
+  function handleCancel() {
+    onOpenChange(false);
+  }
+
+  function handleMemberIdsChange(ids: string[]) {
+    form.setValue("memberIds", ids, { shouldDirty: true });
+  }
+
   function handleSubmit(values: EditProjectFormValues) {
     const reassignments =
       Object.keys(reassignmentsRef.current).length > 0
@@ -299,22 +307,26 @@ export function EditProjectSheet({
                 <FormField
                   control={form.control}
                   name="managerId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Project Lead</FormLabel>
-                      <FormControl>
-                        <MemberPicker
-                          value={field.value}
-                          onChange={(userId) => {
-                            field.onChange(userId ?? undefined);
-                          }}
-                          allowUnassigned
-                          placeholder="Unassigned"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    function handleManagerChange(userId: string | null) {
+                      field.onChange(userId ?? undefined);
+                    }
+
+                    return (
+                      <FormItem>
+                        <FormLabel>Project Lead</FormLabel>
+                        <FormControl>
+                          <MemberPicker
+                            value={field.value}
+                            onChange={handleManagerChange}
+                            allowUnassigned
+                            placeholder="Unassigned"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
 
                 <div className="grid grid-cols-2 gap-3">
@@ -369,7 +381,7 @@ export function EditProjectSheet({
                   </div>
                   <MembersSelector
                     memberIds={form.watch("memberIds") ?? []}
-                    onMemberIdsChange={(ids) => form.setValue("memberIds", ids, { shouldDirty: true })}
+                    onMemberIdsChange={handleMemberIdsChange}
                     originalMemberIds={originalMemberIds}
                     onMemberRemoved={handleMemberRemoved}
                   />
@@ -380,7 +392,7 @@ export function EditProjectSheet({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => onOpenChange(false)}
+                  onClick={handleCancel}
                   disabled={updateProject.isPending}
                   className="flex-1"
                 >

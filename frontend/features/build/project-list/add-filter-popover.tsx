@@ -10,21 +10,25 @@ import {
 } from "@/components/ui/responsive-popover";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import type { ProjectHealth } from "@/types/projects/projects";
+
+export type ProjectStatusFilter = "ACTIVE" | "COMPLETED" | "ARCHIVED";
 
 export interface ProjectActiveFilters {
-  status?: string;
+  status?: ProjectStatusFilter;
   lead?: string;
-  health?: string;
+  health?: ProjectHealth;
   startAfter?: string;
   startBefore?: string;
   endAfter?: string;
   endBefore?: string;
 }
 
-interface FilterOptionProps {
+interface FilterOptionProps<T extends string> {
+  value: T;
   label: string;
   active: boolean;
-  onSelect: () => void;
+  onSelect: (value: T) => void;
 }
 
 const FILTER_CATEGORIES = [
@@ -37,27 +41,29 @@ const FILTER_CATEGORIES = [
 
 type FilterKey = (typeof FILTER_CATEGORIES)[number]["key"];
 
-const STATUS_OPTIONS = ["ACTIVE", "PLANNING", "COMPLETED", "ON_HOLD", "ARCHIVED"];
-const STATUS_LABELS: Record<string, string> = {
+export const STATUS_OPTIONS: ProjectStatusFilter[] = ["ACTIVE", "COMPLETED", "ARCHIVED"];
+export const STATUS_LABELS: Record<ProjectStatusFilter, string> = {
   ACTIVE: "In Progress",
-  PLANNING: "Planning",
   COMPLETED: "Completed",
-  ON_HOLD: "On Hold",
   ARCHIVED: "Archived",
 };
 
-const HEALTH_OPTIONS = ["healthy", "at_risk", "critical"];
-const HEALTH_LABELS: Record<string, string> = {
-  healthy: "Healthy",
+export const HEALTH_OPTIONS: ProjectHealth[] = ["on_track", "at_risk", "off_track"];
+export const HEALTH_LABELS: Record<ProjectHealth, string> = {
+  on_track: "On Track",
   at_risk: "At Risk",
-  critical: "Critical",
+  off_track: "Off Track",
 };
 
-function FilterOption({ label, active, onSelect }: FilterOptionProps) {
+function FilterOption<T extends string>({ value, label, active, onSelect }: FilterOptionProps<T>) {
+  function handleClick() {
+    onSelect(value);
+  }
+
   return (
     <button
       type="button"
-      onClick={onSelect}
+      onClick={handleClick}
       className={cn(
         "flex w-full items-center rounded-md px-2 py-1.5 text-left text-label transition-colors",
         active
@@ -66,6 +72,39 @@ function FilterOption({ label, active, onSelect }: FilterOptionProps) {
       )}
     >
       {label}
+    </button>
+  );
+}
+
+function FilterCategoryButton({
+  category,
+  active,
+  filled,
+  onSelect,
+}: {
+  category: (typeof FILTER_CATEGORIES)[number];
+  active: boolean;
+  filled: boolean;
+  onSelect: (key: FilterKey) => void;
+}) {
+  function handleClick() {
+    onSelect(category.key);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={cn(
+        "flex w-full items-center rounded-md px-2 py-1.5 text-left text-xs transition-colors",
+        active
+          ? "bg-primary text-primary-foreground font-medium"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+        filled && "font-medium text-foreground",
+      )}
+    >
+      {category.label}
+      {filled ? <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" /> : null}
     </button>
   );
 }
@@ -96,14 +135,14 @@ export function AddFilterPopover({ filters, onFiltersChange }: AddFilterPopoverP
   }, []);
 
   const handleStatusSelect = useCallback(
-    (value: string) => {
+    (value: ProjectStatusFilter) => {
       onFiltersChange({ ...filters, status: filters.status === value ? undefined : value });
     },
     [filters, onFiltersChange],
   );
 
   const handleHealthSelect = useCallback(
-    (value: string) => {
+    (value: ProjectHealth) => {
       onFiltersChange({ ...filters, health: filters.health === value ? undefined : value });
     },
     [filters, onFiltersChange],
@@ -159,23 +198,13 @@ export function AddFilterPopover({ filters, onFiltersChange }: AddFilterPopoverP
         <div className="flex gap-2">
           <div className="w-28 shrink-0 space-y-0.5 border-r border-border pr-2">
             {FILTER_CATEGORIES.map((cat) => (
-              <button
+              <FilterCategoryButton
                 key={cat.key}
-                type="button"
-                onClick={() => handleCategorySelect(cat.key)}
-                className={cn(
-                  "flex w-full items-center rounded-md px-2 py-1.5 text-left text-xs transition-colors",
-                  activeCategory === cat.key
-                    ? "bg-primary text-primary-foreground font-medium"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                  filters[cat.key] && "font-medium text-foreground",
-                )}
-              >
-                {cat.label}
-                {filters[cat.key] ? (
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
-                ) : null}
-              </button>
+                category={cat}
+                active={activeCategory === cat.key}
+                filled={Boolean(filters[cat.key])}
+                onSelect={handleCategorySelect}
+              />
             ))}
           </div>
 
@@ -185,9 +214,10 @@ export function AddFilterPopover({ filters, onFiltersChange }: AddFilterPopoverP
                 {STATUS_OPTIONS.map((s) => (
                   <FilterOption
                     key={s}
+                    value={s}
                     label={STATUS_LABELS[s] ?? s}
                     active={filters.status === s}
-                    onSelect={() => handleStatusSelect(s)}
+                    onSelect={handleStatusSelect}
                   />
                 ))}
               </FilterSection>
@@ -196,14 +226,12 @@ export function AddFilterPopover({ filters, onFiltersChange }: AddFilterPopoverP
                 {HEALTH_OPTIONS.map((h) => (
                   <FilterOption
                     key={h}
+                    value={h}
                     label={HEALTH_LABELS[h] ?? h}
                     active={filters.health === h}
-                    onSelect={() => handleHealthSelect(h)}
+                    onSelect={handleHealthSelect}
                   />
                 ))}
-                <p className="mt-2 text-micro text-muted-foreground italic">
-                  Health score is a backend gap — not in current API response.
-                </p>
               </FilterSection>
             ) : activeCategory === "lead" ? (
               <p className="text-xs text-muted-foreground py-2">
@@ -233,16 +261,14 @@ interface ActiveFilterChipsProps {
 
 const STATUS_LABEL_MAP: Record<string, string> = {
   ACTIVE: "Status: In Progress",
-  PLANNING: "Status: Planning",
   COMPLETED: "Status: Completed",
-  ON_HOLD: "Status: On Hold",
   ARCHIVED: "Status: Archived",
 };
 
-const HEALTH_LABEL_MAP: Record<string, string> = {
-  healthy: "Health: Healthy",
+const HEALTH_LABEL_MAP: Record<ProjectHealth, string> = {
+  on_track: "Health: On Track",
   at_risk: "Health: At Risk",
-  critical: "Health: Critical",
+  off_track: "Health: Off Track",
 };
 
 export function ActiveFilterChips({ filters, onRemove, leadName }: ActiveFilterChipsProps) {
@@ -263,22 +289,34 @@ export function ActiveFilterChips({ filters, onRemove, leadName }: ActiveFilterC
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       {chips.map((chip) => (
-        <Badge
-          key={chip.key}
-          variant="secondary"
-          className="h-6 gap-1 pl-2 pr-1 text-dense font-normal"
-        >
-          {chip.label}
-          <button
-            type="button"
-            aria-label={`Remove ${chip.label} filter`}
-            onClick={() => onRemove(chip.key)}
-            className="ml-0.5 rounded-sm text-muted-foreground transition-colors hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </Badge>
+        <RemovableFilterChip key={chip.key} chip={chip} onRemove={onRemove} />
       ))}
     </div>
+  );
+}
+
+function RemovableFilterChip({
+  chip,
+  onRemove,
+}: {
+  chip: { key: keyof ProjectActiveFilters; label: string };
+  onRemove: (key: keyof ProjectActiveFilters) => void;
+}) {
+  function handleRemove() {
+    onRemove(chip.key);
+  }
+
+  return (
+    <Badge variant="secondary" className="h-6 gap-1 pl-2 pr-1 text-dense font-normal">
+      {chip.label}
+      <button
+        type="button"
+        aria-label={`Remove ${chip.label} filter`}
+        onClick={handleRemove}
+        className="ml-0.5 rounded-sm text-muted-foreground transition-colors hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </Badge>
   );
 }

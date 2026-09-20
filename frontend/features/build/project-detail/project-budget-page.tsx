@@ -11,8 +11,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { IndianRupee, TrendingUp, Pencil } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useProjectBudget, useUpdateProjectBudget, useProjectMembers } from "@/hooks/api/build";
 import { useOrgMembers } from "@/hooks/api/organization";
+import { useCanState } from "@/hooks/api/access";
+import { resolveGate } from "@/lib/rbac/gate";
 import type { NamedUser } from "@/lib/person-display";
 import { toast } from "sonner";
 import { DataTable } from "@/components/ui/data-table";
@@ -36,6 +39,7 @@ interface ProjectBudgetPageProps {
 export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPageProps) {
   const projectId = Number(projectIdStr);
   const display = useOrgDisplay();
+  const access = useCanState("build:manage");
   const {
     data: budget,
     isLoading,
@@ -43,6 +47,12 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
     error,
     refetch,
   } = useProjectBudget(projectId);
+  const gate = resolveGate({
+    access,
+    isLoading,
+    isError,
+    isEmpty: !budget,
+  });
   const { data: members } = useProjectMembers(projectId);
   const { data: orgMembersData } = useOrgMembers(1, 200);
   const updateBudget = useUpdateProjectBudget(projectId);
@@ -130,7 +140,7 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
     </Button>
   );
 
-  if (isLoading) {
+  if (gate === "loading") {
     return (
       <PageWrapper
         title="Budget"
@@ -145,7 +155,20 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
     );
   }
 
-  if (isError) {
+  if (gate === "denied") {
+    return (
+      <PageWrapper
+        title="Budget"
+        subtitle="Planned budget vs actual cost from billable timesheets"
+      >
+        <PmPageShell>
+          <NoPermissionState permission="build:manage" className={PM_FILL_PANEL} />
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (gate === "error") {
     return (
       <PageWrapper
         title="Budget"
@@ -163,7 +186,25 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
     );
   }
 
-  const overBudget = (budget?.remaining ?? 0) < 0;
+  if (gate === "empty" || !budget) {
+    return (
+      <PageWrapper
+        title="Budget"
+        subtitle="Planned budget vs actual cost from billable timesheets"
+      >
+        <PmPageShell>
+          <EmptyState
+            className={PM_FILL_PANEL}
+            illustrationPreset="calendar"
+            title="No budget data"
+            description="Budget details are unavailable for this project."
+          />
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  const overBudget = budget.remaining < 0;
   // Hours the API could not put a price on: no rate was stamped on the entry, or
   // the entry was rated in a currency other than the budget's. Actual Cost omits
   // them, so saying only "under budget" beside them would understate the spend.
