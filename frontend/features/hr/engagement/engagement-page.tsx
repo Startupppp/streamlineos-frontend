@@ -125,7 +125,7 @@ function OverviewTab() {
   const { staggerContainer, fadeUp } = useMotionVariants();
   const { data: overview, isLoading, isError, error, refetch } = useEngagementOverview();
   const { data: moodData, isLoading: moodLoading } = useOrgMoodAggregate();
-  const { data: recognitions, isLoading: recLoading } = useRecognitions();
+  const { data: recognitions, isLoading: recLoading, isError: recError, error: recErrorData, refetch: refetchRec } = useRecognitions();
   const { data: membersData } = useOrgMembers(1, 200);
   const canManage = useCan("hr:engagement:manage");
 
@@ -283,7 +283,10 @@ function RecognitionTab() {
 
       <RecognitionFeed
         recognitions={recognitions ?? []}
-        isLoading={isLoading}
+        isLoading={recLoading}
+        isError={recError}
+        error={recErrorData}
+        onRetry={() => void refetchRec()}
         onGiveKudos={handleGiveKudos}
       />
 

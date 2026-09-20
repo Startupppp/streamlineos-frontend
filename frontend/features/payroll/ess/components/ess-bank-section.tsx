@@ -16,6 +16,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { useEssBank, useUpdateBank } from "@/hooks/api/payroll/ess";
 import type { EssBankDetails } from "@/hooks/api/payroll/ess-schema";
@@ -353,7 +354,7 @@ export function EssBankSection({
   sheetOpen?: boolean;
   onSheetOpenChange?: (open: boolean) => void;
 }) {
-  const { data, isLoading } = useEssBank();
+  const { data, isLoading, isError, error, refetch } = useEssBank();
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const sheetOpen = sheetOpenProp ?? uncontrolledOpen;
   const setSheetOpen = onSheetOpenChange ?? setUncontrolledOpen;
@@ -380,6 +381,12 @@ export function EssBankSection({
             </div>
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState
+          title="Couldn't load bank details"
+          description={getErrorMessage(error)}
+          onRetry={() => void refetch()}
+        />
       ) : data?.hasBank && data.masked ? (
         <motion.div
           initial={{ opacity: 0, y: 8 }}

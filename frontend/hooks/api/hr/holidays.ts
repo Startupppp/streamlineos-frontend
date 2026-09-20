@@ -26,10 +26,10 @@ interface CreateHolidayInput {
 }
 
 export function useHolidays() {
-  const canView = useCan("self:attendance");
+  const canView = useCan("hr:attendance:view");
   return useQuery<Holiday[]>({
     queryKey: humanResourcesQueryKeys.hr.holidays(),
-    queryFn: ({ signal }) => apiClient.get<Holiday[]>("/me/attendance/holidays", undefined, signal, lazyContract(() => import("@/hooks/api/hr/holidays-schema").then(m => m.holidayListContract))),
+    queryFn: ({ signal }) => apiClient.get<Holiday[]>("/hr/attendance/holidays", undefined, signal, lazyContract(() => import("@/hooks/api/hr/holidays-schema").then(m => m.holidayListContract))),
     staleTime: 300_000,
     enabled: canView,
   });

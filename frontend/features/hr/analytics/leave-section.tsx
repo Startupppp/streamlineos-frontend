@@ -3,6 +3,8 @@
 import { useHrLeaveAnalytics } from "@/hooks/api/hr/leaves-expenses";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   AnalyticsChartCard,
   AnalyticsSectionHeader,
@@ -29,7 +31,7 @@ interface LeaveSectionProps {
 }
 
 export function LeaveSection({ year }: LeaveSectionProps) {
-  const { data, isLoading } = useHrLeaveAnalytics(year);
+  const { data, isLoading, isError, error, refetch } = useHrLeaveAnalytics(year);
 
   if (isLoading) {
     return (
@@ -42,6 +44,16 @@ export function LeaveSection({ year }: LeaveSectionProps) {
           <SectionSkeleton rows={8} />
         </div>
       </section>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Couldn't load leave analytics"
+        description={getErrorMessage(error)}
+        onRetry={() => void refetch()}
+      />
     );
   }
 
