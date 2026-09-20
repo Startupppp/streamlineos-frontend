@@ -3,6 +3,8 @@
 **Opened:** 2026-09-20 · **Owner:** backend
 **Follows:** `2026-09-20-deferred-items-lane.md` R4, which found these while proving `accessMode: "read only"` unsafe.
 
+⚠ **Every W-item is ticked and the lane is NOT finished.** Do not delete this file on the strength of its checkboxes. It still carries four open items (§ *Still open*), the documented recall limits of `check:get-route-writes` — without which a green gate reads as proof it is not — two unfixed races needing migrations (`payslip_templates`, `user_sessions`), and a live billing-path defect at `ai-credits-reservation.service.ts:103` that is reported, not repaired.
+
 backend/CLAUDE.md §2 says **"no writes in a GET"**. It is violated **15 times** across 1,646 GET routes. A written rule is not a control.
 
 This is not a tidiness lane. Those 15 routes are the reason two separate capacity wins are blocked:

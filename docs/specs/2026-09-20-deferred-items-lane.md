@@ -1,8 +1,10 @@
-# Deferred-items lane — closing out the two prior lanes
+# Deferred-items lane — closing out the prior lanes
 
 **Opened:** 2026-09-20 · **Owner:** backend
 **Absorbs and replaces:** `2026-09-19-tenant-connection-hold-prd.md` · `2026-09-20-read-cost-lane.md`
 Both were 100% ticked with their acceptance met, so they were deleted on 2026-09-20 and their durable content folded in below (§A, §B). Recover either with `git show HEAD:docs/specs/<name>.md`.
+
+**This file is not finished work.** Every R-item below is closed, but the lane still carries the R6 deferral table and the open `[dup-prefix]` migration numbers.
 
 Both prior lanes are 100% ticked. What remains is their **deferred** tables. A deferral is a claim, and a claim can be wrong — so each item below is re-tested against source before it is either implemented or re-deferred with a sharper reason.
 
