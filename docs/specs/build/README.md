@@ -184,6 +184,75 @@ Migration journal note: `migrations/meta/_journal.json` carries an uncommitted
 idx 1011 (`1123_ai_action_proposals_rls`) owned by another session. The batched
 Build migration packet cannot reserve the journal until that entry lands.
 
+## Cycle 7 Outcome — 2026-09-20
+
+Six packets under `build/core/` and `build/execution/`, each holding an
+exclusive file reservation; agents wrote fixes and specs, the coordinator
+reviewed the diffs and owned every commit. **No finding was accepted from its
+report** — each was re-derived from source, and each fix was verified by
+reverting it and confirming its test fails. One agent under-reported: it
+described a one-line N+1 fix, and the diff also carried an unreported
+behavioral change to reported workload.
+
+| Packet | Status | Result |
+|---|---|---|
+| `BLD-X-BE-PROJECT-DIR-001` | `INTEGRATED` | `getProject`'s team-member join had drifted to a single-column `teamId` predicate, dropping `orgId` — a cross-tenant join edge |
+| `BLD-X-BE-PROJECT-WRITE-001` | `INTEGRATED` | `updateProject` answered `403` for a project outside the org, an existence oracle; now `404`. `clientMembershipId: input.clientId ? undefined : undefined` — a **dead write**: client assignment was silently discarded and `200` returned |
+| `BLD-X-BE-TICKET-LIST-001` | `INTEGRATED` | `getAllWork` resolved `assigneeId` through a correlated subquery **per row**; replaced by the join already present. `getPersonTicketStats` counted only primary assignees while its own tool description claims exact counts — `ticketAssignees` co-assignees were invisible |
+| `BLD-X-BE-TICKET-DETAIL-001` | `INTEGRATED` | `epicRowSchema` omitted `assignee`, so the contract **stripped it from every epic row** and every epic rendered unassigned |
+| `BLD-X-BE-TICKET-WRITE-001` | `INTEGRATED` | `beforeAssigneeId` was a hardcoded `null`, so **every** automation and notification saw the ticket as previously unassigned. Ancestry validation ran unserialized — two concurrent reparents could each pass and commit a cycle |
+| `BLD-X-BE-ITERATION-001` | `INTEGRATED` | `createCycle` omitted `assertProjectInOrg` (its sibling had it) — a foreign `projectId` reached the `INSERT`. `removeWatcher` deleted with **no tenant predicate and no ownership check** |
+
+Two response contracts described shapes their services never return.
+`ticketRelationSchema` served both `addRelation` (a raw row) and
+`listRelations` (a projection), fitting neither, and omitted `relationType`,
+which the insert always returns; split into two schemas. `gitLinkSchema`
+required four fields the projection does not select and named the link column
+`repoUrl` where the row carries `url`. Both drift at consumption, not as a
+`500`: the interceptor passes the payload through in prod, and the frontend's
+`parseApiResponse` fails closed — a blank screen, not an error.
+
+**The params gate went repo-wide with a null result.** `modules/build/**` →
+all of `modules/**`: **598 controllers, 1,849 parameterised routes, 0
+violations**. The 15 known defects were Build-local; `payroll/runs/:runId`,
+`surveys/:surveyId`, `chat/channels/:channelId` and
+`hr/recruitment/candidates/:candidateId` nest identically and are clean. Proven
+non-vacuous against **real payroll source** — removing `runId` from
+`runAndExceptionIdParams` made the gate name both affected routes and exit 1.
+Two capability gaps closed: `.extend()`/`.merge()` chains were invisible to it
+(feedbucket's `submissionMediaParams` was the live instance), and the
+four-regex timesheets exclusion was a pure hole — with it emptied the scan is
+still clean, so it hid six routes for nothing. Now wired into CI.
+
+Evidence: `tsc -p tsconfig.build.json --noEmit` **exit 0**;
+`tsc -p tsconfig.json --noEmit` **119 errors, down from 125** — the six cleared
+were this work's, including two of the coordinator's own regressions from the
+cycle-6 public-forms consolidation (a stale constructor arity and a
+self-referential mock) that **passed jest the whole time**, since ts-jest's
+`isolatedModules` means jest never type-checks. `pnpm check:cycles` clean over
+8,135 files. Six new spec files, all mutation-verified.
+
+Two process traps worth pinning. A `String.replace` revert hit the **first**
+matching occurrence — an already-correct join — instead of the line under test;
+the spec passed and read as vacuous. **A mis-aimed revert and a genuinely
+vacuous test produce the identical signal.** Separately, a multi-line revert
+written with `\n` silently matched nothing against this repo's CRLF files, and
+9/9 passed. Both now require an explicit "did the replace apply?" guard.
+
+Awaiting a decision, not fixed:
+
+- `getTicket` relies on DataScope alone while `deleteTicket`, `updateTicket`
+  and the list all require project membership — **a ticket the list hides is
+  readable by id.** Tightening it breaks cross-project ticket links.
+- `updateEpicSchema` accepts `assigneeId` (a string userId) but the column is
+  `assigneeMembershipId` (integer); Drizzle drops the unknown key, returns
+  `200`, and the assignee never changes.
+- `pnpm check:gate-wiring` was **already exit 1** before this cycle. Four
+  package scripts no CI job invokes: `verify:auth-races`,
+  `verify:otp-delivery`, `verify:identity-journey`, `check:list-projections`.
+  The last passes but cannot resolve 13 endpoints, so wiring it as-is enforces
+  less than it appears to.
+
 ## Cycle 6 Outcome — 2026-09-20
 
 All five agents were killed when the session's process exited; four had already
@@ -350,8 +419,9 @@ pool deliberately contains more READY work than execution slots:
 | Backend leaf | `BLD-X-BE-MEETINGS-001` | `READY` | Current contract unchanged; module-local files |
 | Backend leaf | `BLD-X-BE-DRAFT-001` | `READY` | Current contract unchanged; module-local files |
 | Backend leaf | `BLD-X-BE-PULSE-001` | `READY` | Current contract unchanged; module-local files |
-| Backend leaf | `BLD-X-BE-ITERATION-001` + `BLD-X-BE-PLANNING-001` | `READY`, **one owner only** | Both are sprints/cycles/modules/epics inside the single `execution/iterations.controller.ts` and the single `execution/dto/execution-response.schemas.ts`. They are NOT parallelisable — dispatch as one packet or serially, never as two concurrent agents |
-| Backend leaf | `BLD-X-BE-PROJECT-DIR-001`, `-PROJECT-WRITE-001`, `-TICKET-LIST-001`, `-TICKET-DETAIL-001`, `-TICKET-WRITE-001`, `-BULK-001`, `-REPORT-001` | `READY` after file enumeration | All under `build/core/` (93 production files). `core/dto/` is split per resource and IS disjointable. The real contention is `projects-tickets.controller.ts`, shared by TICKET-LIST, TICKET-DETAIL and TICKET-WRITE — give it to exactly one of the three and let the other two own service + DTO only, or run them serially |
+| Backend leaf | `BLD-X-BE-ITERATION-001` + `BLD-X-BE-PLANNING-001` | `INTEGRATED` (cycle 7), **one owner only** | Both are sprints/cycles/modules/epics inside the single `execution/iterations.controller.ts` and the single `execution/dto/execution-response.schemas.ts`. They are NOT parallelisable — dispatch as one packet or serially, never as two concurrent agents |
+| Backend leaf | `BLD-X-BE-PROJECT-DIR-001`, `-PROJECT-WRITE-001`, `-TICKET-LIST-001`, `-TICKET-DETAIL-001`, `-TICKET-WRITE-001` | `INTEGRATED` (cycle 7) | All under `build/core/` (93 production files). `core/dto/` is split per resource and IS disjointable. The real contention is `projects-tickets.controller.ts`, shared by TICKET-LIST, TICKET-DETAIL and TICKET-WRITE — give it to exactly one of the three and let the other two own service + DTO only, or run them serially |
+| Backend leaf | `BLD-X-BE-BULK-001`, `-REPORT-001` | `READY` | The last two `build/core/` packets. BULK owns `build-ticket-bulk-mutation*` and `build-ticket-batch-workflow*`; REPORT owns `projects-reports*`, `projects-analytics*`, `projects-velocity-report` and `projects-burnup.util`. Disjoint — safe to run as two concurrent agents |
 | Backend sweep | `BLD-X-BE-E2E-STATUS-001` | `READY` | Replace 139 `not.toBe(401)`/`not.toBe(403)` pairs across 52 spec files with the exact expected status; fix each endpoint or mock the change exposes. Split per owning module; never one agent across all 52 |
 | Backend migration | `BLD-X-DB-BUILD-VERSION-001` | `CODE_COMPLETE`, **unapplied** | Authored as `1128_build_optimistic_concurrency_and_update_publication.sql`, journal idx 1016. `version` on all 9 tables; `audience`/`status`/`published_at` + publication CHECK + partial published-audience cursor index on `project_updates`; `review_date`/`category` + review-date index on `project_risks`; self-referencing composite `superseded_by_id` FK (PostgreSQL 15 column-list `SET NULL`), self-supersession CHECK and partial index on `project_decisions`; `(org_id, run_id, id)` on `test_run_results`. Drizzle schema updated to match. **Application and reconciliation remain a separate `BLD-X-DB-MIG-*` packet** — needs the named disposable database |
 
