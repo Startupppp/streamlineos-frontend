@@ -363,7 +363,7 @@ export function EmployeesListPage() {
                 description={
                   hasFilters
                     ? "No results match your filters."
-                    : "Your employee directory is empty. Add your first team member to get started."
+                    : "No workers with active employment records. Onboard your first employee to get started."
                 }
                 filtersActive={hasFilters}
                 onClearFilters={clearFilters}

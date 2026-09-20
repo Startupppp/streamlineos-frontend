@@ -309,7 +309,7 @@ export function PeopleDirectoryPage({
               className={cn(CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS)}
               illustrationPreset="team"
               title="No person records yet"
-              description={isFiltered ? "No results match your filters." : "Create a person record before linking someone as a worker or payee."}
+              description={isFiltered ? "No results match your filters." : "The organization directory is empty. Add people here before linking them as workers, contacts, or payees."}
               filtersActive={isFiltered}
               onClearFilters={handleClearSearch}
               action={!isFiltered && canCreate ? { label: "Add person record", onClick: handleOpenCreate } : undefined}
