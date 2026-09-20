@@ -3,8 +3,10 @@
 import { useState, useCallback } from "react";
 import DOMPurify from "isomorphic-dompurify";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,7 +56,16 @@ function ContractStatusBadge({ status }: { status: HrContract["status"] }) {
 
 function CertificateViewer({ contractId }: { contractId: number }) {
   const [enabled, setEnabled] = useState(false);
-  const { data, isLoading } = useInternshipCertificate(contractId, enabled);
+  const { data, isLoading, isError, error } = useInternshipCertificate(contractId, enabled);
+
+  function handleClick() {
+    setEnabled(true);
+  }
+
+  if (enabled && isError) {
+    toast.error(getErrorMessage(error));
+    setEnabled(false);
+  }
 
   return (
     <>
@@ -62,12 +73,12 @@ function CertificateViewer({ contractId }: { contractId: number }) {
         variant="ghost"
         size="sm"
         className="text-xs gap-1"
-        onClick={() => setEnabled(true)}
+        onClick={handleClick}
       >
         <FileText className="h-3 w-3" />
         Certificate
       </Button>
-      {enabled && !isLoading && data && (
+      {enabled && !isLoading && !isError && data && (
         <AlertDialog open onOpenChange={() => setEnabled(false)}>
           <AlertDialogContent className="max-w-2xl">
             <AlertDialogHeader>

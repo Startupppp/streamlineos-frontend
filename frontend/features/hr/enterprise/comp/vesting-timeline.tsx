@@ -4,6 +4,8 @@ import { format, isPast } from "date-fns";
 import { CheckCircle2, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useVestingSchedule } from "@/hooks/api/hr/enterprise-comp";
 
 interface Props {
@@ -11,13 +13,24 @@ interface Props {
 }
 
 export function VestingTimeline({ grantId }: Props) {
-  const { data: events, isLoading } = useVestingSchedule(grantId);
+  const { data: events, isLoading, isError, error, refetch } = useVestingSchedule(grantId);
 
   if (isLoading) {
     return (
       <div className="space-y-2">
         {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Couldn't load vesting schedule"
+        description={getErrorMessage(error)}
+        onRetry={refetch}
+        compact
+      />
     );
   }
 
