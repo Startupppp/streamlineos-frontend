@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
 import type { AskAiHistoryMessage } from "@/hooks/api/chat-ai-assistant";
+import type { ConfirmActionResult } from "@/hooks/api/ai-confirm-action";
 import { extractAskOsDirective, type AskOsDirective } from "./ask-os-directive-schema";
 
 const AskOsConfirmationCard = dynamic(
@@ -101,9 +102,15 @@ export function EmptyAskOs({
 
 type ConfirmActionDirective = Extract<AskOsDirective, { kind: "confirm-action" }>;
 
-function confirmOutcomeCopy(action: string): string {
+function confirmOutcomeFallback(action: string): string {
   if (action === "email.send" || action === "mail.send") return "Email sent.";
   return "Done.";
+}
+
+function confirmOutcomeCopy(outcome: ConfirmActionResult, action: string): string {
+  const summary = typeof outcome.summary === "string" ? outcome.summary.trim() : "";
+  if (summary) return summary;
+  return confirmOutcomeFallback(action);
 }
 
 function ConfirmDirectiveSlot({
@@ -113,17 +120,21 @@ function ConfirmDirectiveSlot({
   directive: ConfirmActionDirective;
   persisted: boolean;
 }) {
-  const [confirmedResult, setConfirmedResult] = useState<Record<
-    string,
-    unknown
-  > | null>(null);
+  const [confirmedOutcome, setConfirmedOutcome] =
+    useState<ConfirmActionResult | null>(null);
   const [cancelled, setCancelled] = useState(false);
+
+  function handleConfirmed(outcome: ConfirmActionResult) {
+    setConfirmedOutcome(outcome);
+  }
 
   function handleCancelled() {
     setCancelled(true);
   }
 
-  if (persisted)
+  const { token } = directive;
+
+  if (persisted || token === undefined)
     return (
       <AskOsConfirmationCard
         mode="record"
@@ -133,10 +144,10 @@ function ConfirmDirectiveSlot({
       />
     );
 
-  if (confirmedResult !== null)
+  if (confirmedOutcome !== null)
     return (
       <p className="text-[13px] text-muted-foreground">
-        {confirmOutcomeCopy(directive.action)}
+        {confirmOutcomeCopy(confirmedOutcome, directive.action)}
       </p>
     );
   if (cancelled)
@@ -147,11 +158,11 @@ function ConfirmDirectiveSlot({
       mode="live"
       summary={directive.summary}
       preview={directive.preview}
-      token={directive.token}
+      token={token}
       expiresAt={directive.expiresAt}
       title={directive.title}
       confirmLabel={directive.confirmLabel}
-      onConfirmed={setConfirmedResult}
+      onConfirmed={handleConfirmed}
       onCancelled={handleCancelled}
     />
   );

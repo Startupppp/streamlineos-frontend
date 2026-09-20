@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useConfirmAction } from "@/hooks/api/ai-confirm-action";
+import { useConfirmAction, type ConfirmActionResult } from "@/hooks/api/ai-confirm-action";
 
 const PREVIEW_LABELS: Record<string, string> = {
   toEmail: "To",
@@ -25,7 +25,7 @@ type LiveProps = {
   expiresAt?: string;
   title?: string;
   confirmLabel?: string;
-  onConfirmed: (result: Record<string, unknown>) => void;
+  onConfirmed: (outcome: ConfirmActionResult) => void;
   onCancelled: () => void;
 };
 
@@ -103,7 +103,7 @@ function ConfirmationLive({
   function handleConfirm() {
     mutate(token, {
       onSuccess: (data) => {
-        onConfirmed(data.result);
+        onConfirmed(data);
       },
       onError: (error) => {
         toast.error(getErrorMessage(error));

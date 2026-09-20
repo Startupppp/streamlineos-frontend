@@ -6,13 +6,17 @@ const CONNECT_INTEGRATION_PREFIX = "CONNECT_INTEGRATION:";
 const confirmActionDirectiveSchema = z.object({
   kind: z.literal("confirm-action"),
   proposalId: z.number(),
-  token: z.string(),
+  token: z.string().optional(),
   action: z.string(),
   summary: z.string(),
   preview: z.record(z.string(), z.unknown()),
   expiresAt: z.string().optional(),
   title: z.string().optional(),
   confirmLabel: z.string().optional(),
+});
+
+const liveConfirmActionDirectiveSchema = confirmActionDirectiveSchema.extend({
+  token: z.string().min(1),
 });
 
 const connectIntegrationDirectiveSchema = z.object({
@@ -27,7 +31,13 @@ export const askOsDirectiveSchema = z.discriminatedUnion("kind", [
   connectIntegrationDirectiveSchema,
 ]);
 
+const liveAskOsDirectiveSchema = z.discriminatedUnion("kind", [
+  liveConfirmActionDirectiveSchema,
+  connectIntegrationDirectiveSchema,
+]);
+
 export type AskOsDirective = z.infer<typeof askOsDirectiveSchema>;
+export type LiveAskOsDirective = z.infer<typeof liveAskOsDirectiveSchema>;
 export type ConnectIntegrationDirective = z.infer<typeof connectIntegrationDirectiveSchema>;
 
 const DIRECTIVE_PREFIXES: Array<{ prefix: string; kind: AskOsDirective["kind"] }> = [
@@ -96,7 +106,7 @@ export function appendAskOsDirective(
   return trimmed.length === 0 ? encoded : `${trimmed}\n${encoded}`;
 }
 
-export function parseAskOsDirectivePayload(data: unknown): AskOsDirective | null {
-  const result = askOsDirectiveSchema.safeParse(data);
+export function parseAskOsDirectivePayload(data: unknown): LiveAskOsDirective | null {
+  const result = liveAskOsDirectiveSchema.safeParse(data);
   return result.success ? result.data : null;
 }

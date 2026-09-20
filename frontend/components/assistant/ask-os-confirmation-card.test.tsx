@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AskOsConfirmationCard } from "./ask-os-confirmation-card";
+import type { ConfirmActionResult } from "@/hooks/api/ai-confirm-action";
 
 const mutate = jest.fn();
 const toastError = jest.fn();
@@ -68,8 +69,8 @@ describe("a pending write is a compact proposal inside the message, not a nested
 
   it("confirms with the proposal token and surfaces the result to the bubble", async () => {
     const onConfirmed = jest.fn();
-    mutate.mockImplementation((_token: string, options: { onSuccess: (data: { result: Record<string, unknown> }) => void }) => {
-      options.onSuccess({ result: { messageId: "m-1" } });
+    mutate.mockImplementation((_token: string, options: { onSuccess: (data: ConfirmActionResult) => void }) => {
+      options.onSuccess({ ok: true, result: { messageId: "m-1" }, summary: "Email sent to jane@example.com" });
     });
 
     render(
@@ -87,7 +88,39 @@ describe("a pending write is a compact proposal inside the message, not a nested
     await userEvent.click(screen.getByRole("button", { name: "Send" }));
 
     expect(mutate).toHaveBeenCalledWith("tok-confirm", expect.objectContaining({ onSuccess: expect.any(Function) }));
-    expect(onConfirmed).toHaveBeenCalledWith({ messageId: "m-1" });
+    expect(onConfirmed).toHaveBeenCalledWith({
+      ok: true,
+      result: { messageId: "m-1" },
+      summary: "Email sent to jane@example.com",
+    });
+  });
+
+  it("hands the backend summary to the bubble instead of dropping it, so the outcome line can say what happened", async () => {
+    const onConfirmed = jest.fn();
+    mutate.mockImplementation((_token: string, options: { onSuccess: (data: ConfirmActionResult) => void }) => {
+      options.onSuccess({
+        ok: true,
+        result: { bonusId: 9 },
+        summary: "Bonus created (PENDING payroll approval): 5000",
+      });
+    });
+
+    render(
+      <AskOsConfirmationCard
+        mode="live"
+        summary="Grant a bonus"
+        preview={{ amount: "5000" }}
+        token="tok-bonus"
+        title="Grant bonus"
+        onConfirmed={onConfirmed}
+        onCancelled={jest.fn()}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Confirm" }));
+
+    expect(onConfirmed).toHaveBeenCalledWith(
+      expect.objectContaining({ summary: "Bonus created (PENDING payroll approval): 5000" }),
+    );
   });
 
   it("discards without calling the confirm endpoint so a change of mind is free", async () => {

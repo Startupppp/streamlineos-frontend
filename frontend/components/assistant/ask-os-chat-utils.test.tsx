@@ -41,6 +41,44 @@ jest.mock("sonner", () => ({
 
 import { AskOsBubble } from "./ask-os-chat-utils";
 import { serializeAskOsDirective } from "./ask-os-directive-schema";
+import type { ConfirmActionResult } from "@/hooks/api/ai-confirm-action";
+
+const bonusDirective = {
+  kind: "confirm-action" as const,
+  proposalId: 7,
+  token: "tok-bonus",
+  action: "hr.bonus.create",
+  summary: "Grant a bonus to Jane Doe",
+  preview: { amount: "5000" },
+  title: "Grant bonus",
+};
+
+const storedBonusDirective = {
+  kind: "confirm-action" as const,
+  proposalId: 7,
+  action: "hr.bonus.create",
+  summary: "Grant a bonus to Jane Doe",
+  preview: { amount: "5000" },
+  title: "Grant bonus",
+};
+
+const leaveDirective = {
+  kind: "confirm-action" as const,
+  proposalId: 8,
+  token: "tok-leave",
+  action: "self.leave.request",
+  summary: "Request leave",
+  preview: { startDate: "2026-10-01" },
+  title: "Request leave",
+};
+
+function resolveConfirmWith(summary: string) {
+  mutate.mockImplementation(
+    (_token: string, options: { onSuccess: (data: ConfirmActionResult) => void }) => {
+      options.onSuccess({ ok: true, result: {}, summary });
+    },
+  );
+}
 
 const emailDirective = {
   kind: "confirm-action" as const,
@@ -123,5 +161,117 @@ describe("AskOsBubble confirm-action routing — persisted vs live", () => {
       "tok-email",
       expect.objectContaining({ onSuccess: expect.any(Function) }),
     );
+  });
+});
+
+describe("a confirm directive the backend no longer ships a token for cannot be executed", () => {
+  it("renders a tokenless directive as a read-only past proposal instead of a button that would confirm nothing", async () => {
+    render(
+      <AskOsBubble
+        role="assistant"
+        content="Granting that bonus."
+        streaming={false}
+        reduce={false}
+        directives={[storedBonusDirective]}
+      />,
+    );
+
+    expect(await screen.findByText("Past proposal — view only.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /confirm|discard/i })).not.toBeInTheDocument();
+    expect(mutate).not.toHaveBeenCalled();
+  });
+});
+
+describe("a confirmed action reports what the backend actually did", () => {
+  it("renders the backend summary so granting a bonus does not read the same as filing leave", async () => {
+    resolveConfirmWith("Bonus created (PENDING payroll approval): 5000");
+
+    render(
+      <AskOsBubble
+        role="assistant"
+        content="Granting that bonus."
+        streaming={false}
+        reduce={false}
+        directives={[bonusDirective]}
+      />,
+    );
+    await userEvent.click(await screen.findByRole("button", { name: "Confirm" }));
+
+    expect(
+      await screen.findByText("Bonus created (PENDING payroll approval): 5000"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Done.")).not.toBeInTheDocument();
+  });
+
+  it("renders the leave summary rather than the hardcoded Done. that made every action look identical", async () => {
+    resolveConfirmWith("Leave request submitted from 2026-10-01 to 2026-10-03");
+
+    render(
+      <AskOsBubble
+        role="assistant"
+        content="Filing that leave request."
+        streaming={false}
+        reduce={false}
+        directives={[leaveDirective]}
+      />,
+    );
+    await userEvent.click(await screen.findByRole("button", { name: "Confirm" }));
+
+    expect(
+      await screen.findByText("Leave request submitted from 2026-10-01 to 2026-10-03"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Done.")).not.toBeInTheDocument();
+  });
+
+  it("renders the recipient-bearing email summary instead of the generic Email sent.", async () => {
+    resolveConfirmWith("Email sent to test@example.com");
+
+    render(
+      <AskOsBubble
+        role="assistant"
+        content="Sending that email."
+        streaming={false}
+        reduce={false}
+        directives={[emailDirective]}
+      />,
+    );
+    await userEvent.click(await screen.findByRole("button", { name: "Send" }));
+
+    expect(await screen.findByText("Email sent to test@example.com")).toBeInTheDocument();
+    expect(screen.queryByText("Email sent.")).not.toBeInTheDocument();
+  });
+
+  it("falls back to the per-action copy when the summary is blank so an older response never renders an empty line", async () => {
+    resolveConfirmWith("   ");
+
+    render(
+      <AskOsBubble
+        role="assistant"
+        content="Granting that bonus."
+        streaming={false}
+        reduce={false}
+        directives={[bonusDirective]}
+      />,
+    );
+    await userEvent.click(await screen.findByRole("button", { name: "Confirm" }));
+
+    expect(await screen.findByText("Done.")).toBeInTheDocument();
+  });
+
+  it("falls back to Email sent. when an email confirm returns no summary", async () => {
+    resolveConfirmWith("");
+
+    render(
+      <AskOsBubble
+        role="assistant"
+        content="Sending that email."
+        streaming={false}
+        reduce={false}
+        directives={[emailDirective]}
+      />,
+    );
+    await userEvent.click(await screen.findByRole("button", { name: "Send" }));
+
+    expect(await screen.findByText("Email sent.")).toBeInTheDocument();
   });
 });

@@ -93,13 +93,12 @@ describe("parseAskOsDirective", () => {
   });
 
   it("returns null when a required field is missing from the payload", () => {
-    const bodyMissingToken = JSON.stringify({
+    const bodyMissingAction = JSON.stringify({
       proposalId: 1,
-      action: "send_email",
-      summary: "Missing token field",
+      summary: "Missing action field",
       preview: {},
     });
-    expect(parseAskOsDirective(`CONFIRM_ACTION:${bodyMissingToken}`)).toBeNull();
+    expect(parseAskOsDirective(`CONFIRM_ACTION:${bodyMissingAction}`)).toBeNull();
   });
 });
 
@@ -252,5 +251,74 @@ describe("Ask OS directive encoding stays on the message, not a separate footer"
     const extracted = extractAskOsDirective(encoded);
     expect(extracted.prose).toBe(prose);
     expect(extracted.directives).toHaveLength(2);
+  });
+});
+
+describe("a directive replayed from stored chat history carries no redeemable token", () => {
+  const PERSISTED = `CONFIRM_ACTION:${JSON.stringify({
+    proposalId: 42,
+    action: "hr.grantBonus",
+    summary: "Grant a bonus of 5,000 to Priya Raman",
+    preview: { amount: 5000 },
+    expiresAt: "2026-09-20T12:00:00.000Z",
+    title: "Grant bonus",
+    confirmLabel: "Grant",
+  })}`;
+
+  it("parses a stored directive that has no token, because the backend stopped persisting one and a reject would blank the card", () => {
+    const parsed = parseAskOsDirective(PERSISTED);
+
+    expect(parsed).not.toBeNull();
+    expect(parsed?.kind).toBe("confirm-action");
+  });
+
+  it("keeps everything the read-only card renders", () => {
+    const parsed = parseAskOsDirective(PERSISTED);
+
+    expect(parsed).toMatchObject({
+      proposalId: 42,
+      action: "hr.grantBonus",
+      summary: "Grant a bonus of 5,000 to Priya Raman",
+      title: "Grant bonus",
+      confirmLabel: "Grant",
+    });
+  });
+
+  it("refuses a live stream payload with no token, so a tokenless directive can never reach the confirm button", () => {
+    expect(
+      parseAskOsDirectivePayload({
+        kind: "confirm-action",
+        proposalId: 42,
+        action: "hr.grantBonus",
+        summary: "s",
+        preview: {},
+      }),
+    ).toBeNull();
+  });
+
+  it("refuses a live payload whose token is an empty string, because an empty token would render an unusable Confirm button", () => {
+    expect(
+      parseAskOsDirectivePayload({
+        kind: "confirm-action",
+        proposalId: 42,
+        token: "",
+        action: "hr.grantBonus",
+        summary: "s",
+        preview: {},
+      }),
+    ).toBeNull();
+  });
+
+  it("accepts a live payload that does carry a token, so the assertions above are not rejecting everything", () => {
+    expect(
+      parseAskOsDirectivePayload({
+        kind: "confirm-action",
+        proposalId: 42,
+        token: "redeemable",
+        action: "hr.grantBonus",
+        summary: "s",
+        preview: {},
+      }),
+    ).toMatchObject({ token: "redeemable" });
   });
 });
