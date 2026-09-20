@@ -124,8 +124,8 @@ function MoodSparkline({ data }: { data: { date: string; avgMood: number }[] }) 
 function OverviewTab() {
   const { staggerContainer, fadeUp } = useMotionVariants();
   const { data: overview, isLoading, isError, error, refetch } = useEngagementOverview();
-  const { data: moodData, isLoading: moodLoading } = useOrgMoodAggregate();
-  const { data: recognitions, isLoading: recLoading } = useRecognitions();
+  const { data: moodData, isLoading: moodLoading, isError: moodError } = useOrgMoodAggregate();
+  const { data: recognitions, isLoading: recLoading, isError: recError } = useRecognitions();
   const { data: membersData } = useOrgMembers(1, 200);
   const canManage = useCan("hr:engagement:manage");
 
@@ -137,7 +137,7 @@ function OverviewTab() {
     return map;
   }, [membersData]);
 
-  const recentCount = recognitions?.length ?? 0;
+  const recentCount = recError ? null : (recognitions?.length ?? 0);
   const eom = overview?.employeeOfMonth?.top;
   const eomMember = eom ? memberById.get(eom.userId) : undefined;
   const eomName = eomMember ? getUserDisplayName(eomMember) : eom ? "Unknown" : null;
@@ -160,14 +160,16 @@ function OverviewTab() {
       >
         <motion.div variants={fadeUp}>
           <StatCardGrid cols={4}>
-            <StatCard
-              label="Recognitions"
-              value={recentCount}
-              hint="All time"
-              icon={Heart}
-              tone="red"
-              isLoading={recLoading}
-            />
+            {!recError && (
+              <StatCard
+                label="Recognitions"
+                value={recentCount ?? 0}
+                hint="All time"
+                icon={Heart}
+                tone="red"
+                isLoading={recLoading}
+              />
+            )}
             <StatCard
               label="Top Points"
               value={overview?.topLeaderboard?.[0]?.total ?? "—"}
@@ -176,32 +178,36 @@ function OverviewTab() {
               tone="amber"
               isLoading={isLoading}
             />
-            <StatCard
-              label="Mood Responses"
-              value={moodData?.reduce((acc, d) => acc + d.count, 0) ?? "—"}
-              hint="Aggregated"
-              icon={Smile}
-              tone="blue"
-              isLoading={moodLoading}
-            />
-            <StatCard
-              label="Avg Mood"
-              value={
-                moodData && moodData.length > 0
-                  ? (moodData.slice(-7).reduce((s, d) => s + d.avgMood, 0) / Math.min(moodData.slice(-7).length, 7)).toFixed(1)
-                  : "—"
-              }
-              hint="Last 7 days"
-              icon={Star}
-              tone="blue"
-              isLoading={moodLoading}
-            />
+            {!moodError && (
+              <StatCard
+                label="Mood Responses"
+                value={moodData?.reduce((acc, d) => acc + d.count, 0) ?? "—"}
+                hint="Aggregated"
+                icon={Smile}
+                tone="blue"
+                isLoading={moodLoading}
+              />
+            )}
+            {!moodError && (
+              <StatCard
+                label="Avg Mood"
+                value={
+                  moodData && moodData.length > 0
+                    ? (moodData.slice(-7).reduce((s, d) => s + d.avgMood, 0) / Math.min(moodData.slice(-7).length, 7)).toFixed(1)
+                    : "—"
+                }
+                hint="Last 7 days"
+                icon={Star}
+                tone="blue"
+                isLoading={moodLoading}
+              />
+            )}
           </StatCardGrid>
         </motion.div>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {canManage && (
+        {canManage && !moodError && (
           <div className="bg-card border border-border rounded-xl p-4 space-y-3">
             <p className="text-sm font-semibold text-foreground">Mood Trend (14 days)</p>
             {moodLoading ? (

@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Pencil, PartyPopper } from "lucide-react";
 import { PlusIcon, Trash2Icon, CheckIcon, XIcon } from "@animateicons/react/lucide";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 
@@ -46,11 +47,13 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
 
   const yearOptions = [currentYear - 2, currentYear - 1, currentYear, currentYear + 1];
 
-  const { data: holidaysList, isLoading } = useHrHolidaysForYear(selectedYear);
+  const { data: holidaysList, isLoading, isError, error, refetch } = useHrHolidaysForYear(selectedYear);
 
   const addMutation = useAddLegacyHoliday();
   const deleteMutation = useDeleteLegacyHoliday();
   const updateMutation = useUpdateLegacyHoliday();
+
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
   const handleMessageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setMessage(e.target.value), []);
@@ -247,6 +250,14 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
                 <Skeleton key={i} className="h-10 w-full rounded-xl" />
               ))}
             </div>
+          ) : isError ? (
+            <ErrorState
+              compact
+              className="border-0 bg-transparent shadow-none"
+              title="Couldn't load holidays"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+            />
           ) : holidaysList && holidaysList.length > 0 ? (
             <ul className="rounded-xl border border-border divide-y divide-border overflow-hidden">
               {holidaysList.map((h) => (
