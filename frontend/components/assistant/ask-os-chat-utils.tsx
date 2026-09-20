@@ -108,8 +108,10 @@ function confirmOutcomeCopy(action: string): string {
 
 function ConfirmDirectiveSlot({
   directive,
+  persisted,
 }: {
   directive: ConfirmActionDirective;
+  persisted: boolean;
 }) {
   const [confirmedResult, setConfirmedResult] = useState<Record<
     string,
@@ -120,6 +122,16 @@ function ConfirmDirectiveSlot({
   function handleCancelled() {
     setCancelled(true);
   }
+
+  if (persisted)
+    return (
+      <AskOsConfirmationCard
+        mode="record"
+        summary={directive.summary}
+        preview={directive.preview}
+        title={directive.title}
+      />
+    );
 
   if (confirmedResult !== null)
     return (
@@ -132,7 +144,7 @@ function ConfirmDirectiveSlot({
 
   return (
     <AskOsConfirmationCard
-      action={directive.action}
+      mode="live"
       summary={directive.summary}
       preview={directive.preview}
       token={directive.token}
@@ -174,6 +186,7 @@ export function AskOsBubble({
 
   const { directives: extracted, prose } = extractAskOsDirective(content);
   const directives = directivesProp ?? extracted;
+  const isPersistedTurn = directivesProp === undefined;
 
   const confirmDirectives = directives.filter(
     (d): d is ConfirmActionDirective => d.kind === "confirm-action",
@@ -202,17 +215,18 @@ export function AskOsBubble({
       <div className="min-w-0 max-w-[92%] flex-1 space-y-2 text-sm leading-6 text-foreground">
         {showChrome ? (
           <div className="space-y-2">
-            {confirmDirectives.map((directive) => (
-              <ConfirmDirectiveSlot
-                key={directive.proposalId}
-                directive={directive}
-              />
-            ))}
             {prose ? (
               <div className="break-words">
                 <MarkdownContent content={prose} />
               </div>
             ) : null}
+            {confirmDirectives.map((directive) => (
+              <ConfirmDirectiveSlot
+                key={directive.proposalId}
+                directive={directive}
+                persisted={isPersistedTurn}
+              />
+            ))}
             {showTyping ? <TypingDots reduce={reduce} /> : null}
           </div>
         ) : null}

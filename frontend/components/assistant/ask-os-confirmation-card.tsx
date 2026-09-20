@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -16,8 +17,8 @@ const PREVIEW_LABELS: Record<string, string> = {
   title: "Title",
 };
 
-interface ConfirmationCardProps {
-  action: string;
+type LiveProps = {
+  mode: "live";
   summary: string;
   preview: Record<string, unknown>;
   token: string;
@@ -26,12 +27,22 @@ interface ConfirmationCardProps {
   confirmLabel?: string;
   onConfirmed: (result: Record<string, unknown>) => void;
   onCancelled: () => void;
-}
+};
+
+type RecordProps = {
+  mode: "record";
+  summary: string;
+  preview: Record<string, unknown>;
+  title?: string;
+};
+
+type ConfirmationCardProps = LiveProps | RecordProps;
 
 function previewLabel(key: string): string {
   const mapped = PREVIEW_LABELS[key];
   if (mapped) return mapped;
-  return key.replace(/([A-Z])/g, " $1").replace(/[_-]+/g, " ").trim();
+  const spaced = key.replace(/([A-Z])/g, " $1").replace(/[_-]+/g, " ").trim();
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
 function PreviewFields({ preview }: { preview: Record<string, unknown> }) {
@@ -49,13 +60,25 @@ function PreviewFields({ preview }: { preview: Record<string, unknown> }) {
   );
 }
 
-function isExpired(expiresAt: string | undefined): boolean {
-  if (!expiresAt) return false;
-  return new Date(expiresAt) <= new Date();
+function msUntilExpiry(expiresAt: string | undefined): number | null {
+  if (!expiresAt) return null;
+  const expiry = new Date(expiresAt).getTime();
+  if (isNaN(expiry)) return null;
+  return expiry - Date.now();
 }
 
-export function AskOsConfirmationCard({
-  action: _action,
+function ConfirmationRecord({ summary, preview, title }: RecordProps) {
+  const cardTitle = title ?? summary;
+  return (
+    <div className="space-y-2">
+      <p className="text-[13px] font-medium leading-5 text-foreground">{cardTitle}</p>
+      <PreviewFields preview={preview} />
+      <p className="text-[11px] text-muted-foreground">Past proposal — view only.</p>
+    </div>
+  );
+}
+
+function ConfirmationLive({
   summary,
   preview,
   token,
@@ -64,11 +87,18 @@ export function AskOsConfirmationCard({
   confirmLabel,
   onConfirmed,
   onCancelled,
-}: ConfirmationCardProps) {
+}: LiveProps) {
   const { mutate, isPending } = useConfirmAction();
   const cardTitle = title ?? summary;
   const buttonLabel = confirmLabel ?? "Confirm";
-  const expired = isExpired(expiresAt);
+  const [expired, setExpired] = useState(() => (msUntilExpiry(expiresAt) ?? 1) <= 0);
+
+  useEffect(() => {
+    const remaining = msUntilExpiry(expiresAt);
+    if (remaining === null || remaining <= 0) return;
+    const id = setTimeout(() => setExpired(true), remaining);
+    return () => clearTimeout(id);
+  }, [expiresAt]);
 
   function handleConfirm() {
     mutate(token, {
@@ -113,4 +143,9 @@ export function AskOsConfirmationCard({
       </div>
     </div>
   );
+}
+
+export function AskOsConfirmationCard(props: ConfirmationCardProps) {
+  if (props.mode === "record") return <ConfirmationRecord {...props} />;
+  return <ConfirmationLive {...props} />;
 }

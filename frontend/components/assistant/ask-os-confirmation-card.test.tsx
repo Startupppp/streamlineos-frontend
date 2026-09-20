@@ -25,10 +25,12 @@ describe("a pending write is a compact proposal inside the message, not a nested
   it("names the email fields in plain language and hides the machine action slug", () => {
     render(
       <AskOsConfirmationCard
-        action="email.send"
+        mode="live"
         summary="Send email to adityachalla@gmail.com: testing streamlineos"
         preview={emailPreview}
         token="tok-1"
+        title="Send email"
+        confirmLabel="Send"
         onConfirmed={jest.fn()}
         onCancelled={jest.fn()}
       />,
@@ -49,10 +51,12 @@ describe("a pending write is a compact proposal inside the message, not a nested
   it("uses Send as the primary label for an email so Confirm is not a generic verb", () => {
     render(
       <AskOsConfirmationCard
-        action="email.send"
+        mode="live"
         summary="Send email to jane@example.com: Hello"
         preview={emailPreview}
         token="tok-1"
+        title="Send email"
+        confirmLabel="Send"
         onConfirmed={jest.fn()}
         onCancelled={jest.fn()}
       />,
@@ -70,10 +74,12 @@ describe("a pending write is a compact proposal inside the message, not a nested
 
     render(
       <AskOsConfirmationCard
-        action="email.send"
+        mode="live"
         summary="Send email"
         preview={emailPreview}
         token="tok-confirm"
+        title="Send email"
+        confirmLabel="Send"
         onConfirmed={onConfirmed}
         onCancelled={jest.fn()}
       />,
@@ -89,10 +95,12 @@ describe("a pending write is a compact proposal inside the message, not a nested
 
     render(
       <AskOsConfirmationCard
-        action="email.send"
+        mode="live"
         summary="Send email"
         preview={emailPreview}
         token="tok-1"
+        title="Send email"
+        confirmLabel="Send"
         onConfirmed={jest.fn()}
         onCancelled={onCancelled}
       />,
@@ -111,10 +119,12 @@ describe("a pending write is a compact proposal inside the message, not a nested
 
     render(
       <AskOsConfirmationCard
-        action="email.send"
+        mode="live"
         summary="Send email"
         preview={emailPreview}
         token="tok-1"
+        title="Send email"
+        confirmLabel="Send"
         onConfirmed={onConfirmed}
         onCancelled={jest.fn()}
       />,
@@ -123,5 +133,66 @@ describe("a pending write is a compact proposal inside the message, not a nested
 
     expect(onConfirmed).not.toHaveBeenCalled();
     expect(toastError).toHaveBeenCalledWith("Proposal expired");
+  });
+
+  it("falls back to the summary as card title and Confirm as button label when the backend supplies neither, so a tool with no action label entry still works", () => {
+    render(
+      <AskOsConfirmationCard
+        mode="live"
+        summary="Do something important"
+        preview={{}}
+        token="tok-1"
+        onConfirmed={jest.fn()}
+        onCancelled={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Do something important")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Confirm" })).toBeInTheDocument();
+  });
+});
+
+describe("a persisted confirmation card records the proposal without allowing re-execution", () => {
+  it("shows the card title and all preview fields in read-only form", () => {
+    render(
+      <AskOsConfirmationCard
+        mode="record"
+        summary="Send email to adityachalla@gmail.com: testing streamlineos"
+        preview={emailPreview}
+        title="Send email"
+      />,
+    );
+
+    expect(screen.getByText("Send email")).toBeInTheDocument();
+    expect(screen.getByText("adityachalla@gmail.com")).toBeInTheDocument();
+    expect(screen.getByText("testing streamlineos")).toBeInTheDocument();
+    expect(screen.getByText("Testing")).toBeInTheDocument();
+  });
+
+  it("renders no Confirm or Discard button when mode is record so the token cannot be resubmitted after a page refresh", () => {
+    render(
+      <AskOsConfirmationCard
+        mode="record"
+        summary="Send email to adityachalla@gmail.com: testing streamlineos"
+        preview={emailPreview}
+        title="Send email"
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: /send|confirm|discard/i })).not.toBeInTheDocument();
+    expect(mutate).not.toHaveBeenCalled();
+  });
+
+  it("shows the past-proposal copy so the read-only state reads as deliberate not broken", () => {
+    render(
+      <AskOsConfirmationCard
+        mode="record"
+        summary="Send email to adityachalla@gmail.com: testing streamlineos"
+        preview={emailPreview}
+        title="Send email"
+      />,
+    );
+
+    expect(screen.getByText("Past proposal — view only.")).toBeInTheDocument();
   });
 });

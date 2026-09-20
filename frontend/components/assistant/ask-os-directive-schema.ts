@@ -73,6 +73,7 @@ export function extractAskOsDirective(content: string): {
 
   for (let i = lines.length - 1; i >= 0; i -= 1) {
     const line = lines[i] ?? "";
+    if (line === "") continue;
     const d = parseAskOsDirective(line);
     if (d === null) break;
     directives.unshift(d);
