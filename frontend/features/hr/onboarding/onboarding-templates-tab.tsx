@@ -76,12 +76,12 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
 
   const handleSubmit = useCallback(() => {
     if (!name.trim()) {
-      toast.error("Template name is required");
+      toast.error("Plan name is required");
       return;
     }
     const validSteps = steps.filter((s) => s.title.trim().length > 0);
     if (validSteps.length === 0) {
-      toast.error("Add at least one step");
+      toast.error("Step title is required");
       return;
     }
     createTemplate.mutate(

@@ -66,7 +66,7 @@ export interface UpdateExternalReferralInput {
 }
 
 export function useExternalReferrals() {
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:requisitions:view", {
     queryKey: humanResourcesQueryKeys.hr.externalReferrals(),
     queryFn: ({ signal }) => apiClient.get<ExternalReferral[]>("/hr/recruitment/external-referrals", undefined, signal, externalReferralListContract),
     staleTime: 60_000,
@@ -75,7 +75,7 @@ export function useExternalReferrals() {
 
 export function useUpdateExternalReferral() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "external-referrals", "update"],
     mutationFn: ({ externalReferralId, ...data }: { externalReferralId: number } & UpdateExternalReferralInput) =>
       apiClient.patch<ExternalReferral>(`/hr/recruitment/external-referrals/${externalReferralId}`, data, undefined, externalReferralRowContract),
@@ -86,7 +86,7 @@ export function useUpdateExternalReferral() {
 }
 
 export function useExternalReferrers() {
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:requisitions:view", {
     queryKey: humanResourcesQueryKeys.hr.externalReferrers(),
     queryFn: ({ signal }) => apiClient.get<ExternalReferrer[]>("/hr/recruitment/external-referrers", undefined, signal, externalReferrerListContract),
     staleTime: 60_000,
@@ -95,7 +95,7 @@ export function useExternalReferrers() {
 
 export function useUpdateExternalReferrerStatus(referrerId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "external-referrers", "update-status", referrerId],
     mutationFn: (status: ExternalReferrerStatus) =>
       apiClient.patch<ExternalReferrer>(`/hr/recruitment/external-referrers/${referrerId}`, { status }, undefined, externalReferrerRowContract),

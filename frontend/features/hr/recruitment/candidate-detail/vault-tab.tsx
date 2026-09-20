@@ -4,6 +4,8 @@ import { useState, useCallback } from "react";
 import { Upload, FileText, ChevronDown, FolderLock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import { useCandidateVault } from "@/hooks/api/hr/recruitment";
 import type { BgvStatus as CandidateBgvStatus } from "@/types/hr";
@@ -32,7 +34,7 @@ export interface VaultTabProps {
 
 export function VaultTab(props: VaultTabProps) {
   const [showUpload, setShowUpload] = useState(false);
-  const { data: docs } = useCandidateVault(props.candidateId);
+  const { data: docs, isLoading, isError, refetch } = useCandidateVault(props.candidateId);
 
   const handleToggleUpload = useCallback(() => setShowUpload((p) => !p), []);
 
@@ -46,6 +48,26 @@ export function VaultTab(props: VaultTabProps) {
   );
 
   const totalDocuments = docs?.length ?? 0;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2].map((i) => (
+          <Skeleton key={i} className="h-32 w-full rounded-2xl" />
+        ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Unable to load verification documents"
+        description="Try again. If this keeps happening, contact an admin."
+        onRetry={() => void refetch()}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">

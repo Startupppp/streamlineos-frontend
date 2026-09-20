@@ -34,8 +34,8 @@ type FormValues = z.infer<typeof schema>;
 
 const EMPTY_VALUES: FormValues = {
   name: "",
-  lat: "",
-  lng: "",
+  lat: "12.9716",
+  lng: "77.5946",
   radiusMeters: 200,
 };
 
@@ -122,7 +122,7 @@ export function GeofenceFormSheet({ open, onOpenChange, fence }: Props) {
                     Latitude <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="12.9716" className="text-sm font-mono" {...field} />
+                    <Input placeholder="e.g. 13.0827" className="text-sm font-mono" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -137,7 +137,7 @@ export function GeofenceFormSheet({ open, onOpenChange, fence }: Props) {
                     Longitude <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="77.5946" className="text-sm font-mono" {...field} />
+                    <Input placeholder="e.g. 80.2707" className="text-sm font-mono" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

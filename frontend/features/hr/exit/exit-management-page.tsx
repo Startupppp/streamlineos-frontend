@@ -14,6 +14,7 @@ const exitLetterContract = lazyContract(() =>
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -106,11 +107,10 @@ export function ExitManagementPage() {
         title="Exit Management"
         subtitle="Resignations, exit interviews, and offboarding"
       >
-        <EmptyState
-          illustrationPreset="alert"
-          title="Failed to load resignations"
-          description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: handleRetry }}
+        <ErrorState
+          title="Unable to load resignations"
+          description="Try again. If this keeps happening, check your permissions or contact an admin."
+          onRetry={handleRetry}
         />
       </PageWrapper>
     );
@@ -121,7 +121,11 @@ export function ExitManagementPage() {
       title="Exit Management"
       subtitle="Resignations, exit interviews, and offboarding"
       actions={
-        !canApproveExit && !hasActiveResignation ? (
+        hasActiveResignation ? (
+          <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
+            Resignation pending
+          </span>
+        ) : (
           <AnimatedIconButton
             icon={PlusIcon}
             iconSize={14}
@@ -129,13 +133,9 @@ export function ExitManagementPage() {
             className="gap-1.5"
             onClick={handleOpenSheet}
           >
-            Submit Resignation
+            {canApproveExit ? "New Resignation" : "Submit Resignation"}
           </AnimatedIconButton>
-        ) : hasActiveResignation ? (
-          <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
-            Resignation pending
-          </span>
-        ) : null
+        )
       }
     >
       {!resignations?.length ? (
@@ -146,6 +146,14 @@ export function ExitManagementPage() {
             canApproveExit || isHR
               ? "Employee resignations will appear here once submitted."
               : "Submit a resignation to start the exit process."
+          }
+          action={
+            !hasActiveResignation
+              ? {
+                  label: canApproveExit ? "New Resignation" : "Submit Resignation",
+                  onClick: handleOpenSheet,
+                }
+              : undefined
           }
           compact
         />

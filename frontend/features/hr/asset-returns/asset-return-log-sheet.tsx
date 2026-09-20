@@ -29,6 +29,7 @@ interface AssetReturnLogSheetProps {
   condition: string;
   notes: string;
   notesError: string;
+  validationError?: string;
   isPending: boolean;
   onAssetChange: (id: string) => void;
   onEmployeeOverrideChange: (id: string) => void;
@@ -50,6 +51,7 @@ export function AssetReturnLogSheet({
   condition,
   notes,
   notesError,
+  validationError,
   isPending,
   onAssetChange,
   onEmployeeOverrideChange,
@@ -79,6 +81,11 @@ export function AssetReturnLogSheet({
       submitLabel="Log Return"
       isPending={isPending}
     >
+      {validationError && (
+        <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {validationError}
+        </div>
+      )}
       <div className="space-y-1.5">
         <label className="text-sm font-medium">
           Asset <span className="text-destructive">*</span>
