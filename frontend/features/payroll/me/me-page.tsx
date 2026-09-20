@@ -270,12 +270,12 @@ export function MyPayrollPageContent() {
             </StatCardGrid>
 
             <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide">
-              <TabsList className="w-full shrink-0 md:w-auto">
+              <TabsList className="shrink-0">
                 {sections.map((section) => (
                   <TabsTrigger
                     key={section.id}
                     value={section.id}
-                    className="gap-1.5 truncate"
+                    className="gap-1.5 whitespace-nowrap"
                   >
                     {section.label}
                   </TabsTrigger>
