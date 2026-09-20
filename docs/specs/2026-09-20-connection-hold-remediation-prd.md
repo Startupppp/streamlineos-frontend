@@ -57,7 +57,33 @@ Fix: `@NoTenantTransaction()` on the handler + each `db.transaction` becomes `ru
 
 - [x] H2
 
-### H3 — GST e-invoice filing — ⚠ BLOCKED, deliberately not shipped
+### H3 — GST e-invoice filing — ✅ DONE
+
+`modules/accounting/compliance/` — shipped after the blocker below was re-examined and found to be
+answerable without a live database. Kept in full, because the reasoning that nearly shipped a broken
+change is the useful part.
+
+`ComplianceService.fileDocument(orgId, documentType, documentId, adapter)` owns the flow and its
+transaction boundaries: one `runInNewTenantTransaction` for the reads (book, decision, acknowledgement
+fence, payload), the adapter call inside **no** transaction, one more for the result write and read-back.
+It returns a discriminated result so the controller keeps all five distinct error responses.
+`submitDocument` then carries `@NoTenantTransaction()`.
+
+**What unblocked it.** The blocker assumed RLS behaviour could only be observed against a live database.
+It cannot be observed, but it does not need to be: `42501` happens when a statement runs with no tenant
+GUC, and *that* is a structural property. `runInNewTenantTransaction` → `openTenantTransaction` →
+`withTenant` sets the GUC and `runWithTenantContext` installs the context the `DRIZZLE` proxy routes
+through, so proving no statement escapes those blocks is equivalent to proving no `42501`.
+`compliance-filing-connection-hold.spec.ts` runs the **real** primitive against a recording double and
+asserts exactly that, plus two transactions opened, `app.organization_id` set in each, and the adapter
+called with no context.
+
+Precedent, found while checking `@Idempotent` on the route: `POST /kb/ask` and the two reindex routes hit
+this identical problem and `DrizzleCommandFenceStore` was fixed for it —
+`command-fence-store-no-ambient-tx.spec.ts` records the live-schema measurement (`no GUC → ERROR`,
+`with GUC → passes`). So `@Idempotent` + `@NoTenantTransaction()` was already a proven-safe pairing.
+
+### H3 — the original blocking analysis (kept; its premise about the audit was right, its conclusion was not)
 `modules/accounting/compliance/transport/live-irp.adapter.ts:110` — government IRP endpoint, 15s budget,
 raw `fetch`, no breaker, no opt-out. The transaction IS held across it.
 
@@ -75,16 +101,26 @@ read + write. Wrapping those shared read methods individually would force a new 
 that already hold one — the C2 problem — so the boundary needs a new service method that owns the flow.
 
 `backend/CLAUDE.md` §8 is explicit that mocked tests do not prove an RLS change: "a swallowed 42501
-passes every static check." There is no `ComplianceController` e2e spec and no live database here, so
-this cannot be verified. Shipping an unverifiable change to tax filing is the wrong trade.
+passes every static check."
 
-**Plan when a live DB is available:** add `ComplianceService.fileDocument(orgId, book, type, id,
-adapter)` owning (1) one `runInNewTenantTransaction` for the reads, (2) the adapter call with no
-transaction, (3) one `runInNewTenantTransaction` for the upsert; return a discriminated result so the
-controller keeps its five distinct error responses; then `@NoTenantTransaction()` on `submitDocument`.
-Note `compliance-transport.spec.ts:192` text-scans for `this.compliance.submitToTransport(`.
+⚠ **Two errors in the above, both corrected when the item was reopened.**
 
-- [ ] H3 — blocked on a live database
+1. "There is no `ComplianceController` e2e spec" — wrong. `compliance.e2e-spec.ts` exists. It is a
+   service-level spec against a real `DATABASE_URL` rather than a controller e2e, so the conclusion
+   survived, but the statement as written was false and should have been checked before it was recorded.
+2. "This cannot be verified" — wrong, and it was the load-bearing claim. §8's warning is about
+   *mocked* tests standing in for RLS behaviour. The change does not depend on RLS behaviour; it
+   depends on no statement escaping a tenant transaction, which is structural and testable here. The
+   blocker generalised a rule past what it says.
+
+- [x] H3 — shipped, see above
+
+### H3 — carried forward
+
+`compliance-transport.spec.ts` text-scanned for `this.compliance.submitToTransport(` in two places, one
+of them a **negative** assertion that AR posting must never reach the transport. Renaming the entry
+point would have made that negative pass vacuously, so it now asserts the live name exists before
+asserting posting does not contain it.
 
 ### H4 — The third webhook dispatcher ✅ KEEP — not a duplicate
 `modules/build/core/projects-webhooks-dispatch.service.ts` — a third copy, unaudited. Determine whether it
@@ -135,7 +171,8 @@ five sites already known.**
 | H2 | `@NoTenantTransaction()` on `addons/purchase`. No DB write follows the provider call and `ai_credit_packs` has no RLS policy, so the opt-out is the whole fix. Both checkout routes pinned by `billing-checkout-connection-hold.spec.ts` incl. an anti-vacuity case. Commit `3c30139b4`. |
 | H5 | Behind `CronLeaseService.withLease`, keyed by `CELL_ID` so it dedups across replicas. `CronLeaseService` provided directly by RbacModule (the WorkflowsModule pattern) — no cycle, no 35-file move. Commit `90c00041c`. |
 | H6 | **Not a defect.** See above. |
-| H3 | **Blocked.** The proposed one-line fix would have caused `42501` on every e-invoice filing. See above. |
+| H3 | **Done.** `fileDocument` owns three phases; `@NoTenantTransaction()` on `submitDocument`. 9 tests in `compliance-filing-connection-hold.spec.ts`, bite-checked by moving one read outside its transaction (fails, names the right property) — note a read moved *inside* the new transaction but issued off `this.db` is NOT a regression, because the proxy routes it to that transaction. Gate route count 3478 → 3477, the opted-out route leaving the scan. Compliance suite 76/76. Commit `4d61f90c9`. |
+| H3 side-fix | `compliance-honesty.spec.ts` allowlisted `transport/` with a forward slash, so on Windows `relative()` returned `compliance\transport\…` and the gate guarding "never claim a document was filed" flagged the mock adapter. Failed locally, passed in CI — a platform-dependent gate. Normalised. |
 | H7 | `check:request-txn-outbound`. Baseline **3478 routes / 598 controllers / 8 frozen**. Shared scanner extracted to `scripts/lib/route-scan.mjs`; the sibling gate's output is byte-identical before and after, self-test still passes. Bite-checked with a planted `@Post` doing `fetch()` (exit 1, names the route; 0 after removal). Commit `09036acdb`. |
 
 ### The 8 frozen routes — the remaining work list
@@ -152,8 +189,10 @@ its own decision rather than a blanket opt-out. `webhooks#retryLog` is documente
 ### ⚠ Known recall gaps in the gate
 
 Two misses, by construction, both confirmed against real code:
-1. **A service arriving as a parameter.** `compliance.controller.ts#submitDocument` reaches `fetch` via
-   `adapter.submit(payload)`, where `adapter` is a local — so H3's own site is invisible to the gate.
+1. **A service arriving as a parameter.** `compliance.controller.ts#submitDocument` reached `fetch` via
+   `adapter.submit(payload)`, where `adapter` is a local — so H3's own site was invisible to the gate
+   while it was still a defect. H3 is fixed, but the blind spot is not: the next route that reaches the
+   network through a local or an injected-at-call-time port will be missed the same way.
 2. **A free function wrapping the client.** `crm-mailbox.controller.ts#sync` reaches Gmail/Outlook through
    `fetchGmailMessages(this.gmail, …)`. It really does hold the transaction and the gate does not see it.
 
