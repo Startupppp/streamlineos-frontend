@@ -288,13 +288,15 @@ export function OrgChartPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const searchInput = searchParams.get("q") ?? "";
+  const urlSearchValue = searchParams.get("q") ?? "";
+  const [searchInput, setSearchInput] = useState(urlSearchValue);
   const debouncedSearch = useDebouncedValue(searchInput.trim(), 300);
   const validSearch = debouncedSearch.length >= 2 ? debouncedSearch : undefined;
 
   function handleSearchChange(value: string) {
+    setSearchInput(value);
     const next = new URLSearchParams(searchParams.toString());
-    if (value.trim()) next.set("q", value);
+    if (value.trim()) next.set("q", value.trim());
     else next.delete("q");
     const query = next.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });

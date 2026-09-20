@@ -352,6 +352,7 @@ export function EmployeesListPage() {
             <EmployeesDirectoryStats
               loadedCount={employees.length}
               hasMore={Boolean(hasNextPage)}
+              statusFilter={filters.status}
             />
           </div>
 

@@ -7,7 +7,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCan } from "@/hooks/api/access";
 import { OrgCatalogTable } from "./org-catalog-table";
-import { HeadcountStats } from "./headcount-stats";
 import {
   useOrgJobRoles,
   useCreateJobRole,
@@ -71,7 +70,6 @@ export function OrgHubClient() {
       noInternalScroll
       contentClassName="flex flex-col gap-4 sm:gap-5"
     >
-      <HeadcountStats groupBy="department" />
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
         <TabsList className="w-full sm:w-auto">
           <TabsTrigger value="roles" className="flex-1 gap-1.5 sm:flex-none">
