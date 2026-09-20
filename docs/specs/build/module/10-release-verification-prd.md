@@ -1,0 +1,256 @@
+# BLD-10 — Release Verification and Rollout PRD
+
+> Acceptance reference only. Dispatch and status live in
+> [`Build execution`](../README.md); do not assign
+> or tick a checkbox in this file directly.
+
+## Outcome
+
+One reviewed frontend/backend revision pair is proven safe for real customer
+work. Static, mocked, database, browser, migration, provider, performance, and
+deployed evidence are distinguished. Failed or unrun checks remain open.
+
+## Entry Criteria
+
+- [ ] **BLD-10-001** every parent workstream in the Build-module README except
+  BLD-10 is complete.
+- [ ] **BLD-10-002** the subordinate Build sidebar tracker is complete,
+  including its remaining real-browser and external checks.
+- [ ] **BLD-10-003** BLD-01A, the source tree, navigation/access manifests, and
+  `frontend/PAGES.md` match; root `PAGES.md` records delivery evidence.
+- [ ] **BLD-10-004** frontend/backend revisions, migration set, environment,
+  feature flags, and test dataset are recorded.
+- [ ] **BLD-10-005** no unresolved decision can change route, data model,
+  authorization, cache, migration, or customer behavior.
+
+## Test Dataset
+
+The named disposable or staging environment includes:
+
+- freelancer with one standalone project;
+- agency with many clients and isolated project grants;
+- enterprise with multiple workspaces, products, programs, portfolios, teams,
+  restricted projects, and custom roles;
+- project with zero data;
+- project with more than one page in every primary collection;
+- project exceeding board, comments, activity, files, forms, and custom-field
+  continuation thresholds;
+- archived/deleted/moved records;
+- duplicate names across scopes;
+- stale versions and concurrent editors;
+- integrations healthy, disconnected, expired, rate limited, and unavailable;
+- external clients with different grants;
+- realistic skew, history, and high-cardinality filters.
+
+- [ ] **BLD-10-006** dataset creation is repeatable and contains no production
+  secrets or personal data.
+- [ ] **BLD-10-007** expected permissions and record counts are asserted before
+  journey tests begin.
+
+## Route and Navigation
+
+- [ ] **BLD-10-008** static route manifest self-test and gate pass.
+- [ ] **BLD-10-009** every generated final-route row direct-loads and
+  hard-refreshes; execution is split into browser packets of 5–10 related
+  routes rather than assigned as one task.
+- [ ] **BLD-10-010** sidebar, switcher, command palette, breadcrumbs, cards,
+  rows, metrics, notifications, emails, empty states, and error CTAs reach the
+  intended page.
+- [ ] **BLD-10-011** browser Back/Forward and deterministic back actions pass
+  with filters, overlays, dirty work, denied records, and stale history.
+- [ ] **BLD-10-012** removed routes have zero code caller and no physical page.
+- [ ] **BLD-10-013** malformed, missing, archived, wrong-parent, denied, and
+  wrong-tenant deep links show the correct state without leakage.
+
+## Authorization and Tenant Isolation
+
+Roles exercised:
+
+- organization owner;
+- Build administrator;
+- project manager;
+- product manager;
+- team member;
+- restricted/data-scoped member;
+- guest;
+- external client;
+- active member without Build administration;
+- revoked/suspended actor.
+
+- [ ] **BLD-10-014** every page and API has allow/deny coverage for applicable
+  roles and data scopes.
+- [ ] **BLD-10-015** reads, counts, search, filters, exports, bulk, reports,
+  option lists, and caches preserve identical scope.
+- [ ] **BLD-10-016** cross-tenant IDs and cursors reveal no existence or
+  metadata.
+- [ ] **BLD-10-017** access revocation removes navigation, cached data,
+  outstanding proposals, portal access, and unsafe actions immediately.
+- [ ] **BLD-10-018** client portal projections expose only explicitly granted
+  records and fields.
+
+## Page and Customer Journey Matrix
+
+- [ ] **BLD-10-019** organization Command Center, Projects, All Work, My Work,
+  Inbox, Approvals, Roadmap, Goals, Programs, Portfolios, Teams, Templates,
+  Customers, and Settings pass.
+- [ ] **BLD-10-020** workspace Overview, Projects, Products, Teams, All Work,
+  Goals, Roadmap, and Settings pass.
+- [ ] **BLD-10-021** product Overview, Projects, Roadmap, Goals, Feedback,
+  Insights, Settings, and client progress pass.
+- [ ] **BLD-10-022** project Overview, Issues, Backlog, Triage, Epics, Modules,
+  Cycles, Milestones, Releases, Goals, Updates, Files, Reports, and Workload
+  pass.
+- [ ] **BLD-10-023** QA, approvals, changes, incidents, risks, decisions,
+  meetings, Chat, Wiki, Whiteboard, forms, Feedbucket, budget, portal preview,
+  and every final project Settings route pass.
+- [ ] **BLD-10-024** ticket create/detail/edit/comment/relation/move/bulk/archive
+  and client visibility pass.
+- [ ] **BLD-10-075** one evidence row per generated final-route ID and
+  applicable persona records direct load, primary customer job, actions,
+  filters/views/paging, overlays, states, responsive behavior, accessibility,
+  API/permission/data scope, cache behavior, and browser result.
+- [ ] **BLD-10-076** internal `/portal/*`, external `/client-portal/*`,
+  invitation acceptance, published Forms, shared Board, and public Roadmap pass
+  identity, expiry, revocation, replay, rate-limit, projection, and
+  cross-tenant tests.
+
+Each check includes populated, empty, no-results, denied, loading, refresh,
+offline/stale, error, conflict, and partial-success states where applicable.
+
+## Filters, Views, and Pagination
+
+- [ ] **BLD-10-025** URL, saved view, API predicate, count, export, and bulk
+  selection parity tests pass.
+- [ ] **BLD-10-026** every filter supports valid, invalid, empty, archived,
+  inaccessible, and cross-tenant option cases.
+- [ ] **BLD-10-027** board/list/table/timeline preserve compatible state and
+  expose all matching rows beyond the first page.
+- [ ] **BLD-10-028** per-column board counts and continuation match active
+  filters.
+- [ ] **BLD-10-029** cursor traversal has no duplicate/omitted rows in the
+  documented consistency model.
+- [ ] **BLD-10-030** pagination, virtualization, and bulk selection pass at
+  realistic scale.
+
+## Forms and Mutations
+
+- [ ] **BLD-10-031** request/form/database parity gate and self-test pass.
+- [ ] **BLD-10-032** required, optional, null, boundary, Unicode, enum, date,
+  URL, relation, file, and rich-text cases pass.
+- [ ] **BLD-10-033** dirty-state protection covers every inventoried surface
+  and exit.
+- [ ] **BLD-10-034** duplicate submit, timeout retry, stale version, conflict,
+  permission loss, and organization switch are safe.
+- [ ] **BLD-10-035** bulk and import report partial outcomes accurately and
+  retry failed targets idempotently.
+- [ ] **BLD-10-036** drag and keyboard move enforce workflow, WIP, concurrency,
+  activity, and cache behavior atomically.
+
+## Database, Migration, and Recovery
+
+- [ ] **BLD-10-037** migration generation/journal integrity checks pass.
+- [ ] **BLD-10-038** forward migration passes on empty and production-shaped
+  disposable databases.
+- [ ] **BLD-10-039** backfill counts, unmapped records, constraints, indexes,
+  and query plans are recorded.
+- [ ] **BLD-10-040** application compatibility during deployment order is
+  proven.
+- [ ] **BLD-10-041** backup/restore or approved forward recovery drill passes.
+- [ ] **BLD-10-042** canonical iteration and defect migrations preserve all
+  references, history, events, views, automation, and analytics.
+
+## Query, Cache, and Performance
+
+- [ ] **BLD-10-043** endpoint query-count budgets pass.
+- [ ] **BLD-10-044** representative `EXPLAIN (ANALYZE, BUFFERS)` plans use the
+  intended tenant-leading indexes without unbounded scans.
+- [ ] **BLD-10-045** BLD-06 p50/p95/p99 budgets pass under agreed concurrency.
+- [ ] **BLD-10-046** cache writer/invalidation tests pass for create, update,
+  move, bulk, archive, restore, revoke, rollback, and cache outage.
+- [ ] **BLD-10-047** client first-use, background refresh, view switch, and
+  large collection responsiveness meet budgets.
+- [ ] **BLD-10-048** no N+1 or request storm appears in traces.
+
+## Integrations and Side Effects
+
+- [ ] **BLD-10-049** CRM, Calendar, Meetings, Files/Documents, Knowledge,
+  Timesheets, Accounting, Goals, Chat/Mail, Notifications, Integrations, AI,
+  and Client Portal contract tests pass where enabled.
+- [ ] **BLD-10-050** source deleted, access revoked, token expired, provider
+  unavailable, timeout, rate limit, duplicate event, replay, and poison event
+  behaviors pass.
+- [ ] **BLD-10-051** durable outbox and idempotency evidence proves committed
+  writes are neither lost nor duplicated.
+- [ ] **BLD-10-052** provider transactions use named test accounts and perform
+  no unintended external side effects.
+
+## Visual, Responsive, and Accessibility
+
+- [ ] **BLD-10-053** approved light/dark screenshots cover all page anatomies,
+  overlay levels, empty/error states, and dense populated states.
+- [ ] **BLD-10-054** 320, 375, 768, 1024, and 1440 CSS pixel journeys pass.
+- [ ] **BLD-10-055** keyboard-only journeys pass with visible focus and no trap.
+- [ ] **BLD-10-056** screen-reader journeys pass for navigation, filters,
+  board, table, ticket, form errors, bulk result, and portal.
+- [ ] **BLD-10-057** contrast, 200% zoom, forced colors, reduced motion, and
+  touch target checks pass.
+- [ ] **BLD-10-058** global primitive changes have focused non-Build regression
+  evidence.
+
+## AI and Agent Safety
+
+- [ ] **BLD-10-059** scoped context, citations, stale data, denied data, prompt
+  injection, proposal diff, confirmation, expiration, and reauthorization pass.
+- [ ] **BLD-10-060** duplicate confirmation/retry cannot execute twice.
+- [ ] **BLD-10-061** credit exhaustion and AI outage leave deterministic Build
+  workflows usable.
+- [ ] **BLD-10-062** usage metering, audit, retention, and client publication
+  rules pass.
+
+## Repository Gates
+
+Exact package commands and results are recorded at execution time.
+
+- [ ] **BLD-10-063** focused frontend unit/contract suites pass.
+- [ ] **BLD-10-064** focused backend unit and controller e2e suites pass.
+- [ ] **BLD-10-065** frontend and backend type checks/builds pass as applicable.
+- [ ] **BLD-10-066** lint on changed files reports no introduced errors.
+- [ ] **BLD-10-067** route, permission, validation, schema, migration,
+  architecture, and file-size gates pass.
+- [ ] **BLD-10-068** cycle self-tests pass before cycle gates; resolved import
+  counts prove the gates are non-vacuous.
+- [ ] **BLD-10-069** dead-code removals have module-graph and real-build proof.
+
+## Rollout
+
+- [ ] **BLD-10-070** rollout order, migration window, feature flags, tenant
+  cohort, and abort criteria are documented.
+- [ ] **BLD-10-071** dashboards and alerts cover error rate, latency, slow
+  queries, queue/outbox lag, provider failures, cache failures, denied access
+  anomalies, and client portal errors.
+- [ ] **BLD-10-072** support has known symptoms, correlation lookup, customer
+  workaround, and escalation owner.
+- [ ] **BLD-10-073** rollback/forward-fix procedure preserves writes made after
+  deployment.
+- [ ] **BLD-10-074** staged rollout completes with monitored soak evidence
+  before general availability.
+
+## Sign-Off
+
+- [ ] **BLD-10-A01** Product signs page disposition, terminology, workflows,
+  baseline, and deliberate non-goals.
+- [ ] **BLD-10-A02** Frontend signs route, state, responsive, accessibility,
+  cache, and browser evidence.
+- [ ] **BLD-10-A03** Backend signs contracts, authorization, transactions,
+  idempotency, query plans, and performance.
+- [ ] **BLD-10-A04** Security signs tenant isolation, client grants,
+  integrations, secrets, files, and AI actions.
+- [ ] **BLD-10-A05** Database owner signs migrations, constraints, indexes,
+  recovery, and data reconciliation.
+- [ ] **BLD-10-A06** QA signs persona journeys, regressions, and residual risks.
+- [ ] **BLD-10-A07** Operations signs deployment, monitoring, alerting,
+  rollback, and support readiness.
+
+The release remains incomplete while any required checkbox is open. Residual
+risk must name impact, evidence, owner, mitigation, and review date; it is not a
+substitute for a failed required check.

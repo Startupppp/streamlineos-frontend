@@ -51,16 +51,21 @@ Build has four internal scopes:
 3. Managed product
 4. Project
 
-A project belongs to a PM workspace. A project may optionally belong to a managed product.
+A project may belong to a PM workspace and may belong to a managed product.
+Standalone projects remain first-class for freelancers and small teams. When a
+managed product has a workspace, any linked project must use that same
+workspace.
 
 The resulting hierarchy is:
 
 ```text
 Organization
-└── PM workspace
-    ├── Managed product
-    │   └── Linked project
-    └── Standalone project
+├── PM workspace
+│   ├── Managed product
+│   │   └── Linked project
+│   └── Workspace project
+├── Managed product without a workspace
+└── Standalone project
 ```
 
 Portfolios and programs are organization-level rollups across projects. Delivery teams may serve multiple products and projects. They are not parent nodes in the scope selector.
@@ -110,7 +115,7 @@ The sidebar has four zones:
 
 - Inbox
 - Assigned to me
-- Drafts
+- Drafts, opening `/build/inbox?view=drafts`
 
 These labels never change meaning with scope. Counts are loaded independently and remain bounded.
 

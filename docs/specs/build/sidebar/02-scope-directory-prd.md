@@ -1,8 +1,12 @@
 # BSN-02 — Scope Directory and Discovery PRD
 
+> Acceptance reference only. Dispatch and status live in
+> [`Build execution`](../README.md); do not assign
+> or tick a checkbox in this file directly.
+
 ## Tracker
 
-Completion is recorded only in the Master Checklist of
+Acceptance completion is recorded only in the Master Acceptance Roll-up of
 [`README.md`](./README.md). Populate the Evidence Log before checking that
 parent box.
 
@@ -34,9 +38,10 @@ Organization
     └── Standalone project
 ```
 
-Portfolios, programs, and teams are not selector parents. A project always has a
-PM workspace and may additionally have a managed product that belongs to the
-same workspace.
+Portfolios, programs, and teams are not selector parents. A project may be
+standalone with no PM workspace. When a project has a managed product, the
+product and project must belong to the same PM workspace when either side has a
+workspace; mismatched non-null workspaces are invalid.
 
 ## Search and Pagination
 

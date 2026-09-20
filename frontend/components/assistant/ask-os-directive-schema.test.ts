@@ -225,6 +225,18 @@ describe("Ask OS directive encoding stays on the message, not a separate footer"
     expect(appendAskOsDirective(encoded, [connect])).toBe(encoded);
   });
 
+  it("extracts directives from a message that has a trailing newline so LLM responses are handled correctly", () => {
+    const encoded = appendAskOsDirective(
+      "I can search the knowledge base after you connect mail.",
+      [connect],
+    );
+    const withTrailingNewline = `${encoded}\n`;
+    expect(extractAskOsDirective(withTrailingNewline)).toEqual({
+      directives: [connect],
+      prose: "I can search the knowledge base after you connect mail.",
+    });
+  });
+
   it("accumulates N directives in order so a multi-action turn persists correctly", () => {
     const encoded = appendAskOsDirective("", [confirmEmail, connect]);
     const { directives, prose } = extractAskOsDirective(encoded);

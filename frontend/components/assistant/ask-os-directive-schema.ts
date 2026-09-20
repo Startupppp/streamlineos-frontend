@@ -67,7 +67,7 @@ export function extractAskOsDirective(content: string): {
   directives: AskOsDirective[];
   prose: string;
 } {
-  const lines = content.split("\n");
+  const lines = content.trimEnd().split("\n");
   const directives: AskOsDirective[] = [];
   let proseEnd = lines.length;
 

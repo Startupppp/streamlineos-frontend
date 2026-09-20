@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useState, type CSSProperties } from "react";
-import { MoveVertical } from "lucide-react";
+import { MoveVerticalIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { KbXIcon } from "@/features/wiki/lib/kb-icons";
 import { resolveImageUrl } from "@/lib/utils";
 import { COVER_GRADIENT_PRESETS } from "./page-cover-picker";
@@ -144,10 +145,17 @@ export default function PageCover({
       {isEditable && !repositioning && (
         <div className="absolute bottom-3 right-4 flex gap-2 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
           {!parsed.isGradient && (
-            <Button size="sm" variant="secondary" className="h-9 text-xs" onClick={handleStartReposition}>
-              <MoveVertical className="mr-1 h-3 w-3" />
+            <AnimatedIconButton
+              size="sm"
+              variant="secondary"
+              className="h-9 text-xs"
+              icon={MoveVerticalIcon}
+              iconSize={12}
+              iconClassName="mr-1"
+              onClick={handleStartReposition}
+            >
               Reposition
-            </Button>
+            </AnimatedIconButton>
           )}
           <Button size="sm" variant="secondary" className="h-9 text-xs" onClick={onChangeCover}>
             Change

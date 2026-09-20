@@ -1,8 +1,12 @@
 # BSN-04 — Access and Lifecycle Safety PRD
 
+> Acceptance reference only. Dispatch and status live in
+> [`Build execution`](../README.md); do not assign
+> or tick a checkbox in this file directly.
+
 ## Tracker
 
-Completion is recorded only in the Master Checklist of
+Acceptance completion is recorded only in the Master Acceptance Roll-up of
 [`README.md`](./README.md). Populate the Evidence Log before checking that
 parent box.
 

@@ -2,13 +2,16 @@
 
 ## Status
 
-Active implementation tracker and the single indexed task source for Build
-sidebar completion. The product direction lives in
-[`docs/superpowers/specs/2026-09-19-build-sidebar-design.md`](../../superpowers/specs/2026-09-19-build-sidebar-design.md).
-This folder turns that design into bounded delivery PRDs without redefining it.
+Normative sidebar acceptance catalog and historical evidence for Build sidebar
+completion. The product direction lives in
+[`docs/superpowers/specs/2026-09-19-build-sidebar-design.md`](../../../superpowers/specs/2026-09-19-build-sidebar-design.md).
+This folder preserves that design and its evidence without redefining it.
 
-No `architecture-refactor/prd/completion-plan.md` exists in this repository.
-Until one is restored, treat this README Master Checklist as the delivery lane.
+The only agent scheduler is the
+[`Build execution` ledger](../README.md), reached through the
+restored `architecture-refactor/prd/completion-plan.md` pointer. The checkboxes
+here are roll-up acceptance criteria, not agent assignments. Agents must not
+claim or tick them directly.
 
 ## Scope
 
@@ -43,10 +46,11 @@ These facts are baseline evidence, not proof that any PRD below is complete.
 A later PRD may inspect earlier owners. It must not re-implement their contracts
 or keep a second competing definition.
 
-## Master Checklist
+## Master Acceptance Roll-up
 
-Complete the PRDs in this order. A parent checkbox may be marked only after every
-required checkbox in that PRD is checked and its evidence section is populated.
+Roll up the PRDs in this order. Dispatch work only from the Build execution
+ledger. A parent checkbox may be marked only after every required criterion in
+that PRD is satisfied and its evidence section is populated.
 
 - [ ] [BSN-01 — Scope navigation parity](./01-scope-navigation-prd.md)
 - [ ] [BSN-02 — Scope directory and discovery](./02-scope-directory-prd.md)
@@ -99,10 +103,10 @@ authenticated browser session move that number to roughly 38.
 
 ## Completion Protocol
 
-The Master Checklist above is the only complete/incomplete source for BSN-01
-through BSN-05. Child PRDs list only remaining TODOs. Completed implementation
-requirements move to their Completed Implementation Inventory and Evidence Log
-so a finished checkbox is not retained as a second work queue.
+The Master Acceptance Roll-up above is the acceptance source for BSN-01 through
+BSN-05. Packet status and reservations live only in the Build execution ledger.
+Child PRDs preserve remaining criteria and historical evidence; they are not a
+second agent work queue.
 
 Every TODO follows these rules:
 

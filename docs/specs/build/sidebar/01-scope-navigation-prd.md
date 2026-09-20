@@ -1,8 +1,12 @@
 # BSN-01 — Scope Navigation Parity PRD
 
+> Acceptance reference only. Dispatch and status live in
+> [`Build execution`](../README.md); do not assign
+> or tick a checkbox in this file directly.
+
 ## Tracker
 
-Completion is recorded only in the Master Checklist of
+Acceptance completion is recorded only in the Master Acceptance Roll-up of
 [`README.md`](./README.md). Populate the Evidence Log before checking that
 parent box.
 
@@ -16,7 +20,7 @@ of organization or project pages.
 ## Dependencies
 
 - Design source:
-  [`2026-09-19-build-sidebar-design.md`](../../superpowers/specs/2026-09-19-build-sidebar-design.md)
+  [`2026-09-19-build-sidebar-design.md`](../../../superpowers/specs/2026-09-19-build-sidebar-design.md)
 - Current resolver: `frontend/lib/build/build-scope.ts`
 - Current catalog: `frontend/lib/build/build-nav-model.ts`
 - Backend remains the owner of scope filtering and authorization.

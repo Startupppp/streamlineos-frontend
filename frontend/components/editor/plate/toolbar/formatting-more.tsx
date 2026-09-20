@@ -1,13 +1,14 @@
 'use client';
 
-import { Minus, MoreHorizontal } from 'lucide-react';
+import { Minus } from 'lucide-react';
+import { EllipsisIcon } from '@animateicons/react/lucide';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
 import type { UploadedEditorMedia } from '@/components/editor/plate/upload-media';
-import { Button } from '@/components/ui/button';
+import { AnimatedIconButton } from '@/components/ui/animated-icon-button';
 import { ToolbarButton } from './toolbar-button';
 import { ColorButtons } from './color-buttons';
 import { AlignDropdown } from './align-dropdown';
@@ -37,15 +38,15 @@ export function FormattingMore({ uploadFile }: FormattingMoreProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button
+        <AnimatedIconButton
           type="button"
           variant="ghost"
           size="icon-sm"
+          icon={EllipsisIcon}
+          iconSize={16}
           aria-label="Insert and format"
           title="Insert and format"
-        >
-          <MoreHorizontal className="size-4" />
-        </Button>
+        />
       </PopoverTrigger>
       <PopoverContent align="start" className="flex w-[min(20rem,calc(100vw-2rem))] flex-wrap items-center gap-0.5 p-2">
         <ColorButtons />
