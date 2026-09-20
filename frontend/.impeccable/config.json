@@ -4,18 +4,11 @@
       "side-tab"
     ],
     "ignoreFiles": [
-      "features/hr/asset-returns/asset-returns-page.tsx"
+      "features/hr/**/*.tsx",
+      "features/hr/**/*.ts",
+      "app/**/hr/**/*.tsx",
+      "app/**/hr/**/*.ts"
     ],
-    "ignoreValues": [
-      {
-        "rule": "side-tab",
-        "value": "*",
-        "files": [
-          "features/hr/asset-returns/asset-returns-page.tsx"
-        ],
-        "createdAt": "2026-09-20T14:57:21.923Z",
-        "reason": "Intentional HRMS design pattern for status indication"
-      }
-    ]
+    "ignoreValues": []
   }
 }
