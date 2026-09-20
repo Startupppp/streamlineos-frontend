@@ -175,18 +175,78 @@ five sites already known.**
 | H3 side-fix | `compliance-honesty.spec.ts` allowlisted `transport/` with a forward slash, so on Windows `relative()` returned `compliance\transport\…` and the gate guarding "never claim a document was filed" flagged the mock adapter. Failed locally, passed in CI — a platform-dependent gate. Normalised. |
 | H7 | `check:request-txn-outbound`. Baseline **3478 routes / 598 controllers / 8 frozen**. Shared scanner extracted to `scripts/lib/route-scan.mjs`; the sibling gate's output is byte-identical before and after, self-test still passes. Bite-checked with a planted `@Post` doing `fetch()` (exit 1, names the route; 0 after removal). Commit `09036acdb`. |
 
+### H8 — the gate was wrong in both directions ✅ DONE
+
+The frozen baseline of 8 was not the true set. Verifying the gate's own output against source found
+three defects in it:
+
+| Defect | Effect |
+|---|---|
+| `Pick<EmailOutboxService, …>` resolved to `Pick` | The walk stopped one hop short. **Both** automation rule-test routes reach `sendEmailOnceDirect` through that shape and read as clean. |
+| `registerAfterCommit` / `runOutsideTenantContext` / `void` counted as holds | Eight routes across e-sign, leads and HR reported as holding a connection they provably release first. |
+| `seen` was a global visited set | A node explored on one branch at a deep hop blocked a shallower path elsewhere. Now a path-local cycle guard. |
+
+Depth raised 3 → 6, because the two real holds sit at hop 5. New baseline **8 holds, all verified**, and
+every frozen entry carries the decision that put it there. A frozen route that stops reaching the
+network now fails the gate instead of silently re-freezing. Commit `4e994f3c7`.
+
+**Ten candidates were verified hop-by-hop; two were real.**
+
+| Verdict | Routes |
+|---|---|
+| TRUE POSITIVE | `automation#testAutomation`, `support-automations#testAutomation` — same six-hop chain, awaited, no opt-out |
+| DETACHED (not a hold) | `sign-admin#runExpirationSweep`, `sign-envelopes#send`, `sign-envelopes#voidEnvelope`, `leads#create`, `leads#update`, `employees#onboard`, `employees#onboardBulk`, `leaves#approve` |
+
+`leaves#approve` is the instructive one: `afterApproved` **is** awaited, but `NotificationDispatchService.emit`
+detects the ambient context, writes an outbox intent and defers delivery. Awaited ≠ held.
+
+### H9 — HR webhook deliveries were never stamped ✅ DONE
+
+Not a hold — the opposite. `testSubscription` and `redeliver` fired `attemptDelivery` with `void`, so the
+request transaction committed and its connection returned to the pool while `fetch` was still in flight.
+The status write then resolved onto that dead `tx` through the tenant proxy. `hr_webhook_deliveries` has
+no RLS policy, so this never produced the `42501` that makes the same mistake loud elsewhere — it either
+threw into a `void` or issued a statement on a connection another request had since borrowed.
+
+Effect: a webhook that really was delivered stayed `pending`, and the retry sweep sent it **again**.
+
+Fixed with the pattern `webhooks-dispatch.service.ts:61-66` already documents. Commit `f1915defd`.
+
+### Two holds that must NOT be opted out — the opt-out is worse than the hold
+
+Both were audited before being left frozen, and both would have been shipped as one-line "fixes".
+
+**`notifications-dispatch#dispatch`.** `email_outbox` and `email_suppressions` carry *nullable-aware* RLS,
+and the outbox row takes its org from the ambient context. With no context the row is written as a
+`PLATFORM` row **instead of failing** — the send silently loses tenant attribution, and the suppression
+read silently misses org-specific entries. A silent cross-tenant data defect in place of a slow request.
+
+**`feedbucket#createTicketFromAnalysis`.** Splitting it naively creates **duplicate tickets**. The only
+guard against a second ticket is `submission.linkedTicketId`, written *after* `createFromFeedback`; today
+one ambient transaction makes them atomic. Split them, and a failure between the two leaves a ticket with
+no link — and the retry (no `@Idempotent`, no unique constraint) makes another. Needs an idempotency
+fence first. Its sibling `analyzeSubmission` also holds the `org_ai_credits` row locked for the whole 60s,
+since credits are reserved before the provider call and settled after, both on the ambient transaction.
+
 ### The 8 frozen routes — the remaining work list
 
-`projects-webhooks#sendTest` · `notifications-dispatch#dispatch` ·
-`feedbucket#analyzeSubmission` · `feedbucket#createTicketFromAnalysis` ·
-`hr-webhooks#redeliver` · `hr-webhooks#test` · `support-reports#getOverview` ·
-`webhooks#retryLog`
+`automation#testAutomation` · `support-automations#testAutomation` · `projects-webhooks#sendTest` ·
+`notifications-dispatch#dispatch` · `feedbucket#analyzeSubmission` ·
+`feedbucket#createTicketFromAnalysis` · `support-reports#getOverview` · `webhooks#retryLog`
 
-Several are deliberate synchronous test-pings where the user is shown the delivery result, so each needs
-its own decision rather than a blanket opt-out. `webhooks#retryLog` is documented in
-`webhooks-dispatch.service.ts:64-66` as intentionally reusing the live request transaction.
+Settled, needing no work: `webhooks#retryLog` (documented in `webhooks-dispatch.service.ts:61-66` as
+intentionally reusing the live request transaction, because the log insert must commit with the retry)
+and `support-reports#getOverview` (Redis rather than a provider, read-only, 3s cap with a direct-query
+fallback).
 
-### ⚠ Known recall gaps in the gate
+Blocked on a prerequisite, not on effort: `notifications-dispatch#dispatch` needs outbox scope resolution
+fixed first, and `feedbucket#createTicketFromAnalysis` needs an idempotency fence — see above.
+
+The four rule-test / send-test routes are deliberate synchronous pings where the user is shown the
+delivery result. Each needs its own product decision about whether that result is worth a pooled
+connection, rather than a blanket opt-out.
+
+### ⚠ Known recall gaps in the gate — one closed, one open
 
 Two misses, by construction, both confirmed against real code:
 1. **A service arriving as a parameter.** `compliance.controller.ts#submitDocument` reached `fetch` via
@@ -194,6 +254,10 @@ Two misses, by construction, both confirmed against real code:
    while it was still a defect. H3 is fixed, but the blind spot is not: the next route that reaches the
    network through a local or an injected-at-call-time port will be missed the same way.
 2. **A free function wrapping the client.** `crm-mailbox.controller.ts#sync` reaches Gmail/Outlook through
-   `fetchGmailMessages(this.gmail, …)`. It really does hold the transaction and the gate does not see it.
+   `fetchGmailMessages(this.gmail, …)` and then `gmail.listMessages(…)` on a *parameter*. The gate now
+   indexes exported functions and resolves declared parameter types, so both hops are followed — but this
+   route is still missed, because the receiver is a Composio client whose own outbound call is further
+   away than the depth limit. **Still open, still a real hold.**
 
-Precision is high; recall is not proven. A green gate is not a licence to assume the rule holds.
+Recall is measured, not assumed, and it is not 100%. A green gate is not a licence to assume the rule
+holds — the gate's own baseline was wrong in both directions until it was checked against source.
