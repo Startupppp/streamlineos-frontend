@@ -52,7 +52,7 @@ function HolidayFormInner({
                   <FormItem>
                     <FormLabel>Holiday Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Independence Day" {...field} />
+                      <Input placeholder="e.g. Independence Day" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

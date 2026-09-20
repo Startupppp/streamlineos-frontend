@@ -25,9 +25,9 @@ export const emptyPolicyDefaults: PolicyFormValues = {
   carryForwardDays: "0",
   encashable: false,
   probationRestricted: false,
-  name: "",
+  name: "Annual Leave Policy",
   leaveTypeId: "",
-  accrualRate: "",
+  accrualRate: "12",
   maxBalance: "",
   effectiveFrom: "",
 };

@@ -199,13 +199,13 @@ export function PolicyFormSheet({
                   control={form.control}
                   name="name"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Policy Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Annual Leave Policy" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                  <FormItem>
+                    <FormLabel>Policy Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Sick Leave Policy" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                   )}
                 />
                 <FormField
@@ -313,15 +313,15 @@ export function PolicyFormSheet({
                     name="accrualRate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Accrual Rate (days)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.5"
-                            placeholder="12"
-                            {...field}
-                          />
-                        </FormControl>
+                      <FormLabel>Accrual Rate (days)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.5"
+                          placeholder="e.g. 15"
+                          {...field}
+                        />
+                      </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}

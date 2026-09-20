@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { addDays, format } from "date-fns";
+import { addDays, format, startOfWeek, nextMonday } from "date-fns";
 import { toast } from "sonner";
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -27,6 +27,15 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+function getNextMonday(): string {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  if (dayOfWeek === 1) {
+    return format(today, "yyyy-MM-dd");
+  }
+  return format(nextMonday(today), "yyyy-MM-dd");
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -38,7 +47,7 @@ export function CreateRosterSheet({ open, onOpenChange }: Props) {
     resolver: zodResolver(schema),
     defaultValues: {
       name: "",
-      weekStart: format(new Date(), "yyyy-MM-dd"),
+      weekStart: getNextMonday(),
     },
   });
 

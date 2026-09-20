@@ -110,9 +110,13 @@ export function LeaveTypesManager({ canManage }: { canManage: boolean }) {
   }
 
   function handleSave() {
+    if (!editor.name.trim()) {
+      toast.error("Name is required");
+      return;
+    }
     const days = parseInt(editor.days, 10);
-    if (!editor.name.trim() || Number.isNaN(days) || days < 0 || days > 365) {
-      toast.error("Enter a name and a days-per-year value between 0 and 365");
+    if (Number.isNaN(days) || days < 0 || days > 365) {
+      toast.error("Days per year must be between 0 and 365");
       return;
     }
     if (editor.editing) {
