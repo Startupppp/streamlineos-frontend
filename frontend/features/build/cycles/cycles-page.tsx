@@ -2,11 +2,13 @@
 
 import { useState, useCallback } from "react";
 import { useCycles, useCreateCycle } from "@/hooks/api/build";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { formatShortDate } from "@/lib/date-utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
@@ -88,9 +90,10 @@ interface CyclesPageProps {
 
 export function CyclesPage({ projectId }: CyclesPageProps) {
   const [createOpen, setCreateOpen] = useState(false);
+  const canView = useCan("build:view");
   const canManage = useCan("build:workspace:manage");
 
-  const { data: cycles, isLoading, isError, refetch } = useCycles(projectId);
+  const { data: cycles, isLoading, isError, error, refetch } = useCycles(projectId);
   const activeCycles = cycles?.filter((c) => c.status === "active") ?? [];
   const upcomingCycles = cycles?.filter((c) => c.status === "draft") ?? [];
   const completedCycles = cycles?.filter((c) => c.status === "completed") ?? [];
@@ -164,6 +167,14 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     [createMutation, projectId, form],
   );
 
+  if (!canView) {
+    return (
+      <PageWrapper title="Cycles">
+        <NoPermissionState permission="build:view" className="flex-1" />
+      </PageWrapper>
+    );
+  }
+
   if (isLoading) {
     return (
       <PageWrapper title="Cycles">
@@ -207,7 +218,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
         <ErrorState
           className="flex-1"
           title="Couldn't load cycles"
-          description="Failed to load cycles for this project. Please try again."
+          description={getErrorMessage(error)}
           onRetry={handleRetry}
         />
       </PageWrapper>

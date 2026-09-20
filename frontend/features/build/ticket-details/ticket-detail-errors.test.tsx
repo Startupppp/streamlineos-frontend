@@ -7,7 +7,9 @@ const mockRetryByKey = jest.fn();
 const mockRetryTicket = jest.fn();
 const mockNotFound = jest.fn(() => { throw new Error("NEXT_NOT_FOUND"); });
 let mockByKeyError: Error | null = null;
+let mockByKeyTicket: { id: number } | undefined = { id: 1 };
 let mockTicketError: Error | null = null;
+let mockCanViewAccess: "loading" | "granted" | "denied" = "granted";
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
@@ -22,7 +24,7 @@ jest.mock("@/hooks/api", () => ({
 }));
 jest.mock("@/hooks/api/build", () => ({
   useTicketByKey: () => ({
-    data: mockByKeyError ? undefined : { id: 1 },
+    data: mockByKeyError ? undefined : mockByKeyTicket,
     error: mockByKeyError,
     isLoading: false,
     refetch: mockRetryByKey,
@@ -32,7 +34,10 @@ jest.mock("@/hooks/api/build", () => ({
   useCycles: jest.fn(),
 }));
 jest.mock("@/hooks/api/build/ticket-queries", () => ({ useProjectBoardTickets: jest.fn() }));
-jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => true,
+  useCanState: () => mockCanViewAccess,
+}));
 jest.mock("@/hooks/common/use-mobile", () => ({ useIsMobile: () => false }));
 jest.mock("./use-ticket-detail", () => ({
   useTicketDetail: () => ({
@@ -53,7 +58,9 @@ jest.mock("./ticket-parent-control", () => ({ TicketParentControl: () => null })
 
 beforeEach(() => {
   mockByKeyError = null;
+  mockByKeyTicket = { id: 1 };
   mockTicketError = null;
+  mockCanViewAccess = "granted";
   jest.clearAllMocks();
 });
 
@@ -78,4 +85,23 @@ it("offers retry for a failed ticket detail read after its key was resolved", ()
 it("preserves the real not-found response", () => {
   mockByKeyError = new ApiError("Ticket not found", 404, "PROJECTS_TICKET_NOT_FOUND");
   expect(() => render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />)).toThrow("NEXT_NOT_FOUND");
+});
+
+it("shows NoPermissionState when build:tickets:view is denied, not a 404", () => {
+  mockCanViewAccess = "denied";
+  mockByKeyTicket = undefined;
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(screen.getByText("Access Restricted")).toBeInTheDocument();
+  expect(mockNotFound).not.toHaveBeenCalled();
+});
+
+it("shows a plan-required state for a 402 MODULE_NOT_ENABLED on ticket key lookup, not a generic error", () => {
+  mockByKeyError = new ApiError("Module not enabled", 402, "MODULE_NOT_ENABLED", {
+    moduleKey: "BUILD",
+    reason: "not-in-plan",
+    upgradePath: "/settings/billing",
+  });
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(screen.queryByText("Couldn't load ticket")).not.toBeInTheDocument();
+  expect(mockNotFound).not.toHaveBeenCalled();
 });

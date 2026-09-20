@@ -6,6 +6,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -36,14 +37,16 @@ interface ReleasesPageProps {
 }
 
 export function ReleasesPage({ projectId }: ReleasesPageProps) {
+  const canView = useCan("build:view");
   const {
     data: releases,
     isLoading,
     isError,
+    error,
     refetch,
   } = useReleases(projectId);
-  const deleteRelease = useDeleteRelease(projectId);
   const canManage = useCan("build:manage");
+  const deleteRelease = useDeleteRelease(projectId);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Release | null>(null);
@@ -179,6 +182,13 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
     [handleOpenEdit, handleDeleteTarget],
   );
 
+  if (!canView)
+    return (
+      <PageWrapper title="Releases">
+        <NoPermissionState permission="build:view" className="flex-1" />
+      </PageWrapper>
+    );
+
   return (
     <PageWrapper
       title="Releases"
@@ -226,7 +236,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
             <ErrorState
               className={PM_FILL_PANEL}
               title="Failed to load releases"
-              description="Could not fetch release data. Please try again."
+              description={getErrorMessage(error)}
               onRetry={handleRetry}
             />
           ) : (

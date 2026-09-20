@@ -40,6 +40,8 @@ Simplicity over cleverness · normalize data · deny by default · fail fast at 
 
 ## 3. Workflow
 
+- For cloud-only multi-agent delivery, use the reusable protocol in `docs/agent-delivery/README.md` (especially `protocol.md` and `prompts.md`). It is the source of truth for packet boundaries, reservations, sad-path-first verification, context compaction, screenshot review and PR completion; module PRDs provide requirements, not orchestration.
+
 - The user's current request defines the scope. Proceed with already-authorized repairs; ask only for unresolved product choices, destructive operations, or external actions outside that scope. **"go"** continues the assigned task, not an arbitrary unchecked page.
 - Use `architecture-refactor/prd/completion-plan.md` to find the active delivery lane. Historical reports are reference evidence, not new work. Check `.claude/` instructions for the assigned task.
 - Verification is part of an authorized repair: run the smallest relevant typecheck, regression, contract or browser check. Review the command first; DB writes and provider transactions require a named disposable/test environment. Never load production credentials merely to make a test pass.

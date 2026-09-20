@@ -1,0 +1,1348 @@
+{
+  "version": 2,
+  "generatedAt": "2026-09-20T17:05:17.103Z",
+  "source": "frontend/app",
+  "count": 93,
+  "routes": [
+    {
+      "path": "/accept-invitation",
+      "file": "frontend/app/(portal)/accept-invitation/page.tsx"
+    },
+    {
+      "path": "/board/{shareToken}",
+      "file": "frontend/app/(public)/board/[shareToken]/page.tsx"
+    },
+    {
+      "path": "/build",
+      "file": "frontend/app/(authenticated)/build/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/ai",
+      "file": "frontend/app/(authenticated)/build/[projectId]/ai/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/analytics",
+      "file": "frontend/app/(authenticated)/build/[projectId]/analytics/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/approvals",
+      "file": "frontend/app/(authenticated)/build/[projectId]/approvals/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/automations",
+      "file": "frontend/app/(authenticated)/build/[projectId]/automations/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/backlog",
+      "file": "frontend/app/(authenticated)/build/[projectId]/backlog/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/budget",
+      "file": "frontend/app/(authenticated)/build/[projectId]/budget/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/bugs",
+      "file": "frontend/app/(authenticated)/build/[projectId]/bugs/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/change-requests",
+      "file": "frontend/app/(authenticated)/build/[projectId]/change-requests/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/chat",
+      "file": "frontend/app/(authenticated)/build/[projectId]/chat/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/client-portal",
+      "file": "frontend/app/(authenticated)/build/[projectId]/client-portal/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/cycles",
+      "file": "frontend/app/(authenticated)/build/[projectId]/cycles/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/cycles/{cycleId}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/cycles/[cycleId]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/decisions",
+      "file": "frontend/app/(authenticated)/build/[projectId]/decisions/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/epics",
+      "file": "frontend/app/(authenticated)/build/[projectId]/epics/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/feedbucket",
+      "file": "frontend/app/(authenticated)/build/[projectId]/feedbucket/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/feedbucket/{submissionId}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/feedbucket/[submissionId]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/files",
+      "file": "frontend/app/(authenticated)/build/[projectId]/files/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/forms",
+      "file": "frontend/app/(authenticated)/build/[projectId]/forms/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/forms/{formId}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/forms/[formId]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/incidents",
+      "file": "frontend/app/(authenticated)/build/[projectId]/incidents/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/incidents/{incidentId}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/incidents/[incidentId]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/intake",
+      "file": "frontend/app/(authenticated)/build/[projectId]/intake/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/issues",
+      "file": "frontend/app/(authenticated)/build/[projectId]/issues/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/meetings",
+      "file": "frontend/app/(authenticated)/build/[projectId]/meetings/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/meetings/{meetingId}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/meetings/[meetingId]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/milestones",
+      "file": "frontend/app/(authenticated)/build/[projectId]/milestones/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/modules",
+      "file": "frontend/app/(authenticated)/build/[projectId]/modules/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/my-tickets",
+      "file": "frontend/app/(authenticated)/build/[projectId]/my-tickets/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/qa",
+      "file": "frontend/app/(authenticated)/build/[projectId]/qa/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/qa/runs/{runId}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/qa/runs/[runId]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/releases",
+      "file": "frontend/app/(authenticated)/build/[projectId]/releases/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/reports",
+      "file": "frontend/app/(authenticated)/build/[projectId]/reports/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/risks",
+      "file": "frontend/app/(authenticated)/build/[projectId]/risks/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/sprints",
+      "file": "frontend/app/(authenticated)/build/[projectId]/sprints/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/tickets/{ticketKey}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/tickets/[ticketKey]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/timeline",
+      "file": "frontend/app/(authenticated)/build/[projectId]/timeline/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/triage",
+      "file": "frontend/app/(authenticated)/build/[projectId]/triage/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/updates",
+      "file": "frontend/app/(authenticated)/build/[projectId]/updates/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/views",
+      "file": "frontend/app/(authenticated)/build/[projectId]/views/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/webhooks",
+      "file": "frontend/app/(authenticated)/build/[projectId]/webhooks/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/whiteboard",
+      "file": "frontend/app/(authenticated)/build/[projectId]/whiteboard/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/wiki",
+      "file": "frontend/app/(authenticated)/build/[projectId]/wiki/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/wiki/{pageId}",
+      "file": "frontend/app/(authenticated)/build/[projectId]/wiki/[pageId]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/workflow",
+      "file": "frontend/app/(authenticated)/build/[projectId]/workflow/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/workload",
+      "file": "frontend/app/(authenticated)/build/[projectId]/workload/page.tsx"
+    },
+    {
+      "path": "/build/access",
+      "file": "frontend/app/(authenticated)/build/access/page.tsx"
+    },
+    {
+      "path": "/build/all-work",
+      "file": "frontend/app/(authenticated)/build/all-work/page.tsx"
+    },
+    {
+      "path": "/build/approvals",
+      "file": "frontend/app/(authenticated)/build/approvals/page.tsx"
+    },
+    {
+      "path": "/build/client-access",
+      "file": "frontend/app/(authenticated)/build/client-access/page.tsx"
+    },
+    {
+      "path": "/build/command-center",
+      "file": "frontend/app/(authenticated)/build/command-center/page.tsx"
+    },
+    {
+      "path": "/build/customers",
+      "file": "frontend/app/(authenticated)/build/customers/page.tsx"
+    },
+    {
+      "path": "/build/drafts",
+      "file": "frontend/app/(authenticated)/build/drafts/page.tsx"
+    },
+    {
+      "path": "/build/goal",
+      "file": "frontend/app/(authenticated)/build/goal/page.tsx"
+    },
+    {
+      "path": "/build/goal/{goalId}",
+      "file": "frontend/app/(authenticated)/build/goal/[goalId]/page.tsx"
+    },
+    {
+      "path": "/build/inbox",
+      "file": "frontend/app/(authenticated)/build/inbox/page.tsx"
+    },
+    {
+      "path": "/build/managed-products",
+      "file": "frontend/app/(authenticated)/build/managed-products/page.tsx"
+    },
+    {
+      "path": "/build/managed-products/{managedProductId}",
+      "file": "frontend/app/(authenticated)/build/managed-products/[managedProductId]/page.tsx"
+    },
+    {
+      "path": "/build/managed-products/{managedProductId}/feedback",
+      "file": "frontend/app/(authenticated)/build/managed-products/[managedProductId]/feedback/page.tsx"
+    },
+    {
+      "path": "/build/managed-products/{managedProductId}/goals",
+      "file": "frontend/app/(authenticated)/build/managed-products/[managedProductId]/goals/page.tsx"
+    },
+    {
+      "path": "/build/managed-products/{managedProductId}/insights",
+      "file": "frontend/app/(authenticated)/build/managed-products/[managedProductId]/insights/page.tsx"
+    },
+    {
+      "path": "/build/managed-products/{managedProductId}/projects",
+      "file": "frontend/app/(authenticated)/build/managed-products/[managedProductId]/projects/page.tsx"
+    },
+    {
+      "path": "/build/managed-products/{managedProductId}/roadmap",
+      "file": "frontend/app/(authenticated)/build/managed-products/[managedProductId]/roadmap/page.tsx"
+    },
+    {
+      "path": "/build/members",
+      "file": "frontend/app/(authenticated)/build/members/page.tsx"
+    },
+    {
+      "path": "/build/my-work",
+      "file": "frontend/app/(authenticated)/build/my-work/page.tsx"
+    },
+    {
+      "path": "/build/pm-workspaces",
+      "file": "frontend/app/(authenticated)/build/pm-workspaces/page.tsx"
+    },
+    {
+      "path": "/build/portfolios",
+      "file": "frontend/app/(authenticated)/build/portfolios/page.tsx"
+    },
+    {
+      "path": "/build/portfolios/{portfolioId}",
+      "file": "frontend/app/(authenticated)/build/portfolios/[portfolioId]/page.tsx"
+    },
+    {
+      "path": "/build/programs",
+      "file": "frontend/app/(authenticated)/build/programs/page.tsx"
+    },
+    {
+      "path": "/build/roadmap",
+      "file": "frontend/app/(authenticated)/build/roadmap/page.tsx"
+    },
+    {
+      "path": "/build/settings/integrations",
+      "file": "frontend/app/(authenticated)/build/settings/integrations/page.tsx"
+    },
+    {
+      "path": "/build/teams",
+      "file": "frontend/app/(authenticated)/build/teams/page.tsx"
+    },
+    {
+      "path": "/build/teams/{teamId}",
+      "file": "frontend/app/(authenticated)/build/teams/[teamId]/page.tsx"
+    },
+    {
+      "path": "/build/templates",
+      "file": "frontend/app/(authenticated)/build/templates/page.tsx"
+    },
+    {
+      "path": "/build/workspaces/{pmWorkspaceId}",
+      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/page.tsx"
+    },
+    {
+      "path": "/build/workspaces/{pmWorkspaceId}/all-work",
+      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/all-work/page.tsx"
+    },
+    {
+      "path": "/build/workspaces/{pmWorkspaceId}/goals",
+      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/goals/page.tsx"
+    },
+    {
+      "path": "/build/workspaces/{pmWorkspaceId}/my-work",
+      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/my-work/page.tsx"
+    },
+    {
+      "path": "/build/workspaces/{pmWorkspaceId}/overview",
+      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/overview/page.tsx"
+    },
+    {
+      "path": "/build/workspaces/{pmWorkspaceId}/products",
+      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/products/page.tsx"
+    },
+    {
+      "path": "/build/workspaces/{pmWorkspaceId}/roadmap",
+      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/roadmap/page.tsx"
+    },
+    {
+      "path": "/build/workspaces/{pmWorkspaceId}/teams",
+      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/teams/page.tsx"
+    },
+    {
+      "path": "/client-portal",
+      "file": "frontend/app/(portal)/client-portal/page.tsx"
+    },
+    {
+      "path": "/client-portal/{projectId}",
+      "file": "frontend/app/(portal)/client-portal/[projectId]/page.tsx"
+    },
+    {
+      "path": "/forms/{formToken}",
+      "file": "frontend/app/(public)/forms/[formToken]/page.tsx"
+    },
+    {
+      "path": "/intake/{projectId}",
+      "file": "frontend/app/(public)/intake/[projectId]/page.tsx"
+    },
+    {
+      "path": "/portal",
+      "file": "frontend/app/(authenticated)/portal/page.tsx"
+    },
+    {
+      "path": "/portal/{projectId}",
+      "file": "frontend/app/(authenticated)/portal/[projectId]/page.tsx"
+    },
+    {
+      "path": "/roadmap/{orgId}",
+      "file": "frontend/app/(public)/roadmap/[orgId]/page.tsx"
+    }
+  ],
+  "duplicates": [],
+  "bareDynamic": [],
+  "manifest": {
+    "current": [
+      {
+        "id": "PG-ORG-001",
+        "path": "/build",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-002",
+        "path": "/build/access",
+        "disposition": "MOVE"
+      },
+      {
+        "id": "PG-ORG-003",
+        "path": "/build/all-work",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-004",
+        "path": "/build/approvals",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-005",
+        "path": "/build/client-access",
+        "disposition": "MOVE"
+      },
+      {
+        "id": "PG-ORG-006",
+        "path": "/build/command-center",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-007",
+        "path": "/build/customers",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-008",
+        "path": "/build/drafts",
+        "disposition": "CONSOLIDATE"
+      },
+      {
+        "id": "PG-ORG-009",
+        "path": "/build/goal",
+        "disposition": "MOVE"
+      },
+      {
+        "id": "PG-ORG-010",
+        "path": "/build/goal/{goalId}",
+        "disposition": "MOVE"
+      },
+      {
+        "id": "PG-ORG-011",
+        "path": "/build/inbox",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-012",
+        "path": "/build/managed-products",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-013",
+        "path": "/build/members",
+        "disposition": "CONSOLIDATE"
+      },
+      {
+        "id": "PG-ORG-014",
+        "path": "/build/my-work",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-015",
+        "path": "/build/pm-workspaces",
+        "disposition": "MOVE"
+      },
+      {
+        "id": "PG-ORG-016",
+        "path": "/build/portfolios",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-017",
+        "path": "/build/portfolios/{portfolioId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-018",
+        "path": "/build/programs",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-019",
+        "path": "/build/roadmap",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-020",
+        "path": "/build/settings/integrations",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-021",
+        "path": "/build/teams",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-022",
+        "path": "/build/teams/{teamId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-023",
+        "path": "/build/templates",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-WS-001",
+        "path": "/build/workspaces/{pmWorkspaceId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-WS-002",
+        "path": "/build/workspaces/{pmWorkspaceId}/all-work",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-WS-003",
+        "path": "/build/workspaces/{pmWorkspaceId}/goals",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-WS-004",
+        "path": "/build/workspaces/{pmWorkspaceId}/my-work",
+        "disposition": "CONSOLIDATE"
+      },
+      {
+        "id": "PG-WS-005",
+        "path": "/build/workspaces/{pmWorkspaceId}/overview",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-WS-006",
+        "path": "/build/workspaces/{pmWorkspaceId}/products",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-WS-007",
+        "path": "/build/workspaces/{pmWorkspaceId}/roadmap",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-WS-008",
+        "path": "/build/workspaces/{pmWorkspaceId}/teams",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PROD-001",
+        "path": "/build/managed-products/{managedProductId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PROD-002",
+        "path": "/build/managed-products/{managedProductId}/feedback",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PROD-003",
+        "path": "/build/managed-products/{managedProductId}/goals",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PROD-004",
+        "path": "/build/managed-products/{managedProductId}/insights",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PROD-005",
+        "path": "/build/managed-products/{managedProductId}/projects",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PROD-006",
+        "path": "/build/managed-products/{managedProductId}/roadmap",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-001",
+        "path": "/build/{projectId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-002",
+        "path": "/build/{projectId}/ai",
+        "disposition": "CONSOLIDATE"
+      },
+      {
+        "id": "PG-PRJ-003",
+        "path": "/build/{projectId}/analytics",
+        "disposition": "CONSOLIDATE"
+      },
+      {
+        "id": "PG-PRJ-004",
+        "path": "/build/{projectId}/approvals",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-005",
+        "path": "/build/{projectId}/automations",
+        "disposition": "MOVE"
+      },
+      {
+        "id": "PG-PRJ-006",
+        "path": "/build/{projectId}/backlog",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-007",
+        "path": "/build/{projectId}/budget",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-008",
+        "path": "/build/{projectId}/bugs",
+        "disposition": "CONSOLIDATE"
+      },
+      {
+        "id": "PG-PRJ-009",
+        "path": "/build/{projectId}/change-requests",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-010",
+        "path": "/build/{projectId}/chat",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-011",
+        "path": "/build/{projectId}/client-portal",
+        "disposition": "KEEP_ROUTE_MOVE_CONFIG"
+      },
+      {
+        "id": "PG-PRJ-012",
+        "path": "/build/{projectId}/cycles",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-013",
+        "path": "/build/{projectId}/cycles/{cycleId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-014",
+        "path": "/build/{projectId}/decisions",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-015",
+        "path": "/build/{projectId}/epics",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-016",
+        "path": "/build/{projectId}/feedbucket",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-017",
+        "path": "/build/{projectId}/feedbucket/{submissionId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-018",
+        "path": "/build/{projectId}/files",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-019",
+        "path": "/build/{projectId}/forms",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-020",
+        "path": "/build/{projectId}/forms/{formId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-021",
+        "path": "/build/{projectId}/incidents",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-022",
+        "path": "/build/{projectId}/incidents/{incidentId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-023",
+        "path": "/build/{projectId}/intake",
+        "disposition": "CONSOLIDATE"
+      },
+      {
+        "id": "PG-PRJ-024",
+        "path": "/build/{projectId}/issues",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-025",
+        "path": "/build/{projectId}/meetings",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-026",
+        "path": "/build/{projectId}/meetings/{meetingId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-027",
+        "path": "/build/{projectId}/milestones",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-028",
+        "path": "/build/{projectId}/modules",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-029",
+        "path": "/build/{projectId}/my-tickets",
+        "disposition": "CONSOLIDATE"
+      },
+      {
+        "id": "PG-PRJ-030",
+        "path": "/build/{projectId}/qa",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-031",
+        "path": "/build/{projectId}/qa/runs/{runId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-032",
+        "path": "/build/{projectId}/releases",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-033",
+        "path": "/build/{projectId}/reports",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-034",
+        "path": "/build/{projectId}/risks",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-035",
+        "path": "/build/{projectId}/settings",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-036",
+        "path": "/build/{projectId}/sprints",
+        "disposition": "REMOVE"
+      },
+      {
+        "id": "PG-PRJ-037",
+        "path": "/build/{projectId}/tickets/{ticketKey}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-038",
+        "path": "/build/{projectId}/timeline",
+        "disposition": "CONSOLIDATE"
+      },
+      {
+        "id": "PG-PRJ-039",
+        "path": "/build/{projectId}/triage",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-040",
+        "path": "/build/{projectId}/updates",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-041",
+        "path": "/build/{projectId}/views",
+        "disposition": "CONSOLIDATE"
+      },
+      {
+        "id": "PG-PRJ-042",
+        "path": "/build/{projectId}/webhooks",
+        "disposition": "MOVE"
+      },
+      {
+        "id": "PG-PRJ-043",
+        "path": "/build/{projectId}/whiteboard",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-044",
+        "path": "/build/{projectId}/wiki",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-045",
+        "path": "/build/{projectId}/wiki/{pageId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-046",
+        "path": "/build/{projectId}/workflow",
+        "disposition": "MOVE"
+      },
+      {
+        "id": "PG-PRJ-047",
+        "path": "/build/{projectId}/workload",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PORTAL-001",
+        "path": "/portal",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PORTAL-002",
+        "path": "/portal/{projectId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PORTAL-003",
+        "path": "/client-portal",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PORTAL-004",
+        "path": "/client-portal/{projectId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PORTAL-005",
+        "path": "/accept-invitation",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PUBLIC-001",
+        "path": "/board/{shareToken}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PUBLIC-002",
+        "path": "/forms/{formToken}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PUBLIC-003",
+        "path": "/intake/{projectId}",
+        "disposition": "CONSOLIDATE"
+      },
+      {
+        "id": "PG-PUBLIC-004",
+        "path": "/roadmap/{orgId}",
+        "disposition": "MOVE"
+      }
+    ],
+    "final": [
+      {
+        "id": "PG-ORG-001",
+        "path": "/build",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-002",
+        "path": "/build/settings/access",
+        "disposition": "MOVE"
+      },
+      {
+        "id": "PG-ORG-003",
+        "path": "/build/all-work",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-004",
+        "path": "/build/approvals",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-005",
+        "path": "/build/settings/client-access",
+        "disposition": "MOVE"
+      },
+      {
+        "id": "PG-ORG-006",
+        "path": "/build/command-center",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-007",
+        "path": "/build/customers",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-009",
+        "path": "/build/goals",
+        "disposition": "MOVE"
+      },
+      {
+        "id": "PG-ORG-010",
+        "path": "/build/goals/{goalId}",
+        "disposition": "MOVE"
+      },
+      {
+        "id": "PG-ORG-011",
+        "path": "/build/inbox",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-012",
+        "path": "/build/managed-products",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-014",
+        "path": "/build/my-work",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-015",
+        "path": "/build/workspaces",
+        "disposition": "MOVE"
+      },
+      {
+        "id": "PG-ORG-016",
+        "path": "/build/portfolios",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-017",
+        "path": "/build/portfolios/{portfolioId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-018",
+        "path": "/build/programs",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-019",
+        "path": "/build/roadmap",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-020",
+        "path": "/build/settings/integrations",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-021",
+        "path": "/build/teams",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-022",
+        "path": "/build/teams/{teamId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-ORG-023",
+        "path": "/build/templates",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-WS-001",
+        "path": "/build/workspaces/{pmWorkspaceId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-WS-002",
+        "path": "/build/workspaces/{pmWorkspaceId}/all-work",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-WS-003",
+        "path": "/build/workspaces/{pmWorkspaceId}/goals",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-WS-005",
+        "path": "/build/workspaces/{pmWorkspaceId}/overview",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-WS-006",
+        "path": "/build/workspaces/{pmWorkspaceId}/products",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-WS-007",
+        "path": "/build/workspaces/{pmWorkspaceId}/roadmap",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-WS-008",
+        "path": "/build/workspaces/{pmWorkspaceId}/teams",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PROD-001",
+        "path": "/build/managed-products/{managedProductId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PROD-002",
+        "path": "/build/managed-products/{managedProductId}/feedback",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PROD-003",
+        "path": "/build/managed-products/{managedProductId}/goals",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PROD-004",
+        "path": "/build/managed-products/{managedProductId}/insights",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PROD-005",
+        "path": "/build/managed-products/{managedProductId}/projects",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PROD-006",
+        "path": "/build/managed-products/{managedProductId}/roadmap",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-001",
+        "path": "/build/{projectId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-004",
+        "path": "/build/{projectId}/approvals",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-005",
+        "path": "/build/{projectId}/settings/automations",
+        "disposition": "MOVE"
+      },
+      {
+        "id": "PG-PRJ-006",
+        "path": "/build/{projectId}/backlog",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-007",
+        "path": "/build/{projectId}/budget",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-009",
+        "path": "/build/{projectId}/change-requests",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-010",
+        "path": "/build/{projectId}/chat",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-011",
+        "path": "/build/{projectId}/client-portal",
+        "disposition": "KEEP_ROUTE_MOVE_CONFIG"
+      },
+      {
+        "id": "PG-PRJ-012",
+        "path": "/build/{projectId}/cycles",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-013",
+        "path": "/build/{projectId}/cycles/{cycleId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-014",
+        "path": "/build/{projectId}/decisions",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-015",
+        "path": "/build/{projectId}/epics",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-016",
+        "path": "/build/{projectId}/feedbucket",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-017",
+        "path": "/build/{projectId}/feedbucket/{submissionId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-018",
+        "path": "/build/{projectId}/files",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-019",
+        "path": "/build/{projectId}/forms",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-020",
+        "path": "/build/{projectId}/forms/{formId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-021",
+        "path": "/build/{projectId}/incidents",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-022",
+        "path": "/build/{projectId}/incidents/{incidentId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-024",
+        "path": "/build/{projectId}/issues",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-025",
+        "path": "/build/{projectId}/meetings",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-026",
+        "path": "/build/{projectId}/meetings/{meetingId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-027",
+        "path": "/build/{projectId}/milestones",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-028",
+        "path": "/build/{projectId}/modules",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-030",
+        "path": "/build/{projectId}/qa",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-031",
+        "path": "/build/{projectId}/qa/runs/{runId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-032",
+        "path": "/build/{projectId}/releases",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-033",
+        "path": "/build/{projectId}/reports",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-034",
+        "path": "/build/{projectId}/risks",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-035",
+        "path": "/build/{projectId}/settings",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-037",
+        "path": "/build/{projectId}/tickets/{ticketKey}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-039",
+        "path": "/build/{projectId}/triage",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-040",
+        "path": "/build/{projectId}/updates",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-042",
+        "path": "/build/{projectId}/settings/integrations/webhooks",
+        "disposition": "MOVE"
+      },
+      {
+        "id": "PG-PRJ-043",
+        "path": "/build/{projectId}/whiteboard",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-044",
+        "path": "/build/{projectId}/wiki",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-045",
+        "path": "/build/{projectId}/wiki/{pageId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PRJ-046",
+        "path": "/build/{projectId}/settings/workflow",
+        "disposition": "MOVE"
+      },
+      {
+        "id": "PG-PRJ-047",
+        "path": "/build/{projectId}/workload",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PORTAL-001",
+        "path": "/portal",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PORTAL-002",
+        "path": "/portal/{projectId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PORTAL-003",
+        "path": "/client-portal",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PORTAL-004",
+        "path": "/client-portal/{projectId}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PORTAL-005",
+        "path": "/accept-invitation",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PUBLIC-001",
+        "path": "/board/{shareToken}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PUBLIC-002",
+        "path": "/forms/{formToken}",
+        "disposition": "KEEP"
+      },
+      {
+        "id": "PG-PUBLIC-004",
+        "path": "/roadmap/{shareToken}",
+        "disposition": "MOVE"
+      },
+      {
+        "id": "PG-ADD-001",
+        "path": "/build/settings",
+        "disposition": "ADD"
+      },
+      {
+        "id": "PG-ADD-002",
+        "path": "/build/settings/access",
+        "disposition": "ADD"
+      },
+      {
+        "id": "PG-ADD-003",
+        "path": "/build/settings/client-access",
+        "disposition": "ADD"
+      },
+      {
+        "id": "PG-ADD-004",
+        "path": "/build/workspaces/{pmWorkspaceId}/settings",
+        "disposition": "ADD"
+      },
+      {
+        "id": "PG-ADD-005",
+        "path": "/build/managed-products/{managedProductId}/settings",
+        "disposition": "ADD"
+      },
+      {
+        "id": "PG-ADD-006",
+        "path": "/build/{projectId}/goals",
+        "disposition": "ADD"
+      },
+      {
+        "id": "PG-ADD-007",
+        "path": "/build/{projectId}/settings/access",
+        "disposition": "ADD"
+      },
+      {
+        "id": "PG-ADD-008",
+        "path": "/build/{projectId}/settings/workflow",
+        "disposition": "ADD"
+      },
+      {
+        "id": "PG-ADD-009",
+        "path": "/build/{projectId}/settings/views",
+        "disposition": "ADD"
+      },
+      {
+        "id": "PG-ADD-010",
+        "path": "/build/{projectId}/settings/fields",
+        "disposition": "ADD"
+      },
+      {
+        "id": "PG-ADD-011",
+        "path": "/build/{projectId}/settings/iterations",
+        "disposition": "ADD"
+      },
+      {
+        "id": "PG-ADD-012",
+        "path": "/build/{projectId}/settings/automations",
+        "disposition": "ADD"
+      },
+      {
+        "id": "PG-ADD-013",
+        "path": "/build/{projectId}/settings/integrations",
+        "disposition": "ADD"
+      },
+      {
+        "id": "PG-ADD-014",
+        "path": "/build/{projectId}/settings/integrations/webhooks",
+        "disposition": "ADD"
+      },
+      {
+        "id": "PG-ADD-015",
+        "path": "/build/{projectId}/settings/portal",
+        "disposition": "ADD"
+      },
+      {
+        "id": "PG-ADD-016",
+        "path": "/build/{projectId}/settings/agents",
+        "disposition": "ADD"
+      },
+      {
+        "id": "PG-ADD-017",
+        "path": "/build/{projectId}/settings/agents/credentials",
+        "disposition": "ADD"
+      },
+      {
+        "id": "PG-ADD-018",
+        "path": "/build/{projectId}/settings/retention",
+        "disposition": "ADD"
+      }
+    ]
+  }
+}

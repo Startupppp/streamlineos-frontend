@@ -20,7 +20,10 @@ import { TicketParentControl } from "./ticket-parent-control";
 import { useTicketDetail } from "./use-ticket-detail";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { PageState } from "@/components/shared/page-state";
+import { pageStateFromError } from "@/lib/page-state/resolve-page-state";
 
 
 interface TicketDetailPageProps {
@@ -53,6 +56,7 @@ function DetailSkeleton() {
 }
 
 export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps) {
+  const canViewAccess = useCanState("build:tickets:view");
   const canUpdate = useCan("build:tickets:update");
   const canAssign = useCan("build:tickets:assign");
   const router = useRouter();
@@ -123,7 +127,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
   if (!parsed) return notFound();
 
-  if (projectLoading || byKeyLoading) {
+  if (projectLoading || byKeyLoading || canViewAccess === "loading") {
     return (
       <PageWrapper title="Loading..." backHref={`/build/${projectId}`} noInternalScroll className="h-full">
         <DetailSkeleton />
@@ -148,9 +152,27 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
       );
     }
     if (isApiError(byKeyError) && byKeyError.status === 404) return notFound();
+    const byKeyState = pageStateFromError(byKeyError);
+    if (byKeyState !== null && byKeyState.kind !== "error" && byKeyState.kind !== "denied") {
+      return (
+        <PageWrapper title="Build" backHref={`/build/${projectId}`}>
+          <PageState resolution={byKeyState} loading={<DetailSkeleton />} onRetry={refetchByKey}>
+            <span />
+          </PageState>
+        </PageWrapper>
+      );
+    }
     return (
       <PageWrapper title="Ticket" backHref={`/build/${projectId}`}>
         <ErrorState className="flex-1" title="Couldn't load ticket" description={getErrorMessage(byKeyError)} onRetry={refetchByKey} />
+      </PageWrapper>
+    );
+  }
+
+  if (canViewAccess === "denied") {
+    return (
+      <PageWrapper title="Ticket" backHref={`/build/${projectId}`}>
+        <NoPermissionState permission="build:tickets:view" />
       </PageWrapper>
     );
   }
@@ -186,6 +208,16 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
   }
 
   if (ticketError && !ticket) {
+    const ticketState = pageStateFromError(ticketError);
+    if (ticketState !== null && ticketState.kind !== "error" && ticketState.kind !== "denied") {
+      return (
+        <PageWrapper title="Build" backHref={`/build/${projectId}`}>
+          <PageState resolution={ticketState} loading={<DetailSkeleton />} onRetry={refetchTicket}>
+            <span />
+          </PageState>
+        </PageWrapper>
+      );
+    }
     return (
       <PageWrapper title={displayKey} backHref={`/build/${projectId}`}>
         <ErrorState className="flex-1" title="Couldn't load ticket" description={getErrorMessage(ticketError)} onRetry={refetchTicket} />
