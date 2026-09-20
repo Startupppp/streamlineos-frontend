@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef, useTransition } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ import { CaseDetailSheet } from "./case-detail-sheet";
 import { NewCaseSheet } from "./new-case-sheet";
 import { AnonymousReportDialog } from "./anonymous-report-dialog";
 import { IssueWarningSheet } from "./issue-warning-sheet";
-import { CasesFilterBar } from "./cases-filter-bar";
+import { CasesFilterBar, isCaseCategory, isCaseSeverity, isCaseStatus } from "./cases-filter-bar";
 import { CASE_COLUMNS } from "./case-columns";
 import { DisciplinaryActionsTab } from "./disciplinary-actions-tab";
 
@@ -38,13 +39,37 @@ function isActiveTab(value: string): value is ActiveTab {
   return value === "cases" || value === "disciplinary";
 }
 
+interface CaseUrlFilters {
+  search: string;
+  status: CaseStatus | "";
+  category: CaseCategory | "";
+  severity: CaseSeverity | "";
+}
+
+function parseCaseFilters(searchParams: URLSearchParams): CaseUrlFilters {
+  const status = searchParams.get("status") ?? "";
+  const category = searchParams.get("category") ?? "";
+  const severity = searchParams.get("severity") ?? "";
+  return {
+    search: searchParams.get("q") ?? "",
+    status: isCaseStatus(status) ? status : "",
+    category: isCaseCategory(category) ? category : "",
+    severity: isCaseSeverity(severity) ? severity : "",
+  };
+}
+
 export function CasesPageContent() {
   const canManage = useCan("hr:cases:manage");
-  const [search, setSearch] = useState("");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [isUrlPending, startUrlTransition] = useTransition();
+  const { search: urlSearch, status, category, severity } = parseCaseFilters(searchParams);
+  const [searchDraft, setSearchDraft] = useState({ baseline: urlSearch, value: urlSearch });
+  const searchDraftLive = isUrlPending || searchDraft.baseline === urlSearch;
+  const search = searchDraftLive ? searchDraft.value : urlSearch;
   const debouncedSearch = useDebouncedValue(search, 300);
-  const [status, setStatus] = useState<CaseStatus | "">("");
-  const [category, setCategory] = useState<CaseCategory | "">("");
-  const [severity, setSeverity] = useState<CaseSeverity | "">("");
+  const syncedSearchRef = useRef(urlSearch);
   const casePagination = useCursorPageStack();
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
   const [showNew, setShowNew] = useState(false);
@@ -60,44 +85,66 @@ export function CasesPageContent() {
     refetch: refetchCases,
   } = useHrCases({
     cursor: casePagination.cursor,
-    search: debouncedSearch.trim() || undefined,
+    search: urlSearch.trim() || undefined,
     status: status || undefined,
     category: category || undefined,
     severity: severity || undefined,
   });
 
   const filtersActive =
-    search.trim() !== "" || status !== "" || category !== "" || severity !== "";
+    urlSearch.trim() !== "" || status !== "" || category !== "" || severity !== "";
 
   const resetCasesToFirstPage = casePagination.resetToFirstPage;
 
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value) params.set(key, value);
+        else params.delete(key);
+      }
+      const query = params.toString();
+      startUrlTransition(() => {
+        router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      });
+      resetCasesToFirstPage();
+    },
+    [searchParams, router, pathname, resetCasesToFirstPage],
+  );
+
+  useEffect(() => {
+    if (syncedSearchRef.current === debouncedSearch) return;
+    syncedSearchRef.current = debouncedSearch;
+    if (debouncedSearch === urlSearch) return;
+    startUrlTransition(() => {
+      setSearchDraft((draft) => ({ ...draft, baseline: debouncedSearch }));
+      updateParams({ q: debouncedSearch });
+    });
+  }, [debouncedSearch, urlSearch, updateParams]);
+
   const handleClearFilters = useCallback(() => {
-    setSearch("");
-    setStatus("");
-    setCategory("");
-    setSeverity("");
-    resetCasesToFirstPage();
-  }, [resetCasesToFirstPage]);
+    setSearchDraft({ baseline: "", value: "" });
+    updateParams({ q: null, status: null, category: null, severity: null });
+  }, [updateParams]);
 
   const handleSearchChange = useCallback((value: string) => {
-    setSearch(value);
-    resetCasesToFirstPage();
-  }, [resetCasesToFirstPage]);
+    setSearchDraft((draft) => ({
+      baseline: searchDraftLive ? draft.baseline : urlSearch,
+      value,
+    }));
+  }, [searchDraftLive, urlSearch]);
 
   const handleStatusChange = useCallback((value: CaseStatus | "") => {
-    setStatus(value);
-    resetCasesToFirstPage();
-  }, [resetCasesToFirstPage]);
+    updateParams({ status: value });
+  }, [updateParams]);
 
   const handleCategoryChange = useCallback((value: CaseCategory | "") => {
-    setCategory(value);
-    resetCasesToFirstPage();
-  }, [resetCasesToFirstPage]);
+    updateParams({ category: value });
+  }, [updateParams]);
 
   const handleSeverityChange = useCallback((value: CaseSeverity | "") => {
-    setSeverity(value);
-    resetCasesToFirstPage();
-  }, [resetCasesToFirstPage]);
+    updateParams({ severity: value });
+  }, [updateParams]);
 
   const handleActiveTabChange = useCallback((value: string) => {
     if (isActiveTab(value)) setActiveTab(value);

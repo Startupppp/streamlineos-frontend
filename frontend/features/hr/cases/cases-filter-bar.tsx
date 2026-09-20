@@ -44,15 +44,15 @@ const SEVERITY_OPTIONS: { value: CaseSeverity | typeof SENTINEL; label: string }
   { value: "critical", label: "Critical" },
 ];
 
-function isCaseStatus(value: string): value is CaseStatus {
+export function isCaseStatus(value: string): value is CaseStatus {
   return STATUS_OPTIONS.some((option) => option.value !== SENTINEL && option.value === value);
 }
 
-function isCaseCategory(value: string): value is CaseCategory {
+export function isCaseCategory(value: string): value is CaseCategory {
   return CATEGORY_OPTIONS.some((option) => option.value !== SENTINEL && option.value === value);
 }
 
-function isCaseSeverity(value: string): value is CaseSeverity {
+export function isCaseSeverity(value: string): value is CaseSeverity {
   return SEVERITY_OPTIONS.some((option) => option.value !== SENTINEL && option.value === value);
 }
 
