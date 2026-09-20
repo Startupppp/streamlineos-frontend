@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -57,6 +58,8 @@ export default function HrSettingsLayout({
   const pathname = usePathname();
   const [isAdvanced] = useHrSettingsMode();
   const { data: access } = useAccess();
+  const activeTabRef = useRef<HTMLAnchorElement>(null);
+
   const canOpen = (tab: (typeof TABS)[number]) => {
     if (access?.isOrgOwner) return true;
     const required = Array.isArray(tab.permission)
@@ -72,6 +75,16 @@ export default function HrSettingsLayout({
       (isAdvanced || !tab.advanced || isTabActive(tab.href, pathname)),
   );
 
+  useEffect(() => {
+    if (activeTabRef.current) {
+      activeTabRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
+    }
+  }, [pathname]);
+
   return (
     <div className="flex flex-col h-full">
       <div className="shrink-0 px-4 pt-3 pb-0">
@@ -85,6 +98,7 @@ export default function HrSettingsLayout({
               <Link
                 key={tab.href}
                 href={tab.href}
+                ref={isActive ? activeTabRef : null}
                 className={cn(
                   "inline-flex h-7 shrink-0 items-center rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors",
                   isActive
