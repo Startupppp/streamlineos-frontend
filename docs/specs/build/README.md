@@ -184,6 +184,45 @@ Migration journal note: `migrations/meta/_journal.json` carries an uncommitted
 idx 1011 (`1123_ai_action_proposals_rls`) owned by another session. The batched
 Build migration packet cannot reserve the journal until that entry lands.
 
+## The Controller E2E Tier Was Writing To Production — 2026-09-20
+
+Found while sizing `BLD-X-BE-E2E-STATUS-001`, whose whole method is *run the spec
+and read the real status*.
+
+`jest-e2e.json` sets `setupFiles: ["dotenv/config", …]`, so the tier loads
+`backend/.env`. Both `DATABASE_URL` and `APP_DATABASE_URL` there resolve to
+`streamlineos-instance-1.c94aokgu6g21.ap-south-1.rds.amazonaws.com:5432/streamlineos`
+— **the production instance.** `createE2eApp` (`test/helpers/e2e-app.ts:482`)
+then calls `seedOrg`, which INSERTs `organizations.id = 'org_1'`, the user
+`org_1__seed_owner` (`org_1@seed.invalid`) and an owner membership.
+
+Measured, not inferred: pointed at an unroutable loopback address, **all 19
+`src/modules/build/**` e2e specs fail**, every one of them inside `seedOrg`.
+None is fully mocked. So every green e2e figure cited in cycles 1–8 — 43 tests /
+4 suites, `bugs.controller.e2e-spec.ts` 34/34, 60 / 3 suites — was obtained by
+connecting to and seeding production.
+
+`src/test/jest-e2e-setup.ts` now calls `assertE2eDatabaseApproved`, added to the
+existing `src/test/db-spec-guard.ts` so there is one host allowlist rather than
+two. It refuses any non-loopback host and names every offending variable without
+echoing the password. Verified three ways: it stops a real run against the
+ambient `.env`; a loopback target passes the guard and proceeds to the seed; and
+CI's `test:e2e:ci` job uses `postgres://ci:ci@127.0.0.1:5432/ci`, so it stays
+green. Six spec cases, `tsc -p tsconfig.json --noEmit` still 111 errors with none
+in the touched files. Commit `5703c266d`.
+
+Two consequences for scheduling:
+
+- `BLD-X-BE-E2E-STATUS-001` is **`BLOCKED`, not `READY`.** It cannot be executed
+  from source alone — an exact status asserted without running the endpoint is a
+  guess, and a wrong exact assertion is worse than the weak one it replaces.
+- This machine has **no local Postgres and no Docker** (ports 5432/5433/54320 all
+  refuse; no service, no binaries). The database tier is genuinely unavailable,
+  which blocks this sweep and migration `1128` alike.
+
+**Needs a decision:** whether `org_1` and its seed rows are still present in
+production and should be removed. Nothing here queried production to find out.
+
 ## Cycle 8 Outcome — 2026-09-20
 
 The last two `build/core/` packets, run as two concurrent agents on disjoint
@@ -479,7 +518,7 @@ pool deliberately contains more READY work than execution slots:
 | Backend leaf | `BLD-X-BE-ITERATION-001` + `BLD-X-BE-PLANNING-001` | `INTEGRATED` (cycle 7), **one owner only** | Both are sprints/cycles/modules/epics inside the single `execution/iterations.controller.ts` and the single `execution/dto/execution-response.schemas.ts`. They are NOT parallelisable — dispatch as one packet or serially, never as two concurrent agents |
 | Backend leaf | `BLD-X-BE-PROJECT-DIR-001`, `-PROJECT-WRITE-001`, `-TICKET-LIST-001`, `-TICKET-DETAIL-001`, `-TICKET-WRITE-001` | `INTEGRATED` (cycle 7) | All under `build/core/` (93 production files). `core/dto/` is split per resource and IS disjointable. The real contention is `projects-tickets.controller.ts`, shared by TICKET-LIST, TICKET-DETAIL and TICKET-WRITE — give it to exactly one of the three and let the other two own service + DTO only, or run them serially |
 | Backend leaf | `BLD-X-BE-BULK-001`, `-REPORT-001` | `INTEGRATED` (cycle 8) | The last two `build/core/` packets. **The Build backend core lane is closed** — remaining Build work is the 19 frontend packets, the negative-assertion sweep and the unapplied migration |
-| Backend sweep | `BLD-X-BE-E2E-STATUS-001` | `READY` | Replace negative-only status assertions with the exact expected status; fix each endpoint or mock the change exposes. **The 52-file figure counted only `not.toBe(401)`/`not.toBe(403)`. Counting every evasive form — `not.toBe(4xx)`, `not.toEqual(4xx)`, `not.toBe(HttpStatus.*)` — the real inventory is 73 files**, so a `400` from a broken `.strict()` schema passes them all. Clusters: `build` 13, `kb` 6, `test/` 5, `inventory` 4, then `timesheets`/`organization`/`invoices`/`hr`/`e-sign`/`deals`/`crm`/`autonomy`/`ai` at 2 each and 30 modules at 1. Split per owning module; never one agent across the sweep |
+| Backend sweep | `BLD-X-BE-E2E-STATUS-001` | `BLOCKED` — needs a disposable Postgres; see the production-e2e section above | Replace negative-only status assertions with the exact expected status; fix each endpoint or mock the change exposes. **The 52-file figure counted only `not.toBe(401)`/`not.toBe(403)`. Counting every evasive form — `not.toBe(4xx)`, `not.toEqual(4xx)`, `not.toBe(HttpStatus.*)` — the real inventory is 73 files**, so a `400` from a broken `.strict()` schema passes them all. Clusters: `build` 13, `kb` 6, `test/` 5, `inventory` 4, then `timesheets`/`organization`/`invoices`/`hr`/`e-sign`/`deals`/`crm`/`autonomy`/`ai` at 2 each and 30 modules at 1. Split per owning module; never one agent across the sweep |
 | Backend migration | `BLD-X-DB-BUILD-VERSION-001` | `CODE_COMPLETE`, **unapplied** | Authored as `1128_build_optimistic_concurrency_and_update_publication.sql`, journal idx 1016. `version` on all 9 tables; `audience`/`status`/`published_at` + publication CHECK + partial published-audience cursor index on `project_updates`; `review_date`/`category` + review-date index on `project_risks`; self-referencing composite `superseded_by_id` FK (PostgreSQL 15 column-list `SET NULL`), self-supersession CHECK and partial index on `project_decisions`; `(org_id, run_id, id)` on `test_run_results`. Drizzle schema updated to match. **Application and reconciliation remain a separate `BLD-X-DB-MIG-*` packet** — needs the named disposable database |
 
 Ticket/Cycle/BUG/portal canonicalization packets wait only for their named
