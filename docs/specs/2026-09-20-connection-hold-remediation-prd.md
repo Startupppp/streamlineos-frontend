@@ -200,6 +200,20 @@ network now fails the gate instead of silently re-freezing. Commit `4e994f3c7`.
 `leaves#approve` is the instructive one: `afterApproved` **is** awaited, but `NotificationDispatchService.emit`
 detects the ambient context, writes an outbox intent and defers delivery. Awaited ≠ held.
 
+### H11 — a decorator spanning lines hid its own route ✅ DONE
+
+```
+@UseInterceptors(
+  FileInterceptor("file", { limits: … }),
+)
+resumeParse(…)
+```
+
+The continuation line does not start with `@`, so it matched the handler pattern: the scan named
+`FileInterceptor` as the route **and** consumed the pending decorators, so `resumeParse` was never
+collected. One bug producing both a false name and a missing route, in **both** gates. Decorator
+argument lists are now tracked by paren depth, pinned by a self-test. Commit `9c3fa4bed`.
+
 ### H9 — HR webhook deliveries were never stamped ✅ DONE
 
 Not a hold — the opposite. `testSubscription` and `redeliver` fired `attemptDelivery` with `void`, so the
@@ -227,6 +241,48 @@ one ambient transaction makes them atomic. Split them, and a failure between the
 no link — and the retry (no `@Idempotent`, no unique constraint) makes another. Needs an idempotency
 fence first. Its sibling `analyzeSubmission` also holds the `org_ai_credits` row locked for the whole 60s,
 since credits are reserved before the provider call and settled after, both on the ambient transaction.
+
+### H10 — the gate is blind to AI provider calls ⚠ OPEN, measured
+
+The LLM leaves the process through `ChatOpenAI` (`@langchain/openai`,
+`ai/core/providers/llm.service.ts:2`), not `fetch`/`axios`. Nothing in `OUTBOUND` matches it, so **every
+route that holds a connection across an LLM call is invisible to this gate.**
+
+Reproduce by adding one alternation to `OUTBOUND` in `check-request-txn-outbound.mjs`:
+
+```
+|\binvoke(?:Text|Structured|Chat)[A-Za-z]*\s*\(
+```
+
+Measured: **8 → 37 routes.** Not shipped, because freezing 29 unverified routes is exactly the
+"place to drop a route nobody wanted to think about" the reasoned freeze map exists to prevent.
+
+**Eight verified hop-by-hop, all TRUE POSITIVES, none opted out:**
+
+| Route | Tier |
+|---|---|
+| `support-kb-gap#proposeDraft` | standard 60s — then 5 more writes on the same transaction |
+| `support-kb-engagement#askQuestion` | fast 30s |
+| `kb-from-ticket#draftFromTicket` | fast 30s |
+| `mail#aiInboxSummary` | standard |
+| `comment-drafts#generateDraft` | standard |
+| `inv-ai-explain#getReorderProposal` | standard |
+| `inv-ai-explain#getDigest` | conditional on `?narrate=true` |
+| `inv-ai-explain#getSupplierDelayBriefing` | conditional on vendor-delay data |
+
+⚠ **An opt-out alone breaks all eight.** AI credits are reserved *before* the provider call and settled
+*after*, and `runInTenantTransaction` collapses to `fn(ambient.tx)` whenever a context exists — so
+reserve, settle, `ai_usage_logs` and every post-call write share the held connection. Remove the
+transaction and the next `this.db` call has no GUC. Each needs its service to own three phases, exactly
+as H3 did.
+
+The last two were missed even by the widened pattern above, because they call `invokeText` /
+`invokeStructured` rather than the `*WithUsage` variants — a reminder that one alternation is not the
+fix, the gateway seam is.
+
+`inv-ai-explain.controller.ts` is the clearest case: **5 of its 7 routes reach the gateway, and only 2
+carry the opt-out.** `chat-assistant.controller.ts`, by contrast, is clean — 7 of its 9 routes are plain
+CRUD and correctly left inside the transaction.
 
 ### The 8 frozen routes — the remaining work list
 
