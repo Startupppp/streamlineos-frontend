@@ -29,6 +29,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
@@ -218,7 +220,7 @@ export function CalendarManager({ month }: CalendarManagerProps) {
   const [editingEvent, setEditingEvent] = useState<PayrollCalendarEvent | null>(null);
 
   const range = useMemo(() => getDateRange(month), [month]);
-  const { data: events = [], isLoading } = usePayrollCalendar(range);
+  const { data: events = [], isLoading, isError, error, refetch } = usePayrollCalendar(range);
   const generate = useGenerateCalendarMonth();
   const deleteEvent = useDeleteCalendarEvent();
 
@@ -260,6 +262,10 @@ export function CalendarManager({ month }: CalendarManagerProps) {
   function handleFormCancel() {
     setEditingEvent(null);
     setShowForm(false);
+  }
+
+  function handleRetry() {
+    void refetch();
   }
 
   return (
@@ -324,6 +330,14 @@ export function CalendarManager({ month }: CalendarManagerProps) {
             </div>
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState
+          compact
+          className="border-0 bg-transparent shadow-none"
+          title="Couldn't load calendar events"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
       ) : events.length === 0 ? (
         <EmptyState
           compact
