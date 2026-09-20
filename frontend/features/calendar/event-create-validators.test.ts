@@ -23,8 +23,8 @@ describe("validateEventTitle", () => {
     expect(validateEventTitle("!!!")).toBe("Event title must contain at least one letter or number");
   });
 
-  it("accepts a single-character title with letter/number", () => {
-    expect(validateEventTitle("A")).toBeNull();
+  it("rejects a single-character title (min length 2)", () => {
+    expect(validateEventTitle("A")).toBe("Event title must be at least 2 characters");
   });
 
   it("rejects a title over 100 characters", () => {
@@ -43,7 +43,7 @@ describe("validateEventTitle", () => {
     expect(validateEventTitle("Team sync")).toBeNull();
   });
 
-  // Principal CAL-003 spec: titles may start with brackets, punctuation, etc.
+  // LOCKED wire contract CAL-003: titles may start with brackets, punctuation, etc.
   it("accepts title starting with [ bracket (QA required case)", () => {
     expect(validateEventTitle("[QA] Module 4 audit event")).toBeNull();
   });
@@ -79,6 +79,10 @@ describe("validateEventTitle", () => {
   it("preserves brackets and punctuation in title (no stripping)", () => {
     const title = "[WIP] Design review (draft)";
     expect(validateEventTitle(title)).toBeNull();
+  });
+
+  it("accepts minimum valid length (2 characters)", () => {
+    expect(validateEventTitle("Hi")).toBeNull();
   });
 });
 
