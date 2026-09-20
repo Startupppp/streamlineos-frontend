@@ -7,11 +7,10 @@ import type { CreateCalendarEventPayload } from "@/hooks/api/calendar";
 export function validateEventTitle(title: string): string | null {
   const trimmed = title.trim();
   if (!trimmed) return "Event title is required";
-  if (!/^[a-zA-Z0-9]/.test(trimmed)) return "Event title must start with a letter or number";
-  if (!/[a-zA-Z0-9]/.test(trimmed)) return "Event title must contain at least one letter or number";
   if (trimmed.length < 2) return "Event title must be at least 2 characters";
   if (trimmed.length > 100) return "Event title must be at most 100 characters";
   if (/\s{2,}/.test(title)) return "Event title cannot have consecutive spaces";
+  if (!/[a-zA-Z0-9]/.test(trimmed)) return "Event title must contain at least one letter or number";
   return null;
 }
 
