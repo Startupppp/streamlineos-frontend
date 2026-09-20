@@ -34,7 +34,7 @@ const SCORE_COLORS = [
 
 export function WellnessWidget() {
   const submit = useSubmitCheckin();
-  const { data: checkins } = useMyCheckins();
+  const { data: checkins, isError, refetch } = useMyCheckins();
   const todayCheckin = checkins?.find((c) => c.date === today);
   const [submitted, setSubmitted] = useState(false);
 
@@ -47,6 +47,14 @@ export function WellnessWidget() {
     submit.mutate({ date: today, score: values.score }, {
       onSuccess: () => setSubmitted(true),
     });
+  }
+
+  if (isError) {
+    return (
+      <Card className="p-4 bg-card border border-border rounded-xl">
+        <p className="text-sm text-muted-foreground">Unable to load wellness check-in. <button type="button" onClick={() => void refetch()} className="text-primary hover:underline">Retry</button></p>
+      </Card>
+    );
   }
 
   if (submitted || todayCheckin) {

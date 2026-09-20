@@ -14,6 +14,7 @@ const exitLetterContract = lazyContract(() =>
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -106,11 +107,10 @@ export function ExitManagementPage() {
         title="Exit Management"
         subtitle="Resignations, exit interviews, and offboarding"
       >
-        <EmptyState
-          illustrationPreset="alert"
-          title="Failed to load resignations"
-          description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: handleRetry }}
+        <ErrorState
+          title="Unable to load resignations"
+          description="Try again. If this keeps happening, check your permissions or contact an admin."
+          onRetry={handleRetry}
         />
       </PageWrapper>
     );

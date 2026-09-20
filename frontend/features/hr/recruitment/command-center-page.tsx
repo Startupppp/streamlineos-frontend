@@ -53,6 +53,7 @@ function QueueSection({
   count,
   viewAllHref,
   isLoading,
+  isError,
   isEmpty,
   emptyLabel,
   children,
@@ -61,6 +62,7 @@ function QueueSection({
   count: number;
   viewAllHref: string;
   isLoading: boolean;
+  isError?: boolean;
   isEmpty: boolean;
   emptyLabel: string;
   children: React.ReactNode;
@@ -93,6 +95,8 @@ function QueueSection({
               </div>
             </div>
           ))
+        ) : isError ? (
+          <p className="text-xs text-status-danger-ink py-8 text-center">Failed to load {title.toLowerCase()}</p>
         ) : isEmpty ? (
           <p className="text-xs text-muted-foreground py-8 text-center">{emptyLabel}</p>
         ) : (
@@ -106,9 +110,9 @@ function QueueSection({
 export function RecruitmentCommandCenterPage() {
   const { data: stats, isLoading: statsLoading, isError: statsError, refetch: refetchStats } = useRecruitmentStats();
   const { data: analytics } = useRecruitmentAnalytics();
-  const { data: openJobs, isLoading: jobsLoading } = useJobPostings({ status: "OPEN" });
-  const { data: allInterviews, isLoading: interviewsLoading } = useInterviews({ relevant: true });
-  const { data: newCandidates, isLoading: candidatesLoading } = useCandidates({ status: "NEW" });
+  const { data: openJobs, isLoading: jobsLoading, isError: jobsError } = useJobPostings({ status: "OPEN" });
+  const { data: allInterviews, isLoading: interviewsLoading, isError: interviewsError } = useInterviews({ relevant: true });
+  const { data: newCandidates, isLoading: candidatesLoading, isError: candidatesError } = useCandidates({ status: "NEW" });
 
   const interviewsToday = useMemo(
     () => (allInterviews ?? []).filter((i) => isToday(new Date(i.scheduledAt))),
@@ -192,6 +196,7 @@ export function RecruitmentCommandCenterPage() {
                   count={newCandidates?.length ?? 0}
                   viewAllHref="/hr/recruitment/candidates/intake"
                   isLoading={candidatesLoading}
+                  isError={candidatesError}
                   isEmpty={!newCandidates?.length}
                   emptyLabel="No new applicants right now"
                 >
@@ -219,6 +224,7 @@ export function RecruitmentCommandCenterPage() {
                   count={interviewsToday.length}
                   viewAllHref="/hr/recruitment/interviews"
                   isLoading={interviewsLoading}
+                  isError={interviewsError}
                   isEmpty={!interviewsToday.length}
                   emptyLabel="No interviews scheduled today"
                 >
@@ -241,6 +247,7 @@ export function RecruitmentCommandCenterPage() {
                   count={rolesWithNoApplicants.length}
                   viewAllHref="/hr/recruitment/jobs"
                   isLoading={jobsLoading}
+                  isError={jobsError}
                   isEmpty={!rolesWithNoApplicants.length}
                   emptyLabel="Every open role has applicants"
                 >
