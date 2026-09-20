@@ -184,6 +184,83 @@ Migration journal note: `migrations/meta/_journal.json` carries an uncommitted
 idx 1011 (`1123_ai_action_proposals_rls`) owned by another session. The batched
 Build migration packet cannot reserve the journal until that entry lands.
 
+## Cycle 9 Outcome — 2026-09-20 — the frontend lane opens
+
+Four frontend packets, run two at a time on disjoint write sets. Every agent
+finding was re-derived from source before acceptance, and every fix was
+mutation-verified by the coordinator, not only by its author.
+
+| Packet | Status | Result |
+|---|---|---|
+| `BLD-X-FE-MYWORK-001` | `INTEGRATED` | `dueDateFrom`/`dueDateTo` were already in `MY_WORK_FILTER_PARAMS`, so a due-date range rendered an active chip, switched the page to filtered empty-state messaging and armed Clear — while `buildAllWorkFilters` never forwarded either param. **The chip lied; the list stayed unfiltered.** Scope-widening was checked and honestly refuted: all four tabs pin `scope` to `mine`/`created`/`subscribed`, each bound server-side to the JWT `userId`, so `assigneeId` can only narrow |
+| `BLD-X-FE-REPORT-001` | `INTEGRATED` | Analytics **denial rendered as emptiness** — `useProjectAnalytics` disables its query without `build:view`, so a denied user got `isLoading:false, isError:false, data:undefined` and read "No analytics yet". Also deleted `reports-schema`'s unimported `analyticsContract`, a second export of a name `workspace-schema` already owns |
+| `BLD-X-FE-ORG-PROJECTS-001` | `INTEGRATED` | Three filter defects, one fatal — see below |
+| `BLD-X-FE-REPORT-001b` (Budget) | `INTEGRATED` | Same denial-reads-as-data gap: denied users saw ₹0 stat cards and "Not set". Contracts, money-as-cents conversion and all three permission keys verified clean |
+
+**The project directory's Status filter returned 400 for the whole page.** It
+offered `PLANNING` and `ON_HOLD`; `project_status` is a pgEnum of
+`ACTIVE`/`COMPLETED`/`ARCHIVED` and the list query parses `status` through
+`z.enum`, so selecting either failed validation. Worse, `filterStatus` came
+straight from `searchParams.get()` unvalidated, so any hand-typed value did the
+same — the menu was only one way in. The Health filter was inert **twice
+over**: its values (`healthy`/`critical`) are not the ones the service computes
+(`on_track`/`at_risk`/`off_track`), and `visibleProjects` never applied
+`activeFilters.health` at all. "Order by: Created" had no branch in
+`sortProjects` and no `createdAt` on the row, so it silently left the list
+unsorted.
+
+The agent fixed Health's values but left `ProjectActiveFilters.status` and
+`.health` typed as bare `string` — **which is why the wrong literals compiled**.
+Narrowing both to the real unions immediately failed the typecheck at the
+producers and exposed the unvalidated URL parameters. They are now parsed with
+the idiom already three lines above them (`VIEW_MODES.find(...)`), so an
+impossible value cannot compile into the request.
+
+**The denial-reads-as-emptiness pattern is systemic, not incidental.** Four
+instances in four pages, all the same shape: a hook gates itself with
+`enabled: canX`, and a disabled TanStack Query v5 read reports
+`isLoading: false` (disabled ⇒ `isFetching: false` ⇒ `isPending && isFetching`
+is false). Any page that branches only on `isLoading`/`isError` therefore shows
+its *empty* state to a *denied* user — on `/build` that meant inviting an
+unauthorized user to "Create your first project". Fixed with
+`useCanState` + `resolveGate` + `NoPermissionState`; treat the hook's own
+`enabled` boolean as request suppression only, never as the render gate.
+
+Two defects found in review that no agent reported:
+
+- **`projects-analytics.service.ts` sent SUM aggregates to the client as
+  strings.** `sql<number>` is a type annotation, not a coercion: `SUM` over the
+  `integer` `storyPoints` column returns `bigint` and `SUM` over the
+  `decimal(6,2)` `hours` column returns `numeric`, and postgres-js hands back
+  both as strings. `cycleVelocity` and `estimateVsActual` are returned raw and
+  the frontend contract types them `z.number()`, so `applyContract` threw for
+  any project with a completed cycle or a logged timesheet. The health-score
+  maths already wrapped these in `Number()`, so **the server-side arithmetic was
+  right while the payload was wrong** — which is why it survived review twice.
+  Three sites fixed with `.mapWith(Number)`; the correct idiom was already in
+  `projects-velocity-report.ts` in the same module.
+- **The frontend did not compile at `HEAD`.** `features/calendar/event-create-form.tsx`
+  had an unclosed `<div>` (`TS17008` at 131:16, committed in `2e1661dc0`), so
+  every frontend typecheck aborted and no packet could be verified at all.
+  Fixing the parse then surfaced a second error the syntax error had masked:
+  `useCallback` was referenced but never imported, since line 3 is a
+  default-only `import React from "react"`. Nothing in CI builds the frontend
+  on the way in, or neither would have landed.
+
+Evidence: frontend `tsc --noEmit` **10 → 7 errors, none in any file this cycle
+touched** (the remaining 7 are another session's in-flight `features/hr/**`
+work, independently reported by a second agent). Backend
+`tsc -p tsconfig.json --noEmit` **111, unchanged**. Project-list 5 suites / 10
+tests; analytics 3 suites / 8; my-work 2 suites / 6; budget 4; backend
+coercion 4 with a deliberate control case. Commits `5703c266d`, `5ffbc3755`,
+`7ad4ecb82`, `3765557b3`, `4e6f93c01`, `afe2e025f`, `02a4a187c`.
+
+A note on testing coercion without a database: the obvious test — grepping the
+source for `mapWith` — passes vacuously. The spec instead captures the Drizzle
+select object and asserts its decoder maps `"40"` to `40`, with a fourth case
+proving an absent decoder leaves the string. Stripping all three calls fails
+exactly three of four.
+
 ## The Controller E2E Tier Was Writing To Production — 2026-09-20
 
 Found while sizing `BLD-X-BE-E2E-STATUS-001`, whose whole method is *run the spec
