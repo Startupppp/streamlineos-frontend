@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PmPageShell, PmSection } from "@/components/pm-chrome";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { ViewSwitcher } from "@/features/build/views/view-switcher";
+import { ViewSwitcher, type ViewType } from "@/features/build/views/view-switcher";
 import { DisplayOptionsPanel } from "@/features/build/views/display-options-panel";
 import { useDisplayOptions } from "@/features/build/views/use-display-options";
 import { Button } from "@/components/ui/button";
@@ -99,8 +99,7 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
   );
 
   const handleViewChange = useCallback(
-    (next: string) => {
-      if (!MY_WORK_VIEWS.includes(next as (typeof MY_WORK_VIEWS)[number])) return;
+    (next: ViewType) => {
       const params = new URLSearchParams(searchParams.toString());
       if (next === "list") params.delete("view");
       else params.set("view", next);

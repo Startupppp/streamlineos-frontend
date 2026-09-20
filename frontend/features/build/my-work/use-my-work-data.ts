@@ -65,6 +65,8 @@ function buildAllWorkFilters(params: URLSearchParams) {
   const assigneeId = params.get("assigneeId") ?? "";
   const labels = params.get("labels") ?? "";
   const projectIds = params.get("projectIds") ?? "";
+  const dueDateFrom = params.get("dueDateFrom") ?? "";
+  const dueDateTo = params.get("dueDateTo") ?? "";
   return {
     ...(q ? { search: q } : {}),
     ...(status ? { status } : {}),
@@ -73,6 +75,8 @@ function buildAllWorkFilters(params: URLSearchParams) {
     ...(assigneeId ? { assigneeId } : {}),
     ...(labels ? { labelIds: labels } : {}),
     ...(projectIds ? { projectIds } : {}),
+    ...(dueDateFrom ? { dueDateFrom } : {}),
+    ...(dueDateTo ? { dueDateTo } : {}),
   };
 }
 
