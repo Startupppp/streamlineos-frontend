@@ -115,24 +115,46 @@ Nothing in this lane was exercised against a live database. No disposable enviro
 
 ---
 
-## ⚠ Cross-lane hazard found 2026-09-20 — six committed migrations will never run
+## ✅ Cross-lane hazard found AND closed 2026-09-20 — six committed migrations had never run
 
-`pnpm check:migration-discipline` exits **1**. Six `.sql` files are committed but absent from `migrations/meta/_journal.json`, so **`db:migrate` skips them while printing success** — the exact defect found and fixed for `1123_ai_action_proposals_rls` the same day, where the consequence was a table holding leave reasons, candidate emails and bonus amounts running with no RLS.
+`pnpm check:migration-discipline` exited **1** on six `.sql` files that were committed but absent from
+`migrations/meta/_journal.json`, so **`db:migrate` skipped them while printing success** — the same
+defect found and fixed for `1123_ai_action_proposals_rls` the same day.
 
-| File | Committed in | Problem |
+**They were not merely unjournalled. All six were verified ABSENT from the production catalog, while
+the code that needs them was already deployed.** Each was a live failure waiting on a code path:
+
+| Migration | Production before | Live consequence |
 |---|---|---|
-| `1120_add_landed_cost_tag.sql` | `b37dbf487` | no journal entry · number 1120 also claimed by `1120_feedbucket_widget_defaults.sql` |
-| `1121_requisition_headcount_link.sql` | `71ae380be` | no journal entry · number 1121 also claimed by `1121_chat_presence_custom_status.sql` |
-| `1124_build_comment_draft_evidence.sql` | `7960c2e6e` | no journal entry |
-| `1125_build_managed_product_memberships.sql` | `7960c2e6e` | no journal entry |
-| `1126_build_project_updates.sql` | `7960c2e6e` | no journal entry |
-| `1127_build_project_attachments.sql` | `7960c2e6e` | no journal entry |
+| `1121_requisition_headcount_link` | `job_requisitions.headcount_id` absent | **Creating a job requisition failed outright with `42703`.** Drizzle emits `headcount_id` in *both* the INSERT column list and `RETURNING` — confirmed by rendering the SQL — so every create hit a missing column. Unconditional. |
+| `1120_add_landed_cost_tag` | `gl_system_tag` had no `landed_cost` | `22P02` on any account tagged `landed_cost`. The DTO derives from the pgEnum, so the API accepted a value the database rejected. |
+| `1124_build_comment_draft_evidence` | 0 of 6 columns on `build.comment_drafts` | `42703` — `agent-pulse.service.ts` selects `proposedChange` / `affectedRecordIds` and filters on `retryCount`. |
+| `1125_build_managed_product_memberships` | table absent | `42P01` from `scope-directory.service.ts`. |
+| `1126_build_project_updates` | table absent | `42P01` from `updates.service.ts`. |
+| `1127_build_project_attachments` | table absent | `42P01` from `files.service.ts`. |
 
-**Not fixed here, deliberately.** Journalling a migration asserts it *should* run; if any was already applied out-of-band, adding it replays it. The two duplicate prefixes need a rename, which rewrites files the accounting, recruitment and build lanes own. This needs each owning lane to confirm its file's applied state first.
+**All six are now applied and verified live.** Ledger **17 → 23 rows**. Each was journalled with a
+strictly-increasing `when`, dry-run first, then applied with `--tag=` alone — never bare `db:migrate`,
+which would still try to replay ~870 migrations against a live 1,041-table database. The runner wraps
+each migration in one `sql.begin(...)`, so partial application was impossible.
 
-**What closes it:** per file, check whether its end state is already live (query the catalog for the objects it creates, as was done for 1123), then either append a journal entry with a strictly-increasing `when`, or add it to the gate baseline with the evidence that it is already applied. Renumber the two duplicates in their owning lane.
+Verified in the production catalog afterwards rather than trusted from the runner's output:
+`headcount_id` integer/nullable with `fk_job_requisitions_headcount_org` **validated** and
+`idx_requisitions_headcount` present; `gl_system_tag` carries `landed_cost`; all 6 `comment_drafts`
+columns; all three `build` tables. `job_requisitions` held **0 rows**, so the FK validation and the
+column add were both trivial and took no rewrite.
 
----
+⚠ **Still open, and deliberately not touched: two duplicate migration numbers.** `1120` is claimed by
+both `1120_add_landed_cost_tag.sql` and `1120_feedbucket_widget_defaults.sql`; `1121` by both
+`1121_requisition_headcount_link.sql` and `1121_chat_presence_custom_status.sql`. Two lanes numbered
+independently. The journal keys on `tag`, not the number, so this breaks nothing at runtime — but
+`check:migration-discipline` still reports `[dup-prefix]` for both, and renaming a file belongs to the
+lane that owns it.
+
+**The lesson this lane should carry:** journalling is not bookkeeping. An unjournalled migration is
+indistinguishable from an applied one at every static gate — typecheck passes, jest passes, the build
+passes, `db:migrate` prints success — and only shows up as a runtime `42703`/`42P01` in front of a
+customer. The catalog is the only authority.
 
 ## §A — Absorbed from `2026-09-19-tenant-connection-hold-prd.md`
 
