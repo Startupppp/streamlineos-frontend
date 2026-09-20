@@ -491,6 +491,39 @@ and a frozen entry describing a budget that no longer applies is worse than no e
 from reading services one at a time — the manual approach had already produced one wrong guess.
 Commit `b2ab4f361`.
 
+### H19 — the AI ceiling, worked down 24 → 13 ✅ IN PROGRESS, ceiling holds
+
+Five more routes three-phased the way H3 and H13 established. Commit `3782ec03f`.
+
+| Route | Service | Shape |
+|---|---|---|
+| `support-ai#translateMessage` · `#translateDraft` · `#improveReply` | `SupportAiTranslationService` | reads → provider → **no writes**, so only the read phase needed wrapping |
+| `support-ai#suggestMacro` | `SupportAiTriageService` | reads → provider → writes, two short transactions |
+| `support-ai#analyze` | `SupportAiTriageAnalysisService` | same |
+
+⚠ **Three siblings on the same controllers were deliberately left, because their "read phase" is not
+one.** `suggestReply` and `generateHandoffSummary` call `searchKbForTicket`; `findRootCauseCluster` calls
+`upsertAndSearchSimilar`. Both **embed through the AI gateway partway through the reads**, so wrapping
+that phase in a transaction would hold a connection across an *embedding* call — a new hold in place of
+the old one. They need the KB search split first: reads, embed, vector query. My own first pass
+classified `findRootCauseCluster` as safe because I grepped only for `searchKbForTicket`; the second
+helper does the same thing under another name.
+
+**The remaining 13, and what each needs:**
+
+| Blocked on a real constraint | Why |
+|---|---|
+| `support-ai#suggestReply` · `#generateHandoffSummary` · `#findRootCauseCluster` | embed mid-phase, see above |
+| `inv-ai-explain#getReorderProposal` | `inv-ai-proposal.spec.ts:572` pins that the service holds no DB handle |
+| `mail#aiInboxSummary` | `MailService.listMessages` falls through to a Gmail/Outlook fetch |
+
+| Tractable, same pattern as above | `comment-drafts#generateDraft` · `chat-summarize#summarize` · `hr-email-templates#generateAi` · `recruitment#aiScore` · `#compositeScore` · `#resumeParse` · `mail#aiDraft` · `mail#aiThreadSummary` |
+
+**Testing note that cost real time:** four specs needed `withDelegatingTransaction` *and*
+`primeRelocationTrafficTracker`. The second is not optional — `withTenant` fires
+`refreshRelocationTargets`, which issues its own `select`, so a double that counts `select` calls
+silently answers the **wrong row**. That is what made a mailbox sweep read `disabled` in H17.
+
 ### ⚠ Known recall gaps in the gate — both now closed
 
 Two misses, by construction, both confirmed against real code — **both closed by H18/H17**:
