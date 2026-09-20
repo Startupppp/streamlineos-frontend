@@ -36,7 +36,6 @@ import {
 } from "@/lib/date-constraints";
 import { refineDateOrder, refineNotBeforeToday } from "@/lib/date-refinements";
 import type { Cycle } from "@/types/projects";
-import { useCan } from "@/hooks/api/access";
 
 const DESCRIPTION_MAX = 500;
 
