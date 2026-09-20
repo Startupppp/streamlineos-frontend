@@ -1,0 +1,21 @@
+{
+  "detector": {
+    "ignoreRules": [
+      "side-tab"
+    ],
+    "ignoreFiles": [
+      "features/hr/asset-returns/asset-returns-page.tsx"
+    ],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "features/hr/asset-returns/asset-returns-page.tsx"
+        ],
+        "createdAt": "2026-09-20T14:57:21.923Z",
+        "reason": "Intentional HRMS design pattern for status indication"
+      }
+    ]
+  }
+}
