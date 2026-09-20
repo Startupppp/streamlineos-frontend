@@ -208,7 +208,7 @@ export function OnboardingWizard() {
           className="flex flex-col flex-1 min-h-0"
         >
           <ScrollArea hideScrollbar className="min-h-0 flex-1">
-            <div className="overscroll-contain">
+            <div className="overscroll-contain pb-20 md:pb-0">
             {currentStep === 1 && <StepPersonalInfo form={form} />}
             {currentStep === 2 && (
               <StepEmployment form={form} departments={departments ?? []} />
@@ -219,7 +219,7 @@ export function OnboardingWizard() {
             </div>
           </ScrollArea>
 
-          <div className="shrink-0 flex items-center justify-between pt-4 mt-4 border-t">
+          <div className="shrink-0 flex items-center justify-between pt-4 mt-4 border-t bg-background z-10">
             <Button
               type="button"
               variant="outline"
