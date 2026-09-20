@@ -132,6 +132,22 @@ export function ReferenceChecksTab({ candidateId }: Props) {
     );
   }
 
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-status-danger-rule bg-status-danger-surface px-6 py-8 text-center">
+        <div className="text-sm font-medium text-status-danger-ink">
+          Failed to load reference checks
+        </div>
+        <p className="text-xs text-status-danger-ink">
+          {getErrorMessage(error)}
+        </p>
+        <Button variant="outline" size="sm" onClick={() => void refetch()}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
