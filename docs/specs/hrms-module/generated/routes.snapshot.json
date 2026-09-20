@@ -1,0 +1,2984 @@
+{
+  "version": 1,
+  "source": "frontend/app",
+  "scope": [
+    "/hr",
+    "/directory",
+    "/me",
+    "/payroll",
+    "/employee-onboarding"
+  ],
+  "count": 163,
+  "bySurface": {
+    "hr": 124,
+    "directory": 6,
+    "me": 9,
+    "payroll": 23,
+    "employee-onboarding": 1
+  },
+  "routes": [
+    {
+      "id": "HRM-PG-directory",
+      "path": "/directory",
+      "file": "frontend/app/(authenticated)/directory/page.tsx",
+      "surface": "directory",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-directory.$personId",
+      "path": "/directory/{personId}",
+      "file": "frontend/app/(authenticated)/directory/[personId]/page.tsx",
+      "surface": "directory",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [
+        "personId"
+      ],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-directory.access",
+      "path": "/directory/access",
+      "file": "frontend/app/(authenticated)/directory/access/page.tsx",
+      "surface": "directory",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-directory.settings",
+      "path": "/directory/settings",
+      "file": "frontend/app/(authenticated)/directory/settings/page.tsx",
+      "surface": "directory",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-directory.settings.$personId",
+      "path": "/directory/settings/{personId}",
+      "file": "frontend/app/(authenticated)/directory/settings/[personId]/page.tsx",
+      "surface": "directory",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [
+        "personId"
+      ],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-directory.workers",
+      "path": "/directory/workers",
+      "file": "frontend/app/(authenticated)/directory/workers/page.tsx",
+      "surface": "directory",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-employee-onboarding",
+      "path": "/employee-onboarding",
+      "file": "frontend/app/employee-onboarding/page.tsx",
+      "surface": "employee-onboarding",
+      "routeGroups": [],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr",
+      "path": "/hr",
+      "file": "frontend/app/(authenticated)/hr/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.access",
+      "path": "/hr/access",
+      "file": "frontend/app/(authenticated)/hr/access/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.accommodations",
+      "path": "/hr/accommodations",
+      "file": "frontend/app/(authenticated)/hr/accommodations/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.analytics",
+      "path": "/hr/analytics",
+      "file": "frontend/app/(authenticated)/hr/analytics/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.announcements",
+      "path": "/hr/announcements",
+      "file": "frontend/app/(authenticated)/hr/announcements/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.approvals",
+      "path": "/hr/approvals",
+      "file": "frontend/app/(authenticated)/hr/approvals/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.asset-returns",
+      "path": "/hr/asset-returns",
+      "file": "frontend/app/(authenticated)/hr/asset-returns/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.assets",
+      "path": "/hr/assets",
+      "file": "frontend/app/(authenticated)/hr/assets/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.attendance",
+      "path": "/hr/attendance",
+      "file": "frontend/app/(authenticated)/hr/attendance/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.background-verification",
+      "path": "/hr/background-verification",
+      "file": "frontend/app/(authenticated)/hr/background-verification/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.benefits",
+      "path": "/hr/benefits",
+      "file": "frontend/app/(authenticated)/hr/benefits/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.biometric",
+      "path": "/hr/biometric",
+      "file": "frontend/app/(authenticated)/hr/biometric/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.cases",
+      "path": "/hr/cases",
+      "file": "frontend/app/(authenticated)/hr/cases/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.comp-off",
+      "path": "/hr/comp-off",
+      "file": "frontend/app/(authenticated)/hr/comp-off/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.compensation-planning",
+      "path": "/hr/compensation-planning",
+      "file": "frontend/app/(authenticated)/hr/compensation-planning/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.compliance",
+      "path": "/hr/compliance",
+      "file": "frontend/app/(authenticated)/hr/compliance/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.contingent",
+      "path": "/hr/contingent",
+      "file": "frontend/app/(authenticated)/hr/contingent/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.dashboard",
+      "path": "/hr/dashboard",
+      "file": "frontend/app/(authenticated)/hr/dashboard/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.delegations",
+      "path": "/hr/delegations",
+      "file": "frontend/app/(authenticated)/hr/delegations/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.devices",
+      "path": "/hr/devices",
+      "file": "frontend/app/(authenticated)/hr/devices/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.document-review",
+      "path": "/hr/document-review",
+      "file": "frontend/app/(authenticated)/hr/document-review/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.document-types",
+      "path": "/hr/document-types",
+      "file": "frontend/app/(authenticated)/hr/document-types/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.documents",
+      "path": "/hr/documents",
+      "file": "frontend/app/(authenticated)/hr/documents/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.documents.editor.$documentId",
+      "path": "/hr/documents/editor/{documentId}",
+      "file": "frontend/app/(authenticated)/hr/documents/editor/[documentId]/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [
+        "documentId"
+      ],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.documents.editor.new",
+      "path": "/hr/documents/editor/new",
+      "file": "frontend/app/(authenticated)/hr/documents/editor/new/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.documents.templates",
+      "path": "/hr/documents/templates",
+      "file": "frontend/app/(authenticated)/hr/documents/templates/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.documents.templates.$templateId.edit",
+      "path": "/hr/documents/templates/{templateId}/edit",
+      "file": "frontend/app/(authenticated)/hr/documents/templates/[templateId]/edit/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [
+        "templateId"
+      ],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.documents.templates.new",
+      "path": "/hr/documents/templates/new",
+      "file": "frontend/app/(authenticated)/hr/documents/templates/new/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.email-templates",
+      "path": "/hr/email-templates",
+      "file": "frontend/app/(authenticated)/hr/email-templates/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.emergency",
+      "path": "/hr/emergency",
+      "file": "frontend/app/(authenticated)/hr/emergency/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.employees",
+      "path": "/hr/employees",
+      "file": "frontend/app/(authenticated)/hr/employees/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.employees.$employeeId",
+      "path": "/hr/employees/{employeeId}",
+      "file": "frontend/app/(authenticated)/hr/employees/[employeeId]/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [
+        "employeeId"
+      ],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.employees.find-expert",
+      "path": "/hr/employees/find-expert",
+      "file": "frontend/app/(authenticated)/hr/employees/find-expert/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.employees.skills-matrix",
+      "path": "/hr/employees/skills-matrix",
+      "file": "frontend/app/(authenticated)/hr/employees/skills-matrix/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.engagement",
+      "path": "/hr/engagement",
+      "file": "frontend/app/(authenticated)/hr/engagement/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.equity",
+      "path": "/hr/equity",
+      "file": "frontend/app/(authenticated)/hr/equity/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.event-stream",
+      "path": "/hr/event-stream",
+      "file": "frontend/app/(authenticated)/hr/event-stream/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.exit",
+      "path": "/hr/exit",
+      "file": "frontend/app/(authenticated)/hr/exit/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.expenses",
+      "path": "/hr/expenses",
+      "file": "frontend/app/(authenticated)/hr/expenses/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.feedback",
+      "path": "/hr/feedback",
+      "file": "frontend/app/(authenticated)/hr/feedback/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.fnf",
+      "path": "/hr/fnf",
+      "file": "frontend/app/(authenticated)/hr/fnf/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.geofencing",
+      "path": "/hr/geofencing",
+      "file": "frontend/app/(authenticated)/hr/geofencing/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.goals",
+      "path": "/hr/goals",
+      "file": "frontend/app/(authenticated)/hr/goals/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.handbook",
+      "path": "/hr/handbook",
+      "file": "frontend/app/(authenticated)/hr/handbook/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.helpdesk",
+      "path": "/hr/helpdesk",
+      "file": "frontend/app/(authenticated)/hr/helpdesk/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.holidays",
+      "path": "/hr/holidays",
+      "file": "frontend/app/(authenticated)/hr/holidays/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.identity",
+      "path": "/hr/identity",
+      "file": "frontend/app/(authenticated)/hr/identity/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.kpis",
+      "path": "/hr/kpis",
+      "file": "frontend/app/(authenticated)/hr/kpis/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.labor-relations",
+      "path": "/hr/labor-relations",
+      "file": "frontend/app/(authenticated)/hr/labor-relations/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.leave-policies",
+      "path": "/hr/leave-policies",
+      "file": "frontend/app/(authenticated)/hr/leave-policies/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.leaves",
+      "path": "/hr/leaves",
+      "file": "frontend/app/(authenticated)/hr/leaves/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.leaves.analytics",
+      "path": "/hr/leaves/analytics",
+      "file": "frontend/app/(authenticated)/hr/leaves/analytics/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.legal-holds",
+      "path": "/hr/legal-holds",
+      "file": "frontend/app/(authenticated)/hr/legal-holds/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.onboarding",
+      "path": "/hr/onboarding",
+      "file": "frontend/app/(authenticated)/hr/onboarding/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.onboarding.$userId",
+      "path": "/hr/onboarding/{userId}",
+      "file": "frontend/app/(authenticated)/hr/onboarding/[userId]/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [
+        "userId"
+      ],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.onboarding.probation",
+      "path": "/hr/onboarding/probation",
+      "file": "frontend/app/(authenticated)/hr/onboarding/probation/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.org",
+      "path": "/hr/org",
+      "file": "frontend/app/(authenticated)/hr/org/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.org-chart",
+      "path": "/hr/org-chart",
+      "file": "frontend/app/(authenticated)/hr/org-chart/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.overtime",
+      "path": "/hr/overtime",
+      "file": "frontend/app/(authenticated)/hr/overtime/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.performance",
+      "path": "/hr/performance",
+      "file": "frontend/app/(authenticated)/hr/performance/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.performance.analytics",
+      "path": "/hr/performance/analytics",
+      "file": "frontend/app/(authenticated)/hr/performance/analytics/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.positions",
+      "path": "/hr/positions",
+      "file": "frontend/app/(authenticated)/hr/positions/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment",
+      "path": "/hr/recruitment",
+      "file": "frontend/app/(authenticated)/hr/recruitment/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.analytics",
+      "path": "/hr/recruitment/analytics",
+      "file": "frontend/app/(authenticated)/hr/recruitment/analytics/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.automations",
+      "path": "/hr/recruitment/automations",
+      "file": "frontend/app/(authenticated)/hr/recruitment/automations/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.booking-links",
+      "path": "/hr/recruitment/booking-links",
+      "file": "frontend/app/(authenticated)/hr/recruitment/booking-links/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.candidates",
+      "path": "/hr/recruitment/candidates",
+      "file": "frontend/app/(authenticated)/hr/recruitment/candidates/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.candidates.$candidateId",
+      "path": "/hr/recruitment/candidates/{candidateId}",
+      "file": "frontend/app/(authenticated)/hr/recruitment/candidates/[candidateId]/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [
+        "candidateId"
+      ],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.candidates.import",
+      "path": "/hr/recruitment/candidates/import",
+      "file": "frontend/app/(authenticated)/hr/recruitment/candidates/import/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.candidates.intake",
+      "path": "/hr/recruitment/candidates/intake",
+      "file": "frontend/app/(authenticated)/hr/recruitment/candidates/intake/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.diversity-report",
+      "path": "/hr/recruitment/diversity-report",
+      "file": "frontend/app/(authenticated)/hr/recruitment/diversity-report/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.email-sequences",
+      "path": "/hr/recruitment/email-sequences",
+      "file": "frontend/app/(authenticated)/hr/recruitment/email-sequences/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.headcount",
+      "path": "/hr/recruitment/headcount",
+      "file": "frontend/app/(authenticated)/hr/recruitment/headcount/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.hiring-flows",
+      "path": "/hr/recruitment/hiring-flows",
+      "file": "frontend/app/(authenticated)/hr/recruitment/hiring-flows/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.inbox",
+      "path": "/hr/recruitment/inbox",
+      "file": "frontend/app/(authenticated)/hr/recruitment/inbox/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.internal-jobs",
+      "path": "/hr/recruitment/internal-jobs",
+      "file": "frontend/app/(authenticated)/hr/recruitment/internal-jobs/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.interviewer-performance",
+      "path": "/hr/recruitment/interviewer-performance",
+      "file": "frontend/app/(authenticated)/hr/recruitment/interviewer-performance/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.interviews",
+      "path": "/hr/recruitment/interviews",
+      "file": "frontend/app/(authenticated)/hr/recruitment/interviews/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.jobs",
+      "path": "/hr/recruitment/jobs",
+      "file": "frontend/app/(authenticated)/hr/recruitment/jobs/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.jobs.$jobId.edit",
+      "path": "/hr/recruitment/jobs/{jobId}/edit",
+      "file": "frontend/app/(authenticated)/hr/recruitment/jobs/[jobId]/edit/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [
+        "jobId"
+      ],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.jobs.new",
+      "path": "/hr/recruitment/jobs/new",
+      "file": "frontend/app/(authenticated)/hr/recruitment/jobs/new/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.offer-templates",
+      "path": "/hr/recruitment/offer-templates",
+      "file": "frontend/app/(authenticated)/hr/recruitment/offer-templates/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.offers",
+      "path": "/hr/recruitment/offers",
+      "file": "frontend/app/(authenticated)/hr/recruitment/offers/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.pipeline",
+      "path": "/hr/recruitment/pipeline",
+      "file": "frontend/app/(authenticated)/hr/recruitment/pipeline/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.question-bank",
+      "path": "/hr/recruitment/question-bank",
+      "file": "frontend/app/(authenticated)/hr/recruitment/question-bank/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.recruiters",
+      "path": "/hr/recruitment/recruiters",
+      "file": "frontend/app/(authenticated)/hr/recruitment/recruiters/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.refer",
+      "path": "/hr/recruitment/refer",
+      "file": "frontend/app/(authenticated)/hr/recruitment/refer/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.referrals",
+      "path": "/hr/recruitment/referrals",
+      "file": "frontend/app/(authenticated)/hr/recruitment/referrals/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.reports",
+      "path": "/hr/recruitment/reports",
+      "file": "frontend/app/(authenticated)/hr/recruitment/reports/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.requisitions",
+      "path": "/hr/recruitment/requisitions",
+      "file": "frontend/app/(authenticated)/hr/recruitment/requisitions/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.scorecard-analytics",
+      "path": "/hr/recruitment/scorecard-analytics",
+      "file": "frontend/app/(authenticated)/hr/recruitment/scorecard-analytics/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.scorecard-templates",
+      "path": "/hr/recruitment/scorecard-templates",
+      "file": "frontend/app/(authenticated)/hr/recruitment/scorecard-templates/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.settings",
+      "path": "/hr/recruitment/settings",
+      "file": "frontend/app/(authenticated)/hr/recruitment/settings/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.sla",
+      "path": "/hr/recruitment/sla",
+      "file": "frontend/app/(authenticated)/hr/recruitment/sla/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.sla-report",
+      "path": "/hr/recruitment/sla-report",
+      "file": "frontend/app/(authenticated)/hr/recruitment/sla-report/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.talent-pools",
+      "path": "/hr/recruitment/talent-pools",
+      "file": "frontend/app/(authenticated)/hr/recruitment/talent-pools/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.recruitment.vendors",
+      "path": "/hr/recruitment/vendors",
+      "file": "frontend/app/(authenticated)/hr/recruitment/vendors/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.reimbursements",
+      "path": "/hr/reimbursements",
+      "file": "frontend/app/(authenticated)/hr/reimbursements/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.retention",
+      "path": "/hr/retention",
+      "file": "frontend/app/(authenticated)/hr/retention/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.rosters",
+      "path": "/hr/rosters",
+      "file": "frontend/app/(authenticated)/hr/rosters/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.safety",
+      "path": "/hr/safety",
+      "file": "frontend/app/(authenticated)/hr/safety/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.service-delivery",
+      "path": "/hr/service-delivery",
+      "file": "frontend/app/(authenticated)/hr/service-delivery/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.settings",
+      "path": "/hr/settings",
+      "file": "frontend/app/(authenticated)/hr/settings/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.settings.automations",
+      "path": "/hr/settings/automations",
+      "file": "frontend/app/(authenticated)/hr/settings/automations/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.settings.company",
+      "path": "/hr/settings/company",
+      "file": "frontend/app/(authenticated)/hr/settings/company/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.settings.custom-fields",
+      "path": "/hr/settings/custom-fields",
+      "file": "frontend/app/(authenticated)/hr/settings/custom-fields/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.settings.forms",
+      "path": "/hr/settings/forms",
+      "file": "frontend/app/(authenticated)/hr/settings/forms/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.settings.forms.$formId",
+      "path": "/hr/settings/forms/{formId}",
+      "file": "frontend/app/(authenticated)/hr/settings/forms/[formId]/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [
+        "formId"
+      ],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.settings.forms.$formId.submissions",
+      "path": "/hr/settings/forms/{formId}/submissions",
+      "file": "frontend/app/(authenticated)/hr/settings/forms/[formId]/submissions/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [
+        "formId"
+      ],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.settings.import-export",
+      "path": "/hr/settings/import-export",
+      "file": "frontend/app/(authenticated)/hr/settings/import-export/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.settings.integrations",
+      "path": "/hr/settings/integrations",
+      "file": "frontend/app/(authenticated)/hr/settings/integrations/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.settings.policies",
+      "path": "/hr/settings/policies",
+      "file": "frontend/app/(authenticated)/hr/settings/policies/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.settings.preview",
+      "path": "/hr/settings/preview",
+      "file": "frontend/app/(authenticated)/hr/settings/preview/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.settings.templates",
+      "path": "/hr/settings/templates",
+      "file": "frontend/app/(authenticated)/hr/settings/templates/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.settings.versions",
+      "path": "/hr/settings/versions",
+      "file": "frontend/app/(authenticated)/hr/settings/versions/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.settings.workflows",
+      "path": "/hr/settings/workflows",
+      "file": "frontend/app/(authenticated)/hr/settings/workflows/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.shifts",
+      "path": "/hr/shifts",
+      "file": "frontend/app/(authenticated)/hr/shifts/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.simulator",
+      "path": "/hr/simulator",
+      "file": "frontend/app/(authenticated)/hr/simulator/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.termination",
+      "path": "/hr/termination",
+      "file": "frontend/app/(authenticated)/hr/termination/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.travel",
+      "path": "/hr/travel",
+      "file": "frontend/app/(authenticated)/hr/travel/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.travel.approvals",
+      "path": "/hr/travel/approvals",
+      "file": "frontend/app/(authenticated)/hr/travel/approvals/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.work-logs",
+      "path": "/hr/work-logs",
+      "file": "frontend/app/(authenticated)/hr/work-logs/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.workforce",
+      "path": "/hr/workforce",
+      "file": "frontend/app/(authenticated)/hr/workforce/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-hr.workforce-cost",
+      "path": "/hr/workforce-cost",
+      "file": "frontend/app/(authenticated)/hr/workforce-cost/page.tsx",
+      "surface": "hr",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-me.attendance",
+      "path": "/me/attendance",
+      "file": "frontend/app/(authenticated)/me/attendance/page.tsx",
+      "surface": "me",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-me.documents",
+      "path": "/me/documents",
+      "file": "frontend/app/(authenticated)/me/documents/page.tsx",
+      "surface": "me",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-me.expenses",
+      "path": "/me/expenses",
+      "file": "frontend/app/(authenticated)/me/expenses/page.tsx",
+      "surface": "me",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-me.job-openings",
+      "path": "/me/job-openings",
+      "file": "frontend/app/(authenticated)/me/job-openings/page.tsx",
+      "surface": "me",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-me.onboarding",
+      "path": "/me/onboarding",
+      "file": "frontend/app/(authenticated)/me/onboarding/page.tsx",
+      "surface": "me",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-me.pay",
+      "path": "/me/pay",
+      "file": "frontend/app/(authenticated)/me/pay/page.tsx",
+      "surface": "me",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-me.recruitment",
+      "path": "/me/recruitment",
+      "file": "frontend/app/(authenticated)/me/recruitment/page.tsx",
+      "surface": "me",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-me.referrals",
+      "path": "/me/referrals",
+      "file": "frontend/app/(authenticated)/me/referrals/page.tsx",
+      "surface": "me",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-me.time-off",
+      "path": "/me/time-off",
+      "file": "frontend/app/(authenticated)/me/time-off/page.tsx",
+      "surface": "me",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll",
+      "path": "/payroll",
+      "file": "frontend/app/(authenticated)/payroll/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.access",
+      "path": "/payroll/access",
+      "file": "frontend/app/(authenticated)/payroll/access/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.bank-transfers",
+      "path": "/payroll/bank-transfers",
+      "file": "frontend/app/(authenticated)/payroll/bank-transfers/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.bonuses",
+      "path": "/payroll/bonuses",
+      "file": "frontend/app/(authenticated)/payroll/bonuses/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.components",
+      "path": "/payroll/components",
+      "file": "frontend/app/(authenticated)/payroll/components/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.employees",
+      "path": "/payroll/employees",
+      "file": "frontend/app/(authenticated)/payroll/employees/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.employees.$employeeUserId",
+      "path": "/payroll/employees/{employeeUserId}",
+      "file": "frontend/app/(authenticated)/payroll/employees/[employeeUserId]/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [
+        "employeeUserId"
+      ],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.fnf",
+      "path": "/payroll/fnf",
+      "file": "frontend/app/(authenticated)/payroll/fnf/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.inputs",
+      "path": "/payroll/inputs",
+      "file": "frontend/app/(authenticated)/payroll/inputs/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.loans",
+      "path": "/payroll/loans",
+      "file": "frontend/app/(authenticated)/payroll/loans/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.payslips",
+      "path": "/payroll/payslips",
+      "file": "frontend/app/(authenticated)/payroll/payslips/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.reimbursements",
+      "path": "/payroll/reimbursements",
+      "file": "frontend/app/(authenticated)/payroll/reimbursements/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.reports",
+      "path": "/payroll/reports",
+      "file": "frontend/app/(authenticated)/payroll/reports/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.runs",
+      "path": "/payroll/runs",
+      "file": "frontend/app/(authenticated)/payroll/runs/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.runs.$runId",
+      "path": "/payroll/runs/{runId}",
+      "file": "frontend/app/(authenticated)/payroll/runs/[runId]/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [
+        "runId"
+      ],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.salary-structures",
+      "path": "/payroll/salary-structures",
+      "file": "frontend/app/(authenticated)/payroll/salary-structures/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.settings",
+      "path": "/payroll/settings",
+      "file": "frontend/app/(authenticated)/payroll/settings/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.settings.import-export",
+      "path": "/payroll/settings/import-export",
+      "file": "frontend/app/(authenticated)/payroll/settings/import-export/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.setup",
+      "path": "/payroll/setup",
+      "file": "frontend/app/(authenticated)/payroll/setup/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.taxes",
+      "path": "/payroll/taxes",
+      "file": "frontend/app/(authenticated)/payroll/taxes/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.team",
+      "path": "/payroll/team",
+      "file": "frontend/app/(authenticated)/payroll/team/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.templates",
+      "path": "/payroll/templates",
+      "file": "frontend/app/(authenticated)/payroll/templates/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    },
+    {
+      "id": "HRM-PG-payroll.workers.$workerId",
+      "path": "/payroll/workers/{workerId}",
+      "file": "frontend/app/(authenticated)/payroll/workers/[workerId]/page.tsx",
+      "surface": "payroll",
+      "routeGroups": [
+        "(authenticated)"
+      ],
+      "params": [
+        "workerId"
+      ],
+      "productOwner": null,
+      "disposition": null,
+      "finalPath": null,
+      "permission": null,
+      "callers": null,
+      "parent": null,
+      "back": null
+    }
+  ],
+  "duplicates": [],
+  "duplicateIds": [],
+  "bareDynamic": [],
+  "unowned": [
+    "HRM-PG-directory",
+    "HRM-PG-directory.$personId",
+    "HRM-PG-directory.access",
+    "HRM-PG-directory.settings",
+    "HRM-PG-directory.settings.$personId",
+    "HRM-PG-directory.workers",
+    "HRM-PG-employee-onboarding",
+    "HRM-PG-hr",
+    "HRM-PG-hr.access",
+    "HRM-PG-hr.accommodations",
+    "HRM-PG-hr.analytics",
+    "HRM-PG-hr.announcements",
+    "HRM-PG-hr.approvals",
+    "HRM-PG-hr.asset-returns",
+    "HRM-PG-hr.assets",
+    "HRM-PG-hr.attendance",
+    "HRM-PG-hr.background-verification",
+    "HRM-PG-hr.benefits",
+    "HRM-PG-hr.biometric",
+    "HRM-PG-hr.cases",
+    "HRM-PG-hr.comp-off",
+    "HRM-PG-hr.compensation-planning",
+    "HRM-PG-hr.compliance",
+    "HRM-PG-hr.contingent",
+    "HRM-PG-hr.dashboard",
+    "HRM-PG-hr.delegations",
+    "HRM-PG-hr.devices",
+    "HRM-PG-hr.document-review",
+    "HRM-PG-hr.document-types",
+    "HRM-PG-hr.documents",
+    "HRM-PG-hr.documents.editor.$documentId",
+    "HRM-PG-hr.documents.editor.new",
+    "HRM-PG-hr.documents.templates",
+    "HRM-PG-hr.documents.templates.$templateId.edit",
+    "HRM-PG-hr.documents.templates.new",
+    "HRM-PG-hr.email-templates",
+    "HRM-PG-hr.emergency",
+    "HRM-PG-hr.employees",
+    "HRM-PG-hr.employees.$employeeId",
+    "HRM-PG-hr.employees.find-expert",
+    "HRM-PG-hr.employees.skills-matrix",
+    "HRM-PG-hr.engagement",
+    "HRM-PG-hr.equity",
+    "HRM-PG-hr.event-stream",
+    "HRM-PG-hr.exit",
+    "HRM-PG-hr.expenses",
+    "HRM-PG-hr.feedback",
+    "HRM-PG-hr.fnf",
+    "HRM-PG-hr.geofencing",
+    "HRM-PG-hr.goals",
+    "HRM-PG-hr.handbook",
+    "HRM-PG-hr.helpdesk",
+    "HRM-PG-hr.holidays",
+    "HRM-PG-hr.identity",
+    "HRM-PG-hr.kpis",
+    "HRM-PG-hr.labor-relations",
+    "HRM-PG-hr.leave-policies",
+    "HRM-PG-hr.leaves",
+    "HRM-PG-hr.leaves.analytics",
+    "HRM-PG-hr.legal-holds",
+    "HRM-PG-hr.onboarding",
+    "HRM-PG-hr.onboarding.$userId",
+    "HRM-PG-hr.onboarding.probation",
+    "HRM-PG-hr.org",
+    "HRM-PG-hr.org-chart",
+    "HRM-PG-hr.overtime",
+    "HRM-PG-hr.performance",
+    "HRM-PG-hr.performance.analytics",
+    "HRM-PG-hr.positions",
+    "HRM-PG-hr.recruitment",
+    "HRM-PG-hr.recruitment.analytics",
+    "HRM-PG-hr.recruitment.automations",
+    "HRM-PG-hr.recruitment.booking-links",
+    "HRM-PG-hr.recruitment.candidates",
+    "HRM-PG-hr.recruitment.candidates.$candidateId",
+    "HRM-PG-hr.recruitment.candidates.import",
+    "HRM-PG-hr.recruitment.candidates.intake",
+    "HRM-PG-hr.recruitment.diversity-report",
+    "HRM-PG-hr.recruitment.email-sequences",
+    "HRM-PG-hr.recruitment.headcount",
+    "HRM-PG-hr.recruitment.hiring-flows",
+    "HRM-PG-hr.recruitment.inbox",
+    "HRM-PG-hr.recruitment.internal-jobs",
+    "HRM-PG-hr.recruitment.interviewer-performance",
+    "HRM-PG-hr.recruitment.interviews",
+    "HRM-PG-hr.recruitment.jobs",
+    "HRM-PG-hr.recruitment.jobs.$jobId.edit",
+    "HRM-PG-hr.recruitment.jobs.new",
+    "HRM-PG-hr.recruitment.offer-templates",
+    "HRM-PG-hr.recruitment.offers",
+    "HRM-PG-hr.recruitment.pipeline",
+    "HRM-PG-hr.recruitment.question-bank",
+    "HRM-PG-hr.recruitment.recruiters",
+    "HRM-PG-hr.recruitment.refer",
+    "HRM-PG-hr.recruitment.referrals",
+    "HRM-PG-hr.recruitment.reports",
+    "HRM-PG-hr.recruitment.requisitions",
+    "HRM-PG-hr.recruitment.scorecard-analytics",
+    "HRM-PG-hr.recruitment.scorecard-templates",
+    "HRM-PG-hr.recruitment.settings",
+    "HRM-PG-hr.recruitment.sla",
+    "HRM-PG-hr.recruitment.sla-report",
+    "HRM-PG-hr.recruitment.talent-pools",
+    "HRM-PG-hr.recruitment.vendors",
+    "HRM-PG-hr.reimbursements",
+    "HRM-PG-hr.retention",
+    "HRM-PG-hr.rosters",
+    "HRM-PG-hr.safety",
+    "HRM-PG-hr.service-delivery",
+    "HRM-PG-hr.settings",
+    "HRM-PG-hr.settings.automations",
+    "HRM-PG-hr.settings.company",
+    "HRM-PG-hr.settings.custom-fields",
+    "HRM-PG-hr.settings.forms",
+    "HRM-PG-hr.settings.forms.$formId",
+    "HRM-PG-hr.settings.forms.$formId.submissions",
+    "HRM-PG-hr.settings.import-export",
+    "HRM-PG-hr.settings.integrations",
+    "HRM-PG-hr.settings.policies",
+    "HRM-PG-hr.settings.preview",
+    "HRM-PG-hr.settings.templates",
+    "HRM-PG-hr.settings.versions",
+    "HRM-PG-hr.settings.workflows",
+    "HRM-PG-hr.shifts",
+    "HRM-PG-hr.simulator",
+    "HRM-PG-hr.termination",
+    "HRM-PG-hr.travel",
+    "HRM-PG-hr.travel.approvals",
+    "HRM-PG-hr.work-logs",
+    "HRM-PG-hr.workforce",
+    "HRM-PG-hr.workforce-cost",
+    "HRM-PG-me.attendance",
+    "HRM-PG-me.documents",
+    "HRM-PG-me.expenses",
+    "HRM-PG-me.job-openings",
+    "HRM-PG-me.onboarding",
+    "HRM-PG-me.pay",
+    "HRM-PG-me.recruitment",
+    "HRM-PG-me.referrals",
+    "HRM-PG-me.time-off",
+    "HRM-PG-payroll",
+    "HRM-PG-payroll.access",
+    "HRM-PG-payroll.bank-transfers",
+    "HRM-PG-payroll.bonuses",
+    "HRM-PG-payroll.components",
+    "HRM-PG-payroll.employees",
+    "HRM-PG-payroll.employees.$employeeUserId",
+    "HRM-PG-payroll.fnf",
+    "HRM-PG-payroll.inputs",
+    "HRM-PG-payroll.loans",
+    "HRM-PG-payroll.payslips",
+    "HRM-PG-payroll.reimbursements",
+    "HRM-PG-payroll.reports",
+    "HRM-PG-payroll.runs",
+    "HRM-PG-payroll.runs.$runId",
+    "HRM-PG-payroll.salary-structures",
+    "HRM-PG-payroll.settings",
+    "HRM-PG-payroll.settings.import-export",
+    "HRM-PG-payroll.setup",
+    "HRM-PG-payroll.taxes",
+    "HRM-PG-payroll.team",
+    "HRM-PG-payroll.templates",
+    "HRM-PG-payroll.workers.$workerId"
+  ]
+}
