@@ -700,6 +700,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/me/job-openings` · **Self-service** · hooks: `requirePermission("self:job-openings")` (server), `useSelfJobOpenings` — §8 member entitlement: browse internal openings and apply. Backend `GET|POST /hr/recruitment/me/job-openings*`, no `@RequireModule`
 - `/me/referrals` · **Self-service** · hooks: `requirePermission("self:referrals")` (server), `useSelfReferrals` — §8 member entitlement: submit and track own referrals. Backend `GET|POST /hr/recruitment/me/referrals`, no `@RequireModule`
 - `/me/time-off` · **Self-service** · hooks: `requirePermission("self:leaves")` (server), `→ features/me/time-off` — VIOLATION: `requirePermission` on a `/me/*` route; must be removed
+- `/me/team` · **Self-service** · hooks: `requireSession()` (server), `useManagerHome()` → `GET /me/team` (universal), `usePageState` (no permission, no module) + `PageState` (2026-09-21: the manager home — requests routed to the viewer as reporting manager (leave, WFH, timesheets, workflows) oldest first with due dates, the direct-report roster with today's presence, unsettled timesheets and probation end, missing timesheets, approved leave over the next fortnight and probation ending within thirty days; a member nobody reports to sees "Nobody reports to you yet"; sidebar "My Team" under For Me)
 
 ---
 
