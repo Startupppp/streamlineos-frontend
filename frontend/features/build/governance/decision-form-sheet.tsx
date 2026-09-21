@@ -81,21 +81,31 @@ export function DecisionFormSheet({
   }, [open, mode, defaultValues, form]);
 
   function handleSubmit(values: DecisionFormValues) {
-    const payload = {
-      title: values.title,
-      ...(values.context ? { context: values.context } : {}),
-      ...(values.decision ? { decision: values.decision } : {}),
-      ...(values.optionsConsidered ? { optionsConsidered: values.optionsConsidered } : {}),
-      status: values.status,
-      ...(values.ownerId ? { ownerId: values.ownerId } : {}),
-      ...(values.decidedAt ? { decidedAt: values.decidedAt } : {}),
-      ...(values.revisitAt ? { revisitAt: values.revisitAt } : {}),
-      ...(values.linkedTicketId ? { linkedTicketId: parseInt(values.linkedTicketId, 10) } : {}),
-    };
     if (mode === "edit" && defaultValues) {
-      onSubmitEdit({ decisionId: defaultValues.id, ...payload });
+      onSubmitEdit({
+        decisionId: defaultValues.id,
+        title: values.title,
+        context: values.context ? values.context : null,
+        decision: values.decision ? values.decision : null,
+        optionsConsidered: values.optionsConsidered ? values.optionsConsidered : null,
+        status: values.status,
+        ownerId: values.ownerId ? values.ownerId : null,
+        decidedAt: values.decidedAt ? values.decidedAt : null,
+        revisitAt: values.revisitAt ? values.revisitAt : null,
+        linkedTicketId: values.linkedTicketId ? parseInt(values.linkedTicketId, 10) : null,
+      });
     } else {
-      onSubmitCreate(payload);
+      onSubmitCreate({
+        title: values.title,
+        ...(values.context ? { context: values.context } : {}),
+        ...(values.decision ? { decision: values.decision } : {}),
+        ...(values.optionsConsidered ? { optionsConsidered: values.optionsConsidered } : {}),
+        status: values.status,
+        ...(values.ownerId ? { ownerId: values.ownerId } : {}),
+        ...(values.decidedAt ? { decidedAt: values.decidedAt } : {}),
+        ...(values.revisitAt ? { revisitAt: values.revisitAt } : {}),
+        ...(values.linkedTicketId ? { linkedTicketId: parseInt(values.linkedTicketId, 10) } : {}),
+      });
     }
   }
 

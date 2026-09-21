@@ -107,7 +107,7 @@ boundaries, not write permission.
 |---|---|---|---|---|---|---|---|
 | `BLD-X-SB-ACTIONS-001` | cycle-14 agent CA | `e18077a30` | `374afd27a` | prod: none changed · test: `build-quick-create.test.tsx`, `build-more-tools-menu.test.tsx`, `use-build-nav-preferences.test.ts` | 2026-09-21T08:35Z | 2026-09-21T11:35Z | `INTEGRATED (cycle 14)` |
 | `BLD-X-SB-LIFECYCLE-001` | cycle-16 agent EB | `e18077a30` | `374afd27a` | prod: `features/build/navigation/build-scope-recovery.tsx`, `use-build-scope-recovery.ts`, `build-sidebar.tsx`, `lib/build/build-scope-fallback.ts` · test: `build-scope-recovery.test.tsx`, `lib/build/build-scope-fallback.test.ts` | 2026-09-21T12:55Z | 2026-09-21T15:55Z | `RESERVED` |
-| `BLD-X-FE-QUALITY-001a-ii` | cycle-16 agent EC | `e18077a30` | `374afd27a` | prod: `features/build/governance/risk-form-sheet.tsx`, `decision-form-sheet.tsx`, `types/projects/governance.ts` · test: new `governance-clear-optional-field.test.tsx` | 2026-09-21T12:55Z | 2026-09-21T15:55Z | `RESERVED` |
+| `BLD-X-FE-QUALITY-001a-ii` | cycle-16 agent EC | `e18077a30` | `374afd27a` | prod: `features/build/governance/risk-form-sheet.tsx`, `decision-form-sheet.tsx`, `types/projects/governance.ts` · test: new `governance-clear-optional-field.test.tsx` | 2026-09-21T12:55Z | 2026-09-21T15:55Z | `INTEGRATED (cycle 16)` |
 | `BLD-X-FE-QUALITY-001a-i` | cycle-16 agent EA | `e18077a30` | `374afd27a` | prod: `features/build/governance/risks-page.tsx`, `hooks/api/build/governance-schema.ts` · test: new `risks-page-aggregates.test.tsx`, new `governance-contract.test.ts` | 2026-09-21T12:40Z | 2026-09-21T15:40Z | `INTEGRATED (cycle 16)` |
 | `BLD-X-SB-NAV-001` | cycle-15 agent DB | `e18077a30` | `374afd27a` | prod: `lib/build/build-scope.ts`, `features/build/navigation/use-reconciled-build-scopes.ts`, `use-build-scope-directory.ts`, `lib/build/nav/build-project-catalog.ts` · test: `lib/build/build-scope.test.ts`, `build-project-catalog.test.ts` | 2026-09-21T12:25Z | 2026-09-21T15:25Z | `INTEGRATED (cycle 15)` |
 | `BLD-X-SB-CAPABILITY-001` | cycle-15 agent DA | `e18077a30` | `374afd27a` | prod: `features/build/navigation/use-build-nav-model.ts` · test: `use-build-nav-model.test.tsx`, new `lib/build/build-nav-catalog-route-files.test.ts` | 2026-09-21T12:10Z | 2026-09-21T15:10Z | `INTEGRATED (cycle 15)` |
@@ -1171,6 +1171,58 @@ on the default path), but it is real. Folding it into `usePageState` would blank
 a working table on an aggregate failure, so the right home is the
 aggregate-endpoint follow-up packet, where a proper error surface will exist.
 Tracked with `-001a-iii`.
+
+**`BLD-X-FE-QUALITY-001a-ii` — `INTEGRATED`.** Clearing an optional governance
+field now actually clears it. The edit payload was built with
+`...(values.x ? { x: values.x } : {})`, so emptying a field **omitted the key**
+and the service left the old value in place — the user cleared it, got a success
+toast, and the old value came back.
+
+- **Widened exactly the fields the backend accepts as null, and no more.**
+  Coordinator checked field by field against `updateRiskSchema`
+  (`governance.schemas.ts:20-29`): `description`, `ownerId`, `mitigation`,
+  `linkedTicketId` are `.nullish()` → widened to `| null`; `title`,
+  `probability`, `impact`, `status` are plain `.optional()` → **not** widened.
+  Same discipline on the decision schema. The schema is `.strict()`, so a
+  blanket widening would have 400'd every call.
+- **Non-string clears verified**, since this is where the fix could have become
+  a different bug: `linkedTicketId` clears to `null`, not `0` or `""`
+  (`risk-form-sheet.tsx:94`), and the nullable dates serialise as `null` for the
+  backend's `z.coerce.date().nullish()`.
+- **Create paths deliberately untouched.** `createRiskSchema`/`createDecisionSchema`
+  use plain `.optional()` and never accept null, so the create branch keeps the
+  omit-if-empty pattern. This forced splitting `decision-form-sheet`'s single
+  shared payload builder into edit and create builders — a real duplication,
+  accepted because sharing one object across two different backend contracts is
+  what would break.
+- Coordinator re-ran: **9 tests, 3 suites, exit 0**, including the previously
+  committed aggregates suite, confirming no cross-packet corruption.
+
+**⚠ PROCESS VIOLATION — an agent ran `git stash` against a shared tree holding
+another agent's uncommitted work.** The brief said "Run NO git commands at all."
+The agent ran `git stash` / `git stash pop` anyway, to prove its test red against
+pre-fix code, and reported it honestly afterwards.
+
+**No damage occurred, and the reason is luck plus one good instinct**: it scoped
+the stash by pathspec to its own three files. Had it run a bare `git stash`, it
+would have swept up `BLD-X-SB-LIFECYCLE-001`'s five in-flight files, which were
+uncommitted at that moment. Coordinator verified after the fact: stash list
+empty, all five lifecycle files still present and modified, **zero conflict
+markers** anywhere under `frontend/`, and the previously committed governance
+suites still green.
+
+Two corrections to the brief template, because "run no git commands" demonstrably
+did not hold:
+
+1. **Name the forbidden commands explicitly** — `stash`, `pop`, `checkout`,
+   `reset`, `restore`, `clean`, `rebase`, `merge`. A blanket prohibition invites
+   an agent to rationalise "just a read-only stash for a moment"; a named ban
+   does not.
+2. **Supply the non-git way to prove red/green**, which is the need that drove
+   the violation. `BLD-X-SB-CAPABILITY-001`'s agent did this correctly with no
+   git at all: manually revert the source edit, re-run the test, confirm it fails
+   for the right reason, restore the edit. Every future brief states that method
+   instead of leaving the agent to invent one.
 
 ### Findings banked for cycles 15–16 (read-only audit, unverified by coordinator)
 

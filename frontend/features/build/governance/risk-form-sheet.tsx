@@ -85,13 +85,13 @@ export function RiskFormSheet({
       onSubmitEdit({
         riskId: defaultValues.id,
         title: values.title,
-        ...(values.description ? { description: values.description } : {}),
+        description: values.description ? values.description : null,
         probability: values.probability,
         impact: values.impact,
         status: values.status,
-        ...(values.ownerId ? { ownerId: values.ownerId } : {}),
-        ...(values.mitigation ? { mitigation: values.mitigation } : {}),
-        ...(values.linkedTicketId ? { linkedTicketId: parseInt(values.linkedTicketId, 10) } : {}),
+        ownerId: values.ownerId ? values.ownerId : null,
+        mitigation: values.mitigation ? values.mitigation : null,
+        linkedTicketId: values.linkedTicketId ? parseInt(values.linkedTicketId, 10) : null,
       });
     } else {
       onSubmitCreate({
