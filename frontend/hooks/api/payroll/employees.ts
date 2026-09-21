@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
@@ -41,7 +42,7 @@ interface CreateProfileBody {
 }
 
 export function useEmployeeProfiles(params?: {
-  page?: number;
+  cursor?: string;
   limit?: number;
   search?: string;
   workerType?: string;
@@ -57,6 +58,7 @@ export function useEmployeeProfiles(params?: {
       ),
     staleTime: 60_000,
     enabled: canView,
+    ...INLINE_READ_ERROR,
   });
 }
 
