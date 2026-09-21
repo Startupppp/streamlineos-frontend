@@ -259,6 +259,7 @@ export type ExtendedPermissionKey =
   | "self:job-openings"
   | "self:recruitment"
   | "self:referrals"
+  | "self:support"
   | "settings:api-tokens:read"
   | "settings:api-tokens:write"
   | "settings:custom-fields:manage"

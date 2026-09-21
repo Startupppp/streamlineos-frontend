@@ -164,7 +164,7 @@ export default function ServiceDeliveryPage() {
             action={
               showOps
                 ? { label: "Open cases", href: "/hr/cases" }
-                : { label: "Helpdesk", href: "/hr/helpdesk" }
+                : { label: "Employee support", href: "/me/support" }
             }
           />
         ) : (
@@ -181,7 +181,7 @@ export default function ServiceDeliveryPage() {
                   Safety
                 </Link>
                 <Link href="/hr/helpdesk" className="underline underline-offset-2">
-                  Helpdesk
+                  Employee support
                 </Link>
               </div>
             </div>

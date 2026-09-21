@@ -47,7 +47,7 @@ export const HR_GOVERNANCE_ROUTES: NavRoute[] = [
             requiredPermission: "hr:cases:view",
           },
           {
-            label: "HR Helpdesk",
+            label: "Employee support",
             icon: LifeBuoy,
             href: "/hr/helpdesk",
             requiredPermission: "hr:helpdesk:view",

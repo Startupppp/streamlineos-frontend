@@ -282,4 +282,52 @@ export const HR_PERMISSIONS: Permission[] = [
   { name: "hr:sensitive:view", resource: "hr:sensitive", action: "view", description: "View employee sensitive fields (salary, bank, tax, government ID, medical)" },
   { name: "hr:sensitive:manage", resource: "hr:sensitive", action: "manage", description: "Manage employee sensitive fields" },
   { name: "hr:custom-fields:manage", resource: "hr:custom-fields", action: "manage", description: "Manage HR custom field definitions" },
+  {
+    name: "hr:helpdesk:view",
+    resource: "hr:helpdesk",
+    action: "view",
+    description: "Open the employee support agent view",
+  },
+  {
+    name: "hr:helpdesk:create",
+    resource: "hr:helpdesk",
+    action: "create",
+    description: "Create employee support requests on the agent surface",
+  },
+  {
+    name: "hr:helpdesk:manage",
+    resource: "hr:helpdesk",
+    action: "manage",
+    description: "Administer employee support: every queue, routing and SLA configuration",
+  },
+  {
+    name: "hr:helpdesk:queue-hr",
+    resource: "hr:helpdesk",
+    action: "queue-hr",
+    description: "Work the HR employee support queue",
+  },
+  {
+    name: "hr:helpdesk:queue-it",
+    resource: "hr:helpdesk",
+    action: "queue-it",
+    description: "Work the IT employee support queue",
+  },
+  {
+    name: "hr:helpdesk:queue-finance",
+    resource: "hr:helpdesk",
+    action: "queue-finance",
+    description: "Work the Finance employee support queue",
+  },
+  {
+    name: "hr:helpdesk:queue-admin",
+    resource: "hr:helpdesk",
+    action: "queue-admin",
+    description: "Work the Admin employee support queue",
+  },
+  {
+    name: "hr:helpdesk:queue-legal",
+    resource: "hr:helpdesk",
+    action: "queue-legal",
+    description: "Work the Legal employee support queue",
+  },
 ];
