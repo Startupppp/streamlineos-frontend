@@ -14,7 +14,6 @@ import {
 } from "./nav/build-nav-destination";
 import { buildOrganizationNavGroups, toBuildNavGroups } from "./build-nav-groups";
 import { ORGANIZATION_BUILD_SCOPE, resolveBuildScope } from "./build-scope";
-import { ALL_VIEW_VALUES, VIEW_TYPES } from "./view-types";
 
 function accessWith(
   keys: PermissionKey[],
@@ -256,9 +255,6 @@ describe("isBuildDestinationActive — boardViews destination (project Issues)",
     expect(isBuildDestinationActive(issues, "/build/42/backlog", null)).toBe(false);
   });
 
-  it("VIEW_TYPES and ALL_VIEW_VALUES enumerate the same set so the nav model and the switcher cannot diverge", () => {
-    expect([...VIEW_TYPES].sort()).toEqual([...ALL_VIEW_VALUES].sort());
-  });
 });
 
 describe("isBuildDestinationActive — project Workload owns a route rather than a view parameter", () => {

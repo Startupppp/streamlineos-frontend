@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ALL_VIEW_VALUES, isViewType, type ViewType } from "@/lib/build/view-types";
+import { VIEW_TYPES, isViewType, type ViewType } from "@/lib/build/view-types";
 
 export type { ViewType } from "@/lib/build/view-types";
 export { parseViewType } from "@/lib/build/view-types";
@@ -52,7 +52,7 @@ const VIEW_META: Record<ViewType, ViewMeta> = {
   workload: { animatedIcon: UsersIcon, label: "Workload" },
 };
 
-const ALL_VIEWS = ALL_VIEW_VALUES.map((value) => ({ value, ...VIEW_META[value] }));
+const ALL_VIEWS = VIEW_TYPES.map((value) => ({ value, ...VIEW_META[value] }));
 
 export const ViewSwitcher = memo(function ViewSwitcher({
   activeView,
