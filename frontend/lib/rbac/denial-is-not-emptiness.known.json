@@ -24,7 +24,6 @@
   "features/build/all-work/all-work-views-menu.tsx",
   "features/build/automations/automations-page.tsx",
   "features/build/backlog/project-backlog-page.tsx",
-  "features/build/incidents/incident-detail-page.tsx",
   "features/build/managed-products/managed-product-detail-page.tsx",
   "features/build/modules/modules-page.tsx",
   "features/build/my-tickets/my-tickets-page.tsx",

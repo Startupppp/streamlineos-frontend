@@ -67,7 +67,7 @@ export function AiAssistantPage({ projectId }: AiAssistantPageProps) {
             className={PM_FILL_PANEL}
             illustration={<ShieldOff className="h-10 w-10 text-muted-foreground" />}
             title="Access restricted"
-            description="You need the projects:ai:use permission to use the AI Assistant."
+            description="You need the build:ai:use permission to use the AI Assistant."
           />
         </PmPageShell>
       </PageWrapper>
