@@ -38,7 +38,7 @@ export function HolidaysPage() {
   const updateMutation = useUpdateHoliday();
   const deleteMutation = useDeleteHoliday();
   const canManage = useCan("hr:attendance:manage");
-  const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
+  const pageState = usePageState({ permission: "self:attendance", isLoading, isError, error });
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const [viewMode, setViewMode] = useState<ViewMode>("calendar");
@@ -131,7 +131,7 @@ export function HolidaysPage() {
   return (
     <PageWrapper
       title="Holiday Calendar"
-      subtitle="Manage organization holidays across the year"
+      subtitle="Organization holidays across the year"
       actions={
         <div className="flex gap-2 items-center flex-nowrap">
           {showYearFilter && (
@@ -167,7 +167,7 @@ export function HolidaysPage() {
           </Tabs>
           {canManage && (
             <AnimatedIconButton icon={PlusIcon} iconSize={14} onClick={handleCreateClick} size="sm">
-              {" Add Holiday"}
+              {" Add holiday"}
             </AnimatedIconButton>
           )}
         </div>

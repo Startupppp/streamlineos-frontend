@@ -2,6 +2,6 @@ import { requirePermission } from "@/lib/rbac/require-permission";
 import { JobsPage } from "@/features/hr/recruitment/jobs-page";
 
 export default async function Page() {
-  await requirePermission("hr:employees:view");
+  await requirePermission("hr:requisitions:view");
   return <JobsPage />;
 }

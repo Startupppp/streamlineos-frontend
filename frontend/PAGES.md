@@ -288,7 +288,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/leaves` · **HR** · hooks: `→ features/hr/leaves`
 - `/hr/leaves/analytics` · **HR** · hooks: `→ features/hr/leaves`
 - `/hr/leave-policies` · **HR** · hooks: `→ features/hr/leaves`
-- `/hr/holidays` · **HR** · hooks: `→ features/hr/holidays`
+- `/hr/holidays` · **HR** · hooks: `requirePermission("self:attendance")` (server, nav-aligned), `useHolidays` → `GET /me/attendance/holidays` (`self:attendance`), `usePageState` + `PageState`, `→ features/hr/holidays`. 2026-09-21 (FE#133): the list read, the nav entry and the page gate all use the ESS route's key `self:attendance` (universal for active members; the admin route `/hr/attendance/holidays` returns the identical `org_holidays` rows); Add/Edit/Delete controls and their `useAuthorizedMutation`s gate on `hr:attendance:manage`, the exact key of `POST/PATCH/DELETE /hr/attendance/holidays*`. No key is invented and no catalog changes. CTA is "Add holiday" (audit §5).
 - `/hr/work-logs` · **HR** · hooks: `→ features/hr/work-logs`
 - `/hr/overtime` · **HR** · hooks: `→ features/hr/overtime`
 - `/hr/shifts` · **HR** · hooks: `→ features/hr/shifts`
