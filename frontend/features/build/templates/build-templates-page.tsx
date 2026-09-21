@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RequireModule } from "@/components/auth/require-module";
@@ -17,6 +17,8 @@ import {
   useDeleteProjectTemplate,
   type ProjectTemplate,
 } from "@/hooks/api/build";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { TemplateCard } from "@/features/build/templates/template-card";
 import { CreateTemplateSheet } from "@/features/build/templates/create-template-sheet";
 import { ApplyTemplateDialog } from "@/features/build/templates/apply-template-dialog";
@@ -65,11 +67,19 @@ function TemplatesGridSkeleton() {
 }
 
 export function BuildTemplatesPage() {
-  const { data: templates, isLoading, isError, refetch } = useProjectTemplates();
+  const canManage = useCan("build:manage");
+  const { data: templates, isLoading, isError, error, refetch } = useProjectTemplates();
   const deleteTemplate = useDeleteProjectTemplate();
   const [createOpen, setCreateOpen] = useState(false);
   const [applyTarget, setApplyTarget] = useState<ProjectTemplate | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProjectTemplate | null>(null);
+
+  const pageState = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError,
+    error,
+  });
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
@@ -96,20 +106,51 @@ export function BuildTemplatesPage() {
     void refetch();
   }
 
+  if (pageState.kind === "loading") {
+    return (
+      <RequireModule module="build">
+        <PageWrapper
+          title="Templates"
+          subtitle="Reusable project structures to bootstrap new work"
+        >
+          <PmPageShell>
+            <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+              <TemplatesGridSkeleton />
+            </PmSection>
+          </PmPageShell>
+        </PageWrapper>
+      </RequireModule>
+    );
+  }
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
+    return (
+      <RequireModule module="build">
+        <PageWrapper
+          title="Templates"
+          subtitle="Reusable project structures to bootstrap new work"
+        >
+          <PageState
+            resolution={pageState}
+            loading={null}
+            onRetry={handleRetry}
+            className="flex-1"
+          />
+        </PageWrapper>
+      </RequireModule>
+    );
+  }
+
   return (
     <RequireModule module="build">
       <PageWrapper
         title="Templates"
         subtitle="Reusable project structures to bootstrap new work"
-        actions={<NewTemplateButton onClick={handleOpenCreate} />}
+        actions={canManage ? <NewTemplateButton onClick={handleOpenCreate} /> : undefined}
       >
         <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            {isLoading ? (
-              <TemplatesGridSkeleton />
-            ) : isError ? (
-              <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
-            ) : templates && templates.length > 0 ? (
+            {templates && templates.length > 0 ? (
               <PmStaggerList
                 className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
                 role="list"
@@ -127,12 +168,12 @@ export function BuildTemplatesPage() {
               </PmStaggerList>
             ) : (
               <EmptyState
-                  className={PM_FILL_PANEL}
-                  illustration={<EmptyProjectsIllustration className="h-32 w-32" />}
-                  title="No templates yet"
-                  description="Create a reusable project structure to bootstrap new projects quickly."
-                  action={{ label: "Create your first template", onClick: handleOpenCreate }}
-                />
+                className={PM_FILL_PANEL}
+                illustration={<EmptyProjectsIllustration className="h-32 w-32" />}
+                title="No templates yet"
+                description="Create a reusable project structure to bootstrap new projects quickly."
+                action={canManage ? { label: "Create your first template", onClick: handleOpenCreate } : undefined}
+              />
             )}
           </PmSection>
         </PmPageShell>
@@ -147,7 +188,7 @@ export function BuildTemplatesPage() {
           open={!!deleteTarget}
           onOpenChange={handleDeleteDialogChange}
           title="Delete template?"
-          description={`“${deleteTarget?.name ?? ""}” will be permanently deleted. Projects created from it will not be affected.`}
+          description={`"${deleteTarget?.name ?? ""}" will be permanently deleted. Projects created from it will not be affected.`}
           confirmLabel="Delete"
           destructive
           onConfirm={handleDelete}

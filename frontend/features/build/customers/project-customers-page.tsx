@@ -6,12 +6,12 @@ import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState, NoPermissionState } from "@/components/shared";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { useProjectCustomers } from "@/hooks/api/build/customers";
-import { useCan } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { EmptyCompaniesIllustration } from "@/components/illustrations";
 import { useCustomerDisplayPrefs } from "./use-customer-display-prefs";
@@ -67,13 +67,18 @@ export function ProjectCustomersPage() {
     setCursorStack([]);
   }, [debouncedSearch, searchParams, updateParams]);
 
-  const canView = useCan("build:customers:view");
-
-  const { data, isLoading, isError, refetch } = useProjectCustomers({
+  const { data, isLoading, isError, error, refetch } = useProjectCustomers({
     search: debouncedSearch.trim() || undefined,
     industry: filters.industry,
     cursor,
     limit: PAGE_SIZE,
+  });
+
+  const pageState = usePageState({
+    permission: "build:customers:view",
+    isLoading,
+    isError,
+    error,
   });
 
   const handleSearchChange = useCallback((value: string) => {
@@ -135,51 +140,6 @@ export function ProjectCustomersPage() {
   const hasPrev = cursorStack.length > 0;
   const hasNext = !!data?.pagination.hasMore;
 
-  if (!canView) {
-    return (
-      <PageWrapper
-        title="Customers"
-        subtitle="CRM companies linked to this workspace"
-        noInternalScroll
-      >
-        <NoPermissionState
-          permission="build:customers:view"
-          description="You don't have permission to view customers."
-          className="flex-1 min-h-0"
-        />
-      </PageWrapper>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <PageWrapper
-        title="Customers"
-        subtitle="CRM companies linked to this workspace"
-        noInternalScroll
-      >
-        <DataTableSkeleton rows={12} columns={5} className="flex-1" />
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper
-        title="Customers"
-        subtitle="CRM companies linked to this workspace"
-        noInternalScroll
-      >
-        <ErrorState
-          title="Failed to load customers"
-          description="An error occurred while loading your customers."
-          onRetry={handleRetry}
-          className="flex-1"
-        />
-      </PageWrapper>
-    );
-  }
-
   return (
     <PageWrapper
       title="Customers"
@@ -206,35 +166,42 @@ export function ProjectCustomersPage() {
         </div>
       }
     >
-      <motion.div
-        className="flex min-h-0 flex-1 flex-col gap-3"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
+      <PageState
+        resolution={pageState}
+        loading={<DataTableSkeleton rows={12} columns={5} className="flex-1" />}
+        onRetry={handleRetry}
+        className="flex min-h-0 flex-1 flex-col"
       >
-        <motion.div variants={fadeUp} className="flex min-h-0 flex-1 flex-col">
-          <CustomerTable
-            customers={filteredCustomers}
-            prefs={prefs}
-            hasPrev={hasPrev}
-            hasNext={hasNext}
-            onPrevPage={handlePrevPage}
-            onNextPage={handleNextPage}
-            emptyState={
-              <EmptyState
-                illustration={
-                  <EmptyCompaniesIllustration className="h-full w-full" />
-                }
-                title="No customers found"
-                description={customersFiltersActive ? undefined : "Companies from your CRM will appear here."}
-                filtersActive={customersFiltersActive}
-                onClearFilters={handleClearCustomerFilters}
-                className="border-0 bg-transparent min-h-[40dvh]"
-              />
-            }
-          />
+        <motion.div
+          className="flex min-h-0 flex-1 flex-col gap-3"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div variants={fadeUp} className="flex min-h-0 flex-1 flex-col">
+            <CustomerTable
+              customers={filteredCustomers}
+              prefs={prefs}
+              hasPrev={hasPrev}
+              hasNext={hasNext}
+              onPrevPage={handlePrevPage}
+              onNextPage={handleNextPage}
+              emptyState={
+                <EmptyState
+                  illustration={
+                    <EmptyCompaniesIllustration className="h-full w-full" />
+                  }
+                  title="No customers found"
+                  description={customersFiltersActive ? undefined : "Companies from your CRM will appear here."}
+                  filtersActive={customersFiltersActive}
+                  onClearFilters={handleClearCustomerFilters}
+                  className="border-0 bg-transparent min-h-[40dvh]"
+                />
+              }
+            />
+          </motion.div>
         </motion.div>
-      </motion.div>
+      </PageState>
     </PageWrapper>
   );
 }

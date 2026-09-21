@@ -2,9 +2,9 @@
 
 import { useEffect } from "react";
 import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useUnsavedChangesGuard } from "@/hooks/common/use-unsaved-changes-guard";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   Form,
   FormField,
@@ -24,37 +24,30 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { FormSheetChrome } from "@/components/shared";
+import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 import type {
   PmWorkspace,
   CreatePmWorkspaceInput,
   UpdatePmWorkspaceInput,
 } from "@/types/projects";
 import { lowerCaseFieldChange } from "@/lib/case-field";
+import {
+  createPmWorkspaceFormSchema,
+  editPmWorkspaceFormSchema,
+  type CreatePmWorkspaceFormInput,
+  type EditPmWorkspaceFormInput,
+} from "./pm-workspace-form-schema";
 
-const createSchema = z.object({
-  name: z.string().min(1, "Required").max(120),
-  slug: z
-    .string()
-    .min(1, "Required")
-    .max(60)
-    .regex(/^[a-z][a-z0-9-]*$/, "Lowercase letters, digits or hyphens; must start with a letter"),
-});
-
-const editSchema = z.object({
-  name: z.string().min(1, "Required").max(120),
-  status: z.enum(["active", "archived"]),
-});
-
-type CreateFormValues = z.infer<typeof createSchema>;
-type EditFormValues = z.infer<typeof editSchema>;
-
-const CREATE_DEFAULTS: CreateFormValues = { name: "", slug: "" };
-const EDIT_DEFAULTS: EditFormValues = { name: "", status: "active" };
+const CREATE_DEFAULTS: CreatePmWorkspaceFormInput = { name: "", slug: "" };
+const EDIT_DEFAULTS: EditPmWorkspaceFormInput = { name: "", status: "active" };
 
 const PM_WORKSPACE_STATUSES = ["active", "archived"] as const;
 
-function toEditForm(w: PmWorkspace): EditFormValues {
-  return { name: w.name, status: PM_WORKSPACE_STATUSES.find((v) => v === w.status) ?? "active" };
+function toEditForm(w: PmWorkspace): EditPmWorkspaceFormInput {
+  return {
+    name: w.name,
+    status: PM_WORKSPACE_STATUSES.find((v) => v === w.status) ?? "active",
+  };
 }
 
 interface CreateProps {
@@ -88,16 +81,19 @@ export function PmWorkspaceFormSheet({
   onSubmitEdit,
   isPending,
 }: Props) {
-  const createForm = useForm<CreateFormValues>({
-    resolver: zodResolver(createSchema),
+  const createForm = useForm<CreatePmWorkspaceFormInput>({
+    resolver: zodResolver(createPmWorkspaceFormSchema),
     defaultValues: CREATE_DEFAULTS,
   });
 
-  const editForm = useForm<EditFormValues>({
-    resolver: zodResolver(editSchema),
+  const editForm = useForm<EditPmWorkspaceFormInput>({
+    resolver: zodResolver(editPmWorkspaceFormSchema),
     defaultValues: EDIT_DEFAULTS,
   });
-  useRegisterBuildDirtyState(open && (createForm.formState.isDirty || editForm.formState.isDirty));
+
+  const isDirty = open && (createForm.formState.isDirty || editForm.formState.isDirty);
+  useRegisterBuildDirtyState(isDirty);
+  const { requestLeave, dialogProps } = useUnsavedChangesGuard({ isDirty });
 
   useEffect(() => {
     if (!open) return;
@@ -108,12 +104,12 @@ export function PmWorkspaceFormSheet({
     }
   }, [open, mode, defaultValues, createForm, editForm]);
 
-  function handleCreateSubmit(v: CreateFormValues) {
+  function handleCreateSubmit(v: CreatePmWorkspaceFormInput) {
     if (!onSubmitCreate) return;
     onSubmitCreate({ name: v.name, slug: v.slug });
   }
 
-  function handleEditSubmit(v: EditFormValues) {
+  function handleEditSubmit(v: EditPmWorkspaceFormInput) {
     if (!onSubmitEdit || !defaultValues) return;
     onSubmitEdit({
       pmWorkspaceId: defaultValues.pmWorkspaceId,
@@ -122,15 +118,20 @@ export function PmWorkspaceFormSheet({
     });
   }
 
-  function handleCancel() {
-    onOpenChange(false);
+  function handleClose() {
+    requestLeave(() => onOpenChange(false));
+  }
+
+  function handleSheetOpenChange(nextOpen: boolean) {
+    if (!nextOpen) handleClose();
+    else onOpenChange(true);
   }
 
   const formId = mode === "edit" ? "pm-workspace-edit-form" : "pm-workspace-create-form";
 
   const footer = (
     <div className="grid w-full grid-cols-2 gap-2">
-      <Button type="button" variant="outline" size="sm" onClick={handleCancel}>
+      <Button type="button" variant="outline" size="sm" onClick={handleClose}>
         Cancel
       </Button>
       <LoadingButton
@@ -147,22 +148,81 @@ export function PmWorkspaceFormSheet({
 
   if (mode === "edit") {
     return (
+      <>
+        <FormSheetChrome
+          open={open}
+          onOpenChange={handleSheetOpenChange}
+          title="Edit PM Workspace"
+          description="Update workspace details."
+          footer={footer}
+        >
+          <Form {...editForm}>
+            <form
+              id={formId}
+              onSubmit={editForm.handleSubmit(handleEditSubmit)}
+              className="space-y-4"
+              noValidate
+            >
+              <FormField
+                control={editForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Workspace name" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="archived">Archived</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </form>
+          </Form>
+        </FormSheetChrome>
+        <UnsavedChangesDialog {...dialogProps} />
+      </>
+    );
+  }
+
+  return (
+    <>
       <FormSheetChrome
         open={open}
-        onOpenChange={onOpenChange}
-        title="Edit PM Workspace"
-        description="Update workspace details."
+        onOpenChange={handleSheetOpenChange}
+        title="New PM Workspace"
+        description="Create a workspace to group products, teams and projects."
         footer={footer}
       >
-        <Form {...editForm}>
+        <Form {...createForm}>
           <form
             id={formId}
-            onSubmit={editForm.handleSubmit(handleEditSubmit)}
+            onSubmit={createForm.handleSubmit(handleCreateSubmit)}
             className="space-y-4"
             noValidate
           >
             <FormField
-              control={editForm.control}
+              control={createForm.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
@@ -175,22 +235,18 @@ export function PmWorkspaceFormSheet({
               )}
             />
             <FormField
-              control={editForm.control}
-              name="status"
+              control={createForm.control}
+              name="slug"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="archived">Archived</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Slug</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="my-workspace"
+                      onChange={lowerCaseFieldChange(field.onChange)}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -198,56 +254,7 @@ export function PmWorkspaceFormSheet({
           </form>
         </Form>
       </FormSheetChrome>
-    );
-  }
-
-  return (
-    <FormSheetChrome
-      open={open}
-      onOpenChange={onOpenChange}
-      title="New PM Workspace"
-      description="Create a workspace to group products, teams and projects."
-      footer={footer}
-    >
-      <Form {...createForm}>
-        <form
-          id={formId}
-          onSubmit={createForm.handleSubmit(handleCreateSubmit)}
-          className="space-y-4"
-          noValidate
-        >
-          <FormField
-            control={createForm.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Workspace name" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={createForm.control}
-            name="slug"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Slug</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="my-workspace"
-                    onChange={lowerCaseFieldChange(field.onChange)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </form>
-      </Form>
-    </FormSheetChrome>
+      <UnsavedChangesDialog {...dialogProps} />
+    </>
   );
 }

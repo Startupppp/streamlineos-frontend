@@ -3,13 +3,14 @@
 import { useCallback, useMemo, useState } from "react";
 import { useChangeRequests, useDeleteChangeRequest } from "@/hooks/api/build/change-requests";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useOrgMembers } from "@/hooks/api/organization";
-import type { ChangeRequest, ChangeRequestStatus } from "@/types/projects";
+import type { ChangeRequest } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PageState } from "@/components/shared/page-state";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,12 +31,7 @@ import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
-
-const CR_STATUS_LABELS: Record<string, string> = {
-  submitted: "Submitted", under_review: "Under Review", estimated: "Estimated",
-  awaiting_approval: "Awaiting Approval", approved: "Approved", rejected: "Rejected",
-  in_progress: "In Progress", completed: "Completed",
-};
+import { CR_STATUSES, CR_STATUS_LABELS } from "./change-request-schema";
 
 const CR_STATUS_STYLES: Record<string, string> = {
   submitted: "text-muted-foreground border-border",
@@ -47,11 +43,6 @@ const CR_STATUS_STYLES: Record<string, string> = {
   in_progress: "text-status-info-ink border-status-info-rule",
   completed: "text-status-success-ink border-status-success-rule",
 };
-
-const CR_STATUSES: ChangeRequestStatus[] = [
-  "submitted", "under_review", "estimated", "awaiting_approval",
-  "approved", "rejected", "in_progress", "completed",
-];
 
 function NewCrButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -98,7 +89,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const [editCr, setEditCr] = useState<ChangeRequest | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ChangeRequest | null>(null);
 
-  const { data: crs, isLoading, isError, refetch } = useChangeRequests(
+  const { data: crs, isLoading, isError, error, refetch } = useChangeRequests(
     projectId,
     statusFilter !== "all" ? { status: statusFilter } : undefined,
   );
@@ -120,6 +111,8 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
       onError: (error) => toast.error(getErrorMessage(error)),
     });
   }, [deleteTarget, deleteCr]);
+
+  const pageState = usePageState({ permission: "build:changerequests:view", isLoading, isError, error });
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -238,6 +231,14 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     </div>
   );
 
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") return (
+    <PageWrapper title="Change Requests" subtitle="Track and manage change requests">
+      <PmPageShell>
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry}>{null}</PageState>
+      </PmPageShell>
+    </PageWrapper>
+  );
+
   return (
     <PageWrapper
       title="Change Requests"
@@ -247,10 +248,8 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          {isLoading ? (
+          {pageState.kind === "loading" ? (
             <DataTableSkeleton rows={12} columns={7} className="flex-1" />
-          ) : isError ? (
-            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : filtered.length === 0 ? (
             <EmptyState
               className={PM_FILL_PANEL}
@@ -286,6 +285,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
         description={`CR-${deleteTarget?.crNumber ?? ""} will be permanently deleted.`}
         confirmLabel="Delete"
         destructive
+        isPending={deleteCr.isPending}
         onConfirm={handleDelete}
       />
     </PageWrapper>

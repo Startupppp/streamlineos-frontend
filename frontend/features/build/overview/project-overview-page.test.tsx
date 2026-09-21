@@ -140,4 +140,23 @@ describe("ProjectOverviewPage", () => {
 
     expect(screen.getByText("Sprint 12")).toBeInTheDocument();
   });
+
+  it("passes the first erroring query error to usePageState so a 402 plan-upgrade or 403 response is not silently degraded", () => {
+    const networkError = new Error("MODULE_NOT_ENABLED");
+    const { useProject } = jest.requireMock("@/hooks/api/build/projects");
+    (useProject as jest.Mock).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: networkError,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "error", error: networkError });
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(usePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ error: networkError }),
+    );
+  });
 });

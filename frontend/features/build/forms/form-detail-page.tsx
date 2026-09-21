@@ -1,10 +1,11 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { motion, useReducedMotion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PageState } from "@/components/shared/page-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
 import { useForm, useDeleteForm, useSubmitForm } from "@/hooks/api/build";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { FORM_TYPE_LABELS } from "./field-type-meta";
 import { DynamicFormRenderer } from "./dynamic-form-renderer";
 import {
@@ -32,6 +34,15 @@ import { FormSubmissionsTab } from "./components/form-submissions-tab";
 interface FormDetailPageProps {
   projectId: number;
   formId: number;
+}
+
+function FormDetailLoading() {
+  return (
+    <div className="flex flex-1 min-h-0 flex-col gap-4 pt-2">
+      <Skeleton className="h-8 w-64 rounded-md" />
+      <FormBuilderTabSkeleton />
+    </div>
+  );
 }
 
 export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
@@ -47,10 +58,20 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
     data: form,
     isLoading,
     isError,
+    error,
     refetch,
   } = useForm(projectId, formId);
   const deleteForm = useDeleteForm(projectId);
   const submitForm = useSubmitForm(projectId, formId);
+
+  const pageState = usePageState({
+    permission: "build:forms:view",
+    isLoading,
+    isError,
+    error,
+  });
+
+  const isReady = pageState.kind === "ready";
 
   function handleDeleteConfirm() {
     deleteForm.mutate(formId, {
@@ -99,124 +120,119 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
     void refetch();
   }
 
-  if (isLoading) {
-    return (
-      <PageWrapper
-        title="Form"
-        backHref={`/build/${projectId}/forms`}
-      >
-        <div className="flex flex-1 min-h-0 flex-col gap-4 pt-2">
-          <Skeleton className="h-8 w-64 rounded-md" />
-          <FormBuilderTabSkeleton />
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  if (isError || !form) {
-    return (
-      <PageWrapper
-        title="Form"
-        backHref={`/build/${projectId}/forms`}
-      >
-        <ErrorState onRetry={handleRetry} />
-      </PageWrapper>
-    );
-  }
-
   return (
     <PageWrapper
-      title={form.name}
+      title={isReady && form ? form.name : "Form"}
       backHref={`/build/${projectId}/forms`}
       actions={
-        <div className="flex items-center gap-2">
-          <Badge
-            variant={form.isActive ? "default" : "secondary"}
-            className="text-xs"
-          >
-            {form.isActive ? "Active" : "Inactive"}
-          </Badge>
-          <Badge variant="outline" className="text-xs">
-            {FORM_TYPE_LABELS[form.type]}
-          </Badge>
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-xs"
-            onClick={handlePreviewOpen}
-          >
-            Preview / Fill
-          </Button>
-          {canManage && (
+        isReady && form ? (
+          <div className="flex items-center gap-2">
+            <Badge
+              variant={form.isActive ? "default" : "secondary"}
+              className="text-xs"
+            >
+              {form.isActive ? "Active" : "Inactive"}
+            </Badge>
+            <Badge variant="outline" className="text-xs">
+              {FORM_TYPE_LABELS[form.type]}
+            </Badge>
             <Button
               size="sm"
               variant="outline"
-              className="text-xs text-destructive hover:text-destructive border-destructive/30"
-              onClick={handleDeleteOpen}
+              className="text-xs"
+              onClick={handlePreviewOpen}
             >
-              Delete
+              Preview / Fill
             </Button>
-          )}
-        </div>
+            {canManage && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs text-destructive hover:text-destructive border-destructive/30"
+                onClick={handleDeleteOpen}
+              >
+                Delete
+              </Button>
+            )}
+          </div>
+        ) : undefined
       }
     >
-      <motion.div
-        initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{
-          duration: shouldReduceMotion ? 0 : 0.22,
-          ease: "easeOut",
-        }}
+      <PageState
+        resolution={pageState}
+        loading={<FormDetailLoading />}
+        onRetry={handleRetry}
+        className="flex-1"
       >
-        <Tabs defaultValue="builder">
-          <TabsList>
-            <TabsTrigger value="builder">Builder</TabsTrigger>
-            <TabsTrigger value="submissions">Submissions</TabsTrigger>
-          </TabsList>
+        {!form ? (
+          <ErrorState
+            className="flex-1"
+            title="Form not found"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        ) : (
+          <>
+            <motion.div
+              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.22,
+                ease: "easeOut",
+              }}
+            >
+              <Tabs defaultValue="builder">
+                <TabsList>
+                  <TabsTrigger value="builder">Builder</TabsTrigger>
+                  <TabsTrigger value="submissions">Submissions</TabsTrigger>
+                </TabsList>
 
-          <TabsContent value="builder">
-            <FormBuilderTab projectId={projectId} formId={formId} />
-          </TabsContent>
+                <TabsContent value="builder">
+                  <FormBuilderTab projectId={projectId} formId={formId} />
+                </TabsContent>
 
-          <TabsContent value="submissions">
-            <FormSubmissionsTab projectId={projectId} formId={formId} />
-          </TabsContent>
-        </Tabs>
-      </motion.div>
+                <TabsContent value="submissions">
+                  <FormSubmissionsTab projectId={projectId} formId={formId} />
+                </TabsContent>
+              </Tabs>
+            </motion.div>
 
-      <Dialog open={previewOpen} onOpenChange={handlePreviewOpenChange}>
-        <DialogContent className="max-w-lg max-h-[90dvh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Preview — {form.name}</DialogTitle>
-          </DialogHeader>
-          {previewSubmitted ? (
-            <EmptyState
-              compact
-              illustrationPreset="approval"
-              title="Submitted!"
-              description="Your test submission was recorded successfully."
-              action={{ label: "Submit another", onClick: handlePreviewAgain }}
+            <Dialog open={previewOpen} onOpenChange={handlePreviewOpenChange}>
+              <DialogContent className="max-w-lg max-h-[90dvh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Preview — {form.name}</DialogTitle>
+                </DialogHeader>
+                {previewSubmitted ? (
+                  <EmptyState
+                    compact
+                    illustrationPreset="approval"
+                    title="Submitted!"
+                    description="Your test submission was recorded successfully."
+                    action={{ label: "Submit another", onClick: handlePreviewAgain }}
+                  />
+                ) : (
+                  <DynamicFormRenderer
+                    fields={form.fields}
+                    projectId={projectId}
+                    onSubmit={handlePreviewSubmit}
+                    isPending={submitForm.isPending}
+                  />
+                )}
+              </DialogContent>
+            </Dialog>
+
+            <ConfirmDialog
+              open={deleteOpen}
+              onOpenChange={setDeleteOpen}
+              title="Delete this form?"
+              description="All submissions will be permanently deleted. This cannot be undone."
+              confirmLabel="Delete"
+              destructive
+              onConfirm={handleDeleteConfirm}
             />
-          ) : (
-            <DynamicFormRenderer
-              fields={form.fields}
-              projectId={projectId}
-              onSubmit={handlePreviewSubmit}
-              isPending={submitForm.isPending}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      <ConfirmDialog
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        title="Delete this form?"
-        description="All submissions will be permanently deleted. This cannot be undone."
-        confirmLabel="Delete"
-        destructive
-        onConfirm={handleDeleteConfirm}
-      />
+          </>
+        )}
+      </PageState>
     </PageWrapper>
   );
 }

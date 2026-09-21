@@ -48,10 +48,13 @@ export function WorkspaceOverviewPage({ pmWorkspaceId }: WorkspaceOverviewPagePr
   const isError =
     workspaceQuery.isError || membersQuery.isError || myWorkQuery.isError;
 
+  const error = workspaceQuery.error ?? membersQuery.error ?? myWorkQuery.error;
+
   const resolution = usePageState({
     permission: "build:workspaces:view",
     isLoading,
     isError,
+    error,
     isEmpty: !workspaceQuery.data,
   });
 

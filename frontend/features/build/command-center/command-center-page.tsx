@@ -46,6 +46,23 @@ export function resolveProjectsStatValue(count: number, hasMore: boolean): strin
   return count;
 }
 
+function CommandCenterLoading() {
+  return (
+    <PmPageShell className={COMMAND_CENTER_PAGE_SHELL}>
+      <div className="min-w-0 w-full max-w-full">
+        <StatCardGridSkeleton cols={3} />
+      </div>
+      <Skeleton className={cn("h-56 rounded-xl", PM_PANEL)} />
+      <Skeleton className={cn("h-48 rounded-xl", PM_PANEL)} />
+      <div className="grid min-w-0 w-full max-w-full gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 9 }).map((_, index) => (
+          <Skeleton key={index} className={cn("h-28 rounded-xl", PM_PANEL)} />
+        ))}
+      </div>
+    </PmPageShell>
+  );
+}
+
 export function CommandCenterPage() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const { openCreateTicket } = useCommandPalette();
@@ -157,130 +174,112 @@ export function CommandCenterPage() {
     error: projectsRawError,
   });
 
-  if (pageState.kind !== "ready" && pageState.kind !== "loading") {
-    return (
-      <PageWrapper title="Home" contentClassName="pb-0 sm:pb-0">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
-          {null}
-        </PageState>
-      </PageWrapper>
-    );
-  }
-
-  if (pageState.kind === "loading") {
-    return (
-      <PageWrapper title="Home" contentClassName="pb-0 sm:pb-0">
-        <PmPageShell className={COMMAND_CENTER_PAGE_SHELL}>
-          <div className="min-w-0 w-full max-w-full">
-            <StatCardGridSkeleton cols={3} />
-          </div>
-          <Skeleton className={cn("h-56 rounded-xl", PM_PANEL)} />
-          <Skeleton className={cn("h-48 rounded-xl", PM_PANEL)} />
-          <div className="grid min-w-0 w-full max-w-full gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <Skeleton key={i} className={cn("h-28 rounded-xl", PM_PANEL)} />
-            ))}
-          </div>
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
+  const isReady = pageState.kind === "ready";
 
   return (
     <>
       <PageWrapper
         title="Home"
-        subtitle="Your issues, projects, and shortcuts"
+        subtitle={isReady ? "Your issues, projects, and shortcuts" : undefined}
         contentClassName="pb-0 sm:pb-0"
         actions={
-          <QuickCreateMenu
-            projects={projects}
-            onCreateProject={handleOpenWizard}
-            onCreateForProject={handleCreateForProject}
-            onCreateIssue={handleCreateIssueShortcut}
-          />
-        }
-      >
-        <PmPageShell className={COMMAND_CENTER_PAGE_SHELL}>
-          <PmSection index={0} className="min-w-0 w-full max-w-full">
-            <StatCardGrid cols={3}>
-              <motion.div
-                whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-                transition={pmSnappy}
-              >
-                <StatCard label="Projects" value={stats.activeProjects} icon={Briefcase} tone="default" index={0} href="/build" />
-              </motion.div>
-              <motion.div
-                whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-                transition={pmSnappy}
-              >
-                <StatCard label="Open issues" value={stats.openIssues} icon={CheckSquare} tone="default" index={1} href="/build/my-work" />
-              </motion.div>
-              <motion.div
-                whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-                transition={pmSnappy}
-                animate={
-                  stats.overdueIssues > 0 && !shouldReduceMotion
-                    ? { scale: [1, 1.015, 1] }
-                    : undefined
-                }
-              >
-                <StatCard label="Overdue" value={stats.overdueIssues} icon={AlertCircle} tone={stats.overdueIssues > 0 ? "red" : "default"} index={2} href="/build/my-work" />
-              </motion.div>
-            </StatCardGrid>
-          </PmSection>
-
-          <PmSection index={1} className="min-w-0 w-full max-w-full overflow-hidden">
-            <PmPanel className={COMMAND_CENTER_JUMP_PANEL}>
-              <p className="mb-1.5 px-0.5 text-micro font-medium uppercase tracking-wider text-muted-foreground">
-                Jump to
-              </p>
-              <PinnedNav defaultProjectId={projects[0]?.id ?? null} />
-            </PmPanel>
-          </PmSection>
-
-          <div className={COMMAND_CENTER_PANELS_GRID}>
-            <MyIssuesPanel
-              items={myWorkItems}
+          isReady ? (
+            <QuickCreateMenu
               projects={projects}
-              isLoading={myIssuesLoading}
-              isError={myIssuesError}
-              error={myIssuesRawError}
-              isFetchingNextPage={isFetchingNextPage}
-              emptyActions={myIssuesEmpty}
-              onRetry={handleMyIssuesRetry}
-              onScroll={handleMyIssuesScroll}
-              onCreateIssue={handleCreateIssueShortcut}
-              onCreateForProject={handleCreateForProject}
-            />
-            <ProjectsPanel
-              projects={projects}
-              canCreateProject={canCreateProject}
-              canCreateIssue={canCreateIssue}
               onCreateProject={handleOpenWizard}
               onCreateForProject={handleCreateForProject}
+              onCreateIssue={handleCreateIssueShortcut}
             />
-          </div>
+          ) : undefined
+        }
+      >
+        <PageState
+          resolution={pageState}
+          loading={<CommandCenterLoading />}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
+          <PmPageShell className={COMMAND_CENTER_PAGE_SHELL}>
+            <PmSection index={0} className="min-w-0 w-full max-w-full">
+              <StatCardGrid cols={3}>
+                <motion.div
+                  whileHover={shouldReduceMotion ? undefined : { y: -2 }}
+                  transition={pmSnappy}
+                >
+                  <StatCard label="Projects" value={stats.activeProjects} icon={Briefcase} tone="default" index={0} href="/build" />
+                </motion.div>
+                <motion.div
+                  whileHover={shouldReduceMotion ? undefined : { y: -2 }}
+                  transition={pmSnappy}
+                >
+                  <StatCard label="Open issues" value={stats.openIssues} icon={CheckSquare} tone="default" index={1} href="/build/my-work" />
+                </motion.div>
+                <motion.div
+                  whileHover={shouldReduceMotion ? undefined : { y: -2 }}
+                  transition={pmSnappy}
+                  animate={
+                    stats.overdueIssues > 0 && !shouldReduceMotion
+                      ? { scale: [1, 1.015, 1] }
+                      : undefined
+                  }
+                >
+                  <StatCard label="Overdue" value={stats.overdueIssues} icon={AlertCircle} tone={stats.overdueIssues > 0 ? "red" : "default"} index={2} href="/build/my-work" />
+                </motion.div>
+              </StatCardGrid>
+            </PmSection>
 
-          <motion.p
-            className="hidden min-w-0 w-full max-w-full text-center text-micro text-muted-foreground md:block"
-            initial={shouldReduceMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ ...pmSnappy, delay: 0.28 }}
-          >
-            Shortcuts · <kbd className="rounded border border-border bg-muted/80 px-1">C</kbd>
-            <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">P</kbd> project ·{" "}
-            <kbd className="rounded border border-border bg-muted/80 px-1">C</kbd>
-            <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">T</kbd> issue ·{" "}
-            <kbd className="rounded border border-border bg-muted/80 px-1">G</kbd>
-            <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">M</kbd> my issues ·{" "}
-            <kbd className="rounded border border-border bg-muted/80 px-1">G</kbd>
-            <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">P</kbd> projects
-          </motion.p>
-        </PmPageShell>
+            <PmSection index={1} className="min-w-0 w-full max-w-full overflow-hidden">
+              <PmPanel className={COMMAND_CENTER_JUMP_PANEL}>
+                <p className="mb-1.5 px-0.5 text-micro font-medium uppercase tracking-wider text-muted-foreground">
+                  Jump to
+                </p>
+                <PinnedNav defaultProjectId={projects[0]?.id ?? null} />
+              </PmPanel>
+            </PmSection>
+
+            <div className={COMMAND_CENTER_PANELS_GRID}>
+              <MyIssuesPanel
+                items={myWorkItems}
+                projects={projects}
+                isLoading={myIssuesLoading}
+                isError={myIssuesError}
+                error={myIssuesRawError}
+                isFetchingNextPage={isFetchingNextPage}
+                emptyActions={myIssuesEmpty}
+                onRetry={handleMyIssuesRetry}
+                onScroll={handleMyIssuesScroll}
+                onCreateIssue={handleCreateIssueShortcut}
+                onCreateForProject={handleCreateForProject}
+              />
+              <ProjectsPanel
+                projects={projects}
+                canCreateProject={canCreateProject}
+                canCreateIssue={canCreateIssue}
+                onCreateProject={handleOpenWizard}
+                onCreateForProject={handleCreateForProject}
+              />
+            </div>
+
+            <motion.p
+              className="hidden min-w-0 w-full max-w-full text-center text-micro text-muted-foreground md:block"
+              initial={shouldReduceMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ ...pmSnappy, delay: 0.28 }}
+            >
+              Shortcuts · <kbd className="rounded border border-border bg-muted/80 px-1">C</kbd>
+              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">P</kbd> project ·{" "}
+              <kbd className="rounded border border-border bg-muted/80 px-1">C</kbd>
+              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">T</kbd> issue ·{" "}
+              <kbd className="rounded border border-border bg-muted/80 px-1">G</kbd>
+              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">M</kbd> my issues ·{" "}
+              <kbd className="rounded border border-border bg-muted/80 px-1">G</kbd>
+              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">P</kbd> projects
+            </motion.p>
+          </PmPageShell>
+        </PageState>
       </PageWrapper>
 
-      <ProjectCreateWizard open={wizardOpen} onOpenChange={setWizardOpen} />
+      {isReady && <ProjectCreateWizard open={wizardOpen} onOpenChange={setWizardOpen} />}
     </>
   );
 }

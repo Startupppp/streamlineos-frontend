@@ -7,6 +7,8 @@ import { Trash2Icon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useMeeting, useUpdateMeeting, useDeleteMeeting, useProjectMembers } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/shared/error-state";
@@ -55,7 +57,7 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const { data: meeting, isLoading, isError, refetch } = useMeeting(projectId, meetingId);
+  const { data: meeting, isLoading, isError, error, refetch } = useMeeting(projectId, meetingId);
   const { data: projectMembers = [] } = useProjectMembers(projectId);
 
   const updateMeeting = useUpdateMeeting(projectId);
@@ -87,7 +89,19 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
     void refetch();
   }, [refetch]);
 
-  if (isLoading) {
+  const pageState = usePageState({ permission: "build:meetings:view", isLoading, isError, error });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+    return (
+      <PageWrapper title="Meeting" backHref={`/build/${projectId}/meetings`}>
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+  }
+
+  if (pageState.kind === "loading") {
     return (
       <PageWrapper title="Meeting" backHref={`/build/${projectId}/meetings`}>
         <PmPageShell>
@@ -102,7 +116,7 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
     );
   }
 
-  if (isError || !meeting) {
+  if (!meeting) {
     return (
       <PageWrapper title="Meeting" backHref={`/build/${projectId}/meetings`}>
         <PmPageShell withGlow={false}>

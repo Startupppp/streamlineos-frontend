@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { useApplyProjectTemplate, type ProjectTemplate } from "@/hooks/api/build";
+import { formatShortDate } from "@/lib/date-utils";
 
 const applyTemplateSchema = z.object({
   name: z.string().min(1, "Project name is required"),
@@ -50,7 +51,7 @@ export function ApplyTemplateDialog({ template, onClose }: ApplyTemplateDialogPr
   const form = useForm<ApplyTemplateFormValues>({
     resolver: zodResolver(applyTemplateSchema),
     defaultValues: {
-      name: `${template.name} — ${new Date().toLocaleDateString()}`,
+      name: `${template.name} — ${formatShortDate(new Date())}`,
       description: template.description ?? "",
       startDate: "",
       endDate: "",

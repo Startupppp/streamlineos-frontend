@@ -92,7 +92,7 @@ function AddLinkButton({ onClick }: { onClick: () => void }) {
 export function GoalDetailPage({ goalId }: { goalId: number }) {
   const router = useRouter();
 
-  const { data: goal, isLoading, isError, refetch } = useGoal(goalId);
+  const { data: goal, isLoading, isError, error, refetch } = useGoal(goalId);
   const deleteGoal = useDeleteGoal();
   const removeLink = useRemoveGoalLink(goalId);
 
@@ -109,7 +109,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
   function handleCheckIn(kr: KeyResult) { setCheckInTarget(kr); }
   function handleRetry() { void refetch(); }
 
-  const pageState = usePageState({ permission: "build:goals:view", isLoading, isError });
+  const pageState = usePageState({ permission: "build:goals:view", isLoading, isError, error });
 
   function handleDelete() {
     deleteGoal.mutate(goalId, {

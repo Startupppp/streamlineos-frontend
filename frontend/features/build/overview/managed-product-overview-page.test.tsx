@@ -186,4 +186,23 @@ describe("ManagedProductOverviewPage", () => {
 
     expect(screen.getByRole("alert")).toBeInTheDocument();
   });
+
+  it("passes the first erroring query error to usePageState so a 402 plan-upgrade or 403 response is not silently degraded", () => {
+    const networkError = new Error("MODULE_NOT_ENABLED");
+    const { useManagedProduct } = jest.requireMock("@/hooks/api/build/managed-products");
+    (useManagedProduct as jest.Mock).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: networkError,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "error", error: networkError });
+
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+
+    expect(usePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ error: networkError }),
+    );
+  });
 });

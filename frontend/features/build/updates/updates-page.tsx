@@ -10,10 +10,10 @@ import {
   useDeleteProjectUpdate,
 } from "@/hooks/api/build/project-updates";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { EntityFormDialog } from "@/components/shared";
@@ -89,11 +89,10 @@ interface UpdatesPageProps {
 }
 
 export function UpdatesPage({ projectId }: UpdatesPageProps) {
-  const canView = useCan("build:updates:view");
   const canManage = useCan("build:updates:manage");
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const { data, isLoading, isError, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } =
+  const { data, isLoading, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useProjectUpdates(projectId);
   const createUpdate = useCreateProjectUpdate(projectId);
   const deleteUpdate = useDeleteProjectUpdate(projectId);
@@ -133,10 +132,26 @@ export function UpdatesPage({ projectId }: UpdatesPageProps) {
     void fetchNextPage();
   }, [fetchNextPage]);
 
-  if (!canView) {
+  const pageState = usePageState({ permission: "build:updates:view", isLoading, isError, error });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
       <PageWrapper title="Updates" subtitle="Project status updates and announcements">
-        <NoPermissionState permission="build:updates:view" className="flex-1" />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+  }
+
+  if (pageState.kind === "loading") {
+    return (
+      <PageWrapper title="Updates" subtitle="Project status updates and announcements">
+        <div className="flex flex-col gap-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className={`${CONTENT_PANEL_SOLID} h-24 animate-pulse`} />
+          ))}
+        </div>
       </PageWrapper>
     );
   }
@@ -148,15 +163,7 @@ export function UpdatesPage({ projectId }: UpdatesPageProps) {
       actions={canManage ? <NewUpdateButton onClick={handleOpenDialog} /> : undefined}
     >
       <div className="flex flex-col gap-4 pb-6">
-        {isLoading ? (
-          <div className="flex flex-col gap-3">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className={`${CONTENT_PANEL_SOLID} h-24 animate-pulse`} />
-            ))}
-          </div>
-        ) : isError ? (
-          <ErrorState className="flex-1" onRetry={handleRetry} />
-        ) : data.length === 0 ? (
+        {data.length === 0 ? (
           <EmptyState
             className="flex-1 min-h-[40vh]"
             illustrationPreset="activity"

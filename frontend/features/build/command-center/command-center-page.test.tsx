@@ -1,3 +1,4 @@
+import type { ReactNode, HTMLAttributes } from "react";
 import { render, screen } from "@testing-library/react";
 import { CommandCenterPage } from "./command-center-page";
 import { ApiError } from "@/lib/api-envelope";
@@ -48,9 +49,9 @@ jest.mock("./command-center-projects-panel", () => ({
 }));
 
 jest.mock("@/components/pm-chrome", () => ({
-  PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PmSection: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PmPanel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  PmPageShell: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  PmSection: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  PmPanel: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   PM_PANEL: "",
 }));
 
@@ -60,16 +61,16 @@ jest.mock("@/lib/motion-presets", () => ({
 
 jest.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...rest }: React.HTMLAttributes<HTMLDivElement>) => <div {...rest}>{children}</div>,
-    p: ({ children, ...rest }: React.HTMLAttributes<HTMLParagraphElement>) => <p {...rest}>{children}</p>,
+    div: ({ children, ...rest }: HTMLAttributes<HTMLDivElement>) => <div {...rest}>{children}</div>,
+    p: ({ children, ...rest }: HTMLAttributes<HTMLParagraphElement>) => <p {...rest}>{children}</p>,
   },
   useReducedMotion: () => false,
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AnimatePresence: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
 jest.mock("next/link", () => ({
   __esModule: true,
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
+  default: ({ children, href }: { children: ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   ),
 }));
@@ -79,10 +80,10 @@ jest.mock("@/components/ui/page-wrapper", () => ({
     children,
     title,
   }: {
-    children: React.ReactNode;
+    children: ReactNode;
     title?: string;
     contentClassName?: string;
-    actions?: React.ReactNode;
+    actions?: ReactNode;
     subtitle?: string;
   }) => (
     <div>
@@ -94,7 +95,7 @@ jest.mock("@/components/ui/page-wrapper", () => ({
 
 jest.mock("@/components/ui/stat-card", () => ({
   StatCard: ({ label }: { label: string }) => <div data-testid="stat-card">{label}</div>,
-  StatCardGrid: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  StatCardGrid: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   StatCardGridSkeleton: () => <div data-testid="stat-card-grid-skeleton" />,
 }));
 

@@ -52,10 +52,18 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
     columnCountsQuery.isError ||
     milestonesQuery.isError;
 
+  const error =
+    projectQuery.error ??
+    analyticsQuery.error ??
+    cyclesQuery.error ??
+    columnCountsQuery.error ??
+    milestonesQuery.error;
+
   const resolution = usePageState({
     permission: "build:view",
     isLoading,
     isError,
+    error,
     isEmpty: !projectQuery.data,
   });
 
