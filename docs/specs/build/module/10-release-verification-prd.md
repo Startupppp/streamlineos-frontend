@@ -61,7 +61,30 @@ The named disposable or staging environment includes:
 
 ## Route and Navigation
 
-- [ ] **BLD-10-008** static route manifest self-test and gate pass.
+- [x] **BLD-10-008** static route manifest self-test and gate pass.
+  **Closed — both static route gates executed self-test-first, exit codes
+  captured, and each proven to bite.** 2026-09-21.
+  `node scripts/build-route-census.mjs --self-test` → 5/5 PASS, exit 0; then
+  `--check` → exit 0, `PASS 92 Build routes; snapshot is current`. That green is
+  earned twice over: the gate exited **1** before this pass (the snapshot
+  recorded 93 routes including `/build/{projectId}/sprints`, deleted earlier the
+  same day in `9662485c9`), and planting
+  `frontend/app/(authenticated)/build/[id]/page.tsx` made it report
+  `bare dynamic segments: /build/{id}` and exit 1, returning to 0 once removed.
+  The bare-param rule was repaired in the same pass — it had filtered for
+  `/\[[^\]]+\]/` on a path `routeFromFile` had already rewritten to `{x}`, so it
+  could never match anything the pipeline produces, and its self-test passed only
+  by hand-feeding `assertSnapshot` a literal the pipeline cannot emit.
+  `node frontend/scripts/check-route-access-contract.mjs --self-test` → exit 0,
+  "check-route-access-contract bites"; then the gate → exit 0, "every
+  route-access permission names an endpoint in the generated contract".
+  The census was also invoked by no `package.json` script and no workflow step
+  until this pass, so it is now root `check:route-census` (+ `:self-test`) and a
+  step in the `gates` job.
+  This certifies the two *static* route gates only. Physical direct-load and
+  hard-refresh of each generated row stays open at BLD-10-009, and the 20
+  MOVE/CONSOLIDATE/REMOVE rows that still have physical pages stay open at
+  BLD-10-012.
 - [ ] **BLD-10-009** every generated final-route row direct-loads and
   hard-refreshes; execution is split into browser packets of 5–10 related
   routes rather than assigned as one task.
@@ -263,7 +286,61 @@ Exact package commands and results are recorded at execution time.
 - [ ] **BLD-10-066** lint on changed files reports no introduced errors.
 - [ ] **BLD-10-067** route, permission, validation, schema, migration,
   architecture, and file-size gates pass.
-  **Open — re-executed 2026-09-21 at `2aa36dcb7`; 28 of 35 pass.**
+  **Open — re-executed 2026-09-21 (this audit): 30 of 41 frontend gates pass,
+  and for the first time in this program ZERO self-tests fail.** Every
+  `check:*` in `frontend/package.json` was run self-test-first with both exit
+  codes captured (`frontend/.scratch/run-gates.mjs`). That no gate is
+  self-test-red is the material change from the 23/35 and 28/35 passes: no
+  frontend gate is currently untrustworthy, only failing. `check:icon-button-rule`
+  is the one gate with no self-test available.
+  **The 11 failing, with findings rather than a summary:**
+  `check:test-typecheck`, `check:file-sizes` (4 files, **none Build-owned** now:
+  `features/wiki/components/use-page-autosave.test.ts` 534,
+  `hooks/api/kb/pages.ts` 758, `hooks/api/response-contracts-chat.test.ts` 505,
+  `lib/api-client.ts` 557), `check:over-300` (4 at exactly 301, one Build:
+  `hooks/api/build/build-tickets-core-schema.ts`), `check:dead-code` (6 symbols,
+  none Build), `check:command-catalog` (**16 → 6**, none Build: impersonation ×2,
+  inventory ×2, signup, timesheets), `check:permission-binding`,
+  `check:test-integrity` (2 tautologies, 12 bare `.toThrow()`),
+  `check:contract-parity`, `check:type-assertions`,
+  `check:route-bundle-budget`, `check:web-vitals-budget`.
+  **`check:contract-vendor` now PASSES** — `frontend/contracts/openapi.json` and
+  `backend/openapi.json` are byte-identical (sha256
+  `b8bace59…`, both 67,841,614 bytes). Every contract-parity result is therefore
+  measured against the backend's real contract for the first time, which makes
+  `check:contract-parity`'s two findings actionable: Build-owned `assignees` in
+  `hooks/api/build/build-tickets-core-schema.ts:101` (`ticketDetailContract`), and
+  payroll `setupRequired`.
+  **Two failures are stale provenance, not code defects.**
+  `check:route-bundle-budget` and `check:web-vitals-budget` both refuse to
+  publish: their manifests measured build `Bvk-O9-WKuVZJokCzLGUr` while
+  `.next/BUILD_ID` on disk is `ZIn7TE-wtFddNL4Oz40BV`. The same staleness is the
+  *only* error in the frontend production typecheck — `.next/types/validator.ts`
+  still imports the deleted sprints page — and `.next/` is gitignored, so the
+  production typecheck is otherwise clean. One `next build` clears all three.
+  **`check:type-assertions` cannot be closed by its own repair tool.**
+  `--update-ledger` advertises "can only lower" but **refuses outright** while any
+  file would go up, and 24 currently would; it wrote nothing. So the ledger's 20
+  stale entries cannot be trimmed until those 24 unledgered assertions are
+  actually removed, across build, timesheets, wiki, chat, offline, hr and
+  feedbucket. The one Build **growth** regression was repaired in this pass
+  (`features/build/settings/custom-fields-settings.tsx` 1 → 2 → 0, by narrowing
+  `customFieldSchema.fieldType` from `z.string()` to `z.enum(CUSTOM_FIELD_TYPES)`
+  rather than casting); the remaining growth file is
+  `components/editor/plate/plate-value-convert.ts` 5 → 8, not Build-owned.
+  **Backend: `check:outbox-consumers` FAILS, and it is CI-blocking.**
+  `backend/.github/workflows/ci.yml:811` runs it self-test-first; the self-test
+  passes and the gate exits 1 on one orphan —
+  `build.incident.status_changed`, emitted twice from
+  `backend/src/modules/build/incidents/incidents.service.ts:187,291`, with **no
+  consumer class anywhere** and no entry in the declared registry. Introduced in
+  `d46e4e348` (cycle 2). Backend CI has been red on a Build defect since then,
+  and BLD-07-016 was recorded SATISFIED from reading the gate rather than running
+  it. Choosing the consumer's behaviour is a product decision, so this is not a
+  mechanical repair.
+  Backend `tsc -p tsconfig.json --noEmit` exit 0, **0 errors**.
+  **Superseded measurement follows, retained for provenance — 2026-09-21 at
+  `2aa36dcb7`; 28 of 35 pass.**
   All 35 frontend gates were run self-test-first, each self-test and gate exit
   code captured. Result at the first run:
   23 pass, 12 fail — of which **two were self-test failures**, the worse class,
