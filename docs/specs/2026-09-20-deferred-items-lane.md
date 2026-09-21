@@ -246,12 +246,68 @@ Four this session, all in the direction of making work look larger than it was:
 | 64 TS7006 errors | 4 errors total, **none** of them TS7006 |
 | `markProposalDeclined` omits its `orgId` argument | It passes `{ orgId }`; the reviewer had not read far enough |
 
-The knip figure is **not independently confirmed** — `pnpm exec knip` OOMs in
-its oxc parser on this machine under memory pressure. Re-measure standalone
-before acting on it.
+The knip figure is since **confirmed standalone** with
+`NODE_OPTIONS=--max-old-space-size=8192`: 1 unused file, 14 unused exports,
+76 unused exported types, 18 duplicate exports — `0` under `src/modules/ai/**`,
+8 under `src/modules/inventory/ai/`.
+
+A fifth premise fell after the above was written:
+
+| Claimed | Actual |
+|---|---|
+| Making `ticket.updateStatus` atomic "means changing both service signatures" | No signature changes at all — see below |
+
+### Test-inclusive typecheck is now blocking
+
+`.github/workflows/ci.yml` — `continue-on-error: true` removed from the
+**Typecheck (test-inclusive)** step (`pnpm typecheck:test`, `tsconfig.test.json`
+covering `src`, `evals`, `test`).
+
+The flag was justified in a comment block by 62 pre-existing errors. That count
+no longer holds: the step exits **0 with zero errors from cold**, with
+`dist/*.tsbuildinfo` deleted first so no stale incremental cache could fake the
+pass. The comment block was removed except for the heap note, which is still
+load-bearing — at 8192 tsc exits 134 after printing zero errors, a silent
+false-pass rather than a typecheck.
+
+Bite proven by scratch-removing a type annotation in
+`rank-gap-matches-board-order.spec.ts`: TS7034 + TS7005, exit 2. Reverted.
+
+### `ticket.updateStatus` atomicity — the deferral's reason was false
+
+The deferral at `2026-09-19-ask-os-architecture-remediation-prd.md:170` was
+right on three clauses and wrong on the one that mattered. `updateTicket` and
+`addComment` do each open their own transaction, neither accepts an external
+`tx`, and `confirmAction` is `@NoTenantTransaction()` — all true. But atomicity
+needed **no signature change**:
+
+Both services take `@Inject(DRIZZLE)`, which is the `createTenantAwareDb`
+proxy. Under an ambient tenant context that proxy resolves every property to
+the ambient `tx`, so `this.db.transaction(...)` becomes `tx.transaction(...)`
+— and drizzle's postgres-js driver implements that as
+`client.savepoint(...)` (`postgres-js/session.js:131`), a savepoint on the same
+connection, not a second one. One outer
+`runInTenantTransaction(db, fn, { orgId })` is therefore sufficient, and it was
+already present in `build-confirm-actions.ts:44`.
+
+`runInNewTenantTransaction` would have been actively worse here — a second
+pooled connection against a ceiling of 10.
+
+What was missing was the test. The pair that existed asserted the same three
+things twice; one was replaced with an assertion that both writes are
+**unreachable when the transaction callback never runs**. Mutation-proved by
+moving `updateTicket` outside the wrapper: the new test fails, and **the
+original one still passed** — so the duplicate would not have caught a write
+escaping the transaction.
+
+Limit worth stating: `runInTenantTransaction` is mocked in these specs, so they
+prove the call shape and the containment, not rollback itself. Rollback rests on
+the savepoint mechanism verified at source above; proving it end to end needs a
+live database, which this machine does not have.
 
 ### Still open
 
-- `.github/workflows/ci.yml` `continue-on-error: true` — removal pending proof that the step it guards passes and that the gate bites.
-- The knip re-measurement above.
+- The ~90 repo-wide knip findings. Authorization covered the AI-module item, whose premise was refuted; the real set spans modules other sessions are actively editing, so it needs a separate decision.
+- The 50 unbudgeted connection-hold sweeps — not dispatched.
 - Every chat-os item needing a live environment: no local Postgres, Redis or Docker on this machine (5432/5433/6379 all refuse).
+- ask-os 11.1 (directive column needs a migration) and the email-predicate widening (needs the notifications owner).
