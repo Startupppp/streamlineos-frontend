@@ -317,12 +317,17 @@ export function useBoardUrlState(
 
   const handleViewChange = useCallback(
     (v: ViewType) => {
+      if (v === "workload") {
+        router.push(`/build/${projectId}/workload`);
+        setSelectedIds(new Set());
+        return;
+      }
       const p = currentSearchParams(searchParams);
       p.set("view", v);
       router.replace(`?${p.toString()}`, { scroll: false });
       setSelectedIds(new Set());
     },
-    [router, searchParams],
+    [router, searchParams, projectId],
   );
 
   const handleSaveViewNameChange = useCallback(

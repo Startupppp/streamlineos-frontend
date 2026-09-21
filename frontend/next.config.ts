@@ -99,8 +99,9 @@ const nextConfig: NextConfig = {
       permanent: true,
     },
     {
-      source: "/build/:projectId/workload",
-      destination: "/build/:projectId?view=workload",
+      source: "/build/:projectId",
+      has: [{ type: "query", key: "view", value: "workload" }],
+      destination: "/build/:projectId/workload",
       permanent: false,
     },
     {

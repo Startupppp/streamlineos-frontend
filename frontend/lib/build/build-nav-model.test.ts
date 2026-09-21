@@ -14,6 +14,7 @@ import {
 } from "./nav/build-nav-destination";
 import { buildOrganizationNavGroups, toBuildNavGroups } from "./build-nav-groups";
 import { ORGANIZATION_BUILD_SCOPE, resolveBuildScope } from "./build-scope";
+import { VIEW_TYPES } from "./view-types";
 
 function accessWith(
   keys: PermissionKey[],
@@ -247,12 +248,18 @@ describe("isBuildDestinationActive — boardViews destination (project Issues)",
     expect(isBuildDestinationActive(issues, "/build/42/issues", "board")).toBe(true);
   });
 
-  it("is inactive when view=workload because workload is not in the board views set", () => {
-    expect(isBuildDestinationActive(issues, "/build/42/issues", "workload")).toBe(false);
+  it("is active on the /issues path with view=workload because workload is a board view the issues page can render", () => {
+    expect(isBuildDestinationActive(issues, "/build/42/issues", "workload")).toBe(true);
   });
 
   it("is inactive on the backlog path because the destination does not own /backlog", () => {
     expect(isBuildDestinationActive(issues, "/build/42/backlog", null)).toBe(false);
+  });
+
+  it("every view type offered by the ViewSwitcher keeps the Issues destination active so a view added to the switcher is immediately recognised by the nav model", () => {
+    for (const view of VIEW_TYPES) {
+      expect(isBuildDestinationActive(issues, "/build/42/issues", view)).toBe(true);
+    }
   });
 });
 

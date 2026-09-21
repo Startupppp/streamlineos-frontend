@@ -17,15 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { type ViewType } from "@/lib/build/view-types";
 
-export type ViewType = "board" | "list" | "table" | "calendar" | "gantt" | "workload";
-
-const VIEW_TYPES: readonly ViewType[] = ["board", "list", "table", "calendar", "gantt", "workload"];
-
-export function parseViewType(value: string | null): ViewType {
-  if (!value) return "board";
-  return VIEW_TYPES.find((v) => v === value) ?? "board";
-}
+export type { ViewType } from "@/lib/build/view-types";
+export { parseViewType } from "@/lib/build/view-types";
 
 interface ViewSwitcherProps {
   activeView: ViewType;
