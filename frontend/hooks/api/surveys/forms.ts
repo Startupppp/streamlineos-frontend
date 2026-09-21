@@ -1,6 +1,6 @@
 "use client";
 
-import { keepPreviousData, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
@@ -102,7 +102,6 @@ export function useSurveys(params?: ListSurveysParams) {
     queryFn: async ({ signal }) =>
       (await apiClient.get<OffsetPage<SurveyForm>>("/surveys", params, signal, surveyFormListC)).items,
     staleTime: 30_000,
-    placeholderData: keepPreviousData,
   });
 }
 

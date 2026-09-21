@@ -166,6 +166,6 @@ describe("HrEngagementPage — access is three-valued, not a boolean", () => {
     render(<HrEngagementPage />);
 
     expect(screen.queryByText(/access restricted/i)).toBeNull();
-    expect(screen.getByRole("heading", { name: /employee engagement/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Polls & engagement" })).toBeInTheDocument();
   });
 });

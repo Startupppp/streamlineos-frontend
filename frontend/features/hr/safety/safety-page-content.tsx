@@ -19,6 +19,7 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { AnonymitySuppressedNotice } from "@/components/shared/anonymity-suppressed-notice";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
@@ -92,9 +93,7 @@ function WellnessPulseCard() {
       <p className="text-xs font-semibold">7-day wellness pulse</p>
       <p className="text-micro text-muted-foreground leading-snug">{data.honestyNote}</p>
       {data.suppressed ? (
-        <p className="text-xs text-muted-foreground">
-          Suppressed — fewer than {data.minGroupSize} respondents (k-anonymity).
-        </p>
+        <AnonymitySuppressedNotice minResponses={data.minGroupSize} />
       ) : (
         <div className="flex gap-4 text-xs pt-1">
           <div>

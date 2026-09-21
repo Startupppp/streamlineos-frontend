@@ -370,7 +370,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 ### Performance & Engagement
 - `/hr/performance` · **HR** · hooks: `→ features/hr/performance`
 - `/hr/performance/analytics` · **HR** · hooks: `→ features/hr/performance`
-- `/hr/engagement` · **HR** · hooks: `→ features/hr/engagement`
+- `/hr/engagement` · **HR** · hooks: `→ features/hr/engagement` — 2026-09-21: renamed **Polls & engagement** (sidebar label, page title, subtitle) per the HRMS audit: the surface is recognition, mood check-ins, polls, communities and campaigns, not a survey programme (audience, schedule, reminders, action plan live nowhere); the real survey builder stays at `/surveys`. Anonymous poll results and the org mood trend now honour the backend anonymity floor (`minResponses`, 5): a poll under it answers `suppressed` with no per-option counts and the tab renders `AnonymitySuppressedNotice`; the mood aggregate is `{ minResponses, suppressedDays, points }` so a trend hidden on every day says so instead of "no data". Primary poll action reads "Create poll".
 - `/hr/feedback` · **HR** · hooks: `→ features/hr/feedback`
 - `/hr/goals` · **HR** · hooks: `→ features/hr/goals`
 - `/hr/kpis` · **HR** · hooks: `→ features/hr/kpis`
@@ -415,7 +415,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/compliance` · **HR** · hooks: `→ features/hr/compliance`
 - `/hr/legal-holds` · **HR** · hooks: `→ features/hr/legal-holds`
 - `/hr/labor-relations` · **HR** · hooks: `→ features/hr/labor-relations`
-- `/hr/safety` · **HR** · hooks: `→ features/hr/safety`
+- `/hr/safety` · **HR** · hooks: `→ features/hr/safety` — 2026-09-21: the suppressed wellness pulse renders the shared `AnonymitySuppressedNotice` (same floor as polls, mood and survey analytics) instead of its own k-anonymity line
 - `/hr/background-verification` · **HR** · hooks: `→ features/hr/bg-verification`
 - `/hr/identity` · **HR** · hooks: `→ features/hr/identity`
 - `/hr/accommodations` · **HR** · hooks: `→ features/hr/accommodations`
@@ -819,9 +819,9 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 
 ## Surveys
 
-- `/surveys` · **Surveys** · hooks: `→ features/surveys`
-- `/surveys/new` · **Surveys** · hooks: `→ features/surveys`
-- `/surveys/[surveyId]` · **Surveys** · hooks: `→ features/surveys`
+- `/surveys` · **Surveys** · hooks: `→ features/surveys` (`useSurveys`) — 2026-09-21: states resolve through `usePageState` + `<PageState>` with the read error passed; the Draft/Mode filters are server-side only (`keepPreviousData` was dropped, so a Published card no longer sits under the Draft filter while the filtered page loads — SURV-003); filter-empty renders "No surveys match your filters" + Clear filters; below `md` the two facet selects collapse into a Drawer behind a Filters button (SURV-004/005); primary action reads "Create survey"
+- `/surveys/new` · **Surveys** · hooks: `→ features/surveys` (`useSurveyTemplates`, `useCreateSurvey`) — 2026-09-21: title "Create survey"; own `loading.tsx` and in-page skeleton share `TemplatePickerSkeleton` so the route fallback keeps this page's title instead of the list's; the create hang was the backend writing the first draft version on a second transaction (SURV-001)
+- `/surveys/[surveyId]` · **Surveys** · hooks: `→ features/surveys` (`useSurvey`) — 2026-09-21: `SurveyDetailContent` resolves through `usePageState({ permission: "surveys:view" })` + `<PageState>` with the read error passed, so a failed read shows the backend message with retry and a denied reader sees Access Restricted, never an indefinite skeleton (SURV-002); own `loading.tsx` shares `SurveyDetailSkeleton`. Results tab: `GET /surveys/{surveyId}/analytics/questions` rows carry `minResponses` + `suppressed`; while a survey holds fewer anonymous submissions than the floor every question card renders `AnonymitySuppressedNotice` instead of its distribution or free text
 - `/surveys/[surveyId]/participants` · **Surveys** · hooks: `→ features/surveys`
 - `/surveys/live/[sessionId]/host` · **Surveys** · hooks: `→ features/surveys`
 - `/surveys/access` · **Surveys** · hooks: `→ features/surveys`
