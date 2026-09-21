@@ -27,18 +27,27 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
+  filterNavGroupsForUser,
   flattenNavRoutes,
   getNavGroupsForUser,
 } from "./sidebar/sidebar-nav-items";
+import { buildProjectNavGroups } from "@/lib/build/build-nav-groups";
+import { BUILD_ROOT_PATH } from "@/lib/build/build-scope";
+import { BUILD_FEEDBACK_ORG_MODULE } from "@/lib/build/nav/build-nav-destination";
+import { matchesOrgModule } from "@/lib/org-module-keys";
+import { useProject } from "@/hooks/api/build/projects";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { useEntitlements } from "@/hooks/api/entitlements";
 import { cn } from "@/lib/utils";
 import { useCommandPalette } from "@/components/command-palette";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import {
+  GLOBAL_SEARCH_MIN_LENGTH,
   useGlobalSearch,
   type GlobalSearchResult,
 } from "@/components/command-palette/hooks/use-global-search";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCommandRegistry } from "./command-palette-commands";
 
 
@@ -133,9 +142,43 @@ export function CommandPaletteDialogBody() {
     [role, scopes, enabledModules, lockedModules],
   );
 
+  const { data: activeProject } = useProject(projectId ?? 0);
+  const isClientPortalEnabled =
+    activeProject?.settings?.features?.["clientPortal"] === true;
+  const isFeedbackEnabled = matchesOrgModule(
+    enabledModules,
+    BUILD_FEEDBACK_ORG_MODULE,
+  );
+
+  const projectNavGroups = useMemo(() => {
+    if (projectId === null) return [];
+    return filterNavGroupsForUser(
+      buildProjectNavGroups(`${BUILD_ROOT_PATH}/${projectId}`, {
+        isOrgModuleEnabled: (orgModuleKey) =>
+          orgModuleKey === BUILD_FEEDBACK_ORG_MODULE
+            ? isFeedbackEnabled
+            : true,
+        isCapabilityEnabled: (capability) =>
+          capability === "client-portal" ? isClientPortalEnabled : true,
+      }),
+      role,
+      scopes,
+      enabledModules,
+      lockedModules,
+    );
+  }, [
+    projectId,
+    isFeedbackEnabled,
+    isClientPortalEnabled,
+    role,
+    scopes,
+    enabledModules,
+    lockedModules,
+  ]);
+
   const pages = useMemo(() => {
     const seen = new Set<string>();
-    return navGroups.flatMap((group) =>
+    return [...navGroups, ...projectNavGroups].flatMap((group) =>
       flattenNavRoutes(group.routes)
         .filter((r) => {
           if (seen.has(r.href)) return false;
@@ -149,11 +192,16 @@ export function CommandPaletteDialogBody() {
           group: group.label,
         })),
     );
-  }, [navGroups]);
+  }, [navGroups, projectNavGroups]);
 
   const debouncedQuery = useDebouncedValue(query, 300);
-  const { results: entityResults, isSearching } =
-    useGlobalSearch(debouncedQuery);
+  const {
+    results: entityResults,
+    isSearching,
+    isError: isSearchError,
+    error: searchError,
+    retry: retrySearch,
+  } = useGlobalSearch(debouncedQuery);
 
   const handleSelect = useCallback(
     (href: string) => {
@@ -231,7 +279,13 @@ export function CommandPaletteDialogBody() {
   }, [navGroups]);
 
   const hasResults = filteredPages.length > 0 || entityResults.length > 0;
-  const showEmpty = !isSearching && query.length >= 2 && !hasResults;
+  const showSearchError =
+    isSearchError && query.length >= GLOBAL_SEARCH_MIN_LENGTH;
+  const showEmpty =
+    !isSearching &&
+    !showSearchError &&
+    query.length >= GLOBAL_SEARCH_MIN_LENGTH &&
+    !hasResults;
 
   const actionsCommands = commands.filter(
     (c) => c.group === "actions" && c.isAvailable,
@@ -252,6 +306,16 @@ export function CommandPaletteDialogBody() {
           <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-muted-foreground pointer-events-none" />
         )}
       </div>
+
+      {showSearchError && (
+        <ErrorState
+          compact
+          className="m-2"
+          title="Couldn't search"
+          description={getErrorMessage(searchError)}
+          onRetry={retrySearch}
+        />
+      )}
 
       <CommandList className="max-h-[420px] px-1 py-1">
         {showEmpty && (

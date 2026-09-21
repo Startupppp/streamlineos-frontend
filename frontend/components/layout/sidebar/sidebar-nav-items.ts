@@ -195,7 +195,8 @@ function filterRoute(
   ];
 }
 
-export function getNavGroupsForUser(
+export function filterNavGroupsForUser(
+  groups: NavGroup[],
   role: string | undefined,
   scopes: GrantedScopes | undefined,
   enabledModules: string[] = [],
@@ -206,7 +207,7 @@ export function getNavGroupsForUser(
   const isOwner = role === ROLES.OWNER;
   const granted = grantedFrom(scopes);
 
-  return NAV_GROUPS.filter(
+  return groups.filter(
     (group) =>
       !group.module ||
       isPlanLocked(group.module, lockedModules) ||
@@ -230,6 +231,21 @@ export function getNavGroupsForUser(
       return { ...group, routes: visibleRoutes };
     })
     .filter((group) => group.routes.length > 0);
+}
+
+export function getNavGroupsForUser(
+  role: string | undefined,
+  scopes: GrantedScopes | undefined,
+  enabledModules: string[] = [],
+  lockedModules: string[] = [],
+): NavGroup[] {
+  return filterNavGroupsForUser(
+    NAV_GROUPS,
+    role,
+    scopes,
+    enabledModules,
+    lockedModules,
+  );
 }
 
 export function flattenNavRoutes(routes: NavRoute[]): NavRoute[] {
