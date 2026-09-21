@@ -394,10 +394,56 @@ its refuted rationale. All six are now fixed at the point of use:
 
 ### Still open
 
-- **The 56 remaining knip findings**, all in modules under concurrent edit (billing, build, cron, impersonation, inventory, kb, notifications, timesheets), plus the 18 duplicate exports and `po-lifecycle.ts`.
+- ~~**The 56 remaining knip findings** … plus the 18 duplicate exports and `po-lifecycle.ts`.~~ **Closed — it was almost entirely phantom work. See the section below.**
 - The 50 unbudgeted connection-hold sweeps — not dispatched.
 - Every chat-os item needing a live environment: no local Postgres, Redis or Docker on this machine (5432/5433/6379 all refuse).
-- ask-os 11.1 (directive column needs a migration) and the email-predicate widening (needs the notifications owner).
+- ~~ask-os 11.1 (directive column needs a migration)~~ **— premise refuted, no migration is needed** (below) — and the email-predicate widening (needs the notifications owner).
 - **ask-os F-07 and F-10**, both now with their false rationale removed — F-07 needs a decline endpoint and a token-bearing reload path; F-10 needs windowing on an established in-repo pattern.
 - **chat-os P4-6** — reopened. Source and the live census disagree and nothing here can settle it; needs a raw-SSE census on a stack built from backend `448c4e25b` or later.
-- The 867 unapplied-below-watermark journal entries described above.
+- The unapplied-below-watermark journal entries described above — now **869**, because three more migrations landed above the watermark.
+
+### No migration needs to run — and both "missing migration" items were false
+
+Re-checked against the production catalogue over IAM, 2026-09-21:
+
+```
+Ledger: 27 applied row(s) against 896 journal entr(ies).
+Watermark 1803000010350; 0 migration(s) pending.
+```
+
+| Item | Claim | What the catalogue says |
+|---|---|---|
+| hardening **M6** | "`unique(\"uniq_ai_action_proposals_org_id\")` declared in Drizzle has no migration." | ⚠ **Half true, and the dangerous half is the other one.** No migration file creates it — but the constraint **already exists in production**, `contype = 'u'`, `convalidated = true`, with its index, on a 10-row table with zero duplicate `(org_id, id)` pairs. Writing and applying the migration would have failed `42710`. This is [[a-migration-is-unverified-until-applied]] in reverse: production was built by push/bootstrap, so "no migration creates it" says nothing about whether it is there. **Probe `pg_constraint` before authoring a migration for a declared-but-unmigrated object.** |
+| ask-os **11.1** | "the directive column needs a migration" | **False.** Directives are not a column. `serializeDirective()` appends `CONFIRM_ACTION:{…}` lines to the assistant message text and `chat-history.service.ts:29` stores it in `ai_chat_messages.content` — `text NOT NULL` since `0000`. The PRD's own note ("No migration was needed or written") was right and the open item contradicting it was wrong. |
+
+**The residual risk M6 really names is cold-rebuild divergence**, not a missing object: a database built from the migration chain would lack this constraint while production has it. That is the same structural condition as the 869 below-watermark entries, and it does not get fixed one constraint at a time.
+
+### `check:dead-code` was RED — now green, and the remaining findings are phantom work
+
+⚠ **The gate was failing with 13 stale verdicts.** Its rule is that the ledger only ever
+shrinks: once a symbol is deleted, knip stops reporting it and the verdict must go. **It was
+already red before this session's deletions** — `loadLeadProfile` and the four
+`confirm-actions/index.ts` barrel entries were orphaned by `448c4e25b` (the ask-os lane) — and
+`36d8d31bc` added seven more without shrinking the ledger. That is the lesson: **deleting code
+is only half of a deletion here.** Fixed by removing all 14 stale entries.
+
+```
+=== ledger: 23 verdict(s) — 20 KEEP, 3 WIRE, 0 REMOVE (debt) ===
+PASS: every dead-code finding is classified and no verdict is stale.
+PASS: self-test (33 assertions)
+```
+
+Then each remaining knip finding was classified against the ledger rather than deleted on
+knip's word. **Exactly one was real work:**
+
+| Outcome | Count | Why |
+|---|---|---|
+| **Deleted** | 1 | `stopImpersonationSchema` — a `z.object({})` the stop-impersonation route never validates against. It carried an explicit REMOVE verdict; discharging it took the ledger's REMOVE debt to zero. |
+| KEEP / WIRE by ledger verdict | 10 | `runInNewOrgTransaction`, `currencyForCountry`, `UNSCHEDULED_BILLING_JOBS`, `timesheetPayPeriodSchema`, `PresenceStatus` and the `z.infer` aliases whose backing schema is parsed at a live boundary. Several are **WIRE**, i.e. a feature that is unwired rather than code that is dead — deleting them would destroy the record of the gap. |
+| Out of scope by design | 7 | `EXCLUDED_MODULE_RE = /^src\/modules\/(crm\|inventory)\//` at `check-dead-code.mjs:80` — CRM and Inventory are "reported separately, never deleted here". `po-lifecycle.ts` is one of these. |
+
+⚠ **The "18 duplicate exports" were never work at all.** Every one is `export const <routeName>ResponseSchema = <rowSchema>;` — a per-route contract name bound to a shared row model, live via `@ResponseSchema`, with the canonical name independently consumed. knip reports them only because two exported names bind one value. **13 already carried KEEP verdicts** spelling this out; the other 5 are the Inventory ones, excluded. Collapsing them would merge separate route contracts into one name, which is the opposite of the §4 alias rule — these are not two import paths for one symbol, they are two contracts that happen to agree today.
+
+**So the open list's "56 knip findings + 18 duplicates + `po-lifecycle.ts`" resolved to one
+deletion.** The count was real; the work behind it was not. That is the same pattern as every
+other refuted premise in this lane, arriving one more time.
