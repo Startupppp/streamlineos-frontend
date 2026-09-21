@@ -263,9 +263,9 @@ Exact package commands and results are recorded at execution time.
 - [ ] **BLD-10-066** lint on changed files reports no introduced errors.
 - [ ] **BLD-10-067** route, permission, validation, schema, migration,
   architecture, and file-size gates pass.
-  **Open — executed 2026-09-21 at `f5cc6ef65`; 27 of 35 pass.**
+  **Open — re-executed 2026-09-21 at `2aa36dcb7`; 28 of 35 pass.**
   All 35 frontend gates were run self-test-first, each self-test and gate exit
-  code captured (`.agent/run-frontend-gates.sh`). Result at the time of the run:
+  code captured. Result at the first run:
   23 pass, 12 fail — of which **two were self-test failures**, the worse class,
   because a gate whose self-test fails is not evidence of anything.
   Repaired in this pass, now green: `check:tenant-neutral` (its walker used
@@ -293,12 +293,26 @@ Exact package commands and results are recorded at execution time.
   `check:contract-vendor` — `frontend/contracts/openapi.json` is stale against
   `backend/openapi.json` (hashes differ). Every contract-parity result is
   therefore measured against a contract that is not the backend's.
-  `check:permission-binding`, `check:command-catalog` (8 findings incl. two
-  referral hooks declaring `hr:employees:*` where the contract requires
-  `hr:requisitions:*`), `check:test-integrity` (2 tautologies, 12 bare
+  `check:permission-binding`, `check:command-catalog` (16 remaining, all outside
+  Build: 9 recruitment hooks declare `hr:employees:*` where the contract
+  requires `hr:requisitions:*` or `hr:interviews:*`, and impersonation,
+  inventory and timesheets mutations run unguarded — note this gate reads the
+  stale vendored contract, so each finding needs checking against the backend
+  decorator before it is treated as a defect, as the three Build ones were),
+  `check:test-integrity` (2 tautologies, 12 bare
   `.toThrow()`), `check:over-300` (6 files at exactly 301 lines).
-  `check:prd-traceability` — reports `EMPTY REGISTRY: no known PRD criteria`,
-  which is a vacuous gate, not a passing one.
+  **Repaired after the first run, now green:** `check:prd-traceability`. It
+  reported `EMPTY REGISTRY: no known PRD criteria` because `e192ec53b`
+  (2026-09-14, titled "remove obsolete log files") had deleted the 6,640-line
+  `architecture-refactor/prd/completion-plan.md` carrying 195 criteria, plus 584
+  further files under that tree — 14 ops drill scripts and the 23 evidence
+  documents the gate's own `REQUIRED_EVIDENCE_MD` names. Restored from
+  `e192ec53b^`; self-test 36 negative cases pass and the gate reports 103
+  acceptance checkboxes across 10 owned, criterion-mapped sections. The gate
+  could not have caught the evidence half of that loss: its allowlist fails an
+  unlisted file that exists, never a listed file that stopped existing.
+  `check:command-catalog` also dropped 19 → 16 findings once the three
+  Build hooks that bypassed `useAuthorizedMutation` were guarded.
 - [x] **BLD-10-068** cycle self-tests pass before cycle gates; resolved import
   counts prove the gates are non-vacuous.
   **Closed — all three cycle gates ran self-test-first, with counts.**
