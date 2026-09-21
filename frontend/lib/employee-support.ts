@@ -48,14 +48,6 @@ export function helpdeskCategoryLabel(category: string | null): string {
   return known ? HELPDESK_CATEGORY_LABELS[known] : category;
 }
 
-export const SUPPORT_QUEUE_PERMISSION_KEYS = {
-  HR: "hr:helpdesk:queue-hr",
-  IT: "hr:helpdesk:queue-it",
-  FINANCE: "hr:helpdesk:queue-finance",
-  ADMIN: "hr:helpdesk:queue-admin",
-  LEGAL: "hr:helpdesk:queue-legal",
-} as const;
-
 export function isSupportQueue(value: string | null | undefined): value is SupportQueue {
   return SUPPORT_QUEUES.some((queue) => queue === value);
 }

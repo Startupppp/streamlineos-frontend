@@ -114,28 +114,6 @@ export type TaxDeclarationStatus = "DRAFT" | "SUBMITTED" | "VERIFIED";
 
 export type FnfStatus = "PENDING" | "HR_REVIEW" | "FINANCE_REVIEW" | "APPROVED" | "PAID";
 
-export interface FnfSettlement {
-  id: number;
-  orgId: string;
-  userId: string;
-  basicDues: number;
-  leaveEncashment: number;
-  bonusDue: number;
-  deductions: number;
-  loanRecovery: number;
-  netPayable: number;
-  status: FnfStatus;
-  approvedBy: string | null;
-  notes: string | null;
-  reimbursementsDue: number;
-  assetRecovery: number;
-  noticeRecovery: number;
-  otherDeductions: number;
-  statementPublishedAt: string | null;
-  userName: string;
-  userEmail: string;
-}
-
 export type FnfStatement = z.infer<typeof fnfStatementContract>;
 
 export type LoanAdjustmentType = "SKIP_EMI" | "EXTRA_RECOVERY" | "FORECLOSURE" | "MANUAL_ADJUST";

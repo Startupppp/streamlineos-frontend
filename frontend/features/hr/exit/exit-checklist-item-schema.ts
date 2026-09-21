@@ -8,8 +8,6 @@ import type { ExitChecklistItem } from "@/hooks/api/hr/exit";
 
 export const EXIT_CHECKLIST_OWNER_CHOICES = ["keep", ...EXIT_CHECKLIST_QUEUES, "person"] as const;
 
-export type ExitChecklistOwnerChoice = (typeof EXIT_CHECKLIST_OWNER_CHOICES)[number];
-
 const isoDay = /^\d{4}-\d{2}-\d{2}$/;
 
 export const exitChecklistItemFormSchema = z
