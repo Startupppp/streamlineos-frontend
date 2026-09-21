@@ -1,4 +1,4 @@
-import { LayoutDashboard, Briefcase, Clock, CalendarCheck, CalendarDays, Receipt, FileText, Contact2, MessageSquareText, Wallet, Bell, ListChecks, Inbox, Video, Megaphone, BellDot } from "lucide-react";
+import { LayoutDashboard, Briefcase, Clock, CalendarCheck, CalendarDays, Receipt, FileText, Contact2, MessageSquareText, Wallet, Bell, ListChecks, Inbox, Video, Megaphone, BellDot, LifeBuoy } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const HOME_NAV_GROUPS: NavGroup[] = [
@@ -87,6 +87,11 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         label: "My Referrals",
         href: "/me/referrals",
         icon: Contact2,
+      },
+      {
+        label: "Support",
+        href: "/me/support",
+        icon: LifeBuoy,
       },
     ],
   },
