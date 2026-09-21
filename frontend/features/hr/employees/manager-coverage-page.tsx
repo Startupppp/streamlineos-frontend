@@ -77,11 +77,13 @@ const OVER_SPAN_COLUMNS: DataTableColumn<ManagerCoverageReport["overSpan"][numbe
   { key: "reports", header: "Direct reports", cell: (row) => <span className="font-mono tabular-nums">{row.directReports}</span> },
 ];
 
+const WITHOUT_MANAGER_HEADERS = WITHOUT_MANAGER_COLUMNS.map((column) => column.header);
+
 function LoadingBody() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <StatCardGridSkeleton cols={4} />
-      <DataTableSkeleton rows={8} columns={4} />
+      <DataTableSkeleton rows={8} headers={WITHOUT_MANAGER_HEADERS} />
     </div>
   );
 }
