@@ -2,10 +2,12 @@ import { renderHook, act } from "@testing-library/react";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { usePresenceMap, useChatOnlineUsers } from "./chat-core-read";
 
-const mockUseQuery = jest.fn(() => ({ data: undefined }));
+const mockUseQuery = jest.fn((_options: { queryKey: unknown }): { data: unknown } => ({
+  data: undefined,
+}));
 
 jest.mock("@tanstack/react-query", () => ({
-  useQuery: (...args: unknown[]) => mockUseQuery(...args),
+  useQuery: (options: { queryKey: unknown }) => mockUseQuery(options),
   useInfiniteQuery: jest.fn(() => ({ data: undefined })),
 }));
 jest.mock("next-auth/react", () => ({ useSession: jest.fn(() => ({ data: null })) }));
@@ -32,9 +34,7 @@ describe("usePresenceMap — issues ONE request shared by many consumers, preven
       useChatOnlineUsers();
     });
 
-    const callArgs: Array<{ queryKey: unknown }> = mockUseQuery.mock.calls.map(
-      ([opts]: [{ queryKey: unknown }]) => opts,
-    );
+    const callArgs: Array<{ queryKey: unknown }> = mockUseQuery.mock.calls.map(([opts]) => opts);
     const keys = callArgs.map((a) => JSON.stringify(a.queryKey));
     const uniqueKeys = new Set(keys);
     expect(uniqueKeys.size).toBe(1);
