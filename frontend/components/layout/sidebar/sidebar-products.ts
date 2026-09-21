@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Briefcase, Timer, IndianRupee, Handshake, ClipboardList, Package, LifeBuoy, Building2, Calculator, Library, PenTool } from "lucide-react";
+import { LayoutDashboard, Users, UserPlus, Briefcase, Timer, IndianRupee, Handshake, ClipboardList, Package, LifeBuoy, Building2, Calculator, Library, PenTool } from "lucide-react";
 import type { ComponentType } from "react";
 import { matchesOrgModule } from "@/lib/org-module-keys";
 import { MANIFEST, moduleByProductKey } from "@/lib/module-manifest";
@@ -14,13 +14,15 @@ export interface ProductDefinition {
 // Products whose href intentionally differs from the manifest route.
 // - administration: no manifest module; chrome product pointing at /settings
 // - documents: manifest route is /knowledge; the sidebar entry lands at /knowledge/chat
+// - recruitment: no manifest module of its own; carved out of the "hr" module's routes
 export const PRODUCT_HREF_EXCEPTIONS: Readonly<Partial<Record<ProductKey, string>>> = {
   administration: "/settings",
   documents: "/knowledge/chat",
+  recruitment: "/hr/recruitment",
 };
 
 // Products with no manifest module counterpart (not in any module's productKey set).
-export const PRODUCT_KEY_EXCEPTIONS = new Set<ProductKey>(["administration"]);
+export const PRODUCT_KEY_EXCEPTIONS = new Set<ProductKey>(["administration", "recruitment"]);
 
 function resolveProductHref(key: ProductKey): string {
   const exception = PRODUCT_HREF_EXCEPTIONS[key];
@@ -43,6 +45,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   { key: "home", label: "Home OS", href: resolveProductHref("home"), icon: LayoutDashboard },
   { key: "crm", label: "CRM OS", href: resolveProductHref("crm"), icon: Handshake },
   { key: "hrms", label: "HRMS OS", href: resolveProductHref("hrms"), icon: Users },
+  { key: "recruitment", label: "Recruitment OS", href: resolveProductHref("recruitment"), icon: UserPlus },
   { key: "build", label: "Build OS", href: resolveProductHref("build"), icon: Briefcase },
   { key: "timesheets", label: "Timesheets OS", href: resolveProductHref("timesheets"), icon: Timer },
   { key: "inventory", label: "Inventory OS", href: resolveProductHref("inventory"), icon: Package },
@@ -72,6 +75,7 @@ export const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
   home: "Overview & activity",
   crm: "Leads, deals & contacts",
   hrms: "People & payroll",
+  recruitment: "Jobs, candidates & hiring",
   build: "Projects, issues & delivery",
   timesheets: "Track, approve & bill time",
   inventory: "Stock & orders",
@@ -110,6 +114,12 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
     bg: "bg-category-emerald-surface",
     indicator: "bg-category-emerald-fill",
     border: "border-category-emerald-rule",
+  },
+  recruitment: {
+    text: "!text-category-orange-ink",
+    bg: "bg-category-orange-surface",
+    indicator: "bg-category-orange-fill",
+    border: "border-category-orange-rule",
   },
   build: {
     text: "!text-category-violet-ink",
@@ -182,6 +192,7 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
 export const PRODUCT_MODULE_KEY: Partial<Record<ProductKey, string>> = {
   crm: "crm",
   hrms: "hr",
+  recruitment: "hr",
   build: "build",
   inventory: "inventory",
   finance: "accounting",

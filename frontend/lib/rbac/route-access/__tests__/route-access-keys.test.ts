@@ -311,4 +311,14 @@ describe("assigned product access", () => {
     expect(hasAssignedProductAccess("build", { "build:tickets:view": "all" })).toBe(true);
     expect(hasAssignedProductAccess("build", { "projects:members:view": "all" })).toBe(true);
   });
+
+  it("resolves recruitment through the hr manifest module it has no manifest entry of its own", () => {
+    expect(
+      hasAssignedProductAccess("recruitment", { "hr:requisitions:view": "all" }),
+    ).toBe(true);
+    expect(hasAssignedProductAccess("recruitment", { "self:attendance": "own" })).toBe(
+      false,
+    );
+    expect(hasAssignedProductAccess("recruitment", {})).toBe(false);
+  });
 });

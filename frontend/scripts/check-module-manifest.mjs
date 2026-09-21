@@ -27,9 +27,10 @@ const MANIFEST_LOADER = join(ROOT, "lib", "module-manifest.ts");
 const PRODUCT_HREF_EXCEPTIONS = {
   administration: "/settings",
   documents: "/knowledge/chat",
+  recruitment: "/hr/recruitment",
 };
 
-const PRODUCT_KEY_EXCEPTIONS = new Set(["administration"]);
+const PRODUCT_KEY_EXCEPTIONS = new Set(["administration", "recruitment"]);
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
