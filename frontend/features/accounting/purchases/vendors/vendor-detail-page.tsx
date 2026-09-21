@@ -9,11 +9,13 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useAccountingBook, usePostableAccounts } from "@/hooks/api/accounting/ledger";
 import { useApDocuments, useVendor } from "@/hooks/api/accounting/ap";
@@ -38,7 +40,8 @@ function DefinitionRow({ label, value }: { label: string; value: string }) {
 
 export function VendorDetailPage({ vendorId }: VendorDetailPageProps) {
   const canUpdate = useCan("accounting:update");
-  const canReadBills = useCan("accounting:payables:read");
+  const billsAccess = useCanState("accounting:payables:read");
+  const canReadBills = billsAccess === "granted";
   const [isEditing, setIsEditing] = useState(false);
   const [billsPage, setBillsPage] = useState(1);
 
@@ -57,6 +60,7 @@ export function VendorDetailPage({ vendorId }: VendorDetailPageProps) {
     error: vendorQuery.error,
   });
   const handleRetry = useCallback(() => { void vendorQuery.refetch(); }, [vendorQuery]);
+  const handleRetryBills = useCallback(() => { void billsQuery.refetch(); }, [billsQuery]);
 
   const expenseAccountName = useMemo(() => {
     const accountId = vendorQuery.data?.defaultExpenseAccountId;
@@ -199,14 +203,14 @@ export function VendorDetailPage({ vendorId }: VendorDetailPageProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-            {!canReadBills ? (
+            {billsAccess === "denied" ? (
               <NoPermissionState permission="accounting:payables:read" />
             ) : billsQuery.isError ? (
               <ErrorState
                 className="flex-1"
                 title="Couldn't load their bills"
                 description={getErrorMessage(billsQuery.error)}
-                onRetry={() => void billsQuery.refetch()}
+                onRetry={handleRetryBills}
               />
             ) : (
               <DataTable

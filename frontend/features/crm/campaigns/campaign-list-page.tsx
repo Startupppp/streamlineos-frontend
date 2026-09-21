@@ -30,7 +30,7 @@ import { CAMPAIGN_LAYOUT } from "@/lib/renderer/crm/campaign-layout";
 import { useCampaigns } from "@/hooks/api/crm/campaigns";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useCan, useCanState } from "@/hooks/api/access";
+import { useCan } from "@/hooks/api/access";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { CampaignSheet } from "./campaign-sheet";
 
@@ -86,7 +86,7 @@ export function CampaignListPage() {
     [searchParams, router, pathname],
   );
 
-  const { data, isLoading, isError, refetch } = useCampaigns({
+  const { data, isLoading, isError, error, refetch } = useCampaigns({
     status: statusFilter === "all" ? undefined : statusFilter,
     page,
     limit: PAGE_SIZE,
@@ -118,18 +118,21 @@ export function CampaignListPage() {
     void refetch();
   }, [refetch]);
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
-  if (useCanState("crm:campaigns:view") === "denied")
-    return <NoPermissionState permission="crm:campaigns:view" />;
+  const pageState = usePageState({
+    permission: "crm:campaigns:view",
+    isLoading,
+    isError,
+    error,
+  });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper title="Campaigns" subtitle="Track lead sources and ROI">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper
@@ -178,13 +181,6 @@ export function CampaignListPage() {
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
         {isLoading ? (
           <DataTableSkeleton rows={12} columns={layout.list.columns.length} className="flex-1" />
-        ) : isError ? (
-          <ErrorState
-            title="Couldn't load campaigns"
-            description="The campaign list didn't load. Check your connection and try again."
-            onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          />
         ) : campaigns.length === 0 ? (
           <EmptyState
             illustration={<EmptyReportIllustration />}
