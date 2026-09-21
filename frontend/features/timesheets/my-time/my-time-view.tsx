@@ -138,7 +138,7 @@ export function MyTimeView() {
   ) : null;
 
   const weekNavActions = (
-    <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-row sm:items-center">
+    <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
       <div className="flex items-center gap-2 flex-wrap">
         <AiActionsMenu
           actions={aiActions}

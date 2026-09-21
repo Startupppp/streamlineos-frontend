@@ -5,6 +5,7 @@ import { Copy, Lock, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollEdgeFade } from "@/components/ui/scroll-edge-fade";
 import { cn } from "@/lib/utils";
 import { ProjectTicketSelect } from "./project-ticket-select";
 import { describeCell } from "./day-label";
@@ -215,7 +216,10 @@ export function WeekGrid({
         </p>
       ) : null}
 
-      <div className="overflow-x-auto rounded-lg border border-border scrollbar-thin">
+      <ScrollEdgeFade
+        className="rounded-lg border border-border"
+        viewportClassName="rounded-lg overscroll-x-contain"
+      >
         <table className="w-full text-xs" style={{ minWidth: 800 }}>
           <caption className="sr-only">
             Hours by project and day for the week of{" "}
@@ -365,7 +369,7 @@ export function WeekGrid({
             </tr>
           </tfoot>
         </table>
-      </div>
+      </ScrollEdgeFade>
 
       {addingRow ? (
         <div className="flex items-end gap-2 p-3 rounded-lg border border-dashed border-primary/40 bg-primary/5 dark:bg-primary/10">
