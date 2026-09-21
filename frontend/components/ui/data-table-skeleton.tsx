@@ -21,16 +21,15 @@ import {
  * of "loading" without a single call site changing — the same three lines `LoadingState` and
  * `DataTable`'s inline skeleton already carry.
  */
-export function DataTableSkeleton({
-  rows = 12,
-  columns = 4,
-  className,
-}: {
+type DataTableSkeletonProps = {
   rows?: number;
-  columns?: number;
   className?: string;
-}) {
+} & ({ headers: readonly string[]; columns?: never } | { headers?: never; columns?: number });
+
+export function DataTableSkeleton({ rows = 12, className, ...shape }: DataTableSkeletonProps) {
   const isOnline = useOnlineStatus();
+  const headers = shape.headers ?? null;
+  const columns = headers ? headers.length : (shape.columns ?? 4);
 
   return (
     <div
@@ -51,8 +50,14 @@ export function DataTableSkeleton({
           <TableRow className="hover:bg-transparent">
             {Array.from({ length: columns }).map((_, colIdx) => (
               <TableHead key={colIdx} className="px-2 py-2">
-                <Skeleton className="h-3.5 w-16" aria-hidden="true" />
-                <span className="sr-only">Column {colIdx + 1}</span>
+                {headers ? (
+                  headers[colIdx]
+                ) : (
+                  <>
+                    <Skeleton className="h-3.5 w-16" aria-hidden="true" />
+                    <span className="sr-only">Column {colIdx + 1}</span>
+                  </>
+                )}
               </TableHead>
             ))}
           </TableRow>
