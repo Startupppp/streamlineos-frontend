@@ -3,7 +3,7 @@ import type { NavGroup } from "./sidebar-nav-types";
 
 export const RECRUITMENT_NAV_GROUPS: NavGroup[] = [
 {
-    label: "Recruitment",
+    label: "Recruitment OS",
     product: "hrms",
     module: "hrms",
     requiredPermission: [
