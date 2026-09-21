@@ -311,7 +311,21 @@ mark a state N/A only with a product reason in its page contract.
 - progress does not simulate certainty or invent status.
 - AI is absent when it cannot provide scoped, evidence-backed value.
 
-- [ ] **BLD-08-025** no agent count reuses unrelated global notification data.
+- [x] **BLD-08-025** no agent count reuses unrelated global notification data.
+  **Closed — unit proof, executed 2026-09-21 (5 suites / 56 tests).**
+  There is no agent *count* at all: `BuildAgentPulse` reads a dedicated
+  `/build/agent-pulse/top-signal` under its own key
+  `buildWorkQueryKeys.projects.agentPulse(scopeKey)`, gated `build:approvals:view`
+  and parameterised by scope (`hooks/api/build/agent-pulse.ts:16-48`), and renders
+  one signal. `agent-pulse.test.ts` (4 cases, including per-scope cache isolation)
+  and `build-agent-pulse.test.tsx` (18 cases) both passed.
+  The one Build badge count is module-filtered rather than global:
+  `sourceModule: "build"` with key `notifications.unreadCount("build")`
+  (`hooks/api/build/approvals.ts:54-66`), consumed at `build-sidebar.tsx:65,111-113`.
+  **Residual worth fixing:** no test pins that `sourceModule` parameter, so a
+  regression to the global count would keep every suite green. A one-assertion
+  addition to `approvals-badge.test.ts` would protect this closure; recorded as a
+  quick win in the 2026-09-21 audit.
 - [ ] **BLD-08-026** pending proposals remain distinguishable from executed
   actions and expire safely.
 - [ ] **BLD-08-027** client-visible AI drafts require explicit human approval.

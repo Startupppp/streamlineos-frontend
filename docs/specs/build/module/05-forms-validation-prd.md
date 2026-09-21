@@ -225,7 +225,19 @@ protects trust boundaries, and the database protects durable state.
 
 - [ ] **BLD-05-019** duplicate name/key races produce a field-level 409.
 - [ ] **BLD-05-020** stale version produces merge/reload choices.
-- [ ] **BLD-05-021** relation-cycle and last-owner checks are transactional.
+- [x] **BLD-05-021** relation-cycle and last-owner checks are transactional.
+  **Closed — unit proof, executed 2026-09-21.**
+  Relation cycle: `assertSelfRefChain` runs on `tx` inside `this.db.transaction`
+  (`core/projects-tickets-update.service.ts:246,255,257`, helper at `:56-124`).
+  Proven by `core/projects-ticket-ancestry-race.spec.ts`, which is non-vacuous in
+  the way that matters here — its `tx` mock returns an inverse edge that the
+  non-transactional `db` handle does not, so a check performed *before* the
+  transaction would pass and the spec would fail.
+  Last owner: `pm-workspace-memberships.service.ts:174-197` and `232-270`, proven by
+  `pm-workspace-memberships.service.spec.ts`, whose transaction mock **does** invoke
+  its callback (`:88`) — without that, every assertion inside the transaction would
+  be silently void.
+  Both suites passed in a 6-suite / 42-test batch.
 
 ## Unsaved Work Contract
 
