@@ -1,9 +1,26 @@
 # Open-items register — as of 2026-09-21
 
-Every unfinished item across the seven active lane/PRD documents, in one place,
-deduplicated and grouped by **what is blocking it**. Companion to
-`2026-09-21-session-handoff.md`, which holds environment traps, what was done, and the
-gate rules — **read that first.**
+> ⚠ **`2026-09-21-pending-work.md` is the canonical index — read it first.** A parallel
+> session published it while this file was being written, and it is **more current**: it
+> knows about the `0466`/`0467` production break, migration `1134`, the currently-red
+> gates, and the 1,279-item module acceptance backlog, none of which appear here.
+>
+> **This file is its detail annex.** It carries what an index cannot: per-item source
+> line, what exactly closes it, and what it is blocked on. It also still holds **~24
+> items the index does not list** — including three that matter more than their placement
+> suggests: **H-1** (an `org_1` fixture row is in the *production* database), **P-6** (no
+> credit gate at all on `POST /chat/confirm`), and **P-7** (`email.send` gated on a key
+> that sits in `EMPLOYEE_SELF_SERVICE`, so the check is effectively "is an active
+> member"). Also absent there: **E-3/E-4** (two specs that certify fictions), **E-5**,
+> **E-8**, **E-9**, **E-17**, **S-4**, **S-5** and **S-09**. These should be folded into
+> the index; they are recorded here so they are not lost in the meantime.
+>
+> Where the two disagree on migration or gate state, **the index wins** — it was written
+> later.
+
+Every unfinished item across the seven active lane/PRD documents, deduplicated and
+grouped by **what is blocking it**. `2026-09-21-session-handoff.md` holds the
+environment traps and gate rules.
 
 ## How to use this
 

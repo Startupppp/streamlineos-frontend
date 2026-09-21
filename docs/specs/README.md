@@ -11,14 +11,9 @@ candidate PRDs were removed; Git history remains their archive.
 - [Migration repair handoff](2026-09-21-migration-repair-handoff.md) — the `0466`/`0467`
   production break, the billing-webhook fix, and the rollback work. **Read before applying
   any historical migration.**
-
-## Start here
-
-- **[Session handoff — 2026-09-21](2026-09-21-session-handoff.md)** — environment traps,
-  what was done, and the gate rules that are not obvious. **Read before running anything;
-  `backend/.env` points at production.**
-- **[Open-items register](2026-09-21-open-items-register.md)** — all 48 unfinished items
-  across every active lane, grouped by what is blocking each one.
+- [Open-items register](2026-09-21-open-items-register.md) — per-item detail annex to the
+  pending-work index: source line, what closes it, what it is blocked on. Carries ~15
+  items the index does not yet list.
 
 ## HRMS + Payroll + WFH/WFO
 
