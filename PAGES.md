@@ -322,12 +322,14 @@ Full text of any pre-2026-08-03 entry is in git history.
 
 ### Build (delivery + product management)
 
-> Namespace is `/build`; `/projects` and `/product-management/**` redirect to `/build` (deep links preserved). `/build/[projectId]` is a project. `project` ≠ `managed product`. PM Workspace context chip in header when in Product Management module.
+> Namespace is `/build`; `/projects` and `/product-management/**` redirect to `/build` (deep links preserved). `/build/[projectId]` is a project. `project` ≠ `managed product`. Scope switching lives in the sidebar scope selector.
 
-- [x] `/build` · `/build/all` — Project directory (inline Lead/Members assign via popover, full-field edit sheet) + legacy deep-link
+- [x] `/build` · ~~`/build/all`~~ — Project directory (inline Lead/Members assign via popover, full-field edit sheet); `/build/all` retired, no route file
 - [x] `/build/[projectId]` — Board: dense toolbar, DnD jank fixed (CSS drag chrome, memoized columns/cards)
 - [x] `/build/[projectId]/backlog` · `/build/[projectId]/sprints` · `/build/[projectId]/cycles` · `/build/[projectId]/cycles/[cycleId]` · `/build/[projectId]/epics` · `/build/[projectId]/milestones` · `/build/[projectId]/modules`
 - [x] `/build/[projectId]/timeline` · `/build/[projectId]/views` · `/build/[projectId]/intake` · `/build/[projectId]/triage`
+- [x] `/build/[projectId]/files` · `/build/[projectId]/issues` (nav's canonical Issues destination) · `/build/[projectId]/updates`
+- [x] `/build/[projectId]/workload` — route file exists but `next.config.ts` redirects it to `/build/:projectId?view=workload`, so it is unreachable
 - [x] `/build/[projectId]/my-tickets` · `/build/[projectId]/tickets/[ticketKey]` — Board/List/Table via `?view=`; Jira-like 2-column detail
 - [x] `/build/[projectId]/analytics` · `/build/[projectId]/reports` (velocity, burnup, CFD + daily snapshots) · `/build/[projectId]/budget`
 - [x] `/build/[projectId]/settings` · `/build/[projectId]/workflow` · `/build/[projectId]/automations` · `/build/[projectId]/webhooks` — Editable workflow statuses (inline CRUD, optimistic), WIP limits, from→to transition rules
@@ -339,14 +341,17 @@ Full text of any pre-2026-08-03 entry is in git history.
 - [x] `/build/[projectId]/change-requests` · `/build/[projectId]/client-portal` — 8-state CR workflow + per-ticket visibility toggles
 - [x] `/build/[projectId]/whiteboard` · `/board/[shareToken]` — Excalidraw scenes; private/project/public; rate-limited public token endpoints
 - [x] `/build/[projectId]/feedbucket` · `/build/[projectId]/feedbucket/[submissionId]` — Widget setup + vision-model feedback→ticket triage
-- [x] `/build/[projectId]/releases` · `/build/[projectId]/chat` · `/build/[projectId]/ai` (6 capability cards, `projects:ai:use`) · `/build/[projectId]/wiki` · `/build/[projectId]/wiki/[pageId]`
+- [x] `/build/[projectId]/releases` · `/build/[projectId]/chat` · `/build/[projectId]/ai` (6 capability cards, `build:ai:use`) · `/build/[projectId]/wiki` · `/build/[projectId]/wiki/[pageId]`
 - [x] `/build/my-work` · `/build/all-work` · `/build/approvals` · `/build/inbox` · `/build/drafts` · `/build/members` · `/build/customers`
 - [x] `/build/teams` · `/build/teams/[teamId]` — First-class teams (members + projects, M:N to projects, access inheritance)
 - [x] `/build/command-center` · `/build/portfolios` · `/build/portfolios/[portfolioId]` · `/build/programs` · `/build/templates` · `/build/roadmap`
 - [x] `/build/goal` · `/build/goal/[goalId]` — Goals & OKRs
-- [x] `/build/managed-products` · `/build/managed-products/[managedProductId]` — Managed Products (`projects:managed-products:*`)
+- [x] `/build/managed-products` · `/build/managed-products/[managedProductId]` — Managed Products (`build:managed-products:*`)
+- [x] `/build/managed-products/[managedProductId]/projects` · `/roadmap` · `/goals` · `/feedback` · `/insights` — Managed-product scope catalog
 - [x] `/build/pm-workspaces` — Container list, default-workspace delete guard, members sheet
-- [x] `/build/portal` · `/build/portal/[projectId]` — Client portal (redirects to `/portal/**`; legacy paths preserved)
+- [x] `/build/workspaces/[pmWorkspaceId]` · `/overview` · `/all-work` · `/my-work` · `/products` · `/teams` · `/roadmap` · `/goals` — PM workspace scope catalog
+- [x] `/build/client-access` — Client access management
+- [x] ~~`/build/portal` · `/build/portal/[projectId]`~~ — retired, no route file; the client portal is `/portal/**` below
 - [x] `/portal` · `/portal/[projectId]` — Client portal (chromeless shell: no module/org switcher sidebar)
 - [x] `/build/settings/integrations` — Connections · Agent access (GitHub); `/agent-tokens` + `/agent/v1/*`
 - [x] `/build/access` — Module access management
