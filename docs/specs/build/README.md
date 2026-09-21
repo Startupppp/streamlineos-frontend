@@ -1,5 +1,9 @@
 # Build Execution Ledger
 
+**New session?** Read [`handoff/README.md`](./handoff/README.md) first — current
+state, the environment blocker, what is done, what is open, and the traps that
+have already cost time. It orients; this file and the PRDs remain authority.
+
 ## Authority
 
 This is the only mutable scheduler for the Build module and Build sidebar.
