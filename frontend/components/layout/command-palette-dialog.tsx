@@ -45,6 +45,7 @@ import {
   useGlobalSearch,
   type GlobalSearchResult,
 } from "@/components/command-palette/hooks/use-global-search";
+import { useCommandRegistry } from "./command-palette-commands";
 
 
 const ENTITY_TYPES = [
@@ -74,6 +75,17 @@ const ENTITY_LABELS: Record<EntityType, string> = {
   contact: "Contacts",
   client: "Clients",
   ticket: "Tickets",
+};
+
+const COMMAND_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  "create-ticket": Plus,
+  "project-board": Kanban,
+  "project-backlog": ListTodo,
+  "project-cycles": RefreshCw,
+  "project-my-tickets": Star,
+  "project-analytics": BarChart2,
+  "nav-all-projects": LayoutDashboard,
+  "nav-my-work": Star,
 };
 
 function ItemIcon({
@@ -116,28 +128,13 @@ function extractProjectId(pathname: string): number | null {
   return Number.isNaN(parsed) ? null : parsed;
 }
 
-interface ProjectNavItem {
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  segment: string;
-  shortcut?: string;
-}
-
-const PROJECT_NAV_ITEMS: ProjectNavItem[] = [
-  { label: "Board", icon: Kanban, segment: "", shortcut: "G B" },
-  { label: "Backlog", icon: ListTodo, segment: "/backlog" },
-  { label: "Cycles", icon: RefreshCw, segment: "/cycles" },
-  { label: "My Tickets", icon: Star, segment: "/my-tickets", shortcut: "G I" },
-  { label: "Analytics", icon: BarChart2, segment: "/analytics" },
-];
-
 export function CommandPaletteDialogBody() {
   const router = useRouter();
   const pathname = usePathname();
   const { data: access } = useAccess();
   const requestLeave = useNavigationLeave();
   const [query, setQuery] = useState("");
-  
+
   const role =
     access?.isOrgOwner
       ? "OWNER"
@@ -145,7 +142,10 @@ export function CommandPaletteDialogBody() {
   const scopes = access?.scopes;
   const enabledModules = useEnabledModules();
   const { data: entitlements } = useEntitlements();
-  const lockedModules = entitlements?.lockedModules ?? [];
+  const lockedModules = useMemo(
+    () => entitlements?.lockedModules ?? [],
+    [entitlements],
+  );
   const { paletteOpen, setPaletteOpen, openCreateTicket } = useCommandPalette();
 
   const projectId = useMemo(() => extractProjectId(pathname), [pathname]);
@@ -200,6 +200,12 @@ export function CommandPaletteDialogBody() {
     openCreateTicket(projectId);
   }, [projectId, setPaletteOpen, openCreateTicket]);
 
+  const commands = useCommandRegistry({
+    projectId,
+    handleSelect,
+    handleCreateTicket,
+  });
+
   const filteredPages = useMemo(() => {
     if (!query) return [];
     const q = query.toLowerCase();
@@ -248,6 +254,13 @@ export function CommandPaletteDialogBody() {
 
   const hasResults = filteredPages.length > 0 || entityResults.length > 0;
   const showEmpty = !isSearching && query.length >= 2 && !hasResults;
+
+  const actionsCommands = commands.filter(
+    (c) => c.group === "actions" && c.isAvailable,
+  );
+  const navCommands = commands.filter(
+    (c) => c.group === "navigation" && c.isAvailable,
+  );
 
   return (
     <CommandDialog open={paletteOpen} onOpenChange={handleOpenChange}>
@@ -354,68 +367,49 @@ export function CommandPaletteDialogBody() {
 
         {!query && (
           <>
-            <CommandGroup
-              heading={projectId !== null ? "This project" : "Actions"}
-              className={COMMAND_GROUP_CLASS}
-            >
-              <CommandItem
-                value="create ticket issue"
-                onSelect={handleCreateTicket}
-                className={COMMAND_ITEM_CLASS}
-              >
-                <ItemIcon icon={Plus} />
-                <span className="flex-1 text-sm text-foreground">
-                  Create ticket
-                </span>
-                <CommandShortcut className={COMMAND_SHORTCUT_CLASS}>
-                  C
-                </CommandShortcut>
-              </CommandItem>
-              {projectId !== null &&
-                PROJECT_NAV_ITEMS.map((item) => (
-                  <CommandItem
-                    key={item.segment}
-                    value={`project ${item.label}`}
-                    onSelect={() =>
-                      handleSelect(`/build/${projectId}${item.segment}`)
-                    }
-                    className={COMMAND_ITEM_CLASS}
-                  >
-                    <ItemIcon icon={item.icon} />
-                    <span className="flex-1 text-sm text-foreground">
-                      {item.label}
-                    </span>
-                    {item.shortcut && (
-                      <CommandShortcut className={COMMAND_SHORTCUT_CLASS}>
-                        {item.shortcut}
-                      </CommandShortcut>
-                    )}
-                  </CommandItem>
-                ))}
-            </CommandGroup>
-            <CommandSeparator className="my-1" />
+            {actionsCommands.length > 0 && (
+              <>
+                <CommandGroup
+                  heading={projectId !== null ? "This project" : "Actions"}
+                  className={COMMAND_GROUP_CLASS}
+                >
+                  {actionsCommands.map((cmd) => (
+                    <CommandItem
+                      key={cmd.id}
+                      value={cmd.keywords.join(" ")}
+                      onSelect={cmd.execute}
+                      className={COMMAND_ITEM_CLASS}
+                    >
+                      <ItemIcon icon={COMMAND_ICONS[cmd.id] ?? Plus} />
+                      <span className="flex-1 text-sm text-foreground">
+                        {cmd.label}
+                      </span>
+                      {cmd.shortcut && (
+                        <CommandShortcut className={COMMAND_SHORTCUT_CLASS}>
+                          {cmd.shortcut}
+                        </CommandShortcut>
+                      )}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+                <CommandSeparator className="my-1" />
+              </>
+            )}
 
             <CommandGroup heading="Navigation" className={COMMAND_GROUP_CLASS}>
-              <CommandItem
-                value="all projects overview"
-                onSelect={() => handleSelect("/build")}
-                className={COMMAND_ITEM_CLASS}
-              >
-                <ItemIcon icon={LayoutDashboard} />
-                <span className="flex-1 text-sm text-foreground">
-                  All Projects
-                </span>
-              </CommandItem>
-              <CommandItem
-                value="my work tickets assigned"
-                onSelect={() => handleSelect("/build/my-work")}
-                className={COMMAND_ITEM_CLASS}
-              >
-                <ItemIcon icon={Star} />
-                <span className="flex-1 text-sm text-foreground">
-                  My Work
-                </span>
-              </CommandItem>
+              {navCommands.map((cmd) => (
+                <CommandItem
+                  key={cmd.id}
+                  value={cmd.keywords.join(" ")}
+                  onSelect={cmd.execute}
+                  className={COMMAND_ITEM_CLASS}
+                >
+                  <ItemIcon icon={COMMAND_ICONS[cmd.id] ?? LayoutDashboard} />
+                  <span className="flex-1 text-sm text-foreground">
+                    {cmd.label}
+                  </span>
+                </CommandItem>
+              ))}
             </CommandGroup>
             <CommandSeparator className="my-1" />
 
