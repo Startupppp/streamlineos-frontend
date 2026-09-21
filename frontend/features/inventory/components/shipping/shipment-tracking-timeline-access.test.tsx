@@ -11,11 +11,11 @@ jest.mock("@/hooks/api/access", () => ({
 }));
 
 const STUB_TIMELINE: ShipmentTimeline = {
-  shipment: { id: 11, status: "IN_TRANSIT", trackingNumber: "TRACK123" },
+  shipment: { id: 11, status: "SHIPPED", trackingNumber: "TRACK123" },
   events: [
     {
       id: 1,
-      status: "IN_TRANSIT",
+      status: "SHIPPED",
       occurredAt: "2026-09-10T08:00:00.000Z",
       receivedAt: "2026-09-10T08:05:00.000Z",
       description: "Shipment picked up by carrier",

@@ -90,6 +90,7 @@ function renderReview() {
     <StepReview
       completedSteps={new Set(DATA_STEP_IDS)}
       draft={DRAFT}
+      countryCode="IN"
       onBack={jest.fn()}
       onEditPersonal={jest.fn()}
       onEditBank={jest.fn()}
