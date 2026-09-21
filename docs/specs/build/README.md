@@ -106,7 +106,7 @@ boundaries, not write permission.
 | Packet | Owner/session | Root/frontend revision | Backend revision | Exact write set | Acquired | Expires | Status |
 |---|---|---|---|---|---|---|---|
 | `BLD-X-SB-ACTIONS-001` | cycle-14 agent CA | `e18077a30` | `374afd27a` | prod: none changed · test: `build-quick-create.test.tsx`, `build-more-tools-menu.test.tsx`, `use-build-nav-preferences.test.ts` | 2026-09-21T08:35Z | 2026-09-21T11:35Z | `INTEGRATED (cycle 14)` |
-| `BLD-X-SB-LIFECYCLE-001` | cycle-16 agent EB | `e18077a30` | `374afd27a` | prod: `features/build/navigation/build-scope-recovery.tsx`, `use-build-scope-recovery.ts`, `build-sidebar.tsx`, `lib/build/build-scope-fallback.ts` · test: `build-scope-recovery.test.tsx`, `lib/build/build-scope-fallback.test.ts` | 2026-09-21T12:55Z | 2026-09-21T15:55Z | `RESERVED` |
+| `BLD-X-SB-LIFECYCLE-001` | cycle-16 agent EB | `e18077a30` | `374afd27a` | prod: `features/build/navigation/build-scope-recovery.tsx`, `use-build-scope-recovery.ts`, `lib/build/build-scope-fallback.ts` · test: `build-scope-recovery.test.tsx`, new `lib/build/build-scope-fallback.test.ts` | 2026-09-21T12:55Z | 2026-09-21T15:55Z | `INTEGRATED (cycle 16)` |
 | `BLD-X-FE-QUALITY-001a-ii` | cycle-16 agent EC | `e18077a30` | `374afd27a` | prod: `features/build/governance/risk-form-sheet.tsx`, `decision-form-sheet.tsx`, `types/projects/governance.ts` · test: new `governance-clear-optional-field.test.tsx` | 2026-09-21T12:55Z | 2026-09-21T15:55Z | `INTEGRATED (cycle 16)` |
 | `BLD-X-FE-QUALITY-001a-i` | cycle-16 agent EA | `e18077a30` | `374afd27a` | prod: `features/build/governance/risks-page.tsx`, `hooks/api/build/governance-schema.ts` · test: new `risks-page-aggregates.test.tsx`, new `governance-contract.test.ts` | 2026-09-21T12:40Z | 2026-09-21T15:40Z | `INTEGRATED (cycle 16)` |
 | `BLD-X-SB-NAV-001` | cycle-15 agent DB | `e18077a30` | `374afd27a` | prod: `lib/build/build-scope.ts`, `features/build/navigation/use-reconciled-build-scopes.ts`, `use-build-scope-directory.ts`, `lib/build/nav/build-project-catalog.ts` · test: `lib/build/build-scope.test.ts`, `build-project-catalog.test.ts` | 2026-09-21T12:25Z | 2026-09-21T15:25Z | `INTEGRATED (cycle 15)` |
@@ -1223,6 +1223,43 @@ did not hold:
    git at all: manually revert the source edit, re-run the test, confirm it fails
    for the right reason, restore the edit. Every future brief states that method
    instead of leaving the agent to invent one.
+
+**`BLD-X-SB-LIFECYCLE-001` — `INTEGRATED`.** Two defects closed, no
+shared-contract request needed, no git run.
+
+- **The recovery link now guards unsaved work.** Both the collapsed-icon and
+  expanded-panel links routed through a bare `next/link` whose `onClick` was the
+  sidebar-close callback, not a leave guard — the one entry point in BSN-04-014's
+  list that nobody wired. Both now go through `useNavigationLeave()`, reusing
+  `build-nav-link.tsx`'s existing approach including modifier-key and
+  `defaultPrevented` passthrough, rather than a second guard mechanism.
+- **The fallback is no longer a hard-coded route.** `ORGANIZATION_HREF`
+  (`/build/command-center`, requiring `build:view`) was returned on
+  `hasAnyBuildAccess` alone, which is `!isBuildNavModelEmpty(model)` for the
+  **current** scope — so a caller holding only e.g. `build:approvals:view` was
+  offered "Go to All of Build" and landed on Access Denied.
+  `resolveBuildScopeFallback` now takes `organizationHref: string | null` and
+  promotes the **first authorized destination** from an independently resolved
+  organization-scope model, degrading to `no-access` when there is none. This is
+  §17's "an inaccessible parent may promote an accessible child, never expose
+  itself", and it stays deterministic because the model is ordered
+  (`myWork → primary → moreTools → settings`), satisfying BSN-04's
+  "deterministic authorized fallback".
+- **Coordinator verified it fails closed while access loads** —
+  `use-build-scope-recovery.ts:94` returns `null` when `access === undefined`, so
+  the recovery link is hidden until authorization is known rather than flashing a
+  possibly-dead link. The helper stays pure and React-free, so
+  `build-scope-fallback.test.ts` unit-tests it directly.
+- Coordinator re-ran: **41 tests, 5 suites, exit 0**, including the three sibling
+  guard suites it did not own.
+
+**Honest residual the agent disclosed.** `hasAnyBuildAccess` is still derived
+from the current (possibly inaccessible) scope's own catalog, so the coarse
+`no-access` vs `proceed` branch remains imprecise. The observable defect is gone
+because `organizationHref` independently re-verifies org-level authorization
+before promoting anything, but the underlying signal is still the wrong shape.
+Fixing it means touching `use-build-nav-model.ts`, which was reserved to another
+packet at the time. Carried forward.
 
 ### Findings banked for cycles 15–16 (read-only audit, unverified by coordinator)
 
