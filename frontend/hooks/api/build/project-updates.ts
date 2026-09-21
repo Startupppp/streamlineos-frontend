@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -83,7 +83,7 @@ export function useCreateProjectUpdate(projectId: number) {
 
 export function useDeleteProjectUpdate(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:updates:manage", {
     mutationKey: ["projects", projectId, "updates", "delete"],
     mutationFn: (updateId: number) =>
       apiClient.delete<void>(
