@@ -6,7 +6,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useExportReport } from "@/hooks/api/accounting/reports";
-import type { ReportKey } from "@/types/accounting-reports";
+import type { ReportKey } from "@/types/accounting/accounting-reports";
 
 interface ExportReportButtonProps {
   report: ReportKey;

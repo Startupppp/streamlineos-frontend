@@ -13,13 +13,20 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { useBookCurrencies, useChartOfAccounts } from "@/hooks/api/accounting/ledger";
+import {
+  useBookCurrencies,
+  useChartOfAccounts,
+} from "@/hooks/api/accounting/ledger";
 import { cn } from "@/lib/utils";
-import type { AccountNode } from "@/types/accounting-kernel";
+import type { AccountNode } from "@/types/accounting/accounting-kernel";
 import { ACCOUNT_TYPE_LABELS } from "./account-form-schema";
 import { ArchiveAccountDialog } from "./archive-account-dialog";
 import { CreateAccountSheet, EditAccountSheet } from "./account-form-sheets";
-import { flattenAccounts, headerAccountOptions, type FlatAccount } from "./flatten-accounts";
+import {
+  flattenAccounts,
+  headerAccountOptions,
+  type FlatAccount,
+} from "./flatten-accounts";
 
 export function ChartOfAccountsClient() {
   const canCreate = useCan("accounting:accounts:create");
@@ -38,7 +45,9 @@ export function ChartOfAccountsClient() {
     isError,
     error,
   });
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
   const { data: currencies } = useBookCurrencies();
 
   const rows = useMemo(() => flattenAccounts(data ?? []), [data]);
@@ -79,17 +88,26 @@ export function ChartOfAccountsClient() {
             {row.node.name}
           </span>
           {row.node.isHeader ? (
-            <Badge variant="outline" className="h-4 shrink-0 px-1.5 py-0 text-micro">
+            <Badge
+              variant="outline"
+              className="h-4 shrink-0 px-1.5 py-0 text-micro"
+            >
               Grouping
             </Badge>
           ) : null}
           {row.node.isCash ? (
-            <Badge variant="outline" className="h-4 shrink-0 px-1.5 py-0 text-micro">
+            <Badge
+              variant="outline"
+              className="h-4 shrink-0 px-1.5 py-0 text-micro"
+            >
               Bank or cash
             </Badge>
           ) : null}
           {!row.node.isActive ? (
-            <Badge variant="outline" className="h-4 shrink-0 px-1.5 py-0 text-micro">
+            <Badge
+              variant="outline"
+              className="h-4 shrink-0 px-1.5 py-0 text-micro"
+            >
               Switched off
             </Badge>
           ) : null}
@@ -110,7 +128,9 @@ export function ChartOfAccountsClient() {
       header: "Currency",
       cell: (row) =>
         row.node.currencyRestriction ? (
-          <span className="font-mono text-dense">{row.node.currencyRestriction}</span>
+          <span className="font-mono text-dense">
+            {row.node.currencyRestriction}
+          </span>
         ) : (
           <span className="text-muted-foreground">Any</span>
         ),
@@ -123,8 +143,17 @@ export function ChartOfAccountsClient() {
       cell: (row) => (
         <div className="flex items-center justify-end gap-1">
           {!row.node.isHeader ? (
-            <Button variant="ghost" size="sm" className="h-7 text-dense" asChild>
-              <Link href={`/accounting/general-ledger?accountId=${row.node.id}`}>Ledger</Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-dense"
+              asChild
+            >
+              <Link
+                href={`/accounting/general-ledger?accountId=${row.node.id}`}
+              >
+                Ledger
+              </Link>
             </Button>
           ) : null}
           {canUpdate ? (
@@ -152,10 +181,19 @@ export function ChartOfAccountsClient() {
     },
   ];
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="Chart of accounts">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>
@@ -198,7 +236,10 @@ export function ChartOfAccountsClient() {
                 className="min-h-[40vh] flex-1 border-0 bg-transparent"
                 title="No accounts yet"
                 description="Turn accounting on and we will seed a chart for your country, then you can add to it."
-                action={{ label: "Set up accounting", href: "/accounting/setup" }}
+                action={{
+                  label: "Set up accounting",
+                  href: "/accounting/setup",
+                }}
               />
             }
           />
@@ -217,7 +258,10 @@ export function ChartOfAccountsClient() {
         parentOptions={parentOptions}
         currencyOptions={currencyOptions}
       />
-      <ArchiveAccountDialog account={archiving} onOpenChange={() => setArchiving(null)} />
+      <ArchiveAccountDialog
+        account={archiving}
+        onOpenChange={() => setArchiving(null)}
+      />
     </PageWrapper>
   );
 }

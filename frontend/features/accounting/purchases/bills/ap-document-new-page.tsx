@@ -6,7 +6,10 @@ import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useAccountingBook } from "@/hooks/api/accounting/ledger";
-import type { ApDocumentDetail, ApDocumentType } from "@/types/accounting-ap";
+import type {
+  ApDocumentDetail,
+  ApDocumentType,
+} from "@/types/accounting/accounting-ap";
 import { BillEditorForm } from "./bill-editor-form";
 
 interface ApDocumentNewPageProps {
@@ -52,7 +55,10 @@ export function ApDocumentNewPage({
             <EmptyState
               title="Accounting not configured"
               description="Set up an accounting book before entering payables."
-              action={{ label: "Accounting settings", href: "/accounting/settings" }}
+              action={{
+                label: "Accounting settings",
+                href: "/accounting/settings",
+              }}
               className="flex-1"
             />
           }
@@ -64,7 +70,12 @@ export function ApDocumentNewPage({
     );
 
   return (
-    <PageWrapper title={title} subtitle={subtitle} backHref={backHref} backLabel={backLabel}>
+    <PageWrapper
+      title={title}
+      subtitle={subtitle}
+      backHref={backHref}
+      backLabel={backLabel}
+    >
       <div className="mx-auto w-full max-w-3xl">
         <BillEditorForm
           documentType={documentType}

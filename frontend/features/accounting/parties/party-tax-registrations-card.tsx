@@ -8,7 +8,13 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EntityFormDialog } from "@/components/shared";
 import {
@@ -36,7 +42,7 @@ import {
   useAddPartyTaxRegistration,
   useRemovePartyTaxRegistration,
 } from "@/hooks/api/accounting/parties";
-import type { PartyTaxRegistration } from "@/types/accounting-ar";
+import type { PartyTaxRegistration } from "@/types/accounting/accounting-ar";
 import {
   TAX_REGIME_OPTIONS,
   partyTaxRegistrationSchema,
@@ -57,7 +63,8 @@ export function PartyTaxRegistrationsCard({
 }: PartyTaxRegistrationsCardProps) {
   const canManage = useCan(PARTY_TAX_MANAGE);
   const [addOpen, setAddOpen] = useState(false);
-  const [pendingRemoval, setPendingRemoval] = useState<PartyTaxRegistration | null>(null);
+  const [pendingRemoval, setPendingRemoval] =
+    useState<PartyTaxRegistration | null>(null);
   const addRegistration = useAddPartyTaxRegistration();
   const removeRegistration = useRemovePartyTaxRegistration();
 
@@ -113,7 +120,8 @@ export function PartyTaxRegistrationsCard({
       <CardContent>
         {registrations.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No tax number on file. Invoices will fall back to the default rate for their country.
+            No tax number on file. Invoices will fall back to the default rate
+            for their country.
           </p>
         ) : (
           <ul className="space-y-2">
@@ -134,7 +142,10 @@ export function PartyTaxRegistrationsCard({
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   {registration.isPrimary ? (
-                    <Badge variant="outline" className="h-5 px-2 py-0.5 text-micro">
+                    <Badge
+                      variant="outline"
+                      className="h-5 px-2 py-0.5 text-micro"
+                    >
                       Primary
                     </Badge>
                   ) : null}
@@ -208,7 +219,11 @@ export function PartyTaxRegistrationsCard({
                 <FormItem>
                   <FormLabel>Number</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="29AABCU9603R1ZM" className="uppercase" />
+                    <Input
+                      {...field}
+                      placeholder="29AABCU9603R1ZM"
+                      className="uppercase"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -222,7 +237,12 @@ export function PartyTaxRegistrationsCard({
                   <FormItem>
                     <FormLabel>Country</FormLabel>
                     <FormControl>
-                      <Input {...field} maxLength={2} placeholder="IN" className="uppercase" />
+                      <Input
+                        {...field}
+                        maxLength={2}
+                        placeholder="IN"
+                        className="uppercase"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -237,7 +257,9 @@ export function PartyTaxRegistrationsCard({
                     <FormControl>
                       <Input {...field} maxLength={16} placeholder="29" />
                     </FormControl>
-                    <FormDescription>Leave blank to read it from the number.</FormDescription>
+                    <FormDescription>
+                      Leave blank to read it from the number.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -250,7 +272,10 @@ export function PartyTaxRegistrationsCard({
                 <FormItem className="flex flex-row items-center justify-between rounded-md border border-border/70 px-3 py-2">
                   <FormLabel>Use this one by default</FormLabel>
                   <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
                   </FormControl>
                 </FormItem>
               )}

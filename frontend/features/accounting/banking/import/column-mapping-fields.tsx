@@ -23,7 +23,7 @@ import {
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { cn } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/design-tokens";
-import { STATEMENT_DATE_FORMATS } from "@/types/accounting-banking";
+import { STATEMENT_DATE_FORMATS } from "@/types/accounting/accounting-banking";
 import { useStatementMappingPresets } from "@/hooks/api/accounting/banking";
 import { DATE_FORMAT_SAMPLES } from "../lib/date-format-samples";
 import { sniffCsvColumns } from "../lib/csv-header";
@@ -45,7 +45,10 @@ const COLUMN_FIELDS = [
   { name: "creditColumn", label: "Money in column", required: false },
 ] as const;
 
-export function ColumnMappingFields({ form, fileContent }: ColumnMappingFieldsProps) {
+export function ColumnMappingFields({
+  form,
+  fileContent,
+}: ColumnMappingFieldsProps) {
   const presetsQuery = useStatementMappingPresets();
   const delimiter = form.watch("delimiter") || ",";
   const skipRowsRaw = form.watch("skipRows");
@@ -53,12 +56,18 @@ export function ColumnMappingFields({ form, fileContent }: ColumnMappingFieldsPr
 
   const detectedColumns = useMemo(() => {
     const skip = Number(skipRowsRaw);
-    return sniffCsvColumns(fileContent, delimiter, Number.isFinite(skip) ? skip : 0);
+    return sniffCsvColumns(
+      fileContent,
+      delimiter,
+      Number.isFinite(skip) ? skip : 0,
+    );
   }, [fileContent, delimiter, skipRowsRaw]);
 
   function handlePresetChange(code: string): void {
     form.setValue("presetCode", code === "none" ? "" : code);
-    const preset = (presetsQuery.data?.presets ?? []).find((entry) => entry.code === code);
+    const preset = (presetsQuery.data?.presets ?? []).find(
+      (entry) => entry.code === code,
+    );
     if (!preset) return;
     form.setValue("dateColumn", preset.mapping.dateColumn ?? "");
     form.setValue("descriptionColumn", preset.mapping.descriptionColumn ?? "");
@@ -66,8 +75,10 @@ export function ColumnMappingFields({ form, fileContent }: ColumnMappingFieldsPr
     form.setValue("amountColumn", preset.mapping.amountColumn ?? "");
     form.setValue("debitColumn", preset.mapping.debitColumn ?? "");
     form.setValue("creditColumn", preset.mapping.creditColumn ?? "");
-    if (preset.mapping.dateFormat) form.setValue("dateFormat", preset.mapping.dateFormat);
-    if (preset.mapping.delimiter) form.setValue("delimiter", preset.mapping.delimiter);
+    if (preset.mapping.dateFormat)
+      form.setValue("dateFormat", preset.mapping.dateFormat);
+    if (preset.mapping.delimiter)
+      form.setValue("delimiter", preset.mapping.delimiter);
     if (preset.mapping.decimalSeparator)
       form.setValue("decimalSeparator", preset.mapping.decimalSeparator);
   }
@@ -82,7 +93,10 @@ export function ColumnMappingFields({ form, fileContent }: ColumnMappingFieldsPr
         render={({ field }) => (
           <FormItem>
             <FormLabel>Start from a known layout</FormLabel>
-            <Select value={field.value || "none"} onValueChange={handlePresetChange}>
+            <Select
+              value={field.value || "none"}
+              onValueChange={handlePresetChange}
+            >
               <FormControl>
                 <SelectTrigger>
                   <SelectValue />
@@ -98,7 +112,8 @@ export function ColumnMappingFields({ form, fileContent }: ColumnMappingFieldsPr
               </SelectContent>
             </Select>
             <FormDescription>
-              A layout is only a starting point — every column below can still be changed.
+              A layout is only a starting point — every column below can still
+              be changed.
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -147,7 +162,11 @@ export function ColumnMappingFields({ form, fileContent }: ColumnMappingFieldsPr
             <FormItem>
               <FormLabel>Rows above the header</FormLabel>
               <FormControl>
-                <Input {...field} inputMode="numeric" className="tabular-nums" />
+                <Input
+                  {...field}
+                  inputMode="numeric"
+                  className="tabular-nums"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -167,7 +186,9 @@ export function ColumnMappingFields({ form, fileContent }: ColumnMappingFieldsPr
                 {detectedColumns.length > 0 ? (
                   <Select
                     value={field.value || "none"}
-                    onValueChange={(value) => field.onChange(value === "none" ? "" : value)}
+                    onValueChange={(value) =>
+                      field.onChange(value === "none" ? "" : value)
+                    }
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -185,7 +206,11 @@ export function ColumnMappingFields({ form, fileContent }: ColumnMappingFieldsPr
                   </Select>
                 ) : (
                   <FormControl>
-                    <Input {...field} value={field.value ?? ""} placeholder="Column heading" />
+                    <Input
+                      {...field}
+                      value={field.value ?? ""}
+                      placeholder="Column heading"
+                    />
                   </FormControl>
                 )}
                 <FormMessage />
@@ -244,7 +269,9 @@ export function ColumnMappingFields({ form, fileContent }: ColumnMappingFieldsPr
           <FormItem className="flex flex-row items-center justify-between gap-3">
             <div className="min-w-0">
               <FormLabel>Remember this for the account</FormLabel>
-              <FormDescription>Next import starts from these settings.</FormDescription>
+              <FormDescription>
+                Next import starts from these settings.
+              </FormDescription>
             </div>
             <FormControl>
               <Switch checked={field.value} onCheckedChange={field.onChange} />

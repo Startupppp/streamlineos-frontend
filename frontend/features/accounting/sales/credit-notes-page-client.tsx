@@ -17,7 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import {
+  FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 import { formatMinorMoney } from "@/lib/accounting/money";
@@ -25,10 +28,18 @@ import { formatShortDate } from "@/lib/date-utils";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { CREDIT_NOTES_CREATE, CREDIT_NOTES_READ, useCreditNotes } from "@/hooks/api/accounting/ar";
-import type { ArDocumentSummary } from "@/types/accounting-ar";
+import {
+  CREDIT_NOTES_CREATE,
+  CREDIT_NOTES_READ,
+  useCreditNotes,
+} from "@/hooks/api/accounting/ar";
+import type { ArDocumentSummary } from "@/types/accounting/accounting-ar";
 import { usePartyNames } from "../parties/use-party-names";
-import { ArStatusBadge, DOCUMENT_STATUS_OPTIONS, isDocumentStatus } from "./ar-labels";
+import {
+  ArStatusBadge,
+  DOCUMENT_STATUS_OPTIONS,
+  isDocumentStatus,
+} from "./ar-labels";
 import { useListUrlState } from "./use-list-url-state";
 
 export function CreditNotesPageClient() {
@@ -80,7 +91,9 @@ export function CreditNotesPageClient() {
       key: "issueDate",
       header: "Issued",
       cell: (row) => (
-        <span className="font-mono text-dense tabular-nums">{formatShortDate(row.issueDate)}</span>
+        <span className="font-mono text-dense tabular-nums">
+          {formatShortDate(row.issueDate)}
+        </span>
       ),
     },
     {
@@ -121,7 +134,9 @@ export function CreditNotesPageClient() {
     isError: creditNotesQuery.isError,
     error: creditNotesQuery.error,
   });
-  const handleRetry = useCallback(() => { void creditNotesQuery.refetch(); }, [creditNotesQuery]);
+  const handleRetry = useCallback(() => {
+    void creditNotesQuery.refetch();
+  }, [creditNotesQuery]);
 
   const hasFilters = debouncedSearch.length > 0 || statusParam.length > 0;
 
@@ -135,7 +150,9 @@ export function CreditNotesPageClient() {
       />
       <Select
         value={statusParam || "all"}
-        onValueChange={(value) => url.setParams({ status: value === "all" ? undefined : value })}
+        onValueChange={(value) =>
+          url.setParams({ status: value === "all" ? undefined : value })
+        }
       >
         <SelectTrigger className={FILTER_SELECT_TRIGGER} aria-label="Status">
           <SelectValue />
@@ -152,10 +169,19 @@ export function CreditNotesPageClient() {
     </div>
   );
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="Credit notes">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>
@@ -196,9 +222,18 @@ export function CreditNotesPageClient() {
             illustrationPreset="documents"
             title="No credit notes yet"
             description="When you need to correct a posted invoice, the credit note lands here."
-            action={canCreate ? { label: "New credit note", href: "/accounting/credit-notes/new" } : undefined}
+            action={
+              canCreate
+                ? {
+                    label: "New credit note",
+                    href: "/accounting/credit-notes/new",
+                  }
+                : undefined
+            }
             filtersActive={hasFilters}
-            onClearFilters={() => url.setParams({ search: undefined, status: undefined })}
+            onClearFilters={() =>
+              url.setParams({ search: undefined, status: undefined })
+            }
           />
         }
         pagination={{

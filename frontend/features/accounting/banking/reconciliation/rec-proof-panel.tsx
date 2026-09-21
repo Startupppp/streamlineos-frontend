@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
-import type { ReconciliationProof } from "@/types/accounting-banking";
+import type { ReconciliationProof } from "@/types/accounting/accounting-banking";
 
 interface RecProofPanelProps {
   proof: ReconciliationProof;
@@ -20,12 +20,22 @@ interface RecProofPanelProps {
 const successTone = statusToneClasses("success");
 const dangerTone = statusToneClasses("danger");
 
-function ProofLine({ label, value, note }: { label: string; value: string; note?: string }) {
+function ProofLine({
+  label,
+  value,
+  note,
+}: {
+  label: string;
+  value: string;
+  note?: string;
+}) {
   return (
     <div className="flex items-start justify-between gap-3 border-b border-border/60 py-2 last:border-b-0">
       <div className="min-w-0">
         <p className="text-label">{label}</p>
-        {note ? <p className="text-dense text-muted-foreground">{note}</p> : null}
+        {note ? (
+          <p className="text-dense text-muted-foreground">{note}</p>
+        ) : null}
       </div>
       <span className="shrink-0 font-mono text-sm tabular-nums">{value}</span>
     </div>
@@ -45,9 +55,12 @@ export function RecProofPanel({
       <CardHeader className="px-4 py-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="min-w-0">
-            <CardTitle className="text-sm font-semibold">Is this money actually there?</CardTitle>
+            <CardTitle className="text-sm font-semibold">
+              Is this money actually there?
+            </CardTitle>
             <p className="text-dense text-muted-foreground">
-              {formatShortDate(proof.periodStart)} to {formatShortDate(proof.periodEnd)}
+              {formatShortDate(proof.periodStart)} to{" "}
+              {formatShortDate(proof.periodEnd)}
             </p>
           </div>
           {proof.reconciledAt ? (
@@ -94,11 +107,17 @@ export function RecProofPanel({
           />
           <ProofLine
             label="What the bank says the account closed at"
-            value={formatMinorMoney(proof.statementClosingMinor, proof.currency)}
+            value={formatMinorMoney(
+              proof.statementClosingMinor,
+              proof.currency,
+            )}
           />
           <ProofLine
             label="Movements the bank showed that the books have not recorded"
-            value={formatMinorMoney(proof.unmatchedStatementMinor, proof.currency)}
+            value={formatMinorMoney(
+              proof.unmatchedStatementMinor,
+              proof.currency,
+            )}
             note={`${proof.unmatchedStatementLines.length} item(s) — fees, interest, direct debits`}
           />
           <ProofLine
@@ -113,7 +132,10 @@ export function RecProofPanel({
           {proof.openingVarianceMinor !== 0 ? (
             <ProofLine
               label="Already disagreed before this period began"
-              value={formatMinorMoney(proof.openingVarianceMinor, proof.currency)}
+              value={formatMinorMoney(
+                proof.openingVarianceMinor,
+                proof.currency,
+              )}
               note="Carried in from an earlier period, so it will not be fixed by matching this one."
             />
           ) : null}

@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
-import type { StatementLine } from "@/types/accounting-banking";
+import type { StatementLine } from "@/types/accounting/accounting-banking";
 
 interface StatementLinesPanelProps {
   lines: StatementLine[];
@@ -45,7 +45,9 @@ export function StatementLinesPanel({
   return (
     <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
       <CardHeader className="shrink-0 px-4 py-3">
-        <CardTitle className="text-sm font-semibold">What the bank showed</CardTitle>
+        <CardTitle className="text-sm font-semibold">
+          What the bank showed
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
         {isLoading ? (
@@ -90,11 +92,17 @@ export function StatementLinesPanel({
                     </button>
                     <div className="flex shrink-0 flex-col items-end gap-1">
                       <span className="font-mono text-sm tabular-nums">
-                        {formatMinorMoney(line.amountMinor, currency, { signDisplay: "always" })}
+                        {formatMinorMoney(line.amountMinor, currency, {
+                          signDisplay: "always",
+                        })}
                       </span>
                       {isMatched ? (
                         <div className="flex items-center gap-1">
-                          <SemanticBadge tone="success" size="xs" label="Matched" />
+                          <SemanticBadge
+                            tone="success"
+                            size="xs"
+                            label="Matched"
+                          />
                           {canReconcile ? (
                             <Button
                               type="button"
@@ -109,7 +117,11 @@ export function StatementLinesPanel({
                           ) : null}
                         </div>
                       ) : (
-                        <SemanticBadge tone="warning" size="xs" label="Not explained" />
+                        <SemanticBadge
+                          tone="warning"
+                          size="xs"
+                          label="Not explained"
+                        />
                       )}
                     </div>
                   </div>

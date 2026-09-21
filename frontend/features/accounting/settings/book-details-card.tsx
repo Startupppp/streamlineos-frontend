@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { AccountingBook } from "@/types/accounting-kernel";
+import type { AccountingBook } from "@/types/accounting/accounting-kernel";
 
 const MONTHS = [
   "January",
@@ -49,7 +49,10 @@ export function BookDetailsCard({
         ) : (
           <>
             <Detail label="Name" value={book.name} />
-            <Detail label="Everything is reported in" value={book.baseCurrency} />
+            <Detail
+              label="Everything is reported in"
+              value={book.baseCurrency}
+            />
             <Detail
               label="Financial year starts"
               value={`${MONTHS[book.fiscalYearStartMonth - 1] ?? "January"} ${book.fiscalYearStartDay}`}
@@ -58,8 +61,13 @@ export function BookDetailsCard({
             <Detail label="Rule set" value={book.localizationPack} />
             <Detail label="Time zone" value={book.timezone} />
             <div className="min-w-0">
-              <p className="text-dense font-medium text-muted-foreground">Status</p>
-              <Badge variant="outline" className="mt-1 h-5 px-2 py-0.5 text-micro">
+              <p className="text-dense font-medium text-muted-foreground">
+                Status
+              </p>
+              <Badge
+                variant="outline"
+                className="mt-1 h-5 px-2 py-0.5 text-micro"
+              >
                 {book.status === "ACTIVE" ? "In use" : "Archived"}
               </Badge>
             </div>
@@ -71,7 +79,12 @@ export function BookDetailsCard({
                 <span className="text-sm font-medium tabular-nums">
                   {taxRegistrationCount}
                 </span>
-                <Button variant="outline" size="sm" className="h-7 text-dense" asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-dense"
+                  asChild
+                >
                   <Link href="/accounting/setup">Manage</Link>
                 </Button>
               </div>

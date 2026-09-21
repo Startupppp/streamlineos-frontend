@@ -6,7 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { accountingArQueryKeys } from "@/lib/query-keys/accounting-ar";
 import { useCan } from "@/hooks/api/access";
 import { PARTIES_READ, useParties } from "@/hooks/api/accounting/parties";
-import type { PartyDetail } from "@/types/accounting-ar";
+import type { PartyDetail } from "@/types/accounting/accounting-ar";
 
 const DIRECTORY_PAGE_SIZE = 100;
 const DIRECTORY_STALE = 2 * 60 * 1000;
@@ -26,14 +26,21 @@ export function usePartyNames(partyIds: readonly string[]): PartyNameResolver {
 
   const known = useMemo(() => {
     const map = new Map<string, string>();
-    for (const party of directory.data?.items ?? []) map.set(party.id, party.displayName);
+    for (const party of directory.data?.items ?? [])
+      map.set(party.id, party.displayName);
     return map;
   }, [directory.data]);
 
-  const idKey = useMemo(() => Array.from(new Set(partyIds)).sort().join("|"), [partyIds]);
+  const idKey = useMemo(
+    () => Array.from(new Set(partyIds)).sort().join("|"),
+    [partyIds],
+  );
 
   const missing = useMemo(
-    () => (idKey ? idKey.split("|").filter((id) => id.length > 0 && !known.has(id)) : []),
+    () =>
+      idKey
+        ? idKey.split("|").filter((id) => id.length > 0 && !known.has(id))
+        : [],
     [idKey, known],
   );
 
@@ -41,7 +48,11 @@ export function usePartyNames(partyIds: readonly string[]): PartyNameResolver {
     queries: missing.map((partyId) => ({
       queryKey: accountingArQueryKeys.accountingAr.party(partyId),
       queryFn: ({ signal }: { signal: AbortSignal }) =>
-        apiClient.get<PartyDetail>(`/accounting/parties/${partyId}`, undefined, signal),
+        apiClient.get<PartyDetail>(
+          `/accounting/parties/${partyId}`,
+          undefined,
+          signal,
+        ),
       staleTime: ENTITY_STALE,
       enabled: canRead,
     })),
@@ -55,10 +66,12 @@ export function usePartyNames(partyIds: readonly string[]): PartyNameResolver {
     return map;
   }, [known, details]);
 
-  const isLoading = directory.isLoading || details.some((result) => result.isLoading);
+  const isLoading =
+    directory.isLoading || details.some((result) => result.isLoading);
 
   return {
-    resolve: (partyId: string) => resolved.get(partyId) ?? (isLoading ? "Loading…" : "Customer"),
+    resolve: (partyId: string) =>
+      resolved.get(partyId) ?? (isLoading ? "Loading…" : "Customer"),
     isLoading,
   };
 }

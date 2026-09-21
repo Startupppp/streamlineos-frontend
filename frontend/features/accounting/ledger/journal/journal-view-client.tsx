@@ -16,7 +16,7 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { useJournal } from "@/hooks/api/accounting/ledger";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
-import type { JournalLine } from "@/types/accounting-kernel";
+import type { JournalLine } from "@/types/accounting/accounting-kernel";
 import { ReverseJournalDialog } from "./reverse-journal-dialog";
 
 interface JournalViewClientProps {
@@ -36,7 +36,9 @@ export function JournalViewClient({ journalId }: JournalViewClientProps) {
     isError,
     error,
   });
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const columns: DataTableColumn<JournalLine>[] = [
     {
@@ -62,7 +64,9 @@ export function JournalViewClient({ journalId }: JournalViewClientProps) {
       key: "description",
       header: "Note",
       cell: (row) => (
-        <span className="truncate text-muted-foreground">{row.description ?? "—"}</span>
+        <span className="truncate text-muted-foreground">
+          {row.description ?? "—"}
+        </span>
       ),
     },
     {
@@ -93,10 +97,23 @@ export function JournalViewClient({ journalId }: JournalViewClientProps) {
 
   const isReversed = !!data?.reversedByJournalId;
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
-      <PageWrapper title="Journal" backHref="/accounting" backLabel="Back to accounting">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+      <PageWrapper
+        title="Journal"
+        backHref="/accounting"
+        backLabel="Back to accounting"
+      >
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>
@@ -104,7 +121,11 @@ export function JournalViewClient({ journalId }: JournalViewClientProps) {
 
   if (isLoading || !data) {
     return (
-      <PageWrapper title="Journal" backHref="/accounting" backLabel="Back to accounting">
+      <PageWrapper
+        title="Journal"
+        backHref="/accounting"
+        backLabel="Back to accounting"
+      >
         <DataTableSkeleton rows={6} columns={5} />
       </PageWrapper>
     );
@@ -116,68 +137,92 @@ export function JournalViewClient({ journalId }: JournalViewClientProps) {
       subtitle={`Posted on ${formatShortDate(data.journalDate)}`}
       backHref="/accounting"
       backLabel="Back to accounting"
-      badge={<span>{isReversed ? "Reversed" : data.sourceType.replace(/_/g, " ")}</span>}
+      badge={
+        <span>
+          {isReversed ? "Reversed" : data.sourceType.replace(/_/g, " ")}
+        </span>
+      }
       actions={
         canPost && !isReversed && !data.reversesJournalId ? (
-          <Button variant="outline" size="sm" onClick={() => setReverseOpen(true)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setReverseOpen(true)}
+          >
             Reverse this entry
           </Button>
         ) : undefined
       }
     >
       <div className="flex min-h-0 w-full flex-1 flex-col gap-3">
-          <Card className="py-0">
-            <CardContent className="grid gap-3 p-4 sm:grid-cols-3">
-              <Detail label="What it is for" value={data.memo ?? "No note was left"} />
-              <Detail
-                label="Total"
-                value={formatMinorMoney(data.totalDebitMinor, data.functionalCurrency)}
-              />
-              <Detail label="Currency" value={data.functionalCurrency} />
-            </CardContent>
-          </Card>
-
-          {data.reversesJournalId ? (
-            <LinkedJournalNote
-              text="This entry was written to reverse an earlier one."
-              href={`/accounting/journal/${data.reversesJournalId}`}
-              label="Open the entry it reverses"
+        <Card className="py-0">
+          <CardContent className="grid gap-3 p-4 sm:grid-cols-3">
+            <Detail
+              label="What it is for"
+              value={data.memo ?? "No note was left"}
             />
-          ) : null}
-          {data.reversedByJournalId ? (
-            <LinkedJournalNote
-              text="This entry has been reversed. Both it and its reversal stay on the record."
-              href={`/accounting/journal/${data.reversedByJournalId}`}
-              label="Open the reversal"
+            <Detail
+              label="Total"
+              value={formatMinorMoney(
+                data.totalDebitMinor,
+                data.functionalCurrency,
+              )}
             />
-          ) : null}
+            <Detail label="Currency" value={data.functionalCurrency} />
+          </CardContent>
+        </Card>
 
-          <Card className="overflow-hidden py-0">
-            <CardContent className="overflow-x-auto p-0">
-              <DataTable
-                data={data.lines}
-                columns={columns}
-                getRowKey={(row) => row.id}
-                minWidth="840px"
-                pagination={{ pageSize: 50 }}
-                footer={
-                  <div className="flex items-center justify-end gap-6 font-mono text-label font-semibold tabular-nums text-foreground">
-                    <span>Debits {formatMinorMoney(data.totalDebitMinor, data.functionalCurrency)}</span>
-                    <span>
-                      Credits {formatMinorMoney(data.totalCreditMinor, data.functionalCurrency)}
-                    </span>
-                  </div>
-                }
-              />
-            </CardContent>
-          </Card>
-
-          <ReverseJournalDialog
-            journal={data}
-            open={reverseOpen}
-            onOpenChange={setReverseOpen}
+        {data.reversesJournalId ? (
+          <LinkedJournalNote
+            text="This entry was written to reverse an earlier one."
+            href={`/accounting/journal/${data.reversesJournalId}`}
+            label="Open the entry it reverses"
           />
-        </div>
+        ) : null}
+        {data.reversedByJournalId ? (
+          <LinkedJournalNote
+            text="This entry has been reversed. Both it and its reversal stay on the record."
+            href={`/accounting/journal/${data.reversedByJournalId}`}
+            label="Open the reversal"
+          />
+        ) : null}
+
+        <Card className="overflow-hidden py-0">
+          <CardContent className="overflow-x-auto p-0">
+            <DataTable
+              data={data.lines}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              minWidth="840px"
+              pagination={{ pageSize: 50 }}
+              footer={
+                <div className="flex items-center justify-end gap-6 font-mono text-label font-semibold tabular-nums text-foreground">
+                  <span>
+                    Debits{" "}
+                    {formatMinorMoney(
+                      data.totalDebitMinor,
+                      data.functionalCurrency,
+                    )}
+                  </span>
+                  <span>
+                    Credits{" "}
+                    {formatMinorMoney(
+                      data.totalCreditMinor,
+                      data.functionalCurrency,
+                    )}
+                  </span>
+                </div>
+              }
+            />
+          </CardContent>
+        </Card>
+
+        <ReverseJournalDialog
+          journal={data}
+          open={reverseOpen}
+          onOpenChange={setReverseOpen}
+        />
+      </div>
     </PageWrapper>
   );
 }

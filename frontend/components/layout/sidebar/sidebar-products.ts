@@ -1,4 +1,19 @@
-import { LayoutDashboard, Users, UserPlus, Briefcase, Timer, IndianRupee, Handshake, ClipboardList, Package, LifeBuoy, Building2, Calculator, Library, PenTool } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  UserPlus,
+  Briefcase,
+  Timer,
+  IndianRupee,
+  Handshake,
+  ClipboardList,
+  Package,
+  LifeBuoy,
+  Building2,
+  Calculator,
+  Library,
+  PenTool,
+} from "lucide-react";
 import type { ComponentType } from "react";
 import { matchesOrgModule } from "@/lib/org-module-keys";
 import { MANIFEST, moduleByProductKey } from "@/lib/module-manifest";
@@ -11,18 +26,19 @@ export interface ProductDefinition {
   icon: ComponentType<{ className?: string; strokeWidth?: number }>;
 }
 
-// Products whose href intentionally differs from the manifest route.
-// - administration: no manifest module; chrome product pointing at /settings
-// - documents: manifest route is /knowledge; the sidebar entry lands at /knowledge/chat
-// - recruitment: no manifest module of its own; carved out of the "hr" module's routes
-export const PRODUCT_HREF_EXCEPTIONS: Readonly<Partial<Record<ProductKey, string>>> = {
+export const PRODUCT_HREF_EXCEPTIONS: Readonly<
+  Partial<Record<ProductKey, string>>
+> = {
   administration: "/settings",
   documents: "/knowledge/chat",
   recruitment: "/hr/recruitment",
 };
 
 // Products with no manifest module counterpart (not in any module's productKey set).
-export const PRODUCT_KEY_EXCEPTIONS = new Set<ProductKey>(["administration", "recruitment"]);
+export const PRODUCT_KEY_EXCEPTIONS = new Set<ProductKey>([
+  "administration",
+  "recruitment",
+]);
 
 function resolveProductHref(key: ProductKey): string {
   const exception = PRODUCT_HREF_EXCEPTIONS[key];
@@ -31,10 +47,6 @@ function resolveProductHref(key: ProductKey): string {
   return manifestModule?.route ?? `/${key}`;
 }
 
-// Verify at module load time that the manifest productKey set and the
-// PRODUCT_DEFINITIONS key set agree (minus the named exceptions above).
-// Failures surface as console warnings rather than crashes so that a stale
-// vendor copy degrades gracefully in development.
 const manifestProductKeys = new Set(
   MANIFEST.modules
     .filter((m) => m.productKey !== null)
@@ -42,20 +54,90 @@ const manifestProductKeys = new Set(
 );
 
 export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
-  { key: "home", label: "Home OS", href: resolveProductHref("home"), icon: LayoutDashboard },
-  { key: "crm", label: "CRM OS", href: resolveProductHref("crm"), icon: Handshake },
-  { key: "hrms", label: "HRMS OS", href: resolveProductHref("hrms"), icon: Users },
-  { key: "recruitment", label: "Recruitment OS", href: resolveProductHref("recruitment"), icon: UserPlus },
-  { key: "build", label: "Build OS", href: resolveProductHref("build"), icon: Briefcase },
-  { key: "timesheets", label: "Timesheets OS", href: resolveProductHref("timesheets"), icon: Timer },
-  { key: "inventory", label: "Inventory OS", href: resolveProductHref("inventory"), icon: Package },
-  { key: "finance", label: "Finance OS", href: resolveProductHref("finance"), icon: Calculator },
-  { key: "helpdesk", label: "Helpdesk OS", href: resolveProductHref("helpdesk"), icon: LifeBuoy },
-  { key: "documents", label: "Documents OS", href: resolveProductHref("documents"), icon: Library },
-  { key: "surveys", label: "Surveys OS", href: resolveProductHref("surveys"), icon: ClipboardList },
-  { key: "administration", label: "Administration", href: resolveProductHref("administration"), icon: Building2 },
-  { key: "payroll", label: "Payroll OS", href: resolveProductHref("payroll"), icon: IndianRupee },
-  { key: "sign", label: "SignOS", href: resolveProductHref("sign"), icon: PenTool },
+  {
+    key: "home",
+    label: "Home OS",
+    href: resolveProductHref("home"),
+    icon: LayoutDashboard,
+  },
+  {
+    key: "crm",
+    label: "CRM OS",
+    href: resolveProductHref("crm"),
+    icon: Handshake,
+  },
+  {
+    key: "hrms",
+    label: "HRMS OS",
+    href: resolveProductHref("hrms"),
+    icon: Users,
+  },
+  {
+    key: "recruitment",
+    label: "Recruitment OS",
+    href: resolveProductHref("recruitment"),
+    icon: UserPlus,
+  },
+  {
+    key: "build",
+    label: "Build OS",
+    href: resolveProductHref("build"),
+    icon: Briefcase,
+  },
+  {
+    key: "timesheets",
+    label: "Timesheets OS",
+    href: resolveProductHref("timesheets"),
+    icon: Timer,
+  },
+  {
+    key: "inventory",
+    label: "Inventory OS",
+    href: resolveProductHref("inventory"),
+    icon: Package,
+  },
+  {
+    key: "finance",
+    label: "Finance OS",
+    href: resolveProductHref("finance"),
+    icon: Calculator,
+  },
+  {
+    key: "helpdesk",
+    label: "Helpdesk OS",
+    href: resolveProductHref("helpdesk"),
+    icon: LifeBuoy,
+  },
+  {
+    key: "documents",
+    label: "Documents OS",
+    href: resolveProductHref("documents"),
+    icon: Library,
+  },
+  {
+    key: "surveys",
+    label: "Surveys OS",
+    href: resolveProductHref("surveys"),
+    icon: ClipboardList,
+  },
+  {
+    key: "administration",
+    label: "Administration",
+    href: resolveProductHref("administration"),
+    icon: Building2,
+  },
+  {
+    key: "payroll",
+    label: "Payroll OS",
+    href: resolveProductHref("payroll"),
+    icon: IndianRupee,
+  },
+  {
+    key: "sign",
+    label: "SignOS",
+    href: resolveProductHref("sign"),
+    icon: PenTool,
+  },
 ];
 
 if (process.env.NODE_ENV !== "production") {

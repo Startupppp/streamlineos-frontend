@@ -15,7 +15,7 @@ import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useAccountingBook } from "@/hooks/api/accounting/ledger";
 import { useBankAccounts } from "@/hooks/api/accounting/banking";
-import type { BankAccountSummary } from "@/types/accounting-banking";
+import type { BankAccountSummary } from "@/types/accounting/accounting-banking";
 import { useUrlListState } from "../lib/use-url-list-state";
 import { AddBankAccountSheet } from "./add-bank-account-sheet";
 import { BankAccountBalanceCell } from "./bank-account-balance-cell";
@@ -29,7 +29,11 @@ export function BankAccountsPage() {
   const [asOf] = useState(() => new Date().toISOString().slice(0, 10));
 
   const bookQuery = useAccountingBook();
-  const accountsQuery = useBankAccounts({ page, pageSize: PAGE_SIZE, includeInactive: true });
+  const accountsQuery = useBankAccounts({
+    page,
+    pageSize: PAGE_SIZE,
+    includeInactive: true,
+  });
 
   const pageState = usePageState({
     permission: "accounting:banking:read",
@@ -37,7 +41,9 @@ export function BankAccountsPage() {
     isError: accountsQuery.isError,
     error: accountsQuery.error,
   });
-  const handleRetry = useCallback(() => { void accountsQuery.refetch(); }, [accountsQuery]);
+  const handleRetry = useCallback(() => {
+    void accountsQuery.refetch();
+  }, [accountsQuery]);
 
   const columns: DataTableColumn<BankAccountSummary>[] = [
     {
@@ -74,14 +80,20 @@ export function BankAccountsPage() {
       header: "What the books say today",
       className: "font-mono tabular-nums text-right",
       headerClassName: "text-right",
-      cell: (row) => <BankAccountBalanceCell bankAccountId={row.id} asOf={asOf} />,
+      cell: (row) => (
+        <BankAccountBalanceCell bankAccountId={row.id} asOf={asOf} />
+      ),
     },
     {
       key: "mapping",
       header: "Statement layout",
       cell: (row) =>
         row.csvMapping?.dateFormat ? (
-          <SemanticBadge tone="success" size="xs" label={`Dates as ${row.csvMapping.dateFormat}`} />
+          <SemanticBadge
+            tone="success"
+            size="xs"
+            label={`Dates as ${row.csvMapping.dateFormat}`}
+          />
         ) : (
           <SemanticBadge tone="warning" size="xs" label="Not set up yet" />
         ),
@@ -90,15 +102,27 @@ export function BankAccountsPage() {
       key: "status",
       header: "Status",
       cell: (row) => (
-        <SemanticBadge tone={row.isActive ? "success" : "neutral"} label={row.isActive ? "In use" : "Closed"} />
+        <SemanticBadge
+          tone={row.isActive ? "success" : "neutral"}
+          label={row.isActive ? "In use" : "Closed"}
+        />
       ),
     },
   ];
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="Banking">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>
@@ -114,10 +138,22 @@ export function BankAccountsPage() {
       className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
       actions={
         <div className="flex w-full items-center gap-2 sm:w-auto">
-          <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none">
-            <Link href="/accounting/banking/reconciliation">Check the books against the bank</Link>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="flex-1 sm:flex-none"
+          >
+            <Link href="/accounting/banking/reconciliation">
+              Check the books against the bank
+            </Link>
           </Button>
-          <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="flex-1 sm:flex-none"
+          >
             <Link href="/accounting/banking/import">Bring in a statement</Link>
           </Button>
           {canManage ? (
@@ -147,7 +183,11 @@ export function BankAccountsPage() {
             className="border-0 bg-transparent min-h-[40vh]"
             title="No bank accounts yet"
             description="Point a bank account at the cash account it is already tracked in, and statements can start coming in."
-            action={canManage ? { label: "Add account", onClick: () => setIsAdding(true) } : undefined}
+            action={
+              canManage
+                ? { label: "Add account", onClick: () => setIsAdding(true) }
+                : undefined
+            }
           />
         }
         pagination={{

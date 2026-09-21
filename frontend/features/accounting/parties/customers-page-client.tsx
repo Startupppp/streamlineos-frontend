@@ -17,14 +17,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import {
+  FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { PARTIES_CREATE, PARTIES_READ, useParties } from "@/hooks/api/accounting/parties";
-import type { PartyRole, PartySummary } from "@/types/accounting-ar";
+import {
+  PARTIES_CREATE,
+  PARTIES_READ,
+  useParties,
+} from "@/hooks/api/accounting/parties";
+import type { PartyRole, PartySummary } from "@/types/accounting/accounting-ar";
 import { PARTY_ROLE_LABEL } from "../sales/ar-labels";
 import { useListUrlState } from "../sales/use-list-url-state";
 import { PartyFormSheet } from "./party-form-sheet";
@@ -48,7 +55,9 @@ const columns: DataTableColumn<PartySummary>[] = [
           {row.displayName}
         </Link>
         {row.legalName && row.legalName !== row.displayName ? (
-          <p className="truncate text-dense text-muted-foreground">{row.legalName}</p>
+          <p className="truncate text-dense text-muted-foreground">
+            {row.legalName}
+          </p>
         ) : null}
       </div>
     ),
@@ -60,7 +69,9 @@ const columns: DataTableColumn<PartySummary>[] = [
       <div className="min-w-0">
         <p className="truncate text-sm">{row.email ?? "No email"}</p>
         {row.phone ? (
-          <p className="truncate font-mono text-dense text-muted-foreground">{row.phone}</p>
+          <p className="truncate font-mono text-dense text-muted-foreground">
+            {row.phone}
+          </p>
         ) : null}
       </div>
     ),
@@ -77,14 +88,18 @@ const columns: DataTableColumn<PartySummary>[] = [
   {
     key: "defaultCurrency",
     header: "Bills in",
-    cell: (row) => <span className="font-mono text-dense">{row.defaultCurrency}</span>,
+    cell: (row) => (
+      <span className="font-mono text-dense">{row.defaultCurrency}</span>
+    ),
   },
   {
     key: "paymentTermsDays",
     header: "Pays within",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-dense tabular-nums">{row.paymentTermsDays} days</span>
+      <span className="font-mono text-dense tabular-nums">
+        {row.paymentTermsDays} days
+      </span>
     ),
   },
   {
@@ -136,10 +151,13 @@ export function CustomersPageClient() {
     isError: partiesQuery.isError,
     error: partiesQuery.error,
   });
-  const handleRetry = useCallback(() => { void partiesQuery.refetch(); }, [partiesQuery]);
+  const handleRetry = useCallback(() => {
+    void partiesQuery.refetch();
+  }, [partiesQuery]);
 
   const rows = partiesQuery.data?.items ?? [];
-  const hasFilters = debouncedSearch.length > 0 || roleParam.length > 0 || includeInactive;
+  const hasFilters =
+    debouncedSearch.length > 0 || roleParam.length > 0 || includeInactive;
 
   const filters = (
     <div className={FILTER_TOOLBAR_ROW}>
@@ -150,7 +168,10 @@ export function CustomersPageClient() {
         className="min-w-0 flex-1 lg:max-w-md"
       />
       <Select value={roleParam || "customer"} onValueChange={handleRoleChange}>
-        <SelectTrigger className={FILTER_SELECT_TRIGGER} aria-label="Relationship">
+        <SelectTrigger
+          className={FILTER_SELECT_TRIGGER}
+          aria-label="Relationship"
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
@@ -160,8 +181,14 @@ export function CustomersPageClient() {
           <SelectItem value="any">Everyone</SelectItem>
         </SelectContent>
       </Select>
-      <Select value={includeInactive ? "all" : "active"} onValueChange={handleIncludeChange}>
-        <SelectTrigger className={FILTER_SELECT_TRIGGER} aria-label="Visibility">
+      <Select
+        value={includeInactive ? "all" : "active"}
+        onValueChange={handleIncludeChange}
+      >
+        <SelectTrigger
+          className={FILTER_SELECT_TRIGGER}
+          aria-label="Visibility"
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
@@ -172,10 +199,19 @@ export function CustomersPageClient() {
     </div>
   );
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="Customers">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>
@@ -216,9 +252,19 @@ export function CustomersPageClient() {
             illustrationPreset="clients"
             title="No customers yet"
             description="Add the first company you bill and their invoices will follow."
-            action={canCreate ? { label: "Add customer", onClick: () => setCreateOpen(true) } : undefined}
+            action={
+              canCreate
+                ? { label: "Add customer", onClick: () => setCreateOpen(true) }
+                : undefined
+            }
             filtersActive={hasFilters}
-            onClearFilters={() => url.setParams({ search: undefined, role: undefined, include: undefined })}
+            onClearFilters={() =>
+              url.setParams({
+                search: undefined,
+                role: undefined,
+                include: undefined,
+              })
+            }
           />
         }
         pagination={{

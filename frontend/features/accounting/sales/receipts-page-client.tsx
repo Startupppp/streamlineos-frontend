@@ -15,7 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import {
+  FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 import { formatMinorMoney } from "@/lib/accounting/money";
@@ -23,8 +26,12 @@ import { formatShortDate } from "@/lib/date-utils";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useAccountingBook } from "@/hooks/api/accounting/ledger";
-import { RECEIVABLES_MANAGE, RECEIVABLES_READ, useArReceipts } from "@/hooks/api/accounting/ar";
-import type { ArReceiptSummary } from "@/types/accounting-ar-receipts";
+import {
+  RECEIVABLES_MANAGE,
+  RECEIVABLES_READ,
+  useArReceipts,
+} from "@/hooks/api/accounting/ar";
+import type { ArReceiptSummary } from "@/types/accounting/accounting-ar-receipts";
 import { usePartyNames } from "../parties/use-party-names";
 import { ReceiptStatusBadge } from "./ar-labels";
 import { ReceiptDetailSheet } from "./receipt-detail-sheet";
@@ -93,7 +100,9 @@ export function ReceiptsPageClient() {
     {
       key: "paymentMethod",
       header: "How",
-      cell: (row) => <span className="text-sm">{row.paymentMethod ?? "—"}</span>,
+      cell: (row) => (
+        <span className="text-sm">{row.paymentMethod ?? "—"}</span>
+      ),
     },
     {
       key: "status",
@@ -128,7 +137,9 @@ export function ReceiptsPageClient() {
     isError: receiptsQuery.isError,
     error: receiptsQuery.error,
   });
-  const handleRetry = useCallback(() => { void receiptsQuery.refetch(); }, [receiptsQuery]);
+  const handleRetry = useCallback(() => {
+    void receiptsQuery.refetch();
+  }, [receiptsQuery]);
 
   const hasFilters = statusParam.length > 0 || unappliedOnly;
 
@@ -136,7 +147,9 @@ export function ReceiptsPageClient() {
     <div className={FILTER_TOOLBAR_ROW}>
       <Select
         value={statusParam || "all"}
-        onValueChange={(value) => url.setParams({ status: value === "all" ? undefined : value })}
+        onValueChange={(value) =>
+          url.setParams({ status: value === "all" ? undefined : value })
+        }
       >
         <SelectTrigger className={FILTER_SELECT_TRIGGER} aria-label="Status">
           <SelectValue />
@@ -149,7 +162,9 @@ export function ReceiptsPageClient() {
       </Select>
       <Select
         value={unappliedOnly ? "true" : "any"}
-        onValueChange={(value) => url.setParams({ unapplied: value === "any" ? undefined : value })}
+        onValueChange={(value) =>
+          url.setParams({ unapplied: value === "any" ? undefined : value })
+        }
       >
         <SelectTrigger className={FILTER_SELECT_TRIGGER} aria-label="Applied">
           <SelectValue />
@@ -162,10 +177,19 @@ export function ReceiptsPageClient() {
     </div>
   );
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="Money in">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>
@@ -205,7 +229,9 @@ export function ReceiptsPageClient() {
           <EmptyState
             className="border-0 bg-transparent min-h-[40vh]"
             illustrationPreset="expenses"
-            title={hasFilters ? "No payments match your filters" : "No payments yet"}
+            title={
+              hasFilters ? "No payments match your filters" : "No payments yet"
+            }
             description={
               hasFilters
                 ? "Try switching the filters back to all payments."
@@ -215,10 +241,17 @@ export function ReceiptsPageClient() {
               hasFilters
                 ? {
                     label: "Clear filters",
-                    onClick: () => url.setParams({ status: undefined, unapplied: undefined }),
+                    onClick: () =>
+                      url.setParams({
+                        status: undefined,
+                        unapplied: undefined,
+                      }),
                   }
                 : canManage
-                  ? { label: "Record money in", onClick: () => setRecordOpen(true) }
+                  ? {
+                      label: "Record money in",
+                      onClick: () => setRecordOpen(true),
+                    }
                   : undefined
             }
           />
