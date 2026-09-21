@@ -17,6 +17,7 @@ const mockLocationReplace = jest.fn();
 let mockProvisioning: SetupProvisioning = {
   isReady: false,
   background: "unknown",
+  orgId: null,
   issue: null,
   isRechecking: false,
   hasTimedOut: false,
@@ -138,6 +139,7 @@ function resetMocks() {
   mockProvisioning = {
     isReady: false,
     background: "unknown",
+    orgId: null,
     issue: null,
     isRechecking: false,
     hasTimedOut: false,
@@ -314,6 +316,7 @@ describe("StepGeneration — background failed + isReady true → user can conti
     mockProvisioning = {
       isReady: true,
       background: "failed",
+      orgId: null,
       issue,
       isRechecking: false,
       hasTimedOut: false,
