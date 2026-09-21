@@ -55,9 +55,15 @@ function projectFixture(
   };
 }
 
-function setUp(projectData: ProjectWithDetails | null | undefined): void {
+function setUp(
+  projectData: ProjectWithDetails | null | undefined,
+  accessOverrides: Partial<ReturnType<typeof useAccess>> = {},
+): void {
   mockUseAccess.mockReturnValue({
     data: accessWithPortalPermission(),
+    isError: false,
+    refetch: jest.fn(),
+    ...accessOverrides,
   } as ReturnType<typeof useAccess>);
   mockUseModuleEnabled.mockReturnValue(true);
   mockUseProject.mockReturnValue({
@@ -86,15 +92,51 @@ describe("useBuildNavModel — client-portal capability gate", () => {
     expect(findClientPortalDestination(result.current.model)).toBeUndefined();
   });
 
-  it("the client-portal destination renders once the project detail has loaded and the capability is not explicitly disabled", () => {
+  it("the client-portal destination stays hidden once the project detail has loaded but its features map has no clientPortal key at all, because an absent key must not enable the portal", () => {
     setUp(projectFixture(undefined));
     const { result } = renderHook(() => useBuildNavModel());
-    expect(findClientPortalDestination(result.current.model)).toBeDefined();
+    expect(findClientPortalDestination(result.current.model)).toBeUndefined();
   });
 
   it("the client-portal destination stays hidden once the project detail has loaded and the capability is explicitly disabled", () => {
     setUp(projectFixture({ clientPortal: false }));
     const { result } = renderHook(() => useBuildNavModel());
     expect(findClientPortalDestination(result.current.model)).toBeUndefined();
+  });
+
+  it("the client-portal destination renders once the project detail has loaded and the capability is explicitly enabled", () => {
+    setUp(projectFixture({ clientPortal: true }));
+    const { result } = renderHook(() => useBuildNavModel());
+    expect(findClientPortalDestination(result.current.model)).toBeDefined();
+  });
+});
+
+describe("useBuildNavModel — access query failure", () => {
+  beforeEach(() => {
+    mockUseAccess.mockReset();
+    mockUseModuleEnabled.mockReset();
+    mockUseProject.mockReset();
+  });
+
+  it("isAccessReady stays false and isAccessError becomes true when the access query fails with no cached data, so the sidebar can render a retry instead of spinning forever", () => {
+    setUp(undefined, { data: undefined, isError: true });
+    const { result } = renderHook(() => useBuildNavModel());
+    expect(result.current.isAccessReady).toBe(false);
+    expect(result.current.isAccessError).toBe(true);
+  });
+
+  it("isAccessError stays false once previously cached access data is present, even while a background refetch is failing", () => {
+    setUp(undefined, { data: accessWithPortalPermission(), isError: true });
+    const { result } = renderHook(() => useBuildNavModel());
+    expect(result.current.isAccessReady).toBe(true);
+    expect(result.current.isAccessError).toBe(false);
+  });
+
+  it("calling refetchAccess invokes the underlying access query's refetch", () => {
+    const refetch = jest.fn();
+    setUp(undefined, { data: undefined, isError: true, refetch });
+    const { result } = renderHook(() => useBuildNavModel());
+    result.current.refetchAccess();
+    expect(refetch).toHaveBeenCalledTimes(1);
   });
 });
