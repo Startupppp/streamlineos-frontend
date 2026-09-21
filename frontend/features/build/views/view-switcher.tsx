@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { isViewType, type ViewType } from "@/lib/build/view-types";
+import { ALL_VIEW_VALUES, isViewType, type ViewType } from "@/lib/build/view-types";
 
 export type { ViewType } from "@/lib/build/view-types";
 export { parseViewType } from "@/lib/build/view-types";
@@ -37,19 +37,22 @@ type AnimatedViewIcon = ComponentType<{
 
 type StaticViewIcon = ComponentType<{ className?: string }>;
 
-const ALL_VIEWS: {
-  value: ViewType;
+type ViewMeta = {
   animatedIcon?: AnimatedViewIcon;
   staticIcon?: StaticViewIcon;
   label: string;
-}[] = [
-  { value: "board", animatedIcon: LayoutGridIcon, label: "Board" },
-  { value: "list", animatedIcon: LayoutListIcon, label: "List" },
-  { value: "table", staticIcon: Table2, label: "Table" },
-  { value: "calendar", staticIcon: Calendar, label: "Calendar" },
-  { value: "gantt", animatedIcon: ChartBarIcon, label: "Gantt" },
-  { value: "workload", animatedIcon: UsersIcon, label: "Workload" },
-];
+};
+
+const VIEW_META: Record<ViewType, ViewMeta> = {
+  board: { animatedIcon: LayoutGridIcon, label: "Board" },
+  list: { animatedIcon: LayoutListIcon, label: "List" },
+  table: { staticIcon: Table2, label: "Table" },
+  calendar: { staticIcon: Calendar, label: "Calendar" },
+  gantt: { animatedIcon: ChartBarIcon, label: "Gantt" },
+  workload: { animatedIcon: UsersIcon, label: "Workload" },
+};
+
+const ALL_VIEWS = ALL_VIEW_VALUES.map((value) => ({ value, ...VIEW_META[value] }));
 
 export const ViewSwitcher = memo(function ViewSwitcher({
   activeView,

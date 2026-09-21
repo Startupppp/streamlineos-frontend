@@ -14,7 +14,7 @@ import {
 } from "./nav/build-nav-destination";
 import { buildOrganizationNavGroups, toBuildNavGroups } from "./build-nav-groups";
 import { ORGANIZATION_BUILD_SCOPE, resolveBuildScope } from "./build-scope";
-import { VIEW_TYPES } from "./view-types";
+import { ALL_VIEW_VALUES, VIEW_TYPES } from "./view-types";
 
 function accessWith(
   keys: PermissionKey[],
@@ -256,15 +256,8 @@ describe("isBuildDestinationActive — boardViews destination (project Issues)",
     expect(isBuildDestinationActive(issues, "/build/42/backlog", null)).toBe(false);
   });
 
-  it("VIEW_TYPES pins the exact set that ViewSwitcher ALL_VIEWS and project-board-content must also cover — adding a view here without updating those two sites is a bug", () => {
-    expect([...VIEW_TYPES].sort()).toEqual([
-      "board",
-      "calendar",
-      "gantt",
-      "list",
-      "table",
-      "workload",
-    ]);
+  it("VIEW_TYPES and ALL_VIEW_VALUES enumerate the same set so the nav model and the switcher cannot diverge", () => {
+    expect([...VIEW_TYPES].sort()).toEqual([...ALL_VIEW_VALUES].sort());
   });
 });
 

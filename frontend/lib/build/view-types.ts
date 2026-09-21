@@ -9,6 +9,15 @@ export const VIEW_TYPES: readonly ViewType[] = [
   "workload",
 ];
 
+export const ALL_VIEW_VALUES: readonly ViewType[] = [
+  "board",
+  "list",
+  "table",
+  "calendar",
+  "gantt",
+  "workload",
+];
+
 export function isViewType(value: string): value is ViewType {
   return VIEW_TYPES.some((t) => t === value);
 }
