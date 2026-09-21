@@ -38,12 +38,15 @@ jest.mock("@/components/ui/page-wrapper", () => ({
   PageWrapper: ({
     children,
     title,
+    actions,
   }: {
     children: React.ReactNode;
     title?: string;
+    actions?: React.ReactNode;
   }) => (
     <div>
       {title ? <h1>{title}</h1> : null}
+      {actions}
       {children}
     </div>
   ),
@@ -221,4 +224,18 @@ it("shows NoPermissionState not empty state when build:goals:view is denied", ()
 
   expect(screen.getByTestId("no-permission")).toBeInTheDocument();
   expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+});
+
+it("hides the New Goal control when build:goals:manage is denied, because a create control must not offer authority the caller may not hold", () => {
+  mockUseCan.mockReturnValue(false);
+
+  render(<GoalsPage />);
+
+  expect(screen.queryByText("New Goal")).not.toBeInTheDocument();
+});
+
+it("shows the New Goal control when build:goals:manage is granted", () => {
+  render(<GoalsPage />);
+
+  expect(screen.getByText("New Goal")).toBeInTheDocument();
 });

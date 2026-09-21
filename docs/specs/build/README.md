@@ -106,6 +106,8 @@ boundaries, not write permission.
 | Packet | Owner/session | Root/frontend revision | Backend revision | Exact write set | Acquired | Expires | Status |
 |---|---|---|---|---|---|---|---|
 | `BLD-X-SB-ACTIONS-001` | cycle-14 agent CA | `e18077a30` | `374afd27a` | prod: none changed · test: `build-quick-create.test.tsx`, `build-more-tools-menu.test.tsx`, `use-build-nav-preferences.test.ts` | 2026-09-21T08:35Z | 2026-09-21T11:35Z | `INTEGRATED (cycle 14)` |
+| `BLD-X-FE-QUALITY-001b` | cycle-17 agent FA | `e18077a30` | `374afd27a` | prod: `features/build/incidents/incidents-page.tsx`, `incident-detail-page.tsx`, `incident-schema.ts`, `sla.ts` · test: `incidents-page.test.tsx` + one new | 2026-09-21T13:20Z | 2026-09-21T16:20Z | `RESERVED` |
+| `BLD-X-FE-ORG-GOV-001a` | cycle-17 agent FB | `e18077a30` | `374afd27a` | prod: `features/build/goals/goals-page.tsx`, `goal-detail-page.tsx` · test: `goals-page.test.tsx`, `goal-detail-page.test.tsx` | 2026-09-21T13:20Z | 2026-09-21T16:20Z | `INTEGRATED (cycle 17)` |
 | `BLD-X-SB-LIFECYCLE-001` | cycle-16 agent EB | `e18077a30` | `374afd27a` | prod: `features/build/navigation/build-scope-recovery.tsx`, `use-build-scope-recovery.ts`, `lib/build/build-scope-fallback.ts` · test: `build-scope-recovery.test.tsx`, new `lib/build/build-scope-fallback.test.ts` | 2026-09-21T12:55Z | 2026-09-21T15:55Z | `INTEGRATED (cycle 16)` |
 | `BLD-X-FE-QUALITY-001a-ii` | cycle-16 agent EC | `e18077a30` | `374afd27a` | prod: `features/build/governance/risk-form-sheet.tsx`, `decision-form-sheet.tsx`, `types/projects/governance.ts` · test: new `governance-clear-optional-field.test.tsx` | 2026-09-21T12:55Z | 2026-09-21T15:55Z | `INTEGRATED (cycle 16)` |
 | `BLD-X-FE-QUALITY-001a-i` | cycle-16 agent EA | `e18077a30` | `374afd27a` | prod: `features/build/governance/risks-page.tsx`, `hooks/api/build/governance-schema.ts` · test: new `risks-page-aggregates.test.tsx`, new `governance-contract.test.ts` | 2026-09-21T12:40Z | 2026-09-21T15:40Z | `INTEGRATED (cycle 16)` |
@@ -1260,6 +1262,56 @@ because `organizationHref` independently re-verifies org-level authorization
 before promoting anything, but the underlying signal is still the wrong shape.
 Fixing it means touching `use-build-nav-model.ts`, which was reserved to another
 packet at the time. Carried forward.
+
+### Cycle 17 outcomes
+
+**`BLD-X-FE-ORG-GOV-001a` — `INTEGRATED`.** Four of five hypotheses refuted;
+one real defect fixed.
+
+- **H5 confirmed and fixed: four mutation controls rendered unconditionally.**
+  New Goal (and its empty-state CTA), Edit, Delete and Add Link had **no**
+  permission gate at all — any member reaching the page saw controls whose
+  mutations would 403. All four now gate on `useCan("build:goals:manage")`,
+  failing closed until access resolves. Coordinator verified the key is exact:
+  `goals.controller.ts:80,112,126,139` all carry
+  `@RequirePermission("build:goals:manage")`, and the frontend uses that literal
+  string. Not a security hole — `useAuthorizedMutation` already gated the writes
+  server-side — but it violated §17's rule that a mutation control uses the exact
+  backend key and hides when unheld.
+- **H3's premise was wrong, and the agent said so instead of inventing a fix.**
+  The brief asserted OKR progress maths lived in `goal-key-results.tsx` /
+  `check-in-dialog.tsx`. Neither computes any rollup — they display a value
+  computed elsewhere. The real rollup is `backend/src/modules/goals/goals-progress.ts:5-57`,
+  and it is **correct**: division-by-zero guarded (`target === start`), `NaN`
+  guarded, clamped 0–100, decreasing-metric goals handled correctly by
+  `(current - start) / (target - start)`, and it iterates **all** key results
+  with no LIMIT so the rollup is not computed over a capped page. Both owned
+  files were left unchanged. Refuting a brief's premise with anchors is the
+  correct outcome.
+- **Red/green proved with no git**, using the manual-revert method added to the
+  brief after the previous cycle's violation: revert the gate edits, re-run,
+  confirm 2 of 8 fail because the controls render anyway, restore, re-run green.
+  The corrected brief worked on first use.
+- Coordinator re-ran: **8 tests, 2 suites, exit 0**.
+
+**⚠ Product defect found in passing — every goal in the product shows
+"Unassigned".** `goals.service.ts:223` (`list`) and `:344` (`getGoal`) both
+hardcode `owner: null`. The type declares `owner: GoalOwner | null` and
+`ownerMembershipId` **is** stored and used for scope filtering, but the owner is
+never hydrated or joined — so the Owner column renders "Unassigned" for every
+goal regardless of who owns it, in both the list and the detail page. Coordinator
+confirmed at source. This is a backend completeness bug no frontend change can
+fix, and it makes the OKR module's ownership story non-functional. **Needs a
+backend owner.**
+
+Three further shared-contract requests filed, none actioned (all outside the
+packet's write set):
+
+| Anchor | Lead |
+|---|---|
+| `features/build/goals/key-result-row.tsx:27-29` | The "Check in" button has no `useCan("build:goals:manage")` gate — same defect class as the four just fixed, missed only because the file was excluded from the write set. Server-gated, so UX not security |
+| `features/build/goals/constants.ts:92` | `keyResultPercent` applies `Math.round` per key result, while the backend rounds only after averaging — a KR at 99.5% displays "100%" on its own bar. Goal-level progress is unaffected |
+| `hooks/api/goals.ts` + `goals-schema.ts` | `useUpdateGoal`/`useCheckIn` type their response as the bare `goalRowContract`, but `update` and `checkIn` actually return the full `GoalDetail` via `getGoal()`. Inert today (no consumer reads the returned value) but the contract comment is factually wrong and will mislead the first consumer |
 
 ### Findings banked for cycles 15–16 (read-only audit, unverified by coordinator)
 

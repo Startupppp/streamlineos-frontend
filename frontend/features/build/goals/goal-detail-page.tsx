@@ -33,6 +33,7 @@ import {
   type KeyResult,
   type GoalDetail,
 } from "@/hooks/api/goals";
+import { useCan } from "@/hooks/api/access";
 import { GoalFormSheet } from "@/features/build/goals/goal-form-sheet";
 import { CheckInDialog } from "@/features/build/goals/check-in-dialog";
 import { AddLinkDialog } from "@/features/build/goals/add-link-dialog";
@@ -91,6 +92,7 @@ function AddLinkButton({ onClick }: { onClick: () => void }) {
 
 export function GoalDetailPage({ goalId }: { goalId: number }) {
   const router = useRouter();
+  const canManage = useCan("build:goals:manage");
 
   const { data: goal, isLoading, isError, error, refetch } = useGoal(goalId);
   const deleteGoal = useDeleteGoal();
@@ -174,7 +176,11 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
     <PageWrapper
       title={detail.title}
       backHref="/build/goal"
-      actions={<GoalDetailActions onEdit={handleOpenEdit} onDelete={handleOpenDelete} />}
+      actions={
+        canManage ? (
+          <GoalDetailActions onEdit={handleOpenEdit} onDelete={handleOpenDelete} />
+        ) : undefined
+      }
     >
       <PmPageShell>
         <PmSection index={0}>
@@ -256,7 +262,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
                 {detail.links.length}
               </Badge>
             </div>
-            <AddLinkButton onClick={handleOpenAddLink} />
+            {canManage ? <AddLinkButton onClick={handleOpenAddLink} /> : null}
           </div>
           {detail.links.length === 0 ? (
             <PmPanel className="flex items-center justify-center p-4">

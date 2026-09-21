@@ -25,12 +25,15 @@ jest.mock("@/components/ui/page-wrapper", () => ({
   PageWrapper: ({
     children,
     title,
+    actions,
   }: {
     children: React.ReactNode;
     title?: string;
+    actions?: React.ReactNode;
   }) => (
     <div>
       {title ? <h1>{title}</h1> : null}
+      {actions}
       {children}
     </div>
   ),
@@ -99,9 +102,13 @@ jest.mock("@/components/ui/progress", () => ({
 }));
 
 jest.mock("@/components/ui/alert-dialog", () => ({
-  AlertDialog: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
+  AlertDialog: ({
+    open,
+    children,
+  }: {
+    open?: boolean;
+    children: React.ReactNode;
+  }) => (open ? <div>{children}</div> : null),
   AlertDialogContent: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
@@ -119,6 +126,15 @@ jest.mock("@/components/ui/alert-dialog", () => ({
   ),
   AlertDialogCancel: ({ children }: { children: React.ReactNode }) => (
     <button>{children}</button>
+  ),
+  AlertDialogAction: ({
+    children,
+    ...props
+  }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+    <button {...props}>{children}</button>
+  ),
+  AlertDialogTrigger: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
   ),
 }));
 
@@ -207,6 +223,21 @@ function makeMutationResult() {
   return { mutate: jest.fn(), isPending: false };
 }
 
+const FULL_GOAL_DETAIL = {
+  id: 42,
+  title: "Ship goals module",
+  description: null,
+  status: "not_started",
+  progress: 40,
+  startDate: null,
+  dueDate: null,
+  project: null,
+  owner: null,
+  keyResults: [],
+  links: [],
+  updates: [],
+};
+
 beforeEach(() => {
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
@@ -233,4 +264,37 @@ it("shows denied state not error state when build:goals:view permission is absen
 
   expect(screen.getByTestId("no-permission")).toBeInTheDocument();
   expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+});
+
+it("hides edit, delete and add-link controls when build:goals:manage is denied, because a control must not offer authority the caller may not hold", () => {
+  mockUseCan.mockReturnValue(false);
+  mockUseGoal.mockReturnValue({
+    data: FULL_GOAL_DETAIL,
+    isLoading: false,
+    isError: false,
+    error: undefined,
+    refetch: jest.fn(),
+  });
+
+  render(<GoalDetailPage goalId={42} />);
+
+  expect(screen.queryByText("Edit")).not.toBeInTheDocument();
+  expect(screen.queryByText("Delete")).not.toBeInTheDocument();
+  expect(screen.queryByText("Link")).not.toBeInTheDocument();
+});
+
+it("shows edit, delete and add-link controls when build:goals:manage is granted", () => {
+  mockUseGoal.mockReturnValue({
+    data: FULL_GOAL_DETAIL,
+    isLoading: false,
+    isError: false,
+    error: undefined,
+    refetch: jest.fn(),
+  });
+
+  render(<GoalDetailPage goalId={42} />);
+
+  expect(screen.getByText("Edit")).toBeInTheDocument();
+  expect(screen.getByText("Delete")).toBeInTheDocument();
+  expect(screen.getByText("Link")).toBeInTheDocument();
 });

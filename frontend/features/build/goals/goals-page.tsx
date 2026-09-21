@@ -32,6 +32,7 @@ import {
   type GoalLevel,
   type GoalStatus,
 } from "@/hooks/api/goals";
+import { useCan } from "@/hooks/api/access";
 import { GoalFormSheet } from "@/features/build/goals/goal-form-sheet";
 import {
   GoalFiltersPopover,
@@ -158,6 +159,7 @@ function GoalsGridSkeleton() {
 }
 
 export function GoalsPage() {
+  const canManage = useCan("build:goals:manage");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
   const [statusFilter, setStatusFilter] = useState<GoalStatus | "all">("all");
@@ -247,7 +249,7 @@ export function GoalsPage() {
                 onStatusChange={handleStatusFilterChange}
               />
             </div>
-            <NewGoalButton onClick={handleOpenCreate} />
+            {canManage ? <NewGoalButton onClick={handleOpenCreate} /> : null}
           </div>
         }
         filters={
@@ -318,7 +320,7 @@ export function GoalsPage() {
                 filtersActive={filtersActive}
                 onClearFilters={handleClearFilters}
                 action={
-                  filtersActive
+                  filtersActive || !canManage
                     ? undefined
                     : { label: "New Goal", onClick: handleOpenCreate }
                 }
