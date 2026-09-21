@@ -104,8 +104,21 @@ protects trust boundaries, and the database protects durable state.
   field and reject contract drift.
 - [ ] **BLD-05-003** all request schemas are strict and live in the owning
   module's schema file.
-- [x] **BLD-05-004** all form schemas live in `*-schema.ts`, with types derived
-  from the schema. **Closed — zero inline schemas remain.**
+- [ ] **BLD-05-004** all form schemas live in `*-schema.ts`, with types derived
+  from the schema.
+  **REOPENED 2026-09-21 — the closing scan cannot see a multiline declaration.**
+  The "repo scan returning no `z.object(`" below is a single-line search.
+  `features/build/cycles/cycles-page.tsx:59` reads
+  `const createCycleSchema = z` with `.object({` on the next line, so the scan
+  passes over a 45-line inline schema in a page component that supplies
+  `zodResolver` at `:149`. Measured today: single-line `z.object(` → zero files;
+  `rg -U "z\s*\n\s*\.object\("` → one, that file. Detail and the wider pattern are
+  recorded at BLD-05-037, which is reopened on the same evidence.
+  The 32-component move this item describes did happen and is not in question —
+  only the completeness claim is. One file remains, and the scan that would prove
+  it needs to tolerate a line break between `z` and its method.
+  **Superseded closure text, retained for provenance — "Closed — zero inline
+  schemas remain."**
   Thirty-two components under `features/build/**` declared their react-hook-form
   `z.object` inline. Each moved to the `*-schema.ts` owning its folder, reusing
   the existing file where one was already present (`goal-form-schema.ts`,
@@ -282,14 +295,36 @@ organization switch, sign-out, and programmatic post-action navigation.
 - [ ] **BLD-05-036** the Intake accept mutation submits every field displayed
   by its form or removes the field; assignee, Cycle, and module cannot be
   collected and discarded.
-- [x] **BLD-05-037** every non-trivial inline Build Zod object is moved to its
+- [ ] **BLD-05-037** every non-trivial inline Build Zod object is moved to its
   one owning `*-schema.ts` only after confirming no canonical schema already
   exists; the root constitution's trivial single-field guard exception remains
-  valid. **Closed — source proof 2026-09-21.** `z.object(` outside a
-  `*-schema.ts` returns zero files across `frontend/features/build/**` and
-  `frontend/app/(authenticated)/build/**`; so do `z.discriminatedUnion(`,
-  `z.tuple(` and `z.record(`, which the original `z.object`-only census would
-  have missed.
+  valid.
+  **REOPENED 2026-09-21 — one counterexample survives, and it is the same
+  detector shape that caused the original miss.**
+  `frontend/features/build/cycles/cycles-page.tsx:59-104` declares a 45-line
+  `createCycleSchema` inline in a page component, with `z.infer` at `:104` and
+  `zodResolver(createCycleSchema)` at `:149`. There is no
+  `features/build/cycles/*-schema.ts` — the directory holds only the two pages and
+  their tests.
+  The closure below widened the **constructor set** (`discriminatedUnion`, `tuple`,
+  `record`) which was a real gap, but kept the **single-line** assumption. The
+  declaration reads `const createCycleSchema = z\n  .object({`, so a literal
+  `z.object(` search cannot see it. Measured both ways today:
+  `rg -l "z\.object\(" features/build "app/(authenticated)/build" --glob '!*-schema.ts'`
+  → **zero files**;
+  `rg -U -l "z\s*\n\s*\.object\(" …` → **exactly one**, `cycles-page.tsx`.
+  The multiline form of the three widened constructors returns zero, so this one
+  file is the whole residue.
+  **`BLD-05-004` above is ticked on the same unsound scan** and is equally false;
+  see the note recorded there. Closing either needs a detector that tolerates a
+  line break between `z` and its method — the frontend's own placement gate
+  (`features/settings/__tests__/settings-schema-placement.contract.test.ts:40`) has
+  the identical single-line defect and is the third instance of it.
+  **Superseded closure text, retained for provenance — "Closed — source proof
+  2026-09-21." `z.object(` outside a `*-schema.ts` returns zero files across
+  `frontend/features/build/**` and `frontend/app/(authenticated)/build/**`; so do
+  `z.discriminatedUnion(`, `z.tuple(` and `z.record(`, which the original
+  `z.object`-only census would have missed.**
   ⚠ This does **not** also close `BLD-05A-003`, whose text adds "no duplicate
   shape remains". Absence of inline objects does not prove absence of two
   `*-schema.ts` files declaring one shape; that clause is still unproven.
