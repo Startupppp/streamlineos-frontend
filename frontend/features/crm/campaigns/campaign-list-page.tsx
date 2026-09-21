@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/content-fill-panel";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { RecordList, asRecordValues } from "@/components/renderer";
