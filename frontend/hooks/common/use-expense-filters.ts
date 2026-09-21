@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useCallback, useMemo, useTransition } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useState, useCallback, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import type { ExpenseFilters } from "@/types/hr/expenses";
+import { useUrlFilters } from "@/lib/url-state/use-url-filters";
 
 export type DatePreset =
   | "today"
@@ -106,10 +107,8 @@ export function useExpenseFilters(
 ): UseExpenseFiltersReturn {
   const { defaultPageSize = 50, syncToUrl = false, onFiltersChange } = options;
 
-  const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  const { update, isPending } = useUrlFilters();
   const initialFilters = useMemo(() => {
     const filters = { ...DEFAULT_FILTERS, pageSize: defaultPageSize };
 
@@ -144,44 +143,30 @@ export function useExpenseFilters(
     (newFilters: ExpenseFilters) => {
       if (!syncToUrl) return;
 
-      startTransition(() => {
-        const params = new URLSearchParams();
-
-        if (newFilters.status && newFilters.status !== "all") {
-          params.set("status", String(newFilters.status));
-        }
-        if (newFilters.category) {
-          params.set("category", newFilters.category);
-        }
-        if (newFilters.startDate) {
-          params.set("startDate", newFilters.startDate);
-        }
-        if (newFilters.endDate) {
-          params.set("endDate", newFilters.endDate);
-        }
-        if (newFilters.search) {
-          params.set("search", newFilters.search);
-        }
-        if (newFilters.page && newFilters.page > 1) {
-          params.set("page", String(newFilters.page));
-        }
-        if (newFilters.paymentMethod && newFilters.paymentMethod !== "all") {
-          params.set("paymentMethod", newFilters.paymentMethod);
-        }
-        if (newFilters.minAmount) {
-          params.set("minAmount", String(newFilters.minAmount));
-        }
-        if (newFilters.maxAmount) {
-          params.set("maxAmount", String(newFilters.maxAmount));
-        }
-
-        const queryString = params.toString();
-        router.replace(`${pathname}${queryString ? `?${queryString}` : ""}`, {
-          scroll: false,
-        });
+      update({
+        status:
+          newFilters.status && newFilters.status !== "all"
+            ? String(newFilters.status)
+            : null,
+        category: newFilters.category ?? null,
+        startDate: newFilters.startDate ?? null,
+        endDate: newFilters.endDate ?? null,
+        search: newFilters.search ?? null,
+        page:
+          newFilters.page !== undefined && newFilters.page > 1
+            ? String(newFilters.page)
+            : null,
+        paymentMethod:
+          newFilters.paymentMethod && newFilters.paymentMethod !== "all"
+            ? newFilters.paymentMethod
+            : null,
+        minAmount:
+          newFilters.minAmount !== undefined ? String(newFilters.minAmount) : null,
+        maxAmount:
+          newFilters.maxAmount !== undefined ? String(newFilters.maxAmount) : null,
       });
     },
-    [syncToUrl, pathname, router]
+    [syncToUrl, update]
   );
   const setFilter = useCallback(
     <K extends keyof ExpenseFilters>(key: K, value: ExpenseFilters[K]) => {
