@@ -1,12 +1,14 @@
 "use client";
 
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 
 const mockUseAccess = jest.fn();
 const mockUseEngagementOverview = jest.fn();
 const mockUseOrgMoodAggregate = jest.fn();
 const mockUseMyMoodHistory = jest.fn();
+const mockUseCan = jest.fn();
+const mockUseQuery = jest.fn();
 
 const accessLoading = { data: undefined, isLoading: true };
 
@@ -52,7 +54,7 @@ jest.mock("framer-motion", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useAccess: () => mockUseAccess(),
-  useCan: () => false,
+  useCan: () => mockUseCan(),
   useModuleEnabled: () => true,
 }));
 
@@ -71,7 +73,7 @@ jest.mock("@/hooks/api/organization", () => ({
 }));
 
 jest.mock("@tanstack/react-query", () => ({
-  useQuery: () => emptyQuery(),
+  useQuery: () => mockUseQuery(),
   useQueryClient: () => ({ invalidateQueries: jest.fn() }),
 }));
 
@@ -138,8 +140,10 @@ import { HrEngagementPage } from "./engagement-page";
 beforeEach(() => {
   jest.clearAllMocks();
   mockUseAccess.mockReturnValue(accessGranted);
+  mockUseCan.mockReturnValue(false);
+  mockUseQuery.mockReturnValue(emptyQuery());
   mockUseEngagementOverview.mockReturnValue(emptyQuery());
-  mockUseOrgMoodAggregate.mockReturnValue({ data: undefined, isLoading: false });
+  mockUseOrgMoodAggregate.mockReturnValue(emptyQuery());
   mockUseMyMoodHistory.mockReturnValue(emptyQuery());
 });
 
@@ -167,5 +171,50 @@ describe("HrEngagementPage — access is three-valued, not a boolean", () => {
 
     expect(screen.queryByText(/access restricted/i)).toBeNull();
     expect(screen.getByRole("heading", { name: /employee engagement/i })).toBeInTheDocument();
+  });
+});
+
+describe("HrEngagementPage overview is honest about failed reads", () => {
+  const refetchMood = jest.fn();
+
+  function failedQuery() {
+    return {
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error("Internal server error"),
+      refetch: refetchMood,
+    };
+  }
+
+  it("shows the recognitions stat as unknown, not zero, when the recognitions read fails", () => {
+    mockUseQuery.mockReturnValue(failedQuery());
+
+    render(<HrEngagementPage />);
+
+    expect(screen.getAllByText("Couldn't load").length).toBeGreaterThan(0);
+    expect(screen.queryByText("All time")).toBeNull();
+  });
+
+  it("offers retry on the mood trend instead of 'No mood data yet' when the mood read fails", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseOrgMoodAggregate.mockReturnValue(failedQuery());
+
+    render(<HrEngagementPage />);
+
+    expect(screen.queryByText(/no mood data yet/i)).toBeNull();
+    expect(screen.getByRole("alert")).toHaveTextContent(/couldn't load the mood trend/i);
+    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+    expect(refetchMood).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps 'No mood data yet' for a mood read that succeeded with nothing to show", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseOrgMoodAggregate.mockReturnValue({ ...emptyQuery(), data: [] });
+
+    render(<HrEngagementPage />);
+
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByText(/no mood data yet/i)).toBeInTheDocument();
   });
 });
