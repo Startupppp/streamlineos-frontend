@@ -7,5 +7,6 @@ export { ErrorState } from "./error-state";
 export { NoPermissionState } from "./no-permission-state";
 export { AnonymitySuppressedNotice, anonymitySuppressedMessage } from "./anonymity-suppressed-notice";
 export { PageState } from "./page-state";
+export { ApprovalRoutePanel } from "./approval-route-panel";
 export { EntityFormSheet } from "./entity-form-sheet";
 export { EntityFormDialog } from "./entity-form-dialog";

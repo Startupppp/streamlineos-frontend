@@ -1,3 +1,5 @@
+import type { ApprovalRoute } from "@/hooks/api/hr/approval-route-schema";
+
 export interface HrLeaveAnalytics {
   year: number;
   byDepartment: {
@@ -35,6 +37,7 @@ export interface LeaveContextResult {
     lastName?: string | null;
     image?: string | null;
   }>;
+  approvalRoute: ApprovalRoute;
 }
 
 export interface LeaveApprovalsResult {

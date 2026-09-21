@@ -11,15 +11,6 @@ export interface LeaveType {
   name: string;
 }
 
-export interface Approver {
-  id: string;
-  name: string | null;
-  email: string;
-  firstName?: string | null;
-  lastName?: string | null;
-  image?: string | null;
-}
-
 export interface LeaveRequest {
   id: number;
   startDate: string | Date;

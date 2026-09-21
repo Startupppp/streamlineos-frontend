@@ -229,6 +229,7 @@ export const humanResourcesQueryKeys = {
     reportingLine: (userId: string) =>
       [...base, "hr", "reportingLine", userId] as const,
     managerCoverage: () => [...base, "hr", "reportingLines", "coverage"] as const,
+    myApprover: (kind: string) => [...base, "me", "approvers", kind] as const,
     employeeTimeline: (employmentId: number, params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "employeeTimeline", employmentId] as const)

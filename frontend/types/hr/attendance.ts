@@ -95,7 +95,6 @@ export interface RequestLeaveInput {
 export interface CreateWfhRequestInput {
   date: Date | string;
   reason?: string;
-  approverId: string;
 }
 
 export interface ProcessWfhRequestInput {

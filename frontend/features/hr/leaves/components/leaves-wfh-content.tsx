@@ -45,7 +45,6 @@ import { LeavesThisWeekCard } from "./leaves-this-week-card";
 import type {
   LeaveBalance,
   LeaveType,
-  Approver,
   LeaveRequest,
   ApprovedLeave,
 } from "./leaves-shared";
@@ -120,7 +119,6 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
 
   const balances = (contextData?.balances ?? []) as LeaveBalance[];
   const leaveTypes = (contextData?.types ?? []) as LeaveType[];
-  const approvers = (contextData?.approvers ?? []) as Approver[];
   const joiningDate = contextData?.joiningDate ?? null;
 
   const myLeaveRequests = (myPages?.pages.flatMap((page) => page.data) ??
@@ -392,14 +390,13 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
         open={leaveSheetOpen}
         onOpenChange={setLeaveSheetOpen}
         leaveTypes={leaveTypes}
-        approvers={approvers}
+        approvalRoute={contextData?.approvalRoute}
         joiningDate={joiningDate}
         balances={balances}
       />
       <WfhRequestSheet
         open={wfhSheetOpen}
         onOpenChange={setWfhSheetOpen}
-        approvers={approvers}
       />
     </div>
   );
