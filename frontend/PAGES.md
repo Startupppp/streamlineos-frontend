@@ -312,7 +312,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/recruitment/talent-pools` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/headcount` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/analytics` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/diversity-report` · **HR** · hooks: `→ features/hr/recruitment`
+- `/hr/recruitment/diversity-report` · **HR** · hooks: `requirePermission("hr:sensitive:view")` (server), `useDiversityReport` (`useGatedQuery("hr:sensitive:view")` → `GET /hr/recruitment/diversity-report`), `usePageState` + `PageWrapper state=`, `→ features/hr/recruitment`. 2026-09-21 (FE#134): the page's state resolves through `usePageState({ permission: "hr:sensitive:view", …, error, isEmpty })`, so access-loading is a skeleton, denial is `DeniedView`, a failed read is `ErrorState` with the backend message, and "No applicant data found" appears only for a permitted, finished read with `total === 0`; removed from `denial-is-not-emptiness.known.json`.
 - `/hr/recruitment/scorecard-analytics` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/scorecard-templates` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/question-bank` · **HR** · hooks: `→ features/hr/recruitment`
