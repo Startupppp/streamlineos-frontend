@@ -113,7 +113,7 @@ const ACCESS_DENIED = {
   data: { isOrgOwner: false, scopes: {}, modules: {} },
   isLoading: false,
 };
-const mockNotFound = notFound as jest.Mock;
+const mockNotFound = notFound as jest.MockedFunction<typeof notFound>;
 
 function baseQueryResult(overrides = {}) {
   return {
@@ -152,7 +152,6 @@ beforeEach(() => {
   mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE_ROW] }));
   mockUseProjectBoardTickets.mockReturnValue(baseQueryResult({ data: [] }));
   mockUseTicketColumnCounts.mockReturnValue(baseQueryResult({ data: {} }));
-  mockNotFound.mockReturnValue(undefined);
 });
 
 it("renders NoPermissionState when build:sprints:view is denied instead of calling notFound", () => {

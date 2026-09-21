@@ -74,10 +74,10 @@ jest.mock("@/hooks/common/use-query-param-open", () => ({
 }));
 
 jest.mock("@animateicons/react/lucide", () => ({
-  PlusIcon: ({ ref: _ref, ...props }: React.HTMLAttributes<HTMLElement>) => (
+  PlusIcon: ({ ref: _ref, ...props }: React.ComponentPropsWithRef<"span">) => (
     <span {...props} />
   ),
-  EllipsisIcon: ({ ref: _ref, ...props }: React.HTMLAttributes<HTMLElement>) => (
+  EllipsisIcon: ({ ref: _ref, ...props }: React.ComponentPropsWithRef<"span">) => (
     <span {...props} />
   ),
 }));

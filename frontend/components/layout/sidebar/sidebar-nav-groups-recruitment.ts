@@ -4,8 +4,8 @@ import type { NavGroup } from "./sidebar-nav-types";
 export const RECRUITMENT_NAV_GROUPS: NavGroup[] = [
 {
     label: "Recruitment OS",
-    product: "hrms",
-    module: "hrms",
+    product: "recruitment",
+    module: "recruitment",
     requiredPermission: [
       "hr:offers:view",
       "hr:interviews:view",
