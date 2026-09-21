@@ -60,6 +60,8 @@ jest.mock("@/lib/utils", () => ({
 }));
 
 import { ProjectBoardContent } from "./project-board-content";
+import { VIEW_TYPES } from "@/lib/build/view-types";
+import type { ViewType } from "@/lib/build/view-types";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
 import type { FilterState as WorkloadFilterState } from "./workload-types";
 import type { ProjectStatus, BoardMember } from "./use-board-url-state";
@@ -145,6 +147,19 @@ function buildBaseProps(
     onLoadMore: truncation.onLoadMore ?? noop,
   };
 }
+
+describe("ProjectBoardContent — render-ladder exhaustiveness", () => {
+  it.each([...VIEW_TYPES])(
+    "view=%s is handled by the render switch and does not throw",
+    (view) => {
+      expect(() => {
+        render(
+          <ProjectBoardContent {...buildBaseProps()} view={view as ViewType} />,
+        );
+      }).not.toThrow();
+    },
+  );
+});
 
 describe("ProjectBoardContent — truncation notice", () => {
   beforeEach(() => {
