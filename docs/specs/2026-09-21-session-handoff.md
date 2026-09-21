@@ -5,6 +5,14 @@ task source: what was done, what is open, what is *not* work, and the traps that
 cost time. Detailed evidence stays in the lane documents named throughout; nothing
 here replaces them.
 
+> ⚠ **Superseded on migration state by a later session the same day.** §1's
+> "production is consistent, and nothing is pending" over a 27-row ledger was true when
+> written; the ledger is now 33 rows and six further migrations were applied, one of which
+> broke production before being repaired. See
+> [`2026-09-21-migration-repair-handoff.md`](2026-09-21-migration-repair-handoff.md).
+> Open work across both sessions is indexed in
+> [`2026-09-21-pending-work.md`](2026-09-21-pending-work.md). Everything else here stands.
+
 ---
 
 ## 0. Environment facts you must know before running anything

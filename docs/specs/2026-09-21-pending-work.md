@@ -1,20 +1,23 @@
 # Pending work — consolidated
 
-**As of 2026-09-21.** One current task source, replacing four lane documents that had
-grown overlapping and contradictory. Everything still open is below; everything closed is
-either gone or, where a closure was a *refutation*, kept in §9 so it is not re-raised.
+**As of 2026-09-21.** A single index of everything still open, gathered from four lane
+documents that had grown overlapping and in places contradictory.
 
-**Replaces (recoverable from git):**
+**This is an index, not a replacement.** The lane documents below still hold the measurements
+and per-item derivations, and `2026-09-21-session-handoff.md` §6 names them as the evidence
+store. Read the source before reversing anything in §9.
 
-```
-git show HEAD~1:docs/specs/2026-09-20-architecture-review-html-closeout.md
-git show HEAD~1:docs/specs/2026-09-20-deferred-items-lane.md
-git show HEAD~1:docs/specs/2026-09-20-get-route-writes-lane.md
-git show HEAD~1:docs/specs/2026-09-20-connection-hold-remediation-prd.md
-```
+| Evidence lives in | For |
+|---|---|
+| `2026-09-20-deferred-items-lane.md` | Every deferral premise re-test, the migration closeout, dead-code classification |
+| `2026-09-20-connection-hold-remediation-prd.md` | H1–H21 measurements and the frozen-route reasoning |
+| `2026-09-20-get-route-writes-lane.md` | The writing GET routes and `check:get-route-writes` recall limits |
+| `2026-09-20-architecture-review-html-closeout.md` | The six architecture reviews' items, item by item |
 
-Those four carry the full measurement logs and per-item derivations. This file carries the
-verdicts and the open work. Read the originals before reversing anything in §9.
+**Companion documents:** [`2026-09-21-session-handoff.md`](2026-09-21-session-handoff.md) for
+state up to the migration closeout, and
+[`2026-09-21-migration-repair-handoff.md`](2026-09-21-migration-repair-handoff.md) for the
+production break, the billing-webhook fix and the rollback work done later the same day.
 
 ---
 

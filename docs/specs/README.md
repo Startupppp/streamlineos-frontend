@@ -5,6 +5,15 @@ candidate PRDs were removed; Git history remains their archive.
 
 ## Start here
 
+- [**Pending work — consolidated**](2026-09-21-pending-work.md) — every open item in one
+  index, grouped by what is actually blocking it, plus the closed-by-refutation list.
+- [Session handoff](2026-09-21-session-handoff.md) — state up to the migration closeout.
+- [Migration repair handoff](2026-09-21-migration-repair-handoff.md) — the `0466`/`0467`
+  production break, the billing-webhook fix, and the rollback work. **Read before applying
+  any historical migration.**
+
+## Start here
+
 - **[Session handoff — 2026-09-21](2026-09-21-session-handoff.md)** — environment traps,
   what was done, and the gate rules that are not obvious. **Read before running anything;
   `backend/.env` points at production.**
