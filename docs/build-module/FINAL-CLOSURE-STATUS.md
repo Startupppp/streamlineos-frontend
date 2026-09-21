@@ -46,11 +46,11 @@ The consequence for TASK I is specific: migration 1142's `ON DELETE SET NULL (he
 |---|---|---|---|---|---|
 | A — Release nested-resource authorization | **DONE** — merged to backend `main` as `d714ae8ff` | agent + coordinator, `build/closure-a-releases` | `projects-releases.service.ts` (7 lines), `projects-releases-cross-project-binding.spec.ts` (new, 388 lines) | 13/13 new; 109 suites / 545 tests green in `src/modules/build/core`; `typecheck` 0, `typecheck:test` 0 | — |
 | B — N-11 cold-load route gates | IN_PROGRESS | agent, `build/closure-b-n11` | — | — | — |
-| C — P0 #6 Sprint/Cycle | TODO | scoping in flight | — | — | awaiting scope |
-| D — P0 #7 QA Bug lifecycle | TODO | scoping in flight | — | — | awaiting scope |
-| E — P0 #8 residual | TODO | scoping in flight | — | — | awaiting scope |
-| F — P1 #11 Issues explorer residual | TODO | scoping in flight | — | — | awaiting scope |
-| G — P1 #13 command palette residual | TODO | scoping in flight | — | — | awaiting scope |
+| C — P0 #6 Sprint/Cycle | **BLOCKED** — not dispatched | scoped, read-only | none | none | Consolidates **two live database identities** (`sprints` and `cycles` tables, both live; tickets carry both `sprintId` and `cycleId` with separate composite FKs). Needs a schema migration **and** a row-level data backfill. No non-production database exists. |
+| D — P0 #7 QA Bug lifecycle | **BLOCKED** — not dispatched | scoped, read-only | none | none | `build.bugs` is a separate table with 10 columns the canonical ticket lacks and a 9-value status enum that maps onto nothing. Needs a schema migration **and** a row-level backfill. No non-production database exists. |
+| E — P0 #8 residual | **DONE (fixture half)** — merged to backend `main` as `a684fed0f`. Item P0 #8 itself remains **BLOCKED** | agent + coordinator, `build/closure-e-p08` | `build-project-scoped-lists-404.spec.ts` (+24, spec only) | 18/18; `project-access-404` 4/4; `typecheck` 0, `typecheck:test` 0; both set-null self-tests green | The 286 composite SET NULL constraints need a real database |
+| F — P1 #11 Issues explorer residual | IN_PROGRESS | agent, `build/closure-f-issues` | — | — | — |
+| G — P1 #13 command palette residual | IN_PROGRESS | agent, `build/closure-g-palette` | — | — | — |
 | H — Controller census | IN_PROGRESS | agent, `build/closure-h-census` | — | — | — |
 | I — Migration readiness | **DONE (static)** — merged to backend `main` as `40abe03fc`. DB application **BLOCKED** | agent + coordinator, `build/closure-i-migrations` | `docs/migration-static-verification-2026-09-21.md` (new). **No migration, journal or seal file touched.** | 8 gate self-tests then 7 gates, all exit 0; `typecheck` 0 | No non-production PostgreSQL. `check:set-null-column-lists` needs `SET_NULL_GATE_DATABASE_URL`; `check:composite-fk-set-null` is production-touching and was not run |
 
@@ -155,3 +155,62 @@ Two reasons not to touch it: **`0619` is sealed** (coordinator-verified — chan
 `src/db/schema/build/core.ts:46` declares `pmWorkspaceId: text("pm_workspace_id")` with **no `.notNull()`**, and OpenAPI publishes it nullable — but the database still carries the NOT NULL from `0333`. **Until 1141 is applied, the published contract says optional while a write that omits the field raises `23502`.** This makes applying 1141 a correctness fix, not a nicety.
 
 1142's column list is unverifiable statically for a second reason beyond `confdelsetcols`: `src/db/schema/hr/requisitions.ts:37` declares the same FK as `.onDelete("set null")`, and **Drizzle's API has no parameter for a column list at all** — the schema is silent on the very thing 1142 changes. The unblock path exists: `.github/workflows/db-gates.yml:157` already runs this gate with `SET_NULL_GATE_DATABASE_URL` against its own `pgvector/pgvector:pg16` service.
+
+---
+
+## TASK E — fixture half closed, merged as `a684fed0f`
+
+The residual of P0 #8 turned out to be a **test-fixture** defect, not a production authorization defect — but a consequential one.
+
+`makeDb` built a chainable `select` but never stubbed `execute`. `ProjectsAnalyticsService.computeProjectAnalytics` calls `this.db.execute(sql\`…\`)` (`projects-analytics.service.ts:42`) for the assignee-completion aggregate, so the positive control died with `TypeError` before reaching any analytics logic.
+
+**Why a red control matters more than its size suggests.** All 8 negatives ("answers 404 for a foreign project") were passing — but with the control dead, nothing established they were passing *for the right reason*. Under BE-141 a status-only negative passes on a 500. Repairing the control is what makes the other 8 assertions trustworthy.
+
+`execute` is now stubbed faithfully, returning string-typed `total`/`completed` as postgres does for `COUNT(...)`, so the service's `Number(row[…])` coercion (`:63-76`) does real work instead of a no-op over an empty array. The control was repaired, **not narrowed or deleted**. Two analytics-specific assertions were added, because `resolves.toBeDefined()` cannot distinguish "the gate let it through" from "the gate was never reached": the control now asserts the mapped `assigneeCompletion` payload and that `execute` ran once, paired with a negative asserting `execute` was **not** called for a foreign project.
+
+### Mutation proof — all 8 gates, not the 2 required
+
+Each of the eight is an independent service, so all were removed at once and observed individually: `assertProjectAccess` (`projects-releases.service.ts:31`) and `assertProjectInOrg` in `projects-webhooks`, `sprints`, `epics`, `cycles`, `modules`, `projects-custom-fields`, `projects-analytics`.
+
+| State | Result |
+|---|---|
+| before fix | 15 passed, **1 failed** (analytics control) |
+| after fix | 18 passed, 0 failed |
+| all 8 gates removed | **9 failed**, 9 passed |
+| restored | 18 passed, 0 failed |
+
+**8 of 8 negatives bit; none failed to bite.** All 8 controls stayed green under mutation — the expected asymmetry, since removing a gate does not break the happy path.
+
+*Coordinator spot-check:* I independently removed only the `cycles.service.ts` gate — exactly **1 of 18** failed, and restore returned 18/18 with a clean tree. The negatives are individually load-bearing, not collectively coincidental.
+
+**No production defect was found.** All eight services gate on the first line of the method, before any query. Parent-child 404 behaviour is correct.
+
+### Scope
+
+This closes the fixture defect. It does **not** close backlog item P0 #8, whose database half — the 286 composite SET NULL constraints readable only from `pg_constraint.confdelsetcols` — remains blocked.
+
+---
+
+## TASKS C and D — BLOCKED, deliberately not dispatched
+
+Both are consolidations of **two live database identities**, not missing features. Each requires a schema migration plus a row-level data backfill, and no non-production database exists on this machine. Writing an unappliable, unverifiable migration would be worse than leaving them clearly blocked.
+
+**P0 #6 — Sprint/Cycle.** Two live tables: `sprints` (`db/schema/build/core.ts:98-129`, text status `PLANNED/ACTIVE/COMPLETED`, `goal`, timestamp dates) and `cycles` (`:154-183`, pg enum defaulting `draft`, `description`, `date` columns, `createdBy` NOT NULL). Tickets carry **both** pointers (`ticket-core.ts:40` `sprintId`, `:59` `cycleId`) with separate composite FKs and indexes. A third sprint-only surface exists (`build_events.sprint_scope_events`) with no cycle equivalent. Both controllers are live in one file (`execution/iterations.controller.ts:60-124` and `:127-183`). The frontend `/cycles` route is wired to the cycles API, but ~40 frontend files still use `sprintId`/`useSprints`, and the board reads **both** `?cycle=` and `?sprint=`. Consolidation needs a status-vocabulary reconciliation, a `created_by` fallback, a `tickets.cycleId` backfill, then a column/FK/index drop.
+
+**P0 #7 — QA Bug.** `build.bugs` (`db/schema/build/qa.ts:138-185`) is a separate table with its own `bugNumber`, three dedicated enums, and ten columns the canonical ticket lacks (`stepsToReproduce`, `expectedResult`, `actualResult`, `environment`, `browserDevice`, `reopenCount`, `affectedReleaseId`, `fixedReleaseId`, `qaOwnerMembershipId`, `linkedTestCaseId`). The canonical identity is `ticketTypeEnum` BUG (`db/schema/common/enums.ts:17`). The two are **linked, not unified** (`bugs.linkedTicketId`). Consolidation requires deciding where the 10 QA-only fields live (BE-42/BE-43 favour an extension table over JSONB), mapping a 9-value `bug_status` onto project statuses and a 5-value severity onto a 4-value priority, then a per-row backfill with `bugNumber`/`ticketNumber` renumbering.
+
+### Stale estimates corrected in both directions
+
+The backlog's figures were wrong on four of five items scoped:
+
+| Item | Backlog | Measured |
+|---|---|---|
+| P0 #6 | 10–15 d | credible, but **blocked** on a database |
+| P0 #7 | 8–12 d | credible, but **blocked** on a database |
+| P0 #8 | 8–12 d | ~15 min for the completable half; rest blocked |
+| P1 #11 | 12–20 d | **~2–3 d** — bulk selection already exists, contrary to the backlog |
+| P1 #13 | 5–8 d | **~1 d** — permission filtering, shortcuts and the unsaved guard all already exist |
+
+### Unrelated finding, logged not acted on
+
+`modules/build/core/dto/ticket.schemas.ts:62,108,158` accepts `"SUBTASK"` as a ticket type, but `ticketTypeEnum` (`common/enums.ts:17`) has no `SUBTASK` member. Whether `normalizeTicketType` folds it to `TASK` before the write is **UNVERIFIED**. Out of scope for #7; worth a look.
