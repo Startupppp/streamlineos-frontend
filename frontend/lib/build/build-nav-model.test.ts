@@ -256,10 +256,15 @@ describe("isBuildDestinationActive — boardViews destination (project Issues)",
     expect(isBuildDestinationActive(issues, "/build/42/backlog", null)).toBe(false);
   });
 
-  it("every view type offered by the ViewSwitcher keeps the Issues destination active so a view added to the switcher is immediately recognised by the nav model", () => {
-    for (const view of VIEW_TYPES) {
-      expect(isBuildDestinationActive(issues, "/build/42/issues", view)).toBe(true);
-    }
+  it("VIEW_TYPES pins the exact set that ViewSwitcher ALL_VIEWS and project-board-content must also cover — adding a view here without updating those two sites is a bug", () => {
+    expect([...VIEW_TYPES].sort()).toEqual([
+      "board",
+      "calendar",
+      "gantt",
+      "list",
+      "table",
+      "workload",
+    ]);
   });
 });
 

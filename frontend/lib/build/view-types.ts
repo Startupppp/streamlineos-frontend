@@ -9,6 +9,10 @@ export const VIEW_TYPES: readonly ViewType[] = [
   "workload",
 ];
 
+export function isViewType(value: string): value is ViewType {
+  return VIEW_TYPES.some((t) => t === value);
+}
+
 export function parseViewType(value: string | null): ViewType {
   if (!value) return "board";
   return VIEW_TYPES.find((v) => v === value) ?? "board";

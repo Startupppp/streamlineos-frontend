@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { type ViewType } from "@/lib/build/view-types";
+import { isViewType, type ViewType } from "@/lib/build/view-types";
 
 export type { ViewType } from "@/lib/build/view-types";
 export { parseViewType } from "@/lib/build/view-types";
@@ -63,14 +63,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({
 
   const handleSelectChange = useCallback(
     (value: string) => {
-      if (
-        value === "board" ||
-        value === "list" ||
-        value === "table" ||
-        value === "calendar" ||
-        value === "gantt" ||
-        value === "workload"
-      ) {
+      if (isViewType(value)) {
         if (allowedViews && !allowedViews.includes(value)) return;
         onViewChange(value);
       }
