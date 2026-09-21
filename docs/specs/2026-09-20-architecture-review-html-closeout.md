@@ -1,10 +1,10 @@
 # Architecture reviews — what the six retired HTML reports still owe
 
-**Status (2026-09-21):** of the 15 items opened on 2026-09-20, **3 are closed in code**
-(2, 6, 10), **3 proved obsolete on measurement** (1, 7, 11), **4 were corrected and
-deferred with a re-open threshold** (4, 8, 9, 12), **2 are blocked on a product decision**
-(3, 15), **1 is real but blocked on a seam widening** (14), and **1 was reverted as a
-duplicate** (5). Item 13 is the only one still in flight.
+**Status (2026-09-21):** of the 15 items opened on 2026-09-20, **4 are closed in code**
+(2, 6, 10, 13), **3 proved obsolete on measurement** (1, 7, 11), **4 were corrected and
+deferred with a re-open threshold** (4, 8, 9, 12), **2 are blocked on a product decision
+and need an owner** (3, 15), **1 is real but blocked on a seam widening** (14), and **1 was
+reverted as a duplicate** (5).
 
 Nine of the fifteen therefore did not survive contact with the source or the database.
 That is the point of the re-derivation discipline below, not a failure of it — but it does
@@ -233,10 +233,33 @@ Ordered most severe first. Each names the owning file and the smallest repair.
     BYPASSRLS, so its plans hide exactly this problem). Rewriting blind risks trading a bad
     plan for a worse one. The `ticket_participants` redesign remains the larger fix.
 
-13. **Invitation state machine has no owner.** `invitation-lifecycle.service.ts`,
-    `invitation-acceptance.service.ts`, `invitations.helpers.ts` split by code path, and
-    the PENDING predicate is restated in each. Extract one
-    `invitationTransition(id, from, to, tx)`.
+13. ~~**Invitation state machine has no owner**~~ — **CLOSED 2026-09-21 (`9cc0043f7`).**
+    Premise confirmed: the PENDING predicate was restated at six places across
+    `invitation-lifecycle.service.ts`, `invitation-acceptance.service.ts` and
+    `invitations.helpers.ts`. `invitationTransition` now owns it — a conditional UPDATE on
+    the from-state plus `accepted_at IS NULL`, returning null when it matches no row.
+    **No race was introduced or found:** all three single-row transitions already did a
+    conditional UPDATE with an affected-row check, so the "first concurrent accept wins"
+    guarantee is preserved, not added.
+    Two departures from the signature the item suggested. It takes an options object, not
+    positionals: `invitationId`/`orgId` are both strings and `from`/`to` are both status
+    enums, which put two pairs of adjacent same-typed arguments within reach of a silent
+    swap. And `orgId` is required as `string | null`, so the token-authorized accept path —
+    scoped by `invitationId` + `tokenHash` rather than by tenant, since
+    `lockPendingInvitation` does not filter on org — has to state that choice rather than
+    omit it.
+    **The spec's first form was vacuous and is worth remembering.** It walked the Drizzle
+    condition graph into the column objects and out to their parent table, so every column
+    of `invitations` was collected and "the predicate contains `org_id`" passed whether or
+    not the filter existed. Stopping the walk at column boundaries is what makes it real —
+    proven because the `orgId: null` case only started failing after that change. The same
+    bug was fixed in `impersonation.service.spec.ts`, which now pins the exact column set.
+    Left alone with reasons: `decline()` keeps `tokenHash` in its WHERE (removing it would
+    let a concurrent resend slip through), `findPendingByToken` is a read not a transition,
+    and `revokeAllPending` is a bulk update with no id.
+    Verification: backend typecheck 0 errors; organization/core 525 passing, up from 522,
+    with the 9 pre-existing failures unchanged (they are an email-outbox scope error and
+    four membership/purge suites, none on the invitation path).
 
 14. **Payroll still imports HR/directory schema directly** — HALF WRONG, half real and
     BLOCKED on a seam widening. Re-derived 2026-09-21.
