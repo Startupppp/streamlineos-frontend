@@ -13,7 +13,7 @@ export default function FnfError({
     <ReportingRouteErrorBoundary
       error={error}
       reset={reset}
-      title="Full & final settlement error"
+      title="Final settlement error"
       fallbackMessage="Failed to load settlement data. Please try again."
     />
   );
