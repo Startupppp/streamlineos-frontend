@@ -438,6 +438,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 
 ### Hub
 - `/payroll` · **Payroll** · hooks: `useCommandCenter`, `useCreateRun`, `useCan("payroll:runs:view")`, `useCan("payroll:runs:manage")`
+- `/payroll/readiness` · **Payroll** · hooks: `usePayrollReadiness(month)` → `GET /payroll/readiness` (2026-09-21: the pay-period readiness ledger — timesheets approved → hours exported → received → acknowledged → inputs locked → run generated, each with owner, timestamp and next action; exceptions for periods awaiting a decision, hours approved after export, rejected exports and periods reopened after their hours reached payroll; state via `usePageState` + `PageState`; sidebar "Readiness" under Payroll)
 
 ### Core payroll operations
 - `/payroll/runs` · **Payroll** · hooks: `→ features/payroll/runs`
