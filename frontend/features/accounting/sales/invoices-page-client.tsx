@@ -247,23 +247,11 @@ export function InvoicesPageClient() {
             <EmptyState
               className="border-0 bg-transparent min-h-[40vh]"
               illustrationPreset="documents"
-              title={hasFilters ? "No invoices match your filters" : "No invoices yet"}
-              description={
-                hasFilters
-                  ? "Try a different search, or switch the status filter back to all invoices."
-                  : "Bill your first customer and it will show up here."
-              }
-              action={
-                hasFilters
-                  ? {
-                      label: "Clear filters",
-                      onClick: () =>
-                        url.setParams({ search: undefined, status: undefined, open: undefined }),
-                    }
-                  : canManage
-                    ? { label: "New invoice", href: "/accounting/invoices/new" }
-                    : undefined
-              }
+              title="No invoices yet"
+              description="Bill your first customer and it will show up here."
+              action={canManage ? { label: "New invoice", href: "/accounting/invoices/new" } : undefined}
+              filtersActive={hasFilters}
+              onClearFilters={() => url.setParams({ search: undefined, status: undefined, open: undefined })}
             />
           }
           pagination={{

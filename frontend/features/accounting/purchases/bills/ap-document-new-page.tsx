@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useAccountingBook } from "@/hooks/api/accounting/ledger";
 import type { ApDocumentDetail, ApDocumentType } from "@/types/accounting-ap";
@@ -28,8 +29,9 @@ export function ApDocumentNewPage({
 
   const pageState = usePageState({
     permission: "accounting:payables:manage",
-    isLoading: false,
+    isLoading: bookQuery.isLoading,
     isError: false,
+    isEmpty: !bookQuery.isLoading && !bookQuery.data,
   });
 
   function handleSaved(document: ApDocumentDetail): void {
@@ -40,10 +42,22 @@ export function ApDocumentNewPage({
     router.push(backHref);
   }
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+  if (pageState.kind !== "ready" && pageState.kind !== "loading")
     return (
       <PageWrapper title={title} backHref={backHref} backLabel={backLabel}>
-        <PageState resolution={pageState} loading={null} className="flex-1">
+        <PageState
+          resolution={pageState}
+          loading={null}
+          empty={
+            <EmptyState
+              title="Accounting not configured"
+              description="Set up an accounting book before entering payables."
+              action={{ label: "Accounting settings", href: "/accounting/settings" }}
+              className="flex-1"
+            />
+          }
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>

@@ -12,6 +12,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { PageState } from "@/components/shared/page-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -42,6 +43,10 @@ export function StatementImportPage() {
     isLoading: accountsQuery.isLoading,
     isError: accountsQuery.isError,
     error: accountsQuery.error,
+    isEmpty:
+      !accountsQuery.isLoading &&
+      !accountsQuery.isError &&
+      (accountsQuery.data?.items ?? []).filter((a) => a.isActive).length === 0,
   });
   const importStatement = useImportBankStatement();
   const saveCsvMapping = useSaveCsvMapping();
@@ -150,10 +155,22 @@ export function StatementImportPage() {
     form.reset();
   }
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+  if (pageState.kind !== "ready" && pageState.kind !== "loading")
     return (
       <PageWrapper title="Bring in a statement" backHref="/accounting/banking" backLabel="Back to banking">
-        <PageState resolution={pageState} loading={null} className="flex-1">
+        <PageState
+          resolution={pageState}
+          loading={null}
+          empty={
+            <EmptyState
+              title="No active bank accounts"
+              description="Add and activate a bank account before importing statements."
+              action={{ label: "Set up banking", href: "/accounting/banking" }}
+              className="flex-1"
+            />
+          }
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>

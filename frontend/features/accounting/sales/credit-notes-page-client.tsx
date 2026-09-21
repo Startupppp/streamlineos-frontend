@@ -194,22 +194,11 @@ export function CreditNotesPageClient() {
           <EmptyState
             className="border-0 bg-transparent min-h-[40vh]"
             illustrationPreset="documents"
-            title={hasFilters ? "No credit notes match your filters" : "No credit notes yet"}
-            description={
-              hasFilters
-                ? "Try a different search or set the status filter back to all."
-                : "When you need to correct a posted invoice, the credit note lands here."
-            }
-            action={
-              hasFilters
-                ? {
-                    label: "Clear filters",
-                    onClick: () => url.setParams({ search: undefined, status: undefined }),
-                  }
-                : canCreate
-                  ? { label: "New credit note", href: "/accounting/credit-notes/new" }
-                  : undefined
-            }
+            title="No credit notes yet"
+            description="When you need to correct a posted invoice, the credit note lands here."
+            action={canCreate ? { label: "New credit note", href: "/accounting/credit-notes/new" } : undefined}
+            filtersActive={hasFilters}
+            onClearFilters={() => url.setParams({ search: undefined, status: undefined })}
           />
         }
         pagination={{

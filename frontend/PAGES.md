@@ -20,7 +20,7 @@
 ## Auth `(auth)`
 
 - `/access-suspended` · **Auth** · hooks: none
-- `/invitation/[token]` · **Auth** · hooks: invite token fetch
+- `/invitation/[invitationToken]` · **Auth** · hooks: invite token fetch
 - `/magic-link` · **Auth** · hooks: magic-link verify
 - `/signin` · **Auth** · hooks: NextAuth
 - `/verify-email` · **Auth** · hooks: email verify
@@ -32,6 +32,9 @@
 - `/` · **Platform** · hooks: session redirect
 - `/employee-onboarding` · **Platform** · hooks: `useOnboardingWizard` — multi-step wizard; skeleton loading; `ErrorState` for load failure; StrictMode-safe; delegates steps to feature components; no `requiredPermission` (correct, universal)
 - `/org-setup` · **Platform** · hooks: `resolveWizardGate`
+- `/home` · **Platform** · hooks: none — redirect to `/dashboard`; alias route
+- `/access-denied` · **Platform** · hooks: none — server-rendered module/permission denial page; resolves `?required=` + `?reason=` search params into a `DeniedView` with module or permission copy
+- `/announcements` · **Platform** · hooks: none — redirect to `/hr/announcements`; alias route
 
 ---
 
@@ -60,7 +63,7 @@
 
 - `/chat` · **Communications** · hooks: `→ feature/chat` — OPEN: the denied state is not browser-verified. `/me/access` is fetched server-side and dehydrated, so no browser response can deny an owner session; it needs a fixture member without `chat:*`. Component coverage: `features/chat/__tests__/channel-sidebar-denied.test.tsx`.
 - `/chat/channels` · **Communications** · hooks: `→ feature/chat` — OPEN: responsive not visually verified at 375/768/1280; the breakpoint classes exist in source but nobody rendered the page at those widths.
-- `/chat/invite/[token]` · **Communications** · hooks: `useJoinViaInviteLink` — revoked, expired, exhausted and archived-channel all return a byte-identical 404 body, so the route is not an existence oracle. Admission is transactional and idempotent.
+- `/chat/invite/[inviteToken]` · **Communications** · hooks: `useJoinViaInviteLink` — revoked, expired, exhausted and archived-channel all return a byte-identical 404 body, so the route is not an existence oracle. Admission is transactional and idempotent.
 - `/chat/settings` · **Communications** · hooks: `useChatOrgSettings`, `useUpdateChatOrgSettings` — read gated `chat:channels:read`, save gated `chat:org-settings:manage`, route gated by `enforceRouteAccess`.
 
 ---
@@ -120,6 +123,7 @@
 ### Campaigns
 - `/crm/campaigns` · **CRM** · hooks: `→ feature/crm/campaigns`
 - `/crm/campaigns/[campaignId]` · **CRM** · hooks: `→ feature/crm/campaigns`
+- `/crm/campaigns/attribution` · **CRM** · hooks: `usePageState` + `<PageState>`, `→ features/crm/campaigns` — attribution-by-model report; static segment beside `[campaignId]`, Next routes this first
 
 ### Activities & Tasks
 - `/crm/activities` · **CRM** · hooks: `→ feature/crm/activities`
@@ -127,6 +131,8 @@
 
 ### Reports & Analytics
 - `/crm/reports` · **CRM** · hooks: `→ feature/crm/reports`
+- `/crm/reports/activity` · **CRM** · hooks: `→ features/crm/reports/activity` — activity report; gated by `RequireModule module="crm"`
+- `/crm/reports/builder` · **CRM** · hooks: `→ features/crm/reports/builder` — custom report builder; gated by `RequireModule module="crm"`
 - `/crm/analytics` · **CRM** · hooks: `→ feature/crm/analytics`
 
 ### Inbox & Issues
@@ -134,8 +140,21 @@
 - `/crm/issues` · **CRM** · hooks: `→ feature/crm/issues`
 - `/crm/import` · **CRM** · hooks: `→ feature/crm/import`
 
+### Revenue & Lifecycle
+- `/crm/commissions` · **CRM** · hooks: `usePageState`, `→ features/crm/commissions` — commission tracking; `useOrgDisplay` for period
+- `/crm/health` · **CRM** · hooks: `→ features/crm/lifecycle`
+- `/crm/renewals` · **CRM** · hooks: `→ features/crm/lifecycle`
+- `/crm/segments` · **CRM** · hooks: `→ features/crm/segments` — gated by `RequireModule module="crm"`
+
+### Call Intelligence
+- `/crm/intelligence` · **CRM** · hooks: `usePageState`, `useCoachingDigest`, `→ features/crm/intelligence`
+- `/crm/intelligence/[activityId]` · **CRM** · hooks: `useCan`, `→ features/crm/intelligence` — call analysis detail; `RequireModule module`; `CallAnalysisPanel` + `CallParticipantsCard`
+- `/crm/intelligence/reps` · **CRM** · hooks: `→ features/crm/intelligence` — rep-level coaching metrics; `RequireModule module`
+
 ### Autonomy
 - `/crm/autonomy` · **CRM** · hooks: `→ feature/crm`
+- `/crm/autonomy/nurture` · **CRM** · hooks: `→ features/crm/nurture` — nurture sequence list; gated `crm:autonomy:view`
+- `/crm/autonomy/nurture/[nurtureSequenceId]` · **CRM** · hooks: `→ features/crm/nurture` — nurture sequence detail; gated `crm:autonomy:view`
 
 ### Calendar
 - `/crm/calendar` · **CRM** [RETIRED 2026-08-30: file deleted; module events now flow through the unified `/calendar` per §8 rule]
@@ -168,6 +187,7 @@
 - `/crm/settings/subject-types` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/territories` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/validation-rules` · **CRM** · hooks: `→ feature/crm/settings`
+- `/crm/settings/mcp` · **CRM** · hooks: `→ features/crm/settings` — MCP (Model Context Protocol) integration settings
 
 ---
 
@@ -198,7 +218,12 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/build/workspaces/[pmWorkspaceId]/all` · **Build** · [RETIRED app/(authenticated)/build/workspaces/[pmWorkspaceId]/all/page.tsx] — superseded by the workspace root above, which renders the same `ProjectsPage` with the same `pmWorkspaceId` prop
 - `/build/workspaces/[pmWorkspaceId]/pm-workspaces` · **Build** · [RETIRED app/(authenticated)/build/workspaces/[pmWorkspaceId]/pm-workspaces/page.tsx] — byte-identical to `/build/pm-workspaces` and never read its own `pmWorkspaceId`; zero inbound links
 - `/build/workspaces/[pmWorkspaceId]/all-work` · **Build** · hooks: `→ features/build`
+- `/build/workspaces/[pmWorkspaceId]/goals` · **Build** · hooks: `→ features/build/pm-workspaces` — workspace goal list; gated `build:goals:view`
 - `/build/workspaces/[pmWorkspaceId]/my-work` · **Build** · hooks: `→ features/build`
+- `/build/workspaces/[pmWorkspaceId]/overview` · **Build** · hooks: `→ features/build/overview` — workspace overview; `enforceRouteAccess`
+- `/build/workspaces/[pmWorkspaceId]/products` · **Build** · hooks: `→ features/build/managed-products` — managed products scoped to a workspace; `enforceRouteAccess`
+- `/build/workspaces/[pmWorkspaceId]/roadmap` · **Build** · hooks: `→ features/build/pm-workspaces` — workspace roadmap; gated `build:roadmap:view`
+- `/build/workspaces/[pmWorkspaceId]/teams` · **Build** · hooks: `→ features/build/teams` — teams scoped to a workspace; `enforceRouteAccess`
 - `/build/workspaces/[pmWorkspaceId]/[projectId]*` · **Build** · [NOT IMPLEMENTED] — corrected 2026-09-19: `app/(authenticated)/build/workspaces/[pmWorkspaceId]/` holds only `page.tsx`, `all-work/` and `my-work/`, so the five nested project entries previously listed here resolved to 404. `resolveBuildScope` therefore reads a project scope only from `/build/[projectId]`, and the scope selector links projects there.
 
 ### Programs, Portfolios, Goals, Roadmap, Teams
@@ -215,6 +240,11 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 ### Managed Products (product management)
 - `/build/managed-products` · **Build** · hooks: `→ features/build`
 - `/build/managed-products/[managedProductId]` · **Build** · hooks: `→ features/build`
+- `/build/managed-products/[managedProductId]/feedback` · **Build** · hooks: `→ features/build/managed-products` — product feedback from Feedbucket; gated `feedbucket:submissions:view` via `requireModulePermission`
+- `/build/managed-products/[managedProductId]/goals` · **Build** · hooks: `→ features/build/managed-products` — product goal list; gated `build:goals:view`
+- `/build/managed-products/[managedProductId]/insights` · **Build** · hooks: `→ features/build/managed-products` — product insights; gated `build:managed-products:view`
+- `/build/managed-products/[managedProductId]/projects` · **Build** · hooks: `→ features/build/project-list` — projects scoped to a managed product; `enforceRouteAccess`
+- `/build/managed-products/[managedProductId]/roadmap` · **Build** · hooks: `→ features/build/managed-products` — product roadmap; gated `build:roadmap:view`
 
 ### Settings (Build module)
 - `/build/settings/integrations` · **Build** · hooks: `→ features/build/settings`
@@ -237,10 +267,12 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/build/[projectId]/epics` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/feedbucket` · **Build** · hooks: `usePageState({permission,module})` + `PageWrapper state=`, `→ features/build/feedbucket` — the captured 402. **UN-RUN CHECK:** the browser proof (load as a member of an org with `feedbucket` disabled; expect the module name and an Enable path to `/settings/modules`, and NO upgrade link and NO "Try Again") was never executed — no booted stack. A passing typecheck is not proof of that journey.
 - `/build/[projectId]/feedbucket/[submissionId]` · **Build** · hooks: `→ features/feedbucket` — delete submission + per-media (screenshot/recording) delete, gated `feedbucket:submissions:delete`. Submission delete is SOFT (`deleted_at`, media kept); media delete is a real storage delete.
+- `/build/[projectId]/files` · **Build** · hooks: `→ features/build/files` — project file attachments; gated `build:files:view` via `requireModulePermission`
 - `/build/[projectId]/forms` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/forms/[formId]` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/incidents` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/incidents/[incidentId]` · **Build** · hooks: `→ features/build/project`
+- `/build/[projectId]/issues` · **Build** · hooks: `→ features/build/project` — board view alias; `enforceRouteAccess`
 - `/build/[projectId]/intake` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/meetings` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/meetings/[meetingId]` · **Build** · hooks: `→ features/build/project`
@@ -256,12 +288,14 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/build/[projectId]/tickets/[ticketKey]` · **Build** · hooks: `→ features/build/project` — notification/email/search deep links emit `/build/...` (not legacy `/projects/...`); client navigation normalizes any stored `/projects` links via `normalizeBuildDeepLink`; main column uses `min-h-0 flex-1 basis-0 overflow-y-auto` inside an `overflow-hidden` split so long descriptions scroll (parity with inbox preview; `ticket-detail-scroll-chain.test.ts`)
 - `/build/[projectId]/timeline` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/triage` · **Build** · hooks: `→ features/build/project`
+- `/build/[projectId]/updates` · **Build** · hooks: `→ features/build/updates` — project status updates; gated `build:updates:view` via `requireModulePermission`
 - `/build/[projectId]/views` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/webhooks` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/whiteboard` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/wiki` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/wiki/[pageId]` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/workflow` · **Build** · hooks: `→ features/build/project`
+- `/build/[projectId]/workload` · **Build** · hooks: `→ features/build/project` — workload view alias; `enforceRouteAccess`
 
 ---
 
@@ -481,93 +515,98 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 
 ### Invoices & Receivables
 - `/accounting/invoices` · **Accounting** · hooks: `useInvoices`, `useInvoiceStats`, `useVoidInvoice`, `useCan("accounting:receivables:manage")`
+- `/accounting/invoices/new` · **Accounting** · hooks: `→ features/accounting/sales` — invoice composer; gated `accounting:receivables:manage`
 - `/accounting/invoices/[invoiceId]` · **Accounting** · hooks: `→ features/accounting/sales`
-- `/accounting/recurring-invoices` · **Accounting** · hooks: `→ features/accounting`
+- `/accounting/recurring-invoices` · **Accounting** [RETIRED: no page.tsx found 2026-09-21; ARs may have been consolidated]
 - `/accounting/payments-received` · **Accounting** · hooks: `→ features/accounting`
-- `/accounting/credit-notes` · **Accounting** · hooks: `→ features/accounting`
-- `/accounting/customers/[clientId]` · **Accounting** · hooks: `→ features/accounting`
+- `/accounting/credit-notes` · **Accounting** · hooks: `→ features/accounting/sales`
+- `/accounting/credit-notes/new` · **Accounting** · hooks: `→ features/accounting/sales` — credit note composer; gated `accounting:credit-notes:create`
+- `/accounting/credit-notes/[creditNoteId]` · **Accounting** · hooks: `→ features/accounting/sales` — credit note detail; gated `accounting:credit-notes:read`
+- `/accounting/customers/[partyId]` · **Accounting** · hooks: `→ features/accounting`
 - `/accounting/customers` · **Accounting** · hooks: `→ features/accounting`
-- `/accounting/payment-reminders` · **Accounting** · hooks: `→ features/accounting`
+- `/accounting/payment-reminders` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
 - `/accounting/aged-receivables` · **Accounting** · hooks: `→ features/accounting`
 
 ### Purchase & Payables
 - `/accounting/purchase-bills` · **Accounting** · hooks: `usePurchaseBills`, `useCreatePurchaseBill`, `useCan("accounting:payables:approve")`, `useCan("accounting:payables:manage")` — cursor pagination; search + status filters URL-synced; `EmptyState` with `EmptyExpensesIllustration` ✓; minor: empty state action shows "New bill" without checking `canManage`
 - `/accounting/purchase-bills/new` · **Accounting** · hooks: `→ features/accounting/purchase-bills`
-- `/accounting/purchase-bills/[billId]` · **Accounting** · hooks: `→ features/accounting/purchase-bills`
+- `/accounting/purchase-bills/[apDocumentId]` · **Accounting** · hooks: `→ features/accounting/purchase-bills`
 - `/accounting/vendor-payments` · **Accounting** · hooks: `useVendorPayments`, `useCreateVendorPayment`, `useCan("accounting:payables:manage")` — dual cursor queries (paid + partial) merged; vendor filter URL-synced; `EmptyState` with `illustrationPreset="tasks"` ✓
 - `/accounting/vendor-credits` · **Accounting** · hooks: `→ features/accounting`
+- `/accounting/vendor-credits/new` · **Accounting** · hooks: `→ features/accounting/purchases` — vendor credit composer (DEBIT_NOTE type); `ApDocumentNewPage`
 - `/accounting/vendors/[vendorId]` · **Accounting** · hooks: `→ features/accounting`
 - `/accounting/vendors` · **Accounting** · hooks: `→ features/accounting`
-- `/accounting/recurring-bills` · **Accounting** · hooks: `→ features/accounting`
+- `/accounting/recurring-bills` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
 - `/accounting/aged-payables` · **Accounting** · hooks: `→ features/accounting`
 
 ### Chart of Accounts & Journal
 - `/accounting/coa` · **Accounting** · hooks: `→ features/accounting/coa`
-- `/accounting/coa/[accountId]` · **Accounting** · hooks: `useAccount`, `useAccountJournalEntries`, `useCan("accounting:accounts:update")`, `useCan("accounting:journal:manage")` — detail; Edit via `EditAccountDialog`; journal preview table capped at 20 rows (acceptable for preview); not-found uses bespoke div, not `EmptyState` (minor)
+- `/accounting/coa/[accountId]` · **Accounting** [RETIRED: no page.tsx found 2026-09-21; account detail may have been merged into the COA list view] — detail; Edit via `EditAccountDialog`; journal preview table capped at 20 rows (acceptable for preview); not-found uses bespoke div, not `EmptyState` (minor)
 - `/accounting/journal` · **Accounting** · hooks: `useJournalEntries`, `useCan("accounting:journal:create")` — cursor pagination (pageSize 25, server mode); filters: date range, source, status, URL-synced; `useCan` gates create button only — no `enabled` view-gate on the list query (403-spam for non-finance roles); `EmptyState` with `EmptyReportIllustration` ✓
 - `/accounting/journal/new` · **Accounting** · hooks: `useChartOfAccounts`, `useCreateJournalEntry`, `useCan("accounting:journal:create")` — create-only form; gate: `EmptyState illustrationPreset="security"` when `!canCreate`; `LoadingState` while accounts load; `ErrorState` if accounts fail; `LoadingButton` for submit
-- `/accounting/journal/[entryId]` · **Accounting** · hooks: `useJournalEntry`, `usePostJournalEntry`, `useReverseJournalEntry`, `useSubmitJournalApproval`, `useCan("accounting:journal:post")`, `useCan("accounting:journal:approve")` — detail; post, submit-for-approval, approve, reject, reverse lifecycle; `LoadingState` and `ErrorState` ✓; not-found renders `ErrorState` ✓
+- `/accounting/journal/[journalId]` · **Accounting** · hooks: `useJournalEntry`, `usePostJournalEntry`, `useReverseJournalEntry`, `useSubmitJournalApproval`, `useCan("accounting:journal:post")`, `useCan("accounting:journal:approve")` — detail; post, submit-for-approval, approve, reject, reverse lifecycle; `LoadingState` and `ErrorState` ✓; not-found renders `ErrorState` ✓
 - `/accounting/general-ledger` · **Accounting** · hooks: `→ features/accounting`
 - `/accounting/opening-balances` · **Accounting** · hooks: `→ features/accounting`
-- `/accounting/dimensions` · **Accounting** · hooks: `→ features/accounting`
+- `/accounting/dimensions` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
 
 ### Banking
 - `/accounting/banking` · **Accounting** · hooks: `→ features/accounting/banking`
-- `/accounting/banking/[bankAccountId]` · **Accounting** · hooks: `→ features/accounting/banking`
+- `/accounting/banking/[bankAccountId]` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
 - `/accounting/banking/import` · **Accounting** · hooks: `→ features/accounting/banking`
 - `/accounting/banking/reconciliation` · **Accounting** · hooks: `→ features/accounting/banking`
-- `/accounting/banking/transfers` · **Accounting** · hooks: `→ features/accounting/banking`
+- `/accounting/banking/transfers` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
 
 ### Payments, Runs & Approvals
-- `/accounting/payment-runs` · **Accounting** · hooks: `→ features/accounting`
-- `/accounting/payment-runs/[runId]` · **Accounting** · hooks: `→ features/accounting`
-- `/accounting/approvals` · **Accounting** · hooks: `→ features/accounting`
+- `/accounting/payment-runs` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/payment-runs/[runId]` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/approvals` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
 
 ### Taxes
 - `/accounting/taxes` · **Accounting** · hooks: `→ features/accounting/taxes`
-- `/accounting/taxes/codes` · **Accounting** · hooks: `→ features/accounting/taxes`
-- `/accounting/taxes/payments` · **Accounting** · hooks: `→ features/accounting/taxes`
-- `/accounting/taxes/reports` · **Accounting** · hooks: `→ features/accounting/taxes`
-- `/accounting/gstr-1` · **Accounting** · hooks: `→ features/accounting/taxes`
-- `/accounting/gstr-3b` · **Accounting** · hooks: `→ features/accounting/taxes`
+- `/accounting/taxes/codes` · **Accounting** [RETIRED: no page.tsx found 2026-09-21; tax codes may live inside the taxes hub]
+- `/accounting/taxes/payments` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/taxes/reports` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/gstr-1` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/gstr-3b` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
 
 ### Financial Reports
 - `/accounting/profit-loss` · **Accounting** · hooks: `→ features/accounting/reports`
 - `/accounting/balance-sheet` · **Accounting** · hooks: `→ features/accounting/reports`
 - `/accounting/trial-balance` · **Accounting** · hooks: `→ features/accounting/reports`
 - `/accounting/cash-flow` · **Accounting** · hooks: `→ features/accounting/reports`
-- `/accounting/forecast` · **Accounting** · hooks: `→ features/accounting/reports`
-- `/accounting/scenarios` · **Accounting** · hooks: `→ features/accounting/scenarios`
+- `/accounting/forecast` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/scenarios` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
 - `/accounting/period-close` · **Accounting** · hooks: `→ features/accounting`
 
 ### Assets
-- `/accounting/assets` · **Accounting** · hooks: `→ features/accounting/assets`
-- `/accounting/assets/[assetId]` · **Accounting** · hooks: `useAsset`, `useActivateAsset`, `useDisposeAsset`, `useAssetCategories`, `useCan("accounting:assets:update")`, `useCan("accounting:assets:manage")` — detail page; Edit via `EditAssetSheet` (DRAFT); Dispose via `AlertDialog` + `EntityFormDialog` (ACTIVE); depreciation schedule table is bounded (usefulLifeMonths rows), no pagination needed
-- `/accounting/assets/depreciation` · **Accounting** · hooks: `useDepreciationRuns`, `useCreateDepreciationRun`, `useReverseDepreciationRun`, `useCan("accounting:assets:manage")` — runs are immutable; reverse ≠ delete; list is bounded by accounting periods; `EmptyState` with `EmptyReportIllustration` ✓
+- `/accounting/assets` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/assets/[assetId]` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/assets/depreciation` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
 
 ### Budgets
-- `/accounting/budgets` · **Accounting** · hooks: `useBudgets`, `useCreateBudget`, `useCan("accounting:budgets:create")` — ISSUES: (1) `pageSize: 100` hard-coded, no `pagination` prop on `DataTable` — budgets can grow past 100; (2) no view-gate: query fires unconditionally, 403-spams for non-finance roles; fix: `enabled: useCan("accounting:budgets:view")` on the hook; `EmptyState` with `EmptyReportIllustration` ✓
-- `/accounting/budgets/[budgetId]` · **Accounting** · hooks: `useBudget`, `useSubmitBudget`, `useApproveBudget`, `useDuplicateBudget`, `useCan("accounting:budgets:update")`, `useCan("accounting:budgets:approve")` — detail; Edit = BudgetMatrix + duplicate; Submit/Approve lifecycle; not-found renders `ErrorState` ✓
+- `/accounting/budgets` · **Accounting** [RETIRED: no page.tsx found 2026-09-21; OPEN items preserved: (1) `pageSize: 100` hard-coded; (2) no view-gate on list query]
+- `/accounting/budgets/[budgetId]` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
 
 ### Expenses
-- `/accounting/expenses` · **Accounting** · hooks: `→ features/accounting/expenses`
-- `/accounting/expenses/policies` · **Accounting** · hooks: `→ features/accounting/expenses`
-- `/accounting/expenses/receipts` · **Accounting** · hooks: `→ features/accounting/expenses`
-- `/accounting/expenses/reimbursements` · **Accounting** · hooks: `→ features/accounting/expenses`
-- `/accounting/expenses/reimbursements/[batchId]` · **Accounting** · hooks: `→ features/accounting/expenses`
+- `/accounting/expenses` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/expenses/policies` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/expenses/receipts` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/expenses/reimbursements` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/expenses/reimbursements/[batchId]` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
 
 ### Sub-reports
 - `/accounting/reports` · **Accounting** · hooks: `→ features/accounting/reports`
-- `/accounting/reports/burn-rate` · **Accounting** · hooks: `→ features/accounting/reports`
-- `/accounting/reports/customer-statement` · **Accounting** · hooks: `→ features/accounting/reports`
-- `/accounting/reports/department-profitability` · **Accounting** · hooks: `→ features/accounting/reports`
-- `/accounting/reports/expense-by-category` · **Accounting** · hooks: `→ features/accounting/reports`
-- `/accounting/reports/project-profitability` · **Accounting** · hooks: `→ features/accounting/reports`
-- `/accounting/reports/sales-by-customer` · **Accounting** · hooks: `→ features/accounting/reports`
-- `/accounting/reports/sales-by-item` · **Accounting** · hooks: `→ features/accounting/reports`
-- `/accounting/reports/tax-summary` · **Accounting** · hooks: `→ features/accounting/reports`
-- `/accounting/reports/vendor-statement` · **Accounting** · hooks: `→ features/accounting/reports`
-- `/accounting/reports/working-capital` · **Accounting** · hooks: `→ features/accounting/reports`
+- `/accounting/reports/aging` · **Accounting** · hooks: `→ features/accounting/reports` — AR/AP aging report
+- `/accounting/reports/burn-rate` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/reports/customer-statement` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/reports/department-profitability` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/reports/expense-by-category` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/reports/project-profitability` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/reports/sales-by-customer` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/reports/sales-by-item` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/reports/tax-summary` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/reports/vendor-statement` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
+- `/accounting/reports/working-capital` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
 
 ### Settings
 - `/accounting/settings` · **Accounting** · hooks: `useAccountingSettings`, `useUpdateAccountingSettings`, `useCan("accounting:settings:manage")` — company + tax registration forms; ISSUE: loading and error branches return bare `<div>` wrappers, not `PageWrapper` with `LoadingState`/`ErrorState`
@@ -596,6 +635,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/inventory/stock/movements` · **Inventory** · hooks: `→ features/inventory/stock`
 - `/inventory/stock/transfers` · **Inventory** · hooks: `→ features/inventory/stock`
 - `/inventory/stock/transfers/[transferId]` · **Inventory** · hooks: `→ features/inventory/stock`
+- `/inventory/stock/transit` · **Inventory** · hooks: `→ features/inventory` — in-transit stock view; `TransitClient`
 
 ### Lots & Serials
 - `/inventory/lots` · **Inventory** · hooks: `→ features/inventory/lots`
@@ -621,6 +661,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/inventory/operations/shipping` · **Inventory** · hooks: `→ features/inventory/operations`
 - `/inventory/operations/returns` · **Inventory** · hooks: `→ features/inventory/operations`
 - `/inventory/operations/issues` · **Inventory** · hooks: `→ features/inventory/operations`
+- `/inventory/operations/putaway` · **Inventory** · hooks: `→ features/inventory` — putaway workbench; `PutawayWorkbenchPage`
 - `/inventory/shipments` · **Inventory** · hooks: `→ features/inventory/shipments`
 - `/inventory/loads` · **Inventory** · hooks: `→ features/inventory/loads`
 - `/inventory/packages` · **Inventory** · hooks: `→ features/inventory/packages`
@@ -636,6 +677,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/inventory/quality` · **Inventory** · hooks: `→ features/inventory/quality`
 - `/inventory/quality/inspections` · **Inventory** · hooks: `→ features/inventory/quality`
 - `/inventory/quality/holds` · **Inventory** · hooks: `→ features/inventory/quality`
+- `/inventory/quality/plans` · **Inventory** · hooks: `→ features/inventory/quality` — quality control plans
 - `/inventory/quality/recalls` · **Inventory** · hooks: `→ features/inventory/quality`
 
 ### Counting & Audits
@@ -647,15 +689,42 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 ### Analytics & Reporting
 - `/inventory/forecasting` · **Inventory** · hooks: `→ features/inventory/forecasting`
 - `/inventory/replenishment` · **Inventory** · hooks: `→ features/inventory/replenishment`
+- `/inventory/replenishment/drift` · **Inventory** · hooks: `→ features/inventory` — forecast drift; `ForecastDriftClient`
 - `/inventory/replenishment/rules` · **Inventory** · hooks: `→ features/inventory/replenishment`
+- `/inventory/replenishment/transfers` · **Inventory** · hooks: `→ features/inventory` — transfer recommendations; `TransferRecommendationsClient`
 - `/inventory/reports/stock-summary` · **Inventory** · hooks: `→ features/inventory/reports`
 - `/inventory/reports/movements` · **Inventory** · hooks: `→ features/inventory/reports`
 - `/inventory/reports/slow-moving` · **Inventory** · hooks: `→ features/inventory/reports`
 - `/inventory/reports/reorder` · **Inventory** · hooks: `→ features/inventory/reports`
 - `/inventory/reports/expiry` · **Inventory** · hooks: `→ features/inventory/reports`
+- `/inventory/reports/allocation-overrides` · **Inventory** · hooks: `→ features/inventory/reports` — allocation override report; `AllocationOverridesClient`
+- `/inventory/reports/audit-trail` · **Inventory** · hooks: `→ features/inventory/reports` — inventory audit trail
+- `/inventory/reports/throughput` · **Inventory** · hooks: `→ features/inventory/reports` — throughput dashboard; `ThroughputDashboardPage`
 - `/inventory/expiry` · **Inventory** · hooks: `→ features/inventory`
 - `/inventory/valuation` · **Inventory** · hooks: `→ features/inventory/valuation`
 - `/inventory/costing` · **Inventory** · hooks: `→ features/inventory/costing`
+
+### Advanced Warehouse & Fulfilment
+- `/inventory/ai` · **Inventory** · hooks: `→ features/inventory` — AI assistant for inventory; `InventoryAiClient`
+- `/inventory/consignment` · **Inventory** · hooks: `→ features/inventory` — consignment stock management
+- `/inventory/dark-stores` · **Inventory** · hooks: `→ features/inventory` — dark store locations; `DarkStoresClient`
+- `/inventory/dock` · **Inventory** · hooks: `→ features/inventory` — dock scheduling
+- `/inventory/handling-units` · **Inventory** · hooks: `→ features/inventory` — handling unit (pallet/carton) management
+- `/inventory/kits` · **Inventory** · hooks: `→ features/inventory` — kit / bundle management
+- `/inventory/labor` · **Inventory** · hooks: `→ features/inventory` — warehouse labor tracking
+- `/inventory/landed-cost` · **Inventory** · hooks: `→ features/inventory` — landed cost allocation; `LandedCostClient`
+- `/inventory/pick-lists` · **Inventory** · hooks: none — redirect to `/inventory/operations/picking`; alias so bookmarks and nav labels ("Pick lists") resolve to the picking workbench
+- `/inventory/projects` · **Inventory** · hooks: `→ features/inventory` — inventory projects (manufacturing/production orders); `ProjectsClient`
+- `/inventory/projects/[projectId]` · **Inventory** · hooks: `→ features/inventory` — project detail; `ProjectDetailClient`
+- `/inventory/quick-commerce` · **Inventory** · hooks: `→ features/inventory` — quick-commerce order fulfillment
+- `/inventory/reconciliation` · **Inventory** · hooks: `→ features/inventory` — inventory reconciliation; `ReconciliationClient`
+- `/inventory/reconciliation/gl` · **Inventory** · hooks: `→ features/inventory` — GL reconciliation; `GlReconciliationClient`
+- `/inventory/rf` · **Inventory** · hooks: `→ features/inventory` — RF (radio-frequency) scanner hub; links to pick and putaway flows
+- `/inventory/rf/pick` · **Inventory** · hooks: `→ features/inventory` — RF picking queue
+- `/inventory/rf/pick/[pickListId]` · **Inventory** · hooks: `→ features/inventory` — RF pick list execution
+- `/inventory/rf/putaway` · **Inventory** · hooks: `→ features/inventory` — RF putaway queue
+- `/inventory/rf/putaway/[taskId]` · **Inventory** · hooks: `→ features/inventory` — RF putaway task execution
+- `/inventory/slotting` · **Inventory** · hooks: `→ features/inventory` — slot / bin optimization
 
 ### Misc
 - `/inventory/barcode` · **Inventory** · hooks: `→ features/inventory`
@@ -683,6 +752,9 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 
 ### Legacy
 - `/knowledge-base` · **Knowledge (legacy)** [RETIRED 2026-08-30: file deleted; canonical KB is at `/knowledge/wiki/**`]
+- `/knowledge` · **Knowledge** · hooks: none — redirect to `/knowledge/chat`; top-level alias for the knowledge hub
+- `/docs` · **Platform** · hooks: none — redirect to `/knowledge/wiki`; alias route for convenience linking
+- `/kb` · **Platform** · hooks: none — redirect to `/knowledge/wiki`; alias route (replaces the old `/knowledge-base` path shape)
 
 ---
 
@@ -794,6 +866,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/timesheets/approvals` · **Timesheets** · hooks: `→ features/timesheets`
 - `/timesheets/billing` · **Timesheets** · hooks: `→ features/timesheets`
 - `/timesheets/exceptions` · **Timesheets** · hooks: `→ features/timesheets`
+- `/timesheets/overdue` · **Timesheets** · hooks: `→ features/timesheets` — overdue timesheets list; `enforceRouteAccess`
 - `/timesheets/payroll` · **Timesheets** · hooks: `→ features/timesheets`
 - `/timesheets/reports` · **Timesheets** · hooks: `→ features/timesheets/reports`
 - `/timesheets/settings` · **Timesheets** · hooks: `→ features/timesheets/settings`
@@ -861,6 +934,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 ## Parties & Subjects
 
 - `/parties` · **Platform** · hooks: `→ features/parties`
+- `/parties/duplicates` · **Platform** · hooks: `requirePermission("party:duplicates:view")` (server), `→ features/party/duplicates`
 - `/subjects` · **Platform** · hooks: `→ features/subjects`
 
 ---
@@ -895,27 +969,27 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/legal/security` · **Marketing** · hooks: none
 - `/legal/terms` · **Marketing** · hooks: none
 - `/blogs` · **Marketing** · hooks: `→ features/blog` — disk path: `(public)/blogs/(site)/page.tsx`; `(site)` is a route group, not a URL segment
-- `/blogs/[slug]` · **Marketing** · hooks: `→ features/blog`
-- `/blogs/category/[slug]` · **Marketing** · hooks: `→ features/blog`
+- `/blogs/[postSlug]` · **Marketing** · hooks: `→ features/blog`
+- `/blogs/category/[categorySlug]` · **Marketing** · hooks: `→ features/blog`
 - `/blogs/tag/[tag]` · **Marketing** · hooks: `→ features/blog`
 - `/careers/[orgSlug]` · **HR (public)** · hooks: `→ features/careers`
 - `/careers/[orgSlug]/jobs/[jobId]/apply` · **HR (public)** · hooks: `→ features/careers`
-- `/application-status/[token]` · **HR (public)** · hooks: `→ features/careers`
-- `/interview-booking/[token]` · **HR (public)** · hooks: `→ features/careers`
-- `/offer/[token]` · **HR (public)** · hooks: `→ features/careers`
-- `/nps/[token]` · **Support (public)** · hooks: `→ features/support`
-- `/ticket-feedback/[token]` · **Support (public)** · hooks: `→ features/support`
+- `/application-status/[applicationToken]` · **HR (public)** · hooks: `→ features/careers`
+- `/interview-booking/[bookingToken]` · **HR (public)** · hooks: `→ features/careers`
+- `/offer/[offerToken]` · **HR (public)** · hooks: `→ features/careers`
+- `/nps/[npsToken]` · **Support (public)** · hooks: `→ features/support`
+- `/ticket-feedback/[csatToken]` · **Support (public)** · hooks: `→ features/support`
 - `/help/[orgId]` · **Support (public KB)** · hooks: `→ features/support/kb`
-- `/help/[orgId]/[slug]` · **Support (public KB)** · hooks: `→ features/support/kb`
-- `/forms/[token]` · **Build/HR (public forms)** · hooks: `→ features/forms`
+- `/help/[orgId]/[articleSlug]` · **Support (public KB)** · hooks: `→ features/support/kb`
+- `/forms/[formToken]` · **Build/HR (public forms)** · hooks: `→ features/forms`
 - `/intake/[projectId]` · **Build (public intake)** · hooks: `→ features/build/intake`
 - `/board/[shareToken]` · **Build (public board share)** · hooks: `→ features/build/board`
 - `/wiki/[shareToken]` · **Knowledge (public wiki share)** · hooks: `→ features/wiki`
 - `/roadmap/[orgId]` · **Build (public roadmap)** · hooks: `→ features/build/roadmap`
 - `/live/[sessionCode]` · **Surveys (live session)** · hooks: `→ features/surveys/live`
 - `/live-chat/[orgId]` · **Support (live chat widget)** · hooks: `→ features/support/chat`
-- `/vendor-portal/[token]` · **Inventory/Accounting** · hooks: `→ features/vendor-portal`
-- `/sign/[token]` · **Sign (public signing)** · hooks: `→ features/sign`
-- `/s/[token]` · **Platform (short link)** · hooks: redirect
+- `/vendor-portal/[vendorPortalToken]` · **Inventory/Accounting** · hooks: `→ features/vendor-portal`
+- `/sign/[recipientToken]` · **Sign (public signing)** · hooks: `→ features/sign`
+- `/s/[collectorToken]` · **Platform (short link)** · hooks: redirect
 - `/refer/[orgId]` · **HR (public referral)** · hooks: `→ features/hr/recruitment`
-- `/refer/link/[token]` · **HR (public referral)** · hooks: `→ features/hr/recruitment`
+- `/refer/link/[referralToken]` · **HR (public referral)** · hooks: `→ features/hr/recruitment`

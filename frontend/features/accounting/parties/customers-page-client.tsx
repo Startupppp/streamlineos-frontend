@@ -214,19 +214,11 @@ export function CustomersPageClient() {
           <EmptyState
             className="border-0 bg-transparent min-h-[40vh]"
             illustrationPreset="clients"
-            title={hasFilters ? "No customers match your filters" : "No customers yet"}
-            description={
-              hasFilters
-                ? "Try a different search or widen the relationship filter."
-                : "Add the first company you bill and their invoices will follow."
-            }
-            action={
-              hasFilters
-                ? { label: "Clear filters", onClick: () => url.setParams({ search: undefined, role: undefined, include: undefined }) }
-                : canCreate
-                  ? { label: "Add customer", onClick: () => setCreateOpen(true) }
-                  : undefined
-            }
+            title="No customers yet"
+            description="Add the first company you bill and their invoices will follow."
+            action={canCreate ? { label: "Add customer", onClick: () => setCreateOpen(true) } : undefined}
+            filtersActive={hasFilters}
+            onClearFilters={() => url.setParams({ search: undefined, role: undefined, include: undefined })}
           />
         }
         pagination={{
