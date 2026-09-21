@@ -151,3 +151,107 @@ These are the reason a peer's green run is not integration proof.
 
 1. **A silent behaviour narrowing.** Reusing `listMemberChannelIds` also inherited its `isArchived = false` filter, which `searchChannels` never had. An archived private channel the caller belongs to stopped being findable — and search is exactly how a person finds one. Fixed with an `includeArchived` option defaulting to `false`, so the Ably token route keeps its old behaviour.
 2. **A constructor arity break.** Adding `ChatChannelListService` as a third constructor parameter broke four `new ChatSearchService(...)` call sites in two **unmodified** specs. Every chat jest run stayed green because ts-jest does not fail on type errors — **only the typecheck sees arity.**
+
+---
+
+## 2026-09-21 — closeout session
+
+### Migration 1129 (onboarding session race) — APPLIED TO PRODUCTION
+
+The race this migration exists to prevent had **already happened in production**.
+`getOrCreateSession` could insert a second flow session for one actor, and
+because it orders by `created_at DESC` the newest row wins.
+
+| Evidence | Value |
+|---|---|
+| Conflicting pair | org `c26140dd…`, user `6fcc8aa8…`, type `org_setup` |
+| Row 4 | `completed` at 2026-09-14T02:36:34.612Z |
+| Row 5 | `not_started`, inserted 02:36:38.732Z, empty, untouched for 7 days |
+| Effect | that org's owner was handed the stale `not_started` row for a week |
+
+`CREATE UNIQUE INDEX` would have failed outright on this pair. The migration now
+abandons losers first, keeping the most advanced session per actor
+(`completed` > `skipped` > `in_progress` > `not_started`, newest first) — the
+same status its partial indexes already exclude.
+
+**A defect in the migration itself was caught before applying.** It dropped
+`idx_onb_flow_sessions_org_membership_type` and replaced it with two *partial*
+indexes. The first read in `getOrCreateSession` filters org + actor + type with
+**no status predicate**, so neither partial index can serve it and
+`idx_onb_flow_sessions_status` leads on `(org_id, status)`. That read would have
+been left with no usable index. The plain index is kept and restored to the
+Drizzle schema.
+
+Applied over IAM auth by explicit tag — never the full chain, which would have
+replayed ~1,100 migrations against the near-empty production ledger. The `.env`
+password is stale; that cluster is IAM-only.
+
+Verified on production: both partial unique indexes present with correct
+predicates · plain actor index intact · row 5 `abandoned`, row 4 untouched ·
+zero remaining conflicts · ledger hash matches the file on disk · a duplicate
+insert **rejected `23505` on `uq_onb_flow_sessions_user_type`**.
+
+### Notification emails bypassed the suppression list
+
+`EmailService` overrides `sendEmail` to route through `outbox.enqueueAndTry`, so
+named senders were gated. `NotificationEmailProvider` called
+`EmailProviderService.dispatchEmail` directly and skipped suppression entirely —
+falsifying the clause in `email-outbox.service.ts` that the gate "applies to
+mandatory notification types too". Hard-bounced addresses kept receiving mail,
+degrading domain reputation for every other recipient.
+
+Fixed in the provider, reusing the existing `EmailSuppressionService` seam, as a
+**terminal** failure (`retryable: false`) so `notificationQueue` does not retry
+forever. Not routed through the outbox: that would have given notifications two
+competing retry systems, which root §9 forbids.
+
+### The verification log above is now out of date
+
+It records "62 pre-existing errors remain in files owned by concurrent sessions".
+That is no longer true.
+
+| Check | Result |
+|---|---|
+| `tsc --noEmit -p tsconfig.json` | **exit 0, zero errors** across `src`, `evals` and `test` |
+
+Three of the last errors were a regression: adding the suppression dependency
+changed `NotificationEmailProvider`'s constructor arity, and three specs still
+constructed it with two arguments. All four provider suites were green
+throughout — ts-jest runs with `isolatedModules`, so **jest cannot see a type
+error**. Typecheck remains the only gate that sees an arity change.
+
+The suppression parameter is narrowed to
+`Pick<EmailSuppressionService, "findSuppressed">` with an explicit `@Inject`,
+matching how `PUBLIC_API_URL` already arrives on that constructor — so no spec
+needed a cast.
+
+### Suites repaired
+
+All previously failing, all now green, none weakened:
+`payroll-inputs` ×2 · `assets.service` · `recruitment-handoff` ·
+`employee-attach-employment-duplicate-primary` · `hr-lifecycle-read-caps` ·
+`notification-email.provider`.
+
+`hr-analytics.service.ts` `deptDistribution` grouped departments with no cap and
+now carries `.limit(1_000)`.
+
+### Premises that did not survive inspection
+
+Four this session, all in the direction of making work look larger than it was:
+
+| Claimed | Actual |
+|---|---|
+| Outbox writes a PLATFORM/NULL row for notifications | Notifications never touch the outbox at all — no such row exists |
+| ~89 unused knip exports in the AI modules | **0** in `src/modules/ai/**`; the ~90 repo-wide total is spread across billing, build, CRM, HR, inventory, KB and others |
+| 64 TS7006 errors | 4 errors total, **none** of them TS7006 |
+| `markProposalDeclined` omits its `orgId` argument | It passes `{ orgId }`; the reviewer had not read far enough |
+
+The knip figure is **not independently confirmed** — `pnpm exec knip` OOMs in
+its oxc parser on this machine under memory pressure. Re-measure standalone
+before acting on it.
+
+### Still open
+
+- `.github/workflows/ci.yml` `continue-on-error: true` — removal pending proof that the step it guards passes and that the gate bites.
+- The knip re-measurement above.
+- Every chat-os item needing a live environment: no local Postgres, Redis or Docker on this machine (5432/5433/6379 all refuse).
