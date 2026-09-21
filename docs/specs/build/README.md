@@ -107,7 +107,7 @@ boundaries, not write permission.
 |---|---|---|---|---|---|---|---|
 | `BLD-X-SB-ACTIONS-001` | cycle-14 agent CA | `e18077a30` | `374afd27a` | prod: none changed · test: `build-quick-create.test.tsx`, `build-more-tools-menu.test.tsx`, `use-build-nav-preferences.test.ts` | 2026-09-21T08:35Z | 2026-09-21T11:35Z | `INTEGRATED (cycle 14)` |
 | `BLD-X-FE-QUALITY-001a-i` | cycle-16 agent EA | `e18077a30` | `374afd27a` | prod: `features/build/governance/risks-page.tsx`, `risk-severity.ts`, `hooks/api/build/governance-schema.ts` · test: `risk-matrix.test.tsx`, new `risks-page-aggregates.test.tsx`, new `governance-contract.test.ts` | 2026-09-21T12:40Z | 2026-09-21T15:40Z | `RESERVED` |
-| `BLD-X-SB-NAV-001` | cycle-15 agent DB | `e18077a30` | `374afd27a` | prod: `lib/build/build-scope.ts`, `features/build/navigation/use-reconciled-build-scopes.ts`, `use-build-scope-directory.ts`, `lib/build/nav/build-project-catalog.ts` · test: `lib/build/build-scope.test.ts`, `build-project-catalog.test.ts` | 2026-09-21T12:25Z | 2026-09-21T15:25Z | `RESERVED` |
+| `BLD-X-SB-NAV-001` | cycle-15 agent DB | `e18077a30` | `374afd27a` | prod: `lib/build/build-scope.ts`, `features/build/navigation/use-reconciled-build-scopes.ts`, `use-build-scope-directory.ts`, `lib/build/nav/build-project-catalog.ts` · test: `lib/build/build-scope.test.ts`, `build-project-catalog.test.ts` | 2026-09-21T12:25Z | 2026-09-21T15:25Z | `INTEGRATED (cycle 15)` |
 | `BLD-X-SB-CAPABILITY-001` | cycle-15 agent DA | `e18077a30` | `374afd27a` | prod: `features/build/navigation/use-build-nav-model.ts` · test: `use-build-nav-model.test.tsx`, new `lib/build/build-nav-catalog-route-files.test.ts` | 2026-09-21T12:10Z | 2026-09-21T15:10Z | `INTEGRATED (cycle 15)` |
 | `BLD-X-FE-ALLWORK-001` | cycle-14 agent CB | `e18077a30` | `374afd27a` | prod: `all-work-page.tsx`, `use-all-work-filters.ts`, `all-work-board-section.tsx`, `all-work-list-section.tsx` · test: `all-work-access-gate.test.tsx`, new `all-work-filters.test.ts` | 2026-09-21T08:35Z | 2026-09-21T11:35Z | `INTEGRATED (cycle 14)` |
 | `BLD-X-FE-INBOX-001` | cycle-14 agent CC | `e18077a30` | `374afd27a` | prod: `features/build/inbox/inbox-page.tsx`, `inbox-list.tsx`, `inbox-notification-item.tsx`, `inbox-preview-pane.tsx`, `inbox-render-window.ts`, `inbox-ticket-preview.tsx`, `parse-inbox-ticket-link.ts` · test: `inbox-badge-invalidation.test.ts`, `inbox-list-bounded.test.tsx`, `inbox-notification-item.test.tsx`, `parse-inbox-ticket-link.test.ts`, new `inbox-page.test.tsx` | 2026-09-21T08:55Z | 2026-09-21T11:55Z | `RESERVED` |
@@ -1059,6 +1059,54 @@ capability === "client-portal"
 - It closes a real gap: the existing parity test only checks an href resolves to
   a registered route-access decision, never that a `page.tsx` exists.
 - Coordinator re-ran: **5 tests, 2 suites, exit 0**.
+
+**`BLD-X-SB-NAV-001` — `INTEGRATED`, and its shared-contract request was
+correctly refused.** All three workspace href producers had the bug and all
+three are fixed (`build-scope.ts:90-94`, `hrefFor` in
+`use-reconciled-build-scopes.ts`, the `workspaces` memo in
+`use-build-scope-directory.ts`); a workspace now opens `${basePath}/overview`,
+matching the convention `build-workspace-catalog.ts:10` already used. The
+`hrefFor` missing-`organization`-branch report is **refuted-but-fragile**: the
+backend's `ScopeKeyType` is `workspace|product|project` and `parseScopeKey`
+drops anything else, so the branch is unreachable today; no speculative handling
+was added.
+
+**The Cycles flip turned up a live authorization mismatch, and the agent's
+proposed fix would have made it worse.** Flipping the href to `/cycles` reddened
+`build-nav-route-access-parity.test.ts`. The agent stopped at its write-set
+boundary and requested a new `route-access-extension-entries.ts` entry gating
+`/build/[projectId]/cycles` on `build:sprints:view`. **The coordinator refused
+it**, because the backend disagrees:
+
+| Endpoint | Read key | `file:line` |
+|---|---|---|
+| `GET build/:projectId/sprints` | `build:sprints:view` | `execution/iterations.controller.ts:67-68` |
+| `GET build/:projectId/cycles` | **`build:view`** | `execution/iterations.controller.ts:135-136` |
+
+`app/(authenticated)/build/[projectId]/cycles/page.tsx` calls
+`enforceRouteAccess("/build/[projectId]/cycles")`, which resolves through the
+same registry — so adding that entry would have gated the **route** at
+`build:sprints:view` while the **API** serves `build:view`, denying users the
+backend would happily answer. A frontend gate stricter than the data layer is a
+false denial, not defence in depth (§1.8: authorize at the data layer; client
+checks are advisory). No extension entry was added; the existing fallthrough to
+`build:view` is already correct.
+
+The real defect was the nav destination declaring `build:sprints:view` for a
+route the backend reads under `build:view`. Coordinator changed
+`build-project-catalog.ts` `project-cycles` to `build:view`, matching the
+endpoint. Parity gate green; **39 tests across 4 suites, then 61 across 5
+sibling nav suites, all exit 0**.
+
+**Open backend finding, needs an owner —** the two iteration endpoints carry
+different read keys, and the manifest makes `/cycles` canonical while `/sprints`
+is `REMOVE duplicate`. So deleting `/sprints` will **loosen** the iteration read
+gate from `build:sprints:view` to `build:view` for everyone. That is a real
+authorization consequence of the route-canonicalization decision, invisible from
+the frontend, and it should be settled (tighten `GET /cycles` to
+`build:sprints:view`, or accept the widening deliberately) **before**
+`PG-PRJ-036` is deleted. Filed against the backend iteration packet, not this
+one.
 
 **Tooling papercut, recorded not fixed.** `pnpm type-check:specs` OOMs at the
 default Node heap; it needs `NODE_OPTIONS=--max-old-space-size=10240`. Three

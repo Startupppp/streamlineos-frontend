@@ -75,9 +75,9 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
       {
         id: "project-cycles",
         label: "Cycles",
-        href: `${basePath}/sprints`,
+        href: `${basePath}/cycles`,
         icon: Calendar,
-        requiredPermission: "build:sprints:view",
+        requiredPermission: "build:view",
       },
       {
         id: "project-timeline",

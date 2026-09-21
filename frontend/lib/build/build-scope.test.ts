@@ -53,6 +53,12 @@ describe("buildScopeOverviewHref", () => {
       buildScopeOverviewHref(resolveBuildScope("/build/managed-products/7")),
     ).toBe("/build/managed-products/7");
   });
+
+  it("sends a workspace scope to its overview page, not its Projects list", () => {
+    expect(
+      buildScopeOverviewHref(resolveBuildScope("/build/workspaces/ws-1/teams")),
+    ).toBe("/build/workspaces/ws-1/overview");
+  });
 });
 
 describe("buildScopeKey", () => {
