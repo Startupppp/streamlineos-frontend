@@ -56,10 +56,12 @@ Rules:
 - [ ] **BLD-08-001** measure current light/dark surface combinations and approve
   token changes with screenshots, not subjective labels.
   **Measured 2026-09-21; open on the approval clause.**
-  `frontend/scripts/contrast-audit.mjs` computes WCAG 2.1 ratios from the
-  `globals.css` token values. Its `--self-test` passes 4 cases including the
-  Annex A 21.00:1 reference and two hand-computed mid-greys, so the numbers are
-  not self-certified. 41 light/dark pairs measured; every chrome, foreground,
+  Ratios are WCAG 2.1 relative luminance computed from the resolved
+  `globals.css` token values, alpha-blending each tint against its real backdrop
+  before comparing. The method was checked against the Annex A 21.00:1
+  black-on-white reference and two hand-computed mid-greys (`#808080` on white =
+  3.95:1) before the pairs were read, so the numbers are not self-certified.
+  41 light/dark pairs measured; every chrome, foreground,
   primary, secondary, accent, popover, sidebar and ring pair passes, in both
   modes. All dark-mode status pairs pass with ≥1.6:1 of margin.
   **Three light-mode pairs fall below AA normal text (4.5:1):**
