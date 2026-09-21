@@ -106,7 +106,9 @@ boundaries, not write permission.
 | Packet | Owner/session | Root/frontend revision | Backend revision | Exact write set | Acquired | Expires | Status |
 |---|---|---|---|---|---|---|---|
 | `BLD-X-SB-ACTIONS-001` | cycle-14 agent CA | `e18077a30` | `374afd27a` | prod: none changed · test: `build-quick-create.test.tsx`, `build-more-tools-menu.test.tsx`, `use-build-nav-preferences.test.ts` | 2026-09-21T08:35Z | 2026-09-21T11:35Z | `INTEGRATED (cycle 14)` |
-| `BLD-X-FE-QUALITY-001a-i` | cycle-16 agent EA | `e18077a30` | `374afd27a` | prod: `features/build/governance/risks-page.tsx`, `risk-severity.ts`, `hooks/api/build/governance-schema.ts` · test: `risk-matrix.test.tsx`, new `risks-page-aggregates.test.tsx`, new `governance-contract.test.ts` | 2026-09-21T12:40Z | 2026-09-21T15:40Z | `RESERVED` |
+| `BLD-X-SB-LIFECYCLE-001` | cycle-16 agent EB | `e18077a30` | `374afd27a` | prod: `features/build/navigation/build-scope-recovery.tsx`, `use-build-scope-recovery.ts`, `build-sidebar.tsx`, `lib/build/build-scope-fallback.ts` · test: `build-scope-recovery.test.tsx`, `lib/build/build-scope-fallback.test.ts` | 2026-09-21T12:55Z | 2026-09-21T15:55Z | `RESERVED` |
+| `BLD-X-FE-QUALITY-001a-ii` | cycle-16 agent EC | `e18077a30` | `374afd27a` | prod: `features/build/governance/risk-form-sheet.tsx`, `decision-form-sheet.tsx`, `types/projects/governance.ts` · test: new `governance-clear-optional-field.test.tsx` | 2026-09-21T12:55Z | 2026-09-21T15:55Z | `RESERVED` |
+| `BLD-X-FE-QUALITY-001a-i` | cycle-16 agent EA | `e18077a30` | `374afd27a` | prod: `features/build/governance/risks-page.tsx`, `hooks/api/build/governance-schema.ts` · test: new `risks-page-aggregates.test.tsx`, new `governance-contract.test.ts` | 2026-09-21T12:40Z | 2026-09-21T15:40Z | `INTEGRATED (cycle 16)` |
 | `BLD-X-SB-NAV-001` | cycle-15 agent DB | `e18077a30` | `374afd27a` | prod: `lib/build/build-scope.ts`, `features/build/navigation/use-reconciled-build-scopes.ts`, `use-build-scope-directory.ts`, `lib/build/nav/build-project-catalog.ts` · test: `lib/build/build-scope.test.ts`, `build-project-catalog.test.ts` | 2026-09-21T12:25Z | 2026-09-21T15:25Z | `INTEGRATED (cycle 15)` |
 | `BLD-X-SB-CAPABILITY-001` | cycle-15 agent DA | `e18077a30` | `374afd27a` | prod: `features/build/navigation/use-build-nav-model.ts` · test: `use-build-nav-model.test.tsx`, new `lib/build/build-nav-catalog-route-files.test.ts` | 2026-09-21T12:10Z | 2026-09-21T15:10Z | `INTEGRATED (cycle 15)` |
 | `BLD-X-FE-ALLWORK-001` | cycle-14 agent CB | `e18077a30` | `374afd27a` | prod: `all-work-page.tsx`, `use-all-work-filters.ts`, `all-work-board-section.tsx`, `all-work-list-section.tsx` · test: `all-work-access-gate.test.tsx`, new `all-work-filters.test.ts` | 2026-09-21T08:35Z | 2026-09-21T11:35Z | `INTEGRATED (cycle 14)` |
@@ -1115,6 +1117,60 @@ brief tells them to run that gate, the brief now specifies the heap flag — an
 agent that hits the OOM and reads it as "the gate is broken" would report a
 clean typecheck it never got. Not fixing `package.json` here because a
 concurrent session has it modified.
+
+### Cycle 16 outcomes
+
+**`BLD-X-FE-QUALITY-001a-i` — `INTEGRATED`.** The risk register's stat row and
+matrix no longer go silently wrong when the status filter is touched, and the
+`NaN`→"Critical" severity path is now unreachable.
+
+- **The aggregate fix adds a second read, and the necessity argument was
+  checked, not accepted.** `risks-page.tsx:114-116` keeps the status-filtered
+  read for the table; `:117` adds an unfiltered `useProjectRisks(projectId)`
+  feeding the three tiles and `<RiskMatrix>`. Coordinator verified the claim
+  that this is free on the common path: the filtered call passes
+  `status: undefined` when the filter is `"all"` (`:115`), and
+  `useProjectRisks` only appends params when `filters?.status` is truthy
+  (`hooks/api/build/governance.ts:41-48`), so both calls produce the identical
+  key `[...base, "projects", projectId, "risks"]` and **TanStack collapses them
+  into one request**. A second request fires only while a non-`all` filter is
+  active, and the aggregate key carries no status, so changing the filter never
+  refetches it. Existing mutation invalidation already targets the `list()`
+  prefix, so it matches both — no hook change was needed.
+- **Rejected alternatives, correctly.** Relabelling the tiles to "current
+  filter" was rejected because "Open" scoped to a Closed filter is a non-answer,
+  not a smaller truth. Client-side filtering was rejected because the endpoint
+  hard-caps at `limit(100)` with no cursor, so it would present a truncated
+  window as complete.
+- **Contract tightening verified column by column before acceptance**, since a
+  too-tight contract **throws** and breaks the screen — strictly worse than the
+  bug. `probability`/`impact` → `low|medium|high`, `status` →
+  `open|mitigating|monitoring|accepted|closed`, each an exact match to the
+  `pgEnum` at `backend/src/db/schema/build/governance.ts:8-10`, each column
+  `.notNull()` with a default. The database cannot produce a rejected value.
+- **`risk-severity.ts` deliberately unchanged.** With the contract rejecting
+  out-of-enum rows at the boundary, the `NaN` fallthrough is unreachable for
+  real data; narrowing the function's own params would have errored at every
+  call site because `Risk.probability` in `types/projects/governance.ts` is
+  still `string` and that file belongs to another packet. Runtime protection is
+  real; the dead branch remains compilable. Acceptable, and the honest
+  description of what shipped.
+- Agent proved the aggregate test red by reverting the fix and re-running.
+  Coordinator re-ran: **19 tests, 4 suites, exit 0**, including the
+  `governance-access-gate` suite it did not own.
+- Accepted deviation: it also narrowed `status`, which the brief named only
+  implicitly. Same file, same evidence, same defect class (`STATUS_LABEL[...]`
+  rendering `undefined`). Correct call.
+
+**Open item, honestly disclosed by the agent and NOT fixed.** The unfiltered
+aggregate read has no error branch of its own. If it fails while the filtered
+table read succeeds, the three tiles render **0** and the matrix blanks — which
+is the same "a failure reads as emptiness" class this whole program exists to
+remove. It is narrow (both reads hit one endpoint, and they are the same query
+on the default path), but it is real. Folding it into `usePageState` would blank
+a working table on an aggregate failure, so the right home is the
+aggregate-endpoint follow-up packet, where a proper error surface will exist.
+Tracked with `-001a-iii`.
 
 ### Findings banked for cycles 15–16 (read-only audit, unverified by coordinator)
 

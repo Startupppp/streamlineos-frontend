@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+const riskLevelContract = z.enum(["low", "medium", "high"]);
+const riskStatusValueContract = z.enum(["open", "mitigating", "monitoring", "accepted", "closed"]);
+
 export const riskRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -7,9 +10,9 @@ export const riskRowContract = z.object({
   riskNumber: z.number().int(),
   title: z.string(),
   description: z.string().nullable(),
-  probability: z.string(),
-  impact: z.string(),
-  status: z.string(),
+  probability: riskLevelContract,
+  impact: riskLevelContract,
+  status: riskStatusValueContract,
   ownerId: z.string().nullable(),
   mitigation: z.string().nullable(),
   linkedTicketId: z.number().int().nullable(),

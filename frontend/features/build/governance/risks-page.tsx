@@ -114,6 +114,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
   const { data, isLoading, isError, error, refetch } = useProjectRisks(projectId, {
     status: statusFilter !== "all" ? statusFilter : undefined,
   });
+  const { data: registerData, isLoading: isRegisterLoading } = useProjectRisks(projectId);
 
   const pageState = usePageState({ permission: "build:risks:view", isLoading, isError, error });
   const { data: members = [] } = useProjectMembers(projectId);
@@ -128,16 +129,17 @@ export function RisksPage({ projectId }: RisksPageProps) {
     return getUserDisplayName(m) || userId;
   }, [members]);
 
-  const allRisks = useMemo(() => data ?? [], [data]);
-  const openCount = allRisks.filter((r) => r.status === "open").length;
-  const highCritCount = allRisks.filter((r) => {
+  const registerRisks = useMemo(() => registerData ?? [], [registerData]);
+  const filteredRisks = useMemo(() => data ?? [], [data]);
+  const openCount = registerRisks.filter((r) => r.status === "open").length;
+  const highCritCount = registerRisks.filter((r) => {
     const { label } = getRiskSeverity(r.probability, r.impact);
     return label === "High" || label === "Critical";
   }).length;
-  const closedCount = allRisks.filter((r) => r.status === "closed").length;
+  const closedCount = registerRisks.filter((r) => r.status === "closed").length;
 
   const displayed = useMemo(() => {
-    let items = allRisks;
+    let items = filteredRisks;
     if (matrixCell) {
       items = items.filter((r) => r.probability === matrixCell.probability && r.impact === matrixCell.impact);
     }
@@ -146,7 +148,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
       items = items.filter((r) => r.title.toLowerCase().includes(q) || `risk-${r.riskNumber}`.includes(q));
     }
     return items;
-  }, [allRisks, matrixCell, search]);
+  }, [filteredRisks, matrixCell, search]);
 
   function handleCreate(input: CreateRiskInput) {
     createRisk.mutate(input, {
@@ -295,16 +297,16 @@ export function RisksPage({ projectId }: RisksPageProps) {
       <PmPageShell>
         <PmSection index={0} className="shrink-0">
           <StatCardGrid cols={3}>
-            <StatCard label="Open" value={openCount} icon={ShieldAlert} tone="default" isLoading={isLoading || pageState.kind === "loading"} />
-            <StatCard label="High / Critical" value={highCritCount} icon={AlertTriangle} tone="red" isLoading={isLoading || pageState.kind === "loading"} />
-            <StatCard label="Closed" value={closedCount} icon={CheckCircle2} tone="emerald" isLoading={isLoading || pageState.kind === "loading"} />
+            <StatCard label="Open" value={openCount} icon={ShieldAlert} tone="default" isLoading={isRegisterLoading || pageState.kind === "loading"} />
+            <StatCard label="High / Critical" value={highCritCount} icon={AlertTriangle} tone="red" isLoading={isRegisterLoading || pageState.kind === "loading"} />
+            <StatCard label="Closed" value={closedCount} icon={CheckCircle2} tone="emerald" isLoading={isRegisterLoading || pageState.kind === "loading"} />
           </StatCardGrid>
         </PmSection>
 
-        {!isLoading && pageState.kind !== "loading" ? (
+        {!isRegisterLoading && pageState.kind !== "loading" ? (
           <PmSection index={1} className="shrink-0">
             <PmPanel className="p-3" solid>
-              <RiskMatrix risks={allRisks} onCellClick={handleCellClick} selectedCell={matrixCell} />
+              <RiskMatrix risks={registerRisks} onCellClick={handleCellClick} selectedCell={matrixCell} />
             </PmPanel>
           </PmSection>
         ) : null}
