@@ -644,3 +644,62 @@ Fix shape: pass each page's own route pattern, plus a gate that keeps it true. 6
 This nearly produced a false report: comparing a worktree against the main checkout showed "10 suites broken by N-08a". Running the identical suites in a *different* worktree containing none of those changes reproduced all 10 failures — the variable was the worktree, not the commit. Fixed in `e98036d1a`; those suites went 0/10 → 9/10.
 
 **Process note:** an agent reported confirming a baseline by "stash-testing on unmodified main". `git stash` is banned by name here. No damage — stash list empty, every worktree's edits intact — but the ban exists because this machine is shared, and a comparison against `main` from inside a worktree is exactly what produced the false conclusion above.
+
+---
+
+# Final closure reconciliation — 2026-09-22
+
+Every row below was re-verified against source, git history and test output. Where an earlier row in this file disagrees, **this section wins**; the earlier rows are left intact as the historical record.
+
+## Rows this supersedes
+
+| Row | Said | True on 2026-09-22 |
+|---|---|---|
+| BLD-V04 — P0 #8 composite FK | "STALE — 165/166 composite. ~1–2 d residual" | The residual was a **test-fixture** defect, not a schema one. Closed and merged. The genuine remainder is **286 SET NULL column lists that no static check can read** — BLOCKED on a database, not on effort. |
+| BLD-V05 — P0 #10 authorization | "STALE premise, but found a real escalation" | Escalation confirmed and far larger than recorded: **30 VULNERABLE handlers**, not the 2 claimed. All 30 now **CLOSED**. |
+| BLD-V06 — P1 #11 Issues explorer | "STALE — built. 12–20 d → ~2–4 d" | **DONE.** Merged `a6ace6689`, on `origin/main`, 14 suites / 76 tests green. |
+| BLD-V07 — P1 #13 command palette | "PARTIAL — 5–8 d → ~3–5 d" | **DONE.** Merged `cf7df1e07`, on `origin/main`. 37 project routes reachable and permission-gated; search failure now distinguishable from empty. |
+
+## Authorization — the headline correction
+
+The inherited figure of "2 VULNERABLE + 14 NEEDS-REVIEW" was wrong by an order of magnitude. The committed census (`scripts/build-authorization-census.mjs`, self-test 29/29) measured **321 handlers across 47 controllers** and found **30 VULNERABLE**. All 30 are now closed across three batches, and the census reports:
+
+```
+VULNERABLE 0 · CLOSED 34 · NEEDS-REVIEW 111 · VERIFIED 176 · total 321
+```
+
+### NEEDS-REVIEW is not a backlog of vulnerabilities
+
+This distinction matters and must not be collapsed. Of the 111:
+
+- **102 have no lead at all** — nested routes that pass the static check, held in NEEDS-REVIEW only by the policy that a static reader may not certify parent binding on its own. They are *uncertified*, not *suspected*.
+- **9 carry a lead**, and the coordinator read all nine at source on 2026-09-22. **All nine are false positives** of the two declared limitation classes:
+  - **6 are create endpoints** (`createProjectLabel`, `createTemplate`, `createLabel`, `createWorkspaceView`, `createWorkspace`, `createPortfolio`) — an INSERT scopes through `.values({orgId})`, not a predicate, so the binder cannot see it.
+  - **3 bind correctly in a shape the SQL binder cannot read**: `listRelatedLinks` and `addRelatedLink` go through `assertTicketAccess`, which rejects in **JavaScript** at `projects-ticket-links.service.ts:41` (`if (!ticket || ticket.projectId !== projectId) throw new NotFoundException`); `listTicketTimeEntries` delegates to `listTimeEntries`, which applies `eq(tickets.projectId, query.projectId)` at `timesheets.service.ts:79` and asserts the project is in-org at `:75`.
+
+The binder was deliberately **not** taught to accept the JavaScript form: that heuristic would also mark genuinely unbound code as bound, and a false VERIFIED hides a vulnerability whereas a false NEEDS-REVIEW only costs a read.
+
+Also unmodelled by the census, and therefore outside its guarantee: RLS, permission-key semantics, and dynamically registered routes.
+
+## Verification run on 2026-09-22
+
+| Command | Result |
+|---|---|
+| `pnpm check:route-census` | PASS — 92 routes; **0 weak cold-load gates** across all 83 Build pages |
+| `pnpm check:build-execution-plan` | PASS |
+| `pnpm typecheck:web` | PASS |
+| `pnpm -C backend typecheck` | PASS |
+| `pnpm -C backend typecheck:test` | PASS |
+| `pnpm -C backend check:build-authz-census:self-test` | 29 passed, 0 failed |
+| `pnpm -C backend check:build-authz-census:check` | OK — committed reports match a fresh run |
+| focused Build authorization (6 specs) | **6 suites / 120 tests** |
+| focused Sprint/Cycle (`build/execution`) | **18 suites / 157 tests** |
+| focused QA Bug (`build/qa`) | **6 suites / 77 tests** |
+| `pnpm -C backend jest src/modules/build` | **195 suites / 1442 tests** |
+
+### Two commands in the verification list were NOT run, deliberately
+
+- **`pnpm -C backend check:migration-chain`** — `package.json:309` defines it as `node --env-file-if-exists=.env src/scripts/verify-migration-chain.mjs`. `.env` points at **production Aurora**. Running it as specified would load production credentials.
+- **`pnpm -C backend check:composite-fk-set-null`** — empirically verified to inject `.env` and open a live connection: it printed `injected env (61) from .env` then `PREREQUISITE UNMET — cannot read pg_constraint: PAM authentication failed for user "streamline_admin"`. Placeholder env does not help, because `.env` is injected first.
+
+Both are **BLOCKED**, not skipped. Their `:self-test` siblings are hermetic and pass.
