@@ -40,7 +40,7 @@ function HolidayFormInner({
     <Sheet open onOpenChange={handleOpenChange}>
       <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0">
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-          <SheetTitle>{editingHoliday ? "Edit Holiday" : "Add Holiday"}</SheetTitle>
+          <SheetTitle>{editingHoliday ? "Edit holiday" : "Add holiday"}</SheetTitle>
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
@@ -89,7 +89,7 @@ function HolidayFormInner({
             </SheetBody>
             <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
               <LoadingButton type="submit" isPending={isPending} loadingText="Saving..." className="w-full">
-                {editingHoliday ? "Update Holiday" : "Add Holiday"}
+                {editingHoliday ? "Update holiday" : "Add holiday"}
               </LoadingButton>
             </SheetFooter>
           </form>

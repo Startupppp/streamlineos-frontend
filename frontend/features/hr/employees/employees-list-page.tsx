@@ -28,6 +28,7 @@ import {
   parseEmployeeListFilters,
   toHrEmployeesApiParams,
   hasActiveEmployeeFilters,
+  applyEmployeeUrlUpdates,
   employeeFiltersToUrlUpdates,
   DEFAULT_PAGE_SIZE,
   type EmployeeStatusFilter,
@@ -221,14 +222,21 @@ export function EmployeesListPage() {
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      for (const [k, v] of Object.entries(updates)) {
-        if (v == null || v === "") params.delete(k);
-        else params.set(k, v);
-      }
+      const params = applyEmployeeUrlUpdates(searchParams, updates);
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
     [searchParams, router, pathname],
+  );
+
+  const statusHref = useCallback(
+    (status: Exclude<EmployeeStatusFilter, "all">) => {
+      const params = applyEmployeeUrlUpdates(
+        searchParams,
+        employeeFiltersToUrlUpdates({ status }, { size: PAGE_SIZE, status: "all" }),
+      );
+      return `${pathname}?${params.toString()}`;
+    },
+    [searchParams, pathname],
   );
 
   const handleDepartmentFilterChange = useCallback(
@@ -287,7 +295,7 @@ export function EmployeesListPage() {
       subtitle={
         isFetching && !isLoading
           ? "Updating…"
-          : "Search, filter, and open employee profiles"
+          : "Employment administration for people with HR records — everyone in the organization is in the Directory."
       }
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col gap-3 sm:gap-4"
@@ -353,6 +361,12 @@ export function EmployeesListPage() {
               loadedCount={employees.length}
               hasMore={Boolean(hasNextPage)}
               statusFilter={filters.status}
+              filters={{
+                search: apiParams.search,
+                departmentId: apiParams.departmentId,
+                role: apiParams.role,
+              }}
+              statusHref={statusHref}
             />
           </div>
 

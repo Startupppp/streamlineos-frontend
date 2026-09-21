@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useDiversityReport, type DiversityFilters } from "@/hooks/api/hr/recruitment";
 import { useHrDepartments } from "@/hooks/api/hr";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,7 +19,6 @@ import {
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { ChevronDown, Users, BarChart3, MapPin, Globe } from "lucide-react";
-import { ErrorState } from "@/components/shared/error-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { cn } from "@/lib/utils";
 import type { Department } from "@/types/hr";
@@ -103,7 +103,14 @@ export function DiversityReportPage() {
     departmentIds: [],
   });
 
-  const { data, isLoading, isError, refetch } = useDiversityReport(filters);
+  const { data, isLoading, isError, error, refetch } = useDiversityReport(filters);
+  const pageState = usePageState({
+    permission: "hr:sensitive:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: data === undefined || data.total === 0,
+  });
 
   const handleApply = useCallback(() => {
     setFilters({ ...pendingFilters });
@@ -149,6 +156,27 @@ export function DiversityReportPage() {
     <PageWrapper
       title="Diversity Report"
       subtitle="Anonymized applicant pool demographics"
+      state={pageState}
+      onRetry={handleRetry}
+      loading={
+        <div className="grid gap-4 sm:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="pt-6">
+                <Skeleton className="h-40 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      }
+      empty={
+        <RecruitmentEmptyState
+          illustrationPreset="chart"
+          title="No applicant data found"
+          description="Adjust the filters or wait for candidates to apply."
+          className={CONTENT_FILL_PANEL}
+        />
+      }
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <DatePicker value={pendingFilters.from ?? ""} onChange={handleFromChange} placeholder="From date" className="text-xs w-36" />
@@ -209,26 +237,7 @@ export function DiversityReportPage() {
     >
 
       <div className="flex flex-1 min-h-0 flex-col">
-        {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i}>
-                <CardContent className="pt-6">
-                  <Skeleton className="h-40 w-full" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : isError ? (
-          <ErrorState className="flex-1" title="Failed to load diversity report" onRetry={handleRetry} />
-        ) : !data || data.total === 0 ? (
-          <RecruitmentEmptyState
-            illustrationPreset="chart"
-            title="No applicant data found"
-            description="Adjust the filters or wait for candidates to apply."
-            className={CONTENT_FILL_PANEL}
-          />
-        ) : (
+        {data ? (
           <>
             <StatCardGrid cols={4} className="mb-6">
               <StatCard label="Total Applicants" value={data.total} icon={Users} tone="blue" />
@@ -317,7 +326,7 @@ export function DiversityReportPage() {
               </Card>
             </div>
           </>
-        )}
+        ) : null}
       </div>
     </PageWrapper>
   );

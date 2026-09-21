@@ -148,7 +148,6 @@
   "features/hr/recruitment/components/automations-client.tsx",
   "features/hr/recruitment/components/internal-jobs-client.tsx",
   "features/hr/recruitment/components/scorecard-analytics-client.tsx",
-  "features/hr/recruitment/diversity-report-page.tsx",
   "features/hr/recruitment/headcount/headcount-page.tsx",
   "features/hr/recruitment/interviewer-performance-page.tsx",
   "features/hr/recruitment/jobs-page.tsx",

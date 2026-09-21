@@ -312,6 +312,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 
 ### Employees
 - `/hr/employees` · **HR** · hooks: `requirePermission("hr:employees:view")` (server), `usePageState` + `PageWrapper state=`, `→ features/hr/employees` — the duplicated loading-only `PageWrapper` early return is gone — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
+- `/hr/employees` · **HR** · hooks: `requirePermission("hr:employees:view")` (server), `usePageState` + `PageWrapper state=`, `→ features/hr/employees` — the duplicated loading-only `PageWrapper` early return is gone. 2026-09-21 (FE#156/BE#36): the Active/Inactive summary now reads `useHrEmployeeCounts` → `GET /hr/employees/counts`, which runs the list's own predicate (search, department, role) under the same `hr:employees:view` DataScope, so with the Active filter applied the count equals the list length; the org-wide command-center headcount (`hr:analytics:read`) no longer feeds this page. "Loaded" carries "of N matching". FE#100: subtitle now states this is employment administration and points everyone-in-the-organization reads at `/directory`.
 - `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
 - `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees` (2026-09-21: header card gains a "Resend invite" action — `ResendInviteButton` → `useResendEmployeeInvite` → `POST /hr/employees/:employeeId/resend-invite`, `Idempotency-Key` per intent, rendered only for `hr:onboarding:manage` holders and never on your own profile or a terminated one; success toasts "Invitation sent", a queued-but-undeliverable outcome warns with the backend's reason)
 - `/hr/employees/find-expert` · **HR** · hooks: `→ features/hr/employees`
@@ -329,7 +330,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/leaves` · **HR** · hooks: `→ features/hr/leaves`
 - `/hr/leaves/analytics` · **HR** · hooks: `→ features/hr/leaves`
 - `/hr/leave-policies` · **HR** · hooks: `→ features/hr/leaves`
-- `/hr/holidays` · **HR** · hooks: `→ features/hr/holidays`
+- `/hr/holidays` · **HR** · hooks: `requirePermission("self:attendance")` (server, nav-aligned), `useHolidays` → `GET /me/attendance/holidays` (`self:attendance`), `usePageState` + `PageState`, `→ features/hr/holidays`. 2026-09-21 (FE#133): the list read, the nav entry and the page gate all use the ESS route's key `self:attendance` (universal for active members; the admin route `/hr/attendance/holidays` returns the identical `org_holidays` rows); Add/Edit/Delete controls and their `useAuthorizedMutation`s gate on `hr:attendance:manage`, the exact key of `POST/PATCH/DELETE /hr/attendance/holidays*`. No key is invented and no catalog changes. CTA is "Add holiday" (audit §5).
 - `/hr/work-logs` · **HR** · hooks: `→ features/hr/work-logs` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
 - `/hr/overtime` · **HR** · hooks: `→ features/hr/overtime`
 - `/hr/shifts` · **HR** · hooks: `→ features/hr/shifts`
@@ -353,7 +354,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/recruitment/talent-pools` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/headcount` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/analytics` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/diversity-report` · **HR** · hooks: `→ features/hr/recruitment`
+- `/hr/recruitment/diversity-report` · **HR** · hooks: `requirePermission("hr:sensitive:view")` (server), `useDiversityReport` (`useGatedQuery("hr:sensitive:view")` → `GET /hr/recruitment/diversity-report`), `usePageState` + `PageWrapper state=`, `→ features/hr/recruitment`. 2026-09-21 (FE#134): the page's state resolves through `usePageState({ permission: "hr:sensitive:view", …, error, isEmpty })`, so access-loading is a skeleton, denial is `DeniedView`, a failed read is `ErrorState` with the backend message, and "No applicant data found" appears only for a permitted, finished read with `total === 0`; removed from `denial-is-not-emptiness.known.json`.
 - `/hr/recruitment/scorecard-analytics` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/scorecard-templates` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/question-bank` · **HR** · hooks: `→ features/hr/recruitment`
@@ -402,6 +403,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 
 ### Org Chart & Structure
 - `/hr/org` · **HR** · hooks: `→ features/hr/org` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
+- `/hr/org` · **HR** · hooks: `requirePermission("hr:employees:view")` (server), `useOrgJobRoles`/`useOrgJobLevels`, `→ features/hr/org`. 2026-09-21 (FE#158/BE#37): the "Total" that could read 1 above an empty Job Roles list was `HeadcountStats` (people per department, not roles); 4bf5b2421 stopped rendering it and the dead component, `useOrgHeadcount`, its contract, type and query key are now deleted. Backend `GET /hr/org/roles` and the role headcount share `liveJobRolesOf`, so an archived role is never a named count.
 - `/hr/org-chart` · **HR** · hooks: `→ features/hr/org-chart` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
 
 ### Announcements & Communications

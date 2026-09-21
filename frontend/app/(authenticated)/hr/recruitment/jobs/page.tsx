@@ -4,7 +4,7 @@ import { JobsPage } from "@/features/hr/recruitment/jobs-page";
 import JobsLoading from "./loading";
 
 export default async function Page() {
-  await requirePermission("hr:employees:view");
+  await requirePermission("hr:requisitions:view");
   return (
     <Suspense fallback={<JobsLoading />}>
       <JobsPage />

@@ -137,7 +137,7 @@ export const HR_FOUNDATION_ROUTES: NavRoute[] = [
             label: "Holiday Calendar",
             icon: CalendarDays,
             href: "/hr/holidays",
-            requiredPermission: "hr:leaves:view",
+            requiredPermission: "self:attendance",
           },
           {
             label: "Comp-Off",
