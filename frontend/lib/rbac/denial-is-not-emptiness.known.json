@@ -115,8 +115,6 @@
   "features/hr/governance/components/data-requests-tab.tsx",
   "features/hr/governance/components/delegation-sheet.tsx",
   "features/hr/governance/components/labor-tabs.tsx",
-  "features/hr/helpdesk/my-tickets-tab.tsx",
-  "features/hr/helpdesk/queue-tab.tsx",
   "features/hr/import-export/components/job-history-table.tsx",
   "features/hr/kpis/competency-frameworks-tab.tsx",
   "features/hr/kpis/kpi-library-tab.tsx",
