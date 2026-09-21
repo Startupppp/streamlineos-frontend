@@ -48,10 +48,15 @@ first and the pipe throws `NotFoundException`) · `applyScope`'s correlated
 
 Ordered most severe first. Each names the owning file and the smallest repair.
 
-1. **`chat_messages` is unpartitioned.** `backend/src/db/schema/chat/chat-message-tables.ts:19`.
-   RANGE on `created_at`, PK becomes `(id, created_at)`, partitions pre-created. Record
-   the triggering row count in the migration header per backend/CLAUDE.md §3 — and
-   decide before partitioning, because the key must be in every PK/UNIQUE.
+1. ~~**`chat_messages` is unpartitioned**~~ — **DEFERRED on measurement, 2026-09-21.**
+   The item asked for the triggering row count before deciding, per backend/CLAUDE.md §3.
+   Measured against production: **`chat_messages` holds 14 rows.** For scale, the largest
+   table in the entire production database is `role_permission_grants` at 27,808 rows /
+   13 MB; nothing else exceeds 900 rows. Partitioning now would force the partition key
+   into every PK and UNIQUE on the table, and into every FK that references it, to
+   optimise a 14-row scan.
+   **Re-open when `chat_messages` passes ~10M rows or the table exceeds ~10 GB**, and
+   re-measure before designing — not before.
 
 2. ~~**171 direct `process.env` reads and no lint rule**~~ — **both halves were wrong;
    corrected and largely CLOSED 2026-09-20.** The real count outside config, scripts
@@ -86,10 +91,17 @@ Ordered most severe first. Each names the owning file and the smallest repair.
    holds `token`, `tokenHash` and `tokenEncrypted`; the service already looks up by
    hash. Null the column, make `tokenHash` NOT NULL, drop the plaintext unique index.
 
-7. **`sendToChannelMembers` awaits N pushes in the request thread.** `realtime/web-push.service.ts:168`.
-   Move to `OutboxWriter.emit` so the fan-out runs after commit — backend/CLAUDE.md §4
-   mechanism (2), since losing a push is recoverable but holding a pooled connection
-   through someone else's outage is not.
+7. **`sendToChannelMembers` fan-out is still inline** — premise HALF STALE, narrowed
+   2026-09-21. `realtime/web-push.service.ts:168`. The review described
+   `Promise.allSettled(members.map(...))` opening one call per member; **that is already
+   fixed** — the method now pages recipients (`PUSH_SUBSCRIPTION_BATCH`), loads each
+   page's subscriptions in ONE query, and fans out under `boundedMap` with
+   `PUSH_FANOUT_CONCURRENCY`. The N+1 and the unbounded concurrency are both gone.
+   **What remains** is only that the loop is still `await`ed inline, so the caller holds
+   its pooled connection through the push provider's latency. Moving it to
+   `OutboxWriter.emit` (backend/CLAUDE.md §4 mechanism 2) is still right — losing a push
+   is recoverable, holding a pooled connection through someone else's outage is not —
+   but the urgency is much lower than the review implied.
 
 8. **`MAX_CAPABILITY_CHANNELS = 500` truncates silently.** `realtime/ably.service.ts`,
    enforced at `chat-channel-list.service.ts:141`. An org past 500 channels simply
@@ -105,13 +117,29 @@ Ordered most severe first. Each names the owning file and the smallest repair.
     but `view` from a literal key lookup with standing as fallback. Route `view` through
     `resolveModuleStanding` too, so `module-standing.spec.ts` guards the live path.
 
-11. **No Postgres safety net on email canonicalization.** All three DTOs canonicalize
-    (`users.schemas.ts:51-57`), but `auth.ts:114` is a plain case-sensitive
-    `.unique()`. A seed or direct insert can still create duplicate-case identities.
-    Add `uniqueIndex on lower(email)`.
+11. ~~**No Postgres safety net on email canonicalization**~~ — **OBSOLETE, the net already
+    exists. Verified against production 2026-09-21.** The review read only the Drizzle
+    table (`src/db/schema/common/auth.ts:114`, a plain case-sensitive `.unique()`) and
+    concluded there was no database-level guard. There is:
+    `migrations/0455_email_canonical_uniqueness.sql` creates
+    `CREATE UNIQUE INDEX "uniq_users_email_ci" ON "users" (LOWER("email"))`, it is
+    journaled, and `pg_indexes` confirms it live in production. Its implementation is
+    better than the one this item proposed — a `DO` block pre-checks for case-variant
+    duplicates and raises an error naming every offending address, because a bare
+    `CREATE UNIQUE INDEX` fails with an undiagnosable "could not create unique index".
+    Proven by constructed bite: inserting an uppercase variant of an existing address
+    into production inside a rolled-back transaction is rejected with `23505`.
+    **The absence from the Drizzle schema is deliberate, not drift.** `uniq_users_email_ci`,
+    `idx_users_email_trgm` and `idx_users_platform_admin` all exist in production and are
+    all absent from the table definition: raw-SQL-managed objects stay outside Drizzle's
+    view so Drizzle never manages them, the same principle as the
+    `hrms-phase1-sql-managed.ts` holding barrel. Declaring them would invite a generated
+    migration to drop them. Do not "fix" this by adding them to the schema.
 
-12. **"My work" ticket read is three OR branches.** `build/core/projects-tickets-read.service.ts`
-    measured 373ms / 116 MB per page. Per backend/CLAUDE.md §7 an `OR` between an
+12. **"My work" ticket read is three OR branches.** `build/core/projects-tickets-read.service.ts`.
+    **The quoted 373ms / 116 MB per page did not come from production** — no build table
+    reaches the top 12 by row count there (2026-09-21 measurement, item 1). Treat it as a
+    seeded-environment figure and re-measure before and after. Per backend/CLAUDE.md §7 an `OR` between an
     indexed predicate and a semi-join defeats both — split into a `UNION` of
     independently-indexed branches with `count(*) OVER ()`. Measure before and after;
     the `ticket_participants` redesign is the larger fix and can wait on the number.
