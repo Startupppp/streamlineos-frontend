@@ -95,12 +95,7 @@ Verified in the production catalog afterwards rather than trusted from the runne
 columns; all three `build` tables. `job_requisitions` held **0 rows**, so the FK validation and the
 column add were both trivial and took no rewrite.
 
-⚠ **Still open, and deliberately not touched: two duplicate migration numbers.** `1120` is claimed by
-both `1120_add_landed_cost_tag.sql` and `1120_feedbucket_widget_defaults.sql`; `1121` by both
-`1121_requisition_headcount_link.sql` and `1121_chat_presence_custom_status.sql`. Two lanes numbered
-independently. The journal keys on `tag`, not the number, so this breaks nothing at runtime — but
-`check:migration-discipline` still reports `[dup-prefix]` for both, and renaming a file belongs to the
-lane that owns it.
+✅ **The two duplicate migration numbers are closed 2026-09-21** — see the migration closeout below.
 
 **The lesson this lane should carry:** journalling is not bookkeeping. An unjournalled migration is
 indistinguishable from an applied one at every static gate — typecheck passes, jest passes, the build
@@ -305,9 +300,81 @@ prove the call shape and the containment, not rollback itself. Rollback rests on
 the savepoint mechanism verified at source above; proving it end to end needs a
 live database, which this machine does not have.
 
+### Migration closeout — production is now consistent
+
+Three separate defects, all found by reading the production catalog rather than
+trusting a runner's output.
+
+| Migration | State found | Action |
+|---|---|---|
+| `1130_chat_invite_link_token_hardening` | journalled, never applied | **Applied.** Verified beforehand to be a no-op: `chat_channel_invite_links` holds **0 rows**, `token_hash` was already `NOT NULL`, and `uniq_chat_invite_link_token` was already absent. Nothing was erased and no invite link broke — the apparent destructiveness of its `UPDATE … SET token = NULL` was against an empty table. |
+| `1129_onb_flow_sessions_unique_type_per_actor` | **applied, but reading as pending** | Its ledger row (id 24) carried `created_at=1789959560734` while the journal had been renumbered to `…346` by another session *after* it was applied. That made the row an orphan and put the migration above the watermark, so the next `db:migrate` would have re-run an applied migration. Reconciled with one guarded `UPDATE`, hash-checked against the file first. |
+| `1120`/`1121` duplicate numbers | `check:migration-discipline` red | Renumbered to `1128a`/`1128b` — see commit. |
+
+Ledger before: 24 rows, 2 pending, 1 orphan. After: **26 rows, 0 pending, 0
+orphans, 0 duplicates.**
+
+⚠ **One pre-existing condition is NOT fixed and is not mine:** 867 journal
+entries sit below the watermark with no ledger row, so they will never apply on
+this database. Production was built by push/bootstrap rather than by the
+migration chain, which is why the ledger is near-empty against 893 files. A
+cold rebuild from this journal and the live database are therefore not
+guaranteed to agree. Unchanged by this lane, recorded so it is not rediscovered.
+
+`check:migration-chain` still fails on two pre-existing issues — the baselined
+`1090` duplicate prefix and the `0619` timestamp regression. It went from three
+duplicate prefixes to one.
+
+### Dead code — 33 exports deleted, scoped to modules nobody else was editing
+
+Backend knip: 13 unused exports + 76 unused types → **10 + 46**. Most deletions
+were not merely unused but root §4 violations — a service re-exporting a type it
+does not own, creating a second import path that rots.
+
+**The dead-code ledger beat the tool three times.** `check-dead-code.mjs` carries
+verdicts knip cannot see, and all three were correct to honour:
+`PresenceStatus` (KEEP — companion alias of the live `PRESENCE_STATUSES`; knip
+misses the `(typeof X)[number]` derivation), `EmployeeAdmissionStatus` (KEEP),
+and `runInNewOrgTransaction` (**WIRE**, not delete — its missing caller is
+`bootstrapCellOrganization`, and the `runInNewTenantTransaction` it currently
+uses resolves region by reading the organisation's own uncommitted row).
+
+Left alone deliberately: `inventory/purchase-orders/po-lifecycle.ts`, a verified
+stale pre-extraction duplicate of the live `lib/po-lifecycle.ts` (its four
+exports are shadowed by same-named ones with different signatures). Zero
+references, safe to delete — but inventory is being actively edited by another
+session, so it stays for its owner. The 18 duplicate exports were also left:
+they sit in `*-response.schemas.ts` files where a rename risks contract drift.
+
+### Deferral premises re-tested — six fell, one survived
+
+An audit claimed seven documented blockers were already satisfied. Each was
+re-verified adversarially before any doc was edited, and that was worth doing:
+
+| Item | Verdict |
+|---|---|
+| chat-os P4-6 "no `data-*` directive frame is emitted at all" | **Stale** — the emitter is wired end to end on a single unbranched path. The SSE census predates the wiring and almost certainly did not decode **transient** data parts. |
+| ask-os F-06 multiple directives per turn | **Done** — `global-ask-os.tsx:219-220` appends rather than overwrites; the renderer maps N cards. |
+| ask-os F-07 confirm card surviving reload | ⚠ **Still open — the audit overreached.** The reloaded card renders in `mode="record"` and is **read-only**: the token is stripped at persist time (`streaming/ask-os-directive.ts:43`). Only the "card vanishes" half was fixed. There is still no way to confirm or decline after a reload, and `cancelProposal` was deleted, so a live proposal dangles until expiry. |
+| ask-os F-10 "`react-window` is installed but unused anywhere" | **False** — nine production consumers. The defect (`ask-os-chat-view.tsx:112` maps every row) is real, but the stated reason to defer is not. |
+| `ai-credits-reservation.service.ts` live billing bug | **Already fixed** — `:103` returns `existing.id`. |
+| "impersonation is never recorded in any audit log" | **False** — the context reaches a real write at `audit.service.ts:200-204`, and the interceptor is registered *before* `TenantContextInterceptor`, so the scope encloses the after-commit drain. |
+| ask-os 11.4 registry parity spec "has not landed" | **Landed and non-vacuous** — asserts both directions plus anti-vacuity floors. `ACTION_LABELS` 24 ↔ `CONFIRMABLE_ACTION_DEFINITIONS` 24; the "20 against 22" is stale. |
+| ask-os 15.1 `AmbiguousCandidate` duplicate | **Unified** — one declaration, three importers, no alias. |
+
+**A stale count worth correcting elsewhere:** the connection-hold PRD's "13 AI
+holds remaining" is now **1**. `check:request-txn-outbound` reports
+`8 holding across an outbound call (frozen), 1 across an AI call (ceiling 1)`,
+and the one is `mail#aiInboxSummary`.
+
+That makes **twelve** deferral premises refuted across this lane. The pattern is
+consistent: every one made the work look larger than it was.
+
 ### Still open
 
-- The ~90 repo-wide knip findings. Authorization covered the AI-module item, whose premise was refuted; the real set spans modules other sessions are actively editing, so it needs a separate decision.
+- **The 56 remaining knip findings**, all in modules under concurrent edit (billing, build, cron, impersonation, inventory, kb, notifications, timesheets), plus the 18 duplicate exports and `po-lifecycle.ts`.
 - The 50 unbudgeted connection-hold sweeps — not dispatched.
 - Every chat-os item needing a live environment: no local Postgres, Redis or Docker on this machine (5432/5433/6379 all refuse).
 - ask-os 11.1 (directive column needs a migration) and the email-predicate widening (needs the notifications owner).
+- **ask-os F-07 and F-10**, both now with their false rationale removed — F-07 needs a decline endpoint and a token-bearing reload path; F-10 needs windowing on an established in-repo pattern.
+- The 867 unapplied-below-watermark journal entries described above.
