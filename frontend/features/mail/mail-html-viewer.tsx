@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import DOMPurify from "isomorphic-dompurify";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useSanitizedHtml } from "@/hooks/common/use-sanitized-html";
+import type { SanitizeHtmlPolicy } from "@/lib/sanitize-html";
 
 const BLOCKED_ATTR = "data-blocked-src";
 
@@ -27,34 +28,31 @@ function isRemoteUrl(src: string): boolean {
   return src.startsWith("http://") || src.startsWith("https://") || src.startsWith("//");
 }
 
-function sanitizeEmail(html: string, allowImages: boolean): string {
-  if (!allowImages) {
-    DOMPurify.addHook("afterSanitizeAttributes", (node) => {
-      if (node.tagName === "IMG") {
-        const src = node.getAttribute("src") ?? "";
-        if (isRemoteUrl(src)) {
-          node.setAttribute(BLOCKED_ATTR, src);
-          node.removeAttribute("src");
-          const alt = node.getAttribute("alt") ?? "remote image";
-          node.setAttribute("alt", alt);
-        }
-      }
-    });
-  }
+const blockRemoteImage: NonNullable<SanitizeHtmlPolicy["afterSanitizeAttributes"]> = (node) => {
+  if (node.tagName !== "IMG") return;
+  const src = node.getAttribute("src") ?? "";
+  if (!isRemoteUrl(src)) return;
+  node.setAttribute(BLOCKED_ATTR, src);
+  node.removeAttribute("src");
+  node.setAttribute("alt", node.getAttribute("alt") ?? "remote image");
+};
 
-  let clean: string;
-  try {
-    clean = DOMPurify.sanitize(html, {
-      ALLOWED_TAGS,
-      ALLOWED_ATTR,
-      FORCE_BODY: true,
-      ALLOW_UNKNOWN_PROTOCOLS: false,
-    });
-  } finally {
-    if (!allowImages) DOMPurify.removeHook("afterSanitizeAttributes");
-  }
+const MAIL_POLICY: SanitizeHtmlPolicy = {
+  config: {
+    ALLOWED_TAGS,
+    ALLOWED_ATTR,
+    FORCE_BODY: true,
+    ALLOW_UNKNOWN_PROTOCOLS: false,
+  },
+};
 
-  return clean.replace(
+const MAIL_POLICY_BLOCKING_REMOTE_IMAGES: SanitizeHtmlPolicy = {
+  ...MAIL_POLICY,
+  afterSanitizeAttributes: blockRemoteImage,
+};
+
+function hardenLinks(html: string): string {
+  return html.replace(
     /<a(\s)/gi,
     '<a target="_blank" rel="noopener noreferrer"$1',
   );
@@ -73,9 +71,14 @@ interface MailHtmlViewerProps {
 export function MailHtmlViewer({ html, className }: MailHtmlViewerProps) {
   const [allowImages, setAllowImages] = useState(false);
 
+  const sanitizedBody = useSanitizedHtml(
+    html,
+    allowImages ? MAIL_POLICY : MAIL_POLICY_BLOCKING_REMOTE_IMAGES,
+  );
+
   const sanitized = useMemo(
-    () => sanitizeEmail(html, allowImages),
-    [html, allowImages],
+    () => (sanitizedBody === null ? "" : hardenLinks(sanitizedBody)),
+    [sanitizedBody],
   );
 
   const blockedCount = useMemo(

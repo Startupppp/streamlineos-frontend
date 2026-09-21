@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { EmployeeDetailsView } from "@/features/hr/employees/detail/employee-details-view";
 import {
   employeeDataSchema,
@@ -7,6 +8,7 @@ import { notFound } from "next/navigation";
 import { requirePermission } from "@/lib/rbac/require-permission";
 import { serverGet } from "@/lib/server-fetch";
 import { isApiError } from "@/lib/api-client";
+import EmployeeDetailLoading from "./loading";
 
 export default async function EditEmployeePage({
   params,
@@ -29,9 +31,11 @@ export default async function EditEmployeePage({
     throw error;
   }
 
-  if (!employee) 
-    return notFound();
-  
+  if (!employee) return notFound();
 
-  return <EmployeeDetailsView employee={employee} />;
+  return (
+    <Suspense fallback={<EmployeeDetailLoading />}>
+      <EmployeeDetailsView employee={employee} />
+    </Suspense>
+  );
 }

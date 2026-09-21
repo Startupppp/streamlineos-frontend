@@ -1,7 +1,5 @@
 "use client";
 
-import DOMPurify from "isomorphic-dompurify";
-
 import { useState, useCallback } from "react";
 import { useResignations, type Resignation } from "@/hooks/api/hr";
 import { apiClient } from "@/lib/api-client";
@@ -67,14 +65,17 @@ export function ExitManagementPage() {
 
   const handleViewLetter = useCallback(async (id: number) => {
     try {
-      const data = await apiClient.get(`/hr/exit/${id}/letter`, undefined, undefined, exitLetterContract);
+      const [{ sanitizeHtml }, data] = await Promise.all([
+        import("@/lib/sanitize-html"),
+        apiClient.get(`/hr/exit/${id}/letter`, undefined, undefined, exitLetterContract),
+      ]);
       const win = window.open("", "_blank");
       if (!win) {
         toast.error("Popup blocked — please allow popups to view the letter.");
         return;
       }
       win.document.write(
-        `<!DOCTYPE html><html><head><title>Resignation Letter</title><style>body{margin:0;padding:20px 40px;}</style></head><body>${DOMPurify.sanitize(data.html)}</body></html>`,
+        `<!DOCTYPE html><html><head><title>Resignation Letter</title><style>body{margin:0;padding:20px 40px;}</style></head><body>${sanitizeHtml(data.html)}</body></html>`,
       );
       win.document.close();
     } catch {

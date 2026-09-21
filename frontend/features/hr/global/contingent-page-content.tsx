@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import DOMPurify from "isomorphic-dompurify";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +19,7 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { SanitizedHtml } from "@/components/shared/sanitized-html";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileText } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -83,9 +83,9 @@ function CertificateViewer({ contractId }: { contractId: number }) {
             <AlertDialogHeader>
               <AlertDialogTitle>Internship Certificate</AlertDialogTitle>
             </AlertDialogHeader>
-            <div
+            <SanitizedHtml
+              html={data.html}
               className="prose prose-sm max-h-96 overflow-y-auto rounded-lg border border-border p-4 bg-card"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.html) }}
             />
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setEnabled(false)}>Close</AlertDialogCancel>
