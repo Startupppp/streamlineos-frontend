@@ -27,11 +27,15 @@ export const myMoodHistoryContract = z.array(z.object({
   note: z.string().nullable(),
 }));
 
-export const orgMoodAggregateContract = z.array(z.object({
-  date: z.string(),
-  avgMood: z.number(),
-  count: z.number().int(),
-}));
+export const orgMoodAggregateContract = z.object({
+  minResponses: z.number().int(),
+  suppressedDays: z.number().int(),
+  points: z.array(z.object({
+    date: z.string(),
+    avgMood: z.number(),
+    count: z.number().int(),
+  })),
+});
 
 export const moodCheckinContract = z.object({
   id: z.number().int(),
@@ -104,11 +108,13 @@ export const pollResultsContract = z.object({
   anonymous: z.boolean(),
   status: z.enum(["draft", "active", "closed"]),
   totalVotes: z.number().int(),
+  minResponses: z.number().int(),
+  suppressed: z.boolean(),
   counts: z.array(z.object({
     option: z.string(),
     optionIndex: z.number().int(),
     count: z.number().int(),
-  })),
+  })).nullable(),
 });
 
 const communityMemberContract = z.object({
