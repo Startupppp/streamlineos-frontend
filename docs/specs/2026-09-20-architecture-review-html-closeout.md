@@ -53,10 +53,20 @@ Ordered most severe first. Each names the owning file and the smallest repair.
    the triggering row count in the migration header per backend/CLAUDE.md §3 — and
    decide before partitioning, because the key must be in every PK/UNIQUE.
 
-2. **171 direct `process.env` reads outside `src/config/`, and climbing** — 108 on
-   2026-08-20, 158 on 2026-08-23, 171 now. The repair is not the 171 edits, it is the
-   lint rule that stops the 172nd: `no-restricted-syntax` banning `process.env` outside
-   `src/config/`. Without the gate the count returns.
+2. ~~**171 direct `process.env` reads and no lint rule**~~ — **both halves were wrong;
+   corrected and largely CLOSED 2026-09-20.** The real count outside config, scripts
+   and tests is **94**, not 171 — the review's figure counted test and script reads.
+   And a `no-restricted-syntax` gate already existed. Its actual defects were narrower
+   and worse: it covered only `src/modules/**` and `src/common/**`, leaving
+   `src/health`, `src/db`, `src/degradation` and `src/me` **entirely ungated**; and 22
+   files inside the covered glob were missing from the per-file ratchet, so
+   `pnpm exec eslint` was **exiting 1 on `main`** — confirmed by running the committed
+   config against three of them and collecting five errors. Fixed in `14bc673d4`: glob
+   widened to `src/**` with explicit ignores for the four places that legitimately read
+   the environment pre-injector, and the 22 added to the ratchet. Verified the rule
+   fires in newly-covered `src/health/` and stays silent in `src/config/`.
+   **Still open:** nothing caps ratchet growth, so an author can still add their file
+   instead of fixing the read. That needs its own check.
 
 3. **AI model tiering is two global constants.** `llm-provider.config.ts:34-35` —
    `fastModel = "gpt-4o-mini"`, `standardModel = "gpt-4o"`, platform-wide. Needs
@@ -114,12 +124,31 @@ Ordered most severe first. Each names the owning file and the smallest repair.
 14. **Payroll still imports HR/directory schema directly.** `payroll/filings/filings.service.ts`
     and `payroll/lib/payroll-run-payee.ts` should read through `modules/directory/person-seam.ts`.
 
-15. **`team` DataScope silently degrades to `own`.** `access/apply-scope.ts:23-27` falls
-    back to `eq(ownerColumn, userId)` when `teamIds` is absent — and **no caller supplies
-    `teamIds`**. So every team-scoped list quietly returns the caller's own rows. The
-    correlated subquery backend/CLAUDE.md §5 named as the blocker is gone; materialising
-    org-unit membership is the remaining prerequisite before `team` can be advertised
-    as working. Until then it is a scope that lies.
+15. **`team` DataScope silently degrades to `own`** — premise CONFIRMED, and one
+    tempting repair has been tried and REJECTED. `access/apply-scope.ts:22-27` falls
+    back to `eq(ownerColumn, userId)` when `teamIds` is absent. Verified 2026-09-20:
+    there is exactly **one** runtime caller (`scoped-read.ts:106`) and it supplies no
+    `teamIds`, so every team-scoped list returns the caller's own rows. `team` *is*
+    reachable — `permission-catalog-sync.service.ts:133` emits a `team` row for every
+    `scopable` permission — but **no role seeds it**, and a live count found **zero
+    `scope = 'team'` rows in production** across `role_permission_grants` and
+    `user_permission_grants`. The correlated subquery §5 named as the blocker is
+    already gone.
+
+    **Do not "fix" this by returning `sql\`false\``.** That was implemented and backed
+    out, for three reasons. ADR 0005 ranks `none < own < team < all` and `broadest()`
+    depends on it, so denying at `team` makes the *broader* grant return strictly
+    fewer rows than the narrower one — a user holding both `own` and `team` would
+    resolve to `team` and see nothing. It fails six tests across three suites,
+    including two that deliberately pin the degrade. And it does not even achieve its
+    own aim: `false` renders an empty list, which is exactly as silent to the user as
+    the under-grant it replaces.
+
+    The honest repair is one of two product decisions, neither of them a code tweak:
+    materialise org-unit membership so `teamIds` can be supplied, or stop offering
+    `team` as a grantable scope until it exists. backend/CLAUDE.md §5 already says
+    `team` "ships only once materialised" — the defect is that the grant UI offers a
+    scope the query layer cannot honour.
 
 **Not re-verified:** the knip housekeeping item (14 unused web files, `@reactour/tour`).
 Note that the 11 raw-SQL-managed schema files are *deliberately* unimported and are
