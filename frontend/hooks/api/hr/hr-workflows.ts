@@ -27,10 +27,10 @@ const WORKFLOWS_KEY = [...queryKeyBase, "hr", "workflows"] as const;
 const INSTANCES_KEY = [...queryKeyBase, "hr", "workflow-instances"] as const;
 const DELEGATIONS_KEY = [...queryKeyBase, "hr", "workflow-delegations"] as const;
 
-export function useHrWorkflowDefinitions(params?: { objectType?: HrWorkflowObjectType; status?: HrWorkflowStatus; page?: number; limit?: number }) {
+export function useHrWorkflowDefinitions(params?: { objectType?: HrWorkflowObjectType; status?: HrWorkflowStatus; cursor?: string; limit?: number }) {
   return useGatedQuery("hr:workflows:view", {
     queryKey: [...humanResourcesQueryKeys.hr.hrWorkflowsAll, params],
-    queryFn: ({ signal }) => apiClient.get<PaginatedResult<HrWorkflowDefinition>>("/hr/workflows", params, signal, lazyContract(() => import("@/hooks/api/hr/hr-workflows-schema").then(m => m.workflowDefinitionListContract))),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginatedResult<HrWorkflowDefinition & { stepCount: number }>>("/hr/workflows", params, signal, lazyContract(() => import("@/hooks/api/hr/hr-workflows-schema").then(m => m.workflowDefinitionListContract))),
     staleTime: 2 * 60_000,
   });
 }
