@@ -106,8 +106,9 @@ boundaries, not write permission.
 | Packet | Owner/session | Root/frontend revision | Backend revision | Exact write set | Acquired | Expires | Status |
 |---|---|---|---|---|---|---|---|
 | `BLD-X-SB-ACTIONS-001` | cycle-14 agent CA | `e18077a30` | `374afd27a` | prod: none changed · test: `build-quick-create.test.tsx`, `build-more-tools-menu.test.tsx`, `use-build-nav-preferences.test.ts` | 2026-09-21T08:35Z | 2026-09-21T11:35Z | `INTEGRATED (cycle 14)` |
+| `BLD-X-FE-QUALITY-001a-i` | cycle-16 agent EA | `e18077a30` | `374afd27a` | prod: `features/build/governance/risks-page.tsx`, `risk-severity.ts`, `hooks/api/build/governance-schema.ts` · test: `risk-matrix.test.tsx`, new `risks-page-aggregates.test.tsx`, new `governance-contract.test.ts` | 2026-09-21T12:40Z | 2026-09-21T15:40Z | `RESERVED` |
 | `BLD-X-SB-NAV-001` | cycle-15 agent DB | `e18077a30` | `374afd27a` | prod: `lib/build/build-scope.ts`, `features/build/navigation/use-reconciled-build-scopes.ts`, `use-build-scope-directory.ts`, `lib/build/nav/build-project-catalog.ts` · test: `lib/build/build-scope.test.ts`, `build-project-catalog.test.ts` | 2026-09-21T12:25Z | 2026-09-21T15:25Z | `RESERVED` |
-| `BLD-X-SB-CAPABILITY-001` | cycle-15 agent DA | `e18077a30` | `374afd27a` | prod: `features/build/navigation/use-build-nav-model.ts` · test: `use-build-nav-model.test.tsx`, new `lib/build/build-nav-catalog-route-files.test.ts` | 2026-09-21T12:10Z | 2026-09-21T15:10Z | `RESERVED` |
+| `BLD-X-SB-CAPABILITY-001` | cycle-15 agent DA | `e18077a30` | `374afd27a` | prod: `features/build/navigation/use-build-nav-model.ts` · test: `use-build-nav-model.test.tsx`, new `lib/build/build-nav-catalog-route-files.test.ts` | 2026-09-21T12:10Z | 2026-09-21T15:10Z | `INTEGRATED (cycle 15)` |
 | `BLD-X-FE-ALLWORK-001` | cycle-14 agent CB | `e18077a30` | `374afd27a` | prod: `all-work-page.tsx`, `use-all-work-filters.ts`, `all-work-board-section.tsx`, `all-work-list-section.tsx` · test: `all-work-access-gate.test.tsx`, new `all-work-filters.test.ts` | 2026-09-21T08:35Z | 2026-09-21T11:35Z | `INTEGRATED (cycle 14)` |
 | `BLD-X-FE-INBOX-001` | cycle-14 agent CC | `e18077a30` | `374afd27a` | prod: `features/build/inbox/inbox-page.tsx`, `inbox-list.tsx`, `inbox-notification-item.tsx`, `inbox-preview-pane.tsx`, `inbox-render-window.ts`, `inbox-ticket-preview.tsx`, `parse-inbox-ticket-link.ts` · test: `inbox-badge-invalidation.test.ts`, `inbox-list-bounded.test.tsx`, `inbox-notification-item.test.tsx`, `parse-inbox-ticket-link.test.ts`, new `inbox-page.test.tsx` | 2026-09-21T08:55Z | 2026-09-21T11:55Z | `RESERVED` |
 | `BLD-X-SB-SIGNALS-001` | cycle-13 agent BA | `400e17647` | `1e8df44cc` | prod: `features/build/navigation/build-agent-pulse.tsx`, `build-nav-link.tsx`, `hooks/api/build/approvals.ts` (dead `signalBuildInboxInvalidation` + its `storage` listener only) · test: `build-agent-pulse.test.tsx`, `build-inbox-badge-cross-tab.test.tsx`, `build-nav-link-badge-a11y.test.tsx`, `hooks/api/build/approvals-badge.test.ts` | 2026-09-21T06:20Z | 2026-09-21T09:20Z | `INTEGRATED (cycle 13)` |
@@ -1021,6 +1022,52 @@ guarantees to every member. Nothing to un-tick here (no entry to shrink), but
 the gate under-reports and a future packet should widen it to cover universal
 reads that can still return 402/403.
 
+### Cycle 15 outcomes
+
+**`BLD-X-SB-CAPABILITY-001` — `INTEGRATED`.** The capability gate now mirrors
+the permission gate beside it:
+
+```ts
+capability === "client-portal"
+  ? activeProject !== undefined && projectFeatures?.["clientPortal"] !== false
+  : true
+```
+
+- **The premise was refined, not just confirmed.** The audit assumed the gate
+  might also be wrong for a *loaded* project with an absent `clientPortal` key.
+  The agent traced the create wizard (`features/build/project-create/use-project-create.ts:44-62`)
+  and found it always writes the **complete** `features` map, so a
+  wizard-created project carries an explicit `false` and gates correctly once
+  loaded. The defect really was load-timing only. Residual, unchanged by this
+  fix and **not** a load-timing bug: a project created by any path that bypasses
+  the wizard (`projects-provision.service.ts:117-122` persists `features` only
+  when sent) has no `clientPortal` key and reads as *enabled*. That is a
+  default-value product question and needs its own owner.
+- **Coordinator ruled out the regression this fix could have caused.**
+  `useProject(scope.projectId ?? 0)` is disabled for non-project scopes, so
+  `activeProject` is `undefined` there forever — which would hide the
+  destination permanently if the capability appeared in a non-project catalog.
+  It does not: `client-portal` exists only in `build-project-catalog.ts:111-116`.
+  No non-project scope reaches the gate.
+- **Both new tests were proven non-vacuous, which is the part that matters.**
+  The agent reverted the source fix and confirmed the loading test went red for
+  the right reason, then restored it. For the route census it injected a
+  `fake-dangling` destination and confirmed the test failed naming it. The
+  census also carries `expect(destinations.length).toBeGreaterThan(40)` at
+  `build-nav-catalog-route-files.test.ts:64`, so it cannot pass by enumerating
+  nothing — the exact failure mode this repo has been bitten by before.
+- It closes a real gap: the existing parity test only checks an href resolves to
+  a registered route-access decision, never that a `page.tsx` exists.
+- Coordinator re-ran: **5 tests, 2 suites, exit 0**.
+
+**Tooling papercut, recorded not fixed.** `pnpm type-check:specs` OOMs at the
+default Node heap; it needs `NODE_OPTIONS=--max-old-space-size=10240`. Three
+separate agents hit this and worked around it independently. Since every agent
+brief tells them to run that gate, the brief now specifies the heap flag — an
+agent that hits the OOM and reads it as "the gate is broken" would report a
+clean typecheck it never got. Not fixing `package.json` here because a
+concurrent session has it modified.
+
 ### Findings banked for cycles 15–16 (read-only audit, unverified by coordinator)
 
 Leads with file:line anchors, to be re-verified by the owning packet before any
@@ -1037,6 +1084,22 @@ edit — an audit report is a lead, not a finding.
 | `features/build/governance/risk-form-sheet.tsx:101-118`, `decision-form-sheet.tsx:100-107` | `...(values.x ? { x } : {})` omits an emptied field, so clearing Description/Mitigation/Owner silently restores the old value. The backend already supports clearing (`.nullish()`); the frontend `Update*Input` types are `string \| undefined` and cannot express `null` | `BLD-X-FE-QUALITY-001a` |
 | `backend/src/modules/build/governance/risks.service.ts:43`, `decisions.service.ts:51` | Bare `.select()` expands to the full Drizzle column list including the four columns migration `1128` adds. Against a database that has not applied 1128, **every governance read is `42703` → 500**. `1128` is journalled (idx 1016) but unapplied — a deploy-ordering hazard, not a frontend bug | `BLD-X-DB-MIG-*` + `BLD-X-FE-QUALITY-001a` |
 | `features/build/governance/governance-schema.ts:10-11` | `probability`/`impact`/`status` typed `z.string()` over pg enums. `risk-severity.ts:16` multiplies through a `Record<string, number>`, so an off-enum value yields `NaN`, every comparison is false, and the badge renders **"Critical"** | `BLD-X-FE-QUALITY-001a` |
+
+**`BLD-X-FE-QUALITY-001a` was split — the audit's proposed write set was not a
+packet.** It named **14 production files across both repos**, against a hard
+limit of eight and a max of three ownership roots, and it bundled a real API
+design decision (cursor vs offset pagination, which the backend has neither of)
+with straightforward frontend repairs. Dispatched as:
+
+| Child | Scope | State |
+|---|---|---|
+| `-001a-i` | Filtered-aggregate correctness + the `NaN`→"Critical" severity path + enum tightening. Frontend only, no API change | dispatched cycle 16 |
+| `-001a-ii` | The cannot-clear-an-optional-field bug: `...(v ? {x:v} : {})` in both form sheets, plus widening `Update*Input` to express `null` (the backend already accepts it via `.nullish()`) | queued, disjoint files |
+| `-001a-iii` | Pagination for the governance endpoints. **Blocked on a product/API decision** — offset with `count(*) OVER ()` vs cursor. Backend change, needs its own owner | blocked |
+
+The deploy-ordering hazard (bare `.select()` expanding to columns migration
+`1128` has not applied) is a **backend** finding and stays with
+`BLD-X-DB-MIG-*`; no frontend child touches it.
 
 Refuted by the same audit, so no packet should re-open them: governance pages
 already pass `error` to `usePageState` (not among the fourteen); `loading={null}`

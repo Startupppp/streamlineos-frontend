@@ -60,9 +60,9 @@ export function useBuildNavModel(): {
   const isCapabilityEnabled = useCallback(
     (capability: BuildNavCapability) =>
       capability === "client-portal"
-        ? projectFeatures?.["clientPortal"] !== false
+        ? activeProject !== undefined && projectFeatures?.["clientPortal"] !== false
         : true,
-    [projectFeatures],
+    [activeProject, projectFeatures],
   );
 
   const navAccess = useMemo<BuildNavAccess>(
