@@ -52,7 +52,7 @@ The consequence for TASK I is specific: migration 1142's `ON DELETE SET NULL (he
 | F — P1 #11 Issues explorer residual | TODO | scoping in flight | — | — | awaiting scope |
 | G — P1 #13 command palette residual | TODO | scoping in flight | — | — | awaiting scope |
 | H — Controller census | IN_PROGRESS | agent, `build/closure-h-census` | — | — | — |
-| I — Migration readiness | IN_PROGRESS | agent, `build/closure-i-migrations` | — | — | no database |
+| I — Migration readiness | **DONE (static)** — merged to backend `main` as `40abe03fc`. DB application **BLOCKED** | agent + coordinator, `build/closure-i-migrations` | `docs/migration-static-verification-2026-09-21.md` (new). **No migration, journal or seal file touched.** | 8 gate self-tests then 7 gates, all exit 0; `typecheck` 0 | No non-production PostgreSQL. `check:set-null-column-lists` needs `SET_NULL_GATE_DATABASE_URL`; `check:composite-fk-set-null` is production-touching and was not run |
 
 ## Reconciliation of the inherited pending list
 
@@ -107,6 +107,51 @@ The spec interprets real Drizzle where-clause predicates against an in-memory st
 
 The transaction mock invokes its callback (BE-136), so the assertions inside it are live.
 
-### Prior weakness resolved
+### Prior weakness resolved (TASK A)
 
 The earlier N-10 spec had a positive control (`updateRelease`) that failed when its gate was removed, because the transaction mock was consumed by the membership probe — it could not distinguish a working gate from a broken fixture. The new store-backed fixture does not have that defect.
+
+---
+
+## TASK I — static verification only, merged as `40abe03fc`
+
+**Database application is BLOCKED. Migrations 1141 and 1142 remain UNAPPLIED.** No database was contacted and none of the banned commands ran.
+
+### Gates that ran (no DB I/O, proven by reading source first)
+
+`check-migration-immutability`, `check-migration-rollback`, `check-drop-column-safety`, `check-migration-discipline`, `check-watermark-free-appliers` and `migration-plan` import only `node:fs`/`path`/`url`/`os`/`crypto`. `guard-db-generate` does import `node:child_process`, but `--check` routes through `runCheck()`, which `process.exit()`s at both exits before reaching the `spawnSync("drizzle-kit")`.
+
+Self-tests first in every case (discipline 27, immutability 13, rollback 9, drop-column, db-generate-guard 6, watermark-free 10, set-null 14, composite-fk 7/7), then the gates: discipline PASSED 903 files / 0 new violations, immutability OK, rollback PASSED, drop-column OK, watermark-free OK, `typecheck` 0.
+
+### Blocked, with the exact missing requirement
+
+- `check:set-null-column-lists` — needs a **non-production bootstrapped PostgreSQL 15+ via `SET_NULL_GATE_DATABASE_URL`**. None exists here. The worktree has no `.env` at all, so the blocker is the absent database, not credentials.
+- `check:composite-fk-set-null` — production-touching; self-test only.
+
+### Journal integrity — independently re-verified by the coordinator
+
+903 files ↔ 903 entries, sets identical, 0 unjournalled, 0 fileless, 0 duplicate `idx`, 0 duplicate `when`, and **exactly one** `when` non-increase, at array position 342 (`0271a_waitlist_admission` → `0619_chain_creates_what_production_has`).
+
+### Both alleged defects: REAL, already adjudicated — document, do not touch
+
+**Duplicate prefix 1090.** Distinct tags, idx, when and files. Nothing resolves a migration by prefix: the runner reads `migrations/${tag}.sql`, the seal keys on tag, and the ledger has no tag column. It is one of **80** duplicated prefixes (`0379` is 4-way). Already in `BASELINE_JOURNAL_INTEGRITY`; the gate passes with 0 new violations.
+
+> **The baseline's written rationale is false.** It claims the collision was with "the already-sealed `1090_subscription_purchases`". Coordinator-verified: **neither 1090 is sealed.** The conclusion survives only on the independent ground that the ledger stores no tag. Do not rely on the seal argument if this is revisited.
+
+**0619 / 0271 timestamp regression.** Named verbatim by `check:migration-discipline` as a `NOTE [journal-order]`. Ordering is by **array position** — `run-pending-migrations.mjs:128` queues the whole array and guards by file hash; `migration-plan.mjs` uses set membership, not a watermark. `check:watermark-free` is what keeps it harmless: if any applier reverted to watermark selection, position 341 would silently strand hundreds of later entries.
+
+Two reasons not to touch it: **`0619` is sealed** (coordinator-verified — changing its `when` is a `RENUMBERED` failure, since `when` is the ledger join key), and `0271a` is baselined against the databases it is recorded applied on. With no database, the ledger half of that repair is impossible.
+
+*Coordinator note on method:* the seal file keys entries by array index, and each entry carries its own `tag`. Two of my own membership tests were malformed before I got this right — first comparing tags against index keys, then comparing by journal position, which has drifted because `0464a` and `0271a` were spliced in after sealing. The authoritative test is the `tag` recorded inside each seal entry.
+
+### PostgreSQL version — UNDECLARED
+
+**No file in either repository declares a minimum.** `engines` is Node-only; there is no docker-compose, devcontainer, `.tool-versions`, IaC or `server_version_num` assertion. PG 15+ holds only in practice: CI pins `pgvector/pgvector:pg16`, production Aurora is 18.4 (`db/pool.config.ts:207`), local scratch 18.6.
+
+**1142 introduces no new requirement** — the PG15 column-list form appears in ~100 migration files, earliest `0265`, with `0770` and `0992` dedicated to it, all three sealed. Declaring the floor explicitly is worth doing, but it does not gate this deployment.
+
+### Deployment hazard found in 1141 — coordinator-verified
+
+`src/db/schema/build/core.ts:46` declares `pmWorkspaceId: text("pm_workspace_id")` with **no `.notNull()`**, and OpenAPI publishes it nullable — but the database still carries the NOT NULL from `0333`. **Until 1141 is applied, the published contract says optional while a write that omits the field raises `23502`.** This makes applying 1141 a correctness fix, not a nicety.
+
+1142's column list is unverifiable statically for a second reason beyond `confdelsetcols`: `src/db/schema/hr/requisitions.ts:37` declares the same FK as `.onDelete("set null")`, and **Drizzle's API has no parameter for a column list at all** — the schema is silent on the very thing 1142 changes. The unblock path exists: `.github/workflows/db-gates.yml:157` already runs this gate with `SET_NULL_GATE_DATABASE_URL` against its own `pgvector/pgvector:pg16` service.
