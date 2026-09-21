@@ -44,7 +44,7 @@ The consequence for TASK I is specific: migration 1142's `ON DELETE SET NULL (he
 
 | Task | Status | Agent/session | Files changed | Tests | Blocker |
 |---|---|---|---|---|---|
-| A — Release nested-resource authorization | IN_PROGRESS | agent, `build/closure-a-releases` | — | — | — |
+| A — Release nested-resource authorization | **DONE** — merged to backend `main` as `d714ae8ff` | agent + coordinator, `build/closure-a-releases` | `projects-releases.service.ts` (7 lines), `projects-releases-cross-project-binding.spec.ts` (new, 388 lines) | 13/13 new; 109 suites / 545 tests green in `src/modules/build/core`; `typecheck` 0, `typecheck:test` 0 | — |
 | B — N-11 cold-load route gates | IN_PROGRESS | agent, `build/closure-b-n11` | — | — | — |
 | C — P0 #6 Sprint/Cycle | TODO | scoping in flight | — | — | awaiting scope |
 | D — P0 #7 QA Bug lifecycle | TODO | scoping in flight | — | — | awaiting scope |
@@ -75,3 +75,38 @@ No two agents share a file. Each works in its own worktree cut from `main`.
 | `build/closure-b-n11` | `slos-fe-b-n11` | `frontend/app/(authenticated)/build/**`, `frontend/lib/rbac/route-access/` |
 
 This file is owned by the coordinator. No agent may edit it.
+
+---
+
+## TASK A — closed, merged as `d714ae8ff`
+
+The inherited claim that N-10 closed this was wrong. N-10 gated the **caller** against the URL project; every nested lookup then matched on `releaseId + orgId` alone. Six bindings were missing:
+
+| Method | Added |
+|---|---|
+| `updateRelease` | `projectReleases.projectId` |
+| `deleteRelease` | `projectReleases.projectId` |
+| `addTicketToRelease` | `projectReleases.projectId`, `tickets.projectId` |
+| `removeTicketFromRelease` | `projectReleases.projectId` |
+| `releaseTickets` count + delete | `releaseTickets.orgId` — both **spanned organizations** |
+
+The two `releaseTickets.orgId` omissions were not in the original finding. The ticket-count subquery counted rows from every tenant, and the unlink deleted them.
+
+`tickets.projectId` is **nullable** (`ticket-core.ts:38`), so a project-less ticket now fails the match — fail-closed, which is correct.
+
+### Mutation proof
+
+The spec interprets real Drizzle where-clause predicates against an in-memory store instead of asserting on a mock, so removing a gate genuinely changes the outcome rather than passing vacuously. Each class was removed independently:
+
+| Mutation | Result |
+|---|---|
+| 4 release `projectId` bindings removed | **5 of 13 fail** |
+| ticket `projectId` binding removed | **1 of 13 fails** |
+| `releaseTickets` `orgId` bindings removed | **2 of 13 fail** |
+| all restored | **13 of 13 pass** |
+
+The transaction mock invokes its callback (BE-136), so the assertions inside it are live.
+
+### Prior weakness resolved
+
+The earlier N-10 spec had a positive control (`updateRelease`) that failed when its gate was removed, because the transaction mock was consumed by the membership probe — it could not distinguish a working gate from a broken fixture. The new store-backed fixture does not have that defect.
