@@ -44,9 +44,9 @@ The consequence for TASK I is specific: migration 1142's `ON DELETE SET NULL (he
 
 | Task | Status | Agent/session | Files changed | Tests | Blocker |
 |---|---|---|---|---|---|
-| J — authz fixes: 15 ticket handlers | IN_PROGRESS | agent, `build/closure-j-tickets` | — | — | — |
-| K — authz fixes: 9 execution handlers | IN_PROGRESS | agent, `build/closure-k-execution` | — | — | — |
-| L — authz fixes: 6 remaining handlers | IN_PROGRESS | agent, `build/closure-l-misc` | — | — | — |
+| J — authz fixes: 15 ticket handlers | **DONE** — merged to backend `main` | agent + coordinator, `build/closure-j-tickets` | 33 files incl. 2 new specs (44 tests) | build/core 111 suites / 589 tests (from 109/545); 255 suites / 1992 across the blast radius; `typecheck` 0, `typecheck:test` 0 | — |
+| K — authz fixes: 9 execution handlers | **DONE** — merged to backend `main` | agent + coordinator, `build/closure-k-execution` | 11 files incl. 1 new spec | 191 suites / 1367 tests; `typecheck` 0, `typecheck:test` 0 | — |
+| L — authz fixes: 6 remaining handlers | **DONE** — merged to backend `main` | agent + coordinator, `build/closure-l-misc` | 12 files incl. 2 new specs | 192 suites / 1366 tests; `typecheck` 0, `typecheck:test` 0 | — |
 | A — Release nested-resource authorization | **DONE** — merged to backend `main` as `d714ae8ff` | agent + coordinator, `build/closure-a-releases` | `projects-releases.service.ts` (7 lines), `projects-releases-cross-project-binding.spec.ts` (new, 388 lines) | 13/13 new; 109 suites / 545 tests green in `src/modules/build/core`; `typecheck` 0, `typecheck:test` 0 | — |
 | B — N-11 cold-load route gates | **DONE** — merged to root `main` | agent + coordinator, `build/closure-b-n11` | 52 files: 49 `page.tsx`, 1 new feature module, 1 new census spec, `scripts/build-route-census.mjs` | census PASS **0 weak cold-load gates**; self-test 9 PASS; `lib/rbac/route-access` 9 suites / 223 tests; `typecheck:web` 0; `check:build-execution-plan` 0 | — |
 | C — P0 #6 Sprint/Cycle | **BLOCKED** — not dispatched | scoped, read-only | none | none | Consolidates **two live database identities** (`sprints` and `cycles` tables, both live; tickets carry both `sprintId` and `cycleId` with separate composite FKs). Needs a schema migration **and** a row-level data backfill. No non-production database exists. |
@@ -54,7 +54,7 @@ The consequence for TASK I is specific: migration 1142's `ON DELETE SET NULL (he
 | E — P0 #8 residual | **DONE (fixture half)** — merged to backend `main` as `a684fed0f`. Item P0 #8 itself remains **BLOCKED** | agent + coordinator, `build/closure-e-p08` | `build-project-scoped-lists-404.spec.ts` (+24, spec only) | 18/18; `project-access-404` 4/4; `typecheck` 0, `typecheck:test` 0; both set-null self-tests green | The 286 composite SET NULL constraints need a real database |
 | F — P1 #11 Issues explorer residual | IN_PROGRESS | agent, `build/closure-f-issues` | — | — | — |
 | G — P1 #13 command palette residual | **DONE** — merged to root `main` as `cf7df1e07` | agent + coordinator, `build/closure-g-palette` | 9 files (`command-palette-dialog.tsx`, `use-global-search.ts`, `sidebar-nav-items.ts`, `build-nav-groups.ts`, 3 new specs, 2 mock updates) | 339 passed / 343; the 4 failures are pre-existing `shell-keyboard.test.tsx`, confirmed identical on main; `typecheck:web` 0 | — |
-| H — Controller census | **DONE** — merged to backend `main` as `a7c4b3b84` | agent + coordinator, `build/closure-h-census` | `scripts/build-authorization-census.mjs` (new, 1958 lines), `docs/build-module/authorization-census.{md,json}`, `package.json` | self-test 29/29; `--check` green; `typecheck` 0 | — |
+| H — Controller census | **DONE** — merged, re-cut twice as fixes landed (`5400534df`) | agent + coordinator, `build/closure-h-census` | `scripts/build-authorization-census.mjs` (new, 1958 lines), `docs/build-module/authorization-census.{md,json}`, `package.json` | self-test 29/29; `--check` green; **VULNERABLE 30 → 0** | — |
 | I — Migration readiness | **DONE (static)** — merged to backend `main` as `40abe03fc`. DB application **BLOCKED** | agent + coordinator, `build/closure-i-migrations` | `docs/migration-static-verification-2026-09-21.md` (new). **No migration, journal or seal file touched.** | 8 gate self-tests then 7 gates, all exit 0; `typecheck` 0 | No non-production PostgreSQL. `check:set-null-column-lists` needs `SET_NULL_GATE_DATABASE_URL`; `check:composite-fk-set-null` is production-touching and was not run |
 
 ## Reconciliation of the inherited pending list
@@ -297,3 +297,60 @@ Note the division of labour: the jest census does **not** catch a brand-new unga
 ### Second backend resolver found — extends a known environment trap
 
 `frontend/test-support/backend-checkout.ts` is a **second** resolver that **ignores `STREAMLINE_BACKEND_ROOT` entirely**, probing only `<checkout>/backend`, `../streamlineos-backend`, and `<prefix>-frontend` → `<prefix>-backend`. So the documented env-var fix covers `lib/test-support/backend-path.ts` but **not** this one, and two inventory suites fail in any worktree whose name matches none of those patterns. Not caused by N-11.
+
+---
+
+## Authorization closure — all 30 findings closed
+
+`VULNERABLE 30 → 0`. Final census: **CLOSED 34 · NEEDS-REVIEW 111 · VERIFIED 176 · total 321**, self-test 29/29, `--check` green.
+
+| Batch | Handlers | Merge |
+|---|---|---|
+| K — execution | 9 (sprints, modules, milestones, intake, views) | `build/closure-k-execution` |
+| L — misc | 6 (custom states, custom fields, webhooks, time entries) | `build/closure-l-misc` |
+| J — tickets | 15 (associations, checklists, comments, tickets) | `build/closure-j-tickets` |
+
+The three batches were split so no two agents shared a service file — four ticket controllers share `ProjectsTicketSubresourcesService`, so they had to be fixed atomically. That held: when K and L merged, **exactly 15 anchors went stale and no others**, which independently confirms neither agent strayed.
+
+### Findings sharper than the census recorded
+
+- **`updateCustomState`/`deleteCustomState` were a genuine cross-project WRITE, not a broken 404.** The route carries `@RequirePermission("build:manage")` and `assertCanManageProject` returns early at `projects-members.service.ts:77` on exactly that permission — so the re-derived project check was **unreachable for every caller who passed the guard**. The discarded `projectId` was the only thing that should have stopped the write.
+- **`logTicketTime`** blocks a plain project-A member, but org-wide `build:manage` short-circuits the membership check: such a holder could log time onto any ticket in the org via any project's URL, with the entry landing under the *ticket's* project.
+- **`deleteModule` had a tenth, unlisted gate.** Its ticket detach ran before the delete bound only to `(moduleId, orgId)`, staging `moduleId = NULL` across another project's tickets before the 404 threw. Statement-level rather than observable, but now bound.
+- **`removeLabel` is under-called** in the census as NEEDS-REVIEW; it has the identical defect and was fixed as a consequence of the shared helper.
+
+### Schema constraint that shaped the fix
+
+`ticket_checklists`, `ticket_checklist_items`, `ticket_watchers`, `ticket_attachments` and `ticket_label_mappings` have **no `project_id` column** (`db/schema/build/ticket-collaboration.ts`). Those are bound through the parent join, not by inventing a column — coordinator-verified. `tickets.projectId` is nullable, so a project-less ticket fails the match: fail-closed, which is correct.
+
+### Gates that do not bite — reported, not counted
+
+Both J and L disclosed weaknesses rather than inflating coverage:
+
+- **L's first test pass was worthless for four gates** (two defence-in-depth write bindings, two `assertProjectInOrg` calls). It rebuilt them with real bites — TOCTOU fixtures moving the row between lookup and write, and soft-deleted-project cases a `projectId` predicate alone cannot see. All 12 then bit.
+- **J: 10 of 12 bite independently.** The item→checklist binding exists on both the pre-read and the write and each masks the other — 0 failures individually, **2 as a pair**. The `ticketId` predicate on the checklist write is fully redundant with `requireChecklistInTicket` — **0 failures; it is belt-and-braces, not coverage.**
+- **K deliberately avoided defence-in-depth** on `updateSprint`/`updateIntake`: binding the follow-on write as well would make the primary gate un-mutatable, so the proof would be worthless.
+
+### Coordinator re-proofs
+
+Each batch was independently re-proved rather than accepted:
+
+| Gate | Result |
+|---|---|
+| `updateMilestone` (`workspace.service.ts:68`) | 1 of 151 fails; restored 151/151 |
+| `updateCustomState` (`projects-custom-states.service.ts:171`) | 1 of 25 fails; restored 25/25 |
+| `requireTicket` (`projects-ticket-subresources.service.ts:271`) | **5 of 589 fail**; restored 589/589 |
+
+**Two of my own mutations proved nothing and had to be redone** — one silently failed to apply, and another hit `createCustomState` (a duplicate-name pre-check, an explicitly declared false-positive class) instead of `updateCustomState`. A mutation that does not apply is indistinguishable from a gate that does not bite; always assert the edit landed.
+
+### One false VULNERABLE corrected
+
+`deleteChecklist` was already gated via `requireChecklistInTicket` at `projects-ticket-checklists.service.ts:185`, but its anchor — `/eq\(ticketChecklists\.id, checklistId\),/` — was broad enough to keep matching the DELETE's own where-clause. It never went stale, so it was never re-cut and sat as VULNERABLE while being fixed. **An over-broad anchor fails silently in the safe-looking direction.**
+
+### Arity blind spot worth remembering
+
+`confirmable-actions.spec.ts:432` asserted the `addComment` call shape with `toHaveBeenCalledWith` (untyped varargs), so an arity change **slipped past `typecheck:test`** and only jest caught it. BE-138 says typecheck is the only gate that sees arity — that is true of signatures, not of varargs matchers.
+
+### Review note carried forward
+
+`updateField` and `logTicketTime` now take adjacent same-typed `number` params, which typecheck cannot protect against a caller swap. The specs use distinct values per role so a swap fails loudly, but the call sites deserve a second pair of eyes.
