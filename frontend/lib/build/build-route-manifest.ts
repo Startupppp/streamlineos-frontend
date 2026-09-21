@@ -1,0 +1,117 @@
+import { z } from "zod";
+
+const RouteDecisionSchema = z.enum(["KEEP", "CONSOLIDATE", "MOVE", "DELETE"]);
+
+type RouteDecision = z.infer<typeof RouteDecisionSchema>;
+
+type BuildRouteManifestEntry = {
+  route: string;
+  decision: RouteDecision;
+};
+
+const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
+  { route: "/build", decision: "KEEP" },
+  { route: "/build/[projectId]", decision: "KEEP" },
+  { route: "/build/[projectId]/ai", decision: "CONSOLIDATE" },
+  { route: "/build/[projectId]/analytics", decision: "CONSOLIDATE" },
+  { route: "/build/[projectId]/approvals", decision: "KEEP" },
+  { route: "/build/[projectId]/automations", decision: "MOVE" },
+  { route: "/build/[projectId]/backlog", decision: "KEEP" },
+  { route: "/build/[projectId]/budget", decision: "KEEP" },
+  { route: "/build/[projectId]/bugs", decision: "CONSOLIDATE" },
+  { route: "/build/[projectId]/change-requests", decision: "KEEP" },
+  { route: "/build/[projectId]/chat", decision: "KEEP" },
+  { route: "/build/[projectId]/client-portal", decision: "KEEP" },
+  { route: "/build/[projectId]/cycles", decision: "KEEP" },
+  { route: "/build/[projectId]/cycles/[cycleId]", decision: "KEEP" },
+  { route: "/build/[projectId]/decisions", decision: "KEEP" },
+  { route: "/build/[projectId]/epics", decision: "KEEP" },
+  { route: "/build/[projectId]/feedbucket", decision: "KEEP" },
+  { route: "/build/[projectId]/feedbucket/[submissionId]", decision: "KEEP" },
+  { route: "/build/[projectId]/files", decision: "KEEP" },
+  { route: "/build/[projectId]/forms", decision: "KEEP" },
+  { route: "/build/[projectId]/forms/[formId]", decision: "KEEP" },
+  { route: "/build/[projectId]/incidents", decision: "KEEP" },
+  { route: "/build/[projectId]/incidents/[incidentId]", decision: "KEEP" },
+  { route: "/build/[projectId]/intake", decision: "CONSOLIDATE" },
+  { route: "/build/[projectId]/issues", decision: "KEEP" },
+  { route: "/build/[projectId]/meetings", decision: "KEEP" },
+  { route: "/build/[projectId]/meetings/[meetingId]", decision: "KEEP" },
+  { route: "/build/[projectId]/milestones", decision: "KEEP" },
+  { route: "/build/[projectId]/modules", decision: "KEEP" },
+  { route: "/build/[projectId]/my-tickets", decision: "CONSOLIDATE" },
+  { route: "/build/[projectId]/qa", decision: "KEEP" },
+  { route: "/build/[projectId]/qa/runs/[runId]", decision: "KEEP" },
+  { route: "/build/[projectId]/releases", decision: "KEEP" },
+  { route: "/build/[projectId]/reports", decision: "KEEP" },
+  { route: "/build/[projectId]/risks", decision: "KEEP" },
+  { route: "/build/[projectId]/settings", decision: "KEEP" },
+  { route: "/build/[projectId]/tickets/[ticketKey]", decision: "KEEP" },
+  { route: "/build/[projectId]/timeline", decision: "CONSOLIDATE" },
+  { route: "/build/[projectId]/triage", decision: "KEEP" },
+  { route: "/build/[projectId]/updates", decision: "KEEP" },
+  { route: "/build/[projectId]/views", decision: "CONSOLIDATE" },
+  { route: "/build/[projectId]/webhooks", decision: "MOVE" },
+  { route: "/build/[projectId]/whiteboard", decision: "KEEP" },
+  { route: "/build/[projectId]/wiki", decision: "KEEP" },
+  { route: "/build/[projectId]/wiki/[pageId]", decision: "KEEP" },
+  { route: "/build/[projectId]/workflow", decision: "MOVE" },
+  { route: "/build/[projectId]/workload", decision: "KEEP" },
+  { route: "/build/access", decision: "MOVE" },
+  { route: "/build/all-work", decision: "KEEP" },
+  { route: "/build/approvals", decision: "KEEP" },
+  { route: "/build/client-access", decision: "MOVE" },
+  { route: "/build/command-center", decision: "KEEP" },
+  { route: "/build/customers", decision: "KEEP" },
+  { route: "/build/drafts", decision: "CONSOLIDATE" },
+  { route: "/build/goal", decision: "MOVE" },
+  { route: "/build/goal/[goalId]", decision: "MOVE" },
+  { route: "/build/inbox", decision: "KEEP" },
+  { route: "/build/managed-products", decision: "KEEP" },
+  { route: "/build/managed-products/[managedProductId]", decision: "KEEP" },
+  {
+    route: "/build/managed-products/[managedProductId]/feedback",
+    decision: "KEEP",
+  },
+  {
+    route: "/build/managed-products/[managedProductId]/goals",
+    decision: "KEEP",
+  },
+  {
+    route: "/build/managed-products/[managedProductId]/insights",
+    decision: "KEEP",
+  },
+  {
+    route: "/build/managed-products/[managedProductId]/projects",
+    decision: "KEEP",
+  },
+  {
+    route: "/build/managed-products/[managedProductId]/roadmap",
+    decision: "KEEP",
+  },
+  { route: "/build/members", decision: "MOVE" },
+  { route: "/build/my-work", decision: "KEEP" },
+  { route: "/build/pm-workspaces", decision: "MOVE" },
+  { route: "/build/portfolios", decision: "KEEP" },
+  { route: "/build/portfolios/[portfolioId]", decision: "KEEP" },
+  { route: "/build/programs", decision: "KEEP" },
+  { route: "/build/roadmap", decision: "KEEP" },
+  { route: "/build/settings/integrations", decision: "KEEP" },
+  { route: "/build/teams", decision: "KEEP" },
+  { route: "/build/teams/[teamId]", decision: "KEEP" },
+  { route: "/build/templates", decision: "KEEP" },
+  { route: "/build/workspaces/[pmWorkspaceId]", decision: "KEEP" },
+  { route: "/build/workspaces/[pmWorkspaceId]/all-work", decision: "KEEP" },
+  { route: "/build/workspaces/[pmWorkspaceId]/goals", decision: "KEEP" },
+  {
+    route: "/build/workspaces/[pmWorkspaceId]/my-work",
+    decision: "CONSOLIDATE",
+  },
+  { route: "/build/workspaces/[pmWorkspaceId]/overview", decision: "KEEP" },
+  { route: "/build/workspaces/[pmWorkspaceId]/products", decision: "KEEP" },
+  { route: "/build/workspaces/[pmWorkspaceId]/roadmap", decision: "KEEP" },
+  { route: "/build/workspaces/[pmWorkspaceId]/teams", decision: "KEEP" },
+];
+
+export { BUILD_ROUTE_MANIFEST, RouteDecisionSchema };
+export type { BuildRouteManifestEntry, RouteDecision };
