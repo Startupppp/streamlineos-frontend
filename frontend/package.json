@@ -10,7 +10,7 @@
     "build": "node --max-old-space-size=4096 ./node_modules/next/dist/bin/next build --webpack",
     "verify:server-data-seam": "node scripts/verify-server-data-seam.mjs",
     "type-check": "next typegen && node --max-old-space-size=8192 ./node_modules/typescript/bin/tsc --noEmit",
-    "type-check:specs": "tsc --noEmit -p tsconfig.specs.json",
+    "type-check:specs": "node --max-old-space-size=10240 ./node_modules/typescript/bin/tsc --noEmit -p tsconfig.specs.json",
     "type-check:e2e": "tsc --noEmit -p tsconfig.e2e.json",
     "test": "jest",
     "build:widget": "node feedbucket-widget/build.mjs",
