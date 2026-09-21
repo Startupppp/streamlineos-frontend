@@ -47,7 +47,7 @@ Cite rules by ID in review (`FE-22`). `(gate: x)` names the `pnpm` check that fa
 **FE-34.** Invalidate by true key prefix — no trailing `undefined`, `exact: true` only when meant — and always re-call `options?.onSuccess`.
 **FE-35.** Patch the cache with `setQueryData` when the response already carries the new state. *Why:* invalidating a paginated query refetches every loaded page.
 **FE-36.** Make inline edits on board, list and card surfaces optimistic. Quotes and revenue figures never are.
-**FE-37.** Optimistic recipe (`hooks/api/build/ticket-mutations.ts`): cancel and snapshot every key you patch → patch every cache the view renders → resolve related display objects from cached data → restore every snapshot `onError` → invalidate `onSettled`, gating expensive aggregates behind the fields that move them.
+**FE-37.** Optimistic recipe (`useUpdateTicket`, `hooks/api/build/ticket-update-mutation.ts:93`): cancel and snapshot every key you patch → patch every cache the view renders → resolve related display objects from cached data → restore every snapshot `onError` → invalidate `onSettled`, gating expensive aggregates behind the fields that move them.
 **FE-38.** Never show `AppLoadingScreen` on a background refetch or ordinary mutation. Preserve stale data; show pending state only on the affected control.
 **FE-39.** Never refresh the NextAuth session to reconcile state Query already owns.
 
@@ -73,7 +73,7 @@ const pageState = usePageState({ permission: "build:view", isLoading, isError, e
 **FE-51.** Never fire a request the role cannot access. Prevent predictable 403 fetch loops.
 **FE-52.** Present the six standings from BE-102. Never build a role-creation screen; internal role slugs are identifiers, not permission.
 **FE-53.** Drive desktop sidebar, mobile drawer, bottom nav, product switcher and command palette from the same filtered navigation model — never parallel hard-coded lists.
-**FE-54.** Give every non-universal route a `requiredPermission` and every universal route none. (gate: `sidebar-permission-coverage.test.ts`)
+**FE-54.** Give every non-universal route a `requiredPermission` and every universal route none. (gate: `components/layout/sidebar/sidebar-permission-coverage.test.ts`)
 **FE-55.** Never render a link that predictably ends at Access Denied. An inaccessible parent may promote an accessible child.
 
 ## 4. Components & Structure
