@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QUESTION_TYPE_META, type SurveyQuestionType } from "@/features/surveys/shared/question-type-meta";
 import type { QuestionAnalytics } from "@/hooks/api/surveys/analytics";
+import { AnonymitySuppressedNotice } from "@/components/shared/anonymity-suppressed-notice";
 
 const CHART_COLOR = "#3B82F6";
 
@@ -58,7 +59,9 @@ export function QuestionAnalyticsCard({ analytics }: { analytics: QuestionAnalyt
         </p>
       </CardHeader>
       <CardContent>
-        {analytics.choiceDistribution.length > 0 ? (
+        {analytics.suppressed ? (
+          <AnonymitySuppressedNotice minResponses={analytics.minResponses} />
+        ) : analytics.choiceDistribution.length > 0 ? (
           <ChoiceDistributionBars analytics={analytics} />
         ) : isTextType ? (
           <TextResponsesList responses={analytics.textResponses ?? []} />

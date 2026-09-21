@@ -5,6 +5,7 @@ export { FormSheetChrome } from "./form-sheet-chrome";
 export { LoadingState } from "./loading-state";
 export { ErrorState } from "./error-state";
 export { NoPermissionState } from "./no-permission-state";
+export { AnonymitySuppressedNotice, anonymitySuppressedMessage } from "./anonymity-suppressed-notice";
 export { PageState } from "./page-state";
 export { EntityFormSheet } from "./entity-form-sheet";
 export { EntityFormDialog } from "./entity-form-dialog";
