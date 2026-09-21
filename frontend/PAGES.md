@@ -45,7 +45,7 @@
 
 ## Dashboard / Home
 
-- `/dashboard` · **Home** · hooks: `usePageState` + `<PageState>` (stat section), `→ feature/dashboard` — section-scoped so a stats failure no longer hides the widgets below it; hand-rolled error block replaced by the shared one
+- `/dashboard` · **Home** · hooks: `usePageState` + `<PageState>` (stat section), `→ feature/dashboard` — section-scoped so a stats failure no longer hides the widgets below it; hand-rolled error block replaced by the shared one (2026-09-21: the Timesheet widget renders its "No hours logged this week" empty state for a zero-hour week — a new joiner saw a red "Hours Missing" alarm beside an empty My Tasks and read it as an error; a degraded `timesheet` source is still announced as an error)
 
 ---
 
@@ -313,11 +313,13 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 ### Employees
 - `/hr/employees` · **HR** · hooks: `requirePermission("hr:employees:view")` (server), `usePageState` + `PageWrapper state=`, `→ features/hr/employees` — the duplicated loading-only `PageWrapper` early return is gone — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
 - `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
+- `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees` (2026-09-21: header card gains a "Resend invite" action — `ResendInviteButton` → `useResendEmployeeInvite` → `POST /hr/employees/:employeeId/resend-invite`, `Idempotency-Key` per intent, rendered only for `hr:onboarding:manage` holders and never on your own profile or a terminated one; success toasts "Invitation sent", a queued-but-undeliverable outcome warns with the backend's reason)
 - `/hr/employees/find-expert` · **HR** · hooks: `→ features/hr/employees`
 - `/hr/employees/skills-matrix` · **HR** · hooks: `→ features/hr/employees`
 
 ### Onboarding
 - `/hr/onboarding` · **HR** · hooks: `→ features/hr/onboarding` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
+- `/hr/onboarding` · **HR** · hooks: `→ features/hr/onboarding` (2026-09-21: the New Employee wizard reads the onboard response's `invite: { sent, reason }` — the employee is created either way, and an unsent invitation raises a warning toast naming the backend's reason (suppressed address, no email provider, already a member) instead of "created successfully" hiding it; the tracker row gains "Resend invite" beside View, gated on `hr:onboarding:manage`; Skills & Pay labels professional tax and net pay as estimates — payroll's state slab and salary structure decide the real deductions)
 - `/hr/onboarding/[userId]` · **HR** · hooks: `→ features/hr/onboarding`
 - `/hr/onboarding/my-tasks` · **HR** · [RETIRED app/(authenticated)/hr/onboarding/my-tasks/page.tsx] — legacy redirect stub to `/me/onboarding` sitting behind the HR layout gate its own audience lacks; §8 forbids legacy redirects
 - `/hr/onboarding/probation` · **HR** · hooks: `requirePermission("hr:probation:view")`, `→ features/hr/onboarding`
