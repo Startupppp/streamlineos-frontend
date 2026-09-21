@@ -8,7 +8,7 @@ import {
   useMemo,
   type ChangeEvent,
 } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useProject } from "@/hooks/api";
 import {
   useViews,
@@ -59,6 +59,7 @@ export function useBoardUrlState(
 ) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
 
   const view: ViewType = parseViewType(searchParams.get("view") ?? defaultView);
   const ticketParam = searchParams.get("ticket");
@@ -317,12 +318,25 @@ export function useBoardUrlState(
 
   const handleViewChange = useCallback(
     (v: ViewType) => {
+      if (v === "workload") {
+        const p = currentSearchParams(searchParams);
+        p.delete("view");
+        const qs = p.toString();
+        router.push(`/build/${projectId}/workload${qs ? `?${qs}` : ""}`);
+        setSelectedIds(new Set());
+        return;
+      }
       const p = currentSearchParams(searchParams);
       p.set("view", v);
+      if (pathname === `/build/${projectId}/workload`) {
+        router.push(`/build/${projectId}/issues?${p.toString()}`);
+        setSelectedIds(new Set());
+        return;
+      }
       router.replace(`?${p.toString()}`, { scroll: false });
       setSelectedIds(new Set());
     },
-    [router, searchParams],
+    [router, searchParams, projectId, pathname],
   );
 
   const handleSaveViewNameChange = useCallback(
