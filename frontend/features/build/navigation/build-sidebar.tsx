@@ -97,7 +97,7 @@ export function BuildSidebar({ isCollapsed, onNavigate }: BuildSidebarProps) {
         <ShieldAlert
           role="img"
           aria-label="Build access required"
-          className="mx-auto h-5 w-5 text-muted-foreground/60"
+          className="mx-auto h-5 w-5 text-muted-foreground"
         />
       </div>
     ) : (

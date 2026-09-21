@@ -23,6 +23,10 @@ const EXCEPTIONS = [
     file: "components/charts/chart-empty-state.tsx",
     reason: "This IS the chart-specific empty-state primitive — the shared counterpart to EmptyState for chart surfaces; converting it would be circular",
   },
+  {
+    file: "features/build/views/kanban-board-column.tsx",
+    reason: "In-column empty for a 18rem kanban lane, not a page empty. EmptyState non-compact renders a dashed-border card at py-12 with a 10rem illustration box, which nests a card inside the column card and overflows a swimlane row; its compact branch still reserves a 6rem box for an h-8 icon. ColumnEmptyState is pinned by six tests in kanban-column-empty-state.test.tsx including per-status copy and a no-hardcoded-height assertion. Revisit with a browser check before converting",
+  },
 ];
 
 for (const exc of EXCEPTIONS) {

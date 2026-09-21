@@ -12,6 +12,8 @@ import {
 import { InlineGroupCreate } from "@/features/build/views/list-view-group-create";
 import { BulkActionBar } from "@/features/build/backlog/bulk-action-bar";
 import { ProjectViewsToolbar } from "@/features/build/views/project-views-toolbar";
+import { DEFAULT_DISPLAY_OPTIONS } from "@/features/build/views/display-options-panel";
+import { INITIAL_FILTERS } from "@/features/build/views/workload-types";
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
@@ -101,6 +103,7 @@ jest.mock("@/features/build/shared/ticket-filter-bar", () => ({
 }));
 
 jest.mock("@/features/build/views/display-options-panel", () => ({
+  ...jest.requireActual("@/features/build/views/display-options-panel"),
   DisplayOptionsPanel: () => null,
 }));
 
@@ -251,7 +254,7 @@ describe("Build ticket mutation controls", () => {
       <ProjectViewsToolbar
         view="board"
         onViewChange={noop}
-        displayOptions={{}}
+        displayOptions={DEFAULT_DISPLAY_OPTIONS}
         onDisplayOptionsChange={noop}
         onOpenSaveView={noop}
         projectId={42}
@@ -259,7 +262,7 @@ describe("Build ticket mutation controls", () => {
         hideCompleted={false}
         onHideCompletedChange={noop}
         doneCount={0}
-        workloadFilters={{}}
+        workloadFilters={INITIAL_FILTERS}
         onWorkloadFilterChange={noop}
         onClearWorkloadFilters={noop}
       />,
@@ -275,7 +278,7 @@ describe("Build ticket mutation controls", () => {
       <ProjectViewsToolbar
         view="board"
         onViewChange={noop}
-        displayOptions={{}}
+        displayOptions={DEFAULT_DISPLAY_OPTIONS}
         onDisplayOptionsChange={noop}
         onOpenSaveView={noop}
         projectId={42}
@@ -283,7 +286,7 @@ describe("Build ticket mutation controls", () => {
         hideCompleted={false}
         onHideCompletedChange={noop}
         doneCount={0}
-        workloadFilters={{}}
+        workloadFilters={INITIAL_FILTERS}
         onWorkloadFilterChange={noop}
         onClearWorkloadFilters={noop}
       />,
