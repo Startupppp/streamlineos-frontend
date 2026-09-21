@@ -388,9 +388,10 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/accommodations` · **HR** · hooks: `→ features/hr/accommodations`
 
 ### Offboarding & Exit
-- `/hr/exit` · **HR** · hooks: `→ features/hr/exit`
-- `/hr/termination` · **HR** · hooks: `→ features/hr/termination`
-- `/hr/fnf` · **HR** · hooks: `→ features/hr/fnf`
+- `/hr/exit` · **HR** · hooks: `requirePermission("hr:exit:view")` (server), `useResignations`, `useMyResignation`, `→ features/hr/exit/exit-management-page` (2026-09-21: primary action top-right is now one of "Submit resignation" (`hr:exit:create`), "Resignation pending" badge when one is already open, or "Initiate termination" for exit administrators — the empty state no longer offers a CTA the viewer cannot take; each card links to `/hr/exit/[resignationId]`; the list contract now mirrors the backend row (`hasResignationLetter`, enriched `user`, `hrReviewer`) — the old contract declared `resignationLetterUrl`/`checklists`/`finalReviewer` the list never returns)
+- `/hr/exit/[resignationId]` · **HR** · hooks: `requirePermission("hr:exit:view")` (server), `useResignation` → `GET /hr/exit/{resignationId}`, `useUpdateExitChecklistItem` → `PATCH /hr/exit/{resignationId}/checklist/{itemKey}` (idempotent), `useCompleteExit` → `PATCH /hr/exit/{exitId}`, `usePageState` + `PageState`, `→ features/hr/exit/exit-detail-page` (2026-09-21: the one offboarding checklist as primary content — typed items with owner (person or named queue), due date, status, evidence, notes, closed-by; exactly one action per item the viewer may take ("Close item"/"Update"), links to asset returns, identity and Final settlement gated on their own view keys; "Complete exit" for `hr:exit:manage` on an approved exit asks for a reason when items are still open, matching the backend completion guard; loading keeps the leaver title over a typed skeleton, failures show `ErrorState` with retry, denial is explicit; the checklist freezes once the exit is COMPLETED)
+- `/hr/termination` · **HR** · hooks: `→ features/hr/termination` (2026-09-21: user-visible wording is "Final settlement" — routes, permission keys and symbols unchanged)
+- `/hr/fnf` · **HR** · hooks: `requirePermission("hr:payroll:view")` (server), `useFnfSettlements`, `usePageState` + `PageState`, `→ features/hr/fnf/fnf-page-client` (2026-09-21: titled "Final settlement"; the page resolves through `usePageState` so a failed read shows `ErrorState` with retry instead of the empty list and a 402/403 shows the backend's denial; "Create settlement" gates on `hr:exit:manage`; removed from `denial-is-not-emptiness.known.json`)
 
 ### Positions, Workforce, Delegations
 - `/hr/positions` · **HR** · hooks: `→ features/hr/positions`
@@ -451,7 +452,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/payroll/bonuses` · **Payroll** · hooks: `→ features/payroll/bonuses`
 - `/payroll/loans` · **Payroll** · hooks: `→ features/payroll/loans`
 - `/payroll/reimbursements` · **Payroll** · hooks: `→ features/payroll/reimbursements`
-- `/payroll/fnf` · **Payroll** · hooks: `→ features/payroll/fnf`
+- `/payroll/fnf` · **Payroll** · hooks: `→ features/payroll/fnf` (2026-09-21: nav label, title, table, detail sheet and statement download say "Final settlement"; route `/payroll/fnf` and `payroll:fnf:*` keys unchanged)
 - `/payroll/taxes` · **Payroll** · hooks: `→ features/payroll/taxes`
 - `/payroll/team` · **Payroll** · hooks: `→ features/payroll/team`
 
@@ -694,7 +695,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/me/documents` · **Self-service** · hooks: `requirePermission("self:onboarding-docs")` (server), `→ features/me/documents` — VIOLATION: `requirePermission` on a `/me/*` route; must be removed
 - `/me/expenses` · **Self-service** · hooks: `requirePermission("self:expenses")` (server), `→ features/me/expenses` — VIOLATION: `requirePermission` on a `/me/*` route; must be removed
 - `/me/onboarding` · **Self-service** · hooks: `→ features/me/onboarding`
-- `/me/pay` · **Self-service** · hooks: `requireSession()` (server), `usePageState` (error only) + `PageWrapper state=`, `→ features/payroll/me` — universal no-gate zone holds: NO module and NO permission passed to `usePageState`. Per-card skeletons kept deliberately, so page-level loading is not used; a failed overview read now shows an error with retry instead of silently blank cards
+- `/me/pay` · **Self-service** · hooks: `requireSession()` (server), `usePageState` (error only) + `PageWrapper state=`, `→ features/payroll/me` — universal no-gate zone holds: NO module and NO permission passed to `usePageState`. Per-card skeletons kept deliberately, so page-level loading is not used; a failed overview read now shows an error with retry instead of silently blank cards (2026-09-21: the Final settlement tab is also shown when its read fails, rendering `ErrorState` with retry rather than vanishing)
 - `/me/recruitment` · **Self-service** · hooks: `requirePermission("self:recruitment")` (server), `→ features/employee-self-service` — serves assigned interviews and own hiring feedback. A `self:*` key is what §8 prescribes for `/me/*` and is a member default, so it denies nobody; internal job openings live at `/me/job-openings`
 - `/me/job-openings` · **Self-service** · hooks: `requirePermission("self:job-openings")` (server), `useSelfJobOpenings` — §8 member entitlement: browse internal openings and apply. Backend `GET|POST /hr/recruitment/me/job-openings*`, no `@RequireModule`
 - `/me/referrals` · **Self-service** · hooks: `requirePermission("self:referrals")` (server), `useSelfReferrals` — §8 member entitlement: submit and track own referrals. Backend `GET|POST /hr/recruitment/me/referrals`, no `@RequireModule`

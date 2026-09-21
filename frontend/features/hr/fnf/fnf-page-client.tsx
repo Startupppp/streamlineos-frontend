@@ -3,6 +3,9 @@
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -152,8 +155,10 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
 }
 
 export function FnfPageClient() {
-  const { data: items, isLoading, isError, refetch } = useFnfSettlements();
+  const { data: items, isLoading, isError, error, refetch } = useFnfSettlements();
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const pageState = usePageState({ permission: "hr:payroll:view", isLoading, isError, error });
+  const canCreate = useCan("hr:exit:manage");
 
   const create = useCreateFnfSettlement();
   const complete = useCompleteFnfSettlement();
@@ -231,56 +236,43 @@ export function FnfPageClient() {
   const handleLoanRecoveryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLoanRecovery(e.target.value), []);
   const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
 
-  if (isLoading) {
-    return (
-      <PageWrapper title="Final settlement" subtitle="Manage final settlements for separated employees">
-        <div className="flex flex-1 min-h-0 flex-col gap-3">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-2xl" />
-          ))}
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper title="Final settlement" subtitle="Manage final settlements for separated employees">
-        <EmptyState
-          illustrationPreset="alert"
-          title="Failed to load settlements"
-          description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: handleRetry }}
-        />
-      </PageWrapper>
-    );
-  }
+  const loadingSkeleton = (
+    <div className="flex flex-1 min-h-0 flex-col gap-3">
+      {Array.from({ length: 10 }).map((_, i) => (
+        <Skeleton key={i} className="h-20 rounded-2xl" />
+      ))}
+    </div>
+  );
 
   return (
     <PageWrapper
       title="Final settlement"
       subtitle="Manage final settlements for separated employees"
       actions={
-        <Button size="sm" onClick={handleOpenSheet} className="gap-1.5">
-          <Plus className="h-3.5 w-3.5" />
-          Create settlement
-        </Button>
+        canCreate ? (
+          <Button size="sm" onClick={handleOpenSheet} className="gap-1.5">
+            <Plus className="h-3.5 w-3.5" />
+            Create settlement
+          </Button>
+        ) : undefined
       }
     >
-      {!items?.length ? (
-        <EmptyState
-          illustration={<EmptyExpensesIllustration className="h-24 w-24" />}
-          title="No final settlements on record"
-          description="Full and final settlements for separated employees will appear here."
-          compact
-        />
-      ) : (
-        <div className="flex flex-1 min-h-0 flex-col gap-2">
-          {items.map((item: FnfSettlement) => (
-            <FnfCard key={item.id} item={item} onMarkPaid={setCompleteId} isPending={complete.isPending} />
-          ))}
-        </div>
-      )}
+      <PageState resolution={pageState} loading={loadingSkeleton} onRetry={handleRetry} className="flex-1">
+        {!items?.length ? (
+          <EmptyState
+            illustration={<EmptyExpensesIllustration className="h-24 w-24" />}
+            title="No final settlements on record"
+            description="Final settlements for separated employees will appear here."
+            compact
+          />
+        ) : (
+          <div className="flex flex-1 min-h-0 flex-col gap-2">
+            {items.map((item: FnfSettlement) => (
+              <FnfCard key={item.id} item={item} onMarkPaid={setCompleteId} isPending={complete.isPending} />
+            ))}
+          </div>
+        )}
+      </PageState>
 
       <HrSheet
         open={sheetOpen}
