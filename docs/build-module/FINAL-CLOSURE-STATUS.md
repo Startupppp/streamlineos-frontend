@@ -10,7 +10,9 @@ Coordinator ledger for the closure phase opened 2026-09-21. Every row is reconci
 | Backend repo | `D:/projects/personal/Streamlineos/backend` — `main` = `8b3612135`, in sync with `origin/main`, clean |
 | Database | **None.** No non-production PostgreSQL exists on this machine. `backend/.env` points at **production**. |
 | Build pages | 83 `page.tsx` under `app/(authenticated)/build/` |
-| Build routes | **92** per `check:route-census`. The 83/92 gap is real: not every route is a `page.tsx`. |
+| Build routes | 83 authenticated Build routes. `check:route-census` reports **92** because it covers the whole app — the extra 9 are public/portal routes. |
+
+The route census snapshot (`docs/specs/build/generated/routes.snapshot.json`) carries only `path` and `file` per route. It has no access-key column, so **it cannot express "zero weak cold-load gates" without being extended**. Regenerating it without `--check` rewrites `generatedAt` and dirties the tree.
 
 ### Clean-tree baseline, measured before any closure work
 
@@ -58,7 +60,7 @@ The consequence for TASK I is specific: migration 1142's `ON DELETE SET NULL (he
 |---|---|---|
 | TASK A "releases authorization closed by N-10" | **FALSE — the defect is real and open** | N-10 added `assertProjectAccess(…, projectId)` to all five methods, which gates the caller against the **URL** project. But every nested lookup then omits the project binding: `projects-releases.service.ts:77` (`updateRelease`), `:115` (`deleteRelease`), `:125` and `:131` (`addTicketToRelease`), `:144` and `:150` (`removeTicketFromRelease`). A member of Project A can still mutate a release in Project B in the same org. `:150` additionally omits `orgId` from the delete. |
 | "2 VULNERABLE + 14 NEEDS-REVIEW controllers" | **UNVERIFIED** | Produced by a manual pass with no committed artefact. TASK H must prove or replace it. |
-| N-11 "63 of 83 routes weakly gated" | **UNVERIFIED** | The census counts 92 routes, not 83, so the denominator is already wrong. TASK B must re-measure. |
+| N-11 "63 of 83 routes weakly gated" | **denominator CONFIRMED, numerator UNVERIFIED** | The 83 is right. `check:route-census` reports 92 because it covers the whole app: 83 routes under `app/(authenticated)/build/` plus 9 public/portal routes (`/accept-invitation`, `/board/{shareToken}`, `/client-portal`, `/client-portal/{projectId}`, `/forms/{formToken}`, `/intake/{projectId}`, `/portal`, `/portal/{projectId}`, `/roadmap/{orgId}`). The count of 63 weak routes is still unproven and TASK B must re-measure it. |
 | Migrations 1141 / 1142 committed but unapplied | **CONFIRMED** | Both present, both journalled, neither applied. No database exists to apply them to. |
 
 ## Worktree allocation
