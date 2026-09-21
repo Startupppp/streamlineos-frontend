@@ -23,6 +23,10 @@ function routeFromFile(file) {
   return `/${segments.map((segment) => segment.replace(/^\[\.\.\.(.+)\]$/, "{...$1}").replace(/^\[(.+)\]$/, "{$1}")).join("/")}`.replace(/\/+/g, "/").replace(/\/$/, "") || "/";
 }
 
+function hasUninformativeParam(path) {
+  return path.split("/").some((segment) => /^\{(\.\.\.)?id\}$/i.test(segment));
+}
+
 function buildSnapshot() {
   const rows = walk(APP_ROOT)
     .map((file) => ({ path: routeFromFile(file), file: relative(ROOT, file).split("\\").join("/") }))
@@ -31,7 +35,7 @@ function buildSnapshot() {
   const byPath = new Map();
   for (const row of rows) byPath.set(row.path, [...(byPath.get(row.path) ?? []), row.file]);
   const duplicates = [...byPath.entries()].filter(([, files]) => files.length > 1).map(([path, files]) => ({ path, files }));
-  const bareDynamic = rows.filter(({ path }) => /\[[^\]]+\]/.test(path));
+  const bareDynamic = rows.filter(({ path }) => hasUninformativeParam(path));
   const manifest = parseManifest();
   return { version: 2, generatedAt: new Date().toISOString(), source: "frontend/app", count: rows.length, routes: rows, duplicates, bareDynamic, manifest };
 }
@@ -74,7 +78,14 @@ function compareSnapshots(actual, recorded) {
 function selfTest() {
   const clean = { routes: [{ path: "/build" }], duplicates: [], bareDynamic: [] };
   const duplicate = { routes: [{ path: "/build" }, { path: "/build" }], duplicates: [{ path: "/build" }], bareDynamic: [] };
-  const dynamic = { routes: [{ path: "/build/{projectId}" }], duplicates: [], bareDynamic: [{ path: "/build/[projectId]" }] };
+  const bareRows = [
+    { path: "/build/{projectId}", file: "a" },
+    { path: "/build/{id}", file: "b" },
+    { path: "/build/{...id}", file: "c" },
+    { path: "/build/{ticketKey}", file: "d" },
+  ];
+  const bareFlagged = bareRows.filter(({ path }) => hasUninformativeParam(path));
+  const dynamic = { routes: bareRows, duplicates: [], bareDynamic: bareFlagged };
   const drift = compareSnapshots({ count: 2, routes: [{ path: "/build", file: "a" }, { path: "/build/x", file: "b" }] }, { count: 1, routes: [{ path: "/build", file: "a" }] });
   const check = (name, value, expected) => {
     const failed = assertSnapshot(value).length > 0;
@@ -84,6 +95,10 @@ function selfTest() {
   check("clean census", clean, false);
   check("duplicate detection", duplicate, true);
   check("bare dynamic detection", dynamic, true);
+  if (bareFlagged.length !== 2) throw new Error("self-test failed: bare dynamic must flag {id} and {...id} and nothing else");
+  if (routeFromFile(join(APP_ROOT, "build", "[id]", "page.tsx")) !== "/build/{id}")
+    throw new Error("self-test failed: the census pipeline cannot produce the shape the bare-dynamic rule matches");
+  console.log("PASS bare dynamic rule matches what the pipeline produces");
   if (!(drift.countDrift && drift.missing.length === 1 && drift.stale.length === 0)) throw new Error("self-test failed: snapshot drift detection");
   console.log("PASS snapshot drift detection");
 }
