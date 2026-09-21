@@ -3,7 +3,8 @@
 import * as React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCheckIcon } from "@animateicons/react/lucide";
@@ -12,7 +13,6 @@ import {
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
 } from "@/hooks/api/notifications";
-import { getErrorMessage } from "@/lib/get-error-message";
 import type { Notification, NotificationSection } from "@/types/notifications";
 import { InboxNotificationItem } from "./inbox-notification-item";
 import {
@@ -83,7 +83,7 @@ export function InboxList({
 
   const {
     data,
-    isLoading,
+    isPending,
     isError,
     error,
     refetch,
@@ -131,6 +131,12 @@ export function InboxList({
     [activeTab, rawNotifications],
   );
   const total = notifications.length;
+  const pageState = usePageState({
+    isLoading: isPending,
+    isError,
+    error,
+    isEmpty: !isPending && total === 0 && !hasNextPage,
+  });
   const visibleCount = resolveInboxVisibleCount(total, pagesShown, renderPageSize);
   const heldCount = total - visibleCount;
   const visibleNotifications = React.useMemo(
@@ -156,7 +162,7 @@ export function InboxList({
   firstNotificationRef.current = firstNotification;
 
   React.useEffect(() => {
-    if (isLoading || isError) return;
+    if (isPending || isError) return;
     if (selectedId != null && !selectedStillVisible) {
       onClearSelectionRef.current?.();
       return;
@@ -166,7 +172,7 @@ export function InboxList({
     const first = firstNotificationRef.current;
     if (first) onSelectRef.current(first);
   }, [
-    isLoading,
+    isPending,
     isError,
     isDesktopInbox,
     selectedId,
@@ -205,44 +211,38 @@ export function InboxList({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto border-l border-border scrollbar-hide">
-        {isLoading && (
-          <div className="flex min-h-full flex-col">
-            <InboxListSkeleton />
-          </div>
-        )}
-
-        {!isLoading && isError && (
-          <ErrorState
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-            compact
-            className="min-h-full w-full flex-1 p-4"
-          />
-        )}
-
-        {!isLoading && !isError && total === 0 && !hasNextPage && (
-          <EmptyState
-            illustrationPreset="mail"
-            title={
-              activeTab === "UNREAD"
-                ? "All caught up"
-                : activeTab === "MENTIONS"
-                ? "No mentions"
-                : "No notifications"
-            }
-            description={
-              activeTab === "UNREAD"
-                ? "You have no unread notifications."
-                : activeTab === "MENTIONS"
-                ? "You have not been mentioned in any comments yet."
-                : "Notifications will appear here when you receive them."
-            }
-            compact
-            className="min-h-full w-full flex-1 rounded-lg border-dashed p-4"
-          />
-        )}
-
-        {!isLoading && !isError && (total > 0 || hasNextPage) && (
+        <PageState
+          resolution={pageState}
+          loading={
+            <div className="flex min-h-full flex-col">
+              <InboxListSkeleton />
+            </div>
+          }
+          onRetry={handleRetry}
+          compact
+          className="min-h-full w-full flex-1"
+          empty={
+            <EmptyState
+              illustrationPreset="mail"
+              title={
+                activeTab === "UNREAD"
+                  ? "All caught up"
+                  : activeTab === "MENTIONS"
+                  ? "No mentions"
+                  : "No notifications"
+              }
+              description={
+                activeTab === "UNREAD"
+                  ? "You have no unread notifications."
+                  : activeTab === "MENTIONS"
+                  ? "You have not been mentioned in any comments yet."
+                  : "Notifications will appear here when you receive them."
+              }
+              compact
+              className="min-h-full w-full flex-1 rounded-lg border-dashed p-4"
+            />
+          }
+        >
           <div>
             <div role="list" aria-label="Notifications">
               {deferredVisibleNotifications.map((notification, index) => (
@@ -277,7 +277,7 @@ export function InboxList({
               </div>
             ) : null}
           </div>
-        )}
+        </PageState>
       </div>
     </Tabs>
   );

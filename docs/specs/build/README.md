@@ -106,6 +106,7 @@ boundaries, not write permission.
 | Packet | Owner/session | Root/frontend revision | Backend revision | Exact write set | Acquired | Expires | Status |
 |---|---|---|---|---|---|---|---|
 | `BLD-X-SB-ACTIONS-001` | cycle-14 agent CA | `e18077a30` | `374afd27a` | prod: none changed · test: `build-quick-create.test.tsx`, `build-more-tools-menu.test.tsx`, `use-build-nav-preferences.test.ts` | 2026-09-21T08:35Z | 2026-09-21T11:35Z | `INTEGRATED (cycle 14)` |
+| `BLD-X-SB-NAV-001` | cycle-15 agent DB | `e18077a30` | `374afd27a` | prod: `lib/build/build-scope.ts`, `features/build/navigation/use-reconciled-build-scopes.ts`, `use-build-scope-directory.ts`, `lib/build/nav/build-project-catalog.ts` · test: `lib/build/build-scope.test.ts`, `build-project-catalog.test.ts` | 2026-09-21T12:25Z | 2026-09-21T15:25Z | `RESERVED` |
 | `BLD-X-SB-CAPABILITY-001` | cycle-15 agent DA | `e18077a30` | `374afd27a` | prod: `features/build/navigation/use-build-nav-model.ts` · test: `use-build-nav-model.test.tsx`, new `lib/build/build-nav-catalog-route-files.test.ts` | 2026-09-21T12:10Z | 2026-09-21T15:10Z | `RESERVED` |
 | `BLD-X-FE-ALLWORK-001` | cycle-14 agent CB | `e18077a30` | `374afd27a` | prod: `all-work-page.tsx`, `use-all-work-filters.ts`, `all-work-board-section.tsx`, `all-work-list-section.tsx` · test: `all-work-access-gate.test.tsx`, new `all-work-filters.test.ts` | 2026-09-21T08:35Z | 2026-09-21T11:35Z | `INTEGRATED (cycle 14)` |
 | `BLD-X-FE-INBOX-001` | cycle-14 agent CC | `e18077a30` | `374afd27a` | prod: `features/build/inbox/inbox-page.tsx`, `inbox-list.tsx`, `inbox-notification-item.tsx`, `inbox-preview-pane.tsx`, `inbox-render-window.ts`, `inbox-ticket-preview.tsx`, `parse-inbox-ticket-link.ts` · test: `inbox-badge-invalidation.test.ts`, `inbox-list-bounded.test.tsx`, `inbox-notification-item.test.tsx`, `parse-inbox-ticket-link.test.ts`, new `inbox-page.test.tsx` | 2026-09-21T08:55Z | 2026-09-21T11:55Z | `RESERVED` |
@@ -982,6 +983,43 @@ the concurrently-running inbox agent, so CB measured a tree another agent was
 mid-edit in. The gate is re-run after the inbox packet lands and attributed
 then. This is the standing hazard with overlapping agents: a repo-wide gate run
 by agent A reports agent B's in-flight work as pre-existing.
+
+**`BLD-X-FE-INBOX-001` — `INTEGRATED`, two confirmed defects repaired.** Three
+of five hypotheses refuted (MENTIONS paginates correctly; Drafts is a separate
+route with its own page state; badge invalidation already prefix-matches).
+
+- **H1, no page state at all.** `inbox-page.tsx` had no `usePageState`, no
+  `<PageState>`, no error branch — it rendered `PageWrapper` → `InboxList` +
+  `InboxPreviewPane` directly, so a 402/403 read rendered as an empty inbox.
+- **H2, the disabled-query trap.** `useInfiniteNotifications` returns
+  `isPending: true, isLoading: false` while the session is not ready, and the
+  empty guard checked `isLoading` — so a not-yet-enabled query fell straight
+  through to "All caught up" before the first fetch. Now `isLoading: isPending`.
+- **Accepted deviation from the brief.** The brief named `inbox-page.tsx`; the
+  agent fixed `inbox-list.tsx` instead, because that is where the query and its
+  `isPending`/`isError`/`error` actually live. Fixing the page would have meant
+  threading state upward out of its owner. The deviation is correct.
+- **`permission` is deliberately omitted** from this `usePageState` call, and
+  that is right: the inbox is a universal surface (root §8 — every active member
+  keeps notifications), so there is no gating key. Coordinator verified the
+  denial story still works without it: `permission` is optional and defaults the
+  permission dimension to `granted` (`hooks/api/use-page-state.ts:28-34`), while
+  `pageStateFromError` (`lib/page-state/resolve-page-state.ts:68-75`) maps 403 →
+  `denied` and 402 → plan/module denial **from the error alone**. Passing `error`
+  is what carries it.
+- Coordinator re-ran: **27 tests, 4 suites, exit 0**; no code comments in the
+  diff; `check:named-handlers` **passes across 4,566 files**, resolving the
+  false "pre-existing" attribution above — that failure was this packet's
+  in-flight state and is now clean.
+
+**Gate blind spot found, not yet owned.** `lib/rbac/denial-is-not-emptiness.known.json`
+had **no inbox entry** — the surface was unconverted but the ratchet never
+flagged it, because the ratchet tracks surfaces reading a *permission-gated*
+hook and the inbox read is universal. So the "denial renders as emptiness" class
+has a blind spot exactly over universal surfaces, which are the ones root §8
+guarantees to every member. Nothing to un-tick here (no entry to shrink), but
+the gate under-reports and a future packet should widen it to cover universal
+reads that can still return 402/403.
 
 ### Findings banked for cycles 15–16 (read-only audit, unverified by coordinator)
 

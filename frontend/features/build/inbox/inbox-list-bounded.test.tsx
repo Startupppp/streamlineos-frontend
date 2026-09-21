@@ -21,6 +21,20 @@ jest.mock("@/hooks/api/notifications", () => ({
   useMarkAllNotificationsRead: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: ({ isLoading, isError, error, isEmpty }: {
+    isLoading: boolean;
+    isError: boolean;
+    error?: unknown;
+    isEmpty?: boolean;
+  }) => {
+    if (isLoading) return { kind: "loading" };
+    if (isError) return { kind: "error", error };
+    if (isEmpty) return { kind: "empty" };
+    return { kind: "ready" };
+  },
+}));
+
 jest.mock("./inbox-notification-item", () => ({
   InboxNotificationItem: ({ notification }: { notification: { title: string } }) => (
     <div>{notification.title}</div>
@@ -58,6 +72,7 @@ function mockPages(counts: number[], hasNextPage: boolean) {
   });
   useInfiniteNotifications.mockReturnValue({
     data: { pages, pageParams: [] },
+    isPending: false,
     isLoading: false,
     isError: false,
     error: null,
@@ -160,6 +175,7 @@ describe("InboxList — changing the filter resets the window", () => {
   it("does not claim there are no mentions while more pages are still unread", () => {
     useInfiniteNotifications.mockReturnValue({
       data: { pages: [[]], pageParams: [] },
+      isPending: false,
       isLoading: false,
       isError: false,
       error: null,
@@ -173,5 +189,40 @@ describe("InboxList — changing the filter resets the window", () => {
     expect(
       screen.getByRole("button", { name: /load older notifications/i }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("InboxList — disabled query shows skeleton, not empty state", () => {
+  it("shows a loading skeleton and not the empty message when the query is pending but not yet fetching", () => {
+    useInfiniteNotifications.mockReturnValue({
+      data: undefined,
+      isPending: true,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage,
+    });
+    renderInbox();
+    expect(screen.queryByText("All caught up")).toBeNull();
+    expect(screen.queryByText("No notifications")).toBeNull();
+  });
+
+  it("shows the error state and not the empty message when the query has failed", () => {
+    useInfiniteNotifications.mockReturnValue({
+      data: undefined,
+      isPending: false,
+      isLoading: false,
+      isError: true,
+      error: new Error("Network failure"),
+      refetch: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage,
+    });
+    renderInbox();
+    expect(screen.queryByText("All caught up")).toBeNull();
   });
 });
