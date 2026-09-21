@@ -7,6 +7,16 @@ import { useApprovals } from "@/hooks/api/timesheets-core/approvals";
 import type { TimesheetPeriod } from "@/features/timesheets/types";
 import { ApprovalsView } from "./approvals-view";
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
+  usePathname: () => "/timesheets/approvals",
+  useSearchParams: () => ({ get: () => null }),
+}));
+
+jest.mock("@/hooks/api/timesheets-core/periods", () => ({
+  usePeriod: () => ({ data: undefined }),
+}));
+
 jest.mock("next-auth/react", () => ({
   useSession: jest.fn(() => ({ data: { user: { id: "usr_me" }, orgId: "org_1" } })),
 }));

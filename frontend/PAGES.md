@@ -482,6 +482,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 
 ### Hub
 - `/payroll` · **Payroll** · hooks: `useCommandCenter`, `useCreateRun`, `useCan("payroll:runs:view")`, `useCan("payroll:runs:manage")` (2026-09-21: the KPI row and every `TabsList` fade the edge that hides more via `useHorizontalOverflow`, so a clipped row reads as scrollable at 390/768 — FE#76)
+- `/payroll/readiness` · **Payroll** · hooks: `usePayrollReadiness(month)` → `GET /payroll/readiness` (2026-09-21: the pay-period readiness ledger — timesheets approved → hours exported → received → acknowledged → inputs locked → run generated, each with owner, timestamp and next action; exceptions for periods awaiting a decision, hours approved after export, rejected exports and periods reopened after their hours reached payroll; state via `usePageState` + `PageState`; sidebar "Readiness" under Payroll)
 
 ### Core payroll operations
 - `/payroll/runs` · **Payroll** · hooks: `→ features/payroll/runs`
@@ -878,7 +879,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 
 - `/timesheets` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: the week grid scroller fades its hidden edge and, below `sm`, says "Swipe sideways to reach every day of the week" whenever it overflows — FE#79; header wrapping at 768 landed earlier in 08f6406e2 — FE#80)
 - `/timesheets` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: My Time shows the shared `ApprovalRoutePanel` from `GET /timesheets/periods/{periodId}/approver` before submit — who approves, why, SLA, escalation — and disables Submit when nobody can own the period)
-- `/timesheets/approvals` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: the queue lists periods routed to the viewer, an Approver column names the rung, escalation and deadline (`approvalRoute`/`approvalDueAt`), the detail sheet spells out the routing explanation)
+- `/timesheets/approvals` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: the queue lists periods routed to the viewer, an Approver column names the rung, escalation and deadline (`approvalRoute`/`approvalDueAt`), the detail sheet spells out the routing explanation; `?period=<periodId>` — the link notifications and the payroll readiness ledger use — opens that period's detail sheet directly)
 - `/timesheets/billing` · **Timesheets** · hooks: `→ features/timesheets`
 - `/timesheets/exceptions` · **Timesheets** · hooks: `→ features/timesheets`
 - `/timesheets/overdue` · **Timesheets** · hooks: `→ features/timesheets` — overdue timesheets list; `enforceRouteAccess`
