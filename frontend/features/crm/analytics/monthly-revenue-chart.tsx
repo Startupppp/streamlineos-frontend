@@ -41,7 +41,7 @@ export function MonthlyRevenueChart({ data }: MonthlyRevenueChartProps) {
               <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis dataKey="month" tick={AXIS_TICK} />
           <YAxis tick={AXIS_TICK} />
           <Tooltip

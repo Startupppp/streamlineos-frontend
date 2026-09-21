@@ -42,10 +42,10 @@ export function ScorecardCharts({ stats, dist, orgAvgRating }: ScorecardChartsPr
                     key={s.interviewerId}
                     fill={
                       s.avgRating < (orgAvgRating ?? 5) - 1.5
-                        ? "hsl(var(--destructive))"
+                        ? "var(--destructive)"
                         : s.avgRating > (orgAvgRating ?? 5) + 1.5
                         ? "hsl(142 76% 36%)"
-                        : "hsl(var(--primary))"
+                        : "var(--primary)"
                     }
                   />
                 ))}
@@ -66,7 +66,7 @@ export function ScorecardCharts({ stats, dist, orgAvgRating }: ScorecardChartsPr
               <XAxis dataKey="range" tick={{ fontSize: 10 }} />
               <YAxis allowDecimals={false} tick={{ fontSize: 10 }} />
               <Tooltip />
-              <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="count" fill="var(--primary)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>

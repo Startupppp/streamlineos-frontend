@@ -25,7 +25,7 @@ export function AttributionChart({ data }: { data: CampaignAttribution[] }) {
   return (
     <ResponsiveContainer width="100%" height={280}>
       <BarChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
         <XAxis dataKey="name" tick={AXIS_TICK} />
         <YAxis tick={AXIS_TICK} tickFormatter={(v: number) => `₹${(v / 1000).toFixed(0)}K`} />
         <Tooltip
