@@ -35,6 +35,7 @@
 - `/home` · **Platform** · hooks: none — redirect to `/dashboard`; alias route
 - `/access-denied` · **Platform** · hooks: none — server-rendered module/permission denial page; resolves `?required=` + `?reason=` search params into a `DeniedView` with module or permission copy
 - `/announcements` · **Platform** · hooks: none — redirect to `/hr/announcements`; alias route
+- `/owner` · **Platform (internal)** · hooks: `requireSession` (server) — platform operations hub for internal staff; links to blog admin, owner console, and platform management surfaces; `robots: { index: false }`
 
 ---
 
@@ -543,7 +544,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/accounting/coa` · **Accounting** · hooks: `→ features/accounting/coa`
 - `/accounting/coa/[accountId]` · **Accounting** [RETIRED: no page.tsx found 2026-09-21; account detail may have been merged into the COA list view] — detail; Edit via `EditAccountDialog`; journal preview table capped at 20 rows (acceptable for preview); not-found uses bespoke div, not `EmptyState` (minor)
 - `/accounting/journal` · **Accounting** · hooks: `useJournalEntries`, `useCan("accounting:journal:create")` — cursor pagination (pageSize 25, server mode); filters: date range, source, status, URL-synced; `useCan` gates create button only — no `enabled` view-gate on the list query (403-spam for non-finance roles); `EmptyState` with `EmptyReportIllustration` ✓
-- `/accounting/journal/new` · **Accounting** · hooks: `useChartOfAccounts`, `useCreateJournalEntry`, `useCan("accounting:journal:create")` — create-only form; gate: `EmptyState illustrationPreset="security"` when `!canCreate`; `LoadingState` while accounts load; `ErrorState` if accounts fail; `LoadingButton` for submit
+- `/accounting/journal/new` · **Accounting** [RETIRED: no page.tsx found 2026-09-21; journal entry creation appears to be form-within-list or was removed]
 - `/accounting/journal/[journalId]` · **Accounting** · hooks: `useJournalEntry`, `usePostJournalEntry`, `useReverseJournalEntry`, `useSubmitJournalApproval`, `useCan("accounting:journal:post")`, `useCan("accounting:journal:approve")` — detail; post, submit-for-approval, approve, reject, reverse lifecycle; `LoadingState` and `ErrorState` ✓; not-found renders `ErrorState` ✓
 - `/accounting/general-ledger` · **Accounting** · hooks: `→ features/accounting`
 - `/accounting/opening-balances` · **Accounting** · hooks: `→ features/accounting`
@@ -692,6 +693,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/inventory/replenishment/drift` · **Inventory** · hooks: `→ features/inventory` — forecast drift; `ForecastDriftClient`
 - `/inventory/replenishment/rules` · **Inventory** · hooks: `→ features/inventory/replenishment`
 - `/inventory/replenishment/transfers` · **Inventory** · hooks: `→ features/inventory` — transfer recommendations; `TransferRecommendationsClient`
+- `/inventory/reports` · **Inventory** · hooks: `useAccess, useCan` — report index; links each report, gates the list on the reader's own permissions
 - `/inventory/reports/stock-summary` · **Inventory** · hooks: `→ features/inventory/reports`
 - `/inventory/reports/movements` · **Inventory** · hooks: `→ features/inventory/reports`
 - `/inventory/reports/slow-moving` · **Inventory** · hooks: `→ features/inventory/reports`
@@ -962,8 +964,10 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 
 - `/about` · **Marketing** · hooks: none
 - `/pricing` · **Marketing** · hooks: none
+- `/signup` · **Auth** · hooks: `SignupForm` — renders a sign-up form, currently redirects to `/signin`; see `frontend/CLAUDE.md`
 - `/contact` · **Marketing** · hooks: none
 - `/waitlist` · **Marketing** [RETIRED path: no page.tsx found on disk]
+- `/waitlist/claim/[claimToken]` · **Marketing** · hooks: none — workspace claim form for waitlist invitees; `ClaimForm` + `PublicShell`; token-gated, not indexed
 - `/design-system` · **Dev** · hooks: none — dev-only gallery
 - `/legal/privacy` · **Marketing** · hooks: none
 - `/legal/security` · **Marketing** · hooks: none
@@ -993,3 +997,4 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/s/[collectorToken]` · **Platform (short link)** · hooks: redirect
 - `/refer/[orgId]` · **HR (public referral)** · hooks: `→ features/hr/recruitment`
 - `/refer/link/[referralToken]` · **HR (public referral)** · hooks: `→ features/hr/recruitment`
+- `/unsubscribe/[unsubscribeToken]` · **Platform (public)** · hooks: `usePublicUnsubscribe` — email unsubscribe flow; four states: loading, success, error, already-unsubscribed
