@@ -794,7 +794,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 ## Timesheets
 
 - `/timesheets` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: My Time shows the shared `ApprovalRoutePanel` from `GET /timesheets/periods/{periodId}/approver` before submit — who approves, why, SLA, escalation — and disables Submit when nobody can own the period)
-- `/timesheets/approvals` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: the queue lists periods routed to the viewer, an Approver column names the rung, escalation and deadline (`approvalRoute`/`approvalDueAt`), the detail sheet spells out the routing explanation)
+- `/timesheets/approvals` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: the queue lists periods routed to the viewer, an Approver column names the rung, escalation and deadline (`approvalRoute`/`approvalDueAt`), the detail sheet spells out the routing explanation; `?period=<periodId>` — the link notifications and the payroll readiness ledger use — opens that period's detail sheet directly)
 - `/timesheets/billing` · **Timesheets** · hooks: `→ features/timesheets`
 - `/timesheets/exceptions` · **Timesheets** · hooks: `→ features/timesheets`
 - `/timesheets/payroll` · **Timesheets** · hooks: `→ features/timesheets`

@@ -9,6 +9,16 @@ import type { BorrowedAuthority } from "./approval-standing";
 import { DelegateActingBanner } from "./delegate-acting-banner";
 import { ApprovalsView } from "./approvals-view";
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
+  usePathname: () => "/timesheets/approvals",
+  useSearchParams: () => ({ get: () => null }),
+}));
+
+jest.mock("@/hooks/api/timesheets-core/periods", () => ({
+  usePeriod: () => ({ data: undefined }),
+}));
+
 jest.mock("next-auth/react", () => ({
   useSession: jest.fn(),
 }));
