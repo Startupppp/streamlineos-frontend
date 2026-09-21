@@ -385,6 +385,7 @@ If it is here, do not reimplement it. **Adding a shared component means adding a
 | Board skeletons | `KanbanBoardSkeleton`, `KanbanColumnSkeleton` — `components/ui/kanban-skeleton.tsx` |
 | Rich surface (HR + Administration) | `RichPanel`, `RichPageContent`, `RichHero`, `RichQuickAction`, `RichIconWell` — `components/shared/rich-surface.tsx` (re-exported `Hr*` from `features/hr/shared/hr-ui.tsx`) |
 | AI | `AiActionsMenu`, `AiUsageChip` — `components/ai/` |
+| Sanitised HTML | `SanitizedHtml` — `components/shared/sanitized-html.tsx` · `useSanitizedHtml` — `hooks/common/use-sanitized-html.ts` · `sanitizeHtml`, `SanitizeHtmlPolicy` — `lib/sanitize-html.ts` (the ONE DOMPurify entry; sanitises after mount via a dynamic import, so never `import { sanitizeHtml }` statically and never import `isomorphic-dompurify` elsewhere — `lib/sanitize-html-import-boundary.test.ts` fails the build; a bundled jsdom throws ENOENT during SSR, which is React #419) |
 | Plate list model (KB Wiki) | `listStyleTypeOf`, `listIndentOf`, `listPaddingRem`, `listOrdinalOf`, `listOrdinalLabel`, `isListItemChecked` — `components/editor/plate/plate-list-model.ts` (the ONE definition of the indent list model; both the editor and the public reader consume it) |
 | KB chat bubbles | `ChatBubble`, `TypingBubble`, `ChatMessage` — `components/kb/kb-chat-bubble.tsx` (wiki Ask KB and the page-ask sheet) |
 | Party merge (duplicates) | `PartyMergeDialog`, `DuplicatePartyCard` — `components/party-merge/` (CRM contacts and the party duplicates page both open it) |
