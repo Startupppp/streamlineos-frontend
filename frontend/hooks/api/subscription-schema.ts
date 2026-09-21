@@ -80,7 +80,7 @@ export const subscriptionResponseContract = z.object({
   subscription: subscriptionContract.nullable(),
   publicKeyId: z.string().nullable(),
   isConfigured: z.boolean(),
-  platformCheckout: billingReadinessContract.optional(),
+  platformCheckout: billingReadinessContract,
 });
 
 export const planDefinitionContract = z.object({
