@@ -45,6 +45,14 @@ const RUN_STATUS_LABELS: Record<string, string> = {
   aborted: "Aborted",
 };
 
+function runStatusLabel(status: string): string {
+  return RUN_STATUS_LABELS[status] ?? status.replace(/_/g, " ");
+}
+
+function runStatusStyle(status: string): string {
+  return RUN_STATUS_STYLES[status] ?? "text-muted-foreground border-border";
+}
+
 function RunProgress({ counts }: { counts?: TestRunCounts }) {
   if (!counts || counts.total === 0) {
     return <span className="text-dense text-muted-foreground">—</span>;
@@ -170,9 +178,9 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
       cell: (row) => (
         <Badge
           variant="outline"
-          className={cn("text-micro", RUN_STATUS_STYLES[row.status])}
+          className={cn("text-micro", runStatusStyle(row.status))}
         >
-          {RUN_STATUS_LABELS[row.status]}
+          {runStatusLabel(row.status)}
         </Badge>
       ),
       className: "w-[110px]",
