@@ -12,4 +12,5 @@ export const SELF_PERMISSIONS: Permission[] = [
   { name: "self:recruitment", resource: "self", action: "recruitment", description: "View assigned interviews and submit own hiring feedback" },
   { name: "self:job-openings", resource: "self", action: "job-openings", description: "Browse internal job openings and apply to them" },
   { name: "self:referrals", resource: "self", action: "referrals", description: "Submit candidate referrals and track own referrals" },
+  { name: "self:support", resource: "self", action: "support", description: "Raise employee support requests and follow own requests" },
 ];
