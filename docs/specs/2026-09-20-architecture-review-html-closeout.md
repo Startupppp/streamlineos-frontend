@@ -1,7 +1,17 @@
 # Architecture reviews — what the six retired HTML reports still owe
 
-**Status:** audit complete, 15 items open. This file replaces the record that went
-missing when `.scratch/platform-phase-three/` was deleted.
+**Status (2026-09-21):** of the 15 items opened on 2026-09-20, **3 are closed in code**
+(2, 6, 10), **3 proved obsolete on measurement** (1, 7, 11), **4 were corrected and
+deferred with a re-open threshold** (4, 8, 9, 12), **2 are blocked on a product decision**
+(3, 15), **1 is real but blocked on a seam widening** (14), and **1 was reverted as a
+duplicate** (5). Item 13 is the only one still in flight.
+
+Nine of the fifteen therefore did not survive contact with the source or the database.
+That is the point of the re-derivation discipline below, not a failure of it — but it does
+mean this document's *own* remaining claims deserve the same suspicion.
+
+This file replaces the record that went missing when `.scratch/platform-phase-three/` was
+deleted.
 
 Six HTML reports were generated 2026-08-20 and 2026-08-23, then deleted in
 `22ddddb93` on the claim that "everything actionable in them is now shipped,
@@ -70,8 +80,14 @@ Ordered most severe first. Each names the owning file and the smallest repair.
    widened to `src/**` with explicit ignores for the four places that legitimately read
    the environment pre-injector, and the 22 added to the ratchet. Verified the rule
    fires in newly-covered `src/health/` and stays silent in `src/config/`.
-   **Still open:** nothing caps ratchet growth, so an author can still add their file
-   instead of fixing the read. That needs its own check.
+   **Residual now CLOSED too (`81905ceef`).** `check:process-env-ratchet` caps the combined
+   list so it may only shrink, and fails on a duplicate or a stale entry — a stale path
+   exempts nothing and hides a debt that was paid without the count falling. Both blocks are
+   counted together on purpose: gating them separately would let a file be reclassified from
+   "debt" to "permanent" to dodge the ratchet. Wired into the CI `gates` job with a self-test.
+   Its first run found two real defects: `region.module.ts` was listed in *both* blocks, and
+   `payroll/hr-payroll/lib/encryption.ts` no longer exists (its env reads moved into
+   `common/security`, already listed). Baseline landed at **62**, not 64.
 
 3. **AI model tiering is two global constants.** `llm-provider.config.ts:34-35` —
    `fastModel = "gpt-4o-mini"`, `standardModel = "gpt-4o"`, platform-wide. Needs
@@ -127,17 +143,24 @@ Ordered most severe first. Each names the owning file and the smallest repair.
    re-display the invite URL, and only `token` was legacy. Joining was never affected:
    `joinViaInviteLink` resolves by hash alone.
 
-7. **`sendToChannelMembers` fan-out is still inline** — premise HALF STALE, narrowed
-   2026-09-21. `realtime/web-push.service.ts:168`. The review described
-   `Promise.allSettled(members.map(...))` opening one call per member; **that is already
-   fixed** — the method now pages recipients (`PUSH_SUBSCRIPTION_BATCH`), loads each
-   page's subscriptions in ONE query, and fans out under `boundedMap` with
-   `PUSH_FANOUT_CONCURRENCY`. The N+1 and the unbounded concurrency are both gone.
-   **What remains** is only that the loop is still `await`ed inline, so the caller holds
-   its pooled connection through the push provider's latency. Moving it to
-   `OutboxWriter.emit` (backend/CLAUDE.md §4 mechanism 2) is still right — losing a push
-   is recoverable, holding a pooled connection through someone else's outage is not —
-   but the urgency is much lower than the review implied.
+7. ~~**`sendToChannelMembers` awaits N pushes in the request thread**~~ — **OBSOLETE on both
+   halves. Verified 2026-09-21; the asked-for repair is already in place.**
+   The `Promise.allSettled(members.map(...))` the review described is gone:
+   `realtime/web-push.service.ts` now pages recipients (`PUSH_SUBSCRIPTION_BATCH`), loads
+   each page's subscriptions in ONE query, and fans out under `boundedMap` with
+   `PUSH_FANOUT_CONCURRENCY`. No N+1, no unbounded concurrency.
+   And it does not run in the request thread. The only production caller is
+   `chat/chat-fanout-deferred.helper.ts:91`, reached via
+   `OutboxBackedMessageFanoutProvider`: `ChatMessagesService` writes a
+   `chat.message.fanout` outbox row before its transaction commits, the outbox worker
+   claims the durable row afterwards, and a throw returns to that worker for
+   retry/dead-letter. Each channel additionally goes through `effects.execute` with a
+   `producerEventId`/`effectKey` and `providerIdempotency: "STABLE_KEY_PROPAGATED"`, inside
+   its own `runInNewTenantTransaction` — not the request's.
+   **One residual nuance, not worth a change today:** the HTTPS push happens inside that
+   fresh transaction, so a pooled connection is held for the provider's latency — but it is
+   the outbox worker's connection, not a request's, and the send needs the tenant GUC for
+   its own reads and ledger writes. Revisit only if the worker pool shows saturation.
 
 8. **`MAX_CAPABILITY_CHANNELS = 500`** — **"silently" is WRONG, and it is unreachable by
    125×.** Re-derived 2026-09-21. Both layers already emit a structured warning:
@@ -198,10 +221,17 @@ Ordered most severe first. Each names the owning file and the smallest repair.
 12. **"My work" ticket read is three OR branches.** `build/core/projects-tickets-read.service.ts`.
     **The quoted 373ms / 116 MB per page did not come from production** — no build table
     reaches the top 12 by row count there (2026-09-21 measurement, item 1). Treat it as a
-    seeded-environment figure and re-measure before and after. Per backend/CLAUDE.md §7 an `OR` between an
-    indexed predicate and a semi-join defeats both — split into a `UNION` of
-    independently-indexed branches with `count(*) OVER ()`. Measure before and after;
-    the `ticket_participants` redesign is the larger fix and can wait on the number.
+    seeded-environment figure. Per backend/CLAUDE.md §7 an `OR` between an indexed predicate
+    and a semi-join defeats both — split into a `UNION` of independently-indexed branches
+    with `count(*) OVER ()`.
+    **BLOCKED on a measurement environment, and deliberately not attempted blind.** That same
+    §7 entry says the inverse also holds — once the outer set is narrowed to one project, a
+    single pass with `EXISTS` is *cheaper* — and requires measuring both before choosing.
+    Production cannot supply the number; it holds no build data of consequence. This needs a
+    seeded environment with a realistic ticket/participant distribution, measured in
+    **buffers, not milliseconds**, as `streamline_app` with the tenant GUC set (the owner has
+    BYPASSRLS, so its plans hide exactly this problem). Rewriting blind risks trading a bad
+    plan for a worse one. The `ticket_participants` redesign remains the larger fix.
 
 13. **Invitation state machine has no owner.** `invitation-lifecycle.service.ts`,
     `invitation-acceptance.service.ts`, `invitations.helpers.ts` split by code path, and
