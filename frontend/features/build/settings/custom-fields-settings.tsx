@@ -266,7 +266,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
         : null;
 
     createField.mutate(
-      { name: values.fieldName.trim(), type: values.fieldType as CustomFieldType, options: parsedOptions },
+      { name: values.fieldName.trim(), type: values.fieldType, options: parsedOptions },
       {
         onSuccess: () => {
           form.reset();
@@ -308,7 +308,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
         fieldId: editingField.id,
         data: {
           name: values.fieldName.trim(),
-          type: values.fieldType as CustomFieldType,
+          type: values.fieldType,
           options: parsedOptions,
         },
       },
