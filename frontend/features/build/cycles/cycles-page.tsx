@@ -10,7 +10,14 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { formatShortDate } from "@/lib/date-utils";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetBody,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -18,10 +25,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Calendar, CheckCircle2, Clock, ArrowRight, AlertTriangle } from "lucide-react";
+import {
+  Calendar,
+  CheckCircle2,
+  Clock,
+  ArrowRight,
+  AlertTriangle,
+} from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { PlusIcon, ChevronDownIcon, ChevronRightIcon } from "@animateicons/react/lucide";
+import {
+  PlusIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+} from "@animateicons/react/lucide";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -50,18 +67,34 @@ const createCycleSchema = z
           .string()
           .min(2, "Name must be at least 2 characters")
           .max(100, "Name must be 100 characters or fewer")
-          .regex(/[A-Za-z0-9]/, "Name must contain at least one letter or number")
+          .regex(
+            /[A-Za-z0-9]/,
+            "Name must contain at least one letter or number",
+          ),
       ),
     description: z
       .string()
-      .max(DESCRIPTION_MAX, `Description must be ${DESCRIPTION_MAX} characters or fewer`)
+      .max(
+        DESCRIPTION_MAX,
+        `Description must be ${DESCRIPTION_MAX} characters or fewer`,
+      )
       .optional(),
     startDate: z.string().min(1, "Start date is required"),
     endDate: z.string().min(1, "End date is required"),
   })
   .superRefine((data, ctx) => {
-    refineNotBeforeToday(data.startDate, ctx, "startDate", "Start date cannot be in the past");
-    refineNotBeforeToday(data.endDate, ctx, "endDate", "End date cannot be in the past");
+    refineNotBeforeToday(
+      data.startDate,
+      ctx,
+      "startDate",
+      "Start date cannot be in the past",
+    );
+    refineNotBeforeToday(
+      data.endDate,
+      ctx,
+      "endDate",
+      "End date cannot be in the past",
+    );
     refineDateOrder(data, ctx, {
       mode: "after",
       message: "End date must be after start date",
@@ -91,16 +124,23 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
   const [createOpen, setCreateOpen] = useState(false);
   const canManage = useCan("build:workspace:manage");
 
-  const { data: cycles, isLoading, isError, error, refetch } = useCycles(projectId);
-  const pageState = usePageState({
-    permission: "build:view",
-    isLoading,
-    isError,
+  const {
     error,
+    refetch,
+    isError,
+    isLoading,
+    data: cycles,
+  } = useCycles(projectId);
+  const pageState = usePageState({
+    error,
+    isError,
+    isLoading,
+    permission: "build:sprints:view",
   });
   const activeCycles = cycles?.filter((c) => c.status === "active") ?? [];
   const upcomingCycles = cycles?.filter((c) => c.status === "draft") ?? [];
   const completedCycles = cycles?.filter((c) => c.status === "completed") ?? [];
+
   const [showCompleted, setShowCompleted] = useState(false);
 
   const createMutation = useCreateCycle();
@@ -125,15 +165,25 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     [form],
   );
 
-  const handleToggleCompleted = useCallback(() => setShowCompleted((v) => !v), []);
+  const handleToggleCompleted = useCallback(
+    () => setShowCompleted((v) => !v),
+    [],
+  );
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const { iconRef: completedChevronRef, hoverHandlers: completedChevronHoverHandlers } = useAnimatedIcon();
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const {
+    iconRef: completedChevronRef,
+    hoverHandlers: completedChevronHoverHandlers,
+  } = useAnimatedIcon();
+
   const watchedStartDate = form.watch("startDate");
   const startPickerBounds = planningStartPickerProps();
   const endPickerBounds = planningEndPickerProps({
-    startDate: watchedStartDate,
     mode: "after",
+    startDate: watchedStartDate,
   });
 
   const handleSetStartDate = useCallback(
@@ -171,10 +221,19 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     [createMutation, projectId, form],
   );
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  ) {
     return (
       <PageWrapper title="Cycles">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>
@@ -201,7 +260,10 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
           <div className="space-y-2">
             <Skeleton className="h-3 w-20" />
             {Array.from({ length: 2 }).map((_, i) => (
-              <div key={i} className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
+              <div
+                key={i}
+                className="bg-card border border-border rounded-lg p-4 flex items-center justify-between"
+              >
                 <div className="space-y-1.5">
                   <Skeleton className="h-4 w-36" />
                   <Skeleton className="h-3 w-44" />
@@ -218,104 +280,161 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     );
   }
 
-  const hasCycles = activeCycles.length > 0 || upcomingCycles.length > 0 || completedCycles.length > 0;
+  const hasCycles =
+    activeCycles.length > 0 ||
+    upcomingCycles.length > 0 ||
+    completedCycles.length > 0;
 
   return (
     <PageWrapper
       title="Cycles"
       subtitle="Time-box work into focused iterations"
       actions={
-        canManage ? <Sheet open={createOpen} onOpenChange={handleOpenChange}>
-          <SheetTrigger asChild>
-            <AnimatedIconButton size="sm" icon={PlusIcon} iconSize={16} iconClassName="mr-1">
-              New Cycle
-            </AnimatedIconButton>
-          </SheetTrigger>
-          <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col gap-0">
-            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-              <SheetTitle>Create Cycle</SheetTitle>
-            </SheetHeader>
-            <SheetBody className="px-6 py-5">
-              <form id="cycle-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-                <div className="space-y-1.5">
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" placeholder="e.g. Sprint 1, Q3 Planning..." {...form.register("name")} />
-                  {form.formState.errors.name && (
-                    <p className="text-xs text-destructive mt-1">{form.formState.errors.name.message}</p>
-                  )}
-                  {!form.formState.errors.name && showDuplicateWarning && (
-                    <p className="text-xs text-status-warning-ink flex items-center gap-1 mt-1">
-                      <AlertTriangle className="h-3 w-3 shrink-0" />
-                      A cycle with this name already exists in this project.
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="description">Description</Label>
-                    <span className={cn("text-xs tabular-nums", watchedDescription.length > DESCRIPTION_MAX ? "text-destructive" : "text-muted-foreground")}>
-                      {watchedDescription.length}/{DESCRIPTION_MAX}
-                    </span>
-                  </div>
-                  <Textarea id="description" placeholder="Optional description..." {...form.register("description")} rows={3} />
-                  {form.formState.errors.description && (
-                    <p className="text-xs text-destructive mt-1">{form.formState.errors.description.message}</p>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+        canManage ? (
+          <Sheet open={createOpen} onOpenChange={handleOpenChange}>
+            <SheetTrigger asChild>
+              <AnimatedIconButton
+                size="sm"
+                icon={PlusIcon}
+                iconSize={16}
+                iconClassName="mr-1"
+              >
+                New Cycle
+              </AnimatedIconButton>
+            </SheetTrigger>
+            <SheetContent
+              side="right"
+              className="sm:max-w-md p-0 flex flex-col gap-0"
+            >
+              <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
+                <SheetTitle>Create Cycle</SheetTitle>
+              </SheetHeader>
+              <SheetBody className="px-6 py-5">
+                <form
+                  id="cycle-form"
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-5"
+                >
                   <div className="space-y-1.5">
-                    <Label htmlFor="startDate">Start Date</Label>
-                    <DatePicker
-                      id="startDate"
-                      value={watchedStartDate || ""}
-                      onChange={handleSetStartDate}
-                      placeholder="Start date"
-                      fromDate={startPickerBounds.fromDate}
-                      fromYear={startPickerBounds.fromYear}
-                      toYear={startPickerBounds.toYear}
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                      id="name"
+                      placeholder="e.g. Sprint 1, Q3 Planning..."
+                      {...form.register("name")}
                     />
-                    {form.formState.errors.startDate && (
-                      <p className="text-xs text-destructive mt-1">{form.formState.errors.startDate.message}</p>
+                    {form.formState.errors.name && (
+                      <p className="text-xs text-destructive mt-1">
+                        {form.formState.errors.name.message}
+                      </p>
+                    )}
+                    {!form.formState.errors.name && showDuplicateWarning && (
+                      <p className="text-xs text-status-warning-ink flex items-center gap-1 mt-1">
+                        <AlertTriangle className="h-3 w-3 shrink-0" />A cycle
+                        with this name already exists in this project.
+                      </p>
                     )}
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="endDate">End Date</Label>
-                    <DatePicker
-                      id="endDate"
-                      value={form.watch("endDate") || ""}
-                      onChange={handleSetEndDate}
-                      placeholder="End date"
-                      fromDate={endPickerBounds.fromDate}
-                      fromYear={endPickerBounds.fromYear}
-                      toYear={endPickerBounds.toYear}
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="description">Description</Label>
+                      <span
+                        className={cn(
+                          "text-xs tabular-nums",
+                          watchedDescription.length > DESCRIPTION_MAX
+                            ? "text-destructive"
+                            : "text-muted-foreground",
+                        )}
+                      >
+                        {watchedDescription.length}/{DESCRIPTION_MAX}
+                      </span>
+                    </div>
+                    <Textarea
+                      id="description"
+                      placeholder="Optional description..."
+                      {...form.register("description")}
+                      rows={3}
                     />
-                    {form.formState.errors.endDate && (
-                      <p className="text-xs text-destructive mt-1">{form.formState.errors.endDate.message}</p>
+                    {form.formState.errors.description && (
+                      <p className="text-xs text-destructive mt-1">
+                        {form.formState.errors.description.message}
+                      </p>
                     )}
                   </div>
-                </div>
-              </form>
-            </SheetBody>
-            <div className="shrink-0 px-6 py-4 border-t">
-              <LoadingButton type="submit" form="cycle-form" isPending={createMutation.isPending} loadingText="Creating..." className="w-full">
-                Create Cycle
-              </LoadingButton>
-            </div>
-          </SheetContent>
-        </Sheet> : undefined
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="startDate">Start Date</Label>
+                      <DatePicker
+                        id="startDate"
+                        value={watchedStartDate || ""}
+                        onChange={handleSetStartDate}
+                        placeholder="Start date"
+                        fromDate={startPickerBounds.fromDate}
+                        fromYear={startPickerBounds.fromYear}
+                        toYear={startPickerBounds.toYear}
+                      />
+                      {form.formState.errors.startDate && (
+                        <p className="text-xs text-destructive mt-1">
+                          {form.formState.errors.startDate.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="endDate">End Date</Label>
+                      <DatePicker
+                        id="endDate"
+                        value={form.watch("endDate") || ""}
+                        onChange={handleSetEndDate}
+                        placeholder="End date"
+                        fromDate={endPickerBounds.fromDate}
+                        fromYear={endPickerBounds.fromYear}
+                        toYear={endPickerBounds.toYear}
+                      />
+                      {form.formState.errors.endDate && (
+                        <p className="text-xs text-destructive mt-1">
+                          {form.formState.errors.endDate.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </form>
+              </SheetBody>
+              <div className="shrink-0 px-6 py-4 border-t">
+                <LoadingButton
+                  type="submit"
+                  form="cycle-form"
+                  isPending={createMutation.isPending}
+                  loadingText="Creating..."
+                  className="w-full"
+                >
+                  Create Cycle
+                </LoadingButton>
+              </div>
+            </SheetContent>
+          </Sheet>
+        ) : undefined
       }
     >
       {hasCycles && (
         <div className="flex flex-1 min-h-0 flex-col gap-6">
           {activeCycles.length > 0 && (
             <section>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Active</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                Active
+              </p>
               <div className="grid gap-3">
                 {activeCycles.map((cycle) => (
-                  <Link key={cycle.id} href={`/build/${projectId}/cycles/${cycle.id}`}>
+                  <Link
+                    key={cycle.id}
+                    href={`/build/${projectId}/cycles/${cycle.id}`}
+                  >
                     <div className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-colors cursor-pointer">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="min-w-0 font-semibold text-sm truncate" title={cycle.name}>{cycle.name}</span>
+                        <span
+                          className="min-w-0 font-semibold text-sm truncate"
+                          title={cycle.name}
+                        >
+                          {cycle.name}
+                        </span>
                         <Badge className="shrink-0 bg-status-success-surface text-status-success-ink">
                           Active
                         </Badge>
@@ -323,7 +442,8 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
                       <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          {formatShortDate(cycle.startDate)} — {formatShortDate(cycle.endDate)}
+                          {formatShortDate(cycle.startDate)} —{" "}
+                          {formatShortDate(cycle.endDate)}
                         </span>
                         <span className="flex items-center gap-1">
                           <CheckCircle2 className="h-3 w-3" />
@@ -344,7 +464,9 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
                             style={{ width: `${cycle.progress}%` }}
                           />
                         </div>
-                        <span className="text-xs text-muted-foreground mt-1 block">{cycle.progress}% complete</span>
+                        <span className="text-xs text-muted-foreground mt-1 block">
+                          {cycle.progress}% complete
+                        </span>
                       </div>
                     </div>
                   </Link>
@@ -359,22 +481,31 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
 
           {upcomingCycles.length > 0 && (
             <section>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Upcoming</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                Upcoming
+              </p>
               <div className="grid gap-3">
                 {upcomingCycles.map((cycle) => (
-                  <Link key={cycle.id} href={`/build/${projectId}/cycles/${cycle.id}`}>
+                  <Link
+                    key={cycle.id}
+                    href={`/build/${projectId}/cycles/${cycle.id}`}
+                  >
                     <div className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-colors cursor-pointer flex items-center justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm truncate" title={cycle.name}>{cycle.name}</p>
+                        <p
+                          className="font-semibold text-sm truncate"
+                          title={cycle.name}
+                        >
+                          {cycle.name}
+                        </p>
                         <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                           <Clock className="h-3 w-3 shrink-0" />
-                          {formatShortDate(cycle.startDate)} — {formatShortDate(cycle.endDate)}
+                          {formatShortDate(cycle.startDate)} —{" "}
+                          {formatShortDate(cycle.endDate)}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <Badge variant="secondary">
-                          Draft
-                        </Badge>
+                        <Badge variant="secondary">Draft</Badge>
                         <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
                       </div>
                     </div>
@@ -405,15 +536,26 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
                 {showCompleted && (
                   <div className="grid gap-3">
                     {completedCycles.map((cycle) => (
-                      <Link key={cycle.id} href={`/build/${projectId}/cycles/${cycle.id}`}>
-                        <div className={cn(
-                          "bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-all cursor-pointer flex items-center justify-between gap-3",
-                          "opacity-70 hover:opacity-100"
-                        )}>
+                      <Link
+                        key={cycle.id}
+                        href={`/build/${projectId}/cycles/${cycle.id}`}
+                      >
+                        <div
+                          className={cn(
+                            "bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-all cursor-pointer flex items-center justify-between gap-3",
+                            "opacity-70 hover:opacity-100",
+                          )}
+                        >
                           <div className="min-w-0">
-                            <p className="font-semibold text-sm truncate" title={cycle.name}>{cycle.name}</p>
+                            <p
+                              className="font-semibold text-sm truncate"
+                              title={cycle.name}
+                            >
+                              {cycle.name}
+                            </p>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              {cycle.completedItems}/{cycle.totalItems} items completed
+                              {cycle.completedItems}/{cycle.totalItems} items
+                              completed
                             </p>
                           </div>
                           <Badge variant="secondary" className="shrink-0">
@@ -435,7 +577,11 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
           illustration={<EmptyCalendarIllustration />}
           title="No cycles yet"
           description="Create your first cycle to start planning work in time-boxed iterations."
-          action={canManage ? { label: "Create First Cycle", onClick: handleOpenCreate } : undefined}
+          action={
+            canManage
+              ? { label: "Create First Cycle", onClick: handleOpenCreate }
+              : undefined
+          }
         />
       )}
     </PageWrapper>

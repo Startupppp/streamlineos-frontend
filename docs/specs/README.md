@@ -5,7 +5,8 @@ candidate PRDs were removed; Git history remains their archive.
 
 ## HRMS + Payroll + WFH/WFO
 
-- [HRMS module completion program](hrms-module/README.md)
+- [HRMS People execution ledger and PRD program](hrms-module/README.md)
+- [HRMS People product blueprint](hrms-module/product-blueprint-prd.md)
 - [HRM-00 product decisions](hrms-module/00-product-decisions-prd.md)
 
 ## Documents / Knowledge / Wiki
