@@ -287,3 +287,75 @@ describe("BSN-02-024 — scope isolation by org AND actor", () => {
     expect(recentsUser2.current.recents).toHaveLength(0);
   });
 });
+
+describe("BSN-03-032 — pin ceiling counts only authorized pins", () => {
+  test("stale unauthorized pins do not count against the three-pin ceiling so a newly-authorized tool can still be pinned before access resolves", () => {
+    const scope = "authenticated:org-bsn032-stale:user-1";
+    const storageKey = `${scope}::build-nav-pins`;
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify(["revoked-1", "revoked-2", "revoked-3"]),
+    );
+
+    const { result } = renderHook(
+      () => useBuildNavPins(["tool-authorized"], false),
+      { wrapper: wrapWith(scope) },
+    );
+
+    expect(result.current.canPinMore).toBe(true);
+    act(() => {
+      result.current.togglePin("tool-authorized");
+    });
+    expect(result.current.isPinned("tool-authorized")).toBe(true);
+  });
+
+  test("three authorized pins exhaust the ceiling so a fourth authorized tool cannot be added", () => {
+    const scope = "authenticated:org-bsn032-full:user-1";
+
+    const { result } = renderHook(
+      () => useBuildNavPins(["t1", "t2", "t3", "t4"], true),
+      { wrapper: wrapWith(scope) },
+    );
+
+    act(() => {
+      result.current.togglePin("t1");
+    });
+    act(() => {
+      result.current.togglePin("t2");
+    });
+    act(() => {
+      result.current.togglePin("t3");
+    });
+
+    expect(result.current.canPinMore).toBe(false);
+
+    act(() => {
+      result.current.togglePin("t4");
+    });
+    expect(result.current.isPinned("t4")).toBe(false);
+  });
+
+  test("canPinMore recovers to true after a stale pin is pruned when access resolves", () => {
+    const scope = "authenticated:org-bsn032-recover:user-1";
+
+    const { result, rerender } = renderHook(
+      ({ authIds, resolved }: { authIds: string[]; resolved: boolean }) =>
+        useBuildNavPins(authIds, resolved),
+      {
+        initialProps: { authIds: ["t1", "t2", "t3"], resolved: true },
+        wrapper: wrapWith(scope),
+      },
+    );
+
+    act(() => { result.current.togglePin("t1"); });
+    act(() => { result.current.togglePin("t2"); });
+    act(() => { result.current.togglePin("t3"); });
+    expect(result.current.canPinMore).toBe(false);
+
+    act(() => {
+      rerender({ authIds: ["t1", "t2"], resolved: true });
+    });
+
+    expect(result.current.canPinMore).toBe(true);
+  });
+});

@@ -68,6 +68,12 @@ applicable child evidence row.
   Increase it only after observing memory and test-runner headroom. Read-only
   audits are not fanned out merely because slots exist; duplicated context load
   is real work.
+- Observed 2026-09-21 on the 32 GB laptop: two code agents running focused jest
+  left 16.5 GB free, so cycle 14 raised the ceiling to **three code agents plus
+  one read-only auditor**. The auditor runs no jest, tsc or build, so it costs
+  context rather than memory. The memory hogs are `type-check` (8 GB heap) and
+  `next build`; both stay coordinator-only and serial, and never overlap a
+  code agent's jest run.
 - Run at most one backend DB or migration writer. Parallel leaf agents require
   disjoint exact write sets.
 - Shared route manifests, navigation catalogs, route-access rules, permission
@@ -99,6 +105,18 @@ boundaries, not write permission.
 
 | Packet | Owner/session | Root/frontend revision | Backend revision | Exact write set | Acquired | Expires | Status |
 |---|---|---|---|---|---|---|---|
+| `BLD-X-SB-ACTIONS-001` | cycle-14 agent CA | `e18077a30` | `374afd27a` | prod: none changed · test: `build-quick-create.test.tsx`, `build-more-tools-menu.test.tsx`, `use-build-nav-preferences.test.ts` | 2026-09-21T08:35Z | 2026-09-21T11:35Z | `INTEGRATED (cycle 14)` |
+| `BLD-X-SB-CAPABILITY-001` | cycle-15 agent DA | `e18077a30` | `374afd27a` | prod: `features/build/navigation/use-build-nav-model.ts` · test: `use-build-nav-model.test.tsx`, new `lib/build/build-nav-catalog-route-files.test.ts` | 2026-09-21T12:10Z | 2026-09-21T15:10Z | `RESERVED` |
+| `BLD-X-FE-ALLWORK-001` | cycle-14 agent CB | `e18077a30` | `374afd27a` | prod: `features/build/all-work/all-work-page.tsx`, `use-all-work-filters.ts`, `all-work-ticket-utils.ts`, `all-work-views-menu.tsx`, `all-work-board-section.tsx`, `all-work-list-section.tsx`, `all-work-table-section.tsx` · test: `all-work-access-gate.test.tsx`, `all-work-org-statuses.test.tsx`, `all-work-views-menu.test.tsx`, new `all-work-filters.test.ts` | 2026-09-21T08:35Z | 2026-09-21T11:35Z | `RESERVED` |
+| `BLD-X-FE-INBOX-001` | cycle-14 agent CC | `e18077a30` | `374afd27a` | prod: `features/build/inbox/inbox-page.tsx`, `inbox-list.tsx`, `inbox-notification-item.tsx`, `inbox-preview-pane.tsx`, `inbox-render-window.ts`, `inbox-ticket-preview.tsx`, `parse-inbox-ticket-link.ts` · test: `inbox-badge-invalidation.test.ts`, `inbox-list-bounded.test.tsx`, `inbox-notification-item.test.tsx`, `parse-inbox-ticket-link.test.ts`, new `inbox-page.test.tsx` | 2026-09-21T08:55Z | 2026-09-21T11:55Z | `RESERVED` |
+| `BLD-X-SB-SIGNALS-001` | cycle-13 agent BA | `400e17647` | `1e8df44cc` | prod: `features/build/navigation/build-agent-pulse.tsx`, `build-nav-link.tsx`, `hooks/api/build/approvals.ts` (dead `signalBuildInboxInvalidation` + its `storage` listener only) · test: `build-agent-pulse.test.tsx`, `build-inbox-badge-cross-tab.test.tsx`, `build-nav-link-badge-a11y.test.tsx`, `hooks/api/build/approvals-badge.test.ts` | 2026-09-21T06:20Z | 2026-09-21T09:20Z | `INTEGRATED (cycle 13)` |
+| `BLD-X-SB-DIR-001` | cycle-13 agent BB | `400e17647` | `1e8df44cc` | prod: `features/build/navigation/build-scope-browser.tsx`, `build-scope-row.tsx`, `build-scope-tree.ts`, `use-build-scope-directory.ts` · test: `build-scope-browser.test.tsx`, `build-scope-row.test.tsx`, `build-scope-tree.test.ts`, `use-build-scope-directory.test.ts` | 2026-09-21T06:20Z | 2026-09-21T09:20Z | `INTEGRATED (cycle 13)` |
+| `BLD-X-SEAM-UI-PAGESTATE-001` | cycle-13 coordinator | `400e17647` | `1e8df44cc` | prod: `features/build/templates/build-templates-page.tsx` · test: new `components/shared/page-state-misuse.test.ts` | 2026-09-21T06:20Z | 2026-09-21T09:20Z | `INTEGRATED (cycle 13)` |
+| `BLD-X-FE-COLLAB-001a` | cycle-12 agent AA | `e24231ac4` | `1e8df44cc` | prod: `features/build/files/files-page.tsx`, `features/build/meetings/meetings-list-page.tsx`, `features/build/meetings/meeting-detail-page.tsx` · test: `files/files-page.test.tsx`, new `meetings/meetings-list-page.test.tsx`, new `meetings/meeting-detail-page.test.tsx` | 2026-09-20T18:05Z | 2026-09-20T21:05Z | `INTEGRATED (cycle 12)` |
+| `BLD-X-FE-COMMAND-001` | cycle-12 agent AB | `e24231ac4` | `1e8df44cc` | prod: `features/build/command-center/command-center-page.tsx`, `command-center-my-issues-panel.tsx`, `command-center-projects-panel.tsx`, `command-center-rows.tsx`, `command-center-utils.ts`, `command-center-jump-links.tsx` · test: `command-center-projects-stat.test.ts`, new `command-center-page.test.tsx` | 2026-09-20T18:05Z | 2026-09-20T21:05Z | `INTEGRATED (cycle 12)` |
+| `BLD-X-FE-FORM-001` | cycle-12 agent AC | `e24231ac4` | `1e8df44cc` | prod: `features/build/pm-workspaces/pm-workspace-form-sheet.tsx`, new `features/build/pm-workspaces/pm-workspace-form-schema.ts` · test: new `pm-workspaces/pm-workspace-form-sheet.test.tsx` | 2026-09-20T18:05Z | 2026-09-20T21:05Z | `INTEGRATED (cycle 12)` |
+| `BLD-X-FE-INTAKE-001` | cycle-12 agent AD | `e24231ac4` | `1e8df44cc` | prod: `features/build/forms/forms-list-page.tsx`, `features/build/forms/form-detail-page.tsx`, `features/build/forms/components/form-submissions-tab.tsx`, `features/build/triage/triage-page.tsx` · test: new `forms/forms-list-page.test.tsx`, new `triage/triage-page.test.tsx` | 2026-09-20T18:05Z | 2026-09-20T21:05Z | `INTEGRATED (cycle 12)` |
+| `BLD-X-FE-PORTAL-001` | cycle-12 agent AE | `e24231ac4` | `1e8df44cc` | prod: `features/build/client-portal/portal-dashboard-page.tsx`, `portal-list-page.tsx`, `client-visibility-page.tsx`, `features/portal-access/client-access-page.tsx` · test: `client-portal/portal-separation.test.tsx`, new `client-portal/portal-list-page.test.tsx`, new `portal-access/client-access-page.test.tsx` | 2026-09-20T18:05Z | 2026-09-20T21:05Z | `INTEGRATED (cycle 12)` |
 | `BLD-X-BE-SUBMISSIONS-001` | cycle-6 agent R | `1b311a280` | `f1915defd` | prod: `build/forms/submissions.controller.ts`, `submissions.service.ts`, `dto/forms.schemas.ts` (submission exports only), `dto/forms-response.schemas.ts` (submission exports only) · test: `submissions.service.spec.ts`, `submissions-tenant-isolation.spec.ts`, new `forms/*.spec.ts` | 2026-09-20T14:10Z | 2026-09-20T17:10Z | `RESOLVED (cycle 6)` |
 | `BLD-X-BE-BUG-001` | cycle-6 agent S | `1b311a280` | `f1915defd` | prod: `build/qa/bugs.controller.ts`, `bugs.service.ts`, `dto/bugs.schemas.ts` · test: `bugs.service.spec.ts`, `bugs.controller.e2e-spec.ts`, new `qa/*.spec.ts` | 2026-09-20T14:10Z | 2026-09-20T17:10Z | `INTEGRATED (cycle 6)` |
 | `BLD-X-BE-CHANGE-001` | cycle-6 agent T | `1b311a280` | `f1915defd` | prod: `build/client-portal/change-requests.controller.ts`, `change-requests.service.ts`, `dto/change-requests.schemas.ts`, `dto/change-requests-response.schemas.ts` · test: `change-requests.isolation.spec.ts`, new `client-portal/change-*.spec.ts` | 2026-09-20T14:10Z | 2026-09-20T17:10Z | `INTEGRATED (cycle 6)` |
@@ -183,6 +201,127 @@ test-double helper or an explicit spec-only exception.
 Migration journal note: `migrations/meta/_journal.json` carries an uncommitted
 idx 1011 (`1123_ai_action_proposals_rls`) owned by another session. The batched
 Build migration packet cannot reserve the journal until that entry lands.
+
+## Cycle 13 — 2026-09-21 — the sidebar signal lane, and a gate agents can actually run
+
+Two packets at bounded concurrency (`BLD-X-SB-SIGNALS-001`, `BLD-X-SB-DIR-001`) plus
+one coordinator seam. Both agents reported honestly and neither needed rework — the
+first cycle this session where that held.
+
+**`BLD-X-SEAM-UI-PAGESTATE-001` — the root cause of cycle 12's two red packets.**
+`frontend/package.json` runs ts-jest with `isolatedModules: true` and eslint is not
+type-aware, so a missing required prop is invisible to **every check an agent is
+allowed to run**; only the coordinator's 8 GB `type-check` sees it. New gate
+`check:page-state-usage` (+ `:self-test`, wired into `frontend.yml`) statically rejects
+a self-closing `<PageState />` in under a second. Proven non-vacuous twice: the
+self-test plants one violation among three near-miss fixtures (children present, JSX
+nested in an attribute expression, a different tag sharing the prefix), and the
+detector was run against the pre-fix committed `build-templates-page.tsx`, reporting
+the real defect at `:133`. `check:gate-wiring` now reports **41 gates, all invoked by a
+reachable run step**.
+
+**Correction to cycle 12's framing:** `loading={null}` is **not** a defect. 29 call
+sites use it, including `cycles-page.tsx`, the example `frontend/CLAUDE.md` names. It
+is the house pattern; sweeping it would churn working code.
+
+- **`SIGNALS` confirmed cycle 10's dead-code lead and handled a tool disagreement
+  correctly.** `signalBuildInboxInvalidation`, `BUILD_INBOX_INVALIDATION_KEY` and the
+  `storage` listener are deleted. **knip called the symbol *used*** — because the only
+  consumer was its own test, and knip counts test files. The agent reported the
+  disagreement rather than resolving it silently in either direction. Production
+  invalidation is `useNotificationEvents` (`layout-client.tsx:49`) →
+  `invalidateNotificationInbox`, whose 3-element `unreadCount()` key prefix-matches the
+  badge's 4-element `unreadCount("build")` — which only works because cycle 10 removed
+  `exact: true`. The removal is pinned by a test asserting the legacy storage key no
+  longer invalidates.
+- **`SIGNALS` changed no production code in two of its three owned files** and said so,
+  rather than manufacturing work: BSN-03's scope, quiet-at-zero, failure-safe and
+  accessible-name criteria were already met.
+- **`DIR` found two real defects and refuted three of its four assigned reproductions.**
+  Search results rendered `itemRole="treeitem"` inside a `role="listbox"` container, and
+  search mode had no load-more control, so a truncated first page read as the whole
+  result set. Denied-access gating, filter-empty vs data-empty copy, and cross-org
+  `localStorage` scoping were already correct, each with a source anchor.
+
+Verification: typecheck **0 errors attributable to this work**; 46 + 109 tests across 8
+suites; `check:feature-cycles` PASS non-vacuous (5,031 resolved imports); denial ratchet
+5/5; `check:page-state-usage` green.
+
+**`check:import-direction` is GREEN at 0/0, first time this program** — a concurrent
+session moved `build-dirty-state-context` to `components/shared/dirty-state-context`
+and repointed all 58 importers, including this session's committed `pm-workspace-form-sheet`.
+Verified by source: zero references to the old path or `useRegisterBuildDirtyState` survive.
+
+Two hazards that cost real time and will recur:
+
+- **A deleted file leaves `tsconfig.tsbuildinfo` stale**, and the next `type-check`
+  false-passes against it. Delete it before any typecheck that follows another session's
+  file move.
+- **`rg` without `--glob '!*.tsbuildinfo'` matches the build cache**, returning a 1.7 MB
+  line and hiding the real answer.
+
+## Cycle 12 — 2026-09-21 — the last five frontend lanes, and the gate agents could not run
+
+`BLD-X-FE-COLLAB-001a`, `-COMMAND-001`, `-FORM-001`, `-INTAKE-001`, `-PORTAL-001` —
+the five packets never dispatched. All five landed in commit `400e17647`, which a
+concurrent session created with a broad `git add`; nothing was lost, and that
+session also closed the three loose ratchet entries this one deliberately left it.
+
+Denial ratchet **319 → 308**. Eight entries came off here (meetings-list, the four
+forms/triage surfaces, the three portal surfaces); the concurrent session removed
+change-requests, intake and templates.
+
+**Two of five packets self-reported green while red.** `INTAKE` returned "6/6 tests
+pass, ESLint clean" with **four `TS2741`s** in its own files — `<PageState … />`
+rendered self-closing, and `children` is required. `PORTAL` reported CODE_COMPLETE
+with four real defects. Neither agent was careless: `frontend/package.json` runs
+ts-jest with `isolatedModules: true`, and eslint is not type-aware, so **no check an
+agent is allowed to run can see a missing prop**. The coordinator's `type-check` is
+the only gate that sees it, and it costs 8 GB and several minutes — which is why it
+runs once per wave, not once per packet.
+
+That is now fixed rather than described. **`check:page-state-usage`** (+ `:self-test`,
+wired into `frontend.yml`, `check:gate-wiring` green at 41 gates) statically rejects a
+self-closing `<PageState />` in under a second, so an agent can run it on its own write
+set. Proven non-vacuous twice: its self-test plants a violation among three near-miss
+fixtures (children present, JSX nested in an attribute expression, a different tag
+sharing the prefix), and the detector was run against the pre-fix committed
+`build-templates-page.tsx`, where it reported the real defect at `:133`.
+
+**Four of five agents produced a broken `PageState` call from one brief — in three
+different ways, and the differences mattered.** A guard excluding `ready`+`empty`+`loading`
+makes `{null}` children unreachable and is safe (COLLAB, portal-list, templates).
+A guard excluding only `ready`+`loading` renders a **blank page** on `empty`
+(COMMAND, PORTAL — both fixed). Omitting children entirely is a red build (INTAKE,
+templates). Blanket-fixing all four would have churned working code; only the second
+shape is a live bug. Note `loading={null}` itself is **not** a defect — 29 call sites
+use it, including `cycles-page.tsx`, which `frontend/CLAUDE.md` names as the canonical
+example. It is the house pattern.
+
+Findings worth carrying:
+
+- **`BLD-X-FE-FORM-001` refuted its own premise correctly.** `pm_workspaces.status` is
+  `text` + a CHECK constraint, not a pgEnum, so the frontend `z.enum` matched; the agent
+  reported "already correct" rather than inventing a defect. It also kept
+  `useRegisterBuildDirtyState` while adding `useUnsavedChangesGuard` — dropping it would
+  have passed every test and silently broken sidebar scope-switch interception.
+- **`PORTAL` introduced a regression while fixing AP-10**: hoisting `useRevokeGrant` to
+  page level forced `useRevokeGrant(revokeTarget?.projectClientGrantId ?? "")`, a sentinel
+  that would POST `/portal-access/grants//revoke`, prevented only by an `open={!!target}`
+  guard. Fixed by mounting a target-scoped component that owns the hook with a real id.
+- **`PORTAL` also dropped one branch of an OR**: `isError = isErrorOverview || isErrorCrs`
+  while passing only `overviewError`, so a 402 from the change-requests query alone was
+  unclassifiable — the exact bug the packet existed to remove, on the other branch.
+- `portal-separation.test.tsx` contained an assertion that *encoded* the bug
+  (`getByText(/No projects/i)` for a denied user). Strengthened, and disclosed.
+- **Intake→forms/triage parity gaps (D08 cutover blocker, none blocking this cycle):**
+  accept-with-assignment and decline-with-reason belong to Triage, which currently flips
+  to `IN_PROGRESS`/`CANCELLED` with no metadata; per-form public URL belongs to Forms;
+  duplicate-marking and the Pending/Accepted/Declined tabs need confirming against
+  backlog/board before being rebuilt.
+- `ApiError` is defined in `lib/api-envelope.ts` and re-exported from `lib/api-client.ts:383`,
+  while `frontend/CLAUDE.md` §4 and §15 both name `api-client.ts` as owner. Two import paths
+  for one symbol (§4 drift). Not fixed; outside every reserved write set.
 
 ## Cycle 11 — 2026-09-20 — a whole defect class, and one gate becomes one
 
@@ -739,6 +878,97 @@ pool deliberately contains more READY work than execution slots:
 | Backend leaf | `BLD-X-BE-BULK-001`, `-REPORT-001` | `INTEGRATED` (cycle 8) | The last two `build/core/` packets. **The Build backend core lane is closed** — remaining Build work is the 19 frontend packets, the negative-assertion sweep and the unapplied migration |
 | Backend sweep | `BLD-X-BE-E2E-STATUS-001` | `BLOCKED` — needs a disposable Postgres; see the production-e2e section above | Replace negative-only status assertions with the exact expected status; fix each endpoint or mock the change exposes. **The 52-file figure counted only `not.toBe(401)`/`not.toBe(403)`. Counting every evasive form — `not.toBe(4xx)`, `not.toEqual(4xx)`, `not.toBe(HttpStatus.*)` — the real inventory is 73 files**, so a `400` from a broken `.strict()` schema passes them all. Clusters: `build` 13, `kb` 6, `test/` 5, `inventory` 4, then `timesheets`/`organization`/`invoices`/`hr`/`e-sign`/`deals`/`crm`/`autonomy`/`ai` at 2 each and 30 modules at 1. Split per owning module; never one agent across the sweep |
 | Backend migration | `BLD-X-DB-BUILD-VERSION-001` | `CODE_COMPLETE`, **unapplied** | Authored as `1128_build_optimistic_concurrency_and_update_publication.sql`, journal idx 1016. `version` on all 9 tables; `audience`/`status`/`published_at` + publication CHECK + partial published-audience cursor index on `project_updates`; `review_date`/`category` + review-date index on `project_risks`; self-referencing composite `superseded_by_id` FK (PostgreSQL 15 column-list `SET NULL`), self-supersession CHECK and partial index on `project_decisions`; `(org_id, run_id, id)` on `test_run_results`. Drizzle schema updated to match. **Application and reconciliation remain a separate `BLD-X-DB-MIG-*` packet** — needs the named disposable database |
+
+### Remaining frontend and sidebar dispatch plan
+
+The four family packets (`COLLAB`, `QUALITY`, `ORG-GOV`, `SETTINGS`) are split
+into children by feature root, as their catalog rows require. Two code agents
+per cycle, disjoint write sets, coordinator runs the heavy gates between cycles.
+
+| Cycle | Agent A | Agent B | Write-set roots |
+|---|---|---|---|
+| 14 | `BLD-X-SB-ACTIONS-001` | `BLD-X-FE-ALLWORK-001` | `navigation/` quick-create+tools+prefs · `all-work/` |
+| 15 | `BLD-X-SB-NAV-001` | `BLD-X-FE-INBOX-001` | `navigation/` sidebar+nav-model · `inbox/` |
+| 16 | `BLD-X-SB-LIFECYCLE-001` | `BLD-X-FE-QUALITY-001a` | `navigation/` scope-recovery+identity · `governance/` |
+| 17 | `BLD-X-SB-OFFLINE-001` | `BLD-X-FE-QUALITY-001b` | `navigation/` offline/error states · `incidents/` |
+| 18 | `BLD-X-FE-ISSUES-001` | `BLD-X-FE-ORG-GOV-001a` | `tickets/` + view consumers · `goals/` |
+| 19 | `BLD-X-FE-ORG-GOV-001b` | `BLD-X-FE-QUALITY-001c` | `customers/` + `approvals/` · `qa/` |
+| 20 | `BLD-X-FE-SETTINGS-001a` | `BLD-X-FE-COLLAB-001b` | `settings/` project+access · `whiteboard/` |
+| 21 | `BLD-X-FE-SETTINGS-001b` | `BLD-X-FE-VISUAL-001` | `settings/` fields+labels+statuses · one named page anatomy |
+
+`BLD-X-FE-QUALITY-001d` (change requests) and the remaining `SETTINGS` children
+(Iterations, Automations, Integrations, Portal, Agents, Credentials, Retention)
+are dispatched after cycle 21 against whatever the earlier children establish.
+
+### Cycle 14 outcomes
+
+**`BLD-X-SB-ACTIONS-001` — `INTEGRATED`, zero production changes.** All five
+hypotheses refuted against source; the sidebar action surfaces were already
+correct. Coordinator-verified rather than accepted on report:
+
+- Diff is three test files, +96 lines, **zero deletions, no production file** —
+  `git diff --stat` on the write set.
+- Fail-closed gate confirmed at `features/build/navigation/use-build-nav-model.ts:48-51`:
+  `can` is `isOrgOwner || (scopes !== undefined && permission in scopes)`, so an
+  in-flight access snapshot returns `false` and both menus render nothing. The
+  components never call `useCan` themselves — they receive pre-filtered lists.
+- Pin ceiling confirmed at `lib/build/build-nav-model.ts:140-146`:
+  `countBuildScopePins` intersects stored ids with `authorizedToolIds`, so a
+  stale revoked pin cannot consume the three-pin ceiling.
+- Three-gate ordering confirmed at `lib/build/build-nav-model.ts:42-59` — module,
+  then capability, then permission; none substitutes for another.
+- Suites re-run by the coordinator: **60 tests, 3 suites, exit 0**. The agent
+  reported 64; the measured number is 60 and is the one recorded here.
+
+**Two agents converged on one defect from opposite directions.** Agent CA
+(actions) and the read-only auditor (lifecycle) independently anchored
+`features/build/navigation/use-build-nav-model.ts:60-66`:
+
+```ts
+capability === "client-portal" ? projectFeatures?.["clientPortal"] !== false : true
+```
+
+`useProject` in flight leaves `projectFeatures` undefined, so `undefined !== false`
+is **true** and the capability gate fails **open** — the Client-portal destination
+renders for a project that has it disabled, until the detail read lands. This
+breaks `frontend/CLAUDE.md` §17 ("never render a link that predictably ends at
+Access Denied"). It is the inverse of the permission gate two lines above it,
+which fails closed. Reserved as **`BLD-X-SB-CAPABILITY-001`**, cycle 15 agent A's
+write set, since it lives in the file `BLD-X-SB-NAV-001` already owns.
+
+**A coordinator brief was wrong and was corrected mid-flight.** The cycle-14
+briefs told agents a mutation control should gate on
+`useCanState(key) !== "denied"`. `frontend/CLAUDE.md:48` says the opposite and
+gives the reason: that form shows the control *during loading*, offering
+authority the caller may not hold. The rule is an asymmetry — a **surface** must
+not claim denial before it knows (never `useCan` for page state), a **control**
+must not claim authority before it knows (always `useCan`, fail closed). All
+three code agents were corrected before landing a control-gate change. Future
+briefs quote `frontend/CLAUDE.md:48` verbatim rather than paraphrasing it.
+
+### Findings banked for cycles 15–16 (read-only audit, unverified by coordinator)
+
+Leads with file:line anchors, to be re-verified by the owning packet before any
+edit — an audit report is a lead, not a finding.
+
+| Anchor | Lead | Owning packet |
+|---|---|---|
+| `lib/build/build-scope.ts:90-94` | `buildScopeOverviewHref` returns `basePath` for `workspace` = `/build/workspaces/{id}` (Projects), not `${basePath}/overview`. Coordinator confirmed the source reads this way. Same bug in `use-reconciled-build-scopes.ts` `hrefFor` and `use-build-scope-directory.ts`. **Open product question:** the manifest calls `PG-WS-001` "KEEP Projects" while the PRD lists Overview first — one of the two must be amended before the code changes | `BLD-X-SB-NAV-001` |
+| `lib/build/nav/build-project-catalog.ts:76-81` | "Cycles" points at `${basePath}/sprints`, which the manifest marks `REMOVE duplicate`; `/cycles` is the canonical row. Both pages exist today and render different features, so this is path-drift now and a 404 when `PG-PRJ-036` is deleted | `BLD-X-SB-NAV-001` |
+| `features/build/navigation/build-scope-recovery.tsx` | Both recovery links are bare `next/link` with no `useNavigationLeave` — the one navigation entry point in BSN-04-014's list with no unsaved-work guard. Sidebar links and the scope selector both guard correctly | `BLD-X-SB-LIFECYCLE-001` |
+| `lib/build/build-scope-fallback.ts:20,50-54` | The `recover` fallback is the hard-coded `/build/command-center`, returned on `hasAnyBuildAccess` alone, which is `!isBuildNavModelEmpty(model)`. A caller holding only e.g. `build:risks:view` is offered the link and lands on Access Denied, because the destination needs `build:view` | `BLD-X-SB-LIFECYCLE-001` |
+| `modules/build/governance/risks.service.ts:53-54`, `decisions.service.ts:61-62` | Hard `.limit(100)`, no cursor/total, and the pages mount `DataTable` with **no `pagination` prop**. Client-side search over that capped window presents a partial result as complete | `BLD-X-FE-QUALITY-001a` |
+| `features/build/governance/risks-page.tsx:131-137,307` | `openCount`/`highCritCount`/`closedCount` and `<RiskMatrix>` all derive from `allRisks`, which is already **status-filtered server-side**. Selecting "Closed" makes the stat row read 0 and blanks the matrix, both looking authoritative | `BLD-X-FE-QUALITY-001a` |
+| `features/build/governance/risk-form-sheet.tsx:101-118`, `decision-form-sheet.tsx:100-107` | `...(values.x ? { x } : {})` omits an emptied field, so clearing Description/Mitigation/Owner silently restores the old value. The backend already supports clearing (`.nullish()`); the frontend `Update*Input` types are `string \| undefined` and cannot express `null` | `BLD-X-FE-QUALITY-001a` |
+| `backend/src/modules/build/governance/risks.service.ts:43`, `decisions.service.ts:51` | Bare `.select()` expands to the full Drizzle column list including the four columns migration `1128` adds. Against a database that has not applied 1128, **every governance read is `42703` → 500**. `1128` is journalled (idx 1016) but unapplied — a deploy-ordering hazard, not a frontend bug | `BLD-X-DB-MIG-*` + `BLD-X-FE-QUALITY-001a` |
+| `features/build/governance/governance-schema.ts:10-11` | `probability`/`impact`/`status` typed `z.string()` over pg enums. `risk-severity.ts:16` multiplies through a `Record<string, number>`, so an off-enum value yields `NaN`, every comparison is false, and the badge renders **"Critical"** | `BLD-X-FE-QUALITY-001a` |
+
+Refuted by the same audit, so no packet should re-open them: governance pages
+already pass `error` to `usePageState` (not among the fourteen); `loading={null}`
+there is the sanctioned pattern; denial-as-emptiness is handled and pinned by
+`governance-access-gate.test.tsx:191-231`; `useCan` appears only on `canManage`
+(a control, correct); BSN-01-024 Updates/Files are wired and tested; no catalog
+href dangles — every one resolves to a directory containing `page.tsx`.
 
 Ticket/Cycle/BUG/portal canonicalization packets wait only for their named
 contract or migration child. Frontend packets wait only when they change the
