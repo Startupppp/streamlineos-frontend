@@ -37,7 +37,8 @@ interface ResignationListParams {
 
 const exitKeys = {
   all: [...humanResourcesQueryKeys.hr.all, "exit"] as const,
-  list: (params?: ResignationListParams) => [...exitKeys.all, "list", params] as const,
+  lists: () => [...exitKeys.all, "list"] as const,
+  list: (params?: ResignationListParams) => [...exitKeys.lists(), params] as const,
   detail: (resignationId: number) => [...exitKeys.all, "detail", resignationId] as const,
   progress: (resignationId: number) =>
     [...exitKeys.all, "progress", resignationId] as const,
@@ -159,7 +160,7 @@ export function useUpdateExitChecklistItem() {
       ),
     onSuccess: (_item, variables) => {
       void qc.invalidateQueries({ queryKey: exitKeys.detail(variables.resignationId) });
-      void qc.invalidateQueries({ queryKey: [...exitKeys.all, "list"] });
+      void qc.invalidateQueries({ queryKey: exitKeys.lists() });
     },
   });
 }
@@ -182,7 +183,7 @@ export function useCompleteExit() {
       ),
     onSuccess: (_result, variables) => {
       void qc.invalidateQueries({ queryKey: exitKeys.detail(variables.exitId) });
-      void qc.invalidateQueries({ queryKey: [...exitKeys.all, "list"] });
+      void qc.invalidateQueries({ queryKey: exitKeys.lists() });
     },
   });
 }

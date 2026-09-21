@@ -74,8 +74,6 @@ export interface ReorgScenario {
   createdAt: string;
 }
 
-const POSITIONS_KEY = ["hr", "governance", "positions"] as const;
-const SCENARIOS_KEY = ["hr", "governance", "scenarios"] as const;
 
 export function usePositions(params?: { status?: string; departmentId?: number; page?: number; limit?: number }) {
   const canViewPositions = useCan("hr:positions:view");
@@ -123,7 +121,7 @@ export function useSimulateScenario(scenarioId: number | undefined) {
 export function usePositionStatuses(options?: { enabled?: boolean }) {
   const canViewPositions = useCan("hr:positions:view");
   return useQuery({
-    queryKey: [...POSITIONS_KEY, "statuses"],
+    queryKey: [...humanResourcesQueryKeys.hr.hrPositionsAll, "statuses"],
     queryFn: ({ signal }) =>
       apiClient.get<PositionStatus[]>("/hr/governance/position-taxonomy/statuses", undefined, signal, positionStatusListContract),
     staleTime: 2 * 60_000,
@@ -134,10 +132,10 @@ export function usePositionStatuses(options?: { enabled?: boolean }) {
 export function useCreatePosition() {
   const qc = useQueryClient();
   return useAuthorizedMutation<Position, Error, CreatePositionInput>("hr:positions:manage", {
-    mutationKey: [...POSITIONS_KEY, "create"],
+    mutationKey: [...humanResourcesQueryKeys.hr.hrPositionsAll, "create"],
     mutationFn: (input) => apiClient.post<Position>("/hr/governance/positions", input, undefined, positionContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: POSITIONS_KEY });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPositionsAll });
     },
   });
 }
@@ -145,10 +143,10 @@ export function useCreatePosition() {
 export function useDeletePosition() {
   const qc = useQueryClient();
   return useAuthorizedMutation<void, Error, number>("hr:positions:manage", {
-    mutationKey: [...POSITIONS_KEY, "delete"],
+    mutationKey: [...humanResourcesQueryKeys.hr.hrPositionsAll, "delete"],
     mutationFn: (positionId) => apiClient.delete(`/hr/governance/positions/${positionId}`, undefined, undefined, positionDeleteContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: POSITIONS_KEY });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPositionsAll });
       toast.success("Position deleted");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -158,10 +156,10 @@ export function useDeletePosition() {
 export function useDeleteReorgScenario() {
   const qc = useQueryClient();
   return useAuthorizedMutation<void, Error, number>("hr:positions:manage", {
-    mutationKey: [...SCENARIOS_KEY, "delete"],
+    mutationKey: [...humanResourcesQueryKeys.hr.hrScenariosAll, "delete"],
     mutationFn: (scenarioId) => apiClient.delete(`/hr/governance/scenarios/${scenarioId}`, undefined, undefined, positionDeleteContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: SCENARIOS_KEY });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrScenariosAll });
       toast.success("Scenario deleted");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
