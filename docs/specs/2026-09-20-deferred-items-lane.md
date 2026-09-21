@@ -353,10 +353,10 @@ re-verified adversarially before any doc was edited, and that was worth doing:
 
 | Item | Verdict |
 |---|---|
-| chat-os P4-6 "no `data-*` directive frame is emitted at all" | **Stale** — the emitter is wired end to end on a single unbranched path. The SSE census predates the wiring and almost certainly did not decode **transient** data parts. |
+| chat-os P4-6 "no `data-*` directive frame is emitted at all" | ⚠ **Unresolved — and this verdict's own first reason was wrong.** The emitter *is* wired end to end on a single unbranched path (`ask-os-tool-registry.ts:185` → `chat-assistant.service.ts:205, 247` → `ai-stream-response.ts:140-168`, `transient: true`). But "the SSE census predates the wiring" is **refuted by timestamps**: the emitter landed in backend `448c4e25b` at 2026-09-20T12:24+05:30 and the census was committed 2026-09-21T00:07+05:30. Either the scratch stack ran a pre-`448c4e25b` build, or the census decoded UI messages rather than raw SSE and dropped transient parts by construction. Needs a raw-SSE re-run; **P4-6 stays open**. |
 | ask-os F-06 multiple directives per turn | **Done** — `global-ask-os.tsx:219-220` appends rather than overwrites; the renderer maps N cards. |
 | ask-os F-07 confirm card surviving reload | ⚠ **Still open — the audit overreached.** The reloaded card renders in `mode="record"` and is **read-only**: the token is stripped at persist time (`streaming/ask-os-directive.ts:43`). Only the "card vanishes" half was fixed. There is still no way to confirm or decline after a reload, and `cancelProposal` was deleted, so a live proposal dangles until expiry. |
-| ask-os F-10 "`react-window` is installed but unused anywhere" | **False** — nine production consumers. The defect (`ask-os-chat-view.tsx:112` maps every row) is real, but the stated reason to defer is not. |
+| ask-os F-10 "`react-window` is installed but unused anywhere" | **False** — **8** production consumers (recounted 2026-09-21; an earlier "nine" here included `features/__tests__/virtual-row-listitem.contract.test.ts`). The defect (`ask-os-chat-view.tsx:112` maps every row) is real, but the stated reason to defer is not. |
 | `ai-credits-reservation.service.ts` live billing bug | **Already fixed** — `:103` returns `existing.id`. |
 | "impersonation is never recorded in any audit log" | **False** — the context reaches a real write at `audit.service.ts:200-204`, and the interceptor is registered *before* `TenantContextInterceptor`, so the scope encloses the after-commit drain. |
 | ask-os 11.4 registry parity spec "has not landed" | **Landed and non-vacuous** — asserts both directions plus anti-vacuity floors. `ACTION_LABELS` 24 ↔ `CONFIRMABLE_ACTION_DEFINITIONS` 24; the "20 against 22" is stale. |
@@ -365,10 +365,32 @@ re-verified adversarially before any doc was edited, and that was worth doing:
 **A stale count worth correcting elsewhere:** the connection-hold PRD's "13 AI
 holds remaining" is now **1**. `check:request-txn-outbound` reports
 `8 holding across an outbound call (frozen), 1 across an AI call (ceiling 1)`,
-and the one is `mail#aiInboxSummary`.
+and the one is `mail#aiInboxSummary`. ✅ **Propagated 2026-09-21** — H19 now
+carries the measured ceiling, and the older 24/18/13 figures are explicitly
+labelled history rather than status.
 
 That makes **twelve** deferral premises refuted across this lane. The pattern is
 consistent: every one made the work look larger than it was.
+
+⚠ **A thirteenth, and this one was mine.** The P4-6 verdict above originally read
+"the SSE census predates the wiring". Checking the commit timestamps refuted it:
+the emitter landed 2026-09-20T12:24, the census was recorded 2026-09-21T00:07.
+The verdict is corrected in place and P4-6 is back to open. The lesson cuts both
+ways — a premise offered to *close* an item needs the same adversarial check as
+one offered to defer it.
+
+### Corrections propagated into the individual PRDs — 2026-09-21
+
+Every verdict above lived only in this lane, so each source document still carried
+its refuted rationale. All six are now fixed at the point of use:
+
+| Document | What was corrected |
+|---|---|
+| `2026-09-19-ask-os-architecture-remediation-prd.md` | The ⚠ under 3.6 claiming **"impersonation is never recorded in any audit log"** — retracted. The setter *is* called, by `ImpersonationContextInterceptor.intercept` (`impersonation-context.interceptor.ts:20`), registered before `TenantContextInterceptor`. 15.1's `AmbiguousCandidate` duplicate marked closed with the three importers named. The knip figure under 17.4 re-measured 89 → 56. |
+| `2026-09-19-ask-os-hardening-prd.md` | F-06 struck as closed. F-07's rationale replaced — the renderer is not the blocker; the token is stripped at persist time (`ask-os-directive.ts:43`), so the reloaded card is `mode="record"`. F-10's "`react-window` is installed but unused" replaced with the 8 production consumers and three named patterns to copy. |
+| `2026-09-18-chat-os-prd.md` | P4-6 annotated in both places with the source trace and the timestamp refutation; kept **open** pending a raw-SSE re-run. |
+| `2026-09-20-connection-hold-remediation-prd.md` | H19 heading and the "remaining 13" block superseded by the measured ceiling of 1; the historical counts labelled as history. The 8-frozen list now points at H20 and the retraction, because the prerequisites it records have moved. |
+| `2026-09-20-get-route-writes-lane.md` | Its opening ⚠ and the detail note both called `ai-credits-reservation.service.ts:103` a live billing bug. It is fixed — the call site unwraps `existing.id`. This also resolves a direct contradiction between two lane documents. |
 
 ### Still open
 
@@ -377,4 +399,5 @@ consistent: every one made the work look larger than it was.
 - Every chat-os item needing a live environment: no local Postgres, Redis or Docker on this machine (5432/5433/6379 all refuse).
 - ask-os 11.1 (directive column needs a migration) and the email-predicate widening (needs the notifications owner).
 - **ask-os F-07 and F-10**, both now with their false rationale removed — F-07 needs a decline endpoint and a token-bearing reload path; F-10 needs windowing on an established in-repo pattern.
+- **chat-os P4-6** — reopened. Source and the live census disagree and nothing here can settle it; needs a raw-SSE census on a stack built from backend `448c4e25b` or later.
 - The 867 unapplied-below-watermark journal entries described above.

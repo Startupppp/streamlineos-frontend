@@ -3,7 +3,7 @@
 **Opened:** 2026-09-20 · **Owner:** backend
 **Follows:** `2026-09-20-deferred-items-lane.md` R4, which found these while proving `accessMode: "read only"` unsafe.
 
-⚠ **Every W-item is ticked and the lane is NOT finished.** Do not delete this file on the strength of its checkboxes. It still carries the documented recall limits of `check:get-route-writes` — without which a green gate reads as proof it is not — and a live billing-path defect at `ai-credits-reservation.service.ts:103` that is reported, not repaired.
+⚠ **Every W-item is ticked and the lane is NOT finished.** Do not delete this file on the strength of its checkboxes. It still carries the documented recall limits of `check:get-route-writes` — without which a green gate reads as proof it is not. ~~It also carries a live billing-path defect at `ai-credits-reservation.service.ts:103`.~~ **That defect is now fixed — verified at source 2026-09-21; see below.**
 
 **2026-09-21 — three of the four open items are now closed** (both races, plus the
 `onboarding_flow_sessions` index), each verified against production. What remains open is the
@@ -87,6 +87,8 @@ Three things worth keeping from this:
 **The one type error that was ours, and why jest could not see it.** W2's mock spread `unknown[]` into a three-parameter function (`TS2556`) in `sign-certificate-download-scope.spec.ts`. Every e-sign run was green throughout, because **ts-jest does not fail on type errors — typecheck is the only gate that sees a spread or an arity mismatch.** Fixed by naming the three parameters. This is the second time this exact class has slipped past a green agent run in two days.
 
 **A pre-existing defect found while separating ours from theirs, reported not fixed:** `ai-credits-reservation.service.ts:103` returns `{ reservationId: existingId }` where `existingId` is now `{ id, status }`, not a `number` — a concurrent session widened `findByIdempotencyKey`'s return type and left this call site behind. It is present at `HEAD`, so it is not this lane's. On the idempotent-replay path a duplicate reserve hands the caller an **object where `settle`/`release` expect a reservation id**. That is a live billing-path bug; it is left alone because the right fix depends on what that session intends `status` for.
+
+✅ **Closed 2026-09-21 — that session finished the cutover.** The call site now reads `const existing = await this.findByIdempotencyKey(orgId, idempotencyKey); if (existing !== null) return { reservationId: existing.id };` — the object is unwrapped, so `settle`/`release` receive a `number` again. Note the file is `src/modules/billing/core/ai-credits-reservation.service.ts`, not under `modules/ai/`; the path was recorded bare here and cost a search. This closure also resolves the contradiction with `2026-09-20-deferred-items-lane.md`, which had already recorded it as fixed while this document still called it live.
 
 ## What this lane changed
 

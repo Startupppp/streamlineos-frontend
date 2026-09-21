@@ -269,6 +269,13 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     backendRoute: { method: "get", path: "/build/{projectId}/sprints" },
   },
   {
+    prefix: "/build/[projectId]/cycles",
+    product: "build",
+    permission: "build:sprints:view",
+    reason: "Cycles supersede sprints and share their iteration-planning read key; the generic build:view let a role without sprint access open cycle planning.",
+    backendRoute: { method: "get", path: "/build/{projectId}/cycles" },
+  },
+  {
     prefix: "/build/[projectId]/settings",
     product: "build",
     permission: "build:update",
