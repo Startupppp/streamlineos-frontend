@@ -369,7 +369,7 @@ If it is here, do not reimplement it. **Adding a shared component means adding a
 | Need | Component · Path |
 |---|---|
 | Page shell | `PageWrapper`, `PageSection` — `components/ui/page-wrapper.tsx` |
-| Page chrome constants | `PAGE_CHROME_X`, `PAGE_CHROME_BOTTOM`, `CONTENT_PANEL_SOLID`, `CONTENT_FILL_PANEL`, `FILTER_TOOLBAR_ROW`, `FILTER_SELECT_TRIGGER`, `PAGE_BODY_SKELETON_CLASS`, `PAGE_BODY_EMPTY_CLASS` — `components/ui/content-fill-panel.tsx` |
+| Page chrome constants | `PAGE_CHROME_X`, `PAGE_CHROME_BOTTOM`, `CONTENT_PANEL_SOLID`, `CONTENT_FILL_PANEL`, `FILTER_TOOLBAR_ROW`, `FILTER_SELECT_TRIGGER`, `PAGE_BODY_SKELETON_CLASS`, `PAGE_BODY_EMPTY_CLASS`, `STICKY_FOOTER_ABOVE_MOBILE_NAV` (a wizard/form footer that stays visible above the mobile module nav) — `components/ui/content-fill-panel.tsx` |
 | Field sizing constants | `FIELD_CONTROL_CLASS`, `FIELD_SELECT_CONTENT_CLASS`, `FIELD_DATE_POPOVER_CONTENT_CLASS`, `INLINE_POPOVER_MIN_CLASS` — `components/ui/field-control.ts` |
 | Table · skeleton | `DataTable`, `DataTableColumn`, `DataTableSkeleton` — `components/ui/data-table.tsx` |
 | Pagination | `TablePagination`, `useCursorPager` — `components/ui/table-pagination.tsx` · `DataTablePagination` — `components/shared/data-table-pagination.tsx` · `CursorPageControls` — `components/ui/cursor-page-controls.tsx` (standalone prev/next + page-size for non-`DataTable` cursor lists) |
