@@ -50,7 +50,7 @@ function TabsTrigger({
         // labels outgrow the list it scrolls instead.
         "box-border inline-flex h-7 min-h-7 flex-1 min-w-fit items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-transparent px-3 text-sm font-medium leading-none transition-[color,background-color] disabled:pointer-events-none disabled:opacity-50",
         "text-muted-foreground hover:text-foreground",
-        "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
+        "data-[state=active]:bg-muted data-[state=active]:text-foreground data-[state=active]:shadow-sm",
         "focus-visible:outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
