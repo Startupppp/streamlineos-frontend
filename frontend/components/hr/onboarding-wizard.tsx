@@ -21,6 +21,7 @@ import {
   employeeAdmissionGuidance,
   fetchEmployeeAdmissionCheck,
 } from "@/components/hr/check-employee-email";
+import { describeUnsentInvite } from "@/components/hr/invite-delivery";
 import { StepPersonalInfo } from "./_onboarding/step-personal-info";
 import { StepEmployment } from "./_onboarding/step-employment";
 import { StepSkillsPay } from "./_onboarding/step-skills-pay";
@@ -150,6 +151,12 @@ export function OnboardingWizard() {
         {
           onSuccess: (result) => {
             toast.success("Employee created successfully");
+            const unsentInvite = describeUnsentInvite(result.invite);
+            if (unsentInvite)
+              toast.warning(unsentInvite, {
+                description: "The employee was created. Use Resend invite from their profile once the cause is fixed.",
+                duration: 10_000,
+              });
             router.push(result.userId ? `/hr/employees/${result.userId}` : "/hr/employees");
           },
           onError: (err) => toast.error(getErrorMessage(err)),
