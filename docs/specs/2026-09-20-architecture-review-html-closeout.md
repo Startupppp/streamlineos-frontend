@@ -78,10 +78,20 @@ Ordered most severe first. Each names the owning file and the smallest repair.
    `ModelRouting.routeFor(feature)` returning `{provider, model, outputCap}`. **Blocked
    on a product decision** about the feature taxonomy; not actionable as written.
 
-4. **No shared list-view module; ~222 pages improvise.** `frontend/features/build/shared/filter-*.tsx`
-   already is the module and has zero importers outside Build. Move to
-   `features/shared/list-view/`, rename `use-ticket-filter-params` → `useListParams`,
-   drop ticket vocabulary from the public interface.
+4. **No shared list-view module; ~222 pages improvise** — the observation may stand, but
+   THE NAMED REPAIR DOES NOT ACHIEVE IT. Re-measured 2026-09-21.
+   The `filter-*` cluster is not a latent shared module waiting to be relocated; it is a
+   five-file cluster with **one** external consumer, `features/build/views/workload-filter-submenu.tsx`
+   (the other four files only import each other). `use-ticket-filter-params` likewise has
+   exactly one consumer, `features/build/shared/ticket-filter-bar.tsx`.
+   Moving those files to `features/shared/list-view/` and renaming the hook would relocate
+   a Build-specific module with a single caller and make its name *less* descriptive of
+   what actually uses it. No page adopts a shared module because it changed folder — the
+   222 pages would still improvise the next day.
+   **The real work is the migration, not the move:** pick the two or three pages whose list
+   behaviour genuinely duplicates this, migrate them onto one implementation, and let the
+   neutral home follow from having real second and third consumers (root §4). Re-file as a
+   product-level task with those pages named, or drop it.
 
 5. **`rich-text-content.tsx` has no Plate branch** — premise true, but the obvious repair
    was TRIED AND REVERTED 2026-09-21. `frontend/components/editor/rich-text-content.tsx`
@@ -102,9 +112,20 @@ Ordered most severe first. Each names the owning file and the smallest repair.
    appears, lift `renderSlateLeafNode`/`renderSlateNode` out of `features/wiki` into a
    neutral home and point both callers at it. Until that consumer exists, YAGNI.
 
-6. **Chat invite links still carry a plaintext `token` column.** `chat-channel-tables.ts:102`
-   holds `token`, `tokenHash` and `tokenEncrypted`; the service already looks up by
-   hash. Null the column, make `tokenHash` NOT NULL, drop the plaintext unique index.
+6. ~~**Chat invite links still carry a plaintext `token` column**~~ — **CLOSED 2026-09-21,
+   applied to production.** Migration `1130_chat_invite_link_token_hardening` drops the
+   plaintext unique index (an index over a secret at rest), nulls the remaining plaintext,
+   and makes `token_hash` NOT NULL via the NOT VALID / VALIDATE two-step, behind a `0455`-style
+   preflight `DO` block that refuses the migration if any row lacks a hash.
+   Verified on production after commit: `token_hash` is NOT NULL, the plaintext index is
+   gone, the hash index remains, zero plaintext rows, and **the constraint bites** — a null
+   `token_hash` insert is rejected `23502` in a rolled-back transaction. Production held
+   **zero** invite links, so nothing was destroyed and no link was invalidated.
+   `/health/ready` reports database up afterwards. Chat suite 61/61, 635 tests.
+   **Correction to the finding:** `tokenEncrypted` is NOT redundant. The three columns do
+   three jobs — `token_hash` is the indexed lookup, `tokenEncrypted` is what lets an admin
+   re-display the invite URL, and only `token` was legacy. Joining was never affected:
+   `joinViaInviteLink` resolves by hash alone.
 
 7. **`sendToChannelMembers` fan-out is still inline** — premise HALF STALE, narrowed
    2026-09-21. `realtime/web-push.service.ts:168`. The review described
@@ -118,14 +139,28 @@ Ordered most severe first. Each names the owning file and the smallest repair.
    is recoverable, holding a pooled connection through someone else's outage is not —
    but the urgency is much lower than the review implied.
 
-8. **`MAX_CAPABILITY_CHANNELS = 500` truncates silently.** `realtime/ably.service.ts`,
-   enforced at `chat-channel-list.service.ts:141`. An org past 500 channels simply
-   stops receiving realtime with no error. Surface a cursor or an explicit failure.
+8. **`MAX_CAPABILITY_CHANNELS = 500`** — **"silently" is WRONG, and it is unreachable by
+   125×.** Re-derived 2026-09-21. Both layers already emit a structured warning:
+   `ably.service.ts:53-60` logs `ably: channel capability list truncated` with `orgId`,
+   `userId`, `total` and `granted`, and `chat-channel-list.service.ts:141` deliberately
+   reads `MAX_CAPABILITY_CHANNELS + 1` rows precisely so the consumer's truncation is
+   observable at the database layer. Server-side observability exists.
+   Measured against production: the busiest org has **4** channels and the busiest member
+   **4** memberships, against a cap of 500.
+   **What is genuinely missing** is a *client-facing* signal — the token mints with 500
+   channels and the user simply receives nothing on the rest. The suggested repairs do not
+   fit: a cursor is meaningless for an Ably capability list, and an explicit failure would
+   lock a large org out of realtime entirely. The proportionate fix is a `truncated` flag on
+   the token response so the client can degrade visibly, which is a cross-repo contract
+   change (root §5). **Re-open when any org passes ~400 channels per member.**
 
-9. **Ownership transfer lifecycle is three services.** The race *is* fixed —
-   `ownership-transfer-response.service.ts:117-129` does a conditional UPDATE on
-   `status = 'PENDING'` with an affected-row check, same at :216 for cancel. Only the
-   structural consolidation remains; low urgency.
+9. **Ownership transfer lifecycle is three services** — **DEFERRED, and the only part that
+   mattered is already done.** The race *is* fixed: `ownership-transfer-response.service.ts:117-129`
+   does a conditional UPDATE on `status = 'PENDING'` with an affected-row check, same at
+   :216 for cancel. What remains is a pure three-service consolidation with no behavioural
+   change, in ownership-transfer code, while the working tree is shared with other active
+   sessions. Not worth the collision risk for zero customer-visible gain. Re-file only if a
+   fourth code path needs the same lifecycle.
 
 10. ~~**The access ladder resolves `view` and `manage` two different ways**~~ — **CLOSED
     2026-09-21 (`1b55e28ac`).** Premise held. `assertModuleAccessPolicy` now routes `view`
