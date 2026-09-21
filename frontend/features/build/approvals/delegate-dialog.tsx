@@ -59,6 +59,7 @@ export function DelegateDialog({
   }
 
   function handleOpenChange(open: boolean) {
+    if (!open && isPending) return;
     if (!open) form.reset();
     onOpenChange(open);
   }
