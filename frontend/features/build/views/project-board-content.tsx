@@ -17,6 +17,10 @@ import { Button } from "@/components/ui/button";
 import { SearchX } from "lucide-react";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
 import type { ViewType } from "./view-switcher";
+
+function assertNever(x: never): never {
+  throw new Error(`Unhandled view type: ${String(x)}`);
+}
 import { type FilterState as WorkloadFilterState } from "./workload-types";
 import type { Sprint } from "@/types/projects";
 import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
@@ -147,10 +151,10 @@ export function ProjectBoardContent({
     );
   }
 
-  return (
-    <div className={cn(PAGE_CHROME_X, "flex min-h-0 flex-1 flex-col")}>
-      <AnimatePresence mode="wait" initial={false}>
-        {view === "board" ? (
+  function renderViewPane(v: ViewType): React.ReactNode {
+    switch (v) {
+      case "board":
+        return (
           <motion.div
             key="board"
             className="flex h-full min-h-0 w-full flex-1 flex-col pb-1"
@@ -172,8 +176,9 @@ export function ProjectBoardContent({
               hasActiveFilters={hasActiveFilters}
             />
           </motion.div>
-        ) : null}
-        {view === "list" ? (
+        );
+      case "list":
+        return (
           <motion.div
             key="list"
             className="min-h-0 flex-1 flex flex-col overflow-hidden pb-1"
@@ -217,8 +222,9 @@ export function ProjectBoardContent({
               </div>
             </ScrollArea>
           </motion.div>
-        ) : null}
-        {view === "table" ? (
+        );
+      case "table":
+        return (
           <motion.div
             key="table"
             className="min-h-0 flex-1 flex flex-col overflow-hidden pb-1"
@@ -258,8 +264,9 @@ export function ProjectBoardContent({
               </div>
             </ScrollArea>
           </motion.div>
-        ) : null}
-        {view === "calendar" ? (
+        );
+      case "calendar":
+        return (
           <motion.div
             key="calendar"
             className="flex min-h-0 flex-1 flex-col overflow-hidden pb-2 pt-0"
@@ -276,8 +283,9 @@ export function ProjectBoardContent({
               projectStatuses={statuses}
             />
           </motion.div>
-        ) : null}
-        {view === "gantt" ? (
+        );
+      case "gantt":
+        return (
           <motion.div
             key="gantt"
             className="flex min-h-0 flex-1 flex-col overflow-hidden pb-2 pt-0"
@@ -293,8 +301,9 @@ export function ProjectBoardContent({
               onTicketClick={onTicketSelect}
             />
           </motion.div>
-        ) : null}
-        {view === "workload" ? (
+        );
+      case "workload":
+        return (
           <motion.div
             key="workload"
             className="flex min-h-0 flex-1 flex-col overflow-hidden pb-2 pt-0"
@@ -313,7 +322,16 @@ export function ProjectBoardContent({
               onFilterChange={onWorkloadFilterChange}
             />
           </motion.div>
-        ) : null}
+        );
+      default:
+        return assertNever(v);
+    }
+  }
+
+  return (
+    <div className={cn(PAGE_CHROME_X, "flex min-h-0 flex-1 flex-col")}>
+      <AnimatePresence mode="wait" initial={false}>
+        {renderViewPane(view)}
       </AnimatePresence>
       {isTruncated ? (
         <div className="shrink-0 flex items-center justify-between gap-3 border-t border-border/40 py-2">
