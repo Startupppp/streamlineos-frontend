@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireModulePermission } from "@/lib/rbac/require-permission";
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { FilesPage } from "@/features/build/files/files-page";
 
 export const metadata = {
@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default async function ProjectFilesRoute({ params }: Props) {
-  await requireModulePermission("build", "build:files:view");
+  await enforceRouteAccess("/build/[projectId]/files");
   const { projectId } = await params;
   const parsed = Number(projectId);
   if (!Number.isInteger(parsed) || parsed <= 0) notFound();

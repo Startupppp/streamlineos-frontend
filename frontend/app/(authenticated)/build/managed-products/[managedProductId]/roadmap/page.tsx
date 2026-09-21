@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireModulePermission } from "@/lib/rbac/require-permission";
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { ProductRoadmapPage } from "@/features/build/managed-products/product-roadmap-page";
 
 export const metadata = {
@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default async function ProductRoadmapRoute({ params }: Props) {
-  await requireModulePermission("build", "build:roadmap:view");
+  await enforceRouteAccess("/build/managed-products/[managedProductId]/roadmap");
   const { managedProductId } = await params;
   const parsed = Number(managedProductId);
   if (!Number.isInteger(parsed) || parsed <= 0) notFound();
