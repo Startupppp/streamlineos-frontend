@@ -1,4 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
+import { ZodError } from "zod";
+
 import { usePresenceCustomStatus, usePresenceMap } from "./chat-core-read";
 
 const mockUseQuery = jest.fn(() => ({ data: undefined }));
@@ -111,6 +113,6 @@ describe("chatOnlineUsersContract — the new fields survive the parse", () => {
 
     expect(() =>
       chatOnlineUsersContract.parse([{ ...ROW, statusExpiresAt: new Date() }]),
-    ).toThrow();
+    ).toThrow(ZodError);
   });
 });

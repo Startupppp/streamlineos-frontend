@@ -1,5 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+
+import { ZodError } from "zod";
 import { assetRowContract, assetListPageContract } from "@/hooks/api/hr/assets-schema";
 
 const HR_HOOKS_DIR = join(process.cwd(), "hooks", "api", "hr");
@@ -46,6 +48,6 @@ describe("assetRowContract", () => {
   });
 
   it("requires an integer id, matching the backend integer column rather than loosening it", () => {
-    expect(() => assetRowContract.parse({ ...BACKEND_SHAPED_ROW, id: 1.5 })).toThrow();
+    expect(() => assetRowContract.parse({ ...BACKEND_SHAPED_ROW, id: 1.5 })).toThrow(ZodError);
   });
 });

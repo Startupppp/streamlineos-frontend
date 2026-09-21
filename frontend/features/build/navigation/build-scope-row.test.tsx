@@ -248,12 +248,6 @@ describe("BSN-02-033 — 44px touch targets on mobile without compressing deskto
   });
 });
 
-describe("BSN-02-032 — note: browser-level responsive popover", () => {
-  test("BSN-02-032 is satisfied by BuildScopeSelector wrapping BuildScopeBrowser in ResponsivePopover — jsdom cannot render the Drawer/Popover branch, verified via code review of build-scope-selector.tsx", () => {
-    expect(true).toBe(true);
-  });
-});
-
 describe("BSN-02-034 — prefers-reduced-motion", () => {
   test("select button carries no explicit transition or animation class that ignores reduced motion", () => {
     renderRow();
