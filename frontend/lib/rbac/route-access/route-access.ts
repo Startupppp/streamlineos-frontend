@@ -1,9 +1,12 @@
-import { resolveNavRouteAccess } from "@/components/layout/sidebar/sidebar-nav-items";
+import {
+  PRODUCT_MODULE_KEY,
+  resolveNavRouteAccess,
+} from "@/components/layout/sidebar/sidebar-nav-items";
 import type {
   PermissionRequirement,
   ProductKey,
 } from "@/components/layout/sidebar/sidebar-nav-types";
-import { moduleByProductKey } from "@/lib/module-manifest";
+import { moduleById, moduleByProductKey } from "@/lib/module-manifest";
 import { namespaceOf } from "@/lib/rbac/administering-module";
 import permissionCatalog from "@/contracts/permission-catalog.json";
 import { matchRouteAccessExtension } from "./route-access-extensions";
@@ -27,9 +30,19 @@ const MEMBER_DEFAULT_PERMISSIONS = new Set(
   permissionCatalog.memberDefaultPermissions,
 );
 
+// A product with no manifest module of its own (its routes were carved out of
+// another module's, e.g. recruitment out of "hr") resolves through that
+// module's backend id instead.
+function manifestModuleForProduct(product: ProductKey) {
+  const direct = moduleByProductKey(product);
+  if (direct) return direct;
+  const fallbackModuleId = PRODUCT_MODULE_KEY[product];
+  return fallbackModuleId ? moduleById(fallbackModuleId) : undefined;
+}
+
 export function orgModuleKeyForProduct(product: ProductKey): string | null {
   if (ALWAYS_ENABLED_PRODUCTS.has(product)) return null;
-  return moduleByProductKey(product)?.id ?? null;
+  return manifestModuleForProduct(product)?.id ?? null;
 }
 
 export function hasAssignedProductAccess(
@@ -38,7 +51,7 @@ export function hasAssignedProductAccess(
 ): boolean {
   if (product === "home") return true;
   if (!scopes) return false;
-  const manifestModule = moduleByProductKey(product);
+  const manifestModule = manifestModuleForProduct(product);
   if (!manifestModule) return false;
   const namespaces = new Set([
     manifestModule.id,
