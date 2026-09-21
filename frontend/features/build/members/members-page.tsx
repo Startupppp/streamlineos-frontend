@@ -139,6 +139,8 @@ export function MembersPage() {
     });
   }, [removeTarget, removeMember]);
 
+  const columns = useMembersColumns({ displayProps, canManage, handleRemoveRequest });
+
   if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
       <PageWrapper title="Members" subtitle="People who can access Build, and their roles.">
@@ -152,8 +154,6 @@ export function MembersPage() {
   const members = data?.data ?? [];
   const hasPrev = cursorStack.length > 0;
   const hasNext = !!data?.pagination.hasMore;
-
-  const columns = useMembersColumns({ displayProps, canManage, handleRemoveRequest });
 
   return (
     <>

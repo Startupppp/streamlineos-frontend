@@ -14,7 +14,10 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { useAccountingPeriods, useFiscalYears } from "@/hooks/api/accounting/ledger";
+import {
+  useAccountingPeriods,
+  useFiscalYears,
+} from "@/hooks/api/accounting/ledger";
 import {
   useLockPeriod,
   useOpenNextFiscalYear,
@@ -24,7 +27,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
-import type { AccountingPeriod } from "@/types/accounting-kernel";
+import type { AccountingPeriod } from "@/types/accounting/accounting-kernel";
 
 const MIN_REASON_LENGTH = 3;
 
@@ -44,7 +47,9 @@ export function PeriodCloseClient() {
     isError: periods.isError,
     error: periods.error,
   });
-  const handleRetry = useCallback(() => { void periods.refetch(); }, [periods]);
+  const handleRetry = useCallback(() => {
+    void periods.refetch();
+  }, [periods]);
   const lockPeriod = useLockPeriod();
   const unlockPeriod = useUnlockPeriod();
   const openNextYear = useOpenNextFiscalYear();
@@ -60,7 +65,9 @@ export function PeriodCloseClient() {
       { periodId: locking.id },
       {
         onSuccess: () => {
-          toast.success(`${locking.name} is locked. Nothing new can be posted into it.`);
+          toast.success(
+            `${locking.name} is locked. Nothing new can be posted into it.`,
+          );
           setLocking(null);
         },
         onError: (error) => toast.error(getErrorMessage(error)),
@@ -71,14 +78,18 @@ export function PeriodCloseClient() {
   function handleUnlock(reason: string) {
     if (!unlocking) return;
     if (reason.trim().length < MIN_REASON_LENGTH) {
-      toast.error("Say why this period is being reopened — at least a few words.");
+      toast.error(
+        "Say why this period is being reopened — at least a few words.",
+      );
       return;
     }
     unlockPeriod.mutate(
       { periodId: unlocking.id, reason: reason.trim() },
       {
         onSuccess: () => {
-          toast.success(`${unlocking.name} is open again. The reason has been recorded.`);
+          toast.success(
+            `${unlocking.name} is open again. The reason has been recorded.`,
+          );
           setUnlocking(null);
         },
         onError: (error) => toast.error(getErrorMessage(error)),
@@ -88,7 +99,8 @@ export function PeriodCloseClient() {
 
   function handleOpenNextYear() {
     openNextYear.mutate(undefined, {
-      onSuccess: (year) => toast.success(`${year.name} is open, with its periods created.`),
+      onSuccess: (year) =>
+        toast.success(`${year.name} is open, with its periods created.`),
       onError: (error) => toast.error(getErrorMessage(error)),
     });
   }
@@ -112,17 +124,25 @@ export function PeriodCloseClient() {
       key: "dates",
       header: "Covers",
       className: "whitespace-nowrap font-mono text-dense tabular-nums",
-      cell: (row) => `${formatShortDate(row.startsOn)} – ${formatShortDate(row.endsOn)}`,
+      cell: (row) =>
+        `${formatShortDate(row.startsOn)} – ${formatShortDate(row.endsOn)}`,
     },
     {
       key: "status",
       header: "Status",
       cell: (row) => {
-        const tone = statusToneClasses(row.status === "LOCKED" ? "neutral" : "success");
+        const tone = statusToneClasses(
+          row.status === "LOCKED" ? "neutral" : "success",
+        );
         return (
           <Badge
             variant="outline"
-            className={cn("h-5 px-2 py-0.5 text-micro", tone.surface, tone.ink, tone.rule)}
+            className={cn(
+              "h-5 px-2 py-0.5 text-micro",
+              tone.surface,
+              tone.ink,
+              tone.rule,
+            )}
           >
             {row.status === "LOCKED" ? "Closed" : "Open"}
           </Badge>
@@ -133,7 +153,9 @@ export function PeriodCloseClient() {
       key: "reason",
       header: "Why it was closed",
       cell: (row) => (
-        <span className="truncate text-muted-foreground">{row.lockReason ?? "—"}</span>
+        <span className="truncate text-muted-foreground">
+          {row.lockReason ?? "—"}
+        </span>
       ),
     },
     {
@@ -166,10 +188,19 @@ export function PeriodCloseClient() {
     },
   ];
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="Financial years and periods">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>
@@ -210,7 +241,10 @@ export function PeriodCloseClient() {
                 className="min-h-[40vh] flex-1 border-0 bg-transparent"
                 title="No periods yet"
                 description="Turning accounting on opens your first financial year and creates its periods."
-                action={{ label: "Set up accounting", href: "/accounting/setup" }}
+                action={{
+                  label: "Set up accounting",
+                  href: "/accounting/setup",
+                }}
               />
             }
           />

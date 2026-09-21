@@ -1,13 +1,22 @@
 "use client";
 
 import { AlertTriangle, Loader2 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatBasisPoints, formatMinorMoney } from "@/lib/accounting/money";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import type { TaxPreview, TaxProblem } from "@/types/accounting-ar-receipts";
+import type {
+  TaxPreview,
+  TaxProblem,
+} from "@/types/accounting/accounting-ar-receipts";
 
 interface TaxPreviewPanelProps {
   preview: TaxPreview | undefined;
@@ -18,15 +27,34 @@ interface TaxPreviewPanelProps {
   error: Error | null;
 }
 
-function ProblemList({ problems, tone }: { problems: TaxProblem[]; tone: "danger" | "warning" }) {
+function ProblemList({
+  problems,
+  tone,
+}: {
+  problems: TaxProblem[];
+  tone: "danger" | "warning";
+}) {
   if (problems.length === 0) return null;
   const classes = statusToneClasses(tone);
   return (
-    <ul className={cn("space-y-1 rounded-md border p-2", classes.surface, classes.rule)}>
+    <ul
+      className={cn(
+        "space-y-1 rounded-md border p-2",
+        classes.surface,
+        classes.rule,
+      )}
+    >
       {problems.map((problem) => (
-        <li key={`${problem.code}-${problem.documentLineId ?? "doc"}`} className="flex gap-2">
-          <AlertTriangle className={cn("mt-0.5 h-3.5 w-3.5 shrink-0", classes.ink)} />
-          <span className={cn("text-label", classes.ink)}>{problem.message}</span>
+        <li
+          key={`${problem.code}-${problem.documentLineId ?? "doc"}`}
+          className="flex gap-2"
+        >
+          <AlertTriangle
+            className={cn("mt-0.5 h-3.5 w-3.5 shrink-0", classes.ink)}
+          />
+          <span className={cn("text-label", classes.ink)}>
+            {problem.message}
+          </span>
         </li>
       ))}
     </ul>
@@ -44,7 +72,12 @@ function TotalRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-3 py-1">
-      <span className={cn("text-label", emphasis ? "font-medium" : "text-muted-foreground")}>
+      <span
+        className={cn(
+          "text-label",
+          emphasis ? "font-medium" : "text-muted-foreground",
+        )}
+      >
         {label}
       </span>
       <span
@@ -68,7 +101,9 @@ export function TaxPreviewPanel({
   error,
 }: TaxPreviewPanelProps) {
   const components = preview
-    ? preview.lines.flatMap((line) => line.components.map((component) => ({ line, component })))
+    ? preview.lines.flatMap((line) =>
+        line.components.map((component) => ({ line, component })),
+      )
     : [];
 
   return (
@@ -111,7 +146,10 @@ export function TaxPreviewPanel({
             <ProblemList problems={preview.warnings} tone="warning" />
 
             <div className="divide-y divide-border/60">
-              <TotalRow label="Before tax" value={formatMinorMoney(preview.netMinor, currency)} />
+              <TotalRow
+                label="Before tax"
+                value={formatMinorMoney(preview.netMinor, currency)}
+              />
               {components.map(({ line, component }) => (
                 <TotalRow
                   key={`${line.documentLineId}-${component.component}-${component.jurisdiction}`}
@@ -119,7 +157,10 @@ export function TaxPreviewPanel({
                   value={formatMinorMoney(component.taxMinor, currency)}
                 />
               ))}
-              <TotalRow label="Tax" value={formatMinorMoney(preview.taxMinor, currency)} />
+              <TotalRow
+                label="Tax"
+                value={formatMinorMoney(preview.taxMinor, currency)}
+              />
               {preview.roundingMinor !== 0 ? (
                 <TotalRow
                   label="Rounding"

@@ -47,9 +47,9 @@ const validate = () => {
   for (const phrase of [
     "There is no global census or Wave 0 barrier",
     "one coordinator plus two code agents",
-    "347 open checkboxes",
-    "162 authenticated",
-    "169 HR/Directory/Payroll controllers",
+    "346 open checkboxes",
+    "165 authenticated",
+    "174 HR/Directory/Payroll controllers",
     "96 schema files",
   ]) requireText(ledger, phrase, `${specDirectory}/README.md`, failures);
 
@@ -79,8 +79,8 @@ const validate = () => {
     );
     requireText(requirementMap, `\`${name}\``, `${specDirectory}/requirement-map.md`, failures);
   }
-  if (openAcceptanceItems !== 347)
-    failures.push(`acceptance baseline drift: expected 347 open items, found ${openAcceptanceItems}`);
+  if (openAcceptanceItems !== 346)
+    failures.push(`acceptance baseline drift: expected 346 open items, found ${openAcceptanceItems}`);
 
   const routeRoots = ["hr", "directory", "me", "payroll"].map((name) =>
     join(root, "frontend/app/(authenticated)", name),
@@ -89,8 +89,8 @@ const validate = () => {
     (sum, directory) => sum + walk(directory, (path) => path.endsWith("page.tsx")).length,
     0,
   );
-  if (authenticatedPages !== 162)
-    failures.push(`route baseline drift: expected 162 authenticated HRMS-accounted pages, found ${authenticatedPages}`);
+  if (authenticatedPages !== 165)
+    failures.push(`route baseline drift: expected 165 authenticated HRMS-accounted pages, found ${authenticatedPages}`);
   if (!existsSync(join(root, "frontend/app/employee-onboarding/page.tsx")))
     failures.push("missing accounted /employee-onboarding page gate");
 
@@ -101,8 +101,8 @@ const validate = () => {
     (sum, directory) => sum + walk(directory, (path) => path.endsWith(".controller.ts")).length,
     0,
   );
-  if (controllers !== 169)
-    failures.push(`controller baseline drift: expected 169, found ${controllers}`);
+  if (controllers !== 174)
+    failures.push(`controller baseline drift: expected 174, found ${controllers}`);
 
   const schemaRoots = ["hr", "directory", "payroll"].map((name) =>
     join(root, "backend/src/db/schema", name),

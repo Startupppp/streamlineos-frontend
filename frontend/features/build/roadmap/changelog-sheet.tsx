@@ -52,7 +52,7 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
   const update = useUpdateChangelogEntry();
   const isPending = create.isPending || update.isPending;
 
-  const form = useForm<ChangelogFormValues, any, ChangelogFormValues>({
+  const form = useForm<ChangelogFormValues, unknown, ChangelogFormValues>({
     resolver: zodResolver(changelogSchema),
     defaultValues: {
       title: entry?.title ?? "",

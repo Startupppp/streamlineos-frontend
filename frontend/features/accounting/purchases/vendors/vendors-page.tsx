@@ -10,7 +10,10 @@ import { SearchInput } from "@/components/ui/search-input";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
-import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import {
+  FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import {
   Select,
@@ -25,7 +28,7 @@ import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useAccountingBook } from "@/hooks/api/accounting/ledger";
 import { useVendor, useVendors } from "@/hooks/api/accounting/ap";
-import type { VendorSummary } from "@/types/accounting-ap";
+import type { VendorSummary } from "@/types/accounting/accounting-ap";
 import { useUrlListState } from "../lib/use-url-list-state";
 import { VendorFormSheet } from "./vendor-form-sheet";
 
@@ -60,7 +63,9 @@ export function VendorsPage() {
     isError: vendorsQuery.isError,
     error: vendorsQuery.error,
   });
-  const handleRetry = useCallback(() => { void vendorsQuery.refetch(); }, [vendorsQuery]);
+  const handleRetry = useCallback(() => {
+    void vendorsQuery.refetch();
+  }, [vendorsQuery]);
 
   function handleSearchChange(value: string): void {
     setParams({ q: value || undefined });
@@ -91,7 +96,9 @@ export function VendorsPage() {
             {row.displayName}
           </Link>
           {row.legalName && row.legalName !== row.displayName ? (
-            <p className="truncate text-xs text-muted-foreground">{row.legalName}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {row.legalName}
+            </p>
           ) : null}
         </div>
       ),
@@ -100,7 +107,9 @@ export function VendorsPage() {
       key: "contact",
       header: "Contact",
       cell: (row) => (
-        <span className="truncate text-sm text-muted-foreground">{row.email ?? row.phone ?? "—"}</span>
+        <span className="truncate text-sm text-muted-foreground">
+          {row.email ?? row.phone ?? "—"}
+        </span>
       ),
     },
     {
@@ -108,7 +117,9 @@ export function VendorsPage() {
       header: "Where",
       cell: (row) => (
         <span className="text-sm text-muted-foreground">
-          {[row.billingRegion, row.billingCountryCode ?? row.countryCode].filter(Boolean).join(", ")}
+          {[row.billingRegion, row.billingCountryCode ?? row.countryCode]
+            .filter(Boolean)
+            .join(", ")}
         </span>
       ),
     },
@@ -153,10 +164,19 @@ export function VendorsPage() {
     },
   ];
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="Vendors">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>
@@ -192,7 +212,10 @@ export function VendorsPage() {
             value={search}
             onValueChange={handleSearchChange}
           />
-          <Select value={activity || "active"} onValueChange={handleActivityChange}>
+          <Select
+            value={activity || "active"}
+            onValueChange={handleActivityChange}
+          >
             <SelectTrigger className={FILTER_SELECT_TRIGGER}>
               <SelectValue />
             </SelectTrigger>
@@ -217,14 +240,21 @@ export function VendorsPage() {
               className="border-0 bg-transparent min-h-[40vh]"
               title="No vendors match your filters"
               description="Clear the search to see everyone you buy from."
-              action={{ label: "Clear filters", onClick: () => setParams({ q: undefined, activity: undefined }) }}
+              action={{
+                label: "Clear filters",
+                onClick: () => setParams({ q: undefined, activity: undefined }),
+              }}
             />
           ) : (
             <EmptyState
               className="border-0 bg-transparent min-h-[40vh]"
               title="No vendors yet"
               description="Add the businesses you buy from so their bills can be entered."
-              action={canCreate ? { label: "Add vendor", onClick: () => setIsCreating(true) } : undefined}
+              action={
+                canCreate
+                  ? { label: "Add vendor", onClick: () => setIsCreating(true) }
+                  : undefined
+              }
             />
           )
         }

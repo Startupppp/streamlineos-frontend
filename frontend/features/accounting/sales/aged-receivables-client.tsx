@@ -15,7 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import {
+  FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
@@ -24,7 +27,10 @@ import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { RECEIVABLES_READ, useArAging } from "@/hooks/api/accounting/ar";
-import type { AgingBasis, AgingPartyRow } from "@/types/accounting-ar-receipts";
+import type {
+  AgingBasis,
+  AgingPartyRow,
+} from "@/types/accounting/accounting-ar-receipts";
 import { AGING_BUCKET_KEYS, AGING_BUCKET_LABEL } from "./ar-labels";
 import { AgingOpenItemsSheet } from "./aging-open-items-sheet";
 import { useListUrlState } from "./use-list-url-state";
@@ -39,7 +45,10 @@ function isBasis(value: string): value is AgingBasis {
 
 export function AgedReceivablesClient() {
   const url = useListUrlState();
-  const [drillParty, setDrillParty] = useState<{ id: string; name: string } | null>(null);
+  const [drillParty, setDrillParty] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const asOf = url.get("asOf") || todayIso();
   const basisParam = url.get("basis");
@@ -55,7 +64,9 @@ export function AgedReceivablesClient() {
     isError: agingQuery.isError,
     error: agingQuery.error,
   });
-  const handleRetry = useCallback(() => { void agingQuery.refetch(); }, [agingQuery]);
+  const handleRetry = useCallback(() => {
+    void agingQuery.refetch();
+  }, [agingQuery]);
 
   const columns: DataTableColumn<AgingPartyRow>[] = [
     {
@@ -65,7 +76,9 @@ export function AgedReceivablesClient() {
         <button
           type="button"
           className="truncate text-sm font-medium text-status-info-ink hover:underline"
-          onClick={() => setDrillParty({ id: row.partyId, name: row.partyName })}
+          onClick={() =>
+            setDrillParty({ id: row.partyId, name: row.partyName })
+          }
         >
           {row.partyName}
         </button>
@@ -101,7 +114,10 @@ export function AgedReceivablesClient() {
         dateFormat="dd MMM yyyy"
         className="w-auto min-w-[12rem]"
       />
-      <Select value={basis} onValueChange={(value) => url.setParams({ basis: value })}>
+      <Select
+        value={basis}
+        onValueChange={(value) => url.setParams({ basis: value })}
+      >
         <SelectTrigger className={FILTER_SELECT_TRIGGER} aria-label="Age from">
           <SelectValue />
         </SelectTrigger>
@@ -113,10 +129,19 @@ export function AgedReceivablesClient() {
     </div>
   );
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="What customers owe us">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>
@@ -139,19 +164,31 @@ export function AgedReceivablesClient() {
           )}
           role="alert"
         >
-          <AlertTriangle className={cn("mt-0.5 h-5 w-5 shrink-0", danger.ink)} />
+          <AlertTriangle
+            className={cn("mt-0.5 h-5 w-5 shrink-0", danger.ink)}
+          />
           <div className="min-w-0">
             <p className={cn("text-sm font-semibold", danger.inkStrong)}>
               These numbers do not tie back to your books
             </p>
             <p className={cn("mt-1 text-label", danger.ink)}>
               This report adds up to{" "}
-              {formatMinorMoney(aging.reconciliation.agingFunctionalMinor, aging.baseCurrency)} but the
-              customer control account in your ledger says{" "}
-              {formatMinorMoney(aging.reconciliation.arControlBalanceMinor, aging.baseCurrency)} — a
-              difference of{" "}
-              {formatMinorMoney(aging.reconciliation.differenceMinor, aging.baseCurrency)}. Do not send
-              statements or chase payment from this report until it is reconciled.
+              {formatMinorMoney(
+                aging.reconciliation.agingFunctionalMinor,
+                aging.baseCurrency,
+              )}{" "}
+              but the customer control account in your ledger says{" "}
+              {formatMinorMoney(
+                aging.reconciliation.arControlBalanceMinor,
+                aging.baseCurrency,
+              )}{" "}
+              — a difference of{" "}
+              {formatMinorMoney(
+                aging.reconciliation.differenceMinor,
+                aging.baseCurrency,
+              )}
+              . Do not send statements or chase payment from this report until
+              it is reconciled.
             </p>
           </div>
         </div>
@@ -162,14 +199,31 @@ export function AgedReceivablesClient() {
           <StatCard
             key={bucket}
             label={AGING_BUCKET_LABEL[bucket]}
-            value={aging ? formatMinorMoney(aging.totals[bucket], aging.baseCurrency) : "—"}
-            tone={bucket === "days91Plus" ? "red" : bucket === "days0to30" ? "emerald" : "amber"}
+            value={
+              aging
+                ? formatMinorMoney(aging.totals[bucket], aging.baseCurrency)
+                : "—"
+            }
+            tone={
+              bucket === "days91Plus"
+                ? "red"
+                : bucket === "days0to30"
+                  ? "emerald"
+                  : "amber"
+            }
             isLoading={agingQuery.isLoading}
           />
         ))}
         <StatCard
           label="Owed in total"
-          value={aging ? formatMinorMoney(aging.totals.functionalTotalMinor, aging.baseCurrency) : "—"}
+          value={
+            aging
+              ? formatMinorMoney(
+                  aging.totals.functionalTotalMinor,
+                  aging.baseCurrency,
+                )
+              : "—"
+          }
           tone="blue"
           isLoading={agingQuery.isLoading}
         />

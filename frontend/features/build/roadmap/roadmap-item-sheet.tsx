@@ -52,7 +52,7 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
   const update = useUpdateRoadmapItem();
   const isPending = create.isPending || update.isPending;
 
-  const form = useForm<RoadmapItemFormValues, any, RoadmapItemFormValues>({
+  const form = useForm<RoadmapItemFormValues, unknown, RoadmapItemFormValues>({
     resolver: zodResolver(roadmapItemSchema),
     defaultValues: {
       title: item?.title ?? "",

@@ -17,9 +17,12 @@ import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { useCan, useCanState } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { useAccountingBook, usePostableAccounts } from "@/hooks/api/accounting/ledger";
+import {
+  useAccountingBook,
+  usePostableAccounts,
+} from "@/hooks/api/accounting/ledger";
 import { useApDocuments, useVendor } from "@/hooks/api/accounting/ap";
-import type { ApDocumentSummary } from "@/types/accounting-ap";
+import type { ApDocumentSummary } from "@/types/accounting/accounting-ap";
 import { AP_STATUS_LABELS, AP_STATUS_TONES } from "../lib/ap-labels";
 import { VendorFormSheet } from "./vendor-form-sheet";
 
@@ -32,7 +35,9 @@ interface VendorDetailPageProps {
 function DefinitionRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-3 border-b border-border/60 py-2 last:border-b-0">
-      <span className="text-label font-medium text-muted-foreground">{label}</span>
+      <span className="text-label font-medium text-muted-foreground">
+        {label}
+      </span>
       <span className="min-w-0 text-right text-sm">{value}</span>
     </div>
   );
@@ -49,7 +54,12 @@ export function VendorDetailPage({ vendorId }: VendorDetailPageProps) {
   const vendorQuery = useVendor(vendorId);
   const accountsQuery = usePostableAccounts();
   const billsQuery = useApDocuments(
-    { partyId: vendorId, openOnly: true, page: billsPage, pageSize: BILLS_PAGE_SIZE },
+    {
+      partyId: vendorId,
+      openOnly: true,
+      page: billsPage,
+      pageSize: BILLS_PAGE_SIZE,
+    },
     { enabled: canReadBills },
   );
 
@@ -59,14 +69,22 @@ export function VendorDetailPage({ vendorId }: VendorDetailPageProps) {
     isError: vendorQuery.isError,
     error: vendorQuery.error,
   });
-  const handleRetry = useCallback(() => { void vendorQuery.refetch(); }, [vendorQuery]);
-  const handleRetryBills = useCallback(() => { void billsQuery.refetch(); }, [billsQuery]);
+  const handleRetry = useCallback(() => {
+    void vendorQuery.refetch();
+  }, [vendorQuery]);
+  const handleRetryBills = useCallback(() => {
+    void billsQuery.refetch();
+  }, [billsQuery]);
 
   const expenseAccountName = useMemo(() => {
     const accountId = vendorQuery.data?.defaultExpenseAccountId;
     if (!accountId) return "Not set — bill lines start blank";
-    const account = (accountsQuery.data ?? []).find((entry) => entry.id === accountId);
-    return account ? `${account.name} (${account.code})` : "Not set — bill lines start blank";
+    const account = (accountsQuery.data ?? []).find(
+      (entry) => entry.id === accountId,
+    );
+    return account
+      ? `${account.name} (${account.code})`
+      : "Not set — bill lines start blank";
   }, [vendorQuery.data?.defaultExpenseAccountId, accountsQuery.data]);
 
   const billColumns: DataTableColumn<ApDocumentSummary>[] = [
@@ -98,7 +116,10 @@ export function VendorDetailPage({ vendorId }: VendorDetailPageProps) {
       key: "status",
       header: "Status",
       cell: (row) => (
-        <SemanticBadge tone={AP_STATUS_TONES[row.status]} label={AP_STATUS_LABELS[row.status]} />
+        <SemanticBadge
+          tone={AP_STATUS_TONES[row.status]}
+          label={AP_STATUS_LABELS[row.status]}
+        />
       ),
     },
     {
@@ -110,10 +131,23 @@ export function VendorDetailPage({ vendorId }: VendorDetailPageProps) {
     },
   ];
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
-      <PageWrapper title="Vendor" backHref="/accounting/vendors" backLabel="Back to vendors">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+      <PageWrapper
+        title="Vendor"
+        backHref="/accounting/vendors"
+        backLabel="Back to vendors"
+      >
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>
@@ -121,7 +155,11 @@ export function VendorDetailPage({ vendorId }: VendorDetailPageProps) {
 
   if (vendorQuery.isPending || !vendorQuery.data) {
     return (
-      <PageWrapper title="Vendor" backHref="/accounting/vendors" backLabel="Back to vendors">
+      <PageWrapper
+        title="Vendor"
+        backHref="/accounting/vendors"
+        backLabel="Back to vendors"
+      >
         <div className="flex flex-1 flex-col gap-4">
           <Skeleton className="h-40 w-full" />
           <Skeleton className="h-64 w-full" />
@@ -136,13 +174,19 @@ export function VendorDetailPage({ vendorId }: VendorDetailPageProps) {
   return (
     <PageWrapper
       title={vendor.displayName}
-      subtitle={vendor.legalName ?? "What we owe them, and how their bills behave."}
+      subtitle={
+        vendor.legalName ?? "What we owe them, and how their bills behave."
+      }
       backHref="/accounting/vendors"
       backLabel="Back to vendors"
       badge={vendor.isActive ? undefined : "Dormant"}
       actions={
         canUpdate ? (
-          <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setIsEditing(true)}
+          >
             Edit vendor
           </Button>
         ) : null
@@ -152,11 +196,19 @@ export function VendorDetailPage({ vendorId }: VendorDetailPageProps) {
         <div className="grid gap-4 lg:grid-cols-2">
           <Card>
             <CardHeader className="px-4 py-3">
-              <CardTitle className="text-sm font-semibold">How their bills behave</CardTitle>
+              <CardTitle className="text-sm font-semibold">
+                How their bills behave
+              </CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
-              <DefinitionRow label="Where their spending goes" value={expenseAccountName} />
-              <DefinitionRow label="Days to pay" value={`${vendor.paymentTermsDays} days`} />
+              <DefinitionRow
+                label="Where their spending goes"
+                value={expenseAccountName}
+              />
+              <DefinitionRow
+                label="Days to pay"
+                value={`${vendor.paymentTermsDays} days`}
+              />
               <DefinitionRow
                 label="Tax withheld from payments"
                 value={
@@ -165,13 +217,18 @@ export function VendorDetailPage({ vendorId }: VendorDetailPageProps) {
                     : "Nothing is held back"
                 }
               />
-              <DefinitionRow label="Bills arrive in" value={vendor.defaultCurrency} />
+              <DefinitionRow
+                label="Bills arrive in"
+                value={vendor.defaultCurrency}
+              />
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="px-4 py-3">
-              <CardTitle className="text-sm font-semibold">Who they are</CardTitle>
+              <CardTitle className="text-sm font-semibold">
+                Who they are
+              </CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
               <DefinitionRow label="Email" value={vendor.email ?? "—"} />
@@ -188,7 +245,9 @@ export function VendorDetailPage({ vendorId }: VendorDetailPageProps) {
                 label="Tax registration"
                 value={
                   vendor.taxRegistrations.length > 0
-                    ? vendor.taxRegistrations.map((entry) => entry.number).join(", ")
+                    ? vendor.taxRegistrations
+                        .map((entry) => entry.number)
+                        .join(", ")
                     : "None on file"
                 }
               />
@@ -245,7 +304,9 @@ export function VendorDetailPage({ vendorId }: VendorDetailPageProps) {
           open={isEditing}
           onOpenChange={setIsEditing}
           vendor={vendor}
-          defaultCurrency={bookQuery.data?.baseCurrency ?? vendor.defaultCurrency}
+          defaultCurrency={
+            bookQuery.data?.baseCurrency ?? vendor.defaultCurrency
+          }
           defaultCountryCode={bookQuery.data?.countryCode ?? vendor.countryCode}
         />
       ) : null}

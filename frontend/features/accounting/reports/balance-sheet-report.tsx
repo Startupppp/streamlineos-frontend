@@ -4,7 +4,7 @@ import { useBalanceSheetReport } from "@/hooks/api/accounting/reports";
 import type {
   BalanceSheetReport as BalanceSheetReportData,
   BalanceSheetSection,
-} from "@/types/accounting-reports";
+} from "@/types/accounting/accounting-reports";
 import { AsOfControls } from "./report-date-controls";
 import { ExportReportButton } from "./export-report-button";
 import { ReconciliationBanner } from "./reconciliation-banner";
@@ -81,7 +81,8 @@ export function BalanceSheetReport() {
   const controls = useReportControls();
 
   const params = { asOf: controls.asOf, labelMode: controls.labelMode };
-  const { data, isLoading, isError, error, refetch } = useBalanceSheetReport(params);
+  const { data, isLoading, isError, error, refetch } =
+    useBalanceSheetReport(params);
 
   return (
     <ReportShell
@@ -132,7 +133,10 @@ export function BalanceSheetReport() {
             }
           />
 
-          <ReportNotes title="What to know about this report" notes={data.notes} />
+          <ReportNotes
+            title="What to know about this report"
+            notes={data.notes}
+          />
         </>
       ) : null}
     </ReportShell>

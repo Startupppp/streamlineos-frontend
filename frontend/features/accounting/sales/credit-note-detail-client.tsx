@@ -24,12 +24,15 @@ import {
   useUpdateCreditNoteDraft,
 } from "@/hooks/api/accounting/ar";
 import { usePartyNames } from "../parties/use-party-names";
-import type { AllocationLineInput } from "@/types/accounting-ar-receipts";
+import type { AllocationLineInput } from "@/types/accounting/accounting-ar-receipts";
 import { AllocationEditorDialog } from "./allocation-editor-dialog";
 import { ArStatusBadge } from "./ar-labels";
 import { ArDraftEditor } from "./ar-draft-editor";
 import { readArRejection } from "./ar-document-errors";
-import { ArDocumentLinesCard, ArDocumentTotalsCard } from "./ar-document-readonly";
+import {
+  ArDocumentLinesCard,
+  ArDocumentTotalsCard,
+} from "./ar-document-readonly";
 import {
   documentRevision,
   toUpdateDocumentInput,
@@ -38,11 +41,17 @@ import {
 
 const PREVIEW_DEBOUNCE_MS = 400;
 
-export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string }) {
+export function CreditNoteDetailClient({
+  creditNoteId,
+}: {
+  creditNoteId: string;
+}) {
   const canManage = useCan(CREDIT_NOTES_MANAGE);
   const router = useRouter();
 
-  const [errorLineIndex, setErrorLineIndex] = useState<number | undefined>(undefined);
+  const [errorLineIndex, setErrorLineIndex] = useState<number | undefined>(
+    undefined,
+  );
   const [postOpen, setPostOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [applyOpen, setApplyOpen] = useState(false);
@@ -53,9 +62,13 @@ export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string 
 
   const revision = creditNote ? documentRevision(creditNote) : "";
   const debouncedRevision = useDebouncedValue(revision, PREVIEW_DEBOUNCE_MS);
-  const previewQuery = useCreditNoteTaxPreview(creditNoteId, debouncedRevision, {
-    enabled: isDraft && debouncedRevision.length > 0,
-  });
+  const previewQuery = useCreditNoteTaxPreview(
+    creditNoteId,
+    debouncedRevision,
+    {
+      enabled: isDraft && debouncedRevision.length > 0,
+    },
+  );
 
   const partyNames = usePartyNames(creditNote ? [creditNote.partyId] : []);
   const updateDraft = useUpdateCreditNoteDraft();
@@ -69,7 +82,9 @@ export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string 
     isError: creditNoteQuery.isError,
     error: creditNoteQuery.error,
   });
-  const handleRetry = useCallback(() => { void creditNoteQuery.refetch(); }, [creditNoteQuery]);
+  const handleRetry = useCallback(() => {
+    void creditNoteQuery.refetch();
+  }, [creditNoteQuery]);
 
   function handleFailure(error: unknown): void {
     const rejection = readArRejection(error);
@@ -80,7 +95,10 @@ export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string 
   async function handleSave(values: ArDocumentFormValues): Promise<void> {
     setErrorLineIndex(undefined);
     try {
-      await updateDraft.mutateAsync({ creditNoteId, input: toUpdateDocumentInput(values) });
+      await updateDraft.mutateAsync({
+        creditNoteId,
+        input: toUpdateDocumentInput(values),
+      });
       toast.success("Draft saved");
     } catch (error) {
       handleFailure(error);
@@ -127,10 +145,19 @@ export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string 
     });
   }
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="Credit note" backHref="/accounting/credit-notes">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>
@@ -159,7 +186,11 @@ export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string 
       backLabel="Back to credit notes"
       actions={
         canApply ? (
-          <Button size="sm" variant="outline" onClick={() => setApplyOpen(true)}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setApplyOpen(true)}
+          >
             Apply to invoices
           </Button>
         ) : null
@@ -206,7 +237,10 @@ export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string 
             <ArDocumentLinesCard arDocument={creditNote} />
           </div>
           <div className="w-full lg:max-w-sm">
-            <ArDocumentTotalsCard arDocument={creditNote} partyName={partyName} />
+            <ArDocumentTotalsCard
+              arDocument={creditNote}
+              partyName={partyName}
+            />
           </div>
         </div>
       )}

@@ -51,6 +51,7 @@ export function LeadsFunnelView({
   onCreateLead,
   canCreate,
 }: LeadsFunnelViewProps) {
+  const shouldReduceMotion = useReducedMotion();
   const totalLeads = board
     ? STAGE_ORDER.reduce((sum, stage) => sum + (board[stage]?.length ?? 0), 0)
     : 0;
@@ -70,7 +71,6 @@ export function LeadsFunnelView({
     );
   }
 
-  const shouldReduceMotion = useReducedMotion();
   const maxCount = Math.max(...STAGE_ORDER.map((s) => board[s]?.length ?? 0), 1);
 
   const stages = STAGE_ORDER.map((stage, idx) => {

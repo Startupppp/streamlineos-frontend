@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import { addDaysToIso } from "../lib/ap-dates";
-import type { VendorSummary } from "@/types/accounting-ap";
+import type { VendorSummary } from "@/types/accounting/accounting-ap";
 import type { BillFormValues } from "./bill-form-schema";
 import { VendorPickerField } from "./vendor-picker-field";
 
@@ -28,13 +28,20 @@ export function BillHeaderFields({
   lockVendor = false,
   onVendorSelected,
 }: BillHeaderFieldsProps) {
-  function handleVendorChange(partyId: string, vendor: VendorSummary | undefined): void {
+  function handleVendorChange(
+    partyId: string,
+    vendor: VendorSummary | undefined,
+  ): void {
     form.setValue("partyId", partyId, { shouldValidate: true });
     if (!vendor) return;
     onVendorSelected?.(vendor);
     form.setValue("currency", vendor.defaultCurrency);
     const issueDate = form.getValues("issueDate");
-    if (issueDate) form.setValue("dueDate", addDaysToIso(issueDate, vendor.paymentTermsDays));
+    if (issueDate)
+      form.setValue(
+        "dueDate",
+        addDaysToIso(issueDate, vendor.paymentTermsDays),
+      );
   }
 
   return (
@@ -68,7 +75,8 @@ export function BillHeaderFields({
                 <Input {...field} placeholder="INV-2026-0481" />
               </FormControl>
               <FormDescription>
-                Exactly as printed. Entering the same number twice for one vendor is refused.
+                Exactly as printed. Entering the same number twice for one
+                vendor is refused.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -141,7 +149,9 @@ export function BillHeaderFields({
               <FormControl>
                 <Input {...field} maxLength={8} placeholder="29" />
               </FormControl>
-              <FormDescription>Leave blank to use the vendor&apos;s own region.</FormDescription>
+              <FormDescription>
+                Leave blank to use the vendor&apos;s own region.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

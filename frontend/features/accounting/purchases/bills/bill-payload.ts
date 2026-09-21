@@ -1,5 +1,8 @@
 import { parseMoneyInput } from "@/lib/accounting/money";
-import type { ApDocumentLineInput, CreateApDocumentInput } from "@/types/accounting-ap-payments";
+import type {
+  ApDocumentLineInput,
+  CreateApDocumentInput,
+} from "@/types/accounting/accounting-ap-payments";
 import { textOrNull } from "../lib/form-values";
 import type { BillFormValues } from "./bill-form-schema";
 
@@ -44,7 +47,10 @@ export function buildBillPayload(values: BillFormValues): BillPayloadResult {
       };
     }
 
-    const discountMinor = parseMoneyInput(line.discount.trim() || "0", currency);
+    const discountMinor = parseMoneyInput(
+      line.discount.trim() || "0",
+      currency,
+    );
     if (discountMinor === null) {
       return {
         ok: false,

@@ -3,7 +3,7 @@
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useCashFlowReport } from "@/hooks/api/accounting/reports";
 import { formatMinorMoney } from "@/lib/accounting/money";
-import type { CashFlowReport as CashFlowReportData } from "@/types/accounting-reports";
+import type { CashFlowReport as CashFlowReportData } from "@/types/accounting/accounting-reports";
 import { ExportReportButton } from "./export-report-button";
 import { RangeControls } from "./report-date-controls";
 import { ReportNotes } from "./report-notes";
@@ -72,8 +72,13 @@ function buildRows(report: CashFlowReportData): StatementRow[] {
 export function CashFlowReport() {
   const controls = useReportControls();
 
-  const params = { from: controls.from, to: controls.to, labelMode: controls.labelMode };
-  const { data, isLoading, isError, error, refetch } = useCashFlowReport(params);
+  const params = {
+    from: controls.from,
+    to: controls.to,
+    labelMode: controls.labelMode,
+  };
+  const { data, isLoading, isError, error, refetch } =
+    useCashFlowReport(params);
 
   return (
     <ReportShell
@@ -116,12 +121,14 @@ export function CashFlowReport() {
                 This statement does not tie back to the bank balances
               </p>
               <p className="mt-1 text-label text-foreground/80">
-                Cash at the start plus the movement below should equal cash at the end. It does
-                not, which means this statement is currently understating or overstating the
-                movement in your bank and cash accounts.
+                Cash at the start plus the movement below should equal cash at
+                the end. It does not, which means this statement is currently
+                understating or overstating the movement in your bank and cash
+                accounts.
               </p>
               <p className="mt-1 font-mono text-label font-semibold tabular-nums text-foreground">
-                Out by {formatMinorMoney(
+                Out by{" "}
+                {formatMinorMoney(
                   Math.abs(data.reconciliationDifferenceMinor),
                   data.currency,
                 )}

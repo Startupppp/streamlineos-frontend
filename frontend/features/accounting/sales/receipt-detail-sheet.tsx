@@ -20,7 +20,7 @@ import {
   useReverseArReceipt,
 } from "@/hooks/api/accounting/ar";
 import { usePartyNames } from "../parties/use-party-names";
-import type { AllocationLineInput } from "@/types/accounting-ar-receipts";
+import type { AllocationLineInput } from "@/types/accounting/accounting-ar-receipts";
 import { AllocationEditorDialog } from "./allocation-editor-dialog";
 import { ReceiptStatusBadge } from "./ar-labels";
 
@@ -38,7 +38,10 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function ReceiptDetailSheet({ receiptId, onOpenChange }: ReceiptDetailSheetProps) {
+export function ReceiptDetailSheet({
+  receiptId,
+  onOpenChange,
+}: ReceiptDetailSheetProps) {
   const canManage = useCan(RECEIVABLES_MANAGE);
   const canApprove = useCan(RECEIVABLES_APPROVE);
   const [applyOpen, setApplyOpen] = useState(false);
@@ -101,7 +104,9 @@ export function ReceiptDetailSheet({ receiptId, onOpenChange }: ReceiptDetailShe
       open={receiptId !== null}
       onOpenChange={onOpenChange}
       title={receipt?.receiptNumber ?? "Money in"}
-      description={receipt ? partyNames.resolve(receipt.partyId) : "Loading the receipt…"}
+      description={
+        receipt ? partyNames.resolve(receipt.partyId) : "Loading the receipt…"
+      }
       className="sm:max-w-lg"
       footer={
         receipt && !isReversed ? (
@@ -112,7 +117,10 @@ export function ReceiptDetailSheet({ receiptId, onOpenChange }: ReceiptDetailShe
               </Button>
             ) : null}
             {canManage && hasUnapplied ? (
-              <LoadingButton isPending={allocateFifo.isPending} onClick={handleFifo}>
+              <LoadingButton
+                isPending={allocateFifo.isPending}
+                onClick={handleFifo}
+              >
                 Apply oldest first
               </LoadingButton>
             ) : null}
@@ -148,7 +156,10 @@ export function ReceiptDetailSheet({ receiptId, onOpenChange }: ReceiptDetailShe
           </div>
 
           <div className="divide-y divide-border/60">
-            <Row label="Received" value={formatMinorMoney(receipt.amountMinor, receipt.currency)} />
+            <Row
+              label="Received"
+              value={formatMinorMoney(receipt.amountMinor, receipt.currency)}
+            />
             <Row
               label="Applied to invoices"
               value={formatMinorMoney(receipt.appliedMinor, receipt.currency)}
@@ -160,7 +171,9 @@ export function ReceiptDetailSheet({ receiptId, onOpenChange }: ReceiptDetailShe
             {receipt.paymentMethod ? (
               <Row label="Paid by" value={receipt.paymentMethod} />
             ) : null}
-            {receipt.reference ? <Row label="Reference" value={receipt.reference} /> : null}
+            {receipt.reference ? (
+              <Row label="Reference" value={receipt.reference} />
+            ) : null}
           </div>
 
           <div>
@@ -180,7 +193,10 @@ export function ReceiptDetailSheet({ receiptId, onOpenChange }: ReceiptDetailShe
                       {allocation.documentNumber ?? "Invoice"}
                     </span>
                     <span className="font-mono text-label tabular-nums">
-                      {formatMinorMoney(allocation.amountMinor, receipt.currency)}
+                      {formatMinorMoney(
+                        allocation.amountMinor,
+                        receipt.currency,
+                      )}
                     </span>
                   </li>
                 ))}
