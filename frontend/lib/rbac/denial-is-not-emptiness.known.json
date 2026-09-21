@@ -43,7 +43,6 @@
   "features/build/settings/custom-fields-settings.tsx",
   "features/build/settings/labels-settings.tsx",
   "features/build/settings/project-member-roles-section.tsx",
-  "features/build/settings/project-settings-page.tsx",
   "features/build/settings/webhook-card.tsx",
   "features/build/teams/team-projects-section.tsx",
   "features/build/ticket-details/ticket-checklists.tsx",

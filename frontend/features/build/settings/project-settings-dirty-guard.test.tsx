@@ -44,6 +44,10 @@ jest.mock("@/hooks/api/access", () => ({
   useCanState: () => "denied" as const,
 }));
 
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: () => ({ kind: "ready" }),
+}));
+
 jest.mock("@/features/build/settings/project-members-section", () => ({
   MembersSelector: () => <div data-testid="members-selector" />,
   ReassignDialog: () => null,
