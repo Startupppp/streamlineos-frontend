@@ -20,7 +20,7 @@ export default function PayrollRunDetailLoading() {
           <Skeleton className="h-9 w-24 rounded-t-md" />
           <Skeleton className="h-9 w-24 rounded-t-md" />
         </div>
-        <DataTableSkeleton rows={12} columns={6} />
+        <DataTableSkeleton rows={12} headers={["Employee", "Type", "Gross", "Deductions", "Net", "Status"]} />
       </div>
     </PageWrapper>
   );

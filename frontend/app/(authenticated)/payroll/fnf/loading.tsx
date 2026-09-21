@@ -7,14 +7,14 @@ export function FnfPageSkeleton() {
   return (
     <PageWrapper
       title="Full & Final Settlement"
-      subtitle="Review and approve exit settlements."
+      subtitle="Review and approve exit settlements"
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <Skeleton className="h-9 w-44 rounded-md" />
         </div>
       }
     >
-      <DataTableSkeleton rows={12} columns={4} />
+      <DataTableSkeleton rows={12} headers={["Employee", "Net Payable", "Status", "Date"]} />
     </PageWrapper>
   );
 }
