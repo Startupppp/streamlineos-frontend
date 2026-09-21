@@ -35,19 +35,12 @@ const signEnvelopeRowContract = z.object({
   finalizedAt: z.string().nullable(),
   finalPdfFileKey: z.string().nullable(),
   finalPdfHash: z.string().nullable(),
-  publicFormId: z.number().int().nullable(),
   metadataJson: z.record(z.string(), z.unknown()),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 
-/**
- * SIGN-001 resilience: Allow the backend to return extra fields during
- * envelope mutations. The server may include computed/derived fields
- * (e.g., counts, display names) that the client doesn't use but
- * shouldn't reject.
- */
-export const signEnvelopeMutationContract = signEnvelopeRowContract.passthrough();
+export const signEnvelopeMutationContract = signEnvelopeRowContract;
 
 export const signEnvelopesListContract = z.object({
   items: z.array(signEnvelopeRowContract),

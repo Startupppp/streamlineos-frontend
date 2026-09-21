@@ -6,6 +6,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type { SignBulkSendErrorReport, SignBulkSendJob, SignBulkSendJobDetail } from "@/types/sign";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface CreateBulkSendJobInput {
@@ -78,9 +79,12 @@ export function bulkSendPollInterval(
 
 export function useCreateBulkSendJob() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("sign:bulk_send:run", {
+  return useAuthorizedIdempotentMutation<BulkSendJobResult, Error, CreateBulkSendJobInput>("sign:bulk_send:run", {
     mutationKey: ["signBulkSend", "create"],
-    mutationFn: (input: CreateBulkSendJobInput) => apiClient.post<BulkSendJobResult>("/sign/bulk-send/jobs", input, undefined, signBulkJobCreateContract),
+    mutationFn: (input, idempotencyKey) =>
+      apiClient.post<BulkSendJobResult>("/sign/bulk-send/jobs", input, {
+        headers: { "Idempotency-Key": idempotencyKey },
+      }, signBulkJobCreateContract),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signBulkSend.job(data.job.id) });
       qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signBulkSend.all });

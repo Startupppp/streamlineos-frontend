@@ -152,7 +152,6 @@ function makeEnvelope(status: SignEnvelopeStatus, expiresAt: string | null = nul
     finalizedAt: null,
     finalPdfFileKey: null,
     finalPdfHash: null,
-    publicFormId: null,
     metadataJson: {},
     createdAt: "2026-03-01T09:00:00.000Z",
     updatedAt: "2026-03-04T09:15:00.000Z",

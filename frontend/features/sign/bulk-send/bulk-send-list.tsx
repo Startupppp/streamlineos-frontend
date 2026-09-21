@@ -116,11 +116,6 @@ export function BulkSendList() {
   const { data: jobs, isLoading, isFetching, isError, error, refetch, access } = useBulkSendJobs();
   const hasPublished = (templates ?? []).some((t) => t.status === "published");
 
-  /** SIGN-003: Show error if query is stuck pending due to permission denial */
-  const showError = isError || (access && !access.allowed && !isFetching);
-  const effectiveError = !access?.allowed && !isFetching
-    ? new Error("You don't have permission to view bulk send jobs")
-    : error;
   /** Only show skeleton on initial load, not on background refetch */
   const showSkeleton = !jobs && (isLoading || isFetching);
 
@@ -134,6 +129,19 @@ export function BulkSendList() {
 
   async function handleRetry() {
     await refetch();
+  }
+
+  if (access.denied) {
+    return (
+      <PageWrapper title="Bulk Send" subtitle="Send one template to a list of people via CSV">
+        <EmptyState
+          illustrationPreset="permissions"
+          access={access}
+          title="Access restricted"
+          description="You don't have permission to view bulk send jobs."
+        />
+      </PageWrapper>
+    );
   }
 
   return (
@@ -152,15 +160,16 @@ export function BulkSendList() {
             <Skeleton key={i} className="h-16 w-full" />
           ))}
         </div>
-      ) : showError ? (
-        <ErrorState 
+      ) : isError ? (
+        <ErrorState
           className="flex-1"
-          title="Failed to load bulk send jobs" 
-          description={getErrorMessage(effectiveError)}
-          onRetry={handleRetry} 
+          title="Failed to load bulk send jobs"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
         />
       ) : !jobs || jobs.length === 0 ? (
         <EmptyState
+          access={access}
           illustration={<IllustrationImage name="empty-upload" className="h-40 w-40" />}
           title={hasPublished ? "No bulk send jobs yet" : "Publish a template first"}
           description={hasPublished ? "Upload a CSV of recipients to send one template to everyone at once." : "Bulk send requires a published single-signer template. Save an envelope as a template, then publish it."}
