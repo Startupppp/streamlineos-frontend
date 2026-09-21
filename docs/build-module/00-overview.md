@@ -107,6 +107,7 @@ Build owns projects, work items, cycles, delivery planning, project governance, 
 - `04-shared-components.md`: deep shared modules and their interfaces.
 - `05-performance-caching.md`: endpoint risks, caching, invalidation, optimistic and realtime rules.
 - `06-prioritized-backlog.md`: P0/P1/P2 dependency order and effort.
+- `07-claude-parallel-execution.md`: worktree-based parallel implementation prompts, status rules, review, and integration flow.
 - `10-*.md`: 109 self-contained page implementation specifications covering 92 physical Build-owned routes and 17 target routes.
 - `99-kill-list.md`: features and routes to remove or refuse.
 - `99-open-questions.md`: unresolved decisions only.
