@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { useHrAutomationRuns } from "@/hooks/api/hr/hr-automations";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { HrAutomationRun, HrAutomationRunStatus } from "@/types/hr/automations";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -109,6 +110,10 @@ export function AutomationRunsSheet({ ruleId, ruleName, onClose }: Props) {
   const runs = runsData?.data;
   const pagination = runsData?.pagination;
 
+  function handleRetry() {
+    void refetch();
+  }
+
   function handleNext() {
     pager.goNext(pagination?.nextCursor);
   }
@@ -126,13 +131,12 @@ export function AutomationRunsSheet({ ruleId, ruleName, onClose }: Props) {
             <Skeleton key={i} className="h-10 w-full rounded-lg" />
           ))}
           {isError && (
-            <div className="text-sm text-center py-12">
-              <p className="font-medium text-status-danger-ink mb-2">Couldn't load run history</p>
-              <p className="text-xs text-muted-foreground mb-4">{getErrorMessage(error)}</p>
-              <Button size="sm" variant="outline" onClick={() => void refetch()}>
-                Retry
-              </Button>
-            </div>
+            <ErrorState
+              compact
+              title="Couldn't load run history"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+            />
           )}
           {!isLoading && !isError && (!runs || runs.length === 0) && (
             <p className="text-sm text-muted-foreground text-center py-12">No runs yet for this rule.</p>
