@@ -138,7 +138,6 @@ jest.mock("@/components/ui/search-input", () => ({
 
 jest.mock("@animateicons/react/lucide", () => ({
   PlusIcon: ({
-    ref: _ref,
     ...props
   }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
 }));

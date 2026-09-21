@@ -85,7 +85,7 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 }));
 
 jest.mock("@animateicons/react/lucide", () => ({
-  Trash2Icon: ({ ref: _ref, ...props }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
+  Trash2Icon: ({ ...props }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
 }));
 
 jest.mock("./meeting-badges", () => ({

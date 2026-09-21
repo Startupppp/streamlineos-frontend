@@ -34,7 +34,7 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 jest.mock("@animateicons/react/lucide", () => ({
-  PlusIcon: ({ ref: _ref, ...props }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
+  PlusIcon: ({ ...props }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
 }));
 
 jest.mock("next/link", () => ({

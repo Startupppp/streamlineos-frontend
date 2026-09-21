@@ -85,8 +85,8 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 }));
 
 jest.mock("@animateicons/react/lucide", () => ({
-  PlusIcon: ({ ref: _r, ...p }: React.HTMLAttributes<HTMLElement>) => <span {...p} />,
-  XIcon: ({ ref: _r, ...p }: React.HTMLAttributes<HTMLElement>) => <span {...p} />,
+  PlusIcon: ({ ...p }: React.HTMLAttributes<HTMLElement>) => <span {...p} />,
+  XIcon: ({ ...p }: React.HTMLAttributes<HTMLElement>) => <span {...p} />,
 }));
 
 jest.mock("@/lib/utils", () => ({

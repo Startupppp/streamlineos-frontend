@@ -151,11 +151,9 @@ jest.mock("@/components/ui/loading-button", () => ({
 
 jest.mock("@animateicons/react/lucide", () => ({
   Trash2Icon: ({
-    ref: _ref,
     ...props
   }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
   PlusIcon: ({
-    ref: _ref,
     ...props
   }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
 }));

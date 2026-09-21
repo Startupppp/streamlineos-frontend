@@ -53,7 +53,7 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
   useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),
 }));
 jest.mock("@animateicons/react/lucide", () => ({
-  PlusIcon: ({ ref: _ref, ...props }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
+  PlusIcon: ({ ...props }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
 }));
 jest.mock("@/components/ui/confirm-dialog", () => ({
   ConfirmDialog: ({
