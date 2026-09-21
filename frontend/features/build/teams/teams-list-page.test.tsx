@@ -231,6 +231,7 @@ describe("TeamsListPage — usePageState integration (FE-40, FE-41, FE-47, FE-49
     usePageState.mockReturnValue({ kind: "empty" });
     render(<TeamsListPage />);
     expect(screen.getByTestId("page-state-empty")).toBeInTheDocument();
+    expect(screen.getByTestId("empty-state")).toBeInTheDocument();
     expect(screen.queryByTestId("page-state-ready")).not.toBeInTheDocument();
     expect(screen.queryByTestId("data-table-skeleton")).not.toBeInTheDocument();
   });
@@ -243,14 +244,14 @@ describe("TeamsListPage — usePageState integration (FE-40, FE-41, FE-47, FE-49
     expect(screen.queryByTestId("page-state-empty")).not.toBeInTheDocument();
   });
 
-  it("renders NoPermissionState when build:teams:view is denied so a disabled query is not mistaken for empty", () => {
+  it("routes a denied resolution to PageState so the empty state is not shown instead", () => {
     usePageState.mockReturnValue({ kind: "denied", permission: "build:teams:view" });
     render(<TeamsListPage />);
     expect(screen.getByTestId("no-permission")).toBeInTheDocument();
     expect(screen.queryByTestId("page-state-empty")).not.toBeInTheDocument();
   });
 
-  it("surfaces build:teams:view as the permission attribute in the denied state", () => {
+  it("passes the resolution object to PageState unmodified so the permission key is preserved", () => {
     usePageState.mockReturnValue({ kind: "denied", permission: "build:teams:view" });
     render(<TeamsListPage />);
     expect(screen.getByTestId("no-permission")).toHaveAttribute(
@@ -259,10 +260,64 @@ describe("TeamsListPage — usePageState integration (FE-40, FE-41, FE-47, FE-49
     );
   });
 
-  it("does not render the data table when access is denied", () => {
+  it("does not show ready content when access is denied", () => {
     usePageState.mockReturnValue({ kind: "denied", permission: "build:teams:view" });
     render(<TeamsListPage />);
     expect(screen.queryByTestId("data-table")).not.toBeInTheDocument();
     expect(screen.queryByTestId("page-state-ready")).not.toBeInTheDocument();
+  });
+
+  it("passes isEmpty: true to usePageState when the teams list is empty", () => {
+    useProjectTeams.mockReturnValue(EMPTY_TEAMS_RESULT);
+    render(<TeamsListPage />);
+    expect(usePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ isEmpty: true }),
+    );
+  });
+
+  it("passes isEmpty: false to usePageState when the teams list is non-empty", () => {
+    const teams = [
+      { id: 1, name: "Delta Force", key: "DF", memberCount: 2, icon: null, color: null, isPrivate: false },
+    ];
+    useProjectTeams.mockReturnValue({
+      ...EMPTY_TEAMS_RESULT,
+      data: { data: teams, pagination: { hasMore: false, nextCursor: null, limit: 50 } },
+    });
+    render(<TeamsListPage />);
+    expect(usePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ isEmpty: false }),
+    );
+  });
+
+  it("passes isLoading: true to usePageState when the hook reports loading", () => {
+    useProjectTeams.mockReturnValue({ ...EMPTY_TEAMS_RESULT, isLoading: true });
+    render(<TeamsListPage />);
+    expect(usePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ isLoading: true }),
+    );
+  });
+
+  it("passes isLoading: false to usePageState when the hook is not loading", () => {
+    useProjectTeams.mockReturnValue({ ...EMPTY_TEAMS_RESULT, isLoading: false });
+    render(<TeamsListPage />);
+    expect(usePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ isLoading: false }),
+    );
+  });
+
+  it("passes isError: true to usePageState when the hook reports an error", () => {
+    useProjectTeams.mockReturnValue({ ...EMPTY_TEAMS_RESULT, isError: true });
+    render(<TeamsListPage />);
+    expect(usePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ isError: true }),
+    );
+  });
+
+  it("passes isError: false to usePageState when the hook reports no error", () => {
+    useProjectTeams.mockReturnValue({ ...EMPTY_TEAMS_RESULT, isError: false });
+    render(<TeamsListPage />);
+    expect(usePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ isError: false }),
+    );
   });
 });
