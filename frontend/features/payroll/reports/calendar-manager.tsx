@@ -29,10 +29,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { formatShortDate } from "@/lib/date-utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   usePayrollCalendar,
   useGenerateCalendarMonth,
@@ -218,9 +220,13 @@ export function CalendarManager({ month }: CalendarManagerProps) {
   const [editingEvent, setEditingEvent] = useState<PayrollCalendarEvent | null>(null);
 
   const range = useMemo(() => getDateRange(month), [month]);
-  const { data: events = [], isLoading } = usePayrollCalendar(range);
+  const { data: events = [], isLoading, isError, error, refetch } = usePayrollCalendar(range);
   const generate = useGenerateCalendarMonth();
   const deleteEvent = useDeleteCalendarEvent();
+
+  function handleRetry() {
+    void refetch();
+  }
 
   function handleGenerate() {
     generate.mutate(
@@ -324,6 +330,13 @@ export function CalendarManager({ month }: CalendarManagerProps) {
             </div>
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState
+          compact
+          title="Couldn't load calendar events"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
       ) : events.length === 0 ? (
         <EmptyState
           compact
