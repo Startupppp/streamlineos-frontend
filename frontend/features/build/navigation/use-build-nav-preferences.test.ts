@@ -18,7 +18,7 @@ const SCOPE_ORG_B_USER_1 = "authenticated:org-b:user-1";
 
 function wrapWith(scope: string) {
   return function Wrapper({ children }: { children: ReactNode }) {
-    return createElement(OrgStorageScopeProvider, { scope }, children);
+    return createElement(OrgStorageScopeProvider, { scope, children });
   };
 }
 

@@ -17,10 +17,10 @@ jest.mock("next/dynamic", () => () => () => null);
 // The bar's only data dependencies. Stubbing them keeps the session and query
 // providers out of a test about chips and URL state.
 jest.mock("@/hooks/api/build/advanced", () => ({
-  useCycles: (...args: unknown[]) => mockUseCycles(...args),
+  useCycles: (...args: [number, Record<string, unknown>?]) => mockUseCycles(...args),
 }));
 jest.mock("@/hooks/api/build/projects", () => ({
-  useProjectLabels: (...args: unknown[]) => mockUseProjectLabels(...args),
+  useProjectLabels: (...args: [number?, Record<string, unknown>?]) => mockUseProjectLabels(...args),
 }));
 
 /**

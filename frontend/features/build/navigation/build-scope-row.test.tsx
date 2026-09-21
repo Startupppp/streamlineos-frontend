@@ -17,7 +17,15 @@ function makeScope(overrides: Partial<BuildScopeRef> = {}): BuildScopeRef {
   };
 }
 
-const DEFAULT_PROPS = {
+const DEFAULT_PROPS: {
+  scope: BuildScopeRef;
+  isCurrent: boolean;
+  isStarred: boolean;
+  isArchived: boolean;
+  settingsHref: string | null;
+  onSelect: jest.Mock;
+  onToggleStar: jest.Mock;
+} = {
   scope: makeScope(),
   isCurrent: false,
   isStarred: false,

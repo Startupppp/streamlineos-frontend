@@ -17,14 +17,16 @@ describe("project filter options", () => {
   });
 
   it("drops a filterStatus URL parameter naming a status the backend does not accept, because the value reaches the list request and a rejected one 400s the directory", () => {
-    expect(STATUS_OPTIONS.find((s) => s === "PLANNING")).toBeUndefined();
-    expect(STATUS_OPTIONS.find((s) => s === "'; DROP TABLE projects;--")).toBeUndefined();
-    expect(STATUS_OPTIONS.find((s) => s === "ACTIVE")).toBe("ACTIVE");
+    const statusOptions: readonly string[] = STATUS_OPTIONS;
+    expect(statusOptions.find((s) => s === "PLANNING")).toBeUndefined();
+    expect(statusOptions.find((s) => s === "'; DROP TABLE projects;--")).toBeUndefined();
+    expect(statusOptions.find((s) => s === "ACTIVE")).toBe("ACTIVE");
   });
 
   it("drops a filterHealth URL parameter outside the computed health values", () => {
-    expect(HEALTH_OPTIONS.find((h) => h === "healthy")).toBeUndefined();
-    expect(HEALTH_OPTIONS.find((h) => h === "at_risk")).toBe("at_risk");
+    const healthOptions: readonly string[] = HEALTH_OPTIONS;
+    expect(healthOptions.find((h) => h === "healthy")).toBeUndefined();
+    expect(healthOptions.find((h) => h === "at_risk")).toBe("at_risk");
   });
 
   it("labels every option it offers, so no chip renders its raw enum value", () => {

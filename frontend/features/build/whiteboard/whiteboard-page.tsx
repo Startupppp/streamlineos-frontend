@@ -343,7 +343,11 @@ export function WhiteboardPage({
             isViewMode={detail.access === "view"}
             canManage={detail.access === "manage"}
             isFullscreen={isFullscreen}
-            shareToken={detail.sharing?.shareToken ?? null}
+            shareToken={
+              detail.sharing?.visibility === "public"
+                ? detail.sharing.shareToken
+                : null
+            }
             onManualSave={manualSave}
             onToggleFullscreen={handleToggleFullscreen}
             onOpenShare={handleOpenShare}
@@ -490,9 +494,11 @@ export function WhiteboardPage({
         open={canManage && !!deleteTarget}
         onOpenChange={handleDeleteDialogOpenChange}
         title="Delete board?"
-        description={`“${deleteTarget?.name ?? ""}” and all of its content will be permanently deleted.`}
+        description={`"${deleteTarget?.name ?? ""}" and all of its content will be permanently deleted.`}
         confirmLabel="Delete"
         destructive
+        isPending={deleteBoard.isPending}
+        keepOpenOnConfirm
         onConfirm={handleConfirmDelete}
       />
     </PageWrapper>

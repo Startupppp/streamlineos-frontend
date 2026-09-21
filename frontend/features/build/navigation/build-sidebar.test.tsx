@@ -43,7 +43,7 @@ const mockUseBuildNavModel = useBuildNavModel as jest.MockedFunction<typeof useB
 const mockUseBuildNavView = useBuildNavView as jest.MockedFunction<typeof useBuildNavView>;
 const mockUseBuildScopeIdentity = useBuildScopeIdentity as jest.MockedFunction<typeof useBuildScopeIdentity>;
 const mockUseBuildScopeRecovery = useBuildScopeRecovery as jest.MockedFunction<typeof useBuildScopeRecovery>;
-const mockUseBuildNotificationUnreadCount = useBuildNotificationUnreadCount as jest.MockedFunction<typeof useBuildNotificationUnreadCount>;
+const mockUseBuildNotificationUnreadCount = useBuildNotificationUnreadCount as jest.Mock;
 
 const MOCK_ORG_REF: BuildScopeRef = {
   key: "organization",
