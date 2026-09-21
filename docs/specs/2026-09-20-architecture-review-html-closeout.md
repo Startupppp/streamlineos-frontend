@@ -1,14 +1,21 @@
 # Architecture reviews — what the six retired HTML reports still owe
 
-**Status (2026-09-21):** of the 15 items opened on 2026-09-20, **4 are closed in code**
-(2, 6, 10, 13), **3 proved obsolete on measurement** (1, 7, 11), **4 were corrected and
-deferred with a re-open threshold** (4, 8, 9, 12), **2 are blocked on a product decision
-and need an owner** (3, 15), **1 is real but blocked on a seam widening** (14), and **1 was
+**Status (2026-09-21, second pass — the owner ruled on every blocked item, so nothing here
+is waiting on a decision any more):** of the 15 items opened on 2026-09-20, **6 are closed
+in code** (2, 6, 10, 13, 15, and 14 for the site the review named), **4 proved obsolete or
+refuted on measurement** (1, 7, 11, 12), **3 were corrected and deferred with a re-open
+threshold** (4, 8, 9), **1 is closed in part with a re-filed successor** (3), and **1 was
 reverted as a duplicate** (5).
 
-Nine of the fifteen therefore did not survive contact with the source or the database.
-That is the point of the re-derivation discipline below, not a failure of it — but it does
-mean this document's *own* remaining claims deserve the same suspicion.
+Ten of the fifteen therefore did not survive contact with the source or the database —
+item 12 most sharply, where the seeded measurement showed the repair the review asked for
+would have made the query **284× more expensive**. That is the point of the re-derivation
+discipline below, not a failure of it, but it does mean this document's *own* remaining
+claims deserve the same suspicion.
+
+**Two successors were re-filed rather than left inside closed items**, because they are
+different problems from the ones raised: the `ticket_participants` redesign (from 12) and a
+directory-owned name-searchable query method for salary profiles (from 14).
 
 This file replaces the record that went missing when `.scratch/platform-phase-three/` was
 deleted.
@@ -224,14 +231,44 @@ Ordered most severe first. Each names the owning file and the smallest repair.
     seeded-environment figure. Per backend/CLAUDE.md §7 an `OR` between an indexed predicate
     and a semi-join defeats both — split into a `UNION` of independently-indexed branches
     with `count(*) OVER ()`.
-    **BLOCKED on a measurement environment, and deliberately not attempted blind.** That same
-    §7 entry says the inverse also holds — once the outer set is narrowed to one project, a
-    single pass with `EXISTS` is *cheaper* — and requires measuring both before choosing.
-    Production cannot supply the number; it holds no build data of consequence. This needs a
-    seeded environment with a realistic ticket/participant distribution, measured in
-    **buffers, not milliseconds**, as `streamline_app` with the tenant GUC set (the owner has
-    BYPASSRLS, so its plans hide exactly this problem). Rewriting blind risks trading a bad
-    plan for a worse one. The `ticket_participants` redesign remains the larger fix.
+    **MEASURED 2026-09-21, AND THE NAMED REPAIR IS REFUTED. Do not implement the UNION split.**
+    Seeded on the Aurora scratch database: 200,000 tickets (619 MB) across 5 projects, 228,000
+    `ticket_assignees` rows, 50 memberships, plus 20,000 tickets in a second tenant so RLS has
+    rows to exclude. `VACUUM ANALYZE`d, then measured as `streamline_app` with
+    `app.organization_id` set, `EXPLAIN (ANALYZE, BUFFERS)`, `LIMIT 26`. The actor's my-work set
+    is 7,429 of 200,000 tickets. Every rewrite was checked to return the **same page** as the
+    current query, not a cheaper different one.
+
+    | shape | org-wide buffers | project-narrowed buffers |
+    |---|---|---|
+    | **A — current OR** | **555** | **11,121** |
+    | B — UNION + `count(*) OVER ()` (the named repair) | 157,565 | 43,104 |
+    | D — bounded `UNION ALL`, per-branch `ORDER BY … LIMIT` | 24,035 | 779,195 |
+    | E — hoisted `IN` subquery, signature-preserving | 555 | 11,121 |
+    | C — pre-resolved membership id + plain `EXISTS` | 401 | 10,967 |
+
+    The UNION split is **284× worse** org-wide and 3.9× worse project-narrowed, and its bounded
+    form — the version that actually respects the `LIMIT` — is worse still, 70× on the
+    project-narrowed page. The reason is visible in the plan: the current OR streams
+    `idx_tickets_org_created_live` in `created_at` order and stops after 26 rows, while every
+    UNION form must produce all three branches before it can order and cut.
+
+    §7's premise does not even hold here: **`tickets.reporter_id` is `text` with no index at
+    all.** The only reporter index is `idx_tickets_org_reporter_membership` on
+    `reporter_membership_id`, a different column. Adding
+    `(org_id, reporter_id, created_at DESC, id) WHERE deleted_at IS NULL` was measured and
+    changed nothing for the winning shapes.
+
+    Variant C is the only improvement (−28% org-wide, −1.4% project-narrowed) and is **not
+    being taken**: it needs the actor's membership id, and `CurrentUserContext`
+    (`common/auth/backend-claims.ts:22-31`) does not carry one. Adding a field to that core
+    auth type to save 154 buffers on a 1.8 ms query is the wrong trade. Variant E, which
+    preserves `ticketScope(orgId, userId)`'s signature, buys exactly zero.
+
+    **Residual, re-filed rather than closed:** the project-narrowed page costs 11,121 buffers
+    and discards 40,000 rows by filter, and no rewrite of the predicate fixes that — the three
+    branches cannot share one index. That is the `ticket_participants` redesign the item
+    already names, and it is now the only live part of this finding.
 
 13. ~~**Invitation state machine has no owner**~~ — **CLOSED 2026-09-21 (`9cc0043f7`).**
     Premise confirmed: the PENDING predicate was restated at six places across
@@ -279,10 +316,28 @@ Ordered most severe first. Each names the owning file and the smallest repair.
       projection, *then* route the payee loader through the seam.
     - **The review missed a second site:** `payroll/runs/salary-profiles.repository.ts`
       has the same direct-import pattern. Fix both or neither.
-    Not attempted here deliberately: `person-seam.ts` is a shared seam (a reservation
-    surface under root §3), the caller is money-handling code, and collapsing its join into
-    a seam call risks trading one query for an N+1. This wants an owner, not an opportunistic
-    edit. Baseline at time of audit: payroll 130 suites / 1018 tests green, `check:cycles` clean.
+    **AUTHORIZED AND DONE 2026-09-21 for the site the review named; the second site is
+    re-classified, not skipped.**
+    - `person-seam.ts` now projects `workerNumber` from the `workers` join it was already
+      performing — one more projected column, no new join and no second round trip. The type
+      is derived from `workers.$inferSelect["workerNumber"]`, so it tracks the nullable column.
+    - `payroll/lib/payroll-run-payee.ts` routes through `resolvePeopleIdentities` and its direct
+      `workers` / `organizationPeople` imports are gone. **The N+1 risk that blocked this was
+      measured, not assumed:** subjects are collected across all keyset pages and resolved in
+      exactly one seam call. For N payees the run goes from `ceil(N/500) + 3` round trips to
+      `ceil(N/500) + 4` — one more per run, flat in N. A test pins it by name.
+    - **`payroll/runs/salary-profiles.repository.ts` is NOT the same violation and must not be
+      "fixed" the same way.** Verified at source: `profileSortName` is a SQL expression over
+      `organizationPeople.displayName / firstName / lastName / workEmail`, and it drives the
+      `ORDER BY`, the six search `ilike`s, **and the keyset cursor predicate**
+      `(profileSortName, id) > (?, ?)`. Those columns must be in the SQL, so
+      `resolvePeopleIdentities` — which resolves identities *after* the rows are chosen — cannot
+      replace them. Routing it through the seam would silently break search, sort and pagination
+      for worker-linked profiles. Re-filed: this needs a directory-owned query method that
+      exposes name-searchable, name-sortable results, or a product decision to drop worker-name
+      search and sort from that endpoint. It is not a seam widening.
+
+    Verified: 10 suites / 76 tests green across directory and payroll.
 
 15. **`team` DataScope silently degrades to `own`** — premise CONFIRMED, and one
     tempting repair has been tried and REJECTED. `access/apply-scope.ts:22-27` falls
@@ -304,11 +359,31 @@ Ordered most severe first. Each names the owning file and the smallest repair.
     own aim: `false` renders an empty list, which is exactly as silent to the user as
     the under-grant it replaces.
 
-    The honest repair is one of two product decisions, neither of them a code tweak:
-    materialise org-unit membership so `teamIds` can be supplied, or stop offering
-    `team` as a grantable scope until it exists. backend/CLAUDE.md §5 already says
-    `team` "ships only once materialised" — the defect is that the grant UI offers a
-    scope the query layer cannot honour.
+    **DECIDED AND CLOSED 2026-09-21: the offer is withdrawn.** Of the two product options —
+    materialise org-unit membership, or stop offering `team` until it exists — the owner chose
+    to stop offering it. backend/CLAUDE.md §5 already said `team` "ships only once
+    materialised"; the defect was that the offer shipped first.
+
+    Three changes, because the offer lived in three places:
+    - `permission-catalog-sync.service.ts` no longer emits a `team` row for a scopable
+      permission, and its local `SupportedScope` drops the now-dead member.
+    - the grant UI's `SCOPE_OPTIONS` (`frontend/features/module-access/components/page-action-picker-parts.tsx`)
+      offers `all` and `own` only. `parseScope` still *accepts* `team`, because an existing
+      grant may carry it.
+    - **migration 1131** — the sync service inserts with `onConflictDoNothing` and has no
+      delete branch, so stopping the emission would have left the rows standing. Measured
+      against production first: `permission_supported_scopes` held **57 live `team` rows**, and
+      `role_permission_grants` held **zero** `team` grants (27,688 `all`, 120 `own`);
+      `user_permission_grants` was empty. So this withdrew a real offer that nobody held.
+      Applied 2026-09-21; the 57 rows are gone, grants are unchanged, and `access_versions`
+      was bumped. The rollback was dry-run against production inside a discarded transaction
+      and restores exactly 57 rows — exact because the sync emitted `own` and `team` together,
+      so the surviving `own` rows name precisely the withdrawn keys. Precedent: 0670a.
+
+    `DataScope` still contains `team` and `broadest()` still ranks `none < own < team < all`,
+    both deliberately untouched — a pinning test now says so by name, so this change cannot be
+    mistaken later for permission to re-rank. `apply-scope.ts` is unchanged: its degrade is
+    what an existing `team` grant should keep getting, and production has none.
 
 **Not re-verified:** the knip housekeeping item (14 unused web files, `@reactour/tour`).
 Note that the 11 raw-SQL-managed schema files are *deliberately* unimported and are
