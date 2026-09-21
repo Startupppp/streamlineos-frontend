@@ -1,7 +1,7 @@
 import { STATE_COLORS, PRIORITY_COLORS } from "./project-charts";
 import type { ProjectAnalytics } from "@/types/projects";
 
-export const MUTED_FILL = "hsl(var(--muted-foreground))";
+export const MUTED_FILL = "var(--muted-foreground)";
 
 export function buildStateData(analytics: ProjectAnalytics | undefined) {
   if (!analytics?.stateDistribution) return [];
