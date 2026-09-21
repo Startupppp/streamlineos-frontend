@@ -16,6 +16,8 @@ import { useCrmOptions, resolveOption } from "@/hooks/api/crm/metadata";
 import { useLeadsFilters } from "@/hooks/common/use-leads-filters";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { useCan, useScope } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LeadsStatsBar } from "@/features/crm/leads/leads-stats-bar";
@@ -81,6 +83,7 @@ export default function LeadsPipelinePage() {
     data: board,
     isLoading: boardLoading,
     isError: boardError,
+    error: boardFetchError,
     refetch: refetchBoard,
   } = useLeadBoard();
   const { data: stats, isLoading: statsLoading, isError: statsError } = useLeadStats();
@@ -245,6 +248,22 @@ export default function LeadsPipelinePage() {
   const handleNextPage = useCallback(() => {
     if (nextCursor) handleNext(nextCursor);
   }, [nextCursor, handleNext]);
+
+  const pageState = usePageState({
+    permission: "crm:leads:view",
+    isLoading: boardLoading || statsLoading,
+    isError: boardError || statsError,
+    error: boardFetchError,
+  });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper title="Lead Pipeline" subtitle="Manage your leads">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetryBoard} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
 
   if (boardLoading || statsLoading) {
     return (

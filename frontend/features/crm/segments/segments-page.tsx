@@ -7,7 +7,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
@@ -22,6 +22,7 @@ import {
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
   useDeleteSegment,
@@ -65,7 +66,6 @@ import { SegmentSheet } from "./segment-sheet";
 const PAGE_SIZE = 25;
 
 export function SegmentsPage() {
-  const canView = useCan("crm:segments:view");
   const canManage = useCan("crm:segments:manage");
 
   const [page, setPage] = useState(1);
@@ -224,6 +224,27 @@ export function SegmentsPage() {
     />
   );
 
+  const pageState = usePageState({
+    permission: "crm:segments:view",
+    isLoading,
+    isError,
+    error,
+  });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper
+        title="Segments"
+        subtitle="Named criteria over your CRM records, re-evaluated on every read."
+        noInternalScroll
+        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+      >
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+
   return (
     <PageWrapper
       title="Segments"
@@ -254,16 +275,7 @@ export function SegmentsPage() {
       noInternalScroll
       className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
     >
-      {!canView ? (
-        <NoPermissionState permission="crm:segments:view" className="flex-1" />
-      ) : isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load segments"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
-      ) : isLoading ? (
+      {isLoading ? (
         <DataTableSkeleton
           rows={10}
           columns={layout.list.columns.length}

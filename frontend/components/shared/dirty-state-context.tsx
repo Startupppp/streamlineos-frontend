@@ -54,6 +54,7 @@ export function DirtyStateProvider({ children }: DirtyStateProviderProps) {
   const hasUnsavedWork = dirtyIds.size > 0;
   const { requestLeave, dialogProps } = useUnsavedChangesGuard({
     isDirty: hasUnsavedWork,
+    handleBrowserBack: true,
   });
 
   const value = useMemo(

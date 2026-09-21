@@ -70,7 +70,15 @@ jest.mock("@/hooks/api/access", () => {
     usePermissionGate: (permission: PermissionKey) =>
       permissionGate(permission, mockGranted.has(permission), true),
     useCan: (permission: PermissionKey) => mockGranted.has(permission),
-    useAccess: () => ({ data: { scopes: {}, isOrgOwner: false }, refetch: jest.fn() }),
+    useAccess: () => ({
+      data: {
+        modules: {},
+        isOrgOwner: false,
+        scopes: Object.fromEntries([...mockGranted].map((key) => [key, "all"])),
+      },
+      isLoading: false,
+      refetch: jest.fn(),
+    }),
   };
 });
 
@@ -302,7 +310,7 @@ describe("SegmentsPage", () => {
     renderPage();
 
     const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent(/couldn't load segments/i);
+    expect(alert).toHaveTextContent(/upstream is down/i);
     expect(screen.queryByText(/no segments yet/i)).not.toBeInTheDocument();
   });
 });
