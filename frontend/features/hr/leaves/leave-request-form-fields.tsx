@@ -25,12 +25,14 @@ import Link from "next/link";
 import { isWeekend } from "./leave-date-helpers";
 import { LeaveBalancePreview, LeaveLimitError } from "./leave-balance-preview";
 import type { LeaveFormValues } from "./leave-request-schema";
-import type { LeaveType, Approver, LeaveBalance } from "./components/leaves-shared";
+import type { LeaveType, LeaveBalance } from "./components/leaves-shared";
+import type { ApprovalRoute } from "@/hooks/api/hr/approval-route-schema";
+import { ApprovalRoutePanel } from "@/components/shared/approval-route-panel";
 
 interface LeaveRequestFormFieldsProps {
   form: UseFormReturn<LeaveFormValues>;
   leaveTypes: LeaveType[];
-  approvers: Approver[];
+  approvalRoute: ApprovalRoute | undefined;
   balances: LeaveBalance[];
   leaveStartBounds: { fromDate: Date; fromYear: number; toYear: number };
   leaveEndBounds: { fromDate?: Date; fromYear?: number; toYear?: number };
@@ -44,7 +46,7 @@ interface LeaveRequestFormFieldsProps {
 export function LeaveRequestFormFields({
   form,
   leaveTypes,
-  approvers,
+  approvalRoute,
   leaveStartBounds,
   leaveEndBounds,
   onStartDateChange,
@@ -247,26 +249,7 @@ export function LeaveRequestFormFields({
         )}
       />
 
-      <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
-          Approver
-        </p>
-        {approvers[0] ? (
-          <p className="mt-1 text-sm text-foreground">
-            {approvers[0].name ||
-              `${approvers[0].firstName || ""} ${approvers[0].lastName || ""}`.trim() ||
-              approvers[0].email}
-            <span className="ml-1 text-xs text-muted-foreground">
-              (assigned automatically)
-            </span>
-          </p>
-        ) : (
-          <p className="mt-1 text-xs leading-relaxed text-destructive">
-            No authorized approver is configured. Ask an organization
-            administrator to assign a leave approver before submitting.
-          </p>
-        )}
-      </div>
+      <ApprovalRoutePanel route={approvalRoute} isLoading={false} error={null} />
 
       <FormField
         control={form.control}

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { approvalRouteContract } from "@/hooks/api/hr/approval-route-schema";
 
 const successContract = z.object({ success: z.literal(true) });
 
@@ -126,6 +127,7 @@ export const leaveContextContract = z.object({
       image: z.string().nullable().optional(),
     }),
   ),
+  approvalRoute: approvalRouteContract,
 });
 
 export const leaveApprovalsContract = z.object({

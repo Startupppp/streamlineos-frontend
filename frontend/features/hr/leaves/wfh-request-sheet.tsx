@@ -1,13 +1,13 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
-import Link from "next/link";
-import { ArrowRight, UserX } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { addDays, startOfDay, format } from "date-fns";
 import { toast } from "sonner";
 import { useCreateWfhRequest } from "@/hooks/api/hr";
+import { useMyApprover } from "@/hooks/api/hr/approvers";
+import { ApprovalRoutePanel } from "@/components/shared/approval-route-panel";
 
 import {
   Form,
@@ -29,7 +29,6 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { wfhFormSchema, WFH_NOTES_MAX_LENGTH, type WfhFormValues } from "./wfh-request-schema";
-import type { Approver } from "@/features/hr/leaves/components/leaves-shared";
 
 const WFH_REASONS = [
   "Personal commitment",
@@ -46,15 +45,15 @@ const isSunday = (d: Date) => d.getDay() === 0;
 interface WfhRequestSheetProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  approvers: Approver[];
 }
 
 export function WfhRequestSheet({
   open,
   onOpenChange,
-  approvers,
 }: WfhRequestSheetProps) {
   const createWfhRequest = useCreateWfhRequest();
+  const { data: approvalRoute, isLoading: routeLoading, error: routeError } = useMyApprover("wfh", { enabled: open });
+  const approverAvailable = approvalRoute !== undefined && approvalRoute.rung !== null;
 
   const form = useForm<WfhFormValues>({
     resolver: zodResolver(wfhFormSchema),
@@ -62,7 +61,6 @@ export function WfhRequestSheet({
       date: format(addDays(new Date(), 1), "yyyy-MM-dd"),
       reason: "",
       notes: "",
-      approverId: "",
     },
   });
 
@@ -72,16 +70,9 @@ export function WfhRequestSheet({
         date: format(addDays(new Date(), 1), "yyyy-MM-dd"),
         reason: "",
         notes: "",
-        approverId: "",
       });
     }
   }, [open, form]);
-
-  useEffect(() => {
-    if (approvers.length === 1 && !form.getValues("approverId")) {
-      form.setValue("approverId", approvers[0].id);
-    }
-  }, [approvers, form]);
 
   const onSubmit = useCallback(
     (data: WfhFormValues) => {
@@ -89,7 +80,6 @@ export function WfhRequestSheet({
         {
           date: data.date,
           reason: `${data.reason}${data.notes ? ` — ${data.notes}` : ""}`,
-          approverId: data.approverId,
         },
         {
           onSuccess: () => {
@@ -98,7 +88,6 @@ export function WfhRequestSheet({
               date: format(addDays(new Date(), 1), "yyyy-MM-dd"),
               reason: "",
               notes: "",
-              approverId: "",
             });
             onOpenChange(false);
           },
@@ -118,8 +107,8 @@ export function WfhRequestSheet({
       title="Request Work From Home"
       description="Submit a WFH request for approval"
       onSubmit={form.handleSubmit(onSubmit)}
-      submitLabel={approvers.length === 0 ? "No approver available" : "Submit Request"}
-      submitDisabled={approvers.length === 0}
+      submitLabel={approverAvailable ? "Submit Request" : "No approver available"}
+      submitDisabled={!approverAvailable}
       isPending={createWfhRequest.isPending}
       isDirty={form.formState.isDirty}
       onDiscard={() => form.reset()}
@@ -175,55 +164,7 @@ export function WfhRequestSheet({
             )}
           />
 
-          {approvers.length === 0 && (
-            <div className="flex flex-col gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2.5">
-              <div className="flex items-center gap-2 text-xs font-semibold text-status-warning-ink">
-                <UserX className="h-3.5 w-3.5 shrink-0" />
-                Approver not configured
-              </div>
-              <p className="text-xs text-status-warning-ink">
-                WFH requests need an approver. Grant a teammate leave-approval access first.
-              </p>
-              <Link
-                href="/settings/roles"
-                className="inline-flex w-fit items-center gap-1 text-xs font-semibold text-status-warning-ink hover:underline"
-              >
-                Configure roles
-                <ArrowRight className="h-3 w-3" />
-              </Link>
-            </div>
-          )}
-
-          {approvers.length > 1 && (
-            <FormField
-              control={form.control}
-              name="approverId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                    Approver
-                  </FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="text-sm">
-                        <SelectValue placeholder="Select approver" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                      {approvers.map((u) => (
-                        <SelectItem key={u.id} value={u.id}>
-                          {u.name ||
-                            `${u.firstName || ""} ${u.lastName || ""}`.trim() ||
-                            u.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
+          <ApprovalRoutePanel route={approvalRoute} isLoading={routeLoading} error={routeError} />
 
           <FormField
             control={form.control}

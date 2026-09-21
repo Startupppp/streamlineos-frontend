@@ -287,7 +287,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 
 ### Attendance & Time
 - `/hr/attendance` · **HR** · hooks: `→ features/hr/attendance`
-- `/hr/leaves` · **HR** · hooks: `→ features/hr/leaves`
+- `/hr/leaves` · **HR** · hooks: `→ features/hr/leaves` (2026-09-21: the leave and WFH request sheets show `ApprovalRoutePanel` — who approves, why, and the SLA — from `GET /me/time-off`'s `approvalRoute` and `GET /me/approvers/wfh`; the WFH sheet no longer lets the employee pick an approver, the server routes it)
 - `/hr/leaves/analytics` · **HR** · hooks: `→ features/hr/leaves`
 - `/hr/leave-policies` · **HR** · hooks: `→ features/hr/leaves`
 - `/hr/holidays` · **HR** · hooks: `→ features/hr/holidays`
