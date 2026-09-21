@@ -33,7 +33,7 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 jest.mock("@animateicons/react/lucide", () => ({
-  EllipsisIcon: ({ ref: _ref, ...props }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
+  EllipsisIcon: (props: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
 }));
 
 jest.mock("next/link", () => ({
@@ -144,4 +144,25 @@ it("renders the upgrade path the backend sent with a 402 rather than a generic f
     "href",
     "/settings/billing",
   );
+});
+
+it("discloses the server's hard 100-row cap instead of presenting a truncated list as complete", () => {
+  const hundredIncidents = Array.from({ length: 100 }, (_, i) => ({
+    id: i + 1,
+    incidentNumber: i + 1,
+    title: `Incident ${i + 1}`,
+    severity: "low",
+    status: "detected",
+    ownerId: null,
+    detectedAt: null,
+  }));
+  mockUseIncidents.mockReturnValue(baseQuery({ data: hundredIncidents }));
+  render(<IncidentsPage projectId={1} />);
+  expect(screen.getByText(/most recent 100 incidents/i)).toBeInTheDocument();
+});
+
+it("does not show the cap disclosure when the list is well under the cap", () => {
+  mockUseIncidents.mockReturnValue(baseQuery({ data: [{ id: 1, incidentNumber: 1, title: "Incident 1", severity: "low", status: "detected", ownerId: null, detectedAt: null }] }));
+  render(<IncidentsPage projectId={1} />);
+  expect(screen.queryByText(/most recent 100 incidents/i)).not.toBeInTheDocument();
 });

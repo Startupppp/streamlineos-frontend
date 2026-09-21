@@ -10,16 +10,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useIncident, useDeleteIncident } from "@/hooks/api/build/incidents";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { IncidentSlaPanel } from "./incident-sla-panel";
 import { IncidentTimeline } from "./incident-timeline";
 import { IncidentSheet } from "./incident-sheet";
-import type { IncidentSeverity, IncidentStatus } from "@/types/projects";
 
 /**
  * Two ladders, and both lost their orange rung: `high` and `investigating` were
@@ -94,6 +94,14 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
   const deleteIncident = useDeleteIncident();
   const members = membersData?.data ?? [];
 
+  const pageState = usePageState({
+    permission: "build:incidents:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !incident,
+  });
+
   const handleOpenEdit = useCallback(() => setEditOpen(true), []);
   const handleOpenDelete = useCallback(() => setDeleteOpen(true), []);
   const handleDeleteDialogChange = useCallback((open: boolean) => setDeleteOpen(open), []);
@@ -115,50 +123,42 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
     );
   }, [deleteIncident, projectId, incidentId]);
 
-  if (isLoading) {
+  if (pageState.kind !== "ready") {
     return (
       <PageWrapper title="Incident" backHref={`/build/${projectId}/incidents`}>
-        <div className="flex min-h-0 flex-1 flex-col space-y-4">
-          <div className="flex gap-2">
-            <Skeleton className="h-5 w-20 rounded-full" />
-            <Skeleton className="h-5 w-24 rounded-full" />
-          </div>
-          <Skeleton className="h-24 w-full rounded-xl" />
-          <Skeleton className="h-40 w-full rounded-xl" />
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper title="Incident" backHref={`/build/${projectId}/incidents`}>
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load this incident"
-          description={getErrorMessage(error)}
+        <PageState
+          resolution={pageState}
+          loading={
+            <div className="flex min-h-0 flex-1 flex-col space-y-4">
+              <div className="flex gap-2">
+                <Skeleton className="h-5 w-20 rounded-full" />
+                <Skeleton className="h-5 w-24 rounded-full" />
+              </div>
+              <Skeleton className="h-24 w-full rounded-xl" />
+              <Skeleton className="h-40 w-full rounded-xl" />
+            </div>
+          }
+          empty={
+            <EmptyState
+              className="flex-1"
+              illustrationPreset="alert"
+              title="Incident not found"
+              description="This incident no longer exists, or it was deleted."
+              action={{
+                label: "Back to incidents",
+                href: `/build/${projectId}/incidents`,
+              }}
+            />
+          }
           onRetry={handleRetry}
-        />
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
   }
 
-  if (!incident) {
-    return (
-      <PageWrapper title="Incident" backHref={`/build/${projectId}/incidents`}>
-        <EmptyState
-          className="flex-1"
-          illustrationPreset="alert"
-          title="Incident not found"
-          description="This incident no longer exists, or it was deleted."
-          action={{
-            label: "Back to incidents",
-            href: `/build/${projectId}/incidents`,
-          }}
-        />
-      </PageWrapper>
-    );
-  }
+  if (!incident) return null;
 
   const owner = members.find((m) => m.userId === incident.ownerId);
 

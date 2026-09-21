@@ -106,7 +106,7 @@ boundaries, not write permission.
 | Packet | Owner/session | Root/frontend revision | Backend revision | Exact write set | Acquired | Expires | Status |
 |---|---|---|---|---|---|---|---|
 | `BLD-X-SB-ACTIONS-001` | cycle-14 agent CA | `e18077a30` | `374afd27a` | prod: none changed · test: `build-quick-create.test.tsx`, `build-more-tools-menu.test.tsx`, `use-build-nav-preferences.test.ts` | 2026-09-21T08:35Z | 2026-09-21T11:35Z | `INTEGRATED (cycle 14)` |
-| `BLD-X-FE-QUALITY-001b` | cycle-17 agent FA | `e18077a30` | `374afd27a` | prod: `features/build/incidents/incidents-page.tsx`, `incident-detail-page.tsx`, `incident-schema.ts`, `sla.ts` · test: `incidents-page.test.tsx` + one new | 2026-09-21T13:20Z | 2026-09-21T16:20Z | `RESERVED` |
+| `BLD-X-FE-QUALITY-001b` | cycle-17 agent FA | `e18077a30` | `374afd27a` | prod: `features/build/incidents/incidents-page.tsx`, `incident-detail-page.tsx`, `sla.ts` · test: `incidents-page.test.tsx`, new `incident-detail-page.test.tsx` | 2026-09-21T13:20Z | 2026-09-21T16:20Z | `INTEGRATED (cycle 17)` |
 | `BLD-X-FE-ORG-GOV-001a` | cycle-17 agent FB | `e18077a30` | `374afd27a` | prod: `features/build/goals/goals-page.tsx`, `goal-detail-page.tsx` · test: `goals-page.test.tsx`, `goal-detail-page.test.tsx` | 2026-09-21T13:20Z | 2026-09-21T16:20Z | `INTEGRATED (cycle 17)` |
 | `BLD-X-SB-LIFECYCLE-001` | cycle-16 agent EB | `e18077a30` | `374afd27a` | prod: `features/build/navigation/build-scope-recovery.tsx`, `use-build-scope-recovery.ts`, `lib/build/build-scope-fallback.ts` · test: `build-scope-recovery.test.tsx`, new `lib/build/build-scope-fallback.test.ts` | 2026-09-21T12:55Z | 2026-09-21T15:55Z | `INTEGRATED (cycle 16)` |
 | `BLD-X-FE-QUALITY-001a-ii` | cycle-16 agent EC | `e18077a30` | `374afd27a` | prod: `features/build/governance/risk-form-sheet.tsx`, `decision-form-sheet.tsx`, `types/projects/governance.ts` · test: new `governance-clear-optional-field.test.tsx` | 2026-09-21T12:55Z | 2026-09-21T15:55Z | `INTEGRATED (cycle 16)` |
@@ -1293,6 +1293,68 @@ one real defect fixed.
   confirm 2 of 8 fail because the controls render anyway, restore, re-run green.
   The corrected brief worked on first use.
 - Coordinator re-ran: **8 tests, 2 suites, exit 0**.
+
+**`BLD-X-FE-QUALITY-001b` — `INTEGRATED`. The most serious defect found in this
+programme so far: incident SLA compliance was systematically misreported in the
+favourable direction.**
+
+`sla.ts` before the fix:
+
+```ts
+responseBreached   = incident.respondedAt == null && new Date(incident.responseDueAt) < t;
+resolutionBreached = incident.resolvedAt  == null && new Date(incident.resolutionDueAt) < t;
+if (incident.resolvedAt != null) { label = "Met"; } else if (responseBreached) { … }
+```
+
+Two independent faults compounding:
+
+1. The `== null` conjunct meant that once an incident had been responded to or
+   resolved **at all**, its breach flag was permanently `false` **no matter how
+   late** the response or resolution was.
+2. `"Met"` was evaluated **before** either breach check, so **every resolved
+   incident reported "Met"** — including one resolved days past its deadline.
+
+Net effect: an incident answered or closed late reported as having **met** its
+SLA. For an incident-management surface this is worse than a blank field — it is
+a confident false statement about contractual compliance, and it fails silently
+in the direction nobody audits. Coordinator confirmed both faults against the
+pre-fix source via diff.
+
+Fixed: `isLate(dueAt, completedAt ?? now)` compares the deadline against the
+**actual** completion time when one exists and against `now` otherwise, is
+`NaN`-safe, and the label now resolves breaches before falling back to `"Met"`.
+The hinted NaN/timezone/division failure modes were checked and **refuted** —
+there is no percentage or division in the file, and wire dates are UTC
+`Z`-suffixed, so `new Date(iso)` is timezone-safe.
+
+Also in the same packet:
+
+- **H1/H2 — the incident detail page had no page state at all.** It hand-rolled
+  `isLoading` / `isError` / `!incident` branches, so a **denied** user was told
+  *"Incident not found — this incident no longer exists, or it was deleted"*,
+  and a 402 fell into a generic error with no upgrade path. `useIncident` is
+  `enabled: canView && …`, so a disabled query's `data: undefined` was
+  indistinguishable from a deleted record. Now routed through
+  `usePageState({ permission, isLoading, isError, error, isEmpty })` + `<PageState>`,
+  which resolves `denied` before `isEmpty`. `incidents-page.tsx` already did this
+  correctly — refuted there.
+- **H3 — the list is capped at 100 server-side with no cursor param in the DTO at
+  all**, and the table had no `pagination` prop; client-side search filtered over
+  that already-truncated window. Only a **disclosure banner** was added ("Showing
+  the most recent 100 incidents…"), which is a mitigation, not a fix. Real cursor
+  pagination needs the backend DTO, service and the `useIncidents` hook — filed
+  as a shared-contract request, correctly not attempted.
+- **H4 refuted with a useful distinction**: `incident-schema.ts` is the *form*
+  schema, not the response boundary, so drift there surfaces as a 400, not a
+  silent strip. The actual response contract does carry `z.string()` over a
+  pgEnum on **both** sides — the flagged anti-pattern in latent form, with no
+  active defect because the DB enum constrains the values.
+- Red/green proved by manual revert on all three files, no git. Coordinator
+  re-ran: **15 tests, 2 suites, exit 0**.
+- Disclosed residual: `incidents-page.tsx:326` retains an `isError ? <ErrorState/>`
+  branch inside the ready path that is provably unreachable, since `resolvePageState`
+  maps `isError` to a non-`ready` kind caught earlier. Left in place rather than
+  widening scope; flagged for cleanup.
 
 **⚠ Product defect found in passing — every goal in the product shows
 "Unassigned".** `goals.service.ts:223` (`list`) and `:344` (`getGoal`) both
