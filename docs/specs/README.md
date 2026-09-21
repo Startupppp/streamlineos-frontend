@@ -3,6 +3,14 @@
 Active module and platform specifications. Completed historical architecture
 candidate PRDs were removed; Git history remains their archive.
 
+## Start here
+
+- **[Session handoff — 2026-09-21](2026-09-21-session-handoff.md)** — environment traps,
+  what was done, and the gate rules that are not obvious. **Read before running anything;
+  `backend/.env` points at production.**
+- **[Open-items register](2026-09-21-open-items-register.md)** — all 48 unfinished items
+  across every active lane, grouped by what is blocking each one.
+
 ## HRMS + Payroll + WFH/WFO
 
 - [HRMS People execution ledger and PRD program](hrms-module/README.md)
