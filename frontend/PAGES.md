@@ -14,6 +14,8 @@
 
 **`portal` vs `client-portal` are deliberately two surfaces.** `(authenticated)/portal` is internal (session JWT, `useCan("build:portal:view")`); `(portal)/client-portal` is external (portal token, `portalApiClient`). The hook collision was resolved by renaming the external one to `useExternalPortalProjects`.
 
+**Sanitised HTML renders only after mount (2026-09-21).** `isomorphic-dompurify` is imported by exactly one module, `lib/sanitize-html.ts`, and that module is reached only through `useSanitizedHtml` / `SanitizedHtml` (a dynamic `import()` in an effect) or an event handler. Its node build constructs a jsdom window at import, and because pnpm nests `jsdom` under it Next cannot externalise it, so webpack bundled all of jsdom into a 5.8 MB server chunk whose `fs.readFileSync(__dirname + "/default-stylesheet.css")` threw ENOENT during SSR — the `Minified React error #419` the 2026-09-21 audit saw on Exit, Performance, Document Templates and Contingent Workforce (reproduced on 10 routes with `next start`). `lib/sanitize-html-import-boundary.test.ts` holds the line; `features/help-centre`'s server-side `sanitize-html` package is a different job (DOM-free, public SSR content) and stays.
+
 **Backend prefixes renamed under `/build` (2026-09-02).** `product-management/workspaces` → `build/workspaces`; the org-wide `whiteboards` hub → `build/whiteboards`. §8 puts every Build resource under `/build`, and a middleware or rate-limit tier keyed on `/build` silently missed the old hub.
 
 ---
@@ -50,7 +52,7 @@
 
 ## Mail
 
-- `/mail` · **Communications** · hooks: `→ feature/mail`
+- `/mail` · **Communications** · hooks: `→ feature/mail` — 2026-09-21: `MailHtmlViewer` sanitises through `useSanitizedHtml` with two module-level policies (remote images blocked / allowed) instead of adding and removing a DOMPurify hook per call; the body is empty until the sanitiser has run after mount (`mail-html-viewer.test.tsx` pins it)
 - `/inbox` · **Communications** · hooks: `→ feature/inbox`
 
 ---
@@ -236,7 +238,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/build/[projectId]/decisions` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/epics` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/feedbucket` · **Build** · hooks: `usePageState({permission,module})` + `PageWrapper state=`, `→ features/build/feedbucket` — the captured 402. **UN-RUN CHECK:** the browser proof (load as a member of an org with `feedbucket` disabled; expect the module name and an Enable path to `/settings/modules`, and NO upgrade link and NO "Try Again") was never executed — no booted stack. A passing typecheck is not proof of that journey.
-- `/build/[projectId]/feedbucket/[submissionId]` · **Build** · hooks: `→ features/feedbucket` — delete submission + per-media (screenshot/recording) delete, gated `feedbucket:submissions:delete`. Submission delete is SOFT (`deleted_at`, media kept); media delete is a real storage delete.
+- `/build/[projectId]/feedbucket/[submissionId]` · **Build** · hooks: `→ features/feedbucket` — delete submission + per-media (screenshot/recording) delete, gated `feedbucket:submissions:delete`. Submission delete is SOFT (`deleted_at`, media kept); media delete is a real storage delete. — 2026-09-21: the AI analysis description sanitises through `useSanitizedHtml` (was an inline `DOMPurify.sanitize` on `isomorphic-dompurify`)
 - `/build/[projectId]/forms` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/forms/[formId]` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/incidents` · **Build** · hooks: `→ features/build/project`
@@ -272,13 +274,13 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/dashboard` · **HR** · hooks: `→ features/hr/dashboard`
 
 ### Employees
-- `/hr/employees` · **HR** · hooks: `requirePermission("hr:employees:view")` (server), `usePageState` + `PageWrapper state=`, `→ features/hr/employees` — the duplicated loading-only `PageWrapper` early return is gone
-- `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees`
+- `/hr/employees` · **HR** · hooks: `requirePermission("hr:employees:view")` (server), `usePageState` + `PageWrapper state=`, `→ features/hr/employees` — the duplicated loading-only `PageWrapper` early return is gone — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
+- `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
 - `/hr/employees/find-expert` · **HR** · hooks: `→ features/hr/employees`
 - `/hr/employees/skills-matrix` · **HR** · hooks: `→ features/hr/employees`
 
 ### Onboarding
-- `/hr/onboarding` · **HR** · hooks: `→ features/hr/onboarding`
+- `/hr/onboarding` · **HR** · hooks: `→ features/hr/onboarding` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
 - `/hr/onboarding/[userId]` · **HR** · hooks: `→ features/hr/onboarding`
 - `/hr/onboarding/my-tasks` · **HR** · [RETIRED app/(authenticated)/hr/onboarding/my-tasks/page.tsx] — legacy redirect stub to `/me/onboarding` sitting behind the HR layout gate its own audience lacks; §8 forbids legacy redirects
 - `/hr/onboarding/probation` · **HR** · hooks: `requirePermission("hr:probation:view")`, `→ features/hr/onboarding`
@@ -289,7 +291,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/leaves/analytics` · **HR** · hooks: `→ features/hr/leaves`
 - `/hr/leave-policies` · **HR** · hooks: `→ features/hr/leaves`
 - `/hr/holidays` · **HR** · hooks: `→ features/hr/holidays`
-- `/hr/work-logs` · **HR** · hooks: `→ features/hr/work-logs`
+- `/hr/work-logs` · **HR** · hooks: `→ features/hr/work-logs` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
 - `/hr/overtime` · **HR** · hooks: `→ features/hr/overtime`
 - `/hr/shifts` · **HR** · hooks: `→ features/hr/shifts`
 - `/hr/rosters` · **HR** · hooks: `→ features/hr/rosters`
@@ -297,17 +299,17 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 
 ### Recruitment
 - `/hr/recruitment` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/jobs` · **HR** · hooks: `→ features/hr/recruitment`
+- `/hr/recruitment/jobs` · **HR** · hooks: `→ features/hr/recruitment` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
 - `/hr/recruitment/jobs/new` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/jobs/[jobId]/edit` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/candidates` · **HR** · hooks: `→ features/hr/recruitment`
+- `/hr/recruitment/candidates` · **HR** · hooks: `→ features/hr/recruitment` — 2026-09-21: in the reproduced React #419 set (jsdom chunk reached through a shared import); fixed by the sanitiser boundary. 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
 - `/hr/recruitment/candidates/[candidateId]` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/candidates/import` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/candidates/intake` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/pipeline` · **HR** · hooks: `→ features/hr/recruitment`
+- `/hr/recruitment/pipeline` · **HR** · hooks: `→ features/hr/recruitment` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
 - `/hr/recruitment/interviews` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/offers` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/offer-templates` · **HR** · hooks: `→ features/hr/recruitment`
+- `/hr/recruitment/offer-templates` · **HR** · hooks: `→ features/hr/recruitment` — 2026-09-21: the preview sheet renders `SanitizedHtml` instead of an inline `DOMPurify.sanitize`; this route was in the reproduced React #419 set
 - `/hr/recruitment/requisitions` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/talent-pools` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/headcount` · **HR** · hooks: `→ features/hr/recruitment`
@@ -333,7 +335,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/recruitment/settings` · **HR** · hooks: `→ features/hr/recruitment`
 
 ### Performance & Engagement
-- `/hr/performance` · **HR** · hooks: `→ features/hr/performance`
+- `/hr/performance` · **HR** · hooks: `→ features/hr/performance` — 2026-09-21: React #419 came in through `@/components/ai`'s barrel (`AiFailureBody` import pulled `AiInlinePreview` → `isomorphic-dompurify` → bundled jsdom across the client boundary); the preview now renders through `SanitizedHtml`. 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
 - `/hr/performance/analytics` · **HR** · hooks: `→ features/hr/performance`
 - `/hr/engagement` · **HR** · hooks: `→ features/hr/engagement`
 - `/hr/feedback` · **HR** · hooks: `→ features/hr/feedback`
@@ -352,16 +354,16 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/documents` · **HR** · hooks: `→ features/hr/documents`
 - `/hr/documents/editor/new` · **HR** · hooks: `→ features/hr/documents`
 - `/hr/documents/editor/[documentId]` · **HR** · hooks: `→ features/hr/documents`
-- `/hr/documents/templates` · **HR** · hooks: `→ features/hr/documents`
-- `/hr/documents/templates/new` · **HR** · hooks: `→ features/hr/documents`
-- `/hr/documents/templates/[templateId]/edit` · **HR** · hooks: `→ features/hr/documents`
-- `/hr/document-types` · **HR** · hooks: `→ features/hr/documents`
+- `/hr/documents/templates` · **HR** · hooks: `→ features/hr/documents` — 2026-09-21: React #419 — the row `PreviewDialog` sanitised at render with `isomorphic-dompurify`; it now renders `SanitizedHtml` (after-mount sanitiser), see Standing decisions
+- `/hr/documents/templates/new` · **HR** · hooks: `→ features/hr/documents` — 2026-09-21: `TemplatePreviewPanel` (shared with the edit route) renders `SanitizedHtml` instead of an inline `DOMPurify.sanitize`; the route no longer carries jsdom in its server chunk
+- `/hr/documents/templates/[templateId]/edit` · **HR** · hooks: `→ features/hr/documents` — 2026-09-21: same `TemplatePreviewPanel` change as `/new`
+- `/hr/document-types` · **HR** · hooks: `→ features/hr/documents` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
 - `/hr/document-review` · **HR** · hooks: `→ features/hr/documents`
 - `/hr/handbook` · **HR** · hooks: `→ features/hr/handbook`
 
 ### Org Chart & Structure
-- `/hr/org` · **HR** · hooks: `→ features/hr/org`
-- `/hr/org-chart` · **HR** · hooks: `→ features/hr/org-chart`
+- `/hr/org` · **HR** · hooks: `→ features/hr/org` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
+- `/hr/org-chart` · **HR** · hooks: `→ features/hr/org-chart` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
 
 ### Announcements & Communications
 - `/hr/announcements` · **HR** · hooks: `→ features/hr/announcements`
@@ -386,15 +388,15 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/accommodations` · **HR** · hooks: `→ features/hr/accommodations`
 
 ### Offboarding & Exit
-- `/hr/exit` · **HR** · hooks: `→ features/hr/exit`
+- `/hr/exit` · **HR** · hooks: `→ features/hr/exit` — 2026-09-21: React #419 on full loads was `isomorphic-dompurify` imported at module top (bundled jsdom threw ENOENT on the server); the resignation-letter popup now sanitises through a lazy `import("@/lib/sanitize-html")` inside the click handler, so nothing DOM-dependent is in the SSR graph
 - `/hr/termination` · **HR** · hooks: `→ features/hr/termination`
 - `/hr/fnf` · **HR** · hooks: `→ features/hr/fnf`
 
 ### Positions, Workforce, Delegations
-- `/hr/positions` · **HR** · hooks: `→ features/hr/positions`
+- `/hr/positions` · **HR** · hooks: `→ features/hr/positions` — 2026-09-21: the server page keeps its `PageWrapper` and wraps `PositionsPageContent` (a `useSearchParams` consumer) in `<Suspense fallback={<DataTableSkeleton rows={10} columns={6} />}>`, the same body its `loading.tsx` draws; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
 - `/hr/workforce` · **HR** · hooks: `→ features/hr/workforce`
 - `/hr/workforce-cost` · **HR** · hooks: `→ features/hr/workforce`
-- `/hr/contingent` · **HR** · hooks: `→ features/hr/contingent`
+- `/hr/contingent` · **HR** · hooks: `→ features/hr/contingent` — 2026-09-21: React #419 — the internship `CertificateViewer` sanitised at render with `isomorphic-dompurify`; it now renders `SanitizedHtml`
 - `/hr/delegations` · **HR** · hooks: `→ features/hr/delegations`
 
 ### HR Analytics, Helpdesk, Cases
@@ -428,7 +430,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/settings/workflows` · **HR** · hooks: `→ features/hr/settings`
 
 ### Access
-- `/hr/access` · **HR** · hooks: `→ features/hr`
+- `/hr/access` · **HR** · hooks: `→ features/hr` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
 
 ---
 
