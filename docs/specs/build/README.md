@@ -1460,7 +1460,7 @@ with straightforward frontend repairs. Dispatched as:
 |---|---|---|
 | `-001a-i` | Filtered-aggregate correctness + the `NaN`→"Critical" severity path + enum tightening. Frontend only, no API change | dispatched cycle 16 |
 | `-001a-ii` | The cannot-clear-an-optional-field bug: `...(v ? {x:v} : {})` in both form sheets, plus widening `Update*Input` to express `null` (the backend already accepts it via `.nullish()`) | queued, disjoint files |
-| `-001a-iii` | Pagination for the governance endpoints. **Blocked on a product/API decision** — offset with `count(*) OVER ()` vs cursor. Backend change, needs its own owner | blocked |
+| `-001a-iii` | Pagination for the governance endpoints. **Decision taken 2026-09-21: cursor/keyset**, so no longer blocked. Dispatched as `BLD-X-BE-GOV-CURSOR-001` | UNBLOCKED, dispatched cycle 19 |
 
 The deploy-ordering hazard (bare `.select()` expanding to columns migration
 `1128` has not applied) is a **backend** finding and stays with
@@ -1477,6 +1477,76 @@ Ticket/Cycle/BUG/portal canonicalization packets wait only for their named
 contract or migration child. Frontend packets wait only when they change the
 specific API response they consume. Snapshot completion is required for final
 coverage reconciliation, not as a prerequisite for unrelated implementation.
+
+### Cycles 18–19 outcomes — 2026-09-21
+
+Five packets integrated, each verified by the coordinator against source before
+the ledger moved.
+
+| Packet | Outcome |
+|---|---|
+| `BLD-X-SB-CAPABILITY-002` + `-SB-OFFLINE-001` | `INTEGRATED` — `9eb296b20` |
+| `BLD-X-FE-ISSUES-001` | `INTEGRATED` — `1aaacb145`, 4 of 5 hypotheses refuted with a full contract table |
+| `BLD-X-FE-QUALITY-001c` | `INTEGRATED` — `439efa24b` |
+| `BLD-X-FE-ORG-GOV-001b` | `INTEGRATED` — `d923cb023` |
+| `BLD-X-DB-BUILD-VERSION-001` | `APPLIED + VERIFIED` on production Aurora |
+
+**An absent capability key meant *enabled*.** `use-build-nav-model.ts:65` read
+`projectFeatures?.["clientPortal"] !== false`, so a project whose features map
+omits the key exposed the Client Portal. Now `=== true`. Wizard-created projects
+never relied on it — they always write an explicit `true`.
+
+**A failed access query left the sidebar loading forever.** `isAccessReady` was
+`access !== undefined` and never considered `isError`, so a genuine fetch failure
+with no cached data rendered the skeleton permanently, reaching no terminal state
+— not an error, not a denial. It now shows a retryable error, gated so cached
+data suppresses the branch during a failing background refetch.
+
+**The dirty-state ratchet could not see the surface it was meant to protect.**
+`build-dirty-state-coverage.test.ts` walked `.tsx` only and flagged a form owner
+by a `useForm` call *in that same file*, so ticket creation — which delegates to
+`use-create-ticket-form.ts` — was invisible on both counts and shipped with no
+registration at all. The walk now includes `.ts` and credits a hook owner when a
+`.tsx` consumer registers. Proven to bite: removing the registration fails the
+ratchet naming `tickets/use-create-ticket-form.ts`, where before it passed.
+
+**Silent truncation is a class, not an instance.** Four Build surfaces cap
+server-side behind a bare `z.array(...)` with no `hasMore`, so the client cannot
+tell a full page from a truncated one: QA test-cases and test-runs at 50
+(`test-management.service.ts:19`, `test-runs.service.ts:19`), approvals at 100
+(`approvals-read.service.ts:52,72`), plus governance and incidents. The backend
+already owns the machinery — `common/pagination/cursor.ts` and the worked example
+in `execution/timesheets-pagination.ts` — and `qa-response.schemas.ts:86-90`
+already ships the envelope shape `{ data, hasMore, nextCursor }`. This is wiring,
+not invention. `BLD-X-BE-GOV-CURSOR-001` takes governance first.
+
+**The AI assistant named a permission nobody can grant.** Its denied state told
+the user to request `projects:ai:use`, a key in neither catalog, while the gate
+above it read `build:ai:use`.
+
+**`/cycles` tightening is authored but PARKED, not shipped.** The backend now
+requires `build:sprints:view`, matching its sibling iteration endpoints, and the
+nav catalog, route-access registry, hook gate and both cycles pages follow. It is
+uncommitted because `route-access-keys.test.ts` compares the frontend registry
+against the backend's `x-permission` in the generated `contracts/openapi.json`,
+which still carries `build:view`. Regenerating needs a full backend boot; the
+generator loads `.env`, which points at production, so it must be run with
+placeholder credentials while no agent holds the machine. **Impact when it lands:
+`digital_marketing` loses Cycles** — it holds `build:view` but not
+`build:sprints:view` (`role-templates-build.constants.ts:40`), and never had
+sprint access, so this is the intended alignment rather than a regression.
+
+**Deleting `/sprints` is deferred for the same reason.** The route is 3 files but
+the feature behind it is 17, and `frontend/CLAUDE.md` cites
+`sprints/create-sprint-dialog.tsx` as the canonical `EntityFormSheet` example.
+Only the route page imports the feature; the two other `sprints` references are
+`hooks/api/build/sprints`, which must stay. Proof requires knip plus a real
+`next build`, not grep — both coordinator-only.
+
+**Two gates are red from another session's committed work, not ours.**
+`denial-is-not-emptiness` reports 16 `hr`/`inventory` mismatches from `9366c1705`,
+and `features/accounting/parties/__tests__/customer-detail-ap9.test.tsx` fails
+from `872c34d85`. Both paths are untouched by this lane and were left alone.
 
 ## Completed Setup Packets
 
