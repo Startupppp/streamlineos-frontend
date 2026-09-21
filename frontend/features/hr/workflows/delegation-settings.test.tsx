@@ -20,10 +20,10 @@ beforeEach(() => {
   myDelegations.mockReturnValue({ data: [], isLoading: false });
 });
 
-describe("the My Delegations dialog", () => {
+describe("the My delegations dialog", () => {
   it("opens instead of throwing the Radix empty-value error that broke the Approvals page", () => {
     expect(() => render(<DelegationSettings open onOpenChange={noop} />)).not.toThrow();
-    expect(screen.getByText("My Delegations")).toBeInTheDocument();
+    expect(screen.getByText("My delegations")).toBeInTheDocument();
   });
 
   it("offers the all-types choice through a non-empty sentinel Radix will accept", () => {

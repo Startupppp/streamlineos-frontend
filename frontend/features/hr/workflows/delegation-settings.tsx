@@ -76,14 +76,14 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-base font-semibold">My Delegations</DialogTitle>
+          <DialogTitle className="text-base font-semibold">My delegations</DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="max-h-64 pr-2">
           {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
           {isError && (
             <div className="text-sm text-status-danger-ink">
-              <p className="font-medium">Couldn't load delegations</p>
+              <p className="font-medium">Couldn&apos;t load delegations</p>
               <p className="text-xs mt-1">{getErrorMessage(error)}</p>
               <button
                 onClick={() => void refetch()}

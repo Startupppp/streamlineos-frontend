@@ -254,11 +254,11 @@ export function HrPoliciesPage() {
               isPending={seed.isPending}
               onClick={handleSeedDefaults}
             >
-              Seed Defaults
+              Add starter policies
             </LoadingButton>
             <Button size="sm" className="text-xs gap-1" onClick={handleOpenCreate}>
               <Plus className="h-3.5 w-3.5" />
-              New Policy
+              Create policy
             </Button>
           </div>
         ) : undefined
@@ -317,7 +317,7 @@ export function HrPoliciesPage() {
             onClearFilters={handleClearFilters}
             action={
               canManage && !filtersActive
-                ? { label: "New Policy", onClick: handleOpenCreate }
+                ? { label: "Create policy", onClick: handleOpenCreate }
                 : undefined
             }
           />

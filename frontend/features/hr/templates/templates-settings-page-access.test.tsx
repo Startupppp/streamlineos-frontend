@@ -139,17 +139,17 @@ describe("TemplatesSettingsPage — access is three-valued, not a boolean", () =
     expect(screen.getByRole("heading", { name: /hr templates/i })).toBeInTheDocument();
   });
 
-  it("hides the New Template button when hr:templates:manage is not granted", () => {
+  it("hides the Create template button when hr:templates:manage is not granted", () => {
     render(<TemplatesSettingsPage />);
 
-    expect(screen.queryByText(/new template/i)).toBeNull();
+    expect(screen.queryByText(/create template/i)).toBeNull();
   });
 
-  it("shows the New Template button when hr:templates:manage is granted", () => {
+  it("shows the Create template button when hr:templates:manage is granted", () => {
     mockUseCan.mockImplementation((key: string) => key === "hr:templates:manage");
 
     render(<TemplatesSettingsPage />);
 
-    expect(screen.getByText(/new template/i)).toBeInTheDocument();
+    expect(screen.getByText(/create template/i)).toBeInTheDocument();
   });
 });

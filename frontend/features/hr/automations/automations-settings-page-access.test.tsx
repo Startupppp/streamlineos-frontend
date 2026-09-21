@@ -179,17 +179,17 @@ describe("AutomationsSettingsPage — access is three-valued, not a boolean", ()
     expect(screen.getByRole("heading", { name: /hr automations/i })).toBeInTheDocument();
   });
 
-  it("hides the New Rule button when hr:automations:manage is not granted", () => {
+  it("hides the Create automation button when hr:automations:manage is not granted", () => {
     render(<AutomationsSettingsPage />);
 
-    expect(screen.queryByText(/new rule/i)).toBeNull();
+    expect(screen.queryByText(/create automation/i)).toBeNull();
   });
 
-  it("shows the New Rule button only when hr:automations:manage is granted", () => {
+  it("shows the Create automation button only when hr:automations:manage is granted", () => {
     mockUseCan.mockImplementation((key: string) => key === "hr:automations:manage");
 
     render(<AutomationsSettingsPage />);
 
-    expect(screen.getByText(/new rule/i)).toBeInTheDocument();
+    expect(screen.getByText(/create automation/i)).toBeInTheDocument();
   });
 });

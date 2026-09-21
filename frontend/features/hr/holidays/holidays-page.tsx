@@ -167,7 +167,7 @@ export function HolidaysPage() {
           </Tabs>
           {canManage && (
             <AnimatedIconButton icon={PlusIcon} iconSize={14} onClick={handleCreateClick} size="sm">
-              {" Add Holiday"}
+              {" Add holiday"}
             </AnimatedIconButton>
           )}
         </div>

@@ -68,7 +68,7 @@ export function ListView({ holidays, canManage, onEdit, onDelete, onAdd, yearFil
           description={search ? "No results match your filters." : undefined}
           filtersActive={!!search}
           onClearFilters={handleClearSearch}
-          action={canManage && !search ? { label: "Add Holiday", onClick: onAdd } : undefined}
+          action={canManage && !search ? { label: "Add holiday", onClick: onAdd } : undefined}
           compact
           className="rounded-lg border border-border bg-muted/20 py-10"
         />

@@ -110,7 +110,7 @@ export function AddDeviceSheet({ open, onOpenChange, device }: Props) {
           : "Connect a new fingerprint or face-recognition device"
       }
       onSubmit={form.handleSubmit(onSubmit)}
-      submitLabel={isEdit ? "Save Changes" : "Add Device"}
+      submitLabel={isEdit ? "Save changes" : "Register device"}
       isPending={createDevice.isPending || updateDevice.isPending}
     >
       <Form {...form}>

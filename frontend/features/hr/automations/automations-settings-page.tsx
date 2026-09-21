@@ -118,7 +118,7 @@ export function AutomationsSettingsPage() {
       actions={
         canManage ? (
           <AnimatedIconButton icon={PlusIcon} size="sm" iconSize={16} onClick={handleOpenCreate}>
-            {" New Rule"}
+            {" Create automation"}
           </AnimatedIconButton>
         ) : undefined
       }
@@ -167,7 +167,7 @@ export function AutomationsSettingsPage() {
             illustrationPreset="automations"
             title="No HR automation rules yet"
             description="Create a rule to automatically trigger actions on HR events like onboarding, leave, or resignation."
-            action={{ label: "New Rule", onClick: handleOpenCreate }}
+            action={{ label: "Create automation", onClick: handleOpenCreate }}
             className="flex-1"
           />
         ) : (

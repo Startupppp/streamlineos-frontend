@@ -120,7 +120,7 @@ export function PolicyVersionsPage() {
             onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
           />
           <Button size="sm" className="text-xs" onClick={handleSearch}>
-            Load
+            View history
           </Button>
         </div>
 
