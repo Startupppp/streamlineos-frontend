@@ -273,7 +273,7 @@ export function PollsTab() {
             className="gap-1.5"
             onClick={() => setSheetOpen(true)}
           >
-            New Poll
+            Create poll
           </AnimatedIconButton>
         </div>
       )}

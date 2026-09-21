@@ -398,8 +398,8 @@ export function HrEngagementPage() {
 
   return (
     <PageWrapper
-      title="Employee Engagement"
-      subtitle="Recognition, mood, communities, and culture"
+      title="Polls & engagement"
+      subtitle="Recognition, mood check-ins, polls, communities, and campaigns"
     >
       <PageState resolution={pageState} loading={null} className="flex-1">
         <div className="flex flex-1 min-h-0 flex-col gap-4">

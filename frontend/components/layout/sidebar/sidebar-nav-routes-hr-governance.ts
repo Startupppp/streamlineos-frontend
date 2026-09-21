@@ -53,7 +53,7 @@ export const HR_GOVERNANCE_ROUTES: NavRoute[] = [
             requiredPermission: "hr:helpdesk:view",
           },
           {
-            label: "Engagement",
+            label: "Polls & engagement",
             icon: Sparkles,
             href: "/hr/engagement",
             requiredPermission: "hr:engagement:view",
