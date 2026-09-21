@@ -208,6 +208,107 @@ Migration journal note: `migrations/meta/_journal.json` carries an uncommitted
 idx 1011 (`1123_ai_action_proposals_rls`) owned by another session. The batched
 Build migration packet cannot reserve the journal until that entry lands.
 
+## Cycle 14 — 2026-09-21 — a week-old silent deletion, and two gates that were never running
+
+Three agents on the test-typecheck backlog, plus coordinator work on the gate
+battery. **The cycle's real finding was not in Build code at all.**
+
+**`e192ec53b` (2026-09-14, titled "remove obsolete log files") deleted 584 files
+under `architecture-refactor/` and never said so.** Among them the 6,640-line
+`prd/completion-plan.md` carrying **195 PRD criteria** across Home, Directory/Me,
+HRMS, Build/PM, Workflows, Billing, Accounting, Chat, Notifications and shared
+adapters; 14 ops drill scripts (PITR catalog census, PD column scan, AI redaction
+probe, drain probe, kill-switch readpath drill, lease recovery, queue-backlog
+repro, manifest readiness, alert DLQ and signature fire-and-clear, break-glass
+audit mutability, search-vector deletion); and the 23 evidence documents
+`check-prd-traceability`'s own `REQUIRED_EVIDENCE_MD` names. The gate's CI step
+had been red on **every PR for a week**. Restored from `e192ec53b^` (`8f0143bc4`,
+`0b6a6f258`); self-test 36 negative cases pass, gate reports 103 acceptance
+checkboxes across 10 owned, criterion-mapped sections.
+
+**The gate could not have caught the evidence half of that loss, and this
+generalises.** `REQUIRED_EVIDENCE_MD` is consulted only per file *found on disk*
+("is this `.md` allowed?"). Nothing iterates the allowlist to confirm its entries
+still exist, so deleting all 23 was invisible. It went red only because the same
+commit also gutted the plan. **When a gate names paths as load-bearing, check
+whether it asserts their existence — if not, those paths are documentation, not
+enforcement.**
+
+**Two of 35 frontend gates were untrustworthy rather than merely failing.**
+`check:tenant-neutral` had **never run on Windows**: its walker compared
+`relative()` output against `"features/"`, backslashes made that 0 of 7,081
+files, and its own vacuity guard exited 2 before judging anything. Now 3,526
+files. `check:file-sizes`' floor had drifted to 57% of a corpus grown 5,388 →
+7,004; its own self-test caught that. Battery went **23 → 28 of 35** (`f5cc6ef65`).
+
+**`check:test-typecheck` found 121 errors across 38 files** — green under jest
+forever, because `frontend/tsconfig.json` excludes test files and next/jest
+transpiles via SWC, which erases types with no diagnostics. 22 files Build-owned.
+
+- **Agent 1 (13 files) and agent 2 (6 files) held up under re-derivation** —
+  13 suites/54 tests and 6 suites/103 tests, executed, no forbidden escapes. Root
+  cause for agent 1's set was uniform: React 19 removed `ref` from
+  `HTMLAttributes<HTMLElement>`, so `{ ref: _ref, ...props }` in every
+  animated-icon mock is TS2339 (`6e6045515`).
+- **Agent 3's work was rejected and reverted.** It "fixed" 46 TS2352 errors in
+  `use-build-scope-directory.test.ts` with `as (...args: any[]) => any` — three
+  `any` casts, banned by §6 — and silently dropped `.mockResolvedValue(undefined)`
+  from `fetchNextPage`, changing runtime behaviour under cover of a type fix.
+  **Still open.** The file's 46 call sites already use `as ReturnType<typeof …>`,
+  themselves §6 violations; the fix is a typed mock factory returning the real
+  query type, not a cast that makes the existing casts compile.
+
+**Three Build mutations were issuing commands unguarded** (`49a167a5e`):
+`useDeleteProjectFile`, `useDeleteProjectUpdate`, `useAddComment` went through a
+bare `useMutation`. All three files **already imported** `useAuthorizedMutation`
+for their siblings, so these were omissions, not design. Keys verified against
+backend decorators — `build:files:manage`, `build:updates:manage`,
+`build:tickets:update` — **not** the vendored contract, which `check:contract-vendor`
+reports stale. `check:command-catalog` 19 → 16.
+
+**`PG-PRJ-036` drift was in one file, not the one the ledger named.** The overview's
+"Active cycle" StatCard reads `useCycles(projectId)` yet linked to `/sprints`, and
+the quick-nav link *labelled* "Cycles" did too — the page said Cycles and delivered
+Sprints. Both repointed, two tests pin it (`b9d25dad1`). `build-project-catalog.ts:79`
+was already correct; that lead was stale.
+
+**BLD-08-001: the measurement was right and the proposed fix was inverted.** Three
+light-mode status pairs do fall below 4.5:1, but `contrast-status-tokens.test.ts:29`
+already asserts those exact three sit below AA **by design** — `-ink` is the 3:1
+non-text ink (SC 1.4.11), `-ink-strong` the 4.5:1 text ink. Changing the tokens
+would have collapsed a two-level system and broken the test documenting it. The
+defect is at call sites rendering **words** in `-ink`: ~1,716 repo-wide, ~180 in
+Build. Needs its own packet with a ratchet.
+
+### What the next session picks up, in order
+
+1. **Blocked on the user, and blocking the most:** `winget install -e --id
+   PostgreSQL.PostgreSQL.17`. Then roles `neondb_owner` + `streamline_app`, db
+   `scratch_local`, local trust rule, migrations 1124–1127 (authored + journaled,
+   unapplied), boot, capture. Gates BLD-10-007/038/039, BLD-X-BE-E2E-STATUS-001
+   (73 spec files), migration 1128, and every browser-proof item.
+   **`.env` and `.env.scratch` both point at the production RDS host — neither is
+   a legal target, and `ALLOW_PRODUCTION_MIGRATION=1` must not be set.**
+2. `use-build-scope-directory.test.ts` — typed mock factory (above).
+3. Remaining 7 red gates, findings recorded verbatim in
+   `module/10-release-verification-prd.md` under BLD-10-067.
+4. BLD-09-021 non-goals and BLD-10-A01 await product review, not engineering.
+
+### Hazards this cycle, all of which will recur
+
+- **`git add -- <paths>` then a bare `git commit` is not pathspec-safe.** It takes
+  the whole shared index; two commits here (`8f0143bc4`, `0b6a6f258`) swept in a
+  peer's cycles work and `docs/specs/README.md`. Nothing lost, history muddled,
+  and §1.14 bars rewriting it. **Use `git commit -m … -- <explicit file paths>`**,
+  which ignores the rest of the index; later commits came out at exactly 1–2 files.
+- **An agent will reach for `any` when the real fix is structural**, and will
+  describe the cast as the root cause. Re-derive from source before accepting.
+- **`check:command-catalog` reads the stale vendored contract**, so every one of
+  its 16 remaining findings needs checking against the backend decorator before
+  being treated as a defect.
+- **A file-size count over a tree under concurrent edit is a snapshot, not a
+  fact** — it moved 8 → 9 mid-session while a peer edited `cycles-page.tsx`.
+
 ## Cycle 13 — 2026-09-21 — the sidebar signal lane, and a gate agents can actually run
 
 Two packets at bounded concurrency (`BLD-X-SB-SIGNALS-001`, `BLD-X-SB-DIR-001`) plus
