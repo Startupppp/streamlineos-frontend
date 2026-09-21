@@ -1,6 +1,7 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { useCan } from "@/hooks/api/access";
+import { useRouter, usePathname } from "next/navigation";
 import { CommandPaletteDialogBody } from "../command-palette-dialog";
 
 jest.mock("@/hooks/api/access", () => ({
@@ -37,8 +38,8 @@ jest.mock("@/components/command-palette", () => ({
 }));
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
-  usePathname: () => "/",
+  useRouter: jest.fn(),
+  usePathname: jest.fn(),
 }));
 
 jest.mock("../sidebar/sidebar-nav-items", () => ({
@@ -72,6 +73,8 @@ jest.mock("lucide-react", () => {
 describe("CommandPaletteDialogBody — Create ticket permission gate", () => {
   beforeEach(() => {
     (useCan as jest.Mock).mockReturnValue(false);
+    (useRouter as jest.Mock).mockReturnValue({ push: jest.fn() });
+    (usePathname as jest.Mock).mockReturnValue("/");
   });
 
   afterEach(() => {
@@ -91,5 +94,35 @@ describe("CommandPaletteDialogBody — Create ticket permission gate", () => {
     render(<CommandPaletteDialogBody />);
     expect(screen.getByText("All Projects")).toBeInTheDocument();
     expect(screen.queryByText("Create ticket")).not.toBeInTheDocument();
+  });
+});
+
+describe("CommandPaletteDialogBody — project-scoped commands", () => {
+  let mockPush: jest.Mock;
+
+  beforeEach(() => {
+    mockPush = jest.fn();
+    (useCan as jest.MockedFunction<typeof useCan>).mockReturnValue(false);
+    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
+    (usePathname as jest.Mock).mockReturnValue("/build/42");
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("renders all five project-scoped command labels on a project page", () => {
+    render(<CommandPaletteDialogBody />);
+    expect(screen.getByText("Board")).toBeInTheDocument();
+    expect(screen.getByText("Backlog")).toBeInTheDocument();
+    expect(screen.getByText("Cycles")).toBeInTheDocument();
+    expect(screen.getByText("My Tickets")).toBeInTheDocument();
+    expect(screen.getByText("Analytics")).toBeInTheDocument();
+  });
+
+  it("pushes /build/42/backlog when Backlog is selected", () => {
+    render(<CommandPaletteDialogBody />);
+    fireEvent.click(screen.getByText("Backlog"));
+    expect(mockPush).toHaveBeenCalledWith("/build/42/backlog");
   });
 });

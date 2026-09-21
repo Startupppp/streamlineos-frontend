@@ -1,6 +1,15 @@
 "use client";
 
-import { useMemo } from "react";
+import { type ComponentType, useMemo } from "react";
+import {
+  Plus,
+  Kanban,
+  ListTodo,
+  RefreshCw,
+  Star,
+  BarChart2,
+  LayoutDashboard,
+} from "lucide-react";
 import { useCan } from "@/hooks/api/access";
 
 export interface CommandPaletteCommand {
@@ -9,6 +18,7 @@ export interface CommandPaletteCommand {
   group: string;
   keywords: string[];
   shortcut?: string;
+  icon: ComponentType<{ className?: string }>;
   isAvailable: boolean;
   execute(): void | Promise<void>;
 }
@@ -32,6 +42,7 @@ export function useCommandRegistry({
         group: "actions",
         keywords: ["create", "ticket", "issue"],
         shortcut: "C",
+        icon: Plus,
         isAvailable: canCreateTicket,
         execute: handleCreateTicket,
       },
@@ -41,6 +52,7 @@ export function useCommandRegistry({
         group: "actions",
         keywords: ["project", "Board"],
         shortcut: "G B",
+        icon: Kanban,
         isAvailable: projectId !== null,
         execute: () => {
           if (projectId !== null) handleSelect(`/build/${projectId}`);
@@ -51,6 +63,7 @@ export function useCommandRegistry({
         label: "Backlog",
         group: "actions",
         keywords: ["project", "Backlog"],
+        icon: ListTodo,
         isAvailable: projectId !== null,
         execute: () => {
           if (projectId !== null) handleSelect(`/build/${projectId}/backlog`);
@@ -61,6 +74,7 @@ export function useCommandRegistry({
         label: "Cycles",
         group: "actions",
         keywords: ["project", "Cycles"],
+        icon: RefreshCw,
         isAvailable: projectId !== null,
         execute: () => {
           if (projectId !== null) handleSelect(`/build/${projectId}/cycles`);
@@ -72,6 +86,7 @@ export function useCommandRegistry({
         group: "actions",
         keywords: ["project", "My", "Tickets"],
         shortcut: "G I",
+        icon: Star,
         isAvailable: projectId !== null,
         execute: () => {
           if (projectId !== null)
@@ -83,6 +98,7 @@ export function useCommandRegistry({
         label: "Analytics",
         group: "actions",
         keywords: ["project", "Analytics"],
+        icon: BarChart2,
         isAvailable: projectId !== null,
         execute: () => {
           if (projectId !== null)
@@ -94,6 +110,7 @@ export function useCommandRegistry({
         label: "All Projects",
         group: "navigation",
         keywords: ["all", "projects", "overview"],
+        icon: LayoutDashboard,
         isAvailable: true,
         execute: () => handleSelect("/build"),
       },
@@ -102,6 +119,7 @@ export function useCommandRegistry({
         label: "My Work",
         group: "navigation",
         keywords: ["my", "work", "tickets", "assigned"],
+        icon: Star,
         isAvailable: true,
         execute: () => handleSelect("/build/my-work"),
       },

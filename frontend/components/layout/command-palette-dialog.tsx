@@ -12,13 +12,6 @@ import {
   Search,
   Loader2,
   ArrowRight,
-  Plus,
-  LayoutDashboard,
-  Kanban,
-  ListTodo,
-  RefreshCw,
-  BarChart2,
-  Star,
 } from "lucide-react";
 import {
   CommandDialog,
@@ -77,16 +70,6 @@ const ENTITY_LABELS: Record<EntityType, string> = {
   ticket: "Tickets",
 };
 
-const COMMAND_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  "create-ticket": Plus,
-  "project-board": Kanban,
-  "project-backlog": ListTodo,
-  "project-cycles": RefreshCw,
-  "project-my-tickets": Star,
-  "project-analytics": BarChart2,
-  "nav-all-projects": LayoutDashboard,
-  "nav-my-work": Star,
-};
 
 function ItemIcon({
   icon: Icon,
@@ -380,7 +363,7 @@ export function CommandPaletteDialogBody() {
                       onSelect={cmd.execute}
                       className={COMMAND_ITEM_CLASS}
                     >
-                      <ItemIcon icon={COMMAND_ICONS[cmd.id] ?? Plus} />
+                      <ItemIcon icon={cmd.icon} />
                       <span className="flex-1 text-sm text-foreground">
                         {cmd.label}
                       </span>
@@ -396,22 +379,26 @@ export function CommandPaletteDialogBody() {
               </>
             )}
 
-            <CommandGroup heading="Navigation" className={COMMAND_GROUP_CLASS}>
-              {navCommands.map((cmd) => (
-                <CommandItem
-                  key={cmd.id}
-                  value={cmd.keywords.join(" ")}
-                  onSelect={cmd.execute}
-                  className={COMMAND_ITEM_CLASS}
-                >
-                  <ItemIcon icon={COMMAND_ICONS[cmd.id] ?? LayoutDashboard} />
-                  <span className="flex-1 text-sm text-foreground">
-                    {cmd.label}
-                  </span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-            <CommandSeparator className="my-1" />
+            {navCommands.length > 0 && (
+              <>
+                <CommandGroup heading="Navigation" className={COMMAND_GROUP_CLASS}>
+                  {navCommands.map((cmd) => (
+                    <CommandItem
+                      key={cmd.id}
+                      value={cmd.keywords.join(" ")}
+                      onSelect={cmd.execute}
+                      className={COMMAND_ITEM_CLASS}
+                    >
+                      <ItemIcon icon={cmd.icon} />
+                      <span className="flex-1 text-sm text-foreground">
+                        {cmd.label}
+                      </span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+                <CommandSeparator className="my-1" />
+              </>
+            )}
 
             <div className="px-2 pb-1 pt-2">
               <p className="text-micro font-semibold uppercase tracking-widest text-muted-foreground">
