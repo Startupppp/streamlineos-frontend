@@ -373,6 +373,7 @@ export function ApprovalDetailSheet({
         confirmLabel="Approve"
         onConfirm={handleApprove}
         isPending={approveMutation.isPending}
+        keepOpenOnConfirm
       />
     </>
   );
