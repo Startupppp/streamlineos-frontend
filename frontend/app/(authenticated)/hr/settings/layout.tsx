@@ -32,7 +32,6 @@ const TABS: {
   advanced?: boolean;
 }[] = [
   { label: "Overview", href: "/hr/settings", permission: SETTINGS_OVERVIEW_PERMISSIONS },
-  { label: "Company", href: "/hr/settings/company", permission: "settings:organization:manage" },
   { label: "Policies", href: "/hr/settings/policies", permission: "hr:policies:view" },
   { label: "Workflows", href: "/hr/settings/workflows", permission: "hr:workflows:view", advanced: true },
   { label: "Automations", href: "/hr/settings/automations", permission: "hr:automations:view", advanced: true },
@@ -102,7 +101,7 @@ export default function HrSettingsLayout({
                 className={cn(
                   "inline-flex h-7 shrink-0 items-center rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors",
                   isActive
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-muted text-foreground"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >

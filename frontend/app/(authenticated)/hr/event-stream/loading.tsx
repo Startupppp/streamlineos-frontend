@@ -6,7 +6,7 @@ import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 export default function HrEventStreamLoading() {
   return (
     <PageWrapper
-      title="HR Event Stream"
+      title="HR audit log"
       subtitle="Immutable append-only log of all HR domain events"
       filters={
         <div className={FILTER_TOOLBAR_ROW}>

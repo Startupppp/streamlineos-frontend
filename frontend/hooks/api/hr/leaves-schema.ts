@@ -188,9 +188,6 @@ export const hrHolidaysListContract = z.array(hrHolidayRowSchema);
 
 export type HrHolidayRow = z.infer<typeof hrHolidayRowSchema>;
 
-export const addHolidayContract = successContract;
-export const deleteHolidayContract = z.void();
-export const updateHolidayContract = successContract;
 
 export const leaveAnalyticsContract = z.object({
   year: z.number().int(),

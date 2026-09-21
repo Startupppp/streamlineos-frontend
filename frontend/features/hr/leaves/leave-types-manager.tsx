@@ -194,7 +194,7 @@ export function LeaveTypesManager({ canManage }: { canManage: boolean }) {
             )}
             <Button size="sm" variant="outline" className="gap-1.5" onClick={handleOpenCreate}>
               <PlusIcon size={14} />
-              Add type
+              Add leave type
             </Button>
           </div>
         )}

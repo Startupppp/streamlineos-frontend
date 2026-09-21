@@ -40,7 +40,7 @@ export function BiometricPage() {
         canManage ? (
           <Button onClick={handleOpen}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Device
+            Register device
           </Button>
         ) : undefined
       }

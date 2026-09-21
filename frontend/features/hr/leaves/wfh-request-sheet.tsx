@@ -104,10 +104,10 @@ export function WfhRequestSheet({
     <HrSheet
       open={open}
       onOpenChange={onOpenChange}
-      title="Request Work From Home"
+      title="Request work from home"
       description="Submit a WFH request for approval"
       onSubmit={form.handleSubmit(onSubmit)}
-      submitLabel={approverAvailable ? "Submit Request" : "No approver available"}
+      submitLabel={approverAvailable ? "Submit WFH request" : "No approver available"}
       submitDisabled={!approverAvailable}
       isPending={createWfhRequest.isPending}
       isDirty={form.formState.isDirty}

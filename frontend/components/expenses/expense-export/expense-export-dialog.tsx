@@ -56,16 +56,18 @@ async function emailExpenseReport(
   }
 }
 
-export interface ExpenseExportDialogProps {
+export type ExpenseExportDialogProps = {
   filters: ExpenseFilters;
-  trigger?: React.ReactNode;
-}
+} & (
+  | { trigger?: React.ReactNode; open?: never; onOpenChange?: never }
+  | { trigger?: never; open: boolean; onOpenChange: (open: boolean) => void }
+);
 
-export function ExpenseExportDialog({
-  filters,
-  trigger,
-}: ExpenseExportDialogProps) {
-  const [open, setOpen] = useState(false);
+export function ExpenseExportDialog(props: ExpenseExportDialogProps) {
+  const { filters } = props;
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = props.open ?? uncontrolledOpen;
+  const setOpen = props.onOpenChange ?? setUncontrolledOpen;
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailTarget, setEmailTarget] = useState<ExpenseReportEmailTarget>("BOTH");
@@ -221,14 +223,16 @@ export function ExpenseExportDialog({
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-        <SheetTrigger asChild>
-          {trigger ?? (
-            <Button variant="outline" className="gap-2">
-              <Download className="h-4 w-4" />
-              Export
-            </Button>
-          )}
-        </SheetTrigger>
+        {props.open === undefined ? (
+          <SheetTrigger asChild>
+            {props.trigger ?? (
+              <Button variant="outline" className="gap-2">
+                <Download className="h-4 w-4" />
+                Export
+              </Button>
+            )}
+          </SheetTrigger>
+        ) : null}
         <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-lg">
           <SheetHeader className="shrink-0 gap-1 border-b px-6 py-4 text-left">
             <SheetTitle className="flex items-center gap-2 text-xl font-semibold">

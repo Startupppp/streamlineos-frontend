@@ -49,8 +49,6 @@ export const humanResourcesQueryKeys = {
     orgChart: () => [...base, "hr", "orgChart"] as const,
     wfhRequests: () => [...base, "hr", "wfhRequests"] as const,
     pendingWfhRequests: () => [...base, "hr", "pendingWfhRequests"] as const,
-    holidaysYear: (year: number) =>
-      [...base, "hr", "holidaysYear", year] as const,
     holidaysCalendar: (params: { year: number; month: number }) =>
       [...base, "hr", "holidaysCalendar", params] as const,
     monthlyAttendance: (params: {
@@ -148,13 +146,8 @@ export const humanResourcesQueryKeys = {
     ) => [...base, "hr", orgId, userId, accessVersion, "leavesMyRequests", "pages"] as const,
     leaveAnalytics: (year: number) =>
       [...base, "hr", "leaveAnalytics", year] as const,
-    dashboardMetrics: () => [...base, "hr", "dashboard", "metrics"] as const,
-    leaveCalendar: (month: number, year: number) =>
-      [...base, "hr", "leaveCalendar", month, year] as const,
     headcount: (groupBy: string) =>
       [...base, "hr", "headcount", groupBy] as const,
-    dashboardOnboardingStatus: () =>
-      [...base, "hr", "dashboard", "onboardingStatus"] as const,
     directory: () => [...base, "hr", "directory"] as const,
     onboardingAll: [...base, "hr", "onboarding"] as const,
     onboardingStatus: () => [...base, "hr", "onboarding", "status"] as const,

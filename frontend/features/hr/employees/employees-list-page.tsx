@@ -291,7 +291,7 @@ export function EmployeesListPage() {
 
   return (
     <PageWrapper
-      title="Employee Directory"
+      title="Employee directory"
       subtitle={
         isFetching && !isLoading
           ? "Updating…"
@@ -333,7 +333,7 @@ export function EmployeesListPage() {
               <Link href="/hr/onboarding">
                 <UserPlus className="h-3.5 w-3.5" />
                 <span className="sm:hidden">Add</span>
-                <span className="hidden sm:inline">Add Employee</span>
+                <span className="hidden sm:inline">Add employee</span>
               </Link>
             </Button>
           )}
@@ -382,7 +382,7 @@ export function EmployeesListPage() {
                 }
                 filtersActive={hasFilters}
                 onClearFilters={clearFilters}
-                action={!hasFilters && canOnboard ? { label: "Add Employee", href: "/hr/onboarding" } : undefined}
+                action={!hasFilters && canOnboard ? { label: "Add employee", href: "/hr/onboarding" } : undefined}
                 className={PAGE_BODY_EMPTY_CLASS}
               />
             ) : view === "grid" ? (

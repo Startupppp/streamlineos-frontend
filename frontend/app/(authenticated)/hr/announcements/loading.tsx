@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function AnnouncementsLoading() {
   return (
     <PageWrapper
-      title="Announcements"
+      title="Company announcements"
       subtitle="Stay updated with company news and updates"
       actions={<Skeleton className="h-9 w-[140px] rounded-md" />}
     >

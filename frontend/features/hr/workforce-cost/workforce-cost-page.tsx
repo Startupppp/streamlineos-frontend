@@ -38,10 +38,11 @@ export function WorkforceCostPage() {
   function handleRetrySummary() { void refetchSummary(); }
   function handleRetryDept() { void refetchDept(); }
   function handleRetryLoc() { void refetchLoc(); }
+  function handleUpdateView() { setPeriodKey(periodInput); }
 
   return (
     <PageWrapper
-      title="Workforce Costing"
+      title="Workforce costing"
       subtitle="Real-time cost breakdown by department and location"
     >
       <PageState resolution={pageState} loading={null} onRetry={handleRetrySummary} className="flex-1">
@@ -75,8 +76,8 @@ export function WorkforceCostPage() {
             value={periodInput}
             onChange={(e) => setPeriodInput(e.target.value)}
           />
-          <Button variant="outline" size="sm" onClick={() => setPeriodKey(periodInput)}>
-            Apply
+          <Button variant="outline" size="sm" onClick={handleUpdateView}>
+            Update view
           </Button>
         </div>
 

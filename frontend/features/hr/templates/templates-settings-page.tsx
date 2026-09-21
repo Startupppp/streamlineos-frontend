@@ -200,16 +200,16 @@ export function TemplatesSettingsPage() {
               variant="outline"
               size="sm"
               isPending={seedDefaults.isPending}
-              loadingText="Seeding..."
+              loadingText="Adding…"
               onClick={handleSeed}
               className="gap-1.5"
             >
               <Database className="h-3.5 w-3.5" />
-              Seed Defaults
+              Add starter templates
             </LoadingButton>
             <Button size="sm" className="gap-1.5" onClick={handleOpenCreate}>
               <Plus className="h-3.5 w-3.5" />
-              New Template
+              Create template
             </Button>
           </div>
           ) : undefined

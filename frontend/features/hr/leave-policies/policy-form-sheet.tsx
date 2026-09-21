@@ -255,7 +255,7 @@ export function PolicyFormSheet({
                               isPending={createLeaveType.isPending}
                               onClick={handleCreateLeaveType}
                             >
-                              Add type
+                              Add leave type
                             </LoadingButton>
                           </div>
                         </div>

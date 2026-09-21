@@ -96,7 +96,7 @@ export function LeavePoliciesPage() {
             iconSize={16}
             onClick={handleCreateClick}
           >
-            {" New Policy"}
+            {" Create leave policy"}
           </AnimatedIconButton>
         ) : undefined
       }

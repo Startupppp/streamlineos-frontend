@@ -29,7 +29,7 @@ export const HR_GOVERNANCE_ROUTES: NavRoute[] = [
         ],
       },
 {
-        label: "People Ops",
+        label: "HR operations",
         icon: UserCheck,
         href: "/hr/cases",
         requiredPermission: "hr:cases:view",
@@ -111,7 +111,7 @@ export const HR_GOVERNANCE_ROUTES: NavRoute[] = [
         ],
       },
 {
-        label: "Governance",
+        label: "Access & governance",
         icon: ShieldCheck,
         href: "/hr/identity",
         requiredPermission: "hr:identity:view",
@@ -129,13 +129,13 @@ export const HR_GOVERNANCE_ROUTES: NavRoute[] = [
             requiredPermission: "hr:workflows:manage",
           },
           {
-            label: "Simulator",
+            label: "Policy simulator",
             icon: Sparkles,
             href: "/hr/simulator",
             requiredPermission: "hr:policies:manage",
           },
           {
-            label: "Event Stream",
+            label: "HR audit log",
             icon: TrendingUp,
             href: "/hr/event-stream",
             requiredPermission: "hr:eventstream:view",
@@ -163,13 +163,13 @@ export const HR_GOVERNANCE_ROUTES: NavRoute[] = [
         ],
       },
 {
-        label: "HR Analytics",
+        label: "People analytics",
         icon: BarChart3,
         href: "/hr/analytics",
         requiredPermission: "hr:analytics:read",
       },
 {
-        label: "Access",
+        label: "HR access",
         icon: ShieldCheck,
         href: "/hr/access",
         requiredPermission: "hr:access:view",

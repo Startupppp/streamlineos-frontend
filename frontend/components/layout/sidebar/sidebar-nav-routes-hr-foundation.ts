@@ -14,19 +14,13 @@ export const HR_FOUNDATION_ROUTES: NavRoute[] = [
         ],
       },
 {
-        label: "Dashboard",
-        icon: BarChart3,
-        href: "/hr/dashboard",
-        requiredPermission: "hr:analytics:read",
-      },
-{
-        label: "Approvals Inbox",
+        label: "Approvals",
         icon: ClipboardCheck,
         href: "/hr/approvals",
         requiredPermission: "hr:workflows:approve",
       },
 {
-        label: "Employees",
+        label: "People",
         icon: Users,
         href: "/hr/employees",
         requiredPermission: "hr:employees:view",
@@ -146,7 +140,7 @@ export const HR_FOUNDATION_ROUTES: NavRoute[] = [
             requiredPermission: "self:attendance",
           },
           {
-            label: "Comp-Off",
+            label: "Comp-off",
             icon: RefreshCcw,
             href: "/hr/comp-off",
             requiredPermission: "hr:leaves:view",
