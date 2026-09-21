@@ -7,6 +7,7 @@ import { PageState } from "@/components/shared/page-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { MonthPicker } from "@/features/payroll/shared/month-picker";
 import { formatMonth } from "@/features/payroll/shared/payroll-format";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -122,7 +123,11 @@ export function PayrollReadinessPage() {
             <section className="rounded-xl border border-border bg-card p-4 space-y-3" aria-label="Payroll exports">
               <h3 className="text-sm font-semibold text-foreground">Exports covering this month</h3>
               {data.exports.length === 0 ? (
-                <p className="text-dense text-muted-foreground">No approved hours have been exported for this month yet.</p>
+                <EmptyState
+                  compact
+                  title="No exports yet"
+                  description="No approved hours have been exported for this month yet."
+                />
               ) : (
                 <DataTable data={data.exports} columns={EXPORT_COLUMNS} getRowKey={(row) => row.id} />
               )}
