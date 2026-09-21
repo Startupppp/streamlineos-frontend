@@ -7,7 +7,7 @@ import { addDays, startOfDay, format } from "date-fns";
 import { toast } from "sonner";
 import { useCreateWfhRequest } from "@/hooks/api/hr";
 import { useMyApprover } from "@/hooks/api/hr/approvers";
-import { ApprovalRoutePanel } from "@/components/shared/approval-route-panel";
+import { ApprovalRoutePanel, summarizeApprovalRoute } from "@/components/shared/approval-route-panel";
 
 import {
   Form,
@@ -164,7 +164,7 @@ export function WfhRequestSheet({
             )}
           />
 
-          <ApprovalRoutePanel route={approvalRoute} isLoading={routeLoading} error={routeError} />
+          <ApprovalRoutePanel route={approvalRoute && summarizeApprovalRoute(approvalRoute)} isLoading={routeLoading} error={routeError} />
 
           <FormField
             control={form.control}

@@ -6,7 +6,7 @@ export { LoadingState } from "./loading-state";
 export { ErrorState } from "./error-state";
 export { NoPermissionState } from "./no-permission-state";
 export { PageState } from "./page-state";
-export { ApprovalRoutePanel } from "./approval-route-panel";
+export { ApprovalRoutePanel, summarizeApprovalRoute } from "./approval-route-panel";
 export { EntityFormSheet } from "./entity-form-sheet";
 export { EntityFormDialog } from "./entity-form-dialog";
 export { PresenceDot, AvatarWithPresence } from "./presence-dot";

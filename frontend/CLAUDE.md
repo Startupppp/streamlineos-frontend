@@ -380,7 +380,7 @@ If it is here, do not reimplement it. **Adding a shared component means adding a
 | Unsaved-work guard | `DirtyStateProvider`, `useRegisterDirtyState`, `useHasUnsavedWork`, `useNavigationLeave` — `components/shared/dirty-state-context.tsx` (any module, not Build-only; `useNavigationLeave` guards navigation — `useRequestLeave` is HR's leave-request mutation and is a different thing) |
 | Async button · animated icon | `LoadingButton` — `components/ui/loading-button.tsx` · `AnimatedIconButton` — `animated-icon-button.tsx` · `useAnimatedIcon` — `hooks/common/use-animated-icon.ts` |
 | States | `EmptyState` — `components/ui/empty-state.tsx` · `ErrorState`, `LoadingState`, `AccessDenied`, `NoPermissionState` — `components/shared` |
-| Approval routing | `ApprovalRoutePanel` — `components/shared/approval-route-panel.tsx` (who approves a request, why, SLA and escalation; fed by `useMyApprover(kind)` in `hooks/api/hr/approvers.ts` or a page contract's `approvalRoute`) |
+| Approval routing | `ApprovalRoutePanel` — `components/shared/approval-route-panel.tsx` (who approves a request, why, SLA and escalation; takes an `ApprovalRouteSummary` — `summarizeApprovalRoute` for HR's `useMyApprover(kind)` / page `approvalRoute`, `summarizeTimesheetApprover` in `features/timesheets/approval-route-summary.ts` for `usePeriodApproverPreview`) |
 | Mobile overlay · badges | `ResponsivePopover`, `Drawer` — `components/ui/` · `Badge`, `SemanticBadge`, `StatusBadge`, `StatusMapBadge` — `components/ui/` |
 | Pickers | `PhoneInput` · `DatePicker`, `DateRangePicker` · `Combobox`, `UserCombobox` — `components/ui/` |
 | Board skeletons | `KanbanBoardSkeleton`, `KanbanColumnSkeleton` — `components/ui/kanban-skeleton.tsx` |

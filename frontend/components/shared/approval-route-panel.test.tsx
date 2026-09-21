@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { ApiError } from "@/lib/api-client";
-import { ApprovalRoutePanel } from "./approval-route-panel";
+import { ApprovalRoutePanel, summarizeApprovalRoute } from "./approval-route-panel";
 import type { ApprovalRoute } from "@/hooks/api/hr/approval-route-schema";
 
 function route(overrides: Partial<ApprovalRoute> = {}): ApprovalRoute {
@@ -25,7 +25,7 @@ function route(overrides: Partial<ApprovalRoute> = {}): ApprovalRoute {
 
 describe("ApprovalRoutePanel tells the employee who approves and why", () => {
   it("names the reporting manager, the reason, the SLA and where it escalates", () => {
-    render(<ApprovalRoutePanel route={route()} isLoading={false} error={null} />);
+    render(<ApprovalRoutePanel route={summarizeApprovalRoute(route())} isLoading={false} error={null} />);
 
     expect(screen.getByText("Jane Doe")).toBeInTheDocument();
     expect(screen.getByText("Engineering manager")).toBeInTheDocument();
@@ -36,14 +36,14 @@ describe("ApprovalRoutePanel tells the employee who approves and why", () => {
   it("names the queue and its size when no manager in the chain can act", () => {
     render(
       <ApprovalRoutePanel
-        route={route({
+        route={summarizeApprovalRoute(route({
           rung: "queue",
           assignedTo: null,
           approver: null,
           escalation: null,
           queue: { permission: "hr:leaves:approve", label: "HR approvals queue", memberCount: 3, members: [] },
           explanation: "Routed to the HR approvals queue (3 approvers) because reporting manager: no reporting manager is on record.",
-        })}
+        }))}
         isLoading={false}
         error={null}
       />,
@@ -56,7 +56,7 @@ describe("ApprovalRoutePanel tells the employee who approves and why", () => {
   it("warns, rather than reading as empty, when nobody can own the request", () => {
     render(
       <ApprovalRoutePanel
-        route={route({ rung: null, assignedTo: null, approver: null, escalation: null, explanation: "Nobody can approve this leave request." })}
+        route={summarizeApprovalRoute(route({ rung: null, assignedTo: null, approver: null, escalation: null, explanation: "Nobody can approve this leave request." }))}
         isLoading={false}
         error={null}
       />,
