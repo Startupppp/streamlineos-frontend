@@ -40,18 +40,18 @@ const manifestProductKeys = new Set(
 );
 
 export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
-  { key: "home", label: "Home", href: resolveProductHref("home"), icon: LayoutDashboard },
-  { key: "crm", label: "CRM", href: resolveProductHref("crm"), icon: Handshake },
-  { key: "hrms", label: "HRMS", href: resolveProductHref("hrms"), icon: Users },
-  { key: "build", label: "Build", href: resolveProductHref("build"), icon: Briefcase },
-  { key: "timesheets", label: "Timesheets", href: resolveProductHref("timesheets"), icon: Timer },
-  { key: "inventory", label: "Inventory", href: resolveProductHref("inventory"), icon: Package },
-  { key: "finance", label: "Finance", href: resolveProductHref("finance"), icon: Calculator },
-  { key: "helpdesk", label: "Helpdesk", href: resolveProductHref("helpdesk"), icon: LifeBuoy },
-  { key: "documents", label: "Documents", href: resolveProductHref("documents"), icon: Library },
-  { key: "surveys", label: "Surveys", href: resolveProductHref("surveys"), icon: ClipboardList },
+  { key: "home", label: "Home OS", href: resolveProductHref("home"), icon: LayoutDashboard },
+  { key: "crm", label: "CRM OS", href: resolveProductHref("crm"), icon: Handshake },
+  { key: "hrms", label: "HRMS OS", href: resolveProductHref("hrms"), icon: Users },
+  { key: "build", label: "Build OS", href: resolveProductHref("build"), icon: Briefcase },
+  { key: "timesheets", label: "Timesheets OS", href: resolveProductHref("timesheets"), icon: Timer },
+  { key: "inventory", label: "Inventory OS", href: resolveProductHref("inventory"), icon: Package },
+  { key: "finance", label: "Finance OS", href: resolveProductHref("finance"), icon: Calculator },
+  { key: "helpdesk", label: "Helpdesk OS", href: resolveProductHref("helpdesk"), icon: LifeBuoy },
+  { key: "documents", label: "Documents OS", href: resolveProductHref("documents"), icon: Library },
+  { key: "surveys", label: "Surveys OS", href: resolveProductHref("surveys"), icon: ClipboardList },
   { key: "administration", label: "Administration", href: resolveProductHref("administration"), icon: Building2 },
-  { key: "payroll", label: "Payroll", href: resolveProductHref("payroll"), icon: IndianRupee },
+  { key: "payroll", label: "Payroll OS", href: resolveProductHref("payroll"), icon: IndianRupee },
   { key: "sign", label: "SignOS", href: resolveProductHref("sign"), icon: PenTool },
 ];
 
