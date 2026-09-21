@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
@@ -11,7 +11,8 @@ import {
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
@@ -25,6 +26,7 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   useBankStatement,
   useBankStatements,
@@ -41,7 +43,6 @@ import { UnreconciledSplitView } from "./unreconciled-split-view";
 const LINES_PAGE_SIZE = 25;
 
 export function ReconciliationPage() {
-  const canRead = useCan("accounting:banking:read");
   const canReconcile = useCan("accounting:banking:reconcile");
 
   const { getParam, setParams, page, setPage } = useUrlListState();
@@ -63,6 +64,14 @@ export function ReconciliationPage() {
   });
   const unmatchLine = useUnmatchStatementLine();
   const markReconciled = useMarkStatementReconciled();
+
+  const pageState = usePageState({
+    permission: "accounting:banking:read",
+    isLoading: statementsQuery.isLoading,
+    isError: statementsQuery.isError,
+    error: statementsQuery.error,
+  });
+  const handleRetry = useCallback(() => { void statementsQuery.refetch(); }, [statementsQuery]);
 
   const unmatchedIds = useMemo(
     () => new Set((proofQuery.data?.unmatchedStatementLines ?? []).map((line) => line.id)),
@@ -89,13 +98,14 @@ export function ReconciliationPage() {
     });
   }
 
-  if (!canRead) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper title="Is this money actually there?">
-        <NoPermissionState permission="accounting:banking:read" />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
   return (
     <PageWrapper
@@ -123,14 +133,7 @@ export function ReconciliationPage() {
         </div>
       }
     >
-      {statementsQuery.isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load your statements"
-          description={getErrorMessage(statementsQuery.error)}
-          onRetry={() => void statementsQuery.refetch()}
-        />
-      ) : statementsQuery.isPending ? (
+      {statementsQuery.isPending ? (
         <div className="flex flex-1 flex-col gap-4">
           <Skeleton className="h-64 w-full" />
           <Skeleton className="h-96 w-full" />

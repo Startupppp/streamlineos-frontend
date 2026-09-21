@@ -51,7 +51,8 @@ export type GlSystemTag =
   | "deferred_revenue"
   | "inventory"
   | "inventory_write_off"
-  | "inventory_adjustment";
+  | "inventory_adjustment"
+  | "landed_cost";
 
 export type GlJournalSource =
   | "manual"

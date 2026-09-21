@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,12 +10,14 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { PARTIES_READ, PARTIES_UPDATE, useParty } from "@/hooks/api/accounting/parties";
 import { RECEIVABLES_MANAGE, useArAging, useArInvoices } from "@/hooks/api/accounting/ar";
 import type { ArDocumentSummary } from "@/types/accounting-ar";
@@ -38,7 +40,6 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 
 export function CustomerDetailClient({ partyId }: CustomerDetailClientProps) {
-  const canRead = useCan(PARTIES_READ);
   const canUpdate = useCan(PARTIES_UPDATE);
   const canBill = useCan(RECEIVABLES_MANAGE);
   const url = useListUrlState(10);
@@ -52,6 +53,14 @@ export function CustomerDetailClient({ partyId }: CustomerDetailClientProps) {
     page: url.page,
     pageSize: url.pageSize,
   });
+
+  const pageState = usePageState({
+    permission: PARTIES_READ,
+    isLoading: partyQuery.isLoading,
+    isError: partyQuery.isError,
+    error: partyQuery.error,
+  });
+  const handleRetry = useCallback(() => { void partyQuery.refetch(); }, [partyQuery]);
 
   const columns: DataTableColumn<ArDocumentSummary>[] = [
     {
@@ -109,30 +118,16 @@ export function CustomerDetailClient({ partyId }: CustomerDetailClientProps) {
     },
   ];
 
-  if (!canRead) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper title="Customer" backHref="/accounting/customers">
-        <NoPermissionState permission={PARTIES_READ} />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
-  if (partyQuery.isError) {
-    return (
-      <PageWrapper title="Customer" backHref="/accounting/customers">
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load this customer"
-          description={getErrorMessage(partyQuery.error)}
-          onRetry={() => void partyQuery.refetch()}
-        />
-      </PageWrapper>
-    );
-  }
-
-  const party = partyQuery.data;
-
-  if (partyQuery.isPending || !party) {
+  if (partyQuery.isPending || !partyQuery.data) {
     return (
       <PageWrapper title="Customer" backHref="/accounting/customers">
         <div className="flex flex-1 flex-col gap-4">
@@ -144,6 +139,7 @@ export function CustomerDetailClient({ partyId }: CustomerDetailClientProps) {
     );
   }
 
+  const party = partyQuery.data;
   const aging = agingQuery.data;
   const owedLabel = aging
     ? formatMinorMoney(aging.totals.functionalTotalMinor, aging.baseCurrency)
