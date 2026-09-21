@@ -1,4 +1,4 @@
-import { riskRowContract } from "@/hooks/api/build/governance-schema";
+import { riskRowContract, riskPageContract } from "@/hooks/api/build/governance-schema";
 
 const BASE_RISK_ROW = {
   id: 1,
@@ -48,6 +48,31 @@ describe("riskRowContract enum fields match the risk_probability/risk_impact/ris
 
   it("rejects an out-of-enum status rather than rendering an undefined status badge", () => {
     const result = riskRowContract.safeParse({ ...BASE_RISK_ROW, status: "cancelled" });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("the risks list contract is the keyset page envelope the backend now returns", () => {
+  it("parses a page carrying the rows, the hasMore flag and a numeric nextCursor", () => {
+    const result = riskPageContract.safeParse({
+      data: [BASE_RISK_ROW],
+      hasMore: true,
+      nextCursor: 42,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a null nextCursor, because the last page has no cursor to hand back", () => {
+    const result = riskPageContract.safeParse({
+      data: [BASE_RISK_ROW],
+      hasMore: false,
+      nextCursor: null,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects the old bare array, so a backend that regressed to the unpaginated shape fails loudly instead of rendering an empty register", () => {
+    const result = riskPageContract.safeParse([BASE_RISK_ROW]);
     expect(result.success).toBe(false);
   });
 });

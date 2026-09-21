@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { idCursorPageContract } from "@/hooks/api/cursor-page-schema";
 
 const riskLevelContract = z.enum(["low", "medium", "high"]);
 const riskStatusValueContract = z.enum(["open", "mitigating", "monitoring", "accepted", "closed"]);
@@ -22,7 +23,7 @@ export const riskRowContract = z.object({
   deletedAt: z.string().nullable(),
 });
 
-export const riskListContract = z.array(riskRowContract);
+export const riskPageContract = idCursorPageContract(riskRowContract);
 
 export const decisionRowContract = z.object({
   id: z.number().int(),
@@ -44,6 +45,6 @@ export const decisionRowContract = z.object({
   deletedAt: z.string().nullable(),
 });
 
-export const decisionListContract = z.array(decisionRowContract);
+export const decisionPageContract = idCursorPageContract(decisionRowContract);
 
 export const governanceSuccessContract = z.object({ success: z.literal(true) });

@@ -7,6 +7,10 @@ const mockUseAccess = jest.fn();
 const mockUseCan = jest.fn();
 const mockUseProjectRisks = jest.fn();
 
+function riskPage<T>(rows: T[]) {
+  return { data: rows, hasMore: false, nextCursor: null };
+}
+
 jest.mock("@/hooks/api/access", () => ({
   useAccess: () => mockUseAccess(),
   useCan: () => mockUseCan(),
@@ -23,6 +27,7 @@ jest.mock("@/hooks/api/build", () => ({
   useUpdateRisk: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteRisk: () => ({ mutate: jest.fn(), isPending: false }),
   useProjectMembers: () => ({ data: [] }),
+  GOVERNANCE_PAGE_SIZE: 100,
 }));
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
@@ -226,8 +231,8 @@ describe("RisksPage aggregates and matrix describe the whole register, not the a
     mockUseAccess.mockReturnValue(ACCESS_GRANTED_RISKS);
     mockUseCan.mockReturnValue(true);
     mockUseProjectRisks.mockImplementation((_projectId: number, filters?: { status?: string }) => {
-      if (filters?.status === "closed") return idleQuery(SERVER_CLOSED_FILTER_RESULT);
-      return idleQuery(REGISTER);
+      if (filters?.status === "closed") return idleQuery(riskPage(SERVER_CLOSED_FILTER_RESULT));
+      return idleQuery(riskPage(REGISTER));
     });
   });
 

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { ShieldAlert, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { useProjectRisks, useCreateRisk, useUpdateRisk, useDeleteRisk, useProjectMembers } from "@/hooks/api/build";
+import { useProjectRisks, useCreateRisk, useUpdateRisk, useDeleteRisk, useProjectMembers, GOVERNANCE_PAGE_SIZE } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -14,6 +14,7 @@ import type { Risk, RiskStatus, RiskProbability, RiskImpact, CreateRiskInput, Up
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 
@@ -111,8 +112,10 @@ export function RisksPage({ projectId }: RisksPageProps) {
   const [editRisk, setEditRisk] = useState<Risk | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Risk | null>(null);
 
+  const pager = useCursorPager(statusFilter);
   const { data, isLoading, isError, error, refetch } = useProjectRisks(projectId, {
     status: statusFilter !== "all" ? statusFilter : undefined,
+    cursor: pager.cursor === undefined ? undefined : Number(pager.cursor),
   });
   const { data: registerData, isLoading: isRegisterLoading } = useProjectRisks(projectId);
 
@@ -129,8 +132,8 @@ export function RisksPage({ projectId }: RisksPageProps) {
     return getUserDisplayName(m) || userId;
   }, [members]);
 
-  const registerRisks = useMemo(() => registerData ?? [], [registerData]);
-  const filteredRisks = useMemo(() => data ?? [], [data]);
+  const registerRisks = useMemo(() => registerData?.data ?? [], [registerData]);
+  const filteredRisks = useMemo(() => data?.data ?? [], [data]);
   const openCount = registerRisks.filter((r) => r.status === "open").length;
   const highCritCount = registerRisks.filter((r) => {
     const { label } = getRiskSeverity(r.probability, r.impact);
@@ -182,6 +185,9 @@ export function RisksPage({ projectId }: RisksPageProps) {
     setMatrixCell(null);
   }, []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleNextPage = useCallback(() => {
+    pager.goNext(data?.nextCursor == null ? null : String(data.nextCursor));
+  }, [pager, data]);
   const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) setDeleteTarget(null); }, []);
   const handleSheetOpenChange = useCallback((open: boolean) => {
     if (!open) { setSheetOpen(false); setEditRisk(null); }
@@ -331,6 +337,14 @@ export function RisksPage({ projectId }: RisksPageProps) {
                 getRowKey={(row) => row.id}
                 minWidth="780px"
                 className={PM_FILL_PANEL}
+                pagination={{
+                  mode: "cursor",
+                  pageSize: GOVERNANCE_PAGE_SIZE,
+                  hasMore: data?.hasMore ?? false,
+                  hasPrevious: pager.hasPrevious,
+                  onNext: handleNextPage,
+                  onPrevious: pager.goPrevious,
+                }}
               />
           )}
         </PmSection>

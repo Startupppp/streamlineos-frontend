@@ -31,6 +31,22 @@ export function cursorPageContract<T>(
   });
 }
 
+export interface IdCursorPage<T> {
+  data: T[];
+  hasMore: boolean;
+  nextCursor: number | null;
+}
+
+export function idCursorPageContract<T>(
+  item: ResponseContract<T>,
+): ResponseContract<IdCursorPage<T>> {
+  return z.object({
+    data: z.array(item),
+    hasMore: z.boolean(),
+    nextCursor: z.number().int().nullable(),
+  });
+}
+
 export function cursorPageInfoContract<T>(
   item: ResponseContract<T>,
 ): ResponseContract<{

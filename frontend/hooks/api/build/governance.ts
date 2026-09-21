@@ -11,16 +11,17 @@ import type {
   CreateDecisionInput, UpdateDecisionInput,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { IdCursorPage } from "@/hooks/api/cursor-page-schema";
 
 
-const riskListContract = lazyContract(() =>
-  import("@/hooks/api/build/governance-schema").then((m) => m.riskListContract),
+const riskPageContract = lazyContract(() =>
+  import("@/hooks/api/build/governance-schema").then((m) => m.riskPageContract),
 );
 const riskRowContract = lazyContract(() =>
   import("@/hooks/api/build/governance-schema").then((m) => m.riskRowContract),
 );
-const decisionListContract = lazyContract(() =>
-  import("@/hooks/api/build/governance-schema").then((m) => m.decisionListContract),
+const decisionPageContract = lazyContract(() =>
+  import("@/hooks/api/build/governance-schema").then((m) => m.decisionPageContract),
 );
 const decisionRowContract = lazyContract(() =>
   import("@/hooks/api/build/governance-schema").then((m) => m.decisionRowContract),
@@ -32,21 +33,25 @@ const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
+export const GOVERNANCE_PAGE_SIZE = 100;
+
 interface ListFilters {
   status?: string;
+  cursor?: number;
 }
 
 export function useProjectRisks(projectId: number, filters?: ListFilters) {
   const canView = useCan("build:risks:view");
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
+  if (filters?.cursor !== undefined) params["cursor"] = String(filters.cursor);
 
-  return useQuery<Risk[]>({
+  return useQuery<IdCursorPage<Risk>>({
     queryKey: buildWorkQueryKeys.projects.risks.list(
       projectId,
       Object.keys(params).length > 0 ? params : undefined,
     ),
-    queryFn: ({ signal }) => apiClient.get<Risk[]>(`/build/${projectId}/risks`, params, signal, riskListContract),
+    queryFn: ({ signal }) => apiClient.get<IdCursorPage<Risk>>(`/build/${projectId}/risks`, params, signal, riskPageContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -93,13 +98,14 @@ export function useProjectDecisions(projectId: number, filters?: ListFilters) {
   const canView = useCan("build:decisions:view");
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
+  if (filters?.cursor !== undefined) params["cursor"] = String(filters.cursor);
 
-  return useQuery<Decision[]>({
+  return useQuery<IdCursorPage<Decision>>({
     queryKey: buildWorkQueryKeys.projects.decisions.list(
       projectId,
       Object.keys(params).length > 0 ? params : undefined,
     ),
-    queryFn: ({ signal }) => apiClient.get<Decision[]>(`/build/${projectId}/decisions`, params, signal, decisionListContract),
+    queryFn: ({ signal }) => apiClient.get<IdCursorPage<Decision>>(`/build/${projectId}/decisions`, params, signal, decisionPageContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
