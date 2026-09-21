@@ -10,8 +10,9 @@ import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
 import { buildTicketDetailUrl } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallback";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
@@ -193,6 +194,14 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     [handleTicketSelect],
   );
 
+  const resolution = usePageState({
+    permission: "build:tickets:view",
+    isLoading,
+    isError: ticketsError,
+    error: ticketsErrorValue,
+    isEmpty: filteredTickets.length === 0,
+  });
+
   const columns = useMemo<DataTableColumn<Ticket>[]>(
     () => [
       {
@@ -320,41 +329,38 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
           used to render "No tickets yet" over a project with thousands and
           people created duplicates.
         */}
-        {ticketsError ? (
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load this project's tickets"
-            description={getErrorMessage(ticketsErrorValue)}
-            onRetry={handleRetryTickets}
-          />
-        ) : (
-        <PmPanel className="min-w-0 flex-1 min-h-0 flex flex-col">
-          <DataTable
-            data={filteredTickets}
-            columns={columns}
-            getRowKey={(ticket) => ticket.id}
-            onRowClick={handleRowClick}
-            selection={canUpdate ? {
-              selected: selectedIds,
-              onChange: handleSelectionChange,
-              getRowLabel: (ticket) => ticket.title ?? "",
-            } : undefined}
-            minWidth="640px"
-            className="border-0 rounded-none flex-1 min-h-0"
-            emptyState={
-              <EmptyState
-                illustrationPreset="projects"
-                title="No tickets yet"
-                description={filtersActive ? undefined : "Create a ticket to get started."}
-                filtersActive={filtersActive}
-                onClearFilters={handleClearFilters}
-                compact
-                className="min-h-[200px] border-0 bg-transparent"
-              />
-            }
-          />
-        </PmPanel>
-        )}
+        <PageState
+          resolution={resolution}
+          loading={<DataTableSkeleton rows={12} columns={7} className="flex-1 min-h-0" />}
+          empty={
+            <EmptyState
+              className="flex-1"
+              illustrationPreset="projects"
+              title="No tickets yet"
+              description={filtersActive ? undefined : "Create a ticket to get started."}
+              filtersActive={filtersActive}
+              onClearFilters={handleClearFilters}
+            />
+          }
+          onRetry={handleRetryTickets}
+          className="flex-1 min-h-0"
+        >
+          <PmPanel className="min-w-0 flex-1 min-h-0 flex flex-col">
+            <DataTable
+              data={filteredTickets}
+              columns={columns}
+              getRowKey={(ticket) => ticket.id}
+              onRowClick={handleRowClick}
+              selection={canUpdate ? {
+                selected: selectedIds,
+                onChange: handleSelectionChange,
+                getRowLabel: (ticket) => ticket.title ?? "",
+              } : undefined}
+              minWidth="640px"
+              className="border-0 rounded-none flex-1 min-h-0"
+            />
+          </PmPanel>
+        </PageState>
       </PmPageShell>
     </PageWrapper>
   );

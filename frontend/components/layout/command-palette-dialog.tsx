@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { extractBuildProjectId } from "@/lib/build/extract-build-project-id";
 import { useAccess } from "@/hooks/api/access";
 import {
   Contact2,
@@ -104,12 +105,6 @@ const COMMAND_SHORTCUT_CLASS =
 const COMMAND_GROUP_CLASS =
   "[&_[cmdk-group-heading]]:text-muted-foreground";
 
-function extractProjectId(pathname: string): number | null {
-  const match = /^\/build\/(?:workspaces\/[^/]+\/)?(\d+)(?:\/|$)/.exec(pathname);
-  if (!match) return null;
-  const parsed = parseInt(match[1] ?? "", 10);
-  return Number.isNaN(parsed) ? null : parsed;
-}
 
 export function CommandPaletteDialogBody() {
   const router = useRouter();
@@ -131,7 +126,7 @@ export function CommandPaletteDialogBody() {
   );
   const { paletteOpen, setPaletteOpen, openCreateTicket } = useCommandPalette();
 
-  const projectId = useMemo(() => extractProjectId(pathname), [pathname]);
+  const projectId = useMemo(() => extractBuildProjectId(pathname), [pathname]);
 
   const navGroups = useMemo(
     () => getNavGroupsForUser(role, scopes, enabledModules, lockedModules),
