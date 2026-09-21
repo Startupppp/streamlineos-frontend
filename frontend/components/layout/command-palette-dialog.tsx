@@ -126,7 +126,7 @@ interface ProjectNavItem {
 const PROJECT_NAV_ITEMS: ProjectNavItem[] = [
   { label: "Board", icon: Kanban, segment: "", shortcut: "G B" },
   { label: "Backlog", icon: ListTodo, segment: "/backlog" },
-  { label: "Sprints", icon: RefreshCw, segment: "/sprints" },
+  { label: "Cycles", icon: RefreshCw, segment: "/cycles" },
   { label: "My Tickets", icon: Star, segment: "/my-tickets", shortcut: "G I" },
   { label: "Analytics", icon: BarChart2, segment: "/analytics" },
 ];

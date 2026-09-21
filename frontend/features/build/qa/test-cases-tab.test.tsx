@@ -31,6 +31,16 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
   useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),
 }));
 
+jest.mock("@/components/ui/table-pagination", () => ({
+  useCursorPager: () => ({
+    cursor: undefined,
+    hasPrevious: false,
+    goNext: jest.fn(),
+    goPrevious: jest.fn(),
+    reset: jest.fn(),
+  }),
+}));
+
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 jest.mock("@animateicons/react/lucide", () => ({
@@ -68,6 +78,7 @@ jest.mock("./test-case-columns", () => ({
 }));
 
 import { TestCasesTab } from "./test-cases-tab";
+import { testCasePageContract } from "@/hooks/api/build/qa-schema";
 
 const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:qa:view": "all" }, modules: {} },
@@ -90,13 +101,25 @@ function baseQuery(overrides = {}) {
   };
 }
 
+const EMPTY_PAGE = { data: [], hasMore: false, nextCursor: null };
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
-  mockUseTestCases.mockReturnValue(baseQuery({ data: [] }));
+  mockUseTestCases.mockReturnValue(baseQuery({ data: EMPTY_PAGE }));
   mockUseTestSuites.mockReturnValue(baseQuery({ data: [] }));
   mockUseDeleteTestCase.mockReturnValue({ mutate: jest.fn(), isPending: false });
+});
+
+it("testCasePageContract rejects a bare array so a backend regression serving the old array shape fails loudly instead of rendering an empty list", () => {
+  const result = testCasePageContract.safeParse([]);
+  expect(result.success).toBe(false);
+});
+
+it("testCasePageContract accepts a valid page envelope with data and pagination fields", () => {
+  const result = testCasePageContract.safeParse(EMPTY_PAGE);
+  expect(result.success).toBe(true);
 });
 
 it("renders NoPermissionState when build:qa:view is denied instead of the no-cases empty state", () => {

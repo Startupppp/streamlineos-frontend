@@ -16,7 +16,9 @@ jest.mock("@/hooks/api/entitlements", () => ({
 }));
 
 jest.mock("@/hooks/api/build", () => ({
+  GOVERNANCE_PAGE_SIZE: 100,
   useProjectRisks: () => mockUseProjectRisks(),
+  useProjectRiskStats: () => ({ data: undefined, isLoading: false }),
   useCreateRisk: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateRisk: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteRisk: () => ({ mutate: jest.fn(), isPending: false }),

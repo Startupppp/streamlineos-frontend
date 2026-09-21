@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
@@ -18,19 +18,20 @@ import type {
   UpdateTestResultInput,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { IdCursorPage } from "@/hooks/api/cursor-page-schema";
 
 
 const testSuiteListContract = lazyContract(() =>
   import("@/hooks/api/build/qa-schema").then((m) => m.testSuiteListContract),
 );
-const testCaseListContract = lazyContract(() =>
-  import("@/hooks/api/build/qa-schema").then((m) => m.testCaseListContract),
+const testCasePageContract = lazyContract(() =>
+  import("@/hooks/api/build/qa-schema").then((m) => m.testCasePageContract),
 );
 const testCaseRowContract = lazyContract(() =>
   import("@/hooks/api/build/qa-schema").then((m) => m.testCaseRowContract),
 );
-const testRunListContract = lazyContract(() =>
-  import("@/hooks/api/build/qa-schema").then((m) => m.testRunListContract),
+const testRunListPageContract = lazyContract(() =>
+  import("@/hooks/api/build/qa-schema").then((m) => m.testRunListPageContract),
 );
 const testRunRowContract = lazyContract(() =>
   import("@/hooks/api/build/qa-schema").then((m) => m.testRunRowContract),
@@ -53,10 +54,12 @@ type TestCaseFilters = {
   suiteId?: number;
   priority?: string;
   automationStatus?: string;
+  cursor?: number;
 };
 
 interface TestRunFilters {
   status?: string;
+  cursor?: number;
 }
 
 export function useTestSuites(projectId?: number) {
@@ -76,10 +79,20 @@ export function useTestCases(projectId?: number, filters?: TestCaseFilters) {
   if (filters?.suiteId !== undefined) params["suiteId"] = String(filters.suiteId);
   if (filters?.priority) params["priority"] = filters.priority;
   if (filters?.automationStatus) params["automationStatus"] = filters.automationStatus;
+  if (filters?.cursor !== undefined) params["cursor"] = String(filters.cursor);
 
-  return useQuery<TestCase[]>({
-    queryKey: buildWorkQueryKeys.projects.qa.cases(projectId ?? 0, filters),
-    queryFn: ({ signal }) => apiClient.get<TestCase[]>(`/build/${projectId}/test-cases`, params, signal, testCaseListContract),
+  return useQuery<IdCursorPage<TestCase>>({
+    queryKey: buildWorkQueryKeys.projects.qa.cases(
+      projectId ?? 0,
+      Object.keys(params).length > 0 ? params : undefined,
+    ),
+    queryFn: ({ signal }) =>
+      apiClient.get<IdCursorPage<TestCase>>(
+        `/build/${projectId}/test-cases`,
+        params,
+        signal,
+        testCasePageContract,
+      ),
     enabled: canView && !!projectId,
     staleTime: 60_000,
     placeholderData: keepPreviousData,
@@ -130,10 +143,20 @@ export function useTestRuns(projectId?: number, filters?: TestRunFilters) {
   const canView = useCan("build:qa:view");
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
+  if (filters?.cursor !== undefined) params["cursor"] = String(filters.cursor);
 
-  return useQuery<TestRun[]>({
-    queryKey: buildWorkQueryKeys.projects.qa.runs(projectId ?? 0, filters?.status),
-    queryFn: ({ signal }) => apiClient.get<TestRun[]>(`/build/${projectId}/test-runs`, params, signal, testRunListContract),
+  return useQuery<IdCursorPage<TestRun>>({
+    queryKey: buildWorkQueryKeys.projects.qa.runs(
+      projectId ?? 0,
+      Object.keys(params).length > 0 ? params : undefined,
+    ),
+    queryFn: ({ signal }) =>
+      apiClient.get<IdCursorPage<TestRun>>(
+        `/build/${projectId}/test-runs`,
+        params,
+        signal,
+        testRunListPageContract,
+      ),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });

@@ -26,6 +26,16 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
   useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),
 }));
 
+jest.mock("@/components/ui/table-pagination", () => ({
+  useCursorPager: () => ({
+    cursor: undefined,
+    hasPrevious: false,
+    goNext: jest.fn(),
+    goPrevious: jest.fn(),
+    reset: jest.fn(),
+  }),
+}));
+
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 jest.mock("@animateicons/react/lucide", () => ({
@@ -85,6 +95,7 @@ jest.mock("./test-run-sheet", () => ({
 }));
 
 import { TestRunsTab } from "./test-runs-tab";
+import { testRunListPageContract } from "@/hooks/api/build/qa-schema";
 
 const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:qa:view": "all" }, modules: {} },
@@ -107,12 +118,24 @@ function baseQuery(overrides = {}) {
   };
 }
 
+const EMPTY_PAGE = { data: [], hasMore: false, nextCursor: null };
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
-  mockUseTestRuns.mockReturnValue(baseQuery({ data: [] }));
+  mockUseTestRuns.mockReturnValue(baseQuery({ data: EMPTY_PAGE }));
   mockUseDeleteTestRun.mockReturnValue({ mutate: jest.fn(), isPending: false });
+});
+
+it("testRunListPageContract rejects a bare array so a backend regression serving the old array shape fails loudly instead of rendering an empty list", () => {
+  const result = testRunListPageContract.safeParse([]);
+  expect(result.success).toBe(false);
+});
+
+it("testRunListPageContract accepts a valid page envelope with data and pagination fields", () => {
+  const result = testRunListPageContract.safeParse(EMPTY_PAGE);
+  expect(result.success).toBe(true);
 });
 
 it("renders NoPermissionState when build:qa:view is denied instead of the no-runs empty state", () => {
@@ -151,11 +174,11 @@ it("falls back to a readable label instead of rendering blank text for a run sta
     id: 1,
     runNumber: 7,
     name: "Regression sweep",
-    status: "in_review",
+    status: "in_review" as TestRun["status"],
     environment: "Staging",
     counts: undefined,
-  } satisfies Pick<TestRun, "id" | "runNumber" | "name" | "status" | "environment" | "counts">;
-  mockUseTestRuns.mockReturnValue(baseQuery({ data: [runWithUnknownStatus] }));
+  } as unknown as TestRun;
+  mockUseTestRuns.mockReturnValue(baseQuery({ data: { data: [runWithUnknownStatus], hasMore: false, nextCursor: null } }));
   render(<TestRunsTab projectId={1} />);
   expect(screen.getByText("in review")).toBeInTheDocument();
   expect(screen.queryByText("undefined")).not.toBeInTheDocument();

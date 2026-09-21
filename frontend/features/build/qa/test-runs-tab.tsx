@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
@@ -7,6 +7,7 @@ import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import type { TestRun, TestRunStatus, TestRunCounts } from "@/types/projects";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -30,6 +31,8 @@ import { cn } from "@/lib/utils";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { TestRunSheet } from "./test-run-sheet";
+
+const RUN_PAGE_SIZE = 50;
 
 const RUN_STATUS_STYLES: Record<string, string> = {
   not_started: "text-muted-foreground border-border",
@@ -107,8 +110,14 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<TestRun | null>(null);
 
-  const filters = statusFilter !== "all" ? { status: statusFilter } : undefined;
-  const { data: runs, isLoading, isError, error, refetch } = useTestRuns(projectId, filters);
+  const pager = useCursorPager(statusFilter);
+
+  const filters = {
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    cursor: pager.cursor !== undefined ? Number(pager.cursor) : undefined,
+  };
+  const { data: runsPage, isLoading, isError, error, refetch } = useTestRuns(projectId, filters);
+  const runs = runsPage?.data ?? [];
   const deleteRun = useDeleteTestRun();
 
   const handleDelete = useCallback(() => {
@@ -136,6 +145,10 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const handleNextPage = useCallback(() => {
+    pager.goNext(runsPage?.nextCursor == null ? null : String(runsPage.nextCursor));
+  }, [pager, runsPage]);
 
   const pageState = usePageState({ permission: "build:qa:view", isLoading, isError, error });
 
@@ -238,7 +251,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
         {canManage ? <NewRunButton onClick={handleNewRun} /> : null}
       </div>
 
-      {(runs ?? []).length === 0 ? (
+      {runs.length === 0 ? (
         <EmptyState
           illustrationPreset="ticket"
           title="No test runs"
@@ -254,10 +267,18 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
         />
       ) : (
         <DataTable<TestRun>
-          data={runs ?? []}
+          data={runs}
           columns={columns}
           getRowKey={(row) => row.id}
           className="min-h-0 flex-1"
+          pagination={{
+            mode: "cursor",
+            pageSize: RUN_PAGE_SIZE,
+            hasMore: runsPage?.hasMore ?? false,
+            hasPrevious: pager.hasPrevious,
+            onNext: handleNextPage,
+            onPrevious: pager.goPrevious,
+          }}
         />
       )}
 

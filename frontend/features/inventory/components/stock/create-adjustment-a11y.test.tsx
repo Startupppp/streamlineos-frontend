@@ -156,7 +156,16 @@ describe("the New Stock Adjustment sheet · accessible names on the entity picke
    * three wrappers now REQUIRE the prop — reproducing the original defect
    * through them is a type error, which is the point.
    */
-  it("BITE PROOF — an unnamed combobox trigger does violate button-name", async () => {
+  it("BITE PROOF — a combobox trigger with visible text but no accessible name does violate button-name", async () => {
+    const { baseElement } = renderWithProviders(
+      <button type="button" role="combobox" aria-expanded={false}>
+        <span>Select warehouse…</span>
+      </button>,
+    );
+    await expect(axeViolationIds(baseElement)).resolves.toEqual(["button-name"]);
+  });
+
+  it("cannot reproduce that defect through Combobox itself, because the trigger now falls back to its placeholder for a name", async () => {
     const { baseElement } = renderWithProviders(
       <Combobox
         options={[{ value: "1", label: "Central DC" }]}
@@ -165,6 +174,7 @@ describe("the New Stock Adjustment sheet · accessible names on the entity picke
         placeholder="Select warehouse…"
       />,
     );
-    await expect(axeViolationIds(baseElement)).resolves.toEqual(["button-name"]);
+    expect(screen.getByRole("combobox")).toHaveAccessibleName("Select warehouse…");
+    await expect(axeViolationIds(baseElement)).resolves.toEqual([]);
   });
 });

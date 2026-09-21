@@ -2,10 +2,12 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import type { Risk } from "@/types/projects";
+import type { IdCursorPage } from "@/hooks/api/cursor-page-schema";
 
 const mockUseAccess = jest.fn();
 const mockUseCan = jest.fn();
 const mockUseProjectRisks = jest.fn();
+const mockUseProjectRiskStats = jest.fn();
 
 function riskPage<T>(rows: T[]) {
   return { data: rows, hasMore: false, nextCursor: null };
@@ -23,6 +25,7 @@ jest.mock("@/hooks/api/entitlements", () => ({
 jest.mock("@/hooks/api/build", () => ({
   useProjectRisks: (projectId: number, filters?: { status?: string }) =>
     mockUseProjectRisks(projectId, filters),
+  useProjectRiskStats: (...args: unknown[]) => mockUseProjectRiskStats(...args),
   useCreateRisk: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateRisk: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteRisk: () => ({ mutate: jest.fn(), isPending: false }),
@@ -219,9 +222,17 @@ const CLOSED_LOW_RISK = makeRisk({
 });
 
 const REGISTER = [OPEN_HIGH_RISK, CLOSED_LOW_RISK];
+
+const REGISTER_STATS = {
+  total: 2,
+  open: 1,
+  closed: 1,
+  highCritical: 1,
+  matrix: [{ probability: "high" as const, impact: "high" as const, openCount: 1 }],
+};
 const SERVER_CLOSED_FILTER_RESULT = [CLOSED_LOW_RISK];
 
-function idleQuery(data: Risk[]) {
+function idleQuery(data: IdCursorPage<Risk>) {
   return { data, isLoading: false, isError: false, error: null, refetch: jest.fn() };
 }
 
@@ -233,6 +244,12 @@ describe("RisksPage aggregates and matrix describe the whole register, not the a
     mockUseProjectRisks.mockImplementation((_projectId: number, filters?: { status?: string }) => {
       if (filters?.status === "closed") return idleQuery(riskPage(SERVER_CLOSED_FILTER_RESULT));
       return idleQuery(riskPage(REGISTER));
+    });
+    mockUseProjectRiskStats.mockReturnValue({
+      data: REGISTER_STATS,
+      isLoading: false,
+      isError: false,
+      error: null,
     });
   });
 
@@ -256,5 +273,16 @@ describe("RisksPage aggregates and matrix describe the whole register, not the a
     expect(
       screen.getByRole("button", { name: "high probability, high impact: 1 open risk" }),
     ).toBeInTheDocument();
+  });
+
+  it("reads the tiles from an aggregate the status filter cannot reach, so they cannot be narrowed to the filtered page", async () => {
+    render(<RisksPage projectId={10} />);
+
+    const user = userEvent.setup();
+    await user.selectOptions(screen.getByTestId("status-filter"), "closed");
+
+    for (const call of mockUseProjectRiskStats.mock.calls) {
+      expect(call).toEqual([10]);
+    }
   });
 });

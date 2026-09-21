@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCanState } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useLots } from "@/hooks/api/inventory/traceability";
 import { formatQuantity } from "@/features/inventory/components/planning/forecast-format";
@@ -65,14 +66,8 @@ export function RecallLotPicker({ value, onChange }: Props) {
     setPicked([]);
   }
 
-  if (canReadLotsState === "denied") {
-    return (
-      <div className="rounded-md border border-border px-3 py-2 text-xs text-muted-foreground">
-        Picking lots needs the <span className="font-mono">inventory:stock:read</span> permission.
-        Recall by product or supplier instead, or ask an administrator for lot access.
-      </div>
-    );
-  }
+  if (canReadLotsState === "denied")
+    return <NoPermissionState compact permission="inventory:stock:read" />;
 
   return (
     <div className="flex flex-col gap-3">

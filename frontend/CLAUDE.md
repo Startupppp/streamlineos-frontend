@@ -105,7 +105,7 @@ onSuccess: (data, variables, context, mutFnCtx) => {
 **Use the two shells** over hand-wiring `useForm` — `EntityFormSheet` / `EntityFormDialog` (`components/shared`), generic over `<TInput, TOutput>`, props: `open` · `onOpenChange` · `title` · `description?` · `resolver` · `defaultValues` · `onSubmit` · `isSubmitting?` · `submitLabel?` · `cancelLabel?` · `side?` (Sheet only) · `className?` · `resetOnOpen?` · `children: (form) => ReactNode`.
 
 ```tsx
-// canonical: features/build/sprints/create-sprint-dialog.tsx
+// canonical: features/build/epics/create-epic-dialog.tsx
 const handleSubmit = (data: CreateSprintInput) => createSprint.mutate(payload, {
   onSuccess: () => { toast.success("Sprint created successfully"); setOpen(false); },
   onError: (error) => { toast.error(getErrorMessage(error)); },

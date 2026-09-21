@@ -2,8 +2,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { TicketFilterBar } from "./ticket-filter-bar";
 
 const mockReplace = jest.fn();
-const mockUseCycles = jest.fn(() => ({ data: [] }));
-const mockUseProjectLabels = jest.fn(() => ({ data: [] }));
+const mockUseCycles: jest.Mock = jest.fn(() => ({ data: [] }));
+const mockUseProjectLabels: jest.Mock = jest.fn(() => ({ data: [] }));
 let mockSearchParams = new URLSearchParams();
 
 jest.mock("next/navigation", () => ({

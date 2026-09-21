@@ -262,13 +262,6 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     backendRoute: { method: "get", path: "/build/{projectId}/meetings" },
   },
   {
-    prefix: "/build/[projectId]/sprints",
-    product: "build",
-    permission: "build:sprints:view",
-    reason: "Project-scoped sprint planning carries its own read key, not the generic build:view.",
-    backendRoute: { method: "get", path: "/build/{projectId}/sprints" },
-  },
-  {
     prefix: "/build/[projectId]/cycles",
     product: "build",
     permission: "build:sprints:view",

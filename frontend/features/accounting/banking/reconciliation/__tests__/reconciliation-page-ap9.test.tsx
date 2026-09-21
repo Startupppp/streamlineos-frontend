@@ -1,6 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { ReconciliationPage } from "../reconciliation-page";
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), prefetch: jest.fn() }),
+  usePathname: () => "/accounting/banking/reconciliation",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useAccess: jest.fn(),
   useCan: jest.fn(),

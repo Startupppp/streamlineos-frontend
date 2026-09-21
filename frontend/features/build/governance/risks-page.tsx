@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { ShieldAlert, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { useProjectRisks, useCreateRisk, useUpdateRisk, useDeleteRisk, useProjectMembers, GOVERNANCE_PAGE_SIZE } from "@/hooks/api/build";
+import { useProjectRisks, useProjectRiskStats, useCreateRisk, useUpdateRisk, useDeleteRisk, useProjectMembers, GOVERNANCE_PAGE_SIZE } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -117,7 +117,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
     status: statusFilter !== "all" ? statusFilter : undefined,
     cursor: pager.cursor === undefined ? undefined : Number(pager.cursor),
   });
-  const { data: registerData, isLoading: isRegisterLoading } = useProjectRisks(projectId);
+  const { data: stats, isLoading: isStatsLoading } = useProjectRiskStats(projectId);
 
   const pageState = usePageState({ permission: "build:risks:view", isLoading, isError, error });
   const { data: members = [] } = useProjectMembers(projectId);
@@ -132,14 +132,10 @@ export function RisksPage({ projectId }: RisksPageProps) {
     return getUserDisplayName(m) || userId;
   }, [members]);
 
-  const registerRisks = useMemo(() => registerData?.data ?? [], [registerData]);
   const filteredRisks = useMemo(() => data?.data ?? [], [data]);
-  const openCount = registerRisks.filter((r) => r.status === "open").length;
-  const highCritCount = registerRisks.filter((r) => {
-    const { label } = getRiskSeverity(r.probability, r.impact);
-    return label === "High" || label === "Critical";
-  }).length;
-  const closedCount = registerRisks.filter((r) => r.status === "closed").length;
+  const openCount = stats?.open ?? 0;
+  const highCritCount = stats?.highCritical ?? 0;
+  const closedCount = stats?.closed ?? 0;
 
   const displayed = useMemo(() => {
     let items = filteredRisks;
@@ -303,16 +299,16 @@ export function RisksPage({ projectId }: RisksPageProps) {
       <PmPageShell>
         <PmSection index={0} className="shrink-0">
           <StatCardGrid cols={3}>
-            <StatCard label="Open" value={openCount} icon={ShieldAlert} tone="default" isLoading={isRegisterLoading || pageState.kind === "loading"} />
-            <StatCard label="High / Critical" value={highCritCount} icon={AlertTriangle} tone="red" isLoading={isRegisterLoading || pageState.kind === "loading"} />
-            <StatCard label="Closed" value={closedCount} icon={CheckCircle2} tone="emerald" isLoading={isRegisterLoading || pageState.kind === "loading"} />
+            <StatCard label="Open" value={openCount} icon={ShieldAlert} tone="default" isLoading={isStatsLoading} />
+            <StatCard label="High / Critical" value={highCritCount} icon={AlertTriangle} tone="red" isLoading={isStatsLoading} />
+            <StatCard label="Closed" value={closedCount} icon={CheckCircle2} tone="emerald" isLoading={isStatsLoading} />
           </StatCardGrid>
         </PmSection>
 
-        {!isRegisterLoading && pageState.kind !== "loading" ? (
+        {!isStatsLoading && pageState.kind !== "loading" ? (
           <PmSection index={1} className="shrink-0">
             <PmPanel className="p-3" solid>
-              <RiskMatrix risks={registerRisks} onCellClick={handleCellClick} selectedCell={matrixCell} />
+              <RiskMatrix cells={stats?.matrix ?? []} onCellClick={handleCellClick} selectedCell={matrixCell} />
             </PmPanel>
           </PmSection>
         ) : null}

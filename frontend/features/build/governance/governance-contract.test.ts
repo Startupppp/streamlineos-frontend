@@ -1,4 +1,4 @@
-import { riskRowContract, riskPageContract } from "@/hooks/api/build/governance-schema";
+import { riskRowContract, riskPageContract, riskStatsContract } from "@/hooks/api/build/governance-schema";
 
 const BASE_RISK_ROW = {
   id: 1,
@@ -74,5 +74,40 @@ describe("the risks list contract is the keyset page envelope the backend now re
   it("rejects the old bare array, so a backend that regressed to the unpaginated shape fails loudly instead of rendering an empty register", () => {
     const result = riskPageContract.safeParse([BASE_RISK_ROW]);
     expect(result.success).toBe(false);
+  });
+});
+
+describe("riskStatsContract keeps the register tiles describing the whole register", () => {
+  const BASE_STATS = {
+    total: 240,
+    open: 91,
+    closed: 44,
+    highCritical: 17,
+    matrix: [{ probability: "high", impact: "high", openCount: 12 }],
+  };
+
+  it("accepts the aggregate the stats endpoint returns", () => {
+    expect(() => riskStatsContract.parse(BASE_STATS)).not.toThrow();
+  });
+
+  it("accepts an empty matrix, because a register with no open risks groups to no rows", () => {
+    expect(() => riskStatsContract.parse({ ...BASE_STATS, matrix: [] })).not.toThrow();
+  });
+
+  it("rejects a payload missing matrix, so a backend that dropped the aggregate fails loudly instead of rendering an all-zero heat grid", () => {
+    const { matrix: _matrix, ...withoutMatrix } = BASE_STATS;
+    expect(riskStatsContract.safeParse(withoutMatrix).success).toBe(false);
+  });
+
+  it("rejects an out-of-enum probability in a matrix cell, so an unmapped cell cannot silently vanish from the grid", () => {
+    const result = riskStatsContract.safeParse({
+      ...BASE_STATS,
+      matrix: [{ probability: "extreme", impact: "high", openCount: 1 }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a bare array, so the old first-page-derived tile shape cannot pass as the aggregate", () => {
+    expect(riskStatsContract.safeParse([BASE_RISK_ROW]).success).toBe(false);
   });
 });

@@ -12,6 +12,7 @@ import type {
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { IdCursorPage } from "@/hooks/api/cursor-page-schema";
+import type { RiskStats } from "@/hooks/api/build/governance-schema";
 
 
 const riskPageContract = lazyContract(() =>
@@ -19,6 +20,9 @@ const riskPageContract = lazyContract(() =>
 );
 const riskRowContract = lazyContract(() =>
   import("@/hooks/api/build/governance-schema").then((m) => m.riskRowContract),
+);
+const riskStatsContract = lazyContract(() =>
+  import("@/hooks/api/build/governance-schema").then((m) => m.riskStatsContract),
 );
 const decisionPageContract = lazyContract(() =>
   import("@/hooks/api/build/governance-schema").then((m) => m.decisionPageContract),
@@ -54,6 +58,18 @@ export function useProjectRisks(projectId: number, filters?: ListFilters) {
     queryFn: ({ signal }) => apiClient.get<IdCursorPage<Risk>>(`/build/${projectId}/risks`, params, signal, riskPageContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
+  });
+}
+
+export function useProjectRiskStats(projectId: number) {
+  const canView = useCan("build:risks:view");
+
+  return useQuery<RiskStats>({
+    queryKey: buildWorkQueryKeys.projects.risks.stats(projectId),
+    queryFn: ({ signal }) =>
+      apiClient.get<RiskStats>(`/build/${projectId}/risks/stats`, undefined, signal, riskStatsContract),
+    enabled: canView && !!projectId,
+    staleTime: 2 * 60_000,
   });
 }
 

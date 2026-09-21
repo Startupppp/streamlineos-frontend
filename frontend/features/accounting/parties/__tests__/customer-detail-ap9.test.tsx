@@ -1,5 +1,50 @@
+import React from "react";
 import { render, screen } from "@testing-library/react";
 import { CustomerDetailClient } from "../customer-detail-client";
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  usePathname: () => "/accounting/customers/party-1",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+jest.mock("@/components/ui/page-wrapper", () => ({
+  PageWrapper: ({
+    children,
+    title,
+    actions,
+  }: {
+    children: React.ReactNode;
+    title?: React.ReactNode;
+    actions?: React.ReactNode;
+  }) => (
+    <div>
+      {title != null ? <h1>{String(title)}</h1> : null}
+      {actions}
+      {children}
+    </div>
+  ),
+}));
+
+jest.mock("@/components/shared/page-state", () => ({
+  PageState: ({
+    resolution,
+    loading,
+  }: {
+    resolution: { kind: string };
+    loading: React.ReactNode;
+  }) => {
+    if (resolution.kind === "loading") return <>{loading}</>;
+    if (
+      resolution.kind === "denied" ||
+      resolution.kind === "module-disabled" ||
+      resolution.kind === "plan-required" ||
+      resolution.kind === "module-denied"
+    )
+      return <div>Access Restricted</div>;
+    return <div>{resolution.kind}</div>;
+  },
+}));
 
 jest.mock("@/hooks/api/access", () => ({
   useAccess: jest.fn(),

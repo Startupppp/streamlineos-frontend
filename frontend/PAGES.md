@@ -253,7 +253,6 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/build/[projectId]/reports` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/risks` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/settings` · **Build** · hooks: `→ features/build/project`
-- `/build/[projectId]/sprints` · **Build** · hooks: `useSprints, useUpdateSprint, useUpdateTicket, useSprintTicketMover` — S06: three `Promise.all` per-ticket fan-outs replaced by the bounded transactional `POST /build/:projectId/tickets/bulk` (chunked at the backend cap of 100); sprint completion now sends `sprintId: null` so "move to backlog" actually clears the sprint instead of serialising `undefined` to a no-op. 5 tests in `use-sprint-ticket-mover.test.ts`.
 - `/build/[projectId]/tickets/[ticketKey]` · **Build** · hooks: `→ features/build/project` — notification/email/search deep links emit `/build/...` (not legacy `/projects/...`); client navigation normalizes any stored `/projects` links via `normalizeBuildDeepLink`; main column uses `min-h-0 flex-1 basis-0 overflow-y-auto` inside an `overflow-hidden` split so long descriptions scroll (parity with inbox preview; `ticket-detail-scroll-chain.test.ts`)
 - `/build/[projectId]/timeline` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/triage` · **Build** · hooks: `→ features/build/project`

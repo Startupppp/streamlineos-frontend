@@ -25,6 +25,23 @@ export const riskRowContract = z.object({
 
 export const riskPageContract = idCursorPageContract(riskRowContract);
 
+export const riskMatrixCellContract = z.object({
+  probability: riskLevelContract,
+  impact: riskLevelContract,
+  openCount: z.number().int(),
+});
+
+export const riskStatsContract = z.object({
+  total: z.number().int(),
+  open: z.number().int(),
+  closed: z.number().int(),
+  highCritical: z.number().int(),
+  matrix: z.array(riskMatrixCellContract),
+});
+
+export type RiskMatrixCell = z.infer<typeof riskMatrixCellContract>;
+export type RiskStats = z.infer<typeof riskStatsContract>;
+
 export const decisionRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),

@@ -79,10 +79,10 @@ export const buildWorkQueryKeys = {
         params === undefined
           ? ([...base, "projects", projectId, "qa", "cases"] as const)
           : ([...base, "projects", projectId, "qa", "cases", params] as const),
-      runs: (projectId: number, status?: string) =>
-        status === undefined
+      runs: (projectId: number, params?: QueryKeyParams) =>
+        params === undefined
           ? ([...base, "projects", projectId, "qa", "runs"] as const)
-          : ([...base, "projects", projectId, "qa", "runs", status] as const),
+          : ([...base, "projects", projectId, "qa", "runs", params] as const),
       run: (projectId: number, runId: number) =>
         [...base, "projects", projectId, "qa", "runs", runId] as const,
     },
@@ -139,6 +139,8 @@ export const buildWorkQueryKeys = {
           : ([...base, "projects", projectId, "risks", params] as const),
       detail: (projectId: number, riskId: number) =>
         [...base, "projects", projectId, "risks", riskId] as const,
+      stats: (projectId: number) =>
+        [...base, "projects", projectId, "risks", "stats"] as const,
     },
     decisions: {
       list: (projectId: number, params?: QueryKeyParams) =>
