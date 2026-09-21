@@ -72,10 +72,30 @@ const REMAINING_BY_MODULE: Readonly<Record<string, number>> = {
    * users 10 -> 0 (both keys dropped). Direction of travel is unchanged — the
    * numbers below may still only fall.
    */
-  "hr": 125,
+  /*
+   * Re-measured on 2026-09-21 when the HRMS / Timesheets / Payroll programme
+   * merged (HRMS_AUDIT_2026-09-21). These six are NEW work, not arrivals, and
+   * they are counted rather than exempted so ticket 15 can size the batch:
+   *
+   *   hr        125 -> 127   features/hr/employees/manager-coverage-page.tsx
+   *                          (reporting-manager coverage table),
+   *                          features/hr/onboarding/onboarding-templates-tab.tsx
+   *                          (plan editor moved onto react-hook-form)
+   *   payroll    53 ->  54   features/payroll/readiness/readiness-page.tsx
+   *   me          0 ->   1   features/me/team/team-roster.tsx
+   *   employee-support 0 -> 2  features/employee-support/support-request-columns.tsx,
+   *                          support-requests-table-skeleton.tsx
+   *
+   * features/hr/reimbursements/reimbursement-request-sheet.tsx also moved onto
+   * react-hook-form and features/hr/helpdesk/create-ticket-dialog.tsx was
+   * deleted, so hr nets +2. The numbers below may still only fall.
+   */
+  "hr": 127,
   "inventory": 138, // 96 on the CRM lane; +40 from the inventory lane on merge
   "build": 76,
-  "payroll": 53,
+  "payroll": 54,
+  "employee-support": 2,
+  "me": 1,
   "accounting": 32,
   "settings": 25,
   /*

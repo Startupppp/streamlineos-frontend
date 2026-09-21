@@ -29,28 +29,7 @@ const SERVER_GATE_CALL = /\b(requirePermission|requireModulePermission|requireSe
 const LAYOUT_GATE_CALL = /\benforceRouteAccess\s*\(/;
 const NUMBERED_SKELETON_COLUMN = /^Column \d+$/;
 
-const LOADING_STILL_RENDERS_NUMBERED_COLUMNS: readonly string[] = [
-  "/hr/positions",
-  "/hr/biometric",
-  "/hr/devices",
-  "/hr/equity",
-  "/hr/reimbursements",
-  "/hr/document-types",
-  "/hr/document-review",
-  "/hr/background-verification",
-  "/hr/assets",
-  "/hr/asset-returns",
-  "/hr/workforce",
-  "/hr/cases",
-  "/hr/accommodations",
-  "/hr/safety",
-  "/hr/emergency",
-  "/hr/labor-relations",
-  "/hr/legal-holds",
-  "/hr/retention",
-  "/hr/identity",
-  "/hr/event-stream",
-];
+const LOADING_STILL_RENDERS_NUMBERED_COLUMNS: readonly string[] = [];
 
 function isComponentModule(
   candidate: unknown,
