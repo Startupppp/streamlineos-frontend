@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Clock, CalendarCheck, CalendarDays, FileText, Timer, BarChart3, Network, ClipboardList, ClipboardCheck, Map, RefreshCcw, History, Building2, Search, Grid3X3, LayoutGrid, Smartphone } from "lucide-react";
+import { LayoutDashboard, Users, Clock, CalendarCheck, CalendarDays, FileText, Timer, BarChart3, Network, ClipboardList, ClipboardCheck, Map, RefreshCcw, History, Building2, Search, Grid3X3, LayoutGrid, Smartphone, UserCheck } from "lucide-react";
 import type { NavRoute } from "./sidebar-nav-types";
 
 export const HR_FOUNDATION_ROUTES: NavRoute[] = [
@@ -47,6 +47,12 @@ export const HR_FOUNDATION_ROUTES: NavRoute[] = [
             label: "Org Chart",
             icon: Network,
             href: "/hr/org-chart",
+            requiredPermission: "hr:employees:view",
+          },
+          {
+            label: "Manager coverage",
+            icon: UserCheck,
+            href: "/hr/employees/manager-coverage",
             requiredPermission: "hr:employees:view",
           },
           {

@@ -6,6 +6,26 @@ function hasLetterOrDigit(value: string): boolean {
   return /[\p{L}\p{N}]/u.test(value);
 }
 
+export const REPORTS_TO_REQUIRED_MESSAGE =
+  "Reports to is required. Choose a reporting manager, or mark the role as top-level with a reason.";
+
+function requireReportsTo(
+  value: { reportingManagerUserId?: string; topLevelRole?: boolean; topLevelRoleReason?: string },
+  ctx: z.RefinementCtx,
+): void {
+  const hasManager = Boolean(value.reportingManagerUserId);
+  if (hasManager && value.topLevelRole) {
+    ctx.addIssue({ code: "custom", message: "A top-level role cannot also have a reporting manager.", path: ["topLevelRole"] });
+    return;
+  }
+  if (!hasManager && !value.topLevelRole) {
+    ctx.addIssue({ code: "custom", message: REPORTS_TO_REQUIRED_MESSAGE, path: ["reportingManagerUserId"] });
+    return;
+  }
+  if (value.topLevelRole && !value.topLevelRoleReason?.trim())
+    ctx.addIssue({ code: "custom", message: "Explain why this role has no reporting manager.", path: ["topLevelRoleReason"] });
+}
+
 export const onboardEmployeeInputSchema = z.object({
   firstName: z
     .string()
@@ -41,6 +61,9 @@ export const onboardEmployeeInputSchema = z.object({
     .max(120, "Designation must be at most 120 characters")
     .refine(hasLetterOrDigit, "Designation must contain a letter or number"),
   departmentId: z.string().min(1, "Department is required"),
+  reportingManagerUserId: z.string().optional(),
+  topLevelRole: z.boolean().optional(),
+  topLevelRoleReason: z.string().trim().max(500, "Keep the reason under 500 characters").optional(),
   role: z.enum(USER_INVITE_ROLE_VALUES),
   employeeId: z
     .string()
@@ -129,4 +152,4 @@ export const onboardEmployeeInputSchema = z.object({
         .or(z.literal("")),
     })
     .optional(),
-});
+}).superRefine(requireReportsTo);

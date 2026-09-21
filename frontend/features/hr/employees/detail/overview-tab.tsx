@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EmployeeProjectsList } from "@/components/hr/employee-projects-list";
 import { EmployeeTicketsList } from "@/components/hr/employee-tickets-list";
 import { DirectReportsSection, ManagerScorecardSection } from "@/features/hr/employees/detail/employee-detail-helpers";
+import { ReportingLineSection } from "@/features/hr/employees/detail/reporting-line-section";
 import { Briefcase, FileCheck, Tag } from "lucide-react";
 
 interface OverviewTabProps {
@@ -44,6 +45,8 @@ export function OverviewTab({ employeeId, skillsList, projects, tickets }: Overv
           </CardContent>
         </Card>
       )}
+
+      <ReportingLineSection employeeId={employeeId} />
 
       <ManagerScorecardSection employeeId={employeeId} />
 
