@@ -91,8 +91,16 @@ named, time-boxed, and not treated as two products forever.
       the access-service move.
 - [ ] **DOC-08-007** Knip + build before deleting any schema file
       (`kb_articles` stays until cutover even if knip yells).
-- [ ] **DOC-08-008** No new `app/api/**` business route and no frontend
+- [x] **DOC-08-008** No new `app/api/**` business route and no frontend
       `lib/services/**` for KB.
+      **Closed — source proof 2026-09-21.** `frontend/lib/services/` does not
+      exist at all, and `frontend/app/api/**` contains exactly two routes:
+      `auth/[...nextauth]/route.ts` (the sanctioned auth bridge) and
+      `media/image/route.ts`. The latter was inspected rather than assumed —
+      it is a generic authenticated object proxy that Zod-validates one `key`,
+      requires `session.backendJwt`, forwards upstream and downgrades
+      non-image content types to an opaque download. It holds no KB business
+      logic and is not KB-specific.
 - [ ] **DOC-08-009** Drop `RequireModule` on read surfaces (D17).
 - [ ] **DOC-08-010** Record ACL 404 vs route `NoPermissionState` (D18).
 - [ ] **DOC-08-011** Audit events (append-only) for: visibility, public
