@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/design-tokens";
+import { OVERFLOW_EDGE_FADE_CLASS, useHorizontalOverflow } from "@/hooks/common/use-horizontal-overflow";
 
 function countGridChildren(node: ReactNode): number {
   let count = 0;
@@ -168,30 +169,23 @@ export function StatCardGrid({
   const childCount = countGridChildren(children);
   const columnCount = childCount > 0 ? childCount : cols;
   const ref = useRef<HTMLDivElement>(null);
-  const [scrollableWithoutFocus, setScrollableWithoutFocus] = useState(false);
+  const overflow = useHorizontalOverflow(ref, children);
+  const [hasFocusableChild, setHasFocusableChild] = useState(false);
 
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
-    const measure = () => {
-      const scrolls = element.scrollWidth - element.clientWidth > 1;
-      const focusable = element.querySelector(
-        "a[href], button, input, select, textarea, [tabindex]",
-      );
-      setScrollableWithoutFocus(scrolls && focusable === null);
-    };
-    measure();
-    if (typeof ResizeObserver === "undefined") return undefined;
-    const observer = new ResizeObserver(measure);
-    observer.observe(element);
-    for (const child of Array.from(element.children)) observer.observe(child);
-    return () => observer.disconnect();
+    setHasFocusableChild(element.querySelector("a[href], button, input, select, textarea, [tabindex]") !== null);
   }, [children]);
+
+  const scrollableWithoutFocus = overflow.scrolls && !hasFocusableChild;
 
   return (
     <div
       ref={ref}
       data-slot="stat-card-grid"
+      data-hidden-left={overflow.hiddenLeft}
+      data-hidden-right={overflow.hiddenRight}
       {...(scrollableWithoutFocus
         ? { tabIndex: 0, role: "group", "aria-label": "Summary statistics" }
         : {})}
@@ -200,6 +194,7 @@ export function StatCardGrid({
         "overflow-x-auto scrollbar-hide touch-pan-x snap-x snap-mandatory md:snap-none",
         "[&>*]:min-w-0 [&>*]:h-full [&>*]:snap-start",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        OVERFLOW_EDGE_FADE_CLASS,
         className,
       )}
       style={{

@@ -4,6 +4,7 @@ import * as React from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 
 import { cn } from "../../lib/utils";
+import { OVERFLOW_EDGE_FADE_CLASS, useHorizontalOverflow } from "@/hooks/common/use-horizontal-overflow";
 
 function Tabs({
   className,
@@ -22,14 +23,20 @@ function TabsList({
   className,
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.List>) {
+  const listRef = React.useRef<HTMLDivElement>(null);
+  const overflow = useHorizontalOverflow(listRef, props.children);
   return (
     <TabsPrimitive.List
+      ref={listRef}
       data-slot="tabs-list"
+      data-hidden-left={overflow.hiddenLeft}
+      data-hidden-right={overflow.hiddenRight}
       className={cn(
         // Spans the row up to `md` so triggers share it equally; sizes to its
         // own tabs from `md` up. Never hardcode a width at a call site — that
         // is what crushes triggers into each other.
         "box-border flex h-9 min-h-9 w-full md:w-fit min-w-0 max-w-full flex-nowrap items-center gap-1 overflow-x-auto overscroll-x-contain rounded-lg border border-border bg-card p-1 text-muted-foreground scrollbar-hide",
+        OVERFLOW_EDGE_FADE_CLASS,
         className,
       )}
       {...props}
