@@ -48,7 +48,7 @@ export function ReportsTabs({ projectId }: ReportsTabsProps) {
           <TabsTrigger value="agile">Agile Reports</TabsTrigger>
           <TabsTrigger value="overview">Overview</TabsTrigger>
         </TabsList>
-        <TabsContent value="agile" className={TABS_CONTENT_PAGE_BODY_CLASS}>
+        <TabsContent value="agile" className={TABS_CONTENT_PAGE_BODY_CLASS} forceMount>
           <ReportsAgileTab projectId={projectId} />
         </TabsContent>
         <TabsContent value="overview" className={TABS_CONTENT_PAGE_BODY_CLASS}>
