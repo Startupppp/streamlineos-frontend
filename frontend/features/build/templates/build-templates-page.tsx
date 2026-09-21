@@ -132,10 +132,12 @@ export function BuildTemplatesPage() {
         >
           <PageState
             resolution={pageState}
-            loading={null}
+            loading={<TemplatesGridSkeleton />}
             onRetry={handleRetry}
             className="flex-1"
-          />
+          >
+            {null}
+          </PageState>
         </PageWrapper>
       </RequireModule>
     );

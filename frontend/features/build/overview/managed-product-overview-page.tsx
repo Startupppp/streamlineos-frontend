@@ -40,10 +40,13 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
 
   const isError = productQuery.isError || projectsQuery.isError;
 
+  const error = productQuery.error ?? projectsQuery.error;
+
   const resolution = usePageState({
     permission: "build:managed-products:view",
     isLoading,
     isError,
+    error,
     isEmpty: !productQuery.data,
   });
 

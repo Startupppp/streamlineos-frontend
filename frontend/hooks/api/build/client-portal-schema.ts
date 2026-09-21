@@ -85,6 +85,17 @@ export const toggleVisibilityContract = z
   })
   .transform((row) => ({ ...row, success: row.success ?? true }));
 
+export const CHANGE_REQUEST_STATUSES = [
+  "submitted",
+  "under_review",
+  "estimated",
+  "awaiting_approval",
+  "approved",
+  "rejected",
+  "in_progress",
+  "completed",
+] as const;
+
 export const changeRequestRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -96,7 +107,7 @@ export const changeRequestRowContract = z.object({
   estimateMinutes: z.number().int().nullable(),
   budgetImpactCents: z.number().int().nullable(),
   timelineImpactDays: z.number().int().nullable(),
-  status: z.string(),
+  status: z.enum(CHANGE_REQUEST_STATUSES),
   requestedById: z.string().nullable(),
   approvalOwnerId: z.string().nullable(),
   approvalOwnerMembershipId: z.number().int().nullable(),

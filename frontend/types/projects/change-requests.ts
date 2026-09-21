@@ -4,17 +4,9 @@ import type {
   portalChangeRequestItemContract,
 } from "@/hooks/api/build/client-portal-schema";
 
-export type ChangeRequestStatus =
-  | "submitted"
-  | "under_review"
-  | "estimated"
-  | "awaiting_approval"
-  | "approved"
-  | "rejected"
-  | "in_progress"
-  | "completed";
-
 export type ChangeRequest = z.infer<typeof changeRequestRowContract>;
+
+export type ChangeRequestStatus = ChangeRequest["status"];
 
 export type PortalChangeRequest = z.infer<typeof portalChangeRequestItemContract>;
 
