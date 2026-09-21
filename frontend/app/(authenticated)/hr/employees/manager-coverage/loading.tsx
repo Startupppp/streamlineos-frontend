@@ -10,7 +10,7 @@ export default function ManagerCoverageLoading() {
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4">
         <StatCardGridSkeleton cols={4} />
-        <DataTableSkeleton rows={8} columns={4} />
+        <DataTableSkeleton rows={8} headers={["Employee", "Designation", "Employment", "Employee no."]} />
       </div>
     </PageWrapper>
   );

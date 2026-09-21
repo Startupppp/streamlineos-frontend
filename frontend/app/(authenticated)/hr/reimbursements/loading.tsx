@@ -9,7 +9,7 @@ export default function ReimbursementsLoading() {
       subtitle="Submit and track expense reimbursements"
       actions={<Skeleton className="h-9 w-[120px] rounded-md" />}
     >
-      <DataTableSkeleton rows={12} columns={7} className="flex-1 min-h-0" />
+      <DataTableSkeleton rows={12} headers={["Employee", "Category", "Description", "Date", "Status", "Amount", ""]} className="flex-1 min-h-0" />
     </PageWrapper>
   );
 }

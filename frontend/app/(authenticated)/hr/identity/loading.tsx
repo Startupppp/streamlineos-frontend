@@ -16,7 +16,7 @@ export default function HrIdentityLoading() {
       }
     >
       <div className="flex flex-col flex-1 min-h-0 gap-4">
-        <DataTableSkeleton rows={10} columns={6} />
+        <DataTableSkeleton rows={10} headers={["Employee", "System", "Action", "Trigger", "Status", "Requested"]} />
       </div>
     </PageWrapper>
   );

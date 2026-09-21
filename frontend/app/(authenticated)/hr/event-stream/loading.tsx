@@ -17,7 +17,7 @@ export default function HrEventStreamLoading() {
       }
     >
       <div className="flex flex-col flex-1 min-h-0 gap-4">
-        <DataTableSkeleton rows={12} columns={5} />
+        <DataTableSkeleton rows={12} headers={["Event", "Entity", "Entity ID", "Actor", "Occurred"]} />
       </div>
     </PageWrapper>
   );

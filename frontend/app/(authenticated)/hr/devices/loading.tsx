@@ -18,7 +18,7 @@ export default function DevicesLoading() {
         </div>
 
         {/* Devices tab content — DataTable with 6 columns */}
-        <DataTableSkeleton rows={12} columns={6} />
+        <DataTableSkeleton rows={12} headers={["Device Name", "Serial", "Type", "Status", "Last Sync", ""]} />
       </div>
     </PageWrapper>
   );
