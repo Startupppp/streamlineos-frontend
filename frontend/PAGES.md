@@ -14,6 +14,8 @@
 
 **`portal` vs `client-portal` are deliberately two surfaces.** `(authenticated)/portal` is internal (session JWT, `useCan("build:portal:view")`); `(portal)/client-portal` is external (portal token, `portalApiClient`). The hook collision was resolved by renaming the external one to `useExternalPortalProjects`.
 
+**Selected tabs are a tinted surface, never a filled CTA (2026-09-21).** `TabsTrigger`'s active state is `bg-muted text-foreground shadow-sm`; the ink fill is reserved for the page's single primary action, so a selected view cannot be mistaken for a button. The global header's `+` is now a labelled "Create" button whose menu leads with the current product's group (`orderGroupsForProduct`).
+
 **Backend prefixes renamed under `/build` (2026-09-02).** `product-management/workspaces` → `build/workspaces`; the org-wide `whiteboards` hub → `build/whiteboards`. §8 puts every Build resource under `/build`, and a middleware or rate-limit tier keyed on `/build` silently missed the old hub.
 
 ---
@@ -269,8 +271,8 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 ## HR (Human Resources)
 
 ### Hub
-- `/hr` · **HR** · hooks: `→ features/hr/hub`
-- `/hr/dashboard` · **HR** · hooks: `→ features/hr/dashboard`
+- `/hr` · **HR** · hooks: `→ features/hr/hub` (2026-09-21: titled "HR overview"; one primary action "Onboard employee" with "Review approvals" and "Create announcement" as outlined actions; the Dashboard, Analytics and Approvals tiles that duplicated nav destinations are gone)
+- `/hr/dashboard` — **deleted 2026-09-21**; it duplicated `/hr` (the hub snapshot already carries the metrics, leave calendar and onboarding status), so the route, `features/hr/dashboard/**`, `useHrDashboardMetrics`/`useHrLeaveCalendar`/`useHrOnboardingStatus` and their keys are gone
 
 ### Employees
 - `/hr/employees` · **HR** · hooks: `requirePermission("hr:employees:view")` (server), `usePageState` + `PageWrapper state=`, `→ features/hr/employees` — the duplicated loading-only `PageWrapper` early return is gone
@@ -286,8 +288,8 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/onboarding/probation` · **HR** · hooks: `requirePermission("hr:probation:view")`, `→ features/hr/onboarding`
 
 ### Attendance & Time
-- `/hr/attendance` · **HR** · hooks: `→ features/hr/attendance`
-- `/hr/leaves` · **HR** · hooks: `→ features/hr/leaves` (2026-09-21: the leave and WFH request sheets show `ApprovalRoutePanel` — who approves, why, and the SLA — from `GET /me/time-off`'s `approvalRoute` and `GET /me/approvers/wfh`; the WFH sheet no longer lets the employee pick an approver, the server routes it)
+- `/hr/attendance` · **HR** · hooks: `→ features/hr/attendance` (2026-09-21: the inline Manage Holidays card and its legacy `useHrHolidaysForYear`/add/update/delete hooks are gone — holidays are managed at `/hr/holidays`)
+- `/hr/leaves` · **HR** · hooks: `→ features/hr/leaves` (2026-09-21: one primary action per context — "Request leave" for members, "Review requests" for HR admins with the request buttons outlined; the leave and WFH request sheets show `ApprovalRoutePanel` — who approves, why, and the SLA — from `GET /me/time-off`'s `approvalRoute` and `GET /me/approvers/wfh`; the WFH sheet no longer lets the employee pick an approver, the server routes it)
 - `/hr/leaves/analytics` · **HR** · hooks: `→ features/hr/leaves`
 - `/hr/leave-policies` · **HR** · hooks: `→ features/hr/leaves`
 - `/hr/holidays` · **HR** · hooks: `→ features/hr/holidays`
@@ -345,7 +347,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/retention` · **HR** · hooks: `→ features/hr/retention`
 
 ### Expenses & Travel
-- `/hr/expenses` · **HR** · hooks: `→ features/hr/expenses`
+- `/hr/expenses` · **HR** · hooks: `→ features/hr/expenses` (2026-09-21: admin actions are "Add expense" primary, "Import expenses" outlined and "Export expenses" in the overflow menu, opening `ExpenseExportDialog` in its controlled mode)
 - `/hr/reimbursements` · **HR** · hooks: `→ features/hr/reimbursements`
 - `/hr/travel` · **HR** · hooks: `→ features/hr/travel`
 - `/hr/travel/approvals` · **HR** · hooks: `→ features/hr/travel`
@@ -366,7 +368,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/org-chart` · **HR** · hooks: `→ features/hr/org-chart`
 
 ### Announcements & Communications
-- `/hr/announcements` · **HR** · hooks: `→ features/hr/announcements`
+- `/hr/announcements` · **HR** · hooks: `→ features/hr/announcements` (2026-09-21: titled "Company announcements" with a subtitle saying it is the shared Home surface — the route is deliberately in Home's Company nav group, not the HR shell)
 - `/hr/email-templates` · **HR** · hooks: `→ features/hr/email-templates`
 
 ### Assets & Devices
@@ -395,18 +397,18 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 ### Positions, Workforce, Delegations
 - `/hr/positions` · **HR** · hooks: `→ features/hr/positions`
 - `/hr/workforce` · **HR** · hooks: `→ features/hr/workforce`
-- `/hr/workforce-cost` · **HR** · hooks: `→ features/hr/workforce`
+- `/hr/workforce-cost` · **HR** · hooks: `→ features/hr/workforce` (2026-09-21: "Workforce costing"; the period button is "Update view")
 - `/hr/contingent` · **HR** · hooks: `→ features/hr/contingent`
 - `/hr/delegations` · **HR** · hooks: `→ features/hr/delegations`
 
 ### HR Analytics, Helpdesk, Cases
-- `/hr/analytics` · **HR** · hooks: `→ features/hr/analytics`
+- `/hr/analytics` · **HR** · hooks: `→ features/hr/analytics` (2026-09-21: "People analytics"; the Recruitment tab and the Open positions KPI render only for a viewer holding `hr:interviews:view` — `GET /hr/recruitment/stats`'s key — since no org-level ATS enablement signal exists)
 - `/hr/helpdesk` · **HR** · hooks: `→ features/hr/helpdesk`
 - `/hr/cases` · **HR** · hooks: `→ features/hr/cases`
 - `/hr/service-delivery` · **HR** · hooks: `→ features/hr/service-delivery`
 
 ### Misc HR
-- `/hr/approvals` · **HR** · hooks: `→ features/hr/approvals`
+- `/hr/approvals` · **HR** · hooks: `→ features/hr/workflows` (2026-09-21: "Approvals"; each pending row states the persisted step routing — rung, explanation and escalation — read from `instance.context.approvalRouting[currentStepOrder]` by `currentStepRouting`)
 - `/hr/biometric` · **HR** · hooks: `→ features/hr/biometric`
 - `/hr/geofencing` · **HR** · hooks: `→ features/hr/geofencing`
 - `/hr/emergency` · **HR** · hooks: `→ features/hr/emergency`
@@ -414,9 +416,9 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/simulator` · **HR** · hooks: `→ features/hr/simulator`
 
 ### HR Settings
-- `/hr/settings` · **HR** · hooks: `→ features/hr/settings`
+- `/hr/settings` · **HR** · hooks: `→ features/hr/settings` (2026-09-21: "HR configuration"; the Simple/Advanced banner is a one-line helper; the Company tab is gone — company settings live at `/settings/organization`)
 - `/hr/settings/automations` · **HR** · hooks: `→ features/hr/settings`
-- `/hr/settings/company` · **HR** · hooks: `→ features/hr/settings`
+- `/hr/settings/company` — **deleted 2026-09-21**; it duplicated `/settings/organization`
 - `/hr/settings/custom-fields` · **HR** · hooks: `→ features/hr/settings`
 - `/hr/settings/forms` · **HR** · hooks: `→ features/hr/settings`
 - `/hr/settings/forms/[formId]` · **HR** · hooks: `→ features/hr/settings`
