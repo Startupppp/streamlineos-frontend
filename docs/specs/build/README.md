@@ -107,7 +107,7 @@ boundaries, not write permission.
 |---|---|---|---|---|---|---|---|
 | `BLD-X-SB-ACTIONS-001` | cycle-14 agent CA | `e18077a30` | `374afd27a` | prod: none changed · test: `build-quick-create.test.tsx`, `build-more-tools-menu.test.tsx`, `use-build-nav-preferences.test.ts` | 2026-09-21T08:35Z | 2026-09-21T11:35Z | `INTEGRATED (cycle 14)` |
 | `BLD-X-SB-CAPABILITY-001` | cycle-15 agent DA | `e18077a30` | `374afd27a` | prod: `features/build/navigation/use-build-nav-model.ts` · test: `use-build-nav-model.test.tsx`, new `lib/build/build-nav-catalog-route-files.test.ts` | 2026-09-21T12:10Z | 2026-09-21T15:10Z | `RESERVED` |
-| `BLD-X-FE-ALLWORK-001` | cycle-14 agent CB | `e18077a30` | `374afd27a` | prod: `features/build/all-work/all-work-page.tsx`, `use-all-work-filters.ts`, `all-work-ticket-utils.ts`, `all-work-views-menu.tsx`, `all-work-board-section.tsx`, `all-work-list-section.tsx`, `all-work-table-section.tsx` · test: `all-work-access-gate.test.tsx`, `all-work-org-statuses.test.tsx`, `all-work-views-menu.test.tsx`, new `all-work-filters.test.ts` | 2026-09-21T08:35Z | 2026-09-21T11:35Z | `RESERVED` |
+| `BLD-X-FE-ALLWORK-001` | cycle-14 agent CB | `e18077a30` | `374afd27a` | prod: `all-work-page.tsx`, `use-all-work-filters.ts`, `all-work-board-section.tsx`, `all-work-list-section.tsx` · test: `all-work-access-gate.test.tsx`, new `all-work-filters.test.ts` | 2026-09-21T08:35Z | 2026-09-21T11:35Z | `INTEGRATED (cycle 14)` |
 | `BLD-X-FE-INBOX-001` | cycle-14 agent CC | `e18077a30` | `374afd27a` | prod: `features/build/inbox/inbox-page.tsx`, `inbox-list.tsx`, `inbox-notification-item.tsx`, `inbox-preview-pane.tsx`, `inbox-render-window.ts`, `inbox-ticket-preview.tsx`, `parse-inbox-ticket-link.ts` · test: `inbox-badge-invalidation.test.ts`, `inbox-list-bounded.test.tsx`, `inbox-notification-item.test.tsx`, `parse-inbox-ticket-link.test.ts`, new `inbox-page.test.tsx` | 2026-09-21T08:55Z | 2026-09-21T11:55Z | `RESERVED` |
 | `BLD-X-SB-SIGNALS-001` | cycle-13 agent BA | `400e17647` | `1e8df44cc` | prod: `features/build/navigation/build-agent-pulse.tsx`, `build-nav-link.tsx`, `hooks/api/build/approvals.ts` (dead `signalBuildInboxInvalidation` + its `storage` listener only) · test: `build-agent-pulse.test.tsx`, `build-inbox-badge-cross-tab.test.tsx`, `build-nav-link-badge-a11y.test.tsx`, `hooks/api/build/approvals-badge.test.ts` | 2026-09-21T06:20Z | 2026-09-21T09:20Z | `INTEGRATED (cycle 13)` |
 | `BLD-X-SB-DIR-001` | cycle-13 agent BB | `400e17647` | `1e8df44cc` | prod: `features/build/navigation/build-scope-browser.tsx`, `build-scope-row.tsx`, `build-scope-tree.ts`, `use-build-scope-directory.ts` · test: `build-scope-browser.test.tsx`, `build-scope-row.test.tsx`, `build-scope-tree.test.ts`, `use-build-scope-directory.test.ts` | 2026-09-21T06:20Z | 2026-09-21T09:20Z | `INTEGRATED (cycle 13)` |
@@ -945,6 +945,43 @@ not claim denial before it knows (never `useCan` for page state), a **control**
 must not claim authority before it knows (always `useCan`, fail closed). All
 three code agents were corrected before landing a control-gate change. Future
 briefs quote `frontend/CLAUDE.md:48` verbatim rather than paraphrasing it.
+
+**`BLD-X-FE-ALLWORK-001` — `INTEGRATED`, two confirmed defects repaired.**
+Three of five hypotheses refuted; the page's `usePageState` call was already
+correct (H5) and all three view layouts exist (H3). Coordinator-verified:
+
+- **H4, a filter chip that lied.** `use-all-work-filters.ts` passed raw URL
+  `priority`/`type` straight through. The backend's `allWorkQuerySchema`
+  (`modules/build/core/dto/ticket.schemas.ts:87-112`) validates with
+  `.transform().filter()`, which **silently drops** an unrecognised value rather
+  than rejecting it — so `?priority=low` produced an empty array, the SQL
+  condition became a no-op, and the chip still rendered as an active filter over
+  unfiltered results. Now normalised and validated before the value reaches the
+  API, with `hasActiveFilters` using the same validators.
+  Coordinator checked the new enum sets against the backend line by line:
+  priority `LOW|MEDIUM|HIGH|URGENT` (`:95-96`), type `TASK|BUG|STORY|EPIC|SUBTASK`
+  (`:108-109`) — exact match. Note `lib/validation/projects.ts:5` omits `SUBTASK`,
+  but that is the project-settings schema, a different contract; not a defect.
+- **H2, a per-project count that overstated.** The board and list section badges
+  rendered `{group.tickets.length}` over **loaded pages only**, presenting a
+  partial count as the project total. Now `{count}{hasNextPage ? "+" : ""}`.
+  `allWorkPageContract` has no per-project total, so `+` is the honest
+  disclosure boundary rather than a fabricated number.
+- Full 15-param audit against the backend DTO found **no field-name drift**. The
+  `labels` → `labelIds` URL-to-field mapping round-trips correctly
+  (`ticket.schemas.ts:114`); the schema is `.strict()`, so any extra key would
+  400 every call.
+- Suites re-run by the coordinator: **19 tests, 4 suites, exit 0**. Diff carries
+  no code comments. CB also deleted a duplicated local `ProjectGroup` interface
+  in favour of the canonical one in `all-work-ticket-utils` (§4).
+
+**One cross-agent attribution was wrong and was not accepted.** CB reported
+`check:named-handlers` exit 1 at `features/build/inbox/inbox-page.test.tsx:65`
+as `PRE-EXISTING`. That file is untracked and is being **created right now** by
+the concurrently-running inbox agent, so CB measured a tree another agent was
+mid-edit in. The gate is re-run after the inbox packet lands and attributed
+then. This is the standing hazard with overlapping agents: a repo-wide gate run
+by agent A reports agent B's in-flight work as pre-existing.
 
 ### Findings banked for cycles 15–16 (read-only audit, unverified by coordinator)
 

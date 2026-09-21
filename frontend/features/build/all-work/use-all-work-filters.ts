@@ -5,6 +5,21 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import type { AllWorkFilters } from "@/types/projects";
 import { parseView, type AllWorkView } from "./all-work-view-switcher";
 
+const VALID_PRIORITIES = new Set(["LOW", "MEDIUM", "HIGH", "URGENT"]);
+const VALID_TICKET_TYPES = new Set(["TASK", "BUG", "STORY", "EPIC", "SUBTASK"]);
+
+export function parsePriorityParam(raw: string | null): string | undefined {
+  if (!raw) return undefined;
+  const upper = raw.toUpperCase();
+  return VALID_PRIORITIES.has(upper) ? upper : undefined;
+}
+
+export function parseTicketTypeParam(raw: string | null): string | undefined {
+  if (!raw) return undefined;
+  const upper = raw.toUpperCase();
+  return VALID_TICKET_TYPES.has(upper) ? upper : undefined;
+}
+
 interface UseAllWorkFiltersReturn {
   view: AllWorkView;
   scopeMine: boolean;
@@ -58,9 +73,9 @@ export function useAllWorkFilters(): UseAllWorkFiltersReturn {
     if (q) f.search = q;
     const status = searchParams.get("status");
     if (status) f.status = status;
-    const priority = searchParams.get("priority");
+    const priority = parsePriorityParam(searchParams.get("priority"));
     if (priority) f.priority = priority;
-    const type = searchParams.get("type");
+    const type = parseTicketTypeParam(searchParams.get("type"));
     if (type) f.type = type;
     const assigneeId = searchParams.get("assigneeId");
     if (assigneeId) f.assigneeId = assigneeId;
@@ -77,8 +92,27 @@ export function useAllWorkFilters(): UseAllWorkFiltersReturn {
   }, [searchParams, scopeMine]);
 
   const hasActiveFilters = useMemo(() => {
-    const filterKeys = ["q", "status", "priority", "type", "assigneeId", "labels", "projectIds", "dueDateFrom", "dueDateTo"];
-    return filterKeys.some((k) => !!searchParams.get(k)) || scopeMine;
+    const hasQ = !!searchParams.get("q");
+    const hasStatus = !!searchParams.get("status");
+    const hasPriority = !!parsePriorityParam(searchParams.get("priority"));
+    const hasType = !!parseTicketTypeParam(searchParams.get("type"));
+    const hasAssignee = !!searchParams.get("assigneeId");
+    const hasLabels = !!searchParams.get("labels");
+    const hasProjects = !!searchParams.get("projectIds");
+    const hasDueDateFrom = !!searchParams.get("dueDateFrom");
+    const hasDueDateTo = !!searchParams.get("dueDateTo");
+    return (
+      hasQ ||
+      hasStatus ||
+      hasPriority ||
+      hasType ||
+      hasAssignee ||
+      hasLabels ||
+      hasProjects ||
+      hasDueDateFrom ||
+      hasDueDateTo ||
+      scopeMine
+    );
   }, [searchParams, scopeMine]);
 
   const handleClearFilters = useCallback(() => {

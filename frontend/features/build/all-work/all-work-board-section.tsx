@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -12,9 +12,10 @@ import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 
 interface BoardProjectSectionProps {
   group: ProjectGroup;
+  hasNextPage: boolean;
 }
 
-function BoardProjectSection({ group }: BoardProjectSectionProps) {
+function BoardProjectSection({ group, hasNextPage }: BoardProjectSectionProps) {
   const router = useRouter();
   const kanbanTickets = useMemo(() => group.tickets.map(toKanbanTicket), [group.tickets]);
 
@@ -42,7 +43,7 @@ function BoardProjectSection({ group }: BoardProjectSectionProps) {
           variant="secondary"
           className="h-5 shrink-0 rounded-md bg-primary/10 px-1.5 text-micro font-medium tabular-nums text-primary"
         >
-          {group.tickets.length}
+          {group.tickets.length}{hasNextPage ? "+" : ""}
         </Badge>
       </div>
       <div className="flex min-h-0 flex-1 flex-col px-2 pt-2 pb-0 sm:px-3 sm:pt-3">
@@ -59,13 +60,14 @@ function BoardProjectSection({ group }: BoardProjectSectionProps) {
 
 interface AllWorkBoardSectionProps {
   groups: ProjectGroup[];
+  hasNextPage?: boolean;
 }
 
-export function AllWorkBoardSection({ groups }: AllWorkBoardSectionProps) {
+export function AllWorkBoardSection({ groups, hasNextPage = false }: AllWorkBoardSectionProps) {
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
       {groups.map((group) => (
-        <BoardProjectSection key={group.projectId} group={group} />
+        <BoardProjectSection key={group.projectId} group={group} hasNextPage={hasNextPage} />
       ))}
     </div>
   );

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -9,16 +9,11 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { ProjectChip } from "./project-chip";
 import type { AllWorkTicket } from "@/types/projects";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
-
-interface ProjectGroup {
-  projectId: number;
-  projectKey: string;
-  projectName: string;
-  tickets: AllWorkTicket[];
-}
+import type { ProjectGroup } from "./all-work-ticket-utils";
 
 interface AllWorkListSectionProps {
   groups: ProjectGroup[];
+  hasNextPage?: boolean;
 }
 
 function toListTicket(t: AllWorkTicket) {
@@ -54,8 +49,10 @@ function toListTicket(t: AllWorkTicket) {
 
 const ProjectSection = memo(function ProjectSection({
   group,
+  hasNextPage,
 }: {
   group: ProjectGroup;
+  hasNextPage: boolean;
 }) {
   const router = useRouter();
 
@@ -83,7 +80,7 @@ const ProjectSection = memo(function ProjectSection({
           variant="secondary"
           className="h-5 shrink-0 rounded-md bg-primary/10 px-1.5 text-micro font-medium tabular-nums text-primary"
         >
-          {group.tickets.length}
+          {group.tickets.length}{hasNextPage ? "+" : ""}
         </Badge>
       </div>
       <ListView
@@ -98,13 +95,14 @@ const ProjectSection = memo(function ProjectSection({
 
 export const AllWorkListSection = memo(function AllWorkListSection({
   groups,
+  hasNextPage = false,
 }: AllWorkListSectionProps) {
   if (groups.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-3">
       {groups.map((group) => (
-        <ProjectSection key={group.projectId} group={group} />
+        <ProjectSection key={group.projectId} group={group} hasNextPage={hasNextPage} />
       ))}
     </div>
   );

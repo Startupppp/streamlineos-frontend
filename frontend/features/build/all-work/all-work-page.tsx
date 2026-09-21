@@ -270,7 +270,7 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
                         exit="exit"
                         transition={pmSnappy}
                       >
-                        <AllWorkListSection groups={projectGroups} />
+                        <AllWorkListSection groups={projectGroups} hasNextPage={hasNextPage} />
                       </motion.div>
                     ) : null}
 
@@ -302,7 +302,7 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
                         transition={pmSnappy}
                         className="flex h-full min-h-0 w-full flex-1 flex-col"
                       >
-                        <AllWorkBoardSection groups={projectGroups} />
+                        <AllWorkBoardSection groups={projectGroups} hasNextPage={hasNextPage} />
                       </motion.div>
                     ) : null}
                   </AnimatePresence>
