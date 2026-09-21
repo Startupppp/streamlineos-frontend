@@ -104,7 +104,7 @@ export const PAYROLL_NAV_GROUPS: NavGroup[] = [
         requiredPermission: "payroll:payslips:view",
       },
       {
-        label: "FNF Settlement",
+        label: "Final settlement",
         icon: FileCheck,
         href: "/payroll/fnf",
         requiredPermission: "payroll:fnf:view",

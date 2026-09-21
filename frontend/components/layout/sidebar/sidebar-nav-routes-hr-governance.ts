@@ -149,7 +149,7 @@ export const HR_GOVERNANCE_ROUTES: NavRoute[] = [
         requiredPermission: "hr:exit:view",
         children: [
           {
-            label: "Full & Final",
+            label: "Final settlement",
             icon: FileCheck,
             href: "/hr/fnf",
             requiredPermission: "hr:payroll:approve",

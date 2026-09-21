@@ -42,7 +42,7 @@ const RUN_TYPE_OPTIONS: { value: PayrollRunType; label: string; hint: string }[]
   { value: "BONUS", label: "Bonus", hint: "Approved variable pay, separate from regular pay" },
   { value: "OFF_CYCLE", label: "Off-cycle", hint: "Joiner, advance, or special payment" },
   { value: "CORRECTION", label: "Correction", hint: "Corrects a closed or paid result" },
-  { value: "FINAL_SETTLEMENT", label: "Final settlement", hint: "Termination / F&F run" },
+  { value: "FINAL_SETTLEMENT", label: "Final settlement", hint: "Termination / final settlement run" },
 ];
 
 const RUN_TYPES_NEEDING_SOURCE: PayrollRunType[] = ["OFF_CYCLE", "CORRECTION", "FINAL_SETTLEMENT"];

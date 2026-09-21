@@ -2,19 +2,15 @@
 
 import { ReportingRouteErrorBoundary } from "@/lib/observability/reporting-route-error-boundary";
 
-export default function FnfError({
-  error,
-  reset,
-}: {
+export default function HrExitDetailError(props: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
   return (
     <ReportingRouteErrorBoundary
-      error={error}
-      reset={reset}
-      title="Final settlement error"
-      fallbackMessage="Failed to load settlement data. Please try again."
+      {...props}
+      title="Exit error"
+      fallbackMessage="Failed to load this exit. Please try again."
     />
   );
 }

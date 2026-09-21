@@ -105,7 +105,6 @@
   "features/hr/feedback/cycles-tab.tsx",
   "features/hr/feedback/my-reviews-tab.tsx",
   "features/hr/feedback/results-tab.tsx",
-  "features/hr/fnf/fnf-page-client.tsx",
   "features/hr/geofencing/geofence-list.tsx",
   "features/hr/global/compliance-events-tab.tsx",
   "features/hr/global/contingent-page-content.tsx",

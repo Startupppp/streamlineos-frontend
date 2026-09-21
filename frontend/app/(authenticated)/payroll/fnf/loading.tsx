@@ -6,8 +6,8 @@ import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 export function FnfPageSkeleton() {
   return (
     <PageWrapper
-      title="Full & Final Settlement"
-      subtitle="Review and approve exit settlements"
+      title="Final settlement"
+      subtitle="Review and approve exit settlements."
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <Skeleton className="h-9 w-44 rounded-md" />
