@@ -324,7 +324,7 @@ export function LeavesTabContent({
           description="You haven't submitted any leave requests yet."
           action={
             onRequestLeave
-              ? { label: "Request Leave", onClick: onRequestLeave }
+              ? { label: "Request leave", onClick: onRequestLeave }
               : undefined
           }
           className={PAGE_BODY_EMPTY_CLASS}

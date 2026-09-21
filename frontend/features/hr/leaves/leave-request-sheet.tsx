@@ -181,10 +181,10 @@ export function LeaveRequestSheet({
     <HrSheet
       open={open}
       onOpenChange={onOpenChange}
-      title="Request Leave"
+      title="Request leave"
       description="Fill in the details to submit a leave request"
       onSubmit={form.handleSubmit(onSubmit)}
-      submitLabel={approverAvailable ? "Submit Request" : "No approver available"}
+      submitLabel={approverAvailable ? "Submit leave request" : "No approver available"}
       isPending={requestLeaveMutation.isPending}
       submitDisabled={
         (!isValid && isDirty) ||
