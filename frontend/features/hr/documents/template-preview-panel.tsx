@@ -1,8 +1,8 @@
 "use client";
 
-import DOMPurify from "isomorphic-dompurify";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye } from "lucide-react";
+import { SanitizedHtml } from "@/components/shared/sanitized-html";
 
 interface TemplatePreviewPanelProps {
   previewHtml: string;
@@ -26,9 +26,9 @@ export function TemplatePreviewPanel({ previewHtml }: TemplatePreviewPanelProps)
           </div>
         </CardHeader>
         <CardContent className="p-4">
-          <div
+          <SanitizedHtml
+            html={previewHtml}
             className="max-h-[600px] overflow-y-auto rounded-xl border bg-card p-5 text-sm prose prose-sm dark:prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(previewHtml) }}
           />
         </CardContent>
       </Card>
