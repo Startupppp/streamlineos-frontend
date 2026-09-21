@@ -104,8 +104,21 @@ protects trust boundaries, and the database protects durable state.
   field and reject contract drift.
 - [ ] **BLD-05-003** all request schemas are strict and live in the owning
   module's schema file.
-- [ ] **BLD-05-004** all form schemas live in `*-schema.ts`, with types derived
-  from the schema.
+- [x] **BLD-05-004** all form schemas live in `*-schema.ts`, with types derived
+  from the schema. **Closed — zero inline schemas remain.**
+  Thirty-two components under `features/build/**` declared their react-hook-form
+  `z.object` inline. Each moved to the `*-schema.ts` owning its folder, reusing
+  the existing file where one was already present (`goal-form-schema.ts`,
+  `intake-schema.ts`, `meeting-form-schema.ts`) rather than adding a second.
+  All 22 schema files derive their type with `z.infer`; no hand-written parallel
+  interface survives. `create-epic-dialog` and `edit-epic-dialog` each carried
+  an identical copy of the priority and status lists — now one definition in
+  `epic-schema.ts`.
+  Verified by a repo scan returning no `z.object(` outside a `*-schema.ts` under
+  `features/build/**` or `app/(authenticated)/build/**`; `pnpm type-check` clean;
+  127 Build suites / 740 tests green. Commit `1430903f8`.
+  No validation rule, field or message changed — this was a move, so it is not
+  evidence that any form's rules are correct, only that they are owned.
 
 ## Form Inventory and Minimum Contract
 
