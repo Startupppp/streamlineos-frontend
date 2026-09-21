@@ -379,6 +379,7 @@ If it is here, do not reimplement it. **Adding a shared component means adding a
 | Confirm | `ConfirmDialog` · `UnsavedChangesDialog` · `ConfirmSheet`, `ConfirmWithReasonSheet` — `components/ui/` |
 | Unsaved-work guard | `DirtyStateProvider`, `useRegisterDirtyState`, `useHasUnsavedWork`, `useNavigationLeave` — `components/shared/dirty-state-context.tsx` (any module, not Build-only; `useNavigationLeave` guards navigation — `useRequestLeave` is HR's leave-request mutation and is a different thing) |
 | Async button · animated icon | `LoadingButton` — `components/ui/loading-button.tsx` · `AnimatedIconButton` — `animated-icon-button.tsx` · `useAnimatedIcon` — `hooks/common/use-animated-icon.ts` |
+| Horizontal scroll affordance | `useHorizontalOverflow(ref, revision?)` + `OVERFLOW_EDGE_FADE_CLASS` — `hooks/common/use-horizontal-overflow.ts` (a scrolling row fades the edge that hides more; `StatCardGrid`, `TabsList` and the timesheet week grid already use it — apply to any new `overflow-x-auto scrollbar-hide` row) |
 | States | `EmptyState` — `components/ui/empty-state.tsx` · `ErrorState`, `LoadingState`, `AccessDenied`, `NoPermissionState` — `components/shared` |
 | Mobile overlay · badges | `ResponsivePopover`, `Drawer` — `components/ui/` · `Badge`, `SemanticBadge`, `StatusBadge`, `StatusMapBadge` — `components/ui/` |
 | Pickers | `PhoneInput` · `DatePicker`, `DateRangePicker` · `Combobox`, `UserCombobox` — `components/ui/` |
