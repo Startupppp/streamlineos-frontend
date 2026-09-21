@@ -27,7 +27,7 @@ import { LeaveBalancePreview, LeaveLimitError } from "./leave-balance-preview";
 import type { LeaveFormValues } from "./leave-request-schema";
 import type { LeaveType, LeaveBalance } from "./components/leaves-shared";
 import type { ApprovalRoute } from "@/hooks/api/hr/approval-route-schema";
-import { ApprovalRoutePanel } from "@/components/shared/approval-route-panel";
+import { ApprovalRoutePanel, summarizeApprovalRoute } from "@/components/shared/approval-route-panel";
 
 interface LeaveRequestFormFieldsProps {
   form: UseFormReturn<LeaveFormValues>;
@@ -249,7 +249,7 @@ export function LeaveRequestFormFields({
         )}
       />
 
-      <ApprovalRoutePanel route={approvalRoute} isLoading={false} error={null} />
+      <ApprovalRoutePanel route={approvalRoute && summarizeApprovalRoute(approvalRoute)} isLoading={false} error={null} />
 
       <FormField
         control={form.control}

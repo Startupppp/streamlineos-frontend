@@ -14,6 +14,7 @@ import { APPROVALS_PAGE_SIZE, useApprovals } from "@/hooks/api/timesheets-core/a
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
 import type { PeriodStatus, TimesheetPeriod } from "@/features/timesheets/types";
 import { cn } from "@/lib/utils";
+import { ApprovalRouteCell } from "./approval-route-cell";
 
 export type ApprovalTab = Extract<PeriodStatus, "SUBMITTED" | "APPROVED" | "REJECTED">;
 
@@ -125,6 +126,11 @@ function ApprovalsTable({
           ) : (
             <span className="text-muted-foreground">—</span>
           ),
+      },
+      {
+        key: "route",
+        header: "Approver",
+        cell: (row) => <ApprovalRouteCell period={row} />,
       },
       {
         key: "status",

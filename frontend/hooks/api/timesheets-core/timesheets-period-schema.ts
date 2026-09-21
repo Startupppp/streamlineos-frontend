@@ -1,4 +1,31 @@
 import { z } from "zod";
+import { approvalCandidateContract } from "@/hooks/api/hr/approval-route-schema";
+
+export const timesheetApprovalRouteContract = z.object({
+  source: z.enum(["reporting_manager", "project_manager", "auto"]),
+  rung: z.string().nullable(),
+  approverUserId: z.string().nullable(),
+  approverMembershipId: z.number().nullable(),
+  assignedToUserId: z.string().nullable(),
+  delegation: z.object({ fromUserId: z.string(), toUserId: z.string(), endsAt: z.string() }).nullable(),
+  projectId: z.number().nullable(),
+  explanation: z.string(),
+  slaHours: z.number(),
+  escalationRung: z.string().nullable(),
+  escalatedFrom: z.object({ approverUserId: z.string().nullable(), rung: z.string().nullable(), at: z.string() }).nullable(),
+});
+
+export type TimesheetApprovalRoute = z.infer<typeof timesheetApprovalRouteContract>;
+
+export const periodApproverPreviewContract = z.object({
+  kind: z.enum(["auto", "routed", "unowned"]),
+  approver: approvalCandidateContract.nullable(),
+  route: timesheetApprovalRouteContract.nullable(),
+  dueAt: z.string().nullable(),
+  explanation: z.string(),
+});
+
+export type PeriodApproverPreview = z.infer<typeof periodApproverPreviewContract>;
 
 export const timesheetPeriodContract = z.object({
   id: z.number(),
@@ -15,6 +42,9 @@ export const timesheetPeriodContract = z.object({
   rejectedAt: z.string().nullable(),
   lockedAt: z.string().nullable(),
   currentApproverMembershipId: z.number().nullable(),
+  approvalRoute: timesheetApprovalRouteContract.nullable(),
+  approvalDueAt: z.string().nullable(),
+  approvalEscalatedAt: z.string().nullable(),
   rejectionReason: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),

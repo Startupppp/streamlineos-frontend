@@ -877,13 +877,14 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 ## Timesheets
 
 - `/timesheets` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: the week grid scroller fades its hidden edge and, below `sm`, says "Swipe sideways to reach every day of the week" whenever it overflows — FE#79; header wrapping at 768 landed earlier in 08f6406e2 — FE#80)
-- `/timesheets/approvals` · **Timesheets** · hooks: `→ features/timesheets`
+- `/timesheets` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: My Time shows the shared `ApprovalRoutePanel` from `GET /timesheets/periods/{periodId}/approver` before submit — who approves, why, SLA, escalation — and disables Submit when nobody can own the period)
+- `/timesheets/approvals` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: the queue lists periods routed to the viewer, an Approver column names the rung, escalation and deadline (`approvalRoute`/`approvalDueAt`), the detail sheet spells out the routing explanation)
 - `/timesheets/billing` · **Timesheets** · hooks: `→ features/timesheets`
 - `/timesheets/exceptions` · **Timesheets** · hooks: `→ features/timesheets`
 - `/timesheets/overdue` · **Timesheets** · hooks: `→ features/timesheets` — overdue timesheets list; `enforceRouteAccess`
 - `/timesheets/payroll` · **Timesheets** · hooks: `→ features/timesheets`
 - `/timesheets/reports` · **Timesheets** · hooks: `→ features/timesheets/reports`
-- `/timesheets/settings` · **Timesheets** · hooks: `→ features/timesheets/settings`
+- `/timesheets/settings` · **Timesheets** · hooks: `→ features/timesheets/settings` (2026-09-21: approval mode offers Manager or Auto only — multi-level is not configurable until it exists — and "Who approves" picks the reporting manager (default) or the dominant project's manager)
 - `/timesheets/team` · **Timesheets** · hooks: `→ features/timesheets`
 - `/timesheets/access` · **Timesheets** · hooks: `→ features/timesheets`
 
