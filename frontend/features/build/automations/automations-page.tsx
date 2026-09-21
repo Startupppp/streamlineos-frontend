@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence } from "framer-motion";
@@ -57,7 +57,7 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
       isActive: true,
     },
   });
-  useRegisterBuildDirtyState(sheetOpen && form.formState.isDirty);
+  useRegisterDirtyState(sheetOpen && form.formState.isDirty);
 
   const {
     fields: conditionFields,

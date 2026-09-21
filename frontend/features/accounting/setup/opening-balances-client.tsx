@@ -11,11 +11,12 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMinorMoney, parseMoneyInput } from "@/lib/accounting/money";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useAccountingBook, usePostableAccounts } from "@/hooks/api/accounting/ledger";
 import {
   usePostOpeningBalances,
@@ -28,10 +29,16 @@ function todayIso(): string {
 }
 
 export function OpeningBalancesClient() {
-  const canRead = useCan("accounting:settings:read");
   const canPost = useCan("accounting:journal:post");
   const bookQuery = useAccountingBook();
   const accountsQuery = usePostableAccounts();
+
+  const pageState = usePageState({
+    permission: "accounting:settings:read",
+    isLoading: bookQuery.isLoading,
+    isError: bookQuery.isError,
+    error: bookQuery.error,
+  });
   const preview = usePreviewOpeningBalances();
   const postBalances = usePostOpeningBalances();
 
@@ -86,13 +93,14 @@ export function OpeningBalancesClient() {
     );
   }
 
-  if (!canRead) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper title="Opening balances">
-        <NoPermissionState permission="accounting:settings:read" />
+        <PageState resolution={pageState} loading={null} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
   if (bookQuery.isPending || accountsQuery.isPending) {
     return (
@@ -101,17 +109,6 @@ export function OpeningBalancesClient() {
           <Skeleton className="h-24 w-full" />
           <Skeleton className="h-96 w-full" />
         </div>
-      </PageWrapper>
-    );
-  }
-
-  if (bookQuery.isError) {
-    return (
-      <PageWrapper title="Opening balances">
-        <ErrorState
-          description="Accounting has not been set up yet."
-          className="flex-1"
-        />
       </PageWrapper>
     );
   }

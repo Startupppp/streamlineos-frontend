@@ -377,6 +377,7 @@ If it is here, do not reimplement it. **Adding a shared component means adding a
 | Tabs | `Tabs`, `TABS_CONTENT_PAGE_BODY_CLASS` — `components/ui/tabs.tsx` · `PageTabsToolbar` — `page-tabs-toolbar.tsx` |
 | Form shells · primitives | `EntityFormSheet`, `EntityFormDialog`, `AppSheet`, `AppDialog` — `components/shared` · `Form`, `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormDescription`, `FormMessage` — `components/ui/form.tsx` |
 | Confirm | `ConfirmDialog` · `UnsavedChangesDialog` · `ConfirmSheet`, `ConfirmWithReasonSheet` — `components/ui/` |
+| Unsaved-work guard | `DirtyStateProvider`, `useRegisterDirtyState`, `useHasUnsavedWork`, `useNavigationLeave` — `components/shared/dirty-state-context.tsx` (any module, not Build-only; `useNavigationLeave` guards navigation — `useRequestLeave` is HR's leave-request mutation and is a different thing) |
 | Async button · animated icon | `LoadingButton` — `components/ui/loading-button.tsx` · `AnimatedIconButton` — `animated-icon-button.tsx` · `useAnimatedIcon` — `hooks/common/use-animated-icon.ts` |
 | States | `EmptyState` — `components/ui/empty-state.tsx` · `ErrorState`, `LoadingState`, `AccessDenied`, `NoPermissionState` — `components/shared` |
 | Mobile overlay · badges | `ResponsivePopover`, `Drawer` — `components/ui/` · `Badge`, `SemanticBadge`, `StatusBadge`, `StatusMapBadge` — `components/ui/` |

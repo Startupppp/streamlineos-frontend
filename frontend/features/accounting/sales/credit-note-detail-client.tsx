@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   CREDIT_NOTES_MANAGE,
   CREDIT_NOTES_READ,
@@ -38,7 +39,6 @@ import {
 const PREVIEW_DEBOUNCE_MS = 400;
 
 export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string }) {
-  const canRead = useCan(CREDIT_NOTES_READ);
   const canManage = useCan(CREDIT_NOTES_MANAGE);
   const router = useRouter();
 
@@ -62,6 +62,14 @@ export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string 
   const deleteDraft = useDeleteCreditNoteDraft();
   const postCreditNote = usePostCreditNote();
   const allocate = useAllocateCreditNote();
+
+  const pageState = usePageState({
+    permission: CREDIT_NOTES_READ,
+    isLoading: creditNoteQuery.isLoading,
+    isError: creditNoteQuery.isError,
+    error: creditNoteQuery.error,
+  });
+  const handleRetry = useCallback(() => { void creditNoteQuery.refetch(); }, [creditNoteQuery]);
 
   function handleFailure(error: unknown): void {
     const rejection = readArRejection(error);
@@ -119,26 +127,14 @@ export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string 
     });
   }
 
-  if (!canRead) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper title="Credit note" backHref="/accounting/credit-notes">
-        <NoPermissionState permission={CREDIT_NOTES_READ} />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
-
-  if (creditNoteQuery.isError) {
-    return (
-      <PageWrapper title="Credit note" backHref="/accounting/credit-notes">
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load this credit note"
-          description={getErrorMessage(creditNoteQuery.error)}
-          onRetry={() => void creditNoteQuery.refetch()}
-        />
-      </PageWrapper>
-    );
-  }
 
   if (creditNoteQuery.isPending || !creditNote) {
     return (

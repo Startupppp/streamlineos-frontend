@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useCan } from "@/hooks/api/access";
 import { useTrialBalanceReport } from "@/hooks/api/accounting/reports";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import type { TrialBalanceLine } from "@/types/accounting-reports";
@@ -16,7 +15,6 @@ import { ReportShell } from "./report-shell";
 import { useReportControls } from "./use-report-controls";
 
 export function TrialBalanceReport() {
-  const canView = useCan("accounting:reports:read");
   const controls = useReportControls();
   const includeZeroActivity = controls.includeZeroActivity;
 
@@ -79,7 +77,6 @@ export function TrialBalanceReport() {
       title={data?.title ?? "Trial balance"}
       subtitle="Every account with a closing balance, checked against itself."
       backHref="/accounting"
-      canView={canView}
       permission="accounting:reports:read"
       isLoading={isLoading}
       isError={isError}

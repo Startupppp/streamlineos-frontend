@@ -1,9 +1,9 @@
 import { Suspense, act } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import {
-  BuildDirtyStateProvider,
-  useBuildHasUnsavedWork,
-} from "@/features/build/navigation/build-dirty-state-context";
+  DirtyStateProvider,
+  useHasUnsavedWork,
+} from "@/components/shared/dirty-state-context";
 import { ProjectSettingsPage } from "./project-settings-page";
 
 const mockPush = jest.fn();
@@ -97,7 +97,7 @@ jest.mock("@/lib/text-overflow", () => ({
 }));
 
 function HasUnsavedWorkProbe() {
-  const hasUnsavedWork = useBuildHasUnsavedWork();
+  const hasUnsavedWork = useHasUnsavedWork();
   return (
     <span data-testid="probe">{hasUnsavedWork ? "dirty" : "clean"}</span>
   );
@@ -107,10 +107,10 @@ async function renderHarness() {
   await act(async () => {
     render(
       <Suspense fallback={null}>
-        <BuildDirtyStateProvider>
+        <DirtyStateProvider>
           <HasUnsavedWorkProbe />
           <ProjectSettingsPage params={Promise.resolve({ projectId: "1" })} />
-        </BuildDirtyStateProvider>
+        </DirtyStateProvider>
       </Suspense>,
     );
   });

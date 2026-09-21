@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useUnsavedChangesGuard } from "@/hooks/common/use-unsaved-changes-guard";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -92,7 +92,7 @@ export function PmWorkspaceFormSheet({
   });
 
   const isDirty = open && (createForm.formState.isDirty || editForm.formState.isDirty);
-  useRegisterBuildDirtyState(isDirty);
+  useRegisterDirtyState(isDirty);
   const { requestLeave, dialogProps } = useUnsavedChangesGuard({ isDirty });
 
   useEffect(() => {

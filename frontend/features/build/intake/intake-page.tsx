@@ -26,7 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, ExternalLink } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/lib/person-display";
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm, Controller, useController } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -76,7 +76,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
   const createForm = useForm<CreateIntakeForm>({ resolver: zodResolver(createIntakeSchema) });
   const acceptForm = useForm<AcceptForm>({ resolver: zodResolver(acceptSchema) });
   const declineForm = useForm<DeclineForm>({ resolver: zodResolver(declineSchema) });
-  useRegisterBuildDirtyState(
+  useRegisterDirtyState(
     (createOpen && createForm.formState.isDirty) ||
     (acceptOpen && acceptForm.formState.isDirty) ||
     (declineOpen && declineForm.formState.isDirty),

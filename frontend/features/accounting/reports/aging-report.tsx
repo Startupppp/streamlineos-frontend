@@ -4,7 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCan } from "@/hooks/api/access";
 import { useAgingReport } from "@/hooks/api/accounting/reports";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { AGING_BUCKET_KEYS, type AgingPartyRow } from "@/types/accounting-reports";
@@ -16,7 +15,6 @@ import { ReportShell } from "./report-shell";
 import { useReportControls } from "./use-report-controls";
 
 export function AgingReport() {
-  const canView = useCan("accounting:reports:read");
   const controls = useReportControls();
 
   const params = {
@@ -78,7 +76,6 @@ export function AgingReport() {
       title={data?.title ?? (isReceivable ? "What customers owe us" : "What we owe suppliers")}
       subtitle="Open items grouped by how late they are."
       backHref="/accounting/reports"
-      canView={canView}
       permission="accounting:reports:read"
       isLoading={isLoading}
       isError={isError}

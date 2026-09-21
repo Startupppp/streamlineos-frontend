@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -9,10 +9,10 @@ import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useAccountingBook } from "@/hooks/api/accounting/ledger";
 import { useBankAccounts } from "@/hooks/api/accounting/banking";
 import type { BankAccountSummary } from "@/types/accounting-banking";
@@ -23,7 +23,6 @@ import { BankAccountBalanceCell } from "./bank-account-balance-cell";
 const PAGE_SIZE = 10;
 
 export function BankAccountsPage() {
-  const canRead = useCan("accounting:banking:read");
   const canManage = useCan("accounting:banking:manage");
   const { page, setPage } = useUrlListState();
   const [isAdding, setIsAdding] = useState(false);
@@ -31,6 +30,14 @@ export function BankAccountsPage() {
 
   const bookQuery = useAccountingBook();
   const accountsQuery = useBankAccounts({ page, pageSize: PAGE_SIZE, includeInactive: true });
+
+  const pageState = usePageState({
+    permission: "accounting:banking:read",
+    isLoading: accountsQuery.isLoading,
+    isError: accountsQuery.isError,
+    error: accountsQuery.error,
+  });
+  const handleRetry = useCallback(() => { void accountsQuery.refetch(); }, [accountsQuery]);
 
   const columns: DataTableColumn<BankAccountSummary>[] = [
     {
@@ -88,13 +95,14 @@ export function BankAccountsPage() {
     },
   ];
 
-  if (!canRead) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper title="Banking">
-        <NoPermissionState permission="accounting:banking:read" />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
   const rows = accountsQuery.data?.items ?? [];
 
@@ -127,39 +135,30 @@ export function BankAccountsPage() {
         </div>
       }
     >
-      {accountsQuery.isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load your bank accounts"
-          description={getErrorMessage(accountsQuery.error)}
-          onRetry={() => void accountsQuery.refetch()}
-        />
-      ) : (
-        <DataTable
-          data={rows}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          isLoading={accountsQuery.isPending}
-          minWidth="1000px"
-          className="flex-1 min-h-0"
-          emptyState={
-            <EmptyState
-              className="border-0 bg-transparent min-h-[40vh]"
-              title="No bank accounts yet"
-              description="Point a bank account at the cash account it is already tracked in, and statements can start coming in."
-              action={canManage ? { label: "Add account", onClick: () => setIsAdding(true) } : undefined}
-            />
-          }
-          pagination={{
-            mode: "server",
-            page,
-            pageSize: PAGE_SIZE,
-            total: accountsQuery.data?.total ?? 0,
-            onPageChange: setPage,
-            pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
-          }}
-        />
-      )}
+      <DataTable
+        data={rows}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        isLoading={accountsQuery.isPending}
+        minWidth="1000px"
+        className="flex-1 min-h-0"
+        emptyState={
+          <EmptyState
+            className="border-0 bg-transparent min-h-[40vh]"
+            title="No bank accounts yet"
+            description="Point a bank account at the cash account it is already tracked in, and statements can start coming in."
+            action={canManage ? { label: "Add account", onClick: () => setIsAdding(true) } : undefined}
+          />
+        }
+        pagination={{
+          mode: "server",
+          page,
+          pageSize: PAGE_SIZE,
+          total: accountsQuery.data?.total ?? 0,
+          onPageChange: setPage,
+          pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+        }}
+      />
 
       {canManage ? (
         <AddBankAccountSheet

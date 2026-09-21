@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useState, useCallback } from "react";
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -63,7 +63,7 @@ export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps)
     resolver: zodResolver(createTemplateSchema),
     defaultValues: { name: "", description: "", category: "GENERAL" },
   });
-  useRegisterBuildDirtyState(open && form.formState.isDirty);
+  useRegisterDirtyState(open && form.formState.isDirty);
 
   const addTicket = useCallback(() => {
     setTickets((prev) => [

@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useEffect } from "react";
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -90,7 +90,7 @@ export function TestCaseSheet({
       linkedTicketId: "",
     },
   });
-  useRegisterBuildDirtyState(open && form.formState.isDirty);
+  useRegisterDirtyState(open && form.formState.isDirty);
 
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "steps" });
 

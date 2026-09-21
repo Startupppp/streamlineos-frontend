@@ -13,23 +13,20 @@ import {
 import { useUnsavedChangesGuard } from "@/hooks/common/use-unsaved-changes-guard";
 import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 
-interface BuildDirtyStateContextValue {
+interface DirtyStateContextValue {
   registerDirty: (id: string, isDirty: boolean) => void;
   unregisterDirty: (id: string) => void;
   hasUnsavedWork: boolean;
   requestLeave: (action: () => void) => void;
 }
 
-const BuildDirtyStateContext =
-  createContext<BuildDirtyStateContextValue | null>(null);
+const DirtyStateContext = createContext<DirtyStateContextValue | null>(null);
 
-interface BuildDirtyStateProviderProps {
+interface DirtyStateProviderProps {
   children: ReactNode;
 }
 
-export function BuildDirtyStateProvider({
-  children,
-}: BuildDirtyStateProviderProps) {
+export function DirtyStateProvider({ children }: DirtyStateProviderProps) {
   const [dirtyIds, setDirtyIds] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
@@ -70,15 +67,15 @@ export function BuildDirtyStateProvider({
   );
 
   return (
-    <BuildDirtyStateContext.Provider value={value}>
+    <DirtyStateContext.Provider value={value}>
       {children}
       <UnsavedChangesDialog {...dialogProps} />
-    </BuildDirtyStateContext.Provider>
+    </DirtyStateContext.Provider>
   );
 }
 
-export function useRegisterBuildDirtyState(isDirty: boolean): void {
-  const context = useContext(BuildDirtyStateContext);
+export function useRegisterDirtyState(isDirty: boolean): void {
+  const context = useContext(DirtyStateContext);
   const id = useId();
   const registerDirty = context?.registerDirty;
   const unregisterDirty = context?.unregisterDirty;
@@ -94,13 +91,13 @@ export function useRegisterBuildDirtyState(isDirty: boolean): void {
   }, [unregisterDirty, id]);
 }
 
-export function useBuildHasUnsavedWork(): boolean {
-  const context = useContext(BuildDirtyStateContext);
+export function useHasUnsavedWork(): boolean {
+  const context = useContext(DirtyStateContext);
   return context?.hasUnsavedWork ?? false;
 }
 
-export function useBuildRequestLeave(): (action: () => void) => void {
-  const context = useContext(BuildDirtyStateContext);
+export function useNavigationLeave(): (action: () => void) => void {
+  const context = useContext(DirtyStateContext);
   const requestLeave = context?.requestLeave;
   return useCallback(
     (action: () => void) => {

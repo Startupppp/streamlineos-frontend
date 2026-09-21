@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { FolderIcon } from "lucide-react";
 import { BuildNavLink, BUILD_NAV_BADGE_CAP } from "./build-nav-link";
-import { BuildDirtyStateProvider } from "./build-dirty-state-context";
+import { DirtyStateProvider } from "@/components/shared/dirty-state-context";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { resolveBuildNavModel } from "@/lib/build/build-nav-model";
 import { resolveBuildScope } from "@/lib/build/build-scope";
@@ -33,7 +33,7 @@ const accent: ModuleAccent = { bg: "", text: "", indicator: "" } as ModuleAccent
 function renderLink(opts: { isCollapsed: boolean; badgeCount?: number }) {
   return render(
     <TooltipProvider>
-      <BuildDirtyStateProvider>
+      <DirtyStateProvider>
         <BuildNavLink
           destination={destination}
           isActive={false}
@@ -41,7 +41,7 @@ function renderLink(opts: { isCollapsed: boolean; badgeCount?: number }) {
           accent={accent}
           badgeCount={opts.badgeCount}
         />
-      </BuildDirtyStateProvider>
+      </DirtyStateProvider>
     </TooltipProvider>,
   );
 }
@@ -150,7 +150,7 @@ describe("BSN-03-A07 — client portal link absent at component layer when capab
       pinnedIds: [],
     });
     return (
-      <BuildDirtyStateProvider>
+      <DirtyStateProvider>
         {model.primary.map((dest) => (
           <BuildNavLink
             key={dest.id}
@@ -160,7 +160,7 @@ describe("BSN-03-A07 — client portal link absent at component layer when capab
             accent={accent}
           />
         ))}
-      </BuildDirtyStateProvider>
+      </DirtyStateProvider>
     );
   }
 

@@ -40,7 +40,7 @@ import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { useEntitlements } from "@/hooks/api/entitlements";
 import { cn } from "@/lib/utils";
 import { useCommandPalette } from "@/components/command-palette";
-import { useBuildRequestLeave } from "@/features/build/navigation/build-dirty-state-context";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import {
   useGlobalSearch,
   type GlobalSearchResult,
@@ -135,7 +135,7 @@ export function CommandPaletteDialogBody() {
   const router = useRouter();
   const pathname = usePathname();
   const { data: access } = useAccess();
-  const requestLeave = useBuildRequestLeave();
+  const requestLeave = useNavigationLeave();
   const [query, setQuery] = useState("");
   
   const role =

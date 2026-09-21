@@ -34,7 +34,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { CategoryCreateForm } from "@/features/inventory/components/category-create-form";
@@ -160,6 +161,12 @@ function CategoriesPageInner() {
 
   const query = useCategories();
   const updateMutation = useUpdateCategory();
+  const pageState = usePageState({
+    permission: "inventory:products:read",
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+  });
   const categories = query.data ?? [];
 
   const filteredCategories = categories.filter((cat) => {
@@ -209,6 +216,18 @@ function CategoriesPageInner() {
   function handleRetry(): void {
     void query.refetch();
   }
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper
+        title="Categories"
+        subtitle="Organise products into categories and sub-categories."
+      >
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
 
   function handleEditOpen(cat: InventoryCategory): void {
     setEditingCategory(cat);
@@ -283,13 +302,6 @@ function CategoriesPageInner() {
           </Card>
         )}
 
-        {query.error ? (
-          <ErrorState
-            title="Failed to load categories"
-            description={getErrorMessage(query.error)}
-            onRetry={handleRetry}
-          />
-        ) : (
           <DataTable
             data={filteredCategories}
             className="flex-1 min-h-0"
@@ -322,7 +334,6 @@ function CategoriesPageInner() {
             )}
             minWidth="560px"
           />
-        )}
       </div>
 
       {canUpdate && editingCategory !== null && (

@@ -14,8 +14,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { NoPermissionState } from "@/components/shared";
-import { useCan } from "@/hooks/api/access";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useAccountingBook, usePostableAccounts } from "@/hooks/api/accounting/ledger";
 import { usePostJournal } from "@/hooks/api/accounting/ledger-mutations";
 import { getApiErrorCode, isApiError } from "@/lib/api-client";
@@ -36,7 +36,6 @@ function newIdempotencyKey(): string {
 
 export function PostJournalClient() {
   const router = useRouter();
-  const canPost = useCan("accounting:journal:post");
   const { data: book } = useAccountingBook();
   const { data: accounts } = usePostableAccounts();
   const postJournal = usePostJournal();
@@ -46,6 +45,12 @@ export function PostJournalClient() {
   const [rejection, setRejection] = useState<string | null>(null);
 
   const currency = book?.baseCurrency ?? "";
+
+  const pageState = usePageState({
+    permission: "accounting:journal:post",
+    isLoading: false,
+    isError: false,
+  });
 
   const form = useForm<JournalFormValues>({
     resolver: zodResolver(journalFormSchema),
@@ -112,7 +117,14 @@ export function PostJournalClient() {
     );
   }
 
-  if (!canPost) return <NoPermissionState permission="accounting:journal:post" />;
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper title="New journal entry">
+        <PageState resolution={pageState} loading={null} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper

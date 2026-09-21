@@ -17,8 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { UomCreateForm } from "@/features/inventory/components/uom-create-form";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
@@ -91,6 +91,12 @@ function UomPageInner() {
   const debouncedSearch = useDebouncedValue(search, 300);
 
   const query = useUom();
+  const pageState = usePageState({
+    permission: "inventory:products:read",
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+  });
   const uomList = query.data ?? [];
 
   const filteredUom = uomList.filter((uom) => {
@@ -142,6 +148,18 @@ function UomPageInner() {
     void query.refetch();
   }
 
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper
+        title="Units of Measure"
+        subtitle="Define units used across product catalogues and transactions."
+      >
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+
   const hasFilters = !!(
     search.trim() || (statusParam && statusParam !== "all")
   );
@@ -190,13 +208,6 @@ function UomPageInner() {
           </Card>
         )}
 
-        {query.error ? (
-          <ErrorState
-            title="Failed to load units"
-            description={getErrorMessage(query.error)}
-            onRetry={handleRetry}
-          />
-        ) : (
           <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
             <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
               <DataTable
@@ -229,7 +240,6 @@ function UomPageInner() {
               />
             </CardContent>
           </Card>
-        )}
       </div>
     </PageWrapper>
   );

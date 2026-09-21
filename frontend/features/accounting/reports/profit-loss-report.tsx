@@ -1,6 +1,5 @@
 "use client";
 
-import { useCan } from "@/hooks/api/access";
 import { useProfitLossReport } from "@/hooks/api/accounting/reports";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { statusToneClasses } from "@/lib/design-tokens";
@@ -73,7 +72,6 @@ function buildRows(report: ProfitLossReportData): StatementRow[] {
 }
 
 export function ProfitLossReport() {
-  const canView = useCan("accounting:reports:read");
   const controls = useReportControls();
 
   const params = {
@@ -92,7 +90,6 @@ export function ProfitLossReport() {
       title={data?.title ?? "Profit and loss"}
       subtitle="What came in, what went out, and what is left."
       backHref="/accounting"
-      canView={canView}
       permission="accounting:reports:read"
       isLoading={isLoading}
       isError={isError}

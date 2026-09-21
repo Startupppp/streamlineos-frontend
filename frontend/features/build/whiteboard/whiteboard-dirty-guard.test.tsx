@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import {
-  BuildDirtyStateProvider,
-  useBuildHasUnsavedWork,
-} from "@/features/build/navigation/build-dirty-state-context";
+  DirtyStateProvider,
+  useHasUnsavedWork,
+} from "@/components/shared/dirty-state-context";
 import { WhiteboardPage } from "./whiteboard-page";
 
 let mockSaveStatus: "clean" | "dirty" | "saving" | "saved" = "clean";
@@ -75,7 +75,7 @@ jest.mock("./scene-utils", () => ({
 }));
 
 function HasUnsavedWorkProbe() {
-  const hasUnsavedWork = useBuildHasUnsavedWork();
+  const hasUnsavedWork = useHasUnsavedWork();
   return <span data-testid="probe">{hasUnsavedWork ? "dirty" : "clean"}</span>;
 }
 
@@ -87,10 +87,10 @@ describe("whiteboard page dirty guard (BSN-04-010, BSN-04-013)", () => {
   test("whiteboard page with clean autosave does not block scope changes", () => {
     mockSaveStatus = "clean";
     render(
-      <BuildDirtyStateProvider>
+      <DirtyStateProvider>
         <HasUnsavedWorkProbe />
         <WhiteboardPage projectId={1} initialBoardId={null} />
-      </BuildDirtyStateProvider>,
+      </DirtyStateProvider>,
     );
     expect(screen.getByTestId("probe")).toHaveTextContent("clean");
   });
@@ -98,10 +98,10 @@ describe("whiteboard page dirty guard (BSN-04-010, BSN-04-013)", () => {
   test("whiteboard page registers as dirty when autosave has pending changes so scope-change guard fires", () => {
     mockSaveStatus = "dirty";
     render(
-      <BuildDirtyStateProvider>
+      <DirtyStateProvider>
         <HasUnsavedWorkProbe />
         <WhiteboardPage projectId={1} initialBoardId={null} />
-      </BuildDirtyStateProvider>,
+      </DirtyStateProvider>,
     );
     expect(screen.getByTestId("probe")).toHaveTextContent("dirty");
   });
@@ -109,10 +109,10 @@ describe("whiteboard page dirty guard (BSN-04-010, BSN-04-013)", () => {
   test("whiteboard page in saving state registers as not-dirty so guard does not block while save is in flight", () => {
     mockSaveStatus = "saving";
     render(
-      <BuildDirtyStateProvider>
+      <DirtyStateProvider>
         <HasUnsavedWorkProbe />
         <WhiteboardPage projectId={1} initialBoardId={null} />
-      </BuildDirtyStateProvider>,
+      </DirtyStateProvider>,
     );
     expect(screen.getByTestId("probe")).toHaveTextContent("clean");
   });

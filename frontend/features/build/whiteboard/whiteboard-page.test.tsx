@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import React from "react";
 import { WhiteboardPage } from "./whiteboard-page";
-import { BuildDirtyStateProvider } from "@/features/build/navigation/build-dirty-state-context";
+import { DirtyStateProvider } from "@/components/shared/dirty-state-context";
 
 jest.mock("./use-whiteboard-autosave", () => ({
   useWhiteboardAutosave: () => ({
@@ -109,9 +109,9 @@ jest.mock("@/components/ui/button", () => ({
 describe("WhiteboardPage — access snapshot loading shows loading state (not empty state)", () => {
   it("shows loading state while access snapshot is in flight, not the create-your-first-board empty state", () => {
     render(
-      <BuildDirtyStateProvider>
+      <DirtyStateProvider>
         <WhiteboardPage projectId={1} initialBoardId={null} />
-      </BuildDirtyStateProvider>,
+      </DirtyStateProvider>,
     );
 
     expect(screen.getByTestId("loading-state")).toBeInTheDocument();

@@ -1,23 +1,23 @@
 import { useForm } from "react-hook-form";
 import { fireEvent, render, screen } from "@testing-library/react";
 import {
-  BuildDirtyStateProvider,
-  useBuildHasUnsavedWork,
-} from "@/features/build/navigation/build-dirty-state-context";
+  DirtyStateProvider,
+  useHasUnsavedWork,
+} from "@/components/shared/dirty-state-context";
 import { UpdateFormFields, type CreateUpdateInput } from "./update-form-fields";
 
 function DirtyProbe() {
-  const hasUnsavedWork = useBuildHasUnsavedWork();
+  const hasUnsavedWork = useHasUnsavedWork();
   return <span data-testid="dirty">{hasUnsavedWork ? "dirty" : "clean"}</span>;
 }
 
 function Harness({ isOpen }: { isOpen: boolean }) {
   const form = useForm<CreateUpdateInput>({ defaultValues: { body: "" } });
   return (
-    <BuildDirtyStateProvider>
+    <DirtyStateProvider>
       <DirtyProbe />
       <UpdateFormFields form={form} isOpen={isOpen} />
-    </BuildDirtyStateProvider>
+    </DirtyStateProvider>
   );
 }
 

@@ -31,16 +31,15 @@ import { WinLossDialog } from "@/features/crm/deals/win-loss-dialog";
 import { StageSkipDialog } from "@/features/crm/deals/stage-skip-dialog";
 import { useDealsExport } from "@/features/crm/deals/use-deals-export";
 import { ImportLinkButton } from "@/features/crm/import/import-link-button";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
-import { useCan, useCanState } from "@/hooks/api/access";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 
 const PAGE_SIZE = 25;
 
 export default function DealsPage() {
   const canCreateDeal = useCan("crm:deals:create");
   const canUpdateDeal = useCan("crm:deals:update");
-  const dealsReadState = useCanState("crm:deals:read");
   const [density, setDensity] = useDensity();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -94,7 +93,7 @@ export default function DealsPage() {
     return Object.keys(filters).length > 0 ? filters : undefined;
   }, [assigneeFilter, stageFilter]);
 
-  const { data: allDeals, isLoading, isError, refetch } = useDeals(dealFilters);
+  const { data: allDeals, isLoading, isError, error, refetch } = useDeals(dealFilters);
   const { data: rawEmployees } = useHrEmployees();
   const employees = Array.isArray(rawEmployees) ? rawEmployees : (rawEmployees?.data ?? []);
 
@@ -307,36 +306,18 @@ export default function DealsPage() {
     void refetch();
   }, [refetch]);
 
-  /**
-   * Ticket 26. The table view guards this in `DealList`, but the kanban view
-   * renders its own board straight off `allDeals` with no equivalent check --
-   * a denied caller saw empty stage columns and nothing telling them why.
-   *
-   * Checked before the loading branch on purpose: a query that was never
-   * allowed to run has no loading state worth waiting for.
-   */
-  if (view === "kanban" && dealsReadState === "denied") {
+  const pageState = usePageState({ permission: "crm:deals:read", isLoading, isError, error });
+
+  if (view === "kanban" && pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper title="Deals Pipeline" subtitle="Manage your deals">
-        <NoPermissionState permission="crm:deals:read" />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
-  if (view === "kanban" && isLoading) return <DealsLoadingSkeleton />;
-
-  if (view === "kanban" && isError) {
-    return (
-      <PageWrapper title="Deals Pipeline" subtitle="Manage your deals">
-        <ErrorState
-          title="Failed to load deals"
-          description="We couldn't load your deals. Please try again."
-          onRetry={handleRetry}
-          className="flex-1"
-        />
-      </PageWrapper>
-    );
-  }
+  if (view === "kanban" && pageState.kind === "loading") return <DealsLoadingSkeleton />;
 
   const subtitle = allDeals
     ? `${allDeals.length} deal${allDeals.length !== 1 ? "s" : ""}`

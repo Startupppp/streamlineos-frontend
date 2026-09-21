@@ -15,8 +15,8 @@ jest.mock("@/hooks/api/build/webhooks", () => ({
   useDeleteWebhook: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
-jest.mock("@/features/build/navigation/build-dirty-state-context", () => ({
-  useRegisterBuildDirtyState: jest.fn(),
+jest.mock("@/components/shared/dirty-state-context", () => ({
+  useRegisterDirtyState: jest.fn(),
 }));
 
 jest.mock("@/features/build/settings/webhook-card", () => ({

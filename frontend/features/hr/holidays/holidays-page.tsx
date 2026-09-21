@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getYear, parseISO } from "date-fns";
 import { addMonths, subMonths } from "date-fns";
@@ -14,8 +14,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { ErrorState } from "@/components/shared/error-state";
 import {
   useHolidays,
   useCreateHoliday,
@@ -32,11 +33,13 @@ import { LocationView } from "@/features/hr/holidays/components/location-view";
 import { HolidaySheet } from "@/features/hr/holidays/components/holiday-sheet";
 
 export function HolidaysPage() {
-  const { data: holidays, isLoading, isError, refetch } = useHolidays();
+  const { data: holidays, isLoading, isError, error, refetch } = useHolidays();
   const createMutation = useCreateHoliday();
   const updateMutation = useUpdateHoliday();
   const deleteMutation = useDeleteHoliday();
   const canManage = useCan("hr:attendance:manage");
+  const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const [viewMode, setViewMode] = useState<ViewMode>("calendar");
   const [viewDate, setViewDate] = useState(new Date());
@@ -170,24 +173,22 @@ export function HolidaysPage() {
         </div>
       }
     >
-      {isLoading ? (
-        <div className="space-y-4">
-          <Skeleton className="h-10 w-64" />
-          <Skeleton className="h-72 rounded-lg" />
-          <div className="space-y-2">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 rounded-lg" />
-            ))}
+      <PageState
+        resolution={pageState}
+        loading={
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-72 rounded-lg" />
+            <div className="space-y-2">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="h-16 rounded-lg" />
+              ))}
+            </div>
           </div>
-        </div>
-      ) : isError ? (
-        <ErrorState
-          title="Couldn't load holidays"
-          description="Failed to load the holiday calendar. Please try again."
-          onRetry={() => void refetch()}
-          className="flex-1"
-        />
-      ) : (
+        }
+        onRetry={handleRetry}
+        className="flex-1"
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key={viewMode}
@@ -233,7 +234,7 @@ export function HolidaysPage() {
             {viewMode === "location" && <LocationView />}
           </motion.div>
         </AnimatePresence>
-      )}
+      </PageState>
 
       <HolidaySheet
         open={sheetOpen}

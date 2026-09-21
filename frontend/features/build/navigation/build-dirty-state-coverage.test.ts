@@ -34,7 +34,7 @@ function buildSummaries(): FileSummary[] {
       isFormOwner:
         source.includes('from "react-hook-form"') &&
         /\buseForm\s*[<(]/.test(source),
-      hasRegistration: /\buseRegisterBuildDirtyState\s*\(/.test(source),
+      hasRegistration: /\buseRegisterDirtyState\s*\(/.test(source),
     };
   });
 }
@@ -77,7 +77,7 @@ describe("BSN-04-A03 every Build RHF form owner registers with the shared dirty-
     expect(registeredSurfaces.length).toBeGreaterThan(ALL_EXPLICIT_EXCLUSIONS.size);
   });
 
-  it("every RHF form owner not in a named exclusion set calls useRegisterBuildDirtyState, so a scope switch prompts rather than discarding typed content", () => {
+  it("every RHF form owner not in a named exclusion set calls useRegisterDirtyState, so a scope switch prompts rather than discarding typed content", () => {
     const ungated = unregisteredSurfaces.filter(
       (f) => !ALL_EXPLICIT_EXCLUSIONS.has(f),
     );

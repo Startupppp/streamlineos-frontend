@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { AlertTriangle } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import {
   Select,
   SelectContent,
@@ -17,12 +17,12 @@ import {
 } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { RECEIVABLES_READ, useArAging } from "@/hooks/api/accounting/ar";
 import type { AgingBasis, AgingPartyRow } from "@/types/accounting-ar-receipts";
 import { AGING_BUCKET_KEYS, AGING_BUCKET_LABEL } from "./ar-labels";
@@ -38,7 +38,6 @@ function isBasis(value: string): value is AgingBasis {
 }
 
 export function AgedReceivablesClient() {
-  const canRead = useCan(RECEIVABLES_READ);
   const url = useListUrlState();
   const [drillParty, setDrillParty] = useState<{ id: string; name: string } | null>(null);
 
@@ -49,6 +48,14 @@ export function AgedReceivablesClient() {
   const agingQuery = useArAging({ asOf, basis });
   const aging = agingQuery.data;
   const danger = statusToneClasses("danger");
+
+  const pageState = usePageState({
+    permission: RECEIVABLES_READ,
+    isLoading: agingQuery.isLoading,
+    isError: agingQuery.isError,
+    error: agingQuery.error,
+  });
+  const handleRetry = useCallback(() => { void agingQuery.refetch(); }, [agingQuery]);
 
   const columns: DataTableColumn<AgingPartyRow>[] = [
     {
@@ -106,13 +113,14 @@ export function AgedReceivablesClient() {
     </div>
   );
 
-  if (!canRead) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper title="What customers owe us">
-        <NoPermissionState permission={RECEIVABLES_READ} />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
   return (
     <PageWrapper
@@ -167,32 +175,23 @@ export function AgedReceivablesClient() {
         />
       </StatCardGrid>
 
-      {agingQuery.isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't build the ageing report"
-          description={getErrorMessage(agingQuery.error)}
-          onRetry={() => void agingQuery.refetch()}
-        />
-      ) : (
-        <DataTable
-          data={aging?.rows ?? []}
-          columns={columns}
-          getRowKey={(row) => `${row.partyId}-${row.currency}`}
-          isLoading={agingQuery.isLoading}
-          minWidth="900px"
-          className="flex-1 min-h-0"
-          pagination={{ pageSize: 50 }}
-          emptyState={
-            <EmptyState
-              className="border-0 bg-transparent min-h-[40vh]"
-              illustrationPreset="chart"
-              title="Nobody owes you anything"
-              description="Every invoice up to this date has been settled."
-            />
-          }
-        />
-      )}
+      <DataTable
+        data={aging?.rows ?? []}
+        columns={columns}
+        getRowKey={(row) => `${row.partyId}-${row.currency}`}
+        isLoading={agingQuery.isLoading}
+        minWidth="900px"
+        className="flex-1 min-h-0"
+        pagination={{ pageSize: 50 }}
+        emptyState={
+          <EmptyState
+            className="border-0 bg-transparent min-h-[40vh]"
+            illustrationPreset="chart"
+            title="Nobody owes you anything"
+            description="Every invoice up to this date has been settled."
+          />
+        }
+      />
 
       <AgingOpenItemsSheet
         party={drillParty}

@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState, useCallback, useRef } from "react";
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useProject, useUpdateProject } from "@/hooks/api/build";
@@ -111,7 +111,7 @@ export function ProjectSettingsPage({ params }: PageProps) {
       : undefined,
   });
 
-  useRegisterBuildDirtyState(form.formState.isDirty);
+  useRegisterDirtyState(form.formState.isDirty);
 
   const isOwner = useCan("build:delete");
   const updateMutation = useUpdateProject();

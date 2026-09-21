@@ -1,10 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useRouter } from "next/navigation";
 import {
-  BuildDirtyStateProvider,
-  useRegisterBuildDirtyState,
-  useBuildRequestLeave,
-} from "./build-dirty-state-context";
+  DirtyStateProvider,
+  useRegisterDirtyState,
+  useNavigationLeave,
+} from "@/components/shared/dirty-state-context";
 
 const push = jest.fn();
 
@@ -15,13 +15,13 @@ jest.mock("next/navigation", () => ({
 const mockedUseRouter = jest.mocked(useRouter);
 
 function DirtySurface({ isDirty }: { isDirty: boolean }) {
-  useRegisterBuildDirtyState(isDirty);
+  useRegisterDirtyState(isDirty);
   return null;
 }
 
 function CommandPaletteNavItem({ href }: { href: string }) {
   const router = useRouter();
-  const requestLeave = useBuildRequestLeave();
+  const requestLeave = useNavigationLeave();
 
   function handleSelect() {
     requestLeave(() => router.push(href));
@@ -36,10 +36,10 @@ function CommandPaletteNavItem({ href }: { href: string }) {
 
 function renderHarness(isDirty: boolean) {
   return render(
-    <BuildDirtyStateProvider>
+    <DirtyStateProvider>
       <DirtySurface isDirty={isDirty} />
       <CommandPaletteNavItem href="/build/42/issues" />
-    </BuildDirtyStateProvider>,
+    </DirtyStateProvider>,
   );
 }
 
@@ -89,7 +89,7 @@ describe("BSN-04-014 command-palette navigation honours the unsaved-work guard",
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
   });
 
-  test("useBuildRequestLeave falls back to immediate navigation when mounted outside BuildDirtyStateProvider", () => {
+  test("useNavigationLeave falls back to immediate navigation when mounted outside DirtyStateProvider", () => {
     render(<CommandPaletteNavItem href="/build/roadmap" />);
 
     fireEvent.click(screen.getByRole("button", { name: "Navigate" }));

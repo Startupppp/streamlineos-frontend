@@ -4,7 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { useCan } from "@/hooks/api/access";
 import { useTaxSummaryReport } from "@/hooks/api/accounting/reports";
 import { formatBasisPoints, formatMinorMoney } from "@/lib/accounting/money";
 import type { TaxSummaryRow } from "@/types/accounting-reports";
@@ -15,7 +14,6 @@ import { ReportShell } from "./report-shell";
 import { useReportControls } from "./use-report-controls";
 
 export function TaxSummaryReport() {
-  const canView = useCan("accounting:reports:read");
   const controls = useReportControls();
 
   const params = { from: controls.from, to: controls.to, labelMode: controls.labelMode };
@@ -72,7 +70,6 @@ export function TaxSummaryReport() {
       title={data?.title ?? "Tax collected and tax paid"}
       subtitle="Every tax line frozen onto invoices and bills in this period."
       backHref="/accounting"
-      canView={canView}
       permission="accounting:reports:read"
       isLoading={isLoading}
       isError={isError}

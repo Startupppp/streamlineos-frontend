@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useEffect } from "react";
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -64,7 +64,7 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
   const update = useUpdateChangeRequest(projectId);
 
   const form = useForm<FormValues>({ resolver: zodResolver(changeRequestFormSchema), defaultValues: CHANGE_REQUEST_FORM_DEFAULTS });
-  useRegisterBuildDirtyState(open && form.formState.isDirty);
+  useRegisterDirtyState(open && form.formState.isDirty);
 
   useEffect(() => {
     if (!open) return;

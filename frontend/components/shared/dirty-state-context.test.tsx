@@ -1,10 +1,10 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { useRouter } from "next/navigation";
 import {
-  BuildDirtyStateProvider,
-  useRegisterBuildDirtyState,
-  useBuildHasUnsavedWork,
-} from "./build-dirty-state-context";
+  DirtyStateProvider,
+  useRegisterDirtyState,
+  useHasUnsavedWork,
+} from "./dirty-state-context";
 import { useUnsavedChangesGuard } from "@/hooks/common/use-unsaved-changes-guard";
 import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 
@@ -21,13 +21,13 @@ interface DirtySurfaceProps {
 }
 
 function DirtySurface({ isDirty }: DirtySurfaceProps) {
-  useRegisterBuildDirtyState(isDirty);
+  useRegisterDirtyState(isDirty);
   return null;
 }
 
 function ScopeSwitcher() {
   const router = useRouter();
-  const hasUnsavedWork = useBuildHasUnsavedWork();
+  const hasUnsavedWork = useHasUnsavedWork();
   const { requestLeave, dialogProps } = useUnsavedChangesGuard({
     isDirty: hasUnsavedWork,
   });
@@ -47,16 +47,16 @@ function ScopeSwitcher() {
 }
 
 function HasUnsavedWorkProbe() {
-  const hasUnsavedWork = useBuildHasUnsavedWork();
+  const hasUnsavedWork = useHasUnsavedWork();
   return <span>{hasUnsavedWork ? "dirty" : "clean"}</span>;
 }
 
 function renderHarness(surfaces: React.ReactNode) {
   return render(
-    <BuildDirtyStateProvider>
+    <DirtyStateProvider>
       {surfaces}
       <ScopeSwitcher />
-    </BuildDirtyStateProvider>,
+    </DirtyStateProvider>,
   );
 }
 
@@ -71,7 +71,7 @@ beforeEach(() => {
   } as unknown as ReturnType<typeof useRouter>);
 });
 
-describe("build dirty state wiring", () => {
+describe("dirty state wiring", () => {
   test("a scope switch with no dirty surface navigates immediately without showing a dialog", () => {
     renderHarness(<DirtySurface isDirty={false} />);
 
@@ -113,9 +113,9 @@ describe("build dirty state wiring", () => {
     const { rerender } = renderHarness(<DirtySurface isDirty={true} />);
 
     rerender(
-      <BuildDirtyStateProvider>
+      <DirtyStateProvider>
         <ScopeSwitcher />
-      </BuildDirtyStateProvider>,
+      </DirtyStateProvider>,
     );
     clickSwitchScope();
 
@@ -137,7 +137,7 @@ describe("build dirty state wiring", () => {
     expect(screen.getByRole("alertdialog")).toBeInTheDocument();
   });
 
-  test("useBuildHasUnsavedWork returns false with no provider mounted", () => {
+  test("useHasUnsavedWork returns false with no provider mounted", () => {
     render(<HasUnsavedWorkProbe />);
 
     expect(screen.getByText("clean")).toBeInTheDocument();

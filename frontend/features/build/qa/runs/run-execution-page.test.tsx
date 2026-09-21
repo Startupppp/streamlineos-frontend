@@ -24,8 +24,8 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-jest.mock("@/features/build/navigation/build-dirty-state-context", () => ({
-  useRegisterBuildDirtyState: (...args: unknown[]) => mockUseRegisterBuildDirtyState(...args),
+jest.mock("@/components/shared/dirty-state-context", () => ({
+  useRegisterDirtyState: (...args: unknown[]) => mockUseRegisterBuildDirtyState(...args),
 }));
 
 jest.mock("@/hooks/common/use-animated-icon", () => ({

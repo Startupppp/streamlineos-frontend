@@ -8,9 +8,11 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
 import { RequireModule } from "@/components/auth/require-module";
-import { useCanState } from "@/hooks/api/access";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useCallExemplars, useCallRepMetrics } from "@/hooks/api/crm/call-intelligence";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { EXEMPLAR_METRICS, type ExemplarMetric } from "@/types/crm/call-intelligence";
@@ -66,7 +68,7 @@ export default function RepCallMetricsPage() {
   const [page, setPage] = useState(1);
   const [exemplarLimit, setExemplarLimit] = useState(EXEMPLAR_PAGE_SIZE);
 
-  const canReadTeam = useCanState("crm:call-analysis:view-team") === "granted";
+  const canReadTeam = useCan("crm:call-analysis:view-team");
 
   const handleWindowChange = useCallback((value: string) => {
     setSinceDays(Number(value));
@@ -89,18 +91,20 @@ export default function RepCallMetricsPage() {
   const metrics = useCallRepMetrics({ sinceDays, page, limit: PAGE_SIZE });
   const exemplars = useCallExemplars({ metric, sinceDays, page: 1, limit: exemplarLimit });
 
-  /**
-   * Ticket 26. A gated-shut query reports no rows with `isLoading: false`, which
-   * is indistinguishable from a window in which nobody made a call. Somebody who
-   * cannot read call analyses at all should be told that, not shown an empty
-   * table and left to conclude the feature is broken.
-   */
-  if (useCanState("crm:call-analysis:view") === "denied")
+  const pageState = usePageState({
+    permission: "crm:call-analysis:view",
+    isLoading: metrics.isLoading,
+    isError: metrics.isError,
+    error: metrics.error,
+  });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
-      <NoPermissionState
-        permission="crm:call-analysis:view"
-        description="Call metrics are built from call analyses, which this role cannot read."
-      />
+      <PageWrapper title="Call metrics">
+        <PageState resolution={pageState} loading={null} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
     );
 
   return (

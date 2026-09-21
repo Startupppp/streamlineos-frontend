@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useGetOrganizations, useSwitchOrg } from "@/hooks/common/auth-hooks";
 import { useAccess } from "@/hooks/api/access";
-import { useBuildRequestLeave } from "@/features/build/navigation/build-dirty-state-context";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 
 /**
  * Mounted only once someone asks to leave — the confirmation carries its own
@@ -86,7 +86,7 @@ function OrganizationSwitcher({
   const { data: session } = useSession();
   const { data: access } = useAccess();
   const switchOrg = useSwitchOrg();
-  const requestLeave = useBuildRequestLeave();
+  const requestLeave = useNavigationLeave();
   const [createOpen, setCreateOpen] = useState(false);
   const [createMounted, setCreateMounted] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);

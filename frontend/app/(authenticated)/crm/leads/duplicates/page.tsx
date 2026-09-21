@@ -1,11 +1,10 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { NoPermissionState } from "@/components/shared";
-import { useCanState } from "@/hooks/api/access";
 import { AlertTriangle, ChevronDown, ChevronUp, RefreshCw, Users } from "lucide-react";
 import { EmptyLeadsIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -187,7 +186,7 @@ function DuplicatesSkeleton() {
 }
 
 export default function DuplicateLeadsPage() {
-  const { data, isLoading, isFetching, isError, refetch } = useDuplicateLeads();
+  const { data, isLoading, isFetching, isError, error, refetch } = useDuplicateLeads();
   const { mutate: mergeLead, isPending: isMerging } = useMergeLead();
 
   const leadLayout = useLeadLayout();
@@ -224,18 +223,16 @@ export default function DuplicateLeadsPage() {
     [groups],
   );
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
-  if (useCanState("crm:leads:view") === "denied")
-    return <NoPermissionState permission="crm:leads:view" />;
+  const pageState = usePageState({ permission: "crm:leads:view", isLoading, isError, error });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper title="Duplicate leads" subtitle="Fuzzy matching across name, email, phone and company">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper
@@ -256,13 +253,6 @@ export default function DuplicateLeadsPage() {
     >
       {isLoading ? (
         <DuplicatesSkeleton />
-      ) : isError ? (
-        <ErrorState
-          title="Scan failed"
-          description="The duplicate scan didn't finish. Check your connection and try again."
-          onRetry={handleRetry}
-          className="flex-1"
-        />
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-4">
           <StatCardGrid cols={2}>

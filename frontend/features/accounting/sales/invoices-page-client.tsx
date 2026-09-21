@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -10,7 +10,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { SearchInput } from "@/components/ui/search-input";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import {
   Select,
   SelectContent,
@@ -21,11 +21,11 @@ import {
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   RECEIVABLES_MANAGE,
   RECEIVABLES_READ,
@@ -38,7 +38,6 @@ import { ArStatusBadge, DOCUMENT_STATUS_OPTIONS, isDocumentStatus } from "./ar-l
 import { useListUrlState } from "./use-list-url-state";
 
 export function InvoicesPageClient() {
-  const canRead = useCan(RECEIVABLES_READ);
   const canManage = useCan(RECEIVABLES_MANAGE);
   const router = useRouter();
   const url = useListUrlState();
@@ -57,6 +56,14 @@ export function InvoicesPageClient() {
     pageSize: url.pageSize,
   });
   const agingQuery = useArAging({});
+
+  const pageState = usePageState({
+    permission: RECEIVABLES_READ,
+    isLoading: invoicesQuery.isLoading,
+    isError: invoicesQuery.isError,
+    error: invoicesQuery.error,
+  });
+  const handleRetry = useCallback(() => { void invoicesQuery.refetch(); }, [invoicesQuery]);
 
   const rows = invoicesQuery.data?.items ?? [];
   const partyNames = usePartyNames(rows.map((row) => row.partyId));
@@ -176,13 +183,14 @@ export function InvoicesPageClient() {
     </div>
   );
 
-  if (!canRead) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper title="Invoices">
-        <NoPermissionState permission={RECEIVABLES_READ} />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
   return (
     <PageWrapper
@@ -228,15 +236,7 @@ export function InvoicesPageClient() {
         />
       </StatCardGrid>
 
-      {invoicesQuery.isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load your invoices"
-          description={getErrorMessage(invoicesQuery.error)}
-          onRetry={() => void invoicesQuery.refetch()}
-        />
-      ) : (
-        <DataTable
+      <DataTable
           data={rows}
           columns={columns}
           getRowKey={(row) => row.id}
@@ -276,7 +276,6 @@ export function InvoicesPageClient() {
             pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
           }}
         />
-      )}
     </PageWrapper>
   );
 }

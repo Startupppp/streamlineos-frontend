@@ -11,9 +11,10 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
-import { NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   useBankAccounts,
   useImportBankStatement,
@@ -28,8 +29,6 @@ import { statementImportSchema, type StatementImportFormValues } from "./stateme
 const MAX_FILE_BYTES = 8_000_000;
 
 export function StatementImportPage() {
-  const canRead = useCan("accounting:banking:read");
-  const canImport = useCan("accounting:banking:import");
   const canManage = useCan("accounting:banking:manage");
 
   const [fileContent, setFileContent] = useState("");
@@ -37,6 +36,13 @@ export function StatementImportPage() {
   const [result, setResult] = useState<StatementImportResult | null>(null);
 
   const accountsQuery = useBankAccounts({ page: 1, pageSize: 100 });
+
+  const pageState = usePageState({
+    permission: "accounting:banking:import",
+    isLoading: accountsQuery.isLoading,
+    isError: accountsQuery.isError,
+    error: accountsQuery.error,
+  });
   const importStatement = useImportBankStatement();
   const saveCsvMapping = useSaveCsvMapping();
 
@@ -144,21 +150,14 @@ export function StatementImportPage() {
     form.reset();
   }
 
-  if (!canRead) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper title="Bring in a statement" backHref="/accounting/banking" backLabel="Back to banking">
-        <NoPermissionState permission="accounting:banking:read" />
+        <PageState resolution={pageState} loading={null} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
-
-  if (!canImport) {
-    return (
-      <PageWrapper title="Bring in a statement" backHref="/accounting/banking" backLabel="Back to banking">
-        <NoPermissionState permission="accounting:banking:import" />
-      </PageWrapper>
-    );
-  }
 
   return (
     <PageWrapper

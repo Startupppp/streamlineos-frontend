@@ -11,14 +11,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { EmptyCompaniesIllustration } from "@/components/illustrations";
 import { RecordList, asRecordValues, type RecordValue } from "@/components/renderer";
 import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
 import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { COMPANY_LAYOUT } from "@/lib/renderer/crm/company-layout";
-import { useCan, useCanState } from "@/hooks/api/access";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { useCrmOrganizations, useDeleteCrmOrganization } from "@/hooks/api/crm";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -186,18 +187,16 @@ export function CompanyListPage() {
     [selectedIds, canMerge, canManage, handleSelect, handleRequestDelete],
   );
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
-  if (useCanState("crm:organizations:view") === "denied")
-    return <NoPermissionState permission="crm:organizations:view" />;
+  const pageState = usePageState({ permission: "crm:organizations:view", isLoading, isError, error });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper title="Companies" subtitle="Your company directory">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper
@@ -239,13 +238,6 @@ export function CompanyListPage() {
 
         {isLoading ? (
           <DataTableSkeleton rows={12} columns={layout.list.columns.length} className="flex-1" />
-        ) : isError ? (
-          <ErrorState
-            title="Couldn't load companies"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          />
         ) : companies.length === 0 ? (
           <EmptyState
             illustration={<EmptyCompaniesIllustration />}

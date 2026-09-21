@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -72,7 +72,7 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
       isPublished: entry?.isPublished ?? false,
     },
   });
-  useRegisterBuildDirtyState(form.formState.isDirty);
+  useRegisterDirtyState(form.formState.isDirty);
 
   function handleSave(values: ChangelogFormValues) {
     if (isEdit) {

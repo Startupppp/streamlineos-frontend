@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -8,12 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useAccountingBook, usePostableAccounts } from "@/hooks/api/accounting/ledger";
 import { useApDocuments, useVendor } from "@/hooks/api/accounting/ap";
 import type { ApDocumentSummary } from "@/types/accounting-ap";
@@ -36,7 +37,6 @@ function DefinitionRow({ label, value }: { label: string; value: string }) {
 }
 
 export function VendorDetailPage({ vendorId }: VendorDetailPageProps) {
-  const canRead = useCan("accounting:read");
   const canUpdate = useCan("accounting:update");
   const canReadBills = useCan("accounting:payables:read");
   const [isEditing, setIsEditing] = useState(false);
@@ -49,6 +49,14 @@ export function VendorDetailPage({ vendorId }: VendorDetailPageProps) {
     { partyId: vendorId, openOnly: true, page: billsPage, pageSize: BILLS_PAGE_SIZE },
     { enabled: canReadBills },
   );
+
+  const pageState = usePageState({
+    permission: "accounting:read",
+    isLoading: vendorQuery.isLoading,
+    isError: vendorQuery.isError,
+    error: vendorQuery.error,
+  });
+  const handleRetry = useCallback(() => { void vendorQuery.refetch(); }, [vendorQuery]);
 
   const expenseAccountName = useMemo(() => {
     const accountId = vendorQuery.data?.defaultExpenseAccountId;
@@ -98,34 +106,22 @@ export function VendorDetailPage({ vendorId }: VendorDetailPageProps) {
     },
   ];
 
-  if (!canRead) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper title="Vendor" backHref="/accounting/vendors" backLabel="Back to vendors">
-        <NoPermissionState permission="accounting:read" />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
-  if (vendorQuery.isPending) {
+  if (vendorQuery.isPending || !vendorQuery.data) {
     return (
       <PageWrapper title="Vendor" backHref="/accounting/vendors" backLabel="Back to vendors">
         <div className="flex flex-1 flex-col gap-4">
           <Skeleton className="h-40 w-full" />
           <Skeleton className="h-64 w-full" />
         </div>
-      </PageWrapper>
-    );
-  }
-
-  if (vendorQuery.isError || !vendorQuery.data) {
-    return (
-      <PageWrapper title="Vendor" backHref="/accounting/vendors" backLabel="Back to vendors">
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load this vendor"
-          description={getErrorMessage(vendorQuery.error)}
-          onRetry={() => void vendorQuery.refetch()}
-        />
       </PageWrapper>
     );
   }

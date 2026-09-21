@@ -14,7 +14,8 @@ const exitLetterContract = lazyContract(() =>
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -31,12 +32,13 @@ const ACTIVE_RESIGNATION_STATUSES = ["SUBMITTED", "PENDING_HR", "HR_APPROVED"];
 export function ExitManagementPage() {
   const { data: session } = useSession();
   const pager = useCursorPager();
-  const { data: resignationData, isLoading, isError, refetch } = useResignations({ cursor: pager.cursor, limit: 20 });
+  const { data: resignationData, isLoading, isError, error, refetch } = useResignations({ cursor: pager.cursor, limit: 20 });
   const resignations = resignationData?.data;
   const pagination = resignationData?.pagination;
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+  const pageState = usePageState({ permission: "hr:exit:view", isLoading, isError, error });
 
   const review = useResignationReview();
 
@@ -86,7 +88,7 @@ export function ExitManagementPage() {
     pager.goNext(pagination?.nextCursor);
   }
 
-  if (isLoading) {
+  if (pageState.kind === "loading") {
     return (
       <PageWrapper
         title="Exit Management"
@@ -101,17 +103,15 @@ export function ExitManagementPage() {
     );
   }
 
-  if (isError) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
     return (
       <PageWrapper
         title="Exit Management"
         subtitle="Resignations, exit interviews, and offboarding"
       >
-        <ErrorState
-          title="Unable to load resignations"
-          description="Try again. If this keeps happening, check your permissions or contact an admin."
-          onRetry={handleRetry}
-        />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
   }

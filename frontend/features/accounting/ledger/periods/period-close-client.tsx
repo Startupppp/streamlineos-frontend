@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,9 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useAccountingPeriods, useFiscalYears } from "@/hooks/api/accounting/ledger";
 import {
   useLockPeriod,
@@ -28,7 +29,6 @@ import type { AccountingPeriod } from "@/types/accounting-kernel";
 const MIN_REASON_LENGTH = 3;
 
 export function PeriodCloseClient() {
-  const canRead = useCan("accounting:periods:read");
   const canManage = useCan("accounting:periods:manage");
   const canReopen = useCan("accounting:periods:reopen");
 
@@ -37,6 +37,14 @@ export function PeriodCloseClient() {
 
   const fiscalYears = useFiscalYears();
   const periods = useAccountingPeriods();
+
+  const pageState = usePageState({
+    permission: "accounting:periods:read",
+    isLoading: periods.isLoading,
+    isError: periods.isError,
+    error: periods.error,
+  });
+  const handleRetry = useCallback(() => { void periods.refetch(); }, [periods]);
   const lockPeriod = useLockPeriod();
   const unlockPeriod = useUnlockPeriod();
   const openNextYear = useOpenNextFiscalYear();
@@ -158,6 +166,15 @@ export function PeriodCloseClient() {
     },
   ];
 
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper title="Financial years and periods">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+
   return (
     <PageWrapper
       title="Financial years and periods"
@@ -178,38 +195,27 @@ export function PeriodCloseClient() {
         ) : undefined
       }
     >
-      {!canRead ? (
-        <NoPermissionState permission="accounting:periods:read" />
-      ) : periods.isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load your periods"
-          description={getErrorMessage(periods.error)}
-          onRetry={periods.refetch}
-        />
-      ) : (
-        <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
-          <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-            <DataTable
-              data={periods.data ?? []}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              isLoading={periods.isLoading}
-              className="min-h-0 flex-1"
-              minWidth="900px"
-              pagination={{ pageSize: 50 }}
-              emptyState={
-                <EmptyState
-                  className="min-h-[40vh] flex-1 border-0 bg-transparent"
-                  title="No periods yet"
-                  description="Turning accounting on opens your first financial year and creates its periods."
-                  action={{ label: "Set up accounting", href: "/accounting/setup" }}
-                />
-              }
-            />
-          </CardContent>
-        </Card>
-      )}
+      <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
+        <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
+          <DataTable
+            data={periods.data ?? []}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            isLoading={periods.isLoading}
+            className="min-h-0 flex-1"
+            minWidth="900px"
+            pagination={{ pageSize: 50 }}
+            emptyState={
+              <EmptyState
+                className="min-h-[40vh] flex-1 border-0 bg-transparent"
+                title="No periods yet"
+                description="Turning accounting on opens your first financial year and creates its periods."
+                action={{ label: "Set up accounting", href: "/accounting/setup" }}
+              />
+            }
+          />
+        </CardContent>
+      </Card>
 
       {locking ? (
         <ConfirmDialog

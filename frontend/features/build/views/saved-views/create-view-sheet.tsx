@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useCallback } from "react";
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -62,7 +62,7 @@ export function CreateViewSheet({ projectId, open, onOpenChange, onCreated }: Cr
     resolver: zodResolver(createViewSchema),
     defaultValues: { layoutType: "board", visibility: "shared" },
   });
-  useRegisterBuildDirtyState(open && form.formState.isDirty);
+  useRegisterDirtyState(open && form.formState.isDirty);
 
   const onSubmit = useCallback(
     (data: CreateViewForm) => {

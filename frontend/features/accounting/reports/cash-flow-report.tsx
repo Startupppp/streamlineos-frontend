@@ -1,7 +1,6 @@
 "use client";
 
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { useCan } from "@/hooks/api/access";
 import { useCashFlowReport } from "@/hooks/api/accounting/reports";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import type { CashFlowReport as CashFlowReportData } from "@/types/accounting-reports";
@@ -71,7 +70,6 @@ function buildRows(report: CashFlowReportData): StatementRow[] {
 }
 
 export function CashFlowReport() {
-  const canView = useCan("accounting:reports:read");
   const controls = useReportControls();
 
   const params = { from: controls.from, to: controls.to, labelMode: controls.labelMode };
@@ -82,7 +80,6 @@ export function CashFlowReport() {
       title={data?.title ?? "Cash flow"}
       subtitle="Where the money in the bank came from and where it went."
       backHref="/accounting"
-      canView={canView}
       permission="accounting:reports:read"
       isLoading={isLoading}
       isError={isError}

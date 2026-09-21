@@ -24,6 +24,8 @@
     "check:formatters:self-test": "node scripts/check-no-local-formatters.mjs --self-test",
     "check:empty-states": "node scripts/check-no-handrolled-empty-states.mjs",
     "check:empty-states:self-test": "node scripts/check-no-handrolled-empty-states.mjs --self-test",
+    "check:page-state-usage": "node scripts/check-page-state-usage.mjs",
+    "check:page-state-usage:self-test": "node scripts/check-page-state-usage.mjs --self-test",
     "check:icon-labels": "node scripts/check-no-unlabeled-icon-buttons.mjs",
     "check:icon-button-rule": "node eslint-rules/no-unlabelled-icon-button.test.mjs",
     "check:query-scope": "node scripts/check-query-scope.mjs",

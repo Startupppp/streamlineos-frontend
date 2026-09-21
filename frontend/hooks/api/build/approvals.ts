@@ -1,6 +1,5 @@
 ﻿"use client";
 
-import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UnreadCount } from "@/types/notifications";
 import { apiClient } from "@/lib/api-client";
@@ -35,14 +34,6 @@ const notificationCountContract = lazyContract(() =>
   import("@/hooks/api/notifications-schema").then((m) => m.notificationCountContract),
 );
 
-export const BUILD_INBOX_INVALIDATION_KEY = "build:inbox:invalidated";
-
-export function signalBuildInboxInvalidation(): void {
-  try {
-    localStorage.setItem(BUILD_INBOX_INVALIDATION_KEY, Date.now().toString());
-  } catch {}
-}
-
 interface ApprovalFilters {
   status?: string;
   entityType?: string;
@@ -62,18 +53,6 @@ export function useApprovalInbox() {
 
 export function useBuildNotificationUnreadCount() {
   const canView = useCan("build:tickets:view");
-  const queryClient = useQueryClient();
-
-  useEffect(() => {
-    function handleStorage(event: StorageEvent) {
-      if (event.key !== BUILD_INBOX_INVALIDATION_KEY) return;
-      queryClient.invalidateQueries({
-        queryKey: platformCoreQueryKeys.notifications.unreadCount("build"),
-      });
-    }
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, [queryClient]);
 
   const query = useQuery<UnreadCount>({
     queryKey: platformCoreQueryKeys.notifications.unreadCount("build"),

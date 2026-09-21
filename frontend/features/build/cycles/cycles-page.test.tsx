@@ -16,8 +16,8 @@ jest.mock("@/hooks/api/access", () => ({
   useAccess: jest.fn(),
 }));
 
-jest.mock("@/features/build/navigation/build-dirty-state-context", () => ({
-  useRegisterBuildDirtyState: jest.fn(),
+jest.mock("@/components/shared/dirty-state-context", () => ({
+  useRegisterDirtyState: jest.fn(),
 }));
 
 jest.mock("@/lib/date-constraints", () => ({

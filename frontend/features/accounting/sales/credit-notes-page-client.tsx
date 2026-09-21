@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -9,7 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { SearchInput } from "@/components/ui/search-input";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import {
   Select,
   SelectContent,
@@ -20,11 +20,11 @@ import {
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { CREDIT_NOTES_CREATE, CREDIT_NOTES_READ, useCreditNotes } from "@/hooks/api/accounting/ar";
 import type { ArDocumentSummary } from "@/types/accounting-ar";
 import { usePartyNames } from "../parties/use-party-names";
@@ -32,7 +32,6 @@ import { ArStatusBadge, DOCUMENT_STATUS_OPTIONS, isDocumentStatus } from "./ar-l
 import { useListUrlState } from "./use-list-url-state";
 
 export function CreditNotesPageClient() {
-  const canRead = useCan(CREDIT_NOTES_READ);
   const canCreate = useCan(CREDIT_NOTES_CREATE);
   const router = useRouter();
   const url = useListUrlState();
@@ -116,6 +115,14 @@ export function CreditNotesPageClient() {
     url.setParams({ search: value || undefined });
   }
 
+  const pageState = usePageState({
+    permission: CREDIT_NOTES_READ,
+    isLoading: creditNotesQuery.isLoading,
+    isError: creditNotesQuery.isError,
+    error: creditNotesQuery.error,
+  });
+  const handleRetry = useCallback(() => { void creditNotesQuery.refetch(); }, [creditNotesQuery]);
+
   const hasFilters = debouncedSearch.length > 0 || statusParam.length > 0;
 
   const filters = (
@@ -145,13 +152,14 @@ export function CreditNotesPageClient() {
     </div>
   );
 
-  if (!canRead) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper title="Credit notes">
-        <NoPermissionState permission={CREDIT_NOTES_READ} />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
   return (
     <PageWrapper
@@ -175,54 +183,45 @@ export function CreditNotesPageClient() {
       }
       filters={filters}
     >
-      {creditNotesQuery.isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load your credit notes"
-          description={getErrorMessage(creditNotesQuery.error)}
-          onRetry={() => void creditNotesQuery.refetch()}
-        />
-      ) : (
-        <DataTable
-          data={rows}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          isLoading={creditNotesQuery.isLoading}
-          minWidth="900px"
-          className="flex-1 min-h-0"
-          emptyState={
-            <EmptyState
-              className="border-0 bg-transparent min-h-[40vh]"
-              illustrationPreset="documents"
-              title={hasFilters ? "No credit notes match your filters" : "No credit notes yet"}
-              description={
-                hasFilters
-                  ? "Try a different search or set the status filter back to all."
-                  : "When you need to correct a posted invoice, the credit note lands here."
-              }
-              action={
-                hasFilters
-                  ? {
-                      label: "Clear filters",
-                      onClick: () => url.setParams({ search: undefined, status: undefined }),
-                    }
-                  : canCreate
-                    ? { label: "New credit note", href: "/accounting/credit-notes/new" }
-                    : undefined
-              }
-            />
-          }
-          pagination={{
-            mode: "server",
-            page: url.page,
-            pageSize: url.pageSize,
-            total: creditNotesQuery.data?.total ?? 0,
-            onPageChange: url.setPage,
-            onPageSizeChange: url.setPageSize,
-            pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
-          }}
-        />
-      )}
+      <DataTable
+        data={rows}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        isLoading={creditNotesQuery.isLoading}
+        minWidth="900px"
+        className="flex-1 min-h-0"
+        emptyState={
+          <EmptyState
+            className="border-0 bg-transparent min-h-[40vh]"
+            illustrationPreset="documents"
+            title={hasFilters ? "No credit notes match your filters" : "No credit notes yet"}
+            description={
+              hasFilters
+                ? "Try a different search or set the status filter back to all."
+                : "When you need to correct a posted invoice, the credit note lands here."
+            }
+            action={
+              hasFilters
+                ? {
+                    label: "Clear filters",
+                    onClick: () => url.setParams({ search: undefined, status: undefined }),
+                  }
+                : canCreate
+                  ? { label: "New credit note", href: "/accounting/credit-notes/new" }
+                  : undefined
+            }
+          />
+        }
+        pagination={{
+          mode: "server",
+          page: url.page,
+          pageSize: url.pageSize,
+          total: creditNotesQuery.data?.total ?? 0,
+          onPageChange: url.setPage,
+          onPageSizeChange: url.setPageSize,
+          pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+        }}
+      />
     </PageWrapper>
   );
 }

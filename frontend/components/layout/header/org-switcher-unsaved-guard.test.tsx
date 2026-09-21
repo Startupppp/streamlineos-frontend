@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { useRegisterBuildDirtyState, BuildDirtyStateProvider } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState, DirtyStateProvider } from "@/components/shared/dirty-state-context";
 import { WorkspaceSwitcher } from "./org-switcher";
 
 const mockSwitch = jest.fn();
@@ -50,16 +50,16 @@ jest.mock("@/components/ui/drawer", () => ({
 }));
 
 function DirtySurface() {
-  useRegisterBuildDirtyState(true);
+  useRegisterDirtyState(true);
   return null;
 }
 
 it("does not switch organizations until the user discards Build changes", () => {
   render(
-    <BuildDirtyStateProvider>
+    <DirtyStateProvider>
       <DirtySurface />
       <WorkspaceSwitcher drawerOnly open onOpenChange={jest.fn()} />
-    </BuildDirtyStateProvider>,
+    </DirtyStateProvider>,
   );
 
   fireEvent.click(screen.getByRole("button", { name: "Switch to target organization" }));

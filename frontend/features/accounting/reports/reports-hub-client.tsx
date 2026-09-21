@@ -11,8 +11,8 @@ import {
   Users,
 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { NoPermissionState } from "@/components/shared";
-import { useCan } from "@/hooks/api/access";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { cn } from "@/lib/utils";
 
 interface ReportLink {
@@ -70,42 +70,51 @@ const REPORTS: readonly ReportLink[] = [
 ];
 
 export function ReportsHubClient() {
-  const canView = useCan("accounting:reports:read");
+  const pageState = usePageState({
+    permission: "accounting:reports:read",
+    isLoading: false,
+    isError: false,
+  });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper title="Reports">
+        <PageState resolution={pageState} loading={null} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper
       title="Reports"
       subtitle="Every figure is computed from the ledger when you ask for it. Nothing is stored, so nothing can drift."
     >
-      {!canView ? (
-        <NoPermissionState permission="accounting:reports:read" />
-      ) : (
-        <div className="flex min-h-0 flex-1 flex-col gap-3">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {REPORTS.map((report) => (
-              <Link
-                key={report.href}
-                href={report.href}
-                className={cn(
-                  "flex flex-col gap-2 rounded-xl border border-border bg-card p-4 shadow-sm transition-all",
-                  "hover:border-primary/40 hover:shadow-md",
-                )}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10">
-                    <report.icon className="h-4 w-4 text-primary" aria-hidden />
-                  </span>
-                  <span className="text-sm font-semibold">{report.founder}</span>
-                </div>
-                <p className="text-label text-muted-foreground">{report.description}</p>
-                <p className="text-dense font-medium tracking-wider text-muted-foreground">
-                  {report.accountant}
-                </p>
-              </Link>
-            ))}
-          </div>
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {REPORTS.map((report) => (
+            <Link
+              key={report.href}
+              href={report.href}
+              className={cn(
+                "flex flex-col gap-2 rounded-xl border border-border bg-card p-4 shadow-sm transition-all",
+                "hover:border-primary/40 hover:shadow-md",
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10">
+                  <report.icon className="h-4 w-4 text-primary" aria-hidden />
+                </span>
+                <span className="text-sm font-semibold">{report.founder}</span>
+              </div>
+              <p className="text-label text-muted-foreground">{report.description}</p>
+              <p className="text-dense font-medium tracking-wider text-muted-foreground">
+                {report.accountant}
+              </p>
+            </Link>
+          ))}
         </div>
-      )}
+      </div>
     </PageWrapper>
   );
 }

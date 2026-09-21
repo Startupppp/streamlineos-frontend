@@ -1,6 +1,5 @@
 "use client";
 
-import { useCan } from "@/hooks/api/access";
 import { useBalanceSheetReport } from "@/hooks/api/accounting/reports";
 import type {
   BalanceSheetReport as BalanceSheetReportData,
@@ -79,7 +78,6 @@ function buildRows(report: BalanceSheetReportData): StatementRow[] {
 }
 
 export function BalanceSheetReport() {
-  const canView = useCan("accounting:reports:read");
   const controls = useReportControls();
 
   const params = { asOf: controls.asOf, labelMode: controls.labelMode };
@@ -90,7 +88,6 @@ export function BalanceSheetReport() {
       title={data?.title ?? "Balance sheet"}
       subtitle="Everything owned set against everything owed, on one date."
       backHref="/accounting"
-      canView={canView}
       permission="accounting:reports:read"
       isLoading={isLoading}
       isError={isError}
