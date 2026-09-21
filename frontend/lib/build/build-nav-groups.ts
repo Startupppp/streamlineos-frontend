@@ -6,11 +6,13 @@ import type {
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import { splitDestinationHref } from "./build-nav-model";
 import { buildOrganizationCatalog } from "./nav/build-organization-catalog";
+import { buildProjectCatalog } from "./nav/build-project-catalog";
 import {
   BUILD_BROWSE_ALL_DESTINATION,
   BUILD_MY_WORK_DESTINATIONS,
 } from "./nav/build-stable-destinations";
 import type {
+  BuildNavCapability,
   BuildNavDestination,
   BuildNavModel,
 } from "./nav/build-nav-destination";
@@ -97,6 +99,49 @@ export function buildOrganizationNavGroups(): NavGroup[] {
       catalog.settings
         ? [...catalog.moreTools, catalog.settings]
         : catalog.moreTools,
+      true,
+    ),
+  ];
+  return groups.filter((group): group is NavGroup => group !== null);
+}
+
+export const BUILD_PROJECT_NAV_GROUP_LABEL = "Project";
+export const BUILD_PROJECT_TOOLS_NAV_GROUP_LABEL = "Project tools";
+
+export interface BuildNavScopeAvailability {
+  isOrgModuleEnabled: (orgModuleKey: string) => boolean;
+  isCapabilityEnabled: (capability: BuildNavCapability) => boolean;
+}
+
+function availableDestinations(
+  destinations: BuildNavDestination[],
+  availability: BuildNavScopeAvailability,
+): BuildNavDestination[] {
+  return destinations.filter(
+    (destination) =>
+      (destination.requiredOrgModule === undefined ||
+        availability.isOrgModuleEnabled(destination.requiredOrgModule)) &&
+      (destination.requiredCapability === undefined ||
+        availability.isCapabilityEnabled(destination.requiredCapability)),
+  );
+}
+
+export function buildProjectNavGroups(
+  basePath: string,
+  availability: BuildNavScopeAvailability,
+): NavGroup[] {
+  const catalog = buildProjectCatalog(basePath);
+  const overflow = catalog.settings
+    ? [...catalog.moreTools, catalog.settings]
+    : catalog.moreTools;
+  const groups: (NavGroup | null)[] = [
+    toNavGroup(
+      BUILD_PROJECT_NAV_GROUP_LABEL,
+      availableDestinations(catalog.primary, availability),
+    ),
+    toNavGroup(
+      BUILD_PROJECT_TOOLS_NAV_GROUP_LABEL,
+      availableDestinations(overflow, availability),
       true,
     ),
   ];

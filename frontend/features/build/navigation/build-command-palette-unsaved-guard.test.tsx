@@ -23,6 +23,10 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: { lockedModules: [] } }),
 }));
 
+jest.mock("@/hooks/api/build/projects", () => ({
+  useProject: () => ({ data: undefined }),
+}));
+
 jest.mock("@/hooks/common/use-debounce", () => ({
   useDebouncedValue: (v: string) => v,
 }));
@@ -30,7 +34,14 @@ jest.mock("@/hooks/common/use-debounce", () => ({
 jest.mock(
   "@/components/command-palette/hooks/use-global-search",
   () => ({
-    useGlobalSearch: () => ({ results: [], isSearching: false }),
+    GLOBAL_SEARCH_MIN_LENGTH: 2,
+    useGlobalSearch: () => ({
+      results: [],
+      isSearching: false,
+      isError: false,
+      error: null,
+      retry: jest.fn(),
+    }),
   }),
 );
 
@@ -49,6 +60,7 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/components/layout/sidebar/sidebar-nav-items", () => ({
   getNavGroupsForUser: () => [],
+  filterNavGroupsForUser: () => [],
   flattenNavRoutes: () => [],
 }));
 
