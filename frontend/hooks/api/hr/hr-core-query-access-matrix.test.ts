@@ -13,6 +13,7 @@ const queryAccessCases: readonly QueryAccessCase[] = [
   ["employee-departments.ts", "useHrDepartments", "/hr/departments", "hr:employees:view", true],
   ["employee-list.ts", "useHrEmployees", "/hr/employees", "hr:employees:view", true],
   ["employee-list.ts", "useInfiniteHrEmployees", "/hr/employees", "hr:employees:view", true],
+  ["employee-list.ts", "useHrEmployeeCounts", "/hr/employees/counts", "hr:employees:view", true],
   ["employee-insights.ts", "useHrEmployeeStats", "/hr/employees/stats", "hr:employees:view", true],
   ["employee-insights.ts", "useHrEmployeeProjects", "/hr/employees/projects", "hr:employees:view", true],
   ["employee-insights.ts", "useHrEmployeeTickets", "/hr/employees/tickets", "hr:employees:view", true],

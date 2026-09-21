@@ -9,6 +9,8 @@ export const humanResourcesQueryKeys = {
       params === undefined
         ? ([...base, "hr", "employees"] as const)
         : ([...base, "hr", "employees", params] as const),
+    employeeCounts: (params: QueryKeyParams) =>
+      [...base, "hr", "employees", "counts", params] as const,
     employee: (employeeUserId: string) =>
       [...base, "hr", "employees", employeeUserId] as const,
     attendanceStatus: () => [...base, "hr", "attendanceStatus"] as const,
@@ -232,8 +234,6 @@ export const humanResourcesQueryKeys = {
       [...base, "hr", "employeeSensitive", employmentId] as const,
     orgRoles: () => [...base, "hr", "org", "roles"] as const,
     orgLevels: () => [...base, "hr", "org", "levels"] as const,
-    orgHeadcount: (groupBy: string) =>
-      [...base, "hr", "org", "headcount", groupBy] as const,
     workAuthorizations: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "global", "workAuthorizations"] as const)

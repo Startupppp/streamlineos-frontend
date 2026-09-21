@@ -8,6 +8,9 @@ import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 const employeeListPageLazy = lazyContract(() =>
   import("@/hooks/api/hr/employee-list-schema").then((m) => m.employeeListPageContract),
 );
+const employeeCountsLazy = lazyContract(() =>
+  import("@/hooks/api/hr/employee-list-schema").then((m) => m.employeeCountsContract),
+);
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
   EmployeeCursorPage,
@@ -24,6 +27,13 @@ export type HrEmployeesParams = {
   /** Server-side role filter (users.role). */
   role?: string;
 };
+
+export type HrEmployeeCountsParams = Pick<HrEmployeesParams, "search" | "departmentId" | "role">;
+
+export interface HrEmployeeCounts {
+  active: number;
+  inactive: number;
+}
 
 export function normalizeEmployeesResponse(
   res: EmployeeListItem[] | PaginatedEmployees | EmployeeCursorPage | null | undefined,
@@ -144,6 +154,18 @@ export function useInfiniteHrEmployees(
     getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor ?? undefined,
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView && (options?.enabled ?? true),
+  });
+}
+
+export function useHrEmployeeCounts(params: HrEmployeeCountsParams) {
+  const canView = useCan("hr:employees:view");
+  const hrEnabled = useModuleEnabled("hr");
+  return useQuery({
+    queryKey: humanResourcesQueryKeys.hr.employeeCounts(params),
+    queryFn: ({ signal }) =>
+      apiClient.get<HrEmployeeCounts>("/hr/employees/counts", params, signal, employeeCountsLazy),
+    staleTime: 2 * 60_000,
+    enabled: hrEnabled && canView,
   });
 }
 
