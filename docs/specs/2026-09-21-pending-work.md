@@ -127,6 +127,71 @@ left inside a closed item.
 
 ---
 
+## 7a. Folded in from the open-items register
+
+[`2026-09-21-open-items-register.md`](2026-09-21-open-items-register.md) is the per-item
+detail annex — source line, what closes it, what blocks it, for 48 items. These are the ones
+it named as missing here. **Its ids are kept so the two files can be cross-read.**
+
+### Security and authorization — highest value in this group
+
+| id | Item |
+|---|---|
+| **P-6** | **`POST /chat/confirm` reserves and deducts no credits at all.** Not a leak of an existing gate — there is no gate. Needs a product answer on whether confirms are credit-gated before a test can be written; one was deliberately not written, to avoid certifying a fiction. |
+| **P-7** | **`email.send` is gated on `chat:messages:write`, which sits in `EMPLOYEE_SELF_SERVICE`** — so the check is effectively "is an active member". Either remap the key or formally document the amplification risk. Needs a named owner. |
+| **E-17** | `evaluateAssignmentRules` fires `void Promise.allSettled` after the handler (`leads.service.ts:388`) — the request transaction has committed and the GUC is gone. Use `registerAfterCommit` or `runInNewTenantTransaction`. |
+
+### Tests that certify fictions
+
+| id | Item |
+|---|---|
+| **E-3** | `chat-assistant.service.spec.ts:270-297` and `chat-assistant-multistep-cancellation.spec.ts:345-402` assert **opposite outcomes for the same abort**. The former's `streamText` mock never invokes `onAbort`, so it certifies a fiction. Fix against the latter, which matches the shipped SDK. |
+| **E-4** | `ai-confirmation.service.spec.ts:452` asserts a row ends `EXPIRED` after an expired confirm, but in production the `BadRequestException` rolls that write back. The mock has no rollback. Assert the exception, or test against a real transaction. |
+
+### Engineering, unblocked
+
+| id | Item |
+|---|---|
+| **E-5** | Malformed route parameter names in `build/core/` (`IdstateIdParams`, `IdautomationIdParams`, `IdfieldIdParams`) — a §7 violation from a concatenation bug. Correct forms already exist in `build/meetings/`, `build/client-portal/`, `build/execution/`. ⚠ Source says 5 controllers / 26 occurrences; re-measured 2026-09-21 as **8 controllers**. |
+| **E-8** | **8 duplicate copies of `isRecord` / `isPayloadRecord`** across `auth`, `crm/import`, `e-sign`, `workflow`, `openapi`, `storage`. `src/common/types/is-record.ts` already exists — redirect all 8 and delete the copies. Textbook §4. |
+| **E-9** | Gemini explicit caching is unreachable: `AiStreamTextOpts` has no `providerOptions` field and the gateway never passes one to `streamText`, so `cachedContent` can never be used. The byte-identical-prefix precondition is already pinned by test. |
+| **E-10 / E-11** | `getAllWork`'s `assigneeId` filter matches only `tickets.assignee_membership_id`, never `ticket_assignees`, so cross-user ticket counts under-count. E-11 is the same bug latent in `countTicketsByStatus` with `scope:"all"` — **no live caller today**; fix it or document the restriction in the signature before someone adds one. |
+| **E-14** | `projects-members.service.ts` `limit(500)` and `projects-labels.service.ts` `limit(300)` need a keyset cursor **and** matching frontend paging — two-repo lane. |
+| **E-16** | `ai_action_proposals.user_membership_id` backfill — new rows carry it, historical rows are NULL. Data migration. |
+
+### Structural
+
+| id | Item |
+|---|---|
+| **S-4** | `ai_action_proposals` uses a `serial` PK, not `generatedAlwaysAsIdentity()`. A breaking change on a live table with existing FKs — needs its own lane with a downtime or online-migration plan. |
+| **S-5** | **Read-replica routing for 1,646 GET routes** — the largest remaining capacity win. `DB_REPLICA_URL` is unset and `runInReplicaTenantRead` has 3 call sites. Blocked on infrastructure *and* behind the `accessMode` item in §3: a reader cannot serve a GET that writes. |
+
+### H-1 — ⚠ the premise is refuted, but something real is there
+
+The register records *"an `org_1` fixture organisation exists in the PRODUCTION database
+(`created_at` 2026-09-14)"*, seeded by the e2e harness while `.env` pointed at Aurora.
+
+**Measured against production 2026-09-21: there is no organisation with id `org_1`.** That
+specific claim does not hold.
+
+What is there, out of **18 live organisations**, is three with test-shaped names:
+
+| id | name | slug | created |
+|---|---|---|---|
+| `d75644c3-…` | Testing Phase | `testing-phase-9kud` | 2026-09-16 |
+| `eb71eb7c-…` | Test Enterprise | `test-enterprise-tlik` | 2026-09-17 |
+| `4c8d8eda-…` | Test Annual | `test-annual-n2sm` | 2026-09-17 |
+
+All three carry **UUID ids and randomised slug suffixes**, which is the signature of manual
+signup testing rather than a fixture harness (which would use a fixed id). None matches the
+recorded date. **Whether they should be removed is your call, not mine** — deleting an
+organisation row from production is destructive and I have not touched them.
+
+The half of H-1 that stands regardless, and matters more: **make the e2e harness refuse a
+non-local host outright**, so a seeded run cannot reach Aurora whatever `.env` says.
+
+---
+
 ## 8. Module acceptance backlog — 1,279 unchecked
 
 These are **normative acceptance references**, not an agent queue. The completion plan
