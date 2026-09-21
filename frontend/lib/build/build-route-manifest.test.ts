@@ -1,8 +1,8 @@
 import { readdirSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
-import { BUILD_ROUTE_MANIFEST } from "./build-route-manifest";
+import { BUILD_ROUTE_MANIFEST, BuildRouteManifestEntrySchema } from "./build-route-manifest";
 
-const APP_AUTH_DIR = resolve(process.cwd(), "app", "(authenticated)");
+const APP_AUTH_DIR = resolve(__dirname, "../../app/(authenticated)");
 const APP_BUILD_DIR = join(APP_AUTH_DIR, "build");
 
 function collectPageFilePaths(dir: string): string[] {
@@ -46,5 +46,50 @@ describe("BLD-001 — build route manifest covers all 83 authenticated build pag
   it("every page.tsx on disk appears in the manifest so no unreviewed route can land undetected", () => {
     const untracked = [...diskRoutes].filter((route) => !manifestRoutes.has(route));
     expect(untracked).toEqual([]);
+  });
+});
+
+describe("BLD-001 — target field invariant enforced by schema", () => {
+  it("schema rejects a CONSOLIDATE entry with a null target so a migration without a destination cannot be authored", () => {
+    const result = BuildRouteManifestEntrySchema.safeParse({
+      route: "/build/fake",
+      decision: "CONSOLIDATE",
+      target: null,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("schema rejects a MOVE entry with a null target so a move without a destination cannot be authored", () => {
+    const result = BuildRouteManifestEntrySchema.safeParse({
+      route: "/build/fake",
+      decision: "MOVE",
+      target: null,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("schema rejects a DELETE entry with a null target so a deletion without an owning module cannot be authored", () => {
+    const result = BuildRouteManifestEntrySchema.safeParse({
+      route: "/build/fake",
+      decision: "DELETE",
+      target: null,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("schema rejects a KEEP entry with a non-null target so no dead-link target can exist on a retained route", () => {
+    const result = BuildRouteManifestEntrySchema.safeParse({
+      route: "/build/fake",
+      decision: "KEEP",
+      target: "/somewhere",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("every non-KEEP entry has a non-empty target so every killed route names its migration destination", () => {
+    const violations = BUILD_ROUTE_MANIFEST.filter(
+      (e) => e.decision !== "KEEP" && e.target === "",
+    );
+    expect(violations).toEqual([]);
   });
 });
