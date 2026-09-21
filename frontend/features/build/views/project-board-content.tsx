@@ -29,6 +29,8 @@ import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import type { ProjectStatus, BoardMember } from "./use-board-url-state";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 
 const KanbanBoard = dynamic(
   () => import("./kanban-board").then((m) => m.KanbanBoard),
@@ -71,6 +73,10 @@ interface ProjectBoardContentProps {
   isTruncated: boolean;
   isFetchingMore: boolean;
   onLoadMore: () => void;
+  isLoading: boolean;
+  isError: boolean;
+  error: unknown;
+  onRetry: () => void;
 }
 
 export function ProjectBoardContent({
@@ -101,55 +107,59 @@ export function ProjectBoardContent({
   isTruncated,
   isFetchingMore,
   onLoadMore,
+  isLoading,
+  isError,
+  error,
+  onRetry,
 }: ProjectBoardContentProps) {
   const shouldReduceMotion = useReducedMotion();
   const canUpdate = useCan("build:tickets:update");
+  const resolution = usePageState({
+    permission: "build:tickets:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: showEmptyFilterState,
+  });
   const viewVariants = shouldReduceMotion ? viewSwapReduced : viewSwap;
   const selection = useMemo(
     () => canUpdate ? { selected: selectedIds, onChange: onSelectionChange } : undefined,
     [canUpdate, selectedIds, onSelectionChange],
   );
 
-  if (showEmptyFilterState) {
-    return (
+  const filteredEmptyState = (
+    <div className="relative flex h-full flex-1 flex-col items-center justify-center py-12">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-6 right-1/4 h-36 w-36 rounded-full bg-primary/[0.06] blur-3xl"
+      />
       <div
         className={cn(
-          PAGE_CHROME_X,
-          "relative flex h-full flex-1 flex-col items-center justify-center py-12",
+          PM_PANEL,
+          "relative flex w-full max-w-sm flex-col items-center gap-3 px-6 py-8 text-center",
         )}
       >
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-6 right-1/4 h-36 w-36 rounded-full bg-primary/[0.06] blur-3xl"
-        />
-        <div
-          className={cn(
-            PM_PANEL,
-            "relative flex w-full max-w-sm flex-col items-center gap-3 px-6 py-8 text-center",
-          )}
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-primary/[0.06] shadow-sm">
-            <SearchX className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-foreground">No tickets match your filters</p>
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              Try adjusting your search or filters to find what you&apos;re looking for.
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onClearSearch}
-            className="mt-0.5 h-8 border-border/70 bg-background/60 text-xs backdrop-blur-sm"
-          >
-            Clear all filters
-          </Button>
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-primary/[0.06] shadow-sm">
+          <SearchX className="h-5 w-5 text-muted-foreground" />
         </div>
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-foreground">No tickets match your filters</p>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Try adjusting your search or filters to find what you&apos;re looking for.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onClearSearch}
+          className="mt-0.5 h-8 border-border/70 bg-background/60 text-xs backdrop-blur-sm"
+        >
+          Clear all filters
+        </Button>
       </div>
-    );
-  }
+    </div>
+  );
 
   function renderViewPane(v: ViewType): React.ReactNode {
     switch (v) {
@@ -330,27 +340,35 @@ export function ProjectBoardContent({
 
   return (
     <div className={cn(PAGE_CHROME_X, "flex min-h-0 flex-1 flex-col")}>
-      <AnimatePresence mode="wait" initial={false}>
-        {renderViewPane(view)}
-      </AnimatePresence>
-      {isTruncated ? (
-        <div className="shrink-0 flex items-center justify-between gap-3 border-t border-border/40 py-2">
-          <ListTruncationNotice
-            shown={filteredTickets.length}
-            hint="Load more to see additional tickets, or narrow your filters."
-            className="flex-1 border-0 px-0 py-0"
-          />
-          <LoadingButton
-            type="button"
-            variant="outline"
-            size="sm"
-            isPending={isFetchingMore}
-            onClick={onLoadMore}
-          >
-            Load more
-          </LoadingButton>
-        </div>
-      ) : null}
+      <PageState
+        resolution={resolution}
+        loading={<KanbanBoardSkeleton />}
+        empty={filteredEmptyState}
+        onRetry={onRetry}
+        className="flex-1"
+      >
+        <AnimatePresence mode="wait" initial={false}>
+          {renderViewPane(view)}
+        </AnimatePresence>
+        {isTruncated ? (
+          <div className="shrink-0 flex items-center justify-between gap-3 border-t border-border/40 py-2">
+            <ListTruncationNotice
+              shown={filteredTickets.length}
+              hint="Load more to see additional tickets, or narrow your filters."
+              className="flex-1 border-0 px-0 py-0"
+            />
+            <LoadingButton
+              type="button"
+              variant="outline"
+              size="sm"
+              isPending={isFetchingMore}
+              onClick={onLoadMore}
+            >
+              Load more
+            </LoadingButton>
+          </div>
+        ) : null}
+      </PageState>
     </div>
   );
 }
