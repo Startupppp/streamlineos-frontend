@@ -13,7 +13,6 @@ import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
   HrJobRole,
   HrJobLevel,
-  HrHeadcountGroup,
   OrgCatalogInput,
 } from "@/types/hr/core";
 
@@ -94,16 +93,5 @@ export function useDeleteJobLevel() {
     mutationFn: (jobLevelId: number) =>
       apiClient.delete<void>(`/hr/org/levels/${jobLevelId}`, undefined, undefined, noContentC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.orgLevels() }),
-  });
-}
-
-export function useOrgHeadcount(groupBy: "department" | "location" | "role" = "department") {
-  const canEmployees = useCan("hr:employees:view");
-  const hrEnabled = useModuleEnabled("hr");
-  return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.orgHeadcount(groupBy),
-    queryFn: ({ signal }) => apiClient.get<HrHeadcountGroup[]>("/hr/org/headcount", { groupBy }, signal, lazyContract(() => import("@/hooks/api/hr/hr-org-schema").then(m => m.headcountItemListContract))),
-    staleTime: 5 * 60_000,
-    enabled: hrEnabled && canEmployees,
   });
 }

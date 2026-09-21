@@ -27,7 +27,6 @@ const queryAccessCases: readonly QueryAccessCase[] = [
   ["employee-profile.ts", "useEmployeeSensitive", "/sensitive", "hr:sensitive:view", true],
   ["hr-org.ts", "useOrgJobRoles", "/hr/org/roles", "hr:employees:view", true],
   ["hr-org.ts", "useOrgJobLevels", "/hr/org/levels", "hr:employees:view", true],
-  ["hr-org.ts", "useOrgHeadcount", "/hr/org/headcount", "hr:employees:view", true],
   ["attendance.ts", "useHrAttendanceStatus", "/me/attendance/status", "self:attendance", false],
   ["attendance.ts", "useHrAttendanceHistory", "/me/attendance/history", "self:attendance", false],
   ["attendance.ts", "useHrMonthlyAttendance", "/hr/attendance/monthly", "self:attendance|hr:attendance:view", true],

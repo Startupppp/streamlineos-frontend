@@ -360,7 +360,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/handbook` · **HR** · hooks: `→ features/hr/handbook`
 
 ### Org Chart & Structure
-- `/hr/org` · **HR** · hooks: `→ features/hr/org`
+- `/hr/org` · **HR** · hooks: `requirePermission("hr:employees:view")` (server), `useOrgJobRoles`/`useOrgJobLevels`, `→ features/hr/org`. 2026-09-21 (FE#158/BE#37): the "Total" that could read 1 above an empty Job Roles list was `HeadcountStats` (people per department, not roles); 4bf5b2421 stopped rendering it and the dead component, `useOrgHeadcount`, its contract, type and query key are now deleted. Backend `GET /hr/org/roles` and the role headcount share `liveJobRolesOf`, so an archived role is never a named count.
 - `/hr/org-chart` · **HR** · hooks: `→ features/hr/org-chart`
 
 ### Announcements & Communications
