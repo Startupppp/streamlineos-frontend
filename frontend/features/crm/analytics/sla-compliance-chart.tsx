@@ -32,7 +32,7 @@ export function SlaComplianceChart({ slaReport }: SlaComplianceChartProps) {
                 cy="50"
                 r="42"
                 fill="none"
-                stroke="hsl(var(--border))"
+                stroke="var(--border)"
                 strokeWidth="8"
               />
               <circle

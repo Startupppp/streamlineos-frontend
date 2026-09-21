@@ -13,7 +13,7 @@ export function LeadVolumeChart({ data }: LeadVolumeChartProps) {
     <AnalyticsChartCard title="Lead Volume Trend (12 weeks)" data={data} filename="lead-volume-trend">
       <ResponsiveContainer width="100%" height={280}>
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis dataKey="week" tick={AXIS_TICK} />
           <YAxis tick={AXIS_TICK} />
           <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />

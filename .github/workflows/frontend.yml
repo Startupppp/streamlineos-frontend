@@ -488,6 +488,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run check:colors:self-test && pnpm run check:colors
 
+      - name: No hsl(var(--TOKEN)) wrappers around hex-valued tokens
+        if: ${{ !cancelled() }}
+        run: pnpm run check:css-tokens:self-test && pnpm run check:css-tokens
+
       - name: No customer proper noun in the source every tenant runs
         if: ${{ !cancelled() }}
         run: pnpm run check:tenant-neutral:self-test && pnpm run check:tenant-neutral

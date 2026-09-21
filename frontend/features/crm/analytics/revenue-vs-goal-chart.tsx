@@ -48,7 +48,7 @@ export function RevenueVsGoalChart({ data }: RevenueVsGoalChartProps) {
     >
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis dataKey="month" tick={{ ...AXIS_TICK, fontSize: 10 }} />
           <YAxis tick={AXIS_TICK} tickFormatter={yAxisFormatter} />
           <Tooltip

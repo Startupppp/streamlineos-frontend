@@ -59,6 +59,8 @@
     "check:feature-cycles": "node scripts/check-feature-cycles.mjs",
     "check:feature-cycles:self-test": "node scripts/check-feature-cycles.mjs --self-test",
     "check:colors:self-test": "node scripts/check-no-arbitrary-colors.mjs --self-test",
+    "check:css-tokens": "node scripts/check-no-hsl-token-wrapper.mjs",
+    "check:css-tokens:self-test": "node scripts/check-no-hsl-token-wrapper.mjs --self-test",
     "check:effect-fetches:self-test": "node scripts/check-no-effect-fetches.mjs --self-test",
     "check:routes:self-test": "node scripts/check-no-business-routes.mjs --self-test",
     "check:icon-labels:self-test": "node scripts/check-no-unlabeled-icon-buttons.mjs --self-test",
