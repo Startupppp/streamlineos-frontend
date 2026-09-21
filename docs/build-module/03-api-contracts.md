@@ -5,7 +5,7 @@
 - Controllers: `backend/src/modules/build/**/*.controller.ts`.
 - DTO schemas: `backend/src/modules/build/**/dto/*.schemas.ts`.
 - Client hooks: `frontend/hooks/api/build/`.
-- Query keys: `frontend/lib/query-keys.ts`.
+- Query keys: the domain module `frontend/lib/query-keys/build-work.ts`. Production code must never import the `frontend/lib/query-keys.ts` aggregate (FE-18).
 - Pagination: `backend/src/common/pagination/cursor.schema.ts` and `list-query.schema.ts`.
 
 ## Naming and transport
@@ -18,44 +18,73 @@
 
 ## Envelopes
 
+These are live and load-bearing. Build must consume them as they are; do not introduce a second envelope.
+
 ```ts
-type ApiSuccess<T> = { data: T; meta?: { requestId: string; revision?: string } };
-type CursorPage<T> = {
-  data: T[];
-  pageInfo: { nextCursor: string | null; hasMore: boolean };
-  aggregates?: Record<string, number>;
-};
-type ApiError = {
-  error: { code: string; message: string; details?: unknown; requestId: string };
-};
+// BE-19, common/interceptors/response-transform.interceptor.ts:13
+// A payload already carrying `success` passes through unchanged.
+type ApiSuccess<T> = { success: true; data: T };
+
+// BE-20, common/http/all-exceptions.filter.ts:10 — flat, not nested under `error`.
+type ApiError = { code: string; message: string; details?: unknown; correlationId?: string };
 ```
 
-Canonical codes include `VALIDATION_ERROR`, `UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `VERSION_CONFLICT`, `RATE_LIMITED`, `MODULE_NOT_ENABLED`, and `DEPENDENCY_UNAVAILABLE`. Cross-tenant and inaccessible records return the same `NOT_FOUND` interface.
+Two cursor page shapes exist. Pick by key type; do not add a third.
+
+```ts
+// common/pagination/cursor.ts:130 — opaque cursor, from buildCursorPage / buildTupleCursorPage.
+interface CursorPage<T> {
+  data: T[];
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
+}
+
+// common/pagination/cursor.ts:187 — monotonic integer id, from buildIdCursorPage.
+interface IdCursorPage<T> {
+  data: T[];
+  hasMore: boolean;
+  nextCursor: number | null;
+}
+```
+
+Live error codes come from `defaultCode` (`all-exceptions.filter.ts:18`) unless the thrower supplies its own: `BAD_REQUEST`, `UNAUTHORIZED`, `PAYMENT_REQUIRED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `PAYLOAD_TOO_LARGE`, `UNSUPPORTED_MEDIA_TYPE`, `UNPROCESSABLE_ENTITY`, `RATE_LIMITED`, `SERVICE_UNAVAILABLE`, falling back to `HTTP_<status>`. A Zod failure is `VALIDATION_FAILED` with `details: Array<{ path: string; message: string }>` (`:184`). Module denial is `MODULE_NOT_ENABLED` at 402 (`common/http/api-exceptions.ts:46`, BE-23).
+
+`VALIDATION_ERROR`, `UNAUTHENTICATED`, `VERSION_CONFLICT` and `DEPENDENCY_UNAVAILABLE` do not exist in this repo. Do not branch on them.
+
+Cross-tenant and inaccessible records return the same `NOT_FOUND` interface (BE-91).
 
 ## List query contract
 
+Extend `baseListQuerySchema` (`common/pagination/list-query.schema.ts:45`). Sort is one enum-constrained field plus a direction, not a comma-separated list.
+
 ```text
-?cursor=<opaque>&limit=50&sort=-updatedAt,title
+?cursor=<opaque>&limit=50&page=1&sortField=updatedAt&sortDir=desc
 &q=<search>&status=a,b&assigneeId=...&projectId=...
 &from=YYYY-MM-DD&to=YYYY-MM-DD
 ```
 
-- Maximum `limit` is 100; default 50.
-- Cursor includes normalized filters, sort, scope, access revision, and stable tie-breaker.
-- Invalid/expired/mismatched cursors return `VALIDATION_ERROR`, never silently restart.
-- Counts required by filter chips are server aggregates over the same authorization predicate.
+- Maximum `limit` is `PAGE_SIZE_CAP` = 100, default 50. Import it; never redeclare it (BE-24).
+- An over-large `limit` is **clamped, not rejected** (`list-query.schema.ts:22`). A bookmarked link gets the largest allowed page.
+- Declare `sortField` per endpoint with `withSortField([...])` so the enum rejects unknown columns.
+- The opaque cursor encodes **position only** — no tenant, no permission, no filter state (`cursor.schema.ts:20`).
+- A malformed, stale or mismatched cursor **degrades to the first page**; it does not 400. This is a deliberate decision recorded at `cursor.schema.ts:4-25`, and it is the one behavior both cursor implementations agree on. Do not reintroduce the 400.
+- Because the cursor carries no filter state, the server must re-apply the authorization predicate on every page. Never trust a cursor to have narrowed the result.
+- Counts required by filter chips are server aggregates over the same authorization predicate, returned alongside the page (FE-33).
 
 ## Command contract
 
 ```ts
 type CommandHeaders = {
   "Idempotency-Key": string;
-  "If-Match"?: string; // entity version for conflict detection
+  "If-Match"?: string;
 };
 type Patch<T> = Partial<{ [K in keyof T]: T[K] | null }>;
 ```
 
-Mutations return the complete projection needed to patch current caches, plus `version` and `updatedAt`. Async work returns `202` with a durable run ID and status URL.
+`Idempotency-Key` is live: apply `@Idempotent()` on retriable mutations, which replays the first result and 409s while in flight (BE-34). The frontend `apiClient` generates the header automatically — do not hand-set it.
+
+**`If-Match` optimistic concurrency is a target, not current behavior.** No handler reads it and `VERSION_CONFLICT` exists nowhere in the repo. A slice that needs it must introduce the header, the `version` column, the 409 code and its tests together, and say so in its acceptance criteria. Until then, do not write a client that sends it or a contract that expects `version` back.
+
+Mutations return the complete projection needed to patch current caches (FE-35), plus `updatedAt`. Async work returns `202` with a durable run ID and status URL.
 
 ## Auth and permissions
 
