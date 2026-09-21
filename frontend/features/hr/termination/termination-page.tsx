@@ -17,7 +17,6 @@ import {
   useHrEmployees,
   type TerminationStatus,
 } from "@/hooks/api/hr";
-import type { EmployeeListItem } from "@/types/hr";
 import { useTerminationActions } from "./use-termination-actions";
 
 type StatusFilter = "ALL" | TerminationStatus;

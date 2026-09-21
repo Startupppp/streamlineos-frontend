@@ -3,12 +3,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
-import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { downloadBlob } from "@/lib/download-blob";
-import type { FnfSettlement, FnfStatement } from "@/types/payroll/reports";
+import type { FnfStatement } from "@/types/payroll/reports";
 
 const fnfInsightsListC = lazyContract(() =>
   import("@/hooks/api/payroll/fnf-schema").then((m) => m.fnfInsightsListContract),
