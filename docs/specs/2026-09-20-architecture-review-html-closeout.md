@@ -83,9 +83,24 @@ Ordered most severe first. Each names the owning file and the smallest repair.
    `features/shared/list-view/`, rename `use-ticket-filter-params` → `useListParams`,
    drop ticket vocabulary from the public interface.
 
-5. **`rich-text-content.tsx` has no Plate branch.** `frontend/components/editor/rich-text-content.tsx:34`
-   branches Markdown / Tiptap only, so a KB document authored in Plate cannot render
-   outside the KB. Add a `looksLikePlate` detector (Slate JSON) and a read-only branch.
+5. **`rich-text-content.tsx` has no Plate branch** — premise true, but the obvious repair
+   was TRIED AND REVERTED 2026-09-21. `frontend/components/editor/rich-text-content.tsx`
+   branches Markdown / Tiptap only. KB really does author Plate
+   (`features/wiki/components/page-document.tsx:41` → `PlateDocumentEditor`, persisted as
+   a Slate array per `hooks/api/kb/kb-pages-schema.ts:19`).
+   **Do not fix it by adding a Slate renderer to the shared component.** That was
+   implemented — a `looksLikePlate` detector plus 126 lines of node rendering — and backed
+   out for two reasons. It is a near-verbatim copy of `renderSlateLeafNode` in
+   `features/wiki/components/public-page-content.tsx:141`, down to the same Tailwind
+   strings, and CLAUDE.md §4 is explicit that an existing implementation is imported, not
+   copied. And it is speculative: `RichTextContent` has exactly **one** caller,
+   `features/build/ticket-details/comment-item.tsx:246`, which passes Tiptap HTML. No code
+   path anywhere hands it Plate, so the branch could not execute.
+   The blocker the agent correctly identified is real — `components/` may not import
+   `features/wiki/` (§9, one-directional flow) — and it is what makes this item a
+   **structural move, not an addition**: when a second consumer of Slate rendering actually
+   appears, lift `renderSlateLeafNode`/`renderSlateNode` out of `features/wiki` into a
+   neutral home and point both callers at it. Until that consumer exists, YAGNI.
 
 6. **Chat invite links still carry a plaintext `token` column.** `chat-channel-tables.ts:102`
    holds `token`, `tokenHash` and `tokenEncrypted`; the service already looks up by
@@ -112,10 +127,19 @@ Ordered most severe first. Each names the owning file and the smallest repair.
    `status = 'PENDING'` with an affected-row check, same at :216 for cancel. Only the
    structural consolidation remains; low urgency.
 
-10. **The access ladder resolves `view` and `manage` two different ways.**
-    `module-access.helpers.ts:96-104` answers `manage` from `resolveModuleManagementStanding`
-    but `view` from a literal key lookup with standing as fallback. Route `view` through
-    `resolveModuleStanding` too, so `module-standing.spec.ts` guards the live path.
+10. ~~**The access ladder resolves `view` and `manage` two different ways**~~ — **CLOSED
+    2026-09-21 (`1b55e28ac`).** Premise held. `assertModuleAccessPolicy` now routes `view`
+    through a new `resolveModuleStanding`, the same authority resolver `manage` uses, and
+    six tests in `module-standing.spec.ts` cover the live path (they failed before the fix
+    because the function did not exist).
+    **Verified that no access changes hands**, on the two axes where it could have:
+    the key lookup is only reachable with `action === "view"` (the `manage` branch returns
+    or throws above it), so replacing `` `:access:${action}` `` with `:access:view` is
+    equivalent there and is *not* a grant of view-keys to manage-callers; and every source
+    `resolveAuthoritySource` can return — `org-owner`, `module-ownership`, `org-admin`,
+    `module-role` — carries `canManageAccess: true`, so `source !== null` is the same
+    predicate as the `hasModuleAccessManagementAuthority` call it replaced. The only
+    `canManageAccess: false` standing is `membership`, which that function never returns.
 
 11. ~~**No Postgres safety net on email canonicalization**~~ — **OBSOLETE, the net already
     exists. Verified against production 2026-09-21.** The review read only the Drizzle
@@ -149,8 +173,28 @@ Ordered most severe first. Each names the owning file and the smallest repair.
     the PENDING predicate is restated in each. Extract one
     `invitationTransition(id, from, to, tx)`.
 
-14. **Payroll still imports HR/directory schema directly.** `payroll/filings/filings.service.ts`
-    and `payroll/lib/payroll-run-payee.ts` should read through `modules/directory/person-seam.ts`.
+14. **Payroll still imports HR/directory schema directly** — HALF WRONG, half real and
+    BLOCKED on a seam widening. Re-derived 2026-09-21.
+    - **`payroll/filings/filings.service.ts` — no violation. Do not "fix" it.** It imports
+      only `payrollFilings`, a payroll-owned table. What the review saw is
+      `EmploymentFactsService`, which is a *service* import, and backend/CLAUDE.md §1 says
+      cross-module access goes through the other module's service — that is the convention
+      being followed, not broken. 19 payroll files do the same.
+    - **`payroll/lib/payroll-run-payee.ts` — real violation.** It imports directory-owned
+      `workers` and `organizationPeople` from `db/schema` and joins them for
+      `workerNumber`, `organizationPersonId`, `displayName`, `firstName`, `lastName`,
+      `workEmail`. Of the 15 files importing those two tables, every other one is inside
+      `modules/directory/` or `modules/hr/`.
+    - **The blocker:** `resolvePeopleIdentities` covers every field except `workerNumber`.
+      The seam's query already joins `workers` but projects only `workerId` and `isPayee`.
+      So the unblocking step is precise: add `workerNumber` to `PersonIdentity` and to that
+      projection, *then* route the payee loader through the seam.
+    - **The review missed a second site:** `payroll/runs/salary-profiles.repository.ts`
+      has the same direct-import pattern. Fix both or neither.
+    Not attempted here deliberately: `person-seam.ts` is a shared seam (a reservation
+    surface under root §3), the caller is money-handling code, and collapsing its join into
+    a seam call risks trading one query for an N+1. This wants an owner, not an opportunistic
+    edit. Baseline at time of audit: payroll 130 suites / 1018 tests green, `check:cycles` clean.
 
 15. **`team` DataScope silently degrades to `own`** — premise CONFIRMED, and one
     tempting repair has been tried and REJECTED. `access/apply-scope.ts:22-27` falls
