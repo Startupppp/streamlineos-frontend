@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -63,6 +64,7 @@ export function NestedGroup({
   projectStatuses,
   displayOptions,
   onTicketClick,
+  selection,
 }: NestedGroupProps) {
   const status = getGroupStatus(groupBy, groupKey, items);
   return (
@@ -88,6 +90,7 @@ export function NestedGroup({
           projectStatuses={projectStatuses}
           displayOptions={displayOptions}
           onTicketClick={onTicketClick}
+          selection={selection}
         />
       </AccordionContent>
     </AccordionItem>
@@ -103,11 +106,23 @@ export function DroppableGroup({
   displayOptions,
   onTicketClick,
   shouldReduceMotion,
+  selection,
 }: DroppableGroupProps) {
   const { visibleCount, hiddenCount, showMore } = useGroupRenderLimit(
     items.length,
   );
   const visibleItems = items.slice(0, visibleCount);
+
+  const handleItemSelect = useCallback(
+    (id: string | number, checked: boolean) => {
+      if (!selection) return;
+      const next = new Set(selection.selected);
+      if (checked) next.add(id);
+      else next.delete(id);
+      selection.onChange(next);
+    },
+    [selection],
+  );
 
   return (
     <Droppable droppableId={groupKey} type="LIST_TICKET">
@@ -147,6 +162,8 @@ export function DroppableGroup({
                     displayOptions={displayOptions}
                     dragHandleProps={dragProvided.dragHandleProps}
                     isDragging={dragSnapshot.isDragging}
+                    isSelected={selection?.selected.has(ticket.id)}
+                    onSelect={selection ? handleItemSelect : undefined}
                   />
                 </div>
               )}

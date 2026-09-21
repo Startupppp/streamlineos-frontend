@@ -23,6 +23,11 @@ export interface Ticket {
   cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;
 }
 
+export interface ListSelection {
+  selected: Set<string | number>;
+  onChange: (sel: Set<string | number>) => void;
+}
+
 export interface ListViewProps {
   tickets: Ticket[];
   onTicketClick: (ticketId: number) => void;
@@ -34,6 +39,7 @@ export interface ListViewProps {
   displayOptions?: DisplayOptions;
   showEmptyRows?: boolean;
   showEmptyColumns?: boolean;
+  selection?: ListSelection;
 }
 
 export interface ListViewItemProps {
@@ -45,6 +51,8 @@ export interface ListViewItemProps {
   displayOptions?: DisplayOptions;
   dragHandleProps?: DraggableProvidedDragHandleProps | null;
   isDragging?: boolean;
+  isSelected?: boolean;
+  onSelect?: (id: string | number, checked: boolean) => void;
 }
 
 export interface InlineGroupCreateProps {
@@ -71,6 +79,7 @@ export interface NestedGroupProps {
   projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
   displayOptions?: DisplayOptions;
   onTicketClick: (id: number) => void;
+  selection?: ListSelection;
 }
 
 export interface DroppableGroupProps {
@@ -82,6 +91,7 @@ export interface DroppableGroupProps {
   displayOptions?: DisplayOptions;
   onTicketClick: (id: number) => void;
   shouldReduceMotion: boolean | null;
+  selection?: ListSelection;
 }
 
 export type ReorderContext = { previousTickets: Ticket[] };

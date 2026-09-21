@@ -48,6 +48,7 @@ export const ListView = memo(function ListView({
   projectStatuses,
   displayOptions,
   showEmptyRows,
+  selection,
 }: ListViewProps) {
   const hasRowBy = !!rowBy && rowBy !== "none";
   const shouldReduceMotion = useReducedMotion();
@@ -66,6 +67,17 @@ export const ListView = memo(function ListView({
   const handleShowMoreFlat = useCallback(() => {
     setVisibleFlatCount((count) => count + LIST_RENDER_PAGE_SIZE);
   }, []);
+
+  const handleItemSelect = useCallback(
+    (id: string | number, checked: boolean) => {
+      if (!selection) return;
+      const next = new Set(selection.selected);
+      if (checked) next.add(id);
+      else next.delete(id);
+      selection.onChange(next);
+    },
+    [selection],
+  );
 
   const isDnDMode = canUpdate && (groupBy !== "assignee" || canAssign) && !hasRowBy && !!groupBy && groupBy !== "none" && DROPPABLE_MODES.has(groupBy) && projectId != null;
 
@@ -238,6 +250,7 @@ export const ListView = memo(function ListView({
                           projectStatuses={projectStatuses}
                           displayOptions={displayOptions}
                           onTicketClick={onTicketClick}
+                          selection={selection}
                         />
                       ))}
                     </Accordion>
@@ -290,6 +303,7 @@ export const ListView = memo(function ListView({
                     displayOptions={displayOptions}
                     onTicketClick={onTicketClick}
                     shouldReduceMotion={shouldReduceMotion}
+                    selection={selection}
                   />
                 </AccordionContent>
               </AccordionItem>
@@ -334,6 +348,7 @@ export const ListView = memo(function ListView({
                   projectStatuses={projectStatuses}
                   displayOptions={displayOptions}
                   onTicketClick={onTicketClick}
+                  selection={selection}
                 />
               </AccordionContent>
             </AccordionItem>
@@ -351,6 +366,8 @@ export const ListView = memo(function ListView({
                 projectStatuses={projectStatuses}
                 onClick={onTicketClick}
                 displayOptions={displayOptions}
+                isSelected={selection?.selected.has(ticket.id)}
+                onSelect={selection ? handleItemSelect : undefined}
               />
             ))}
           </div>

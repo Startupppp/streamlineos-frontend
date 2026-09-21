@@ -26,6 +26,7 @@ export function useKeyboardShortcuts(
       }
 
       if (e.key === "/") {
+        e.stopPropagation();
         e.preventDefault();
         const searchEl = document.querySelector<HTMLElement>("[data-search-input]");
         searchEl?.focus();
@@ -71,9 +72,9 @@ export function useKeyboardShortcuts(
       setPendingKey(null);
     }
 
-    window.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
       clearTimeout(timer);
     };
   }, [pendingKey, onCreateProject, onCreateIssue, router]);

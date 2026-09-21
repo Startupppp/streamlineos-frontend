@@ -178,6 +178,22 @@ export function ProjectBoardContent({
             exit="exit"
             transition={pmSnappy}
           >
+            {canUpdate && selectedIds.size > 0 && (
+              <BulkActionBar
+                selectedCount={selectedIds.size}
+                members={members}
+                sprints={sprints}
+                statuses={statuses}
+                projectId={projectId}
+                excludeIds={selectedIds}
+                onBulkStatus={onBulkStatus}
+                onBulkPriority={onBulkPriority}
+                onBulkAssignee={onBulkAssignee}
+                onBulkSprint={onBulkSprint}
+                onBulkParent={onBulkParent}
+                onClear={onClearSelection}
+              />
+            )}
             <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
               <div className="overscroll-contain">
                 <ListView
@@ -191,6 +207,7 @@ export function ProjectBoardContent({
                   showEmptyColumns={displayOptions.showEmptyColumns}
                   showEmptyRows={displayOptions.showEmptyRows}
                   projectId={projectId}
+                  selection={canUpdate ? { selected: selectedIds, onChange: onSelectionChange } : undefined}
                 />
               </div>
             </ScrollArea>

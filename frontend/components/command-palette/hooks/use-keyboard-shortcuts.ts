@@ -17,7 +17,7 @@ function isInputTarget(e: KeyboardEvent): boolean {
 }
 
 function extractProjectId(pathname: string): number | null {
-  const match = /\/projects\/(\d+)/.exec(pathname);
+  const match = /\/build\/(\d+)/.exec(pathname);
   if (!match) return null;
   const parsed = parseInt(match[1] ?? "", 10);
   return Number.isNaN(parsed) ? null : parsed;
@@ -70,6 +70,7 @@ export function useKeyboardShortcuts() {
       }
 
       if (e.key === "/") {
+        if (document.querySelector("[data-search-input]") !== null) return;
         e.preventDefault();
         setPaletteOpen(true);
         return;

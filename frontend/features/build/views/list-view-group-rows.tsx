@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { LIST_RENDER_PAGE_SIZE } from "./list-view-shared";
 import { ListViewItem } from "./list-view-item";
-import type { ListViewItemProps, Ticket } from "./list-view-shared";
+import type { ListSelection, ListViewItemProps, Ticket } from "./list-view-shared";
 
 interface GroupRenderLimit {
   visibleCount: number;
@@ -59,6 +59,7 @@ export interface GroupRowsProps {
   projectStatuses: ListViewItemProps["projectStatuses"];
   displayOptions: ListViewItemProps["displayOptions"];
   onTicketClick: ListViewItemProps["onClick"];
+  selection?: ListSelection;
 }
 
 export function GroupRows({
@@ -68,9 +69,21 @@ export function GroupRows({
   projectStatuses,
   displayOptions,
   onTicketClick,
+  selection,
 }: GroupRowsProps) {
   const { visibleCount, hiddenCount, showMore } = useGroupRenderLimit(
     items.length,
+  );
+
+  const handleItemSelect = useCallback(
+    (id: string | number, checked: boolean) => {
+      if (!selection) return;
+      const next = new Set(selection.selected);
+      if (checked) next.add(id);
+      else next.delete(id);
+      selection.onChange(next);
+    },
+    [selection],
   );
 
   return (
@@ -85,6 +98,8 @@ export function GroupRows({
             projectStatuses={projectStatuses}
             onClick={onTicketClick}
             displayOptions={displayOptions}
+            isSelected={selection?.selected.has(ticket.id)}
+            onSelect={selection ? handleItemSelect : undefined}
           />
         ))}
       </div>
