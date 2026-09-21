@@ -1,15 +1,12 @@
-"use client";
-
-import { use } from "react";
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { ReportsTabs } from "@/features/build/reports/reports-tabs";
 
-export default function ProjectReportsPage({
+export default async function ProjectReportsPage({
   params,
 }: {
   params: Promise<{ projectId: string }>;
 }) {
-  const { projectId: projectIdStr } = use(params);
-  const projectId = Number(projectIdStr);
-
-  return <ReportsTabs projectId={projectId} />;
+  await enforceRouteAccess("/build/[projectId]/reports");
+  const { projectId: projectIdStr } = await params;
+  return <ReportsTabs projectId={Number(projectIdStr)} />;
 }

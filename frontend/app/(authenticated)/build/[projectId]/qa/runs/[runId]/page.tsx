@@ -1,14 +1,13 @@
-﻿"use client";
-
-import { use } from "react";
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { RunExecutionPage } from "@/features/build/qa/runs/run-execution-page";
 
 interface PageProps {
   params: Promise<{ projectId: string; runId: string }>;
 }
 
-export default function RunExecutionRoute({ params }: PageProps) {
-  const { projectId: projectIdStr, runId: runIdStr } = use(params);
+export default async function RunExecutionRoute({ params }: PageProps) {
+  await enforceRouteAccess("/build/[projectId]/qa/runs/[runId]");
+  const { projectId: projectIdStr, runId: runIdStr } = await params;
   return (
     <RunExecutionPage
       projectId={parseInt(projectIdStr, 10)}

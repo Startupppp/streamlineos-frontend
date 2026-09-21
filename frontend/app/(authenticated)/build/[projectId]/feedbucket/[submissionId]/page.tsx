@@ -1,6 +1,4 @@
-"use client";
-
-import { use } from "react";
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { RequireModule } from "@/components/auth/require-module";
@@ -10,8 +8,9 @@ interface PageProps {
   params: Promise<{ projectId: string; submissionId: string }>;
 }
 
-export default function ProjectFeedbackSubmissionRoute({ params }: PageProps) {
-  const { projectId, submissionId } = use(params);
+export default async function ProjectFeedbackSubmissionRoute({ params }: PageProps) {
+  await enforceRouteAccess("/build/[projectId]/feedbucket/[submissionId]");
+  const { projectId, submissionId } = await params;
   const id = Number(submissionId);
   const backHref = `/build/${projectId}/feedbucket`;
 
