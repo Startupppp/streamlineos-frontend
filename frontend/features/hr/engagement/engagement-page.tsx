@@ -126,8 +126,8 @@ function MoodSparkline({ data }: { data: { date: string; avgMood: number }[] }) 
 function OverviewTab() {
   const { staggerContainer, fadeUp } = useMotionVariants();
   const { data: overview, isLoading, isError, error, refetch } = useEngagementOverview();
-  const { data: moodData, isLoading: moodLoading } = useOrgMoodAggregate();
-  const { data: recognitions, isLoading: recLoading, isError: recError, error: recErrorData, refetch: refetchRec } = useRecognitions();
+  const { data: moodData, isLoading: moodLoading, isError: moodError, error: moodErrorData, refetch: refetchMood } = useOrgMoodAggregate();
+  const { data: recognitions, isLoading: recLoading, isError: recError } = useRecognitions();
   const { data: membersData } = useOrgMembers(1, 200);
   const canManage = useCan("hr:engagement:manage");
 
@@ -151,6 +151,10 @@ function OverviewTab() {
     void refetch();
   }
 
+  function handleRetryMood(): void {
+    void refetchMood();
+  }
+
   if (isError)
     return <ErrorState title="Couldn't load engagement data" description={getErrorMessage(error)} onRetry={handleRetry} />;
 
@@ -166,8 +170,8 @@ function OverviewTab() {
           <StatCardGrid cols={4}>
             <StatCard
               label="Recognitions"
-              value={recentCount}
-              hint="All time"
+              value={recError ? "—" : recentCount}
+              hint={recError ? "Couldn't load" : "All time"}
               icon={Heart}
               tone="red"
               isLoading={recLoading}
@@ -183,7 +187,7 @@ function OverviewTab() {
             <StatCard
               label="Mood responses"
               value={moodData ? moodPoints.reduce((acc, d) => acc + d.count, 0) : "—"}
-              hint="Aggregated"
+              hint={moodError ? "Couldn't load" : "Aggregated"}
               icon={Smile}
               tone="blue"
               isLoading={moodLoading}
@@ -195,7 +199,7 @@ function OverviewTab() {
                   ? (recentMoodPoints.reduce((s, d) => s + d.avgMood, 0) / recentMoodPoints.length).toFixed(1)
                   : "—"
               }
-              hint="Last 7 days"
+              hint={moodError ? "Couldn't load" : "Last 7 days"}
               icon={Star}
               tone="blue"
               isLoading={moodLoading}
@@ -208,8 +212,10 @@ function OverviewTab() {
         {canManage && (
           <div className="bg-card border border-border rounded-xl p-4 space-y-3">
             <p className="text-sm font-semibold text-foreground">Mood trend (14 days)</p>
-            {moodLoading || !moodData ? (
+            {moodLoading || (!moodData && !moodError) ? (
               <Skeleton className="h-10 w-full" />
+            ) : moodError || !moodData ? (
+              <ErrorState compact title="Couldn't load the mood trend" description={getErrorMessage(moodErrorData)} onRetry={handleRetryMood} />
             ) : moodPoints.length > 0 ? (
               <MoodSparkline data={moodPoints} />
             ) : moodData.suppressedDays > 0 ? (

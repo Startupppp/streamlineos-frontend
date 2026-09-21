@@ -4,8 +4,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function BookingLinksLoading() {
   return (
     <PageWrapper
-      title="Booking Links"
-      subtitle="Shareable scheduling links for candidates"
+      title="Interview Booking Links"
+      subtitle="Manage self-scheduling links sent to candidates"
       actions={<Skeleton className="h-9 w-28 rounded-md" />}
     >
       <div className="flex flex-1 min-h-0 flex-col">

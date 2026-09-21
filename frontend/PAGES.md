@@ -308,18 +308,20 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 ## HR (Human Resources)
 
 ### Hub
-- `/hr` · **HR** · hooks: `→ features/hr/hub` (2026-09-21: titled "HR overview"; one primary action "Onboard employee" with "Review approvals" and "Create announcement" as outlined actions; the Dashboard, Analytics and Approvals tiles that duplicated nav destinations are gone)
+- `/hr` · **HR** · hooks: `→ features/hr/hub` (2026-09-21: titled "HR overview"; one primary action "Onboard employee" with "Review approvals" and "Create announcement" as outlined actions; the Dashboard, Analytics and Approvals tiles that duplicated nav destinations are gone) (2026-09-21: `loading.tsx` is titled "HR overview", matching the page)
 - `/hr/dashboard` — **deleted 2026-09-21**; it duplicated `/hr` (the hub snapshot already carries the metrics, leave calendar and onboarding status), so the route, `features/hr/dashboard/**`, `useHrDashboardMetrics`/`useHrLeaveCalendar`/`useHrOnboardingStatus` and their keys are gone
 
 ### Employees
 - `/hr/employees` · **HR** · hooks: `requirePermission("hr:employees:view")` (server), `usePageState` + `PageWrapper state=`, `→ features/hr/employees` — the duplicated loading-only `PageWrapper` early return is gone — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
+- `/hr/employees` · **HR** · hooks: `requirePermission("hr:employees:view")` (server), `usePageState` + `PageWrapper state=`, `→ features/hr/employees` — the duplicated loading-only `PageWrapper` early return is gone (2026-09-21: `loading.tsx` is titled "Employee directory", matching the page, so the h1 no longer changes case when the data lands)
 - `/hr/employees` · **HR** · hooks: `requirePermission("hr:employees:view")` (server), `usePageState` + `PageWrapper state=`, `→ features/hr/employees` — the duplicated loading-only `PageWrapper` early return is gone. 2026-09-21 (FE#156/BE#36): the Active/Inactive summary now reads `useHrEmployeeCounts` → `GET /hr/employees/counts`, which runs the list's own predicate (search, department, role) under the same `hr:employees:view` DataScope, so with the Active filter applied the count equals the list length; the org-wide command-center headcount (`hr:analytics:read`) no longer feeds this page. "Loaded" carries "of N matching". FE#100: subtitle now states this is employment administration and points everyone-in-the-organization reads at `/directory`.
+- `/hr/employees` · **HR** · hooks: `requirePermission("hr:employees:view")` (server), `usePageState` + `PageWrapper state=`, `→ features/hr/employees` — the duplicated loading-only `PageWrapper` early return is gone (2026-09-21: `loading.tsx` is titled "Employee directory", matching the page, so the h1 no longer changes case when the data lands)
 - `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
 - `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees` (2026-09-21: overview tab mounts `ReportingLineSection` on `useReportingLine` → `GET /hr/reporting-lines/{employeeUserId}` — current, scheduled and historical managers with the manager's state; the edit form's Reports to writes through `PATCH /hr/employees/{employeeUserId}` `reportingTo`, which the backend now validates for inactive, exited and circular managers)
 - `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees` (2026-09-21: header card gains a "Resend invite" action — `ResendInviteButton` → `useResendEmployeeInvite` → `POST /hr/employees/:employeeId/resend-invite`, `Idempotency-Key` per intent, rendered only for `hr:onboarding:manage` holders and never on your own profile or a terminated one; success toasts "Invitation sent", a queued-but-undeliverable outcome warns with the backend's reason)
 - `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees` (2026-09-21: overview tab mounts `ReportingLineSection` on `useReportingLine` → `GET /hr/reporting-lines/{employeeUserId}` — current, scheduled and historical managers with the manager's state; the edit form's Reports to writes through `PATCH /hr/employees/{employeeUserId}` `reportingTo`, which the backend now validates for inactive, exited and circular managers)
 - `/hr/employees/find-expert` · **HR** · hooks: `→ features/hr/employees`
-- `/hr/employees/manager-coverage` · **HR** · hooks: `requirePermission("hr:employees:view")` (server), `useManagerCoverage` → `GET /hr/reporting-lines/coverage`, `usePageState` + `PageState`, `→ features/hr/employees/manager-coverage-page` (2026-09-21: employees without a manager, reporting to an inactive/exited manager, circular chains, and managers over the span-of-control limit — the repair queue behind every approval fallback)
+- `/hr/employees/manager-coverage` · **HR** · hooks: `requirePermission("hr:employees:view")` (server), `useManagerCoverage` → `GET /hr/reporting-lines/coverage`, `usePageState` + `PageState`, `→ features/hr/employees/manager-coverage-page` (2026-09-21: employees without a manager, reporting to an inactive/exited manager, circular chains, and managers over the span-of-control limit — the repair queue behind every approval fallback) (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load; the in-feature loading branch derives its headers from `WITHOUT_MANAGER_COLUMNS`)
 - `/hr/employees/skills-matrix` · **HR** · hooks: `→ features/hr/employees`
 
 ### Onboarding
@@ -353,7 +355,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/recruitment/candidates/import` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/candidates/intake` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/pipeline` · **HR** · hooks: `→ features/hr/recruitment` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
-- `/hr/recruitment/interviews` · **HR** · hooks: `→ features/hr/recruitment`
+- `/hr/recruitment/interviews` · **HR** · hooks: `→ features/hr/recruitment` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
 - `/hr/recruitment/offers` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/offer-templates` · **HR** · hooks: `→ features/hr/recruitment` — 2026-09-21: the preview sheet renders `SanitizedHtml` instead of an inline `DOMPurify.sanitize`; this route was in the reproduced React #419 set
 - `/hr/recruitment/requisitions` · **HR** · hooks: `→ features/hr/recruitment`
@@ -365,7 +367,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/recruitment/scorecard-templates` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/question-bank` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/hiring-flows` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/booking-links` · **HR** · hooks: `→ features/hr/recruitment`
+- `/hr/recruitment/booking-links` · **HR** · hooks: `→ features/hr/recruitment` (2026-09-21: `loading.tsx` is titled "Interview Booking Links" with the page's subtitle)
 - `/hr/recruitment/email-sequences` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/automations` · **HR** · hooks: `→ features/hr/recruitment`
 - `/hr/recruitment/recruiters` · **HR** · hooks: `→ features/hr/recruitment`
@@ -384,15 +386,16 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/performance` · **HR** · hooks: `→ features/hr/performance` — 2026-09-21: React #419 came in through `@/components/ai`'s barrel (`AiFailureBody` import pulled `AiInlinePreview` → `isomorphic-dompurify` → bundled jsdom across the client boundary); the preview now renders through `SanitizedHtml`. 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
 - `/hr/performance/analytics` · **HR** · hooks: `→ features/hr/performance`
 - `/hr/engagement` · **HR** · hooks: `→ features/hr/engagement` — 2026-09-21: renamed **Polls & engagement** (sidebar label, page title, subtitle) per the HRMS audit: the surface is recognition, mood check-ins, polls, communities and campaigns, not a survey programme (audience, schedule, reminders, action plan live nowhere); the real survey builder stays at `/surveys`. Anonymous poll results and the org mood trend now honour the backend anonymity floor (`minResponses`, 5): a poll under it answers `suppressed` with no per-option counts and the tab renders `AnonymitySuppressedNotice`; the mood aggregate is `{ minResponses, suppressedDays, points }` so a trend hidden on every day says so instead of "no data". Primary poll action reads "Create poll".
+- `/hr/engagement` · **HR** · hooks: `→ features/hr/engagement` (2026-09-21: the Overview tab is honest about failed reads — the Recognitions stat shows an unknown value with a "Couldn't load" hint and the mood-trend card offers retry (FE#138); `BadgesGrid` and `PointsLeaderboard` retry through the shared `ErrorState` (FE#115))
 - `/hr/feedback` · **HR** · hooks: `→ features/hr/feedback`
 - `/hr/goals` · **HR** · hooks: `→ features/hr/goals`
 - `/hr/kpis` · **HR** · hooks: `→ features/hr/kpis`
 - `/hr/compensation-planning` · **HR** · hooks: `→ features/hr/compensation`
-- `/hr/retention` · **HR** · hooks: `→ features/hr/retention`
+- `/hr/retention` · **HR** · hooks: `→ features/hr/retention` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (the Retention Policies tab))
 
 ### Expenses & Travel
 - `/hr/expenses` · **HR** · hooks: `→ features/hr/expenses` (2026-09-21: admin actions are "Add expense" primary, "Import expenses" outlined and "Export expenses" in the overflow menu, opening `ExpenseExportDialog` in its controlled mode)
-- `/hr/reimbursements` · **HR** · hooks: `→ features/hr/reimbursements` (2026-09-21: the request sheet validates on change through `reimbursement-schema.ts`; a negative amount is flagged inline before submit)
+- `/hr/reimbursements` · **HR** · hooks: `→ features/hr/reimbursements` (2026-09-21: the request sheet validates on change through `reimbursement-schema.ts`; a negative amount is flagged inline before submit) (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
 - `/hr/travel` · **HR** · hooks: `→ features/hr/travel`
 - `/hr/travel/approvals` · **HR** · hooks: `→ features/hr/travel`
 
@@ -404,7 +407,8 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/documents/templates/new` · **HR** · hooks: `→ features/hr/documents` — 2026-09-21: `TemplatePreviewPanel` (shared with the edit route) renders `SanitizedHtml` instead of an inline `DOMPurify.sanitize`; the route no longer carries jsdom in its server chunk
 - `/hr/documents/templates/[templateId]/edit` · **HR** · hooks: `→ features/hr/documents` — 2026-09-21: same `TemplatePreviewPanel` change as `/new`
 - `/hr/document-types` · **HR** · hooks: `→ features/hr/documents` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
-- `/hr/document-review` · **HR** · hooks: `→ features/hr/documents`
+- `/hr/document-types` · **HR** · hooks: `→ features/hr/documents` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
+- `/hr/document-review` · **HR** · hooks: `→ features/hr/documents` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
 - `/hr/handbook` · **HR** · hooks: `→ features/hr/handbook`
 
 ### Org Chart & Structure
@@ -419,20 +423,21 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 
 ### Assets & Devices
 - `/hr/assets` · **HR** · hooks: `→ features/hr/assets`
-- `/hr/asset-returns` · **HR** · hooks: `→ features/hr/assets` (2026-09-21: the Log asset return drawer shows each missing field's message under the field instead of a toast)
-- `/hr/devices` · **HR** · hooks: `→ features/hr/devices`
+- `/hr/asset-returns` · **HR** · hooks: `→ features/hr/assets` (2026-09-21: the Log asset return drawer shows each missing field's message under the field instead of a toast) (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
+- `/hr/devices` · **HR** · hooks: `→ features/hr/devices` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (the Devices tab))
 
 ### Benefits, Equity, Payroll self-links
 - `/hr/benefits` · **HR** · hooks: `→ features/hr/benefits`
-- `/hr/equity` · **HR** · hooks: `→ features/hr/equity`
+- `/hr/equity` · **HR** · hooks: `→ features/hr/equity` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
 
 ### Compliance & Legal
 - `/hr/compliance` · **HR** · hooks: `→ features/hr/compliance`
-- `/hr/legal-holds` · **HR** · hooks: `→ features/hr/legal-holds`
-- `/hr/labor-relations` · **HR** · hooks: `→ features/hr/labor-relations`
+- `/hr/legal-holds` · **HR** · hooks: `→ features/hr/legal-holds` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
+- `/hr/labor-relations` · **HR** · hooks: `→ features/hr/labor-relations` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (the Memberships tab))
 - `/hr/safety` · **HR** · hooks: `→ features/hr/safety` — 2026-09-21: the suppressed wellness pulse renders the shared `AnonymitySuppressedNotice` (same floor as polls, mood and survey analytics) instead of its own k-anonymity line
+- `/hr/safety` · **HR** · hooks: `→ features/hr/safety` (2026-09-21: `WellnessPulseCard` renders `ErrorState` with retry when `useWellnessPulse` fails instead of returning null (FE#117); `loading.tsx` shows the table's real column headers under the page title while the rows load)
 - `/hr/background-verification` · **HR** · hooks: `→ features/hr/bg-verification`
-- `/hr/identity` · **HR** · hooks: `→ features/hr/identity`
+- `/hr/identity` · **HR** · hooks: `→ features/hr/identity` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (the Provisioning tab))
 - `/hr/accommodations` · **HR** · hooks: `→ features/hr/accommodations`
 
 ### Offboarding & Exit
@@ -442,7 +447,8 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 
 ### Positions, Workforce, Delegations
 - `/hr/positions` · **HR** · hooks: `→ features/hr/positions` — 2026-09-21: the server page keeps its `PageWrapper` and wraps `PositionsPageContent` (a `useSearchParams` consumer) in `<Suspense fallback={<DataTableSkeleton rows={10} columns={6} />}>`, the same body its `loading.tsx` draws; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
-- `/hr/positions` · **HR** · hooks: `→ features/hr/governance` (2026-09-21: Create position dialog → `POST /hr/governance/positions`, statuses from `GET /hr/governance/position-taxonomy/statuses`; the empty-state CTA opens it)
+- `/hr/positions` · **HR** · hooks: `→ features/hr/governance` (2026-09-21: Create position dialog → `POST /hr/governance/positions`, statuses from `GET /hr/governance/position-taxonomy/statuses`; the empty-state CTA opens it) (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (the Positions tab))
+- `/hr/positions` · **HR** · hooks: `→ features/hr/governance` (2026-09-21: Create position dialog → `POST /hr/governance/positions`, statuses from `GET /hr/governance/position-taxonomy/statuses`; the empty-state CTA opens it) (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (the Positions tab))
 - `/hr/workforce` · **HR** · hooks: `→ features/hr/workforce`
 - `/hr/workforce-cost` · **HR** · hooks: `→ features/hr/workforce` (2026-09-21: "Workforce costing"; the period button is "Update view")
 - `/hr/contingent` · **HR** · hooks: `→ features/hr/contingent` — 2026-09-21: React #419 — the internship `CertificateViewer` sanitised at render with `isomorphic-dompurify`; it now renders `SanitizedHtml`
@@ -455,16 +461,16 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/hr/service-delivery` · **HR** · hooks: `→ features/hr/service-delivery`
 
 ### Misc HR
-- `/hr/approvals` · **HR** · hooks: `→ features/hr/workflows` (2026-09-21: "Approvals"; each pending row states the persisted step routing — rung, explanation and escalation — read from `instance.context.approvalRouting[currentStepOrder]` by `currentStepRouting`)
-- `/hr/biometric` · **HR** · hooks: `→ features/hr/biometric`
+- `/hr/approvals` · **HR** · hooks: `→ features/hr/workflows` (2026-09-21: "Approvals"; each pending row states the persisted step routing — rung, explanation and escalation — read from `instance.context.approvalRouting[currentStepOrder]` by `currentStepRouting`) (2026-09-21: the My delegations dialog renders `ErrorState` with retry on a failed `useMyDelegations` read (FE#129))
+- `/hr/biometric` · **HR** · hooks: `→ features/hr/biometric` (2026-09-21: `loading.tsx` mirrors the Devices tab's card grid instead of a numbered table)
 - `/hr/geofencing` · **HR** · hooks: `→ features/hr/geofencing` (2026-09-21: `geofence-schema.ts` validates latitude/longitude as numbers in range; no pre-filled coordinates)
-- `/hr/emergency` · **HR** · hooks: `→ features/hr/emergency`
-- `/hr/event-stream` · **HR** · hooks: `→ features/hr/event-stream`
+- `/hr/emergency` · **HR** · hooks: `→ features/hr/emergency` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
+- `/hr/event-stream` · **HR** · hooks: `→ features/hr/event-stream` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (the Event Log tab))
 - `/hr/simulator` · **HR** · hooks: `→ features/hr/simulator`
 
 ### HR Settings
 - `/hr/settings` · **HR** · hooks: `→ features/hr/settings` (2026-09-21: "HR configuration"; the Simple/Advanced banner is a one-line helper; the Company tab is gone — company settings live at `/settings/organization`; below `md` the section tabs are a Select so the active section is never off-screen)
-- `/hr/settings/automations` · **HR** · hooks: `→ features/hr/settings`
+- `/hr/settings/automations` · **HR** · hooks: `→ features/hr/settings` (2026-09-21: the Runs sheet renders `ErrorState` with retry on a failed `useHrAutomationRuns` read (FE#130))
 - `/hr/settings/company` — **deleted 2026-09-21**; it duplicated `/settings/organization`
 - `/hr/settings/custom-fields` · **HR** · hooks: `→ features/hr/settings`
 - `/hr/settings/forms` · **HR** · hooks: `→ features/hr/settings`
@@ -490,24 +496,24 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/payroll/readiness` · **Payroll** · hooks: `usePayrollReadiness(month)` → `GET /payroll/readiness` (2026-09-21: the pay-period readiness ledger — timesheets approved → hours exported → received → acknowledged → inputs locked → run generated, each with owner, timestamp and next action; exceptions for periods awaiting a decision, hours approved after export, rejected exports and periods reopened after their hours reached payroll; state via `usePageState` + `PageState`; sidebar "Readiness" under Payroll)
 
 ### Core payroll operations
-- `/payroll/runs` · **Payroll** · hooks: `→ features/payroll/runs`
-- `/payroll/runs/[runId]` · **Payroll** · hooks: `→ features/payroll/runs`
-- `/payroll/employees` · **Payroll** · hooks: `→ features/payroll/employees`
+- `/payroll/runs` · **Payroll** · hooks: `→ features/payroll/runs` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
+- `/payroll/runs/[runId]` · **Payroll** · hooks: `→ features/payroll/runs` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (the Employees tab))
+- `/payroll/employees` · **Payroll** · hooks: `→ features/payroll/employees` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
 - `/payroll/employees/[employeeUserId]` · **Payroll** · hooks: `→ features/payroll/employees`
 - `/payroll/workers/[workerId]` · **Payroll** · hooks: `→ features/payroll/workers`
 - `/payroll/payslips` · **Payroll** · hooks: `→ features/payroll/payslips`
-- `/payroll/bank-transfers` · **Payroll** · hooks: `→ features/payroll/bank-transfers`
-- `/payroll/inputs` · **Payroll** · hooks: `→ features/payroll/inputs`
+- `/payroll/bank-transfers` · **Payroll** · hooks: `→ features/payroll/bank-transfers` (2026-09-21: the batch detail sheet's skeleton derives its headers from the batch columns)
+- `/payroll/inputs` · **Payroll** · hooks: `→ features/payroll/inputs` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (the Attendance tab); every input tab renders `ErrorState` with retry on a failed snapshot read instead of "Build the period first" (FE#153))
 - `/payroll/bonuses` · **Payroll** · hooks: `→ features/payroll/bonuses`
-- `/payroll/loans` · **Payroll** · hooks: `→ features/payroll/loans`
-- `/payroll/reimbursements` · **Payroll** · hooks: `→ features/payroll/reimbursements`
-- `/payroll/fnf` · **Payroll** · hooks: `→ features/payroll/fnf`
-- `/payroll/taxes` · **Payroll** · hooks: `→ features/payroll/taxes`
+- `/payroll/loans` · **Payroll** · hooks: `→ features/payroll/loans` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
+- `/payroll/reimbursements` · **Payroll** · hooks: `→ features/payroll/reimbursements` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
+- `/payroll/fnf` · **Payroll** · hooks: `→ features/payroll/fnf` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
+- `/payroll/taxes` · **Payroll** · hooks: `→ features/payroll/taxes` (2026-09-21: the Filings tab renders `ErrorState` with retry on a failed `usePayrollFilings` read instead of "No filings prepared" (FE#153))
 - `/payroll/team` · **Payroll** · hooks: `→ features/payroll/team`
 
 ### Configuration
 - `/payroll/salary-structures` · **Payroll** · hooks: `→ features/payroll`
-- `/payroll/components` · **Payroll** · hooks: `→ features/payroll`
+- `/payroll/components` · **Payroll** · hooks: `→ features/payroll` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
 - `/payroll/templates` · **Payroll** · hooks: `→ features/payroll`
 
 ### Reports & Setup
@@ -515,7 +521,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/payroll/setup` · **Payroll** · hooks: `→ features/payroll/setup`
 
 ### Settings
-- `/payroll/settings` · **Payroll** · hooks: `→ features/payroll/settings`
+- `/payroll/settings` · **Payroll** · hooks: `→ features/payroll/settings` (2026-09-21: the payroll calendar renders `ErrorState` with retry on a failed `usePayrollCalendar` read instead of "No calendar events" (FE#153); the policy version history skeleton derives its headers from its columns)
 - `/payroll/settings/import-export` · **Payroll** · hooks: `requirePermission("payroll:reports:view")` (server) — server component; Suspense loading fallback; delegates entirely to feature component; import/export only, no CRUD
 
 ### Self-service
@@ -885,14 +891,14 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 
 - `/timesheets` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: the week grid scroller fades its hidden edge and, below `sm`, says "Swipe sideways to reach every day of the week" whenever it overflows — FE#79; header wrapping at 768 landed earlier in 08f6406e2 — FE#80)
 - `/timesheets` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: My Time shows the shared `ApprovalRoutePanel` from `GET /timesheets/periods/{periodId}/approver` before submit — who approves, why, SLA, escalation — and disables Submit when nobody can own the period)
-- `/timesheets/approvals` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: the queue lists periods routed to the viewer, an Approver column names the rung, escalation and deadline (`approvalRoute`/`approvalDueAt`), the detail sheet spells out the routing explanation; `?period=<periodId>` — the link notifications and the payroll readiness ledger use — opens that period's detail sheet directly)
+- `/timesheets/approvals` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: the queue lists periods routed to the viewer, an Approver column names the rung, escalation and deadline (`approvalRoute`/`approvalDueAt`), the detail sheet spells out the routing explanation; `?period=<periodId>` — the link notifications and the payroll readiness ledger use — opens that period's detail sheet directly) (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
 - `/timesheets/billing` · **Timesheets** · hooks: `→ features/timesheets`
-- `/timesheets/exceptions` · **Timesheets** · hooks: `→ features/timesheets`
+- `/timesheets/exceptions` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (open exceptions with the actions column))
 - `/timesheets/overdue` · **Timesheets** · hooks: `→ features/timesheets` — overdue timesheets list; `enforceRouteAccess`
 - `/timesheets/payroll` · **Timesheets** · hooks: `→ features/timesheets`
-- `/timesheets/reports` · **Timesheets** · hooks: `→ features/timesheets/reports`
+- `/timesheets/reports` · **Timesheets** · hooks: `→ features/timesheets/reports` (2026-09-21: the utilization, compliance, client-profitability and approval-SLA tab skeletons derive their headers from their column definitions)
 - `/timesheets/settings` · **Timesheets** · hooks: `→ features/timesheets/settings` (2026-09-21: approval mode offers Manager or Auto only — multi-level is not configurable until it exists — and "Who approves" picks the reporting manager (default) or the dominant project's manager)
-- `/timesheets/team` · **Timesheets** · hooks: `→ features/timesheets`
+- `/timesheets/team` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (Member, the seven weekdays, Total, Status))
 - `/timesheets/access` · **Timesheets** · hooks: `→ features/timesheets`
 
 ---

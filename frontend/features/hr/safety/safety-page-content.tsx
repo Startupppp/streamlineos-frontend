@@ -85,8 +85,21 @@ const ACTIVE_TABS = ["incidents", "wellness"] as const;
 type ActiveTab = (typeof ACTIVE_TABS)[number];
 
 function WellnessPulseCard() {
-  const { data, isLoading } = useWellnessPulse(true);
+  const { data, isLoading, isError, error, refetch } = useWellnessPulse(true);
+  function handleRetry() {
+    void refetch();
+  }
   if (isLoading) return <Skeleton className="h-24 w-full rounded-lg" />;
+  if (isError) {
+    return (
+      <ErrorState
+        compact
+        title="Couldn't load the wellness pulse"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
   if (!data) return null;
   return (
     <div className="rounded-lg border border-border bg-card p-3 space-y-1.5">

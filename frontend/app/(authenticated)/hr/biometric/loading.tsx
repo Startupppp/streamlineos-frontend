@@ -1,6 +1,7 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+
+const DEVICE_CARDS = [1, 2, 3];
 
 export default function BiometricLoading() {
   return (
@@ -14,7 +15,11 @@ export default function BiometricLoading() {
           <Skeleton className="h-8 w-20 rounded-md" />
           <Skeleton className="h-8 w-24 rounded-md" />
         </div>
-        <DataTableSkeleton rows={8} columns={6} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {DEVICE_CARDS.map((card) => (
+            <Skeleton key={card} className="h-44 rounded-xl" />
+          ))}
+        </div>
       </div>
     </PageWrapper>
   );

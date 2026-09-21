@@ -7,7 +7,7 @@ export default function PayrollInputsLoading() {
   return (
     <PageWrapper
       title="Payroll Inputs"
-      subtitle="Capture and lock HR data for payroll processing."
+      subtitle="Capture and lock HR data for payroll processing"
       actions={<Skeleton className="h-9 w-36 rounded-md" />}
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
@@ -17,7 +17,7 @@ export default function PayrollInputsLoading() {
     >
       <div className="space-y-4">
         <Skeleton className="h-16 w-full rounded-xl" />
-        <DataTableSkeleton rows={12} columns={6} />
+        <DataTableSkeleton rows={12} headers={["Employee", "Payable", "Present", "Absent", "Late", "OT (min)", ""]} />
       </div>
     </PageWrapper>
   );
