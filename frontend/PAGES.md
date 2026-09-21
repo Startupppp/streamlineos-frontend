@@ -452,7 +452,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/payroll/bonuses` · **Payroll** · hooks: `→ features/payroll/bonuses`
 - `/payroll/loans` · **Payroll** · hooks: `→ features/payroll/loans`
 - `/payroll/reimbursements` · **Payroll** · hooks: `→ features/payroll/reimbursements`
-- `/payroll/fnf` · **Payroll** · hooks: `→ features/payroll/fnf` (2026-09-21: nav label, title, table, detail sheet and statement download say "Final settlement"; route `/payroll/fnf` and `payroll:fnf:*` keys unchanged)
+- `/payroll/fnf` · **Payroll** · hooks: `→ features/payroll/fnf` (2026-09-21: nav label, title, table, detail sheet, error boundary and statement download say "Final settlement"; route `/payroll/fnf` and `payroll:fnf:*` keys unchanged)
 - `/payroll/taxes` · **Payroll** · hooks: `→ features/payroll/taxes`
 - `/payroll/team` · **Payroll** · hooks: `→ features/payroll/team`
 
