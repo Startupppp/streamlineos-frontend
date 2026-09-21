@@ -53,7 +53,6 @@ const queryAccessCases: readonly QueryAccessCase[] = [
   ["leaves.ts", "useHrLeavesThisWeek", "/me/time-off/team-calendar", "self:leaves", false],
   ["leaves.ts", "useHrMyLeaveRequests", "/me/time-off/requests", "self:leaves", false],
   ["leaves.ts", "useHrMyLeaveRequestsInfinite", "/me/time-off/requests", "self:leaves", false],
-  ["leaves.ts", "useHrHolidaysForYear", "/hr/holidays", "hr:attendance:view", true],
   ["leaves.ts", "useHrHolidaysForCalendar", "/hr/holidays/calendar", "hr:attendance:view", true],
   ["leaves.ts", "useHrLeaveAnalytics", "/hr/leaves/analytics", "hr:leaves:view", true],
   ["leaves.ts", "useLeavePolicy", "/hr/leave-policy", "hr:leaves:view", false],
@@ -86,9 +85,6 @@ const queryAccessCases: readonly QueryAccessCase[] = [
   ["hr-templates.ts", "useHrTemplates", "/hr/templates", "hr:templates:view", true],
   ["hr-templates.ts", "useHrTemplate", "/hr/templates/", "hr:templates:view", true],
   ["hr-templates.ts", "useHrTemplateVariables", "/hr/templates/variables", "hr:templates:view", true],
-  ["dashboard.ts", "useHrDashboardMetrics", "/hr/dashboard/metrics", "hr:analytics:read", true],
-  ["dashboard.ts", "useHrLeaveCalendar", "/hr/leave-calendar", "hr:leaves:read", false],
-  ["dashboard.ts", "useHrOnboardingStatus", "/hr/dashboard/onboarding-status", "hr:analytics:read", true],
 ];
 
 function hookSource(fileName: string, hookName: string): string {

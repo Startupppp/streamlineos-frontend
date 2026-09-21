@@ -36,7 +36,6 @@ import { NULL_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export * from "@/hooks/api/hr/leave-request-mutations";
 export * from "@/hooks/api/hr/leave-type-mutations";
-export * from "@/hooks/api/hr/legacy-holiday-mutations";
 export type {
   HrLeaveType,
   LeavePolicyType,
@@ -125,18 +124,6 @@ export function useHrMyLeaveRequestsInfinite(enabled = true) {
     getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor ?? undefined,
     staleTime: 2 * 60_000,
     enabled: Boolean(identity.orgId && identity.userId) && canSelf && enabled,
-  });
-}
-
-export function useHrHolidaysForYear(year: number) {
-  const canAttendance = useCan("hr:attendance:view");
-  const hrEnabled = useModuleEnabled("hr");
-  return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.holidaysYear(year),
-    queryFn: ({ signal }) =>
-      apiClient.get<HrHolidayRow[]>("/hr/holidays", { year }, signal, hrHolidaysListC),
-    staleTime: 2 * 60_000,
-    enabled: hrEnabled && canAttendance,
   });
 }
 

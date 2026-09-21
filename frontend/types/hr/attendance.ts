@@ -103,23 +103,6 @@ export interface ProcessWfhRequestInput {
   rejectionReason?: string;
 }
 
-export interface AddHolidayInput {
-  name: string;
-  date: Date | string;
-  message?: string;
-}
-
-export interface DeleteHolidayInput {
-  holidayId: number;
-}
-
-export interface UpdateHolidayInput {
-  holidayId: number;
-  name: string;
-  date: string;
-  message?: string;
-}
-
 export interface GetMonthlyAttendanceInput {
   userId?: string;
   year: number;
