@@ -9,7 +9,7 @@ import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateSignEnvelope } from "@/hooks/api/sign/envelopes";
 import type { SignEnvelope } from "@/types/sign";
-import { envelopeSchema, type EnvelopeValues } from "./envelope-schema";
+import { envelopeSchema, type EnvelopeValues } from "@/components/sign/envelope-schema";
 
 interface EditEnvelopeSheetProps {
   envelope: SignEnvelope;
