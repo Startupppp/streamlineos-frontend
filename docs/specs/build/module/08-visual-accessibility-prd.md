@@ -55,6 +55,39 @@ Rules:
 
 - [ ] **BLD-08-001** measure current light/dark surface combinations and approve
   token changes with screenshots, not subjective labels.
+  **Measured 2026-09-21; open on the approval clause.**
+  `frontend/scripts/contrast-audit.mjs` computes WCAG 2.1 ratios from the
+  `globals.css` token values. Its `--self-test` passes 4 cases including the
+  Annex A 21.00:1 reference and two hand-computed mid-greys, so the numbers are
+  not self-certified. 41 light/dark pairs measured; every chrome, foreground,
+  primary, secondary, accent, popover, sidebar and ring pair passes, in both
+  modes. All dark-mode status pairs pass with ≥1.6:1 of margin.
+  **Three light-mode pairs fall below AA normal text (4.5:1):**
+  `status-success-ink` on its surface 3.58:1, `status-warning-ink` 3.46:1,
+  `status-danger-ink` 4.41:1.
+  **These are not token defects, and the tokens must not be "fixed".** The
+  system is deliberately two-level: `-ink` is the 3:1 non-text ink for icons and
+  borders (SC 1.4.11), `-ink-strong` is the 4.5:1 text ink.
+  `components/ui/__tests__/contrast-status-tokens.test.ts:29` already asserts
+  that exactly `["success", "warning", "danger"]` sit below AA — so raising
+  `-ink` to the `-ink-strong` value would collapse the two levels and fail the
+  test that documents the design.
+  **The defect is at call sites that render words in `-ink`.** Extending the
+  measurement to the untinted surfaces the audit did not cover:
+  `success-ink` and `warning-ink` fail 4.5:1 on **every** light surface —
+  card (3.77, 3.58), background (3.60, 3.43) and muted (3.44, 3.27) — so there
+  is no light context in which they are safe for text. `danger-ink` (4.41) and
+  `neutral-ink` (4.34) additionally fail on `muted`. Every `-ink-strong` clears
+  4.5:1 on all three.
+  Scope: 1,716 `text-status-{success,warning,danger}-ink` call sites repo-wide;
+  about 180 under `features/build/**`, of which 72 pair the ink with a tinted
+  `-surface` and are therefore measured failures today. A confirmed example is
+  `features/build/navigation/build-scope-recovery.tsx:66`, whose warning
+  paragraph renders at 3.46:1.
+  Not closed: the item also requires approving changes **with screenshots**, and
+  no browser has run. The repo-wide call-site sweep is larger than Build and
+  needs its own packet with a ratchet, since a gate over 1,716 sites cannot land
+  green in one change.
 - [ ] **BLD-08-002** Card, Popover, Dialog, Sheet, menu, tooltip, and board
   column have distinct documented elevation roles.
 - [ ] **BLD-08-003** no retained Build page uses identical adjacent surface

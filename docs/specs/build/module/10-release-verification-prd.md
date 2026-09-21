@@ -263,8 +263,62 @@ Exact package commands and results are recorded at execution time.
 - [ ] **BLD-10-066** lint on changed files reports no introduced errors.
 - [ ] **BLD-10-067** route, permission, validation, schema, migration,
   architecture, and file-size gates pass.
-- [ ] **BLD-10-068** cycle self-tests pass before cycle gates; resolved import
+  **Open — executed 2026-09-21 at `f5cc6ef65`; 27 of 35 pass.**
+  All 35 frontend gates were run self-test-first, each self-test and gate exit
+  code captured (`.agent/run-frontend-gates.sh`). Result at the time of the run:
+  23 pass, 12 fail — of which **two were self-test failures**, the worse class,
+  because a gate whose self-test fails is not evidence of anything.
+  Repaired in this pass, now green: `check:tenant-neutral` (its walker used
+  `relative()` and compared against `"features/"`, so on Windows the backslash
+  paths gave a features/ count of **0 out of 7,081** and the vacuity guard
+  exited 2 before a single file was judged — the gate had never run here);
+  `check:file-sizes` self-test (its floor had drifted to 57% of the corpus as
+  the tree grew from 5,388 to 7,004 files, and its own re-measurement caught
+  it); `check:colors`; `check:empty-states`.
+  **Still failing, with the finding rather than a summary:**
+  `check:file-sizes` — 9 files over 500 lines, 4 Build-owned
+  (`cycles-page.tsx` 586, `use-build-scope-directory.test.ts` 543,
+  `build-scope-browser.test.tsx` 519, `projects-page.tsx` 508). Note the count
+  moved from 8 to 9 mid-session because another session is editing
+  `cycles-page.tsx`; a file-size number taken over a tree under concurrent edit
+  is a snapshot, not a fact.
+  `check:test-typecheck` — **121 errors across 38 files, 22 Build-owned.** These
+  specs are green under jest and always will be: `tsconfig.json` excludes test
+  files and SWC erases types without diagnostics, so this gate is the only thing
+  that sees them. Repair in progress.
+  `check:type-assertions` — 4 files hold an unledgered double cast, 23 hold an
+  unledgered plain assertion, 8 ledger entries are stale, and the plain-assertion
+  floor reads 498 against a floor of 499, which the gate itself reports as "the
+  counter is broken, not the tree clean".
+  `check:contract-vendor` — `frontend/contracts/openapi.json` is stale against
+  `backend/openapi.json` (hashes differ). Every contract-parity result is
+  therefore measured against a contract that is not the backend's.
+  `check:permission-binding`, `check:command-catalog` (8 findings incl. two
+  referral hooks declaring `hr:employees:*` where the contract requires
+  `hr:requisitions:*`), `check:test-integrity` (2 tautologies, 12 bare
+  `.toThrow()`), `check:over-300` (6 files at exactly 301 lines).
+  `check:prd-traceability` — reports `EMPTY REGISTRY: no known PRD criteria`,
+  which is a vacuous gate, not a passing one.
+- [x] **BLD-10-068** cycle self-tests pass before cycle gates; resolved import
   counts prove the gates are non-vacuous.
+  **Closed — all three cycle gates ran self-test-first, with counts.**
+  2026-09-21 at `f5cc6ef65`, in this order:
+  frontend `check:cycles:self-test` 2/2 passed → `check:cycles` **processed
+  7,019 files**, no circular dependency;
+  frontend `check:feature-cycles:self-test` (detector sees a planted cycle and
+  only that) → `check:feature-cycles` **43 features, 15 cross-feature edges,
+  5,149 resolved imports, 3,525 files**, acyclic;
+  backend `check:cycles:self-test` 2/2 passed → `check:cycles` **processed
+  8,163 files**, no circular dependency.
+  Each self-test plants two mutually-importing files and asserts the gate exits
+  non-zero, so the green results are earned rather than vacuous, and the
+  resolved-import and file counts are non-zero and of the right order — the
+  failure mode this item exists to catch is a gate that resolves nothing and
+  reports zero.
+  Non-vacuity of the wider battery is not implied by this item and is not
+  claimed: `check:tenant-neutral` was found resolving zero files under
+  `features/` and `check:prd-traceability` reports an empty registry. Both are
+  recorded against BLD-10-067.
 - [ ] **BLD-10-069** dead-code removals have module-graph and real-build proof.
 
 ## Rollout
