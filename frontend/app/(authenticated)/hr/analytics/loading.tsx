@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function HrAnalyticsLoading() {
   return (
     <PageWrapper
-      title="HR Analytics"
+      title="People analytics"
       subtitle="Workforce insights and operational metrics"
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4">

@@ -15,10 +15,10 @@ describe("permission-aware product navigation", () => {
       module: "hrms",
       requiredPermission: "hr:employees:view",
     });
-    expect(resolveNavRouteAccess("/hr/settings/company")).toMatchObject({
+    expect(resolveNavRouteAccess("/hr/settings/workflows")).toMatchObject({
       matched: true,
       module: "hrms",
-      requiredPermission: "settings:organization:manage",
+      requiredPermission: "hr:workflows:view",
     });
     expect(resolveNavRouteAccess("/hr/announcements")).toEqual({
       matched: true,

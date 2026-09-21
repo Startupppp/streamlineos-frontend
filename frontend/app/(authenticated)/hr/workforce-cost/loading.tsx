@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function WorkforceCostLoading() {
   return (
     <PageWrapper
-      title="Workforce Costing"
+      title="Workforce costing"
       subtitle="Real-time cost breakdown by department and location"
     >
       <div className="space-y-6">

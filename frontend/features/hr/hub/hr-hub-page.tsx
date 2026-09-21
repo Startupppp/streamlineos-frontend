@@ -1,16 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  AlertCircle,
-  UserPlus,
-  Briefcase,
-  ClipboardCheck,
-  Banknote,
-  Megaphone,
-  RefreshCcw,
-} from "lucide-react";
+import { AlertCircle, Briefcase, Banknote, RefreshCcw } from "lucide-react";
+import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   HrHero,
@@ -28,15 +22,6 @@ import { HrHubActivity } from "./hr-hub-activity";
 
 const ALL_QUICK_ACTIONS = [
   {
-    actionKey: "add-employee" as const,
-    href: "/hr/onboarding",
-    icon: UserPlus,
-    label: "Add employee",
-    description: "Onboard a new hire",
-    tone: "blue" as const,
-    permKey: "canOnboarding" as const,
-  },
-  {
     actionKey: "post-job" as const,
     href: "/hr/recruitment/jobs",
     icon: Briefcase,
@@ -46,15 +31,6 @@ const ALL_QUICK_ACTIONS = [
     permKey: "canRequisitionsManage" as const,
   },
   {
-    actionKey: "approvals" as const,
-    href: "/hr/approvals",
-    icon: ClipboardCheck,
-    label: "Approvals",
-    description: "Pending decisions",
-    tone: "amber" as const,
-    permKey: "canWorkflowsApprove" as const,
-  },
-  {
     actionKey: "run-payroll" as const,
     href: "/payroll/runs",
     icon: Banknote,
@@ -62,15 +38,6 @@ const ALL_QUICK_ACTIONS = [
     description: "Execute payroll cycle",
     tone: "emerald" as const,
     permKey: "canPayrollRunsCreate" as const,
-  },
-  {
-    actionKey: "announce" as const,
-    href: "/hr/announcements",
-    icon: Megaphone,
-    label: "Announce",
-    description: "Broadcast to your team",
-    tone: "rose" as const,
-    permKey: "canAnnouncements" as const,
   },
 ] as const;
 
@@ -90,9 +57,30 @@ export function HrHubPage() {
 
   return (
     <PageWrapper
-      title="HR"
+      title="HR overview"
       subtitle="People operations hub — manage your team, track time, and run the full employee lifecycle"
       variant="display"
+      actions={
+        access.canOnboarding || access.canWorkflowsApprove || access.canAnnouncements ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {access.canAnnouncements ? (
+              <Button size="sm" variant="outline" asChild>
+                <Link href="/hr/announcements">Create announcement</Link>
+              </Button>
+            ) : null}
+            {access.canWorkflowsApprove ? (
+              <Button size="sm" variant="outline" asChild>
+                <Link href="/hr/approvals">Review approvals</Link>
+              </Button>
+            ) : null}
+            {access.canOnboarding ? (
+              <Button size="sm" asChild>
+                <Link href="/hr/onboarding">Onboard employee</Link>
+              </Button>
+            ) : null}
+          </div>
+        ) : undefined
+      }
     >
       <div className="flex flex-1 min-h-0 flex-col">
         <HrPageContent>
@@ -104,7 +92,7 @@ export function HrHubPage() {
                   "[&>*]:min-w-[min(100%,15.5rem)] [&>*]:shrink-0",
                   "min-[420px]:grid min-[420px]:grid-cols-2 min-[420px]:overflow-visible min-[420px]:pb-0",
                   "min-[420px]:[&>*]:min-w-0 min-[420px]:[&>*]:shrink",
-                  "xl:grid-cols-5",
+                  "xl:grid-cols-4",
                 )}
               >
                 {visibleActions.map((action) => (

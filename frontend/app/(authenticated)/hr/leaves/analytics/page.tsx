@@ -10,11 +10,11 @@ export default async function LeaveAnalyticsPage() {
   return (
     <PageWrapper
       title="Leave Analytics"
-      subtitle="Summary from the HR Analytics module"
+      subtitle="Summary from People analytics"
       actions={
         <Button asChild variant="outline" size="sm">
           <Link href="/hr/analytics">
-            Full Report <ArrowRight className="ml-2 h-4 w-4" />
+            Open people analytics <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
         </Button>
       }
