@@ -44,14 +44,17 @@ The consequence for TASK I is specific: migration 1142's `ON DELETE SET NULL (he
 
 | Task | Status | Agent/session | Files changed | Tests | Blocker |
 |---|---|---|---|---|---|
+| J — authz fixes: 15 ticket handlers | IN_PROGRESS | agent, `build/closure-j-tickets` | — | — | — |
+| K — authz fixes: 9 execution handlers | IN_PROGRESS | agent, `build/closure-k-execution` | — | — | — |
+| L — authz fixes: 6 remaining handlers | IN_PROGRESS | agent, `build/closure-l-misc` | — | — | — |
 | A — Release nested-resource authorization | **DONE** — merged to backend `main` as `d714ae8ff` | agent + coordinator, `build/closure-a-releases` | `projects-releases.service.ts` (7 lines), `projects-releases-cross-project-binding.spec.ts` (new, 388 lines) | 13/13 new; 109 suites / 545 tests green in `src/modules/build/core`; `typecheck` 0, `typecheck:test` 0 | — |
-| B — N-11 cold-load route gates | IN_PROGRESS | agent, `build/closure-b-n11` | — | — | — |
+| B — N-11 cold-load route gates | **DONE** — merged to root `main` | agent + coordinator, `build/closure-b-n11` | 52 files: 49 `page.tsx`, 1 new feature module, 1 new census spec, `scripts/build-route-census.mjs` | census PASS **0 weak cold-load gates**; self-test 9 PASS; `lib/rbac/route-access` 9 suites / 223 tests; `typecheck:web` 0; `check:build-execution-plan` 0 | — |
 | C — P0 #6 Sprint/Cycle | **BLOCKED** — not dispatched | scoped, read-only | none | none | Consolidates **two live database identities** (`sprints` and `cycles` tables, both live; tickets carry both `sprintId` and `cycleId` with separate composite FKs). Needs a schema migration **and** a row-level data backfill. No non-production database exists. |
 | D — P0 #7 QA Bug lifecycle | **BLOCKED** — not dispatched | scoped, read-only | none | none | `build.bugs` is a separate table with 10 columns the canonical ticket lacks and a 9-value status enum that maps onto nothing. Needs a schema migration **and** a row-level backfill. No non-production database exists. |
 | E — P0 #8 residual | **DONE (fixture half)** — merged to backend `main` as `a684fed0f`. Item P0 #8 itself remains **BLOCKED** | agent + coordinator, `build/closure-e-p08` | `build-project-scoped-lists-404.spec.ts` (+24, spec only) | 18/18; `project-access-404` 4/4; `typecheck` 0, `typecheck:test` 0; both set-null self-tests green | The 286 composite SET NULL constraints need a real database |
 | F — P1 #11 Issues explorer residual | IN_PROGRESS | agent, `build/closure-f-issues` | — | — | — |
-| G — P1 #13 command palette residual | IN_PROGRESS | agent, `build/closure-g-palette` | — | — | — |
-| H — Controller census | IN_PROGRESS | agent, `build/closure-h-census` | — | — | — |
+| G — P1 #13 command palette residual | **DONE** — merged to root `main` as `cf7df1e07` | agent + coordinator, `build/closure-g-palette` | 9 files (`command-palette-dialog.tsx`, `use-global-search.ts`, `sidebar-nav-items.ts`, `build-nav-groups.ts`, 3 new specs, 2 mock updates) | 339 passed / 343; the 4 failures are pre-existing `shell-keyboard.test.tsx`, confirmed identical on main; `typecheck:web` 0 | — |
+| H — Controller census | **DONE** — merged to backend `main` as `a7c4b3b84` | agent + coordinator, `build/closure-h-census` | `scripts/build-authorization-census.mjs` (new, 1958 lines), `docs/build-module/authorization-census.{md,json}`, `package.json` | self-test 29/29; `--check` green; `typecheck` 0 | — |
 | I — Migration readiness | **DONE (static)** — merged to backend `main` as `40abe03fc`. DB application **BLOCKED** | agent + coordinator, `build/closure-i-migrations` | `docs/migration-static-verification-2026-09-21.md` (new). **No migration, journal or seal file touched.** | 8 gate self-tests then 7 gates, all exit 0; `typecheck` 0 | No non-production PostgreSQL. `check:set-null-column-lists` needs `SET_NULL_GATE_DATABASE_URL`; `check:composite-fk-set-null` is production-touching and was not run |
 
 ## Reconciliation of the inherited pending list
@@ -214,3 +217,83 @@ The backlog's figures were wrong on four of five items scoped:
 ### Unrelated finding, logged not acted on
 
 `modules/build/core/dto/ticket.schemas.ts:62,108,158` accepts `"SUBTASK"` as a ticket type, but `ticketTypeEnum` (`common/enums.ts:17`) has no `SUBTASK` member. Whether `normalizeTicketType` folds it to `TASK` before the write is **UNVERIFIED**. Out of scope for #7; worth a look.
+
+---
+
+## TASK H — the census refutes the inherited claim, and it undercounted badly
+
+**"2 VULNERABLE + 14 NEEDS-REVIEW" is wrong.** Across **321 handlers in 47 controller files**:
+
+| Verdict | Handlers |
+|---|---|
+| **VULNERABLE** | **30** |
+| CLOSED | 4 (the releases fix, re-cut on merge) |
+| NEEDS-REVIEW | 111 |
+| VERIFIED | 176 |
+
+All 30 are nested `:projectId/:childId` routes whose service resolves the child by `(id, orgId)` with **no `projectId` predicate**. `orgId` is bound in all 30, so **none is cross-tenant** — the blast radius is cross-**project** within the caller's own organization, plus a broken 404 (a foreign-project id answers 200 instead of 404). Same class as the release defect closed in `d714ae8ff`.
+
+### Coordinator verification
+
+I did not accept the escalation on trust. Three read at source, from three different controllers, all unambiguous:
+
+- `updateCustomState` (`project-resources.controller.ts:173`) declares `@Param("projectId", ParseIntPipe) _: number` — it **parses the route param and discards it**, then calls `this.members.updateCustomState(u, stateId, body)`.
+- `updateMilestone` (`workspace.controller.ts:96`) calls `this.milestones.updateMilestone(u.orgId, milestoneId, body)`.
+- `updateView` (`workspace.controller.ts:195`) calls `this.views.updateView(u.orgId, u.userId, viewId, body)`.
+
+All three validate `:projectId` in their params schema, then ignore it.
+
+### Clean results worth stating
+
+- **All 321 handlers carry `JwtAuthGuard + PermissionGuard`** — zero BE-29 gaps.
+- **No params schema omits a route param** — zero BE-14 violations.
+- A vacuity hole was closed: `@Public` routes had been auto-VERIFIED without a read. All three were then read — hashed token, expiry and view-only enforcement, predicates re-asserted inside the UPDATE (TOCTOU-safe), RLS GUC, rate limiting — and are genuinely sound, now VERIFIED *by evidence*.
+
+### Anti-vacuity
+
+47 = 47 files and 321 = 321 handlers, each cross-checked against an independent grep. Self-test **29/29**, including anchor re-validation of every reviewed entry against source. A latent reproducibility bug was also fixed: `core.autocrlf=true` with no `.gitattributes` means a fresh checkout returns CRLF, so `--check` would have reported drift on an untouched tree.
+
+### The anchors worked exactly as designed
+
+The four release entries deliberately pinned the **old** lines so the report would fail loudly the moment the fix merged. It did — `--check` went red on `main` immediately after `d714ae8ff`. Re-cut to CLOSED against the fixed source, `--check` green (`a7c4b3b84`). The `removeTicket` entry now records what the fix actually found: the unqualified join delete bound no `orgId` at all, making it **cross-tenant**, not merely cross-project.
+
+### Declared limitations
+
+Two false-positive classes are deliberately left noisy: **create endpoints** (an INSERT scopes via `.values({orgId})`, not a predicate) and **parent checks written in JavaScript** (`projects-ticket-links.service.ts` fetches by `(id, orgId)` then rejects with `if (ticket.projectId !== projectId)` — correctly bound, invisible to a SQL binder). The binder was **not** taught to accept the JS form: that heuristic would also mark genuinely unbound code as bound, and a false VERIFIED hides a vulnerability while a false NEEDS-REVIEW only costs a read. Also unmodelled: RLS, permission-key semantics, dynamically registered routes.
+
+**Of the 111 NEEDS-REVIEW, 102 have no lead at all** — nested routes with a clean static pass, held there only by the policy that a static reader may not certify parent binding alone. They are uncertified, not suspected.
+
+---
+
+## TASK B — N-11 closed, zero weak cold-load gates
+
+**The inherited figure of 63 was wrong. The true original count was 49**, of which an earlier pass had closed 24, leaving **25**. All 25 are now closed and all 83 Build pages pass their own canonical pattern.
+
+Two distinct senses of "weak", both now enforced:
+
+- **Structural** — 25 routes never passed their own pattern, so they inherited only the layout's `/build`.
+- **Semantic** — only **6** resolved to a genuinely weaker permission key: `budget`, `cycles/[cycleId]`, `timeline` and `webhooks` (downgraded to `build:view`), plus `/build/roadmap` and `/build/templates`, which had **no server gate at all**.
+
+### Decisions worth recording
+
+- **Timeline** was the only real refactor: its client body moved verbatim to `features/build/timeline/project-timeline-page.tsx` so the route could become a server component. The other 24 were already server components.
+- **`/build/access` keeps BOTH gates.** Replacing its `requirePermission("build:access:view")` broke `module-access-route-invariants.test.ts`, a cross-module spec pinning that exact source line across all 13 access pages. `enforceRouteAccess` was added **alongside** rather than weakening a shared policy spec; `getServerAccessResult` is `react.cache()`-wrapped, so the second call is free.
+- `wiki` and `wiki/[pageId]` were on bare `requireSession()` — now strictly stronger.
+
+### Mutation proof — two independent mutations, both bite
+
+| Mutation | Result |
+|---|---|
+| `/build/[projectId]/timeline` pattern weakened to `"/build"` | census EXIT 1 (`1 of 83 … never pass their own canonical pattern`); jest names `missing=[build:tickets:view]` |
+| brand-new ungated page added | census EXIT 1, names the file |
+| both restored | `PASS 83 … (0 weak cold-load gates)`, jest 4/4 |
+
+Note the division of labour: the jest census does **not** catch a brand-new ungated page, because an unregistered route resolves to the same key as `/build` and so is not *semantically* weaker. The structural census script is what blocks it.
+
+### A worktree artefact that looked like a failure and was not
+
+`check:build-execution-plan` failed in the worktree only. It asserts a literal containing `\n` against `docs/specs/build/sidebar/02-scope-directory-prd.md`. Coordinator-verified: the file is byte-identical to HEAD, but `git ls-files --eol` reports `w/crlf` in the worktree versus `w/lf` in the main checkout — `git worktree add` wrote CRLF. The branch touches no docs at all. **On `main` after the merge the gate passes, EXIT 0.**
+
+### Second backend resolver found — extends a known environment trap
+
+`frontend/test-support/backend-checkout.ts` is a **second** resolver that **ignores `STREAMLINE_BACKEND_ROOT` entirely**, probing only `<checkout>/backend`, `../streamlineos-backend`, and `<prefix>-frontend` → `<prefix>-backend`. So the documented env-var fix covers `lib/test-support/backend-path.ts` but **not** this one, and two inventory suites fail in any worktree whose name matches none of those patterns. Not caused by N-11.
