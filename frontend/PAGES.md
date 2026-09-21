@@ -745,9 +745,9 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 
 ## Surveys
 
-- `/surveys` · **Surveys** · hooks: `→ features/surveys`
-- `/surveys/new` · **Surveys** · hooks: `→ features/surveys`
-- `/surveys/[surveyId]` · **Surveys** · hooks: `→ features/surveys`
+- `/surveys` · **Surveys** · hooks: `→ features/surveys` (`useSurveys`) — 2026-09-21: states resolve through `usePageState` + `<PageState>` with the read error passed; the Draft/Mode filters are server-side only (`keepPreviousData` was dropped, so a Published card no longer sits under the Draft filter while the filtered page loads — SURV-003); filter-empty renders "No surveys match your filters" + Clear filters; below `md` the two facet selects collapse into a Drawer behind a Filters button (SURV-004/005); primary action reads "Create survey"
+- `/surveys/new` · **Surveys** · hooks: `→ features/surveys` (`useSurveyTemplates`, `useCreateSurvey`) — 2026-09-21: title "Create survey"; own `loading.tsx` and in-page skeleton share `TemplatePickerSkeleton` so the route fallback keeps this page's title instead of the list's; the create hang was the backend writing the first draft version on a second transaction (SURV-001)
+- `/surveys/[surveyId]` · **Surveys** · hooks: `→ features/surveys` (`useSurvey`) — 2026-09-21: `SurveyDetailContent` resolves through `usePageState({ permission: "surveys:view" })` + `<PageState>` with the read error passed, so a failed read shows the backend message with retry and a denied reader sees Access Restricted, never an indefinite skeleton (SURV-002); own `loading.tsx` shares `SurveyDetailSkeleton`
 - `/surveys/[surveyId]/participants` · **Surveys** · hooks: `→ features/surveys`
 - `/surveys/live/[sessionId]/host` · **Surveys** · hooks: `→ features/surveys`
 - `/surveys/access` · **Surveys** · hooks: `→ features/surveys`
