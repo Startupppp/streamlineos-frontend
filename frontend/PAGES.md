@@ -435,7 +435,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 ## Payroll
 
 ### Hub
-- `/payroll` · **Payroll** · hooks: `useCommandCenter`, `useCreateRun`, `useCan("payroll:runs:view")`, `useCan("payroll:runs:manage")`
+- `/payroll` · **Payroll** · hooks: `useCommandCenter`, `useCreateRun`, `useCan("payroll:runs:view")`, `useCan("payroll:runs:manage")` (2026-09-21: the KPI row and every `TabsList` fade the edge that hides more via `useHorizontalOverflow`, so a clipped row reads as scrollable at 390/768 — FE#76)
 
 ### Core payroll operations
 - `/payroll/runs` · **Payroll** · hooks: `→ features/payroll/runs`
@@ -692,7 +692,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/me/documents` · **Self-service** · hooks: `requirePermission("self:onboarding-docs")` (server), `→ features/me/documents` — VIOLATION: `requirePermission` on a `/me/*` route; must be removed
 - `/me/expenses` · **Self-service** · hooks: `requirePermission("self:expenses")` (server), `→ features/me/expenses` — VIOLATION: `requirePermission` on a `/me/*` route; must be removed
 - `/me/onboarding` · **Self-service** · hooks: `→ features/me/onboarding`
-- `/me/pay` · **Self-service** · hooks: `requireSession()` (server), `usePageState` (error only) + `PageWrapper state=`, `→ features/payroll/me` — universal no-gate zone holds: NO module and NO permission passed to `usePageState`. Per-card skeletons kept deliberately, so page-level loading is not used; a failed overview read now shows an error with retry instead of silently blank cards
+- `/me/pay` · **Self-service** · hooks: `requireSession()` (server), `usePageState` (error only) + `PageWrapper state=`, `→ features/payroll/me` — universal no-gate zone holds: NO module and NO permission passed to `usePageState`. Per-card skeletons kept deliberately, so page-level loading is not used; a failed overview read now shows an error with retry instead of silently blank cards (2026-09-21: the salary structure section renders `ErrorState` + `getErrorMessage` with retry, wrapping in full at 390 — FE#77)
 - `/me/recruitment` · **Self-service** · hooks: `requirePermission("self:recruitment")` (server), `→ features/employee-self-service` — serves assigned interviews and own hiring feedback. A `self:*` key is what §8 prescribes for `/me/*` and is a member default, so it denies nobody; internal job openings live at `/me/job-openings`
 - `/me/job-openings` · **Self-service** · hooks: `requirePermission("self:job-openings")` (server), `useSelfJobOpenings` — §8 member entitlement: browse internal openings and apply. Backend `GET|POST /hr/recruitment/me/job-openings*`, no `@RequireModule`
 - `/me/referrals` · **Self-service** · hooks: `requirePermission("self:referrals")` (server), `useSelfReferrals` — §8 member entitlement: submit and track own referrals. Backend `GET|POST /hr/recruitment/me/referrals`, no `@RequireModule`
@@ -790,7 +790,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 
 ## Timesheets
 
-- `/timesheets` · **Timesheets** · hooks: `→ features/timesheets`
+- `/timesheets` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: the week grid scroller fades its hidden edge and, below `sm`, says "Swipe sideways to reach every day of the week" whenever it overflows — FE#79; header wrapping at 768 landed earlier in 08f6406e2 — FE#80)
 - `/timesheets/approvals` · **Timesheets** · hooks: `→ features/timesheets`
 - `/timesheets/billing` · **Timesheets** · hooks: `→ features/timesheets`
 - `/timesheets/exceptions` · **Timesheets** · hooks: `→ features/timesheets`
