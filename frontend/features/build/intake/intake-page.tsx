@@ -229,7 +229,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
                     <Label htmlFor="intake-title">Title</Label>
                     <Input id="intake-title" {...createForm.register("title")} />
                     {createForm.formState.errors.title && (
-                      <p className="text-xs text-destructive mt-1">{createForm.formState.errors.title.message}</p>
+                      <p className="text-xs text-destructive mt-1" aria-live="polite">{createForm.formState.errors.title.message}</p>
                     )}
                   </div>
                   <div>
@@ -338,7 +338,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
                   )}
                 />
                 {acceptForm.formState.errors.state && (
-                  <p className="text-xs text-destructive mt-1">{acceptForm.formState.errors.state.message}</p>
+                  <p className="text-xs text-destructive mt-1" aria-live="polite">{acceptForm.formState.errors.state.message}</p>
                 )}
               </div>
               <div>
@@ -413,7 +413,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
                   {...declineForm.register("reason")}
                 />
                 {declineForm.formState.errors.reason && (
-                  <p className="text-xs text-destructive mt-1">{declineForm.formState.errors.reason.message}</p>
+                  <p className="text-xs text-destructive mt-1" aria-live="polite">{declineForm.formState.errors.reason.message}</p>
                 )}
               </div>
             </form>

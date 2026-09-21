@@ -69,7 +69,10 @@ export function useKeyboardShortcuts() {
         return;
       }
 
-      if (e.key === "c" && projectId !== null) {
+      const onBuildRoute = pathname.startsWith("/build/") || pathname === "/build";
+      const onCommandCenter = pathname.startsWith("/build/command-center");
+
+      if (e.key === "c" && onBuildRoute && !onCommandCenter) {
         e.preventDefault();
         openCreateTicket(projectId);
         return;

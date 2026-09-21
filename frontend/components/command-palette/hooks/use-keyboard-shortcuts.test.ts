@@ -46,7 +46,21 @@ describe("extractProjectId — regex fix", () => {
     expect(mockOpenCreateTicket).not.toHaveBeenCalled();
   });
 
-  it("does not fire c shortcut on /build/command-center (non-numeric segment)", () => {
+  it("fires c shortcut on /build/my-work (org-level route) with null projectId so the create dialog can prompt for project", () => {
+    mockPathname.current = "/build/my-work";
+    renderHook(() => useKeyboardShortcuts());
+    press("c");
+    expect(mockOpenCreateTicket).toHaveBeenCalledWith(null);
+  });
+
+  it("fires c shortcut on /build (projects list) with null projectId", () => {
+    mockPathname.current = "/build";
+    renderHook(() => useKeyboardShortcuts());
+    press("c");
+    expect(mockOpenCreateTicket).toHaveBeenCalledWith(null);
+  });
+
+  it("does not fire c shortcut on /build/command-center because its own chord handler owns c", () => {
     mockPathname.current = "/build/command-center";
     renderHook(() => useKeyboardShortcuts());
     press("c");

@@ -323,12 +323,12 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
                       {...form.register("name")}
                     />
                     {form.formState.errors.name && (
-                      <p className="text-xs text-destructive mt-1">
+                      <p className="text-xs text-destructive mt-1" aria-live="polite">
                         {form.formState.errors.name.message}
                       </p>
                     )}
                     {!form.formState.errors.name && showDuplicateWarning && (
-                      <p className="text-xs text-status-warning-ink flex items-center gap-1 mt-1">
+                      <p className="text-xs text-status-warning-ink flex items-center gap-1 mt-1" aria-live="polite">
                         <AlertTriangle className="h-3 w-3 shrink-0" />A cycle
                         with this name already exists in this project.
                       </p>
@@ -355,7 +355,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
                       rows={3}
                     />
                     {form.formState.errors.description && (
-                      <p className="text-xs text-destructive mt-1">
+                      <p className="text-xs text-destructive mt-1" aria-live="polite">
                         {form.formState.errors.description.message}
                       </p>
                     )}
@@ -373,7 +373,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
                         toYear={startPickerBounds.toYear}
                       />
                       {form.formState.errors.startDate && (
-                        <p className="text-xs text-destructive mt-1">
+                        <p className="text-xs text-destructive mt-1" aria-live="polite">
                           {form.formState.errors.startDate.message}
                         </p>
                       )}
@@ -390,7 +390,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
                         toYear={endPickerBounds.toYear}
                       />
                       {form.formState.errors.endDate && (
-                        <p className="text-xs text-destructive mt-1">
+                        <p className="text-xs text-destructive mt-1" aria-live="polite">
                           {form.formState.errors.endDate.message}
                         </p>
                       )}
