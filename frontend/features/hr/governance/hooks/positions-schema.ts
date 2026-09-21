@@ -27,6 +27,20 @@ export const positionListContract = z.object({
   pagination: cursorPaginationContract,
 });
 
+export const positionStatusContract = z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  name: z.string(),
+  order: z.number().int(),
+  color: z.string().nullable(),
+  lifecycleGroup: z.enum(["backlog", "unstarted", "started", "completed", "cancelled"]),
+  isActive: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const positionStatusListContract = z.array(positionStatusContract);
+
 export const reorgScenarioContract = z.object({
   id: z.number().int(),
   orgId: z.string(),

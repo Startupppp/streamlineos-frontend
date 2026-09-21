@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
@@ -21,6 +21,12 @@ const simulationResultContract = lazyContract(() =>
 const positionDeleteContract = lazyContract(() =>
   import("@/features/hr/governance/hooks/positions-schema").then((m) => m.positionDeleteContract),
 );
+const positionContract = lazyContract(() =>
+  import("@/features/hr/governance/hooks/positions-schema").then((m) => m.positionContract),
+);
+const positionStatusListContract = lazyContract(() =>
+  import("@/features/hr/governance/hooks/positions-schema").then((m) => m.positionStatusListContract),
+);
 
 export interface Position {
   id: number;
@@ -36,6 +42,26 @@ export interface Position {
   deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PositionStatus {
+  id: number;
+  orgId: string;
+  name: string;
+  order: number;
+  color: string | null;
+  lifecycleGroup: "backlog" | "unstarted" | "started" | "completed" | "cancelled";
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatePositionInput {
+  title: string;
+  status: string;
+  effectiveFrom: string;
+  departmentId?: string;
+  budgetedCostCents?: number;
 }
 
 export interface ReorgScenario {
@@ -91,6 +117,28 @@ export function useSimulateScenario(scenarioId: number | undefined) {
     queryFn: ({ signal }) => apiClient.get(`/hr/governance/scenarios/${scenarioId}/simulate`, undefined, signal, simulationResultContract),
     enabled: canViewPositions && scenarioId !== undefined,
     staleTime: 0,
+  });
+}
+
+export function usePositionStatuses(options?: { enabled?: boolean }) {
+  const canViewPositions = useCan("hr:positions:view");
+  return useQuery({
+    queryKey: [...POSITIONS_KEY, "statuses"],
+    queryFn: ({ signal }) =>
+      apiClient.get<PositionStatus[]>("/hr/governance/position-taxonomy/statuses", undefined, signal, positionStatusListContract),
+    staleTime: 2 * 60_000,
+    enabled: canViewPositions && (options?.enabled ?? true),
+  });
+}
+
+export function useCreatePosition() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation<Position, Error, CreatePositionInput>("hr:positions:manage", {
+    mutationKey: [...POSITIONS_KEY, "create"],
+    mutationFn: (input) => apiClient.post<Position>("/hr/governance/positions", input, undefined, positionContract),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: POSITIONS_KEY });
+    },
   });
 }
 
