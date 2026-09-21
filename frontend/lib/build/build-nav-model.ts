@@ -17,14 +17,9 @@ import { buildOrganizationCatalog } from "./nav/build-organization-catalog";
 import { buildWorkspaceCatalog } from "./nav/build-workspace-catalog";
 import { buildManagedProductCatalog } from "./nav/build-managed-product-catalog";
 import { buildProjectCatalog } from "./nav/build-project-catalog";
+import { VIEW_TYPES } from "./view-types";
 
-const WORK_BOARD_VIEWS: ReadonlySet<string> = new Set([
-  "board",
-  "list",
-  "table",
-  "calendar",
-  "gantt",
-]);
+const WORK_BOARD_VIEWS: ReadonlySet<string> = new Set(VIEW_TYPES);
 
 export function buildScopeCatalog(scope: BuildScope): BuildScopeCatalog {
   switch (scope.type) {

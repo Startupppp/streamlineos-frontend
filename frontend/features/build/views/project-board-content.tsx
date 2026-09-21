@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
@@ -100,6 +101,10 @@ export function ProjectBoardContent({
   const shouldReduceMotion = useReducedMotion();
   const canUpdate = useCan("build:tickets:update");
   const viewVariants = shouldReduceMotion ? viewSwapReduced : viewSwap;
+  const selection = useMemo(
+    () => canUpdate ? { selected: selectedIds, onChange: onSelectionChange } : undefined,
+    [canUpdate, selectedIds, onSelectionChange],
+  );
 
   if (showEmptyFilterState) {
     return (
@@ -178,6 +183,22 @@ export function ProjectBoardContent({
             exit="exit"
             transition={pmSnappy}
           >
+            {canUpdate && selectedIds.size > 0 && (
+              <BulkActionBar
+                selectedCount={selectedIds.size}
+                members={members}
+                sprints={sprints}
+                statuses={statuses}
+                projectId={projectId}
+                excludeIds={selectedIds}
+                onBulkStatus={onBulkStatus}
+                onBulkPriority={onBulkPriority}
+                onBulkAssignee={onBulkAssignee}
+                onBulkSprint={onBulkSprint}
+                onBulkParent={onBulkParent}
+                onClear={onClearSelection}
+              />
+            )}
             <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
               <div className="overscroll-contain">
                 <ListView
@@ -191,6 +212,7 @@ export function ProjectBoardContent({
                   showEmptyColumns={displayOptions.showEmptyColumns}
                   showEmptyRows={displayOptions.showEmptyRows}
                   projectId={projectId}
+                  selection={selection}
                 />
               </div>
             </ScrollArea>
@@ -231,7 +253,7 @@ export function ProjectBoardContent({
                   projectId={projectId}
                   projectStatuses={statuses}
                   displayOptions={displayOptions}
-                  selection={canUpdate ? { selected: selectedIds, onChange: onSelectionChange } : undefined}
+                  selection={selection}
                 />
               </div>
             </ScrollArea>
