@@ -19,7 +19,7 @@ import {
   type AssetReturn,
 } from "@/features/hr/asset-returns/asset-return-constants";
 import { buildAssetReturnColumns } from "@/features/hr/asset-returns/asset-return-columns";
-import { AssetReturnLogSheet } from "@/features/hr/asset-returns/asset-return-log-sheet";
+import { AssetReturnLogSheet, type AssetReturnFieldErrors } from "@/features/hr/asset-returns/asset-return-log-sheet";
 import {
   AssetReturnsSkeleton,
   AssetReturnsError,
@@ -71,6 +71,7 @@ export function AssetReturnsPage() {
   const [condition, setCondition] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [notesError, setNotesError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<AssetReturnFieldErrors>({});
 
   const selectedAsset = useMemo<Asset | undefined>(
     () => allAssignedAssets.find((a) => String(a.id) === selectedAssetId),
@@ -95,6 +96,7 @@ export function AssetReturnsPage() {
     setCondition("");
     setNotes("");
     setNotesError("");
+    setFieldErrors({});
   }, []);
 
   const handleSheetOpenChange = useCallback(
@@ -110,10 +112,17 @@ export function AssetReturnsPage() {
   const handleAssetChange = useCallback((id: string) => {
     setSelectedAssetId(id);
     setOverrideUserId(null);
+    setFieldErrors((prev) => ({ ...prev, asset: undefined, employee: undefined }));
   }, []);
 
   const handleEmployeeOverrideChange = useCallback((id: string) => {
     setOverrideUserId(id || null);
+    setFieldErrors((prev) => ({ ...prev, employee: undefined }));
+  }, []);
+
+  const handleConditionChange = useCallback((value: string) => {
+    setCondition(value);
+    setFieldErrors((prev) => ({ ...prev, condition: undefined }));
   }, []);
 
   const handleNotesChange = useCallback(
@@ -130,10 +139,13 @@ export function AssetReturnsPage() {
   );
 
   const handleCreate = useCallback(() => {
-    if (!selectedAssetId) { toast.error("Please select an asset to return"); return; }
-    if (!resolvedUserId) { toast.error("Please select an employee"); return; }
-    if (!condition) { toast.error("Please select the asset condition"); return; }
-    if (notes.length > 1000) { toast.error("Notes must be at most 1000 characters"); return; }
+    const errors: AssetReturnFieldErrors = {
+      asset: selectedAssetId ? undefined : "Select the asset being returned",
+      employee: resolvedUserId ? undefined : "Select the employee returning it",
+      condition: condition ? undefined : "Select the asset's condition",
+    };
+    setFieldErrors(errors);
+    if (errors.asset || errors.employee || errors.condition || notes.length > 1000) return;
     const asset = allAssignedAssets.find((a) => String(a.id) === selectedAssetId);
     if (!asset) return;
     create.mutate(
@@ -201,10 +213,11 @@ export function AssetReturnsPage() {
         condition={condition}
         notes={notes}
         notesError={notesError}
+        fieldErrors={fieldErrors}
         isPending={create.isPending}
         onAssetChange={handleAssetChange}
         onEmployeeOverrideChange={handleEmployeeOverrideChange}
-        onConditionChange={setCondition}
+        onConditionChange={handleConditionChange}
         onNotesChange={handleNotesChange}
         onOverrideUserId={setOverrideUserId}
         onSubmit={handleCreate}
