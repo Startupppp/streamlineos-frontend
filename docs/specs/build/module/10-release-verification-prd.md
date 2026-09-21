@@ -42,8 +42,20 @@ The named disposable or staging environment includes:
 - external clients with different grants;
 - realistic skew, history, and high-cardinality filters.
 
-- [ ] **BLD-10-006** dataset creation is repeatable and contains no production
-  secrets or personal data.
+- [x] **BLD-10-006** dataset creation is repeatable and contains no production
+  secrets or personal data. **Closed — source proof plus a passing self-test.**
+  `backend/src/scripts/seed-scratch-e2e.mjs` seeds two fixed synthetic orgs
+  (`aaaaaaaa-1111-0000-0000-00000000000{1,2}`) with `ON CONFLICT DO NOTHING`
+  throughout and a `--purge` clean-reseed path, so a second run converges rather
+  than duplicating. `assertScratchTarget` refuses any URL matching
+  `PRODUCTION_HOST_PATTERNS`, any database whose name lacks `scratch`, any URL
+  identical to a live `DATABASE_URL`, and anything unparseable;
+  `node src/scripts/seed-scratch-e2e.mjs --self-test` passes all 8 cases
+  (2026-09-21). Every seeded address is `@scratch-seed.test` or
+  `@example.com`; webhook secrets are derived from the synthetic org id. No
+  provider credential or real personal record is present.
+  This certifies the seed *script*, not a seeded database — nothing has been run
+  against a disposable target yet, so BLD-10-007's record counts stay open.
 - [ ] **BLD-10-007** expected permissions and record counts are asserted before
   journey tests begin.
 
@@ -59,6 +71,27 @@ The named disposable or staging environment includes:
 - [ ] **BLD-10-011** browser Back/Forward and deterministic back actions pass
   with filters, overlays, dirty work, denied records, and stale history.
 - [ ] **BLD-10-012** removed routes have zero code caller and no physical page.
+  **Open — partially repaired 2026-09-21; the remainder is a product decision.**
+  `PG-PRJ-036` (`/build/{projectId}/sprints`, disposition *REMOVE duplicate*)
+  still has a physical page at
+  `frontend/app/(authenticated)/build/[projectId]/sprints/`.
+  Two label/destination mismatches were repaired: in
+  `features/build/overview/project-overview-page.tsx` the **"Active cycle"**
+  stat card read its value from `useCycles` but linked to `/sprints`, and the
+  quick-nav link labelled **"Cycles"** also pointed at `/sprints`. Both now
+  resolve to `/cycles`, pinned by two tests in
+  `project-overview-page.test.tsx`.
+  `lib/build/nav/build-project-catalog.ts` was already corrected to `/cycles`,
+  so the README finding at line 1444 describing it as pointing at `/sprints` is
+  stale.
+  What remains is not a mechanical delete. `features/build/sprints/` holds
+  capability `features/build/cycles/` does not — sprint planning panel, velocity
+  chart, complete-sprint sheet and the ticket mover — and
+  `components/layout/command-palette-dialog.tsx:129` still offers a "Sprints"
+  destination, which is internally consistent today and would 404 the moment the
+  route is deleted. Deleting the route before that capability is ported would
+  lose working features, so this needs the consolidation decision recorded in
+  BLD-00, not a removal.
 - [ ] **BLD-10-013** malformed, missing, archived, wrong-parent, denied, and
   wrong-tenant deep links show the correct state without leakage.
 
@@ -148,7 +181,20 @@ offline/stale, error, conflict, and partial-success states where applicable.
 
 ## Database, Migration, and Recovery
 
-- [ ] **BLD-10-037** migration generation/journal integrity checks pass.
+- [x] **BLD-10-037** migration generation/journal integrity checks pass.
+  **Closed — the spec was executed, not merely read.**
+  `backend/src/db/migration-integrity.spec.ts`: 38 tests, 38 passed
+  (2026-09-21). It reads migration files and the journal from disk and needs no
+  database, so this result is valid without a disposable target. Covered: the
+  RBAC hardening wave's `NOT VALID` / `VALIDATE CONSTRAINT` pairing and
+  `lock_timeout` pins; the HRMS Phase 1 bundle's five forward and five down
+  migrations, their `search_path` pins, dollar-quote balance and fail-closed
+  rollbacks; that `hrms-phase1-sql-managed.ts` stays out of the runtime barrel;
+  and that no chain-repair migration precedes the authoritative migration it
+  recreates.
+  This proves the migration *files and journal* are internally consistent. It is
+  not evidence that any migration applies — BLD-10-038 and BLD-10-039 still need
+  a live database.
 - [ ] **BLD-10-038** forward migration passes on empty and production-shaped
   disposable databases.
 - [ ] **BLD-10-039** backfill counts, unmapped records, constraints, indexes,

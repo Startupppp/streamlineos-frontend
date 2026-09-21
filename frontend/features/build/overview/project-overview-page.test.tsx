@@ -105,6 +105,36 @@ describe("ProjectOverviewPage", () => {
     expect(screen.getByRole("link", { name: "Milestones" })).toBeInTheDocument();
   });
 
+  it("points the Cycles quick-nav link at the canonical /cycles route, not the REMOVE-disposition /sprints duplicate", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(screen.getByRole("link", { name: "Cycles" })).toHaveAttribute(
+      "href",
+      "/build/101/cycles",
+    );
+  });
+
+  it("points the Active cycle stat card at the same /cycles route its own data was read from", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useCycles } = jest.requireMock("@/hooks/api/build/advanced");
+    (useCycles as jest.Mock).mockReturnValue({
+      data: [{ id: 1, name: "Sprint 12", status: "active" }],
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(screen.getByText("Sprint 12").closest("a")).toHaveAttribute(
+      "href",
+      "/build/101/cycles",
+    );
+  });
+
   it("does not render Updates or Files links because the backend has no such endpoints yet", () => {
     usePageState.mockReturnValue({ kind: "ready" });
 

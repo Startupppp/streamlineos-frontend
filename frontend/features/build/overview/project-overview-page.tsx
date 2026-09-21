@@ -117,7 +117,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
               icon={Zap}
               tone="violet"
               isLoading={cyclesQuery.isLoading}
-              href={activeCycle ? `${basePath}/sprints` : undefined}
+              href={activeCycle ? `${basePath}/cycles` : undefined}
             />
             <StatCard
               label="Health"
@@ -179,7 +179,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
               Issues
             </Link>
             <Link
-              href={`${basePath}/sprints`}
+              href={`${basePath}/cycles`}
               className="text-primary hover:underline"
             >
               Cycles
