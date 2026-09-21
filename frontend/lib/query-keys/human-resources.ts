@@ -224,6 +224,9 @@ export const humanResourcesQueryKeys = {
     hrTemplateVariables: () => [...base, "hr", "templateVariables"] as const,
     employeeEmployment: (userId: string) =>
       [...base, "hr", "employeeEmployment", userId] as const,
+    reportingLine: (userId: string) =>
+      [...base, "hr", "reportingLine", userId] as const,
+    managerCoverage: () => [...base, "hr", "reportingLines", "coverage"] as const,
     employeeTimeline: (employmentId: number, params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "employeeTimeline", employmentId] as const)

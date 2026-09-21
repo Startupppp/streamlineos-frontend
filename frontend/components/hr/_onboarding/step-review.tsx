@@ -5,6 +5,8 @@ import { z } from "zod";
 import { onboardEmployeeInputSchema } from "../../../lib/validation/hr";
 import { format } from "date-fns";
 import { Check, Lightbulb } from "lucide-react";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { getUserDisplayName } from "@/lib/person-display";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
@@ -20,6 +22,15 @@ interface StepReviewProps {
 
 export function StepReview({ form, allDepartmentOptions }: StepReviewProps) {
   const { getValues } = form;
+  const reportingManagerUserId = getValues("reportingManagerUserId");
+  const topLevelRole = getValues("topLevelRole") === true;
+  const { data: managerPage } = useOrgMembersByIds(reportingManagerUserId ? [reportingManagerUserId] : []);
+  const manager = managerPage?.data.find((member) => member.userId === reportingManagerUserId);
+  const reportsTo = topLevelRole
+    ? `Top-level role — ${getValues("topLevelRoleReason") ?? ""}`
+    : manager
+      ? getUserDisplayName(manager)
+      : "Loading…";
 
   return (
     <div className="space-y-6">
@@ -37,6 +48,7 @@ export function StepReview({ form, allDepartmentOptions }: StepReviewProps) {
           <div><span className="text-muted-foreground">Email:</span> <span className="font-medium">{getValues("email")}</span></div>
           <div><span className="text-muted-foreground">Role:</span> <span className="font-medium">{getValues("designation")}</span></div>
           <div><span className="text-muted-foreground">Department:</span> <span className="font-medium">{allDepartmentOptions?.find(d => d.id === getValues("departmentId"))?.name}</span></div>
+          <div><span className="text-muted-foreground">Reports to:</span> <span className="font-medium">{reportsTo}</span></div>
           <div><span className="text-muted-foreground">Joining:</span> <span className="font-medium">{format(getValues("joiningDate"), "PPP")}</span></div>
         </div>
       </div>

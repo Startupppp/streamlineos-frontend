@@ -1,6 +1,6 @@
 # PAGES.md — StreamlineOS Frontend Route Catalog
 
-**What this is:** one row per `page.tsx` under `frontend/app/`. It records what each route is and what it calls. **Total routes: 610.**
+**What this is:** one row per `page.tsx` under `frontend/app/`. It records what each route is and what it calls. **Total routes: 611.**
 
 **This is an inventory, not a task list.** It carries no checkboxes and no per-route audit state. A row is a fact about a route, never a to-do. Anything written here as `OPEN:` is a known unverified gap, not an assignment — do not infer work from a row.
 
@@ -274,8 +274,9 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 
 ### Employees
 - `/hr/employees` · **HR** · hooks: `requirePermission("hr:employees:view")` (server), `usePageState` + `PageWrapper state=`, `→ features/hr/employees` — the duplicated loading-only `PageWrapper` early return is gone
-- `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees`
+- `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees` (2026-09-21: overview tab mounts `ReportingLineSection` on `useReportingLine` → `GET /hr/reporting-lines/{employeeUserId}` — current, scheduled and historical managers with the manager's state; the edit form's Reports to writes through `PATCH /hr/employees/{employeeUserId}` `reportingTo`, which the backend now validates for inactive, exited and circular managers)
 - `/hr/employees/find-expert` · **HR** · hooks: `→ features/hr/employees`
+- `/hr/employees/manager-coverage` · **HR** · hooks: `requirePermission("hr:employees:view")` (server), `useManagerCoverage` → `GET /hr/reporting-lines/coverage`, `usePageState` + `PageState`, `→ features/hr/employees/manager-coverage-page` (2026-09-21: employees without a manager, reporting to an inactive/exited manager, circular chains, and managers over the span-of-control limit — the repair queue behind every approval fallback)
 - `/hr/employees/skills-matrix` · **HR** · hooks: `→ features/hr/employees`
 
 ### Onboarding
