@@ -4,7 +4,12 @@ import { useEffect } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import {
+  createManagedProductSchema,
+  type CreateManagedProductFormValues,
+  editManagedProductSchema,
+  type EditManagedProductFormValues,
+} from "@/features/build/managed-products/managed-product-schema";
 import {
   Form,
   FormField,
@@ -26,35 +31,14 @@ import type {
 } from "@/types/projects";
 import { upperCaseFieldChange } from "@/lib/case-field";
 
-const createSchema = z.object({
-  name: z.string().min(1, "Required").max(255),
-  key: z
-    .string()
-    .min(1, "Required")
-    .max(50)
-    .regex(/^[A-Z0-9_-]+$/, "Uppercase letters, digits, hyphens, or underscores only"),
-  description: z.string(),
-  ownerId: z.string(),
-});
-
-const editSchema = z.object({
-  name: z.string().min(1, "Required").max(255),
-  description: z.string(),
-  ownerId: z.string(),
-  status: z.enum(["active", "archived"]),
-});
-
-type CreateFormValues = z.infer<typeof createSchema>;
-type EditFormValues = z.infer<typeof editSchema>;
-
-const CREATE_DEFAULTS: CreateFormValues = {
+const CREATE_DEFAULTS: CreateManagedProductFormValues = {
   name: "",
   key: "",
   description: "",
   ownerId: "",
 };
 
-const EDIT_DEFAULTS: EditFormValues = {
+const EDIT_DEFAULTS: EditManagedProductFormValues = {
   name: "",
   description: "",
   ownerId: "",
@@ -63,7 +47,7 @@ const EDIT_DEFAULTS: EditFormValues = {
 
 const MANAGED_PRODUCT_STATUSES = ["active", "archived"] as const;
 
-function toEditForm(p: ManagedProduct): EditFormValues {
+function toEditForm(p: ManagedProduct): EditManagedProductFormValues {
   return {
     name: p.name,
     description: p.description ?? "",
@@ -103,13 +87,13 @@ export function ManagedProductFormSheet({
   onSubmitEdit,
   isPending,
 }: Props) {
-  const createForm = useForm<CreateFormValues>({
-    resolver: zodResolver(createSchema),
+  const createForm = useForm<CreateManagedProductFormValues>({
+    resolver: zodResolver(createManagedProductSchema),
     defaultValues: CREATE_DEFAULTS,
   });
 
-  const editForm = useForm<EditFormValues>({
-    resolver: zodResolver(editSchema),
+  const editForm = useForm<EditManagedProductFormValues>({
+    resolver: zodResolver(editManagedProductSchema),
     defaultValues: EDIT_DEFAULTS,
   });
 
@@ -127,7 +111,7 @@ export function ManagedProductFormSheet({
     }
   }, [open, mode, defaultValues, createForm, editForm]);
 
-  function handleCreateSubmit(v: CreateFormValues) {
+  function handleCreateSubmit(v: CreateManagedProductFormValues) {
     if (!onSubmitCreate) return;
     onSubmitCreate({
       name: v.name,
@@ -137,7 +121,7 @@ export function ManagedProductFormSheet({
     });
   }
 
-  function handleEditSubmit(v: EditFormValues) {
+  function handleEditSubmit(v: EditManagedProductFormValues) {
     if (!onSubmitEdit || !defaultValues) return;
     onSubmitEdit({
       managedProductId: defaultValues.id,

@@ -28,7 +28,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/lib/person-display";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm, Controller, useController } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { IntakeItemCard } from "@/features/build/intake/intake-item-card";
@@ -43,12 +42,9 @@ import {
   type CreateIntakeForm,
   acceptSchema,
   type AcceptForm,
+  declineIntakeSchema,
+  type DeclineIntakeForm,
 } from "@/features/build/intake/intake-schema";
-
-const declineSchema = z.object({
-  reason: z.string().min(1, "Reason is required"),
-});
-type DeclineForm = z.infer<typeof declineSchema>;
 
 const WORK_STATES = ["backlog", "todo", "in_progress", "done", "cancelled"] as const;
 
@@ -75,7 +71,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
 
   const createForm = useForm<CreateIntakeForm>({ resolver: zodResolver(createIntakeSchema) });
   const acceptForm = useForm<AcceptForm>({ resolver: zodResolver(acceptSchema) });
-  const declineForm = useForm<DeclineForm>({ resolver: zodResolver(declineSchema) });
+  const declineForm = useForm<DeclineIntakeForm>({ resolver: zodResolver(declineIntakeSchema) });
   useRegisterDirtyState(
     (createOpen && createForm.formState.isDirty) ||
     (acceptOpen && acceptForm.formState.isDirty) ||
@@ -128,7 +124,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
     );
   }, [selectedItemId, updateMutation, projectId, acceptForm]);
 
-  const onDeclineSubmit = useCallback((data: DeclineForm) => {
+  const onDeclineSubmit = useCallback((data: DeclineIntakeForm) => {
     if (selectedItemId === null) return;
     updateMutation.mutate(
       { intakeRequestId: selectedItemId, projectId, status: "declined", declineReason: data.reason },

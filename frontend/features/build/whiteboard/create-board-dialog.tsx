@@ -2,7 +2,10 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import {
+  createBoardSchema,
+  type CreateBoardFormValues,
+} from "@/features/build/whiteboard/whiteboard-schema";
 import {
   Dialog,
   DialogContent,
@@ -21,12 +24,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-
-const createBoardSchema = z.object({
-  name: z.string().min(1, "Board name is required"),
-});
-
-type CreateBoardFormValues = z.infer<typeof createBoardSchema>;
 
 interface CreateBoardDialogProps {
   open: boolean;

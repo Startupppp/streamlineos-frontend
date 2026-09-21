@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { createBugFromResultSchema, type CreateBugFromResultFormValues } from "./run-schema";
 import { useTestRunDetail, useUpdateTestRun, useCreateBugFromResult } from "@/hooks/api/build/qa";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -46,13 +46,6 @@ import {
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { ResultRow } from "./result-row";
 import type { TestRunStatus, TestRunCounts } from "@/types/projects";
-
-const createBugFromResultSchema = z.object({
-  bugTitle: z.string().min(1, "Title is required"),
-  bugSeverity: z.string(),
-});
-
-type CreateBugFromResultFormValues = z.infer<typeof createBugFromResultSchema>;
 
 const STATUS_STYLES: Record<string, string> = {
   not_started: "text-muted-foreground border-border",

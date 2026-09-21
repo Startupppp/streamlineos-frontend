@@ -4,7 +4,7 @@ import { memo, useState, useCallback, useMemo } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { customFieldSchema, type CustomFieldFormValues } from "./custom-fields-schema";
 import {
   useProjectCustomFields,
   useCreateProjectCustomField,
@@ -46,14 +46,6 @@ import type { CustomFieldType } from "@/types/projects/tasks";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
-
-const customFieldSchema = z.object({
-  fieldName: z.string().min(1, "Field name is required"),
-  fieldType: z.string(),
-  options: z.string(),
-});
-
-type CustomFieldFormValues = z.infer<typeof customFieldSchema>;
 
 const FIELD_TYPES: Array<{ value: CustomFieldType; label: string }> = [
   { value: "text", label: "Text" },

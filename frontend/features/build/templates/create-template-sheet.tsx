@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { createTemplateSchema, type CreateTemplateFormValues } from "./templates-schema";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -39,14 +39,6 @@ import { useCreateProjectTemplate } from "@/hooks/api/build";
 import { TicketRow, type TicketDraft } from "./ticket-row";
 
 const CATEGORIES = ["GENERAL", "SOFTWARE", "ONBOARDING", "MARKETING", "SALES", "HR"] as const;
-
-const createTemplateSchema = z.object({
-  name: z.string().min(1, "Template name is required"),
-  description: z.string(),
-  category: z.string(),
-});
-
-type CreateTemplateFormValues = z.infer<typeof createTemplateSchema>;
 
 interface CreateTemplateSheetProps {
   open: boolean;

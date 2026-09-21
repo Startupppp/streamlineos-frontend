@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { applyTemplateSchema, type ApplyTemplateFormValues } from "./templates-schema";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Badge } from "@/components/ui/badge";
@@ -29,15 +29,6 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { useApplyProjectTemplate, type ProjectTemplate } from "@/hooks/api/build";
 import { formatShortDate } from "@/lib/date-utils";
-
-const applyTemplateSchema = z.object({
-  name: z.string().min(1, "Project name is required"),
-  description: z.string(),
-  startDate: z.string(),
-  endDate: z.string(),
-});
-
-type ApplyTemplateFormValues = z.infer<typeof applyTemplateSchema>;
 
 interface ApplyTemplateDialogProps {
   template: ProjectTemplate;

@@ -3,7 +3,7 @@
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { changelogSchema, type ChangelogFormValues } from "./roadmap-schema";
 import {
   Form,
   FormField,
@@ -40,16 +40,6 @@ import {
 } from "@/hooks/api/build/roadmap";
 import type { ChangelogEntry } from "@/types/projects";
 import { CHANGELOG_TYPE_OPTIONS } from "./roadmap-constants";
-
-const changelogSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  content: z.string(),
-  type: z.enum(["feature", "improvement", "fix"]),
-  version: z.string(),
-  isPublished: z.boolean(),
-});
-
-type ChangelogFormValues = z.infer<typeof changelogSchema>;
 
 interface ChangelogSheetProps {
   entry?: ChangelogEntry;
