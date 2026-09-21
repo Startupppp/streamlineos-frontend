@@ -22,7 +22,6 @@ function memberName(row: TimesheetException): string {
 
 export interface ExceptionColumnOptions {
   canManage: boolean;
-  /** True while the queue is showing statuses other than OPEN. */
   showResolution: boolean;
   onResolve: (exception: TimesheetException) => void;
   onDismiss: (exception: TimesheetException) => void;
@@ -113,11 +112,6 @@ export function buildExceptionColumns({
     },
   ];
 
-  /**
-   * A closed exception is only auditable if you can see why it was closed.
-   * The reason is required at the API (min 3 chars) and was stored, displayed
-   * nowhere, so "Resolved" was an assertion with no evidence behind it.
-   */
   if (showResolution) {
     columns.push({
       key: "resolution",

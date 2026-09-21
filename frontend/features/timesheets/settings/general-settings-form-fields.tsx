@@ -49,12 +49,6 @@ const APPROVAL_OPTIONS: { value: ApprovalMode; label: string }[] = [
   { value: "MULTI_LEVEL", label: "Multi-level approval" },
 ];
 
-/*
- * Only what the server enforces. "Billable flag" and "Work link" were offered
- * here and checked nowhere — ticking either saved, showed a tick on reload, and
- * changed nothing about what anyone could log. `required-fields.test.ts` reads
- * the backend's own `if`s so a third inert option cannot appear.
- */
 const REQUIRED_FIELD_OPTIONS = CREATE_REQUIRED_FIELDS.map((key) => ({
   key,
   label: requiredFieldLabel(key),
@@ -64,10 +58,6 @@ interface GeneralSettingsFormFieldsProps {
   form: UseFormReturn<GeneralSettingsFormValues>;
   canManage: boolean;
   isPending: boolean;
-  /**
-   * The pending changes the server will refuse without a reason, derived by the
-   * form from the same diff its save sends.
-   */
   pendingMaterial: ReturnType<typeof materialChangesIn>;
 }
 

@@ -29,14 +29,8 @@ const bulkRejectC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-approvals-schema").then((m) => m.bulkRejectResponseContract),
 );
 
-/**
- * The approvals list accepts three of the seven period statuses; typing the
- * filter as the full `PeriodStatus` let a caller ask for `OPEN` and get a 400.
- */
 type ApprovalStatusFilter = Extract<PeriodStatus, "SUBMITTED" | "APPROVED" | "REJECTED">;
 
-/** One page of the approvals queue. Shared by the page header and the tab panel
- * so the two ask for the same rows under one cache key. */
 export const APPROVALS_PAGE_SIZE = 25;
 
 interface ApprovalsQuery {

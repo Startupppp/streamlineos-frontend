@@ -36,15 +36,6 @@ export function MyTimeView() {
   );
 
   const { weekStart, weekEnd, days, isCurrentWeek, goToPrev, goToNext, goToCurrent } = useWeek(weekStartsOn);
-  /*
-   * The result is stored WITH the week it ran for, and rendered only while that
-   * week is still on screen.
-   *
-   * A summary saying "3 draft entries created" is about one week; left on screen
-   * after paging it attributes those rows to a week that never had them. Storing
-   * the week and comparing beats clearing in an effect — there is no moment where
-   * the stale summary is shown before an effect gets round to removing it.
-   */
   const [draftResult, setDraftResult] = useState<{ week: string; result: AttendanceDraftResult } | null>(
     null,
   );
@@ -71,17 +62,6 @@ export function MyTimeView() {
     return label;
   }, [weekStart, weekEnd, totalHours]);
 
-  /*
-   * The same rule `periods.service.ts#submitPeriod` applies, run before the
-   * button rather than after it. The server refuses the whole period naming a
-   * row id — "Entry 4211 is missing a required description" — which is a
-   * number that appears on no screen, so the refusal arrived with nowhere to go.
-   *
-   * Scoped by `timesheetPeriodId` exactly as the server scopes it, over the
-   * entries this week has loaded. Anything in the period but outside the week
-   * on screen is still the server's to catch; this only ever removes surprises,
-   * never adds one.
-   */
   const incomplete = useMemo(() => {
     const required = settings?.requiredFields ?? [];
     if (!period || required.length === 0) return [];

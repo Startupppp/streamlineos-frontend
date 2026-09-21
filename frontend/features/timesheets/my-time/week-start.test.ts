@@ -8,11 +8,8 @@ describe("resolveWeekStart", () => {
   });
 
   it("falls back to the current period's start day when settings are unreadable", () => {
-    // 2026-09-06 is a Sunday; the backend built the period from workWeekStart=0.
     expect(resolveWeekStart(undefined, "2026-09-06")).toBe(0);
-    // 2026-09-07 is a Monday.
     expect(resolveWeekStart(undefined, "2026-09-07")).toBe(1);
-    // 2026-09-09 is a Wednesday — a genuinely unusual work week, still honoured.
     expect(resolveWeekStart(null, "2026-09-09")).toBe(3);
   });
 

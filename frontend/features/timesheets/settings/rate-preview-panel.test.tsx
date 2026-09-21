@@ -24,7 +24,6 @@ jest.mock("@/components/ui/user-combobox", () => ({
   UserCombobox: () => <div data-testid="user-combobox" />,
 }));
 
-/* RatesTab resolves permissions and loads rates; neither is what is under test. */
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
   usePermissionGate: () => ({ allowed: true, denied: false }),
@@ -37,12 +36,6 @@ jest.mock("@/hooks/api/timesheets-core/rates", () => ({
   useUpdateRate: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
-/*
- * The panel only queries once something is picked, so the state under test is
- * "a selection was made and the server answered". React state cannot be reached
- * from outside, so the query hook is what varies and the selection is implied
- * by the hook returning data — which is exactly the seam the component reads.
- */
 beforeEach(() => {
   previewState.data = undefined;
   previewState.isFetching = false;
@@ -58,14 +51,6 @@ describe("RatePreviewPanel", () => {
 });
 
 describe("RatePreviewResult", () => {
-  /**
-   * The reason this panel exists.
-   *
-   * `source: null` with `billRate: null` means no rate card matched and the
-   * person has no rate on the project, so time logged against that combination
-   * resolves to no bill rate at all. Rendering it as a blank or a zero would
-   * hide the one answer somebody needs before they invoice.
-   */
   it("says plainly when a combination would bill nothing", () => {
     render(
       <RatePreviewResult
@@ -108,11 +93,6 @@ describe("RatePreviewResult", () => {
   });
 });
 
-/**
- * A component with a green unit test and no mount point is this effort's
- * signature defect, and `rate-preview` is a fresh example of it — the endpoint
- * shipped with a query key and no caller. So the mount is asserted.
- */
 describe("the rates tab mounts the preview", () => {
   it("renders it above the rate table", () => {
     render(<RatesTab />);

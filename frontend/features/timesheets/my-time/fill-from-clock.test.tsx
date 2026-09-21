@@ -13,26 +13,12 @@ function result(over: Partial<AttendanceDraftResult> = {}): AttendanceDraftResul
   };
 }
 
-/**
- * The endpoint answers five things at once, and flattening them is the bug.
- *
- * `POST /timesheets/entries/from-attendance` had no caller at all, so nothing
- * had ever had to decide what its result means. The trap is that four of the
- * five outcomes have `entriesCreated: 0`, and they are not the same thing:
- * "your organisation has not switched this on" is not "your clock produced no
- * hours", and neither is "those days are already logged".
- */
 describe("what a draft-from-attendance result means", () => {
   it("says the policy is off rather than reporting zero entries", () => {
     const { tone, headline, detail } = describeDraftResult(result({ enabled: false }));
 
     expect(tone).toBe("info");
     expect(headline).toMatch(/switched off/i);
-    /*
-     * The assertion that carries the finding. `enabled: false` means nothing was
-     * read and nothing was written, so a "0" here would be a claim about the
-     * person's clock that the server never made.
-     */
     expect(headline).not.toMatch(/\b0\b/);
     expect(detail).toMatch(/nothing was read/i);
   });

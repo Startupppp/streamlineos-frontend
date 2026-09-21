@@ -52,7 +52,6 @@ function buildSubtitle(start: string, end: string): string {
       return `${format(s, "MMM d")} – ${format(e, "MMM d, yyyy")}`;
     }
   } catch {
-    // fall through
   }
   return "";
 }

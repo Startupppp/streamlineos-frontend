@@ -31,11 +31,6 @@ export function deriveRows(entries: TimesheetEntry[]): GridRow[] {
   return [...map.values()];
 }
 
-/**
- * Locked means the row is settled, not that the cell is unreachable: a locked
- * cell stays focusable and says it is locked, so a keyboard user can read it
- * rather than having it skipped silently.
- */
 export function isCellLocked(entry: TimesheetEntry | undefined): boolean {
   return !!entry?.lockedAt || entry?.status === "APPROVED";
 }

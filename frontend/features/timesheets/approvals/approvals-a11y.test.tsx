@@ -154,10 +154,6 @@ describe("approvals accessibility", () => {
     if (!first) throw new Error("no row checkbox");
     await user.click(first);
 
-    /**
-     * Re-queried: the toolbar appearing remounts the table, so the node
-     * captured before the click is detached and answers for nothing.
-     */
     expect(screen.getAllByRole("checkbox", { name: "Select row" })[0]).toBeChecked();
     expect(screen.getByText("1 selected")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Approve" })).toBeInTheDocument();

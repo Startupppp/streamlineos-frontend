@@ -36,11 +36,6 @@ export function usePeriod(periodId: number | null) {
   });
 }
 
-/**
- * Each action passes its own literal path rather than interpolating the action
- * name: a path segment built from a variable is a path the contract scan cannot
- * read, so drift on it would never be reported.
- */
 function usePeriodAction(
   action: "submit" | "recall",
   message: string,

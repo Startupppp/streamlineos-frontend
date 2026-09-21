@@ -235,11 +235,6 @@ export function RatesTab() {
         Higher priority overrides lower. Scope specificity: user &gt; project &gt; task &gt; client &gt; any.
       </p>
 
-      {/*
-        Above the table, because it answers the question the sentence above
-        raises: those precedence rules are exactly what makes "which card wins
-        here?" hard to read off the rows.
-      */}
       <RatePreviewPanel />
 
       <DataTable

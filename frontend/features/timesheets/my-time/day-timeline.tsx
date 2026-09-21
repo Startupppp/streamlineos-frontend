@@ -96,19 +96,7 @@ const EntryRow = memo(function EntryRow({ entry, onEdit, onVoid }: EntryRowProps
 });
 
 export function DayTimeline({ entries, days, weekStart, weekEnd }: DayTimelineProps) {
-  /**
-   * `entries` arrives from a query gated on this key, so "no entries" and "you
-   * may not see the entries" reach this component as the same empty array.
-   * The route redirects a denied caller before it renders, but the empty state
-   * is the thing that would state the falsehood if that ever stopped being
-   * true, so it carries the gate rather than relying on the redirect.
-   */
   const access = usePermissionGate("timesheets:entries:view");
-  /**
-   * Same query key as the week grid's, so this is a cache read rather than a
-   * second request. A holiday that disappears when you switch from Week to Day
-   * is a holiday the org does not really have.
-   */
   const { data: holidayData } = useTimesheetHolidays(weekStart, weekEnd);
   const holidayByDate = useMemo(
     () => new Map((holidayData?.holidays ?? []).map((h) => [h.date, h.name])),

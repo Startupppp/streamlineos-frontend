@@ -22,19 +22,6 @@ function asWeekStartDay(value: number): WeekStartDay | null {
   return value as WeekStartDay;
 }
 
-/**
- * Which day the organisation's week begins on.
- *
- * `workWeekStart` on the org settings is the authority, but `GET
- * /timesheets/settings` requires `timesheets:settings:view`, which the people
- * who actually fill in a timesheet do not hold — so for most viewers the hook
- * is disabled and this argument is `undefined`. The fallback is not a guess:
- * `PeriodsService.getCurrent` builds the period from `weekRange(now,
- * workWeekStart)`, so the current period's `periodStart` lands on exactly that
- * day and is readable with `timesheets:entries:view`. Monday is the last
- * resort, matching the column default, and is reached only when neither call
- * has answered.
- */
 export function resolveWeekStart(
   settingsWeekStart: number | null | undefined,
   currentPeriodStart: string | null | undefined,

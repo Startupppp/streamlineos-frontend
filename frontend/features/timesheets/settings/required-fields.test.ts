@@ -41,11 +41,6 @@ describe("missingOnCreate", () => {
 });
 
 describe("missingOnSubmit", () => {
-  /*
-   * Submitting a period is checked against two fields, creating an entry
-   * against three. An entry logged before `ticket` was made required still
-   * submits; that is the server's behaviour and the reason these are two lists.
-   */
   it("does not hold a period back for a missing ticket", () => {
     expect(missingOnSubmit(["ticket"], EMPTY)).toEqual([]);
     expect(missingOnCreate(["ticket"], EMPTY)).toEqual(["ticket"]);
@@ -59,16 +54,6 @@ describe("missingOnSubmit", () => {
   });
 });
 
-/**
- * The drift guard, and the reason this file exists.
- *
- * `requiredFields` is enforced by hand-written `if`s inside two services, not
- * by a Zod schema, so no contract test could see it. The log-time form never
- * knew the setting existed: an org that ticked "Description" got
- * `Field 'description' is required` as a toast on every save, and an org that
- * ticked "Billable flag" got a setting that did nothing at all. Both halves of
- * that come from the same place — nobody comparing the two lists.
- */
 describe("the required-field lists match the backend", () => {
   function enforcedIn(relativePath: string): string[] {
     const src = readFileSync(backendPath(relativePath), "utf8");
