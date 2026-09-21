@@ -4,6 +4,12 @@
 > [Build execution ledger](../../docs/specs/build/README.md). This file remains
 > the criterion registry and traceability source for every module; restored
 > 2026-09-21 after `e192ec53b` removed it without recording the removal.
+>
+> **Its checkbox states are those of 2026-09-13 and nothing reconciled them
+> during the week it was deleted.** Treat every tick as an opening claim, not
+> evidence: confirm against current source and the latest appended evidence
+> before relying on one, per CLAUDE.md §12. Build work landed in that window is
+> in the ledger's cycle sections, not here.
 
 Updated 2026-09-13. **The only execution checklist.** Follow the priority and dependency order below; complete prerequisites first and revisit waiting acceptance. One Claude session can perform every role sequentially. Original module PRDs have been consolidated here and removed as superseded, not falsely marked complete. Existing evidence is reference only. Do not create another PRD, history, session report or PDF task list.
 
