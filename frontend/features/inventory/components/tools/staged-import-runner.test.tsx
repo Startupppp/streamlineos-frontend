@@ -42,7 +42,10 @@ jest.mock("@/hooks/api/inventory/staged-import", () => ({
   checksumOf: async () => "deadbeefdeadbeef",
 }));
 
-jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => true,
+  useCanState: () => "granted",
+}));
 
 function progress(overrides: Partial<StagedImportProgress> = {}): StagedImportProgress {
   return {

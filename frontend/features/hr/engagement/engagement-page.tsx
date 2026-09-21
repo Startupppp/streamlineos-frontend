@@ -33,8 +33,9 @@ const recognitionRowContract = lazyContract(() =>
 );
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { PageState } from "@/components/shared/page-state";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { useEngagementOverview, useMyMoodHistory, useOrgMoodAggregate } from "@/hooks/api/hr/engagement";
@@ -382,7 +383,7 @@ export function HrEngagementPage() {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? "";
-  const canViewEngagement = useCan("hr:engagement:view");
+  const pageState = usePageState({ permission: "hr:engagement:view", isLoading: false, isError: false });
 
   const tabContent = useMemo(() => {
     switch (activeTab) {
@@ -395,41 +396,32 @@ export function HrEngagementPage() {
     }
   }, [activeTab, currentUserId]);
 
-  if (!canViewEngagement) {
-    return (
-      <PageWrapper
-        title="Employee Engagement"
-        subtitle="Recognition, mood, communities, and culture"
-      >
-        <NoPermissionState permission="hr:engagement:view" />
-      </PageWrapper>
-    );
-  }
-
   return (
     <PageWrapper
       title="Employee Engagement"
       subtitle="Recognition, mood, communities, and culture"
     >
-      <div className="flex flex-1 min-h-0 flex-col gap-4">
-        <FilterPillGroup className="flex-wrap overflow-x-visible">
-          {TABS.map((tab) => (
-            <EngagementTabPill key={tab.id} tab={tab} activeTab={activeTab} onSelect={setActiveTab} />
-          ))}
-        </FilterPillGroup>
+      <PageState resolution={pageState} loading={null} className="flex-1">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <FilterPillGroup className="flex-wrap overflow-x-visible">
+            {TABS.map((tab) => (
+              <EngagementTabPill key={tab.id} tab={tab} activeTab={activeTab} onSelect={setActiveTab} />
+            ))}
+          </FilterPillGroup>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, x: 24 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -24 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
-          >
-            {tabContent}
-          </motion.div>
-        </AnimatePresence>
-      </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -24 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+            >
+              {tabContent}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </PageState>
     </PageWrapper>
   );
 }

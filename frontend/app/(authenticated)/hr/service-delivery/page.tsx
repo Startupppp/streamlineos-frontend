@@ -5,9 +5,9 @@ import { AlertTriangle, Info, LifeBuoy, Shield, Briefcase } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
 import {
   useServiceDeliveryOpsInbox,
@@ -89,6 +89,8 @@ export default function ServiceDeliveryPage() {
   const error = showOps ? opsError : myError;
   const refetch = showOps ? refetchOps : refetchMine;
   const items = data?.items ?? [];
+  const isError = !!error;
+  const pageState = usePageState({ isLoading: false, isError, error });
 
   return (
     <PageWrapper
@@ -141,17 +143,16 @@ export default function ServiceDeliveryPage() {
           </StatCardGrid>
         )}
 
-        {isLoading ? (
+        {pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading" ? (
+          <PageState resolution={pageState} loading={null} onRetry={() => void refetch()}>
+            {null}
+          </PageState>
+        ) : isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} className="h-14 w-full rounded-lg" />
             ))}
           </div>
-        ) : error ? (
-          <ErrorState
-            description={getErrorMessage(error)}
-            onRetry={() => void refetch()}
-          />
         ) : items.length === 0 ? (
           <EmptyState
             title="Nothing open"

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { AppSheet, ErrorState } from "@/components/shared";
+import { AppSheet, ErrorState, NoPermissionState } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,6 +21,7 @@ import {
   type PackingReconciliationLine,
 } from "@/hooks/api/inventory/packing";
 import { useScanTarget } from "@/features/inventory/hooks/use-scan-target";
+import { useCanState } from "@/hooks/api/access";
 import { scanNamesVariant, type ResolvedScan } from "@/features/inventory/lib/scan-resolution";
 import { ScanField } from "@/features/inventory/components/scan";
 import { PackingCartonPicker } from "@/features/inventory/components/operations/packing-carton-picker";
@@ -81,6 +82,7 @@ function QuantityList({
  * is in the packer's hand — rather than at close with the box already taped.
  */
 export function PackingStationSheet({ open, onOpenChange, row }: PackingStationSheetProps) {
+  const packingState = useCanState("inventory:packages:manage");
   const [cartonTypeId, setCartonTypeId] = useState<string>("");
   const [suggestion, setSuggestion] = useState<CartonSuggestion | null>(null);
 
@@ -216,7 +218,9 @@ export function PackingStationSheet({ open, onOpenChange, row }: PackingStationS
         </div>
       }
     >
-      {packageId === null ? (
+      {packingState === "denied" ? (
+        <NoPermissionState compact permission="inventory:packages:manage" />
+      ) : packageId === null ? (
         <div className="space-y-3">
           <p className={cn("text-muted-foreground", typeScaleClass("dense"))}>
             No carton is open for this order yet. Opening one starts the manifest; nothing moves
@@ -231,7 +235,7 @@ export function PackingStationSheet({ open, onOpenChange, row }: PackingStationS
             Open a carton
           </LoadingButton>
         </div>
-      ) : reconciliation.isLoading ? (
+      ) : reconciliation.isPending ? (
         <div className="space-y-3">
           <Skeleton className="h-9 w-full" />
           <Skeleton className="h-24 w-full" />

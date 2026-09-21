@@ -17,8 +17,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCan } from "@/hooks/api/access";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { ErrorState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useEntityVersions } from "@/hooks/api/hr/settings-hub";
 import type { VersionEntity } from "@/hooks/api/hr/settings-hub";
 import { useActivatePolicy } from "@/hooks/api/hr/policies";
@@ -44,7 +45,6 @@ function formatDate(val: unknown): string {
 }
 
 export function PolicyVersionsPage() {
-  const canView = useCan("hr:policies:view");
   const canManage = useCan("hr:policies:manage");
 
   const [entity, setEntity] = useState<VersionEntity>("policy");
@@ -65,6 +65,8 @@ export function PolicyVersionsPage() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const pageState = usePageState({ permission: "hr:policies:view", isLoading: false, isError, error });
 
   const handleSearch = useCallback(() => {
     const parsed = Number(idInput);
@@ -89,23 +91,12 @@ export function PolicyVersionsPage() {
     [activate],
   );
 
-  if (!canView) {
-    return (
-      <PageWrapper title="Version History" subtitle="Browse version lineage and rollback policies, templates, and workflows">
-        <NoPermissionState
-          permission="hr:policies:view"
-          title="Access Restricted"
-          description="You don't have permission to view HR version history. HR Admin role is required."
-        />
-      </PageWrapper>
-    );
-  }
-
   return (
     <PageWrapper
       title="Version History"
       subtitle="Browse version lineage and rollback policies, templates, and workflows"
     >
+      <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
       <div className="flex flex-1 min-h-0 flex-col gap-4 px-4 sm:px-6 py-4">
         <div className={FILTER_TOOLBAR_ROW}>
           <Select
@@ -194,6 +185,7 @@ export function PolicyVersionsPage() {
           </div>
         )}
       </div>
+      </PageState>
     </PageWrapper>
   );
 }

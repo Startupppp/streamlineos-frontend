@@ -23,7 +23,8 @@ import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useHrTemplates, useSeedHrTemplateDefaults } from "@/hooks/api/hr/hr-templates";
 import { KindBadge, StatusBadge } from "@/features/hr/templates/template-kind-badge";
 import { TemplateUpsertSheet } from "@/features/hr/templates/template-upsert-sheet";
@@ -106,7 +107,6 @@ function buildTemplateColumns(
 }
 
 export function TemplatesSettingsPage() {
-  const canView = useCan("hr:templates:view");
   const canManage = useCan("hr:templates:manage");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
@@ -129,8 +129,10 @@ export function TemplatesSettingsPage() {
     [kind, status, debouncedSearch, cursor],
   );
 
-  const { data, isLoading, isFetching, isError } = useHrTemplates(params);
+  const { data, isLoading, isFetching, isError, error } = useHrTemplates(params);
   const seedDefaults = useSeedHrTemplateDefaults();
+
+  const pageState = usePageState({ permission: "hr:templates:view", isLoading: false, isError, error });
 
   const handleOpenCreate = useCallback(() => {
     setEditingTemplate(undefined);
@@ -185,18 +187,6 @@ export function TemplatesSettingsPage() {
 
   const templates = data?.data ?? [];
   const total = data?.total ?? 0;
-
-  if (!canView) {
-    return (
-      <PageWrapper title="HR Templates" subtitle="Unified template library for checklists, letters, reviews, surveys, and more.">
-        <NoPermissionState
-          permission="hr:templates:view"
-          title="Access Restricted"
-          description="You don't have permission to view HR templates. HR Admin role is required."
-        />
-      </PageWrapper>
-    );
-  }
 
   return (
     <>
@@ -267,39 +257,33 @@ export function TemplatesSettingsPage() {
           </div>
         }
       >
-        <DataTable<HrTemplateListItem>
-          className="flex-1 min-h-0"
-          data={templates}
-          columns={buildTemplateColumns(handleOpenEdit)}
-          getRowKey={(t) => t.id}
-          isLoading={isLoading}
-          emptyState={
-            isError ? (
-              <EmptyState
-                illustrationPreset="alert"
-                title="Failed to load templates"
-                description="Could not fetch templates. Please try again."
-              />
-            ) : (
+        <PageState resolution={pageState} loading={null} className="flex-1">
+          <DataTable<HrTemplateListItem>
+            className="flex-1 min-h-0"
+            data={templates}
+            columns={buildTemplateColumns(handleOpenEdit)}
+            getRowKey={(t) => t.id}
+            isLoading={isLoading}
+            emptyState={
               <EmptyState
                 illustrationPreset="documents"
                 title="No templates yet"
                 description="Create your first template or seed default templates to get started."
                 action={{ label: "New Template", onClick: handleOpenCreate }}
               />
-            )
-          }
-        />
-        {data && (page > 1 || data.pagination.hasMore) ? (
-          <CursorPageControls
-            page={page}
-            hasNext={data.pagination.hasMore}
-            disabled={isFetching}
-            onPrevious={handlePreviousPage}
-            onNext={handleNextPage}
-            className="mt-3"
+            }
           />
-        ) : null}
+          {data && (page > 1 || data.pagination.hasMore) ? (
+            <CursorPageControls
+              page={page}
+              hasNext={data.pagination.hasMore}
+              disabled={isFetching}
+              onPrevious={handlePreviousPage}
+              onNext={handleNextPage}
+              className="mt-3"
+            />
+          ) : null}
+        </PageState>
       </PageWrapper>
 
       <TemplateUpsertSheet

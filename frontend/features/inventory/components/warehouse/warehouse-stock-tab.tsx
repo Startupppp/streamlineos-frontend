@@ -4,8 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { useWarehouseStock } from "@/hooks/api/inventory/warehouses";
+import { useCanState } from "@/hooks/api/access";
 import type { WarehouseStockRow } from "@/types/inventory";
 
 interface WarehouseStockTabProps {
@@ -76,8 +77,9 @@ const columns: DataTableColumn<WarehouseStockRow>[] = [
 ];
 
 export function WarehouseStockTab({ warehouseId }: WarehouseStockTabProps) {
+  const stockState = useCanState("inventory:stock:read");
   const [page, setPage] = useState(1);
-  const { data, isLoading, isError, refetch } = useWarehouseStock(warehouseId, {
+  const { data, isPending, isError, refetch } = useWarehouseStock(warehouseId, {
     page,
     limit: 20,
   });
@@ -90,7 +92,8 @@ export function WarehouseStockTab({ warehouseId }: WarehouseStockTabProps) {
     setPage(newPage);
   }
 
-  if (isLoading) return <DataTableSkeleton rows={8} columns={6} />;
+  if (stockState === "denied") return <NoPermissionState compact permission="inventory:stock:read" />;
+  if (isPending) return <DataTableSkeleton rows={8} columns={6} />;
 
   if (isError) {
     return (

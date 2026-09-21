@@ -11,7 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCan } from "@/hooks/api/access";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   useWorkforceCostSummary,
   useCostByDepartment,
@@ -25,7 +26,6 @@ function formatCents(v: unknown): string {
 }
 
 export function WorkforceCostPage() {
-  const canView = useCan("hr:analytics:read");
   const [periodKey, setPeriodKey] = useState(`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`);
   const [periodInput, setPeriodInput] = useState(periodKey);
 
@@ -33,23 +33,18 @@ export function WorkforceCostPage() {
   const { data: byDept, isLoading: deptLoading, isError: deptIsError, error: deptError, refetch: refetchDept } = useCostByDepartment(periodKey);
   const { data: byLoc, isLoading: locLoading, isError: locIsError, error: locError, refetch: refetchLoc } = useCostByLocation();
 
+  const pageState = usePageState({ permission: "hr:analytics:read", isLoading: summaryLoading, isError: summaryIsError, error: summaryError });
+
   function handleRetrySummary() { void refetchSummary(); }
   function handleRetryDept() { void refetchDept(); }
   function handleRetryLoc() { void refetchLoc(); }
-
-  if (!canView) {
-    return (
-      <PageWrapper title="Workforce Costing" subtitle="Cost analytics by department and location">
-        <p className="text-sm text-muted-foreground">You do not have permission to view workforce cost data.</p>
-      </PageWrapper>
-    );
-  }
 
   return (
     <PageWrapper
       title="Workforce Costing"
       subtitle="Real-time cost breakdown by department and location"
     >
+      <PageState resolution={pageState} loading={null} onRetry={handleRetrySummary} className="flex-1">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -153,6 +148,7 @@ export function WorkforceCostPage() {
           </div>
         </div>
       </motion.div>
+      </PageState>
     </PageWrapper>
   );
 }
