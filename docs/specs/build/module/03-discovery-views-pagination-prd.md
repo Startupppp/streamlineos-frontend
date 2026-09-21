@@ -229,7 +229,20 @@ It never stores a cursor, tenant ID from the client, or unauthorized option.
   archive, and delete are permission checked.
 - [ ] **BLD-03-020** opening a view reports missing/archived fields and offers a
   safe repair rather than silently changing meaning.
-- [ ] **BLD-03-021** private views cannot be resolved by another actor.
+- [x] **BLD-03-021** private views cannot be resolved by another actor.
+  **Closed — source proof plus a bite-proven regression test (2026-09-21).**
+  `ViewsService` exposes no get-by-id route: `workspace.controller.ts:166-266`
+  registers list/create/update/delete only, at both project and workspace scope.
+  Both read paths narrow the WHERE to
+  `or(visibility = "shared", createdBy = userId)`
+  (`workspace.service.ts:234-240`, `:300-306`), and all four mutation paths
+  reject a non-owner private view with `ForbiddenException`
+  (`:271-274`, `:288-291`, `:342-345`, `:364-367`) — 403 rather than 404
+  because the caller is inside the correct tenant.
+  Eight tests added to `workspace-tenant-isolation.spec.ts`, including the
+  shared-view and owner controls so the guard is proven to gate privacy rather
+  than authorship. Bite-proved: neutering the four guards fails exactly the
+  four negative tests.
 - [ ] **BLD-03-022** default-view resolution has a deterministic fallback when
   access is revoked.
 

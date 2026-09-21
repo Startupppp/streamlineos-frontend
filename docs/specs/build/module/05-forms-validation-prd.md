@@ -270,10 +270,17 @@ organization switch, sign-out, and programmatic post-action navigation.
 - [ ] **BLD-05-036** the Intake accept mutation submits every field displayed
   by its form or removes the field; assignee, Cycle, and module cannot be
   collected and discarded.
-- [ ] **BLD-05-037** every non-trivial inline Build Zod object is moved to its
+- [x] **BLD-05-037** every non-trivial inline Build Zod object is moved to its
   one owning `*-schema.ts` only after confirming no canonical schema already
   exists; the root constitution's trivial single-field guard exception remains
-  valid.
+  valid. **Closed — source proof 2026-09-21.** `z.object(` outside a
+  `*-schema.ts` returns zero files across `frontend/features/build/**` and
+  `frontend/app/(authenticated)/build/**`; so do `z.discriminatedUnion(`,
+  `z.tuple(` and `z.record(`, which the original `z.object`-only census would
+  have missed.
+  ⚠ This does **not** also close `BLD-05A-003`, whose text adds "no duplicate
+  shape remains". Absence of inline objects does not prove absence of two
+  `*-schema.ts` files declaring one shape; that clause is still unproven.
 
 ## Acceptance
 

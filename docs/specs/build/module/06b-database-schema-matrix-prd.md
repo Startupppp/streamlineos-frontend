@@ -106,8 +106,14 @@ deliveries, incident timelines, drafts, and ticket history require:
 
 ## Completion Checks
 
-- [ ] **BLD-06B-006** all 36 current Build schema files appear exactly once in
-  this matrix.
+- [x] **BLD-06B-006** all 36 current Build schema files appear exactly once in
+  this matrix. **Closed — set equality measured 2026-09-21.**
+  `backend/src/db/schema/build/*.ts` holds 36 files; this matrix names 36
+  distinct `.ts` filenames. `comm` over both sorted sets returns empty in both
+  directions (no file missing from the matrix, no matrix row naming an absent
+  file), and no filename heads more than one table row.
+  This certifies coverage of the matrix, not the correctness of any row's
+  owner, index or retention claim.
 - [ ] **BLD-06B-007** every table maps to exactly one canonical service/module
   owner and every owner has tenant/data-scope tests.
 - [ ] **BLD-06B-008** no duplicate Sprint/Cycle, BUG/ticket, meeting/event,
