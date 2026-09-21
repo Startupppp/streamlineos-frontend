@@ -883,7 +883,7 @@ pool deliberately contains more READY work than execution slots:
 | Backend leaf | `BLD-X-BE-PROJECT-DIR-001`, `-PROJECT-WRITE-001`, `-TICKET-LIST-001`, `-TICKET-DETAIL-001`, `-TICKET-WRITE-001` | `INTEGRATED` (cycle 7) | All under `build/core/` (93 production files). `core/dto/` is split per resource and IS disjointable. The real contention is `projects-tickets.controller.ts`, shared by TICKET-LIST, TICKET-DETAIL and TICKET-WRITE — give it to exactly one of the three and let the other two own service + DTO only, or run them serially |
 | Backend leaf | `BLD-X-BE-BULK-001`, `-REPORT-001` | `INTEGRATED` (cycle 8) | The last two `build/core/` packets. **The Build backend core lane is closed** — remaining Build work is the 19 frontend packets, the negative-assertion sweep and the unapplied migration |
 | Backend sweep | `BLD-X-BE-E2E-STATUS-001` | `BLOCKED` — needs a disposable Postgres; see the production-e2e section above | Replace negative-only status assertions with the exact expected status; fix each endpoint or mock the change exposes. **The 52-file figure counted only `not.toBe(401)`/`not.toBe(403)`. Counting every evasive form — `not.toBe(4xx)`, `not.toEqual(4xx)`, `not.toBe(HttpStatus.*)` — the real inventory is 73 files**, so a `400` from a broken `.strict()` schema passes them all. Clusters: `build` 13, `kb` 6, `test/` 5, `inventory` 4, then `timesheets`/`organization`/`invoices`/`hr`/`e-sign`/`deals`/`crm`/`autonomy`/`ai` at 2 each and 30 modules at 1. Split per owning module; never one agent across the sweep |
-| Backend migration | `BLD-X-DB-BUILD-VERSION-001` | `CODE_COMPLETE`, **unapplied** | Authored as `1128_build_optimistic_concurrency_and_update_publication.sql`, journal idx 1016. `version` on all 9 tables; `audience`/`status`/`published_at` + publication CHECK + partial published-audience cursor index on `project_updates`; `review_date`/`category` + review-date index on `project_risks`; self-referencing composite `superseded_by_id` FK (PostgreSQL 15 column-list `SET NULL`), self-supersession CHECK and partial index on `project_decisions`; `(org_id, run_id, id)` on `test_run_results`. Drizzle schema updated to match. **Application and reconciliation remain a separate `BLD-X-DB-MIG-*` packet** — needs the named disposable database |
+| Backend migration | `BLD-X-DB-BUILD-VERSION-001` | **`APPLIED + VERIFIED` on production Aurora 2026-09-21** — see the Cycle 18 migration record below | Authored as `1128_build_optimistic_concurrency_and_update_publication.sql`, journal idx 1016. `version` on all 9 tables; `audience`/`status`/`published_at` + publication CHECK + partial published-audience cursor index on `project_updates`; `review_date`/`category` + review-date index on `project_risks`; self-referencing composite `superseded_by_id` FK (PostgreSQL 15 column-list `SET NULL`), self-supersession CHECK and partial index on `project_decisions`; `(org_id, run_id, id)` on `test_run_results`. Drizzle schema updated to match. **Application and reconciliation remain a separate `BLD-X-DB-MIG-*` packet** — needs the named disposable database |
 
 ### Remaining frontend and sidebar dispatch plan
 
@@ -1262,6 +1262,64 @@ because `organizationHref` independently re-verifies org-level authorization
 before promoting anything, but the underlying signal is still the wrong shape.
 Fixing it means touching `use-build-nav-model.ts`, which was reserved to another
 packet at the time. Carried forward.
+
+### Migration record — `1128` applied to production Aurora, 2026-09-21
+
+**Authorized by the user after the risk was stated explicitly.** Target is
+`streamlineos-instance-1.c94aokgu6g21.ap-south-1.rds.amazonaws.com/streamlineos`
+(PostgreSQL 18.4, ap-south-1), reached with RDS **IAM auth** — the URL carries no
+password, so the migration scripts die `28P01` without a minted token, which reads
+exactly like a rotated credential and is not one.
+
+**`pnpm db:migrate` was NOT used and must never be used here.** Production's
+`drizzle.__drizzle_migrations` is near-empty against ~1,100 journal files, so the
+bare command queues the entire journal and starts re-running `0000`. The safe
+path is one tag at a time:
+
+```
+node <wrapper> src/scripts/run-pending-migrations.mjs \
+  --tag=1128_build_optimistic_concurrency_and_update_publication [--dry-run]
+```
+
+The wrapper (kept outside the repo, since another session's cleanup deletes
+untracked files) mints an IAM token via `@aws-sdk/rds-signer`, sets it as the URL
+password, adds `sslmode=require`, and spawns the runner with
+`ALLOW_PRODUCTION_MIGRATION=1` and `cwd` = backend.
+
+**Pre-flight checks that mattered.** The known trap is that Build tables live in
+Postgres schema `build`, which is **not** on the runner's `search_path` — an
+unqualified `ALTER TABLE "project_risks"` fails `relation does not exist` (rolling
+back cleanly). `1128` was checked first and is fully schema-qualified, including
+the `ON "build"."…"` clause of all four `CREATE INDEX` statements, which sits on
+the line *after* the `CREATE INDEX`, so a single-line grep reports false
+negatives. Dry-run reported **30 statements**; the real run applied.
+
+**Verified by direct query, not by the runner's success line** (a migration is
+unverified until proven at the database):
+
+| Check | Result |
+|---|---|
+| `project_updates.audience` / `.status` / `.published_at` | present — enums `NOT NULL` defaulting `internal` / `draft`; `published_at` timestamptz nullable |
+| `project_risks.review_date` / `.category` | present |
+| `project_decisions.superseded_by_id` | present |
+| `version` column | present on 13 `build` tables |
+| `chk_project_updates_published_at`, `chk_project_decisions_not_self_superseded` | exist, **`convalidated = true`** |
+| `fk_project_decisions_org_superseded_by` | exists, **`convalidated = true`**, `FOREIGN KEY (org_id, superseded_by_id) REFERENCES build.project_decisions(org_id, id) ON DELETE SET NULL (superseded_by_id)` — the PG15 column-list form |
+| 4 partial indexes | all present |
+
+**Coordinator error worth recording:** the first verification probe queried
+`fk_project_decisions_superseded_by`, a **guessed** constraint name, and found
+nothing. The real name is `fk_project_decisions_org_superseded_by`. A guessed
+identifier reading as a missing object is the same failure mode as a scan whose
+pattern matches nothing — the absence was in the query, not the database. Always
+read the constraint name out of the migration before asserting it is missing.
+
+**This closes the deploy-ordering hazard** filed against the governance packets:
+`risks.service.ts` / `decisions.service.ts` use a bare `.select()` that expands to
+the full column list including `1128`'s columns, which would have thrown `42703`
+→ 500 on every governance read against a database without the migration. Those
+columns now exist in production. The columns remain **contract-omitted** on the
+frontend (silently stripped, harmless) until a packet builds UI for them.
 
 ### Cycle 17 outcomes
 
