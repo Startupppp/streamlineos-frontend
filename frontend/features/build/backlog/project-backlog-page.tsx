@@ -268,6 +268,16 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     [data?.key],
   );
 
+  if (isLoading) {
+    return (
+      <PageWrapper title="Backlog" subtitle="Loading...">
+        <DataTableSkeleton rows={12} columns={7} className="flex-1 min-h-0" />
+      </PageWrapper>
+    );
+  }
+
+  // A failure to READ the project is not a project that is gone: only the
+  // fallback's resolved 404 reaches notFound().
   if (projectError) {
     return (
       <ProjectLoadFallback
@@ -314,6 +324,11 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
           />
         ) : null}
 
+        {/*
+          A 500 on GET /build/:id/tickets flattens to `[]` here, so the table
+          used to render "No tickets yet" over a project with thousands and
+          people created duplicates.
+        */}
         <PageState
           resolution={resolution}
           loading={<DataTableSkeleton rows={12} columns={7} className="flex-1 min-h-0" />}

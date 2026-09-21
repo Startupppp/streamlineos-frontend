@@ -70,23 +70,11 @@ describe("extractProjectId — regex fix", () => {
   });
 });
 
-describe("/ shortcut — global palette handler yields to in-page search", () => {
-  it("opens the palette when / is pressed and no [data-search-input] exists", () => {
+describe("/ shortcut — global palette handler", () => {
+  it("opens the palette when / is pressed", () => {
     renderHook(() => useKeyboardShortcuts());
     press("/");
     expect(mockSetPaletteOpen).toHaveBeenCalledWith(true);
-  });
-
-  it("does not open the palette when / is pressed and [data-search-input] is present", () => {
-    const searchEl = document.createElement("input");
-    searchEl.setAttribute("data-search-input", "");
-    document.body.appendChild(searchEl);
-
-    renderHook(() => useKeyboardShortcuts());
-    press("/");
-
-    expect(mockSetPaletteOpen).not.toHaveBeenCalled();
-    document.body.removeChild(searchEl);
   });
 
   it("does not open the palette when / is pressed inside an input element", () => {

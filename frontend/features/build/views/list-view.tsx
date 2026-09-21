@@ -29,6 +29,7 @@ import {
   encodeNestedAccordionValue,
   buildGroupFieldPatch,
   applyLocalPatch,
+  useItemSelectHandler,
 } from "./list-view-shared";
 import { compareByRank, computeOptimisticRank } from "./kanban-board-utils";
 import { ListViewItem } from "./list-view-item";
@@ -68,16 +69,7 @@ export const ListView = memo(function ListView({
     setVisibleFlatCount((count) => count + LIST_RENDER_PAGE_SIZE);
   }, []);
 
-  const handleItemSelect = useCallback(
-    (id: string | number, checked: boolean) => {
-      if (!selection) return;
-      const next = new Set(selection.selected);
-      if (checked) next.add(id);
-      else next.delete(id);
-      selection.onChange(next);
-    },
-    [selection],
-  );
+  const handleItemSelect = useItemSelectHandler(selection);
 
   const isDnDMode = canUpdate && (groupBy !== "assignee" || canAssign) && !hasRowBy && !!groupBy && groupBy !== "none" && DROPPABLE_MODES.has(groupBy) && projectId != null;
 

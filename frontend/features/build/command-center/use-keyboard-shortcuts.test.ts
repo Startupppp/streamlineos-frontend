@@ -12,9 +12,9 @@ import { useKeyboardShortcuts } from "./use-keyboard-shortcuts";
 const mockOnCreateProject = jest.fn();
 const mockOnCreateIssue = jest.fn();
 
-function pressOnDocument(key: string) {
+function press(key: string, modifiers: Partial<KeyboardEventInit> = {}) {
   document.body.dispatchEvent(
-    new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }),
+    new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...modifiers }),
   );
 }
 
@@ -22,36 +22,22 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-describe("/ shortcut — command-center in-page search", () => {
-  it("calls focus on [data-search-input] when / is pressed", () => {
-    const searchEl = document.createElement("input");
-    searchEl.setAttribute("data-search-input", "");
-    const focusSpy = jest.fn();
-    searchEl.focus = focusSpy;
-    document.body.appendChild(searchEl);
-
+describe("modifier guard — command-center shortcuts do not fire on Cmd/Ctrl/Alt combos", () => {
+  it("does not navigate when Cmd+g is pressed", () => {
     renderHook(() =>
       useKeyboardShortcuts(mockOnCreateProject, mockOnCreateIssue),
     );
-    pressOnDocument("/");
-
-    expect(focusSpy).toHaveBeenCalled();
-    document.body.removeChild(searchEl);
+    press("g", { metaKey: true });
+    press("m");
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it("does not focus the search input when a non-slash key is pressed", () => {
-    const searchEl = document.createElement("input");
-    searchEl.setAttribute("data-search-input", "");
-    const focusSpy = jest.fn();
-    searchEl.focus = focusSpy;
-    document.body.appendChild(searchEl);
-
+  it("does not call onCreateProject when Ctrl+c is pressed", () => {
     renderHook(() =>
       useKeyboardShortcuts(mockOnCreateProject, mockOnCreateIssue),
     );
-    pressOnDocument("g");
-
-    expect(focusSpy).not.toHaveBeenCalled();
-    document.body.removeChild(searchEl);
+    press("c", { ctrlKey: true });
+    press("p");
+    expect(mockOnCreateProject).not.toHaveBeenCalled();
   });
 });

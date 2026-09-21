@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { LIST_RENDER_PAGE_SIZE } from "./list-view-shared";
+import { LIST_RENDER_PAGE_SIZE, useItemSelectHandler } from "./list-view-shared";
 import { ListViewItem } from "./list-view-item";
 import type { ListSelection, ListViewItemProps, Ticket } from "./list-view-shared";
 
@@ -75,16 +75,7 @@ export function GroupRows({
     items.length,
   );
 
-  const handleItemSelect = useCallback(
-    (id: string | number, checked: boolean) => {
-      if (!selection) return;
-      const next = new Set(selection.selected);
-      if (checked) next.add(id);
-      else next.delete(id);
-      selection.onChange(next);
-    },
-    [selection],
-  );
+  const handleItemSelect = useItemSelectHandler(selection);
 
   return (
     <>

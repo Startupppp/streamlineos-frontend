@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useCommandPalette } from "./use-command-palette";
+import { extractBuildProjectId } from "@/lib/build/extract-build-project-id";
 
 function isInputTarget(e: KeyboardEvent): boolean {
   const target = e.target;
@@ -14,13 +15,6 @@ function isInputTarget(e: KeyboardEvent): boolean {
     tag === "select" ||
     (target as HTMLElement).isContentEditable
   );
-}
-
-function extractProjectId(pathname: string): number | null {
-  const match = /\/build\/(\d+)/.exec(pathname);
-  if (!match) return null;
-  const parsed = parseInt(match[1] ?? "", 10);
-  return Number.isNaN(parsed) ? null : parsed;
 }
 
 export function useKeyboardShortcuts() {
@@ -46,7 +40,7 @@ export function useKeyboardShortcuts() {
         return;
       }
 
-      const projectId = extractProjectId(pathname);
+      const projectId = extractBuildProjectId(pathname);
 
       if (awaitingChordRef.current === "g" && projectId !== null) {
         clearChord();
@@ -70,7 +64,6 @@ export function useKeyboardShortcuts() {
       }
 
       if (e.key === "/") {
-        if (document.querySelector("[data-search-input]") !== null) return;
         e.preventDefault();
         setPaletteOpen(true);
         return;

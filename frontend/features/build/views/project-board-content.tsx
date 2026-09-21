@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
@@ -100,6 +101,10 @@ export function ProjectBoardContent({
   const shouldReduceMotion = useReducedMotion();
   const canUpdate = useCan("build:tickets:update");
   const viewVariants = shouldReduceMotion ? viewSwapReduced : viewSwap;
+  const selection = useMemo(
+    () => canUpdate ? { selected: selectedIds, onChange: onSelectionChange } : undefined,
+    [canUpdate, selectedIds, onSelectionChange],
+  );
 
   if (showEmptyFilterState) {
     return (
@@ -207,7 +212,7 @@ export function ProjectBoardContent({
                   showEmptyColumns={displayOptions.showEmptyColumns}
                   showEmptyRows={displayOptions.showEmptyRows}
                   projectId={projectId}
-                  selection={canUpdate ? { selected: selectedIds, onChange: onSelectionChange } : undefined}
+                  selection={selection}
                 />
               </div>
             </ScrollArea>
@@ -248,7 +253,7 @@ export function ProjectBoardContent({
                   projectId={projectId}
                   projectStatuses={statuses}
                   displayOptions={displayOptions}
-                  selection={canUpdate ? { selected: selectedIds, onChange: onSelectionChange } : undefined}
+                  selection={selection}
                 />
               </div>
             </ScrollArea>

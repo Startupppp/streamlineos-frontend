@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import type { DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 import type { UpdateTicketInput } from "@/types/projects";
 import type { DisplayOptions } from "../shared/types";
@@ -92,6 +93,19 @@ export interface DroppableGroupProps {
   onTicketClick: (id: number) => void;
   shouldReduceMotion: boolean | null;
   selection?: ListSelection;
+}
+
+export function useItemSelectHandler(selection: ListSelection | undefined) {
+  return useCallback(
+    (id: string | number, checked: boolean) => {
+      if (!selection) return;
+      const next = new Set(selection.selected);
+      if (checked) next.add(id);
+      else next.delete(id);
+      selection.onChange(next);
+    },
+    [selection],
+  );
 }
 
 export type ReorderContext = { previousTickets: Ticket[] };

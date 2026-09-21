@@ -155,16 +155,14 @@ describe("ProjectBacklogPage — usePageState inputs", () => {
     );
   });
 
-  it("passes isLoading true when project query is still loading", () => {
+  it("renders the loading skeleton instead of notFound when the project query is in flight", () => {
     mockUseProject.mockReturnValue({
       ...READY_PROJECT,
       data: undefined,
       isLoading: true,
     });
     renderPage();
-    expect(usePageState).toHaveBeenCalledWith(
-      expect.objectContaining({ isLoading: true }),
-    );
+    expect(screen.getByTestId("data-table-skeleton")).toBeDefined();
   });
 
   it("passes isError true and the error object when tickets query fails", () => {

@@ -14,6 +14,7 @@ export function useKeyboardShortcuts(
     let timer: ReturnType<typeof setTimeout>;
 
     function handleKeyDown(e: KeyboardEvent) {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
       const target = e.target;
       if (!(target instanceof HTMLElement)) return;
       if (
@@ -22,14 +23,6 @@ export function useKeyboardShortcuts(
         target.tagName === "SELECT" ||
         target.isContentEditable
       ) {
-        return;
-      }
-
-      if (e.key === "/") {
-        e.stopPropagation();
-        e.preventDefault();
-        const searchEl = document.querySelector<HTMLElement>("[data-search-input]");
-        searchEl?.focus();
         return;
       }
 

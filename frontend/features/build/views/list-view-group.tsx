@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -13,7 +12,7 @@ import { User } from "lucide-react";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { getUserInitials } from "@/lib/person-display";
 import { pmSnappy } from "@/lib/motion-presets";
-import { getGroupStatus } from "./list-view-shared";
+import { getGroupStatus, useItemSelectHandler } from "./list-view-shared";
 import type { OuterGroupHeaderProps, NestedGroupProps, DroppableGroupProps } from "./list-view-shared";
 import { ListViewItem } from "./list-view-item";
 import { InlineGroupCreate } from "./list-view-group-create";
@@ -113,16 +112,7 @@ export function DroppableGroup({
   );
   const visibleItems = items.slice(0, visibleCount);
 
-  const handleItemSelect = useCallback(
-    (id: string | number, checked: boolean) => {
-      if (!selection) return;
-      const next = new Set(selection.selected);
-      if (checked) next.add(id);
-      else next.delete(id);
-      selection.onChange(next);
-    },
-    [selection],
-  );
+  const handleItemSelect = useItemSelectHandler(selection);
 
   return (
     <Droppable droppableId={groupKey} type="LIST_TICKET">
