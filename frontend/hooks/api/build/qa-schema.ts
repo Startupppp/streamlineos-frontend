@@ -58,14 +58,6 @@ const testRunRowContract = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   deletedAt: z.string().nullable(),
-  counts: z.object({
-    total: z.number().int(),
-    passed: z.number().int(),
-    failed: z.number().int(),
-    blocked: z.number().int(),
-    skipped: z.number().int(),
-    notRun: z.number().int(),
-  }).optional(),
 });
 
 export const testRunListItemContract = testRunRowContract.extend({

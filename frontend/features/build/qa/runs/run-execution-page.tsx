@@ -61,8 +61,8 @@ const STATUS_LABELS: Record<string, string> = {
   aborted: "Aborted",
 };
 
-function ProgressBar({ counts }: { counts?: TestRunCounts }) {
-  if (!counts || counts.total === 0) return null;
+function ProgressBar({ counts }: { counts: TestRunCounts }) {
+  if (counts.total === 0) return null;
   const pct = Math.round(((counts.passed + counts.failed + counts.blocked + counts.skipped) / counts.total) * 100);
   const passPct = Math.round((counts.passed / counts.total) * 100);
   return (
@@ -200,6 +200,14 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
   }
 
   const results = run.results ?? [];
+  const runCounts: TestRunCounts = {
+    total: results.length,
+    passed: results.filter((result) => result.status === "passed").length,
+    failed: results.filter((result) => result.status === "failed").length,
+    blocked: results.filter((result) => result.status === "blocked").length,
+    skipped: results.filter((result) => result.status === "skipped").length,
+    notRun: results.filter((result) => result.status === "not_run").length,
+  };
 
   return (
     <PageWrapper
@@ -222,7 +230,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
                 {run.environment}
               </span>
             ) : null}
-            <ProgressBar counts={run.counts} />
+            <ProgressBar counts={runCounts} />
           </PmPanel>
         </PmSection>
 

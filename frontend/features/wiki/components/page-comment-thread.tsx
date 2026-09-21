@@ -157,9 +157,9 @@ export function PageCommentThread({ comment, replies, pageId, onReply, currentUs
         </div>
       </div>
       {replies.length > 0 && (
-        <ul role="list" className="ml-8 space-y-3 border-l-2 border-border/40 pl-3">
+        <ul className="ml-8 space-y-3 border-l-2 border-border/40 pl-3">
           {replies.map((reply) => (
-            <li key={reply.id} role="listitem">
+            <li key={reply.id}>
               <PageCommentThread
                 comment={reply}
                 replies={[]}

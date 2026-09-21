@@ -54,7 +54,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
   const { data: suites } = useTestSuites(projectId);
   const { data: casesData } = useTestCases(projectId);
 
-  const cases = casesData ?? [];
+  const cases = casesData?.data ?? [];
 
   const form = useForm<TestRunFormValues>({
     resolver: zodResolver(testRunSchema),

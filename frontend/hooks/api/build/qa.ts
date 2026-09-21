@@ -9,6 +9,7 @@ import type {
   TestSuite,
   TestCase,
   TestRun,
+  TestRunListItem,
   TestRunDetail,
   Bug,
   CreateTestCaseInput,
@@ -145,13 +146,13 @@ export function useTestRuns(projectId?: number, filters?: TestRunFilters) {
   if (filters?.status) params["status"] = filters.status;
   if (filters?.cursor !== undefined) params["cursor"] = String(filters.cursor);
 
-  return useQuery<IdCursorPage<TestRun>>({
+  return useQuery<IdCursorPage<TestRunListItem>>({
     queryKey: buildWorkQueryKeys.projects.qa.runs(
       projectId ?? 0,
       Object.keys(params).length > 0 ? params : undefined,
     ),
     queryFn: ({ signal }) =>
-      apiClient.get<IdCursorPage<TestRun>>(
+      apiClient.get<IdCursorPage<TestRunListItem>>(
         `/build/${projectId}/test-runs`,
         params,
         signal,
