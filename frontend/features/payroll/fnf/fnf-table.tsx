@@ -176,7 +176,7 @@ export function FnfTable() {
             description={
               filtersActive
                 ? undefined
-                : "Full & Final settlements will appear here once initiated"
+                : "Final settlements will appear here once initiated"
             }
             filtersActive={filtersActive}
             onClearFilters={handleClearFilters}

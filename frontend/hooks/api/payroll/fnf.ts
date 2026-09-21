@@ -61,7 +61,7 @@ export async function downloadFnfStatement(
   const blob = await apiClient.download(
     `/payroll/fnf/${settlementId}/statement/download`,
   );
-  downloadBlob(blob, `FNF_Statement_${settlementId}.pdf`);
+  downloadBlob(blob, `Final_settlement_statement_${settlementId}.pdf`);
 }
 
 export function useApproveFnf() {

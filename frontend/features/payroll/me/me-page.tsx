@@ -139,7 +139,7 @@ export function MyPayrollPageContent() {
     }
     if (toggles?.essAllowBankUpdate)
       items.push({ id: "bank", label: "Bank Details" });
-    if (fnf) items.push({ id: "fnf", label: "FNF Settlement" });
+    if (fnf) items.push({ id: "fnf", label: "Final settlement" });
     return items;
   }, [toggles, overview?.activeLoanBalance, fnf]);
 

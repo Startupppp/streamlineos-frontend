@@ -193,7 +193,7 @@ export function FnfPageClient() {
       },
       {
         onSuccess: () => {
-          toast.success("FnF settlement created");
+          toast.success("Final settlement created");
           setSheetOpen(false);
           resetForm();
         },
@@ -233,7 +233,7 @@ export function FnfPageClient() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Full & Final Settlement" subtitle="Manage full and final settlements for separated employees">
+      <PageWrapper title="Final settlement" subtitle="Manage final settlements for separated employees">
         <div className="flex flex-1 min-h-0 flex-col gap-3">
           {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-2xl" />
@@ -245,7 +245,7 @@ export function FnfPageClient() {
 
   if (isError) {
     return (
-      <PageWrapper title="Full & Final Settlement" subtitle="Manage full and final settlements for separated employees">
+      <PageWrapper title="Final settlement" subtitle="Manage final settlements for separated employees">
         <EmptyState
           illustrationPreset="alert"
           title="Failed to load settlements"
@@ -258,19 +258,19 @@ export function FnfPageClient() {
 
   return (
     <PageWrapper
-      title="Full & Final Settlement"
-      subtitle="Manage full and final settlements for separated employees"
+      title="Final settlement"
+      subtitle="Manage final settlements for separated employees"
       actions={
         <Button size="sm" onClick={handleOpenSheet} className="gap-1.5">
           <Plus className="h-3.5 w-3.5" />
-          New Settlement
+          Create settlement
         </Button>
       }
     >
       {!items?.length ? (
         <EmptyState
           illustration={<EmptyExpensesIllustration className="h-24 w-24" />}
-          title="No FnF settlements on record"
+          title="No final settlements on record"
           description="Full and final settlements for separated employees will appear here."
           compact
         />
@@ -285,9 +285,9 @@ export function FnfPageClient() {
       <HrSheet
         open={sheetOpen}
         onOpenChange={handleSheetOpenChange}
-        title="New FnF Settlement"
+        title="Create final settlement"
         onSubmit={handleCreate}
-        submitLabel="Create Settlement"
+        submitLabel="Create settlement"
         isPending={create.isPending}
       >
         <div className="space-y-1.5">
@@ -381,7 +381,7 @@ export function FnfPageClient() {
         open={completeId !== null}
         onOpenChange={handleCompleteIdClose}
         title="Mark Settlement as Paid"
-        description="Are you sure you want to mark this FnF settlement as paid? This confirms that the full and final amount has been disbursed to the employee."
+        description="Are you sure you want to mark this final settlement as paid? This confirms that the settled amount has been disbursed to the employee."
         confirmLabel="Mark as Paid"
         onConfirm={handleComplete}
         isPending={complete.isPending}
