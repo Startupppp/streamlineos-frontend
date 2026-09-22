@@ -158,11 +158,48 @@ frontend/features/build/drafts/comment-drafts-page.test.tsx
 - The seven `CONSOLIDATE` pages and three `MOVE` pages with a missing target —
   `BLOCKED`, because deleting them would remove the user job rather than move it.
 
-## After pulling this branch: prune nine stale generated route types
+## Merged to `main`, and verified there
 
-`next typegen` regenerates route types for routes that exist but does **not**
-prune types for routes that were deleted, so on any checkout with a warm
-`.next/` cache `pnpm typecheck:web` fails like this:
+`main` = `125c66eec`. The branch was merged by fast-forward using git's own
+`receive.denyCurrentBranch=updateInstead`, which **refuses if the target working
+tree is dirty** and otherwise updates the working tree alongside the ref — so
+the shared checkout at `D:/projects/personal/Streamlineos` is consistent rather
+than left holding deleted files. The setting was unset afterwards. Verified on
+disk there: all nine route pages gone, ten `/build/` redirects in
+`next.config.ts`, the new removal test present.
+
+Measured **in the main checkout**, after pruning the stale types below:
+
+| Check | Result |
+|---|---|
+| `pnpm typecheck:web` | **exit 0** (was exit 2 — 17 dangling `.next/types` errors, zero source errors) |
+| `node scripts/build-route-census.mjs --check` | **PASS** — 88 Build routes, 79 Build pages, 0 weak cold-load gates |
+| `node scripts/build-route-census.mjs --self-test` | **PASS** |
+| `node scripts/check-build-execution-plan.mjs` | **exit 0** — green on `main`, confirming the worktree failure really was the CRLF artifact |
+| `pnpm jest lib/build lib/rbac features/build components/command-palette components/layout/sidebar features/module-access` | **215 of 216 suites, 1777 of 1778 tests pass** |
+
+The single failure is `sidebar-nav-inventory.test.ts`, and it is not this work:
+
+- `NAV_GROUPS` and the `sidebar-nav-groups-*` files contain **zero** references
+  to `build-stable-destinations` or any Build nav catalog, so the Drafts href
+  change cannot move the digest.
+- The digest constant was last recomputed in `1dc61259f` (Recruitment OS split)
+  while a nav group config changed later in `7840a4c58`. It was already stale
+  before this branch existed.
+- Independently reproduced earlier by restoring the HEAD copy of the only shared
+  file this branch edits and re-running: identical failure.
+
+It is deliberately **not** fixed here. Its own instruction is to recompute the
+digest *and record why it moved*; recomputing it without knowing which nav
+change moved it would rubber-stamp an unreviewed navigation edit, which is the
+one thing that gate exists to prevent.
+
+## Stale generated route types — pruned, no longer owed
+
+**Done in the main checkout on 2026-09-22 — listed here for any other warm
+checkout.** `next typegen` regenerates route types for routes that exist but
+does **not** prune types for routes that were deleted, so on any checkout with a
+warm `.next/` cache `pnpm typecheck:web` fails like this:
 
 ```
 .next/types/app/(authenticated)/build/members/page.ts(2,24): error TS2307:
@@ -186,12 +223,13 @@ rm -rf ".next/types/app/(authenticated)/build/workspaces/[pmWorkspaceId]/my-work
 ```
 
 The parallel session found this for `/build/access` and recorded it in
-`ACCESS-ROUTE-CLOSURE-STATUS.md`; the same applies to the other five.
+`ACCESS-ROUTE-CLOSURE-STATUS.md`; the same applied to the other eight.
 **This worktree never reproduced it** — it was created fresh and `next typegen`
 first ran after the deletions, so no stale directory was ever generated. That is
-why `typecheck:web` passes here, and it is why that pass alone does not prove a
-warm checkout is clean. Verified by listing all six paths under
-`frontend/.next/types/`: none exists here.
+why `typecheck:web` passed here throughout, and it is why that pass alone did
+not prove a warm checkout was clean. It was not: the main checkout failed with
+exit 2 on 17 errors, every one of them a dangling `.next/types` artifact and not
+one of them a source error. After the prune it exits 0.
 
 ## The census vacuity floor was lowered, deliberately
 
