@@ -714,3 +714,55 @@ Also unmodelled by the census, and therefore outside its guarantee: RLS, permiss
 - **`pnpm -C backend check:composite-fk-set-null`** — empirically verified to inject `.env` and open a live connection: it printed `injected env (61) from .env` then `PREREQUISITE UNMET — cannot read pg_constraint: PAM authentication failed for user "streamline_admin"`. Placeholder env does not help, because `.env` is injected first.
 
 Both are **BLOCKED**, not skipped. Their `:self-test` siblings are hermetic and pass.
+
+## Next-closure reconciliation — 2026-09-22 (authoritative for this branch)
+
+Supersedes earlier rows for the `build/next-build-closure` work only. Coordinator-verified: every
+number below was reproduced by the coordinator, not accepted from an agent report.
+
+### What the brief asserted that was not true
+
+The dispatch brief described a `TicketChanges.sprintId` type error and three failing backend suites.
+Neither survived contact with the tree. The type error was already fixed by `b93f10501`, and the three
+suites passed 29/29 on first run. Work was re-scoped to what the branch had actually left broken.
+
+### Defects found and fixed
+
+**Velocity and burnup were broken end to end.** The branch renamed the velocity response field
+`sprintId` → `cycleId` in the backend and never updated the client, so a required key was missing and
+the decode failed. Reading the handler showed the cutover was only half applied: burnup resolved its
+query param against `sprints.id` and bridged through `cycles.legacySprintId`, so a selector that can
+only offer cycle ids would have returned 404 on every request. Both sides now speak `cycleId`, and
+`burnup()` resolves `cycles` directly — the legacy sprint bridge is gone.
+
+**Four spec fixtures were stale, not pre-existing.** `build-ticket-batch-workflow.spec.ts` and
+`projects-activity-identity.spec.ts` were untouched by the branch but stopped compiling because the
+type beneath them lost `sprintId`. An untouched file is not evidence that a failure is pre-existing.
+
+**The generated contract was stale and hid a gate.** See `NEXT-CLOSURE-BASELINE.md`.
+
+### Verified state
+
+| Check | Result |
+|---|---|
+| backend Build suite | **209 suites / 1844 tests pass** |
+| frontend Build suite | **200 suites / 1377 tests pass** |
+| frontend `type-check` | **0 errors** |
+| backend `tsconfig.build.json` | 1 error, pre-existing HR, out of scope |
+| `openapi:check` | **PASS** — 3947 operations |
+| `check:permission-catalog` | **PASS** |
+| `check:route-access-contract` / `check:module-manifest` | **PASS** |
+| `check:migration-chain` | **PASS** (applied-watermark step skipped — no `DATABASE_URL`) |
+| `check:build-authz-census:check` | **PASS** — `VULNERABLE 0` |
+| frontend `check:dead-code` | **PASS** |
+
+### Not done, and why
+
+**Production migrations: NOT APPLIED, NOT VERIFIED.** 1149, 1150 and 1151 are additive and journalled.
+This worktree has no `.env`, so the ledger read failed closed and was not retried. The only reachable
+PostgreSQL is production, so no `applied` claim can be made here. Cycle phases 04/05 and the QA
+destructive contraction remain **BLOCKED** on unmet preconditions.
+
+**Browser QA: READY_FOR_CODEX_BROWSER_QA.** Not performed and not claimed. Owned by Codex.
+The velocity/burnup fix above is exercised only by unit tests and typecheck — it has not been
+observed in a browser, and it is the change most worth looking at first.

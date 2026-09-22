@@ -89,6 +89,8 @@ The application-layer code cutover in this document is the ONLY thing standing b
 | `test_runs.sprint_id` cleared / cutover | Agent 2 scope | PENDING |
 | Archive existing ticket sprint bindings (run phase 04 migration) | Coordinator / migration author | PENDING |
 
+**Agent 3 review 2026-09-22: Phases 04 and 05 are BLOCKED.** Both PENDING items above are unmet. The DO-block guard in `a-sprint-cycle-04-detach.sql` is a data check only; the application-layer cutover (`test_runs.sprint_id` and ticket binding archive) must complete first. Phase 05 cannot run until phase 04 succeeds. Default is BLOCKED; do not proceed to phase 04 unless both PENDING rows above are confirmed DONE.
+
 ---
 
 ## Remaining `tickets.sprintId` references

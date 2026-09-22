@@ -76,3 +76,45 @@ apply the chain, and set `DATABASE_URL` in a worktree that is not the main check
 
 No failure in the final report may be called `pre-existing` unless it appears in this table with the same
 shape. Anything not here that fails later is new, and belongs to this session's diff until proven otherwise.
+
+## Closure reconciliation — 2026-09-22
+
+Every row below was re-run by the coordinator after the closure work landed. Nothing here is
+reported from an agent summary that the coordinator did not reproduce.
+
+### Moved from FAIL to PASS
+
+| Gate | Baseline | Now |
+|---|---|---|
+| `check:permission-catalog` | FAIL — Rule 3 drift | **PASS** — byte-identical to a fresh regeneration, 645 route-bound permissions catalogued |
+| `check:build-authz-census:check` | FAIL — census stale | **PASS** — committed reports match a fresh run; `VULNERABLE 0`, 322 handlers |
+
+### A failure this baseline never recorded
+
+`openapi:check` **failed** on the closure branch and no baseline row covers it, so by the rule at the
+foot of this document it belonged to this session's diff. The branch renamed the velocity response
+field to `cycleId`, moved the burnup query param, reshaped the QA bug response and added
+`GET /build/{projectId}/workload/capacity`, but never regenerated the tracked contract.
+
+The staleness was not only cosmetic: because the new route was absent from the contract,
+`check:permission-binding` had nothing to match it against and skipped it silently rather than
+verifying it. A stale generated artifact suppresses the gate that would have checked it.
+
+Regenerated with placeholder environment values only — `openapi-env.ts` forces `NODE_ENV=test` and
+documents placeholders as safe, and no database is contacted. `openapi:check` now passes at 3947
+operations, and the frontend copy was re-vendored (`sha256 609a2e4c…`).
+
+### Still failing, unchanged from baseline
+
+| Gate | State |
+|---|---|
+| `check:permission-binding` | FAIL — 11 + 4 mismatches across HR recruitment, payroll and CRM. **0 in Build.** Out of scope: HR/CRM must not be modified here |
+| backend `check:dead-code` | FAIL — the same single stale verdict, `dep:openssl` |
+| backend `tsconfig.build.json` | 1 error — `hr/hub/manager-home.service.ts:71` TS2345. Pre-existing on `main`, HR, out of scope |
+| backend `tsconfig.test.json` | 6 errors — 5 × TS2502 `tx` plus the HR error above. The TS2502 class is pre-existing on `main` at `portal/client/portal-client-submit-cr.spec.ts:87` |
+
+### The database-bound gates
+
+`check:composite-fk-set-null` and `check:tenant-relationships` remain unsatisfiable, unchanged.
+This worktree has no `.env`, which is why the migration ledger could not be read. That absence is a
+safety property, not a defect: the only PostgreSQL reachable from this machine is production.
