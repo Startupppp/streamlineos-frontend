@@ -114,5 +114,5 @@ retention, a manual snapshot would be its only reversal.
 ## What unblocks the remaining three
 
 1. Merge and **deploy** the cutover, so the running revision stops reading those objects.
-2. Answer open question 17 — `a-sprint-cycle-05-drop.sql` also renames `build_events.sprint_scope_events`, which live code still reads by its old name.
+2. ~~Resolve the rename buried in phase 05.~~ **Done** — `1baada9ca` split it into `a-sprint-cycle-06-rename-scope-events.sql`, which runs after a deploy that renames the code.
 3. Then run, in this order and each behind a fresh snapshot: `a-sprint-cycle-04-detach` (which also drops the four foreign keys that would otherwise make the next step fail `2BP01`), `a-sprint-cycle-05-drop`, `b-qa-bug-05-contract-drop`.

@@ -5,9 +5,9 @@ after the coordinator session landed most of Stage A. This is the runbook for th
 begins **after** that session finishes. It does not describe, schedule or depend on anything the
 session is still editing.
 
-**State at re-measurement:** A1, A1b, A2 and A4 are done; A2 landed in `3d4e5a6a6` on
-`build/a2-sprints-table-cutover`. **A5 is the one remaining migration blocker** and A3 is open
-but gates nothing. None of the four destructive migrations has been applied.
+**State at re-measurement:** A1, A1b, A2, A4 and A5 are all done on `main`. **No code blocker
+remains.** A3 is open but gates nothing. Of the four destructive migrations, one is applied and
+three wait on a deploy.
 
 **Production database state, read-only over IAM on 2026-09-22.** Every figure below was measured
 inside a `SET TRANSACTION READ ONLY` transaction; nothing was written.
@@ -92,50 +92,32 @@ scanners could not see".
 
 ### A2 — the `sprints` table access path — DONE
 
-Landed in `3d4e5a6a6`. All five live call sites are gone; every sprint endpoint is served from
-`build.cycles` via `legacy_sprint_id`, so nothing reads the table phase 05 drops.
+Resolved on `main` as a **freeze**, not a bridge. Every `SprintsService` verb throws
+`GoneException`; `cycles.legacy_sprint_id` was removed from the schema; and `e48e4d139` deleted
+the `sprints` and `bugs` table declarations outright. `backend/src/modules/build/execution/sprint-create-frozen.spec.ts`
+pins that all five methods throw, touch no database and cover the whole prototype.
 
-The endpoints were **kept rather than deleted**, because deleting them is a breaking contract
-change and no consumer was proven absent beyond the frontend. `createSprint` stays frozen with
-`GoneException`; the read and write verbs now operate on the bridged cycle.
+A parallel branch in this lane reached the same goal differently — keeping the endpoints alive and
+serving them from `cycles` via `legacy_sprint_id`, so no client contract broke. **The freeze won**:
+it is simpler, it is merged, and it is the module owner's call. The bridge was discarded rather
+than forced in, and `cycles.legacy_sprint_id` stays removed.
 
-Behaviour was preserved deliberately, including the `build.sprint.completed` outbox event and
-the `sprint.started` / `sprint.completed` webhooks. Status is mapped through one bridge,
-`backend/src/modules/build/core/sprint-cycle-status.ts`, which inverts the CASE expression in
-`a-sprint-cycle-02-backfill.sql` exactly: `PLANNED ↔ draft`, `ACTIVE ↔ active`,
-`COMPLETED ↔ completed`. A spec pins the bridge against that migration so the two cannot drift.
+What that branch contributed instead is the regression guard main lacked:
+`backend/src/modules/build/phase-2/sprint-cycle-drop-invariant.spec.ts` scans the whole tree for
+any read, write, relation or import of the `sprints` table, with ten non-vacuity tests proving
+each matcher fires on the real pre-removal text and stays silent on the shapes that replaced it.
 
-Two schema corrections came with it, both verified against the live database:
+**A latent defect found on the way, and deliberately left alone.** `updateSprint` used to be the
+only emitter of `build.sprint.completed` and of the `sprint.started` / `sprint.completed`
+webhooks; `cycles.service.ts` `updateCycle` emits neither. The freeze makes that permanent: those
+notifications and webhooks now fire for nobody. Wiring emission onto the canonical cycle path
+changes user-visible notification behaviour, so it is a product decision, not cutover cleanup.
 
-- `cycles.goal` and `cycles.deleted_at` are now declared. Both were applied by `a-sprint-cycle-01-expand.sql` and never declared. `goal` is populated for all 4 production cycles, so omitting it would have returned `goal: null` for every sprint — the same "backward compatible null" that already shipped once on `sprintId`.
-- `fk_cycles_org_legacy_sprint` was removed from the schema. No migration ever created it, and production confirms it does not exist.
+### A5 — the phase-05 rename — DONE
 
-**A latent defect found and deliberately left alone.** `updateSprint` is the only emitter of
-`build.sprint.completed` and of the `sprint.started` / `sprint.completed` webhooks.
-`cycles.service.ts` `updateCycle` emits neither. Since the frontend drives cycles and never
-calls the legacy sprint endpoint, **those notifications and webhooks never fire for any real
-user today.** Moving the emission onto the canonical cycle path would change user-visible
-notification behaviour, so it is a product decision rather than part of a behaviour-preserving
-cutover. Recorded here rather than silently fixed or silently dropped.
-
-### A5 — the phase-05 rename — OPEN, and the remaining blocker for D2
-
-`a-sprint-cycle-05-drop.sql` does not only drop `build.sprints`. It also runs:
-
-```sql
-ALTER TABLE "build_events"."sprint_scope_events" RENAME TO "cycle_scope_events";
-ALTER TYPE "sprint_scope_event_type" RENAME TO "cycle_scope_event_type";
-```
-
-The schema still declares the old physical names at
-`backend/src/db/schema/build/sprint-events.ts:23-24` and `:15`, and
-`backend/src/modules/build/core/projects-reports.service.ts:102` selects from that table for the
-burnup report. A rename in the same phase as the drop would require the code rename to deploy at
-the same instant, which cannot be arranged — the burnup report raises `42P01` the moment the
-phase commits.
-
-Settle open question 17 before running D2. Do not "fix" this by renaming the code first: that
-breaks the report in the other direction, for the whole window before the migration runs.
+`1baada9ca` split the two `RENAME` statements out of `a-sprint-cycle-05-drop.sql` into
+`backend/migrations/sql/a-sprint-cycle-06-rename-scope-events.sql`. The drop no longer demands a
+code deploy at the same instant.
 
 ### A3 — Change Request affected work
 
@@ -191,7 +173,7 @@ before any DDL:
 | # | Migration | Effect | Status |
 |---|---|---|---|
 | 1 | `backend/migrations/sql/a-sprint-cycle-04-detach.sql` | drops `sprint_id` from 4 tables, and the 4 FKs that block phase 05 | **NOT APPLIED** — needs the deploy |
-| 2 | `backend/migrations/sql/a-sprint-cycle-05-drop.sql` | drops `build.sprints`, renames `sprint_scope_events` | **NOT APPLIED** — needs A5, then phase 1, then the deploy |
+| 2 | `backend/migrations/sql/a-sprint-cycle-05-drop.sql` | drops `build.sprints` | **NOT APPLIED** — needs phase 1 first, then the deploy |
 | 3 | `backend/migrations/sql/b-qa-bug-04-contract-freeze.sql` | revokes write on `build.bugs`, keeps `SELECT` | **APPLIED 2026-09-22**, snapshot `pre-qa-bug-freeze-20260922173910` |
 | 4 | `backend/migrations/sql/b-qa-bug-05-contract-drop.sql` | drops `build.bugs` | **NOT APPLIED** — the deployed revision still reads the table |
 
@@ -290,7 +272,8 @@ exists, so their assertions are unverified.**
 - [x] No table other than `cycles` declares `sprint_id`.
 - [x] No non-schema read or write of the `sprints` table remains.
 - [x] `b-qa-bug-03-verify.sql` returned zero on all 14 checks — with the vacuity caveat recorded.
-- [ ] Open question 17 is answered, so the phase-05 rename cannot break the burnup report.
+- [x] The phase-05 rename is split into its own phase, so it cannot break the burnup report.
+- [ ] The cutover is **deployed**, which is the only remaining gate on phases 1, 2 and 4.
 - [ ] Stage A is deployed and observed clean before any Stage D migration runs.
 - [ ] All four contraction phases are applied, each behind its own fresh snapshot.
 - [ ] `b-qa-bug-03-verify.sql` returned zero on all 14 checks before the freeze.
