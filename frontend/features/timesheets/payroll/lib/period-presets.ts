@@ -6,11 +6,19 @@ import {
   endOfMonth,
   subWeeks,
   subMonths,
-  startOfYear,
   differenceInCalendarDays,
   addDays,
 } from "date-fns";
 import type { PayPeriod } from "../types";
+
+/**
+ * Monday, chosen only so a biweekly block starts on the same weekday as the
+ * WEEKLY preset's `weekStartsOn: 1`. A block's phase carries across every
+ * January 1st rather than resetting there — resetting per calendar year is
+ * what previously made "this period" and "last period" disagree across the
+ * boundary and left December 31st in neither.
+ */
+const BIWEEKLY_EPOCH = new Date(2024, 0, 1);
 
 export const PERIOD_PRESETS = [
   "this-period",
@@ -27,10 +35,9 @@ export function resolvePeriodPreset(raw: string | null): PeriodPreset {
 }
 
 function getBiweeklyBlock(date: Date): { from: Date; to: Date } {
-  const yearStart = startOfYear(date);
-  const dayOfYear = differenceInCalendarDays(date, yearStart);
-  const blockIndex = Math.floor(dayOfYear / 14);
-  const from = addDays(yearStart, blockIndex * 14);
+  const daysSinceEpoch = differenceInCalendarDays(date, BIWEEKLY_EPOCH);
+  const blockIndex = Math.floor(daysSinceEpoch / 14);
+  const from = addDays(BIWEEKLY_EPOCH, blockIndex * 14);
   const to = addDays(from, 13);
   return { from, to };
 }
@@ -126,7 +133,7 @@ export function getPresetRange(
       }
       case "SEMIMONTHLY": {
         const pivotDate = now.getDate() <= 15
-          ? new Date(now.getFullYear(), now.getMonth(), 20)
+          ? new Date(now.getFullYear(), now.getMonth() - 1, 20)
           : new Date(now.getFullYear(), now.getMonth(), 1);
         const block = getSemimonthlyBlock(pivotDate);
         return {

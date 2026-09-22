@@ -321,6 +321,7 @@ export function ApprovalsView() {
         confirmLabel="Approve"
         onConfirm={handleBulkApproveConfirm}
         isPending={bulkApproveMutation.isPending}
+        keepOpenOnConfirm
       />
 
       <BulkRejectDialog
