@@ -145,3 +145,62 @@ No database was contacted in this session. No migration was applied. No destruct
 checklist is `docs/build-module/FINAL-BROWSER-QA.md`. It must run after deployment, at desktop and
 375 px, and it names the two deliberate behaviour changes — stale `?sprintId=` links (§1.8) and the
 Feedbucket 403 (§6) — so neither is misread as a defect.
+
+---
+
+# Migrations APPLIED — 2026-09-22
+
+Executed against production over IAM auth with the repo owner's explicit authorization, after they
+confirmed the merged code was deployed and that they are the only user of the database.
+
+| Step | File | Result |
+|---|---|---|
+| verify | `b-qa-bug-03-verify.sql` | **all 14 checks returned 0**, read-only, first run ever |
+| detach | `a-sprint-cycle-04-detach.sql` | applied — `077e7608…` |
+| drop | `a-sprint-cycle-05-drop.sql` | applied — `6bfdf9b8…` |
+| freeze | `b-qa-bug-04-contract-freeze.sql` | applied — `3a7903b0…` |
+| contract drop | `b-qa-bug-05-contract-drop.sql` | applied — `bf467ef1…` |
+| rename | `a-sprint-cycle-06-rename-scope-events.sql` | **deliberately NOT run** — cosmetic, needs a lockstep deploy |
+
+Ledger 908 → 912.
+
+## Preconditions measured before executing, not assumed
+
+- Phase 04's own guard condition — tickets with `sprint_id` set and no row in `sprint_binding_archive` —
+  read **0**, against 103 archived bindings.
+- **0** tickets would have lost their iteration: all 103 carrying `sprint_id` also carried `cycle_id`.
+- `project_meetings`, `test_runs` and `sprint_scope_events` held **no** `sprint_id` values at all.
+- `build.bugs` held **0 rows**, and `streamline_app` already lacked INSERT on it.
+
+## Verified after, from the catalog
+
+`build.sprints` gone, all 4 rows in `build.sprints_archive` with RLS and its `tenant_isolation` policy.
+`build.bugs`, `test_run_results.linked_bug_id` and the `bug_priority` type gone. `bug_status` and
+`bug_severity` survive, correctly — `work_item_qa_details` still binds them. 220 tickets, 103 with a
+cycle, 44 of type BUG, 5 cycles. `sprint_scope_events` still carries its pre-rename name, which is the
+only state in which phase 06 is unapplied and the burnup report resolves.
+
+## What the migrations then broke in code, and what it cost to find
+
+Dropping a column inverts the declaration rule. Before the drop, a declaration that outlives its column is
+the hazard; after it, **any surviving declaration is a query against something that does not exist**.
+
+`test-runs.service.ts` projected `linked_bug_id` on `getRun` and `listRunResults`. Both would have raised
+`42703` on every read. The frontend was worse: `qa-schema.ts` declared `linkedBugId` **required**, so
+`applyContract` would have thrown and killed the test-run results screen rather than degrading it. Also
+removed: the `bugs` and `sprints` table declarations, `sprintsRelations`, the `bug_priority` pgEnum, and
+two membership-artifact rulings on a dropped table — replaced by the `work_item_qa_details` QA-owner
+pointer, which had never been ruled.
+
+The dual-identity tripwires are retired, which is what their own text instructed. Where a spec still
+needed the dropped vocabulary it now reads it from an artifact that survives: the sprint status CHECK from
+the phase 05 rollback, the bugs column list from the disposition map.
+
+## Phase 05 was unsafe as written, and was split before running
+
+It ended with `ALTER TABLE sprint_scope_events RENAME TO cycle_scope_events` and the matching enum rename.
+Dropping `build.sprints` is safe once nothing queries it; a rename is not, because the old name stops
+resolving at the instant the new one starts. `projects-reports.service.ts` reads that table for the burnup
+report through a declaration that still names it, so phase 05 would have dropped the table successfully
+and broken burnup in the same transaction. Both renames now live in phase 06 with a rollback and a
+tripwire pinning the lockstep.
