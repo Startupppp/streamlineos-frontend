@@ -61,8 +61,8 @@
 ### Move or consolidate
 
 - `/build/drafts` → `/build/inbox?view=drafts`.
-- `/build/goal*` → `/build/goals*`.
-- `/build/pm-workspaces` → `/build/workspaces`.
+- `/build/goal*` → `/build/goals*` — **done 2026-09-22**.
+- `/build/pm-workspaces` → `/build/workspaces` — **blocked**, see the route row below.
 - `/build/members` and `/build/access` → `/build/settings/access`.
 - `/build/client-access` → `/build/settings/client-access`.
 - Workspace My Work → `/build/my-work?pmWorkspaceId=...`.
@@ -159,8 +159,8 @@ This census contains all 92 physical Build-owned page routes found in the reposi
 | `/build/command-center` | Provide a prioritized operating home across Build. | Product or project manager. | [KEEP](./10-command-center.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/customers` | Show CRM customers linked to Build delivery. | Client project manager. | [KEEP](./10-customers.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/drafts` | Collect actionable Build notifications and recover drafts. | Contributor. | [CONSOLIDATE — EXECUTED 2026-09-22](./10-drafts.md) | Job lives at `/build/inbox?view=drafts`. Page deleted; the redirect moved into `next.config.ts` and the sidebar Drafts entry now links straight to the canonical URL. |
-| `/build/goal` | Define measurable outcomes and connect delivery evidence. | Product manager. | [MOVE](./10-goal.md) | Migrate the user job to `/build/goals`, preserve deep links temporarily, then remove this physical route. |
-| `/build/goal/[goalId]` | Define measurable outcomes and connect delivery evidence. | Product manager. | [MOVE](./10-goal-goal.md) | Migrate the user job to `/build/goals/[goalId]`, preserve deep links temporarily, then remove this physical route. |
+| `/build/goal` | Define measurable outcomes and connect delivery evidence. | Product manager. | [MOVE — EXECUTED 2026-09-22](./10-goal.md) | Renamed to `/build/goals`. Every in-app caller repointed; `next.config.ts` redirects the old path. |
+| `/build/goal/[goalId]` | Define measurable outcomes and connect delivery evidence. | Product manager. | [MOVE — EXECUTED 2026-09-22](./10-goal-goal.md) | Renamed to `/build/goals/[goalId]`; `next.config.ts` redirects the old path. |
 | `/build/inbox` | Collect actionable Build notifications and recover drafts. | Contributor. | [KEEP](./10-inbox.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/managed-products` | Manage products independently from delivery projects. | Product manager. | [KEEP](./10-managed-products.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/managed-products/[managedProductId]` | Manage products independently from delivery projects. | Product manager. | [KEEP](./10-managed-products-product.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
@@ -171,7 +171,7 @@ This census contains all 92 physical Build-owned page routes found in the reposi
 | `/build/managed-products/[managedProductId]/roadmap` | Connect outcomes and releases to planned product work. | Product manager. | [KEEP](./10-managed-products-product-roadmap.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/members` | Administer Build access at organization scope. | Organization administrator. | [MOVE — EXECUTED 2026-09-22](./10-members.md) | Job lives at `/build/settings/access`. Page deleted; the `next.config.ts` redirect preserves the deep link. |
 | `/build/my-work` | Unify work assigned to, reported by, or watched by the current actor. | Contributor. | [KEEP](./10-my-work.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
-| `/build/pm-workspaces` | Optionally group projects, products, and teams. | Program administrator. | [MOVE](./10-pm-workspaces.md) | Migrate the user job to `/build/workspaces`, preserve deep links temporarily, then remove this physical route. |
+| `/build/pm-workspaces` | Optionally group projects, products, and teams. | Program administrator. | [MOVE — BLOCKED](./10-pm-workspaces.md) | Attempted and reverted. `/build/workspaces` is a strict prefix of the workspace scope namespace, so the org list swallows every `/build/workspaces/:id/...` deep link in route-access resolution. Needs a reviewed resolver change. |
 | `/build/portfolios` | Group investments across projects and programs. | Portfolio manager. | [KEEP](./10-portfolios.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/portfolios/[portfolioId]` | Group investments across projects and programs. | Portfolio manager. | [KEEP](./10-portfolios-portfolio.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/programs` | Coordinate related projects toward one delivery outcome. | Program manager. | [KEEP](./10-programs.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |

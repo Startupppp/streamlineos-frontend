@@ -158,6 +158,41 @@ frontend/features/build/drafts/comment-drafts-page.test.tsx
 - The seven `CONSOLIDATE` pages and three `MOVE` pages with a missing target —
   `BLOCKED`, because deleting them would remove the user job rather than move it.
 
+## Round 3 — the two remaining `MOVE` rows
+
+| Move | Outcome |
+|---|---|
+| `/build/goal` → `/build/goals` | **EXECUTED.** Route files renamed, `loading.tsx` moved with them so the detail route keeps the same boundary, `enforceRouteAccess` literals follow, all eight in-app callers repointed, `next.config.ts` redirects the old paths. Nothing deleted. |
+| `/build/goal/[goalId]` → `/build/goals/[goalId]` | **EXECUTED.** `/build/goal/:goalId(\d+)` redirects. |
+| `/build/pm-workspaces` → `/build/workspaces` | **BLOCKED.** Implemented in full, then reverted on test evidence. |
+
+### Why the workspaces move was reverted
+
+`/build/workspaces` is a strict prefix of the workspace **scope** namespace
+`/build/workspaces/[pmWorkspaceId]/…`. Putting the organization-level list there
+made it win route-access resolution for every workspace deep link:
+
+```
+/build/workspaces/ws-1/feedbucket
+  expected  feedbucket:widgets:view
+  actual    build:workspaces:view
+```
+
+`build-nav-route-access-parity.test.ts` went red on three cross-scope paths
+(`feedbucket`, `bugs`, `cycles`) plus `workspace-projects -> /build/workspaces/ws-1`
+key drift. Setting `exact: true` on the destination — the pattern `org-projects`
+uses for `/build`, which has the identical shape — **did not fix it**; the
+resolver does not honour `exact` there.
+
+Completing this move means changing shared route-access resolution, which moves
+permission outcomes for every module relying on prefix matching.
+`99-open-questions.md` forbids proceeding by silently choosing an answer that
+changes permissions, so it is reverted and recorded rather than forced. The
+goals move landed precisely because `goals` is not a scope namespace.
+
+The `page.tsx`, `loading.tsx` and `error.tsx` for `/build/pm-workspaces` are all
+restored to their original content; the revert is complete, not partial.
+
 ## Merged to `main`, and verified there
 
 `main` = `125c66eec`. The branch was merged by fast-forward using git's own

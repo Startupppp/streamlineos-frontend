@@ -117,7 +117,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
     deleteGoal.mutate(goalId, {
       onSuccess: () => {
         toast.success("Goal deleted");
-        router.push("/build/goal");
+        router.push("/build/goals");
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
@@ -132,7 +132,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
-      <PageWrapper title="Goal" backHref="/build/goal">
+      <PageWrapper title="Goal" backHref="/build/goals">
         <PmPageShell withGlow={false}>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
             <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
@@ -146,7 +146,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
 
   if (pageState.kind === "loading") {
     return (
-      <PageWrapper title="Goal" backHref="/build/goal">
+      <PageWrapper title="Goal" backHref="/build/goals">
         <GoalDetailSkeleton />
       </PageWrapper>
     );
@@ -154,7 +154,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
 
   if (!goal) {
     return (
-      <PageWrapper title="Goal" backHref="/build/goal">
+      <PageWrapper title="Goal" backHref="/build/goals">
         <PmPageShell withGlow={false}>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
             <ErrorState
@@ -175,7 +175,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
   return (
     <PageWrapper
       title={detail.title}
-      backHref="/build/goal"
+      backHref="/build/goals"
       actions={
         canManage ? (
           <GoalDetailActions onEdit={handleOpenEdit} onDelete={handleOpenDelete} />

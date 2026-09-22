@@ -148,13 +148,40 @@ them destroys a working user surface.
 | Project saved views | route | `/build/[projectId]/views` | `/build/[projectId]/issues` | `build-project-catalog.ts:264` (live) | **BLOCKED** | Full page. |
 | Build customers | route | `/build/customers` | `/crm` | `build-organization-catalog.ts:103` (live), route-access entry at `:179`, `hooks/api/build/customers.ts` | **NEEDS_REVIEW** | **The two manifests disagree.** `build-route-manifest.ts:136` says `DELETE → /crm`; `01a-canonical-route-manifest-prd.md` `PG-ORG-007` says `same · KEEP CRM relation view`. A contradiction between two authorities is not a licence to delete. |
 
-### E. Move sources whose destination does not exist
+### E. Move sources whose destination did not exist
 
-| Candidate | Kind | Current path | Stated target | Target on disk | Decision | Evidence |
-|---|---|---|---|---|---|---|
-| Build goals list | route | `/build/goal` | `/build/goals` | **absent** — no `app/(authenticated)/build/goals/` | **BLOCKED** | `build-organization-catalog.ts:89` points at `/build/goal`. This is the only Goals implementation; deleting it removes the job outright. |
-| Build goal detail | route | `/build/goal/[goalId]` | `/build/goals/[goalId]` | **absent** | **BLOCKED** | Same. |
-| PM workspaces list | route | `/build/pm-workspaces` | `/build/workspaces` | **absent** — `app/(authenticated)/build/workspaces/` contains only `[pmWorkspaceId]`, no index page | **BLOCKED** | `build-organization-catalog.ts:75` points at `/build/pm-workspaces`. Creating the index page is new work, not deletion. |
+| Candidate | Kind | Current path | Stated target | Decision | Evidence |
+|---|---|---|---|---|---|
+| Build goals list | route | `/build/goal` | `/build/goals` | **MOVE — EXECUTED** | The move was completed rather than left open: the route files moved to `app/(authenticated)/build/goals/`, the `enforceRouteAccess` literal follows, all eight in-app callers now link to `/build/goals`, and `next.config.ts` redirects the old path. Nothing was deleted. |
+| Build goal detail | route | `/build/goal/[goalId]` | `/build/goals/[goalId]` | **MOVE — EXECUTED** | Same. `/build/goal/:goalId(\d+)` redirects to `/build/goals/:goalId`. `goal/loading.tsx` moved with it, so the detail route keeps exactly the boundary it had. |
+| PM workspaces list | route | `/build/pm-workspaces` | `/build/workspaces` | **BLOCKED — architectural collision, evidence below** | Attempted and reverted. |
+
+#### Why `/build/pm-workspaces` → `/build/workspaces` cannot be done as a rename
+
+The move was implemented in full and then reverted on test evidence.
+`/build/workspaces` is a **strict prefix of the workspace scope namespace**
+`/build/workspaces/[pmWorkspaceId]/…`, so putting the organization-level list
+there makes it swallow every workspace deep link during route-access
+resolution:
+
+```
+/build/workspaces/ws-1/feedbucket
+  expected: feedbucket:widgets:view
+  actual:   build:workspaces:view      ← the org list entry won
+```
+
+`lib/build/build-nav-route-access-parity.test.ts` failed on three cross-scope
+paths (`feedbucket`, `bugs`, `cycles`) plus `workspace-projects -> /build/workspaces/ws-1`
+key drift. Marking the destination `exact: true` — the pattern `org-projects`
+uses for `/build`, which has the same shape — **did not fix it**: the
+route-access resolver does not honour `exact` on this path.
+
+Making it work therefore requires changing shared route-access resolution
+semantics, which alters permission outcomes for every module that relies on
+prefix matching. `99-open-questions.md` forbids proceeding by silently choosing
+an answer that changes permissions, so the move is recorded here and left for a
+reviewed decision. The goals move has no such collision — `goals` is not a scope
+namespace — which is why it landed and this one did not.
 
 ### F. Manifest rows with no page on disk
 

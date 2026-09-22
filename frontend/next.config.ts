@@ -159,6 +159,16 @@ const nextConfig: NextConfig = {
       destination: "/build/my-work?pmWorkspaceId=:pmWorkspaceId",
       permanent: false,
     },
+    {
+      source: "/build/goal",
+      destination: "/build/goals",
+      permanent: false,
+    },
+    {
+      source: "/build/goal/:goalId(\\d+)",
+      destination: "/build/goals/:goalId",
+      permanent: false,
+    },
   ],
   images: {
     formats: ["image/webp"],

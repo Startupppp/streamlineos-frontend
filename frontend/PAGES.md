@@ -238,8 +238,8 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/build/programs` · **Build** · hooks: `→ features/build`
 - `/build/portfolios` · **Build** · hooks: `→ features/build`
 - `/build/portfolios/[portfolioId]` · **Build** · hooks: `→ features/build`
-- `/build/goal` · **Build** · hooks: `→ features/build`
-- `/build/goal/[goalId]` · **Build** · hooks: `→ features/build`
+- `/build/goals` · **Build** · hooks: `→ features/build/goals` — renamed from `/build/goal` on 2026-09-22; the old path redirects via `next.config.ts`
+- `/build/goals/[goalId]` · **Build** · hooks: `→ features/build/goals` — renamed from `/build/goal/[goalId]` on 2026-09-22; the old path redirects via `next.config.ts`
 - `/build/roadmap` · **Build** · hooks: `→ features/build`
 - `/build/teams` · **Build** · hooks: `→ features/build`
 - `/build/teams/[teamId]` · **Build** · hooks: `→ features/build`
