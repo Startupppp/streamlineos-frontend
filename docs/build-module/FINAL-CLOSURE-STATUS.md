@@ -354,3 +354,72 @@ Each batch was independently re-proved rather than accepted:
 ### Review note carried forward
 
 `updateField` and `logTicketTime` now take adjacent same-typed `number` params, which typecheck cannot protect against a caller swap. The specs use distinct values per role so a swap fails loudly, but the call sites deserve a second pair of eyes.
+
+---
+
+# Final closure phase — 2026-09-22
+
+## Task board
+
+| Task | Status | Files changed | Tests | Blocker |
+|---|---|---|---|---|
+| 1. P0 #6 Sprint/Cycle | **BLOCKED** (design DONE) | `docs/build-module/sprint-cycle-consolidation-design.md` | typecheck 0; 18 suites / 157 tests | A non-production **PostgreSQL 18** |
+| 2. P0 #7 QA Bug | **BLOCKED** (design DONE) | `docs/build-module/qa-bug-consolidation-design.md` | typecheck 0; 6 suites / 77 tests | A non-production PostgreSQL |
+| 3. P0 #8 residual | **DONE (static)** · DB half BLOCKED | new gate `check:set-null-migration-text` + `docs/build-module/p08-composite-fk-status.md` | 10 self-tests; 195 suites / 1442 tests | `SET_NULL_GATE_DATABASE_URL` |
+| 4. Migration chain | **DONE** — CI gate repaired and green | `1090a_*` rename, journal, rollback, `verify-migration-chain.mjs` | `check:migration-chain` **PASS** | 1141/1142 stay unapplied |
+| 5. Controller census | **DONE** | none (verification only) | self-test 29/29; `--check` green | — |
+| 6. Documentation | **DONE** | this file + `IMPLEMENTATION-STATUS.md` | — | — |
+
+## The finding that mattered most: CI was red
+
+`check:migration-chain` **failed with exit 1 on `main`**, and `ci.yml:643` runs it on every push and PR. It had been red on both known defects. Direct evidence, no database, no `.env`:
+
+```
+FAIL  migration chain has 2 issue(s):
+  (b) DUPLICATE PREFIX  1090: 1090_inv_quality_hold_stock_grain, 1090_subscription_purchases
+  (c) TIMESTAMP REGRESSION  0619_... (when=1787895425277) <= 0271a_waitlist_admission (when=1803000010178)
+```
+
+Its self-test passes 24/24, so the gate was not vacuous — it was correctly reporting real defects that nobody could clear.
+
+**1090 was repaired, not suppressed.** Renamed to `1090a_` with its journal tag and rollback file. The preconditions were each verified rather than assumed: the ledger stores only `(hash, created_at)` with **no tag column** (`run-pending-migrations.mjs:86,91`), so no rename can orphan a row; **neither 1090 is sealed**, checked via the `tag` recorded *inside* each seal entry; a rename changes neither bytes nor `when`; and insert-order holds because `...299` sits between `...168` and `1091`'s `...300`. The baseline's written rationale for keeping both names turned on 1090 being sealed — it is not, and it was the only un-baselined collision of **15** (not the 80 previously recorded).
+
+**The 0271a to 0619 regression was baselined**, because it genuinely cannot be repaired from a checkout: restamping requires a matching `UPDATE drizzle.__drizzle_migrations` on every database where `0271a` is applied, and half of one atomic repair must not be performed. It is inert because ordering is by **array position**, not `when`. Quantified blast radius if an applier ever reverted to watermark selection: **385 of the 561 later entries would be stranded**. `check:watermark-free` is the only guard, and it is in CI (`ci.yml:649-651`).
+
+**Renaming broke the rollback pairing** — rollback files are keyed by tag. Caught by `check:migration-rollback`, fixed by renaming the `.down.sql` to match. Worth remembering before the next rename.
+
+## P0 #8: from blocked to 246 of 286 verified
+
+Drizzle's `UpdateDeleteAction` is a five-member string union with **no column-list parameter**, so the schema cannot express what migration 1142 changes. But the migration *text* can, and 285 of 286 constraint names appear in it. A new hermetic gate, `check:set-null-migration-text`, now verifies **246 of the 286** with no database at all — including 1142's own correctness, despite it being unapplied.
+
+**The 286 are not a list but a rule:** all are arity-2 `(tenant_col NOT NULL, single nullable pointer)`; the tenant column is member 0 in 286/286. That bounds the risk sharply — a bare list raises **23502 and aborts the parent DELETE loudly**; the silent-corruption case requires a *second* nullable member, which is structurally impossible here. Tenant isolation is never at stake; the defect *prevents* `org_id` being nulled.
+
+### Two genuine live defects found, coordinator-verified at source
+
+| Constraint | Migration | Shape |
+|---|---|---|
+| `fk_inv_sales_orders_channel_id_org` | `0580a:129` | `("org_id","channel_id")` with bare `ON DELETE set null` |
+| `fk_inv_stock_adjustments_scrap_location_id_org` | `0545a:73` | `("org_id","scrap_location_id")` with bare `ON DELETE SET NULL` |
+
+Both are the exact class 1142 repairs. They are **not yet fixed** — a repair migration is the natural next step.
+
+Also found: the existing catalog gate has a **live blind spot** — it keys on an untruncated 77-character constraint name, but Postgres truncates at 63, so `check-set-null-column-lists.ts:304` silently skips it *even with a database*.
+
+## Unresolved conflict: the PostgreSQL floor
+
+The two design agents disagreed, and this decides what database to provision.
+
+- **PG18** — `0619_chain_creates_what_production_has.sql` contains **648** occurrences of `ALTER TABLE ... ADD CONSTRAINT "<name>" NOT NULL <column>`, which is PG18-only named-NOT-NULL syntax. A prior session recorded a PG17 cold build dying at **`crm_org_party_map`**, which matches line 3333 exactly — same table.
+- **PG15** — the newest *feature* is `ON DELETE SET NULL (column_list)`, and CI's only Postgres service is `pgvector/pgvector:pg16`.
+
+These reconcile only partly: the `db-gates.yml` header records it was measured green at **journal head 672/672**, and head is now **903**, so cold-replay-to-head on pg16 is **unestablished**. **Provision PG18** — it is what production runs (Aurora 18.4) and is safe under either reading. The floor remains formally undeclared; recommended: `engines.postgresql: ">=18"`, a boot assertion in `pool.config.ts`, and a README line.
+
+## Corrections to earlier claims in this ledger
+
+- **The `23502` hazard recorded for migration 1141 is NOT reachable.** All three `insert(projects)` sites take `pmWorkspaceId` from `resolveWorkspaceIdForWrite`, typed `Promise<string>`, which returns a default workspace or throws (`projects-provision.service.ts:74`). No write path can produce a NULL. The real consequence of dropping `.notNull()` is narrower: it removed the only **compile-time** guard, so a future insert omitting the field would no longer be caught by `typecheck`. Latent, not live. **1141 is therefore not urgent**, and it unblocks the standalone-project feature without delivering it — no write path can yet produce a NULL.
+- **"One of 80 duplicated prefixes" was wrong.** Both gates define a prefix as the first underscore-delimited segment, so `0540` is distinct from `0540a`. Under that definition there are **15**, of which 14 were baselined.
+- **`check:migration-discipline` cannot fail on the regression** — line 752 downgrades every `journal-order` finding to a NOTE before the baseline is consulted, so its ~60 entries suppress printing only.
+- **`sprint_scope_events` has no application writer at all** — its only writer is the one-shot backfill inside `0156_sprint_scope_events.sql:105-135`. Consequently burnup silently degrades to `burnupFromCurrentMembership` for every sprint created since. Filed as P1, not fixed here.
+- **`bugs.qa_owner_membership_id` is written by nobody** (`bugs.service.ts:94,161` write only `qaOwnerId`); populated once by `0908` and NULL ever since, while `idx_bugs_org_qa_owner_membership` indexes a mostly-NULL column.
+- **BE-65 CONCURRENTLY guidance contradicts its own enforcing gate** — `check-migration-discipline.mjs:569-574` rejects `CREATE INDEX CONCURRENTLY` outright, and `BASELINE_CONCURRENTLY` is empty. `CLAUDE.md:90` should be reconciled.
+- **`SUBTASK` is not a live defect** — `normalizeTicketType` folds it to `TASK`. But the read path survives only on an undocumented `::text` cast (`projects-tickets-read.service.ts:264`), nothing pins it, and `createTicketSchema:158` still publishes `SUBTASK` in the OpenAPI enum, so clients get a silent downgrade rather than a 400.
