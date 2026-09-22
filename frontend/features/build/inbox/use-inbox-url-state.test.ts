@@ -72,6 +72,27 @@ describe("useInboxUrlState — param round-trips", () => {
     expect(url).toContain("q=ticket");
   });
 
+  it("setParams with view clears cursor because a notifications cursor cannot address the drafts list", () => {
+    mockSearchParams = new URLSearchParams("view=notifications&cursor=77");
+    const { result } = renderHook(() => useInboxUrlState());
+    act(() => {
+      result.current.setParams({ view: "drafts" });
+    });
+    const url = replace.mock.calls[0][0];
+    expect(url).not.toContain("cursor=");
+    expect(url).toContain("view=drafts");
+  });
+
+  it("setParams with only cursor keeps the cursor so pagination can advance", () => {
+    mockSearchParams = new URLSearchParams("view=drafts");
+    const { result } = renderHook(() => useInboxUrlState());
+    act(() => {
+      result.current.setParams({ cursor: "88" });
+    });
+    const url = replace.mock.calls[0][0];
+    expect(url).toContain("cursor=88");
+  });
+
   it("clearFilters removes q, type, and cursor but keeps view", () => {
     mockSearchParams = new URLSearchParams("view=drafts&q=foo&type=PROJECTS&cursor=5");
     const { result } = renderHook(() => useInboxUrlState());

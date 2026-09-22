@@ -69,9 +69,7 @@ export function useInboxUrlState(): InboxUrlState {
           next.set(key, value);
         }
       }
-      const filterChanged = Object.keys(updates).some(
-        (key) => key !== "cursor" && key !== "view",
-      );
+      const filterChanged = Object.keys(updates).some((key) => key !== "cursor");
       if (filterChanged) next.delete("cursor");
       replaceWith(next);
     },

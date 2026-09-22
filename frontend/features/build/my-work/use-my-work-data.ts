@@ -108,8 +108,6 @@ export function useMyWorkData({
     defaultSortDirection: defaults.dir,
   });
 
-  // Legacy `cycle` param from old deep links → normalise to cycleId.
-  // useBuildListUrlState already reads `cycleId`; only fall back when absent.
   const legacyCycle = searchParams.get("cycle");
   const baseFilters = useMemo(
     () => ({
