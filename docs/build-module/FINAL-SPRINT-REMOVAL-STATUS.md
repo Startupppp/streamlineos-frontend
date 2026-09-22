@@ -160,9 +160,10 @@ confirmed the merged code was deployed and that they are the only user of the da
 | drop | `a-sprint-cycle-05-drop.sql` | applied — `6bfdf9b8…` |
 | freeze | `b-qa-bug-04-contract-freeze.sql` | applied — `3a7903b0…` |
 | contract drop | `b-qa-bug-05-contract-drop.sql` | applied — `bf467ef1…` |
-| rename | `a-sprint-cycle-06-rename-scope-events.sql` | **deliberately NOT run** — cosmetic, needs a lockstep deploy |
+| rename | `a-sprint-cycle-06-rename-scope-events.sql` | applied — `afd5a242…`, with the declaration renamed in the same change |
+| trigger repair | `1152_build_report_revision_cycles` | applied — journalled, committed by a peer and never run |
 
-Ledger 908 → 912.
+Ledger 908 → 914. All six phase files and the one journalled migration are applied; nothing is outstanding.
 
 ## Preconditions measured before executing, not assumed
 
@@ -204,3 +205,32 @@ resolving at the instant the new one starts. `projects-reports.service.ts` reads
 report through a declaration that still names it, so phase 05 would have dropped the table successfully
 and broken burnup in the same transaction. Both renames now live in phase 06 with a rollback and a
 tripwire pinning the lockstep.
+
+
+---
+
+# Phase 06 and the trigger nobody had applied — 2026-09-22
+
+`a-sprint-cycle-06` is applied and the declaration moved with it, in the same change. The physical table
+is `cycle_scope_events` and the type is `cycle_scope_event_type`. The constraint and index names stay
+spelled `sprint_scope_events` — `ALTER TABLE ... RENAME` does not touch them — so the declaration keeps
+the old spellings on purpose, and a test pins that pairing so a future author does not "tidy" them into
+objects the catalog does not have.
+
+**Migration 1152 had been committed by a concurrent session and never applied.** It rewrites
+`build.bump_report_revision`, whose body still joined `build.sprints` and read `c.sprint_id`, both dropped
+by phases 04 and 05, while wired to twelve triggers including every write on `build.tickets`.
+
+It did not raise, and the reason is worth recording rather than being relieved about. The offending join
+sits behind `IF TG_TABLE_NAME = 'sprint_scope_events'`, and that stopped matching the instant phase 06
+renamed the table. So the branch became unreachable rather than broken — which also means scope-event
+writes were silently skipping their revision bump and serving stale reports until the TTL expired. A
+latent correctness bug, not an outage, and invisible either way.
+
+1152's own header says it **must be applied before** `a-sprint-cycle-04-detach.sql`. It was not. The order
+was wrong and the only thing that made it survivable was the guard above. Applied now and verified: the
+function names neither dropped object, and its triggers additionally cover `build.cycles`, which the
+original 1073 never did — so editing a cycle now bumps the reports that read it.
+
+**Verified after:** ledger 914, function clean, fifteen triggers, and a ticket `UPDATE` inside a
+rolled-back transaction succeeds.
