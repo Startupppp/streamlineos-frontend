@@ -216,7 +216,9 @@ export function FeedbucketSubmissionDetail({
   }
 
   const linkedTicketId = convertedTicketId ?? submission.linkedTicketId;
-  const projectId = submission.widget?.projectId;
+  const linkedProjectId =
+    submission.linkedTicket?.projectId ??
+    (convertedTicketId !== null ? undefined : submission.widget?.projectId);
 
   async function handleStatusChange(value: string) {
     try {
@@ -430,7 +432,7 @@ export function FeedbucketSubmissionDetail({
         existingAnalysis={submission.aiAnalysis}
         linkedTicketId={linkedTicketId}
         linkedTicketKey={null}
-        projectId={projectId}
+        projectId={linkedProjectId}
         onTicketCreated={setConvertedTicketId}
       />
 
