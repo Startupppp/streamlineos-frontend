@@ -9,7 +9,7 @@ import { PageState } from "@/components/shared/page-state";
 import { useProjectMembers } from "@/hooks/api/build";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getUserDisplayName } from "@/lib/person-display";
-import type { Bug, BugSeverity, BugStatus, BugPriority } from "@/types/projects";
+import type { Bug, BugSeverity, BugStatus } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";

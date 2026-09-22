@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
@@ -31,18 +32,20 @@ export function useWorkloadCapacity(
     staleTime: 60_000,
   });
 
-  if (!data?.members) return new Map();
+  return useMemo(() => {
+    if (!data?.members) return new Map<string, MemberCapacityData>();
 
-  return new Map(
-    data.members.map((m) => [
-      m.userId,
-      {
-        capacityHours: m.capacityHours,
-        loggedHours: m.loggedHours,
-        isOverAllocated: m.isOverAllocated,
-        isZeroCapacity: m.isZeroCapacity,
-        utilizationPercent: m.utilizationPercent,
-      } satisfies MemberCapacityData,
-    ]),
-  );
+    return new Map(
+      data.members.map((m) => [
+        m.userId,
+        {
+          capacityHours: m.capacityHours,
+          loggedHours: m.loggedHours,
+          isOverAllocated: m.isOverAllocated,
+          isZeroCapacity: m.isZeroCapacity,
+          utilizationPercent: m.utilizationPercent,
+        } satisfies MemberCapacityData,
+      ]),
+    );
+  }, [data]);
 }

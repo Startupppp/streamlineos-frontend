@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -97,27 +97,26 @@ export function useUpsertCommentDraft() {
     },
   });
 
-  const mutationMutateRef = useRef(mutation.mutate);
-  mutationMutateRef.current = mutation.mutate;
-
-  const isOnlineRef = useRef(isOnline);
-  isOnlineRef.current = isOnline;
+  const { mutate: mutationMutate } = mutation;
 
   useEffect(() => {
     if (!isOnline) return;
     const pending = drainBuffer();
     for (const item of pending) {
-      mutationMutateRef.current(item);
+      mutationMutate(item);
     }
-  }, [isOnline]);
+  }, [isOnline, mutationMutate]);
 
-  const mutate = useRef((args: { ticketId: number; body: string }) => {
-    if (!isOnlineRef.current) {
-      bufferDraft(args.ticketId, args.body);
-      return;
-    }
-    mutationMutateRef.current(args);
-  }).current;
+  const mutate = useCallback(
+    (args: { ticketId: number; body: string }) => {
+      if (!isOnline) {
+        bufferDraft(args.ticketId, args.body);
+        return;
+      }
+      mutationMutate(args);
+    },
+    [isOnline, mutationMutate],
+  );
 
   return { ...mutation, mutate };
 }

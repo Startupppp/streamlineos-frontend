@@ -10,7 +10,6 @@ import type {
   UpdateTicketInput,
   RankTicketInput,
   ProjectWithDetails,
-  ProjectMember,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";

@@ -224,7 +224,7 @@ export const WorkloadView = memo(function WorkloadView({
       const points = memberTickets.reduce((sum, t) => sum + (t.points ?? 0), 0);
       return { member, memberTickets, ticketsByDay, total, overdue, points };
     });
-  }, [members, filteredTickets, days, filters.statCard, filters.assigneeId]);
+  }, [members, filteredTickets, days, filters.statCard, filters.assigneeId, capacityByMemberId]);
 
   const unassigned = useMemo(
     () => filteredTickets.filter((t) => !t.assigneeId),
