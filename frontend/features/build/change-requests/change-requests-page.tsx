@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useChangeRequests, useDeleteChangeRequest } from "@/hooks/api/build/change-requests";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -83,15 +84,39 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const canCreate = useCan("build:changerequests:create");
   const canManage = useCan("build:changerequests:manage");
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
+
+  const statusFilter = searchParams.get("status") ?? "all";
+  const impactFilter = searchParams.get("impact") ?? "";
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editCr, setEditCr] = useState<ChangeRequest | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ChangeRequest | null>(null);
 
+  function updateUrlParam(key: string, value: string | null) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value && value !== "all") {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    const query = params.toString();
+    startTransition(() => {
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    });
+  }
+
+  const activeFilters = {
+    ...(statusFilter !== "all" ? { status: statusFilter } : {}),
+    ...(impactFilter ? { impact: impactFilter } : {}),
+  };
+
   const { data: crs, isLoading, isError, error, refetch } = useChangeRequests(
     projectId,
-    statusFilter !== "all" ? { status: statusFilter } : undefined,
+    Object.keys(activeFilters).length > 0 ? activeFilters : undefined,
   );
   const { data: membersData } = useOrgMembers(1, 100);
   const deleteCr = useDeleteChangeRequest(projectId);
@@ -103,6 +128,14 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
   }, []);
+
+  function handleStatusChange(value: string) {
+    updateUrlParam("status", value === "all" ? null : value);
+  }
+
+  function handleImpactChange(value: string) {
+    updateUrlParam("impact", value || null);
+  }
 
   const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
@@ -118,12 +151,13 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     void refetch();
   }, [refetch]);
 
-  const filtersActive = !!(search || statusFilter !== "all");
+  const filtersActive = !!(search || statusFilter !== "all" || impactFilter);
 
-  const handleClearFilters = useCallback(() => {
+  function handleClearFilters() {
     setSearch("");
-    setStatusFilter("all");
-  }, []);
+    updateUrlParam("status", null);
+    updateUrlParam("impact", null);
+  }
 
   const filtered = useMemo(
     () => (crs ?? []).filter((cr) => !search || cr.title.toLowerCase().includes(search.toLowerCase())),
@@ -215,7 +249,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
         value={search}
         onValueChange={handleSearchChange}
       />
-      <Select value={statusFilter} onValueChange={setStatusFilter}>
+      <Select value={statusFilter} onValueChange={handleStatusChange}>
         <SelectTrigger className="w-40">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
@@ -228,6 +262,11 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
           ))}
         </SelectContent>
       </Select>
+      <SearchInput
+        placeholder="Filter by impact..."
+        value={impactFilter}
+        onValueChange={handleImpactChange}
+      />
     </div>
   );
 
