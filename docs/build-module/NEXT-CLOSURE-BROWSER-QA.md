@@ -17,6 +17,13 @@ browser can settle, so Codex does not re-check what jsdom already covers.
 every Change Requests list request raises PostgreSQL `42703` and the page is a hard 500. Sections 1 and 2
 below are therefore **BLOCKED**, not failing. Do not file them as UI defects.
 
+**Migration 1149 production status (Agent 3, 2026-09-22): NOT YET APPLIED — UNVERIFIED.** The prior P0
+session recorded the production watermark at `1803000010440` (= migration 1144). Migration 1149 has journal
+`when = 1803000010450`, above the watermark, so it was not applied during that session. A live ledger check
+was attempted in this worktree but BLOCKED: `.env` is absent from `slos-next-closure`; `DATABASE_URL` was
+not set; the script failed closed. No retry was attempted. The coordinator must apply 1149 to production
+before sections 1 and 2 can be tested.
+
 Migration `1151` adds the Inbox project-filter index. The filter works without it — the query is just
 unindexed — so section 4 is testable either way.
 
