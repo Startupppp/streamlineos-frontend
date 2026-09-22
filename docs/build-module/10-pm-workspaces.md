@@ -9,10 +9,10 @@
 
 - **Current/target route:** `/build/pm-workspaces`
 - **Scope:** organization
-- **Disposition:** **MOVE — BLOCKED 2026-09-22**
-- **Decision:** Migrate the user job to `/build/workspaces`, preserve deep links temporarily, then remove this physical route.
+- **Disposition:** **MOVE — EXECUTED 2026-09-22**
+- **Decision:** The user job now lives at `/build/workspaces`; the old physical route was removed and its deep link is preserved by `next.config.ts`.
 - **User job:** Create a coherent operating area without forcing hierarchy.
-- **Evidence:** `frontend/app/(authenticated)/build/pm-workspaces/page.tsx`. The move to `/build/workspaces` was implemented in full on 2026-09-22 and reverted: that path is a strict prefix of the workspace scope namespace `/build/workspaces/[pmWorkspaceId]/...`, so the organization list swallowed every workspace deep link in route-access resolution — `/build/workspaces/ws-1/feedbucket` resolved to `build:workspaces:view` instead of `feedbucket:widgets:view`. Marking the destination `exact: true` did not help; the resolver ignores it on that path. Completing the move needs a reviewed change to shared route-access resolution. See `docs/build-module/DEAD-BUILD-SURFACE-INVENTORY.md`.
+- **Evidence:** `frontend/app/(authenticated)/build/workspaces/page.tsx`; `frontend/next.config.ts`; route census and route-access tests. The canonical organization index and dynamic workspace routes now have separate access entries, so `/build/workspaces/[pmWorkspaceId]/...` remains correctly scoped.
 
 ## Product contract
 

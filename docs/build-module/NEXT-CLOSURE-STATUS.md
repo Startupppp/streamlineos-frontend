@@ -22,9 +22,9 @@ Coordinator-owned. Workers never edit this file.
 | Phase B follow-up — two code comments in `use-my-work-data.ts` | DONE | `871103532` | 3 legacy-cycle tests carry the reason; mutation-proven | n/a | none |
 | Phase B follow-up — inner `Promise.all` in All Work chunking | DONE | `871103532` | 4 new tests; 3 fail against the reverted mutant | READY_FOR_CODEX_BROWSER_QA | none |
 | Phase B follow-up — Inbox `view` change does not reset cursor | DONE | `871103532` | 2 new tests; 1 fails against the reverted mutant | READY_FOR_CODEX_BROWSER_QA | none |
-| Phase B follow-up — All Work selection for List/Board | TODO | — | — | READY_FOR_CODEX_BROWSER_QA (known gap, not a defect) | `ListView` / `KanbanBoard` expose no selection API |
-| Phase B follow-up — Inbox `type` dropdown | TODO | — | — | n/a | Needs a real select over 18 `NotificationCategory` values plus enum validation |
-| Phase B follow-up — physical removal of old redirect routes | TODO | — | — | n/a | Census, redirects, deep links and pinned manifest count must move together |
+| Phase B follow-up — All Work selection for List/Board | DONE | `2d3b41ed5` → `7805cd6a6` | 72 focused tests across All Work, Kanban, Inbox and notification queries | READY_FOR_CODEX_BROWSER_QA | List and Kanban selection APIs are implemented and covered by mutation-sensitive tests |
+| Phase B follow-up — Inbox `type` dropdown | DONE | `2d3b41ed5` → `7805cd6a6` | Inbox filter, bounded list and URL-state tests pass | READY_FOR_CODEX_BROWSER_QA | Type filtering is implemented with URL state and notification-category validation |
+| Phase B follow-up — physical removal of old redirect routes | DONE | `1d07fadad` | Route census: 88 routes, 79 pages, 0 weak cold-load gates; route and redirect tests pass | READY_FOR_CODEX_BROWSER_QA | `/build/goal` and `/build/pm-workspaces` page trees were removed; config redirects preserve deep links |
 | Phase C — static integration verification | DONE | — | see table below | n/a | none |
 | Phase D — Codex browser QA handoff | DONE | — | n/a | READY_FOR_CODEX_BROWSER_QA | See `CODEX-BROWSER-QA.md` |
 
