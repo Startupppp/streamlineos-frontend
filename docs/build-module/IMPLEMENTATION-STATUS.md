@@ -782,9 +782,21 @@ Two ledger defects remain, and they are bookkeeping, not missing schema:
 - **One duplicate row at `created_at=1803000010336`.** Same root cause: `id=47` (hash `7c72eaa6…`)
   is the real 1121, and `id=17` is 1123 wearing 1121's timestamp.
 
-Both defects are the same mis-stamped row, so one targeted `UPDATE` of `id=17`'s `created_at` to
-`1803000010338` clears both. That is a production write and is **NOT DONE — it needs explicit
-authorization.** `check:migration-ledger` will keep failing until it is.
+Both defects were the same mis-stamped row, so one targeted `UPDATE` cleared both.
+
+**Applied 2026-09-22 with explicit authorization.** The write moved `id=17` from `1803000010336` to
+`1803000010338`, guarded in a transaction by 1123's full sha256 and by post-state assertions (each
+slot must end holding exactly one row, and `…338` must carry 1123's hash), with a dry run first that
+rolled back. Bookkeeping only — no schema and no application data was touched.
+
+Verified after the write:
+
+- `check:migration-ledger` — **PASS**: "No orphan, duplicate or unreachable entries." 908/908,
+  watermark `1803000010470`, 0 pending.
+- `check:migration-chain` — **PASS**, and its applied-watermark step now reports `RAN` rather than
+  `SKIP`, because the connection works.
+- `public.ai_action_proposals` re-checked: still `relrowsecurity = true` with its `tenant_isolation`
+  policy.
 
 Cycle phases 04/05 and the QA destructive contraction remain **BLOCKED** on unmet preconditions.
 
