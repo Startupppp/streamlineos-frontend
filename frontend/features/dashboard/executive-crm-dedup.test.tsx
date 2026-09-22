@@ -49,6 +49,17 @@ jest.mock("@/hooks/api/dashboard", () => ({
     error: null,
     refetch: jest.fn(),
   }),
+  useCrmPulse: () => ({
+    data: {
+      conversionRate: 22,
+      mrr: 5000,
+      pipelineValue: 20000,
+      newLeadsThisWeek: 8,
+    },
+    isLoading: false,
+    error: null,
+    refetch: jest.fn(),
+  }),
 }));
 
 import { ExecutiveKpiWidget } from "@/components/dashboard/executive-kpi-widget";

@@ -2,19 +2,13 @@
 
 import type { KeyboardEvent, ReactNode, RefObject } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import {
-  CalendarRange,
-  ChevronRight,
-  RefreshCw,
-  Tag,
-} from "lucide-react";
+import { CalendarRange, ChevronRight, RefreshCw, Tag } from "lucide-react";
 import {
   CircleCheckIcon,
   FolderIcon,
   LayersIcon,
   TriangleAlertIcon,
   UserIcon,
-  ZapIcon,
 } from "@animateicons/react/lucide";
 import type { IconHandle } from "@animateicons/react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -70,12 +64,6 @@ function CategoryLeading({
       return <Tag className={cn("h-4 w-4 shrink-0", tone)} />;
     case "cycle":
       return <RefreshCw className={cn("h-4 w-4 shrink-0", tone)} />;
-    case "sprint":
-      return (
-        <span className={cn("shrink-0", tone)}>
-          <ZapIcon ref={iconRef} size={16} />
-        </span>
-      );
     case "dates":
       return <CalendarRange className={cn("h-4 w-4 shrink-0", tone)} />;
     case "project":
@@ -163,7 +151,9 @@ export function FilterCategoryRow({
         iconRef={iconRef}
         active={selected}
       />
-      <span className="min-w-0 flex-1 truncate text-left font-medium tracking-tight">{label}</span>
+      <span className="min-w-0 flex-1 truncate text-left font-medium tracking-tight">
+        {label}
+      </span>
       {activeCount > 0 && (
         <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-dense font-semibold text-primary-foreground">
           {activeCount}
@@ -172,11 +162,7 @@ export function FilterCategoryRow({
       <motion.span
         aria-hidden
         className="inline-flex shrink-0 text-muted-foreground"
-        animate={
-          shouldReduceMotion
-            ? undefined
-            : { x: selected ? 2 : 0 }
-        }
+        animate={shouldReduceMotion ? undefined : { x: selected ? 2 : 0 }}
         transition={pmSnappy}
       >
         <ChevronRight className="h-4 w-4" />

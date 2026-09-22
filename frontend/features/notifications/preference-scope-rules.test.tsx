@@ -1,6 +1,14 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { toast } from "sonner";
+
+beforeAll(() => {
+  Element.prototype.hasPointerCapture = () => false;
+  Element.prototype.setPointerCapture = () => undefined;
+  Element.prototype.releasePointerCapture = () => undefined;
+  Element.prototype.scrollIntoView = () => undefined;
+});
 import type { PreferenceRuleRow } from "@/types/notifications";
 import { NOTIFICATION_CATEGORIES } from "@/lib/notification-types";
 
@@ -86,11 +94,14 @@ describe("PreferenceScopeRulesSection", () => {
     it("renders three selects per enabled module", () => {
       mockModules = ["CRM", "BUILD", "HR"];
       render(<PreferenceScopeRulesSection />);
+      const moduleSection = screen
+        .getByText("Per-Module Preferences")
+        .closest("section") as HTMLElement;
       expect(
-        screen.getByRole("combobox", { name: /CRM In-App notification preference/i }),
+        within(moduleSection).getByRole("combobox", { name: /CRM In-App notification preference/i }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("combobox", { name: /Build In-App notification preference/i }),
+        within(moduleSection).getByRole("combobox", { name: /Build In-App notification preference/i }),
       ).toBeInTheDocument();
     });
 
@@ -167,13 +178,13 @@ describe("PreferenceScopeRulesSection", () => {
 
   describe("mutation payload", () => {
     it("calls set-rule mutation with exact scopeType CATEGORY, lowercase-keyed scopeKey, channel, and mode", async () => {
+      const user = userEvent.setup();
       render(<PreferenceScopeRulesSection />);
       const trigger = screen.getByRole("combobox", {
         name: /Security In-App notification preference/i,
       });
-      fireEvent.pointerDown(trigger, { button: 0 });
-      await waitFor(() => screen.getByRole("listbox"));
-      fireEvent.click(screen.getByRole("option", { name: "Off" }));
+      await user.click(trigger);
+      await user.click(screen.getByRole("option", { name: "Off" }));
       expect(mockMutate).toHaveBeenCalledWith(
         { scopeType: "CATEGORY", scopeKey: "SECURITY", channel: "IN_APP", mode: "OFF" },
         expect.objectContaining({
@@ -184,13 +195,16 @@ describe("PreferenceScopeRulesSection", () => {
     });
 
     it("calls set-rule mutation with scopeType MODULE and lowercase module id as scopeKey", async () => {
+      const user = userEvent.setup();
       render(<PreferenceScopeRulesSection />);
-      const trigger = screen.getByRole("combobox", {
+      const moduleSection = screen
+        .getByText("Per-Module Preferences")
+        .closest("section") as HTMLElement;
+      const trigger = within(moduleSection).getByRole("combobox", {
         name: /CRM In-App notification preference/i,
       });
-      fireEvent.pointerDown(trigger, { button: 0 });
-      await waitFor(() => screen.getByRole("listbox"));
-      fireEvent.click(screen.getByRole("option", { name: "Off" }));
+      await user.click(trigger);
+      await user.click(screen.getByRole("option", { name: "Off" }));
       expect(mockMutate).toHaveBeenCalledWith(
         { scopeType: "MODULE", scopeKey: "crm", channel: "IN_APP", mode: "OFF" },
         expect.objectContaining({
@@ -203,6 +217,7 @@ describe("PreferenceScopeRulesSection", () => {
 
   describe("error handling", () => {
     it("routes mutation error through getErrorMessage and surfaces via toast.error, not a raw message string", async () => {
+      const user = userEvent.setup();
       const error = new Error("upstream network error");
       mockMutate.mockImplementation(
         (_input: unknown, callbacks: { onError: (err: unknown) => void }) => {
@@ -215,9 +230,8 @@ describe("PreferenceScopeRulesSection", () => {
       const trigger = screen.getByRole("combobox", {
         name: /Security In-App notification preference/i,
       });
-      fireEvent.pointerDown(trigger, { button: 0 });
-      await waitFor(() => screen.getByRole("listbox"));
-      fireEvent.click(screen.getByRole("option", { name: "Off" }));
+      await user.click(trigger);
+      await user.click(screen.getByRole("option", { name: "Off" }));
 
       expect(mockGetErrorMessage).toHaveBeenCalledWith(error);
       expect(jest.mocked(toast).error).toHaveBeenCalledWith("Something went wrong");
