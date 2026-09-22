@@ -281,3 +281,58 @@ describe("InboxList — Mentions tab sends section:MENTIONS directly to the back
     );
   });
 });
+
+describe("InboxList — type prop wires category to the query and resets pagination", () => {
+  it("forwards the type prop as category to useInfiniteNotifications", () => {
+    mockPages([INBOX_FETCH_PAGE_SIZE], false);
+    render(
+      <InboxList
+        selectedId={null}
+        onSelect={noop}
+        section="UNREAD"
+        q={null}
+        type="PROJECTS"
+        searchInputRef={searchRef}
+      />,
+    );
+    expect(useInfiniteNotifications).toHaveBeenCalledWith(
+      expect.objectContaining({ category: "PROJECTS" }),
+    );
+  });
+
+  it("does not include category in the request when type prop is omitted", () => {
+    mockPages([INBOX_FETCH_PAGE_SIZE], false);
+    renderInbox("UNREAD");
+    expect(useInfiniteNotifications).not.toHaveBeenCalledWith(
+      expect.objectContaining({ category: expect.anything() }),
+    );
+  });
+
+  it("changing the type prop resets pagesShown back to the first window", async () => {
+    const user = userEvent.setup();
+    mockPages([100, 100, 100], false);
+    const { rerender } = render(
+      <InboxList
+        selectedId={null}
+        onSelect={noop}
+        section="UNREAD"
+        q={null}
+        type={null}
+        searchInputRef={searchRef}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /show 30 more/i }));
+    expect(screen.getAllByRole("listitem")).toHaveLength(INBOX_RENDER_PAGE_SIZE * 2);
+    rerender(
+      <InboxList
+        selectedId={null}
+        onSelect={noop}
+        section="UNREAD"
+        q={null}
+        type="PROJECTS"
+        searchInputRef={searchRef}
+      />,
+    );
+    expect(screen.getAllByRole("listitem")).toHaveLength(INBOX_RENDER_PAGE_SIZE);
+  });
+});

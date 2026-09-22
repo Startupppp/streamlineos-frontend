@@ -7,7 +7,7 @@ import { InboxList } from "./inbox-list";
 import { InboxDraftsPanel } from "./inbox-drafts-panel";
 import { useInboxUrlState } from "./use-inbox-url-state";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
-import type { Notification, NotificationSection } from "@/types/notifications";
+import type { Notification, NotificationSection, NotificationCategory } from "@/types/notifications";
 import { cn } from "@/lib/utils";
 
 const InboxPreviewPane = dynamic(
@@ -54,6 +54,11 @@ export function InboxPage() {
     handleFilterChange();
   }
 
+  function handleTypeChange(value: NotificationCategory | null) {
+    urlState.setParams({ type: value });
+    handleFilterChange();
+  }
+
   function handleClearFilters() {
     urlState.clearFilters();
     handleFilterChange();
@@ -68,11 +73,13 @@ export function InboxPage() {
       selectedId={selectedNotification?.id ?? null}
       section={urlState.section}
       q={urlState.q}
+      type={urlState.type}
       selectionDismissed={selectionDismissed}
       onSelect={handleSelect}
       onClearSelection={handleAutoClearSelection}
       onSectionChange={handleSectionChange}
       onQChange={handleQChange}
+      onTypeChange={handleTypeChange}
       onFilterChange={handleFilterChange}
       onClearFilters={handleClearFilters}
       searchInputRef={searchInputRef}

@@ -2,21 +2,31 @@
 
 import { useCallback, useMemo, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import type { NotificationSection } from "@/types/notifications";
+import type { NotificationSection, NotificationCategory } from "@/types/notifications";
+import { NOTIFICATION_CATEGORY_VALUES } from "@/types/notifications";
 
 export type InboxView = "notifications" | "drafts";
 
-const VALID_SECTIONS: ReadonlySet<string> = new Set([
+const VALID_SECTIONS: readonly NotificationSection[] = [
   "UNREAD",
   "ALL",
   "MENTIONS",
-]);
+];
 
 const FILTER_PARAMS = ["q", "type"] as const;
 
 function parseSection(raw: string | null): NotificationSection {
-  if (raw && VALID_SECTIONS.has(raw)) return raw as NotificationSection;
-  return "UNREAD";
+  const match = VALID_SECTIONS.find((section) => section === raw);
+  return match ?? "UNREAD";
+}
+
+function isNotificationCategory(v: string): v is NotificationCategory {
+  return NOTIFICATION_CATEGORY_VALUES.some((category) => category === v);
+}
+
+function parseType(raw: string | null): NotificationCategory | null {
+  if (raw !== null && isNotificationCategory(raw)) return raw;
+  return null;
 }
 
 function parseView(raw: string | null): InboxView {
@@ -27,7 +37,7 @@ export interface InboxUrlState {
   view: InboxView;
   section: NotificationSection;
   q: string | null;
-  type: string | null;
+  type: NotificationCategory | null;
   cursor: string | null;
   hasActiveFilters: boolean;
   isPending: boolean;
@@ -44,7 +54,7 @@ export function useInboxUrlState(): InboxUrlState {
   const view = parseView(searchParams.get("view"));
   const section = parseSection(searchParams.get("section"));
   const q = searchParams.get("q");
-  const type = searchParams.get("type");
+  const type = parseType(searchParams.get("type"));
   const cursor = searchParams.get("cursor");
 
   const replaceWith = useCallback(
@@ -84,8 +94,8 @@ export function useInboxUrlState(): InboxUrlState {
   }, [replaceWith, searchParams]);
 
   const hasActiveFilters = useMemo(
-    () => FILTER_PARAMS.some((param) => !!searchParams.get(param)),
-    [searchParams],
+    () => q !== null || type !== null,
+    [q, type],
   );
 
   return {

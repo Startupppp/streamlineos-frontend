@@ -4,22 +4,38 @@ import * as React from "react";
 import { X } from "lucide-react";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { NotificationCategory } from "@/types/notifications";
+import { NOTIFICATION_CATEGORY_VALUES } from "@/types/notifications";
+
+const ALL_TYPES_SENTINEL = "__all__" as const;
+
+function isNotificationCategory(v: string): v is NotificationCategory {
+  return (NOTIFICATION_CATEGORY_VALUES as readonly string[]).includes(v);
+}
 
 interface InboxFilterBarProps {
   q: string | null;
-  type: string | null;
+  type: NotificationCategory | null;
   hasActiveFilters: boolean;
   onQChange: (raw: string) => void;
-  onTypeChange: (value: string | null) => void;
+  onTypeChange: (value: NotificationCategory | null) => void;
   onClearFilters: () => void;
   searchInputRef: React.RefObject<HTMLInputElement | null>;
 }
 
 export function InboxFilterBar({
   q,
-  type: _type,
+  type,
   hasActiveFilters,
   onQChange,
+  onTypeChange,
   onClearFilters,
   searchInputRef,
 }: InboxFilterBarProps) {
@@ -44,6 +60,16 @@ export function InboxFilterBar({
     onClearFilters();
   }
 
+  function handleTypeSelectChange(value: string) {
+    if (value === ALL_TYPES_SENTINEL) {
+      onTypeChange(null);
+      return;
+    }
+    if (isNotificationCategory(value)) {
+      onTypeChange(value);
+    }
+  }
+
   return (
     <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
       <SearchInput
@@ -54,6 +80,17 @@ export function InboxFilterBar({
         fill
         inputClassName="h-8 text-xs"
       />
+      <Select value={type ?? ALL_TYPES_SENTINEL} onValueChange={handleTypeSelectChange}>
+        <SelectTrigger className="w-36 shrink-0" aria-label="Filter by category">
+          <SelectValue placeholder="All types" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL_TYPES_SENTINEL}>All types</SelectItem>
+          {NOTIFICATION_CATEGORY_VALUES.map((cat) => (
+            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       {hasActiveFilters ? (
         <Button
           type="button"

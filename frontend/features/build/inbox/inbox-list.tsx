@@ -13,7 +13,7 @@ import {
   useMarkAllNotificationsRead,
 } from "@/hooks/api/notifications";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
-import type { Notification, NotificationSection } from "@/types/notifications";
+import type { Notification, NotificationSection, NotificationCategory } from "@/types/notifications";
 import { InboxNotificationItem } from "./inbox-notification-item";
 import { InboxFilterBar } from "./inbox-filter-bar";
 import { InboxBulkToolbar } from "./inbox-bulk-toolbar";
@@ -38,11 +38,13 @@ interface InboxListProps {
   selectedId: number | null;
   section: NotificationSection;
   q: string | null;
+  type?: NotificationCategory | null;
   selectionDismissed?: boolean;
   onSelect: (notification: Notification) => void;
   onClearSelection?: () => void;
   onSectionChange?: (section: NotificationSection) => void;
   onQChange?: (q: string) => void;
+  onTypeChange?: (value: NotificationCategory | null) => void;
   onFilterChange?: () => void;
   searchInputRef: React.RefObject<HTMLInputElement | null>;
   hasActiveFilters?: boolean;
@@ -53,11 +55,13 @@ export function InboxList({
   selectedId,
   section,
   q,
+  type = null,
   selectionDismissed = false,
   onSelect,
   onClearSelection,
   onSectionChange,
   onQChange,
+  onTypeChange,
   onFilterChange,
   searchInputRef,
   hasActiveFilters = false,
@@ -69,7 +73,7 @@ export function InboxList({
   const bulk = useInboxBulkActions();
 
   const { data, isPending, isError, error, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
-    useInfiniteNotifications({ section, sourceModule: "build", search: q ?? undefined, limit: INBOX_FETCH_PAGE_SIZE });
+    useInfiniteNotifications({ section, sourceModule: "build", search: q ?? undefined, category: type ?? undefined, limit: INBOX_FETCH_PAGE_SIZE });
 
   const [pagesShown, setPagesShown] = React.useState(1);
   const [selectedIds, setSelectedIds] = React.useState<Set<number>>(new Set());
@@ -79,7 +83,7 @@ export function InboxList({
   const rawNotifications = React.useMemo(() => data?.pages.flat() ?? [], [data]);
   const total = rawNotifications.length;
 
-  React.useEffect(() => { setPagesShown(1); setSelectedIds(new Set()); }, [section, q]);
+  React.useEffect(() => { setPagesShown(1); setSelectedIds(new Set()); }, [section, q, type]);
 
   const pageState = usePageState({
     isLoading: isPending,
@@ -113,7 +117,7 @@ export function InboxList({
   function handleBulkArchive() { bulk.runBulkArchive([...selectedIds]); setSelectedIds(new Set()); }
   function handleBulkDelete() { bulk.runBulkDelete([...selectedIds]); setSelectedIds(new Set()); }
   function handleQChange(raw: string) { onQChange?.(raw); }
-  function handleTypeChange(_value: string | null) { void 0; }
+  function handleTypeChange(value: NotificationCategory | null) { onTypeChange?.(value); onFilterChange?.(); }
   function handleClearFilters() { onClearFilters?.(); }
 
   const hasUnread = rawNotifications.some((n) => !n.isRead);
@@ -153,7 +157,7 @@ export function InboxList({
           <AnimatedIconButton icon={CheckCheckIcon} iconSize={14} variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground" disabled={isMarkingAll} onClick={handleMarkAll} aria-label="Mark all read" title="Mark all read" />
         ) : null}
       </div>
-      <InboxFilterBar q={q} type={null} hasActiveFilters={hasActiveFilters} onQChange={handleQChange} onTypeChange={handleTypeChange} onClearFilters={handleClearFilters} searchInputRef={searchInputRef} />
+      <InboxFilterBar q={q} type={type} hasActiveFilters={hasActiveFilters} onQChange={handleQChange} onTypeChange={handleTypeChange} onClearFilters={handleClearFilters} searchInputRef={searchInputRef} />
       <InboxBulkToolbar selectedIds={selectedIds} totalVisible={deferredVisibleNotifications.length} onSelectAll={handleSelectAll} onDeselectAll={handleDeselectAll} onBulkMarkRead={handleBulkMarkRead} onBulkArchive={handleBulkArchive} onBulkDelete={handleBulkDelete} isMutating={bulk.isMutating} />
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto border-l border-border scrollbar-hide">
         <PageState resolution={pageState} loading={<div className="flex min-h-full flex-col"><InboxListSkeleton /></div>} onRetry={handleRetry} compact className="min-h-full w-full flex-1"

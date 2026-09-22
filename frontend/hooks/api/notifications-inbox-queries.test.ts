@@ -82,3 +82,96 @@ describe("abort-signal propagation", () => {
     expect(signal).toBeInstanceOf(AbortSignal);
   });
 });
+
+describe("useInfiniteNotifications — category param wiring", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("forwards category to apiClient.get when provided", async () => {
+    const client = makeClient();
+    const apiClient = apiClientMock();
+    apiClient.get.mockResolvedValue([]);
+
+    renderHook(() => useInfiniteNotifications({ category: "PROJECTS" }), {
+      wrapper: wrapper(client),
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+
+    expect(apiClient.get).toHaveBeenCalled();
+    const [, params] = apiClient.get.mock.calls[0] as [unknown, Record<string, string>];
+    expect(params).toMatchObject({ category: "PROJECTS" });
+  });
+
+  it("does not include category in the request when not provided", async () => {
+    const client = makeClient();
+    const apiClient = apiClientMock();
+    apiClient.get.mockResolvedValue([]);
+
+    renderHook(() => useInfiniteNotifications({ limit: 10 }), {
+      wrapper: wrapper(client),
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+
+    expect(apiClient.get).toHaveBeenCalled();
+    const [, params] = apiClient.get.mock.calls[0] as [unknown, Record<string, string>];
+    expect(params).not.toHaveProperty("category");
+  });
+
+  it("query key differs when category changes so two filters cannot share a cache entry", () => {
+    const { platformCoreQueryKeys } = require("@/lib/query-keys/platform-core");
+    const keyProjects = platformCoreQueryKeys.notifications.list({
+      category: "PROJECTS",
+      sourceModule: "build",
+      infinite: true,
+    });
+    const keyBilling = platformCoreQueryKeys.notifications.list({
+      category: "BILLING",
+      sourceModule: "build",
+      infinite: true,
+    });
+    expect(keyProjects).not.toEqual(keyBilling);
+  });
+
+  it("query key includes category when set", async () => {
+    const { platformCoreQueryKeys } = await import("@/lib/query-keys/platform-core");
+    const keyWithCategory = platformCoreQueryKeys.notifications.list({
+      category: "PROJECTS",
+      infinite: true,
+    });
+    const keyWithoutCategory = platformCoreQueryKeys.notifications.list({
+      infinite: true,
+    });
+    expect(keyWithCategory).not.toEqual(keyWithoutCategory);
+    const keyOtherCategory = platformCoreQueryKeys.notifications.list({
+      category: "BILLING",
+      infinite: true,
+    });
+    expect(keyWithCategory).not.toEqual(keyOtherCategory);
+  });
+
+  it("existing callers without category behave as before — no category key in params", async () => {
+    const client = makeClient();
+    const apiClient = apiClientMock();
+    apiClient.get.mockResolvedValue([]);
+
+    renderHook(() => useInfiniteNotifications(), {
+      wrapper: wrapper(client),
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+
+    expect(apiClient.get).toHaveBeenCalled();
+    const [url, params] = apiClient.get.mock.calls[0] as [string, Record<string, string>];
+    expect(url).toBe("/notifications");
+    expect(params).not.toHaveProperty("category");
+  });
+});

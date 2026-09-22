@@ -4,6 +4,7 @@ import { useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { KanbanBoard } from "@/features/build/views/kanban-board";
+import type { ListSelection } from "@/features/build/views/list-view-shared";
 import { PmPanel } from "@/components/pm-chrome";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ProjectChip } from "./project-chip";
@@ -13,9 +14,11 @@ import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 function BoardGroupSection({
   group,
   hasMore,
+  selection,
 }: {
   group: TicketGroup;
   hasMore: boolean;
+  selection?: ListSelection;
 }) {
   const router = useRouter();
   const kanbanTickets = useMemo(() => group.tickets.map(toKanbanTicket), [group.tickets]);
@@ -51,6 +54,7 @@ function BoardGroupSection({
           projectId={projectId}
           projectKey={projectKey}
           onTicketSelect={handleTicketSelect}
+          selection={selection}
         />
       </div>
     </PmPanel>
@@ -60,13 +64,25 @@ function BoardGroupSection({
 interface AllWorkBoardSectionProps {
   groups: TicketGroup[];
   hasMore?: boolean;
+  tableSelection?: Set<string | number>;
+  onSelectionChange?: (sel: Set<string | number>) => void;
 }
 
-export function AllWorkBoardSection({ groups, hasMore = false }: AllWorkBoardSectionProps) {
+export function AllWorkBoardSection({
+  groups,
+  hasMore = false,
+  tableSelection,
+  onSelectionChange,
+}: AllWorkBoardSectionProps) {
+  const selection: ListSelection | undefined =
+    tableSelection !== undefined && onSelectionChange !== undefined
+      ? { selected: tableSelection, onChange: onSelectionChange }
+      : undefined;
+
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
       {groups.map((group) => (
-        <BoardGroupSection key={group.id} group={group} hasMore={hasMore} />
+        <BoardGroupSection key={group.id} group={group} hasMore={hasMore} selection={selection} />
       ))}
     </div>
   );

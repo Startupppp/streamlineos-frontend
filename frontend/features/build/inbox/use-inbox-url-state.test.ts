@@ -141,3 +141,83 @@ describe("useInboxUrlState — param round-trips", () => {
     expect(url).not.toContain("q=");
   });
 });
+
+describe("useInboxUrlState — type param validation", () => {
+  it("a valid category round-trips through parseType", () => {
+    mockSearchParams = new URLSearchParams("type=PROJECTS");
+    const { result } = renderHook(() => useInboxUrlState());
+    expect(result.current.type).toBe("PROJECTS");
+  });
+
+  it("an invalid category is dropped and type returns null", () => {
+    mockSearchParams = new URLSearchParams("type=BOGUS_CATEGORY");
+    const { result } = renderHook(() => useInboxUrlState());
+    expect(result.current.type).toBeNull();
+  });
+
+  it("a different valid category also round-trips", () => {
+    mockSearchParams = new URLSearchParams("type=BILLING");
+    const { result } = renderHook(() => useInboxUrlState());
+    expect(result.current.type).toBe("BILLING");
+  });
+
+  it("type=SECURITY is a valid category and round-trips", () => {
+    mockSearchParams = new URLSearchParams("type=SECURITY");
+    const { result } = renderHook(() => useInboxUrlState());
+    expect(result.current.type).toBe("SECURITY");
+  });
+
+  it("setParams with a category value writes it to the URL", () => {
+    mockSearchParams = new URLSearchParams();
+    const { result } = renderHook(() => useInboxUrlState());
+    act(() => {
+      result.current.setParams({ type: "HRMS" });
+    });
+    const url = replace.mock.calls[0][0];
+    expect(url).toContain("type=HRMS");
+  });
+
+  it("setParams with null for type removes the param (All types selection)", () => {
+    mockSearchParams = new URLSearchParams("type=PROJECTS");
+    const { result } = renderHook(() => useInboxUrlState());
+    act(() => {
+      result.current.setParams({ type: null });
+    });
+    const url = replace.mock.calls[0][0];
+    expect(url).not.toContain("type=");
+  });
+
+  it("setParams with type clears cursor so pagination resets", () => {
+    mockSearchParams = new URLSearchParams("type=BILLING&cursor=55");
+    const { result } = renderHook(() => useInboxUrlState());
+    act(() => {
+      result.current.setParams({ type: "PROJECTS" });
+    });
+    const url = replace.mock.calls[0][0];
+    expect(url).toContain("type=PROJECTS");
+    expect(url).not.toContain("cursor=");
+  });
+
+  it("hasActiveFilters is true when a valid type is set", () => {
+    mockSearchParams = new URLSearchParams("type=AI");
+    const { result } = renderHook(() => useInboxUrlState());
+    expect(result.current.hasActiveFilters).toBe(true);
+  });
+
+  it("hasActiveFilters is false when type is invalid (it is dropped)", () => {
+    mockSearchParams = new URLSearchParams("type=NOT_A_REAL_CATEGORY");
+    const { result } = renderHook(() => useInboxUrlState());
+    expect(result.current.type).toBeNull();
+    expect(result.current.hasActiveFilters).toBe(false);
+  });
+
+  it("clearFilters removes a set type and returns type as null", () => {
+    mockSearchParams = new URLSearchParams("type=PROJECTS");
+    const { result } = renderHook(() => useInboxUrlState());
+    act(() => {
+      result.current.clearFilters();
+    });
+    const url = replace.mock.calls[0][0];
+    expect(url).not.toContain("type=");
+  });
+});

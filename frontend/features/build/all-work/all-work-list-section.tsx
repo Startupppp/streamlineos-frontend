@@ -4,6 +4,7 @@ import { memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ListView } from "@/features/build/views/list-view";
+import type { ListSelection } from "@/features/build/views/list-view-shared";
 import { PmPanel } from "@/components/pm-chrome";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ProjectChip } from "./project-chip";
@@ -45,9 +46,11 @@ function toListTicket(t: AllWorkTicket) {
 const GroupSection = memo(function GroupSection({
   group,
   hasMore,
+  selection,
 }: {
   group: TicketGroup;
   hasMore: boolean;
+  selection?: ListSelection;
 }) {
   const router = useRouter();
 
@@ -89,6 +92,7 @@ const GroupSection = memo(function GroupSection({
         onTicketClick={handleTicketClick}
         projectKey={firstTicket?.projectKey ?? projectKey}
         projectId={firstTicket?.projectId ?? projectId ?? 0}
+        selection={selection}
       />
     </PmPanel>
   );
@@ -97,18 +101,27 @@ const GroupSection = memo(function GroupSection({
 interface AllWorkListSectionProps {
   groups: TicketGroup[];
   hasMore?: boolean;
+  tableSelection?: Set<string | number>;
+  onSelectionChange?: (sel: Set<string | number>) => void;
 }
 
 export const AllWorkListSection = memo(function AllWorkListSection({
   groups,
   hasMore = false,
+  tableSelection,
+  onSelectionChange,
 }: AllWorkListSectionProps) {
   if (groups.length === 0) return null;
+
+  const selection: ListSelection | undefined =
+    tableSelection !== undefined && onSelectionChange !== undefined
+      ? { selected: tableSelection, onChange: onSelectionChange }
+      : undefined;
 
   return (
     <div className="flex flex-col gap-3">
       {groups.map((group) => (
-        <GroupSection key={group.id} group={group} hasMore={hasMore} />
+        <GroupSection key={group.id} group={group} hasMore={hasMore} selection={selection} />
       ))}
     </div>
   );

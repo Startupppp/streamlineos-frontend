@@ -383,7 +383,12 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
                           exit="exit"
                           transition={pmSnappy}
                         >
-                          <AllWorkListSection groups={groups} hasMore={hasMore} />
+                          <AllWorkListSection
+                            groups={groups}
+                            hasMore={hasMore}
+                            tableSelection={tableSelection}
+                            onSelectionChange={setTableSelection}
+                          />
                         </motion.div>
                       ) : null}
                       {view === "table" ? (
@@ -419,7 +424,12 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
                           transition={pmSnappy}
                           className="flex h-full min-h-0 w-full flex-1 flex-col"
                         >
-                          <AllWorkBoardSection groups={groups} hasMore={hasMore} />
+                          <AllWorkBoardSection
+                            groups={groups}
+                            hasMore={hasMore}
+                            tableSelection={tableSelection}
+                            onSelectionChange={setTableSelection}
+                          />
                         </motion.div>
                       ) : null}
                     </AnimatePresence>
