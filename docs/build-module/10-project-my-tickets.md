@@ -72,7 +72,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 ## Components
 
-- Existing feature evidence: `@/features/build/my-tickets/my-tickets-page`
+- Existing feature evidence: `@/features/build/my-work/my-work-page`. The standalone `my-tickets-page` was deleted 2026-09-22; `@/features/build/my-tickets/map-board-ticket` survives because the board imports it. The `/build/[projectId]/my-tickets` route remains a redirect to `/build/my-work?projectId=…`.
 - Reuse: `PageState`, `DataTable`, cursor controls, `FilterBar` target module, `EmptyState`, `EntityFormDialog`, `EntityFormSheet`, `ConfirmDialog`, status/priority chips, member picker, command palette, dirty-state guard.
 - New only if absent: scope-specific summary/visualization or execution module. Promote a shared module only after a second real consumer.
 

@@ -4,10 +4,10 @@
 
 - **Current/target route:** `/build/members`
 - **Scope:** organization
-- **Disposition:** **MOVE**
-- **Decision:** Migrate the user job to `/build/settings/access`, preserve deep links temporarily, then remove this physical route.
+- **Disposition:** **MOVE — EXECUTED 2026-09-22**
+- **Decision:** The user job lives at `/build/settings/access`. The physical page was deleted; the deep link is preserved by the `next.config.ts` redirect, which fires before the filesystem.
 - **User job:** Grant least-privilege Build access and review it.
-- **Evidence:** `frontend/app/(authenticated)/build/members/page.tsx`; Route existence verified in the repository; live behavior not directly observed with a valid detail record. **ASSUMPTION:** the page follows its source component until browser evidence is captured.
+- **Evidence:** page deleted 2026-09-22; the job renders from `frontend/app/(authenticated)/build/settings/access/page.tsx`, which composes `@/features/build/members/members-page`. Deep link preserved by the `frontend/next.config.ts` redirect. Census: `docs/build-module/DEAD-BUILD-SURFACE-INVENTORY.md`.
 
 ## Product contract
 

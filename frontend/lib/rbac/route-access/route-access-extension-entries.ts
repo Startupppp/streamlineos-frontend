@@ -339,22 +339,6 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     backendRoute: { method: "get", path: "/build/{projectId}/tickets" },
   },
   {
-    prefix: "/build/[projectId]/workflow",
-    product: "build",
-    permission: "build:workflow:view",
-    reason:
-      "Workflow page first reads GET /build/{projectId}/workflow/transitions, which carries @RequirePermission('build:workflow:view'). The nav already declares this key; this entry closes the direct-navigation gap.",
-    backendRoute: { method: "get", path: "/build/{projectId}/workflow/transitions" },
-  },
-  {
-    prefix: "/build/[projectId]/webhooks",
-    product: "build",
-    permission: "build:manage",
-    reason:
-      "Webhooks are delivery administration. First read is GET /build/{projectId}/webhooks, which carries @RequirePermission('build:manage'). The nav already declares this key.",
-    backendRoute: { method: "get", path: "/build/{projectId}/webhooks" },
-  },
-  {
     prefix: "/build/[projectId]/ai",
     product: "build",
     permission: "build:ai:use",

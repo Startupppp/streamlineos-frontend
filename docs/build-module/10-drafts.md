@@ -72,7 +72,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 ## Components
 
-- Existing feature evidence: `@/features/build/drafts/comment-drafts-page`
+- Existing feature evidence: `@/features/build/inbox/inbox-drafts-panel`, which composes `@/features/build/drafts/comment-draft-row`. The standalone `comment-drafts-page` was deleted 2026-09-22 once the Inbox owned the job; the `/build/drafts` route remains a redirect to `/build/inbox?view=drafts`.
 - Reuse: `PageState`, `DataTable`, cursor controls, `FilterBar` target module, `EmptyState`, `EntityFormDialog`, `EntityFormSheet`, `ConfirmDialog`, status/priority chips, member picker, command palette, dirty-state guard.
 - New only if absent: scope-specific summary/visualization or execution module. Promote a shared module only after a second real consumer.
 

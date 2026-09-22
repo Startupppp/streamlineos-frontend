@@ -28,10 +28,11 @@ file records only what was done and how it was measured.
 | `node scripts/build-route-census.mjs --self-test` | PASS 9/9 | **PASS 9/9** |
 | `node scripts/check-build-execution-plan.mjs` | **FAIL (exit 1)** — CRLF artifact | **FAIL (exit 1) — identical message, unchanged** |
 | `node scripts/check-build-execution-plan.mjs --self-test` | PASS | **PASS** |
-| `pnpm typecheck:web` | PASS | **PASS (exit 0)** |
-| `pnpm type-check:specs` | PASS | **PASS (exit 0)** |
-| `pnpm jest features/build lib/build features/portal` | — | **179 suites, 1330 tests, all pass** |
-| `pnpm jest features/build/members features/portal-access` | — | **3 suites, 23 tests, all pass** |
+| `pnpm typecheck:web` | PASS | **PASS (exit 0)**, re-run after the `main` merge |
+| `pnpm type-check:specs` | PASS before the merge | **FAIL (exit 2) after merging `main`** — one error in `features/build/backlog/project-backlog-page.test.tsx:22`, the exact file and error `PHASE-3-STATUS.md` documents as pre-existing. Untouched by this branch; it arrived with `main`. |
+| `pnpm jest lib/build lib/rbac` | — | **35 suites, 505 tests, all pass** |
+| `pnpm jest features/build features/portal features/portal-access lib components/layout components/command-palette hooks/api/build hooks/api/portal-access` | — | all pass **except** five pre-existing failures listed below |
+| `pnpm check:gated-reads`, `check:route-thinness` | — | **PASS** |
 | `pnpm check:dead-code` | **FAIL** — 6 unclassified exports, 3 dead files | **FAIL — same 6 unclassified exports, 0 dead files** |
 | `pnpm check:empty-states` | PASS | **PASS** — 4652 files scanned |
 | `pnpm check:page-state-usage` | PASS | **PASS** |
@@ -41,7 +42,19 @@ file records only what was done and how it was measured.
 | `eslint --quiet <touched files>` | — | **0 errors** |
 | `git diff --check` | — | clean (one CRLF notice on the regenerated snapshot) |
 
-### The four non-green results were each proven pre-existing, not assumed
+### Pre-existing failures in the broad sweep
+
+Five suites fail on the merged branch. None is in a file this branch modifies.
+
+| Suite | Why it is not this branch |
+|---|---|
+| `components/layout/sidebar/sidebar-nav-inventory.test.ts` | Digest of `NAV_GROUPS`; re-run with the HEAD copy of the one shared file this branch edits — identical failure. |
+| `components/layout/__tests__/shell-keyboard.test.tsx` | Throws in `org-switcher.tsx` on `useSession`; same restore-and-compare proof. |
+| `lib/renderer/record-surface-ratchet.test.ts` | Reports **growth** (`inventory: 138 -> 139`, `build: 76 -> 78`, total 580 vs frozen 578). Deletions can only shrink a count, and `inventory` is untouched here. Re-run with all three deleted components restored: **byte-identical numbers**, so this branch contributes zero. |
+| `features/wiki/lib/import-job-label.test.ts` | Wiki import-job naming. No import path reaches anything this branch changes. |
+| `lib/__tests__/auth-callbacks-test-helpers.ts` | "Test suite failed to run" — a helpers file matched by the test glob. A jest-config quirk, not a test. |
+
+### The non-green gate results were each proven pre-existing, not assumed
 
 - **`check:build-execution-plan`** reports the same missing literal that
   `PHASE-3-STATUS.md` diagnosed: the checker asserts a string containing `\n`
@@ -114,6 +127,8 @@ frontend/features/build/drafts/comment-drafts-page.test.tsx
 | `frontend/lib/build/build-route-manifest.ts` | six entries removed |
 | `frontend/lib/build/build-route-manifest.test.ts` | pinned count 88 → 82 |
 | `frontend/lib/rbac/denial-is-not-emptiness.known.json` | `my-tickets-page.tsx` entry removed (allowlist shrinks) |
+| `frontend/lib/rbac/route-access/route-access-extension-entries.ts` | `/build/[projectId]/workflow` and `/build/[projectId]/webhooks` prefixes removed — they became phantom entries once their pages were deleted |
+| `frontend/lib/build/build-route-access-deny.test.ts` | the two rows for the deleted paths now assert the canonical `…/settings/…` URLs, which are the live guarded surfaces |
 | `frontend/components/layout/command-palette-commands.ts` | "My Tickets" now opens `/build/my-work?projectId=…` |
 | `frontend/components/command-palette/hooks/use-keyboard-shortcuts.ts` | `g`+`i` chord now opens `/build/my-work?projectId=…` |
 | `frontend/components/command-palette/hooks/use-keyboard-shortcuts.test.ts` | asserts the canonical URL |
@@ -128,19 +143,24 @@ frontend/features/build/drafts/comment-drafts-page.test.tsx
 
 - `next.config.ts` — all six redirects retained. They are the deep-link contract
   now that the page files are gone.
-- `lib/rbac/route-access/route-access-extension-entries.ts` — the
-  `/build/[projectId]/workflow` and `/build/[projectId]/webhooks` prefixes stay.
-  The **URL** is still live; `resolveRouteAccess` returning `unknown` for a live
-  URL is a fail-open hazard, and `build-route-access-deny.test.ts:20,21` exists
-  to prevent exactly that. This is a reasoned deviation from the blanket
-  "remove the route-access entry" instruction.
+- `hooks/api/**` — see the trap above.
 - `features/build/my-tickets/{my-tickets-skeleton.tsx, my-tickets-view.ts}` —
   unreachable as product surface but still imported by two a11y suites. The
   house rule is not to delete a shared component while any repo-wide import
   remains. Recorded as `NEEDS_REVIEW`.
-- `hooks/api/**` — see the trap above.
 - The seven `CONSOLIDATE` pages and three `MOVE` pages with a missing target —
   `BLOCKED`, because deleting them would remove the user job rather than move it.
+
+## One correction, recorded rather than quietly fixed
+
+The first verification pass ran `lib/build` but **not** `lib/rbac`, and on that
+incomplete evidence this ledger recorded the two route-access extension entries
+for `/build/[projectId]/workflow` and `/build/[projectId]/webhooks` as a
+deliberate `KEEP`. Re-running `pnpm jest lib/rbac` showed two gates red on
+exactly those prefixes — `route-access-coverage.test.ts:42` and
+`route-access-keys.test.ts:153`, both of which exist to stop a registry entry
+outliving its page. The entries are now removed and both gates are green. The
+original `KEEP` was asserted, not measured.
 
 ## Open items for a human decision
 
@@ -156,3 +176,11 @@ frontend/features/build/drafts/comment-drafts-page.test.tsx
    with no route file anywhere under `app/`.
 4. **The PRD manifest header counts (93 / 84)** were already stale before this
    change and cannot be reconciled until 1–3 are decided.
+5. **FE-45 key mismatch, pre-existing.**
+   `/build/[projectId]/settings/workflow` and
+   `/build/[projectId]/settings/integrations/webhooks` inherit `build:update`
+   from the `/build/[projectId]/settings` prefix, but their first reads declare
+   `build:workflow:view` and `build:manage`. Adding more specific registry
+   prefixes would fix it and would also change which users can open those pages,
+   so it was not done here. This arrived with the Phase 3 route move, not with
+   this deletion.

@@ -151,7 +151,29 @@ them destroys a working user surface.
 
 | Candidate | Decision | Evidence |
 |---|---|---|
-| `route-access-extension-entries.ts` prefixes `/build/[projectId]/workflow`, `/build/[projectId]/webhooks` | **KEEP** | Deliberate deviation from the blanket "remove the route-access entry" instruction. The **URL** is still live — it is served by a `next.config.ts` redirect — only the page file is gone. `resolveRouteAccess` returning `unknown` for a live URL is a fail-open hazard, and `build-route-access-deny.test.ts:20,21` exists precisely to prevent it. Removing the entries would buy nothing and re-open a guarded path. |
+| `route-access-extension-entries.ts` prefixes `/build/[projectId]/workflow`, `/build/[projectId]/webhooks` | **DELETE** | Two gates forbid a registry entry outliving its page: `route-access-coverage.test.ts:42` ("every route-access extension prefix matches at least one real authenticated page — catches phantom extensions") and `route-access-keys.test.ts:153` ("keeps every registry extension live, so a stale entry cannot accumulate"). Both went red on exactly these two prefixes after the pages were deleted. Removed. |
+
+**Correction.** An earlier revision of this inventory recorded these two entries
+as `KEEP`, arguing that the URL is still live behind a `next.config.ts` redirect
+so `resolveRouteAccess` must not return `unknown` for it. That reasoning was
+asserted, not measured, and the repository disagrees: it carries two gates whose
+entire purpose is to stop a registry entry outliving its page. The `KEEP` call
+was only possible because the first verification pass ran `lib/build` but never
+`lib/rbac`. Both gates are green after removal.
+
+The entries were **deleted rather than retargeted** at the canonical settings
+paths. Retargeting was the tempting fix — the surfaces that now read
+`GET /build/{projectId}/workflow/transitions` and `GET /build/{projectId}/webhooks`
+inherit `build:update` from the `/build/[projectId]/settings` prefix rather than
+the `build:workflow:view` and `build:manage` keys those endpoints actually
+declare, which is an FE-45 mismatch. But adding the more specific prefixes would
+change *which users can open those pages*, and
+`99-open-questions.md` forbids proceeding by silently choosing an answer that
+changes permissions. Deletion leaves permission resolution byte-identical to
+before this branch. **The FE-45 key mismatch on
+`/build/[projectId]/settings/{workflow,integrations/webhooks}` is recorded here
+as `NEEDS_REVIEW` and is pre-existing — it arrived with the Phase 3 route move,
+not with this deletion.**
 
 ## Managed products — organization assessment
 

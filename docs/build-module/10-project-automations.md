@@ -4,10 +4,10 @@
 
 - **Current/target route:** `/build/[projectId]/automations`
 - **Scope:** project
-- **Disposition:** **MOVE**
-- **Decision:** Migrate the user job to `/build/[projectId]/settings/automations`, preserve deep links temporarily, then remove this physical route.
+- **Disposition:** **MOVE — EXECUTED 2026-09-22**
+- **Decision:** The user job lives at `/build/[projectId]/settings/automations`. The physical page was deleted; the deep link is preserved by the `next.config.ts` redirect, which fires before the filesystem.
 - **User job:** Remove repetitive updates without losing control.
-- **Evidence:** `frontend/app/(authenticated)/build/[projectId]/automations/page.tsx`; Route existence verified in the repository; live behavior not directly observed with a valid detail record. **ASSUMPTION:** the page follows its source component until browser evidence is captured.
+- **Evidence:** page deleted 2026-09-22; the job renders from `frontend/app/(authenticated)/build/[projectId]/settings/automations/page.tsx`. Deep link preserved by the `frontend/next.config.ts` redirect. Census: `docs/build-module/DEAD-BUILD-SURFACE-INVENTORY.md`.
 
 ## Product contract
 
