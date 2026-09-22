@@ -47,6 +47,26 @@ Gates passing: `page-state-usage`, `empty-states`, `gated-reads`, `response-cont
 `over-300`. Every one fails identically on `main`. Phase 3 left each exactly where it found it; the `over-300` count
 briefly rose by one and was brought back down (see L1).
 
+## Merged to main
+
+`main` moved during the phase — another session landed Phase 4 (`a0e7be444`) after this branch was cut, so the merge
+was not a fast-forward. There was **zero file overlap** between the two lines of work, so `main` was merged into this
+branch inside the isolated worktree first and re-verified there; `main`'s shared working tree then took a clean
+`--ff-only`, and the other session's three uncommitted doc edits were preserved untouched.
+
+`main` is now `5cc5b12e1`. Verified on `main` after the merge:
+
+| Check | Result |
+|---|---|
+| `pnpm type-check` | ✅ PASS |
+| `npx jest features/build lib/build features/portal` | ✅ **174 suites, 1260 tests, all pass** |
+| `node scripts/build-route-census.mjs --check` | ✅ 97 routes, 88 pages, 0 weak cold-load gates |
+| `node scripts/check-build-execution-plan.mjs` | ✅ **PASS** |
+| `pnpm check:over-300` | 563 — unchanged from `main` before the merge; this branch contributes 0 |
+
+The execution-plan check passing on `main` confirms the CRLF diagnosis below: it fails only in a freshly checked-out
+Windows worktree, never on a tree whose files are already on disk with LF.
+
 ## Phase 0 — verification before implementation
 
 Six read-only agents audited the surfaces first. Nothing was rebuilt because a spec file existed.
