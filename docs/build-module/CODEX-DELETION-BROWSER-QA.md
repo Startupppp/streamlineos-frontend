@@ -39,13 +39,19 @@ client router are exercised.
 | A4 | `/build/{projectId}/workflow` | `/build/{projectId}/settings/workflow` | |
 | A5 | `/build/{projectId}/automations` | `/build/{projectId}/settings/automations` | |
 | A6 | `/build/{projectId}/webhooks` | `/build/{projectId}/settings/integrations/webhooks` | |
-| A7 | `/build/{projectId}/my-tickets` | `/build/my-work?projectId={projectId}` | page-level redirect, not config |
-| A8 | `/build/drafts` | `/build/inbox?view=drafts` | page-level redirect, not config |
-| A9 | `/build/workspaces/{pmWorkspaceId}/my-work` | `/build/my-work?pmWorkspaceId=…` | page-level redirect, not config |
+| A7 | `/build/{projectId}/my-tickets` | `/build/my-work?projectId={projectId}` | redirect **moved** from the page into config |
+| A8 | `/build/drafts` | `/build/inbox?view=drafts` | redirect **moved** from the page into config |
+| A9 | `/build/workspaces/{pmWorkspaceId}/my-work` | `/build/my-work?pmWorkspaceId=…` | redirect **moved** from the page into config |
 
-**Failure signature to watch for:** A1–A6 are the routes whose page file was
-deleted. If any of them 404s, the configuration redirect is not covering a case
-the page used to cover, and the deletion must be reverted for that route.
+**Failure signature to watch for:** all nine are routes whose page file was
+deleted. If any 404s, the configuration redirect is not covering a case the page
+used to cover, and the deletion must be reverted for that route.
+
+A7–A9 deserve the closest look, because their redirect changed mechanism rather
+than merely losing a redundant copy. In particular confirm the **query string
+survives**: A7 must arrive with `?projectId=` populated, A9 with
+`?pmWorkspaceId=`, and A8 with `?view=drafts`. A redirect that lands on a bare
+`/build/my-work` or `/build/inbox` is a regression even though it does not 404.
 
 Also confirm a **non-numeric** project id degrades safely: `/build/abc/workflow`
 should 404, not throw and not render a broken settings page. The configuration
@@ -61,6 +67,7 @@ behind it. A clean 404 is the intended outcome.
 | B3 | Every entry in project More tools | Click all of them. None 404s. |
 | B4 | Collapsed sidebar | Same checks with the rail collapsed; tooltips and icons still identify the destination. |
 | B5 | Mobile drawer at 375 px | Build navigation opens as a sheet, current scope in the header, no horizontal scroll, every retained entry reachable. |
+| B6 | Build sidebar → **Drafts** (under My Work) | Opens `/build/inbox?view=drafts` **directly**. The URL bar must never show `/build/drafts` on the way. This entry was changed by this work — it previously linked into the redirect. |
 
 ## C. Command palette and keyboard — the repointed entries
 

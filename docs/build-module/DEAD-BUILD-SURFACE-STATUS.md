@@ -18,8 +18,8 @@ file records only what was done and how it was measured.
 |---|---|---|---|---|---|
 | Phase 1 — route and dependency inventory | **DONE** | `docs/build-module/DEAD-BUILD-SURFACE-INVENTORY.md` | n/a | n/a | 88 authenticated Build pages enumerated, 9 redirect-only pages identified, all `(portal)` and `(public)` routes classified. Every candidate checked against nav catalogs, command palette, keyboard shortcuts, `next.config.ts`, route-access registry, route manifest, census and tests. |
 | Phase 2 — managed-products organization | **DONE (no change required)** | none | `features/build/managed-products` suites pass | READY_FOR_CODEX_BROWSER_QA | All seven canonical routes already exist exactly as specified; shared product UI already lives in `frontend/features/build/managed-products/`. No duplicate product page, no product page under an unrelated project route. `/build/workspaces/[pmWorkspaceId]/products` is a workspace-scoped listing, `KEEP` per `PG-WS-006`. Moving correctly-placed routes to satisfy a checklist would be churn. |
-| Phase 3 — remove dead routes and files | **DONE** | 11 deleted, 8 edited | 179 suites / 1330 tests pass | READY_FOR_CODEX_BROWSER_QA | Six unreachable redirect pages plus four orphaned `loading`/`error` siblings, and five orphaned components and tests. Route manifest 88 → 82, census 97 → 91 routes / 88 → 82 pages. |
-| Phase 4 — redirect-only routes | **DONE** | see Phase 3 | `route-redirects.test.ts` passes | READY_FOR_CODEX_BROWSER_QA | Six classified `DELETE` (a `next.config.ts` redirect already serves the URL), three classified `REDIRECT` and retained because their `page.tsx` is the only deep-link contract. In-app callers of `/build/[projectId]/my-tickets` repointed at `/build/my-work?projectId=…`. |
+| Phase 3 — remove dead routes and files | **DONE** | 19 deleted, 14 edited | see verification table | READY_FOR_CODEX_BROWSER_QA | Nine redirect-only route pages, four orphaned `loading`/`error` siblings, six orphaned components and tests. Route manifest 88 → 79, census 97 → 88 routes / 88 → 79 pages. |
+| Phase 4 — redirect-only routes | **DONE** | see Phase 3 | `build-redirect-route-removal.test.ts`, 40 cases, all pass | READY_FOR_CODEX_BROWSER_QA | **All nine** redirect-only Build pages are deleted. Six were already shadowed by a `next.config.ts` redirect; for the other three the redirect was migrated into `next.config.ts` first, so no deep link changed behaviour. No redirect-only Build page remains. |
 | Phase 5 — API, types and Zod cleanup | **DONE (nothing became unused)** | none | n/a | n/a | No endpoint, hook, request/response type or Zod schema was orphaned. Every feature behind a deleted redirect is still imported by the canonical settings route that replaced it. See "Phase 5 finding" below. |
 | Phase 6 — verification | **DONE, two pre-existing failures** | n/a | see table below | n/a | Every non-green result reproduced on unmodified code before being attributed. |
 | Phase 7 — browser handoff | **READY_FOR_CODEX_BROWSER_QA** | `docs/build-module/CODEX-DELETION-BROWSER-QA.md` | n/a | **READY_FOR_CODEX_BROWSER_QA** | Claude ran code and automated tests only. No browser verification is claimed. |
@@ -29,7 +29,8 @@ file records only what was done and how it was measured.
 
 | Check | Baseline (before any edit) | After |
 |---|---|---|
-| `node scripts/build-route-census.mjs --check` | PASS — 97 routes, 88 pages, 0 weak cold-load gates | **PASS — 91 routes, 82 pages, 0 weak cold-load gates** |
+| `node scripts/build-route-census.mjs --check` | PASS — 97 routes, 88 pages, 0 weak cold-load gates | **PASS — 88 routes, 79 pages, 0 weak cold-load gates** |
+| `pnpm check:dead-code` unclassified exports | 6 | **5** — deleting `my-tickets-view.ts` retired `parseMyTicketsView` |
 | `node scripts/build-route-census.mjs --self-test` | PASS 9/9 | **PASS 9/9** |
 | `node scripts/check-build-execution-plan.mjs` | **FAIL (exit 1)** — CRLF artifact | **FAIL (exit 1) — identical message, unchanged** |
 | `node scripts/check-build-execution-plan.mjs --self-test` | PASS | **PASS** |
@@ -157,7 +158,7 @@ frontend/features/build/drafts/comment-drafts-page.test.tsx
 - The seven `CONSOLIDATE` pages and three `MOVE` pages with a missing target —
   `BLOCKED`, because deleting them would remove the user job rather than move it.
 
-## After pulling this branch: prune six stale generated route types
+## After pulling this branch: prune nine stale generated route types
 
 `next typegen` regenerates route types for routes that exist but does **not**
 prune types for routes that were deleted, so on any checkout with a warm
@@ -179,6 +180,9 @@ rm -rf ".next/types/app/(authenticated)/build/client-access"
 rm -rf ".next/types/app/(authenticated)/build/[projectId]/workflow"
 rm -rf ".next/types/app/(authenticated)/build/[projectId]/automations"
 rm -rf ".next/types/app/(authenticated)/build/[projectId]/webhooks"
+rm -rf ".next/types/app/(authenticated)/build/drafts"
+rm -rf ".next/types/app/(authenticated)/build/[projectId]/my-tickets"
+rm -rf ".next/types/app/(authenticated)/build/workspaces/[pmWorkspaceId]/my-work"
 ```
 
 The parallel session found this for `/build/access` and recorded it in
@@ -188,6 +192,27 @@ first ran after the deletions, so no stale directory was ever generated. That is
 why `typecheck:web` passes here, and it is why that pass alone does not prove a
 warm checkout is clean. Verified by listing all six paths under
 `frontend/.next/types/`: none exists here.
+
+## The census vacuity floor was lowered, deliberately
+
+`scripts/build-route-census.mjs` carried `MIN_BUILD_PAGES = 80`, which fails the
+run with *"the sweep resolved nothing and cannot report a clean tree"*. At 79
+Build pages the gate tripped. That floor is a **vacuity guard** — it exists to
+catch a collapsed enumeration, not to forbid a legitimate deletion — so it was
+lowered to `70` rather than the deletions being abandoned. The guard still
+works: the script's own self-test asserts that a sweep of 83 passes and a sweep
+of 3 fails, and both still hold. `--self-test` is green, 9/9.
+
+## A defect the new test found, not inspection
+
+`build-redirect-route-removal.test.ts` asserts that no Build navigation
+destination points at a removed route. It failed on its first run: the "Drafts"
+entry in `BUILD_MY_WORK_DESTINATIONS` was still a live sidebar link to
+`/build/drafts`, so every user opening Drafts from the sidebar took a needless
+server round-trip through a redirect. An earlier revision of the inventory had
+dismissed the `/build/drafts` references as "test fixture only" — true of
+`mobile-module-nav-items-fixtures.ts`, false of the real catalog. The href is
+now `/build/inbox?view=drafts`.
 
 ## One correction, recorded rather than quietly fixed
 

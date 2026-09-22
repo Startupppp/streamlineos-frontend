@@ -4,10 +4,10 @@
 
 - **Current/target route:** `/build/workspaces/[pmWorkspaceId]/my-work`
 - **Scope:** workspace
-- **Disposition:** **CONSOLIDATE**
-- **Decision:** Migrate the user job to `/build/my-work?pmWorkspaceId=...`, preserve deep links temporarily, then remove this physical route.
+- **Disposition:** **CONSOLIDATE — EXECUTED 2026-09-22**
+- **Decision:** The user job lives at `/build/my-work?pmWorkspaceId=...`. The physical page is deleted and its redirect now lives in `next.config.ts`.
 - **User job:** See and update all work that needs my attention.
-- **Evidence:** `frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/my-work/page.tsx`; Route existence verified in the repository; live behavior not directly observed with a valid detail record. **ASSUMPTION:** the page follows its source component until browser evidence is captured.
+- **Evidence:** page deleted 2026-09-22; the job renders from `frontend/app/(authenticated)/build/my-work/page.tsx`. Redirect and removal pinned by `frontend/lib/build/build-redirect-route-removal.test.ts`. Census: `docs/build-module/DEAD-BUILD-SURFACE-INVENTORY.md`.
 
 ## Product contract
 

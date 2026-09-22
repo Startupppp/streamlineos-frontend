@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "generatedAt": "2026-09-22T06:52:22.989Z",
+  "generatedAt": "2026-09-22T07:00:50.710Z",
   "source": "frontend/app",
-  "count": 91,
+  "count": 88,
   "routes": [
     {
       "path": "/accept-invitation",
@@ -125,10 +125,6 @@
       "file": "frontend/app/(authenticated)/build/[projectId]/modules/page.tsx"
     },
     {
-      "path": "/build/{projectId}/my-tickets",
-      "file": "frontend/app/(authenticated)/build/[projectId]/my-tickets/page.tsx"
-    },
-    {
       "path": "/build/{projectId}/qa",
       "file": "frontend/app/(authenticated)/build/[projectId]/qa/page.tsx"
     },
@@ -215,10 +211,6 @@
     {
       "path": "/build/customers",
       "file": "frontend/app/(authenticated)/build/customers/page.tsx"
-    },
-    {
-      "path": "/build/drafts",
-      "file": "frontend/app/(authenticated)/build/drafts/page.tsx"
     },
     {
       "path": "/build/goal",
@@ -319,10 +311,6 @@
     {
       "path": "/build/workspaces/{pmWorkspaceId}/goals",
       "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/goals/page.tsx"
-    },
-    {
-      "path": "/build/workspaces/{pmWorkspaceId}/my-work",
-      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/my-work/page.tsx"
     },
     {
       "path": "/build/workspaces/{pmWorkspaceId}/overview",

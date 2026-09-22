@@ -29,26 +29,31 @@ const diskRoutes = new Set(
   collectPageFilePaths(APP_BUILD_DIR).map(absolutePathToRoute),
 );
 
-describe("BLD-001 — build route manifest covers all 82 authenticated build pages bidirectionally", () => {
-  it("manifest has 82 entries so the coverage check cannot pass vacuously with an empty or truncated list", () => {
-    expect(BUILD_ROUTE_MANIFEST).toHaveLength(82);
+describe("BLD-001 — build route manifest covers all 79 authenticated build pages bidirectionally", () => {
+  it("manifest has 79 entries so the coverage check cannot pass vacuously with an empty or truncated list", () => {
+    expect(BUILD_ROUTE_MANIFEST).toHaveLength(79);
   });
 
-  it("no longer tracks the six redirect-only routes whose next.config.ts redirect already serves the URL, because a manifest entry without a page is a phantom disposition", () => {
+  it("no longer tracks the nine redirect-only routes whose next.config.ts redirect now serves the URL, because a manifest entry without a page is a phantom disposition", () => {
     const routes = BUILD_ROUTE_MANIFEST.map((entry) => entry.route);
     for (const removed of [
       "/build/access",
       "/build/members",
       "/build/client-access",
+      "/build/drafts",
       "/build/[projectId]/workflow",
       "/build/[projectId]/automations",
       "/build/[projectId]/webhooks",
+      "/build/[projectId]/my-tickets",
+      "/build/workspaces/[pmWorkspaceId]/my-work",
     ]) {
       expect(routes).not.toContain(removed);
     }
     for (const canonical of [
       "/build/settings/access",
       "/build/settings/client-access",
+      "/build/inbox",
+      "/build/my-work",
       "/build/[projectId]/settings/workflow",
       "/build/[projectId]/settings/automations",
       "/build/[projectId]/settings/integrations/webhooks",

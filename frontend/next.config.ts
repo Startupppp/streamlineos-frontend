@@ -144,6 +144,21 @@ const nextConfig: NextConfig = {
       destination: "/build/settings/client-access",
       permanent: false,
     },
+    {
+      source: "/build/drafts",
+      destination: "/build/inbox?view=drafts",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/my-tickets",
+      destination: "/build/my-work?projectId=:projectId",
+      permanent: false,
+    },
+    {
+      source: "/build/workspaces/:pmWorkspaceId/my-work",
+      destination: "/build/my-work?pmWorkspaceId=:pmWorkspaceId",
+      permanent: false,
+    },
   ],
   images: {
     formats: ["image/webp"],

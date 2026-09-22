@@ -74,11 +74,6 @@ const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
   },
   { route: "/build/[projectId]/milestones", decision: "KEEP", target: null },
   { route: "/build/[projectId]/modules", decision: "KEEP", target: null },
-  {
-    route: "/build/[projectId]/my-tickets",
-    decision: "CONSOLIDATE",
-    target: "/build/my-work?projectId=[projectId]",
-  },
   { route: "/build/[projectId]/qa", decision: "KEEP", target: null },
   { route: "/build/[projectId]/qa/runs/[runId]", decision: "KEEP", target: null },
   { route: "/build/[projectId]/releases", decision: "KEEP", target: null },
@@ -113,11 +108,6 @@ const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
   { route: "/build/approvals", decision: "KEEP", target: null },
   { route: "/build/command-center", decision: "KEEP", target: null },
   { route: "/build/customers", decision: "DELETE", target: "/crm" },
-  {
-    route: "/build/drafts",
-    decision: "CONSOLIDATE",
-    target: "/build/inbox?view=drafts",
-  },
   { route: "/build/goal", decision: "MOVE", target: "/build/goals" },
   { route: "/build/goal/[goalId]", decision: "MOVE", target: "/build/goals/[goalId]" },
   { route: "/build/inbox", decision: "KEEP", target: null },
@@ -174,11 +164,6 @@ const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
     route: "/build/workspaces/[pmWorkspaceId]/goals",
     decision: "KEEP",
     target: null,
-  },
-  {
-    route: "/build/workspaces/[pmWorkspaceId]/my-work",
-    decision: "CONSOLIDATE",
-    target: "/build/my-work?pmWorkspaceId=[pmWorkspaceId]",
   },
   {
     route: "/build/workspaces/[pmWorkspaceId]/overview",

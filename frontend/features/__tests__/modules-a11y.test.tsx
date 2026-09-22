@@ -147,7 +147,7 @@ jest.mock("date-fns", () => ({
 
 import { NotificationListSkeleton } from "@/features/notifications/notification-list-skeleton";
 import { EmployeesGridSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
-import { MyTicketsSkeleton } from "@/features/build/my-tickets/my-tickets-skeleton";
+import { AllWorkListSkeleton } from "@/features/build/my-work/my-work-rows";
 import { BillingPageSkeleton } from "@/features/billing/components/billing-page-skeleton";
 import { KnowledgeGapStatusBadge } from "@/features/support/components/knowledge-gap-status-badge";
 import { KbPageNotFound } from "@/features/wiki/components/kb-page-not-found";
@@ -200,14 +200,9 @@ describe("Module-level a11y — HRMS (EmployeesGridSkeleton)", () => {
   });
 });
 
-describe("Module-level a11y — Build/PM (MyTicketsSkeleton list view)", () => {
-  it("passes axe in list view", async () => {
-    const { baseElement } = render(<MyTicketsSkeleton view="list" />);
-    await expectNoAxeViolations(baseElement);
-  });
-
-  it("passes axe in table view", async () => {
-    const { baseElement } = render(<MyTicketsSkeleton view="table" />);
+describe("Module-level a11y — Build/PM (AllWorkListSkeleton)", () => {
+  it("passes axe in the loading state My Work actually renders", async () => {
+    const { baseElement } = render(<AllWorkListSkeleton />);
     await expectNoAxeViolations(baseElement);
   });
 });

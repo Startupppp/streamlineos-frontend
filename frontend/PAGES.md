@@ -210,7 +210,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/build/all-work` · **Build** · hooks: `→ features/build/all-work`
 - `/build/my-work` · **Build** · hooks: `→ features/build`
 - `/build/inbox` · **Build** · hooks: `→ features/build`
-- `/build/drafts` · **Build** · hooks: `→ features/build`
+- `/build/drafts` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/drafts/page.tsx] — redirect-only page; the redirect moved into `next.config.ts` and the sidebar Drafts entry now points straight at `/build/inbox?view=drafts`
 - `/build/command-center` · **Build** · hooks: `→ features/build`
 - `/build/approvals` · **Build** · hooks: `→ features/build`
 - `/build/members` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/members/page.tsx + error.tsx] — redirect-only page shadowed by the `next.config.ts:132` redirect to `/build/settings/access`, which fires before the filesystem, so the page never executed; the URL still redirects
@@ -227,7 +227,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/build/workspaces/[pmWorkspaceId]/pm-workspaces` · **Build** · [RETIRED app/(authenticated)/build/workspaces/[pmWorkspaceId]/pm-workspaces/page.tsx] — byte-identical to `/build/pm-workspaces` and never read its own `pmWorkspaceId`; zero inbound links
 - `/build/workspaces/[pmWorkspaceId]/all-work` · **Build** · hooks: `→ features/build`
 - `/build/workspaces/[pmWorkspaceId]/goals` · **Build** · hooks: `→ features/build/pm-workspaces` — workspace goal list; gated `build:goals:view`
-- `/build/workspaces/[pmWorkspaceId]/my-work` · **Build** · hooks: `→ features/build`
+- `/build/workspaces/[pmWorkspaceId]/my-work` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/workspaces/[pmWorkspaceId]/my-work/page.tsx] — redirect-only page; the redirect moved into `next.config.ts` and targets `/build/my-work?pmWorkspaceId=…`
 - `/build/workspaces/[pmWorkspaceId]/overview` · **Build** · hooks: `→ features/build/overview` — workspace overview; `enforceRouteAccess`
 - `/build/workspaces/[pmWorkspaceId]/products` · **Build** · hooks: `→ features/build/managed-products` — managed products scoped to a workspace; `enforceRouteAccess`
 - `/build/workspaces/[pmWorkspaceId]/roadmap` · **Build** · hooks: `→ features/build/pm-workspaces` — workspace roadmap; gated `build:roadmap:view`
@@ -286,7 +286,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/build/[projectId]/meetings/[meetingId]` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/milestones` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/modules` · **Build** · hooks: `→ features/build/project`
-- `/build/[projectId]/my-tickets` · **Build** · hooks: `→ features/build/project`
+- `/build/[projectId]/my-tickets` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/[projectId]/my-tickets/] — redirect-only page; the redirect moved into `next.config.ts` and targets `/build/my-work?projectId=…`. The command palette and the `g`+`i` chord now open the canonical URL directly.
 - `/build/[projectId]/qa` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/qa/runs/[runId]` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/releases` · **Build** · hooks: `→ features/build/project`

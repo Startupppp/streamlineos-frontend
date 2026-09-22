@@ -23,7 +23,7 @@ export const BUILD_MY_WORK_DESTINATIONS: BuildNavDestination[] = [
   {
     id: "my-work-drafts",
     label: "Drafts",
-    href: `${BUILD_ROOT_PATH}/drafts`,
+    href: `${BUILD_ROOT_PATH}/inbox?view=drafts`,
     icon: PenLine,
     requiredPermission: "build:tickets:view",
     mobilePriority: 50,

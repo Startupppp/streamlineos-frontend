@@ -78,7 +78,7 @@ export function coldLoadGateAudit() {
   return { count: rows.length, gaps };
 }
 
-const MIN_BUILD_PAGES = 80;
+const MIN_BUILD_PAGES = 70;
 
 export function assertColdLoadGates(audit) {
   const errors = [];

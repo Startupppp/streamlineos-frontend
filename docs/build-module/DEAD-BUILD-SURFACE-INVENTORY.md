@@ -96,13 +96,28 @@ The feature directories behind all six targets stay: `features/build/members/mem
 `features/build/webhooks/project-webhooks-page.tsx` are each imported by the
 canonical settings route that replaced the old path. None is dead.
 
-### B. Redirect-only routes that are the sole deep-link contract
+### B. Redirect-only routes whose redirect was migrated into `next.config.ts`
+
+These three had no configuration redirect, so the `page.tsx` was the only thing
+preserving the deep link. Rather than keep a page whose entire body is a
+redirect, the redirect was **moved into `next.config.ts`** and the page deleted.
+The URL behaves identically; `enforceRouteAccess` still runs, at the
+destination, exactly as it does for the six in section A.
 
 | Candidate | Kind | Current path | Canonical replacement | Callers | Imports | API usage | Decision | Evidence |
 |---|---|---|---|---|---|---|---|---|
-| Project my-tickets | redirect route | `app/(authenticated)/build/[projectId]/my-tickets/page.tsx` | `/build/my-work?projectId=…` | `command-palette-commands.ts:93`, `use-keyboard-shortcuts.ts:54` (`g`+`i` chord) | — | — | **REDIRECT** | No `next.config.ts` entry, so this page is the only thing preserving the deep link. `route-redirects.test.ts:50` pins the behaviour. In-app callers are repointed at the canonical URL so the route serves bookmarks only. |
-| Build drafts | redirect route | `app/(authenticated)/build/drafts/page.tsx` | `/build/inbox?view=drafts` | `mobile-module-nav-items-fixtures.ts:18` — **test fixture only**, not live navigation | — | — | **REDIRECT** | No `next.config.ts` entry. Phase 3 L2 composed the drafts surface inside the Inbox; the physical route survives purely for bookmarks. |
-| Workspace my-work | redirect route | `app/(authenticated)/build/workspaces/[pmWorkspaceId]/my-work/page.tsx` | `/build/my-work?pmWorkspaceId=…` | none found | — | — | **REDIRECT** | No `next.config.ts` entry. `route-redirects.test.ts:17` pins both the access call and the URL encoding. |
+| Project my-tickets | redirect route | `app/(authenticated)/build/[projectId]/my-tickets/page.tsx` | `/build/my-work?projectId=…` | `command-palette-commands.ts`, `use-keyboard-shortcuts.ts` (`g`+`i` chord) — both repointed at the canonical URL | — | — | **DELETE** | Redirect moved to `next.config.ts` as `/build/:projectId(\d+)/my-tickets`. Pinned by `build-redirect-route-removal.test.ts`. |
+| Build drafts | redirect route | `app/(authenticated)/build/drafts/page.tsx` | `/build/inbox?view=drafts` | `BUILD_MY_WORK_DESTINATIONS` in `build-stable-destinations.ts` — **a live sidebar entry**, repointed | — | — | **DELETE** | Redirect moved to `next.config.ts`. The live nav entry was found by the new test, not by inspection — see below. |
+| Workspace my-work | redirect route | `app/(authenticated)/build/workspaces/[pmWorkspaceId]/my-work/page.tsx` | `/build/my-work?pmWorkspaceId=…` | none | — | — | **DELETE** | Redirect moved to `next.config.ts` as `/build/workspaces/:pmWorkspaceId/my-work`. |
+
+**A defect the new test caught.** `build-redirect-route-removal.test.ts` asserts
+that no Build navigation destination points at a removed route. It immediately
+failed on `/build/drafts`: the "Drafts" entry in `BUILD_MY_WORK_DESTINATIONS`
+was still a live sidebar link into the redirect, so every user reaching Drafts
+from the sidebar took a pointless server round-trip. An earlier revision of this
+inventory called that reference "test fixture only" — that was true of
+`mobile-module-nav-items-fixtures.ts` and false of the real catalog, which the
+first pass missed. The href is now `/build/inbox?view=drafts`.
 
 ### C. Page components orphaned by a redirect
 
@@ -114,7 +129,8 @@ canonical settings route that replaced the old path. None is dead.
 | `CommentDraftsPage` | component | `features/build/drafts/comment-drafts-page.tsx` | `/build/inbox?view=drafts` | none | zero production importers repo-wide | — | **DELETE** | Phase 3 L2 composed drafts inside the Inbox via `inbox-drafts-panel.tsx`; the standalone page component was left behind. |
 | `comment-drafts-page.test.tsx` | test | `features/build/drafts/comment-drafts-page.test.tsx` | — | — | — | — | **DELETE** | Covers only the deleted component. |
 | `map-board-ticket.ts` | module | `features/build/my-tickets/map-board-ticket.ts` | — | `features/build/views/use-board-url-state.ts:21` | live production importer | — | **KEEP** | Shared with the board surface. Deleting it would break Issues. |
-| `MyTicketsSkeleton` | component | `features/build/my-tickets/my-tickets-skeleton.tsx` | — | `features/__tests__/modules-a11y.test.tsx:150`, `modules-content-a11y.test.tsx:150` | test-only importers | — | **NEEDS_REVIEW** | Unreachable as product surface but still imported repo-wide. The house rule is "never delete a shared component until all imports across the entire repository are gone", so it is retained and recorded rather than removed. Its dependency `my-tickets-view.ts` is retained for the same reason. |
+| `MyTicketsSkeleton` | component | `features/build/my-tickets/my-tickets-skeleton.tsx` | `AllWorkListSkeleton` | `modules-a11y.test.tsx` (2 axe cases), `modules-content-a11y.test.tsx` (**unused import**) | test-only importers | — | **DELETE** | A loading skeleton for a route that no longer exists. The a11y coverage was not dropped: it is repointed at `features/build/my-work/my-work-rows.tsx:148` `AllWorkListSkeleton`, the skeleton My Work actually renders via `loading={<AllWorkListSkeleton />}`. The second file's import was dead and is removed. |
+| `my-tickets-view.ts` | module | `features/build/my-tickets/my-tickets-view.ts` | `my-work-view.ts` | only `my-tickets-skeleton.tsx` and the deleted page | — | — | **DELETE** | Sole importers deleted in the same change. Removing it takes `check:dead-code` from 6 unclassified exports to 5, because `parseMyTicketsView` was one of them. |
 
 ### D. Consolidation sources that are still the only implementation
 
@@ -204,11 +220,17 @@ moving a correctly-placed route to satisfy a checklist would be churn.
 
 | Decision | Count | Kind |
 |---|---|---|
-| DELETE | 11 files | 6 unreachable route pages + 4 orphan `loading`/`error` siblings are counted with their route; 5 orphaned components and tests |
-| REDIRECT | 3 | Sole deep-link contract, retained |
-| KEEP | 2 + managed-products | Shared code with live importers |
+| DELETE — routes | 9 | Every redirect-only Build page. Six were already shadowed by a `next.config.ts` redirect; three had their redirect migrated there first. |
+| DELETE — files | 19 | The 9 route pages, 4 orphan `loading`/`error` siblings, and 6 orphaned components and tests |
+| KEEP | 2 + managed-products | `map-board-ticket.ts` (the board imports it) and the canonical settings features |
 | BLOCKED | 10 | Consolidation and move sources whose destination is absent or whose job is unmigrated |
-| NEEDS_REVIEW | 3 | Manifest contradiction, drifted portal rows, test-only component |
+| NEEDS_REVIEW | 3 | Manifest contradiction on `/build/customers`, drifted `/portal` rows, FE-45 key mismatch on the two settings routes |
+
+**No redirect-only Build page remains.** All nine legacy URLs are served by
+`next.config.ts`, which is checked before the filesystem, and
+`build-redirect-route-removal.test.ts` pins all four properties for each: no
+page on disk, a redirect with the right destination, absence from the route
+manifest, and no navigation destination pointing at it.
 
 ## Retained redirects and their removal conditions
 
@@ -216,6 +238,4 @@ moving a correctly-placed route to satisfy a checklist would be churn.
 |---|---|---|
 | `next.config.ts` `/build/access`, `/build/members`, `/build/client-access` | Build module | Remove once access logs show zero hits for one full bookmark cycle. No in-app caller remains. |
 | `next.config.ts` `/build/:projectId(\d+)/{workflow,automations,webhooks}` | Build module | Same. No in-app caller remains after this change. |
-| `page.tsx` `/build/[projectId]/my-tickets` | Build module | Remove once the redirect is moved into `next.config.ts` or bookmark traffic reaches zero. In-app callers removed by this change. |
-| `page.tsx` `/build/drafts` | Build module | Same. |
-| `page.tsx` `/build/workspaces/[pmWorkspaceId]/my-work` | Build module | Same. |
+| `next.config.ts` `/build/drafts`, `/build/:projectId(\d+)/my-tickets`, `/build/workspaces/:pmWorkspaceId/my-work` | Build module | Migrated out of `page.tsx` by this change. Remove once access logs show zero hits for one full bookmark cycle. No in-app caller remains. |

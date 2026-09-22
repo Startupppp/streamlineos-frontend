@@ -36,18 +36,23 @@ Full dependency census in
 | 2026-09-22 | `app/(authenticated)/build/[projectId]/workflow/page.tsx`, `error.tsx`, `loading.tsx` | `/build/[projectId]/settings/workflow` | `next.config.ts` redirect |
 | 2026-09-22 | `app/(authenticated)/build/[projectId]/automations/page.tsx`, `loading.tsx` | `/build/[projectId]/settings/automations` | `next.config.ts` redirect |
 | 2026-09-22 | `app/(authenticated)/build/[projectId]/webhooks/page.tsx`, `loading.tsx` | `/build/[projectId]/settings/integrations/webhooks` | `next.config.ts` redirect |
-| 2026-09-22 | `features/build/my-tickets/my-tickets-page.tsx`, `my-tickets-view-body.tsx` and their test | `/build/my-work?projectId=…` | route redirect retained |
-| 2026-09-22 | `features/build/drafts/comment-drafts-page.tsx` and its test | `/build/inbox?view=drafts` | route redirect retained |
+| 2026-09-22 | `app/(authenticated)/build/drafts/page.tsx` | `/build/inbox?view=drafts` | redirect **moved into** `next.config.ts` |
+| 2026-09-22 | `app/(authenticated)/build/[projectId]/my-tickets/` | `/build/my-work?projectId=…` | redirect **moved into** `next.config.ts` |
+| 2026-09-22 | `app/(authenticated)/build/workspaces/[pmWorkspaceId]/my-work/page.tsx` | `/build/my-work?pmWorkspaceId=…` | redirect **moved into** `next.config.ts` |
+| 2026-09-22 | `features/build/my-tickets/{my-tickets-page,my-tickets-view-body,my-tickets-skeleton,my-tickets-view}` and tests | `/build/my-work` | a11y coverage repointed at `AllWorkListSkeleton` |
+| 2026-09-22 | `features/build/drafts/comment-drafts-page.tsx` and its test | `/build/inbox?view=drafts` | drafts composed inside the Inbox |
 
-Every one of the six routes had a `next.config.ts` redirect **and** a
+Six of the nine routes already had a `next.config.ts` redirect **and** a
 redirect-only `page.tsx`. Configuration redirects are checked before the
-filesystem, so those page files could never execute.
+filesystem, so those page files could never execute. The other three had their
+redirect migrated into `next.config.ts` before the page was deleted, so no deep
+link changed behaviour. **No redirect-only Build page remains**, and
+`frontend/lib/build/build-redirect-route-removal.test.ts` keeps it that way.
 
 Not executed, and why — each is a kill-list entry whose replacement does not
 exist yet, so removing the page would delete the job rather than move it:
-Standalone Drafts page (route still the only deep-link contract), Project
-Analytics, Project Timeline, Project Saved Views, Standalone Bugs, Standalone
-AI, Authenticated Intake. `/build/goal`, `/build/goal/[goalId]` and
+Project Analytics, Project Timeline, Project Saved Views, Standalone Bugs,
+Standalone AI, Authenticated Intake. `/build/goal`, `/build/goal/[goalId]` and
 `/build/pm-workspaces` are `MOVE` rows whose targets `/build/goals` and
 `/build/workspaces` have no page on disk at all.
 

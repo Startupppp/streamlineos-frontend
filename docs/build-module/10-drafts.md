@@ -4,10 +4,10 @@
 
 - **Current/target route:** `/build/drafts`
 - **Scope:** organization
-- **Disposition:** **CONSOLIDATE**
-- **Decision:** Migrate the user job to `/build/inbox?view=drafts`, preserve deep links temporarily, then remove this physical route.
+- **Disposition:** **CONSOLIDATE — EXECUTED 2026-09-22**
+- **Decision:** The user job lives at `/build/inbox?view=drafts`. The physical page is deleted and its redirect now lives in `next.config.ts`; the sidebar Drafts entry links straight to the canonical URL.
 - **User job:** Process mentions, assignments, approvals, and drafts without losing context.
-- **Evidence:** `frontend/app/(authenticated)/build/drafts/page.tsx`; Route existence verified in the repository; live behavior not directly observed with a valid detail record. **ASSUMPTION:** the page follows its source component until browser evidence is captured.
+- **Evidence:** page deleted 2026-09-22; the job renders from `frontend/app/(authenticated)/build/inbox/page.tsx`. Redirect and removal pinned by `frontend/lib/build/build-redirect-route-removal.test.ts`. Census: `docs/build-module/DEAD-BUILD-SURFACE-INVENTORY.md`.
 
 ## Product contract
 
