@@ -119,4 +119,23 @@ export const changeRequestRowContract = z.object({
   deletedAt: z.string().nullable(),
 });
 
-export const changeRequestListContract = z.array(changeRequestRowContract);
+const crPagePaginationContract = z.object({
+  limit: z.number(),
+  hasMore: z.boolean(),
+  nextCursor: z.string().nullable(),
+});
+
+export const changeRequestListContract = z.union([
+  z.array(changeRequestRowContract).transform((rows) => ({
+    data: rows,
+    pagination: {
+      limit: rows.length,
+      hasMore: false as boolean,
+      nextCursor: null as string | null,
+    },
+  })),
+  z.object({
+    data: z.array(changeRequestRowContract),
+    pagination: crPagePaginationContract,
+  }),
+]);

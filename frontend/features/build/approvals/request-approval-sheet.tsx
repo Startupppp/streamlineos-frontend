@@ -122,7 +122,7 @@ function useEntityItems(projectId: number, entityType: ApprovalEntityType) {
 
   if (entityType === "change_request") {
     return {
-      items: (changeRequests ?? []).map((cr): EntityItem => ({
+      items: (changeRequests?.data ?? []).map((cr): EntityItem => ({
         value: String(cr.id),
         label: `CR-${cr.crNumber}: ${cr.title}`,
         sublabel: cr.status,

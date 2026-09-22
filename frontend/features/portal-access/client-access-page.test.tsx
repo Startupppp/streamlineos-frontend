@@ -105,6 +105,34 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
+const mockRouterReplace = jest.fn();
+let mockSearchParamsMap: Record<string, string> = {};
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockRouterReplace, push: jest.fn() }),
+  usePathname: () => "/build/settings/client-access",
+  useSearchParams: () => ({
+    get: (key: string) => mockSearchParamsMap[key] ?? null,
+    toString: () =>
+      Object.entries(mockSearchParamsMap)
+        .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+        .join("&"),
+  }),
+}));
+
+jest.mock("./use-client-access-url-state", () => ({
+  useClientAccessUrlState: () => ({
+    q: mockSearchParamsMap["q"] ?? "",
+    state: mockSearchParamsMap["state"] ?? "",
+    permission: mockSearchParamsMap["permission"] ?? "",
+    hasActiveFilters: Object.keys(mockSearchParamsMap).some((k) =>
+      ["q", "state", "permission"].includes(k),
+    ),
+    setFilter: jest.fn(),
+    resetFilters: jest.fn(),
+  }),
+}));
+
 const ACCESS_GRANTED = {
   data: {
     isOrgOwner: false,
@@ -149,6 +177,8 @@ const emptyGrantsPage = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSearchParamsMap = {};
+  mockRouterReplace.mockReset();
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseCan.mockReturnValue(true);
   mockUseProjectClientGrants.mockReturnValue(
@@ -240,5 +270,64 @@ describe("ClientAccessPage — page state correctness", () => {
     );
     render(<ClientAccessPage />);
     expect(mockUseRevokeGrant).not.toHaveBeenCalled();
+  });
+});
+
+describe("ClientAccessPage — URL filter wiring", () => {
+  it("passes q from URL search params to useProjectClientGrants so search is server-side rather than client-side filtering one page", () => {
+    mockSearchParamsMap = { q: "alice" };
+    render(<ClientAccessPage />);
+    expect(mockUseProjectClientGrants).toHaveBeenCalledWith(
+      expect.objectContaining({ q: "alice" }),
+    );
+  });
+
+  it("passes state from URL search params to useProjectClientGrants", () => {
+    mockSearchParamsMap = { state: "expired" };
+    render(<ClientAccessPage />);
+    expect(mockUseProjectClientGrants).toHaveBeenCalledWith(
+      expect.objectContaining({ state: "expired" }),
+    );
+  });
+
+  it("passes permission from URL search params to useProjectClientGrants", () => {
+    mockSearchParamsMap = { permission: "canSubmitChangeRequests" };
+    render(<ClientAccessPage />);
+    expect(mockUseProjectClientGrants).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: "canSubmitChangeRequests" }),
+    );
+  });
+
+  it("uses data rows from the hook directly without client-side filtering so the server predicate is authoritative and totals are not silently wrong", () => {
+    mockUseProjectClientGrants.mockReturnValue(
+      baseQueryResult({
+        data: {
+          data: [
+            {
+              projectClientGrantId: "grant-1",
+              partyContactId: "contact-1",
+              contactFirstName: "Bob",
+              contactLastName: "Jones",
+              projectId: 7,
+              portalMembershipId: "membership-1",
+              status: "ACTIVE",
+              canViewMilestones: false,
+              canViewTasks: false,
+              canViewAttachments: false,
+              canViewComments: false,
+              canSubmitChangeRequests: false,
+              expiresAt: null,
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+              pmWorkspaceId: null,
+              organizationId: "org-1",
+            },
+          ],
+          pagination: { hasMore: false, nextCursor: undefined },
+        },
+      }),
+    );
+    render(<ClientAccessPage />);
+    expect(screen.getByTestId("data-table")).toBeInTheDocument();
   });
 });
