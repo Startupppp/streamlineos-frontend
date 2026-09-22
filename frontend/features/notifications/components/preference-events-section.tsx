@@ -49,7 +49,7 @@ function EventRow({ item, isPending, onToggleMute }: EventRowProps) {
         <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{item.description}</p>
       </div>
       {item.mandatory ? (
-        <BellOff className="h-4 w-4 shrink-0 text-muted-foreground/40 mt-0.5" aria-label="Cannot mute this notification" />
+        <BellOff className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" aria-label="Cannot mute this notification" />
       ) : (
         <Switch
           checked={!isMuted}
