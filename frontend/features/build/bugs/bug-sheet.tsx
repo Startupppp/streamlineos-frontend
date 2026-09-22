@@ -93,8 +93,8 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
         title: editBug.title,
         description: editBug.description ?? "",
         severity: SEVERITIES.find((v) => v === editBug.severity) ?? "major",
-        priority: PRIORITIES.find((v) => v === editBug.priority) ?? "medium",
-        status: STATUSES.find((v) => v === editBug.status) ?? "new",
+        priority: PRIORITIES.find((v) => v === editBug.priority.toLowerCase()) ?? "medium",
+        status: STATUSES.find((v) => v === editBug.qaState) ?? "new",
         stepsToReproduce: editBug.stepsToReproduce ?? "",
         expectedResult: editBug.expectedResult ?? "",
         actualResult: editBug.actualResult ?? "",
@@ -103,8 +103,8 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
         affectedReleaseId: editBug.affectedReleaseId != null ? String(editBug.affectedReleaseId) : "",
         fixedReleaseId: editBug.fixedReleaseId != null ? String(editBug.fixedReleaseId) : "",
         assigneeId: "none",
-        qaOwnerId: editBug.qaOwnerId ?? "none",
-        linkedTicketId: editBug.linkedTicketId != null ? String(editBug.linkedTicketId) : "",
+        qaOwnerId: editBug.qaOwnerUserId ?? "none",
+        linkedTicketId: "",
       });
     } else {
       form.reset({ ...DEFAULT_VALUES, ...prefill });

@@ -15,12 +15,19 @@ export interface Bug {
   id: number;
   orgId: string;
   projectId: number;
-  bugNumber: number;
+  ticketNumber: number;
   title: string;
   description: string | null;
-  severity: string;
-  priority: string;
+  type: string;
   status: string;
+  priority: string;
+  assigneeMembershipId: number | null;
+  reporterId: string | null;
+  deletedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  qaState: string | null;
+  severity: string | null;
   stepsToReproduce: string | null;
   expectedResult: string | null;
   actualResult: string | null;
@@ -28,17 +35,11 @@ export interface Bug {
   browserDevice: string | null;
   affectedReleaseId: number | null;
   fixedReleaseId: number | null;
-  assigneeMembershipId: number | null;
-  reporterId: string | null;
-  qaOwnerId: string | null;
+  qaOwnerUserId: string | null;
   qaOwnerMembershipId: number | null;
-  reopenCount: number;
-  linkedTicketId: number | null;
   linkedTestCaseId: number | null;
-  createdBy: string | null;
-  deletedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
+  reopenCount: number | null;
+  createdByUserId: string | null;
 }
 
 export interface CreateBugInput {
@@ -56,7 +57,6 @@ export interface CreateBugInput {
   fixedReleaseId?: number;
   assigneeId?: string;
   qaOwnerId?: string;
-  linkedTicketId?: number;
   linkedTestCaseId?: number;
 }
 
