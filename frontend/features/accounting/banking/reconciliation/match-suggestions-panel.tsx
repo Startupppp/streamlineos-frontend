@@ -1,7 +1,13 @@
 "use client";
 
 import { toast } from "sonner";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,8 +15,11 @@ import { ErrorState } from "@/components/shared";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useMatchStatementLine, useMatchSuggestions } from "@/hooks/api/accounting/banking";
-import type { MatchKind } from "@/types/accounting-banking";
+import {
+  useMatchStatementLine,
+  useMatchSuggestions,
+} from "@/hooks/api/accounting/banking";
+import type { MatchKind } from "@/types/accounting/accounting-banking";
 
 interface MatchSuggestionsPanelProps {
   statementLineId: string | null;
@@ -27,7 +36,9 @@ export function MatchSuggestionsPanel({
   statementLineId,
   canReconcile,
 }: MatchSuggestionsPanelProps) {
-  const suggestionsQuery = useMatchSuggestions(statementLineId ?? "", { limit: 10 });
+  const suggestionsQuery = useMatchSuggestions(statementLineId ?? "", {
+    limit: 10,
+  });
   const matchLine = useMatchStatementLine();
 
   function handleMatch(kind: MatchKind, id: string): void {
@@ -44,9 +55,12 @@ export function MatchSuggestionsPanel({
   return (
     <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
       <CardHeader className="shrink-0 px-4 py-3">
-        <CardTitle className="text-sm font-semibold">What it might be in the books</CardTitle>
+        <CardTitle className="text-sm font-semibold">
+          What it might be in the books
+        </CardTitle>
         <CardDescription className="text-label">
-          Entries within three days of the bank&apos;s date, for the same amount.
+          Entries within three days of the bank&apos;s date, for the same
+          amount.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto p-4 pt-0">
@@ -84,15 +98,21 @@ export function MatchSuggestionsPanel({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{suggestion.label}</p>
+                    <p className="truncate text-sm font-medium">
+                      {suggestion.label}
+                    </p>
                     <p className="truncate text-dense text-muted-foreground">
-                      {KIND_LABELS[suggestion.kind]} · {formatShortDate(suggestion.date)}
+                      {KIND_LABELS[suggestion.kind]} ·{" "}
+                      {formatShortDate(suggestion.date)}
                       {suggestion.reference ? ` · ${suggestion.reference}` : ""}
                     </p>
                     {suggestion.reasons.length > 0 ? (
                       <ul className="mt-1 space-y-0.5">
                         {suggestion.reasons.map((reason) => (
-                          <li key={reason} className="text-dense text-muted-foreground">
+                          <li
+                            key={reason}
+                            className="text-dense text-muted-foreground"
+                          >
                             {reason}
                           </li>
                         ))}
@@ -101,9 +121,13 @@ export function MatchSuggestionsPanel({
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
                     <span className="font-mono text-sm tabular-nums">
-                      {formatMinorMoney(suggestion.amountMinor, suggestion.currency, {
-                        signDisplay: "always",
-                      })}
+                      {formatMinorMoney(
+                        suggestion.amountMinor,
+                        suggestion.currency,
+                        {
+                          signDisplay: "always",
+                        },
+                      )}
                     </span>
                     <LoadingButton
                       type="button"
@@ -112,7 +136,9 @@ export function MatchSuggestionsPanel({
                       className="h-7 px-2 text-dense"
                       disabled={!canReconcile}
                       isPending={matchLine.isPending}
-                      onClick={() => handleMatch(suggestion.kind, suggestion.id)}
+                      onClick={() =>
+                        handleMatch(suggestion.kind, suggestion.id)
+                      }
                     >
                       That&apos;s it
                     </LoadingButton>

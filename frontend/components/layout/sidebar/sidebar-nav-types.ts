@@ -5,6 +5,7 @@ export type ProductKey =
   | "home"
   | "crm"
   | "hrms"
+  | "recruitment"
   | "build"
   | "timesheets"
   | "inventory"

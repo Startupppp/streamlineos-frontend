@@ -151,8 +151,17 @@ see the Evidence Log.
 
 BSN-01-031 and BSN-01-032 CLOSED in the fourth pass — see the Evidence Log.
 
-- [ ] **BSN-01-033** Populate the complete project catalog with Overview as the
+- [x] **BSN-01-033** Populate the complete project catalog with Overview as the
   selected scope landing destination.
+  **Closed — source plus a passing pinned test (2026-09-21).**
+  `lib/build/nav/build-project-catalog.ts` emits the nine primary destinations
+  in the PRD order, and `lib/build/build-project-catalog.test.ts` pins all of
+  it: `primary[0].id === "project-overview"`, `primary[0].href === basePath`
+  (so the bare project route opens Overview), `exact: true` (so no child path
+  steals the highlight), the bare basePath matching exactly one destination,
+  the full set equalling the PRD order, and `primary.length` sitting on
+  `BUILD_NAV_MAX_PRIMARY` so a tenth destination fails the test instead of
+  silently truncating Client portal. 14 tests pass.
 
 ## Completed Implementation Inventory
 

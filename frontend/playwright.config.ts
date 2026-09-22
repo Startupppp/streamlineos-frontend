@@ -15,6 +15,9 @@ import { defineConfig, devices } from "@playwright/test";
  */
 const PORT = Number(process.env.E2E_PORT ?? 3000);
 
+const DEV_BUNDLER_FLAG =
+  process.env.E2E_DEV_BUNDLER === "webpack" ? " --webpack" : "";
+
 /**
  * `localhost`, never `127.0.0.1`. They are different origins to both CORS and
  * the cookie jar: the backend allowlist spells `localhost`, and a session cookie
@@ -157,7 +160,7 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: `pnpm exec next dev -p ${PORT}`,
+    command: `pnpm exec next dev -p ${PORT}${DEV_BUNDLER_FLAG}`,
     url: BASE_URL,
     timeout: 180_000,
     stdout: "pipe",

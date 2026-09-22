@@ -6,7 +6,7 @@ import { FnfTable } from "./fnf-table";
 export function FnfPageContent() {
   return (
     <PageWrapper
-      title="Full & Final Settlement"
+      title="Final settlement"
       subtitle="Review and approve exit settlements"
     >
       <div className="flex flex-1 min-h-0 flex-col gap-3">

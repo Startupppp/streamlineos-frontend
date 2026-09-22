@@ -7,9 +7,12 @@ import {
 import { ProjectSettingsPage } from "./project-settings-page";
 
 const mockPush = jest.fn();
+const mockReplace = jest.fn();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/build/1/settings",
 }));
 
 jest.mock("next-auth/react", () => ({
@@ -42,6 +45,10 @@ jest.mock("@/hooks/api/build", () => ({
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => false,
   useCanState: () => "denied" as const,
+}));
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: () => ({ kind: "ready" }),
 }));
 
 jest.mock("@/features/build/settings/project-members-section", () => ({

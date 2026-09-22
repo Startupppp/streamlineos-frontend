@@ -4,6 +4,7 @@ import { RequireModule } from "@/components/auth/require-module";
 import { useAccess } from "@/hooks/api/access";
 import { useEntitlements } from "@/hooks/api/entitlements";
 import { pendingQueryResult, successQueryResult } from "@/test-utils";
+import { ENTITLEMENTS } from "@/test-utils/response-contract-fixtures";
 
 jest.mock("next/link", () => ({
   __esModule: true,
@@ -97,7 +98,7 @@ describe("gate agreement — useModuleEnabled logic for alias pairs", () => {
 describe("RequireModule — route gate loading behaviour", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseEntitlements.mockReturnValue(successQueryResult({ lockedModules: [] }));
+    mockUseEntitlements.mockReturnValue(successQueryResult(ENTITLEMENTS));
   });
 
   it("shows a skeleton, not the disabled view, while access data has not loaded", () => {

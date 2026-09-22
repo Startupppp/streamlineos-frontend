@@ -1,4 +1,4 @@
-import type { GlJournalSource } from "@/types/accounting-kernel";
+import type { GlJournalSource } from "@/types/accounting/accounting-kernel";
 
 export const JOURNAL_SOURCE_LABELS: Record<GlJournalSource, string> = {
   manual: "Manual journal",

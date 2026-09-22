@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "generatedAt": "2026-09-20T17:05:17.103Z",
+  "generatedAt": "2026-09-22T08:02:37.016Z",
   "source": "frontend/app",
-  "count": 93,
+  "count": 88,
   "routes": [
     {
       "path": "/accept-invitation",
@@ -31,10 +31,6 @@
     {
       "path": "/build/{projectId}/approvals",
       "file": "frontend/app/(authenticated)/build/[projectId]/approvals/page.tsx"
-    },
-    {
-      "path": "/build/{projectId}/automations",
-      "file": "frontend/app/(authenticated)/build/[projectId]/automations/page.tsx"
     },
     {
       "path": "/build/{projectId}/backlog",
@@ -129,10 +125,6 @@
       "file": "frontend/app/(authenticated)/build/[projectId]/modules/page.tsx"
     },
     {
-      "path": "/build/{projectId}/my-tickets",
-      "file": "frontend/app/(authenticated)/build/[projectId]/my-tickets/page.tsx"
-    },
-    {
       "path": "/build/{projectId}/qa",
       "file": "frontend/app/(authenticated)/build/[projectId]/qa/page.tsx"
     },
@@ -157,8 +149,16 @@
       "file": "frontend/app/(authenticated)/build/[projectId]/settings/page.tsx"
     },
     {
-      "path": "/build/{projectId}/sprints",
-      "file": "frontend/app/(authenticated)/build/[projectId]/sprints/page.tsx"
+      "path": "/build/{projectId}/settings/automations",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/automations/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/integrations/webhooks",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/integrations/webhooks/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/workflow",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/workflow/page.tsx"
     },
     {
       "path": "/build/{projectId}/tickets/{ticketKey}",
@@ -181,10 +181,6 @@
       "file": "frontend/app/(authenticated)/build/[projectId]/views/page.tsx"
     },
     {
-      "path": "/build/{projectId}/webhooks",
-      "file": "frontend/app/(authenticated)/build/[projectId]/webhooks/page.tsx"
-    },
-    {
       "path": "/build/{projectId}/whiteboard",
       "file": "frontend/app/(authenticated)/build/[projectId]/whiteboard/page.tsx"
     },
@@ -197,16 +193,8 @@
       "file": "frontend/app/(authenticated)/build/[projectId]/wiki/[pageId]/page.tsx"
     },
     {
-      "path": "/build/{projectId}/workflow",
-      "file": "frontend/app/(authenticated)/build/[projectId]/workflow/page.tsx"
-    },
-    {
       "path": "/build/{projectId}/workload",
       "file": "frontend/app/(authenticated)/build/[projectId]/workload/page.tsx"
-    },
-    {
-      "path": "/build/access",
-      "file": "frontend/app/(authenticated)/build/access/page.tsx"
     },
     {
       "path": "/build/all-work",
@@ -217,10 +205,6 @@
       "file": "frontend/app/(authenticated)/build/approvals/page.tsx"
     },
     {
-      "path": "/build/client-access",
-      "file": "frontend/app/(authenticated)/build/client-access/page.tsx"
-    },
-    {
       "path": "/build/command-center",
       "file": "frontend/app/(authenticated)/build/command-center/page.tsx"
     },
@@ -229,16 +213,12 @@
       "file": "frontend/app/(authenticated)/build/customers/page.tsx"
     },
     {
-      "path": "/build/drafts",
-      "file": "frontend/app/(authenticated)/build/drafts/page.tsx"
+      "path": "/build/goals",
+      "file": "frontend/app/(authenticated)/build/goals/page.tsx"
     },
     {
-      "path": "/build/goal",
-      "file": "frontend/app/(authenticated)/build/goal/page.tsx"
-    },
-    {
-      "path": "/build/goal/{goalId}",
-      "file": "frontend/app/(authenticated)/build/goal/[goalId]/page.tsx"
+      "path": "/build/goals/{goalId}",
+      "file": "frontend/app/(authenticated)/build/goals/[goalId]/page.tsx"
     },
     {
       "path": "/build/inbox",
@@ -273,16 +253,8 @@
       "file": "frontend/app/(authenticated)/build/managed-products/[managedProductId]/roadmap/page.tsx"
     },
     {
-      "path": "/build/members",
-      "file": "frontend/app/(authenticated)/build/members/page.tsx"
-    },
-    {
       "path": "/build/my-work",
       "file": "frontend/app/(authenticated)/build/my-work/page.tsx"
-    },
-    {
-      "path": "/build/pm-workspaces",
-      "file": "frontend/app/(authenticated)/build/pm-workspaces/page.tsx"
     },
     {
       "path": "/build/portfolios",
@@ -301,6 +273,14 @@
       "file": "frontend/app/(authenticated)/build/roadmap/page.tsx"
     },
     {
+      "path": "/build/settings/access",
+      "file": "frontend/app/(authenticated)/build/settings/access/page.tsx"
+    },
+    {
+      "path": "/build/settings/client-access",
+      "file": "frontend/app/(authenticated)/build/settings/client-access/page.tsx"
+    },
+    {
       "path": "/build/settings/integrations",
       "file": "frontend/app/(authenticated)/build/settings/integrations/page.tsx"
     },
@@ -317,6 +297,10 @@
       "file": "frontend/app/(authenticated)/build/templates/page.tsx"
     },
     {
+      "path": "/build/workspaces",
+      "file": "frontend/app/(authenticated)/build/workspaces/page.tsx"
+    },
+    {
       "path": "/build/workspaces/{pmWorkspaceId}",
       "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/page.tsx"
     },
@@ -327,10 +311,6 @@
     {
       "path": "/build/workspaces/{pmWorkspaceId}/goals",
       "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/goals/page.tsx"
-    },
-    {
-      "path": "/build/workspaces/{pmWorkspaceId}/my-work",
-      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/my-work/page.tsx"
     },
     {
       "path": "/build/workspaces/{pmWorkspaceId}/overview",

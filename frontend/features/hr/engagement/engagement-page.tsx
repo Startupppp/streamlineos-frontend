@@ -33,8 +33,10 @@ const recognitionRowContract = lazyContract(() =>
 );
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { AnonymitySuppressedNotice } from "@/components/shared/anonymity-suppressed-notice";
+import { PageState } from "@/components/shared/page-state";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { useEngagementOverview, useMyMoodHistory, useOrgMoodAggregate } from "@/hooks/api/hr/engagement";
@@ -124,8 +126,8 @@ function MoodSparkline({ data }: { data: { date: string; avgMood: number }[] }) 
 function OverviewTab() {
   const { staggerContainer, fadeUp } = useMotionVariants();
   const { data: overview, isLoading, isError, error, refetch } = useEngagementOverview();
-  const { data: moodData, isLoading: moodLoading } = useOrgMoodAggregate();
-  const { data: recognitions, isLoading: recLoading, isError: recError, error: recErrorData, refetch: refetchRec } = useRecognitions();
+  const { data: moodData, isLoading: moodLoading, isError: moodError, error: moodErrorData, refetch: refetchMood } = useOrgMoodAggregate();
+  const { data: recognitions, isLoading: recLoading, isError: recError } = useRecognitions();
   const { data: membersData } = useOrgMembers(1, 200);
   const canManage = useCan("hr:engagement:manage");
 
@@ -137,6 +139,8 @@ function OverviewTab() {
     return map;
   }, [membersData]);
 
+  const moodPoints = moodData?.points ?? [];
+  const recentMoodPoints = moodPoints.slice(-7);
   const recentCount = recognitions?.length ?? 0;
   const eom = overview?.employeeOfMonth?.top;
   const eomMember = eom ? memberById.get(eom.userId) : undefined;
@@ -145,6 +149,10 @@ function OverviewTab() {
 
   function handleRetry(): void {
     void refetch();
+  }
+
+  function handleRetryMood(): void {
+    void refetchMood();
   }
 
   if (isError)
@@ -162,8 +170,8 @@ function OverviewTab() {
           <StatCardGrid cols={4}>
             <StatCard
               label="Recognitions"
-              value={recentCount}
-              hint="All time"
+              value={recError ? "—" : recentCount}
+              hint={recError ? "Couldn't load" : "All time"}
               icon={Heart}
               tone="red"
               isLoading={recLoading}
@@ -177,21 +185,21 @@ function OverviewTab() {
               isLoading={isLoading}
             />
             <StatCard
-              label="Mood Responses"
-              value={moodData?.reduce((acc, d) => acc + d.count, 0) ?? "—"}
-              hint="Aggregated"
+              label="Mood responses"
+              value={moodData ? moodPoints.reduce((acc, d) => acc + d.count, 0) : "—"}
+              hint={moodError ? "Couldn't load" : "Aggregated"}
               icon={Smile}
               tone="blue"
               isLoading={moodLoading}
             />
             <StatCard
-              label="Avg Mood"
+              label="Avg mood"
               value={
-                moodData && moodData.length > 0
-                  ? (moodData.slice(-7).reduce((s, d) => s + d.avgMood, 0) / Math.min(moodData.slice(-7).length, 7)).toFixed(1)
+                recentMoodPoints.length > 0
+                  ? (recentMoodPoints.reduce((s, d) => s + d.avgMood, 0) / recentMoodPoints.length).toFixed(1)
                   : "—"
               }
-              hint="Last 7 days"
+              hint={moodError ? "Couldn't load" : "Last 7 days"}
               icon={Star}
               tone="blue"
               isLoading={moodLoading}
@@ -203,15 +211,24 @@ function OverviewTab() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {canManage && (
           <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-            <p className="text-sm font-semibold text-foreground">Mood Trend (14 days)</p>
-            {moodLoading ? (
+            <p className="text-sm font-semibold text-foreground">Mood trend (14 days)</p>
+            {moodLoading || (!moodData && !moodError) ? (
               <Skeleton className="h-10 w-full" />
-            ) : moodData && moodData.length > 0 ? (
-              <MoodSparkline data={moodData} />
+            ) : moodError || !moodData ? (
+              <ErrorState compact title="Couldn't load the mood trend" description={getErrorMessage(moodErrorData)} onRetry={handleRetryMood} />
+            ) : moodPoints.length > 0 ? (
+              <MoodSparkline data={moodPoints} />
+            ) : moodData.suppressedDays > 0 ? (
+              <AnonymitySuppressedNotice minResponses={moodData.minResponses} />
             ) : (
-              <p className="text-xs text-muted-foreground py-4 text-center">No mood data yet</p>
+              <p className="text-xs text-muted-foreground py-4 text-center">No mood check-ins yet</p>
             )}
-            <p className="text-dense text-muted-foreground">Aggregated — groups with &lt;5 responses are hidden</p>
+            {moodData && moodPoints.length > 0 ? (
+              <p className="text-dense text-muted-foreground">
+                Aggregated — days with fewer than {moodData.minResponses} responses are hidden to protect anonymity
+                {moodData.suppressedDays > 0 ? ` (${moodData.suppressedDays} hidden)` : ""}
+              </p>
+            ) : null}
           </div>
         )}
 
@@ -382,7 +399,7 @@ export function HrEngagementPage() {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? "";
-  const canViewEngagement = useCan("hr:engagement:view");
+  const pageState = usePageState({ permission: "hr:engagement:view", isLoading: false, isError: false });
 
   const tabContent = useMemo(() => {
     switch (activeTab) {
@@ -395,41 +412,32 @@ export function HrEngagementPage() {
     }
   }, [activeTab, currentUserId]);
 
-  if (!canViewEngagement) {
-    return (
-      <PageWrapper
-        title="Employee Engagement"
-        subtitle="Recognition, mood, communities, and culture"
-      >
-        <NoPermissionState permission="hr:engagement:view" />
-      </PageWrapper>
-    );
-  }
-
   return (
     <PageWrapper
-      title="Employee Engagement"
-      subtitle="Recognition, mood, communities, and culture"
+      title="Polls & engagement"
+      subtitle="Recognition, mood check-ins, polls, communities, and campaigns"
     >
-      <div className="flex flex-1 min-h-0 flex-col gap-4">
-        <FilterPillGroup className="flex-wrap overflow-x-visible">
-          {TABS.map((tab) => (
-            <EngagementTabPill key={tab.id} tab={tab} activeTab={activeTab} onSelect={setActiveTab} />
-          ))}
-        </FilterPillGroup>
+      <PageState resolution={pageState} loading={null} className="flex-1">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <FilterPillGroup className="flex-wrap overflow-x-visible">
+            {TABS.map((tab) => (
+              <EngagementTabPill key={tab.id} tab={tab} activeTab={activeTab} onSelect={setActiveTab} />
+            ))}
+          </FilterPillGroup>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, x: 24 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -24 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
-          >
-            {tabContent}
-          </motion.div>
-        </AnimatePresence>
-      </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -24 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+            >
+              {tabContent}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </PageState>
     </PageWrapper>
   );
 }

@@ -27,7 +27,7 @@ export default function HrCasesLoading() {
           <Skeleton className="h-9 w-16 rounded-none" />
           <Skeleton className="h-9 w-36 rounded-none" />
         </div>
-        <DataTableSkeleton rows={12} columns={6} />
+        <DataTableSkeleton rows={12} headers={["Case #", "Category", "Severity", "Status", "Summary", "Age"]} />
       </div>
     </PageWrapper>
   );

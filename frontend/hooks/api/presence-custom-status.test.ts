@@ -1,10 +1,14 @@
 import { renderHook, act } from "@testing-library/react";
+import { ZodError } from "zod";
+
 import { usePresenceCustomStatus, usePresenceMap } from "./chat-core-read";
 
-const mockUseQuery = jest.fn(() => ({ data: undefined }));
+const mockUseQuery = jest.fn((_options: { queryKey: unknown }): { data: unknown } => ({
+  data: undefined,
+}));
 
 jest.mock("@tanstack/react-query", () => ({
-  useQuery: (...args: unknown[]) => mockUseQuery(...args),
+  useQuery: (options: { queryKey: unknown }) => mockUseQuery(options),
   useInfiniteQuery: jest.fn(() => ({ data: undefined })),
 }));
 jest.mock("next-auth/react", () => ({ useSession: jest.fn(() => ({ data: null })) }));
@@ -81,7 +85,7 @@ describe("usePresenceCustomStatus — the custom message and its expiry reach th
       usePresenceCustomStatus("u1");
     });
 
-    const keys = mockUseQuery.mock.calls.map(([opts]: [{ queryKey: unknown }]) =>
+    const keys = mockUseQuery.mock.calls.map(([opts]) =>
       JSON.stringify(opts.queryKey),
     );
     expect(new Set(keys).size).toBe(1);
@@ -111,6 +115,6 @@ describe("chatOnlineUsersContract — the new fields survive the parse", () => {
 
     expect(() =>
       chatOnlineUsersContract.parse([{ ...ROW, statusExpiresAt: new Date() }]),
-    ).toThrow();
+    ).toThrow(ZodError);
   });
 });

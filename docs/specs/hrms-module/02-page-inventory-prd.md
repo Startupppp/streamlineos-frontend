@@ -97,8 +97,11 @@ keep/merge/remove/add decision table.
 | `/directory/settings/[personId]` | KEEP | Admin person detail |
 | `/hr/announcements` | KEEP | **Locked:** Home → Company sidebar only; HR hub may deep-link; do not add to HR product sidebar (DR-HRM-07) |
 
-- [ ] **HRM-02-004** do not invent `/directory/settings/workers`; workers stay
-  at `/directory/workers`.
+- [x] **HRM-02-004** do not invent `/directory/settings/workers`; workers stay
+  at `/directory/workers`. **Closed — source proof 2026-09-21.** The route tree
+  under `frontend/app/(authenticated)/directory/` is exactly `[personId]`,
+  `access`, `settings`, `settings/[personId]` and `workers`. There is no
+  `settings/workers` directory, and `/directory/workers` exists.
 - [ ] **HRM-02-005** ADD manager team roster at `/me/team` or document that
   manager scope is only via `/hr/employees` filters — pick one and ship it.
 
@@ -235,8 +238,22 @@ keep/merge/remove/add decision table.
 | `/hr/analytics` | KEEP | HR analytics |
 | `/hr/access` | KEEP | HR access admin |
 
-- [x] **HRM-02-012** `/hr/service-delivery` **MERGE into cases** (HRM-00 D05).
-- [x] **HRM-02-013** `/hr/simulator` **out of customer nav** (HRM-00 D11).
+- [ ] **HRM-02-012** `/hr/service-delivery` **MERGE into cases** (HRM-00 D05).
+  ⚠ **Reopened 2026-09-21 — was ticked, and source contradicts it.** The page
+  still exists at
+  `frontend/app/(authenticated)/hr/service-delivery/page.tsx` and is still a
+  live customer nav destination at
+  `components/layout/sidebar/sidebar-nav-routes-hr-governance.ts:40`. The
+  disposition is locked; the merge was never performed. The tick recorded the
+  decision, not the work.
+- [ ] **HRM-02-013** `/hr/simulator` **out of customer nav** (HRM-00 D11).
+  ⚠ **Reopened 2026-09-21 — was ticked, and source contradicts it.**
+  `frontend/app/(authenticated)/hr/simulator/page.tsx` still exists (with a
+  `loading.tsx`) and is still linked from
+  `components/layout/sidebar/sidebar-nav-routes-hr-governance.ts:134`, so a
+  dev/admin simulator ships in default HR nav — exactly what D11 forbids.
+  This also blocks `HRM-03-007`, whose nav test must assert the absence of
+  `/hr/simulator`: written honestly against current source, that test fails.
 
 ## K. HR Settings
 

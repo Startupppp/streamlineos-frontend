@@ -43,6 +43,8 @@ export interface QuestionAnalytics {
   average: number | null;
   choiceDistribution: QuestionChoiceCount[];
   textResponses?: (string | null)[];
+  minResponses: number;
+  suppressed: boolean;
 }
 
 export interface SurveyResponseSession {

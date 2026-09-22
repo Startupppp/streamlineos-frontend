@@ -6,7 +6,7 @@ export default function LeaveAnalyticsLoading() {
   return (
     <PageWrapper
       title="Leave Analytics"
-      subtitle="Summary from the HR Analytics module"
+      subtitle="Summary from People analytics"
       actions={<Skeleton className="h-9 w-28 rounded-md" />}
     >
       <div className="space-y-6">

@@ -126,6 +126,9 @@ export const usersAndCommerceQueryKeys = {
         : ([...base, "timesheets", "periods", "overdue", params] as const),
     period: (periodId: number) =>
       [...base, "timesheets", "periods", "detail", periodId] as const,
+    periodApprovers: () => [...base, "timesheets", "periods", "approver"] as const,
+    periodApprover: (periodId: number) =>
+      [...base, "timesheets", "periods", "approver", periodId] as const,
     approvals: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "timesheets", "approvals"] as const)

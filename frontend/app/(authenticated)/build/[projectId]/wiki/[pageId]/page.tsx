@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireSession } from "@/lib/rbac/require-permission";
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { RequireModule } from "@/components/auth/require-module";
 import ProjectWikiPageDocument from "@/features/wiki/components/project-wiki-page-document";
 
@@ -8,7 +8,7 @@ interface ProjectWikiDocPageProps {
 }
 
 export default async function ProjectWikiDocPage({ params }: ProjectWikiDocPageProps) {
-  await requireSession();
+  await enforceRouteAccess("/build/[projectId]/wiki/[pageId]");
   const { projectId: rawProjectId, pageId: rawPageId } = await params;
   const projectId = parseInt(rawProjectId, 10);
   const pageId = parseInt(rawPageId, 10);

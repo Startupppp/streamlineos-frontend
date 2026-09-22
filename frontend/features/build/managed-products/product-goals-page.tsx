@@ -44,7 +44,7 @@ function GoalCard({ goal }: { goal: GoalListItem }) {
   const cfg = STATUS_CONFIG[goal.status];
   const ownerName = goal.owner?.name ?? goal.owner?.email ?? null;
   return (
-    <Link href={`/build/goal/${goal.id}`} className="group block">
+    <Link href={`/build/goals/${goal.id}`} className="group block">
       <div className={cn(PM_PANEL, "space-y-3 p-4 transition-[border-color,box-shadow] duration-200 group-hover:border-primary/40 group-hover:shadow-md")}>
         <div className="flex min-w-0 items-start justify-between gap-2">
           <p className={cn(TEXT_TWO_LINES, "text-sm font-medium leading-snug")} title={goal.title}>{goal.title}</p>

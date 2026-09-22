@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/design-tokens";
-import type { AccountingProvisioning } from "@/types/accounting-kernel-ext";
+import type { AccountingProvisioning } from "@/types/accounting/accounting-kernel-ext";
 
 /**
  * The provisioning verdict, rendered.
@@ -47,7 +47,8 @@ function present(provisioning: AccountingProvisioning): Presentation | null {
       return {
         tone: "danger",
         icon: AlertTriangle,
-        headline: "Some account roles are unmapped, and movements needing them are refused",
+        headline:
+          "Some account roles are unmapped, and movements needing them are refused",
         action: { label: "Map the accounts", href: "/accounting/settings" },
       };
     case "fiscal_year_ending":
@@ -61,7 +62,10 @@ function present(provisioning: AccountingProvisioning): Presentation | null {
         tone: "warning",
         icon: CalendarClock,
         headline: "The fiscal year ends soon and no year follows it",
-        action: { label: "Open accounting periods", href: "/accounting/periods" },
+        action: {
+          label: "Open accounting periods",
+          href: "/accounting/periods",
+        },
       };
     case "not_requested":
     case "ready":
@@ -69,7 +73,11 @@ function present(provisioning: AccountingProvisioning): Presentation | null {
   }
 }
 
-export function ProvisioningNotice({ provisioning }: { provisioning: AccountingProvisioning }) {
+export function ProvisioningNotice({
+  provisioning,
+}: {
+  provisioning: AccountingProvisioning;
+}) {
   const shown = present(provisioning);
   if (!shown) return null;
 
@@ -78,11 +86,16 @@ export function ProvisioningNotice({ provisioning }: { provisioning: AccountingP
   const message = "message" in provisioning ? provisioning.message : "";
 
   return (
-    <Card className={cn(tone.surface, tone.rule)} data-testid="provisioning-notice">
+    <Card
+      className={cn(tone.surface, tone.rule)}
+      data-testid="provisioning-notice"
+    >
       <CardContent className="flex items-start gap-3 py-4">
         <Icon className={cn("mt-0.5 size-4 shrink-0", tone.ink)} aria-hidden />
         <div className="min-w-0 flex-1 space-y-1">
-          <p className={cn("text-sm font-medium", tone.inkStrong)}>{shown.headline}</p>
+          <p className={cn("text-sm font-medium", tone.inkStrong)}>
+            {shown.headline}
+          </p>
           <p className="text-muted-foreground text-sm">{message}</p>
           {provisioning.state === "fiscal_year_ending" ? (
             <p className="text-muted-foreground text-sm">

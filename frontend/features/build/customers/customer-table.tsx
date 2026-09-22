@@ -3,7 +3,6 @@
 import React, { useMemo } from "react";
 import { Globe, Users, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
@@ -29,14 +28,20 @@ interface CustomerTableProps {
   hasNext: boolean;
   onPrevPage: () => void;
   onNextPage: () => void;
+  pageSize: number;
   isLoading?: boolean;
   emptyState?: React.ReactNode;
 }
 
-function healthScoreToStatus(
-  score: number | null,
-): { label: string; className: string } {
-  if (score === null) return { label: "Unknown", className: "bg-muted text-muted-foreground border-border" };
+function healthScoreToStatus(score: number | null): {
+  label: string;
+  className: string;
+} {
+  if (score === null)
+    return {
+      label: "Unknown",
+      className: "bg-muted text-muted-foreground border-border",
+    };
   if (score >= 70)
     return {
       label: "Healthy",
@@ -63,6 +68,7 @@ export const CustomerTable = React.memo(function CustomerTable({
   hasNext,
   onPrevPage,
   onNextPage,
+  pageSize,
   isLoading,
   emptyState,
 }: CustomerTableProps) {
@@ -109,9 +115,13 @@ export const CustomerTable = React.memo(function CustomerTable({
         headerClassName: "hidden sm:table-cell",
         cell: (c) =>
           (c.openRequestCount ?? 0) > 0 ? (
-            <span className="tabular-nums text-xs text-foreground">{c.openRequestCount}</span>
+            <span className="tabular-nums text-xs text-foreground">
+              {c.openRequestCount}
+            </span>
           ) : (
-            <span className="tabular-nums text-xs text-muted-foreground">—</span>
+            <span className="tabular-nums text-xs text-muted-foreground">
+              —
+            </span>
           ),
       });
     }
@@ -152,9 +162,7 @@ export const CustomerTable = React.memo(function CustomerTable({
         header: "Owner",
         className: "w-[120px] hidden md:table-cell",
         headerClassName: "hidden md:table-cell",
-        cell: () => (
-          <span className="text-xs text-muted-foreground">—</span>
-        ),
+        cell: () => <span className="text-xs text-muted-foreground">—</span>,
       });
     }
 
@@ -164,7 +172,9 @@ export const CustomerTable = React.memo(function CustomerTable({
         header: "Status",
         className: "w-[90px]",
         cell: (c) => {
-          const { label, className } = healthScoreToStatus(c.healthScore ?? null);
+          const { label, className } = healthScoreToStatus(
+            c.healthScore ?? null,
+          );
           return (
             <Badge
               variant="outline"
@@ -186,9 +196,7 @@ export const CustomerTable = React.memo(function CustomerTable({
         header: "Tier",
         className: "w-[80px] hidden lg:table-cell",
         headerClassName: "hidden lg:table-cell",
-        cell: () => (
-          <span className="text-xs text-muted-foreground">—</span>
-        ),
+        cell: () => <span className="text-xs text-muted-foreground">—</span>,
       });
     }
 
@@ -216,9 +224,7 @@ export const CustomerTable = React.memo(function CustomerTable({
         header: "Data source",
         className: "w-[110px] hidden lg:table-cell",
         headerClassName: "hidden lg:table-cell",
-        cell: () => (
-          <span className="text-xs text-muted-foreground">—</span>
-        ),
+        cell: () => <span className="text-xs text-muted-foreground">—</span>,
       });
     }
 
@@ -229,7 +235,9 @@ export const CustomerTable = React.memo(function CustomerTable({
       cell: (c) =>
         c.website ? (
           <a
-            href={c.website.startsWith("http") ? c.website : `https://${c.website}`}
+            href={
+              c.website.startsWith("http") ? c.website : `https://${c.website}`
+            }
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
@@ -255,17 +263,15 @@ export const CustomerTable = React.memo(function CustomerTable({
         className="min-h-0 flex-1 rounded-none border-0 bg-transparent shadow-none"
         emptyState={emptyState}
         minWidth="480px"
+        pagination={{
+          mode: "cursor",
+          pageSize,
+          hasMore: hasNext,
+          hasPrevious: hasPrev,
+          onNext: onNextPage,
+          onPrevious: onPrevPage,
+        }}
       />
-      {(hasPrev || hasNext) ? (
-        <div className="flex shrink-0 items-center justify-end gap-2 border-t px-2 py-2">
-          <Button variant="outline" size="sm" disabled={!hasPrev} onClick={onPrevPage}>
-            Previous
-          </Button>
-          <Button variant="outline" size="sm" disabled={!hasNext} onClick={onNextPage}>
-            Next
-          </Button>
-        </div>
-      ) : null}
     </PmPanel>
   );
 });

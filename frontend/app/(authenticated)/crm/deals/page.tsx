@@ -308,7 +308,7 @@ export default function DealsPage() {
 
   const pageState = usePageState({ permission: "crm:deals:read", isLoading, isError, error });
 
-  if (view === "kanban" && pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper title="Deals Pipeline" subtitle="Manage your deals">
         <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
@@ -317,7 +317,7 @@ export default function DealsPage() {
       </PageWrapper>
     );
 
-  if (view === "kanban" && pageState.kind === "loading") return <DealsLoadingSkeleton />;
+  if (pageState.kind === "loading") return <DealsLoadingSkeleton />;
 
   const subtitle = allDeals
     ? `${allDeals.length} deal${allDeals.length !== 1 ? "s" : ""}`

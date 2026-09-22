@@ -27,6 +27,7 @@ import { hasActiveWorkloadFilters } from "./workload-types";
 import Link from "next/link";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface WorkloadMember {
   id: string;
@@ -46,6 +47,7 @@ interface WorkloadViewProps {
     key: K,
     value: FilterState[K],
   ) => void;
+  onClearFilters: () => void;
 }
 
 function applyTicketFilters(
@@ -176,6 +178,7 @@ export const WorkloadView = memo(function WorkloadView({
   projectKey,
   filters,
   onFilterChange,
+  onClearFilters,
 }: WorkloadViewProps) {
   const shouldReduceMotion = useReducedMotion();
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(
@@ -321,16 +324,15 @@ export const WorkloadView = memo(function WorkloadView({
             </div>
 
             {memberWorkload.length === 0 && !showUnassignedRow ? (
-              <div className="flex flex-1 items-center justify-center px-4 py-12 text-center">
-                <div>
-                  <Users className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    {hasActiveFilters
-                      ? "No members match the current filters. Try adjusting or clearing filters."
-                      : "No team members with assigned tickets in this project."}
-                  </p>
-                </div>
-              </div>
+              <EmptyState
+                className="flex-1"
+                illustrationPreset="team"
+                title="No workload to show"
+                description="No team members have assigned tickets in this project."
+                filtersActive={hasActiveFilters}
+                filteredTitle="No members match your filters"
+                onClearFilters={onClearFilters}
+              />
             ) : (
               memberWorkload.map(
                 (

@@ -247,6 +247,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
               data={items}
               columns={columns}
               getRowKey={(row) => row.id}
+              pagination={{ pageSize: 25 }}
               minWidth="720px"
               className={PM_FILL_PANEL}
             />

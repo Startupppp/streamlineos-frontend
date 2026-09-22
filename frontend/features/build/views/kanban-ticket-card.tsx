@@ -2,6 +2,7 @@
 
 import { useCallback, memo } from "react";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { KanbanTicket, DisplayOptions } from "../shared/types";
 import { TicketQuickActions } from "./ticket-quick-actions";
 import { InlinePriority, InlineAssignee, InlineEstimate } from "./card-inline-fields";
@@ -19,6 +20,8 @@ interface KanbanTicketCardProps {
   projectKey?: string;
   isDragging: boolean;
   onSelect: (id: number) => void;
+  isSelected?: boolean;
+  onSelectedChange?: (id: number, next: boolean) => void;
   displayOptions?: DisplayOptions;
 }
 
@@ -28,6 +31,8 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   projectKey,
   isDragging,
   onSelect,
+  isSelected,
+  onSelectedChange,
   displayOptions,
 }: KanbanTicketCardProps) {
   const canUpdate = useCan("build:tickets:update");
@@ -35,6 +40,12 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   const handleActivate = useCallback(() => {
     onSelect(ticket.id);
   }, [ticket.id, onSelect]);
+  const handleSelectedChange = useCallback(
+    (next: boolean | "indeterminate") => {
+      onSelectedChange?.(ticket.id, next === true);
+    },
+    [ticket.id, onSelectedChange],
+  );
 
   const ticketKey = projectKey
     ? `${projectKey}-${ticket.ticketNumber}`
@@ -71,6 +82,15 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
       )}
     >
       <div className="flex items-start gap-1.5">
+        {onSelectedChange !== undefined && (
+          <div className="flex-shrink-0 pt-0.5">
+            <Checkbox
+              checked={isSelected ?? false}
+              onCheckedChange={handleSelectedChange}
+              aria-label={`Select ${ticket.title ?? "ticket"}`}
+            />
+          </div>
+        )}
         <button
           type="button"
           onClick={handleActivate}

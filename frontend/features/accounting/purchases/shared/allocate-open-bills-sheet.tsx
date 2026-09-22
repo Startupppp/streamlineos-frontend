@@ -4,13 +4,22 @@ import { useMemo } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EntityFormSheet } from "@/components/shared";
-import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
-import { formatMinorMoney, moneyInputValue, parseMoneyInput } from "@/lib/accounting/money";
+import {
+  formatMinorMoney,
+  moneyInputValue,
+  parseMoneyInput,
+} from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
-import type { ApDocumentSummary } from "@/types/accounting-ap";
-import type { ApAllocationInput } from "@/types/accounting-ap-payments";
+import type { ApDocumentSummary } from "@/types/accounting/accounting-ap";
+import type { ApAllocationInput } from "@/types/accounting/accounting-ap-payments";
 
 const allocationFormSchema = z.object({
   amounts: z.array(z.string()),
@@ -76,7 +85,8 @@ export function AllocateOpenBillsSheet({
       {(form) => (
         <div className="space-y-3">
           <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-label">
-            {formatMinorMoney(availableMinor, currency)} available to spread across the bills below.
+            {formatMinorMoney(availableMinor, currency)} available to spread
+            across the bills below.
           </p>
 
           {bills.length === 0 ? (
@@ -88,11 +98,16 @@ export function AllocateOpenBillsSheet({
             />
           ) : (
             bills.map((bill, index) => (
-              <div key={bill.id} className="rounded-md border border-border/70 bg-card p-3">
+              <div
+                key={bill.id}
+                className="rounded-md border border-border/70 bg-card p-3"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">
-                      {bill.vendorDocumentNumber ?? bill.documentNumber ?? "Unnumbered bill"}
+                      {bill.vendorDocumentNumber ??
+                        bill.documentNumber ??
+                        "Unnumbered bill"}
                     </p>
                     <p className="text-dense text-muted-foreground">
                       Dated {formatShortDate(bill.issueDate)} · still owed{" "}

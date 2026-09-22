@@ -15,7 +15,7 @@ export default function HrWorkforceLoading() {
           <Skeleton className="h-9 w-44 rounded-md" />
           <Skeleton className="h-9 w-36 rounded-md" />
         </div>
-        <DataTableSkeleton rows={10} columns={6} />
+        <DataTableSkeleton rows={10} headers={["Department", "Budgeted", "Actual", "Variance"]} />
       </div>
     </PageWrapper>
   );

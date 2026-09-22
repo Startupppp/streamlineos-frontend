@@ -17,15 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { VIEW_TYPES, isViewType, type ViewType } from "@/lib/build/view-types";
 
-export type ViewType = "board" | "list" | "table" | "calendar" | "gantt" | "workload";
-
-const VIEW_TYPES: readonly ViewType[] = ["board", "list", "table", "calendar", "gantt", "workload"];
-
-export function parseViewType(value: string | null): ViewType {
-  if (!value) return "board";
-  return VIEW_TYPES.find((v) => v === value) ?? "board";
-}
+export type { ViewType } from "@/lib/build/view-types";
+export { parseViewType } from "@/lib/build/view-types";
 
 interface ViewSwitcherProps {
   activeView: ViewType;
@@ -42,19 +37,22 @@ type AnimatedViewIcon = ComponentType<{
 
 type StaticViewIcon = ComponentType<{ className?: string }>;
 
-const ALL_VIEWS: {
-  value: ViewType;
+type ViewMeta = {
   animatedIcon?: AnimatedViewIcon;
   staticIcon?: StaticViewIcon;
   label: string;
-}[] = [
-  { value: "board", animatedIcon: LayoutGridIcon, label: "Board" },
-  { value: "list", animatedIcon: LayoutListIcon, label: "List" },
-  { value: "table", staticIcon: Table2, label: "Table" },
-  { value: "calendar", staticIcon: Calendar, label: "Calendar" },
-  { value: "gantt", animatedIcon: ChartBarIcon, label: "Gantt" },
-  { value: "workload", animatedIcon: UsersIcon, label: "Workload" },
-];
+};
+
+const VIEW_META: Record<ViewType, ViewMeta> = {
+  board: { animatedIcon: LayoutGridIcon, label: "Board" },
+  list: { animatedIcon: LayoutListIcon, label: "List" },
+  table: { staticIcon: Table2, label: "Table" },
+  calendar: { staticIcon: Calendar, label: "Calendar" },
+  gantt: { animatedIcon: ChartBarIcon, label: "Gantt" },
+  workload: { animatedIcon: UsersIcon, label: "Workload" },
+};
+
+const ALL_VIEWS = VIEW_TYPES.map((value) => ({ value, ...VIEW_META[value] }));
 
 export const ViewSwitcher = memo(function ViewSwitcher({
   activeView,
@@ -68,14 +66,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({
 
   const handleSelectChange = useCallback(
     (value: string) => {
-      if (
-        value === "board" ||
-        value === "list" ||
-        value === "table" ||
-        value === "calendar" ||
-        value === "gantt" ||
-        value === "workload"
-      ) {
+      if (isViewType(value)) {
         if (allowedViews && !allowedViews.includes(value)) return;
         onViewChange(value);
       }

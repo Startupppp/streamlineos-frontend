@@ -51,7 +51,7 @@ export function WellnessTrendChart({ fromDate, toDate }: Props) {
       ) : (
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 4 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis
               dataKey="date"
               tick={{ fontSize: 10 }}

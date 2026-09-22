@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { ZodError } from "zod";
 import { PresenceDot, AvatarWithPresence } from "./presence-dot";
 
 jest.mock("@/components/ui/avatar", () => ({
@@ -75,7 +76,7 @@ describe("chatOnlineUsersContract — rejects responses missing required fields 
       "@/hooks/api/chat-schema/presence-schema"
     );
     const malformed = [{ status: "ONLINE", lastSeenAt: "2026-09-16T10:00:00Z", userName: null, userImage: null }];
-    expect(() => chatOnlineUsersContract.parse(malformed)).toThrow();
+    expect(() => chatOnlineUsersContract.parse(malformed)).toThrow(ZodError);
   });
 
   it("throws when status is absent from a presence entry", async () => {
@@ -83,7 +84,7 @@ describe("chatOnlineUsersContract — rejects responses missing required fields 
       "@/hooks/api/chat-schema/presence-schema"
     );
     const malformed = [{ userId: "u1", lastSeenAt: "2026-09-16T10:00:00Z", userName: null, userImage: null }];
-    expect(() => chatOnlineUsersContract.parse(malformed)).toThrow();
+    expect(() => chatOnlineUsersContract.parse(malformed)).toThrow(ZodError);
   });
 
   it("accepts an unrecognised status rather than throwing, because one bad row must not blank every avatar in the product", async () => {

@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { useProjectDecisions, useCreateDecision, useUpdateDecision, useDeleteDecision, useProjectMembers } from "@/hooks/api/build";
+import { useProjectDecisions, useCreateDecision, useUpdateDecision, useDeleteDecision, useProjectMembers, GOVERNANCE_PAGE_SIZE } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -12,6 +12,7 @@ import { getUserDisplayName } from "@/lib/person-display";
 import type { Decision, DecisionStatus, CreateDecisionInput, UpdateDecisionInput } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 
@@ -97,8 +98,10 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
   const [editDecision, setEditDecision] = useState<Decision | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Decision | null>(null);
 
+  const pager = useCursorPager(statusFilter);
   const { data, isLoading, isError, error, refetch } = useProjectDecisions(projectId, {
     status: statusFilter !== "all" ? statusFilter : undefined,
+    cursor: pager.cursor === undefined ? undefined : Number(pager.cursor),
   });
   const { data: members = [] } = useProjectMembers(projectId);
   const pageState = usePageState({ permission: "build:decisions:view", isLoading, isError, error });
@@ -113,7 +116,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     return getUserDisplayName(m) || userId;
   }, [members]);
 
-  const allDecisions = useMemo(() => data ?? [], [data]);
+  const allDecisions = useMemo(() => data?.data ?? [], [data]);
 
   const displayed = useMemo(() => {
     if (!search.trim()) return allDecisions;
@@ -157,6 +160,9 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
   }, []);
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleNextPage = useCallback(() => {
+    pager.goNext(data?.nextCursor == null ? null : String(data.nextCursor));
+  }, [pager, data]);
 
   const handleAlertOpenChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
@@ -279,6 +285,14 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
               getRowKey={(row) => row.id}
               minWidth="720px"
               className={PM_FILL_PANEL}
+              pagination={{
+                mode: "cursor",
+                pageSize: GOVERNANCE_PAGE_SIZE,
+                hasMore: data?.hasMore ?? false,
+                hasPrevious: pager.hasPrevious,
+                onNext: handleNextPage,
+                onPrevious: pager.goPrevious,
+              }}
             />
           )}
         </PmSection>

@@ -6,6 +6,16 @@ jest.mock("@/hooks/api/build/roadmap", () => ({
   useRoadmapItems: jest.fn(),
   useDeleteRoadmapItem: jest.fn(() => ({ mutate: jest.fn() })),
 }));
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: jest.fn(() => ({ kind: "ready" })),
+}));
+
+jest.mock("@/components/shared/page-state", () => ({
+  PageState: ({ children }: { children: React.ReactNode; resolution?: unknown; loading?: unknown; empty?: unknown; onRetry?: unknown; className?: string }) => (
+    <div>{children}</div>
+  ),
+}));
 jest.mock("@/components/ui/button", () => ({
   Button: ({ children, onClick, disabled }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean }) => (
     <button type="button" onClick={onClick} disabled={disabled}>{children}</button>

@@ -7,7 +7,7 @@ export function ComponentsPageSkeleton() {
   return (
     <PageWrapper
       title="Component Catalog"
-      subtitle="Manage salary components used in payroll runs."
+      subtitle="Manage salary components used in payroll runs"
       actions={<Skeleton className="h-9 w-36 rounded-md" />}
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
@@ -17,7 +17,7 @@ export function ComponentsPageSkeleton() {
         </div>
       }
     >
-      <DataTableSkeleton rows={12} columns={5} />
+      <DataTableSkeleton rows={12} headers={["Name / Code", "Type", "Method", "Value", "Flags", "Status", ""]} />
     </PageWrapper>
   );
 }

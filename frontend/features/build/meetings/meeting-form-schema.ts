@@ -43,6 +43,24 @@ export const meetingSchema = z
 
 export type MeetingFormValues = z.infer<typeof meetingSchema>;
 
+export const actionItemFormSchema = z.object({
+  title: z.string().min(1, "Required").max(200),
+  description: z.string(),
+  assigneeId: z.string(),
+  dueDate: z.string(),
+  status: z.enum(["open", "in_progress", "done", "converted", "cancelled"]),
+});
+
+export type ActionItemFormValues = z.infer<typeof actionItemFormSchema>;
+
+export const standupFormSchema = z.object({
+  yesterday: z.string().trim().min(1, "Required"),
+  today: z.string().trim().min(1, "Required"),
+  blockers: z.string().trim().min(1, "Required"),
+});
+
+export type StandupFormValues = z.infer<typeof standupFormSchema>;
+
 export function getDefaultStart(): string {
   const d = new Date();
   d.setMinutes(d.getMinutes() + 5, 0, 0);

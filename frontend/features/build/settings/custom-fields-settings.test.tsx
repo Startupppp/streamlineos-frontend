@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { AccessState } from "@/lib/rbac/gate";
 import { CustomFieldsSettings } from "./custom-fields-settings";
+import { customFieldSchema } from "./custom-fields-schema";
 
 let mockAccessState: AccessState = "denied";
 const mockUpdateMutate = jest.fn();
@@ -127,5 +128,20 @@ describe("CustomFieldsSettings — edit form submits with changed values", () =>
         expect.anything(),
       );
     });
+  });
+});
+
+describe("customFieldSchema — fieldType carries the domain union, not bare string", () => {
+  it("rejects a fieldType outside CustomFieldType, so the form boundary refuses it instead of a cast carrying it to the API", () => {
+    const result = customFieldSchema.safeParse({ fieldName: "Effort", fieldType: "bogus", options: "" });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts every type the Type select offers, so narrowing the schema cannot amputate a supported field type", () => {
+    const offered = ["text", "number", "date", "select", "multi_select", "checkbox", "url", "currency", "user"];
+
+    for (const fieldType of offered)
+      expect(customFieldSchema.safeParse({ fieldName: "Effort", fieldType, options: "" }).success).toBe(true);
   });
 });

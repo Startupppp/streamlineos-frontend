@@ -8,7 +8,7 @@ const METRIC_CARDS = [1, 2, 3, 4, 5, 6];
 export default function HrLoading() {
   return (
     <PageWrapper
-      title="HR"
+      title="HR overview"
       subtitle="People operations hub — manage your team, track time, and run the full employee lifecycle"
       variant="display"
     >

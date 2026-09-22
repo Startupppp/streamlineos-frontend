@@ -27,7 +27,7 @@ jest.mock("framer-motion", () => ({
 }));
 
 jest.mock("@animateicons/react/lucide", () => ({
-  PlusIcon: ({ ref: _ref, ...props }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
+  PlusIcon: ({ ...props }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
 }));
 
 jest.mock("@/hooks/common/use-animated-icon", () => ({

@@ -7,14 +7,14 @@ export function LoansPageSkeleton() {
   return (
     <PageWrapper
       title="Loans & Advances"
-      subtitle="Manage employee salary advances and loan EMI recovery."
+      subtitle="Manage employee salary advances and loan EMI recovery"
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <Skeleton className="h-9 w-44 rounded-md" />
         </div>
       }
     >
-      <DataTableSkeleton rows={12} columns={6} />
+      <DataTableSkeleton rows={12} headers={["Employee", "Principal", "EMI Amount", "Progress", "Outstanding", "Status", ""]} />
     </PageWrapper>
   );
 }

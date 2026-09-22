@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { bugFormSchema, type BugFormValues } from "./bug-schema";
 import {
   Sheet,
   SheetContent,
@@ -59,27 +59,7 @@ const STATUS_LABELS: Record<BugStatus, string> = {
   reopened: "Reopened", closed: "Closed",
 };
 
-const schema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string(),
-  severity: z.enum(["blocker", "critical", "major", "minor", "trivial"]),
-  priority: z.enum(["low", "medium", "high", "urgent"]),
-  status: z.enum(["new", "triaged", "assigned", "in_progress", "fixed", "ready_for_qa", "verified", "reopened", "closed"]),
-  stepsToReproduce: z.string(),
-  expectedResult: z.string(),
-  actualResult: z.string(),
-  environment: z.string(),
-  browserDevice: z.string(),
-  affectedReleaseId: z.string(),
-  fixedReleaseId: z.string(),
-  assigneeId: z.string(),
-  qaOwnerId: z.string(),
-  linkedTicketId: z.string(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
-const DEFAULT_VALUES: FormValues = {
+const DEFAULT_VALUES: BugFormValues = {
   title: "", description: "", severity: "major", priority: "medium",
   status: "new", stepsToReproduce: "", expectedResult: "", actualResult: "",
   environment: "", browserDevice: "", affectedReleaseId: "", fixedReleaseId: "",
@@ -91,7 +71,7 @@ interface BugSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editBug: Bug | null;
-  prefill?: Partial<FormValues>;
+  prefill?: Partial<BugFormValues>;
 }
 
 export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: BugSheetProps) {
@@ -100,8 +80,8 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
   const { data: project } = useProject(projectId);
   const projectKey = project?.key ?? "";
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<BugFormValues>({
+    resolver: zodResolver(bugFormSchema),
     defaultValues: DEFAULT_VALUES,
   });
   useRegisterDirtyState(open && form.formState.isDirty);
@@ -131,7 +111,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
     }
   }, [open, editBug, prefill, form]);
 
-  function handleSubmit(values: FormValues) {
+  function handleSubmit(values: BugFormValues) {
     const input = {
       projectId,
       title: values.title,

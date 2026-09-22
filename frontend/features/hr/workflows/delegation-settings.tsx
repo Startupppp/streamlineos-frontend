@@ -15,6 +15,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useMyDelegations, useCreateDelegation, useDeleteDelegation } from "@/hooks/api/hr/hr-workflows";
 import { HR_WORKFLOW_OBJECT_TYPES, HR_WORKFLOW_OBJECT_TYPE_LABELS } from "@/types/hr/workflows";
@@ -40,6 +41,10 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
   const { data: delegations, isLoading, isError, error, refetch } = useMyDelegations({ enabled: open });
   const create = useCreateDelegation();
   const remove = useDeleteDelegation();
+
+  function handleRetry() {
+    void refetch();
+  }
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -76,23 +81,18 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-base font-semibold">My Delegations</DialogTitle>
+          <DialogTitle className="text-base font-semibold">My delegations</DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="max-h-64 pr-2">
           {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
           {isError && (
-            <div className="text-sm text-status-danger-ink">
-              <p className="font-medium">Couldn't load delegations</p>
-              <p className="text-xs mt-1">{getErrorMessage(error)}</p>
-              <button
-                onClick={() => void refetch()}
-                className="text-xs underline mt-2"
-                type="button"
-              >
-                Retry
-              </button>
-            </div>
+            <ErrorState
+              compact
+              title="Couldn't load delegations"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+            />
           )}
           {!isLoading && !isError && !delegations?.length && (
             <p className="text-sm text-muted-foreground">No active delegations</p>

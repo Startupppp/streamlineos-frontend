@@ -39,7 +39,9 @@ export function ProjectCustomersPage() {
 
   const [filters, setFilters] = useState<CustomerFilters>({
     industry: searchParams.get("industry") ?? undefined,
-    size: SIZE_OPTIONS.find((candidate) => candidate === searchParams.get("size")),
+    size: SIZE_OPTIONS.find(
+      (candidate) => candidate === searchParams.get("size"),
+    ),
   });
 
   const debouncedSearch = useDebouncedValue(search, 300);
@@ -122,7 +124,11 @@ export function ProjectCustomersPage() {
     void refetch();
   }, [refetch]);
 
-  const customersFiltersActive = !!(debouncedSearch || filters.industry || filters.size);
+  const customersFiltersActive = !!(
+    debouncedSearch ||
+    filters.industry ||
+    filters.size
+  );
 
   const handleClearCustomerFilters = useCallback(() => {
     setSearch("");
@@ -178,21 +184,29 @@ export function ProjectCustomersPage() {
           initial="hidden"
           animate="visible"
         >
-          <motion.div variants={fadeUp} className="flex min-h-0 flex-1 flex-col">
+          <motion.div
+            variants={fadeUp}
+            className="flex min-h-0 flex-1 flex-col"
+          >
             <CustomerTable
-              customers={filteredCustomers}
               prefs={prefs}
               hasPrev={hasPrev}
               hasNext={hasNext}
+              pageSize={PAGE_SIZE}
               onPrevPage={handlePrevPage}
               onNextPage={handleNextPage}
+              customers={filteredCustomers}
               emptyState={
                 <EmptyState
                   illustration={
                     <EmptyCompaniesIllustration className="h-full w-full" />
                   }
                   title="No customers found"
-                  description={customersFiltersActive ? undefined : "Companies from your CRM will appear here."}
+                  description={
+                    customersFiltersActive
+                      ? undefined
+                      : "Companies from your CRM will appear here."
+                  }
                   filtersActive={customersFiltersActive}
                   onClearFilters={handleClearCustomerFilters}
                   className="border-0 bg-transparent min-h-[40dvh]"

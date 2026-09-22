@@ -13,7 +13,10 @@ import { formatMinorMoney } from "@/lib/accounting/money";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useApAging } from "@/hooks/api/accounting/ap";
-import { AP_AGING_BUCKETS, type ApAgingPartyRow } from "@/types/accounting-ap-payments";
+import {
+  AP_AGING_BUCKETS,
+  type ApAgingPartyRow,
+} from "@/types/accounting/accounting-ap-payments";
 import { AGING_BUCKET_LABELS } from "../lib/ap-labels";
 import { todayIso } from "../lib/ap-dates";
 import { useUrlListState } from "../lib/use-url-list-state";
@@ -25,9 +28,16 @@ const PAGE_SIZE = 20;
 export function AgedPayablesPage() {
   const { getParam, setParams, page, setPage } = useUrlListState();
   const asOf = getParam("asOf") || todayIso();
-  const [selectedParty, setSelectedParty] = useState<ApAgingPartyRow | null>(null);
+  const [selectedParty, setSelectedParty] = useState<ApAgingPartyRow | null>(
+    null,
+  );
 
-  const agingQuery = useApAging({ asOf, includeItems: true, page, pageSize: PAGE_SIZE });
+  const agingQuery = useApAging({
+    asOf,
+    includeItems: true,
+    page,
+    pageSize: PAGE_SIZE,
+  });
 
   const pageState = usePageState({
     permission: "accounting:reports:read",
@@ -35,7 +45,9 @@ export function AgedPayablesPage() {
     isError: agingQuery.isError,
     error: agingQuery.error,
   });
-  const handleRetry = useCallback(() => { void agingQuery.refetch(); }, [agingQuery]);
+  const handleRetry = useCallback(() => {
+    void agingQuery.refetch();
+  }, [agingQuery]);
 
   function handleSheetOpenChange(open: boolean): void {
     if (!open) setSelectedParty(null);
@@ -73,10 +85,19 @@ export function AgedPayablesPage() {
     },
   ];
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="What we owe">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>
@@ -107,8 +128,13 @@ export function AgedPayablesPage() {
           <StatCard
             key={bucket}
             label={AGING_BUCKET_LABELS[bucket]}
-            value={formatMinorMoney(agingQuery.data?.buckets[bucket] ?? 0, currency)}
-            tone={bucket === "0-30" ? "default" : bucket === "91+" ? "red" : "amber"}
+            value={formatMinorMoney(
+              agingQuery.data?.buckets[bucket] ?? 0,
+              currency,
+            )}
+            tone={
+              bucket === "0-30" ? "default" : bucket === "91+" ? "red" : "amber"
+            }
             isLoading={agingQuery.isPending}
           />
         ))}

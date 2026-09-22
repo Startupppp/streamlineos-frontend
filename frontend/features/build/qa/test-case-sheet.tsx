@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { testCaseSchema, type TestCaseFormValues } from "./qa-schema";
 import {
   Sheet,
   SheetContent,
@@ -42,20 +42,6 @@ import { useProject } from "@/hooks/api/build/projects";
 import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
 import type { TestCase, TestSuite } from "@/types/projects";
 
-const schema = z.object({
-  title: z.string().min(1, "Title is required"),
-  suiteId: z.string(),
-  preconditions: z.string(),
-  steps: z.array(z.object({ action: z.string(), expected: z.string() })),
-  expectedResult: z.string(),
-  priority: z.enum(["low", "medium", "high"]),
-  automationStatus: z.enum(["manual", "automated", "planned"]),
-  component: z.string(),
-  linkedTicketId: z.string(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
 interface TestCaseSheetProps {
   projectId: number;
   open: boolean;
@@ -76,8 +62,8 @@ export function TestCaseSheet({
   const { data: project } = useProject(projectId);
   const projectKey = project?.key ?? "";
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<TestCaseFormValues>({
+    resolver: zodResolver(testCaseSchema),
     defaultValues: {
       title: "",
       suiteId: "none",
@@ -129,7 +115,7 @@ export function TestCaseSheet({
     append({ action: "", expected: "" });
   }
 
-  function handleSubmit(values: FormValues) {
+  function handleSubmit(values: TestCaseFormValues) {
     const suiteId =
       values.suiteId !== "none" && values.suiteId !== "" ? Number(values.suiteId) : undefined;
     const linkedTicketId = values.linkedTicketId ? Number(values.linkedTicketId) : undefined;

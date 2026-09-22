@@ -29,7 +29,8 @@ function toFormValues(s: TimesheetSettings): GeneralSettingsFormValues {
     backdateLimitDays: s.backdateLimitDays != null ? String(s.backdateLimitDays) : "",
     roundingRule: s.roundingRule,
     requiredFields: s.requiredFields ?? [],
-    approvalMode: s.approvalMode,
+    approvalMode: s.approvalMode === "AUTO" ? "AUTO" : "MANAGER",
+    approverSource: s.approverSource,
     clientApprovalEnabled: s.clientApprovalEnabled,
     lockAfterApproval: s.lockAfterApproval,
     lockAfterInvoice: s.lockAfterInvoice,
@@ -82,6 +83,8 @@ function buildChanges(
 
   if (orig.approvalMode !== values.approvalMode)
     changes.approvalMode = values.approvalMode;
+  if (orig.approverSource !== values.approverSource)
+    changes.approverSource = values.approverSource;
   if (orig.clientApprovalEnabled !== values.clientApprovalEnabled)
     changes.clientApprovalEnabled = values.clientApprovalEnabled;
   if (orig.lockAfterApproval !== values.lockAfterApproval)
@@ -124,6 +127,7 @@ export function GeneralSettingsForm() {
       roundingRule: "NONE",
       requiredFields: [],
       approvalMode: "MANAGER",
+      approverSource: "REPORTING_MANAGER",
       clientApprovalEnabled: false,
       lockAfterApproval: false,
       lockAfterInvoice: false,

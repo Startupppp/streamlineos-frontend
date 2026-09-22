@@ -12,7 +12,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { DatePicker } from "@/components/ui/date-picker";
-import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import {
+  FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import {
   Select,
@@ -27,7 +30,11 @@ import { formatShortDate } from "@/lib/date-utils";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useApDocuments } from "@/hooks/api/accounting/ap";
-import type { ApDocumentStatus, ApDocumentSummary, ApDocumentType } from "@/types/accounting-ap";
+import type {
+  ApDocumentStatus,
+  ApDocumentSummary,
+  ApDocumentType,
+} from "@/types/accounting/accounting-ap";
 import { AP_STATUS_LABELS, AP_STATUS_TONES } from "../lib/ap-labels";
 import { useUrlListState } from "../lib/use-url-list-state";
 import { VendorPickerField } from "./vendor-picker-field";
@@ -90,7 +97,9 @@ export function ApDocumentsPage({
     isError: documentsQuery.isError,
     error: documentsQuery.error,
   });
-  const handleRetry = useCallback(() => { void documentsQuery.refetch(); }, [documentsQuery]);
+  const handleRetry = useCallback(() => {
+    void documentsQuery.refetch();
+  }, [documentsQuery]);
 
   function handleCreate(): void {
     router.push(createHref);
@@ -109,7 +118,9 @@ export function ApDocumentsPage({
             {row.vendorDocumentNumber ?? "Not numbered"}
           </Link>
           {row.documentNumber ? (
-            <p className="truncate text-dense text-muted-foreground">Ours: {row.documentNumber}</p>
+            <p className="truncate text-dense text-muted-foreground">
+              Ours: {row.documentNumber}
+            </p>
           ) : null}
         </div>
       ),
@@ -135,7 +146,10 @@ export function ApDocumentsPage({
       key: "status",
       header: "Status",
       cell: (row) => (
-        <SemanticBadge tone={AP_STATUS_TONES[row.status]} label={AP_STATUS_LABELS[row.status]} />
+        <SemanticBadge
+          tone={AP_STATUS_TONES[row.status]}
+          label={AP_STATUS_LABELS[row.status]}
+        />
       ),
     },
     {
@@ -154,10 +168,19 @@ export function ApDocumentsPage({
     },
   ];
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title={title}>
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>
@@ -190,7 +213,9 @@ export function ApDocumentsPage({
         <div className={FILTER_TOOLBAR_ROW}>
           <Select
             value={status || "all"}
-            onValueChange={(value) => setParams({ status: value === "all" ? undefined : value })}
+            onValueChange={(value) =>
+              setParams({ status: value === "all" ? undefined : value })
+            }
           >
             <SelectTrigger className={FILTER_SELECT_TRIGGER}>
               <SelectValue />
@@ -271,7 +296,11 @@ export function ApDocumentsPage({
               className="border-0 bg-transparent min-h-[40vh]"
               title={emptyTitle}
               description={emptyDescription}
-              action={canManage ? { label: createLabel, onClick: handleCreate } : undefined}
+              action={
+                canManage
+                  ? { label: createLabel, onClick: handleCreate }
+                  : undefined
+              }
             />
           )
         }

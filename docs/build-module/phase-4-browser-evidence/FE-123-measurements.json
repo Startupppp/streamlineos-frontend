@@ -1,0 +1,1255 @@
+{
+  "capturedAt": "2026-09-22T05:38:26.549Z",
+  "widths": [
+    375,
+    1440
+  ],
+  "browserPath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  "cssHash": "3ab896beb74df78528adc54218b87e4d5016a4bc0ae50e92ef1463856ff4fd55",
+  "measurements": [
+    {
+      "surface": "client-visibility",
+      "label": "ClientVisibilityPage",
+      "width": 375,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 375,
+        "innerWidth": 375,
+        "by": 0,
+        "widest": "div",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 9,
+        "uniqueElements": 9,
+        "sequence": [
+          "div[region]:Items toggled here appear in the client'",
+          "button[tab]:Tickets4",
+          "div[tabpanel]:IDTitleTypeVisible[data-radix-scroll-are",
+          "div[]:#101Fix authentication timeout on mobile",
+          "button[switch]:Toggle client visibility for ticket #101",
+          "button[switch]:Toggle client visibility for ticket #102",
+          "button[switch]:Toggle client visibility for ticket #103",
+          "button[switch]:Toggle client visibility for ticket #104",
+          "body[]:Client PortalControl what clients see in"
+        ],
+        "domFocusableCount": 10,
+        "orderIssues": [],
+        "zeroSizeExempted": [
+          {
+            "descriptor": "div role=tabpanel tabindex=0 #radix-_r_1_-content-milestones .outline-none.data-[state=inactive]:hidden.data-[st (parent:div)",
+            "reason": "DISPLAY-NONE-NOT-FOCUSABLE: computed display:none — element cannot receive keyboard focus in browsers regardless of tabindex value"
+          }
+        ],
+        "mouseOnlyExempted": [
+          {
+            "descriptor": "button[role=tab]:Milestones3",
+            "reason": "TABLIST-ROVING-TABINDEX: role=tab or descendant of role=tablist uses roving tabindex per WAI-ARIA Tabs pattern; inactive tabs are intentionally excluded from Tab sequence and reached via Arrow keys"
+          }
+        ],
+        "orderAnalysis": {
+          "domFocusableCount": 10,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [
+            {
+              "descriptor": "div role=tabpanel tabindex=0 #radix-_r_1_-content-milestones .outline-none.data-[state=inactive]:hidden.data-[st (parent:div)",
+              "reason": "DISPLAY-NONE-NOT-FOCUSABLE: computed display:none — element cannot receive keyboard focus in browsers regardless of tabindex value"
+            }
+          ],
+          "mouseOnly": [],
+          "mouseOnlyExempted": [
+            {
+              "descriptor": "button[role=tab]:Milestones3",
+              "reason": "TABLIST-ROVING-TABINDEX: role=tab or descendant of role=tablist uses roving tabindex per WAI-ARIA Tabs pattern; inactive tabs are intentionally excluded from Tab sequence and reached via Arrow keys"
+            }
+          ]
+        },
+        "reason": "tab sequence verified: 9 stops, 10 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": null,
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\client-visibility-375px-375px.png"
+      ]
+    },
+    {
+      "surface": "client-visibility",
+      "label": "ClientVisibilityPage",
+      "width": 1440,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 1440,
+        "innerWidth": 1440,
+        "by": 0,
+        "widest": "div",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 9,
+        "uniqueElements": 9,
+        "sequence": [
+          "div[region]:Items toggled here appear in the client'",
+          "button[tab]:Tickets4",
+          "div[tabpanel]:IDTitleTypeVisible[data-radix-scroll-are",
+          "div[]:#101Fix authentication timeout on mobile",
+          "button[switch]:Toggle client visibility for ticket #101",
+          "button[switch]:Toggle client visibility for ticket #102",
+          "button[switch]:Toggle client visibility for ticket #103",
+          "button[switch]:Toggle client visibility for ticket #104",
+          "body[]:Client PortalControl what clients see in"
+        ],
+        "domFocusableCount": 10,
+        "orderIssues": [],
+        "zeroSizeExempted": [
+          {
+            "descriptor": "div role=tabpanel tabindex=0 #radix-_r_1_-content-milestones .outline-none.data-[state=inactive]:hidden.data-[st (parent:div)",
+            "reason": "DISPLAY-NONE-NOT-FOCUSABLE: computed display:none — element cannot receive keyboard focus in browsers regardless of tabindex value"
+          }
+        ],
+        "mouseOnlyExempted": [
+          {
+            "descriptor": "button[role=tab]:Milestones3",
+            "reason": "TABLIST-ROVING-TABINDEX: role=tab or descendant of role=tablist uses roving tabindex per WAI-ARIA Tabs pattern; inactive tabs are intentionally excluded from Tab sequence and reached via Arrow keys"
+          }
+        ],
+        "orderAnalysis": {
+          "domFocusableCount": 10,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [
+            {
+              "descriptor": "div role=tabpanel tabindex=0 #radix-_r_1_-content-milestones .outline-none.data-[state=inactive]:hidden.data-[st (parent:div)",
+              "reason": "DISPLAY-NONE-NOT-FOCUSABLE: computed display:none — element cannot receive keyboard focus in browsers regardless of tabindex value"
+            }
+          ],
+          "mouseOnly": [],
+          "mouseOnlyExempted": [
+            {
+              "descriptor": "button[role=tab]:Milestones3",
+              "reason": "TABLIST-ROVING-TABINDEX: role=tab or descendant of role=tablist uses roving tabindex per WAI-ARIA Tabs pattern; inactive tabs are intentionally excluded from Tab sequence and reached via Arrow keys"
+            }
+          ]
+        },
+        "reason": "tab sequence verified: 9 stops, 10 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": null,
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\client-visibility-1440px-1440px.png"
+      ]
+    },
+    {
+      "surface": "portal-list",
+      "label": "PortalListPage",
+      "width": 375,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 375,
+        "innerWidth": 375,
+        "by": 0,
+        "widest": "div",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 9,
+        "uniqueElements": 5,
+        "sequence": [
+          "div[region]:ALAlpha ProjectALPactive1 Jan 2026 – 31 ",
+          "a[]:ALAlpha ProjectALPactive1 Jan 2026 – 31 ",
+          "a[]:BEBeta InitiativeBETAactive1 Feb 2026 – ",
+          "a[]:GAGamma ReleaseGAMplanning – 30 Jun 2026",
+          "div[region]:ALAlpha ProjectALPactive1 Jan 2026 – 31 ",
+          "a[]:ALAlpha ProjectALPactive1 Jan 2026 – 31 ",
+          "a[]:BEBeta InitiativeBETAactive1 Feb 2026 – ",
+          "a[]:GAGamma ReleaseGAMplanning – 30 Jun 2026",
+          "body[]:Client PortalYour projects and their cur"
+        ],
+        "domFocusableCount": 4,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": {
+          "domFocusableCount": 4,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [],
+          "mouseOnly": [],
+          "mouseOnlyExempted": []
+        },
+        "reason": "tab sequence verified: 9 stops, 4 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": null,
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\portal-list-375px-375px.png"
+      ]
+    },
+    {
+      "surface": "portal-list",
+      "label": "PortalListPage",
+      "width": 1440,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 1440,
+        "innerWidth": 1440,
+        "by": 0,
+        "widest": "div",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 5,
+        "uniqueElements": 5,
+        "sequence": [
+          "div[region]:ALAlpha ProjectALPactive1 Jan 2026 – 31 ",
+          "a[]:ALAlpha ProjectALPactive1 Jan 2026 – 31 ",
+          "a[]:BEBeta InitiativeBETAactive1 Feb 2026 – ",
+          "a[]:GAGamma ReleaseGAMplanning – 30 Jun 2026",
+          "body[]:Client PortalYour projects and their cur"
+        ],
+        "domFocusableCount": 4,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": {
+          "domFocusableCount": 4,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [],
+          "mouseOnly": [],
+          "mouseOnlyExempted": []
+        },
+        "reason": "tab sequence verified: 5 stops, 4 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": null,
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\portal-list-1440px-1440px.png"
+      ]
+    },
+    {
+      "surface": "change-requests",
+      "label": "ChangeRequestsPage",
+      "width": 375,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 375,
+        "innerWidth": 375,
+        "by": 0,
+        "widest": "div.min-w-max",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 7,
+        "uniqueElements": 6,
+        "sequence": [
+          "button[]:New Change Request",
+          "input[]",
+          "button[combobox]:Status",
+          "input[]",
+          "div[region]:IDTitleStatusEst. (hrs)BudgetTimelineReq",
+          "div[region]:Table",
+          "button[]:Change request actions"
+        ],
+        "domFocusableCount": 9,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": {
+          "domFocusableCount": 9,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [],
+          "mouseOnly": [],
+          "mouseOnlyExempted": []
+        },
+        "reason": "tab sequence verified: 7 stops, 9 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": null,
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\change-requests-375px-375px.png"
+      ]
+    },
+    {
+      "surface": "change-requests",
+      "label": "ChangeRequestsPage",
+      "width": 1440,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 1440,
+        "innerWidth": 1440,
+        "by": 0,
+        "widest": "div",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 7,
+        "uniqueElements": 6,
+        "sequence": [
+          "button[]:New Change Request",
+          "input[]",
+          "button[combobox]:Status",
+          "input[]",
+          "div[region]:IDTitleStatusEst. (hrs)BudgetTimelineReq",
+          "div[region]:Table",
+          "button[]:Change request actions"
+        ],
+        "domFocusableCount": 9,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": {
+          "domFocusableCount": 9,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [],
+          "mouseOnly": [],
+          "mouseOnlyExempted": []
+        },
+        "reason": "tab sequence verified: 7 stops, 9 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": null,
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\change-requests-1440px-1440px.png"
+      ]
+    },
+    {
+      "surface": "client-access",
+      "label": "ClientAccessPage",
+      "width": 375,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 375,
+        "innerWidth": 375,
+        "by": 0,
+        "widest": "div",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 5,
+        "uniqueElements": 4,
+        "sequence": [
+          "button[]:Grant Access",
+          "input[]",
+          "div[region]:No client access grantsGrant clients rea",
+          "button[]:Grant Access",
+          "body[]:Client AccessGrant clients visibility in"
+        ],
+        "domFocusableCount": 4,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": {
+          "domFocusableCount": 4,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [],
+          "mouseOnly": [],
+          "mouseOnlyExempted": []
+        },
+        "reason": "tab sequence verified: 5 stops, 4 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": null,
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\client-access-375px-375px.png"
+      ]
+    },
+    {
+      "surface": "client-access",
+      "label": "ClientAccessPage",
+      "width": 1440,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 1440,
+        "innerWidth": 1440,
+        "by": 0,
+        "widest": "div",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 5,
+        "uniqueElements": 4,
+        "sequence": [
+          "button[]:Grant Access",
+          "input[]",
+          "div[region]:No client access grantsGrant clients rea",
+          "button[]:Grant Access",
+          "body[]:Client AccessGrant clients visibility in"
+        ],
+        "domFocusableCount": 4,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": {
+          "domFocusableCount": 4,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [],
+          "mouseOnly": [],
+          "mouseOnlyExempted": []
+        },
+        "reason": "tab sequence verified: 5 stops, 4 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": null,
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\client-access-1440px-1440px.png"
+      ]
+    },
+    {
+      "surface": "feedbucket",
+      "label": "ProjectFeedbucketPage",
+      "width": 375,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 375,
+        "innerWidth": 375,
+        "by": 0,
+        "widest": "div",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 6,
+        "uniqueElements": 6,
+        "sequence": [
+          "button[]:Widget setup",
+          "div[region]:SubmissionsAll statusesAll typesAll subm",
+          "button[combobox]:All statuses",
+          "button[combobox]:All types",
+          "button[combobox]:All submissions",
+          "input[]:From date"
+        ],
+        "domFocusableCount": 7,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": {
+          "domFocusableCount": 7,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [],
+          "mouseOnly": [],
+          "mouseOnlyExempted": []
+        },
+        "reason": "tab sequence verified: 6 stops, 7 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": null,
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\feedbucket-375px-375px.png"
+      ]
+    },
+    {
+      "surface": "feedbucket",
+      "label": "ProjectFeedbucketPage",
+      "width": 1440,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 1440,
+        "innerWidth": 1440,
+        "by": 0,
+        "widest": "div",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 6,
+        "uniqueElements": 6,
+        "sequence": [
+          "button[]:Widget setup",
+          "div[region]:SubmissionsAll statusesAll typesAll subm",
+          "button[combobox]:All statuses",
+          "button[combobox]:All types",
+          "button[combobox]:All submissions",
+          "input[]:From date"
+        ],
+        "domFocusableCount": 7,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": {
+          "domFocusableCount": 7,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [],
+          "mouseOnly": [],
+          "mouseOnlyExempted": []
+        },
+        "reason": "tab sequence verified: 6 stops, 7 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": null,
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\feedbucket-1440px-1440px.png"
+      ]
+    },
+    {
+      "surface": "velocity-chart",
+      "label": "VelocityChart",
+      "width": 375,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 375,
+        "innerWidth": 375,
+        "by": 0,
+        "widest": "div",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 2,
+        "uniqueElements": 2,
+        "sequence": [
+          "svg[application]:Sprint 1Sprint 2Sprint 3Sprint 407142128",
+          "body[]:CommittedCompletedSprint 1Sprint 2Sprint"
+        ],
+        "domFocusableCount": 1,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": {
+          "domFocusableCount": 1,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [],
+          "mouseOnly": [],
+          "mouseOnlyExempted": []
+        },
+        "reason": "tab sequence verified: 2 stops, 1 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": {
+        "verdict": "PASS",
+        "svgCount": 3,
+        "paintedCount": 3,
+        "unpaintedCount": 0,
+        "svgs": [
+          {
+            "width": 32,
+            "height": 24,
+            "clientWidth": 14,
+            "clientHeight": 14,
+            "pathCount": 1,
+            "painted": true
+          },
+          {
+            "width": 32,
+            "height": 24,
+            "clientWidth": 14,
+            "clientHeight": 14,
+            "pathCount": 1,
+            "painted": true
+          },
+          {
+            "width": 343,
+            "height": 259,
+            "clientWidth": 375,
+            "clientHeight": 288,
+            "pathCount": 14,
+            "painted": true
+          }
+        ]
+      },
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\velocity-chart-375px-375px.png"
+      ]
+    },
+    {
+      "surface": "velocity-chart",
+      "label": "VelocityChart",
+      "width": 1440,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 1440,
+        "innerWidth": 1440,
+        "by": 0,
+        "widest": "div",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 1,
+        "uniqueElements": 1,
+        "sequence": [
+          "svg[application]:Sprint 1Sprint 2Sprint 3Sprint 407142128"
+        ],
+        "domFocusableCount": 1,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": {
+          "domFocusableCount": 1,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [],
+          "mouseOnly": [],
+          "mouseOnlyExempted": []
+        },
+        "reason": "tab sequence verified: 1 stops, 1 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": {
+        "verdict": "PASS",
+        "svgCount": 3,
+        "paintedCount": 3,
+        "unpaintedCount": 0,
+        "svgs": [
+          {
+            "width": 32,
+            "height": 24,
+            "clientWidth": 14,
+            "clientHeight": 14,
+            "pathCount": 1,
+            "painted": true
+          },
+          {
+            "width": 32,
+            "height": 24,
+            "clientWidth": 14,
+            "clientHeight": 14,
+            "pathCount": 1,
+            "painted": true
+          },
+          {
+            "width": 1408,
+            "height": 259,
+            "clientWidth": 1440,
+            "clientHeight": 288,
+            "pathCount": 14,
+            "painted": true
+          }
+        ]
+      },
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\velocity-chart-1440px-1440px.png"
+      ]
+    },
+    {
+      "surface": "burnup-chart",
+      "label": "BurnupChart",
+      "width": 375,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 375,
+        "innerWidth": 375,
+        "by": 0,
+        "widest": "g",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 2,
+        "uniqueElements": 2,
+        "sequence": [
+          "svg[application]:Jan 1Jan 8Jan 15Jan 22015304560",
+          "body[]:CompletedScopeJan 1Jan 8Jan 15Jan 220153"
+        ],
+        "domFocusableCount": 1,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": {
+          "domFocusableCount": 1,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [],
+          "mouseOnly": [],
+          "mouseOnlyExempted": []
+        },
+        "reason": "tab sequence verified: 2 stops, 1 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": {
+        "verdict": "PASS",
+        "svgCount": 3,
+        "paintedCount": 3,
+        "unpaintedCount": 0,
+        "svgs": [
+          {
+            "width": 32,
+            "height": 11,
+            "clientWidth": 14,
+            "clientHeight": 14,
+            "pathCount": 1,
+            "painted": true
+          },
+          {
+            "width": 32,
+            "height": 11,
+            "clientWidth": 14,
+            "clientHeight": 14,
+            "pathCount": 1,
+            "painted": true
+          },
+          {
+            "width": 352,
+            "height": 259,
+            "clientWidth": 375,
+            "clientHeight": 288,
+            "pathCount": 10,
+            "painted": true
+          }
+        ]
+      },
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\burnup-chart-375px-375px.png"
+      ]
+    },
+    {
+      "surface": "burnup-chart",
+      "label": "BurnupChart",
+      "width": 1440,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 1440,
+        "innerWidth": 1440,
+        "by": 0,
+        "widest": "g",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 2,
+        "uniqueElements": 2,
+        "sequence": [
+          "svg[application]:Jan 1Jan 8Jan 15Jan 22015304560",
+          "body[]:CompletedScopeJan 1Jan 8Jan 15Jan 220153"
+        ],
+        "domFocusableCount": 1,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": {
+          "domFocusableCount": 1,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [],
+          "mouseOnly": [],
+          "mouseOnlyExempted": []
+        },
+        "reason": "tab sequence verified: 2 stops, 1 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": {
+        "verdict": "PASS",
+        "svgCount": 3,
+        "paintedCount": 3,
+        "unpaintedCount": 0,
+        "svgs": [
+          {
+            "width": 32,
+            "height": 11,
+            "clientWidth": 14,
+            "clientHeight": 14,
+            "pathCount": 1,
+            "painted": true
+          },
+          {
+            "width": 32,
+            "height": 11,
+            "clientWidth": 14,
+            "clientHeight": 14,
+            "pathCount": 1,
+            "painted": true
+          },
+          {
+            "width": 1417,
+            "height": 259,
+            "clientWidth": 1440,
+            "clientHeight": 288,
+            "pathCount": 10,
+            "painted": true
+          }
+        ]
+      },
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\burnup-chart-1440px-1440px.png"
+      ]
+    },
+    {
+      "surface": "cfd-chart",
+      "label": "CfdChart",
+      "width": 375,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 375,
+        "innerWidth": 375,
+        "by": 0,
+        "widest": "g",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 2,
+        "uniqueElements": 2,
+        "sequence": [
+          "svg[application]:Jan 1Jan 8Jan 15",
+          "body[]:BacklogCancelledCompletedStartedUnstarte"
+        ],
+        "domFocusableCount": 1,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": {
+          "domFocusableCount": 1,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [],
+          "mouseOnly": [],
+          "mouseOnlyExempted": []
+        },
+        "reason": "tab sequence verified: 2 stops, 1 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": {
+        "verdict": "PASS",
+        "svgCount": 6,
+        "paintedCount": 6,
+        "unpaintedCount": 0,
+        "svgs": [
+          {
+            "width": 32,
+            "height": 11,
+            "clientWidth": 14,
+            "clientHeight": 14,
+            "pathCount": 1,
+            "painted": true
+          },
+          {
+            "width": 32,
+            "height": 11,
+            "clientWidth": 14,
+            "clientHeight": 14,
+            "pathCount": 1,
+            "painted": true
+          },
+          {
+            "width": 32,
+            "height": 11,
+            "clientWidth": 14,
+            "clientHeight": 14,
+            "pathCount": 1,
+            "painted": true
+          },
+          {
+            "width": 32,
+            "height": 11,
+            "clientWidth": 14,
+            "clientHeight": 14,
+            "pathCount": 1,
+            "painted": true
+          },
+          {
+            "width": 32,
+            "height": 11,
+            "clientWidth": 14,
+            "clientHeight": 14,
+            "pathCount": 1,
+            "painted": true
+          },
+          {
+            "width": 344,
+            "height": 251,
+            "clientWidth": 375,
+            "clientHeight": 288,
+            "pathCount": 3,
+            "painted": true
+          }
+        ]
+      },
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\cfd-chart-375px-375px.png"
+      ]
+    },
+    {
+      "surface": "cfd-chart",
+      "label": "CfdChart",
+      "width": 1440,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 1440,
+        "innerWidth": 1440,
+        "by": 0,
+        "widest": "g",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 2,
+        "uniqueElements": 2,
+        "sequence": [
+          "svg[application]:Jan 1Jan 8Jan 15",
+          "body[]:BacklogCancelledCompletedStartedUnstarte"
+        ],
+        "domFocusableCount": 1,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": {
+          "domFocusableCount": 1,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [],
+          "mouseOnly": [],
+          "mouseOnlyExempted": []
+        },
+        "reason": "tab sequence verified: 2 stops, 1 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": {
+        "verdict": "PASS",
+        "svgCount": 6,
+        "paintedCount": 6,
+        "unpaintedCount": 0,
+        "svgs": [
+          {
+            "width": 32,
+            "height": 11,
+            "clientWidth": 14,
+            "clientHeight": 14,
+            "pathCount": 1,
+            "painted": true
+          },
+          {
+            "width": 32,
+            "height": 11,
+            "clientWidth": 14,
+            "clientHeight": 14,
+            "pathCount": 1,
+            "painted": true
+          },
+          {
+            "width": 32,
+            "height": 11,
+            "clientWidth": 14,
+            "clientHeight": 14,
+            "pathCount": 1,
+            "painted": true
+          },
+          {
+            "width": 32,
+            "height": 11,
+            "clientWidth": 14,
+            "clientHeight": 14,
+            "pathCount": 1,
+            "painted": true
+          },
+          {
+            "width": 32,
+            "height": 11,
+            "clientWidth": 14,
+            "clientHeight": 14,
+            "pathCount": 1,
+            "painted": true
+          },
+          {
+            "width": 1409,
+            "height": 251,
+            "clientWidth": 1440,
+            "clientHeight": 288,
+            "pathCount": 3,
+            "painted": true
+          }
+        ]
+      },
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\cfd-chart-1440px-1440px.png"
+      ]
+    },
+    {
+      "surface": "cycle-time-chart",
+      "label": "CycleTimeChart",
+      "width": 375,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 375,
+        "innerWidth": 375,
+        "by": 0,
+        "widest": "div",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 2,
+        "uniqueElements": 2,
+        "sequence": [
+          "svg[application]",
+          "body[]:0"
+        ],
+        "domFocusableCount": 1,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": {
+          "domFocusableCount": 1,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [],
+          "mouseOnly": [],
+          "mouseOnlyExempted": []
+        },
+        "reason": "tab sequence verified: 2 stops, 1 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": {
+        "verdict": "PASS",
+        "svgCount": 1,
+        "paintedCount": 1,
+        "unpaintedCount": 0,
+        "svgs": [
+          {
+            "width": 307,
+            "height": 174,
+            "clientWidth": 375,
+            "clientHeight": 208,
+            "pathCount": 3,
+            "painted": true
+          }
+        ]
+      },
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\cycle-time-chart-375px-375px.png"
+      ]
+    },
+    {
+      "surface": "cycle-time-chart",
+      "label": "CycleTimeChart",
+      "width": 1440,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 1440,
+        "innerWidth": 1440,
+        "by": 0,
+        "widest": "div",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 1,
+        "uniqueElements": 1,
+        "sequence": [
+          "svg[application]"
+        ],
+        "domFocusableCount": 1,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": {
+          "domFocusableCount": 1,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [],
+          "mouseOnly": [],
+          "mouseOnlyExempted": []
+        },
+        "reason": "tab sequence verified: 1 stops, 1 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": {
+        "verdict": "PASS",
+        "svgCount": 1,
+        "paintedCount": 1,
+        "unpaintedCount": 0,
+        "svgs": [
+          {
+            "width": 1372,
+            "height": 174,
+            "clientWidth": 1440,
+            "clientHeight": 208,
+            "pathCount": 3,
+            "painted": true
+          }
+        ]
+      },
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\cycle-time-chart-1440px-1440px.png"
+      ]
+    },
+    {
+      "surface": "lead-time-chart",
+      "label": "LeadTimeChart",
+      "width": 375,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 375,
+        "innerWidth": 375,
+        "by": 0,
+        "widest": "div",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 2,
+        "uniqueElements": 2,
+        "sequence": [
+          "svg[application]",
+          "body[]:0"
+        ],
+        "domFocusableCount": 1,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": {
+          "domFocusableCount": 1,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [],
+          "mouseOnly": [],
+          "mouseOnlyExempted": []
+        },
+        "reason": "tab sequence verified: 2 stops, 1 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": {
+        "verdict": "PASS",
+        "svgCount": 1,
+        "paintedCount": 1,
+        "unpaintedCount": 0,
+        "svgs": [
+          {
+            "width": 307,
+            "height": 174,
+            "clientWidth": 375,
+            "clientHeight": 208,
+            "pathCount": 3,
+            "painted": true
+          }
+        ]
+      },
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\lead-time-chart-375px-375px.png"
+      ]
+    },
+    {
+      "surface": "lead-time-chart",
+      "label": "LeadTimeChart",
+      "width": 1440,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 1440,
+        "innerWidth": 1440,
+        "by": 0,
+        "widest": "div",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "PASS",
+        "tabCount": 2,
+        "uniqueElements": 2,
+        "sequence": [
+          "svg[application]",
+          "body[]:0"
+        ],
+        "domFocusableCount": 1,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": {
+          "domFocusableCount": 1,
+          "positiveTabIndex": [],
+          "zeroSizeFocusable": [],
+          "zeroSizeExempted": [],
+          "mouseOnly": [],
+          "mouseOnlyExempted": []
+        },
+        "reason": "tab sequence verified: 2 stops, 1 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+      },
+      "svgCheck": {
+        "verdict": "PASS",
+        "svgCount": 1,
+        "paintedCount": 1,
+        "unpaintedCount": 0,
+        "svgs": [
+          {
+            "width": 1372,
+            "height": 174,
+            "clientWidth": 1440,
+            "clientHeight": 208,
+            "pathCount": 3,
+            "painted": true
+          }
+        ]
+      },
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\lead-time-chart-1440px-1440px.png"
+      ]
+    },
+    {
+      "surface": "critical-path-section",
+      "label": "CriticalPathSection",
+      "width": 375,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 375,
+        "innerWidth": 375,
+        "by": 0,
+        "widest": "div",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "NOT-RUN",
+        "tabCount": 1,
+        "uniqueElements": 1,
+        "sequence": [
+          "body[]:Critical PathTotal duration: 144 steps7 "
+        ],
+        "domFocusableCount": null,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": null,
+        "reason": "Tab returned immediately to body — no interactive elements in DOM"
+      },
+      "svgCheck": null,
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\critical-path-section-375px-375px.png"
+      ]
+    },
+    {
+      "surface": "critical-path-section",
+      "label": "CriticalPathSection",
+      "width": 1440,
+      "overflowCheck": {
+        "verdict": "PASS",
+        "scrollWidth": 1440,
+        "innerWidth": 1440,
+        "by": 0,
+        "widest": "div",
+        "measured": true,
+        "pageRendered": true
+      },
+      "focusCheck": {
+        "verdict": "NOT-RUN",
+        "tabCount": 1,
+        "uniqueElements": 1,
+        "sequence": [
+          "body[]:Critical PathTotal duration: 144 steps7 "
+        ],
+        "domFocusableCount": null,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": null,
+        "reason": "Tab returned immediately to body — no interactive elements in DOM"
+      },
+      "svgCheck": null,
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\critical-path-section-1440px-1440px.png"
+      ]
+    }
+  ]
+}

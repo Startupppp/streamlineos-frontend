@@ -33,6 +33,7 @@ import {
   type KeyResult,
   type GoalDetail,
 } from "@/hooks/api/goals";
+import { useCan } from "@/hooks/api/access";
 import { GoalFormSheet } from "@/features/build/goals/goal-form-sheet";
 import { CheckInDialog } from "@/features/build/goals/check-in-dialog";
 import { AddLinkDialog } from "@/features/build/goals/add-link-dialog";
@@ -44,6 +45,7 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
+  PM_FILL_SECTION,
 } from "@/components/pm-chrome";
 import { TEXT_BODY } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -91,6 +93,7 @@ function AddLinkButton({ onClick }: { onClick: () => void }) {
 
 export function GoalDetailPage({ goalId }: { goalId: number }) {
   const router = useRouter();
+  const canManage = useCan("build:goals:manage");
 
   const { data: goal, isLoading, isError, error, refetch } = useGoal(goalId);
   const deleteGoal = useDeleteGoal();
@@ -115,7 +118,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
     deleteGoal.mutate(goalId, {
       onSuccess: () => {
         toast.success("Goal deleted");
-        router.push("/build/goal");
+        router.push("/build/goals");
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
@@ -130,9 +133,9 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
-      <PageWrapper title="Goal" backHref="/build/goal">
-        <PmPageShell withGlow={false}>
-          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+      <PageWrapper title="Goal" backHref="/build/goals">
+        <PmPageShell>
+          <PmSection index={0} className={PM_FILL_SECTION}>
             <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
               {null}
             </PageState>
@@ -144,7 +147,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
 
   if (pageState.kind === "loading") {
     return (
-      <PageWrapper title="Goal" backHref="/build/goal">
+      <PageWrapper title="Goal" backHref="/build/goals">
         <GoalDetailSkeleton />
       </PageWrapper>
     );
@@ -152,9 +155,9 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
 
   if (!goal) {
     return (
-      <PageWrapper title="Goal" backHref="/build/goal">
-        <PmPageShell withGlow={false}>
-          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+      <PageWrapper title="Goal" backHref="/build/goals">
+        <PmPageShell>
+          <PmSection index={0} className={PM_FILL_SECTION}>
             <ErrorState
               title="Failed to load goal"
               description="This goal may have been removed or is unavailable."
@@ -173,8 +176,12 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
   return (
     <PageWrapper
       title={detail.title}
-      backHref="/build/goal"
-      actions={<GoalDetailActions onEdit={handleOpenEdit} onDelete={handleOpenDelete} />}
+      backHref="/build/goals"
+      actions={
+        canManage ? (
+          <GoalDetailActions onEdit={handleOpenEdit} onDelete={handleOpenDelete} />
+        ) : undefined
+      }
     >
       <PmPageShell>
         <PmSection index={0}>
@@ -256,7 +263,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
                 {detail.links.length}
               </Badge>
             </div>
-            <AddLinkButton onClick={handleOpenAddLink} />
+            {canManage ? <AddLinkButton onClick={handleOpenAddLink} /> : null}
           </div>
           {detail.links.length === 0 ? (
             <PmPanel className="flex items-center justify-center p-4">

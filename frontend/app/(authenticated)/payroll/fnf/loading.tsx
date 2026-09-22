@@ -6,7 +6,7 @@ import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 export function FnfPageSkeleton() {
   return (
     <PageWrapper
-      title="Full & Final Settlement"
+      title="Final settlement"
       subtitle="Review and approve exit settlements."
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
@@ -14,7 +14,7 @@ export function FnfPageSkeleton() {
         </div>
       }
     >
-      <DataTableSkeleton rows={12} columns={4} />
+      <DataTableSkeleton rows={12} headers={["Employee", "Net Payable", "Status", "Date"]} />
     </PageWrapper>
   );
 }

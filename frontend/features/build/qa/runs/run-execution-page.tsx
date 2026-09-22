@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { createBugFromResultSchema, type CreateBugFromResultFormValues } from "./run-schema";
 import { useTestRunDetail, useUpdateTestRun, useCreateBugFromResult } from "@/hooks/api/build/qa";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -47,13 +47,6 @@ import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { ResultRow } from "./result-row";
 import type { TestRunStatus, TestRunCounts } from "@/types/projects";
 
-const createBugFromResultSchema = z.object({
-  bugTitle: z.string().min(1, "Title is required"),
-  bugSeverity: z.string(),
-});
-
-type CreateBugFromResultFormValues = z.infer<typeof createBugFromResultSchema>;
-
 const STATUS_STYLES: Record<string, string> = {
   not_started: "text-muted-foreground border-border",
   in_progress: "text-status-info-ink border-status-info-rule",
@@ -68,8 +61,8 @@ const STATUS_LABELS: Record<string, string> = {
   aborted: "Aborted",
 };
 
-function ProgressBar({ counts }: { counts?: TestRunCounts }) {
-  if (!counts || counts.total === 0) return null;
+function ProgressBar({ counts }: { counts: TestRunCounts }) {
+  if (counts.total === 0) return null;
   const pct = Math.round(((counts.passed + counts.failed + counts.blocked + counts.skipped) / counts.total) * 100);
   const passPct = Math.round((counts.passed / counts.total) * 100);
   return (
@@ -199,7 +192,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
   if (!run) {
     return (
       <PageWrapper title="Run" backHref={`/build/${projectId}/qa`}>
-        <PmPageShell withGlow={false}>
+        <PmPageShell>
           <ErrorState onRetry={handleRetry} />
         </PmPageShell>
       </PageWrapper>
@@ -207,6 +200,14 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
   }
 
   const results = run.results ?? [];
+  const runCounts: TestRunCounts = {
+    total: results.length,
+    passed: results.filter((result) => result.status === "passed").length,
+    failed: results.filter((result) => result.status === "failed").length,
+    blocked: results.filter((result) => result.status === "blocked").length,
+    skipped: results.filter((result) => result.status === "skipped").length,
+    notRun: results.filter((result) => result.status === "not_run").length,
+  };
 
   return (
     <PageWrapper
@@ -229,7 +230,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
                 {run.environment}
               </span>
             ) : null}
-            <ProgressBar counts={run.counts} />
+            <ProgressBar counts={runCounts} />
           </PmPanel>
         </PmSection>
 

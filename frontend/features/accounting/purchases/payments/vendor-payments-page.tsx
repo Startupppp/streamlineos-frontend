@@ -9,7 +9,10 @@ import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { DatePicker } from "@/components/ui/date-picker";
-import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import {
+  FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import {
   Select,
@@ -25,9 +28,12 @@ import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useAccountingBook } from "@/hooks/api/accounting/ledger";
 import { useApPayments } from "@/hooks/api/accounting/ap";
-import type { ApPaymentStatus } from "@/types/accounting-ap";
-import type { ApPayment } from "@/types/accounting-ap-payments";
-import { AP_PAYMENT_STATUS_LABELS, AP_PAYMENT_STATUS_TONES } from "../lib/ap-labels";
+import type { ApPaymentStatus } from "@/types/accounting/accounting-ap";
+import type { ApPayment } from "@/types/accounting/accounting-ap-payments";
+import {
+  AP_PAYMENT_STATUS_LABELS,
+  AP_PAYMENT_STATUS_TONES,
+} from "../lib/ap-labels";
 import { useUrlListState } from "../lib/use-url-list-state";
 import { VendorPickerField } from "../bills/vendor-picker-field";
 import { PaymentDetailSheet } from "./payment-detail-sheet";
@@ -49,7 +55,9 @@ export function VendorPaymentsPage() {
   const to = getParam("to");
 
   const [isRecording, setIsRecording] = useState(false);
-  const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
+  const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(
+    null,
+  );
 
   const bookQuery = useAccountingBook();
   const paymentsQuery = useApPayments({
@@ -67,7 +75,9 @@ export function VendorPaymentsPage() {
     isError: paymentsQuery.isError,
     error: paymentsQuery.error,
   });
-  const handleRetry = useCallback(() => { void paymentsQuery.refetch(); }, [paymentsQuery]);
+  const handleRetry = useCallback(() => {
+    void paymentsQuery.refetch();
+  }, [paymentsQuery]);
 
   function handleSheetOpenChange(open: boolean): void {
     if (!open) setSelectedPaymentId(null);
@@ -135,10 +145,19 @@ export function VendorPaymentsPage() {
     },
   ];
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="Money out">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>
@@ -171,7 +190,9 @@ export function VendorPaymentsPage() {
         <div className={FILTER_TOOLBAR_ROW}>
           <Select
             value={status || "all"}
-            onValueChange={(value) => setParams({ status: value === "all" ? undefined : value })}
+            onValueChange={(value) =>
+              setParams({ status: value === "all" ? undefined : value })
+            }
           >
             <SelectTrigger className={FILTER_SELECT_TRIGGER}>
               <SelectValue />
@@ -230,7 +251,14 @@ export function VendorPaymentsPage() {
               className="border-0 bg-transparent min-h-[40vh]"
               title="No money has gone out yet"
               description="Record a payment once you have settled a vendor's bill."
-              action={canManage ? { label: "Pay a vendor", onClick: () => setIsRecording(true) } : undefined}
+              action={
+                canManage
+                  ? {
+                      label: "Pay a vendor",
+                      onClick: () => setIsRecording(true),
+                    }
+                  : undefined
+              }
             />
           )
         }
@@ -252,7 +280,10 @@ export function VendorPaymentsPage() {
         />
       ) : null}
 
-      <PaymentDetailSheet paymentId={selectedPaymentId} onOpenChange={handleSheetOpenChange} />
+      <PaymentDetailSheet
+        paymentId={selectedPaymentId}
+        onOpenChange={handleSheetOpenChange}
+      />
     </PageWrapper>
   );
 }

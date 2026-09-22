@@ -106,6 +106,32 @@ protects trust boundaries, and the database protects durable state.
   module's schema file.
 - [ ] **BLD-05-004** all form schemas live in `*-schema.ts`, with types derived
   from the schema.
+  **REOPENED 2026-09-21 — the closing scan cannot see a multiline declaration.**
+  The "repo scan returning no `z.object(`" below is a single-line search.
+  `features/build/cycles/cycles-page.tsx:59` reads
+  `const createCycleSchema = z` with `.object({` on the next line, so the scan
+  passes over a 45-line inline schema in a page component that supplies
+  `zodResolver` at `:149`. Measured today: single-line `z.object(` → zero files;
+  `rg -U "z\s*\n\s*\.object\("` → one, that file. Detail and the wider pattern are
+  recorded at BLD-05-037, which is reopened on the same evidence.
+  The 32-component move this item describes did happen and is not in question —
+  only the completeness claim is. One file remains, and the scan that would prove
+  it needs to tolerate a line break between `z` and its method.
+  **Superseded closure text, retained for provenance — "Closed — zero inline
+  schemas remain."**
+  Thirty-two components under `features/build/**` declared their react-hook-form
+  `z.object` inline. Each moved to the `*-schema.ts` owning its folder, reusing
+  the existing file where one was already present (`goal-form-schema.ts`,
+  `intake-schema.ts`, `meeting-form-schema.ts`) rather than adding a second.
+  All 22 schema files derive their type with `z.infer`; no hand-written parallel
+  interface survives. `create-epic-dialog` and `edit-epic-dialog` each carried
+  an identical copy of the priority and status lists — now one definition in
+  `epic-schema.ts`.
+  Verified by a repo scan returning no `z.object(` outside a `*-schema.ts` under
+  `features/build/**` or `app/(authenticated)/build/**`; `pnpm type-check` clean;
+  127 Build suites / 740 tests green. Commit `1430903f8`.
+  No validation rule, field or message changed — this was a move, so it is not
+  evidence that any form's rules are correct, only that they are owned.
 
 ## Form Inventory and Minimum Contract
 
@@ -212,7 +238,19 @@ protects trust boundaries, and the database protects durable state.
 
 - [ ] **BLD-05-019** duplicate name/key races produce a field-level 409.
 - [ ] **BLD-05-020** stale version produces merge/reload choices.
-- [ ] **BLD-05-021** relation-cycle and last-owner checks are transactional.
+- [x] **BLD-05-021** relation-cycle and last-owner checks are transactional.
+  **Closed — unit proof, executed 2026-09-21.**
+  Relation cycle: `assertSelfRefChain` runs on `tx` inside `this.db.transaction`
+  (`core/projects-tickets-update.service.ts:246,255,257`, helper at `:56-124`).
+  Proven by `core/projects-ticket-ancestry-race.spec.ts`, which is non-vacuous in
+  the way that matters here — its `tx` mock returns an inverse edge that the
+  non-transactional `db` handle does not, so a check performed *before* the
+  transaction would pass and the spec would fail.
+  Last owner: `pm-workspace-memberships.service.ts:174-197` and `232-270`, proven by
+  `pm-workspace-memberships.service.spec.ts`, whose transaction mock **does** invoke
+  its callback (`:88`) — without that, every assertion inside the transaction would
+  be silently void.
+  Both suites passed in a 6-suite / 42-test batch.
 
 ## Unsaved Work Contract
 
@@ -261,6 +299,35 @@ organization switch, sign-out, and programmatic post-action navigation.
   one owning `*-schema.ts` only after confirming no canonical schema already
   exists; the root constitution's trivial single-field guard exception remains
   valid.
+  **REOPENED 2026-09-21 — one counterexample survives, and it is the same
+  detector shape that caused the original miss.**
+  `frontend/features/build/cycles/cycles-page.tsx:59-104` declares a 45-line
+  `createCycleSchema` inline in a page component, with `z.infer` at `:104` and
+  `zodResolver(createCycleSchema)` at `:149`. There is no
+  `features/build/cycles/*-schema.ts` — the directory holds only the two pages and
+  their tests.
+  The closure below widened the **constructor set** (`discriminatedUnion`, `tuple`,
+  `record`) which was a real gap, but kept the **single-line** assumption. The
+  declaration reads `const createCycleSchema = z\n  .object({`, so a literal
+  `z.object(` search cannot see it. Measured both ways today:
+  `rg -l "z\.object\(" features/build "app/(authenticated)/build" --glob '!*-schema.ts'`
+  → **zero files**;
+  `rg -U -l "z\s*\n\s*\.object\(" …` → **exactly one**, `cycles-page.tsx`.
+  The multiline form of the three widened constructors returns zero, so this one
+  file is the whole residue.
+  **`BLD-05-004` above is ticked on the same unsound scan** and is equally false;
+  see the note recorded there. Closing either needs a detector that tolerates a
+  line break between `z` and its method — the frontend's own placement gate
+  (`features/settings/__tests__/settings-schema-placement.contract.test.ts:40`) has
+  the identical single-line defect and is the third instance of it.
+  **Superseded closure text, retained for provenance — "Closed — source proof
+  2026-09-21." `z.object(` outside a `*-schema.ts` returns zero files across
+  `frontend/features/build/**` and `frontend/app/(authenticated)/build/**`; so do
+  `z.discriminatedUnion(`, `z.tuple(` and `z.record(`, which the original
+  `z.object`-only census would have missed.**
+  ⚠ This does **not** also close `BLD-05A-003`, whose text adds "no duplicate
+  shape remains". Absence of inline objects does not prove absence of two
+  `*-schema.ts` files declaring one shape; that clause is still unproven.
 
 ## Acceptance
 

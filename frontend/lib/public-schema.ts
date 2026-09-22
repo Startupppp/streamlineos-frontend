@@ -93,13 +93,16 @@ export const publicReferrerPortalContract = z.object({
   ),
 });
 
-export const publicReferralSubmitContract = z.discriminatedUnion("alreadyReferred", [
-  z.object({ alreadyReferred: z.literal(true) }),
-  z.object({
-    alreadyReferred: z.literal(false),
-    referral: z.record(z.string(), z.unknown()),
-  }),
-]);
+export const publicReferralSubmitContract = z.discriminatedUnion(
+  "alreadyReferred",
+  [
+    z.object({ alreadyReferred: z.literal(true) }),
+    z.object({
+      alreadyReferred: z.literal(false),
+      referral: z.record(z.string(), z.unknown()),
+    }),
+  ],
+);
 
 export const publicVendorPortalContract = z.object({
   vendorName: z.string().nullable(),

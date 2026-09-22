@@ -37,8 +37,13 @@ jest.mock("next/navigation", () => ({
 }));
 
 const toastError = jest.fn();
+const toastWarning = jest.fn();
 jest.mock("sonner", () => ({
-  toast: { success: jest.fn(), error: (message: string) => toastError(message) },
+  toast: {
+    success: jest.fn(),
+    warning: (message: string) => toastWarning(message),
+    error: (message: string) => toastError(message),
+  },
 }));
 
 import { OnboardingWizard } from "@/components/hr/onboarding-wizard";

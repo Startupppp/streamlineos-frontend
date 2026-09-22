@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { AppSheet, ErrorState } from "@/components/shared";
+import { AppSheet, ErrorState, NoPermissionState } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { ConfirmWithReasonSheet } from "@/components/ui/confirm-with-reason-sheet";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -18,7 +18,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDateTime } from "@/lib/date-utils";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
-import { useCan } from "@/hooks/api/access";
+import { useCanState } from "@/hooks/api/access";
 import {
   useAcceptSnapshotDiff,
   useChannelSnapshotDiffs,
@@ -55,11 +55,13 @@ export function ChannelSnapshotDiffsPanel({
   onOpenChange: (open: boolean) => void;
   channel: Channel | null;
 }) {
-  const canAdjust = useCan("inventory:stock:adjust");
+  const channelState = useCanState("inventory:channels:manage");
+  const canAdjustState = useCanState("inventory:stock:adjust");
+  const canAdjust = canAdjustState === "granted";
   const [status, setStatus] = useState<SnapshotDiffStatus | undefined>("OPEN");
   const [pending, setPending] = useState<PendingResolution>(null);
 
-  const { data, isLoading, isError, error, refetch } = useChannelSnapshotDiffs(
+  const { data, isPending, isError, error, refetch } = useChannelSnapshotDiffs(
     open && channel ? channel.id : null,
     { status, limit: 50 },
   );
@@ -183,6 +185,9 @@ export function ChannelSnapshotDiffsPanel({
         description="What this channel reported holding, against what the ledger says. Accepting posts a movement; dismissing records that the difference was judged unimportant."
         className="sm:max-w-3xl"
       >
+        {channelState === "denied" ? (
+          <NoPermissionState compact permission="inventory:channels:manage" />
+        ) : (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Select value={status ?? ALL} onValueChange={handleStatusChange}>
@@ -216,7 +221,7 @@ export function ChannelSnapshotDiffsPanel({
               data={data?.items ?? []}
               columns={columns}
               getRowKey={(row) => row.id}
-              isLoading={isLoading}
+              isLoading={isPending}
               minWidth="880px"
               emptyState={
                 status === "OPEN" ? (
@@ -238,6 +243,7 @@ export function ChannelSnapshotDiffsPanel({
             />
           )}
         </div>
+        )}
       </AppSheet>
 
       <ConfirmWithReasonSheet

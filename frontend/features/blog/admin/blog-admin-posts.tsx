@@ -322,20 +322,21 @@ export function BlogAdminPosts() {
     },
   ];
 
+  const filtersActive = !!debouncedSearch || statusFilter !== "all";
+
+  function handleClearFilters(): void {
+    handleSearchChange("");
+    handleStatusChange("all");
+  }
+
   const emptyState = (
     <EmptyState
       illustration={<FileText className="h-8 w-8 text-muted-foreground" aria-hidden="true" />}
-      title={debouncedSearch || statusFilter !== "all" ? "No posts match your filters" : "No posts yet"}
-      description={
-        debouncedSearch || statusFilter !== "all"
-          ? "Try adjusting your search or status filter."
-          : "Create your first blog post to get started."
-      }
-      action={
-        !debouncedSearch && statusFilter === "all" && canManage
-          ? { label: "New post", onClick: () => setCreateOpen(true) }
-          : undefined
-      }
+      title="No posts yet"
+      description="Create your first blog post to get started."
+      action={canManage ? { label: "New post", onClick: () => setCreateOpen(true) } : undefined}
+      filtersActive={filtersActive}
+      onClearFilters={handleClearFilters}
       className="border-0 bg-transparent min-h-[40vh]"
     />
   );

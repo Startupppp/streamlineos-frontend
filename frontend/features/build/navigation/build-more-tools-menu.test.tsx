@@ -231,3 +231,15 @@ describe("BSN-03-034 — returns null with an empty tools list", () => {
     expect(container.firstChild).toBeNull();
   });
 });
+
+describe("BSN-03-A03 — zero authorized tools add no visual noise", () => {
+  test("More Tools trigger is absent when zero authorized tools exist so no empty popover appears while access loads", () => {
+    const { container } = renderMenu({ tools: [] });
+    expect(container.firstChild).toBeNull();
+  });
+
+  test("no trigger button exists in the DOM when the authorized tool list is empty so keyboard users cannot reach an empty menu", () => {
+    renderMenu({ tools: [] });
+    expect(screen.queryByRole("button", { name: "More Build tools" })).not.toBeInTheDocument();
+  });
+});

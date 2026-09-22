@@ -4,7 +4,6 @@ import { useState, useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTicketIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -13,10 +12,13 @@ import {
   useUpdateChangelogEntry,
   useDeleteChangelogEntry,
 } from "@/hooks/api/build/roadmap";
+import { useCan } from "@/hooks/api/access";
 import type { ChangelogEntry } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { ChangelogEntryCard } from "./changelog-entry-card";
 import { ChangelogSheet } from "./changelog-sheet";
 
@@ -44,12 +46,23 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
   const [cursorIdx, setCursorIdx] = useState(0);
   const currentCursor = cursorHistory[cursorIdx];
 
-  const { data, isLoading, isError, refetch } = useChangelog({ cursor: currentCursor });
+  const { data, isLoading, isError, error, refetch } = useChangelog({ cursor: currentCursor });
   const update = useUpdateChangelogEntry();
   const deleteEntry = useDeleteChangelogEntry();
+  const canManage = useCan("build:roadmap:manage");
   const [internalCreateOpen, setInternalCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ChangelogEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ChangelogEntry | null>(null);
+
+  const isEmpty = (data?.data ?? []).length === 0 && cursorIdx === 0;
+
+  const resolution = usePageState({
+    permission: "build:roadmap:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty,
+  });
 
   const isCreateControlled = onCreateOpenChange !== undefined;
   const sheetOpen = isCreateControlled ? (createOpen ?? false) : internalCreateOpen;
@@ -121,53 +134,54 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
     setCursorIdx((prev) => prev - 1);
   }
 
-  if (isLoading) return <ChangelogListSkeleton />;
-
-  if (isError) {
-    return (
-      <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
-    );
-  }
-
   const hasPrev = cursorIdx > 0;
   const hasNext = data?.pagination.hasMore ?? false;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
-      {(data?.data ?? []).length === 0 && cursorIdx === 0 ? (
-        <EmptyState
+    <>
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
+        <PageState
+          resolution={resolution}
+          loading={<ChangelogListSkeleton />}
+          empty={
+            <EmptyState
+              className={PM_FILL_PANEL}
+              illustration={<EmptyTicketIllustration />}
+              title="No changelog entries yet"
+              description="Announce shipped features, improvements and fixes to your users."
+              action={{ label: "Add entry", onClick: handleOpenSheet }}
+            />
+          }
+          onRetry={handleRetry}
           className={PM_FILL_PANEL}
-          illustration={<EmptyTicketIllustration />}
-          title="No changelog entries yet"
-          description="Announce shipped features, improvements and fixes to your users."
-          action={{ label: "Add entry", onClick: handleOpenSheet }}
-        />
-      ) : (
-        <>
-          <PmStaggerList className="space-y-2">
-            {(data?.data ?? []).map((entry) => (
-              <ChangelogEntryCard
-                key={entry.id}
-                entry={entry}
-                isUpdating={update.isPending}
-                onTogglePublish={handleTogglePublish}
-                onEdit={handleEditEntry}
-                onDelete={handleDeleteEntry}
-              />
-            ))}
-          </PmStaggerList>
-          {(hasPrev || hasNext) ? (
-            <div className="flex items-center justify-center gap-2 border-t pt-2">
-              <Button variant="ghost" size="sm" onClick={handlePrev} disabled={!hasPrev}>
-                Previous
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handleNext} disabled={!hasNext}>
-                Next
-              </Button>
-            </div>
-          ) : null}
-        </>
-      )}
+        >
+          <>
+            <PmStaggerList className="space-y-2">
+              {(data?.data ?? []).map((entry) => (
+                <ChangelogEntryCard
+                  key={entry.id}
+                  entry={entry}
+                  isUpdating={update.isPending}
+                  canManage={canManage}
+                  onTogglePublish={handleTogglePublish}
+                  onEdit={handleEditEntry}
+                  onDelete={handleDeleteEntry}
+                />
+              ))}
+            </PmStaggerList>
+            {(hasPrev || hasNext) ? (
+              <div className="flex items-center justify-center gap-2 border-t pt-2">
+                <Button variant="ghost" size="sm" onClick={handlePrev} disabled={!hasPrev}>
+                  Previous
+                </Button>
+                <Button variant="ghost" size="sm" onClick={handleNext} disabled={!hasNext}>
+                  Next
+                </Button>
+              </div>
+            ) : null}
+          </>
+        </PageState>
+      </div>
 
       {sheetOpen ? <ChangelogSheet onClose={handleCloseSheet} /> : null}
       {editTarget ? <ChangelogSheet entry={editTarget} onClose={handleCloseEdit} /> : null}
@@ -181,6 +195,6 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
         destructive
         onConfirm={handleDelete}
       />
-    </div>
+    </>
   );
 }

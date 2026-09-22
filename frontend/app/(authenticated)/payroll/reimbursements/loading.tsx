@@ -8,7 +8,7 @@ export function ReimbursementsPageSkeleton() {
   return (
     <PageWrapper
       title="Reimbursements"
-      subtitle="Review and approve employee expense claims."
+      subtitle="Review and approve employee expense claims"
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <Skeleton className="h-9 w-44 rounded-md" />
@@ -21,7 +21,7 @@ export function ReimbursementsPageSkeleton() {
         <Skeleton className="h-9 w-full rounded-lg shrink-0" />
         <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
           <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-            <DataTableSkeleton rows={12} columns={7} />
+            <DataTableSkeleton rows={12} headers={["Employee", "Category", "Amount", "Receipt", "Status", "Submitted", ""]} />
           </CardContent>
         </Card>
       </div>

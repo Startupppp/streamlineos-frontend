@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useChangeRequests, useDeleteChangeRequest } from "@/hooks/api/build/change-requests";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -83,26 +84,62 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const canCreate = useCan("build:changerequests:create");
   const canManage = useCan("build:changerequests:manage");
 
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
+
+  const statusFilter = searchParams.get("status") ?? "all";
+  const impactFilter = searchParams.get("impact") ?? "";
+  const qFilter = searchParams.get("q") ?? "";
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editCr, setEditCr] = useState<ChangeRequest | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ChangeRequest | null>(null);
 
-  const { data: crs, isLoading, isError, error, refetch } = useChangeRequests(
+  function updateUrlParam(key: string, value: string | null) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value && value !== "all") {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    const query = params.toString();
+    startTransition(() => {
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    });
+  }
+
+  const activeFilters = {
+    ...(statusFilter !== "all" ? { status: statusFilter } : {}),
+    ...(impactFilter ? { impact: impactFilter } : {}),
+    ...(qFilter ? { q: qFilter } : {}),
+  };
+
+  const { data: crPage, isLoading, isError, error, refetch } = useChangeRequests(
     projectId,
-    statusFilter !== "all" ? { status: statusFilter } : undefined,
+    Object.keys(activeFilters).length > 0 ? activeFilters : undefined,
   );
   const { data: membersData } = useOrgMembers(1, 100);
   const deleteCr = useDeleteChangeRequest(projectId);
   const members = useMemo(() => membersData?.data ?? [], [membersData]);
 
+  const crs = crPage?.data ?? [];
+  const pagination = crPage?.pagination;
+
   const handleNew = useCallback(() => { setEditCr(null); setSheetOpen(true); }, []);
   const handleEdit = useCallback((cr: ChangeRequest) => { setEditCr(cr); setSheetOpen(true); }, []);
   const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) setDeleteTarget(null); }, []);
   const handleSearchChange = useCallback((value: string) => {
-    setSearch(value);
-  }, []);
+    updateUrlParam("q", value || null);
+  }, [searchParams, pathname]);
+
+  function handleStatusChange(value: string) {
+    updateUrlParam("status", value === "all" ? null : value);
+  }
+
+  function handleImpactChange(value: string) {
+    updateUrlParam("impact", value || null);
+  }
 
   const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
@@ -118,17 +155,19 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     void refetch();
   }, [refetch]);
 
-  const filtersActive = !!(search || statusFilter !== "all");
+  const filtersActive = !!(qFilter || statusFilter !== "all" || impactFilter);
 
-  const handleClearFilters = useCallback(() => {
-    setSearch("");
-    setStatusFilter("all");
-  }, []);
+  function handleClearFilters() {
+    updateUrlParam("q", null);
+    updateUrlParam("status", null);
+    updateUrlParam("impact", null);
+  }
 
-  const filtered = useMemo(
-    () => (crs ?? []).filter((cr) => !search || cr.title.toLowerCase().includes(search.toLowerCase())),
-    [crs, search],
-  );
+  function handleLoadMore() {
+    if (pagination?.nextCursor) {
+      updateUrlParam("cursor", pagination.nextCursor);
+    }
+  }
 
   const columns = useMemo<DataTableColumn<ChangeRequest>[]>(() => [
     {
@@ -212,10 +251,10 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput
         placeholder="Search..."
-        value={search}
+        value={qFilter}
         onValueChange={handleSearchChange}
       />
-      <Select value={statusFilter} onValueChange={setStatusFilter}>
+      <Select value={statusFilter} onValueChange={handleStatusChange}>
         <SelectTrigger className="w-40">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
@@ -228,6 +267,11 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
           ))}
         </SelectContent>
       </Select>
+      <SearchInput
+        placeholder="Filter by impact..."
+        value={impactFilter}
+        onValueChange={handleImpactChange}
+      />
     </div>
   );
 
@@ -250,7 +294,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           {pageState.kind === "loading" ? (
             <DataTableSkeleton rows={12} columns={7} className="flex-1" />
-          ) : filtered.length === 0 ? (
+          ) : crs.length === 0 ? (
             <EmptyState
               className={PM_FILL_PANEL}
               illustrationPreset="ticket"
@@ -261,12 +305,21 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
               action={canCreate && !filtersActive ? { label: "New Change Request", onClick: handleNew } : undefined}
             />
           ) : (
-            <DataTable<ChangeRequest>
-                data={filtered}
+            <>
+              <DataTable<ChangeRequest>
+                data={crs}
                 columns={columns}
                 getRowKey={(row) => row.id}
                 className={PM_FILL_PANEL}
               />
+              {pagination?.hasMore && (
+                <div className="flex justify-center py-2">
+                  <Button variant="ghost" size="sm" className="text-dense" onClick={handleLoadMore}>
+                    Load more
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </PmSection>
       </PmPageShell>

@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, ClipboardList, History, Building2, SlidersHorizontal, Sliders, FileSearch, LayoutTemplate, Workflow, Plug } from "lucide-react";
+import { LayoutDashboard, FileText, ClipboardList, History, SlidersHorizontal, Sliders, FileSearch, LayoutTemplate, Workflow, Plug } from "lucide-react";
 import type { NavRoute } from "./sidebar-nav-types";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
@@ -22,7 +22,7 @@ const HR_SETTINGS_PERMISSIONS: PermissionKey[] = [
 
 export const HR_SETTINGS_ROUTES: NavRoute[] = [
 {
-        label: "Settings",
+        label: "HR configuration",
         icon: SlidersHorizontal,
         href: "/hr/settings",
         exact: true,
@@ -34,12 +34,6 @@ export const HR_SETTINGS_ROUTES: NavRoute[] = [
             href: "/hr/settings",
             exact: true,
             requiredPermission: HR_SETTINGS_PERMISSIONS,
-          },
-          {
-            label: "Company",
-            icon: Building2,
-            href: "/hr/settings/company",
-            requiredPermission: "settings:organization:manage",
           },
           {
             label: "Import / Export",

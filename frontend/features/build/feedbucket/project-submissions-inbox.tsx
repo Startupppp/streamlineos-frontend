@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
-import { forwardRef, useCallback, useMemo, useState, type MouseEvent } from "react";
-import { useRouter } from "next/navigation";
+import { forwardRef, useCallback, useMemo, useState, useTransition, type MouseEvent } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { Trash2Icon } from "@animateicons/react/lucide";
@@ -26,6 +26,8 @@ import type {
   FeedbucketSubmissionStatus,
 } from "@/types/feedbucket";
 import { resolveImageUrl } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 type SubmissionRow = PaginatedFeedbucketSubmissions["data"][number];
 
@@ -66,6 +68,9 @@ const STATUS_LABELS: Record<FeedbucketSubmissionStatus, string> = {
   resolved: "Resolved",
   archived: "Archived",
 };
+
+const ALL_STATUSES: FeedbucketSubmissionStatus[] = ["open", "in_progress", "resolved", "archived"];
+const ALL_TYPES: FeedbucketSubmissionType[] = ["bug", "idea", "feature", "question", "praise", "other"];
 
 const PAGE_SIZE = 25;
 
@@ -176,15 +181,87 @@ export function ProjectSubmissionsInbox({
   projectId,
 }: ProjectSubmissionsInboxProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
   const [page, setPage] = useState(1);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const canDelete = useCan("feedbucket:submissions:delete");
   const deleteSubmission = useDeleteFeedbucketSubmission();
 
+  const statusFilter = searchParams.get("status") as FeedbucketSubmissionStatus | null;
+  const typeFilter = searchParams.get("type") as FeedbucketSubmissionType | null;
+  const linkedFilter = searchParams.get("linked") as "linked" | "unlinked" | null;
+  const fromFilter = searchParams.get("from");
+  const toFilter = searchParams.get("to");
+  const hasActiveFilters =
+    statusFilter !== null ||
+    typeFilter !== null ||
+    linkedFilter !== null ||
+    fromFilter !== null ||
+    toFilter !== null;
+
+  function updateUrlParam(key: string, value: string | null) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    params.delete("page");
+    startTransition(() => {
+      router.replace(params.toString() ? `${pathname}?${params.toString()}` : pathname, { scroll: false });
+    });
+  }
+
+  function handleStatusChange(value: string) {
+    setPage(1);
+    updateUrlParam("status", value === "all" ? null : value);
+  }
+
+  function handleTypeChange(value: string) {
+    setPage(1);
+    updateUrlParam("type", value === "all" ? null : value);
+  }
+
+  function handleLinkedChange(value: string) {
+    setPage(1);
+    updateUrlParam("linked", value === "all" ? null : value);
+  }
+
+  function handleFromChange(value: string) {
+    setPage(1);
+    updateUrlParam("from", value || null);
+  }
+
+  function handleToChange(value: string) {
+    setPage(1);
+    updateUrlParam("to", value || null);
+  }
+
+  function handleClearFilters() {
+    setPage(1);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("status");
+    params.delete("type");
+    params.delete("linked");
+    params.delete("from");
+    params.delete("to");
+    params.delete("page");
+    startTransition(() => {
+      router.replace(params.toString() ? `${pathname}?${params.toString()}` : pathname, { scroll: false });
+    });
+  }
+
   const { data, isLoading, isError, refetch } = useFeedbucketSubmissions({
     page,
     limit: PAGE_SIZE,
     widgetId,
+    ...(statusFilter ? { status: statusFilter } : {}),
+    ...(typeFilter ? { type: typeFilter } : {}),
+    ...(linkedFilter ? { linked: linkedFilter } : {}),
+    ...(fromFilter ? { from: fromFilter } : {}),
+    ...(toFilter ? { to: toFilter } : {}),
   });
 
   function handleRowClick(row: SubmissionRow) {
@@ -254,8 +331,80 @@ export function ProjectSubmissionsInbox({
     );
   }
 
+  const filteredEmptyState = (
+    <EmptyState
+      illustration={<EmptyInboxIllustration className="h-24 w-24" />}
+      title="No matching submissions"
+      description="No submissions match your current filters."
+      action={{ label: "Clear filters", onClick: handleClearFilters }}
+      className="flex flex-1 min-h-0 h-full flex-col"
+    />
+  );
+
+  const firstRunEmptyState = (
+    <EmptyState
+      illustration={<EmptyInboxIllustration className="h-24 w-24" />}
+      title="No submissions yet"
+      description="Submissions from this widget will appear here once users submit feedback."
+      className="flex flex-1 min-h-0 h-full flex-col"
+    />
+  );
+
   return (
     <>
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-border flex-wrap">
+        <Select value={statusFilter ?? "all"} onValueChange={handleStatusChange}>
+          <SelectTrigger className="h-7 w-[130px] text-xs">
+            <SelectValue placeholder="All statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            {ALL_STATUSES.map((s) => (
+              <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={typeFilter ?? "all"} onValueChange={handleTypeChange}>
+          <SelectTrigger className="h-7 w-[120px] text-xs">
+            <SelectValue placeholder="All types" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All types</SelectItem>
+            {ALL_TYPES.map((t) => (
+              <SelectItem key={t} value={t}>{TYPE_LABELS[t]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={linkedFilter ?? "all"} onValueChange={handleLinkedChange}>
+          <SelectTrigger className="h-7 w-[130px] text-xs">
+            <SelectValue placeholder="All submissions" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All submissions</SelectItem>
+            <SelectItem value="linked">Linked to ticket</SelectItem>
+            <SelectItem value="unlinked">Not linked</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Input
+          type="date"
+          aria-label="From date"
+          value={fromFilter ?? ""}
+          onChange={(e) => handleFromChange(e.target.value ? `${e.target.value}T00:00:00Z` : "")}
+          className="h-7 w-[140px] text-xs"
+        />
+
+        <Input
+          type="date"
+          aria-label="To date"
+          value={toFilter ? toFilter.slice(0, 10) : ""}
+          onChange={(e) => handleToChange(e.target.value ? `${e.target.value}T00:00:00Z` : "")}
+          className="h-7 w-[140px] text-xs"
+        />
+      </div>
+
       <DataTable
         data={data?.data ?? []}
         columns={columns}
@@ -269,14 +418,7 @@ export function ProjectSubmissionsInbox({
           onPageChange: setPage,
         }}
         className="flex flex-1 min-h-0 h-full border-0 rounded-none"
-        emptyState={
-          <EmptyState
-            illustration={<EmptyInboxIllustration className="h-24 w-24" />}
-            title="No submissions yet"
-            description="Submissions from this widget will appear here once users submit feedback."
-            className="flex flex-1 min-h-0 h-full flex-col"
-          />
-        }
+        emptyState={hasActiveFilters ? filteredEmptyState : firstRunEmptyState}
         rowClassName={() => "cursor-pointer"}
       />
 

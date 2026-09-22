@@ -1,9 +1,8 @@
 "use client";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { LoadingState } from "@/components/shared/loading-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
-import { useAccess, useCan } from "@/hooks/api/access";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { AttributionByModel } from "@/features/crm/campaigns/attribution-by-model";
 
 /**
@@ -17,24 +16,21 @@ import { AttributionByModel } from "@/features/crm/campaigns/attribution-by-mode
  * touches that key already discloses, not a wider disclosure.
  */
 export default function CampaignAttributionPage() {
-  const { isPending } = useAccess();
-  const canView = useCan("crm:reports:view");
+  const pageState = usePageState({
+    permission: "crm:reports:view",
+    isLoading: false,
+    isError: false,
+    error: undefined,
+  });
 
   return (
     <PageWrapper
       title="Attribution"
       subtitle="The same won revenue, divided across touches five different ways."
     >
-      {isPending ? (
-        <LoadingState variant="page" />
-      ) : !canView ? (
-        <NoPermissionState
-          permission="crm:reports:view"
-          description="You don’t have permission to see campaign attribution."
-        />
-      ) : (
+      <PageState resolution={pageState} loading={null} className="flex-1">
         <AttributionByModel />
-      )}
+      </PageState>
     </PageWrapper>
   );
 }

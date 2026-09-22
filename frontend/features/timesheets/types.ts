@@ -1,3 +1,5 @@
+import type { TimesheetApprovalRoute } from "@/hooks/api/timesheets-core/timesheets-period-schema";
+
 export type EntryStatus = "PENDING" | "APPROVED" | "REJECTED";
 export type PeriodStatus =
   | "OPEN"
@@ -19,7 +21,8 @@ export type RoundingRule =
   | "NEAREST_15"
   | "ROUND_UP"
   | "ROUND_DOWN";
-export type ApprovalMode = "MANAGER" | "AUTO" | "MULTI_LEVEL";
+export type ApprovalMode = "MANAGER" | "AUTO";
+export type ApproverSource = "REPORTING_MANAGER" | "PROJECT_MANAGER";
 
 export interface ProjectRef {
   id: number;
@@ -88,6 +91,9 @@ export interface TimesheetPeriod {
   rejectedAt: string | null;
   lockedAt: string | null;
   currentApproverMembershipId: number | null;
+  approvalRoute: TimesheetApprovalRoute | null;
+  approvalDueAt: string | null;
+  approvalEscalatedAt: string | null;
   rejectionReason: string | null;
   createdAt: string;
   updatedAt: string;
@@ -151,7 +157,8 @@ export interface TimesheetSettings {
   allowOverlappingEntries: boolean;
   allowBackdatedEntries: boolean;
   backdateLimitDays: number | null;
-  approvalMode: ApprovalMode;
+  approvalMode: ApprovalMode | "MULTI_LEVEL";
+  approverSource: ApproverSource;
   clientApprovalEnabled: boolean;
   lockAfterApproval: boolean;
   lockAfterInvoice: boolean;
@@ -178,6 +185,7 @@ export interface UpdateTimesheetSettingsInput {
   allowBackdatedEntries?: boolean;
   backdateLimitDays?: number | null;
   approvalMode?: ApprovalMode;
+  approverSource?: ApproverSource;
   clientApprovalEnabled?: boolean;
   lockAfterApproval?: boolean;
   lockAfterInvoice?: boolean;

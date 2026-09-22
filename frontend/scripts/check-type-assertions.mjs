@@ -263,7 +263,7 @@ const CEILING_LEDGER_PATH = fileURLToPath(new URL("./assertion-ceiling-ledger.js
 // assertions when `unwrapBackend<T>` stopped taking a type parameter and its two
 // call sites narrowed through Zod instead. The tree really is one lower, so the
 // tripwire moves with it rather than reporting a broken counter.
-const CEILING_FLOOR_TOTAL = 499;
+const CEILING_FLOOR_TOTAL = 498;
 
 function loadCeilingLedger() {
   try {

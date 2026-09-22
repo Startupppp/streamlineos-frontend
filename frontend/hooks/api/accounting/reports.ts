@@ -19,14 +19,16 @@ import type {
   TaxSummaryReport,
   TrialBalanceParams,
   TrialBalanceStatement,
-} from "@/types/accounting-reports";
+} from "@/types/accounting/accounting-reports";
 
 type QueryOpts<T> = Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">;
 
 const REPORT_STALE = 60 * 1000;
 
 const taxSummaryContract = lazyContract(() =>
-  import("@/hooks/api/accounting/reports-schema").then((m) => m.taxSummaryReportContract),
+  import("@/hooks/api/accounting/reports-schema").then(
+    (m) => m.taxSummaryReportContract,
+  ),
 );
 
 type QueryParams = Record<string, string | number | boolean | undefined>;
@@ -51,7 +53,11 @@ export function useTrialBalanceReport(
   return useQuery<TrialBalanceStatement, Error>({
     queryKey: accountingReportsQueryKeys.accountingReports.trialBalance(search),
     queryFn: ({ signal }) =>
-      apiClient.get<TrialBalanceStatement>("/accounting/reports/trial-balance", search, signal),
+      apiClient.get<TrialBalanceStatement>(
+        "/accounting/reports/trial-balance",
+        search,
+        signal,
+      ),
     staleTime: REPORT_STALE,
     ...options,
     enabled: canRead && !!params.asOf && (options?.enabled ?? true),
@@ -67,10 +73,15 @@ export function useProfitLossReport(
   return useQuery<ProfitLossReport, Error>({
     queryKey: accountingReportsQueryKeys.accountingReports.profitLoss(search),
     queryFn: ({ signal }) =>
-      apiClient.get<ProfitLossReport>("/accounting/reports/pnl", search, signal),
+      apiClient.get<ProfitLossReport>(
+        "/accounting/reports/pnl",
+        search,
+        signal,
+      ),
     staleTime: REPORT_STALE,
     ...options,
-    enabled: canRead && !!params.from && !!params.to && (options?.enabled ?? true),
+    enabled:
+      canRead && !!params.from && !!params.to && (options?.enabled ?? true),
   });
 }
 
@@ -83,7 +94,11 @@ export function useBalanceSheetReport(
   return useQuery<BalanceSheetReport, Error>({
     queryKey: accountingReportsQueryKeys.accountingReports.balanceSheet(search),
     queryFn: ({ signal }) =>
-      apiClient.get<BalanceSheetReport>("/accounting/reports/balance-sheet", search, signal),
+      apiClient.get<BalanceSheetReport>(
+        "/accounting/reports/balance-sheet",
+        search,
+        signal,
+      ),
     staleTime: REPORT_STALE,
     ...options,
     enabled: canRead && !!params.asOf && (options?.enabled ?? true),
@@ -99,19 +114,28 @@ export function useCashFlowReport(
   return useQuery<CashFlowReport, Error>({
     queryKey: accountingReportsQueryKeys.accountingReports.cashFlow(search),
     queryFn: ({ signal }) =>
-      apiClient.get<CashFlowReport>("/accounting/reports/cash-flow", search, signal),
+      apiClient.get<CashFlowReport>(
+        "/accounting/reports/cash-flow",
+        search,
+        signal,
+      ),
     staleTime: REPORT_STALE,
     ...options,
-    enabled: canRead && !!params.from && !!params.to && (options?.enabled ?? true),
+    enabled:
+      canRead && !!params.from && !!params.to && (options?.enabled ?? true),
   });
 }
 
-export function useAgingReport(params: AgingParams, options?: QueryOpts<AgingReport>) {
+export function useAgingReport(
+  params: AgingParams,
+  options?: QueryOpts<AgingReport>,
+) {
   const canRead = useCan("accounting:reports:read");
   const search = reportParams(params);
   return useQuery<AgingReport, Error>({
     queryKey: accountingReportsQueryKeys.accountingReports.aging(search),
-    queryFn: ({ signal }) => apiClient.get<AgingReport>("/accounting/reports/aging", search, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get<AgingReport>("/accounting/reports/aging", search, signal),
     staleTime: REPORT_STALE,
     ...options,
     enabled: canRead && !!params.asOf && (options?.enabled ?? true),
@@ -135,7 +159,8 @@ export function useTaxSummaryReport(
       ),
     staleTime: REPORT_STALE,
     ...options,
-    enabled: canRead && !!params.from && !!params.to && (options?.enabled ?? true),
+    enabled:
+      canRead && !!params.from && !!params.to && (options?.enabled ?? true),
   });
 }
 
@@ -146,21 +171,24 @@ export interface ExportReportInput {
 }
 
 export function useExportReport() {
-  return useAuthorizedMutation<void, Error, ExportReportInput>("accounting:reports:export", {
-    mutationKey: ["accounting", "reports", "export"],
-    mutationFn: async ({ report, params, filename }) => {
-      const blob = await apiClient.download(
-        "/accounting/reports/export",
-        reportParams({ ...params, report }),
-      );
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
+  return useAuthorizedMutation<void, Error, ExportReportInput>(
+    "accounting:reports:export",
+    {
+      mutationKey: ["accounting", "reports", "export"],
+      mutationFn: async ({ report, params, filename }) => {
+        const blob = await apiClient.download(
+          "/accounting/reports/export",
+          reportParams({ ...params, report }),
+        );
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      },
     },
-  });
+  );
 }

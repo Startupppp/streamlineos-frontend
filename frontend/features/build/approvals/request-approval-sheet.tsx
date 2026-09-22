@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { requestApprovalSchema, type RequestApprovalValues } from "./approvals-schema";
 import {
   Sheet,
   SheetContent,
@@ -54,27 +54,6 @@ const ENTITY_TYPES: { value: ApprovalEntityType; label: string; searchLabel: str
   { value: "change_request", label: "Change Request", searchLabel: "change requests" },
   { value: "timesheet", label: "Timesheet Entry", searchLabel: "timesheet entries" },
 ];
-
-const TITLE_REGEX = /\S/;
-
-const schema = z.object({
-  entityType: z.enum([
-    "task", "milestone", "budget", "release",
-    "change_request", "timesheet",
-  ] as [ApprovalEntityType, ...ApprovalEntityType[]]),
-  entityId: z.string().min(1, "Select an item"),
-  title: z
-    .string()
-    .min(1, "Required")
-    .max(200, "Max 200 characters")
-    .refine((v) => TITLE_REGEX.test(v), { message: "Title cannot be blank" }),
-  approverId: z.string().min(1, "Select an approver"),
-  reason: z.string().max(2000, "Max 2000 characters").optional(),
-  dueAt: z.string().optional(),
-  level: z.enum(["1", "2", "3"]),
-});
-
-type FormValues = z.infer<typeof schema>;
 
 interface RequestApprovalSheetProps {
   open: boolean;
@@ -143,7 +122,7 @@ function useEntityItems(projectId: number, entityType: ApprovalEntityType) {
 
   if (entityType === "change_request") {
     return {
-      items: (changeRequests ?? []).map((cr): EntityItem => ({
+      items: (changeRequests?.data ?? []).map((cr): EntityItem => ({
         value: String(cr.id),
         label: `CR-${cr.crNumber}: ${cr.title}`,
         sublabel: cr.status,
@@ -186,8 +165,8 @@ export function RequestApprovalSheet({
   currentUserId,
   defaultEntityType,
 }: RequestApprovalSheetProps) {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<RequestApprovalValues>({
+    resolver: zodResolver(requestApprovalSchema),
     defaultValues: {
       entityType: defaultEntityType ?? "task",
       entityId: "",
@@ -239,7 +218,7 @@ export function RequestApprovalSheet({
     form.setValue("title", `${prefix}: ${item.rawTitle}`);
   }, [entityId, entityItems, entityType, form]);
 
-  function handleSubmit(values: FormValues) {
+  function handleSubmit(values: RequestApprovalValues) {
     const input: CreateApprovalInput = {
       entityType: values.entityType,
       entityId: parseInt(values.entityId, 10),

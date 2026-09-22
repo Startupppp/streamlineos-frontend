@@ -10,11 +10,13 @@ import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "@animateicons/react/lu
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
+import { ApprovalRoutePanel } from "@/components/shared/approval-route-panel";
 import { AiActionsMenu, type AiAction } from "@/components/ai";
-import { useCurrentPeriod, useSubmitPeriod, useRecallPeriod, useTimesheetEntries, useTimesheetSettings, fetchTimesheetPeriodSummary } from "@/hooks/api/timesheets-core";
+import { useCurrentPeriod, usePeriodApproverPreview, useSubmitPeriod, useRecallPeriod, useTimesheetEntries, useTimesheetSettings, fetchTimesheetPeriodSummary } from "@/hooks/api/timesheets-core";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets";
 import type { AttendanceDraftResult } from "@/features/timesheets/types";
 import { missingOnSubmit } from "@/features/timesheets/settings/required-fields";
+import { summarizeTimesheetApprover } from "@/features/timesheets/approval-route-summary";
 import { IncompleteEntriesNotice } from "./incomplete-entries-notice";
 import { FillFromClockButton, FillFromClockNotice } from "./fill-from-clock";
 import { resolveWeekStart, useWeek } from "./use-week";
@@ -71,11 +73,13 @@ export function MyTimeView() {
       .filter((row) => row.missing.length > 0);
   }, [entries, period, settings]);
 
-  const canSubmit =
+  const awaitingSubmit =
     isCurrentWeek &&
     !!period &&
-    incomplete.length === 0 &&
     (period.status === "OPEN" || period.status === "DRAFT" || period.status === "REJECTED");
+  const approverPreview = usePeriodApproverPreview(period?.id ?? null, { enabled: awaitingSubmit });
+  const approverSummary = approverPreview.data ? summarizeTimesheetApprover(approverPreview.data) : undefined;
+  const canSubmit = awaitingSubmit && incomplete.length === 0 && approverPreview.data?.kind !== "unowned";
   const canRecall = isCurrentWeek && period?.status === "SUBMITTED";
 
   const handleSubmit = useCallback(() => {
@@ -206,6 +210,15 @@ export function MyTimeView() {
         )}
 
         {isCurrentWeek && <IncompleteEntriesNotice rows={incomplete} />}
+
+        {awaitingSubmit && (
+          <ApprovalRoutePanel
+            route={approverSummary}
+            isLoading={approverPreview.isLoading}
+            error={approverPreview.error}
+            unownedHint="Ask an HR administrator to set a reporting manager or a timesheet approver before submitting."
+          />
+        )}
 
         {entriesData?.pagination.hasMore && (
           <p className="text-xs text-muted-foreground">

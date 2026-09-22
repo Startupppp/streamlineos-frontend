@@ -9,6 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { SearchInput } from "@/components/ui/search-input";
 import { RequireModule } from "@/components/auth/require-module";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -32,6 +33,7 @@ import {
   type GoalLevel,
   type GoalStatus,
 } from "@/hooks/api/goals";
+import { useCan } from "@/hooks/api/access";
 import { GoalFormSheet } from "@/features/build/goals/goal-form-sheet";
 import {
   GoalFiltersPopover,
@@ -48,16 +50,14 @@ import {
   PmSection,
   PmStaggerList,
   PM_FILL_PANEL,
+  PM_FILL_SECTION,
   PM_PANEL,
   PM_TOOLBAR,
 } from "@/components/pm-chrome";
 import {
-  fadeUp,
-  fadeUpReduced,
   listItem,
   listItemReduced,
   pmSnappy,
-  pmStagger,
 } from "@/lib/motion-presets";
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -86,7 +86,7 @@ function GoalCard({ goal }: { goal: GoalListItem }) {
       variants={shouldReduceMotion ? listItemReduced : listItem}
       transition={pmSnappy}
     >
-      <Link href={`/build/goal/${goal.id}`} className="group block">
+      <Link href={`/build/goals/${goal.id}`} className="group block">
         <div
           className={cn(
             PM_PANEL,
@@ -105,17 +105,16 @@ function GoalCard({ goal }: { goal: GoalListItem }) {
             </Badge>
           </div>
 
-          <div className="space-y-1">
+          <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>Progress</span>
               <span className="tabular-nums">{goal.progress}%</span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
-                style={{ width: `${goal.progress}%` }}
-              />
-            </div>
+            <Progress
+              value={goal.progress}
+              className="h-1.5"
+              aria-label={`${goal.title} progress`}
+            />
           </div>
 
           <div className="flex min-w-0 items-center justify-between text-xs text-muted-foreground">
@@ -158,15 +157,13 @@ function GoalsGridSkeleton() {
 }
 
 export function GoalsPage() {
+  const canManage = useCan("build:goals:manage");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
   const [statusFilter, setStatusFilter] = useState<GoalStatus | "all">("all");
   const [levelFilter, setLevelFilter] = useState<GoalLevel | "all">("all");
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
-  const shouldReduceMotion = useReducedMotion();
-  const sectionVariants = shouldReduceMotion ? fadeUpReduced : fadeUp;
-
   const params = useMemo(
     () => ({
       ...(statusFilter !== "all" ? { status: statusFilter } : {}),
@@ -215,7 +212,13 @@ export function GoalsPage() {
 
   function handleRetry() { void refetch(); }
 
-  const pageState = usePageState({ permission: "build:goals:view", isLoading, isError, error });
+  const pageState = usePageState({
+    permission: "build:goals:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !hasGoals,
+  });
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
@@ -247,7 +250,7 @@ export function GoalsPage() {
                 onStatusChange={handleStatusFilterChange}
               />
             </div>
-            <NewGoalButton onClick={handleOpenCreate} />
+            {canManage ? <NewGoalButton onClick={handleOpenCreate} /> : null}
           </div>
         }
         filters={
@@ -270,66 +273,70 @@ export function GoalsPage() {
       >
         <PmPageShell>
           <PmSection index={0} className="shrink-0">
-            <StatCardGrid cols={4}>
-              <motion.div
-                variants={sectionVariants}
-                transition={pmStagger(0)}
-                whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-              >
-                <StatCard label="Total Goals" value={stats?.total ?? 0} icon={Target} tone="default" isLoading={isLoading} />
-              </motion.div>
-              <motion.div
-                variants={sectionVariants}
-                transition={pmStagger(1)}
-                whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-              >
-                <StatCard label="On Track" value={stats?.byStatus.on_track ?? 0} icon={TrendingUp} tone="emerald" isLoading={isLoading} />
-              </motion.div>
-              <motion.div
-                variants={sectionVariants}
-                transition={pmStagger(2)}
-                whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-              >
-                <StatCard label="At Risk" value={stats?.atRisk ?? 0} icon={AlertTriangle} tone="amber" isLoading={isLoading} />
-              </motion.div>
-              <motion.div
-                variants={sectionVariants}
-                transition={pmStagger(3)}
-                whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-              >
-                <StatCard label="Avg Progress" value={`${stats?.avgProgress ?? 0}%`} icon={TrendingUp} tone="default" isLoading={isLoading} />
-              </motion.div>
+            <StatCardGrid>
+              <StatCard
+                label="Total Goals"
+                value={stats?.total ?? 0}
+                icon={Target}
+                tone="default"
+                isLoading={isLoading}
+              />
+              <StatCard
+                label="On Track"
+                value={stats?.byStatus.on_track ?? 0}
+                icon={TrendingUp}
+                tone="emerald"
+                isLoading={isLoading}
+              />
+              <StatCard
+                label="At Risk"
+                value={stats?.atRisk ?? 0}
+                icon={AlertTriangle}
+                tone="amber"
+                isLoading={isLoading}
+              />
+              <StatCard
+                label="Avg Progress"
+                value={`${stats?.avgProgress ?? 0}%`}
+                icon={TrendingUp}
+                tone="default"
+                isLoading={isLoading}
+              />
             </StatCardGrid>
           </PmSection>
 
-          <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
-            {pageState.kind === "loading" ? (
-              <GoalsGridSkeleton />
-            ) : !hasGoals ? (
-              <EmptyState
-                className={PM_FILL_PANEL}
-                illustration={<EmptyTargetIllustration />}
-                title="No goals yet"
-                description={
-                  filtersActive
-                    ? undefined
-                    : "Create your first objective with measurable key results to start tracking progress."
-                }
-                filtersActive={filtersActive}
-                onClearFilters={handleClearFilters}
-                action={
-                  filtersActive
-                    ? undefined
-                    : { label: "New Goal", onClick: handleOpenCreate }
-                }
-              />
-            ) : (
-              <div className="space-y-8">
+          <PmSection index={1} className={PM_FILL_SECTION}>
+            <PageState
+              resolution={pageState}
+              onRetry={handleRetry}
+              className="flex-1"
+              loading={<GoalsGridSkeleton />}
+              empty={
+                <EmptyState
+                  className={PM_FILL_PANEL}
+                  illustration={<EmptyTargetIllustration />}
+                  title="No goals yet"
+                  description={
+                    filtersActive
+                      ? undefined
+                      : "Create your first objective with measurable key results to start tracking progress."
+                  }
+                  filtersActive={filtersActive}
+                  onClearFilters={handleClearFilters}
+                  action={
+                    filtersActive || !canManage
+                      ? undefined
+                      : { label: "New Goal", onClick: handleOpenCreate }
+                  }
+                />
+              }
+            >
+              <div className="flex flex-col gap-6 overflow-y-auto">
                 {LEVEL_ORDER.map((level) => {
                   const levelGoals = grouped.get(level) ?? [];
                   if (levelGoals.length === 0) return null;
                   return (
-                    <div key={level} className="space-y-3">
+                    <div key={level} className="flex flex-col gap-3">
                       <div className="flex items-center gap-2">
                         <h2 className="text-sm font-semibold text-foreground">
                           {LEVEL_LABEL[level]}
@@ -347,7 +354,7 @@ export function GoalsPage() {
                   );
                 })}
               </div>
-            )}
+            </PageState>
           </PmSection>
         </PmPageShell>
 

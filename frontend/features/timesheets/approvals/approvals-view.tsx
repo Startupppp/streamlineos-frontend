@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -20,6 +21,7 @@ import {
   useBulkApprove,
   useBulkReject,
 } from "@/hooks/api/timesheets-core/approvals";
+import { usePeriod } from "@/hooks/api/timesheets-core/periods";
 import type { TimesheetPeriod } from "@/features/timesheets/types";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -33,6 +35,12 @@ import {
   type ApprovalTab,
 } from "./approvals-tab-panel";
 import { ApprovalTabFilter } from "./approval-tab-filter";
+
+export function linkedPeriodIdOf(raw: string | null): number | null {
+  if (raw === null || !/^\d+$/.test(raw)) return null;
+  const parsed = Number(raw);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+}
 
 export function ApprovalsView() {
   const canManage = useCan("timesheets:approvals:manage");
@@ -52,6 +60,13 @@ export function ApprovalsView() {
   const [selection, setSelection] = useState<Set<string | number>>(new Set());
   const [detailPeriod, setDetailPeriod] = useState<TimesheetPeriod | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const linkedPeriodId = linkedPeriodIdOf(searchParams.get("period"));
+  const [linkDismissed, setLinkDismissed] = useState(false);
+  const { data: linkedDetail } = usePeriod(linkDismissed ? null : linkedPeriodId);
+  const linkedPeriod = linkDismissed ? null : (linkedDetail?.period ?? null);
   const [bulkRejectOpen, setBulkRejectOpen] = useState(false);
   const [bulkApproveOpen, setBulkApproveOpen] = useState(false);
 
@@ -113,10 +128,18 @@ export function ApprovalsView() {
     setDetailOpen(true);
   }, []);
 
-  const handleDetailOpenChange = useCallback((open: boolean) => {
-    setDetailOpen(open);
-    if (!open) setDetailPeriod(null);
-  }, []);
+  const handleDetailOpenChange = useCallback(
+    (open: boolean) => {
+      setDetailOpen(open);
+      if (open) return;
+      setDetailPeriod(null);
+      if (linkedPeriodId !== null) {
+        setLinkDismissed(true);
+        router.replace(pathname);
+      }
+    },
+    [linkedPeriodId, pathname, router],
+  );
 
   const handleBulkApproveOpen = useCallback(() => setBulkApproveOpen(true), []);
 
@@ -261,8 +284,8 @@ export function ApprovalsView() {
       </motion.div>
 
       <ApprovalDetailSheet
-        period={detailPeriod}
-        open={detailOpen}
+        period={detailPeriod ?? linkedPeriod}
+        open={detailOpen || linkedPeriod !== null}
         onOpenChange={handleDetailOpenChange}
       />
 

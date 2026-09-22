@@ -97,10 +97,12 @@ describe("Members & Access read failures stay on the page", () => {
     });
   }
 
-  it.each([
+  const readHooks: ReadonlyArray<[string, () => { isError: boolean; error: Error | null }]> = [
     ["useUsers", () => useUsers()],
     ["useUserStats", () => useUserStats()],
-  ])(
+  ];
+
+  it.each(readHooks)(
     "%s surfaces a failed read inline instead of destroying the /settings segment boundary",
     async (_name, callHook) => {
       const client = boundaryClient();

@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import type { DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 import type { UpdateTicketInput } from "@/types/projects";
 import type { DisplayOptions } from "../shared/types";
@@ -23,6 +24,11 @@ export interface Ticket {
   cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;
 }
 
+export interface ListSelection {
+  selected: Set<string | number>;
+  onChange: (sel: Set<string | number>) => void;
+}
+
 export interface ListViewProps {
   tickets: Ticket[];
   onTicketClick: (ticketId: number) => void;
@@ -34,6 +40,7 @@ export interface ListViewProps {
   displayOptions?: DisplayOptions;
   showEmptyRows?: boolean;
   showEmptyColumns?: boolean;
+  selection?: ListSelection;
 }
 
 export interface ListViewItemProps {
@@ -45,6 +52,8 @@ export interface ListViewItemProps {
   displayOptions?: DisplayOptions;
   dragHandleProps?: DraggableProvidedDragHandleProps | null;
   isDragging?: boolean;
+  isSelected?: boolean;
+  onSelect?: (id: string | number, checked: boolean) => void;
 }
 
 export interface InlineGroupCreateProps {
@@ -71,6 +80,7 @@ export interface NestedGroupProps {
   projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
   displayOptions?: DisplayOptions;
   onTicketClick: (id: number) => void;
+  selection?: ListSelection;
 }
 
 export interface DroppableGroupProps {
@@ -82,6 +92,20 @@ export interface DroppableGroupProps {
   displayOptions?: DisplayOptions;
   onTicketClick: (id: number) => void;
   shouldReduceMotion: boolean | null;
+  selection?: ListSelection;
+}
+
+export function useItemSelectHandler(selection: ListSelection | undefined) {
+  return useCallback(
+    (id: string | number, checked: boolean) => {
+      if (!selection) return;
+      const next = new Set(selection.selected);
+      if (checked) next.add(id);
+      else next.delete(id);
+      selection.onChange(next);
+    },
+    [selection],
+  );
 }
 
 export type ReorderContext = { previousTickets: Ticket[] };

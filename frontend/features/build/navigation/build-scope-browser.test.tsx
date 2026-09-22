@@ -75,7 +75,7 @@ const DEFAULT_PROPS = {
 
 function setupMocks(directoryOverrides: Partial<BuildScopeDirectory> = {}) {
   mockUseBuildScopeDirectory.mockReturnValue(makeDirectory(directoryOverrides));
-  mockUseReconciledBuildScopes.mockReturnValue({ entries: [] });
+  mockUseReconciledBuildScopes.mockReturnValue({ entries: [], isReconciled: false });
   mockUseBuildScopeRecents.mockReturnValue({
     recents: [],
     replaceRecents: jest.fn(),
@@ -211,8 +211,8 @@ describe("BSN-02-030 — ARIA roles for browse tree and flat lists", () => {
   test("starred items have role=option inside a role=listbox", () => {
     const ref = makeRef({ key: "project:5", name: "StarredProject" });
     setupMocks();
-    mockUseReconciledBuildScopes.mockReturnValueOnce({ entries: [] });
-    mockUseReconciledBuildScopes.mockReturnValueOnce({ entries: [ref] });
+    mockUseReconciledBuildScopes.mockReturnValueOnce({ entries: [], isReconciled: false });
+    mockUseReconciledBuildScopes.mockReturnValueOnce({ entries: [ref], isReconciled: false });
     renderBrowser();
     expect(screen.getByRole("listbox", { name: "Starred scopes" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: /StarredProject/ })).toBeInTheDocument();
@@ -221,8 +221,8 @@ describe("BSN-02-030 — ARIA roles for browse tree and flat lists", () => {
   test("recent items have role=option inside a role=listbox", () => {
     const ref = makeRef({ key: "project:6", name: "RecentProject" });
     setupMocks();
-    mockUseReconciledBuildScopes.mockReturnValueOnce({ entries: [ref] });
-    mockUseReconciledBuildScopes.mockReturnValueOnce({ entries: [] });
+    mockUseReconciledBuildScopes.mockReturnValueOnce({ entries: [ref], isReconciled: false });
+    mockUseReconciledBuildScopes.mockReturnValueOnce({ entries: [], isReconciled: false });
     renderBrowser();
     expect(screen.getByRole("listbox", { name: "Recent scopes" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: /RecentProject/ })).toBeInTheDocument();

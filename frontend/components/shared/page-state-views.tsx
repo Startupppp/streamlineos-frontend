@@ -10,7 +10,6 @@ import { humanizeLimitKey, humanizeModuleKey, type GateStateProps } from "./page
 import { NoPermissionState } from "./no-permission-state";
 import { ModuleDeniedView, PlanRequiredView } from "./page-state-plan-views";
 
-export { humanizeModuleKey, type GateStateProps } from "./page-state-shared";
 export { ModuleDeniedView, PlanRequiredView };
 
 interface QuotaExceededViewProps extends GateStateProps {

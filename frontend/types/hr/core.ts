@@ -56,12 +56,6 @@ export interface HrJobLevel {
   isActive: boolean;
 }
 
-export interface HrHeadcountGroup {
-  groupId: number | string | null;
-  groupName: string | null;
-  headcount: number;
-}
-
 export type OrgCatalogInput = {
   name: string;
   code?: string;

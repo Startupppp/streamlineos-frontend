@@ -4,7 +4,8 @@ import {
   DirtyStateProvider,
   useHasUnsavedWork,
 } from "@/components/shared/dirty-state-context";
-import { UpdateFormFields, type CreateUpdateInput } from "./update-form-fields";
+import { UpdateFormFields } from "./update-form-fields";
+import type { CreateUpdateInput } from "./updates-schema";
 
 function DirtyProbe() {
   const hasUnsavedWork = useHasUnsavedWork();

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import { ArrowDown, ArrowUp, Minus, AlertTriangle } from "lucide-react";
@@ -9,6 +9,7 @@ import { NOTIFICATION_TYPE_CONFIG } from "@/lib/notification-types";
 import type { Notification } from "@/types/notifications";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { TicketTypeIcon } from "@/features/build/shared/ticket-type-icon";
 import { getStatusDotClass, getStatusBadgeClass } from "@/components/shared/ticket-status-badge";
@@ -18,7 +19,10 @@ import { parseInboxTicketLink } from "./parse-inbox-ticket-link";
 interface InboxNotificationItemProps {
   notification: Notification;
   isSelected: boolean;
+  isSelectable?: boolean;
+  isChecked?: boolean;
   onSelect: (notification: Notification) => void;
+  onToggleSelect?: (id: number) => void;
 }
 
 const PRIORITY_ICONS = {
@@ -53,7 +57,10 @@ function createdAtIso(value: Date | string): string {
 export const InboxNotificationItem = React.memo(function InboxNotificationItem({
   notification,
   isSelected,
+  isSelectable = false,
+  isChecked = false,
   onSelect,
+  onToggleSelect,
 }: InboxNotificationItemProps) {
   const rowRef = React.useRef<HTMLButtonElement>(null);
   const ticket = notification.ticketContext ?? null;
@@ -80,13 +87,23 @@ export const InboxNotificationItem = React.memo(function InboxNotificationItem({
     onSelect(notification);
   }
 
+  function handleCheckboxChange(checked: boolean | "indeterminate") {
+    if (typeof checked === "boolean") {
+      onToggleSelect?.(notification.id);
+    }
+  }
+
+  function handleCheckboxClick(e: React.MouseEvent) {
+    e.stopPropagation();
+  }
+
   const priorityKey = priority ? resolvePriorityKey(priority) : null;
   const PriorityIcon = priorityKey ? PRIORITY_ICONS[priorityKey] : null;
   const priorityCfg = priorityKey
     ? (priorityConfig[priorityKey] ?? priorityConfig.MEDIUM)
     : null;
 
-  return (
+  const buttonNode = (
     <button
       ref={rowRef}
       type="button"
@@ -101,6 +118,7 @@ export const InboxNotificationItem = React.memo(function InboxNotificationItem({
           : isUnread
             ? "bg-primary/5 hover:bg-primary/10"
             : "hover:bg-muted/50",
+        isSelectable && "pl-2",
       )}
     >
       <div
@@ -211,5 +229,23 @@ export const InboxNotificationItem = React.memo(function InboxNotificationItem({
         </div>
       </div>
     </button>
+  );
+
+  if (!isSelectable) return buttonNode;
+
+  return (
+    <div className="flex items-stretch">
+      <div
+        className="flex items-start pl-4 pt-3.5"
+        onClick={handleCheckboxClick}
+      >
+        <Checkbox
+          checked={isChecked}
+          onCheckedChange={handleCheckboxChange}
+          aria-label={`Select notification: ${notification.title}`}
+        />
+      </div>
+      {buttonNode}
+    </div>
   );
 });

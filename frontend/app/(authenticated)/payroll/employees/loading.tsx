@@ -15,7 +15,7 @@ export default function PayrollEmployeesLoading() {
         </div>
       }
     >
-      <DataTableSkeleton rows={12} columns={6} />
+      <DataTableSkeleton rows={12} headers={["Employee", "Type", "Annual CTC", "Status", "Effective From", "Currency"]} />
     </PageWrapper>
   );
 }

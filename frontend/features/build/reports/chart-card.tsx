@@ -7,17 +7,17 @@ import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 
 export const TOOLTIP_STYLE = {
-  background: "hsl(var(--card))",
-  border: "1px solid hsl(var(--border))",
+  background: "var(--card)",
+  border: "1px solid var(--border)",
   borderRadius: 8,
 } as const;
 
 export const AXIS_TICK = {
-  fill: "hsl(var(--muted-foreground))",
+  fill: "var(--muted-foreground)",
   fontSize: 11,
 } as const;
 
-export const GRID_STROKE = "hsl(var(--border))";
+export const GRID_STROKE = "var(--border)";
 
 export const CHART_BLUE = {
   200: "#bfdbfe",
@@ -51,4 +51,4 @@ export function ChartCard({
       {children}
     </PmPanel>
   );
-}
+}

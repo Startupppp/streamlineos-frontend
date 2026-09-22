@@ -34,6 +34,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useCreateUom, useUom } from "@/hooks/api/inventory";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCanState } from "@/hooks/api/access";
 
 const CREATE_SENTINEL = "__create__";
 
@@ -56,6 +57,7 @@ export function UomSelect({
   placeholder = "Select UOM",
   disabled = false,
 }: UomSelectProps) {
+  const uomState = useCanState("inventory:products:read");
   const [dialogOpen, setDialogOpen] = useState(false);
   const uomQuery = useUom();
   const createMutation = useCreateUom();
@@ -95,20 +97,26 @@ export function UomSelect({
     setDialogOpen(false);
   }
 
-  const isLoading = uomQuery.isLoading;
-
   return (
     <>
       <Select
         value={value}
         onValueChange={handleValueChange}
-        disabled={disabled || isLoading}
+        disabled={disabled || uomState !== "granted" || uomQuery.isPending}
       >
         <SelectTrigger className="min-w-0">
-          <SelectValue placeholder={isLoading ? "Loading…" : placeholder} />
+          <SelectValue
+            placeholder={
+              uomState === "denied"
+                ? "Access restricted"
+                : uomQuery.isPending
+                  ? "Loading…"
+                  : placeholder
+            }
+          />
         </SelectTrigger>
         <SelectContent>
-          {uomOptions.length === 0 && !isLoading && (
+          {uomOptions.length === 0 && uomState === "granted" && !uomQuery.isPending && (
             <div className="px-2 py-3 text-xs text-muted-foreground text-center">
               No units yet
             </div>

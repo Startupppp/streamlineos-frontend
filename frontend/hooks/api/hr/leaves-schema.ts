@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { approvalRouteContract } from "@/hooks/api/hr/approval-route-schema";
 
 const successContract = z.object({ success: z.literal(true) });
 
@@ -126,12 +127,21 @@ export const leaveContextContract = z.object({
       image: z.string().nullable().optional(),
     }),
   ),
+  approvalRoute: approvalRouteContract,
+});
+
+const idCursorPageInfoSchema = z.object({
+  limit: z.number().int(),
+  hasMore: z.boolean(),
+  nextCursor: z.number().int().nullable(),
 });
 
 export const leaveApprovalsContract = z.object({
-  pending: z.array(leavesTeamItemSchema),
-  all: z.array(leavesTeamItemSchema),
+  data: z.array(leavesTeamItemSchema),
+  pageInfo: idCursorPageInfoSchema,
 });
+
+export type LeavesTeamPage = z.infer<typeof leaveApprovalsContract>;
 
 export const leavesThisWeekContract = z.array(
   leaveRequestRowSchema.extend({
@@ -151,11 +161,7 @@ export const leavesThisWeekContract = z.array(
 
 export const leaveRequestsPageContract = z.object({
   data: z.array(leaveRequestWithRelationsSchema),
-  pageInfo: z.object({
-    limit: z.number().int(),
-    hasMore: z.boolean(),
-    nextCursor: z.number().int().nullable(),
-  }),
+  pageInfo: idCursorPageInfoSchema,
 });
 
 const orgHolidayRowSchema = z.object({
@@ -186,9 +192,6 @@ export const hrHolidaysListContract = z.array(hrHolidayRowSchema);
 
 export type HrHolidayRow = z.infer<typeof hrHolidayRowSchema>;
 
-export const addHolidayContract = successContract;
-export const deleteHolidayContract = z.void();
-export const updateHolidayContract = successContract;
 
 export const leaveAnalyticsContract = z.object({
   year: z.number().int(),

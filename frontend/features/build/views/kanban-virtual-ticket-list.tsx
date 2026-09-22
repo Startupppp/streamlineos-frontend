@@ -22,6 +22,7 @@ import {
 import { List, useDynamicRowHeight, type RowComponentProps } from "react-window";
 import { cn } from "@/lib/utils";
 import { KanbanTicketCard } from "./kanban-ticket-card";
+import type { ListSelection } from "./list-view-shared";
 import type { KanbanTicket, DisplayOptions } from "../shared/types";
 
 export const TICKET_DND_TYPE = "TICKET";
@@ -36,6 +37,7 @@ interface KanbanVirtualRowData {
   projectKey?: string;
   dragStartRef: MutableRefObject<{ x: number; y: number } | null>;
   onSelect: (id: number) => void;
+  selection?: ListSelection;
   displayOptions?: DisplayOptions;
   canDragTickets: boolean;
 }
@@ -61,6 +63,7 @@ function KanbanVirtualRow({
   projectKey,
   dragStartRef,
   onSelect,
+  selection,
   displayOptions,
   canDragTickets,
 }: RowComponentProps<KanbanVirtualRowData>) {
@@ -71,6 +74,17 @@ function KanbanVirtualRow({
       dragStartRef.current = { x: event.clientX, y: event.clientY };
     },
     [dragStartRef],
+  );
+
+  const handleSelectedChange = useCallback(
+    (id: number, next: boolean) => {
+      if (!selection) return;
+      const nextSelected = new Set(selection.selected);
+      if (next) nextSelected.add(id);
+      else nextSelected.delete(id);
+      selection.onChange(nextSelected);
+    },
+    [selection],
   );
 
   const handleClick = useCallback(
@@ -125,6 +139,8 @@ function KanbanVirtualRow({
             projectKey={projectKey}
             isDragging={snapshot.isDragging}
             onSelect={onSelect}
+            isSelected={selection ? selection.selected.has(ticket.id) : undefined}
+            onSelectedChange={selection ? handleSelectedChange : undefined}
             displayOptions={displayOptions}
           />
         </div>
@@ -167,6 +183,7 @@ interface KanbanVirtualTicketListProps {
   stretch?: boolean;
   minHeightClass?: string;
   onSelect: (id: number) => void;
+  selection?: ListSelection;
   dragStartRef: MutableRefObject<{ x: number; y: number } | null>;
   canDragTickets: boolean;
 }
@@ -180,6 +197,7 @@ export const KanbanVirtualTicketList = memo(function KanbanVirtualTicketList({
   stretch = true,
   minHeightClass = "min-h-[100px]",
   onSelect,
+  selection,
   dragStartRef,
   canDragTickets,
 }: KanbanVirtualTicketListProps) {
@@ -196,10 +214,11 @@ export const KanbanVirtualTicketList = memo(function KanbanVirtualTicketList({
       projectKey,
       dragStartRef,
       onSelect,
+      selection,
       displayOptions,
       canDragTickets,
     }),
-    [tickets, projectId, projectKey, dragStartRef, onSelect, displayOptions, canDragTickets],
+    [tickets, projectId, projectKey, dragStartRef, onSelect, selection, displayOptions, canDragTickets],
   );
 
   const renderClone = useCallback(

@@ -92,7 +92,7 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
         illustrationPreset="devices"
         title="No time clock devices"
         description="Register biometric, RFID, or mobile devices to start tracking clock-ins"
-        action={canManage ? { label: "Add Device", onClick: onAdd } : undefined}
+        action={canManage ? { label: "Register device", onClick: onAdd } : undefined}
         className={CONTENT_FILL_PANEL}
         compact
       />

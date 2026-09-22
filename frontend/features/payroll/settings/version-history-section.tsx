@@ -42,13 +42,15 @@ const columns: DataTableColumn<PolicyVersionRow>[] = [
   },
 ];
 
+const columnHeaders = columns.map((column) => column.header);
+
 export function VersionHistorySection({ policyId }: VersionHistorySectionProps) {
   const { data: versions, isLoading } = usePolicyVersions(policyId);
 
   if (isLoading) {
     return (
       <PageSection title="Version History">
-        <DataTableSkeleton rows={8} columns={5} />
+        <DataTableSkeleton rows={8} headers={columnHeaders} />
       </PageSection>
     );
   }

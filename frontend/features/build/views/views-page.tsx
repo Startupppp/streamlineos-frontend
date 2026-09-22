@@ -12,7 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { ViewCard } from "@/features/build/views/saved-views/view-card";
+import { ViewCard, type ViewItem } from "@/features/build/views/saved-views/view-card";
+import { RenameViewDialog } from "@/features/build/views/saved-views/rename-view-dialog";
 import { CreateViewSheet } from "@/features/build/views/saved-views/create-view-sheet";
 import {
   PmPageShell,
@@ -34,6 +35,9 @@ export function ViewsPage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
   const [createOpen, setCreateOpen] = useState(false);
+  const [renameTarget, setRenameTarget] = useState<ViewItem | null>(null);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameSeq, setRenameSeq] = useState(0);
   const router = useRouter();
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
@@ -47,6 +51,7 @@ export function ViewsPage({ params }: PageProps) {
     refetch,
   } = useViews(projectId);
   const togglePinMutation = useUpdateView();
+  const renameMutation = useUpdateView();
   const deleteMutation = useDeleteView();
   const pageState = usePageState({
     permission: "build:view",
@@ -60,7 +65,7 @@ export function ViewsPage({ params }: PageProps) {
       const urlParams = new URLSearchParams();
       urlParams.set("viewId", view.id.toString());
       urlParams.set("view", view.layoutType);
-      router.push(`/build/${projectId}?${urlParams.toString()}`);
+      router.push(`/build/${projectId}/issues?${urlParams.toString()}`);
     },
     [router, projectId],
   );
@@ -73,6 +78,29 @@ export function ViewsPage({ params }: PageProps) {
       );
     },
     [togglePinMutation, projectId],
+  );
+
+  const handleOpenRename = useCallback((view: ViewItem) => {
+    setRenameTarget(view);
+    setRenameSeq((seq) => seq + 1);
+    setRenameOpen(true);
+  }, []);
+
+  const handleRename = useCallback(
+    (name: string) => {
+      if (!renameTarget) return;
+      renameMutation.mutate(
+        { viewId: renameTarget.id, projectId, name },
+        {
+          onSuccess: () => {
+            toast.success("View renamed");
+            setRenameOpen(false);
+          },
+          onError: (err) => toast.error(getErrorMessage(err)),
+        },
+      );
+    },
+    [renameMutation, projectId, renameTarget],
   );
 
   const handleDelete = useCallback(
@@ -176,6 +204,7 @@ export function ViewsPage({ params }: PageProps) {
                         currentUserId={currentUserId}
                         onNavigate={handleNavigateToView}
                         onTogglePin={handleTogglePin}
+                        onRename={handleOpenRename}
                         onDelete={handleDelete}
                         canManage={canManage}
                       />
@@ -203,6 +232,7 @@ export function ViewsPage({ params }: PageProps) {
                         currentUserId={currentUserId}
                         onNavigate={handleNavigateToView}
                         onTogglePin={handleTogglePin}
+                        onRename={handleOpenRename}
                         onDelete={handleDelete}
                         canManage={canManage}
                       />
@@ -221,6 +251,17 @@ export function ViewsPage({ params }: PageProps) {
           open={createOpen}
           onOpenChange={setCreateOpen}
           onCreated={handleCreated}
+        />
+      ) : null}
+
+      {canManage ? (
+        <RenameViewDialog
+          key={renameSeq}
+          open={renameOpen}
+          onOpenChange={setRenameOpen}
+          currentName={renameTarget?.name ?? ""}
+          onRename={handleRename}
+          isSaving={renameMutation.isPending}
         />
       ) : null}
     </PageWrapper>

@@ -24,7 +24,7 @@ export function TimesheetWidget() {
       }
       loadingRows={2}
     >
-      {ts ? (
+      {ts && ts.hoursLogged > 0 ? (
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -67,8 +67,8 @@ export function TimesheetWidget() {
       ) : (
         <EmptyState
           illustration={<EmptyCalendarIllustration className="h-20 w-20" />}
-          title="No timesheet this week"
-          description="Log your hours to track weekly progress."
+          title="No hours logged this week"
+          description={ts ? `${ts.weekLabel} · log your hours to track weekly progress.` : "Log your hours to track weekly progress."}
           compact
         />
       )}

@@ -247,13 +247,14 @@ describe("isBuildDestinationActive — boardViews destination (project Issues)",
     expect(isBuildDestinationActive(issues, "/build/42/issues", "board")).toBe(true);
   });
 
-  it("is inactive when view=workload because workload is not in the board views set", () => {
-    expect(isBuildDestinationActive(issues, "/build/42/issues", "workload")).toBe(false);
+  it("is active on the /issues path with view=workload because workload is a board view the issues page can render", () => {
+    expect(isBuildDestinationActive(issues, "/build/42/issues", "workload")).toBe(true);
   });
 
   it("is inactive on the backlog path because the destination does not own /backlog", () => {
     expect(isBuildDestinationActive(issues, "/build/42/backlog", null)).toBe(false);
   });
+
 });
 
 describe("isBuildDestinationActive — project Workload owns a route rather than a view parameter", () => {

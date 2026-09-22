@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useVendors } from "@/hooks/api/accounting/ap";
-import type { VendorSummary } from "@/types/accounting-ap";
+import type { VendorSummary } from "@/types/accounting/accounting-ap";
 
 interface VendorPickerFieldProps {
   value: string;
@@ -12,7 +12,11 @@ interface VendorPickerFieldProps {
   disabled?: boolean;
 }
 
-export function VendorPickerField({ value, onChange, disabled }: VendorPickerFieldProps) {
+export function VendorPickerField({
+  value,
+  onChange,
+  disabled,
+}: VendorPickerFieldProps) {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
   const vendorsQuery = useVendors({
@@ -21,7 +25,10 @@ export function VendorPickerField({ value, onChange, disabled }: VendorPickerFie
     pageSize: 50,
   });
 
-  const vendors = useMemo(() => vendorsQuery.data?.items ?? [], [vendorsQuery.data]);
+  const vendors = useMemo(
+    () => vendorsQuery.data?.items ?? [],
+    [vendorsQuery.data],
+  );
 
   const options = useMemo<ComboboxOption[]>(
     () =>

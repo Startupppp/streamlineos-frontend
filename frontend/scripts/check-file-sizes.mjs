@@ -51,12 +51,15 @@ const LIMIT = 500;
  * 500 lines" over a tree it had never opened. Proved in a tmpdir below: at minFiles 200 a corpus
  * with its largest subtree unreadable returned ok=true while a 900-line violation sat inside it.
  *
- * 4,000 is ~74% of the measured corpus: it bites the moment either of the two largest subtrees
+ * 5,200 is ~74% of the measured corpus: it bites the moment either of the two largest subtrees
  * goes missing, and still leaves room for the tree to shrink by a quarter without a false alarm.
  * The count is only a backstop against gross loss — REQUIRED_SUBTREES is what catches a single
  * subtree disappearing, and a THROWING collectFiles is what catches an unreadable one.
+ *
+ * The self-test re-measures this ratio rather than trusting the number above, which is how the
+ * drift to 57% was caught after the corpus grew from 5,388 to 7,004 files.
  */
-const MIN_FILES = 4000;
+const MIN_FILES = 5200;
 
 /**
  * Every authored source root. A scan that returns files but contributes nothing from one of these

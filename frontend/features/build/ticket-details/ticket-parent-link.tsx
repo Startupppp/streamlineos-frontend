@@ -1,12 +1,15 @@
 "use client";
 
+import { useCallback, type MouseEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CornerLeftUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useTicket } from "@/hooks/api";
 import { cn } from "@/lib/utils";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 
 interface TicketParentLinkProps {
   parentTicketId: number | null;
@@ -24,6 +27,24 @@ export function TicketParentLink({
   className,
 }: TicketParentLinkProps) {
   const { data: parent, isLoading } = useTicket(projectId, parentTicketId ?? 0);
+  const router = useRouter();
+  const requestLeave = useNavigationLeave();
+
+  const resolvedKey = parent?.project?.key ?? projectKey;
+  const href =
+    parent && parent.ticketNumber != null
+      ? getTicketDetailHref(parent.projectId ?? projectId, resolvedKey, parent.ticketNumber)
+      : null;
+
+  const handleNavigate = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>) => {
+      if (!href) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+      event.preventDefault();
+      requestLeave(() => router.push(href));
+    },
+    [href, requestLeave, router],
+  );
 
   if (!parentTicketId) return null;
   if (isLoading && !parent) {
@@ -36,14 +57,8 @@ export function TicketParentLink({
       />
     );
   }
-  if (!parent || parent.ticketNumber == null) return null;
+  if (!parent || parent.ticketNumber == null || !href) return null;
 
-  const resolvedKey = parent.project?.key ?? projectKey;
-  const href = getTicketDetailHref(
-    parent.projectId ?? projectId,
-    resolvedKey,
-    parent.ticketNumber,
-  );
   const displayKey = resolvedKey
     ? `${resolvedKey}-${parent.ticketNumber}`
     : `#${parent.ticketNumber}`;
@@ -51,6 +66,7 @@ export function TicketParentLink({
   return (
     <Link
       href={href}
+      onClick={handleNavigate}
       className={cn(
         "group inline-flex max-w-full min-w-0 items-center gap-1 rounded-md text-muted-foreground transition-colors hover:text-foreground",
         density === "compact" && "px-1 py-0.5 hover:bg-muted/60",

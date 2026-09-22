@@ -1,7 +1,5 @@
 "use client";
 
-import DOMPurify from "isomorphic-dompurify";
-
 import { useState, useCallback } from "react";
 import { useResignations, type Resignation } from "@/hooks/api/hr";
 import { apiClient } from "@/lib/api-client";
@@ -18,7 +16,8 @@ import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
-import { PlusIcon } from "@animateicons/react/lucide";
+import { useRouter } from "next/navigation";
+import { PlusIcon, UserXIcon } from "@animateicons/react/lucide";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
@@ -31,6 +30,7 @@ const ACTIVE_RESIGNATION_STATUSES = ["SUBMITTED", "PENDING_HR", "HR_APPROVED"];
 
 export function ExitManagementPage() {
   const { data: session } = useSession();
+  const router = useRouter();
   const pager = useCursorPager();
   const { data: resignationData, isLoading, isError, error, refetch } = useResignations({ cursor: pager.cursor, limit: 20 });
   const resignations = resignationData?.data;
@@ -46,6 +46,7 @@ export function ExitManagementPage() {
   const isAdmin = useCan("hr:exit:manage");
   const isHR = isAdmin;
   const canApproveExit = useCan("hr:exit:approve");
+  const canSubmit = useCan("hr:exit:create");
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
@@ -67,14 +68,17 @@ export function ExitManagementPage() {
 
   const handleViewLetter = useCallback(async (id: number) => {
     try {
-      const data = await apiClient.get(`/hr/exit/${id}/letter`, undefined, undefined, exitLetterContract);
+      const [{ sanitizeHtml }, data] = await Promise.all([
+        import("@/lib/sanitize-html"),
+        apiClient.get(`/hr/exit/${id}/letter`, undefined, undefined, exitLetterContract),
+      ]);
       const win = window.open("", "_blank");
       if (!win) {
         toast.error("Popup blocked — please allow popups to view the letter.");
         return;
       }
       win.document.write(
-        `<!DOCTYPE html><html><head><title>Resignation Letter</title><style>body{margin:0;padding:20px 40px;}</style></head><body>${DOMPurify.sanitize(data.html)}</body></html>`,
+        `<!DOCTYPE html><html><head><title>Resignation Letter</title><style>body{margin:0;padding:20px 40px;}</style></head><body>${sanitizeHtml(data.html)}</body></html>`,
       );
       win.document.close();
     } catch {
@@ -87,6 +91,24 @@ export function ExitManagementPage() {
   function handleNextPage() {
     pager.goNext(pagination?.nextCursor);
   }
+
+  function handleInitiateTermination() {
+    router.push("/hr/termination");
+  }
+
+  const primaryAction = hasActiveResignation ? (
+    <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
+      Resignation pending
+    </span>
+  ) : canSubmit ? (
+    <AnimatedIconButton icon={PlusIcon} iconSize={14} size="sm" className="gap-1.5" onClick={handleOpenSheet}>
+      Submit resignation
+    </AnimatedIconButton>
+  ) : isAdmin ? (
+    <AnimatedIconButton icon={UserXIcon} iconSize={14} size="sm" className="gap-1.5" onClick={handleInitiateTermination}>
+      Initiate termination
+    </AnimatedIconButton>
+  ) : null;
 
   if (pageState.kind === "loading") {
     return (
@@ -120,23 +142,7 @@ export function ExitManagementPage() {
     <PageWrapper
       title="Exit Management"
       subtitle="Resignations, exit interviews, and offboarding"
-      actions={
-        hasActiveResignation ? (
-          <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
-            Resignation pending
-          </span>
-        ) : (
-          <AnimatedIconButton
-            icon={PlusIcon}
-            iconSize={14}
-            size="sm"
-            className="gap-1.5"
-            onClick={handleOpenSheet}
-          >
-            {canApproveExit ? "New Resignation" : "Submit Resignation"}
-          </AnimatedIconButton>
-        )
-      }
+      actions={primaryAction ?? undefined}
     >
       {!resignations?.length ? (
         <EmptyState
@@ -144,15 +150,14 @@ export function ExitManagementPage() {
           title="No resignations on record"
           description={
             canApproveExit || isHR
-              ? "Employee resignations will appear here once submitted."
-              : "Submit a resignation to start the exit process."
+              ? "Employee resignations appear here once submitted; each approved exit carries one offboarding checklist."
+              : canSubmit
+                ? "Submit a resignation to start the exit process."
+                : "You have no exit in progress."
           }
           action={
-            !hasActiveResignation
-              ? {
-                  label: canApproveExit ? "New Resignation" : "Submit Resignation",
-                  onClick: handleOpenSheet,
-                }
+            !hasActiveResignation && canSubmit
+              ? { label: "Submit resignation", onClick: handleOpenSheet }
               : undefined
           }
           compact

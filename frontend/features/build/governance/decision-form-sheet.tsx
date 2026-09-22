@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { decisionFormSchema, type DecisionFormValues } from "./governance-schema";
 import {
   Sheet,
   SheetContent,
@@ -29,20 +29,6 @@ import { ProjectMemberSelect } from "@/components/members/project-member-select"
 import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
 import { useProject } from "@/hooks/api/build/projects";
 import type { Decision, CreateDecisionInput, UpdateDecisionInput } from "@/types/projects";
-
-const decisionSchema = z.object({
-  title: z.string().min(1, "Required").max(200),
-  context: z.string(),
-  decision: z.string(),
-  optionsConsidered: z.string(),
-  status: z.enum(["proposed", "accepted", "superseded", "revisit"]),
-  ownerId: z.string(),
-  decidedAt: z.string(),
-  revisitAt: z.string(),
-  linkedTicketId: z.string(),
-});
-
-type DecisionFormValues = z.infer<typeof decisionSchema>;
 
 const CREATE_DEFAULTS: DecisionFormValues = {
   title: "", context: "", decision: "", optionsConsidered: "",
@@ -83,7 +69,7 @@ export function DecisionFormSheet({
   const { data: project } = useProject(projectId);
   const projectKey = project?.key ?? "";
   const form = useForm<DecisionFormValues>({
-    resolver: zodResolver(decisionSchema),
+    resolver: zodResolver(decisionFormSchema),
     defaultValues: CREATE_DEFAULTS,
   });
   useRegisterDirtyState(open && form.formState.isDirty);
@@ -95,21 +81,31 @@ export function DecisionFormSheet({
   }, [open, mode, defaultValues, form]);
 
   function handleSubmit(values: DecisionFormValues) {
-    const payload = {
-      title: values.title,
-      ...(values.context ? { context: values.context } : {}),
-      ...(values.decision ? { decision: values.decision } : {}),
-      ...(values.optionsConsidered ? { optionsConsidered: values.optionsConsidered } : {}),
-      status: values.status,
-      ...(values.ownerId ? { ownerId: values.ownerId } : {}),
-      ...(values.decidedAt ? { decidedAt: values.decidedAt } : {}),
-      ...(values.revisitAt ? { revisitAt: values.revisitAt } : {}),
-      ...(values.linkedTicketId ? { linkedTicketId: parseInt(values.linkedTicketId, 10) } : {}),
-    };
     if (mode === "edit" && defaultValues) {
-      onSubmitEdit({ decisionId: defaultValues.id, ...payload });
+      onSubmitEdit({
+        decisionId: defaultValues.id,
+        title: values.title,
+        context: values.context ? values.context : null,
+        decision: values.decision ? values.decision : null,
+        optionsConsidered: values.optionsConsidered ? values.optionsConsidered : null,
+        status: values.status,
+        ownerId: values.ownerId ? values.ownerId : null,
+        decidedAt: values.decidedAt ? values.decidedAt : null,
+        revisitAt: values.revisitAt ? values.revisitAt : null,
+        linkedTicketId: values.linkedTicketId ? parseInt(values.linkedTicketId, 10) : null,
+      });
     } else {
-      onSubmitCreate(payload);
+      onSubmitCreate({
+        title: values.title,
+        ...(values.context ? { context: values.context } : {}),
+        ...(values.decision ? { decision: values.decision } : {}),
+        ...(values.optionsConsidered ? { optionsConsidered: values.optionsConsidered } : {}),
+        status: values.status,
+        ...(values.ownerId ? { ownerId: values.ownerId } : {}),
+        ...(values.decidedAt ? { decidedAt: values.decidedAt } : {}),
+        ...(values.revisitAt ? { revisitAt: values.revisitAt } : {}),
+        ...(values.linkedTicketId ? { linkedTicketId: parseInt(values.linkedTicketId, 10) } : {}),
+      });
     }
   }
 

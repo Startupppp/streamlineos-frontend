@@ -360,6 +360,11 @@ fallback).
 Blocked on a prerequisite, not on effort: `notifications-dispatch#dispatch` needs outbox scope resolution
 fixed first, and `feedbucket#createTicketFromAnalysis` needs an idempotency fence — see above.
 
+⚠ **Both of those prerequisites have since moved, though the routes are still frozen (gate: 8, 2026-09-21).**
+H20 fixed the outbox scope resolution that `notifications-dispatch#dispatch` was waiting on, and the
+idempotency-fence claim for `feedbucket#createTicketFromAnalysis` is retracted further down. Re-read those
+two sections before picking either route up — the reason recorded here is no longer the reason.
+
 The four rule-test / send-test routes are deliberate synchronous pings where the user is shown the
 delivery result. Each needs its own product decision about whether that result is worth a pooled
 connection, rather than a blanket opt-out.
@@ -474,7 +479,7 @@ and a frozen entry describing a budget that no longer applies is worse than no e
 from reading services one at a time — the manual approach had already produced one wrong guess.
 Commit `b2ab4f361`.
 
-### H19 — the AI ceiling, worked down 24 → 13 ✅ IN PROGRESS, ceiling holds
+### H19 — the AI ceiling, worked down 24 → 13 → **1** ✅ ceiling holds at 1 (measured 2026-09-21)
 
 Five more routes three-phased the way H3 and H13 established. Commit `3782ec03f`.
 
@@ -492,7 +497,7 @@ the old one. They need the KB search split first: reads, embed, vector query. My
 classified `findRootCauseCluster` as safe because I grepped only for `searchKbForTicket`; the second
 helper does the same thing under another name.
 
-**The remaining 13, and what each needs:**
+~~**The remaining 13, and what each needs:**~~ *(superseded — see the 2026-09-21 measurement after these tables. Kept because each row records why that route was blocked at the time.)*
 
 | Blocked on a real constraint | Why |
 |---|---|
@@ -501,6 +506,28 @@ helper does the same thing under another name.
 | `mail#aiInboxSummary` | `MailService.listMessages` falls through to a Gmail/Outlook fetch |
 
 | Tractable, same pattern as above | `comment-drafts#generateDraft` · `chat-summarize#summarize` · `hr-email-templates#generateAi` · `recruitment#aiScore` · `#compositeScore` · `#resumeParse` · `mail#aiDraft` · `mail#aiThreadSummary` |
+
+#### 2026-09-21 — measured: the AI ceiling is **1**, not 13
+
+```
+$ pnpm check:request-txn-outbound
+check-request-txn-outbound: 3451 route(s) across 598 controller(s);
+8 holding across an outbound call (frozen), 1 across an AI call (ceiling 1).
+```
+
+Twelve of the thirteen above were closed after H19 was written, including all three
+`support-ai` embed-mid-phase routes and `inv-ai-explain#getReorderProposal` — so the two
+constraints this section recorded as blocking (`searchKbForTicket` / `upsertAndSearchSimilar`
+embedding partway through the reads, and `inv-ai-proposal.spec.ts:572`'s no-DB-handle
+invariant) were both solved rather than waived. **The one remaining hold is
+`mail#aiInboxSummary`**, for the reason already given at H13: `MailService.listMessages`
+falls through to a Gmail/Outlook fetch when metadata cannot serve the page, so wrapping its
+read would create a new hold rather than remove one. Mail still needs its own lane.
+
+⚠ **The earlier counts in this document are history, not status, and are deliberately left
+in place** — H10's "ceilinged at 24", H18's "24 → 18", H19's "24 → 13" and the "count rises
+to 25" arithmetic at H10 each record what was true when it was measured. Read the ceiling
+from the gate, never from a heading: the gate is the only current number.
 
 **Testing note that cost real time:** four specs needed `withDelegatingTransaction` *and*
 `primeRelocationTrafficTracker`. The second is not optional — `withTenant` fires

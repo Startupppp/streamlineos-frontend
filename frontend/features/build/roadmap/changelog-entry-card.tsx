@@ -19,6 +19,7 @@ import { CHANGELOG_TYPE_OPTIONS, CHANGELOG_TYPE_VARIANT } from "./roadmap-consta
 export interface ChangelogEntryCardProps {
   entry: ChangelogEntry;
   isUpdating: boolean;
+  canManage: boolean;
   onTogglePublish: (entry: ChangelogEntry) => void;
   onEdit: (entry: ChangelogEntry) => void;
   onDelete: (entry: ChangelogEntry) => void;
@@ -27,6 +28,7 @@ export interface ChangelogEntryCardProps {
 export const ChangelogEntryCard = memo(function ChangelogEntryCard({
   entry,
   isUpdating,
+  canManage,
   onTogglePublish,
   onEdit,
   onDelete,
@@ -84,29 +86,31 @@ export const ChangelogEntryCard = memo(function ChangelogEntryCard({
               : `Created ${format(new Date(entry.createdAt), "MMM d, yyyy")}`}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-1">
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-xs"
-            onClick={handleTogglePublish}
-            disabled={isUpdating}
-          >
-            {entry.isPublished ? "Unpublish" : "Publish"}
-          </Button>
-          <Button size="icon" variant="ghost" className="w-7" aria-label="Edit changelog entry" onClick={handleEdit}>
-            <Pencil className="h-3 w-3" />
-          </Button>
-          <AnimatedIconButton
-            size="icon"
-            variant="ghost"
-            className="w-7 text-destructive hover:text-destructive"
-            aria-label="Delete changelog entry"
-            onClick={handleDelete}
-            icon={Trash2Icon}
-            iconSize={12}
-          />
-        </div>
+        {canManage ? (
+          <div className="flex shrink-0 items-center gap-1">
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs"
+              onClick={handleTogglePublish}
+              disabled={isUpdating}
+            >
+              {entry.isPublished ? "Unpublish" : "Publish"}
+            </Button>
+            <Button size="icon" variant="ghost" className="w-7" aria-label="Edit changelog entry" onClick={handleEdit}>
+              <Pencil className="h-3 w-3" />
+            </Button>
+            <AnimatedIconButton
+              size="icon"
+              variant="ghost"
+              className="w-7 text-destructive hover:text-destructive"
+              aria-label="Delete changelog entry"
+              onClick={handleDelete}
+              icon={Trash2Icon}
+              iconSize={12}
+            />
+          </div>
+        ) : null}
       </div>
     </motion.div>
   );

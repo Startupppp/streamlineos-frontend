@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { ApiError } from "@/lib/api-envelope";
+import type { TestRun } from "@/types/projects";
 
 const mockUseTestRuns = jest.fn();
 const mockUseDeleteTestRun = jest.fn();
@@ -25,11 +26,21 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
   useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),
 }));
 
+jest.mock("@/components/ui/table-pagination", () => ({
+  useCursorPager: () => ({
+    cursor: undefined,
+    hasPrevious: false,
+    goNext: jest.fn(),
+    goPrevious: jest.fn(),
+    reset: jest.fn(),
+  }),
+}));
+
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 jest.mock("@animateicons/react/lucide", () => ({
-  PlusIcon: ({ ref: _ref, ...props }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
-  Trash2Icon: ({ ref: _ref, ...props }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
+  PlusIcon: ({ ...props }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
+  Trash2Icon: ({ ...props }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
 }));
 
 jest.mock("next/link", () => ({
@@ -37,8 +48,33 @@ jest.mock("next/link", () => ({
   default: ({ children, href }: { children: ReactNode; href: string }) => <a href={href}>{children}</a>,
 }));
 
+interface MockDataTableColumn<T> {
+  key: string;
+  cell: (row: T) => ReactNode;
+}
+
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: () => <div data-testid="data-table" />,
+  DataTable: <T,>({
+    data,
+    columns,
+    getRowKey,
+  }: {
+    data: T[];
+    columns: MockDataTableColumn<T>[];
+    getRowKey: (row: T, index: number) => string | number;
+  }) => (
+    <table data-testid="data-table">
+      <tbody>
+        {data.map((row, index) => (
+          <tr key={getRowKey(row, index)}>
+            {columns.map((col) => (
+              <td key={col.key}>{col.cell(row)}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  ),
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 
@@ -59,6 +95,7 @@ jest.mock("./test-run-sheet", () => ({
 }));
 
 import { TestRunsTab } from "./test-runs-tab";
+import { testRunListPageContract } from "@/hooks/api/build/qa-schema";
 
 const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:qa:view": "all" }, modules: {} },
@@ -81,12 +118,24 @@ function baseQuery(overrides = {}) {
   };
 }
 
+const EMPTY_PAGE = { data: [], hasMore: false, nextCursor: null };
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
-  mockUseTestRuns.mockReturnValue(baseQuery({ data: [] }));
+  mockUseTestRuns.mockReturnValue(baseQuery({ data: EMPTY_PAGE }));
   mockUseDeleteTestRun.mockReturnValue({ mutate: jest.fn(), isPending: false });
+});
+
+it("testRunListPageContract rejects a bare array so a backend regression serving the old array shape fails loudly instead of rendering an empty list", () => {
+  const result = testRunListPageContract.safeParse([]);
+  expect(result.success).toBe(false);
+});
+
+it("testRunListPageContract accepts a valid page envelope with data and pagination fields", () => {
+  const result = testRunListPageContract.safeParse(EMPTY_PAGE);
+  expect(result.success).toBe(true);
 });
 
 it("renders NoPermissionState when build:qa:view is denied instead of the no-runs empty state", () => {
@@ -118,4 +167,19 @@ it("renders the upgrade path the backend sent with a 402 rather than a generic f
     "href",
     "/settings/billing",
   );
+});
+
+it("falls back to a readable label instead of rendering blank text for a run status outside the known status map", () => {
+  const runWithUnknownStatus = {
+    id: 1,
+    runNumber: 7,
+    name: "Regression sweep",
+    status: "in_review" as TestRun["status"],
+    environment: "Staging",
+    counts: undefined,
+  } as unknown as TestRun;
+  mockUseTestRuns.mockReturnValue(baseQuery({ data: { data: [runWithUnknownStatus], hasMore: false, nextCursor: null } }));
+  render(<TestRunsTab projectId={1} />);
+  expect(screen.getByText("in review")).toBeInTheDocument();
+  expect(screen.queryByText("undefined")).not.toBeInTheDocument();
 });

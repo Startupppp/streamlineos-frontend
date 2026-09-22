@@ -202,7 +202,7 @@ export function ApprovalsInboxPage() {
   if (pageState.kind !== "ready" && pageState.kind !== "empty") {
     return (
       <PageWrapper title="Approvals" subtitle="Approvals waiting for your decision across all projects">
-        <PmPageShell withGlow={false}>
+        <PmPageShell>
           <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
             {null}
           </PageState>
