@@ -310,3 +310,11 @@ export const todayActivitiesContract = z.array(
     subject: z.string().nullable(),
   }),
 );
+
+/** `crmPulseDashboardSchema` — CRM-only figures for the Business Pulse widget. */
+export const crmPulseDashboardContract = z.object({
+  mrr: z.number(),
+  pipelineValue: z.number(),
+  newLeadsThisWeek: z.number().int(),
+  conversionRate: z.number().int(),
+});

@@ -198,9 +198,9 @@ describe("NotificationBellPanel — unified inbox preview", () => {
     mockIsError = true;
     renderPanel();
     expect(screen.getByText(/couldn't load inbox/i)).toBeInTheDocument();
-    const link = screen.getByRole("link", { name: /open inbox/i });
-    expect(link).toHaveAttribute("href", "/inbox");
-    expect(link).not.toHaveAttribute("href", "/notifications");
+    const links = screen.getAllByRole("link", { name: /open inbox/i });
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) expect(link).toHaveAttribute("href", "/inbox");
   });
 
   it("shows empty state with a message when there are no items", () => {

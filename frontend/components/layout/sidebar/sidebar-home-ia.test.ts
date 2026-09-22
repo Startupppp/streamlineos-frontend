@@ -190,13 +190,13 @@ describe("Home information architecture — Notifications restructure", () => {
     });
   });
 
-  describe("resolveRouteAccess for /notifications compatibility route", () => {
-    it("resolves to universal — the /notifications path is still a universal route", () => {
-      expect(resolveRouteAccess("/notifications").kind).toBe("universal");
+  describe("retired /notifications routes are no longer declared app routes", () => {
+    it("the /notifications root is undeclared — next.config.ts redirects it to /inbox?view=notifications", () => {
+      expect(resolveRouteAccess("/notifications").kind).toBe("unknown");
     });
 
-    it("BITE: it does NOT resolve to permission, confirming it is not misclassified as admin", () => {
-      expect(resolveRouteAccess("/notifications").kind).not.toBe("permission");
+    it("BITE: /inbox is declared universal, so an undeclared /notifications is a deliberate retirement and not a broken registry", () => {
+      expect(resolveRouteAccess("/inbox").kind).toBe("universal");
     });
   });
 });

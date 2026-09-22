@@ -87,6 +87,12 @@
       "permission": "hr:attendance:view"
     },
     {
+      "endpoint": "/dashboard/crm-pulse",
+      "universal": false,
+      "module": "crm",
+      "permission": "crm:leads:view"
+    },
+    {
       "endpoint": "/dashboard/today-activities",
       "universal": false,
       "module": "crm",

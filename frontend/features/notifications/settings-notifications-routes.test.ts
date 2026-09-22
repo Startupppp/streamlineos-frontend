@@ -13,8 +13,8 @@ describe("Settings → Notifications route access declarations", () => {
       expect(isUniversalRoute("/settings/notifications/my-preferences")).toBe(true);
     });
 
-    it("BITE: the root /settings/notifications is also universal so the above is not a special case", () => {
-      expect(resolveRouteAccess("/settings/notifications").kind).toBe("universal");
+    it("BITE: a sibling administration route is NOT universal, so the above is a real grant and not a blanket one", () => {
+      expect(isUniversalRoute("/settings/notifications/templates")).toBe(false);
     });
   });
 
@@ -54,13 +54,17 @@ describe("Settings → Notifications route access declarations", () => {
     });
   });
 
-  describe("/notifications root is still universal — compat redirect to /inbox?view=notifications", () => {
-    it("/notifications resolves as universal", () => {
-      expect(resolveRouteAccess("/notifications").kind).toBe("universal");
+  describe("retired /notifications routes are undeclared and served by next.config.ts redirects", () => {
+    it("/notifications is no longer a declared app route", () => {
+      expect(resolveRouteAccess("/notifications").kind).toBe("unknown");
     });
 
-    it("BITE: /notifications/providers is no longer permission-gated — page deleted, handled by next.config.ts redirect", () => {
+    it("/notifications/providers is no longer permission-gated — the page moved to /settings/notifications/providers", () => {
       expect(isUniversalRoute("/notifications/providers")).toBe(false);
+    });
+
+    it("BITE: the replacement /settings/notifications/providers IS declared, so the retirement did not drop the surface", () => {
+      expect(resolveRouteAccess("/settings/notifications/providers").kind).toBe("permission");
     });
   });
 

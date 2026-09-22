@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { notificationListContract } from "@/hooks/api/notifications-schema";
 
 const wireDate = () => z.string();
 
@@ -28,8 +27,3 @@ export const hrDocumentListContract = z.object({
   }),
 });
 
-export const notificationCursorPageContract = notificationListContract;
-
-export const notificationUnreadCountContract = z.object({
-  count: z.number().int(),
-});
