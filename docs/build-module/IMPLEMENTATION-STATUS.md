@@ -758,10 +758,35 @@ type beneath them lost `sprintId`. An untouched file is not evidence that a fail
 
 ### Not done, and why
 
-**Production migrations: NOT APPLIED, NOT VERIFIED.** 1149, 1150 and 1151 are additive and journalled.
-This worktree has no `.env`, so the ledger read failed closed and was not retried. The only reachable
-PostgreSQL is production, so no `applied` claim can be made here. Cycle phases 04/05 and the QA
-destructive contraction remain **BLOCKED** on unmet preconditions.
+**Production migrations: 1149, 1150 and 1151 are APPLIED — verified against the live ledger.**
+
+This corrects an earlier claim in this file that they were unapplied. That claim was wrong. It rested
+on two failed reads — one worktree with no `.env`, and one `PAM authentication failed` — and a failed
+read was mistaken for evidence of an unapplied migration. It is not evidence of anything.
+
+The auth failure was never a credential problem. Aurora is on IAM auth, and
+`run-pending-migrations.mjs` / `check:migration-chain` hand `DATABASE_URL` straight to `postgres()`
+without minting a token, so they die `28P01 PAM authentication failed` — which reads exactly like a
+wrong password. Reading the ledger through an IAM-token wrapper works and always did.
+
+Live ledger, read 2026-09-22: **908 rows against 908 journal entries, watermark `1803000010470`
+(= 1151), 0 pending.** All three of 1149/1150/1151 match by file hash *and* by `when`.
+
+Two ledger defects remain, and they are bookkeeping, not missing schema:
+
+- **`1123_ai_action_proposals_rls` reads as "below the watermark, will NEVER apply".** It is applied.
+  Ledger row `id=17` carries 1123's exact file sha256 (`085adb73…`) but was stamped
+  `created_at=1803000010336`, which is *1121's* `when`, not 1123's `1803000010338`. Verified
+  materially against the database, not inferred: `public.ai_action_proposals` has
+  `relrowsecurity = true` and one policy, `tenant_isolation`. **There is no RLS gap.**
+- **One duplicate row at `created_at=1803000010336`.** Same root cause: `id=47` (hash `7c72eaa6…`)
+  is the real 1121, and `id=17` is 1123 wearing 1121's timestamp.
+
+Both defects are the same mis-stamped row, so one targeted `UPDATE` of `id=17`'s `created_at` to
+`1803000010338` clears both. That is a production write and is **NOT DONE — it needs explicit
+authorization.** `check:migration-ledger` will keep failing until it is.
+
+Cycle phases 04/05 and the QA destructive contraction remain **BLOCKED** on unmet preconditions.
 
 **Browser QA: READY_FOR_CODEX_BROWSER_QA.** Not performed and not claimed. Owned by Codex.
 The velocity/burnup fix above is exercised only by unit tests and typecheck — it has not been

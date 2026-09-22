@@ -116,5 +116,14 @@ operations, and the frontend copy was re-vendored (`sha256 609a2e4c…`).
 ### The database-bound gates
 
 `check:composite-fk-set-null` and `check:tenant-relationships` remain unsatisfiable, unchanged.
-This worktree has no `.env`, which is why the migration ledger could not be read. That absence is a
-safety property, not a defect: the only PostgreSQL reachable from this machine is production.
+
+**The migration ledger, however, was readable all along — an earlier version of this file said
+otherwise and was wrong.** Two separate failures were both misread as "no database access": a
+worktree with no `.env`, and `PAM authentication failed` in the worktree that has one. The second is
+not a credential fault. Aurora uses IAM auth, and `check:migration-chain` passes `DATABASE_URL`
+straight to `postgres()` without minting a token, so it fails `28P01` in a way that is
+indistinguishable from a wrong password.
+
+Reading it through an IAM-token wrapper succeeds. Anything derived from "the ledger could not be
+read" — including any claim that a migration is unapplied — was never evidence. A failed read tells
+you about the reader, not the database. See `IMPLEMENTATION-STATUS.md` for the verified ledger state.

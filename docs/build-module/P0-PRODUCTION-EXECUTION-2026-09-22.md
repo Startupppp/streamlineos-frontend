@@ -95,10 +95,28 @@ All three are registered in `migrations/meta/_journal.json`:
 - idx 1034, when 1803000010460 — 1150
 - idx 1035, when 1803000010470 — 1151
 
-### Production application status — UNVERIFIED / NOT YET APPLIED
+### Production application status — APPLIED, verified against the live ledger
 
-Prior P0 session recorded production watermark at `1803000010440` (idx 1032 = `1144_repair_inventory_composite_set_null`). All three migrations have `when` values above that watermark and therefore had NOT been applied at the time of the P0 run.
+Read 2026-09-22 over an IAM-token connection: **908 ledger rows against 908 journal entries,
+watermark `1803000010470`, 0 pending.** 1149, 1150 and 1151 each match by file sha256 *and* by
+`when`. All three are applied.
 
-Live ledger check attempted 2026-09-22 in this worktree: BLOCKED — `.env` absent in `slos-next-closure` worktree; `DATABASE_URL` not set; script `check-migration-ledger.mjs` failed closed with "DATABASE_URL is not set". No retry attempted. No credentials printed.
+**A superseded reading is kept below, because the way it was wrong is the reusable part.**
 
-**Conclusion**: 1149, 1150, and 1151 are journalled but UNVERIFIED against the live production ledger. The strongest available evidence (P0 watermark reading) puts them unapplied. They must be applied by the coordinator before the browser QA checks for sections 1–2 are unblocked.
+> UNVERIFIED / NOT YET APPLIED. Prior P0 session recorded production watermark at `1803000010440`
+> (idx 1032). All three migrations have `when` values above that watermark and therefore had NOT been
+> applied at the time of the P0 run. Live ledger check attempted 2026-09-22: BLOCKED — `.env` absent,
+> `DATABASE_URL` not set, failed closed. No retry attempted.
+
+Two mistakes produced that conclusion:
+
+1. **A stale watermark was treated as current.** `1803000010440` was true when the P0 session read
+   it; migrations landed afterwards. A watermark is a timestamp, not a standing fact.
+2. **A failed read was treated as a negative result.** The ledger could not be read, so it was
+   recorded as "not applied". Those are different claims. The connection failed for reasons that had
+   nothing to do with which migrations exist — first a missing `.env`, then
+   `PAM authentication failed`, which is not a credential fault at all: Aurora is on IAM auth and
+   `check:migration-chain` never mints a token.
+
+The standing rule this earns: **never downgrade a migration to "unapplied" on the strength of a read
+that failed.** Report it as unknown and fix the reader.
