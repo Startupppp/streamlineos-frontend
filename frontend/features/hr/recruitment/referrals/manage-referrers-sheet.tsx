@@ -19,6 +19,7 @@ import {
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Users2 } from "lucide-react";
@@ -53,7 +54,11 @@ function ReferrerRow({ id, name, email, status, referralCount }: { id: number; n
 }
 
 export function ManageReferrersSheet() {
-  const { data: referrers = [], isLoading } = useExternalReferrers();
+  const { data: referrers = [], isLoading, isError, error, refetch } = useExternalReferrers();
+
+  function handleRetry(): void {
+    void refetch();
+  }
 
   return (
     <Sheet>
@@ -71,6 +76,14 @@ export function ManageReferrersSheet() {
         <SheetBody className="px-6 py-4 space-y-2">
           {isLoading ? (
             Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)
+          ) : isError ? (
+            <ErrorState
+              compact
+              className="border-0 bg-transparent shadow-none"
+              title="Couldn't load external referrers"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+            />
           ) : referrers.length === 0 ? (
             <RecruitmentEmptyState
               illustration={<EmptyTeamIllustration />}

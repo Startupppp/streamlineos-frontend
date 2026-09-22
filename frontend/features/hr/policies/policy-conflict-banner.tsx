@@ -3,6 +3,8 @@
 import { AlertTriangle } from "lucide-react";
 import { usePolicyConflicts, type PolicyConflict } from "@/hooks/api/hr/policies";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -46,7 +48,11 @@ function ConflictList({ conflicts }: { conflicts: PolicyConflict[] }) {
 }
 
 export function PolicyConflictBanner({ policyId, className }: Props) {
-  const { data, isLoading, isError } = usePolicyConflicts(policyId);
+  const { data, isLoading, isError, error, refetch } = usePolicyConflicts(policyId);
+
+  function handleRetry(): void {
+    void refetch();
+  }
 
   if (policyId <= 0) return null;
 
@@ -54,7 +60,21 @@ export function PolicyConflictBanner({ policyId, className }: Props) {
     return <Skeleton className={cn("h-16 w-full rounded-lg", className)} />;
   }
 
-  if (isError || !data) return null;
+  if (isError) {
+    return (
+      <div className={cn("rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2.5", className)}>
+        <ErrorState
+          compact
+          className="border-0 bg-transparent shadow-none"
+          title="Couldn't check policy conflicts"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      </div>
+    );
+  }
+
+  if (!data) return null;
 
   const hasBlocking = data.conflicts.some((c) => c.severity === "blocking");
   const hasAny = data.conflicts.length > 0;
