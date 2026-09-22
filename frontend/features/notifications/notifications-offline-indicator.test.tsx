@@ -115,15 +115,12 @@ jest.mock("@/components/ui/content-fill-panel", () => ({
 }));
 
 describe("Notifications page offline indicator", () => {
-  it("the /notifications route renders exactly this component", () => {
+  it("the /notifications route is now a redirect to /inbox?view=notifications", () => {
     const routeSource = readFileSync(
       join(process.cwd(), "app", "(authenticated)", "notifications", "page.tsx"),
       "utf8",
     );
-    expect(routeSource).toContain(
-      'import { NotificationsInboxPage } from "@/features/notifications/inbox/notifications-inbox-page";',
-    );
-    expect(routeSource).toContain("<NotificationsInboxPage />");
+    expect(routeSource).toContain('redirect("/inbox?view=notifications")');
   });
 
   afterEach(() => {

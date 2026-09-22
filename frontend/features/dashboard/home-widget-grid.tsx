@@ -69,12 +69,21 @@ const BusinessPulseWidget = dynamic(
     })),
   { loading: () => <WidgetSkeleton rows={2} /> },
 );
+const TodayActivitiesWidget = dynamic(
+  () =>
+    import("@/components/dashboard/today-activities-widget").then((m) => ({
+      default: m.TodayActivitiesWidget,
+    })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
 
 export interface HomeWidgetGridProps {
   projectsEnabled: boolean;
   hrEnabled: boolean;
   canViewExecutive: boolean;
   canSelfAttendance: boolean;
+  crmEnabled: boolean;
+  canViewCrmLeads: boolean;
   expensesSlot?: ReactNode;
 }
 
@@ -83,6 +92,8 @@ export function HomeWidgetGrid({
   hrEnabled,
   canViewExecutive,
   canSelfAttendance,
+  crmEnabled,
+  canViewCrmLeads,
   expensesSlot,
 }: HomeWidgetGridProps) {
   const { fadeUp } = useMotionVariants();
@@ -127,6 +138,11 @@ export function HomeWidgetGrid({
       {batch2Ready && canViewExecutive ? (
         <HomeSectionBoundary sectionLabel="Business pulse">
           <BusinessPulseWidget />
+        </HomeSectionBoundary>
+      ) : null}
+      {batch2Ready && crmEnabled && canViewCrmLeads ? (
+        <HomeSectionBoundary sectionLabel="Today's activities">
+          <TodayActivitiesWidget />
         </HomeSectionBoundary>
       ) : null}
       {batch2Ready && hrEnabled && canSelfAttendance ? (

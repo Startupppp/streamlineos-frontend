@@ -1,8 +1,31 @@
-import { Users, Briefcase, Contact2, Network, Shield, ShieldCheck, CreditCard, CircleUser, Coins, Map, Zap, History, GitBranch, Building2, UserCog, ArrowLeftRight, LayoutGrid, Key } from "lucide-react";
+import {
+  Users,
+  Briefcase,
+  Contact2,
+  Network,
+  Shield,
+  ShieldCheck,
+  CreditCard,
+  CircleUser,
+  Coins,
+  Map,
+  Zap,
+  History,
+  GitBranch,
+  Building2,
+  UserCog,
+  ArrowLeftRight,
+  LayoutGrid,
+  Key,
+  Bell,
+  Megaphone,
+  FileText,
+  Plug,
+} from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
-{
+  {
     label: "Account",
     product: "administration",
     routes: [
@@ -12,9 +35,14 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
         href: "/settings",
         exact: true,
       },
+      {
+        label: "Notifications",
+        icon: Bell,
+        href: "/settings/notifications/my-preferences",
+      },
     ],
   },
-{
+  {
     label: "Workspace",
     product: "administration",
     requiredPermission: ["settings:manage", "ownership:transfer:respond"],
@@ -34,7 +62,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
       },
     ],
   },
-{
+  {
     label: "People",
     product: "administration",
     requiredPermission: [
@@ -66,7 +94,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
       },
     ],
   },
-{
+  {
     label: "Access",
     product: "administration",
     requiredPermission: ["settings:rbac:manage", "settings:manage"],
@@ -85,7 +113,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
       },
     ],
   },
-{
+  {
     label: "Organization",
     product: "administration",
     requiredPermission: ["settings:manage", "settings:view"],
@@ -141,7 +169,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
       },
     ],
   },
-{
+  {
     label: "Modules",
     product: "administration",
     requiredPermission: "settings:manage",
@@ -154,10 +182,13 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
       },
     ],
   },
-{
+  {
     label: "Billing",
     product: "administration",
-    requiredPermission: ["billing:subscription:view", "billing:ai-credits:view"],
+    requiredPermission: [
+      "billing:subscription:view",
+      "billing:ai-credits:view",
+    ],
     routes: [
       {
         label: "Billing & Plan",
@@ -174,7 +205,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
       },
     ],
   },
-{
+  {
     label: "Security",
     product: "administration",
     requiredPermission: "settings:manage",
@@ -187,7 +218,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
       },
     ],
   },
-{
+  {
     label: "Developer",
     product: "administration",
     requiredPermission: [
@@ -207,6 +238,49 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
         icon: Zap,
         href: "/settings/webhooks",
         requiredPermission: "settings:webhooks:manage",
+      },
+    ],
+  },
+  {
+    label: "Notifications",
+    product: "administration",
+    requiredPermission: [
+      "notifications:templates:view",
+      "notifications:providers:view",
+      "notifications:events:view",
+      "notifications:policy:view",
+      "notifications:broadcasts:view",
+    ],
+    routes: [
+      {
+        label: "Templates",
+        icon: FileText,
+        href: "/settings/notifications/templates",
+        requiredPermission: "notifications:templates:view",
+      },
+      {
+        label: "Broadcasts",
+        icon: Megaphone,
+        href: "/settings/notifications/broadcasts",
+        requiredPermission: "notifications:broadcasts:view",
+      },
+      {
+        label: "Providers",
+        icon: Plug,
+        href: "/settings/notifications/providers",
+        requiredPermission: "notifications:providers:view",
+      },
+      {
+        label: "Events",
+        icon: Bell,
+        href: "/settings/notifications/events",
+        requiredPermission: "notifications:events:view",
+      },
+      {
+        label: "Policy",
+        icon: Shield,
+        href: "/settings/notifications/policy",
+        requiredPermission: "notifications:policy:view",
       },
     ],
   },

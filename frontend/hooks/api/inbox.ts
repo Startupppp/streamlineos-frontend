@@ -1,6 +1,7 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient, isApiError } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -8,9 +9,12 @@ import { lazyContract } from "@/lib/api-envelope";
 const unifiedInboxContract = lazyContract(() =>
   import("@/hooks/api/inbox-schema").then((m) => m.unifiedInboxContract),
 );
+const unifiedInboxCountContract = lazyContract(() =>
+  import("@/hooks/api/inbox-schema").then((m) => m.unifiedInboxCountContract),
+);
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
-import type { InboxKind, UnifiedInboxResponse } from "@/types/inbox";
+import type { InboxKind, UnifiedInboxCount, UnifiedInboxResponse } from "@/types/inbox";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export interface UnifiedInboxParams {
@@ -36,6 +40,26 @@ export function inboxErrorRecoveryInterval(query: {
       ? INBOX_ERROR_RECOVERY_MS
       : false;
   return INBOX_ERROR_RECOVERY_MS;
+}
+
+export function useUnifiedInboxCount(
+  options?: Omit<UseQueryOptions<UnifiedInboxCount, Error>, "queryKey" | "queryFn">,
+) {
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
+  return useQuery<UnifiedInboxCount, Error>({
+    ...options,
+    queryKey: platformCoreQueryKeys.inbox.unified({ count: true }),
+    queryFn: ({ signal }) =>
+      apiClient.get<UnifiedInboxCount>(
+        "/me/inbox/unified/count",
+        undefined,
+        signal,
+        unifiedInboxCountContract,
+      ),
+    staleTime: 15_000,
+    enabled: !!orgId && (options?.enabled ?? true),
+  });
 }
 
 export function useUnifiedInbox(

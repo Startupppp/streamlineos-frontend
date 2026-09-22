@@ -48,11 +48,8 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
   },
   {
     path: "/notifications",
-    universalDescendants: [
-      { path: "/notifications/preferences", subtree: true },
-    ],
     reason:
-      "Platform core communication surface — personal inbox and read state only. Administration (providers, templates, events, policy, broadcasts) is explicitly gated via the extension registry.",
+      "Platform core communication surface — the root is a compat redirect to /inbox?view=notifications. All sub-routes are handled elsewhere: personal preferences moved to /settings/notifications/my-preferences, administration moved to /settings/notifications/*.",
   },
   {
     path: "/calendar",
@@ -98,6 +95,14 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
     path: "/settings",
     reason:
       "The personal account landing page. Everything beneath /settings is organization administration and stays permissioned.",
+  },
+  {
+    path: "/settings/notifications",
+    universalDescendants: [
+      { path: "/settings/notifications/my-preferences", subtree: true },
+    ],
+    reason:
+      "Notification Settings hub. The root redirects to the personal preference centre which is platform core for every member. Organisation-administration descendants (templates, providers, events, policy, broadcasts) are gated via the extension registry.",
   },
   {
     path: "/access-denied",

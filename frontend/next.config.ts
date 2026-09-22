@@ -174,6 +174,46 @@ const nextConfig: NextConfig = {
       destination: "/build/my-work?pmWorkspaceId=:pmWorkspaceId",
       permanent: false,
     },
+    {
+      source: "/home",
+      destination: "/dashboard",
+      permanent: false,
+    },
+    {
+      source: "/notifications",
+      destination: "/inbox?view=notifications",
+      permanent: false,
+    },
+    {
+      source: "/notifications/preferences",
+      destination: "/settings/notifications/my-preferences",
+      permanent: false,
+    },
+    {
+      source: "/notifications/templates",
+      destination: "/settings/notifications/templates",
+      permanent: false,
+    },
+    {
+      source: "/notifications/broadcasts",
+      destination: "/settings/notifications/broadcasts",
+      permanent: false,
+    },
+    {
+      source: "/notifications/providers",
+      destination: "/settings/notifications/providers",
+      permanent: false,
+    },
+    {
+      source: "/notifications/events",
+      destination: "/settings/notifications/events",
+      permanent: false,
+    },
+    {
+      source: "/notifications/policy",
+      destination: "/settings/notifications/policy",
+      permanent: false,
+    },
   ],
   images: {
     formats: ["image/webp"],

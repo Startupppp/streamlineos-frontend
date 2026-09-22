@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { usePendingApprovals } from "@/hooks/api/dashboard";
 import { useChatUnreadTotal } from "@/hooks/api/chat-core-read";
-import { useUnreadNotificationCount } from "@/hooks/api/notifications-inbox";
+import { useUnifiedInboxCount } from "@/hooks/api/inbox";
 import { NOTIFICATION_FALLBACK_INTERVAL_MS } from "@/lib/query-request-policies";
 import {
   getNavGroupsForProduct,
@@ -137,7 +137,6 @@ export function AppSidebar({
     return null;
   }, [navGroups, pathname]);
 
-
   useEffect(() => {
     try {
       const stored = localStorage.getItem("sidebar-groups");
@@ -196,25 +195,24 @@ export function AppSidebar({
   );
   const unreadChatCount = chatUnread?.total ?? 0;
 
-  const { data: notifData } = useUnreadNotificationCount({
+  const { data: unifiedCountData } = useUnifiedInboxCount({
     refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS,
     refetchIntervalInBackground: false,
     throwOnError: false,
   });
-  const unreadNotifCount = notifData?.count ?? 0;
+  const unreadInboxCount = unifiedCountData?.total ?? 0;
 
   useEffect(() => {
     const base = "StreamlineOS";
-    const total = unreadChatCount + unreadNotifCount;
+    const total = unreadChatCount + unreadInboxCount;
     document.title =
       total > 0 ? `(${total > 99 ? "99+" : total}) ${base}` : base;
-  }, [unreadChatCount, unreadNotifCount]);
+  }, [unreadChatCount, unreadInboxCount]);
 
   const effectiveCollapsed = isMobile ? false : isCollapsed;
 
-  if (status === "loading") {
+  if (status === "loading")
     return <SidebarSkeleton isCollapsed={isCollapsed} isMobile={isMobile} />;
-  }
 
   return (
     <TooltipProvider>

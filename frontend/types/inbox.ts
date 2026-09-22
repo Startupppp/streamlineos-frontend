@@ -75,3 +75,11 @@ export type UnifiedInboxResponse = {
 };
 
 export type InboxKind = UnifiedInboxItem["kind"];
+
+export type UnifiedInboxCount = {
+  notification: number;
+  mail: number;
+  approval: number;
+  total: number;
+  mailExact: boolean;
+};

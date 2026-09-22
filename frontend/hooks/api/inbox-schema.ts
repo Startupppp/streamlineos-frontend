@@ -1,11 +1,5 @@
 import { z } from "zod";
 
-/**
- * Response contract for `GET /me/inbox/unified`.
- * Derived from backend `unifiedInboxResponseSchema`.
- * NOT `.strict()`.
- */
-
 const inboxActorContract = z
   .object({
     id: z.string(),
@@ -79,4 +73,12 @@ export const unifiedInboxContract = z.object({
     }),
   ),
   degraded: z.boolean(),
+});
+
+export const unifiedInboxCountContract = z.object({
+  notification: z.number().int(),
+  mail: z.number().int(),
+  approval: z.number().int(),
+  total: z.number().int(),
+  mailExact: z.boolean(),
 });

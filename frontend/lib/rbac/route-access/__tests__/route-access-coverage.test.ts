@@ -148,14 +148,14 @@ describe("§8 platform-core surfaces are universally accessible to every active 
     expect(resolveRouteAccess("/knowledge/chat").kind).toBe("universal");
   });
 
-  it("personal notification preferences are universal", () => {
-    expect(isUniversalRoute("/notifications/preferences")).toBe(true);
-    expect(resolveRouteAccess("/notifications/preferences").kind).toBe("universal");
+  it("personal notification preferences are universal — canonical route is under /settings/notifications/my-preferences", () => {
+    expect(isUniversalRoute("/settings/notifications/my-preferences")).toBe(true);
+    expect(resolveRouteAccess("/settings/notifications/my-preferences").kind).toBe("universal");
   });
 
-  it("notification administration is NOT universal — gated on providers permission", () => {
-    expect(isUniversalRoute("/notifications/providers")).toBe(false);
-    expect(resolveRouteAccess("/notifications/providers").kind).toBe("permission");
+  it("notification administration is NOT universal — gated on providers permission under /settings/notifications/*", () => {
+    expect(isUniversalRoute("/settings/notifications/providers")).toBe(false);
+    expect(resolveRouteAccess("/settings/notifications/providers").kind).toBe("permission");
   });
 
   it("KB administration is NOT universal — gated on import permission", () => {

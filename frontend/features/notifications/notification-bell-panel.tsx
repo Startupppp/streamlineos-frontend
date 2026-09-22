@@ -10,19 +10,26 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
+import { useUnifiedInbox } from "@/hooks/api/inbox";
 import {
-  useUnreadNotifications,
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-inbox";
 import {
-  NOTIFICATION_CATEGORY_CONFIG,
-  type NotificationCategory,
-} from "@/lib/notification-types";
+  INBOX_SOURCE_LABELS,
+  degradedSources,
+} from "./unified-inbox/inbox-sources";
 import { formatRelativeTime } from "./format-relative-time";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import type { Notification } from "@/types/notifications";
 import { normalizeBuildDeepLink } from "@/lib/build/normalize-build-deep-link";
+import { toSearchParams } from "@/lib/route-search-params";
+import type {
+  UnifiedInboxItem,
+  NotificationInboxItem,
+  BroadcastInboxItem,
+  MailInboxItem,
+  BuildApprovalInboxItem,
+} from "@/types/inbox";
 
 function PanelSkeleton() {
   return (
@@ -40,20 +47,17 @@ function PanelSkeleton() {
   );
 }
 
-function NotificationItem({
-  notification,
+function InboxItemRow({
+  item,
   onItemClick,
 }: {
-  notification: Notification;
-  onItemClick: (n: Notification) => void;
+  item: UnifiedInboxItem;
+  onItemClick: (item: UnifiedInboxItem) => void;
 }) {
-  const catKey = notification.category;
-  const config =
-    NOTIFICATION_CATEGORY_CONFIG[catKey] ?? NOTIFICATION_CATEGORY_CONFIG.SYSTEM;
-  const Icon = config.icon;
+  const sourceLabel = INBOX_SOURCE_LABELS[item.kind];
 
   function handleClick() {
-    onItemClick(notification);
+    onItemClick(item);
   }
 
   return (
@@ -62,40 +66,27 @@ function NotificationItem({
       onClick={handleClick}
       className={cn(
         "w-full flex items-start gap-2.5 px-3 py-2 text-left transition-colors hover:bg-muted/50 rounded-md",
-        !notification.isRead && "bg-primary/5",
+        !item.isRead && "bg-primary/5",
       )}
     >
-      <div
-        className={cn(
-          "flex h-7 w-7 shrink-0 items-center justify-center rounded-md mt-0.5",
-          config.bg,
-        )}
-      >
-        <Icon className={cn("h-3.5 w-3.5", config.color)} />
-      </div>
       <div className="min-w-0 flex-1 overflow-hidden">
         <div className="flex min-w-0 items-center justify-between gap-2">
           <TruncatedText
-            text={notification.title}
+            text={item.subject}
             className={cn(
               "min-w-0 flex-1 text-label leading-snug",
-              notification.isRead
+              item.isRead
                 ? "font-medium text-muted-foreground"
                 : "font-semibold text-foreground",
             )}
           />
           <span className="shrink-0 text-dense text-muted-foreground">
-            {formatRelativeTime(notification.createdAt)}
+            {formatRelativeTime(item.timestamp)}
           </span>
         </div>
-        {notification.message && (
-          <TruncatedText
-            text={notification.message}
-            className="text-xs text-muted-foreground mt-0.5"
-          />
-        )}
+        <span className="text-xs text-muted-foreground">{sourceLabel}</span>
       </div>
-      {!notification.isRead && (
+      {!item.isRead && (
         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
       )}
     </button>
@@ -114,27 +105,84 @@ export function NotificationBellPanel({
   onClose,
 }: NotificationBellPanelProps) {
   const router = useRouter();
-  const {
-    data: notifications,
-    isLoading,
-    isError,
-  } = useUnreadNotifications({ enabled: true });
+  const { data, isLoading, isError } = useUnifiedInbox({ limit: 6 });
+
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
-  const { iconRef: markAllReadIconRef, hoverHandlers: markAllReadHoverHandlers } =
-    useAnimatedIcon();
+  const {
+    iconRef: markAllReadIconRef,
+    hoverHandlers: markAllReadHoverHandlers,
+  } = useAnimatedIcon();
 
-  const recentNotifications = notifications?.slice(0, 6) ?? [];
+  const pages = data?.pages ?? [];
+  const firstPage = pages[0];
+  const items = firstPage?.items ?? [];
+  const isDegraded = firstPage?.degraded === true;
+  const degraded = isDegraded ? degradedSources(pages) : [];
 
-  const handleItemClick = useCallback(
-    (notification: Notification) => {
-      if (!notification.isRead) markRead.mutate(notification.id);
-      if (notification.link) {
+  const canMarkAllRead =
+    unreadCount > 0 &&
+    items.some(
+      (item) =>
+        !item.isRead &&
+        (item.kind === "notification" || item.kind === "broadcast"),
+    );
+
+  const handleNotificationClick = useCallback(
+    (item: NotificationInboxItem) => {
+      if (!item.isRead) markRead.mutate(item.id);
+      if (item.deepLink) {
         onClose();
-        router.push(normalizeBuildDeepLink(notification.link));
+        router.push(normalizeBuildDeepLink(item.deepLink));
       }
     },
-    [onClose, markRead, router],
+    [markRead, onClose, router],
+  );
+
+  const handleBroadcastClick = useCallback(
+    (item: BroadcastInboxItem) => {
+      if (item.deepLink) {
+        onClose();
+        router.push(normalizeBuildDeepLink(item.deepLink));
+      }
+    },
+    [onClose, router],
+  );
+
+  const handleMailClick = useCallback(
+    (item: MailInboxItem) => {
+      const params = toSearchParams({
+        messageId: item.id,
+        accountId: String(item.accountId),
+      });
+      onClose();
+      router.push(`/mail?${params.toString()}`);
+    },
+    [onClose, router],
+  );
+
+  const handleApprovalClick = useCallback(
+    (item: BuildApprovalInboxItem) => {
+      const params = toSearchParams({ projectId: String(item.projectId) });
+      onClose();
+      router.push(`/build/approvals?${params.toString()}`);
+    },
+    [onClose, router],
+  );
+
+  const handleItemClick = useCallback(
+    (item: UnifiedInboxItem) => {
+      if (item.kind === "notification") handleNotificationClick(item);
+      else if (item.kind === "broadcast") handleBroadcastClick(item);
+      else if (item.kind === "mail") handleMailClick(item);
+      else handleApprovalClick(item);
+    },
+    [
+      handleNotificationClick,
+      handleBroadcastClick,
+      handleMailClick,
+      handleApprovalClick,
+    ],
   );
 
   const handleMarkAllRead = useCallback(() => {
@@ -144,10 +192,10 @@ export function NotificationBellPanel({
   const title =
     surface === "drawer" ? (
       <DrawerTitle className="text-sm font-semibold text-foreground">
-        Notifications
+        Inbox
       </DrawerTitle>
     ) : (
-      <h3 className="text-sm font-semibold text-foreground">Notifications</h3>
+      <h3 className="text-sm font-semibold text-foreground">Inbox</h3>
     );
 
   return (
@@ -155,7 +203,7 @@ export function NotificationBellPanel({
       <div className="flex items-center justify-between border-b border-border px-3 py-2.5">
         {title}
         <div className="flex items-center gap-1">
-          {unreadCount > 0 && (
+          {canMarkAllRead && (
             <Button
               variant="ghost"
               size="icon"
@@ -171,6 +219,15 @@ export function NotificationBellPanel({
         </div>
       </div>
 
+      {isDegraded && degraded.length > 0 && (
+        <div className="border-b border-border bg-muted/40 px-3 py-1.5">
+          <p className="text-xs text-muted-foreground">
+            {degraded.map((s) => INBOX_SOURCE_LABELS[s.kind]).join(", ")}{" "}
+            {degraded.length === 1 ? "is" : "are"} temporarily unavailable.
+          </p>
+        </div>
+      )}
+
       <div className="min-h-0 flex-1 overflow-y-auto px-1 py-1">
         {isLoading ? (
           <PanelSkeleton />
@@ -178,31 +235,31 @@ export function NotificationBellPanel({
           <div className="flex flex-col items-center justify-center px-4 py-8 text-center">
             <Inbox className="mb-2 w-8 text-muted-foreground" />
             <p className="text-sm font-medium text-foreground">
-              Couldn&apos;t load notifications
+              Couldn&apos;t load inbox
             </p>
             <Link
-              href="/notifications"
+              href="/inbox"
               onClick={onClose}
               className="mt-0.5 text-xs text-accent hover:underline"
             >
-              Open the notification center
+              Open Inbox
             </Link>
           </div>
-        ) : recentNotifications.length === 0 ? (
+        ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-4 py-8 text-center">
             <Inbox className="mb-2 w-8 text-muted-foreground" />
             <p className="text-sm font-medium text-foreground">
               You&apos;re all caught up
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              No unread notifications
+              No new items in your inbox
             </p>
           </div>
         ) : (
-          recentNotifications.map((notification) => (
-            <NotificationItem
-              key={notification.id}
-              notification={notification}
+          items.map((item) => (
+            <InboxItemRow
+              key={item.dedupKey}
+              item={item}
               onItemClick={handleItemClick}
             />
           ))
@@ -211,11 +268,11 @@ export function NotificationBellPanel({
 
       <div className="border-t border-border px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
         <Link
-          href="/notifications"
+          href="/inbox"
           onClick={onClose}
           className="block w-full py-1 text-center text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
-          See all notifications →
+          Open Inbox →
         </Link>
       </div>
     </>

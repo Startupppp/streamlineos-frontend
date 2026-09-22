@@ -15,9 +15,10 @@ import { groupMailMessages } from "./mail-group-messages";
 import type { MailMessageSummary } from "@/types/mail";
 
 interface MailEmptyPaneProps {
-  variant: "select" | "connect";
+  variant: "select" | "connect" | "not_found" | "needs_reauth";
   selectedAccountId?: number | "all";
   onConnect?: () => void;
+  onReconnect?: () => void;
   onSelectMessage?: (message: MailMessageSummary) => void;
   className?: string;
 }
@@ -273,9 +274,49 @@ export function MailEmptyPane({
   variant,
   selectedAccountId = "all",
   onConnect,
+  onReconnect,
   onSelectMessage,
   className,
 }: MailEmptyPaneProps) {
+  if (variant === "not_found") {
+    return (
+      <div
+        className={cn(
+          "flex h-full min-h-0 flex-1 items-center justify-center p-6",
+          className,
+        )}
+      >
+        <EmptyState
+          compact
+          className="flex-1 border-0 bg-transparent"
+          title="Message not found"
+          description="This message may have been moved, deleted, or does not belong to a connected account."
+        />
+      </div>
+    );
+  }
+
+  if (variant === "needs_reauth") {
+    return (
+      <div
+        className={cn(
+          "flex h-full min-h-0 flex-1 items-center justify-center p-6",
+          className,
+        )}
+      >
+        <EmptyState
+          compact
+          className="flex-1 border-0 bg-transparent"
+          title="Reconnect your inbox"
+          description="This account needs to be reconnected before messages can load."
+          action={
+            onReconnect ? { label: "Reconnect", onClick: onReconnect } : undefined
+          }
+        />
+      </div>
+    );
+  }
+
   if (variant === "connect") {
     return (
       <div

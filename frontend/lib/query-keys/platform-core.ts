@@ -42,6 +42,8 @@ export const platformCoreQueryKeys = {
     events: () => [...base, "notifications", "events"] as const,
     policy: () => [...base, "notifications", "policy"] as const,
     suppressions: () => [...base, "notifications", "suppressions"] as const,
+    preferenceRules: () => [...base, "notifications", "preference-rules"] as const,
+    preferenceEventCatalog: () => [...base, "notifications", "preference-event-catalog"] as const,
   },
 
   invoice: {

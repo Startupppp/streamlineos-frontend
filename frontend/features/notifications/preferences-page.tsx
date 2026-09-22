@@ -29,6 +29,7 @@ import {
 } from "@/lib/notification-types";
 import type { UpdatePreferencesInput, DigestMode } from "@/types/notifications";
 import { PushPermissionCard } from "@/features/notifications/components/push-permission-card";
+import { PreferenceEventsSection } from "@/features/notifications/components/preference-events-section";
 
 const CHANNELS = [
   { key: "inAppEnabled" as const, label: "In-App", description: "Notifications inside the app", icon: Bell },
@@ -275,6 +276,8 @@ export function NotificationPreferencesPage() {
             })}
           </div>
         </section>
+
+        <PreferenceEventsSection />
 
         <section>
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Muted Notifications</h2>

@@ -79,6 +79,7 @@ describe("every Home widget is individually contained", () => {
     "AnnouncementsWidget",
     "UpcomingEventsWidget",
     "BusinessPulseWidget",
+    "TodayActivitiesWidget",
     "MyAttendanceWidget",
     "PayrollWidget",
     "LeavesTodayWidget",

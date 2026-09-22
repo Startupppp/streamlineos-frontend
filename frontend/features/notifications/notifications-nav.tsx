@@ -12,40 +12,38 @@ interface NavTab {
 }
 
 const PERSONAL_TABS: NavTab[] = [
-  { href: "/notifications", label: "Inbox" },
-  { href: "/notifications/preferences", label: "Preferences" },
+  { href: "/settings/notifications/my-preferences", label: "My preferences" },
 ];
 
 const ADMIN_TABS: Array<NavTab & { permission: PermissionKey }> = [
   {
-    href: "/notifications/templates",
+    href: "/settings/notifications/templates",
     label: "Templates",
     permission: "notifications:templates:view",
   },
   {
-    href: "/notifications/broadcasts",
+    href: "/settings/notifications/broadcasts",
     label: "Broadcasts",
     permission: "notifications:broadcasts:view",
   },
   {
-    href: "/notifications/providers",
+    href: "/settings/notifications/providers",
     label: "Providers",
     permission: "notifications:providers:view",
   },
   {
-    href: "/notifications/events",
+    href: "/settings/notifications/events",
     label: "Events",
     permission: "notifications:events:view",
   },
   {
-    href: "/notifications/policy",
+    href: "/settings/notifications/policy",
     label: "Policy",
     permission: "notifications:policy:view",
   },
 ];
 
 function isTabActive(pathname: string, href: string): boolean {
-  if (href === "/notifications") return pathname === "/notifications";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 

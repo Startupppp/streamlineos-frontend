@@ -75,6 +75,21 @@ export function MailShell() {
   const [summarySheetOpen, setSummarySheetOpen] = useState(false);
   const composeParamConsumedRef = useRef(false);
 
+  const rawAccountId = searchParams.get("accountId");
+  const parsedAccountId = rawAccountId !== null ? Number(rawAccountId) : NaN;
+  const urlAccountId =
+    Number.isFinite(parsedAccountId) &&
+    parsedAccountId > 0 &&
+    Number.isInteger(parsedAccountId)
+      ? parsedAccountId
+      : null;
+  const urlMessageId = searchParams.get("messageId") || null;
+  const urlThreadId = searchParams.get("threadId") || null;
+
+  type DeepLinkStatus = "idle" | "not_found" | "needs_reauth";
+  const [deepLinkStatus, setDeepLinkStatus] = useState<DeepLinkStatus>("idle");
+  const deepLinkConsumedRef = useRef(false);
+
   const { summaryState, triggerSummary } = useMailInboxSummarySheet();
 
   const finalizeMutate = finalize.mutate;
@@ -135,6 +150,18 @@ export function MailShell() {
     (message: MailMessageSummary) => {
       setShowMobileList(false);
       seedMailDetailFromSummary(queryClient, message);
+
+      const next = new URLSearchParams(searchParams.toString());
+      next.set("accountId", String(message.accountId));
+      if (message.threadId) {
+        next.set("threadId", message.threadId);
+        next.delete("messageId");
+      } else {
+        next.set("messageId", message.id);
+        next.delete("threadId");
+      }
+      router.replace(`/mail?${next.toString()}`, { scroll: false });
+
       if (message.isRead || !canManageMail) {
         setSelectedMessage(message);
         return;
@@ -152,8 +179,46 @@ export function MailShell() {
         { onError: () => setSelectedMessage(message) },
       );
     },
-    [canManageMail, mailActionMutate, queryClient],
+    [canManageMail, mailActionMutate, queryClient, searchParams, router],
   );
+
+  useEffect(() => {
+    if (urlAccountId === null || (urlMessageId === null && urlThreadId === null)) return;
+    if (deepLinkConsumedRef.current) return;
+    if (accountsLoading) return;
+    deepLinkConsumedRef.current = true;
+
+    const account = accounts.find((a) => a.id === urlAccountId);
+    if (!account) {
+      setDeepLinkStatus("not_found");
+      return;
+    }
+    if (account.status === "needs_reauth") {
+      setDeepLinkStatus("needs_reauth");
+      setAccountsSheetOpen(true);
+      return;
+    }
+
+    const effectiveThreadId = urlThreadId;
+    const effectiveId = urlThreadId !== null ? urlThreadId : (urlMessageId ?? "");
+
+    const synthetic: MailMessageSummary = {
+      id: effectiveId,
+      threadId: effectiveThreadId,
+      accountId: urlAccountId,
+      provider: account.provider,
+      from: { name: null, email: "" },
+      to: [],
+      subject: "",
+      snippet: "",
+      date: new Date().toISOString(),
+      isRead: false,
+      isStarred: false,
+      hasAttachments: false,
+    };
+
+    handleSelectMessage(synthetic);
+  }, [urlAccountId, urlMessageId, urlThreadId, accountsLoading, accounts, handleSelectMessage]);
 
   const handleBackToList = useCallback(() => {
     setShowMobileList(true);
@@ -249,6 +314,13 @@ export function MailShell() {
             <MailEmptyPane
               variant="connect"
               onConnect={handleOpenAccountsSheet}
+            />
+          ) : deepLinkStatus === "not_found" ? (
+            <MailEmptyPane variant="not_found" />
+          ) : deepLinkStatus === "needs_reauth" ? (
+            <MailEmptyPane
+              variant="needs_reauth"
+              onReconnect={handleOpenAccountsSheet}
             />
           ) : selectedMessage ? (
             <MailReadingPane

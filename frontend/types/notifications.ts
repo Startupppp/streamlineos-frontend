@@ -406,3 +406,44 @@ export interface CreateSuppressionInput {
   channel?: NotificationChannel;
   expiresAt?: string;
 }
+
+export type PreferenceRuleScopeType = "EVENT" | "MODULE" | "CATEGORY";
+export type PreferenceRuleMode = "ON" | "OFF" | "DIGEST";
+
+export interface PreferenceRuleRow {
+  id: number;
+  orgId: string;
+  membershipId: number;
+  scopeType: PreferenceRuleScopeType;
+  scopeKey: string;
+  channel: string;
+  mode: PreferenceRuleMode;
+  updatedAt: string;
+}
+
+export interface SetPreferenceRuleInput {
+  scopeType: PreferenceRuleScopeType;
+  scopeKey: string;
+  channel: NotificationChannel;
+  mode: PreferenceRuleMode;
+}
+
+export interface PreferenceEventCatalogItem {
+  eventKey: string;
+  displayName: string;
+  description: string;
+  category: string;
+  sourceModule: string | null;
+  priority: string;
+  defaultChannels: string[];
+  allowedChannels: string[];
+  mandatory: boolean;
+  userConfigurable: boolean;
+  userPreference: unknown | null;
+}
+
+export interface UpdateEventPreferenceInput {
+  channels?: Record<string, boolean>;
+  muted?: boolean;
+  mode?: string;
+}

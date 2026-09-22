@@ -1,11 +1,10 @@
 "use client";
 
 import { WidgetCard } from "@/components/ui/widget-card";
-import { Button } from "@/components/ui/button";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useExecutiveDashboard } from "@/hooks/api/dashboard";
 import { useAccess } from "@/hooks/api/access";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { FolderKanban, RefreshCw } from "lucide-react";
+import { FolderKanban, Target, IndianRupee, TrendingUp, Zap } from "lucide-react";
 
 /**
  * The CRM check gates the MOUNT, not an `enabled` flag, and that is the whole
@@ -30,6 +29,12 @@ export function BusinessPulseWidget() {
   return <BusinessPulseCard />;
 }
 
+function fmt(n: number): string {
+  if (n >= 1_000_000) return `₹${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `₹${(n / 1_000).toFixed(0)}K`;
+  return `₹${n}`;
+}
+
 function BusinessPulseCard() {
   const { data, isLoading, error, refetch } = useExecutiveDashboard();
 
@@ -46,27 +51,48 @@ function BusinessPulseCard() {
       }
       isLoading={isLoading}
       loadingRows={2}
+      error={error}
+      onRetry={handleRetry}
     >
-      {error ? (
-        <div className="flex flex-col items-center gap-2 py-4">
-          <p role="alert" className="text-sm text-destructive text-center">
-            {getErrorMessage(error)}
-          </p>
-          <Button variant="ghost" size="sm" onClick={handleRetry}>
-            <RefreshCw className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
-            Retry
-          </Button>
-        </div>
-      ) : (
-        <div className="rounded-xl border border-border/60 bg-status-success-surface p-4 text-center">
-          <p className="text-2xl font-bold tabular-nums text-status-success-ink">
-            {data?.conversionRate ?? 0}%
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Lead Conversion Rate
-          </p>
-        </div>
-      )}
+      <StatCardGrid cols={2}>
+        <StatCard
+          label="Conversion Rate"
+          value={`${data?.conversionRate ?? 0}%`}
+          icon={Target}
+          color="purple"
+          index={0}
+          href="/crm/leads"
+        />
+        {data?.mrr !== undefined && (
+          <StatCard
+            label="MRR (Won)"
+            value={fmt(data.mrr)}
+            icon={IndianRupee}
+            color="gold"
+            index={1}
+          />
+        )}
+        {data?.pipelineValue !== undefined && (
+          <StatCard
+            label="Pipeline Value"
+            value={fmt(data.pipelineValue)}
+            icon={TrendingUp}
+            color="blue"
+            index={2}
+            href="/crm/deals"
+          />
+        )}
+        {data?.newLeadsThisWeek !== undefined && (
+          <StatCard
+            label="New Leads This Week"
+            value={data.newLeadsThisWeek}
+            icon={Zap}
+            color="cyan"
+            index={3}
+            href="/crm/leads"
+          />
+        )}
+      </StatCardGrid>
     </WidgetCard>
   );
 }

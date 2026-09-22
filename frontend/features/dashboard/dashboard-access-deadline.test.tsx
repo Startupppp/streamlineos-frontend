@@ -30,7 +30,6 @@ function unresolvedAccess(): DashboardAccess {
     projectsEnabled: false,
     payrollEnabled: false,
     signEnabled: false,
-    accountingEnabled: false,
     canViewEmployees: false,
     canCreateEmployees: false,
     canViewAttendance: false,
@@ -42,10 +41,6 @@ function unresolvedAccess(): DashboardAccess {
     canViewCrmReports: false,
     canViewTickets: false,
     canViewPayrollSelf: false,
-    canViewOnboardingDocsSummary: false,
-    canViewExpenses: false,
-    canCreateExpenses: false,
-    canApproveExpenses: false,
     canViewSignEnvelopes: false,
   };
 }
