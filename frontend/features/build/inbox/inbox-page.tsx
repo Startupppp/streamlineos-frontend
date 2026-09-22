@@ -61,6 +61,11 @@ export function InboxPage() {
     handleFilterChange();
   }
 
+  function handleProjectClear() {
+    urlState.setParams({ project: null });
+    handleFilterChange();
+  }
+
   function handleClearFilters() {
     urlState.clearFilters();
     handleFilterChange();
@@ -76,12 +81,14 @@ export function InboxPage() {
       section={urlState.section}
       q={urlState.q}
       type={urlState.type}
+      projectId={urlState.projectId}
       selectionDismissed={selectionDismissed}
       onSelect={handleSelect}
       onClearSelection={handleAutoClearSelection}
       onSectionChange={handleSectionChange}
       onQChange={handleQChange}
       onTypeChange={handleTypeChange}
+      onProjectClear={handleProjectClear}
       onFilterChange={handleFilterChange}
       onClearFilters={handleClearFilters}
       searchInputRef={searchInputRef}

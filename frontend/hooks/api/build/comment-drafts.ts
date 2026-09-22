@@ -1,11 +1,14 @@
 ﻿"use client";
 
+import { useCallback, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import { bufferDraft, drainBuffer } from "./comment-draft-offline-buffer";
 import type { GeneratedCommentDraft } from "./comment-drafts-schema";
 
 export interface CommentDraftAssignee {
@@ -68,7 +71,8 @@ export function useMyCommentDrafts() {
 
 export function useUpsertCommentDraft() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:tickets:view", {
+  const isOnline = useOnlineStatus();
+  const mutation = useAuthorizedMutation("build:tickets:view", {
     meta: { buildCacheSync: false },
     mutationKey: ["projects", "comment-drafts", "upsert"],
     mutationFn: ({ ticketId, body }: { ticketId: number; body: string }) =>
@@ -92,6 +96,29 @@ export function useUpsertCommentDraft() {
       qc.setQueryData(listKey, next);
     },
   });
+
+  const { mutate: mutationMutate } = mutation;
+
+  useEffect(() => {
+    if (!isOnline) return;
+    const pending = drainBuffer();
+    for (const item of pending) {
+      mutationMutate(item);
+    }
+  }, [isOnline, mutationMutate]);
+
+  const mutate = useCallback(
+    (args: { ticketId: number; body: string }) => {
+      if (!isOnline) {
+        bufferDraft(args.ticketId, args.body);
+        return;
+      }
+      mutationMutate(args);
+    },
+    [isOnline, mutationMutate],
+  );
+
+  return { ...mutation, mutate };
 }
 
 export function useDeleteCommentDraft() {

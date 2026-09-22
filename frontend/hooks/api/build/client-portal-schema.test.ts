@@ -73,6 +73,8 @@ describe("changeRequestRowContract", () => {
     approvalOwnerMembershipId: null,
     decisionComment: null,
     decidedAt: null,
+    releaseId: null,
+    clientVisible: false,
     createdBy: "user-1",
     createdAt: "2026-09-09T00:00:00Z",
     updatedAt: "2026-09-09T00:00:00Z",
@@ -108,6 +110,19 @@ describe("changeRequestRowContract", () => {
   it("rejects a budgetImpactCents sent as a string instead of a number", () => {
     expect(changeRequestRowContract.safeParse({ ...internalRow, budgetImpactCents: "50000" }).success).toBe(false);
   });
+
+  it("accepts a releaseId naming the release the change request was folded into", () => {
+    expect(changeRequestRowContract.safeParse({ ...internalRow, releaseId: 7 }).success).toBe(true);
+  });
+
+  it("rejects a row whose clientVisible flag is absent, because a missing publication decision must not decode as not-published", () => {
+    const { clientVisible: _omitted, ...withoutFlag } = internalRow;
+    expect(changeRequestRowContract.safeParse(withoutFlag).success).toBe(false);
+  });
+
+  it("rejects a clientVisible sent as the string \"false\", which is truthy once decoded", () => {
+    expect(changeRequestRowContract.safeParse({ ...internalRow, clientVisible: "false" }).success).toBe(false);
+  });
 });
 
 const minimalRow = {
@@ -127,6 +142,8 @@ const minimalRow = {
   approvalOwnerMembershipId: null,
   decisionComment: null,
   decidedAt: null,
+  releaseId: null,
+  clientVisible: false,
   createdBy: null,
   createdAt: "2026-09-01T00:00:00.000Z",
   updatedAt: "2026-09-01T00:00:00.000Z",

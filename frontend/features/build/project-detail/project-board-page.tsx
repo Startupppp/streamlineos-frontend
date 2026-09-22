@@ -1,7 +1,9 @@
 "use client";
 
-import { use, useCallback } from "react";
+import { use, useCallback, useMemo } from "react";
+import { format, addDays } from "date-fns";
 import { useProject, useSprints, useBulkUpdateTickets } from "@/hooks/api";
+import { useWorkloadCapacity } from "@/hooks/api/build/workload-capacity";
 import type { BulkUpdateTicketsInput } from "@/hooks/api";
 import { useBoardUrlState } from "@/features/build/views/use-board-url-state";
 import { ProjectBoardContent } from "@/features/build/views/project-board-content";
@@ -82,6 +84,21 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
   } = useBoardUrlState(projectId, defaultView);
 
   const isLoading = projectLoading;
+
+  const capacityWindow = useMemo(() => {
+    const today = new Date();
+    return {
+      start: format(today, "yyyy-MM-dd"),
+      end: format(addDays(today, 13), "yyyy-MM-dd"),
+    };
+  }, []);
+
+  const capacityByMemberId = useWorkloadCapacity(
+    projectId,
+    capacityWindow.start,
+    capacityWindow.end,
+    { enabled: view === "workload" },
+  );
 
   const handleRetryProject = useCallback(() => void refetchProject(), [refetchProject]);
   const handleRetryTickets = useCallback(() => void refetchTickets(), [refetchTickets]);
@@ -222,6 +239,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
         hideCompleted={hideCompleted}
         hasActiveFilters={hasActiveFilters}
         workloadFilters={workloadFilters}
+        capacityByMemberId={capacityByMemberId}
         onTicketSelect={handleTicketSelect}
         onWorkloadFilterChange={handleWorkloadFilterChange}
         onClearWorkloadFilters={handleClearWorkloadFilters}

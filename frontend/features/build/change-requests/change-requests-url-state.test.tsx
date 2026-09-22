@@ -88,7 +88,7 @@ jest.mock("@/components/ui/select", () => ({
     children: React.ReactNode;
     value?: string;
   }) => (
-    <div data-testid="status-select" data-value={value}>
+    <div data-testid="cr-select" data-value={value}>
       {children}
     </div>
   ),
@@ -247,10 +247,12 @@ describe("ChangeRequestsPage — URL state for status and impact filters", () =>
     it("renders the status select with the URL value so the filter UI reflects deep-linked state", () => {
       mockUseSearchParams.mockReturnValue(new URLSearchParams("status=rejected"));
       render(<ChangeRequestsPage projectId={1} />);
-      expect(screen.getByTestId("status-select")).toHaveAttribute(
-        "data-value",
-        "rejected",
+      const selects = screen.getAllByTestId("cr-select");
+      const statusSelect = selects.find(
+        (el) => el.getAttribute("data-value") === "rejected",
       );
+      expect(statusSelect).toBeDefined();
+      expect(statusSelect).toHaveAttribute("data-value", "rejected");
     });
   });
 
@@ -301,6 +303,115 @@ describe("ChangeRequestsPage — URL state for status and impact filters", () =>
       mockUseChangeRequests.mockReturnValue(baseQueryResult({ data: [] }));
       render(<ChangeRequestsPage projectId={1} />);
       expect(screen.getByTestId("empty-state")).toBeInTheDocument();
+    });
+  });
+});
+
+describe("ChangeRequestsPage — URL state for clientVisible filter", () => {
+  it("calls useChangeRequests without clientVisible when the param is absent so no spurious visibility filter is sent", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
+    render(<ChangeRequestsPage projectId={1} />);
+    const call = mockUseChangeRequests.mock.calls[0];
+    const filters = call[1] as Record<string, unknown> | undefined;
+    expect(filters?.clientVisible).toBeUndefined();
+  });
+
+  it("passes clientVisible=true to useChangeRequests when the param is true so only client-visible CRs are returned", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("clientVisible=true"));
+    render(<ChangeRequestsPage projectId={1} />);
+    expect(mockUseChangeRequests).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ clientVisible: true }),
+    );
+  });
+
+  it("passes clientVisible=false to useChangeRequests when the param is false so only internal CRs are returned", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("clientVisible=false"));
+    render(<ChangeRequestsPage projectId={1} />);
+    expect(mockUseChangeRequests).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ clientVisible: false }),
+    );
+  });
+
+  it("renders the clientVisible select showing the active filter so the user sees what is applied", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("clientVisible=true"));
+    render(<ChangeRequestsPage projectId={1} />);
+    const selects = screen.getAllByTestId("cr-select");
+    const visSelect = selects.find(
+      (el) => el.getAttribute("data-value") === "true",
+    );
+    expect(visSelect).toBeDefined();
+    expect(visSelect).toHaveAttribute("data-value", "true");
+  });
+});
+
+describe("ChangeRequestsPage — URL state for requesterId filter", () => {
+  it("calls useChangeRequests without requesterId when the param is absent", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
+    render(<ChangeRequestsPage projectId={1} />);
+    const call = mockUseChangeRequests.mock.calls[0];
+    const filters = call[1] as Record<string, unknown> | undefined;
+    expect(filters?.requesterId).toBeUndefined();
+  });
+
+  it("reads the requesterId param and passes it to useChangeRequests so the list is filtered by requester", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("requesterId=user-abc"));
+    render(<ChangeRequestsPage projectId={1} />);
+    expect(mockUseChangeRequests).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ requesterId: "user-abc" }),
+    );
+  });
+});
+
+describe("ChangeRequestsPage — URL state for approverId filter", () => {
+  it("calls useChangeRequests without approverId when the param is absent", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
+    render(<ChangeRequestsPage projectId={1} />);
+    const call = mockUseChangeRequests.mock.calls[0];
+    const filters = call[1] as Record<string, unknown> | undefined;
+    expect(filters?.approverId).toBeUndefined();
+  });
+
+  it("reads the approverId param and passes it to useChangeRequests so the list is filtered by approver", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("approverId=user-xyz"));
+    render(<ChangeRequestsPage projectId={1} />);
+    expect(mockUseChangeRequests).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ approverId: "user-xyz" }),
+    );
+  });
+});
+
+describe("ChangeRequestsPage — URL state for releaseId filter", () => {
+  it("calls useChangeRequests without releaseId when the param is absent", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
+    render(<ChangeRequestsPage projectId={1} />);
+    const call = mockUseChangeRequests.mock.calls[0];
+    const filters = call[1] as Record<string, unknown> | undefined;
+    expect(filters?.releaseId).toBeUndefined();
+  });
+
+  it("reads the releaseId param and passes it as a number to useChangeRequests so the list is scoped to that release", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("releaseId=7"));
+    render(<ChangeRequestsPage projectId={1} />);
+    expect(mockUseChangeRequests).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ releaseId: 7 }),
+    );
+  });
+
+  it("passes all new filters together when requesterId, approverId, releaseId, and clientVisible are all in the URL", () => {
+    mockUseSearchParams.mockReturnValue(
+      new URLSearchParams("requesterId=user-a&approverId=user-b&releaseId=3&clientVisible=true"),
+    );
+    render(<ChangeRequestsPage projectId={1} />);
+    expect(mockUseChangeRequests).toHaveBeenCalledWith(1, {
+      requesterId: "user-a",
+      approverId: "user-b",
+      releaseId: 3,
+      clientVisible: true,
     });
   });
 });

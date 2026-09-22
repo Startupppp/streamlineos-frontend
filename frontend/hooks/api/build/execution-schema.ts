@@ -152,3 +152,23 @@ export const epicListContract = z.array(epicRowSchema);
 export const sprintUpdateResultContract = z.object({
   success: z.literal(true),
 });
+
+export const memberCapacityItemSchema = z.object({
+  userId: z.string(),
+  membershipId: z.number().int(),
+  workingDaysInWindow: z.number(),
+  leaveDays: z.number(),
+  halfLeaveDays: z.number(),
+  netCapacityDays: z.number(),
+  capacityHours: z.number().nullable(),
+  loggedHours: z.number(),
+  isOverAllocated: z.boolean(),
+  isZeroCapacity: z.boolean(),
+  utilizationPercent: z.number().nullable(),
+});
+
+export const workloadCapacityContract = z.object({
+  members: z.array(memberCapacityItemSchema),
+});
+
+export type MemberCapacityItem = z.infer<typeof memberCapacityItemSchema>;

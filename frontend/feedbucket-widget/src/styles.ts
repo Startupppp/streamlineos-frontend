@@ -289,6 +289,21 @@ export function getStyles(): string {
 }
 .done-btn:hover, .retry-btn:hover { background: #1e293b; }
 
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 2147483646;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 180ms ease, visibility 0ms linear 180ms;
+}
+.backdrop.visible {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 180ms ease, visibility 0ms;
+}
+
 @media (max-width: 480px) {
   .panel.is-sheet .panel-header { padding: 12px 14px; }
   .panel.is-sheet .panel-body { padding: 14px; }
@@ -296,6 +311,7 @@ export function getStyles(): string {
   .type-group { gap: 6px; }
   .actions { flex-wrap: wrap; }
   .actions .cancel-btn, .actions .submit-btn { flex: 1 1 auto; }
+  .widget.panel-open .launcher { opacity: 0 !important; }
 }
 @media (prefers-reduced-motion: reduce) {
   .launcher-btn, .panel, .type-btn, .close-btn, .capture-btn, .remove-screenshot-btn,

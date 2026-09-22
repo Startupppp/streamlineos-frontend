@@ -1,4 +1,4 @@
-import { epicListContract, sprintListContract } from "./execution-schema";
+import { cycleListContract, cycleRowContract, epicListContract, sprintListContract } from "./execution-schema";
 
 it("preserves sprint tickets used by progress summaries", () => {
   const tickets = [
@@ -96,4 +96,54 @@ it("rejects an epic row whose reporterId is not a string, so an assignee/reporte
   };
 
   expect(epicListContract.safeParse([row]).success).toBe(false);
+});
+
+const baseCycleRow = {
+  id: 3,
+  orgId: "org-1",
+  projectId: 7,
+  name: "Q4 Cycle",
+  description: "Focus on checkout",
+  status: "active" as const,
+  startDate: "2026-10-01",
+  endDate: "2026-10-31",
+  createdBy: "user-1",
+  createdAt: "2026-09-30T00:00:00.000Z",
+  updatedAt: "2026-09-30T00:00:00.000Z",
+};
+
+it("cycleRowContract accepts a well-formed cycle — Cycle is the canonical iteration type and its schema must parse", () => {
+  const result = cycleRowContract.parse(baseCycleRow);
+  expect(result.id).toBe(3);
+  expect(result.status).toBe("active");
+  expect(result.name).toBe("Q4 Cycle");
+});
+
+it("cycleRowContract rejects a cycle with an invalid status — draft/active/completed are the only valid cycle statuses", () => {
+  const badRow = { ...baseCycleRow, status: "ACTIVE" };
+  expect(cycleRowContract.safeParse(badRow).success).toBe(false);
+});
+
+it("cycleListContract preserves progress stats on list items — totalItems/completedItems/progress must survive the parse", () => {
+  const listRow = {
+    ...baseCycleRow,
+    totalItems: 12,
+    completedItems: 4,
+    progress: 33,
+  };
+
+  const result = cycleListContract.parse([listRow]);
+  expect(result[0]?.totalItems).toBe(12);
+  expect(result[0]?.completedItems).toBe(4);
+  expect(result[0]?.progress).toBe(33);
+});
+
+it("cycleListContract rejects a list item missing progress — the iteration dashboard summary would silently show 0 without this guard", () => {
+  const { progress: _p, ...withoutProgress } = {
+    ...baseCycleRow,
+    totalItems: 5,
+    completedItems: 2,
+    progress: 40,
+  };
+  expect(cycleListContract.safeParse([withoutProgress]).success).toBe(false);
 });

@@ -10,7 +10,6 @@ import type {
   UpdateTicketInput,
   RankTicketInput,
   ProjectWithDetails,
-  ProjectMember,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
@@ -247,6 +246,7 @@ export interface BulkUpdateTicketsInput {
   assigneeId?: string;
   status?: string;
   sprintId?: number | null;
+  cycleId?: number | null;
   priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   parentTicketId?: number | null;
 }
@@ -268,6 +268,7 @@ function toTicketUpdateInput(
     assigneeId: input.assigneeId,
     status: input.status,
     sprintId: input.sprintId,
+    cycleId: input.cycleId,
     priority: input.priority,
     parentTicketId: input.parentTicketId,
   };

@@ -21,7 +21,7 @@ import type { ViewType } from "./view-switcher";
 function assertNever(x: never): never {
   throw new Error(`Unhandled view type: ${String(x)}`);
 }
-import { type FilterState as WorkloadFilterState } from "./workload-types";
+import { type FilterState as WorkloadFilterState, type MemberCapacityData } from "./workload-types";
 import type { Sprint } from "@/types/projects";
 import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
 import { PM_PANEL } from "@/components/pm-chrome";
@@ -62,6 +62,7 @@ interface ProjectBoardContentProps {
     value: WorkloadFilterState[K],
   ) => void;
   onClearWorkloadFilters: () => void;
+  capacityByMemberId?: Map<string, MemberCapacityData>;
   sprints: Sprint[];
   selectedIds: Set<string | number>;
   onBulkStatus: (v: string) => void;
@@ -97,6 +98,7 @@ export function ProjectBoardContent({
   onTicketSelect,
   onWorkloadFilterChange,
   onClearWorkloadFilters,
+  capacityByMemberId,
   sprints,
   selectedIds,
   onBulkStatus,
@@ -333,6 +335,7 @@ export function ProjectBoardContent({
               filters={workloadFilters}
               onFilterChange={onWorkloadFilterChange}
               onClearFilters={onClearWorkloadFilters}
+              capacityByMemberId={capacityByMemberId}
             />
           </motion.div>
         );

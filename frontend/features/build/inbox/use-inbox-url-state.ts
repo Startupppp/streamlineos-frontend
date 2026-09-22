@@ -13,7 +13,7 @@ const VALID_SECTIONS: readonly NotificationSection[] = [
   "MENTIONS",
 ];
 
-const FILTER_PARAMS = ["q", "type"] as const;
+const FILTER_PARAMS = ["q", "type", "project"] as const;
 
 function parseSection(raw: string | null): NotificationSection {
   const match = VALID_SECTIONS.find((section) => section === raw);
@@ -33,11 +33,18 @@ function parseView(raw: string | null): InboxView {
   return raw === "drafts" ? "drafts" : "notifications";
 }
 
+function parseProjectId(raw: string | null): number | null {
+  if (raw === null) return null;
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
 export interface InboxUrlState {
   view: InboxView;
   section: NotificationSection;
   q: string | null;
   type: NotificationCategory | null;
+  projectId: number | null;
   cursor: string | null;
   hasActiveFilters: boolean;
   isPending: boolean;
@@ -55,6 +62,7 @@ export function useInboxUrlState(): InboxUrlState {
   const section = parseSection(searchParams.get("section"));
   const q = searchParams.get("q");
   const type = parseType(searchParams.get("type"));
+  const projectId = parseProjectId(searchParams.get("project"));
   const cursor = searchParams.get("cursor");
 
   const replaceWith = useCallback(
@@ -94,8 +102,8 @@ export function useInboxUrlState(): InboxUrlState {
   }, [replaceWith, searchParams]);
 
   const hasActiveFilters = useMemo(
-    () => q !== null || type !== null,
-    [q, type],
+    () => q !== null || type !== null || projectId !== null,
+    [q, type, projectId],
   );
 
   return {
@@ -103,6 +111,7 @@ export function useInboxUrlState(): InboxUrlState {
     section,
     q,
     type,
+    projectId,
     cursor,
     hasActiveFilters,
     isPending,

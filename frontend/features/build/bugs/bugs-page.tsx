@@ -9,7 +9,7 @@ import { PageState } from "@/components/shared/page-state";
 import { useProjectMembers } from "@/hooks/api/build";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getUserDisplayName } from "@/lib/person-display";
-import type { Bug, BugSeverity, BugStatus, BugPriority } from "@/types/projects";
+import type { Bug, BugSeverity, BugStatus } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -72,10 +72,10 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const PRIORITY_STYLES: Record<string, string> = {
-  low: "text-muted-foreground border-border",
-  medium: "text-status-warning-ink border-status-warning-rule",
-  high: "text-status-danger-ink border-status-danger-rule",
-  urgent: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
+  LOW: "text-muted-foreground border-border",
+  MEDIUM: "text-status-warning-ink border-status-warning-rule",
+  HIGH: "text-status-danger-ink border-status-danger-rule",
+  URGENT: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
 };
 
 function ReportBugButton({ onClick }: { onClick: () => void }) {
@@ -185,9 +185,9 @@ export function BugsPage({ projectId }: BugsPageProps) {
 
   const columns = useMemo<DataTableColumn<Bug>[]>(() => [
     {
-      key: "bugNumber",
+      key: "ticketNumber",
       header: "ID",
-      cell: (row) => <span className="font-mono text-dense text-muted-foreground">BUG-{row.bugNumber}</span>,
+      cell: (row) => <span className="font-mono text-dense text-muted-foreground">BUG-{row.ticketNumber}</span>,
       className: "w-[72px]",
     },
     {
@@ -197,7 +197,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
       cell: (row) => (
         <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
           <TruncatedText text={row.title} className="text-dense font-medium" />
-          {row.reopenCount > 0 ? (
+          {(row.reopenCount ?? 0) > 0 ? (
             <Badge variant="outline" className="shrink-0 text-micro text-status-warning-ink border-status-warning-rule">
               ×{row.reopenCount}
             </Badge>
@@ -209,8 +209,8 @@ export function BugsPage({ projectId }: BugsPageProps) {
       key: "severity",
       header: "Severity",
       cell: (row) => (
-        <Badge variant="outline" className={cn("text-micro capitalize", SEVERITY_STYLES[row.severity])}>
-          {row.severity}
+        <Badge variant="outline" className={cn("text-micro capitalize", SEVERITY_STYLES[row.severity ?? ""] ?? "text-muted-foreground border-border")}>
+          {row.severity ?? "—"}
         </Badge>
       ),
       className: "w-[90px]",
@@ -219,8 +219,8 @@ export function BugsPage({ projectId }: BugsPageProps) {
       key: "status",
       header: "Status",
       cell: (row) => (
-        <Badge variant="outline" className={cn("text-micro", STATUS_STYLES[row.status])}>
-          {STATUS_LABELS[row.status]}
+        <Badge variant="outline" className={cn("text-micro", STATUS_STYLES[row.qaState ?? ""] ?? "text-muted-foreground border-border")}>
+          {STATUS_LABELS[row.qaState ?? ""] ?? row.status}
         </Badge>
       ),
       className: "w-[110px]",
@@ -229,8 +229,8 @@ export function BugsPage({ projectId }: BugsPageProps) {
       key: "priority",
       header: "Priority",
       cell: (row) => (
-        <Badge variant="outline" className={cn("text-micro capitalize", PRIORITY_STYLES[row.priority])}>
-          {row.priority}
+        <Badge variant="outline" className={cn("text-micro capitalize", PRIORITY_STYLES[row.priority] ?? "text-muted-foreground border-border")}>
+          {row.priority.toLowerCase()}
         </Badge>
       ),
       className: "w-[80px]",
@@ -373,7 +373,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
         open={!!deleteTarget}
         onOpenChange={handleDeleteDialogChange}
         title="Delete bug?"
-        description={`BUG-${deleteTarget?.bugNumber ?? ""}${deleteTarget?.title ? ` · ${deleteTarget.title}` : ""} will be permanently deleted.`}
+        description={`BUG-${deleteTarget?.ticketNumber ?? ""}${deleteTarget?.title ? ` · ${deleteTarget.title}` : ""} will be permanently deleted.`}
         confirmLabel="Delete"
         destructive
         onConfirm={handleDelete}

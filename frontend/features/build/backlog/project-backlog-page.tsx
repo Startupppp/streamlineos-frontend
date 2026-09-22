@@ -142,7 +142,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
   }, [selectedTicketId, data, tickets, projectId, router]);
 
   const handleBulkUpdate = useCallback(
-    (update: Partial<Pick<BulkUpdateTicketsInput, "assigneeId" | "status" | "sprintId" | "priority" | "parentTicketId">>) => {
+    (update: Partial<Pick<BulkUpdateTicketsInput, "assigneeId" | "status" | "cycleId" | "priority" | "parentTicketId">>) => {
       if (selectedIds.size === 0) { toast.error("No tickets selected"); return; }
       bulkUpdate.mutate(
         { ticketIds: [...selectedIds].map(Number), ...update },
@@ -169,7 +169,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
   );
   const handleBulkAssignee = useCallback((v: string) => handleBulkUpdate({ assigneeId: v }), [handleBulkUpdate]);
   const handleBulkSprint = useCallback(
-    (v: string) => handleBulkUpdate({ sprintId: v === "backlog" ? null : Number(v) }),
+    (v: string) => handleBulkUpdate({ cycleId: v === "backlog" ? null : Number(v) }),
     [handleBulkUpdate],
   );
   const handleBulkParent = useCallback(

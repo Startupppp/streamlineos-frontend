@@ -1,4 +1,202 @@
-# Build closure session — status ledger
+# Next closure — status ledger
+
+Coordinator-owned. Agents never edit this file.
+
+**Session:** 2026-09-22
+**Branch:** `build/next-build-closure` (root and backend), not yet merged
+**Worktrees:** `D:/projects/personal/slos-next-closure` (+ `/backend`), `node_modules` junctioned, no install
+**Control:** `D:/projects/personal/slos-baseline-be`, a detached read-only backend worktree at `main`.
+Baseline measurements are in `NEXT-CLOSURE-BASELINE.md`, captured before any agent edit.
+
+`DONE` = code, tests and gates complete and verified here.
+`READY_FOR_CODEX_BROWSER_QA` = code complete; Codex must verify in a real browser. **Claude opened no
+browser, took no screenshot, and verified no UI this session.**
+`BLOCKED` = cannot proceed without something this environment does not have, with the exact condition named.
+
+## Status
+
+| Task | Status | Commits | Evidence | Browser |
+|---|---|---|---|---|
+| Sprint/Cycle — application cutover | **DONE** | `c41e87988`, `32dbe982d`, `88411bc74`, `b93f10501` | Zero non-schema backend reads or writes of `tickets.sprint_id`; invariant spec 18 tests, allowlist empty, mutation-proven | READY_FOR_CODEX_BROWSER_QA |
+| Sprint/Cycle — legacy writer freeze | **DONE** | `c41e87988` | `createSprint` throws `GoneException`; `sprint-create-frozen.spec.ts` 5 tests, mutant 3 fail | n/a |
+| Sprint/Cycle — contraction (phases 04/05) | **BLOCKED** | — | Migrations already authored at `migrations/sql/a-sprint-cycle-04-detach.sql` and `-05-drop.sql` | n/a |
+| QA Bug — application cutover | **DONE** | `0c532e4bd`, `450065946`, `2d34fef8d` | Bugs resolve through `tickets` + `work_item_qa_details`; 13 suites / 388 tests | READY_FOR_CODEX_BROWSER_QA |
+| QA Bug — legacy writer unreachable | **DONE** | `2d34fef8d` | `legacy-bug-writer-unreachable.spec.ts` 4 tests; mutant 2 fail | n/a |
+| QA Bug — contraction (freeze/drop) | **BLOCKED** | — | `b-qa-bug-04-contract-freeze.sql`, `-05-contract-drop.sql` already authored | n/a |
+| Change Request fields and filters | **DONE (code)** / **BLOCKED (deploy)** | `0057090e5`, `2533787e5` | 37 backend + 23 frontend tests; `check:list-projections` FAIL→PASS | BLOCKED on 1149 |
+| Workload real capacity | **DONE** | `8535cc4d6`, `075038ae8`, `99353bb9f`, `7770cb7e3` | Endpoint + hook + page wired; 13 capacity tests; cross-tenant negative + positive control | READY_FOR_CODEX_BROWSER_QA |
+| Inbox project filtering | **DONE** | `8535cc4d6`, `075038ae8`, `d05f49c51` | End to end; cache-key probe added; migration 1151 indexes it | READY_FOR_CODEX_BROWSER_QA |
+| Offline drafts and reconnect | **DONE** | `075038ae8`, `7770cb7e3` | Last-write-wins per ticket; 10 tests | READY_FOR_CODEX_BROWSER_QA |
+| Feedbucket mobile + dialog a11y | **DONE** | `075038ae8` | Focus trap, backdrop, launcher hidden at mobile width; 4 focus tests | READY_FOR_CODEX_BROWSER_QA |
+| Timesheets tenant isolation | **DONE** | `8535cc4d6` | `check:tenant-isolation` 4 → 2 uncovered | n/a |
+| Authorization census | **DONE** | `260e4e24f` | `VULNERABLE = 0`; gate FAIL→PASS | n/a |
+| Freelancer quote→payment traceability | **PARTIAL** | `0057090e5` | Migration 1150 adds the invoice→timesheet pointer but **no code uses it yet** | n/a |
+| Import/export architecture | **DESIGN ONLY** | `6f1d3329a` | `lane-4-import-export.md`; nothing implemented | n/a |
+
+## Gate results — branch vs the measured `main` control
+
+Every `pre-existing` claim below was reproduced on an untouched checkout. None is taken on trust.
+
+| Gate | `main` | Branch | Verdict |
+|---|---|---|---|
+| `check:route-census` | PASS 88/79/0 | **PASS 88/79/0** | unchanged — no route added, removed or renamed |
+| `check:build-execution-plan` | PASS | **PASS** | — |
+| Frontend `type-check` | PASS | **PASS (0 errors)** | — |
+| Frontend `type-check:specs` | 1 error | **0 errors** | improved |
+| Backend `typecheck` | 1 error | **1 error** | parity (the pre-existing `manager-home.service.ts`) |
+| Backend `typecheck:test` | 2 errors | **2 errors** | parity |
+| `check:over-300` | 568 | **568** | parity |
+| `check:dead-code` (FE) | PASS | **PASS** | — |
+| `check:type-assertions` (FE) | 4 / 30 / 1 / 27 | **identical** | pre-existing |
+| `check:permission-binding` | 12 mismatches | **12** | parity |
+| `check:permission-catalog` | FAIL | **PASS after regen** | **CRLF artifact — see below** |
+| `check:list-projections` | **FAIL** | **PASS** | fixed |
+| `check:tenant-isolation` | 4 uncovered | **2 uncovered** | improved |
+| `check:build-authz-census` | STALE | **PASS**, `VULNERABLE = 0` | improved |
+| `check:migration-chain / -discipline / -rollback / -immutability` | PASS | **PASS** with 3 new migrations | — |
+| `check:tenant-indexes` | 1 (`impersonation_sessions`) | **1** | pre-existing, outside Build |
+| `check:dead-code` (BE) | 192 no-importer | **192** | pre-existing |
+| `check:type-assertions` (BE) | 21 double casts | **21** | pre-existing |
+| `check:unbounded-reads` | 3 | **3** | pre-existing; the new capacity reads are bounded, not suppressed |
+| `check:test-integrity` | 1 unregistered | **1, identical entry** | pre-existing |
+| `check:file-sizes` | FAIL | FAIL | pre-existing, CRM/Inventory informational |
+| Frontend focused suites | — | **229 suites / 1705 tests pass** | — |
+| Backend focused suites | 12 fail / 52 tests | **12 fail / 52 tests, same suites** | **zero new** |
+| `git diff --check` | — | clean | — |
+
+### Backend test failures — all twelve reproduce on the control
+
+10 in `src/modules/ai/core` (chat-assistant and gateway) and 2 in `src/modules/timesheets/core`.
+Running the identical set on `slos-baseline-be` gives **the same 10 suites and 50 failing tests** in
+`ai/core`, plus the same 2 timesheets suites. Branch total 52 = 50 + 2. Nothing this session broke.
+
+### `check:permission-catalog` is not detecting drift
+
+After `pnpm generate:permission-catalog` the gate passes and `git diff` is **empty**. The regenerated file
+and `main`'s are the **same git blob** (`bddf8207dc2ddfaa714d6cd73e9706cee20b996d`) while on-disk size
+differs — **24762 bytes vs 25606** — an 844-byte CR delta. The generator writes LF; a Windows checkout holds
+CRLF. It therefore fails on any fresh Windows checkout regardless of content. Same class as the
+`check:build-execution-plan` CRLF artifact recorded in the prior session. No file was committed, because no
+content changed.
+
+### `check:contract-parity` could not be measured on the branch
+
+The gate builds a cache entry under `node_modules/.cache/contract-parity`, and because the worktree's
+`node_modules` is **junctioned to the main checkout**, the generated entry resolves imports back to `main`'s
+source tree. It fails with `No matching export ... for "workloadCapacityContract"` — an artifact of the
+junction, not a parity finding. Clearing the cache does not help; it regenerates in the same place.
+Measured cleanly on `main` instead: **FAIL, 6 new required fields** — pre-existing.
+**Unblock:** run it from a checkout with its own installed `node_modules`, or after merge.
+
+## What the review caught that the agents' own suites did not
+
+Recorded because each is a failure mode, not a one-off.
+
+**The capacity feature was inert.** `capacity.lib.ts` had zero importers, no controller exposed it, and
+`capacityByMemberId` was an optional prop no caller passed — so Workload still counted tickets while 35
+tests passed over a correct pure function wired to nothing.
+
+**A half-renamed AI action.** `work-actions-tools.ts` was changed to propose `ticket.moveToCycle` while
+`build-confirm-actions.ts`, `ask-os-tool-registry.ts` and four specs still named `ticket.moveToSprint`. A
+user would have confirmed a move that no handler executed. The agent reported "113/113 passing" without
+running the suite that asserts the old name.
+
+**`sprintId: null` shipped as "backward compatibility."** The work-row mapping replaced the value with
+`null` while keeping the nullable field. A Zod contract that accepts `null` cannot tell you the value
+stopped arriving. Meeting agenda generation filters `t.sprintId === sprint.id`, so agendas would have come
+back silently empty. Now derived from `cycles.legacy_sprint_id`.
+
+**A backend build broken across three files.** Backend `typecheck` went 1 → 8: `projects-ai.service.ts`
+used `sprints` after the import was removed, and `TicketSnapshot` / `TicketChanges` still declared a
+`sprintId` nothing supplied. Four consecutive agent reports said "all passing" because each ran only the
+suites it had touched. A cutover changes callers you never open.
+
+**A grep-shaped blind spot in the invariant itself.** The detach spec scanned for `tickets.sprintId` and
+reported an empty allowlist while three files selected the column through Drizzle's relational API as
+`sprintId: true`. The agent found this itself; the spec now scans both forms and one benign Zod `.pick()`
+site is named with its reason.
+
+**A new authorization finding.** `useWorkloadCapacity` fetched for every viewer. A denied user's 403
+surfaced as `isPending` with nothing fetching — indistinguishable from a finished empty read, so the screen
+said "none yet" to someone who was refused. `check:permission-binding` reported 1 on the branch and 0 on
+`main`; now back to parity.
+
+**A gate moved the right way while a new entry slipped in behind it.** `check:tenant-isolation` went 4 → 3,
+not 4 → 2, because the new `workload-capacity.service.ts` took a freed slot. Check a gate's membership, not
+only its count.
+
+**"Pre-existing" used without a control.** Three failures were reported as pre-existing and unrelated; they
+had been caused by another agent minutes earlier — two required keys added to `changeRequestRowContract`
+without updating its fixtures. In a shared worktree, a failure you did not cause is often one another agent
+caused seconds ago.
+
+**An inflated gate claim.** `check:list-projections` failing on `main` was reported as 19 missing columns.
+The original code used `...crColumns`, a spread that already projected every column; the gate's AST parser
+cannot see through a `SpreadAssignment`. Real hardening, but it fixed no user-visible defect and `deletedAt`
+was never missing.
+
+## What was NOT rebuilt
+
+Both cutover migration plans already existed, fully authored with rollbacks and spec coverage, at
+`backend/migrations/sql/a-sprint-cycle-01..05` and `b-qa-bug-01..05`. Phases 01–03 (Sprint/Cycle) and 01–02
+(QA Bug) are **already committed to production** behind snapshot
+`streamlineos-pre-build-p0-20260922085750`. One agent wrote duplicate migrations `1145`/`1146` before this
+was discovered; they were deleted. The existing ones are strictly better — phase 04 refuses to run unless
+every `tickets.sprint_id` value is archived, and phase 05 copies `build.sprints` before dropping it.
+
+No route was added, removed or renamed. No completed surface was rebuilt.
+
+## Migrations written this session — none applied
+
+| File | Effect | Code depends on it? | Status |
+|---|---|---|---|
+| `1149_change_requests_client_visible_release_id.sql` | Adds `client_visible`, `release_id`, partial indexes, `NOT VALID` FK | **YES — hard dependency** | **BLOCKED** |
+| `1150_invoice_items_timesheet_entry_ref.sql` | Adds `invoice_items.timesheet_entry_id` | No — inert | BLOCKED |
+| `1151_notifications_metadata_project_id_index.sql` | Expression index on `(org_id, membership_id, (metadata->>'projectId'))` | No — filter works unindexed | BLOCKED |
+
+Each has a `.down.sql` rollback; 1149 also has `migrations/sql/1149-verify.sql`, six read-only postcondition
+queries. All four migration gates pass with the journal entries added.
+
+**1149 is a merge-and-deploy blocker.** `change-requests.service.ts` reads both new columns on every list,
+create and update. Deployed before 1149 applies, every Change Requests request raises PostgreSQL `42703`
+and the page is a hard 500.
+
+## Blockers
+
+| # | Blocker | Impact | Exact unblock condition | Owner |
+|---|---|---|---|---|
+| 1 | Migration 1149 not applied | Change Requests page 500s if this branch deploys | Owner authorizes applying `migrations/1149_change_requests_client_visible_release_id.sql` to production, then runs `migrations/sql/1149-verify.sql` and confirms all six queries return their stated results | Repo owner |
+| 2 | No non-production PostgreSQL | No `*.db.spec.ts` or `*.e2e-spec.ts` ran; `check:composite-fk-set-null` and `check:tenant-relationships` cannot report at all | Provision PostgreSQL 15+, apply the chain, set `DATABASE_URL` in a worktree that is not the main checkout. **Neither `.env` nor `.env.production` may be used — both resolve to the same production RDS host, re-verified this session** | Repo owner |
+| 3 | Sprint/Cycle phase 04 cannot run | Dropping `tickets.sprint_id` today would break ~52 call sites with `42703` | **81 non-test `sprintId` references across 45 frontend files** must be cut over, and `hooks/api/build/build-tickets-core-schema.ts:24` must stop projecting it. Backend is clear. `a-sprint-cycle-04-detach.sql`'s guard is a **data** check and cannot detect code | Next session |
+| 4 | Sprint/Cycle phase 05 cannot run | `sprints` table still read | `sprints.service.ts` `listSprints` still selects from the frozen `sprints` table | Next session |
+| 5 | QA Bug contract-freeze not run | `build.bugs` still writable | `b-qa-bug-03-verify.sql` must return zero for all 14 checks against production, then `b-qa-bug-04-contract-freeze.sql` applied. Requires blocker 2 or explicit production authorization | Repo owner |
+| 6 | `check:contract-parity` unmeasurable in a junctioned worktree | Cannot prove zero new parity findings pre-merge | Run from a checkout with its own `node_modules`, or after merge on `main`. `main` baseline is FAIL with 6 new required fields | Coordinator, post-merge |
+| 7 | Browser verification | No UI claim can be made | Codex executes `NEXT-CLOSURE-BROWSER-QA.md`. Sections 1 and 2 need blocker 1 cleared first | Codex |
+| 8 | CI cannot run | No independent gate replay | GitHub Actions billing lapsed ~2026-09-10; `ci.yml` and `db-gates.yml` fail with 0 steps and no logs. A red workflow is not a code defect | Repo owner |
+| 9 | Freelancer quote→payment | Traceability is partial | Migration 1150 adds the pointer; `backend/src/db/schema/crm/invoicing.ts` and the invoicing service must populate `invoice_items.timesheet_entry_id` | Next session |
+
+## Rules enforced
+
+- No production database contacted. No migration applied. `.env` absent from both worktrees throughout.
+- No `git reset`, `checkout`, `clean` or `stash`. Agents ran no git at all; the coordinator made every commit.
+- `main` was never modified. All work is on `build/next-build-closure` in both repos.
+- No code comments, TODO comments, JSDoc or commented-out code added. Reasons are carried in test names.
+- Four agents, disjoint file ownership. Shared files — route manifest, permission registry, migration
+  journal, generated artifacts, status ledgers — coordinator-only. One journal edit by an agent was caught,
+  inspected and kept because it was well-formed and uncontended.
+- Typechecks run serially, never concurrently, and never while an agent was running jest in the same repo.
+- Every failure classified `code` / `test` / `environment` / `pre-existing`, with each `pre-existing` claim
+  reproduced on an untouched control checkout.
+- Agents reported `READY_FOR_REVIEW`; only the coordinator marked `DONE`, and every load-bearing claim was
+  re-verified here rather than accepted.
+- No browser opened, no screenshot taken, no UI verification claimed.
+
+---
+
+# Appendix — prior session ledger (2026-09-22, branch `build/phase-4-close`)
+
+Preserved verbatim. That session's work is merged into `main` and is the baseline this one builds on.
+
 
 Coordinator-owned. Workers never edit this file.
 
