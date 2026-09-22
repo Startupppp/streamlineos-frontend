@@ -273,6 +273,8 @@ export const buildWorkQueryKeys = {
     agentTokens: () => [...base, "projects", "agent-tokens"] as const,
     agentPulse: (scopeKey: string) =>
       [...base, "projects", "agent-pulse", scopeKey] as const,
+    workloadCapacity: (projectId: number, start: string, end: string) =>
+      [...base, "projects", projectId, "workload-capacity", start, end] as const,
     commentDrafts: {
       mine: () => [...base, "projects", "comment-drafts", "mine"] as const,
     },

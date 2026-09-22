@@ -103,6 +103,7 @@ export interface NotificationListParams {
   category?: NotificationCategory;
   priority?: NotificationPriority;
   sourceModule?: string;
+  projectId?: number;
   search?: string;
   limit?: number;
   cursor?: number;

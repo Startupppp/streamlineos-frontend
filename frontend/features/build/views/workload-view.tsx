@@ -22,8 +22,8 @@ import { cn } from "@/lib/utils";
 import type { KanbanTicket } from "../shared/types";
 import { stopEvent, InlineAssignee } from "./card-inline-fields";
 import { WorkloadMemberRow } from "./workload-member-row";
-import type { FilterState, StatFilter } from "./workload-types";
-import { hasActiveWorkloadFilters } from "./workload-types";
+import type { FilterState, MemberCapacityData, StatFilter } from "./workload-types";
+import { hasActiveWorkloadFilters, isMemberOverCapacity } from "./workload-types";
 import Link from "next/link";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -48,6 +48,7 @@ interface WorkloadViewProps {
     value: FilterState[K],
   ) => void;
   onClearFilters: () => void;
+  capacityByMemberId?: Map<string, MemberCapacityData>;
 }
 
 function applyTicketFilters(
@@ -179,6 +180,7 @@ export const WorkloadView = memo(function WorkloadView({
   filters,
   onFilterChange,
   onClearFilters,
+  capacityByMemberId,
 }: WorkloadViewProps) {
   const shouldReduceMotion = useReducedMotion();
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(
@@ -201,7 +203,7 @@ export const WorkloadView = memo(function WorkloadView({
         const count = filteredTickets.filter(
           (t) => t.assigneeId === m.id,
         ).length;
-        return count > 5;
+        return isMemberOverCapacity(count, capacityByMemberId?.get(m.id));
       });
     }
     if (filters.assigneeId !== "all") {
@@ -232,7 +234,9 @@ export const WorkloadView = memo(function WorkloadView({
     () => filteredTickets.filter((t) => !!t.assigneeId).length,
     [filteredTickets],
   );
-  const overCapacityCount = memberWorkload.filter((m) => m.total > 5).length;
+  const overCapacityCount = memberWorkload.filter((m) =>
+    isMemberOverCapacity(m.total, capacityByMemberId?.get(m.member.id)),
+  ).length;
 
   const statValues: Record<StatFilter, number> = {
     all: filteredTickets.length,
@@ -361,6 +365,7 @@ export const WorkloadView = memo(function WorkloadView({
                     motionDelay={idx * 0.04}
                     reducedMotion={shouldReduceMotion}
                     onToggle={handleToggleExpand}
+                    capacityData={capacityByMemberId?.get(member.id)}
                   />
                 ),
               )

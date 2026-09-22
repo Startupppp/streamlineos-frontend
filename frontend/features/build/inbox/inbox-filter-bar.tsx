@@ -20,9 +20,11 @@ const ALL_TYPES_SENTINEL = "__all__" as const;
 interface InboxFilterBarProps {
   q: string | null;
   type: NotificationCategory | null;
+  projectId?: number | null;
   hasActiveFilters: boolean;
   onQChange: (raw: string) => void;
   onTypeChange: (value: NotificationCategory | null) => void;
+  onProjectClear?: () => void;
   onClearFilters: () => void;
   searchInputRef: React.RefObject<HTMLInputElement | null>;
 }
@@ -30,9 +32,11 @@ interface InboxFilterBarProps {
 export function InboxFilterBar({
   q,
   type,
+  projectId = null,
   hasActiveFilters,
   onQChange,
   onTypeChange,
+  onProjectClear,
   onClearFilters,
   searchInputRef,
 }: InboxFilterBarProps) {
@@ -88,6 +92,17 @@ export function InboxFilterBar({
           ))}
         </SelectContent>
       </Select>
+      {projectId !== null && onProjectClear && (
+        <button
+          type="button"
+          className="inline-flex h-8 shrink-0 items-center gap-1 rounded-md border border-border bg-muted/50 px-2 text-xs text-foreground hover:bg-muted"
+          onClick={onProjectClear}
+          aria-label={`Remove project filter (project ${projectId})`}
+        >
+          <span>Project #{projectId}</span>
+          <X className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+        </button>
+      )}
       {hasActiveFilters ? (
         <Button
           type="button"

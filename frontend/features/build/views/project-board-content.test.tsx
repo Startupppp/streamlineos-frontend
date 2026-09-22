@@ -34,7 +34,13 @@ jest.mock("@/hooks/api/entitlements", () => ({
 jest.mock("./table-view", () => ({ TableView: () => null }));
 jest.mock("./calendar-view", () => ({ CalendarView: () => null }));
 jest.mock("./gantt-view", () => ({ GanttView: () => null }));
-jest.mock("./workload-view", () => ({ WorkloadView: () => null }));
+let lastWorkloadViewProps: Record<string, unknown> | null = null;
+jest.mock("./workload-view", () => ({
+  WorkloadView: (props: Record<string, unknown>) => {
+    lastWorkloadViewProps = props;
+    return null;
+  },
+}));
 
 jest.mock("@/features/build/backlog/bulk-action-bar", () => ({
   BulkActionBar: () => null,
@@ -73,7 +79,8 @@ import { ProjectBoardContent } from "./project-board-content";
 import { VIEW_TYPES } from "@/lib/build/view-types";
 import type { ViewType } from "@/lib/build/view-types";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
-import type { FilterState as WorkloadFilterState } from "./workload-types";
+import type { FilterState as WorkloadFilterState, MemberCapacityData } from "./workload-types";
+import { isMemberOverCapacity } from "./workload-types";
 import type { ProjectStatus, BoardMember } from "./use-board-url-state";
 
 const DISPLAY_OPTIONS: DisplayOptions = {
@@ -254,5 +261,49 @@ describe("ProjectBoardContent — the ticket query's loading, error, empty and d
 
     expect(screen.queryByText("No tickets match your filters")).not.toBeInTheDocument();
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+});
+
+describe("ProjectBoardContent — workload capacity wiring", () => {
+  beforeEach(() => {
+    lastWorkloadViewProps = null;
+    mockScopes = { "build:tickets:view": true };
+  });
+
+  it("forwards capacityByMemberId to WorkloadView when the workload view is active", () => {
+    const capacityByMemberId = new Map<string, MemberCapacityData>([
+      [
+        "user-1",
+        {
+          capacityHours: 40,
+          loggedHours: 48,
+          isOverAllocated: true,
+          isZeroCapacity: false,
+          utilizationPercent: 120,
+        },
+      ],
+    ]);
+
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps()}
+        view="workload"
+        capacityByMemberId={capacityByMemberId}
+      />,
+    );
+
+    expect(lastWorkloadViewProps?.capacityByMemberId).toBe(capacityByMemberId);
+  });
+
+  it("a member with low ticket count but isOverAllocated=true is flagged over-capacity — revert the wiring and this fails", () => {
+    const overAllocated: MemberCapacityData = {
+      capacityHours: 8,
+      loggedHours: 10,
+      isOverAllocated: true,
+      isZeroCapacity: false,
+      utilizationPercent: 125,
+    };
+    expect(isMemberOverCapacity(1, overAllocated)).toBe(true);
+    expect(isMemberOverCapacity(1, undefined)).toBe(false);
   });
 });

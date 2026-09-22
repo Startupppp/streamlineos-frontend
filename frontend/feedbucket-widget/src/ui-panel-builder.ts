@@ -90,13 +90,14 @@ export function buildFeedbackPanel(
   const panel = document.createElement("div");
   panel.className = "panel";
   panel.setAttribute("role", "dialog");
-  panel.setAttribute("aria-modal", "false");
-  panel.setAttribute("aria-label", "Feedback panel");
+  panel.setAttribute("aria-modal", "true");
+  panel.setAttribute("aria-labelledby", "feedbucket-dialog-title");
   panel.setAttribute("aria-hidden", "true");
 
   const header = document.createElement("div");
   header.className = "panel-header";
   const headerTitle = document.createElement("span");
+  headerTitle.id = "feedbucket-dialog-title";
   headerTitle.className = "panel-title";
   headerTitle.textContent = "Share Feedback";
   const closeBtn = document.createElement("button");
@@ -240,11 +241,13 @@ export function buildFeedbackPanel(
   nameInput.type = "text";
   nameInput.placeholder = "Your name (optional)";
   nameInput.autocomplete = "name";
+  nameInput.setAttribute("aria-label", "Your name (optional)");
   const emailInput = document.createElement("input");
   emailInput.className = "text-input";
   emailInput.type = "email";
   emailInput.placeholder = "Your email (optional)";
   emailInput.autocomplete = "email";
+  emailInput.setAttribute("aria-label", "Your email (optional)");
   optionalFields.appendChild(nameInput);
   optionalFields.appendChild(emailInput);
   formView.appendChild(optionalFields);

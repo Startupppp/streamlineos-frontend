@@ -64,6 +64,9 @@ export class FeedbucketWidget {
   private readonly typeButtons: HTMLButtonElement[] = [];
 
   private readonly drag: DragManager;
+  private readonly backdrop: HTMLDivElement;
+  private focusTrapHandler: ((e: KeyboardEvent) => void) | null = null;
+  private previouslyFocused: Element | null = null;
 
   private readonly handleScreenshotLauncher = (): void => {
     void this.runScreenshotFlow();
@@ -257,6 +260,15 @@ export class FeedbucketWidget {
     this.container = document.createElement("div");
     this.container.className = "widget";
     shadow.appendChild(this.container);
+
+    this.backdrop = document.createElement("div");
+    this.backdrop.className = "backdrop";
+    this.backdrop.setAttribute("aria-hidden", "true");
+    this.backdrop.addEventListener("click", () => {
+      this.isOpen = false;
+      this.syncPanel();
+    });
+    shadow.appendChild(this.backdrop);
 
     const { launcher, logo } = buildLauncher({
       onScreenshot: this.handleScreenshotLauncher,
@@ -471,13 +483,74 @@ export class FeedbucketWidget {
     this.syncPanel();
   }
 
+  private getFocusableInPanel(): HTMLElement[] {
+    return Array.from(
+      this.panel.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([type="hidden"]):not([disabled]), textarea:not([disabled])',
+      ),
+    ).filter((el) => {
+      if (el.hidden) return false;
+      let node: Element | null = el.parentElement;
+      while (node !== null && node !== this.panel) {
+        if ((node as HTMLElement).hidden) return false;
+        node = node.parentElement;
+      }
+      return true;
+    });
+  }
+
+  private activateFocusTrap(): void {
+    this.previouslyFocused = this.shadowRoot.activeElement ?? document.activeElement;
+    const focusable = this.getFocusableInPanel();
+    if (focusable.length > 0) {
+      focusable[0].focus();
+    } else {
+      this.panel.setAttribute("tabindex", "-1");
+      this.panel.focus();
+    }
+    this.focusTrapHandler = (e: KeyboardEvent): void => {
+      if (e.key !== "Tab") return;
+      const els = this.getFocusableInPanel();
+      if (els.length === 0) return;
+      const active = this.shadowRoot.activeElement;
+      if (e.shiftKey) {
+        if (active === els[0]) {
+          e.preventDefault();
+          els[els.length - 1].focus();
+        }
+      } else {
+        if (active === els[els.length - 1]) {
+          e.preventDefault();
+          els[0].focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", this.focusTrapHandler);
+  }
+
+  private deactivateFocusTrap(): void {
+    if (this.focusTrapHandler !== null) {
+      document.removeEventListener("keydown", this.focusTrapHandler);
+      this.focusTrapHandler = null;
+    }
+    if (this.previouslyFocused instanceof HTMLElement) {
+      this.previouslyFocused.focus();
+    }
+    this.previouslyFocused = null;
+  }
+
   private syncPanel(): void {
     this.panel.setAttribute("aria-hidden", this.isOpen ? "false" : "true");
     if (this.isOpen) {
       this.positionPanel();
+      if (this.focusTrapHandler === null) {
+        this.activateFocusTrap();
+      }
     } else {
+      this.deactivateFocusTrap();
       this.container.classList.remove("panel-open");
       this.panel.classList.remove("is-sheet");
+      this.backdrop.classList.remove("visible");
       if (this.panel.parentElement !== this.container) {
         this.container.appendChild(this.panel);
       }
@@ -498,6 +571,7 @@ export class FeedbucketWidget {
       this.panel.style.top = "";
       this.panel.style.bottom = "";
       this.container.classList.add("panel-open");
+      this.backdrop.classList.add("visible");
       return;
     }
 
@@ -506,6 +580,7 @@ export class FeedbucketWidget {
     }
     this.panel.classList.remove("is-sheet");
     this.container.classList.remove("panel-open");
+    this.backdrop.classList.remove("visible");
     const rect = this.container.getBoundingClientRect();
     this.panel.classList.toggle("flip-left", rect.left < window.innerWidth / 2);
     const isBottom = rect.top > window.innerHeight / 2;
