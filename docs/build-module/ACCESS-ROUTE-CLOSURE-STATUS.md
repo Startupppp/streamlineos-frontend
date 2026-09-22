@@ -2,6 +2,8 @@
 
 Branch `build/access-route-removal` · commit `54e73a9` · worktree `D:/projects/personal/slos-access-removal`.
 
+Written for the path `NEXT-CLOSURE-STATUS.md` and renamed on delivery: a concurrent session owns that filename for the `build/phase-4-close` workstream, where it is a coordinator-owned ledger marked "Workers never edit this file". That file was untracked in the main checkout, so no branch-level check could see it. The two documents are unrelated — this one covers only the `/build/access` removal.
+
 Canonical route: `/build/settings/access`. Audit: [ACCESS-ROUTE-REMOVAL-AUDIT.md](./ACCESS-ROUTE-REMOVAL-AUDIT.md). Browser handoff: [ACCESS-ROUTE-BROWSER-QA.md](./ACCESS-ROUTE-BROWSER-QA.md).
 
 ## 1. Deleted files
