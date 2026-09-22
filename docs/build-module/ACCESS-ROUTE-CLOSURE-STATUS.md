@@ -63,6 +63,12 @@ None. No API contract, endpoint, or schema was specific to this route; `backend/
 | focused: manifest, invariants, sidebar nav, nav route-access, removal spec | PASS — 5 suites, 86 tests |
 | broad: `lib/build`, `lib/rbac/route-access`, `features/module-access`, `components/layout/sidebar` | 41/42 suites, 561/562 tests (1 pre-existing failure, below) |
 
+### Re-verified after merging main
+
+`main` advanced 13 commits (Phase 3 follow-ups, Phase 4 closure, palette and portal-access work) and was merged into this branch at `5e201b16`. The merge was conflict-free, touched none of the 14 files in this change, and added or removed no Build route — `main` still carries 88 Build pages, so the 87 baseline here remains correct. The deletion survived the merge (verified on disk and in the manifest).
+
+Every gate above was then re-run on the merged branch with identical results: census 96/87, `typecheck:web` clean, specs typecheck showing only the pre-existing error, contract gate 221/645, eslint clean, 561/562 tests.
+
 **`check:build-execution-plan` note.** It fails in any fresh worktree because `git worktree add` writes `docs/specs/build/sidebar/02-scope-directory-prd.md` with CRLF while the checker asserts an LF-only literal. Same blob OID in both trees (`4a1d1b8`), 17009 vs 17326 bytes. Verified three ways: passes in the main checkout, passes in the worktree once CRLF is stripped, and the file is not part of this change.
 
 ### Pre-existing failures
@@ -72,7 +78,9 @@ Three suites were red on `main` at `63296d193` before this work. Two were caused
 - `module-access-route-invariants.test.ts` — Build's access page was a bare redirect, failing the shared-`ModuleAccessPage` policy.
 - `sidebar-permission-navigation.test.ts` — fixture expected `/build/access`; the nav already emitted `/build/settings/access`.
 
-One is unrelated and **left alone**: `sidebar-nav-inventory.test.ts` digest mismatch (expected `5ec432b…`, received `90c5e1e…`). Identical on `main`; this change touches no navigation config. Re-baselining another session's digest would hide whatever real drift produced it.
+One is unrelated and **left alone**: `sidebar-nav-inventory.test.ts` digest mismatch (expected `5ec432b…`, received `90c5e1e…`). Identical on `main` both before and after the merge; this change touches no navigation config.
+
+Traced to `7840a4c58` *feat(palette): reach the 37 project-scoped Build routes and surface search failures*, which is on `main` and changed sidebar nav config without recomputing `sidebar-nav-inventory-digest.ts`. That file's own instruction is to recompute the digest **and record why** when a route or permission changes on purpose — which requires whoever made the nav change to confirm it was intended. Re-baselining it here would bless a nav diff this workstream never reviewed and hide any permission change bundled in it. Routed to the palette workstream, not fixed here.
 
 ### Regression tests added
 
