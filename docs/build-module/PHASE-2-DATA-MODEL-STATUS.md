@@ -2,6 +2,16 @@
 
 Coordinator-owned. Workers never edit this file. Phase 1 ledgers are not modified by Phase 2.
 
+> **This is the data-model half of Phase 2.** A separate, concurrently-running session owns
+> `docs/build-module/PHASE-2-STATUS.md`, which records the **application of migrations 1141 and 1142
+> to production RDS**. The two documents are complementary and neither supersedes the other: that one
+> is the execution record, this one is the design and static-verification record. This file was
+> originally written at that path and renamed to avoid overwriting it.
+>
+> Where their measurements settle something this phase had listed as database-blocked, it is marked
+> below and attributed. Nothing in this file was re-verified against production — the no-production
+> rule applied to this workstream throughout, and every production number cited here is theirs.
+
 **Session start:** 2026-09-22
 **Branch:** `build/phase-2-data` (both repos)
 **Root worktree:** `D:/projects/personal/slos-phase-2-data`
@@ -68,7 +78,7 @@ Constraints on the target: the database name must contain `scratch` or the seed 
 | A — Sprint/Cycle | DESIGN_COMPLETE, EXECUTION_BLOCKED | 11 (1 spec, 10 SQL, 1 doc) | 99/99 pass | none applied | staging PostgreSQL |
 | B — QA Bug | DESIGN_COMPLETE, EXECUTION_BLOCKED | 11 (1 spec, 1 helper, 8 SQL, 1 doc) | 43/43 pass | none applied | staging PostgreSQL |
 | C — Composite FK | STATIC_GAP_CLOSED, CATALOG_BLOCKED | 6 (1 spec, 4 SQL, 1 doc, 1 gate extended) | 58/58 pass + gate self-tests 60/14/7 | none applied | staging PostgreSQL |
-| D — 1141/1142 | VERIFIED_STATIC, EXECUTION_BLOCKED | 4 (1 spec, 2 SQL, 1 doc) | 32/32 pass | none applied | staging PostgreSQL |
+| D — 1141/1142 | VERIFIED_STATIC; applied to production by another session | 4 (1 spec, 2 SQL, 1 doc) | 32/32 pass | applied to production RDS, not by this phase — see `PHASE-2-STATUS.md` | none for 1141/1142; cold replay still needs staging |
 
 `DESIGN_COMPLETE` and `VERIFIED_STATIC` are deliberately not `DONE`. Nothing here has staging evidence, so nothing qualifies.
 
@@ -222,15 +232,26 @@ The line is drawn at TypeScript. The 24 SQL files under `backend/docs/phase-2/sq
 
 One blocker, unchanged from the gating determination: **no non-production PostgreSQL 15+ instance exists**. The version floor of 15 is now verified rather than assumed.
 
-Still requiring a database, and nothing else:
+Six of the items this phase listed as database-blocked were settled in the meantime by the session that applied 1141 and 1142 to production. Those are marked **resolved elsewhere** and attributed; none of them was re-measured here.
 
-1. Whether migration 1141 is already applied, and therefore whether any schema drift exists at all.
-2. `confdelsetcols` for all 286 keys against the live catalog.
-3. The cross-tenant delete proof and the bare-form regression proof (workstream C SQL files 03 and 04, written and untested).
-4. The behavioural `23502` proof for 1141 and its pre-repair control.
-5. Ledger depth and pending count; full cold chain replay.
-6. Real lock behaviour under traffic, and whether 1142's `VALIDATE` completes inside the 5s lock timeout at production row counts.
-7. Row counts that size workstream A's and B's backfills — how many tickets hit each conflict case, how many sprints are soft-deleted, whether any org already has two active cycles.
+| # | Item | State |
+|---|---|---|
+| 1 | Whether 1141 is applied, and whether schema drift exists | **Resolved elsewhere.** Applied; `build.projects.pm_workspace_id` went `attnotnull = true → false`. No drift remains. |
+| 2 | `confdelsetcols` for all 286 keys against the live catalog | **1 of 286 resolved elsewhere.** `fk_job_requisitions_headcount_org` reads `confdelsetcols = [25]` → `headcount_id`, `convalidated = true`, `org_id` untouched. The other 285 remain catalog-unverified. |
+| 3 | Cross-tenant delete proof and bare-form regression proof (workstream C SQL 03 and 04) | **Still blocked.** Both written, neither executed. |
+| 4 | Behavioural `23502` proof for 1141 | **Resolved elsewhere, and the premise was wrong.** `job_requisitions` and `headcount_requests` both hold **0 rows**, so the 1142 defect was latent, never active. Independently confirms workstream D's finding that the `23502` claim was unreachable. |
+| 5 | Ledger depth and pending count | **Resolved elsewhere.** 903 ledger rows against 903 journal entries, 0 pending, watermark `1803000010420` = journal head. Full cold chain replay is **still blocked**. |
+| 6 | Real lock behaviour and whether 1142's `VALIDATE` fits the 5s timeout | **Resolved elsewhere for these two migrations.** Both took `ACCESS EXCLUSIVE` on tables of 9 and 0 rows under `lock_timeout = '5s'`; 0 sessions were waiting on a lock. This does not generalise to the workstream A and B migrations, which touch populated tables. |
+| 7 | Row counts sizing the workstream A and B backfills | **Still blocked.** `build.projects` is 9 rows, but ticket conflict-case counts, soft-deleted sprint counts and whether any org already holds two active cycles are all unmeasured. |
+
+So the standing blocker reduces to items 3 and 7, plus the 285 remaining catalog keys and the cold replay.
+
+**Two corroborations worth recording,** because they were reached independently and agree:
+
+- Workstream C identified `fk_inv_sales_orders_channel_id_org` and `fk_inv_stock_adjustments_scrap_location_id_org` as the two surviving bare composite SET NULL keys of the same class 1142 repairs. The production-application record lists exactly those two as its open items, with no migration authored. They are the next migration in this area.
+- Workstream D concluded from source that the 1141 `23502` drift was unreachable because `resolveWorkspaceIdForWrite` cannot return null. The production record reaches the same conclusion from the other direction, calling 1141 "a compile-time guard, not a runtime one".
+
+**One sequencing finding is theirs, not this phase's,** and is recorded here only so the two documents do not contradict each other: both migrations were applied to production **before** the preflight gate was requested, outside any maintenance window, and without a pre-change RDS snapshot. Every technical check passed afterwards and both rollbacks were rehearsed successfully. This phase neither performed nor authorised that application.
 
 The cheapest unblock is not a new machine-local database. `.github/workflows/db-gates.yml:157` already runs the catalog half of the SET NULL gate against a `pgvector/pgvector:pg16` service, and items 2 and 3 drop into that existing job with no new infrastructure.
 
