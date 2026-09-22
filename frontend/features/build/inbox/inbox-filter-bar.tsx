@@ -13,12 +13,9 @@ import {
 } from "@/components/ui/select";
 import type { NotificationCategory } from "@/types/notifications";
 import { NOTIFICATION_CATEGORY_VALUES } from "@/types/notifications";
+import { isNotificationCategory } from "./use-inbox-url-state";
 
 const ALL_TYPES_SENTINEL = "__all__" as const;
-
-function isNotificationCategory(v: string): v is NotificationCategory {
-  return (NOTIFICATION_CATEGORY_VALUES as readonly string[]).includes(v);
-}
 
 interface InboxFilterBarProps {
   q: string | null;
