@@ -2,6 +2,12 @@ import { render, screen } from "@testing-library/react";
 import { ChangeRequestsPage } from "./change-requests-page";
 import { ApiError } from "@/lib/api-envelope";
 
+jest.mock("next/navigation", () => ({
+  useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ replace: jest.fn() }),
+  usePathname: () => "/build/1/change-requests",
+}));
+
 jest.mock("@/hooks/api/build/change-requests", () => ({
   useChangeRequests: jest.fn(),
   useDeleteChangeRequest: jest.fn(),

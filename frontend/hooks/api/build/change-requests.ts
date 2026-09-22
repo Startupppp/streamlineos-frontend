@@ -25,17 +25,23 @@ const noContentContract = lazyContract(() =>
 
 interface CrFilters {
   status?: string;
+  impact?: string;
 }
 
 export function useChangeRequests(projectId: number, filters?: CrFilters) {
   const canView = useCan("build:changerequests:view");
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
+  if (filters?.impact) params["impact"] = filters.impact;
+
+  const activeFilters: CrFilters = {};
+  if (filters?.status) activeFilters.status = filters.status;
+  if (filters?.impact) activeFilters.impact = filters.impact;
 
   return useQuery<ChangeRequest[]>({
     queryKey: buildWorkQueryKeys.projects.changeRequests.list(
       projectId,
-      filters?.status ? { status: filters.status } : undefined,
+      Object.keys(activeFilters).length > 0 ? activeFilters : undefined,
     ),
     queryFn: ({ signal }) =>
       apiClient.get<ChangeRequest[]>(`/build/${projectId}/change-requests`, params, signal, changeRequestListContract),

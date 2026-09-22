@@ -186,8 +186,8 @@ function AttachmentsSection({ attachments }: { attachments: PortalAttachment[] }
             <span className="text-sm text-foreground truncate block">{a.filename}</span>
             <span className="text-xs text-muted-foreground">
               {a.uploadedByName ? `Shared by ${a.uploadedByName} · ` : ""}
-              {formatPortalDate(a.uploadedAt)}
-              {a.sizeBytes !== null ? ` · ${formatPortalFileSize(a.sizeBytes)}` : ""}
+              {formatPortalDate(a.uploadedAt ?? null)}
+              {a.sizeBytes != null ? ` · ${formatPortalFileSize(a.sizeBytes)}` : ""}
             </span>
           </div>
           <a
@@ -352,8 +352,17 @@ interface PortalProjectDetailProps {
   data: PortalProjectOverview;
 }
 
+const NO_CAPABILITIES = {
+  canViewMilestones: false,
+  canViewTasks: false,
+  canViewAttachments: false,
+  canViewComments: false,
+  canSubmitChangeRequests: false,
+} as const;
+
 export function PortalProjectDetail({ data }: PortalProjectDetailProps) {
-  const { project, capabilities, milestones, tasks, attachments, comments } = data;
+  const { project, milestones, tasks, attachments, comments } = data;
+  const capabilities = data.capabilities ?? NO_CAPABILITIES;
   return (
     <>
       <div className="rounded-xl border border-border bg-card p-5 mb-6">
