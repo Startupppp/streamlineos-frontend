@@ -11,11 +11,11 @@ export interface PortalProject {
   name: string;
   key: string;
   status: string;
-  color: string | null;
-  description: string | null;
+  color?: string | null;
+  description?: string | null;
   startDate: string | null;
   targetEndDate: string | null;
-  capabilities: PortalCapabilities;
+  capabilities?: PortalCapabilities;
 }
 
 export interface PortalMilestone {
@@ -31,17 +31,17 @@ export interface PortalTask {
   title: string;
   status: string;
   dueDate: string | null;
-  assigneeName: string | null;
+  assigneeName?: string | null;
 }
 
 export interface PortalAttachment {
   id: number;
   filename: string;
   url: string;
-  mimeType: string | null;
-  sizeBytes: number | null;
-  uploadedAt: string;
-  uploadedByName: string | null;
+  mimeType?: string | null;
+  sizeBytes?: number | null;
+  uploadedAt?: string;
+  uploadedByName?: string | null;
 }
 
 export interface PortalComment {
@@ -53,7 +53,7 @@ export interface PortalComment {
 
 export interface PortalProjectOverview {
   project: PortalProject;
-  capabilities: PortalCapabilities;
+  capabilities?: PortalCapabilities;
   milestones: PortalMilestone[];
   tasks: PortalTask[];
   attachments: PortalAttachment[];
