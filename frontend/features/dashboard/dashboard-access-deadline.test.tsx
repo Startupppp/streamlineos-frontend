@@ -59,6 +59,12 @@ jest.mock("@/hooks/api/dashboard", () => ({
     refetch: jest.fn(),
   }),
   useMyIssues: () => ({ data: [], isLoading: false, error: null, refetch: jest.fn() }),
+  usePendingApprovals: () => ({ data: { pendingLeaves: 0, pendingResignations: 0, total: 0 }, isLoading: false }),
+  usePersonalDashboard: () => ({ data: { myTasks: [], timesheetStatus: null, upcomingEvents: [], degraded: [] }, isLoading: false }),
+}));
+
+jest.mock("@/hooks/api/inbox", () => ({
+  useUnifiedInboxCount: () => ({ data: { notification: 0, mail: 0, approval: 0, total: 0, mailExact: true }, isLoading: false }),
 }));
 
 jest.mock("./use-dashboard-access", () => ({

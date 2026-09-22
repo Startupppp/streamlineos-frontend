@@ -61,6 +61,32 @@ jest.mock("@/hooks/api/dashboard", () => ({
   useMyLeaveBalance: () => ({ data: [], isLoading: false }),
   useLeavesToday: () => ({ data: { data: [], total: 0, hasMore: false }, isLoading: false }),
   useUpcomingHolidays: () => ({ data: [], isLoading: false }),
+  useCrmPulse: () => ({ data: null, isLoading: false, error: null, refetch: jest.fn() }),
+}));
+
+jest.mock("@/features/dashboard/use-dashboard-access", () => ({
+  useDashboardAccess: () => ({
+    accessLoading: false,
+    accessResolved: true,
+    refetchAccess: jest.fn(),
+    hrEnabled: true,
+    crmEnabled: true,
+    projectsEnabled: true,
+    payrollEnabled: true,
+    signEnabled: true,
+    canViewEmployees: true,
+    canCreateEmployees: true,
+    canViewAttendance: true,
+    canSelfAttendance: true,
+    canViewLeaves: true,
+    canApproveLeaves: true,
+    canViewExecutive: true,
+    canViewCrmLeads: true,
+    canViewCrmReports: true,
+    canViewTickets: true,
+    canViewPayrollSelf: true,
+    canViewSignEnvelopes: true,
+  }),
 }));
 
 jest.mock("@/hooks/api/hr", () => ({
@@ -146,8 +172,7 @@ describe("useHomeCustomisation — persistence", () => {
 describe("HomeWidgetGrid — hidden widgets do not render", () => {
   it("POSITIVE: Payroll widget renders when not hidden", async () => {
     render(<HomeWidgetGrid {...allEnabled} expensesSlot={undefined} />);
-    await screen.findAllByText(/./, {}, { timeout: 3_000 }).catch(() => []);
-    expect(screen.getByText("My Payroll")).toBeInTheDocument();
+    expect(await screen.findByText("My Payroll", {}, { timeout: 3_000 })).toBeInTheDocument();
   });
 
   it("NEGATIVE: Payroll widget is absent when hidden via customisation", async () => {
@@ -185,8 +210,8 @@ describe("HomeWidgetGrid — hidden widgets do not render", () => {
 describe("HomeWidgetGrid — density class (positive and negative)", () => {
   it("NEGATIVE: comfortable density uses gap-4 (not gap-2)", () => {
     const { container } = render(<HomeWidgetGrid {...allEnabled} expensesSlot={undefined} />);
-    expect(container.querySelector(".gap-4")).not.toBeNull();
-    expect(container.querySelector(".gap-2")).toBeNull();
+    expect(container.querySelector(".grid.gap-4")).not.toBeNull();
+    expect(container.querySelector(".grid.gap-2")).toBeNull();
   });
 
   it("POSITIVE: compact density uses gap-2", () => {

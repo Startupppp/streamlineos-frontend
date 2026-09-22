@@ -780,7 +780,25 @@ describe("InboxShell — approval with null projectId navigates without query pa
   });
 
   it("approval click with numeric projectId pushes /build/approvals?projectId=N", async () => {
-    inboxState.items = [];
+    inboxState.items = [
+      {
+        kind: "notification",
+        id: 1,
+        subject: "A",
+        body: "B",
+        notifType: "INFO",
+        priority: "NORMAL",
+        category: "SYSTEM",
+        sourceModule: "notification",
+        isRead: false,
+        pinned: false,
+        deepLink: null,
+        eventKey: null,
+        timestamp: new Date().toISOString(),
+        actor: null,
+        dedupKey: "notification:1",
+      },
+    ];
     await mountInbox();
     expect(capturedList).not.toBeNull();
 
