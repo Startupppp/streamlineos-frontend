@@ -113,6 +113,8 @@ export const changeRequestRowContract = z.object({
   approvalOwnerMembershipId: z.number().int().nullable(),
   decisionComment: z.string().nullable(),
   decidedAt: z.string().nullable(),
+  releaseId: z.number().int().nullable(),
+  clientVisible: z.boolean(),
   createdBy: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),

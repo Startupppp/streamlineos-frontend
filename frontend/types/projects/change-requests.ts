@@ -16,6 +16,8 @@ export interface CreateChangeRequestInput {
   title: string;
   description?: string;
   impact?: string;
+  releaseId?: number;
+  clientVisible?: boolean;
 }
 
 export interface UpdateChangeRequestInput {
@@ -28,4 +30,6 @@ export interface UpdateChangeRequestInput {
   status?: ChangeRequestStatus;
   approvalOwnerId?: string;
   decisionComment?: string;
+  releaseId?: number | null;
+  clientVisible?: boolean;
 }

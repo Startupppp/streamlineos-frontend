@@ -91,6 +91,10 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
 
   const statusFilter = searchParams.get("status") ?? "all";
   const impactFilter = searchParams.get("impact") ?? "";
+  const requesterIdFilter = searchParams.get("requesterId") ?? "";
+  const approverIdFilter = searchParams.get("approverId") ?? "";
+  const releaseIdFilter = searchParams.get("releaseId") ?? "";
+  const clientVisibleFilter = searchParams.get("clientVisible") ?? "";
   const qFilter = searchParams.get("q") ?? "";
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editCr, setEditCr] = useState<ChangeRequest | null>(null);
@@ -112,6 +116,10 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const activeFilters = {
     ...(statusFilter !== "all" ? { status: statusFilter } : {}),
     ...(impactFilter ? { impact: impactFilter } : {}),
+    ...(requesterIdFilter ? { requesterId: requesterIdFilter } : {}),
+    ...(approverIdFilter ? { approverId: approverIdFilter } : {}),
+    ...(releaseIdFilter ? { releaseId: Number(releaseIdFilter) } : {}),
+    ...(clientVisibleFilter !== "" ? { clientVisible: clientVisibleFilter === "true" } : {}),
     ...(qFilter ? { q: qFilter } : {}),
   };
 
@@ -141,6 +149,10 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     updateUrlParam("impact", value || null);
   }
 
+  function handleClientVisibleChange(value: string) {
+    updateUrlParam("clientVisible", value === "all" ? null : value);
+  }
+
   const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
     deleteCr.mutate(deleteTarget.id, {
@@ -155,12 +167,24 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     void refetch();
   }, [refetch]);
 
-  const filtersActive = !!(qFilter || statusFilter !== "all" || impactFilter);
+  const filtersActive = !!(
+    qFilter ||
+    statusFilter !== "all" ||
+    impactFilter ||
+    requesterIdFilter ||
+    approverIdFilter ||
+    releaseIdFilter ||
+    clientVisibleFilter !== ""
+  );
 
   function handleClearFilters() {
     updateUrlParam("q", null);
     updateUrlParam("status", null);
     updateUrlParam("impact", null);
+    updateUrlParam("requesterId", null);
+    updateUrlParam("approverId", null);
+    updateUrlParam("releaseId", null);
+    updateUrlParam("clientVisible", null);
   }
 
   function handleLoadMore() {
@@ -265,6 +289,19 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
               {CR_STATUS_LABELS[s]}
             </SelectItem>
           ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={clientVisibleFilter === "" ? "all" : clientVisibleFilter}
+        onValueChange={handleClientVisibleChange}
+      >
+        <SelectTrigger className="w-40">
+          <SelectValue placeholder="Visibility" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All visibility</SelectItem>
+          <SelectItem value="true">Client visible</SelectItem>
+          <SelectItem value="false">Internal only</SelectItem>
         </SelectContent>
       </Select>
       <SearchInput

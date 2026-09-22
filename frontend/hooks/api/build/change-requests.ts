@@ -29,6 +29,8 @@ export interface CrFilters {
   impact?: string;
   requesterId?: string;
   approverId?: string;
+  releaseId?: number;
+  clientVisible?: boolean;
   q?: string;
   cursor?: string;
   limit?: number;
@@ -41,6 +43,8 @@ export function useChangeRequests(projectId: number, filters?: CrFilters) {
   if (filters?.impact) params["impact"] = filters.impact;
   if (filters?.requesterId) params["requesterId"] = filters.requesterId;
   if (filters?.approverId) params["approverId"] = filters.approverId;
+  if (filters?.releaseId !== undefined) params["releaseId"] = String(filters.releaseId);
+  if (filters?.clientVisible !== undefined) params["clientVisible"] = String(filters.clientVisible);
   if (filters?.q) params["q"] = filters.q;
   if (filters?.cursor) params["cursor"] = filters.cursor;
   if (filters?.limit !== undefined) params["limit"] = String(filters.limit);
@@ -50,6 +54,8 @@ export function useChangeRequests(projectId: number, filters?: CrFilters) {
   if (filters?.impact) activeFilters.impact = filters.impact;
   if (filters?.requesterId) activeFilters.requesterId = filters.requesterId;
   if (filters?.approverId) activeFilters.approverId = filters.approverId;
+  if (filters?.releaseId !== undefined) activeFilters.releaseId = filters.releaseId;
+  if (filters?.clientVisible !== undefined) activeFilters.clientVisible = filters.clientVisible;
   if (filters?.q) activeFilters.q = filters.q;
   if (filters?.cursor) activeFilters.cursor = filters.cursor;
 
