@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -13,8 +12,14 @@ import {
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
 } from "@/hooks/api/notifications";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import type { Notification, NotificationSection } from "@/types/notifications";
 import { InboxNotificationItem } from "./inbox-notification-item";
+import { InboxFilterBar } from "./inbox-filter-bar";
+import { InboxBulkToolbar } from "./inbox-bulk-toolbar";
+import { InboxListSkeleton } from "./inbox-list-skeleton";
+import { useInboxKeyboardNav } from "./use-inbox-keyboard-nav";
+import { useInboxBulkActions } from "./use-inbox-bulk-actions";
 import {
   INBOX_FETCH_PAGE_SIZE,
   INBOX_RENDER_PAGE_SIZE,
@@ -23,136 +28,97 @@ import {
 } from "./inbox-render-window";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
 
-type InboxTab = NotificationSection | "MENTIONS";
-
-const SECTION_FILTERS: { label: string; value: InboxTab }[] = [
+const SECTION_FILTERS: { label: string; value: NotificationSection }[] = [
   { label: "Unread", value: "UNREAD" },
   { label: "All", value: "ALL" },
   { label: "Mentions", value: "MENTIONS" },
 ];
 
-function isInboxTab(value: string): value is InboxTab {
-  return value === "UNREAD" || value === "ALL" || value === "MENTIONS";
-}
-
 interface InboxListProps {
   selectedId: number | null;
+  section: NotificationSection;
+  q: string | null;
   selectionDismissed?: boolean;
   onSelect: (notification: Notification) => void;
   onClearSelection?: () => void;
+  onSectionChange?: (section: NotificationSection) => void;
+  onQChange?: (q: string) => void;
   onFilterChange?: () => void;
-}
-
-function isMentionNotification(n: Notification): boolean {
-  return typeof n.eventKey === "string" && n.eventKey.includes("mention");
-}
-
-function InboxListSkeleton() {
-  return (
-    <div className="flex flex-col">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="flex items-start gap-3 border-b border-border px-4 py-3">
-          <Skeleton className="mt-0.5 h-8 w-8 shrink-0 rounded-lg" />
-          <div className="min-w-0 flex-1">
-            <Skeleton className="h-4 w-3/5 rounded" />
-            <Skeleton className="mt-1.5 h-3 w-4/5 rounded" />
-            <div className="mt-1.5 flex items-center gap-2">
-              <Skeleton className="h-4 w-14 rounded-md" />
-              <Skeleton className="h-4 w-12 rounded-md" />
-              <Skeleton className="ml-auto h-3 w-12 rounded" />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  searchInputRef: React.RefObject<HTMLInputElement | null>;
+  hasActiveFilters?: boolean;
+  onClearFilters?: () => void;
 }
 
 export function InboxList({
   selectedId,
+  section,
+  q,
   selectionDismissed = false,
   onSelect,
   onClearSelection,
+  onSectionChange,
+  onQChange,
   onFilterChange,
+  searchInputRef,
+  hasActiveFilters = false,
+  onClearFilters,
 }: InboxListProps) {
   const isDesktopInbox = useShellVariant() === "desktop";
   const renderPageSize = isDesktopInbox ? INBOX_RENDER_PAGE_SIZE : INBOX_MOBILE_RENDER_PAGE_SIZE;
-  const [activeTab, setActiveTab] = React.useState<InboxTab>("UNREAD");
+  const isOnline = useOnlineStatus();
+  const bulk = useInboxBulkActions();
 
-  const querySection: NotificationSection = activeTab === "MENTIONS" ? "ALL" : activeTab;
-
-  const {
-    data,
-    isPending,
-    isError,
-    error,
-    refetch,
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-  } = useInfiniteNotifications({
-    section: querySection,
-    category: activeTab === "MENTIONS" ? "PROJECTS" : undefined,
-    sourceModule: "build",
-    limit: INBOX_FETCH_PAGE_SIZE,
-  });
+  const { data, isPending, isError, error, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
+    useInfiniteNotifications({ section, sourceModule: "build", search: q ?? undefined, limit: INBOX_FETCH_PAGE_SIZE });
 
   const [pagesShown, setPagesShown] = React.useState(1);
-
+  const [selectedIds, setSelectedIds] = React.useState<Set<number>>(new Set());
   const { mutate: markRead } = useMarkNotificationRead();
   const { mutate: markAllRead, isPending: isMarkingAll } = useMarkAllNotificationsRead();
 
-  function handleSelect(notification: Notification) {
-    if (!notification.isRead) {
-      markRead(notification.id);
-    }
-    onSelect(notification);
-  }
-
-  function handleTabChange(value: string) {
-    if (isInboxTab(value)) {
-      setActiveTab(value);
-      setPagesShown(1);
-      onFilterChange?.();
-    }
-  }
-
-  function handleMarkAll() {
-    markAllRead();
-  }
-
-  function handleRetry() {
-    refetch();
-  }
-
   const rawNotifications = React.useMemo(() => data?.pages.flat() ?? [], [data]);
-  const notifications = React.useMemo(
-    () => (activeTab === "MENTIONS" ? rawNotifications.filter(isMentionNotification) : rawNotifications),
-    [activeTab, rawNotifications],
-  );
-  const total = notifications.length;
+  const total = rawNotifications.length;
+
+  React.useEffect(() => { setPagesShown(1); setSelectedIds(new Set()); }, [section, q]);
+
   const pageState = usePageState({
     isLoading: isPending,
     isError,
     error,
-    isEmpty: !isPending && total === 0 && !hasNextPage,
+    isEmpty: !isPending && total === 0 && !hasNextPage && isOnline,
   });
+
   const visibleCount = resolveInboxVisibleCount(total, pagesShown, renderPageSize);
   const heldCount = total - visibleCount;
-  const visibleNotifications = React.useMemo(
-    () => notifications.slice(0, visibleCount),
-    [notifications, visibleCount],
-  );
+  const visibleNotifications = React.useMemo(() => rawNotifications.slice(0, visibleCount), [rawNotifications, visibleCount]);
   const deferredVisibleNotifications = React.useDeferredValue(visibleNotifications);
 
-  function handleLoadMore() {
-    setPagesShown((p) => p + 1);
-    if (heldCount === 0) fetchNextPage();
+  function handleSelect(notification: Notification) {
+    if (!notification.isRead) markRead(notification.id);
+    onSelect(notification);
   }
-  const hasUnread = notifications.some((n) => !n.isRead);
-  const firstNotification = notifications[0] ?? null;
-  const selectedStillVisible =
-    selectedId == null || notifications.some((n) => n.id === selectedId);
+  function handleTabChange(value: string) {
+    const next = value as NotificationSection;
+    if (SECTION_FILTERS.some((f) => f.value === next)) { onSectionChange?.(next); onFilterChange?.(); }
+  }
+  function handleMarkAll() { markAllRead(); }
+  function handleRetry() { void refetch(); }
+  function handleLoadMore() { setPagesShown((p) => p + 1); if (heldCount === 0) fetchNextPage(); }
+  function handleToggleSelect(id: number) {
+    setSelectedIds((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  }
+  function handleSelectAll() { setSelectedIds(new Set(deferredVisibleNotifications.map((n) => n.id))); }
+  function handleDeselectAll() { setSelectedIds(new Set()); }
+  function handleBulkMarkRead() { bulk.runBulkMarkRead([...selectedIds]); setSelectedIds(new Set()); }
+  function handleBulkArchive() { bulk.runBulkArchive([...selectedIds]); setSelectedIds(new Set()); }
+  function handleBulkDelete() { bulk.runBulkDelete([...selectedIds]); setSelectedIds(new Set()); }
+  function handleQChange(raw: string) { onQChange?.(raw); }
+  function handleTypeChange(_value: string | null) { void 0; }
+  function handleClearFilters() { onClearFilters?.(); }
+
+  const hasUnread = rawNotifications.some((n) => !n.isRead);
+  const firstNotification = rawNotifications[0] ?? null;
+  const selectedStillVisible = selectedId == null || rawNotifications.some((n) => n.id === selectedId);
 
   const onSelectRef = React.useRef(onSelect);
   const onClearSelectionRef = React.useRef(onClearSelection);
@@ -163,116 +129,50 @@ export function InboxList({
 
   React.useEffect(() => {
     if (isPending || isError) return;
-    if (selectedId != null && !selectedStillVisible) {
-      onClearSelectionRef.current?.();
-      return;
-    }
+    if (selectedId != null && !selectedStillVisible) { onClearSelectionRef.current?.(); return; }
     if (!isDesktopInbox) return;
     if (selectedId != null || selectionDismissed) return;
     const first = firstNotificationRef.current;
     if (first) onSelectRef.current(first);
-  }, [
-    isPending,
-    isError,
-    isDesktopInbox,
-    selectedId,
-    selectedStillVisible,
-    selectionDismissed,
-    firstNotification?.id,
-  ]);
+  }, [isPending, isError, isDesktopInbox, selectedId, selectedStillVisible, selectionDismissed, firstNotification?.id]);
+
+  useInboxKeyboardNav({ notifications: deferredVisibleNotifications, selectedId, onSelect: handleSelect, onClearSelection: () => onClearSelection?.(), searchInputRef });
+
+  const emptyTitle = section === "UNREAD" ? "All caught up" : section === "MENTIONS" ? "No mentions" : "No notifications";
+  const emptyDesc = section === "UNREAD" ? "You have no unread notifications." : section === "MENTIONS" ? "You have not been mentioned in any comments yet." : "Notifications will appear here when you receive them.";
 
   return (
-    <Tabs
-      value={activeTab}
-      onValueChange={handleTabChange}
-      className="flex h-full min-h-0 flex-col gap-0"
-    >
+    <Tabs value={section} onValueChange={handleTabChange} className="flex h-full min-h-0 flex-col gap-0">
       <div className="flex shrink-0 items-center justify-between gap-2 border border-r-0 border-border px-4 py-2">
         <TabsList>
           {SECTION_FILTERS.map(({ label, value }) => (
-            <TabsTrigger key={value} value={value}>
-              {label}
-            </TabsTrigger>
+            <TabsTrigger key={value} value={value}>{label}</TabsTrigger>
           ))}
         </TabsList>
         {hasUnread ? (
-          <AnimatedIconButton
-            icon={CheckCheckIcon}
-            iconSize={14}
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
-            disabled={isMarkingAll}
-            onClick={handleMarkAll}
-            aria-label="Mark all read"
-            title="Mark all read"
-          />
+          <AnimatedIconButton icon={CheckCheckIcon} iconSize={14} variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground" disabled={isMarkingAll} onClick={handleMarkAll} aria-label="Mark all read" title="Mark all read" />
         ) : null}
       </div>
-
+      <InboxFilterBar q={q} type={null} hasActiveFilters={hasActiveFilters} onQChange={handleQChange} onTypeChange={handleTypeChange} onClearFilters={handleClearFilters} searchInputRef={searchInputRef} />
+      <InboxBulkToolbar selectedIds={selectedIds} totalVisible={deferredVisibleNotifications.length} onSelectAll={handleSelectAll} onDeselectAll={handleDeselectAll} onBulkMarkRead={handleBulkMarkRead} onBulkArchive={handleBulkArchive} onBulkDelete={handleBulkDelete} isMutating={bulk.isMutating} />
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto border-l border-border scrollbar-hide">
-        <PageState
-          resolution={pageState}
-          loading={
-            <div className="flex min-h-full flex-col">
-              <InboxListSkeleton />
-            </div>
-          }
-          onRetry={handleRetry}
-          compact
-          className="min-h-full w-full flex-1"
-          empty={
-            <EmptyState
-              illustrationPreset="mail"
-              title={
-                activeTab === "UNREAD"
-                  ? "All caught up"
-                  : activeTab === "MENTIONS"
-                  ? "No mentions"
-                  : "No notifications"
-              }
-              description={
-                activeTab === "UNREAD"
-                  ? "You have no unread notifications."
-                  : activeTab === "MENTIONS"
-                  ? "You have not been mentioned in any comments yet."
-                  : "Notifications will appear here when you receive them."
-              }
-              compact
-              className="min-h-full w-full flex-1 rounded-lg border-dashed p-4"
-            />
-          }
+        <PageState resolution={pageState} loading={<div className="flex min-h-full flex-col"><InboxListSkeleton /></div>} onRetry={handleRetry} compact className="min-h-full w-full flex-1"
+          empty={hasNextPage || !isOnline ? <div /> : (
+            <EmptyState illustrationPreset="mail" title={emptyTitle} description={emptyDesc} filtersActive={hasActiveFilters} filteredTitle="No matching notifications" onClearFilters={hasActiveFilters ? onClearFilters : undefined} compact className="min-h-full w-full flex-1 rounded-lg border-dashed p-4" />
+          )}
         >
           <div>
             <div role="list" aria-label="Notifications">
               {deferredVisibleNotifications.map((notification, index) => (
-                <div
-                  key={notification.id}
-                  role="listitem"
-                  aria-posinset={index + 1}
-                  aria-setsize={hasNextPage ? -1 : total}
-                >
-                  <InboxNotificationItem
-                    notification={notification}
-                    isSelected={selectedId === notification.id}
-                    onSelect={handleSelect}
-                  />
+                <div key={notification.id} role="listitem" aria-posinset={index + 1} aria-setsize={hasNextPage ? -1 : total}>
+                  <InboxNotificationItem notification={notification} isSelected={selectedId === notification.id} isSelectable isChecked={selectedIds.has(notification.id)} onSelect={handleSelect} onToggleSelect={handleToggleSelect} />
                 </div>
               ))}
             </div>
             {heldCount > 0 || hasNextPage ? (
               <div className="flex justify-center py-3">
-                <button
-                  type="button"
-                  onClick={handleLoadMore}
-                  disabled={isFetchingNextPage}
-                  className="text-dense text-primary hover:underline disabled:opacity-50"
-                >
-                  {heldCount > 0
-                    ? `Show ${Math.min(heldCount, renderPageSize)} more (${visibleCount} of ${total})`
-                    : isFetchingNextPage
-                      ? "Loading…"
-                      : "Load older notifications"}
+                <button type="button" onClick={handleLoadMore} disabled={isFetchingNextPage} className="text-dense text-primary hover:underline disabled:opacity-50">
+                  {heldCount > 0 ? `Show ${Math.min(heldCount, renderPageSize)} more (${visibleCount} of ${total})` : isFetchingNextPage ? "Loading…" : "Load older notifications"}
                 </button>
               </div>
             ) : null}

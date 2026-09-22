@@ -90,6 +90,13 @@ const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
   { route: "/build/[projectId]/reports", decision: "KEEP", target: null },
   { route: "/build/[projectId]/risks", decision: "KEEP", target: null },
   { route: "/build/[projectId]/settings", decision: "KEEP", target: null },
+  { route: "/build/[projectId]/settings/automations", decision: "KEEP", target: null },
+  {
+    route: "/build/[projectId]/settings/integrations/webhooks",
+    decision: "KEEP",
+    target: null,
+  },
+  { route: "/build/[projectId]/settings/workflow", decision: "KEEP", target: null },
   { route: "/build/[projectId]/tickets/[ticketKey]", decision: "KEEP", target: null },
   {
     route: "/build/[projectId]/timeline",
@@ -173,6 +180,8 @@ const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
   { route: "/build/portfolios/[portfolioId]", decision: "KEEP", target: null },
   { route: "/build/programs", decision: "KEEP", target: null },
   { route: "/build/roadmap", decision: "KEEP", target: null },
+  { route: "/build/settings/access", decision: "KEEP", target: null },
+  { route: "/build/settings/client-access", decision: "KEEP", target: null },
   { route: "/build/settings/integrations", decision: "KEEP", target: null },
   { route: "/build/teams", decision: "KEEP", target: null },
   { route: "/build/teams/[teamId]", decision: "KEEP", target: null },

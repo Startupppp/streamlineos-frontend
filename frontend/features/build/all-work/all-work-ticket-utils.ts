@@ -1,10 +1,19 @@
-﻿import type { AllWorkTicket } from "@/types/projects";
+import type { AllWorkTicket } from "@/types/projects";
 import type { KanbanTicket } from "@/features/build/shared/types";
+import type { BuildListGrouping } from "@/features/build/shared/use-build-list-url-state";
 
 export interface ProjectGroup {
   projectId: number;
   projectKey: string;
   projectName: string;
+  tickets: AllWorkTicket[];
+}
+
+export interface TicketGroup {
+  id: string | number;
+  label: string;
+  projectId?: number;
+  projectKey?: string;
   tickets: AllWorkTicket[];
 }
 
@@ -97,8 +106,8 @@ export function toTableTicket(t: AllWorkTicket): TableRow {
   };
 }
 
-export function groupByProject(tickets: AllWorkTicket[]): ProjectGroup[] {
-  const map = new Map<number, ProjectGroup>();
+export function groupByProject(tickets: AllWorkTicket[]): TicketGroup[] {
+  const map = new Map<number, TicketGroup>();
   for (const t of tickets) {
     if (t.projectId === null) continue;
     const existing = map.get(t.projectId);
@@ -106,12 +115,83 @@ export function groupByProject(tickets: AllWorkTicket[]): ProjectGroup[] {
       existing.tickets.push(t);
     } else {
       map.set(t.projectId, {
+        id: t.projectId,
+        label: t.projectName ?? "",
         projectId: t.projectId,
         projectKey: t.projectKey ?? "",
-        projectName: t.projectName ?? "",
         tickets: [t],
       });
     }
   }
   return Array.from(map.values());
+}
+
+export function groupByStatus(tickets: AllWorkTicket[]): TicketGroup[] {
+  const map = new Map<string, AllWorkTicket[]>();
+  for (const t of tickets) {
+    const key = t.status;
+    const existing = map.get(key);
+    if (existing) existing.push(t);
+    else map.set(key, [t]);
+  }
+  return Array.from(map.entries()).map(([status, ts]) => ({
+    id: status,
+    label: status.replace(/_/g, " "),
+    tickets: ts,
+  }));
+}
+
+export function groupByPriority(tickets: AllWorkTicket[]): TicketGroup[] {
+  const map = new Map<string, AllWorkTicket[]>();
+  for (const t of tickets) {
+    const key = t.priority ?? "NONE";
+    const existing = map.get(key);
+    if (existing) existing.push(t);
+    else map.set(key, [t]);
+  }
+  return Array.from(map.entries()).map(([priority, ts]) => ({
+    id: priority,
+    label: priority === "NONE" ? "No priority" : priority,
+    tickets: ts,
+  }));
+}
+
+export function groupByAssignee(tickets: AllWorkTicket[]): TicketGroup[] {
+  const map = new Map<string, AllWorkTicket[]>();
+  for (const t of tickets) {
+    const key = t.assigneeId ?? "__unassigned__";
+    const existing = map.get(key);
+    if (existing) existing.push(t);
+    else map.set(key, [t]);
+  }
+  return Array.from(map.entries()).map(([assigneeId, ts]) => {
+    const first = ts[0];
+    const assignee = first?.assignee;
+    const name = assignee
+      ? ([assignee.firstName, assignee.lastName].filter(Boolean).join(" ") ||
+          assignee.name ||
+          "Unknown")
+      : "Unassigned";
+    return { id: assigneeId, label: name ?? "Unassigned", tickets: ts };
+  });
+}
+
+export function groupTickets(
+  tickets: AllWorkTicket[],
+  grouping: BuildListGrouping,
+): TicketGroup[] {
+  switch (grouping) {
+    case "project":
+      return groupByProject(tickets);
+    case "status":
+      return groupByStatus(tickets);
+    case "priority":
+      return groupByPriority(tickets);
+    case "assignee":
+      return groupByAssignee(tickets);
+    default:
+      return tickets.length === 0
+        ? []
+        : [{ id: "all", label: "All Tickets", tickets }];
+  }
 }

@@ -4,8 +4,10 @@ import * as React from "react";
 import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { InboxList } from "./inbox-list";
+import { InboxDraftsPanel } from "./inbox-drafts-panel";
+import { useInboxUrlState } from "./use-inbox-url-state";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
-import type { Notification } from "@/types/notifications";
+import type { Notification, NotificationSection } from "@/types/notifications";
 import { cn } from "@/lib/utils";
 
 const InboxPreviewPane = dynamic(
@@ -19,6 +21,10 @@ export function InboxPage() {
   const [selectedNotification, setSelectedNotification] =
     React.useState<Notification | null>(null);
   const [selectionDismissed, setSelectionDismissed] = React.useState(false);
+  const searchInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const urlState = useInboxUrlState();
+  const isDraftsView = urlState.view === "drafts";
 
   function handleSelect(notification: Notification) {
     setSelectionDismissed(false);
@@ -38,12 +44,46 @@ export function InboxPage() {
     setSelectionDismissed(false);
   }
 
+  function handleSectionChange(next: NotificationSection) {
+    urlState.setParams({ section: next === "UNREAD" ? null : next });
+    handleFilterChange();
+  }
+
+  function handleQChange(raw: string) {
+    urlState.setParams({ q: raw || null });
+    handleFilterChange();
+  }
+
+  function handleClearFilters() {
+    urlState.clearFilters();
+    handleFilterChange();
+  }
+
   const hasSelection = selectedNotification != null;
+
+  const listPane = isDraftsView ? (
+    <InboxDraftsPanel />
+  ) : (
+    <InboxList
+      selectedId={selectedNotification?.id ?? null}
+      section={urlState.section}
+      q={urlState.q}
+      selectionDismissed={selectionDismissed}
+      onSelect={handleSelect}
+      onClearSelection={handleAutoClearSelection}
+      onSectionChange={handleSectionChange}
+      onQChange={handleQChange}
+      onFilterChange={handleFilterChange}
+      onClearFilters={handleClearFilters}
+      searchInputRef={searchInputRef}
+      hasActiveFilters={urlState.hasActiveFilters}
+    />
+  );
 
   return (
     <PageWrapper
       title="Inbox"
-      subtitle="Mentions, assignments, and updates addressed to you"
+      subtitle="Mentions, assignments, approvals and drafts"
       noInternalScroll
       contentClassName="!p-0 mx-4 mb-2 sm:mx-6 lg:mx-8 rounded-xl border border-border"
     >
@@ -56,13 +96,7 @@ export function InboxPage() {
               : "flex w-full lg:w-[320px] xl:w-[360px]",
           )}
         >
-          <InboxList
-            selectedId={selectedNotification?.id ?? null}
-            selectionDismissed={selectionDismissed}
-            onSelect={handleSelect}
-            onClearSelection={handleAutoClearSelection}
-            onFilterChange={handleFilterChange}
-          />
+          {listPane}
         </div>
 
         {(isDesktopShell || hasSelection) ? (

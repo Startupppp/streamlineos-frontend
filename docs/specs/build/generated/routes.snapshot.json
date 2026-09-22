@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "generatedAt": "2026-09-21T10:16:25.627Z",
+  "generatedAt": "2026-09-22T04:13:17.009Z",
   "source": "frontend/app",
-  "count": 92,
+  "count": 97,
   "routes": [
     {
       "path": "/accept-invitation",
@@ -157,6 +157,18 @@
       "file": "frontend/app/(authenticated)/build/[projectId]/settings/page.tsx"
     },
     {
+      "path": "/build/{projectId}/settings/automations",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/automations/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/integrations/webhooks",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/integrations/webhooks/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/workflow",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/workflow/page.tsx"
+    },
+    {
       "path": "/build/{projectId}/tickets/{ticketKey}",
       "file": "frontend/app/(authenticated)/build/[projectId]/tickets/[ticketKey]/page.tsx"
     },
@@ -295,6 +307,14 @@
     {
       "path": "/build/roadmap",
       "file": "frontend/app/(authenticated)/build/roadmap/page.tsx"
+    },
+    {
+      "path": "/build/settings/access",
+      "file": "frontend/app/(authenticated)/build/settings/access/page.tsx"
+    },
+    {
+      "path": "/build/settings/client-access",
+      "file": "frontend/app/(authenticated)/build/settings/client-access/page.tsx"
     },
     {
       "path": "/build/settings/integrations",

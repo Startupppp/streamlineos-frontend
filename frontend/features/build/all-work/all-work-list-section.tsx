@@ -9,12 +9,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { ProjectChip } from "./project-chip";
 import type { AllWorkTicket } from "@/types/projects";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
-import type { ProjectGroup } from "./all-work-ticket-utils";
-
-interface AllWorkListSectionProps {
-  groups: ProjectGroup[];
-  hasNextPage?: boolean;
-}
+import type { TicketGroup } from "./all-work-ticket-utils";
 
 function toListTicket(t: AllWorkTicket) {
   return {
@@ -47,19 +42,19 @@ function toListTicket(t: AllWorkTicket) {
   };
 }
 
-const ProjectSection = memo(function ProjectSection({
+const GroupSection = memo(function GroupSection({
   group,
-  hasNextPage,
+  hasMore,
 }: {
-  group: ProjectGroup;
-  hasNextPage: boolean;
+  group: TicketGroup;
+  hasMore: boolean;
 }) {
   const router = useRouter();
 
   const handleTicketClick = useCallback(
     (ticketId: number) => {
       const ticket = group.tickets.find((t) => t.id === ticketId);
-      if (!ticket) return;
+      if (!ticket || !group.projectId || !group.projectKey) return;
       router.push(
         getTicketDetailHref(group.projectId, group.projectKey, ticket.ticketNumber),
       );
@@ -67,42 +62,53 @@ const ProjectSection = memo(function ProjectSection({
     [router, group.projectId, group.projectKey, group.tickets],
   );
 
+  const firstTicket = group.tickets[0];
+  const projectId = group.projectId;
+  const projectKey = group.projectKey ?? "";
+
   return (
     <PmPanel>
       <div className="flex min-w-0 items-center gap-2 border-b border-border/50 bg-muted/20 px-3 py-2">
-        <ProjectChip
-          projectId={group.projectId}
-          projectKey={group.projectKey}
-          projectName={group.projectName}
-        />
-        <TruncatedText text={group.projectName} className="text-label font-semibold text-foreground" />
+        {projectId !== undefined && (
+          <ProjectChip
+            projectId={projectId}
+            projectKey={projectKey}
+            projectName={group.label}
+          />
+        )}
+        <TruncatedText text={group.label} className="text-label font-semibold text-foreground" />
         <Badge
           variant="secondary"
           className="h-5 shrink-0 rounded-md bg-primary/10 px-1.5 text-micro font-medium tabular-nums text-primary"
         >
-          {group.tickets.length}{hasNextPage ? "+" : ""}
+          {group.tickets.length}{hasMore ? "+" : ""}
         </Badge>
       </div>
       <ListView
         tickets={group.tickets.map(toListTicket)}
         onTicketClick={handleTicketClick}
-        projectKey={group.projectKey}
-        projectId={group.projectId}
+        projectKey={firstTicket?.projectKey ?? projectKey}
+        projectId={firstTicket?.projectId ?? projectId ?? 0}
       />
     </PmPanel>
   );
 });
 
+interface AllWorkListSectionProps {
+  groups: TicketGroup[];
+  hasMore?: boolean;
+}
+
 export const AllWorkListSection = memo(function AllWorkListSection({
   groups,
-  hasNextPage = false,
+  hasMore = false,
 }: AllWorkListSectionProps) {
   if (groups.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-3">
       {groups.map((group) => (
-        <ProjectSection key={group.projectId} group={group} hasNextPage={hasNextPage} />
+        <GroupSection key={group.id} group={group} hasMore={hasMore} />
       ))}
     </div>
   );

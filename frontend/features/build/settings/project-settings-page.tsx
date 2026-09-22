@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useProject, useUpdateProject } from "@/hooks/api/build";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -84,7 +84,8 @@ export function ProjectSettingsPage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
   const router = useRouter();
-  const [activeSection, setActiveSection] = useState<SectionId>("general");
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
 
   const {
     data: project,
@@ -133,6 +134,11 @@ export function ProjectSettingsPage({ params }: PageProps) {
   const reassignmentsRef = useRef<Record<string, string>>({});
   const pendingFieldChangeRef = useRef<(() => void) | null>(null);
 
+  const rawSection = searchParams.get("section") ?? "general";
+  const parsedSection: SectionId = isSectionId(rawSection) ? rawSection : "general";
+  const activeSection: SectionId =
+    parsedSection === "danger" && !isOwner ? "general" : parsedSection;
+
   const navSections: NavSection[] = isOwner
     ? [...BASE_NAV, DANGER_SECTION]
     : BASE_NAV;
@@ -140,11 +146,12 @@ export function ProjectSettingsPage({ params }: PageProps) {
   const handleSectionClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       const rawId = e.currentTarget.dataset.section;
-      if (rawId && isSectionId(rawId)) {
-        setActiveSection(rawId);
-      }
+      if (!rawId || !isSectionId(rawId)) return;
+      const next = new URLSearchParams(searchParams.toString());
+      next.set("section", rawId);
+      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
     },
-    [],
+    [router, pathname, searchParams],
   );
 
   const handleMemberRemoved = useCallback(

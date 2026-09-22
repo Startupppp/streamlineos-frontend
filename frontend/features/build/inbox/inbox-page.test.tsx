@@ -6,6 +6,14 @@ import { InboxPage } from "./inbox-page";
 
 jest.mock("next/dynamic", () => () => () => null);
 
+let mockSearchParams = new URLSearchParams();
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: jest.fn() }),
+  usePathname: () => "/build/inbox",
+  useSearchParams: () => mockSearchParams,
+}));
+
 jest.mock("@/components/layout/shell-variant-context", () => ({
   useShellVariant: jest.fn().mockReturnValue("desktop"),
 }));
@@ -18,6 +26,10 @@ jest.mock("@/components/ui/page-wrapper", () => ({
 
 jest.mock("./inbox-list", () => ({
   InboxList: jest.fn(),
+}));
+
+jest.mock("./inbox-drafts-panel", () => ({
+  InboxDraftsPanel: () => <div data-testid="inbox-drafts-panel" />,
 }));
 
 import { InboxList } from "./inbox-list";
@@ -47,6 +59,7 @@ function makeNotification(id = 42): Notification {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSearchParams = new URLSearchParams();
   (useShellVariant as jest.Mock).mockReturnValue("desktop");
   (InboxList as jest.Mock).mockImplementation(
     ({
@@ -123,5 +136,18 @@ describe("InboxPage", () => {
     render(<InboxPage />);
     expect(InboxList).toHaveBeenCalled();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("renders the drafts panel when view=drafts is in the URL", () => {
+    mockSearchParams = new URLSearchParams("view=drafts");
+    render(<InboxPage />);
+    expect(screen.getByTestId("inbox-drafts-panel")).toBeInTheDocument();
+    expect(screen.queryByTestId("inbox-list")).not.toBeInTheDocument();
+  });
+
+  it("renders the inbox list when no view param is present", () => {
+    render(<InboxPage />);
+    expect(screen.getByTestId("inbox-list")).toBeInTheDocument();
+    expect(screen.queryByTestId("inbox-drafts-panel")).not.toBeInTheDocument();
   });
 });

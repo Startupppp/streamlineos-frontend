@@ -114,6 +114,36 @@ const nextConfig: NextConfig = {
       destination: "/knowledge/wiki/doc/:pageId/history",
       permanent: false,
     },
+    {
+      source: "/build/:projectId(\\d+)/workflow",
+      destination: "/build/:projectId/settings/workflow",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/automations",
+      destination: "/build/:projectId/settings/automations",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/webhooks",
+      destination: "/build/:projectId/settings/integrations/webhooks",
+      permanent: false,
+    },
+    {
+      source: "/build/members",
+      destination: "/build/settings/access",
+      permanent: false,
+    },
+    {
+      source: "/build/access",
+      destination: "/build/settings/access",
+      permanent: false,
+    },
+    {
+      source: "/build/client-access",
+      destination: "/build/settings/client-access",
+      permanent: false,
+    },
   ],
   images: {
     formats: ["image/webp"],

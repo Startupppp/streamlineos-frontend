@@ -124,7 +124,6 @@ function GroupingSidebarBody({
       } else {
         params.delete(key);
       }
-      params.delete("page");
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
     [router, pathname, searchParams],

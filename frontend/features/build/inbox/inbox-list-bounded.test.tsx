@@ -6,11 +6,12 @@
  * reached at all. These assert the cursor read, the render bound, and that
  * nothing sits behind the bound unreachably.
  */
+import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { InboxList } from "./inbox-list";
 import { INBOX_FETCH_PAGE_SIZE, INBOX_RENDER_PAGE_SIZE } from "./inbox-render-window";
-import type { Notification } from "@/types/notifications";
+import type { Notification, NotificationSection } from "@/types/notifications";
 
 const useInfiniteNotifications = jest.fn();
 const fetchNextPage = jest.fn();
@@ -19,6 +20,9 @@ jest.mock("@/hooks/api/notifications", () => ({
   useInfiniteNotifications: (params: unknown) => useInfiniteNotifications(params),
   useMarkNotificationRead: () => ({ mutate: jest.fn() }),
   useMarkAllNotificationsRead: () => ({ mutate: jest.fn(), isPending: false }),
+  useBulkMarkRead: () => ({ mutateAsync: jest.fn() }),
+  useBulkArchive: () => ({ mutateAsync: jest.fn() }),
+  useBulkDelete: () => ({ mutateAsync: jest.fn() }),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
@@ -35,10 +39,26 @@ jest.mock("@/hooks/api/use-page-state", () => ({
   },
 }));
 
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: jest.fn().mockReturnValue(true),
+}));
+
 jest.mock("./inbox-notification-item", () => ({
   InboxNotificationItem: ({ notification }: { notification: { title: string } }) => (
     <div>{notification.title}</div>
   ),
+}));
+
+jest.mock("./inbox-filter-bar", () => ({
+  InboxFilterBar: () => null,
+}));
+
+jest.mock("./inbox-bulk-toolbar", () => ({
+  InboxBulkToolbar: () => null,
+}));
+
+jest.mock("./use-inbox-keyboard-nav", () => ({
+  useInboxKeyboardNav: () => undefined,
 }));
 
 function makeNotifications(count: number): Notification[] {
@@ -84,9 +104,18 @@ function mockPages(counts: number[], hasNextPage: boolean) {
 }
 
 const noop = () => undefined;
+const searchRef = { current: null } as React.RefObject<HTMLInputElement | null>;
 
-function renderInbox() {
-  return render(<InboxList selectedId={null} onSelect={noop} />);
+function renderInbox(section: NotificationSection = "UNREAD") {
+  return render(
+    <InboxList
+      selectedId={null}
+      onSelect={noop}
+      section={section}
+      q={null}
+      searchInputRef={searchRef}
+    />,
+  );
 }
 
 beforeEach(() => {
@@ -161,14 +190,22 @@ describe("InboxList — the bound keeps its semantics", () => {
   });
 });
 
-describe("InboxList — changing the filter resets the window", () => {
-  it("goes back to the first page of rows when the tab changes", async () => {
+describe("InboxList — changing the section prop resets the window", () => {
+  it("goes back to the first page of rows when the section changes via prop", async () => {
     const user = userEvent.setup();
     mockPages([100, 100, 100], false);
-    renderInbox();
+    const { rerender } = renderInbox("UNREAD");
     await user.click(screen.getByRole("button", { name: /show 30 more/i }));
     expect(screen.getAllByRole("listitem")).toHaveLength(INBOX_RENDER_PAGE_SIZE * 2);
-    await user.click(screen.getByRole("tab", { name: "All" }));
+    rerender(
+      <InboxList
+        selectedId={null}
+        onSelect={noop}
+        section="ALL"
+        q={null}
+        searchInputRef={searchRef}
+      />,
+    );
     expect(screen.getAllByRole("listitem")).toHaveLength(INBOX_RENDER_PAGE_SIZE);
   });
 
@@ -184,7 +221,7 @@ describe("InboxList — changing the filter resets the window", () => {
       isFetchingNextPage: false,
       fetchNextPage,
     });
-    renderInbox();
+    renderInbox("MENTIONS");
     expect(screen.queryByText("All caught up")).toBeNull();
     expect(
       screen.getByRole("button", { name: /load older notifications/i }),
@@ -224,5 +261,23 @@ describe("InboxList — disabled query shows skeleton, not empty state", () => {
     });
     renderInbox();
     expect(screen.queryByText("All caught up")).toBeNull();
+  });
+});
+
+describe("InboxList — Mentions tab sends section:MENTIONS directly to the backend", () => {
+  it("passes section=MENTIONS to the query when the Mentions tab is active", () => {
+    mockPages([], false);
+    renderInbox("MENTIONS");
+    expect(useInfiniteNotifications).toHaveBeenCalledWith(
+      expect.objectContaining({ section: "MENTIONS" }),
+    );
+  });
+
+  it("does not pass category:PROJECTS when the Mentions tab is active", () => {
+    mockPages([], false);
+    renderInbox("MENTIONS");
+    expect(useInfiniteNotifications).not.toHaveBeenCalledWith(
+      expect.objectContaining({ category: "PROJECTS" }),
+    );
   });
 });

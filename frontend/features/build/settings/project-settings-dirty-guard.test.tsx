@@ -7,9 +7,12 @@ import {
 import { ProjectSettingsPage } from "./project-settings-page";
 
 const mockPush = jest.fn();
+const mockReplace = jest.fn();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/build/1/settings",
 }));
 
 jest.mock("next-auth/react", () => ({
