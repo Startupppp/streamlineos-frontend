@@ -18,7 +18,6 @@ export function isMemberOverCapacity(
 
 export interface FilterState {
   statCard: StatFilter;
-  sprintId: string;
   cycleId: string;
   priority: string;
   type: string;
@@ -29,7 +28,6 @@ export interface FilterState {
 
 export const INITIAL_FILTERS: FilterState = {
   statCard: "all",
-  sprintId: "all",
   cycleId: "all",
   priority: "all",
   type: "all",
@@ -40,7 +38,6 @@ export const INITIAL_FILTERS: FilterState = {
 
 export function hasActiveWorkloadFilters(filters: FilterState): boolean {
   return (
-    filters.sprintId !== "all" ||
     filters.cycleId !== "all" ||
     filters.priority !== "all" ||
     filters.type !== "all" ||

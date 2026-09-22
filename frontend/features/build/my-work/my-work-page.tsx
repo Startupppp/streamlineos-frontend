@@ -187,7 +187,6 @@ export function MyWorkPage() {
             filters={() =>
               filterBarReady ? (
                 <TicketFilterBar
-                  showSprintFilter={false}
                   showAssigneeFilter={false}
                   statuses={orgStates}
                 />

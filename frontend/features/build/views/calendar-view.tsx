@@ -34,7 +34,6 @@ interface Ticket {
   sequenceId?: string | null;
   assigneeId?: string | null;
   cycleId?: number | null;
-  sprintId?: number | null;
   labels?: { label?: { id: number; name: string; color?: string | null } }[];
 }
 

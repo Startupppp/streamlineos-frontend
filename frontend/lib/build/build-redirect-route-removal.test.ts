@@ -62,6 +62,12 @@ const REMOVED_ROUTES: RemovedRoute[] = [
     redirectDestination: "/build/:projectId/settings/integrations/webhooks",
   },
   {
+    route: "/build/[projectId]/sprints",
+    appDir: join("[projectId]", "sprints"),
+    redirectSource: "/build/:projectId(\\\\d+)/sprints",
+    redirectDestination: "/build/:projectId/cycles",
+  },
+  {
     route: "/build/[projectId]/my-tickets",
     appDir: join("[projectId]", "my-tickets"),
     redirectSource: "/build/:projectId(\\\\d+)/my-tickets",
@@ -124,7 +130,7 @@ function everyBuildNavHref(): string[] {
 
 describe("removed Build redirect routes keep their deep link in next.config.ts", () => {
   it("covers every removed route, so a truncated list cannot pass vacuously", () => {
-    expect(REMOVED_ROUTES).toHaveLength(12);
+    expect(REMOVED_ROUTES).toHaveLength(13);
   });
 
   it.each(REMOVED_ROUTES)(

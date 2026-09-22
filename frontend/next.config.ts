@@ -49,18 +49,6 @@ const optimizePackageImports =
     : ["lucide-react"];
 
 const nextConfig: NextConfig = {
-  /**
-   * A second dev server on this working tree needs its own build directory.
-   *
-   * `next dev` writes a lock into `<distDir>/dev/lock` and refuses to start when
-   * one is already there, which is correct — two servers sharing one `.next`
-   * corrupt each other's output. Two people (or two agent sessions) working on
-   * the same checkout still need to run one each, so the directory is
-   * overridable: `NEXT_DIST_DIR=.next-local npx next dev -p 1002`.
-   *
-   * Unset in every normal case, so CI, Vercel and `pnpm dev` all keep writing
-   * `.next` exactly as before.
-   */
   distDir: process.env.NEXT_DIST_DIR || ".next",
   turbopack: {},
   webpack(config, { dev }) {
@@ -127,6 +115,11 @@ const nextConfig: NextConfig = {
     {
       source: "/build/:projectId(\\d+)/webhooks",
       destination: "/build/:projectId/settings/integrations/webhooks",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/sprints",
+      destination: "/build/:projectId/cycles",
       permanent: false,
     },
     {
@@ -214,6 +207,11 @@ const nextConfig: NextConfig = {
       destination: "/settings/notifications/policy",
       permanent: false,
     },
+    {
+      source: "/settings/notifications",
+      destination: "/settings/notifications/my-preferences",
+      permanent: false,
+    },
   ],
   images: {
     formats: ["image/webp"],
@@ -267,15 +265,6 @@ const nextConfig: NextConfig = {
     {
       source: "/(.*)",
       headers: [
-        /**
-         * Advertise that we select the shell variant from Sec-CH-UA-Mobile so
-         * the browser sends it on the next navigation.  Caches must vary on it
-         * (and User-Agent for the UA fallback path) so they never serve the
-         * mobile shell to a desktop or vice-versa.  The Vary header on static
-         * _next/static/** assets is harmless — those URLs are content-addressed
-         * and served Cache-Control: immutable, so no proxy varies their cache
-         * by this header in practice.
-         */
         { key: "Accept-CH", value: "Sec-CH-UA-Mobile" },
         { key: "Vary", value: "Sec-CH-UA-Mobile, User-Agent" },
         { key: "X-Frame-Options", value: "DENY" },

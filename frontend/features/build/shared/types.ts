@@ -51,7 +51,6 @@ export interface KanbanTicket {
   storyPoints?: number | null;
   assigneeId?: string | null;
   epicId?: number | null;
-  sprintId?: number | null;
   cycleId?: number | null;
   moduleId?: number | null;
   rank?: string | null;

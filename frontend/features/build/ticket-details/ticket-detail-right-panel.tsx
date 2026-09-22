@@ -34,7 +34,6 @@ interface TicketDetailRightPanelProps {
     priority?: string | null;
     type?: string | null;
     points?: number | null;
-    sprintId?: number | null;
     epicId?: number | null;
     moduleId?: number | null;
     cycleId?: number | null;
@@ -74,7 +73,6 @@ interface TicketDetailRightPanelProps {
   ticketId: number;
   projectId: number;
   projectKey?: string | null;
-  sprints: Array<{ id: number; name: string; status?: string | null }>;
   statuses?: Array<{ name: string; id: number }>;
   onAutoSave: (field: Record<string, unknown>) => void;
   asideClassName?: string;
@@ -89,7 +87,6 @@ function TicketDetailRightPanelBody({
   ticketId,
   projectId,
   projectKey,
-  sprints,
   statuses,
   onAutoSave,
   onClose,
@@ -103,7 +100,6 @@ function TicketDetailRightPanelBody({
   ticketId: number;
   projectId: number;
   projectKey?: string | null;
-  sprints: TicketDetailRightPanelProps["sprints"];
   statuses?: TicketDetailRightPanelProps["statuses"];
   onAutoSave: TicketDetailRightPanelProps["onAutoSave"];
   onClose: () => void;
@@ -149,7 +145,6 @@ function TicketDetailRightPanelBody({
           ticketId={ticketId}
           projectId={projectId}
           projectKey={projectKey}
-          sprints={sprints}
           statuses={statuses}
           onAutoSave={onAutoSave}
           canUpdate={canUpdate}
@@ -179,7 +174,6 @@ export function TicketDetailRightPanel({
   ticketId,
   projectId,
   projectKey,
-  sprints,
   statuses,
   onAutoSave,
   asideClassName,
@@ -199,7 +193,6 @@ export function TicketDetailRightPanel({
     ticketId,
     projectId,
     projectKey,
-    sprints,
     statuses,
     onAutoSave,
     onClose: handleClose,

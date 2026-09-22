@@ -181,7 +181,6 @@ export function ProjectViewsToolbar({
       members={members}
       statuses={statuses}
       projectId={projectId}
-      showSprintFilter={false}
       showDoneToggle
       hideCompleted={hideCompleted}
       onHideCompletedChange={onHideCompletedChange}

@@ -26,7 +26,6 @@ interface TicketSidebarProps {
     priority?: string | null;
     type?: string | null;
     points?: number | null;
-    sprintId?: number | null;
     epicId?: number | null;
     moduleId?: number | null;
     cycleId?: number | null;
@@ -73,7 +72,6 @@ interface TicketSidebarProps {
   ticketId: number;
   projectId?: number;
   projectKey?: string | null;
-  sprints: Array<{ id: number; name: string; status?: string | null }>;
   statuses?: Array<{ name: string; id: number }>;
   onAutoSave: (field: Record<string, unknown>) => void;
   canUpdate: boolean;
@@ -85,7 +83,6 @@ export function TicketSidebar({
   ticketId,
   projectId,
   projectKey,
-  sprints,
   statuses,
   onAutoSave,
   canUpdate,
@@ -111,8 +108,6 @@ export function TicketSidebar({
   const handleStatusChange = (v: string) => onAutoSave({ status: v });
   const handlePriorityChange = (v: string) => onAutoSave({ priority: v });
   const handleTypeChange = (v: string) => onAutoSave({ type: v });
-  const handleSprintChange = (v: string) =>
-    onAutoSave({ sprintId: v === "none" ? null : parseInt(v) });
   const handleEpicChange = (v: string) =>
     onAutoSave({ epicId: v === "none" ? null : parseInt(v) });
   const handleModuleChange = (v: string) =>
@@ -162,7 +157,6 @@ export function TicketSidebar({
         key={`${ticket.id}:${ticket.points ?? ""}`}
         ticket={ticket}
         statuses={statuses}
-        sprints={sprints}
         epics={selectableEpics}
         modules={modules ?? []}
         cycles={cycles ?? []}
@@ -170,7 +164,6 @@ export function TicketSidebar({
         onPriorityChange={handlePriorityChange}
         onTypeChange={handleTypeChange}
         onPointsChange={handlePointsChange}
-        onSprintChange={handleSprintChange}
         onEpicChange={handleEpicChange}
         onModuleChange={handleModuleChange}
         onCycleChange={handleCycleChange}

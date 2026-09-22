@@ -96,16 +96,16 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     );
   });
 
-  it("passes sprint filter as sprintIds to the server", () => {
+  it("passes cycle filter as cycleId to the server", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
-    const opts = useCaptureQueryOptions(5, { sprint: "3,4" });
+    const opts = useCaptureQueryOptions(5, { cycle: "3,4" });
     void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/5/tickets",
-      expect.objectContaining({ sprintIds: "3,4" }),
+      expect.objectContaining({ cycleId: "3,4" }),
       forwardedSignal,
       expect.any(Function),
     );

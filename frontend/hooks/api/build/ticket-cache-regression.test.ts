@@ -88,10 +88,10 @@ it.each(["title", "priority", "dueDate"])("invalidates My Issues after %s change
   client.clear();
 });
 
-it("bulk updates invalidate actual detail, board, sprint and report cache entries", async () => {
+it("bulk updates invalidate actual detail, board, cycle and report cache entries", async () => {
   const client = createAppQueryClient();
   const board = queryKeys.projects.tickets({ projectId: 42, view: "board", status: "OPEN" });
-  const keys = [queryKeys.projects.ticket(1), queryKeys.projects.ticket(2), board, queryKeys.projects.sprints(42), queryKeys.projects.analytics(42), queryKeys.projectReports.velocity(42), queryKeys.dashboard.myIssues()];
+  const keys = [queryKeys.projects.ticket(1), queryKeys.projects.ticket(2), board, queryKeys.projects.cycles(42), queryKeys.projects.analytics(42), queryKeys.projectReports.velocity(42), queryKeys.dashboard.myIssues()];
   for (const key of keys) client.setQueryData(key, key === board ? { data: [], pagination: { nextCursor: null } } : []);
   jest.mocked(apiClient.post).mockResolvedValue({ updated: 2, ticketIds: [1, 2] });
   const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);

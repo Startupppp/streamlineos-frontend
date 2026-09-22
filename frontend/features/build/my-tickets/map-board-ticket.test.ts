@@ -10,7 +10,6 @@ const base: Ticket = {
   priority: "HIGH",
   projectId: 42,
   ticketNumber: 1,
-  sprintId: null,
   epicId: null,
   reporterId: null,
   points: null,

@@ -1,10 +1,10 @@
 import type { Ticket } from "@/types/projects";
-import type { Sprint } from "@/types/projects";
+import type { Cycle } from "@/types/projects";
 
-export type AgendaSource = "sprint" | "overdue" | "blocked" | "recently_completed" | "open_action_items";
+export type AgendaSource = "cycle" | "overdue" | "blocked" | "recently_completed" | "open_action_items";
 
 export interface GenerateAgendaOptions {
-  sprint?: Sprint | null;
+  cycle?: Cycle | null;
   tickets?: Ticket[];
   sources: AgendaSource[];
 }
@@ -20,27 +20,27 @@ function sortByPriority(tickets: Ticket[]): Ticket[] {
 }
 
 export function generateAgenda(options: GenerateAgendaOptions): string {
-  const { sprint, tickets = [], sources } = options;
+  const { cycle, tickets = [], sources } = options;
   const now = new Date();
   const sections: string[] = [];
 
-  if (sources.includes("sprint") && sprint) {
-    const sprintTickets = sortByPriority(
+  if (sources.includes("cycle") && cycle) {
+    const cycleTickets = sortByPriority(
       tickets.filter(
         (t) =>
-          t.sprintId === sprint.id &&
+          t.cycleId === cycle.id &&
           t.status !== "DONE" &&
           t.status !== "CANCELLED",
       ),
     ).slice(0, 8);
 
-    if (sprintTickets.length > 0) {
-      const lines = sprintTickets.map(
+    if (cycleTickets.length > 0) {
+      const lines = cycleTickets.map(
         (t) => `  - [${t.priority ?? "MEDIUM"}] ${t.title} (${t.status})`,
       );
-      sections.push(`Sprint: ${sprint.name}\n${lines.join("\n")}`);
-    } else if (sprint) {
-      sections.push(`Sprint: ${sprint.name}\n  - No open tickets in this sprint`);
+      sections.push(`Cycle: ${cycle.name}\n${lines.join("\n")}`);
+    } else if (cycle) {
+      sections.push(`Cycle: ${cycle.name}\n  - No open tickets in this cycle`);
     }
   }
 
