@@ -27,16 +27,16 @@ const BurnupChart = dynamic(
 
 export function BurnupSection({ projectId }: { projectId: number }) {
   const velocity = useVelocityReport(projectId);
-  const [sprintId, setSprintId] = useState<number | undefined>(undefined);
+  const [cycleId, setCycleId] = useState<number | undefined>(undefined);
 
   const sprints = velocity.data ?? [];
-  const activeSprintId =
-    sprints.length > 0 ? sprints[sprints.length - 1].sprintId : undefined;
-  const selectedSprintId = sprintId ?? activeSprintId;
+  const activeCycleId =
+    sprints.length > 0 ? sprints[sprints.length - 1].cycleId : undefined;
+  const selectedCycleId = cycleId ?? activeCycleId;
 
   const { data, isLoading, isError, error, refetch } = useBurnupReport(
     projectId,
-    selectedSprintId,
+    selectedCycleId,
   );
 
   const handleRetry = useCallback(() => Promise.all([velocity.refetch(), refetch()]), [velocity.refetch, refetch]);
@@ -52,13 +52,13 @@ export function BurnupSection({ projectId }: { projectId: number }) {
   );
 
   function handleSprintChange(value: string) {
-    setSprintId(Number(value));
+    setCycleId(Number(value));
   }
 
   const sprintSelect =
     sprints.length > 0 ? (
       <Select
-        value={selectedSprintId ? String(selectedSprintId) : undefined}
+        value={selectedCycleId ? String(selectedCycleId) : undefined}
         onValueChange={handleSprintChange}
       >
         <SelectTrigger className="w-44 text-sm bg-muted/40 border-border">
@@ -66,7 +66,7 @@ export function BurnupSection({ projectId }: { projectId: number }) {
         </SelectTrigger>
         <SelectContent>
           {sprints.map((s) => (
-            <SelectItem key={s.sprintId} value={String(s.sprintId)}>
+            <SelectItem key={s.cycleId} value={String(s.cycleId)}>
               {s.name}
             </SelectItem>
           ))}

@@ -31,7 +31,7 @@ const snapshotResultContract = lazyContract(() =>
 );
 
 interface VelocitySprint {
-  sprintId: number;
+  cycleId: number;
   name: string;
   startDate: string;
   endDate: string;
@@ -92,14 +92,14 @@ export function useVelocityReport(projectId: number) {
   });
 }
 
-export function useBurnupReport(projectId: number, sprintId?: number) {
+export function useBurnupReport(projectId: number, cycleId?: number) {
   const canView = useCan("build:view");
   return useQuery({
-    queryKey: accountingAndSupportQueryKeys.projectReports.burnup(projectId, sprintId),
+    queryKey: accountingAndSupportQueryKeys.projectReports.burnup(projectId, cycleId),
     queryFn: ({ signal }) =>
       apiClient.get<BurnupPoint[]>(
         `/build/${projectId}/reports/burnup`,
-        sprintId ? { sprintId } : undefined,
+        cycleId ? { cycleId } : undefined,
         signal,
         burnupDataContract,
       ),

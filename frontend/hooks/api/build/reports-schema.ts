@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const velocityContract = z.array(z.object({
-  sprintId: z.number().int(),
+  cycleId: z.number().int(),
   name: z.string(),
   startDate: z.string(),
   endDate: z.string(),
