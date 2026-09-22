@@ -20,11 +20,6 @@ export interface Cycle {
   name: string;
 }
 
-export interface Sprint {
-  id: number;
-  name: string;
-}
-
 export interface ProjectOption {
   id: number;
   name: string;
@@ -45,7 +40,6 @@ export type BuildFilterCategory =
   | "assignee"
   | "label"
   | "cycle"
-  | "sprint"
   | "dates"
   | "project";
 
@@ -66,7 +60,6 @@ const BUILD_CATEGORY_TITLES = {
   assignee: "Assignee",
   label: "Label",
   cycle: "Cycle",
-  sprint: "Sprint",
   dates: "Due Dates",
   project: "Project",
 } satisfies Record<BuildFilterCategory, string>;
@@ -86,7 +79,6 @@ export interface FilterState {
   selectedLabels: string[];
   selectedCycles: string[];
   selectedProjectIds: string[];
-  sprintParam: string;
   dueDateFrom: string;
   dueDateTo: string;
 }

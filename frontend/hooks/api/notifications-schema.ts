@@ -161,7 +161,7 @@ export const notificationPolicyRowContract = notificationPolicyBase;
 
 /** `notificationPreferenceSchema` */
 export const notificationPreferenceContract = z.object({
-  id: z.number().int(),
+  id: z.number().int().optional(),
   userId: z.string(),
   orgId: z.string(),
   emailEnabled: z.boolean(),
@@ -182,8 +182,8 @@ export const notificationPreferenceContract = z.object({
   inherited: z
     .object({ defaultChannels: z.array(z.string()), canUserOverride: z.boolean() })
     .optional(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 
 const suppressionBase = z.object({

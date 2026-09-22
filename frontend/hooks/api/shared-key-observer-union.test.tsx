@@ -54,7 +54,7 @@ function makeClient(scopes: string[]): QueryClient {
     ) as AccessResponse["scopes"],
     isOrgOwner: false,
     canManageOrganizationMembership: false,
-    modules: { HR: true, CRM: true },
+    modules: { hr: true, crm: true },
   };
   client.setQueryData(queryKeys.access.me(), access);
   return client;

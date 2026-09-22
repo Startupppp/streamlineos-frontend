@@ -208,7 +208,7 @@ export interface BroadcastListResponse {
 }
 
 export interface NotificationPreferences {
-  id: number;
+  id?: number;
   userId: string;
   orgId: string;
   emailEnabled: boolean;
@@ -222,8 +222,8 @@ export interface NotificationPreferences {
   digestMode: DigestMode;
   categories: Record<string, boolean>;
   channelCategories: Record<string, Record<string, boolean>>;
-  createdAt: Date | string;
-  updatedAt: Date | string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }
 
 export interface UpdatePreferencesInput {
