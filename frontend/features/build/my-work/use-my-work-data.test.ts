@@ -56,3 +56,39 @@ describe("useMyWorkData Due Dates filter", () => {
     expect(mineCall?.[0]).not.toHaveProperty("dueDateTo");
   });
 });
+
+describe("useMyWorkData legacy cycle deep links", () => {
+  beforeEach(() => {
+    mockedUseAllWork.mockClear();
+  });
+
+  it("normalises the legacy cycle param to cycleId so old deep links keep filtering", () => {
+    renderWith("cycle=42");
+
+    const mineCall = mockedUseAllWork.mock.calls.find(
+      ([filters]) => filters?.scope === "mine",
+    );
+
+    expect(mineCall?.[0]).toMatchObject({ cycleId: "42" });
+  });
+
+  it("prefers an explicit cycleId over the legacy cycle param when both are present", () => {
+    renderWith("cycle=42&cycleId=99");
+
+    const mineCall = mockedUseAllWork.mock.calls.find(
+      ([filters]) => filters?.scope === "mine",
+    );
+
+    expect(mineCall?.[0]).toMatchObject({ cycleId: "99" });
+  });
+
+  it("sends no cycleId when neither the legacy nor the canonical param is present", () => {
+    renderWith("");
+
+    const mineCall = mockedUseAllWork.mock.calls.find(
+      ([filters]) => filters?.scope === "mine",
+    );
+
+    expect(mineCall?.[0]).not.toHaveProperty("cycleId");
+  });
+});
