@@ -184,3 +184,83 @@ and it was designed around rather than discovered late.
 - One coordinator, four parallel lanes, disjoint file ownership
 - Gates run serially after all lanes finished — concurrent runs corrupt fixture-planting gates
 - DONE marked only against measured evidence recorded above
+
+## Post-merge review — 2026-09-22
+
+Run in the closure session (`docs/build-module/NEXT-CLOSURE-STATUS.md`). The merge had already happened,
+so the review that was meant to precede it was performed after the fact against `main`. Confirmed with
+`git rev-list --left-right --count main...build/phase-3-workflows` → `9  0`: the branch is fully contained
+in `main`, landed as `ade105b12`. Nothing was left to merge.
+
+| Item | Verdict |
+|---|---|
+| Unrelated files | CLEAN — no migration, schema, `rbac/route-access/`, command-palette, Issues-explorer, portal/public or shared-nav file in the change set |
+| Code comments | **DEFECT** — see below |
+| Route manifest | CLEAN — pinned at 88, bidirectional disk check passes, all CONSOLIDATE/MOVE targets resolve |
+| Redirect behavior | CLEAN — all nine redirect pages call `enforceRouteAccess(literal)` before `redirect()`, literals byte-identical, no destination is itself a source |
+| Permission gates | CLEAN — every new route resolves to a permission decision, not `unknown`; `danger` gates on `isOwner` at both the section and the render |
+| Cache invalidation | CONCERN — see below |
+| URL state | CLEAN, one sub-concern — defaults omitted, cursor deleted on any shape-param change, invalid enum values dropped |
+| Mobile-card wiring | CLEAN — `mobileCard` passed at `all-work-table-section.tsx:183` and `my-work-content.tsx:205` (structural only) |
+| Bulk-action error handling | CLEAN at the project level, CONCERN inside — see below |
+
+### Defects found, each verified at source by the coordinator
+
+**D1 — two code comments in application code.** `features/build/my-work/use-my-work-data.ts:111-112` carries two
+`//` lines explaining the legacy `cycle` param fallback. Introduced by `ade105b12`. The ledger above claims
+"No code comments, no TODO comments" under Rules enforced; that claim is inaccurate. The reason belongs in a
+test name. No runtime impact.
+
+**D2 — FE-77 violation.** `features/build/my-work/use-my-work-bulk.ts:7` imports `isApiError` from
+`@/lib/api-client` rather than its owner `@/lib/api-envelope`. The sibling `use-all-work-bulk.ts:9` does it
+correctly, so this is a copy-paste slip in a file this phase created. Works today only because `api-client`
+re-exports it; it breaks the day that re-export is cleaned up.
+
+**C1 — inner chunk fan-out is not `allSettled`.** `features/build/all-work/use-all-work-bulk.ts:86` sends
+per-project chunks with `Promise.all`. The outer per-project fan-out correctly uses `Promise.allSettled`, but
+if a user selects more than 100 tickets from one project and chunk 1 commits while chunk 2 fails, the whole
+project call rejects, that project lands in `failed`, and its per-project tickets cache is never invalidated —
+so chunk 1's committed changes read stale until `staleTime` expires. The `allWorkAll` invalidation still fires,
+so the All Work view itself refreshes. Low probability (page size is 50, so >100 from one project needs
+multi-page traversal) but the asymmetry is real and undocumented.
+
+**C2 — `view` change does not reset the Inbox cursor.** `features/build/inbox/use-inbox-url-state.ts:72-75`
+excludes `view` from the `filterChanged` guard, so switching notifications↔drafts leaves `cursor` in the URL.
+The backend treats a foreign cursor as absent, so the immediate render is correct; the cost is that switching
+back restores a stale page position.
+
+### Corrections to this ledger's own claims
+
+- "No code comments, no TODO comments" under Rules enforced is **inaccurate** — see D1.
+- L1's "chunked at the backend's 100-id cap" overstates the scope. My Work's `use-my-work-bulk.ts` does **not**
+  chunk; `fanOutBulk` sends all per-project ids in one request. Defensible, since page size 50 makes >100 from
+  one project unreachable, but only All Work and the Inbox actually chunk.
+- The `Promise.allSettled` claim is true of the outer project fan-out only. The inner chunk loop is `Promise.all`
+  (C1), and the ledger does not record that asymmetry.
+
+### Known limitations — re-checked, all four still open
+
+- **All Work selection for List and Board.** Still Table-only. `AllWorkListSection` and `AllWorkBoardSection`
+  pass no selection props because `ListView` and `KanbanBoard` expose no selection API. Closing it means adding
+  a selection prop to both view primitives, threading `tableSelection` through both sections, and showing the
+  existing `BulkActionBar` in those modes. The bulk hooks and the action bar already exist. Medium.
+- **Inbox `type` dropdown.** Still absent — `InboxFilterBar` receives the handler as an unused `_type` prop, and
+  `inbox-page.tsx` forwards `type` to nothing, so no invalid value can currently reach the backend. Adding the
+  select over 18 `NotificationCategory` values should land **together with** enum validation in
+  `use-inbox-url-state.ts`, modelled on the existing `parseSection`, so an unrecognised value is dropped rather
+  than forwarded to a `.strict()` backend schema. Small-medium.
+- **Physical removal of old redirect routes.** Nine redirect-only `page.tsx` files remain. Not a one-file change.
+  A safe deletion must move in one commit: delete the nine files, remove their manifest entries, decrement the
+  pinned count at `build-route-manifest.test.ts:33` from 88, regenerate the census snapshot with the script
+  rather than by hand, and decide the six `next.config.ts` redirects. Correct sequence is to make those
+  redirects `permanent: true` **before** deleting the pages — they are the network-level fallback for deep links
+  arriving from email and bookmarks, and removing both at once loses it. `features/build/my-tickets/**` should
+  be assessed in the same pass. Deleting page files without the manifest count and snapshot fails the
+  bidirectional manifest test immediately.
+- **Browser verification of mobile layout and focus order.** Still owed. `mobileCard` is confirmed wired
+  structurally, but jsdom cannot see layout, focus order or paint. Handed to Codex in
+  `docs/build-module/CODEX-BROWSER-QA.md`.
+
+None of D1, D2, C1 or C2 was fixed in the closure session: all four live in the My Work, All Work and Inbox
+implementations, which that session's brief placed explicitly out of scope. They are carried in
+`NEXT-CLOSURE-STATUS.md` as TODO.

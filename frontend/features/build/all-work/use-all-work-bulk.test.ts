@@ -235,6 +235,58 @@ describe("useAllWorkBulk — chunks ≤100 ids per project call", () => {
   });
 });
 
+describe("useAllWorkBulk — a failed chunk does not discard the chunk that already committed", () => {
+  const tickets150 = Array.from({ length: 150 }, (_, i) => makeTicket(i + 1, 77));
+  const selection150 = new Set<string | number>(tickets150.map((t) => t.id));
+
+  function renderWithFailingSecondChunk(failure: Error) {
+    getPost()
+      .mockResolvedValueOnce({ updated: 100, ticketIds: [] })
+      .mockRejectedValueOnce(failure);
+    const { result } = renderHook(() => useAllWorkBulk(tickets150));
+    act(() => { result.current.setTableSelection(selection150); });
+    return result;
+  }
+
+  it("counts the tickets the first chunk committed when a later chunk of the same project fails", async () => {
+    const result = renderWithFailingSecondChunk(new Error("chunk two failed"));
+
+    await act(async () => { await result.current.handleBulkStatus("DONE"); });
+
+    expect(getToast().success).toHaveBeenCalledWith(expect.stringContaining("100 ticket"));
+  });
+
+  it("invalidates the project tickets cache because one of its chunks committed", async () => {
+    const result = renderWithFailingSecondChunk(new Error("chunk two failed"));
+
+    await act(async () => { await result.current.handleBulkStatus("DONE"); });
+
+    const keys = _qc.invalidateQueries.mock.calls.map(
+      (c: unknown[]) => JSON.stringify((c[0] as { queryKey: unknown }).queryKey),
+    );
+    expect(keys.some((k: string) => k.includes('"projectId":77'))).toBe(true);
+  });
+
+  it("still surfaces the failed chunk rather than reporting the project as wholly successful", async () => {
+    const result = renderWithFailingSecondChunk(new Error("chunk two failed"));
+
+    await act(async () => { await result.current.handleBulkStatus("DONE"); });
+
+    expect(getToast().error).toHaveBeenCalled();
+  });
+
+  it("reports a 409 on one chunk as a retryable conflict while the committed chunk still counts", async () => {
+    const FakeApiError = getFakeApiError();
+    const result = renderWithFailingSecondChunk(new FakeApiError("Conflict", 409, "CONFLICT"));
+
+    await act(async () => { await result.current.handleBulkStatus("DONE"); });
+
+    expect(getToast().warning).toHaveBeenCalledWith(expect.stringContaining("concurrent"));
+    expect(getToast().success).toHaveBeenCalledWith(expect.stringContaining("100 ticket"));
+    expect(getToast().error).not.toHaveBeenCalled();
+  });
+});
+
 describe("useAllWorkBulk — selection state", () => {
   it("clears selection after a fully successful bulk update", async () => {
     getPost().mockResolvedValue({ updated: 2, ticketIds: [1, 2] });

@@ -4,6 +4,16 @@ Coordinator-owned. Workers never edit this file. `DONE` requires: PR merged into
 
 States: `TODO` · `IN_PROGRESS` · `BLOCKED` · `READY_FOR_REVIEW` · `DONE`
 
+## Current status — 2026-09-22
+
+The historical entries below are preserved for audit history. The current source and verification state is:
+
+- **DONE:** release authorization, N-11 cold-load gates, Issues explorer residual, command palette residual, authorization census closure, migration-chain repair, and UX hardening.
+- **Verified:** `VULNERABLE = 0`; 83 Build pages have 0 weak cold-load gates; root route/execution checks and backend typecheck pass.
+- **Database execution blocked:** P0 #6 Sprint/Cycle, P0 #7 QA Bug lifecycle, and P0 #8 live composite `SET NULL` catalog verification require non-production PostgreSQL 15+.
+- **Migrations 1141/1142:** statically complete and ready for staging application; not applied because no safe staging database exists.
+- **Documentation authority:** `docs/build-module/PHASE-1-STATUS.md` and the final reconciliation section below supersede earlier historical `Still open` rows.
+
 Integration branch: `build/integration` (not yet created — awaiting approval)
 
 ## Verification wave — dispatched 2026-09-21
