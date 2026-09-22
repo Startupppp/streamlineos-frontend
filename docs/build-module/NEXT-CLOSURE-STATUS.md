@@ -22,8 +22,8 @@ Coordinator-owned. Workers never edit this file.
 | Phase B follow-up — two code comments in `use-my-work-data.ts` | DONE | `871103532` | 3 legacy-cycle tests carry the reason; mutation-proven | n/a | none |
 | Phase B follow-up — inner `Promise.all` in All Work chunking | DONE | `871103532` | 4 new tests; 3 fail against the reverted mutant | READY_FOR_CODEX_BROWSER_QA | none |
 | Phase B follow-up — Inbox `view` change does not reset cursor | DONE | `871103532` | 2 new tests; 1 fails against the reverted mutant | READY_FOR_CODEX_BROWSER_QA | none |
-| Phase B follow-up — All Work selection for List/Board | DONE | `2d3b41ed5` → `7805cd6a6` | 72 focused tests across All Work, Kanban, Inbox and notification queries | READY_FOR_CODEX_BROWSER_QA | List and Kanban selection APIs are implemented and covered by mutation-sensitive tests |
-| Phase B follow-up — Inbox `type` dropdown | DONE | `2d3b41ed5` → `7805cd6a6` | Inbox filter, bounded list and URL-state tests pass | READY_FOR_CODEX_BROWSER_QA | Type filtering is implemented with URL state and notification-category validation |
+| Phase B follow-up — All Work selection for List/Board | DONE | `2d3b41ed5`, `cfd4b1afd` → merge `ebe2cd0b7` | 1420 tests / 186 suites green; board navigation guard mutation-proven | READY_FOR_CODEX_BROWSER_QA | none |
+| Phase B follow-up — Inbox `type` dropdown | DONE | `2d3b41ed5`, `cfd4b1afd` → merge `ebe2cd0b7` | 105 inbox tests; invalid-category drop mutation-proven | READY_FOR_CODEX_BROWSER_QA | none |
 | Phase B follow-up — physical removal of old redirect routes | DONE | `1d07fadad` | Route census: 88 routes, 79 pages, 0 weak cold-load gates; route and redirect tests pass | READY_FOR_CODEX_BROWSER_QA | `/build/goal` and `/build/pm-workspaces` page trees were removed; config redirects preserve deep links |
 | Phase C — static integration verification | DONE | — | see table below | n/a | none |
 | Phase D — Codex browser QA handoff | DONE | — | n/a | READY_FOR_CODEX_BROWSER_QA | See `CODEX-BROWSER-QA.md` |
@@ -159,6 +159,47 @@ Two lessons worth keeping. A file's mtime is not evidence about its contents —
 could have been read at any point. And a blocker is a claim: this one survived two phases without anyone testing
 it, which is the same failure the BLD-003 ledger already recorded about a "needs a scratch database" blocker that
 also turned out to be false.
+
+## The last two follow-ups, and the regression that nearly shipped with them
+
+Merged as `ebe2cd0b7`. Two workers ran in parallel on disjoint files; the coordinator reviewed, corrected and
+committed.
+
+**Board selection was delivered as a regression and had to be rebuilt.** The first implementation gave
+`KanbanBoard` a `selection` prop and made `handleSelect` toggle selection *instead of* navigating whenever that
+prop was present. Because All Work always passes it, the effect was that **clicking a card on the Board could no
+longer open the ticket** — the feature traded away the surface's primary action. The worker recorded it as
+intentional, having taken the shortcut because `KanbanTicketCard` sat outside its ownership.
+
+Rebuilt so selection is additive: card click navigates exactly as before, and selection is a checkbox on the
+card mirroring the existing `list-view-item` idiom. `selection` is threaded through
+`KanbanBoardColumn` → `KanbanVirtualTicketList` → `KanbanTicketCard` rather than intercepted at the top. Pinned
+by `kanban-card-selection.test.tsx`, whose first test is named for the invariant: reintroducing the regression
+fails exactly that test and nothing else.
+
+The reason this slipped through the worker's own suite is worth recording: its tests mocked `KanbanBoard`
+wholesale and asserted only that props were threaded. Prop-threading assertions cannot see behaviour, so a suite
+built entirely from them will pass whatever the component does with those props.
+
+**Three further corrections before merge**, each caught by a gate run against a main-checkout control:
+
+- `type-check:specs` showed 10 errors against main's 9. The extra one was a `require("react")` inside a hoisted
+  `jest.mock` factory shadowing the typed import, making `createContext<T>()` an untyped call. Fixed with a
+  `mock`-prefixed import, which `babel-plugin-jest-hoist` permits. Back to 9, same two files as main.
+- `check:type-assertions` flagged two new assertions in `use-inbox-url-state.ts`. Removed rather than
+  allowlisted — `.some()` and `.find()` replace the casts — and the category guard now has one definition that
+  `inbox-filter-bar.tsx` imports instead of duplicating.
+- `check:over-300` rose 569 → 570 because the new category tests pushed `inbox-list-bounded.test.tsx` to 338
+  lines. The ratchet may only shrink, so the suite was split into a shared harness plus two files of 233 and
+  118 lines: 17 tests before, 17 after, count back to 569.
+
+Final state on the merged branch: `pnpm type-check` 0 errors, `type-check:specs` 9 (main's baseline, zero new),
+eslint clean on every touched source file, `check:over-300` 569, route census 88 routes / 79 pages / 0 weak
+cold-load gates, and **1420 tests across 186 suites** in `features/build`, `lib/build` and
+`hooks/api/notifications`.
+
+The six `text-[11px]` eslint errors in `kanban-ticket-card.tsx` and `kanban-board-column.tsx` are pre-existing —
+identical counts on the untouched main checkout, and this change added none.
 
 ## Blockers
 
