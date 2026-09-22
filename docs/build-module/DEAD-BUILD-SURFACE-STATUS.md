@@ -158,6 +158,51 @@ frontend/features/build/drafts/comment-drafts-page.test.tsx
 - The seven `CONSOLIDATE` pages and three `MOVE` pages with a missing target —
   `BLOCKED`, because deleting them would remove the user job rather than move it.
 
+## Round 3 — the two remaining `MOVE` rows
+
+| Move | Outcome |
+|---|---|
+| `/build/goal` → `/build/goals` | **EXECUTED.** Route files renamed, `loading.tsx` moved with them so the detail route keeps the same boundary, `enforceRouteAccess` literals follow, all eight in-app callers repointed, `next.config.ts` redirects the old paths. Nothing deleted. |
+| `/build/goal/[goalId]` → `/build/goals/[goalId]` | **EXECUTED.** `/build/goal/:goalId(\d+)` redirects. |
+| `/build/pm-workspaces` → `/build/workspaces` | **EXECUTED** — by a parallel session, not by this one. This session implemented it, hit a real collision, reverted, and concluded wrongly that no contained fix existed. Corrected below. |
+
+### The workspaces move, and a wrong call worth recording
+
+`/build/workspaces` is a strict prefix of the workspace **scope** namespace
+`/build/workspaces/[pmWorkspaceId]/…`, so the organization-level list wins
+route-access resolution for every workspace deep link:
+
+```
+/build/workspaces/ws-1/feedbucket
+  expected  feedbucket:widgets:view
+  actual    build:workspaces:view
+```
+
+This session hit that in `build-nav-route-access-parity.test.ts` (three
+cross-scope paths plus `workspace-projects` key drift), tried `exact: true` on
+the nav destination, found it inert, reverted the move, and recorded it as
+needing a reviewed change to shared route-access resolution.
+
+**That was wrong.** A parallel session landed the same move with a *more
+specific route-access extension entry*:
+
+```ts
+{ prefix: "/build/workspaces/[pmWorkspaceId]", permission: "build:view", … }
+```
+
+Extension entries match by longest prefix, so the dynamic-segment entry shadows
+the organization index for workspace paths while the index keeps
+`build:workspaces:view` for itself. Nothing shared changed. The instinct not to
+alter permissions silently was correct; the claim that no contained fix existed
+was asserted after one failed attempt instead of being traced through
+`matchRouteAccessExtension`, which already had the answer.
+
+Their move is merged here. After the merge the parity test passes and
+`lib/build lib/rbac features/build/goals features/build/pm-workspaces
+components/layout/sidebar features/module-access` is **58 suites, 712 tests,
+zero failures** — including `sidebar-nav-inventory.test.ts`, whose digest the
+parallel session recomputed.
+
 ## Merged to `main`, and verified there
 
 `main` = `125c66eec`. The branch was merged by fast-forward using git's own

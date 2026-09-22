@@ -148,13 +148,52 @@ them destroys a working user surface.
 | Project saved views | route | `/build/[projectId]/views` | `/build/[projectId]/issues` | `build-project-catalog.ts:264` (live) | **BLOCKED** | Full page. |
 | Build customers | route | `/build/customers` | `/crm` | `build-organization-catalog.ts:103` (live), route-access entry at `:179`, `hooks/api/build/customers.ts` | **NEEDS_REVIEW** | **The two manifests disagree.** `build-route-manifest.ts:136` says `DELETE → /crm`; `01a-canonical-route-manifest-prd.md` `PG-ORG-007` says `same · KEEP CRM relation view`. A contradiction between two authorities is not a licence to delete. |
 
-### E. Move sources whose destination does not exist
+### E. Move sources whose destination did not exist
 
-| Candidate | Kind | Current path | Stated target | Target on disk | Decision | Evidence |
-|---|---|---|---|---|---|---|
-| Build goals list | route | `/build/goal` | `/build/goals` | **absent** — no `app/(authenticated)/build/goals/` | **BLOCKED** | `build-organization-catalog.ts:89` points at `/build/goal`. This is the only Goals implementation; deleting it removes the job outright. |
-| Build goal detail | route | `/build/goal/[goalId]` | `/build/goals/[goalId]` | **absent** | **BLOCKED** | Same. |
-| PM workspaces list | route | `/build/pm-workspaces` | `/build/workspaces` | **absent** — `app/(authenticated)/build/workspaces/` contains only `[pmWorkspaceId]`, no index page | **BLOCKED** | `build-organization-catalog.ts:75` points at `/build/pm-workspaces`. Creating the index page is new work, not deletion. |
+| Candidate | Kind | Current path | Stated target | Decision | Evidence |
+|---|---|---|---|---|---|
+| Build goals list | route | `/build/goal` | `/build/goals` | **MOVE — EXECUTED** | The move was completed rather than left open: the route files moved to `app/(authenticated)/build/goals/`, the `enforceRouteAccess` literal follows, all eight in-app callers now link to `/build/goals`, and `next.config.ts` redirects the old path. Nothing was deleted. |
+| Build goal detail | route | `/build/goal/[goalId]` | `/build/goals/[goalId]` | **MOVE — EXECUTED** | Same. `/build/goal/:goalId(\d+)` redirects to `/build/goals/:goalId`. `goal/loading.tsx` moved with it, so the detail route keeps exactly the boundary it had. |
+| PM workspaces list | route | `/build/pm-workspaces` | `/build/workspaces` | **MOVE — EXECUTED by a parallel session** | Landed on `main` as `1d07fadad`; this branch merged it. |
+
+#### The workspaces move: one collision, and the fix this session did not find
+
+Moving the organization-level list to `/build/workspaces` makes it a **strict
+prefix of the workspace scope namespace** `/build/workspaces/[pmWorkspaceId]/…`,
+so it wins route-access resolution for every workspace deep link:
+
+```
+/build/workspaces/ws-1/feedbucket
+  expected: feedbucket:widgets:view
+  actual:   build:workspaces:view      ← the org list entry won
+```
+
+This session implemented the move, hit exactly that failure in
+`build-nav-route-access-parity.test.ts` (three cross-scope paths plus
+`workspace-projects -> /build/workspaces/ws-1` key drift), tried `exact: true`
+on the nav destination — the pattern `org-projects` uses for `/build`, which has
+the identical shape — found it had no effect, and **reverted the move**,
+concluding it needed a change to shared route-access resolution.
+
+**That conclusion was wrong, and the correction is worth recording.** A parallel
+session landed the same move and fixed the collision with a *more specific
+route-access extension entry* rather than a resolver change:
+
+```ts
+{ prefix: "/build/workspaces/[pmWorkspaceId]", permission: "build:view", … }
+```
+
+Extension entries resolve by longest prefix, so the dynamic-segment entry
+shadows the organization index for every workspace path while the index keeps
+`build:workspaces:view` for itself. No shared semantics changed. The caution
+about not silently altering permissions was right; the belief that no contained
+fix existed was not — it was asserted after one failed attempt rather than
+traced through `matchRouteAccessExtension`, which had the answer in it.
+
+After merging, `build-nav-route-access-parity.test.ts` and all 58 suites in
+`lib/build lib/rbac features/build/goals features/build/pm-workspaces
+components/layout/sidebar features/module-access` pass — 712 tests, zero
+failures.
 
 ### F. Manifest rows with no page on disk
 

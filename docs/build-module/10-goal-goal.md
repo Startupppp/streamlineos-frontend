@@ -9,10 +9,10 @@
 
 - **Current/target route:** `/build/goal/[goalId]`
 - **Scope:** organization
-- **Disposition:** **MOVE**
+- **Disposition:** **MOVE — EXECUTED 2026-09-22**
 - **Decision:** Migrate the user job to `/build/goals/[goalId]`, preserve deep links temporarily, then remove this physical route.
 - **User job:** Track whether work changes the intended outcome.
-- **Evidence:** `frontend/app/(authenticated)/build/goal/[goalId]/page.tsx`; Route existence verified in the repository; live behavior not directly observed with a valid detail record. **ASSUMPTION:** the page follows its source component until browser evidence is captured.
+- **Evidence:** renamed 2026-09-22 to `frontend/app/(authenticated)/build/goals/[goalId]/page.tsx`. `frontend/next.config.ts` redirects `/build/goal/:goalId`; pinned by `frontend/lib/build/build-redirect-route-removal.test.ts`. Census: `docs/build-module/DEAD-BUILD-SURFACE-INVENTORY.md`.
 
 ## Product contract
 

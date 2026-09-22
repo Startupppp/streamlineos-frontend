@@ -10,6 +10,7 @@ import {
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { InfoIcon, XIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { FilterChip } from "@/components/list-view";
 import { getUserDisplayName } from "@/lib/person-display";
 import { useSprints } from "@/hooks/api/build/sprints";
@@ -128,14 +129,16 @@ export const WorkloadFilterBar = memo(function WorkloadFilterBar({
           <TooltipProvider delayDuration={200}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button
+                <Button
                   type="button"
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0 text-muted-foreground"
                   aria-label="About workload metrics"
                   {...infoHoverHandlers}
                 >
                   <InfoIcon ref={infoIconRef} size={14} />
-                </button>
+                </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-[16rem] text-xs">
                 Workload shows ticket count per member. Points are summed where set.

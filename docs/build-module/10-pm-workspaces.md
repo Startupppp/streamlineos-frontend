@@ -9,10 +9,10 @@
 
 - **Current/target route:** `/build/pm-workspaces`
 - **Scope:** organization
-- **Disposition:** **MOVE**
+- **Disposition:** **MOVE — BLOCKED 2026-09-22**
 - **Decision:** Migrate the user job to `/build/workspaces`, preserve deep links temporarily, then remove this physical route.
 - **User job:** Create a coherent operating area without forcing hierarchy.
-- **Evidence:** `frontend/app/(authenticated)/build/pm-workspaces/page.tsx`; Route existence verified in the repository; live behavior not directly observed with a valid detail record. **ASSUMPTION:** the page follows its source component until browser evidence is captured.
+- **Evidence:** `frontend/app/(authenticated)/build/pm-workspaces/page.tsx`. The move to `/build/workspaces` was implemented in full on 2026-09-22 and reverted: that path is a strict prefix of the workspace scope namespace `/build/workspaces/[pmWorkspaceId]/...`, so the organization list swallowed every workspace deep link in route-access resolution — `/build/workspaces/ws-1/feedbucket` resolved to `build:workspaces:view` instead of `feedbucket:widgets:view`. Marking the destination `exact: true` did not help; the resolver ignores it on that path. Completing the move needs a reviewed change to shared route-access resolution. See `docs/build-module/DEAD-BUILD-SURFACE-INVENTORY.md`.
 
 ## Product contract
 

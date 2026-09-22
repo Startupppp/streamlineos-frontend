@@ -37,13 +37,13 @@ the final route has no current physical page.
 | `PG-ORG-006` | `/build/command-center` | same · KEEP | BLD-02C |
 | `PG-ORG-007` | `/build/customers` | same · KEEP CRM relation view | BLD-02C |
 | `PG-ORG-008` | `/build/drafts` | `/build/inbox?view=drafts` · CONSOLIDATE | BLD-02C |
-| `PG-ORG-009` | `/build/goal` | `/build/goals` · MOVE | BLD-02C |
-| `PG-ORG-010` | `/build/goal/{goalId}` | `/build/goals/{goalId}` · MOVE | BLD-02C |
+| `PG-ORG-009` | `/build/goal` | `/build/goals` · MOVE — **executed 2026-09-22**, redirect in `next.config.ts` | BLD-02C |
+| `PG-ORG-010` | `/build/goal/{goalId}` | `/build/goals/{goalId}` · MOVE — **executed 2026-09-22**, redirect in `next.config.ts` | BLD-02C |
 | `PG-ORG-011` | `/build/inbox` | same · KEEP | BLD-02C |
 | `PG-ORG-012` | `/build/managed-products` | same · KEEP | BLD-02D |
 | `PG-ORG-013` | `/build/members` | `/build/settings/access` · CONSOLIDATE — **page deleted 2026-09-22**, redirect retained in `next.config.ts` | BLD-02C |
 | `PG-ORG-014` | `/build/my-work` | same · KEEP | BLD-02C |
-| `PG-ORG-015` | `/build/pm-workspaces` | `/build/workspaces` · MOVE | BLD-02C |
+| `PG-ORG-015` | `/build/pm-workspaces` | `/build/workspaces` · MOVE — **blocked**: the target is a strict prefix of the workspace scope namespace | BLD-02C |
 | `PG-ORG-016` | `/build/portfolios` | same · KEEP | BLD-02C |
 | `PG-ORG-017` | `/build/portfolios/{portfolioId}` | same · KEEP | BLD-02C |
 | `PG-ORG-018` | `/build/programs` | same · KEEP | BLD-02C |

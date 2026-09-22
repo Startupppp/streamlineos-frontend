@@ -45,6 +45,7 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
+  PM_FILL_SECTION,
 } from "@/components/pm-chrome";
 import { TEXT_BODY } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -133,8 +134,8 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
   if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
       <PageWrapper title="Goal" backHref="/build/goals">
-        <PmPageShell withGlow={false}>
-          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+        <PmPageShell>
+          <PmSection index={0} className={PM_FILL_SECTION}>
             <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
               {null}
             </PageState>
@@ -155,8 +156,8 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
   if (!goal) {
     return (
       <PageWrapper title="Goal" backHref="/build/goals">
-        <PmPageShell withGlow={false}>
-          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+        <PmPageShell>
+          <PmSection index={0} className={PM_FILL_SECTION}>
             <ErrorState
               title="Failed to load goal"
               description="This goal may have been removed or is unavailable."

@@ -3,6 +3,8 @@
 import * as React from "react";
 import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
+import { PmPageShell, PmSection, PM_FILL_SECTION } from "@/components/pm-chrome";
 import { InboxList } from "./inbox-list";
 import { InboxDraftsPanel } from "./inbox-drafts-panel";
 import { useInboxUrlState } from "./use-inbox-url-state";
@@ -92,36 +94,42 @@ export function InboxPage() {
       title="Inbox"
       subtitle="Mentions, assignments, approvals and drafts"
       noInternalScroll
-      contentClassName="!p-0 mx-4 mb-2 sm:mx-6 lg:mx-8 rounded-xl border border-border"
     >
-      <div className="flex h-full min-h-0 min-w-0 divide-x divide-border">
-        <div
-          className={cn(
-            "min-h-0 min-w-0 flex-col overflow-hidden lg:shrink-0",
-            hasSelection
-              ? "hidden lg:flex lg:w-[280px] xl:w-[320px]"
-              : "flex w-full lg:w-[320px] xl:w-[360px]",
-          )}
+      <PmPageShell>
+        <PmSection
+          index={0}
+          className={cn(PM_FILL_SECTION, CONTENT_PANEL_SOLID)}
         >
-          {listPane}
-        </div>
+          <div className="flex h-full min-h-0 min-w-0 divide-x divide-border">
+            <div
+              className={cn(
+                "min-h-0 min-w-0 flex-col overflow-hidden lg:shrink-0",
+                hasSelection
+                  ? "hidden lg:flex lg:w-[280px] xl:w-[320px]"
+                  : "flex w-full lg:w-[320px] xl:w-[360px]",
+              )}
+            >
+              {listPane}
+            </div>
 
-        {(isDesktopShell || hasSelection) ? (
-          <div
-            className={cn(
-              "min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-hidden",
-              hasSelection ? "flex" : "hidden lg:flex",
+            {(isDesktopShell || hasSelection) ? (
+              <div
+                className={cn(
+                  "min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-hidden",
+                  hasSelection ? "flex" : "hidden lg:flex",
+                )}
+              >
+                <InboxPreviewPane
+                  notification={selectedNotification}
+                  onClose={handleClearSelection}
+                />
+              </div>
+            ) : (
+              <div className="hidden lg:flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-hidden" aria-hidden />
             )}
-          >
-            <InboxPreviewPane
-              notification={selectedNotification}
-              onClose={handleClearSelection}
-            />
           </div>
-        ) : (
-          <div className="hidden lg:flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-hidden" aria-hidden />
-        )}
-      </div>
+        </PmSection>
+      </PmPageShell>
     </PageWrapper>
   );
 }

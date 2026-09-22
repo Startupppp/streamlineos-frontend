@@ -27,7 +27,7 @@ import {
   buildVelocityData,
   buildEstimateData,
 } from "@/features/build/analytics/analytics-chart-data";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 
 interface ReportsOverviewTabProps {
   projectId: number;
@@ -57,7 +57,7 @@ export function ReportsOverviewTab({ projectId }: ReportsOverviewTabProps) {
   const estimateData = useMemo(() => buildEstimateData(analytics), [analytics]);
 
   return (
-    <PmPageShell>
+    <>
       <PageState
         resolution={pageState}
         className={PM_FILL_PANEL}
@@ -107,6 +107,6 @@ export function ReportsOverviewTab({ projectId }: ReportsOverviewTabProps) {
           </div>
         </PmSection>
       </PageState>
-    </PmPageShell>
+    </>
   );
 }
