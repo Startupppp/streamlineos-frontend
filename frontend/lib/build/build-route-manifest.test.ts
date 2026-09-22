@@ -29,9 +29,15 @@ const diskRoutes = new Set(
   collectPageFilePaths(APP_BUILD_DIR).map(absolutePathToRoute),
 );
 
-describe("BLD-001 — build route manifest covers all 88 authenticated build pages bidirectionally", () => {
-  it("manifest has 88 entries so the coverage check cannot pass vacuously with an empty or truncated list", () => {
-    expect(BUILD_ROUTE_MANIFEST).toHaveLength(88);
+describe("BLD-001 — build route manifest covers all 87 authenticated build pages bidirectionally", () => {
+  it("manifest has 87 entries so the coverage check cannot pass vacuously with an empty or truncated list", () => {
+    expect(BUILD_ROUTE_MANIFEST).toHaveLength(87);
+  });
+
+  it("no longer tracks /build/access, because the obsolete redirect route was deleted and its job belongs to /build/settings/access", () => {
+    const routes = BUILD_ROUTE_MANIFEST.map((entry) => entry.route);
+    expect(routes).not.toContain("/build/access");
+    expect(routes).toContain("/build/settings/access");
   });
 
   it("disk route count matches manifest count so neither direction can silently absorb extra entries", () => {

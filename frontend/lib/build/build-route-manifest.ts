@@ -124,7 +124,6 @@ const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
     target: "/build/[projectId]/settings/workflow",
   },
   { route: "/build/[projectId]/workload", decision: "KEEP", target: null },
-  { route: "/build/access", decision: "MOVE", target: "/build/settings/access" },
   { route: "/build/all-work", decision: "KEEP", target: null },
   { route: "/build/approvals", decision: "KEEP", target: null },
   {
