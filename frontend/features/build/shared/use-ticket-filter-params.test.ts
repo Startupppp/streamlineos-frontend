@@ -41,7 +41,7 @@ describe("ticket filter URL state", () => {
 
   it("hydrates every selection from the URL", () => {
     const { result } = renderWith(
-      "status=OPEN,DONE&priority=HIGH&type=BUG&assigneeId=u1,u2&labels=3&cycle=9&projectIds=4&sprintId=7&dueDateFrom=2026-01-01&dueDateTo=2026-02-01&q=login",
+      "status=OPEN,DONE&priority=HIGH&type=BUG&assigneeId=u1,u2&labels=3&cycle=9&projectIds=4&dueDateFrom=2026-01-01&dueDateTo=2026-02-01&q=login",
     );
 
     expect(result.current.selectedStatuses).toEqual(["OPEN", "DONE"]);
@@ -51,7 +51,6 @@ describe("ticket filter URL state", () => {
     expect(result.current.selectedLabels).toEqual(["3"]);
     expect(result.current.selectedCycles).toEqual(["9"]);
     expect(result.current.selectedProjectIds).toEqual(["4"]);
-    expect(result.current.sprintParam).toBe("7");
     expect(result.current.dueDateFrom).toBe("2026-01-01");
     expect(result.current.dueDateTo).toBe("2026-02-01");
     expect(result.current.q).toBe("login");
@@ -81,22 +80,6 @@ describe("ticket filter URL state", () => {
     expect(lastParams().has("status")).toBe(false);
   });
 
-  it("replaces rather than accumulates for a single-valued filter", () => {
-    const { result } = renderWith("sprintId=7");
-
-    act(() => result.current.handleToggleSprint("9"));
-
-    expect(lastParams().get("sprintId")).toBe("9");
-  });
-
-  it("clears a single-valued filter when its current value is toggled", () => {
-    const { result } = renderWith("sprintId=7");
-
-    act(() => result.current.handleToggleSprint("7"));
-
-    expect(lastParams().has("sprintId")).toBe(false);
-  });
-
   it("returns to the first page whenever a filter changes", () => {
     const { result } = renderWith("status=OPEN&page=4");
 
@@ -124,7 +107,7 @@ describe("ticket filter URL state", () => {
 
   it("clears every filter but keeps unrelated URL state", () => {
     const { result } = renderWith(
-      "status=OPEN&priority=HIGH&sprintId=7&dueDateFrom=2026-01-01&page=3&q=login&tab=board",
+      "status=OPEN&priority=HIGH&cycle=7&dueDateFrom=2026-01-01&page=3&q=login&tab=board",
     );
 
     act(() => result.current.clearAll());
@@ -134,7 +117,6 @@ describe("ticket filter URL state", () => {
       "status",
       "priority",
       "type",
-      "sprintId",
       "assigneeId",
       "labels",
       "cycle",

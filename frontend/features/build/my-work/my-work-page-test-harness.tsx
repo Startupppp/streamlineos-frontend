@@ -173,7 +173,6 @@ export const stubTicket = {
   projectKey: "ENG",
   projectName: "Engineering",
   ticketNumber: 1,
-  sprintId: null,
   epicId: null,
   assigneeId: null,
   points: null,

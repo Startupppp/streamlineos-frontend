@@ -76,7 +76,7 @@ export function useAllWorkFilters(pmWorkspaceId?: string): UseAllWorkFiltersRetu
     setListParams({
       q: null, status: null, priority: null, type: null,
       assigneeId: null, labels: null, projectIds: null, projectId: null,
-      cycleId: null, sprintId: null, dueDateFrom: null, dueDateTo: null,
+      cycleId: null, dueDateFrom: null, dueDateTo: null,
       scope: null, cursor: null,
     });
   }, [setListParams]);

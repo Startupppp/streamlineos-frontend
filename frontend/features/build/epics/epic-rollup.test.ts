@@ -11,7 +11,6 @@ const BASE_TICKET: Ticket = {
   priority: null,
   projectId: 1,
   ticketNumber: 1,
-  sprintId: null,
   epicId: 10,
   reporterId: null,
   points: null,

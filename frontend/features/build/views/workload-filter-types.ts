@@ -14,11 +14,6 @@ export interface StatusOption {
   type?: string | null;
 }
 
-export interface SprintOption {
-  id: number;
-  name: string;
-}
-
 export interface CycleOption {
   id: number;
   name: string;
@@ -27,7 +22,6 @@ export interface CycleOption {
 export interface WorkloadFilterMenuProps {
   filters: FilterState;
   members: WorkloadMember[];
-  sprints: SprintOption[];
   cycles: CycleOption[];
   projectStatuses?: StatusOption[];
   activeFilterCount: number;
@@ -35,7 +29,6 @@ export interface WorkloadFilterMenuProps {
 }
 
 export type WorkloadFilterCategory =
-  | "sprint"
   | "cycle"
   | "priority"
   | "type"
@@ -43,7 +36,6 @@ export type WorkloadFilterCategory =
   | "assignee";
 
 export type StringFilterKey =
-  | "sprintId"
   | "cycleId"
   | "priority"
   | "type"

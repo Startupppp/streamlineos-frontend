@@ -10,7 +10,7 @@ import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { Meeting, ProjectMemberRecord } from "@/types/projects";
 
-interface Sprint {
+interface Cycle {
   id: number;
   name: string;
 }
@@ -18,7 +18,7 @@ interface Sprint {
 export function buildMeetingsColumns(
   projectId: number,
   memberMap: Map<string, ProjectMemberRecord>,
-  sprintMap: Map<number, Sprint>,
+  cycleMap: Map<number, Cycle>,
 ): DataTableColumn<Meeting>[] {
   return [
     {
@@ -46,10 +46,10 @@ export function buildMeetingsColumns(
           >
             <TruncatedText text={row.title} />
           </Link>
-          {row.sprintId != null && sprintMap.has(row.sprintId) ? (
+          {row.cycleId != null && cycleMap.has(row.cycleId) ? (
             <span className="flex max-w-full min-w-0 items-center gap-1 text-dense text-muted-foreground">
               <Layers className="h-3 w-3 shrink-0" />
-              <TruncatedText text={sprintMap.get(row.sprintId)?.name ?? ""} className="text-dense" />
+              <TruncatedText text={cycleMap.get(row.cycleId)?.name ?? ""} className="text-dense" />
             </span>
           ) : null}
         </div>

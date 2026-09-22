@@ -5,7 +5,7 @@ import { useListFilterParams, type ListFilterSpec } from "@/components/list-view
 
 /**
  * Build's declaration, and the first caller of the shared list-filter hook. The
- * nine categories below used to be a closed union inside the hook itself, which
+ * categories below used to be a closed union inside the hook itself, which
  * is why no other module could reach any of this.
  */
 export const TICKET_FILTER_SPEC: ListFilterSpec = {
@@ -17,7 +17,6 @@ export const TICKET_FILTER_SPEC: ListFilterSpec = {
     { key: "label", label: "Label", arity: "multi", params: ["labels"] },
     { key: "cycle", label: "Cycle", arity: "multi", params: ["cycle"] },
     { key: "project", label: "Project", arity: "multi", params: ["projectIds"] },
-    { key: "sprint", label: "Sprint", arity: "single", params: ["sprintId"] },
     {
       key: "dates",
       label: "Due Dates",
@@ -40,7 +39,6 @@ export function useTicketFilterParams() {
 
     return {
       q: filters.search,
-      sprintParam: values["sprint"]?.[0] ?? "",
       dueDateFrom: values["dates"]?.[0] ?? "",
       dueDateTo: values["dates"]?.[1] ?? "",
       selectedStatuses: group("status"),
@@ -59,7 +57,6 @@ export function useTicketFilterParams() {
       handleToggleAssignee: (id: string) => toggle("assignee", id),
       handleToggleLabel: (id: string) => toggle("label", id),
       handleToggleCycle: (id: string) => toggle("cycle", id),
-      handleToggleSprint: (id: string) => toggle("sprint", id),
       handleToggleProject: (id: string) => toggle("project", id),
       handleDueDateFromChange: (value: string) => setAt("dates", 0, value),
       handleDueDateToChange: (value: string) => setAt("dates", 1, value),
@@ -70,7 +67,6 @@ export function useTicketFilterParams() {
       makeRemoveLabel: makeRemove("label"),
       makeRemoveCycle: makeRemove("cycle"),
       makeRemoveProject: makeRemove("project"),
-      handleRemoveSprint: () => clearCategory("sprint"),
       handleRemoveDueDate: () => clearCategory("dates"),
       clearAll: filters.clearAll,
     };

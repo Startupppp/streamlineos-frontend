@@ -81,7 +81,7 @@ export interface CreateTestRunInput {
   environment?: string;
   browserDevice?: string;
   testerId?: string;
-  sprintId?: number;
+  cycleId?: number;
   releaseId?: number;
 }
 

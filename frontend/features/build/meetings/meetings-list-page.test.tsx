@@ -6,7 +6,7 @@ jest.mock("@/hooks/api/build", () => ({
   useMeetings: jest.fn(),
   useCreateMeeting: jest.fn(),
   useProjectMembers: jest.fn(),
-  useSprints: jest.fn(),
+  useCycles: jest.fn(),
   useProjectBoardTickets: jest.fn(),
 }));
 
@@ -122,7 +122,7 @@ import {
   useMeetings,
   useCreateMeeting,
   useProjectMembers,
-  useSprints,
+  useCycles,
   useProjectBoardTickets,
 } from "@/hooks/api/build";
 import { useCan, useAccess } from "@/hooks/api/access";
@@ -130,7 +130,7 @@ import { useCan, useAccess } from "@/hooks/api/access";
 const mockUseMeetings = useMeetings as jest.Mock;
 const mockUseCreateMeeting = useCreateMeeting as jest.Mock;
 const mockUseProjectMembers = useProjectMembers as jest.Mock;
-const mockUseSprints = useSprints as jest.Mock;
+const mockUseCycles = useCycles as jest.Mock;
 const mockUseProjectBoardTickets = useProjectBoardTickets as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
@@ -162,7 +162,7 @@ beforeEach(() => {
   mockUseMeetings.mockReturnValue(baseMeetingsResult());
   mockUseCreateMeeting.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseProjectMembers.mockReturnValue({ data: [] });
-  mockUseSprints.mockReturnValue({ data: [] });
+  mockUseCycles.mockReturnValue({ data: [] });
   mockUseProjectBoardTickets.mockReturnValue({ data: undefined });
 });
 

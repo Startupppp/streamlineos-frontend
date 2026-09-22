@@ -24,7 +24,6 @@ function toListTicket(t: AllWorkTicket) {
     sequenceId: undefined,
     assigneeId: t.assigneeId,
     cycleId: t.cycleId,
-    sprintId: t.sprintId,
     dueDate: t.dueDate,
     startDate: t.startDate,
     assignee: t.assignee

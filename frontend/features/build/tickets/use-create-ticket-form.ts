@@ -175,7 +175,7 @@ export function useCreateTicketForm({
     if (projectId != null) {
       queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.tickets({ projectId }) });
       queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.detail(projectId) });
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.sprints(projectId) });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.cycles(projectId) });
     }
     onCreated?.();
     if (createMore) {

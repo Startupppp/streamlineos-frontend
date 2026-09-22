@@ -54,7 +54,6 @@ function makeTicket(id: number, projectId: number): AllWorkTicket {
     projectKey: "ENG",
     projectName: "Engineering",
     ticketNumber: id,
-    sprintId: null,
     epicId: null,
     assigneeId: null,
     points: null,

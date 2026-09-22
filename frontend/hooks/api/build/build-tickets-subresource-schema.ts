@@ -220,7 +220,6 @@ const allWorkItemSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   assigneeId: z.string().nullable(),
-  sprintId: z.number().int().nullable(),
   cycleId: z.number().int().nullable(),
   epicId: z.number().int().nullable(),
   projectId: z.number().int().nullable(),

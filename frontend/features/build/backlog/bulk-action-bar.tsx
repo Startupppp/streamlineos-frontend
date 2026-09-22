@@ -16,7 +16,7 @@ import {
   ResponsivePopoverTrigger,
 } from "@/components/ui/responsive-popover";
 import { Input } from "@/components/ui/input";
-import type { Sprint } from "@/types/projects";
+import type { Cycle } from "@/types/projects";
 import { getUserDisplayName } from "@/lib/person-display";
 import { PM_TOOLBAR } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
@@ -44,16 +44,16 @@ interface LabelOption {
 interface BulkActionBarProps {
   selectedCount: number;
   members: Member[];
-  sprints: Sprint[];
+  cycles: Cycle[];
   statuses: readonly StatusOptionSource[] | undefined;
   labels?: LabelOption[];
-  hideSprint?: boolean;
+  hideCycle?: boolean;
   projectId?: number;
   excludeIds?: Set<string | number>;
   onBulkStatus: (value: string) => void;
   onBulkPriority: (value: string) => void;
   onBulkAssignee: (value: string) => void;
-  onBulkSprint: (value: string) => void;
+  onBulkCycle: (value: string) => void;
   onBulkLabel?: (value: string) => void;
   onBulkParent?: (parentTicketId: number | null) => void;
   onClear: () => void;
@@ -151,16 +151,16 @@ function ParentPickerPopover({
 export const BulkActionBar = memo(function BulkActionBar({
   selectedCount,
   members,
-  sprints,
+  cycles,
   statuses,
   labels,
-  hideSprint = false,
+  hideCycle = false,
   projectId,
   excludeIds,
   onBulkStatus,
   onBulkPriority,
   onBulkAssignee,
-  onBulkSprint,
+  onBulkCycle,
   onBulkLabel,
   onBulkParent,
   onClear,
@@ -234,20 +234,20 @@ export const BulkActionBar = memo(function BulkActionBar({
             </SelectContent>
           </Select>
         ) : null}
-        {!hideSprint ? (
-          <Select onValueChange={onBulkSprint}>
+        {!hideCycle ? (
+          <Select onValueChange={onBulkCycle}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Move to Sprint" />
+              <SelectValue placeholder="Move to Cycle" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="backlog" className="text-xs">
-                Backlog (remove sprint)
+                Backlog (remove cycle)
               </SelectItem>
-              {sprints
-                .filter((s) => s.status !== "COMPLETED")
-                .map((s) => (
-                  <SelectItem key={s.id} value={String(s.id)} className="text-xs">
-                    <span className={TEXT_ONE_LINE}>{s.name}</span>
+              {cycles
+                .filter((c) => c.status !== "completed")
+                .map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)} className="text-xs">
+                    <span className={TEXT_ONE_LINE}>{c.name}</span>
                   </SelectItem>
                 ))}
             </SelectContent>

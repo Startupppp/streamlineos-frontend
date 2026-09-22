@@ -22,7 +22,7 @@ function assertNever(x: never): never {
   throw new Error(`Unhandled view type: ${String(x)}`);
 }
 import { type FilterState as WorkloadFilterState, type MemberCapacityData } from "./workload-types";
-import type { Sprint } from "@/types/projects";
+import type { Cycle } from "@/types/projects";
 import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
 import { PM_PANEL } from "@/components/pm-chrome";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
@@ -63,12 +63,12 @@ interface ProjectBoardContentProps {
   ) => void;
   onClearWorkloadFilters: () => void;
   capacityByMemberId?: Map<string, MemberCapacityData>;
-  sprints: Sprint[];
+  cycles: Cycle[];
   selectedIds: Set<string | number>;
   onBulkStatus: (v: string) => void;
   onBulkPriority: (v: string) => void;
   onBulkAssignee: (v: string) => void;
-  onBulkSprint: (v: string) => void;
+  onBulkCycle: (v: string) => void;
   onBulkParent: (parentTicketId: number | null) => void;
   onClearSelection: () => void;
   onSelectionChange: (sel: Set<string | number>) => void;
@@ -99,12 +99,12 @@ export function ProjectBoardContent({
   onWorkloadFilterChange,
   onClearWorkloadFilters,
   capacityByMemberId,
-  sprints,
+  cycles,
   selectedIds,
   onBulkStatus,
   onBulkPriority,
   onBulkAssignee,
-  onBulkSprint,
+  onBulkCycle,
   onBulkParent,
   onClearSelection,
   onSelectionChange,
@@ -206,14 +206,14 @@ export function ProjectBoardContent({
               <BulkActionBar
                 selectedCount={selectedIds.size}
                 members={members}
-                sprints={sprints}
+                cycles={cycles}
                 statuses={statuses}
                 projectId={projectId}
                 excludeIds={selectedIds}
                 onBulkStatus={onBulkStatus}
                 onBulkPriority={onBulkPriority}
                 onBulkAssignee={onBulkAssignee}
-                onBulkSprint={onBulkSprint}
+                onBulkCycle={onBulkCycle}
                 onBulkParent={onBulkParent}
                 onClear={onClearSelection}
               />
@@ -254,14 +254,14 @@ export function ProjectBoardContent({
                   <BulkActionBar
                     selectedCount={selectedIds.size}
                     members={members}
-                    sprints={sprints}
+                    cycles={cycles}
                     statuses={statuses}
                     projectId={projectId}
                     excludeIds={selectedIds}
                     onBulkStatus={onBulkStatus}
                     onBulkPriority={onBulkPriority}
                     onBulkAssignee={onBulkAssignee}
-                    onBulkSprint={onBulkSprint}
+                    onBulkCycle={onBulkCycle}
                     onBulkParent={onBulkParent}
                     onClear={onClearSelection}
                   />

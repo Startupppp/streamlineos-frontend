@@ -24,7 +24,6 @@ const DETAIL_RESPONSE = {
   priority: "MEDIUM",
   projectId: 3,
   ticketNumber: 12,
-  sprintId: null,
   epicId: null,
   assigneeMembershipId: 4,
   reporterId: "user-a",

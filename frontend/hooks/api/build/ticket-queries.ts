@@ -55,7 +55,6 @@ export type BoardFilters = {
   assigneeId?: string;
   labels?: string;
   cycle?: string;
-  sprint?: string;
   module?: string;
 };
 
@@ -69,7 +68,6 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
     filters?.assigneeId ||
     filters?.labels ||
     filters?.cycle ||
-    filters?.sprint ||
     filters?.module
   );
 
@@ -89,7 +87,6 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
       if (filters?.assigneeId) params.assigneeId = filters.assigneeId;
       if (filters?.labels) params.labelIds = filters.labels;
       if (filters?.cycle) params.cycleId = filters.cycle;
-      if (filters?.sprint) params.sprintIds = filters.sprint;
       if (filters?.module) params.moduleIds = filters.module;
       return apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, params, signal, ticketListPageLazy);
     },

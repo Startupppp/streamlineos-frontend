@@ -22,7 +22,6 @@ export function toKanbanTicket(t: AllWorkTicket): KanbanTicket {
     rank: t.rank ?? undefined,
     epicId: t.epicId ?? undefined,
     assigneeId: t.assigneeId ?? undefined,
-    sprintId: t.sprintId ?? undefined,
     cycleId: t.cycleId,
     dueDate: t.dueDate,
     startDate: t.startDate,
@@ -56,7 +55,6 @@ export type TableRow = {
   dueDate: string | null | undefined;
   assigneeId: string | null | undefined;
   cycleId: number | null | undefined;
-  sprintId: number | null | undefined;
   assignee: {
     id: string;
     name: string | undefined;
@@ -82,7 +80,6 @@ export function toTableTicket(t: AllWorkTicket): TableRow {
     dueDate: t.dueDate,
     assigneeId: t.assigneeId,
     cycleId: t.cycleId,
-    sprintId: t.sprintId,
     assignee: t.assignee
       ? {
           id: t.assignee.id,
