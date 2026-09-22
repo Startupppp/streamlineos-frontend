@@ -72,7 +72,7 @@ interface Props {
 }
 
 export function ReferenceChecksTab({ candidateId }: Props) {
-  const { data: checks, isLoading } = useReferenceChecks(candidateId);
+  const { data: checks, isLoading, isError, error, refetch } = useReferenceChecks(candidateId);
   const createCheck = useCreateReferenceCheck(candidateId);
 
   const [sheetOpen, setSheetOpen] = useState(false);
