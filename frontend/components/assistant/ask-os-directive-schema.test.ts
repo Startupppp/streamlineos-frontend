@@ -79,7 +79,7 @@ describe("parseAskOsDirective", () => {
       reason: "needs-reauth",
       summary: "Your Outlook connection needs refreshing.",
     });
-    expect(result?.reason).not.toBe("no-connection");
+    if (result?.kind === "connect-integration") expect(result.reason).not.toBe("no-connection");
   });
 
   it("returns null for malformed JSON after a known prefix", () => {
@@ -180,7 +180,7 @@ describe("parseAskOsDirectivePayload — typed object path for stream data frame
     });
     const result = parseAskOsDirective(`CONFIRM_ACTION:${body}`);
     expect(result?.kind).toBe("confirm-action");
-    expect(result?.token).toBe("tok-xyz");
+    if (result?.kind === "confirm-action") expect(result.token).toBe("tok-xyz");
   });
 });
 

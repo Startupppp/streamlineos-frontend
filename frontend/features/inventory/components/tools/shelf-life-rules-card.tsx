@@ -4,10 +4,11 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
+import { useCanState } from "@/hooks/api/access";
 import { useShelfLifeRules, type ShelfLifeRule } from "@/hooks/api/inventory/system-health";
 import { ShelfLifeRuleSheet } from "./shelf-life-rule-sheet";
 
@@ -51,8 +52,9 @@ const COLUMNS: DataTableColumn<ShelfLifeRule>[] = [
  * silently means "any lot will do" for a customer who negotiated otherwise.
  */
 export function ShelfLifeRulesCard() {
+  const settingsState = useCanState("inventory:settings:manage");
   const [editing, setEditing] = useState<ShelfLifeRule | "new" | null>(null);
-  const { data, isLoading, isError, error, refetch } = useShelfLifeRules();
+  const { data, isPending, isError, error, refetch } = useShelfLifeRules();
 
   function handleRetry(): void {
     void refetch();
@@ -92,7 +94,9 @@ export function ShelfLifeRulesCard() {
         </Button>
       </CardHeader>
       <CardContent className="p-0">
-        {isError ? (
+        {settingsState === "denied" ? (
+          <NoPermissionState compact permission="inventory:settings:manage" />
+        ) : isError ? (
           <ErrorState
             title="Couldn't load the shelf-life floors"
             description={getErrorMessage(error)}
@@ -103,7 +107,7 @@ export function ShelfLifeRulesCard() {
             data={data ?? []}
             columns={columns}
             getRowKey={(row) => row.id}
-            isLoading={isLoading}
+            isLoading={isPending}
             emptyState={
               <InventoryEmptyState
                 illustrationPreset="default"

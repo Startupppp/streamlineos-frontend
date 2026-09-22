@@ -16,6 +16,7 @@ import {
   Users,
 } from "lucide-react"
 import type { PermissionKey } from "@/lib/rbac/permissions"
+import type { ProductKey } from "@/components/layout/sidebar/sidebar-nav-types"
 
 export interface CreateAction {
   id: string
@@ -30,13 +31,21 @@ export interface CreateAction {
 export interface CreateGroup {
   id: string
   label: string
+  products: readonly ProductKey[]
   items: CreateAction[]
+}
+
+export function orderGroupsForProduct(groups: CreateGroup[], product: ProductKey): CreateGroup[] {
+  const inContext = groups.filter((group) => group.products.includes(product))
+  const outOfContext = groups.filter((group) => !group.products.includes(product))
+  return [...inContext, ...outOfContext]
 }
 
 export const QUICK_CREATE_GROUPS: CreateGroup[] = [
   {
     id: "comms",
     label: "Comms",
+    products: ["home"],
     items: [
       {
         id: "send-mail",
@@ -64,6 +73,7 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
   {
     id: "work",
     label: "Work",
+    products: ["build", "helpdesk"],
     items: [
       {
         id: "new-project",
@@ -94,6 +104,7 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
   {
     id: "crm",
     label: "CRM",
+    products: ["crm"],
     items: [
       {
         id: "new-lead",
@@ -132,6 +143,7 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
   {
     id: "people",
     label: "People",
+    products: ["hrms", "payroll", "timesheets", "administration"],
     items: [
       {
         id: "add-employee",
@@ -161,6 +173,7 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
   {
     id: "docs",
     label: "Docs & more",
+    products: ["documents", "surveys", "sign", "finance", "inventory"],
     items: [
       {
         id: "kb-page",

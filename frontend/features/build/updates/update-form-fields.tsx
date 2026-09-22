@@ -11,10 +11,8 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
+import type { CreateUpdateInput } from "./updates-schema";
 
-export interface CreateUpdateInput {
-  body: string;
-}
 
 interface UpdateFormFieldsProps {
   form: UseFormReturn<CreateUpdateInput>;

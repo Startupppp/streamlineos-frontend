@@ -75,9 +75,11 @@ jest.mock("@/hooks/api/sign/templates", () => ({
   useSignTemplates: () => ({ data: [TEMPLATE], isLoading: false }),
 }));
 
+const ALLOWED_ACCESS = { permission: "sign:bulk_send:run", allowed: true, denied: false, pending: false };
+
 jest.mock("@/hooks/api/sign/bulk-send", () => ({
   ACTIVE_BULK_SEND_STATUSES: new Set(["pending", "validating", "running"]),
-  useBulkSendJobs: () => ({ data: [JOB], isLoading: false, isError: false, refetch: jest.fn() }),
+  useBulkSendJobs: () => ({ data: [JOB], isLoading: false, isError: false, refetch: jest.fn(), access: ALLOWED_ACCESS }),
   useCancelBulkSendJob: () => ({ mutateAsync: jest.fn(), isPending: false }),
   useBulkSendJob: (jobId: number | undefined) => ({
     data: jobId === undefined ? undefined : { job: JOB, rows: FAILED_ROWS },

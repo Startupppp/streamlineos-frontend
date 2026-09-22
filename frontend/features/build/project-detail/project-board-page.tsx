@@ -11,7 +11,7 @@ import { ProjectAiMenu } from "@/features/build/ai/project-ai-menu";
 import { SaveViewDialog } from "@/features/build/views/save-view-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
-import { ErrorState } from "@/components/shared/error-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallback";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -47,6 +47,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     setSaveViewOpen,
     saveViewName,
     createView,
+    updateView,
     selectedIds,
     ticketsLoading,
     ticketsError,
@@ -72,6 +73,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     handleOpenSaveView,
     handleSaveViewNameChange,
     handleSaveView,
+    handleUpdateActiveView,
     handleWorkloadFilterChange,
     handleClearWorkloadFilters,
     handleTicketSelect,
@@ -79,7 +81,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     handleClearSelection,
   } = useBoardUrlState(projectId, defaultView);
 
-  const isLoading = projectLoading || ticketsLoading;
+  const isLoading = projectLoading;
 
   const handleRetryProject = useCallback(() => void refetchProject(), [refetchProject]);
   const handleRetryTickets = useCallback(() => void refetchTickets(), [refetchTickets]);
@@ -138,7 +140,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Loading..." noInternalScroll>
+      <PageWrapper title={<Skeleton className="h-5 w-40" />} noInternalScroll>
         <KanbanBoardSkeleton />
       </PageWrapper>
     );
@@ -186,6 +188,8 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
           activeViewName={activeView?.name ?? null}
           onClearView={handleClearView}
           onOpenSaveView={handleOpenSaveView}
+          onUpdateView={handleUpdateActiveView}
+          isUpdatingView={updateView.isPending}
           projectId={projectId}
           members={members}
           statuses={statuses}
@@ -204,44 +208,40 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
         empty state over a project that has thousands, and people created
         duplicates.
       */}
-      {ticketsError ? (
-        <ErrorState
-          className="flex-1 m-3"
-          title="Couldn't load this project's tickets"
-          description={getErrorMessage(ticketsErrorValue)}
-          onRetry={handleRetryTickets}
-        />
-      ) : (
-        <ProjectBoardContent
-          view={view}
-          filteredTickets={filteredTickets}
-          showEmptyFilterState={showEmptyFilterState}
-          onClearSearch={handleClearSearch}
-          projectId={projectId}
-          projectKey={data.key}
-          statuses={statuses}
-          wipLimits={wipLimits}
-          members={members}
-          displayOptions={displayOptions}
-          hideCompleted={hideCompleted}
-          hasActiveFilters={hasActiveFilters}
-          workloadFilters={workloadFilters}
-          onTicketSelect={handleTicketSelect}
-          onWorkloadFilterChange={handleWorkloadFilterChange}
-          sprints={sprints ?? []}
-          selectedIds={selectedIds}
-          onBulkStatus={handleBulkStatus}
-          onBulkPriority={handleBulkPriority}
-          onBulkAssignee={handleBulkAssignee}
-          onBulkSprint={handleBulkSprint}
-          onBulkParent={handleBulkParent}
-          onClearSelection={handleClearSelection}
-          onSelectionChange={handleSelectionChange}
-          isTruncated={isTruncated}
-          isFetchingMore={isFetchingMoreTickets}
-          onLoadMore={fetchMoreTickets}
-        />
-      )}
+      <ProjectBoardContent
+        view={view}
+        filteredTickets={filteredTickets}
+        showEmptyFilterState={showEmptyFilterState}
+        onClearSearch={handleClearSearch}
+        projectId={projectId}
+        projectKey={data.key}
+        statuses={statuses}
+        wipLimits={wipLimits}
+        members={members}
+        displayOptions={displayOptions}
+        hideCompleted={hideCompleted}
+        hasActiveFilters={hasActiveFilters}
+        workloadFilters={workloadFilters}
+        onTicketSelect={handleTicketSelect}
+        onWorkloadFilterChange={handleWorkloadFilterChange}
+        onClearWorkloadFilters={handleClearWorkloadFilters}
+        sprints={sprints ?? []}
+        selectedIds={selectedIds}
+        onBulkStatus={handleBulkStatus}
+        onBulkPriority={handleBulkPriority}
+        onBulkAssignee={handleBulkAssignee}
+        onBulkSprint={handleBulkSprint}
+        onBulkParent={handleBulkParent}
+        onClearSelection={handleClearSelection}
+        onSelectionChange={handleSelectionChange}
+        isTruncated={isTruncated}
+        isFetchingMore={isFetchingMoreTickets}
+        onLoadMore={fetchMoreTickets}
+        isLoading={ticketsLoading}
+        isError={ticketsError}
+        error={ticketsErrorValue}
+        onRetry={handleRetryTickets}
+      />
       <SaveViewDialog
         open={saveViewOpen}
         onOpenChange={setSaveViewOpen}

@@ -26,17 +26,23 @@ import {
 import type {
   HrLeaveAnalytics,
   HrLeaveType,
-  LeaveApprovalsResult,
   LeaveContextResult,
   LeavePolicyResponse,
   LeaveRequestsPage,
 } from "@/hooks/api/hr/leaves-types";
-import type { HrHolidayRow } from "@/hooks/api/hr/leaves-schema";
+import type { HrHolidayRow, LeavesTeamPage } from "@/hooks/api/hr/leaves-schema";
 import { NULL_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+
+export interface LeaveTeamListParams {
+  status?: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+  leaveTypeId?: number;
+  from?: string;
+  to?: string;
+  limit?: number;
+}
 
 export * from "@/hooks/api/hr/leave-request-mutations";
 export * from "@/hooks/api/hr/leave-type-mutations";
-export * from "@/hooks/api/hr/legacy-holiday-mutations";
 export type {
   HrLeaveType,
   LeavePolicyType,
@@ -65,19 +71,28 @@ export function useHrLeaveContext() {
   });
 }
 
-export function useHrLeaveApprovals(options?: { enabled?: boolean }) {
+export function useHrLeaveApprovals(
+  options?: LeaveTeamListParams & { enabled?: boolean },
+) {
   const canLeaves = useCan("hr:leaves:view");
   const hrEnabled = useModuleEnabled("hr");
   const identity = useLeaveQueryIdentity();
-  return useQuery({
-    queryKey: leaveTeamKey(identity),
-    queryFn: ({ signal }) => apiClient.get<LeaveApprovalsResult>("/hr/leaves/team", undefined, signal, leaveApprovalsC),
+  const { enabled, ...params } = options ?? {};
+  return useInfiniteQuery({
+    queryKey: leaveTeamKey(identity, params),
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get<LeavesTeamPage>("/hr/leaves/team", {
+        ...params,
+        ...(pageParam !== null ? { cursor: pageParam } : {}),
+      }, signal, leaveApprovalsC),
+    initialPageParam: NULL_ID_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor ?? undefined,
     staleTime: 2 * 60_000,
     enabled:
       Boolean(identity.orgId && identity.userId) &&
       hrEnabled &&
       canLeaves &&
-      (options?.enabled ?? true),
+      (enabled ?? true),
   });
 }
 
@@ -125,18 +140,6 @@ export function useHrMyLeaveRequestsInfinite(enabled = true) {
     getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor ?? undefined,
     staleTime: 2 * 60_000,
     enabled: Boolean(identity.orgId && identity.userId) && canSelf && enabled,
-  });
-}
-
-export function useHrHolidaysForYear(year: number) {
-  const canAttendance = useCan("hr:attendance:view");
-  const hrEnabled = useModuleEnabled("hr");
-  return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.holidaysYear(year),
-    queryFn: ({ signal }) =>
-      apiClient.get<HrHolidayRow[]>("/hr/holidays", { year }, signal, hrHolidaysListC),
-    staleTime: 2 * 60_000,
-    enabled: hrEnabled && canAttendance,
   });
 }
 

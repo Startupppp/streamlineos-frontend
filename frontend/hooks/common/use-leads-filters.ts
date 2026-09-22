@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useTransition } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useCallback } from "react";
+import { useSearchParams } from "next/navigation";
+import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 
 const LEADS_VIEWS = ["table", "kanban", "funnel"] as const;
 const SORT_DIRECTIONS = ["asc", "desc"] as const;
@@ -35,51 +36,18 @@ function parseOptional(v: string | null): string | undefined {
   return v || undefined;
 }
 
-/**
- * A URL segment is a bare `string`, so narrowing it with `as LeadsView` claimed
- * a membership nobody checked — `?view=nonsense` reached the switch and fell
- * through every branch. Reading the member back out of the tuple the union is
- * DERIVED from means the guard cannot drift from the type.
- */
-function parseView(v: string | null): LeadsView {
-  return LEADS_VIEWS.find((candidate) => candidate === v) ?? "table";
-}
-
-function parseSortDirection(v: string | null): LeadsFilters["sortDirection"] {
-  return SORT_DIRECTIONS.find((candidate) => candidate === v) ?? "desc";
-}
-
 export function useLeadsFilters(): UseLeadsFiltersReturn {
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
-  const [isPending, startTransition] = useTransition();
+  const { update, isPending } = useUrlFilters();
 
-  const view = parseView(searchParams.get("view"));
+  const view = parseEnum(searchParams.get("view"), LEADS_VIEWS, "table");
   const searchQuery = searchParams.get("q") || "";
   const statusFilter = parseOptional(searchParams.get("status"));
   const priorityFilter = parseOptional(searchParams.get("priority"));
   const sourceFilter = parseOptional(searchParams.get("source"));
   const sortColumn = searchParams.get("sortBy") || "createdAt";
-  const sortDirection = parseSortDirection(searchParams.get("order"));
+  const sortDirection = parseEnum(searchParams.get("order"), SORT_DIRECTIONS, "desc");
   const pageSize = Number(searchParams.get("size")) || 50;
-
-  const update = useCallback(
-    (updates: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value === "") {
-          params.delete(key);
-        } else {
-          params.set(key, value);
-        }
-      }
-      startTransition(() => {
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-      });
-    },
-    [searchParams, router, pathname],
-  );
 
   const setView = useCallback(
     (v: LeadsView) => {

@@ -6,7 +6,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAgingReport } from "@/hooks/api/accounting/reports";
 import { formatMinorMoney } from "@/lib/accounting/money";
-import { AGING_BUCKET_KEYS, type AgingPartyRow } from "@/types/accounting-reports";
+import {
+  AGING_BUCKET_KEYS,
+  type AgingPartyRow,
+} from "@/types/accounting/accounting-reports";
 import { AsOfControls } from "./report-date-controls";
 import { ExportReportButton } from "./export-report-button";
 import { ReconciliationBanner } from "./reconciliation-banner";
@@ -34,7 +37,9 @@ export function AgingReport() {
     {
       key: "party",
       header: "Who",
-      cell: (row) => <span className="truncate font-medium">{row.partyName}</span>,
+      cell: (row) => (
+        <span className="truncate font-medium">{row.partyName}</span>
+      ),
     },
     ...AGING_BUCKET_KEYS.map<DataTableColumn<AgingPartyRow>>((bucket) => ({
       key: bucket,
@@ -51,7 +56,8 @@ export function AgingReport() {
     {
       key: "total",
       header: "Total",
-      className: "text-right font-mono font-semibold tabular-nums whitespace-nowrap",
+      className:
+        "text-right font-mono font-semibold tabular-nums whitespace-nowrap",
       headerClassName: "text-right",
       cell: (row) => formatMinorMoney(row.totalMinor, currency),
     },
@@ -73,7 +79,10 @@ export function AgingReport() {
 
   return (
     <ReportShell
-      title={data?.title ?? (isReceivable ? "What customers owe us" : "What we owe suppliers")}
+      title={
+        data?.title ??
+        (isReceivable ? "What customers owe us" : "What we owe suppliers")
+      }
       subtitle="Open items grouped by how late they are."
       backHref="/accounting/reports"
       permission="accounting:reports:read"
@@ -90,7 +99,11 @@ export function AgingReport() {
           labelMode={controls.labelMode}
           onLabelModeChange={controls.setLabelMode}
           extra={
-            <Tabs value={controls.side} onValueChange={handleSideChange} className="shrink-0">
+            <Tabs
+              value={controls.side}
+              onValueChange={handleSideChange}
+              className="shrink-0"
+            >
               <TabsList aria-label="Which side">
                 <TabsTrigger value="ar">Customers owe us</TabsTrigger>
                 <TabsTrigger value="ap">We owe suppliers</TabsTrigger>
@@ -120,7 +133,10 @@ export function AgingReport() {
             differenceLabel="Open items differ from the ledger by"
           />
 
-          <ReportNotes title="What to know about this report" notes={data.notes} />
+          <ReportNotes
+            title="What to know about this report"
+            notes={data.notes}
+          />
 
           <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
             <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
@@ -134,13 +150,20 @@ export function AgingReport() {
                 emptyState={
                   <EmptyState
                     className="min-h-[40vh] flex-1 border-0 bg-transparent"
-                    title={isReceivable ? "Nobody owes you anything" : "You owe nobody anything"}
+                    title={
+                      isReceivable
+                        ? "Nobody owes you anything"
+                        : "You owe nobody anything"
+                    }
                     description="There are no open items on this date."
                   />
                 }
                 footer={
                   <div className="flex items-center justify-end gap-6 font-mono text-label font-semibold tabular-nums text-foreground">
-                    <span>Total outstanding: {formatMinorMoney(data.totalOpenMinor, data.currency)}</span>
+                    <span>
+                      Total outstanding:{" "}
+                      {formatMinorMoney(data.totalOpenMinor, data.currency)}
+                    </span>
                   </div>
                 }
               />

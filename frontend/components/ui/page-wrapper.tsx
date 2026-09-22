@@ -3,7 +3,9 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { Button } from "@/components/ui/button";
 import {
   PAGE_CHROME_BOTTOM,
@@ -14,6 +16,34 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { PageState } from "@/components/shared/page-state";
 import { LoadingState } from "@/components/shared/loading-state";
 import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
+
+function GuardedBackLink({
+  href,
+  label,
+  children,
+}: {
+  href: string;
+  label?: string;
+  children: React.ReactNode;
+}) {
+  const router = useRouter();
+  const requestLeave = useNavigationLeave();
+
+  const handleClick = React.useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>) => {
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+      event.preventDefault();
+      requestLeave(() => router.push(href));
+    },
+    [href, requestLeave, router],
+  );
+
+  return (
+    <Link href={href} aria-label={label} onClick={handleClick}>
+      {children}
+    </Link>
+  );
+}
 
 interface PageWrapperProps {
   title?: React.ReactNode;
@@ -67,6 +97,12 @@ export function PageWrapper({
   onRetry,
 }: PageWrapperProps) {
   const headingId = React.useId();
+  const requestLeave = useNavigationLeave();
+
+  const handleBack = React.useCallback(() => {
+    if (onBack) requestLeave(onBack);
+  }, [onBack, requestLeave]);
+
   const isInterrupted = state !== undefined && state.kind !== "ready" && state.kind !== "empty";
   const visibleActions = isInterrupted ? undefined : actions;
   const visibleFilters = isInterrupted ? undefined : filters;
@@ -83,7 +119,7 @@ export function PageWrapper({
         variant="ghost"
         size="icon-sm"
         className={backButtonClassName}
-        onClick={onBack}
+        onClick={handleBack}
         aria-label={backLabel}
       >
         <ArrowLeft className="h-4 w-4" />
@@ -95,9 +131,9 @@ export function PageWrapper({
         className={backButtonClassName}
         asChild
       >
-        <Link href={backHref} aria-label={backLabel}>
+        <GuardedBackLink href={backHref} label={backLabel}>
           <ArrowLeft className="h-4 w-4" />
-        </Link>
+        </GuardedBackLink>
       </Button>
     ) : null);
 

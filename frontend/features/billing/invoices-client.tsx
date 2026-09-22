@@ -351,6 +351,8 @@ export function InvoicesClient() {
                     : "No invoices have been raised for your organization yet."
                 }
                 action={canCreate ? { label: "New Invoice", onClick: handleOpenCreate } : undefined}
+                filtersActive={statusFilter !== "all"}
+                onClearFilters={() => setStatusFilter("all")}
                 compact
               />
             )

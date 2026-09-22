@@ -179,7 +179,7 @@ describe("workspace and product scope catalogs", () => {
     expect(ids).toContain("workspace-teams");
   });
 
-  it("exposes Overview, Linked projects, Roadmap, Goals, Feedback and Insights under the managed product base path (BSN-01-012, BSN-01-022)", () => {
+  it("exposes Overview, Feedback, Insights, Roadmap, Goals and Linked projects under the managed product base path (BSN-01-012, BSN-01-022)", () => {
     const model = resolveBuildNavModel({
       scope: productScope,
       access: fullAccess,
@@ -187,11 +187,11 @@ describe("workspace and product scope catalogs", () => {
     });
     expect(model.primary.map((d) => d.href)).toEqual([
       "/build/managed-products/7",
-      "/build/managed-products/7/projects",
-      "/build/managed-products/7/roadmap",
-      "/build/managed-products/7/goals",
       "/build/managed-products/7/feedback",
       "/build/managed-products/7/insights",
+      "/build/managed-products/7/roadmap",
+      "/build/managed-products/7/goals",
+      "/build/managed-products/7/projects",
     ]);
   });
 

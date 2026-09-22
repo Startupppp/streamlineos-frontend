@@ -5,8 +5,11 @@ import { toast } from "sonner";
 import { EntityFormSheet } from "@/components/shared";
 import type { ComboboxOption } from "@/components/ui/combobox";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCreateAccount, useUpdateAccount } from "@/hooks/api/accounting/ledger-mutations";
-import type { AccountNode } from "@/types/accounting-kernel";
+import {
+  useCreateAccount,
+  useUpdateAccount,
+} from "@/hooks/api/accounting/ledger-mutations";
+import type { AccountNode } from "@/types/accounting/accounting-kernel";
 import {
   createAccountFormSchema,
   editAccountFormSchema,
@@ -37,7 +40,8 @@ export function CreateAccountSheet({
         code: values.code,
         name: values.name,
         accountType: values.accountType,
-        parentAccountId: values.parentAccountId === "" ? null : values.parentAccountId,
+        parentAccountId:
+          values.parentAccountId === "" ? null : values.parentAccountId,
         isHeader: values.isHeader,
         isCash: values.isCash,
         currencyRestriction:
@@ -109,11 +113,14 @@ export function EditAccountSheet({
         accountId: account.id,
         input: {
           name: values.name,
-          parentAccountId: values.parentAccountId === "" ? null : values.parentAccountId,
+          parentAccountId:
+            values.parentAccountId === "" ? null : values.parentAccountId,
           isActive: values.isActive,
           isCash: values.isCash,
           currencyRestriction:
-            values.currencyRestriction === "" ? null : values.currencyRestriction,
+            values.currencyRestriction === ""
+              ? null
+              : values.currencyRestriction,
           description: values.description === "" ? null : values.description,
         },
       },
@@ -152,7 +159,9 @@ export function EditAccountSheet({
       {(form) => (
         <EditAccountFormFields
           form={form}
-          parentOptions={parentOptions.filter((option) => option.value !== account.id)}
+          parentOptions={parentOptions.filter(
+            (option) => option.value !== account.id,
+          )}
           currencyOptions={currencyOptions}
         />
       )}

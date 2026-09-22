@@ -20,11 +20,13 @@ export async function invalidateHrWorkforceQueries(
     directoryAndOwnershipQueryKeys.directory.peopleAll,
     directoryAndOwnershipQueryKeys.directory.workersAll,
   ];
+  keys.push(humanResourcesQueryKeys.hr.managerCoverage());
   if (userId) {
     keys.push(
       humanResourcesQueryKeys.hr.employee(userId),
       humanResourcesQueryKeys.hr.employeeStats(userId),
       humanResourcesQueryKeys.hr.employeeEmployment(userId),
+      humanResourcesQueryKeys.hr.reportingLine(userId),
     );
   }
 

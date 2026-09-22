@@ -7,6 +7,7 @@ import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type { SignAuditEvent, SignEnvelope, SignEnvelopeFull } from "@/types/sign";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface CreateSignEnvelopeInput {
@@ -136,27 +137,42 @@ export function useValidateSignEnvelope(id: number) {
 
 export function useSendSignEnvelope(id: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("sign:envelope:send", {
+  return useAuthorizedIdempotentMutation<SignEnvelope, Error, void>("sign:envelope:send", {
     mutationKey: ["signEnvelopes", "send", id],
-    mutationFn: () => apiClient.post<SignEnvelope>(`/sign/envelopes/${id}/send`, undefined, undefined, signEnvelopeMutationContract),
+    mutationFn: (_input, idempotencyKey) =>
+      apiClient.post<SignEnvelope>(
+        `/sign/envelopes/${id}/send`,
+        undefined,
+        { headers: { "Idempotency-Key": idempotencyKey } },
+        signEnvelopeMutationContract,
+      ),
     onSuccess: () => invalidateEnvelope(qc, id),
   });
 }
 
 export function useVoidSignEnvelope(id: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("sign:envelope:void", {
+  return useAuthorizedIdempotentMutation<SignEnvelope, Error, string>("sign:envelope:void", {
     mutationKey: ["signEnvelopes", "void", id],
-    mutationFn: (reason: string) => apiClient.post<SignEnvelope>(`/sign/envelopes/${id}/void`, { reason }, undefined, signEnvelopeMutationContract),
+    mutationFn: (reason, idempotencyKey) =>
+      apiClient.post<SignEnvelope>(
+        `/sign/envelopes/${id}/void`,
+        { reason },
+        { headers: { "Idempotency-Key": idempotencyKey } },
+        signEnvelopeMutationContract,
+      ),
     onSuccess: () => invalidateEnvelope(qc, id),
   });
 }
 
 export function useCorrectSignEnvelope(id: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("sign:envelope:correct", {
+  return useAuthorizedIdempotentMutation<SignEnvelopeFull, Error, CorrectSignEnvelopeInput>("sign:envelope:correct", {
     mutationKey: ["signEnvelopes", "correct", id],
-    mutationFn: (input: CorrectSignEnvelopeInput) => apiClient.post<SignEnvelopeFull>(`/sign/envelopes/${id}/correct`, input),
+    mutationFn: (input, idempotencyKey) =>
+      apiClient.post<SignEnvelopeFull>(`/sign/envelopes/${id}/correct`, input, {
+        headers: { "Idempotency-Key": idempotencyKey },
+      }),
     onSuccess: () => {
       invalidateEnvelope(qc, id);
       qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signEnvelopes.audit(id) });
@@ -179,18 +195,30 @@ export function useExtendSignEnvelopeExpiration(id: number) {
 
 export function useResendSignEnvelope(id: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("sign:envelope:send", {
+  return useAuthorizedIdempotentMutation<{ resentCount: number }, Error, void>("sign:envelope:send", {
     mutationKey: ["signEnvelopes", "resend", id],
-    mutationFn: () => apiClient.post<{ resentCount: number }>(`/sign/envelopes/${id}/resend`, undefined, undefined, signEnvelopeResendContract),
+    mutationFn: (_input, idempotencyKey) =>
+      apiClient.post<{ resentCount: number }>(
+        `/sign/envelopes/${id}/resend`,
+        undefined,
+        { headers: { "Idempotency-Key": idempotencyKey } },
+        signEnvelopeResendContract,
+      ),
     onSuccess: () => invalidateEnvelope(qc, id),
   });
 }
 
 export function useSendSignEnvelopeReminder(id: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("sign:envelope:send", {
+  return useAuthorizedIdempotentMutation<{ remindedCount: number }, Error, void>("sign:envelope:send", {
     mutationKey: ["signEnvelopes", "send-reminder", id],
-    mutationFn: () => apiClient.post<{ remindedCount: number }>(`/sign/envelopes/${id}/send-reminder`, undefined, undefined, signEnvelopeReminderContract),
+    mutationFn: (_input, idempotencyKey) =>
+      apiClient.post<{ remindedCount: number }>(
+        `/sign/envelopes/${id}/send-reminder`,
+        undefined,
+        { headers: { "Idempotency-Key": idempotencyKey } },
+        signEnvelopeReminderContract,
+      ),
     onSuccess: () => invalidateEnvelope(qc, id),
   });
 }

@@ -69,10 +69,10 @@ jest.mock("@/lib/motion-presets", () => ({
 }));
 
 jest.mock("@animateicons/react/lucide", () => ({
-  DownloadIcon: ({ ref: _ref, ...props }: React.HTMLAttributes<HTMLElement>) => (
+  DownloadIcon: ({ ...props }: React.HTMLAttributes<HTMLElement>) => (
     <span {...props} />
   ),
-  PlusIcon: ({ ref: _ref, ...props }: React.HTMLAttributes<HTMLElement>) => (
+  PlusIcon: ({ ...props }: React.HTMLAttributes<HTMLElement>) => (
     <span {...props} />
   ),
 }));

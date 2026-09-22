@@ -17,6 +17,7 @@ jest.mock("@/hooks/api/build/webhooks", () => ({
 
 jest.mock("@/components/shared/dirty-state-context", () => ({
   useRegisterDirtyState: jest.fn(),
+  useNavigationLeave: () => (action: () => void) => action(),
 }));
 
 jest.mock("@/features/build/settings/webhook-card", () => ({

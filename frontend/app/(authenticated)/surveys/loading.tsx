@@ -1,6 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { SurveyListSkeleton } from "@/features/surveys/list/survey-list-skeleton";
 
 export default function SurveysLoading() {
   return (
@@ -17,11 +18,7 @@ export default function SurveysLoading() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-xl" />
-          ))}
-        </div>
+        <SurveyListSkeleton />
       </div>
     </PageWrapper>
   );

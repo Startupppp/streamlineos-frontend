@@ -343,7 +343,11 @@ export function WhiteboardPage({
             isViewMode={detail.access === "view"}
             canManage={detail.access === "manage"}
             isFullscreen={isFullscreen}
-            shareToken={detail.sharing?.shareToken ?? null}
+            shareToken={
+              detail.sharing?.visibility === "public"
+                ? detail.sharing.shareToken
+                : null
+            }
             onManualSave={manualSave}
             onToggleFullscreen={handleToggleFullscreen}
             onOpenShare={handleOpenShare}
@@ -366,7 +370,7 @@ export function WhiteboardPage({
       contentClassName="flex min-h-0"
       actions={headerActions}
     >
-      <PmPageShell className="h-full min-h-0 gap-3" withGlow={false}>
+      <PmPageShell className="h-full min-h-0 gap-3">
         {pageState.kind === "loading" ? (
           <div className="flex-1">
             <LoadingState variant="page" />
@@ -490,9 +494,11 @@ export function WhiteboardPage({
         open={canManage && !!deleteTarget}
         onOpenChange={handleDeleteDialogOpenChange}
         title="Delete board?"
-        description={`“${deleteTarget?.name ?? ""}” and all of its content will be permanently deleted.`}
+        description={`"${deleteTarget?.name ?? ""}" and all of its content will be permanently deleted.`}
         confirmLabel="Delete"
         destructive
+        isPending={deleteBoard.isPending}
+        keepOpenOnConfirm
         onConfirm={handleConfirmDelete}
       />
     </PageWrapper>

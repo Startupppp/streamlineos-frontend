@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import type { QueryKeyParams } from "@/lib/query-keys/base";
 import { useAccess } from "@/hooks/api/access";
 
 export const LEAVE_TYPES_KEY = [...humanResourcesQueryKeys.hr.all, "leaveTypesAdmin"] as const;
@@ -24,8 +25,9 @@ export function leaveContextKey(identity: LeaveIdentity) {
   return humanResourcesQueryKeys.hr.leaves(identity.orgId, identity.userId, identity.accessVersion);
 }
 
-export function leaveTeamKey(identity: LeaveIdentity) {
-  return humanResourcesQueryKeys.hr.leavesTeam(identity.orgId, identity.userId, identity.accessVersion);
+export function leaveTeamKey(identity: LeaveIdentity, params?: QueryKeyParams) {
+  const prefix = humanResourcesQueryKeys.hr.leavesTeam(identity.orgId, identity.userId, identity.accessVersion);
+  return params === undefined ? prefix : ([...prefix, params] as const);
 }
 
 export function leaveThisWeekKey(identity: LeaveIdentity) {

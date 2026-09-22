@@ -24,7 +24,7 @@ export function ReorgScenariosTab() {
   const [selectedScenarioId, setSelectedScenarioId] = useState<number | undefined>(undefined);
 
   const { data, isLoading, isError, error, refetch } = useReorgScenarios({ page, limit: 20 });
-  const { data: simulation, isLoading: simLoading } = useSimulateScenario(selectedScenarioId);
+  const { data: simulation, isLoading: simLoading, isError: simError, error: simErrorData, refetch: simRefetch } = useSimulateScenario(selectedScenarioId);
   const deleteScenario = useDeleteReorgScenario();
 
   function handleSimulate(id: number) {
@@ -41,6 +41,10 @@ export function ReorgScenariosTab() {
 
   function handleRetry() {
     void refetch();
+  }
+
+  function handleSimRetry() {
+    void simRefetch();
   }
 
   const columns: DataTableColumn<ReorgScenario>[] = [
@@ -119,6 +123,14 @@ export function ReorgScenariosTab() {
           </div>
           {simLoading ? (
             <Skeleton className="h-16 w-full rounded" />
+          ) : simError ? (
+            <ErrorState
+              compact
+              className="border-0 bg-transparent shadow-none"
+              title="Couldn't load simulation"
+              description={getErrorMessage(simErrorData)}
+              onRetry={handleSimRetry}
+            />
           ) : simulation ? (
             <div className="space-y-2 text-sm text-foreground">
               <p className="font-medium">{simulation.scenarioName}</p>

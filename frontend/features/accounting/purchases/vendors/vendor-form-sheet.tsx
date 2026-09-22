@@ -6,7 +6,10 @@ import { toast } from "sonner";
 import { EntityFormSheet } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateVendor, useUpdateVendor } from "@/hooks/api/accounting/ap";
-import type { SaveVendorInput, VendorDetail } from "@/types/accounting-ap";
+import type {
+  SaveVendorInput,
+  VendorDetail,
+} from "@/types/accounting/accounting-ap";
 import { textOrNull } from "../lib/form-values";
 import { VendorFormFields } from "./vendor-form-fields";
 import { vendorFormSchema, type VendorFormValues } from "./vendor-form-schema";

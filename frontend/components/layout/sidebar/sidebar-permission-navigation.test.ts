@@ -12,7 +12,7 @@ import {
 const ACCESS_ONLY_CASES = [
   ["hrms", "hr:access:view", "/hr/access"],
   ["crm", "crm:access:view", "/crm/access"],
-  ["build", "build:access:view", "/build/access"],
+  ["build", "build:access:view", "/build/settings/access"],
   ["inventory", "inventory:access:view", "/inventory/access"],
   ["finance", "accounting:access:view", "/accounting/access"],
   ["helpdesk", "support:access:view", "/support/access"],

@@ -12,6 +12,7 @@ import { statusToneClasses } from "@/lib/design-tokens";
 import { QuickAddInput } from "./kanban-quick-add";
 import { KanbanColumnHeader } from "./kanban-column-header";
 import { resolveWipState } from "./kanban-board-utils";
+import type { ListSelection } from "./list-view-shared";
 import {
   KanbanVirtualTicketList,
   TICKET_DND_TYPE,
@@ -37,6 +38,7 @@ export interface KanbanBoardColumnProps {
   onRename: (oldName: string, newName: string) => void;
   onColorChange: (statusId: number, color: string) => void;
   onSelect: (id: number) => void;
+  selection?: ListSelection;
   dragStartRef: MutableRefObject<{ x: number; y: number } | null>;
   canDragTickets: boolean;
   columnInnerRef?: (element?: HTMLElement | null) => void;
@@ -62,6 +64,7 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
   onRename,
   onColorChange,
   onSelect,
+  selection,
   dragStartRef,
   canDragTickets,
   columnInnerRef,
@@ -132,6 +135,7 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
             stretch={stretch}
             minHeightClass={minHeightClass}
             onSelect={onSelect}
+            selection={selection}
             dragStartRef={dragStartRef}
             canDragTickets={canDragTickets}
           />

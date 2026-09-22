@@ -16,6 +16,7 @@ import { EmptyPersonIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 
 import { OnboardingInitiateSheet } from "./onboarding-initiate-sheet";
+import { ResendInviteButton } from "@/components/hr/resend-invite-button";
 import { useOnboardingStatus, type OnboardingStatus } from "@/hooks/api/hr/onboarding";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getInitials } from "@/lib/format-utils";
@@ -160,17 +161,26 @@ export function OnboardingList() {
                       </div>
                     </div>
 
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-xs gap-1.5 shrink-0 duration-200"
-                      asChild
-                    >
-                      <Link href={`/hr/onboarding/${row.userId}`} aria-label={`View ${row.userName} onboarding`}>
-                        <TrendingUp className="h-3.5 w-3.5" />
-                        View
-                      </Link>
-                    </Button>
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      {row.userId ? (
+                        <ResendInviteButton
+                          employeeId={row.userId}
+                          employeeName={row.userName}
+                          className="hidden text-xs sm:inline-flex"
+                        />
+                      ) : null}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs gap-1.5 shrink-0 duration-200"
+                        asChild
+                      >
+                        <Link href={`/hr/onboarding/${row.userId}`} aria-label={`View ${row.userName} onboarding`}>
+                          <TrendingUp className="h-3.5 w-3.5" />
+                          View
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { memo, useCallback } from "react";
+import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowBigUp } from "lucide-react";
 import { GitMergeIcon, Trash2Icon } from "@animateicons/react/lucide";
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useUpdateFeedbackPost } from "@/hooks/api/build/roadmap";
+import { useCan } from "@/hooks/api/access";
 import type { FeedbackPost, RoadmapItem } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -38,6 +40,7 @@ export const FeedbackRow = memo(function FeedbackRow({
   onMerge,
 }: FeedbackRowProps) {
   const update = useUpdateFeedbackPost();
+  const canManage = useCan("build:roadmap:manage");
   const shouldReduceMotion = useReducedMotion();
 
   const handleStatusChange = useCallback(
@@ -110,28 +113,30 @@ export const FeedbackRow = memo(function FeedbackRow({
                 </p>
               ) : null}
             </div>
-            <div className="flex shrink-0 items-center gap-1">
-              {isMerged ? null : (
+            {canManage ? (
+              <div className="flex shrink-0 items-center gap-1">
+                {isMerged ? null : (
+                  <AnimatedIconButton
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6"
+                    onClick={handleMergeClick}
+                    icon={GitMergeIcon}
+                    iconSize={12}
+                    aria-label="Merge into another post"
+                  />
+                )}
                 <AnimatedIconButton
                   size="icon"
                   variant="ghost"
-                  className="h-6 w-6"
-                  onClick={handleMergeClick}
-                  icon={GitMergeIcon}
+                  className="h-6 w-6 text-destructive hover:text-destructive"
+                  onClick={handleDeleteClick}
+                  icon={Trash2Icon}
                   iconSize={12}
-                  aria-label="Merge into another post"
+                  aria-label="Delete feedback"
                 />
-              )}
-              <AnimatedIconButton
-                size="icon"
-                variant="ghost"
-                className="h-6 w-6 text-destructive hover:text-destructive"
-                onClick={handleDeleteClick}
-                icon={Trash2Icon}
-                iconSize={12}
-                aria-label="Delete feedback"
-              />
-            </div>
+              </div>
+            ) : null}
           </div>
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <Select value={post.status} onValueChange={handleStatusChange}>
@@ -172,6 +177,15 @@ export const FeedbackRow = memo(function FeedbackRow({
               >
                 Merged duplicate
               </Badge>
+            ) : null}
+            {post.linkedRoadmapItemId !== null ? (
+              <Link
+                href="/build/roadmap"
+                aria-label="View roadmap"
+                className="text-dense text-primary underline-offset-2 hover:underline"
+              >
+                View roadmap
+              </Link>
             ) : null}
           </div>
         </div>

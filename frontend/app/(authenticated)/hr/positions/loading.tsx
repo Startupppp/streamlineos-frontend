@@ -18,7 +18,7 @@ export default function HrPositionsLoading() {
       }
     >
       <div className="flex flex-col flex-1 min-h-0 gap-4">
-        <DataTableSkeleton rows={10} columns={6} />
+        <DataTableSkeleton rows={10} headers={["Title", "Status", "Department", "Incumbent", "Effective", "Budget", ""]} />
       </div>
     </PageWrapper>
   );

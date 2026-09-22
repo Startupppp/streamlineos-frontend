@@ -76,9 +76,9 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 }));
 
 jest.mock("@animateicons/react/lucide", () => ({
-  PlusIcon: ({ ref: _ref, ...props }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
-  ChevronDownIcon: ({ ref: _ref, ...props }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
-  ChevronRightIcon: ({ ref: _ref, ...props }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
+  PlusIcon: ({ ref: _ref, ...props }: React.ComponentPropsWithRef<"span">) => <span {...props} />,
+  ChevronDownIcon: ({ ref: _ref, ...props }: React.ComponentPropsWithRef<"span">) => <span {...props} />,
+  ChevronRightIcon: ({ ref: _ref, ...props }: React.ComponentPropsWithRef<"span">) => <span {...props} />,
 }));
 
 jest.mock("@/components/ui/sheet", () => ({
@@ -109,7 +109,7 @@ const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 
 const ACCESS_GRANTED = {
-  data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} },
+  data: { isOrgOwner: false, scopes: { "build:sprints:view": "all" }, modules: {} },
   isLoading: false,
 };
 const ACCESS_DENIED = {
@@ -135,7 +135,7 @@ beforeEach(() => {
   mockUseCreateCycle.mockReturnValue({ mutate: jest.fn(), isPending: false });
 });
 
-it("renders NoPermissionState when build:view is denied instead of empty state", () => {
+it("renders NoPermissionState when build:sprints:view is denied instead of empty state", () => {
   mockUseAccess.mockReturnValue(ACCESS_DENIED);
   mockUseCycles.mockReturnValue(baseQueryResult());
   render(<CyclesPage projectId={1} />);

@@ -17,7 +17,6 @@ import {
   useHrEmployees,
   type TerminationStatus,
 } from "@/hooks/api/hr";
-import type { EmployeeListItem } from "@/types/hr";
 import { useTerminationActions } from "./use-termination-actions";
 
 type StatusFilter = "ALL" | TerminationStatus;
@@ -194,7 +193,7 @@ export function TerminationPage() {
         open={actions.completeTerminationId !== null}
         onOpenChange={actions.handleCompleteSheetOpenChange}
         title="Complete Termination"
-        description="This will deactivate the employee's account, initiate Full & Final settlement, and create asset return records. This action cannot be undone."
+        description="This will deactivate the employee's account, initiate the final settlement, and create asset return records. This action cannot be undone."
         confirmLabel="Complete Termination"
         destructive
         onConfirm={actions.handleCompleteConfirm}

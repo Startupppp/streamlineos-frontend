@@ -7,7 +7,13 @@ import { z } from "zod";
 import { AppDialog, ErrorState } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,8 +21,8 @@ import { formatMinorMoney, parseMoneyInput } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useArInvoices } from "@/hooks/api/accounting/ar";
-import type { ArDocumentSummary } from "@/types/accounting-ar";
-import type { AllocationLineInput } from "@/types/accounting-ar-receipts";
+import type { ArDocumentSummary } from "@/types/accounting/accounting-ar";
+import type { AllocationLineInput } from "@/types/accounting/accounting-ar-receipts";
 
 const OPEN_ITEMS_PAGE_SIZE = 50;
 
@@ -33,48 +39,52 @@ interface AllocationEditorDialogProps {
 }
 
 function buildSchema(currency: string, invoices: ArDocumentSummary[]) {
-  return z.object({
-    rows: z.array(
-      z.object({
-        documentId: z.string(),
-        amount: z.string().trim(),
-      }),
-    ),
-  }).superRefine((values, ctx) => {
-    let anyAmount = false;
-    values.rows.forEach((row, index) => {
-      if (row.amount.length === 0) return;
-      const minor = parseMoneyInput(row.amount, currency);
-      if (minor === null || minor <= 0) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["rows", index, "amount"],
-          message: "Enter an amount this currency supports",
-        });
-        return;
-      }
-      const invoice = invoices[index];
-      if (invoice && minor > invoice.openMinor) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["rows", index, "amount"],
-          message: `More than the ${formatMinorMoney(invoice.openMinor, currency)} still open`,
-        });
-        return;
-      }
-      anyAmount = true;
-    });
-    if (!anyAmount) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["rows"],
-        message: "Enter at least one amount",
+  return z
+    .object({
+      rows: z.array(
+        z.object({
+          documentId: z.string(),
+          amount: z.string().trim(),
+        }),
+      ),
+    })
+    .superRefine((values, ctx) => {
+      let anyAmount = false;
+      values.rows.forEach((row, index) => {
+        if (row.amount.length === 0) return;
+        const minor = parseMoneyInput(row.amount, currency);
+        if (minor === null || minor <= 0) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["rows", index, "amount"],
+            message: "Enter an amount this currency supports",
+          });
+          return;
+        }
+        const invoice = invoices[index];
+        if (invoice && minor > invoice.openMinor) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["rows", index, "amount"],
+            message: `More than the ${formatMinorMoney(invoice.openMinor, currency)} still open`,
+          });
+          return;
+        }
+        anyAmount = true;
       });
-    }
-  });
+      if (!anyAmount) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["rows"],
+          message: "Enter at least one amount",
+        });
+      }
+    });
 }
 
-type AllocationFormValues = { rows: Array<{ documentId: string; amount: string }> };
+type AllocationFormValues = {
+  rows: Array<{ documentId: string; amount: string }>;
+};
 
 function AllocationForm({
   invoices,
@@ -91,7 +101,10 @@ function AllocationForm({
   onSubmit: (allocations: AllocationLineInput[]) => void;
   onCancel: () => void;
 }) {
-  const schema = useMemo(() => buildSchema(currency, invoices), [currency, invoices]);
+  const schema = useMemo(
+    () => buildSchema(currency, invoices),
+    [currency, invoices],
+  );
   const form = useForm<AllocationFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -129,8 +142,10 @@ function AllocationForm({
                   {invoice.documentNumber ?? "Draft invoice"}
                 </p>
                 <p className="text-dense text-muted-foreground">
-                  {invoice.dueDate ? `Due ${formatShortDate(invoice.dueDate)}` : "Due on receipt"} ·{" "}
-                  {formatMinorMoney(invoice.openMinor, invoice.currency)} open
+                  {invoice.dueDate
+                    ? `Due ${formatShortDate(invoice.dueDate)}`
+                    : "Due on receipt"}{" "}
+                  · {formatMinorMoney(invoice.openMinor, invoice.currency)} open
                 </p>
               </div>
               <FormField
@@ -161,7 +176,12 @@ function AllocationForm({
           </p>
         ) : null}
         <div className="grid grid-cols-2 gap-2">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isPending}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isPending}
+          >
             Cancel
           </Button>
           <LoadingButton type="submit" isPending={isPending}>

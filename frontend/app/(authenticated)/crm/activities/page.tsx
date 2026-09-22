@@ -10,8 +10,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyActivityIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { PageState } from "@/components/shared/page-state";
 import { RecordList, type RecordValue } from "@/components/renderer";
 import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
 import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
@@ -24,7 +23,7 @@ import {
 import { ActivityFilters } from "@/features/crm/activities/activity-filters";
 import { LogActivityDialog } from "@/features/crm/activities/log-activity-dialog";
 import { ActivitiesStatsBar } from "@/features/crm/activities/activities-stats-bar";
-import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useCrmOptions } from "@/hooks/api/crm/metadata";
 import {
   useCompleteCrmActivity,
@@ -130,8 +129,6 @@ function ActivitiesContent() {
   const [search, setSearch] = useState("");
   const [density, setDensity] = useDensity();
 
-  const canViewActivities = useCan("tasks:read");
-
   const rawType = searchParams.get("type") ?? "";
   const rawEntityType = searchParams.get("entityType") ?? "";
   const rawStatus = searchParams.get("status") ?? "";
@@ -199,7 +196,7 @@ function ActivitiesContent() {
     [searchParams, router],
   );
 
-  const { data, isLoading, isError, refetch } = useCrmActivities({
+  const { data, isLoading, isError, error, refetch } = useCrmActivities({
     type: typeFilter || undefined,
     entityType: entityTypeFilter || undefined,
     status: statusFilter || undefined,
@@ -282,6 +279,21 @@ function ActivitiesContent() {
 
   const statsIsLoading = statsLoading || callsLoading || emailsLoading || meetingsLoading;
 
+  const pageState = usePageState({
+    permission: "crm:activities:view",
+    isLoading,
+    isError,
+    error,
+  });
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper title="Activities" subtitle="Track calls, emails, meetings, and tasks across your pipeline">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+
   return (
     <PageWrapper
       title="Activities"
@@ -318,17 +330,8 @@ function ActivitiesContent() {
           isLoading={statsIsLoading}
         />
 
-        {!canViewActivities ? (
-          <NoPermissionState permission="tasks:read" className="flex-1" />
-        ) : isLoading ? (
+        {isLoading ? (
           <DataTableSkeleton rows={12} columns={layout.list.columns.length} className="flex-1" />
-        ) : isError ? (
-          <ErrorState
-            title="Couldn't load activities"
-            description="The activity list didn't load. Check your connection and try again."
-            onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          />
         ) : rows.length === 0 ? (
           <EmptyState
             illustration={<EmptyActivityIllustration />}

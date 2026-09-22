@@ -9,6 +9,7 @@ function rowWithRole(role: string): ParsedRow {
     email: "jane.doe@example.com",
     designation: "Software Engineer",
     department: "Engineering",
+    reportingManagerEmail: "manager@example.com",
     role,
   };
 }

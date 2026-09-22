@@ -6,7 +6,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { usePostableAccounts } from "@/hooks/api/accounting/ledger";
-import type { ApDocumentLine } from "@/types/accounting-ap";
+import type { ApDocumentLine } from "@/types/accounting/accounting-ap";
 import { TAX_CATEGORY_LABELS } from "../lib/ap-labels";
 
 interface BillLinesTableProps {
@@ -19,7 +19,8 @@ export function BillLinesTable({ lines, currency }: BillLinesTableProps) {
 
   const accountNames = useMemo(() => {
     const map = new Map<string, string>();
-    for (const account of accountsQuery.data ?? []) map.set(account.id, account.name);
+    for (const account of accountsQuery.data ?? [])
+      map.set(account.id, account.name);
     return map;
   }, [accountsQuery.data]);
 
@@ -42,7 +43,9 @@ export function BillLinesTable({ lines, currency }: BillLinesTableProps) {
       header: "Goes to",
       cell: (row) => (
         <span className="truncate text-sm text-muted-foreground">
-          {row.expenseAccountId ? accountNames.get(row.expenseAccountId) ?? "—" : "—"}
+          {row.expenseAccountId
+            ? (accountNames.get(row.expenseAccountId) ?? "—")
+            : "—"}
         </span>
       ),
     },
@@ -85,14 +88,18 @@ export function BillLinesTable({ lines, currency }: BillLinesTableProps) {
       key: "capitalize",
       header: "",
       cell: (row) =>
-        row.capitalize ? <SemanticBadge tone="info" size="xs" label="Owned asset" /> : null,
+        row.capitalize ? (
+          <SemanticBadge tone="info" size="xs" label="Owned asset" />
+        ) : null,
     },
   ];
 
   return (
     <Card className="overflow-hidden">
       <CardHeader className="px-4 py-3">
-        <CardTitle className="text-sm font-semibold">Lines on this bill</CardTitle>
+        <CardTitle className="text-sm font-semibold">
+          Lines on this bill
+        </CardTitle>
       </CardHeader>
       <CardContent className="overflow-x-auto p-0">
         <DataTable

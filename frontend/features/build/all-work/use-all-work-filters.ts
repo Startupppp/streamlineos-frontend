@@ -1,102 +1,100 @@
 "use client";
 
-import { useMemo, useCallback, useTransition } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import type { AllWorkFilters } from "@/types/projects";
+import {
+  useBuildListUrlState,
+  parsePriorityParam,
+  parseTicketTypeParam,
+  type BuildListGrouping,
+  type BuildListSortField,
+  type BuildListSortDirection,
+} from "@/features/build/shared/use-build-list-url-state";
 import { parseView, type AllWorkView } from "./all-work-view-switcher";
+
+export { parsePriorityParam, parseTicketTypeParam };
+export type { BuildListGrouping, BuildListSortField, BuildListSortDirection };
 
 interface UseAllWorkFiltersReturn {
   view: AllWorkView;
   scopeMine: boolean;
   filters: AllWorkFilters;
+  grouping: BuildListGrouping;
+  sortField: BuildListSortField;
+  sortDirection: BuildListSortDirection;
+  cursor: string | null;
   hasActiveFilters: boolean;
+  isPending: boolean;
   handleViewChange: (v: AllWorkView, onClearSelection?: () => void) => void;
   handleScopeToggle: () => void;
   handleClearFilters: () => void;
+  setListParams: (updates: Record<string, string | null>) => void;
+  setCursor: (cursor: string | null) => void;
 }
 
-export function useAllWorkFilters(): UseAllWorkFiltersReturn {
-  const router = useRouter();
-  const pathname = usePathname();
+export function useAllWorkFilters(pmWorkspaceId?: string): UseAllWorkFiltersReturn {
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
-
+  const scopeMine = searchParams.get("scope") === "mine";
   const view = parseView(searchParams.get("view"));
-  const scopeParam = searchParams.get("scope");
-  const scopeMine = scopeParam === "mine";
 
-  const setParam = useCallback(
-    (key: string, value: string) => {
-      startTransition(() => {
-        const params = new URLSearchParams(searchParams.toString());
-        if (value) {
-          params.set(key, value);
-        } else {
-          params.delete(key);
-        }
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-      });
-    },
-    [router, pathname, searchParams]
-  );
+  const {
+    filters: baseFilters,
+    grouping,
+    sortField,
+    sortDirection,
+    cursor,
+    hasActiveFilters,
+    isPending,
+    setListParams,
+    setCursor,
+  } = useBuildListUrlState({
+    defaultGrouping: "project",
+    defaultSortField: "rank",
+    defaultSortDirection: "desc",
+    pmWorkspaceId,
+  });
+
+  const filters: AllWorkFilters = {
+    ...baseFilters,
+    ...(scopeMine ? { scope: "mine" as const } : {}),
+  };
 
   const handleViewChange = useCallback(
     (v: AllWorkView, onClearSelection?: () => void) => {
       onClearSelection?.();
-      setParam("view", v);
+      setListParams({ view: v, cursor: null });
     },
-    [setParam]
+    [setListParams],
   );
 
   const handleScopeToggle = useCallback(() => {
-    setParam("scope", scopeMine ? "" : "mine");
-  }, [scopeMine, setParam]);
-
-  const filters = useMemo<AllWorkFilters>(() => {
-    const f: AllWorkFilters = { limit: 50 };
-    const q = searchParams.get("q");
-    if (q) f.search = q;
-    const status = searchParams.get("status");
-    if (status) f.status = status;
-    const priority = searchParams.get("priority");
-    if (priority) f.priority = priority;
-    const type = searchParams.get("type");
-    if (type) f.type = type;
-    const assigneeId = searchParams.get("assigneeId");
-    if (assigneeId) f.assigneeId = assigneeId;
-    const labels = searchParams.get("labels");
-    if (labels) f.labelIds = labels;
-    const projectIds = searchParams.get("projectIds");
-    if (projectIds) f.projectIds = projectIds;
-    const dueDateFrom = searchParams.get("dueDateFrom");
-    if (dueDateFrom) f.dueDateFrom = dueDateFrom;
-    const dueDateTo = searchParams.get("dueDateTo");
-    if (dueDateTo) f.dueDateTo = dueDateTo;
-    if (scopeMine) f.scope = "mine";
-    return f;
-  }, [searchParams, scopeMine]);
-
-  const hasActiveFilters = useMemo(() => {
-    const filterKeys = ["q", "status", "priority", "type", "assigneeId", "labels", "projectIds", "dueDateFrom", "dueDateTo"];
-    return filterKeys.some((k) => !!searchParams.get(k)) || scopeMine;
-  }, [searchParams, scopeMine]);
+    setListParams({ scope: scopeMine ? null : "mine", cursor: null });
+  }, [scopeMine, setListParams]);
 
   const handleClearFilters = useCallback(() => {
-    startTransition(() => {
-      const params = new URLSearchParams();
-      const v = searchParams.get("view");
-      if (v) params.set("view", v);
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    setListParams({
+      q: null, status: null, priority: null, type: null,
+      assigneeId: null, labels: null, projectIds: null, projectId: null,
+      cycleId: null, sprintId: null, dueDateFrom: null, dueDateTo: null,
+      scope: null, cursor: null,
     });
-  }, [router, pathname, searchParams]);
+  }, [setListParams]);
 
   return {
     view,
     scopeMine,
     filters,
-    hasActiveFilters,
+    grouping,
+    sortField,
+    sortDirection,
+    cursor,
+    hasActiveFilters: hasActiveFilters || scopeMine,
+    isPending,
     handleViewChange,
     handleScopeToggle,
     handleClearFilters,
+    setListParams,
+    setCursor,
   };
 }

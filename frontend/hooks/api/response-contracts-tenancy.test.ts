@@ -131,22 +131,37 @@ describe("roles", () => {
 });
 
 describe("access simulation", () => {
+  const SIMULATION = {
+    userId: "user-2",
+    permissions: ["crm:contacts:view", "hr:employees:view"],
+    scopes: { "crm:contacts:view": "all", "hr:employees:view": "own" },
+    isOrgOwner: false,
+    standing: "MEMBER",
+    provenance: [
+      {
+        permissionKey: "crm:contacts:view",
+        moduleKey: "crm",
+        scope: "all",
+        expiresAt: null,
+        sources: [
+          { kind: "role-grant", label: "Sales", scope: "all", moduleKey: "crm", expiresAt: null },
+        ],
+      },
+    ],
+    moduleStandings: [
+      { moduleKey: "crm", standing: "member", available: true, permissionCount: 1 },
+    ],
+  };
+
   it("accepts a simulation whose scopes are the three the route can emit", () => {
-    const body = {
-      userId: "user-2",
-      permissions: ["crm:contacts:view", "hr:employees:view"],
-      scopes: { "crm:contacts:view": "all", "hr:employees:view": "own" },
-      isOrgOwner: false,
-    };
-    expect(simulatedAccessContract.safeParse(body).success).toBe(true);
+    expect(simulatedAccessContract.safeParse(SIMULATION).success).toBe(true);
   });
 
   it("rejects a scope of \"none\", which the route filters out before responding", () => {
     const body = {
-      userId: "user-2",
+      ...SIMULATION,
       permissions: ["crm:contacts:view"],
       scopes: { "crm:contacts:view": "none" },
-      isOrgOwner: false,
     };
     expect(simulatedAccessContract.safeParse(body).success).toBe(false);
   });

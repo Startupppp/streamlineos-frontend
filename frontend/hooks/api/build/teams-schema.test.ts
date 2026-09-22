@@ -1,3 +1,5 @@
+import { ZodError } from "zod";
+
 import { teamRowContract, teamDetailContract } from "./teams-schema";
 
 const bareTeamRow = {
@@ -21,7 +23,7 @@ it("accepts the bare project_teams row createTeam/updateTeam actually return, wi
 });
 
 it("rejects the same bare row against teamDetailContract, proving createTeam/updateTeam must not reuse it", () => {
-  expect(() => teamDetailContract.parse(bareTeamRow)).toThrow();
+  expect(() => teamDetailContract.parse(bareTeamRow)).toThrow(ZodError);
 });
 
 it("still accepts the full detail shape getTeam returns, including members", () => {

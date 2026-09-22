@@ -8,10 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatRelativeTime, formatShortDate } from "@/lib/date-utils";
-import { useCan } from "@/hooks/api/access";
+import { useCanState } from "@/hooks/api/access";
 import {
   useRefreshShipmentTracking,
   useShipmentTimeline,
@@ -42,7 +42,8 @@ export function ShipmentTrackingTimeline({
   shipmentId,
   trackingNumber,
 }: ShipmentTrackingTimelineProps) {
-  const canManage = useCan("inventory:shipments:manage");
+  const trackingState = useCanState("inventory:shipments:manage");
+  const canManage = trackingState === "granted";
   const timelineQuery = useShipmentTimeline(shipmentId);
   const refresh = useRefreshShipmentTracking();
   const [recordOpen, setRecordOpen] = useState<boolean>(false);
@@ -106,7 +107,9 @@ export function ShipmentTrackingTimeline({
         <p className="text-xs text-muted-foreground">
           Add a tracking number above to start a tracking history.
         </p>
-      ) : timelineQuery.isLoading ? (
+      ) : trackingState === "denied" ? (
+        <NoPermissionState compact permission="inventory:shipments:manage" />
+      ) : timelineQuery.isPending ? (
         <div className="space-y-2">
           <Skeleton className="h-4 w-40" />
           <Skeleton className="h-4 w-32" />

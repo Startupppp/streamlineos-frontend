@@ -65,6 +65,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 const SEVERITIES: IncidentSeverity[] = ["critical", "high", "medium", "low"];
 const STATUSES: IncidentStatus[] = ["detected", "investigating", "mitigating", "resolved", "postmortem", "closed"];
+const INCIDENTS_LIST_CAP = 100;
 
 function IncidentRowActions({
   incident,
@@ -321,6 +322,11 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
         </PmSection>
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
+          {!isLoading && !isError && all.length >= INCIDENTS_LIST_CAP ? (
+            <p className="mb-2 shrink-0 text-micro text-muted-foreground">
+              Showing the most recent {INCIDENTS_LIST_CAP} incidents. Narrow the status or severity filter to see more.
+            </p>
+          ) : null}
           {isLoading ? (
             <DataTableSkeleton rows={12} columns={7} className="flex-1" />
           ) : isError ? (

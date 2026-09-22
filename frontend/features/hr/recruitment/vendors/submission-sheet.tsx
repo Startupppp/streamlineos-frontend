@@ -19,6 +19,7 @@ import { getTodayString } from "@/lib/date-utils";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   useVendorSubmissions,
   useCreateVendorSubmission,
@@ -141,7 +142,7 @@ function MarkPaidButton({ sub, disabled, onMarkPaid }: MarkPaidButtonProps) {
 }
 
 export function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
-  const { data: submissions = [], isLoading } = useVendorSubmissions(vendor.id);
+  const { data: submissions = [], isLoading, isError, error, refetch } = useVendorSubmissions(vendor.id);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const { iconRef: plusIconRef, hoverHandlers: plusHoverHandlers } = useAnimatedIcon();
@@ -162,6 +163,7 @@ export function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
   const handleOpenChange = useCallback((v: boolean) => { if (!v) onClose(); }, [onClose]);
   const handleToggleAddForm = useCallback(() => setShowAddForm((v) => !v), []);
   const handleAddDone = useCallback(() => setShowAddForm(false), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const canViewFinancials = submissions.some((s) => s.billRate !== null || s.payRate !== null) || showAddForm;
 
@@ -184,6 +186,14 @@ export function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
           {showAddForm && <AddSubmissionForm vendorId={vendor.id} onDone={handleAddDone} />}
           {isLoading ? (
             Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-lg" />)
+          ) : isError ? (
+            <ErrorState
+              compact
+              className="border-0 bg-transparent shadow-none"
+              title="Couldn't load submissions"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+            />
           ) : submissions.length === 0 ? (
             <RecruitmentEmptyState
               illustrationPreset="person"

@@ -1,4 +1,4 @@
-import type { StatementDateFormat } from "@/types/accounting-banking";
+import type { StatementDateFormat } from "@/types/accounting/accounting-banking";
 
 export const DATE_FORMAT_SAMPLES: Readonly<
   Record<StatementDateFormat, { sample: string; meaning: string }>

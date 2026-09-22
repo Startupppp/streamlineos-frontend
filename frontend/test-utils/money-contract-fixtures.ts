@@ -39,6 +39,14 @@ export const SUBSCRIPTION_RESPONSE = {
   },
   publicKeyId: "rzp_test_x",
   isConfigured: true,
+  platformCheckout: {
+    configured: true,
+    providerKey: "razorpay",
+    environment: "test",
+    publicKeyId: "rzp_test_x",
+    webhookConfigured: true,
+    unavailableReason: null,
+  },
 };
 
 export const INVOICE = {

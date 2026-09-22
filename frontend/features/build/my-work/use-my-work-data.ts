@@ -1,10 +1,16 @@
 "use client";
 
 import { useMemo, useCallback } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { isPast, isToday, parseISO } from "date-fns";
 import { useAllWork } from "@/hooks/api/build/all-work";
 import type { AllWorkTicket } from "@/types/projects";
+import {
+  useBuildListUrlState,
+  type BuildListSortField,
+  type BuildListSortDirection,
+  type BuildListGrouping,
+} from "@/features/build/shared/use-build-list-url-state";
 import { parseMyWorkView } from "./my-work-view";
 import { mapAllWorkTicketToKanban, buildTicketMetaMap } from "./map-all-work-ticket";
 import type { DueBucket } from "./my-work-rows";
@@ -38,12 +44,23 @@ export const MY_WORK_FILTER_PARAMS = [
   "type",
   "assigneeId",
   "labels",
+  "cycleId",
   "cycle",
   "projectIds",
   "sprintId",
   "dueDateFrom",
   "dueDateTo",
 ] as const;
+
+function tabToDefaultSort(tab: WorkTab): {
+  field: BuildListSortField;
+  dir: BuildListSortDirection;
+} {
+  if (tab === "created") return { field: "created", dir: "desc" };
+  if (tab === "subscribed" || tab === "activity")
+    return { field: "updated", dir: "desc" };
+  return { field: "rank", dir: "desc" };
+}
 
 function getDueBucket(dueDate: string | null): DueBucket {
   if (!dueDate) return "none";
@@ -57,30 +74,9 @@ function getDueBucket(dueDate: string | null): DueBucket {
   }
 }
 
-function buildAllWorkFilters(params: URLSearchParams) {
-  const q = params.get("q") ?? "";
-  const status = params.get("status") ?? "";
-  const priority = params.get("priority") ?? "";
-  const type = params.get("type") ?? "";
-  const assigneeId = params.get("assigneeId") ?? "";
-  const labels = params.get("labels") ?? "";
-  const projectIds = params.get("projectIds") ?? "";
-  const dueDateFrom = params.get("dueDateFrom") ?? "";
-  const dueDateTo = params.get("dueDateTo") ?? "";
-  return {
-    ...(q ? { search: q } : {}),
-    ...(status ? { status } : {}),
-    ...(priority ? { priority } : {}),
-    ...(type ? { type } : {}),
-    ...(assigneeId ? { assigneeId } : {}),
-    ...(labels ? { labelIds: labels } : {}),
-    ...(projectIds ? { projectIds } : {}),
-    ...(dueDateFrom ? { dueDateFrom } : {}),
-    ...(dueDateTo ? { dueDateTo } : {}),
-  };
-}
-
-function toDueBucketMap(tickets: AllWorkTicket[]): Record<DueBucket, AllWorkTicket[]> {
+function toDueBucketMap(
+  tickets: AllWorkTicket[],
+): Record<DueBucket, AllWorkTicket[]> {
   const buckets: Record<DueBucket, AllWorkTicket[]> = {
     overdue: [],
     today: [],
@@ -97,63 +93,47 @@ interface UseMyWorkDataOptions {
   pmWorkspaceId?: string;
 }
 
-export function useMyWorkData({ activeTab, activeView, pmWorkspaceId }: UseMyWorkDataOptions) {
-  const router = useRouter();
-  const pathname = usePathname();
+export function useMyWorkData({
+  activeTab,
+  activeView,
+  pmWorkspaceId,
+}: UseMyWorkDataOptions) {
   const searchParams = useSearchParams();
+  const defaults = tabToDefaultSort(activeTab);
 
-  const hasActiveFilters = useMemo(
-    () =>
-      MY_WORK_FILTER_PARAMS.some((p) => {
-        const v = searchParams.get(p);
-        return v !== null && v !== "";
-      }),
-    [searchParams],
+  const urlState = useBuildListUrlState({
+    limit: 50,
+    pmWorkspaceId,
+    defaultSortField: defaults.field,
+    defaultSortDirection: defaults.dir,
+  });
+
+  const legacyCycle = searchParams.get("cycle");
+  const baseFilters = useMemo(
+    () => ({
+      ...urlState.filters,
+      ...(!urlState.filters.cycleId && legacyCycle
+        ? { cycleId: legacyCycle }
+        : {}),
+    }),
+    [urlState.filters, legacyCycle],
   );
-
-  const extraFilters = useMemo(() => buildAllWorkFilters(searchParams), [searchParams]);
 
   const assignedFilters = useMemo(
-    () => ({
-      scope: "mine" as const,
-      ...extraFilters,
-      ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
-      limit: 100,
-    }),
-    [extraFilters, pmWorkspaceId],
+    () => ({ ...baseFilters, scope: "mine" as const }),
+    [baseFilters],
   );
   const createdFilters = useMemo(
-    () => ({
-      scope: "created" as const,
-      ...extraFilters,
-      ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
-      orderBy: "created" as const,
-      orderDir: "desc" as const,
-      limit: 100,
-    }),
-    [extraFilters, pmWorkspaceId],
+    () => ({ ...baseFilters, scope: "created" as const }),
+    [baseFilters],
   );
   const subscribedFilters = useMemo(
-    () => ({
-      scope: "subscribed" as const,
-      ...extraFilters,
-      ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
-      orderBy: "updated" as const,
-      orderDir: "desc" as const,
-      limit: 100,
-    }),
-    [extraFilters, pmWorkspaceId],
+    () => ({ ...baseFilters, scope: "subscribed" as const }),
+    [baseFilters],
   );
   const activityFilters = useMemo(
-    () => ({
-      scope: "mine" as const,
-      ...extraFilters,
-      ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
-      orderBy: "updated" as const,
-      orderDir: "desc" as const,
-      limit: 100,
-    }),
-    [extraFilters, pmWorkspaceId],
+    () => ({ ...baseFilters, scope: "mine" as const }),
+    [baseFilters],
   );
 
   const {
@@ -226,16 +206,13 @@ export function useMyWorkData({ activeTab, activeView, pmWorkspaceId }: UseMyWor
     else if (activeTab === "created") void refetchCreated();
     else if (activeTab === "subscribed") void refetchSubscribed();
     else void refetchActivity();
-  }, [activeTab, refetchAssigned, refetchCreated, refetchSubscribed, refetchActivity]);
-
-  const filtersActive = Object.keys(extraFilters).length > 0;
-
-  const handleClearFilters = useCallback(() => {
-    const params = new URLSearchParams(searchParams.toString());
-    for (const param of MY_WORK_FILTER_PARAMS) params.delete(param);
-    const qs = params.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [router, pathname, searchParams]);
+  }, [
+    activeTab,
+    refetchAssigned,
+    refetchCreated,
+    refetchSubscribed,
+    refetchActivity,
+  ]);
 
   const kanbanTickets = useMemo(() => {
     if (!activeData?.data) return [];
@@ -255,6 +232,10 @@ export function useMyWorkData({ activeTab, activeView, pmWorkspaceId }: UseMyWor
 
   const showViewSwitcher = activeTab === "assigned";
   const showBucketList = activeTab === "assigned" && activeView === "list";
+  const isEmpty =
+    !isLoading &&
+    !isError &&
+    (!activeData?.data || activeData.data.length === 0);
 
   const emptyTitle =
     activeTab === "created"
@@ -275,14 +256,22 @@ export function useMyWorkData({ activeTab, activeView, pmWorkspaceId }: UseMyWor
           : "Tickets assigned to you across all projects will appear here.";
 
   return {
-    hasActiveFilters,
+    hasActiveFilters: urlState.hasActiveFilters,
     isLoading,
     isError,
     error,
+    isEmpty,
     activeData,
     handleRetry,
-    filtersActive,
-    handleClearFilters,
+    filtersActive: urlState.hasActiveFilters,
+    handleClearFilters: urlState.clearFilters,
+    setListParams: urlState.setListParams,
+    setCursor: urlState.setCursor,
+    sortField: urlState.sortField,
+    sortDirection: urlState.sortDirection,
+    grouping: urlState.grouping as BuildListGrouping,
+    cursor: urlState.cursor,
+    isPending: urlState.isPending,
     kanbanTickets,
     ticketMeta,
     dueBuckets,

@@ -34,6 +34,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useCategories, useCreateCategory } from "@/hooks/api/inventory";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCanState } from "@/hooks/api/access";
 
 const CREATE_SENTINEL = "__create__";
 
@@ -48,6 +49,7 @@ export interface CategorySelectProps {
 }
 
 export function CategorySelect({ value, onChange }: CategorySelectProps) {
+  const categoriesState = useCanState("inventory:products:read");
   const [dialogOpen, setDialogOpen] = useState(false);
   const categoriesQuery = useCategories();
   const createMutation = useCreateCategory();
@@ -89,12 +91,24 @@ export function CategorySelect({ value, onChange }: CategorySelectProps) {
 
   return (
     <>
-      <Select value={value} onValueChange={handleValueChange} disabled={categoriesQuery.isLoading}>
+      <Select
+        value={value}
+        onValueChange={handleValueChange}
+        disabled={categoriesState !== "granted" || categoriesQuery.isPending}
+      >
         <SelectTrigger className="min-w-0">
-          <SelectValue placeholder={categoriesQuery.isLoading ? "Loading…" : "Select category"} />
+          <SelectValue
+            placeholder={
+              categoriesState === "denied"
+                ? "Access restricted"
+                : categoriesQuery.isPending
+                  ? "Loading…"
+                  : "Select category"
+            }
+          />
         </SelectTrigger>
         <SelectContent>
-          {categories.length === 0 && !categoriesQuery.isLoading && (
+          {categories.length === 0 && categoriesState === "granted" && !categoriesQuery.isPending && (
             <div className="px-2 py-3 text-xs text-muted-foreground text-center">
               No categories yet
             </div>

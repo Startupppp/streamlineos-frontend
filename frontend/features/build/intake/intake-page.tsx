@@ -28,7 +28,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/lib/person-display";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm, Controller, useController } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { IntakeItemCard } from "@/features/build/intake/intake-item-card";
@@ -43,12 +42,9 @@ import {
   type CreateIntakeForm,
   acceptSchema,
   type AcceptForm,
+  declineIntakeSchema,
+  type DeclineIntakeForm,
 } from "@/features/build/intake/intake-schema";
-
-const declineSchema = z.object({
-  reason: z.string().min(1, "Reason is required"),
-});
-type DeclineForm = z.infer<typeof declineSchema>;
 
 const WORK_STATES = ["backlog", "todo", "in_progress", "done", "cancelled"] as const;
 
@@ -75,7 +71,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
 
   const createForm = useForm<CreateIntakeForm>({ resolver: zodResolver(createIntakeSchema) });
   const acceptForm = useForm<AcceptForm>({ resolver: zodResolver(acceptSchema) });
-  const declineForm = useForm<DeclineForm>({ resolver: zodResolver(declineSchema) });
+  const declineForm = useForm<DeclineIntakeForm>({ resolver: zodResolver(declineIntakeSchema) });
   useRegisterDirtyState(
     (createOpen && createForm.formState.isDirty) ||
     (acceptOpen && acceptForm.formState.isDirty) ||
@@ -128,7 +124,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
     );
   }, [selectedItemId, updateMutation, projectId, acceptForm]);
 
-  const onDeclineSubmit = useCallback((data: DeclineForm) => {
+  const onDeclineSubmit = useCallback((data: DeclineIntakeForm) => {
     if (selectedItemId === null) return;
     updateMutation.mutate(
       { intakeRequestId: selectedItemId, projectId, status: "declined", declineReason: data.reason },
@@ -233,7 +229,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
                     <Label htmlFor="intake-title">Title</Label>
                     <Input id="intake-title" {...createForm.register("title")} />
                     {createForm.formState.errors.title && (
-                      <p className="text-xs text-destructive mt-1">{createForm.formState.errors.title.message}</p>
+                      <p className="text-xs text-destructive mt-1" aria-live="polite">{createForm.formState.errors.title.message}</p>
                     )}
                   </div>
                   <div>
@@ -342,7 +338,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
                   )}
                 />
                 {acceptForm.formState.errors.state && (
-                  <p className="text-xs text-destructive mt-1">{acceptForm.formState.errors.state.message}</p>
+                  <p className="text-xs text-destructive mt-1" aria-live="polite">{acceptForm.formState.errors.state.message}</p>
                 )}
               </div>
               <div>
@@ -417,7 +413,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
                   {...declineForm.register("reason")}
                 />
                 {declineForm.formState.errors.reason && (
-                  <p className="text-xs text-destructive mt-1">{declineForm.formState.errors.reason.message}</p>
+                  <p className="text-xs text-destructive mt-1" aria-live="polite">{declineForm.formState.errors.reason.message}</p>
                 )}
               </div>
             </form>

@@ -10,14 +10,13 @@ export interface BuildScopeFallbackInput {
   isInaccessible: boolean;
   hasAnyBuildAccess: boolean;
   accessibleParent: BuildScopeParent | null;
+  organizationHref: string | null;
 }
 
 export interface BuildScopeParent {
   type: "product" | "workspace";
   id: string;
 }
-
-const ORGANIZATION_HREF = `${BUILD_ROOT_PATH}/command-center`;
 
 function parentHref(parent: BuildScopeParent): string {
   return parent.type === "product"
@@ -36,6 +35,7 @@ export function resolveBuildScopeFallback({
   isInaccessible,
   hasAnyBuildAccess,
   accessibleParent,
+  organizationHref,
 }: BuildScopeFallbackInput): BuildScopeFallback {
   if (!isInaccessible) return { kind: "stay" };
   if (scope.type === "organization")
@@ -47,9 +47,11 @@ export function resolveBuildScopeFallback({
       href: parentHref(accessibleParent),
       label: parentLabel(accessibleParent),
     };
-  return {
-    kind: "recover",
-    href: ORGANIZATION_HREF,
-    label: "Go to All of Build",
-  };
+  if (organizationHref !== null)
+    return {
+      kind: "recover",
+      href: organizationHref,
+      label: "Go to All of Build",
+    };
+  return { kind: "no-access" };
 }

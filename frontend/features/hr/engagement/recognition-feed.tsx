@@ -206,12 +206,16 @@ export function RecognitionFeed({ recognitions, isLoading, isError, error, onRet
 }
 
 export function BadgesGrid() {
-  const { data: badges, isLoading, isError, refetch } = useEngagementBadges();
+  const { data: badges, isLoading, isError, error, refetch } = useEngagementBadges();
   const canManage = useCan("hr:engagement:manage");
   const award = useAwardBadge();
   const [awardBadgeId, setAwardBadgeId] = useState<number | null>(null);
   const [recipientId, setRecipientId] = useState("");
   const [reason, setReason] = useState("");
+
+  function handleRetry(): void {
+    void refetch();
+  }
 
   const handleAward = useCallback(() => {
     if (!awardBadgeId || !recipientId.trim()) return;
@@ -247,13 +251,12 @@ export function BadgesGrid() {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-border bg-muted/20">
-        <Award className="w-7 text-status-danger-ink mb-2" />
-        <p className="text-sm text-foreground">Unable to load badges</p>
-        <Button size="sm" variant="outline" className="mt-3" onClick={() => void refetch()}>
-          Retry
-        </Button>
-      </div>
+      <ErrorState
+        compact
+        title="Couldn't load badges"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
     );
   }
 
@@ -330,8 +333,12 @@ export function BadgesGrid() {
 }
 
 export function PointsLeaderboard() {
-  const { data: entries, isLoading, isError, refetch } = useLeaderboard(20);
+  const { data: entries, isLoading, isError, error, refetch } = useLeaderboard(20);
   const { resolveMemberName, resolveMemberInitials } = useMemberLookup();
+
+  function handleRetry(): void {
+    void refetch();
+  }
 
   if (isLoading) {
     return (
@@ -350,13 +357,12 @@ export function PointsLeaderboard() {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center py-10">
-        <Trophy className="w-7 text-status-danger-ink mb-2" />
-        <p className="text-sm text-foreground">Unable to load leaderboard</p>
-        <Button size="sm" variant="outline" className="mt-3" onClick={() => void refetch()}>
-          Retry
-        </Button>
-      </div>
+      <ErrorState
+        compact
+        title="Couldn't load the leaderboard"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
     );
   }
 

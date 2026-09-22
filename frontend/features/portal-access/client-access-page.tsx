@@ -35,6 +35,7 @@ import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
+import { useClientAccessUrlState } from "./use-client-access-url-state";
 
 const PAGE_SIZE = 20;
 
@@ -169,7 +170,7 @@ export function ClientAccessPage() {
   const canManage = useCan("build:clientvisibility:manage");
 
   const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
-  const [search, setSearch] = useState("");
+  const { q, state: grantState, permission, hasActiveFilters, setFilter } = useClientAccessUrlState();
 
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
@@ -179,6 +180,9 @@ export function ClientAccessPage() {
   const { data, isLoading, isError, error, refetch } = useProjectClientGrants({
     cursor: cursorHistory.at(-1),
     limit: PAGE_SIZE,
+    q: q || undefined,
+    state: grantState || undefined,
+    permission: permission || undefined,
   });
 
   const pageState = usePageState({
@@ -188,26 +192,12 @@ export function ClientAccessPage() {
     error,
   });
 
-  const filteredRows = (() => {
-    const rows = data?.data ?? [];
-    const term = search.trim().toLowerCase();
-    if (!term) return rows;
-    return rows.filter((g) => {
-      const contactName = resolveContactName(g.contactFirstName, g.contactLastName) ?? "";
-      return (
-        contactName.toLowerCase().includes(term) ||
-        g.partyContactId.toLowerCase().includes(term) ||
-        String(g.projectId).includes(term) ||
-        g.portalMembershipId.toLowerCase().includes(term)
-      );
-    });
-  })();
-
+  const filteredRows = data?.data ?? [];
   const pagination = data?.pagination;
-  const isFiltered = !!search.trim();
+  const isFiltered = hasActiveFilters;
 
   function handleSearchChange(value: string) {
-    setSearch(value);
+    setFilter("q", value);
     setCursorHistory([undefined]);
   }
 
@@ -344,7 +334,7 @@ export function ClientAccessPage() {
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput
         placeholder="Search by contact or project…"
-        value={search}
+        value={q}
         onValueChange={handleSearchChange}
       />
     </div>

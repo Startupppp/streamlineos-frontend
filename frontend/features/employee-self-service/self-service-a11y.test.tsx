@@ -174,7 +174,16 @@ jest.mock("@/hooks/api/hr", () => {
       approvers: rows([{ id: "user_manager", name: "Grace" }]),
       joiningDate: "2025-01-06",
     }),
-  useHrLeaveApprovals: () => stub({ pending: rows([]), all: rows([]) }),
+  useHrLeaveApprovals: () =>
+    stub({
+      pages: [
+        {
+          data: rows([]),
+          pageInfo: { limit: 50, hasMore: false, nextCursor: null },
+        },
+      ],
+      pageParams: [null],
+    }),
   useHrMyLeaveRequestsInfinite: () =>
     stub({
       pages: [

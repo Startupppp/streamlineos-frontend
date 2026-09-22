@@ -1,11 +1,10 @@
 "use client";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { addDays, differenceInCalendarDays, format, parseISO } from "date-fns";
 import { Copy, Lock, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollEdgeFade } from "@/components/ui/scroll-edge-fade";
 import { cn } from "@/lib/utils";
 import { ProjectTicketSelect } from "./project-ticket-select";
 import { describeCell } from "./day-label";
@@ -20,6 +19,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import type { TimesheetEntry } from "@/features/timesheets";
 import { deriveRows, isCellLocked, rowKeyOf, type GridRow } from "./week-grid-rows";
 import { useWeekGridCells } from "./use-week-grid-cells";
+import { OVERFLOW_EDGE_FADE_CLASS, useHorizontalOverflow } from "@/hooks/common/use-horizontal-overflow";
 
 interface WeekGridProps {
   entries: TimesheetEntry[] | undefined;
@@ -57,6 +57,8 @@ export function WeekGrid({
   const [newRowProject, setNewRowProject] = useState<number | null>(null);
   const [newRowTicket, setNewRowTicket] = useState<number | null>(null);
   const [isCopying, setIsCopying] = useState(false);
+  const gridScrollRef = useRef<HTMLDivElement>(null);
+  const gridOverflow = useHorizontalOverflow(gridScrollRef, entries);
 
   const prevWeekStart = useMemo(
     () => format(addDays(parseISO(weekStart), -7), "yyyy-MM-dd"),
@@ -216,9 +218,11 @@ export function WeekGrid({
         </p>
       ) : null}
 
-      <ScrollEdgeFade
-        className="rounded-lg border border-border"
-        viewportClassName="rounded-lg overscroll-x-contain"
+      <div
+        ref={gridScrollRef}
+        data-hidden-left={gridOverflow.hiddenLeft}
+        data-hidden-right={gridOverflow.hiddenRight}
+        className={cn("overflow-x-auto rounded-lg border border-border scrollbar-thin", OVERFLOW_EDGE_FADE_CLASS)}
       >
         <table className="w-full text-xs" style={{ minWidth: 800 }}>
           <caption className="sr-only">
@@ -369,7 +373,10 @@ export function WeekGrid({
             </tr>
           </tfoot>
         </table>
-      </ScrollEdgeFade>
+      </div>
+      {gridOverflow.scrolls ? (
+        <p className="text-micro text-muted-foreground sm:hidden">Swipe sideways to reach every day of the week.</p>
+      ) : null}
 
       {addingRow ? (
         <div className="flex items-end gap-2 p-3 rounded-lg border border-dashed border-primary/40 bg-primary/5 dark:bg-primary/10">

@@ -4,7 +4,10 @@ import { useProfitLossReport } from "@/hooks/api/accounting/reports";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
-import type { ProfitLossReport as ProfitLossReportData, ProfitLossSection } from "@/types/accounting-reports";
+import type {
+  ProfitLossReport as ProfitLossReportData,
+  ProfitLossSection,
+} from "@/types/accounting/accounting-reports";
 import { ExportReportButton } from "./export-report-button";
 import { RangeControls } from "./report-date-controls";
 import { ReportNotes } from "./report-notes";
@@ -80,7 +83,8 @@ export function ProfitLossReport() {
     labelMode: controls.labelMode,
     comparative: controls.comparative,
   };
-  const { data, isLoading, isError, error, refetch } = useProfitLossReport(params);
+  const { data, isLoading, isError, error, refetch } =
+    useProfitLossReport(params);
   const tone = statusToneClasses(
     data && data.netProfitMinor >= 0 ? "success" : "danger",
   );
@@ -132,7 +136,9 @@ export function ProfitLossReport() {
             )}
           >
             <div>
-              <p className={cn("text-sm font-semibold", tone.ink)}>{data.netProfitLabel}</p>
+              <p className={cn("text-sm font-semibold", tone.ink)}>
+                {data.netProfitLabel}
+              </p>
               <p className="text-label text-muted-foreground">
                 {data.from} to {data.to} · {data.fiscalYear.name}
               </p>
@@ -155,7 +161,10 @@ export function ProfitLossReport() {
             minWidth={data.comparative ? "900px" : "720px"}
           />
 
-          <ReportNotes title="What to know about this report" notes={data.notes} />
+          <ReportNotes
+            title="What to know about this report"
+            notes={data.notes}
+          />
         </>
       ) : null}
     </ReportShell>

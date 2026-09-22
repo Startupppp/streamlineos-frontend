@@ -11,7 +11,7 @@ import { accountingArQueryKeys } from "@/lib/query-keys/accounting-ar";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
-import type { Journal } from "@/types/accounting-kernel";
+import type { Journal } from "@/types/accounting/accounting-kernel";
 import type {
   ArDocumentPage,
   ArDocumentView,
@@ -21,7 +21,7 @@ import type {
   DeletedResult,
   ListArDocumentsQuery,
   UpdateArDraftInput,
-} from "@/types/accounting-ar";
+} from "@/types/accounting/accounting-ar";
 import type {
   AgingOpenItem,
   AgingQuery,
@@ -35,7 +35,7 @@ import type {
   ListReceiptsQuery,
   ReverseReceiptInput,
   TaxPreview,
-} from "@/types/accounting-ar-receipts";
+} from "@/types/accounting/accounting-ar-receipts";
 
 type QueryOpts<T> = Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">;
 
@@ -92,9 +92,15 @@ export function useArInvoices(
 ) {
   const canRead = useCan(RECEIVABLES_READ);
   return useQuery<ArDocumentPage, Error>({
-    queryKey: accountingArQueryKeys.accountingAr.invoices(documentParams(query)),
+    queryKey: accountingArQueryKeys.accountingAr.invoices(
+      documentParams(query),
+    ),
     queryFn: ({ signal }) =>
-      apiClient.get<ArDocumentPage>("/accounting/ar/invoices", documentParams(query), signal),
+      apiClient.get<ArDocumentPage>(
+        "/accounting/ar/invoices",
+        documentParams(query),
+        signal,
+      ),
     staleTime: STANDARD_LIST_STALE,
     placeholderData: keepPreviousData,
     ...options,
@@ -102,12 +108,19 @@ export function useArInvoices(
   });
 }
 
-export function useArInvoice(invoiceId: string, options?: QueryOpts<ArDocumentView>) {
+export function useArInvoice(
+  invoiceId: string,
+  options?: QueryOpts<ArDocumentView>,
+) {
   const canRead = useCan(RECEIVABLES_READ);
   return useQuery<ArDocumentView, Error>({
     queryKey: accountingArQueryKeys.accountingAr.invoice(invoiceId),
     queryFn: ({ signal }) =>
-      apiClient.get<ArDocumentView>(`/accounting/ar/invoices/${invoiceId}`, undefined, signal),
+      apiClient.get<ArDocumentView>(
+        `/accounting/ar/invoices/${invoiceId}`,
+        undefined,
+        signal,
+      ),
     staleTime: ENTITY_STALE,
     ...options,
     enabled: canRead && !!invoiceId && (options?.enabled ?? true),
@@ -121,9 +134,16 @@ export function useArInvoiceTaxPreview(
 ) {
   const canRead = useCan(RECEIVABLES_READ);
   return useQuery<TaxPreview, Error>({
-    queryKey: accountingArQueryKeys.accountingAr.invoiceTaxPreview(invoiceId, revision),
+    queryKey: accountingArQueryKeys.accountingAr.invoiceTaxPreview(
+      invoiceId,
+      revision,
+    ),
     queryFn: ({ signal }) =>
-      apiClient.get<TaxPreview>(`/accounting/ar/invoices/${invoiceId}/tax-preview`, undefined, signal),
+      apiClient.get<TaxPreview>(
+        `/accounting/ar/invoices/${invoiceId}/tax-preview`,
+        undefined,
+        signal,
+      ),
     staleTime: LIVE_STALE,
     placeholderData: keepPreviousData,
     retry: false,
@@ -132,12 +152,19 @@ export function useArInvoiceTaxPreview(
   });
 }
 
-export function useArInvoiceTaxLines(invoiceId: string, options?: QueryOpts<FrozenTaxLine[]>) {
+export function useArInvoiceTaxLines(
+  invoiceId: string,
+  options?: QueryOpts<FrozenTaxLine[]>,
+) {
   const canRead = useCan(TAXES_READ);
   return useQuery<FrozenTaxLine[], Error>({
     queryKey: accountingArQueryKeys.accountingAr.invoiceTaxLines(invoiceId),
     queryFn: ({ signal }) =>
-      apiClient.get<FrozenTaxLine[]>(`/accounting/ar/invoices/${invoiceId}/tax-lines`, undefined, signal),
+      apiClient.get<FrozenTaxLine[]>(
+        `/accounting/ar/invoices/${invoiceId}/tax-lines`,
+        undefined,
+        signal,
+      ),
     staleTime: ENTITY_STALE,
     ...options,
     enabled: canRead && !!invoiceId && (options?.enabled ?? true),
@@ -146,13 +173,19 @@ export function useArInvoiceTaxLines(invoiceId: string, options?: QueryOpts<Froz
 
 export function useCreateArInvoice() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<ArDocumentView, Error, CreateInvoiceInput>("accounting:receivables:manage", {
-    mutationKey: ["accounting", "ar", "invoices", "create"],
-    mutationFn: (input) => apiClient.post<ArDocumentView>("/accounting/ar/invoices", input),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
+  return useAuthorizedMutation<ArDocumentView, Error, CreateInvoiceInput>(
+    "accounting:receivables:manage",
+    {
+      mutationKey: ["accounting", "ar", "invoices", "create"],
+      mutationFn: (input) =>
+        apiClient.post<ArDocumentView>("/accounting/ar/invoices", input),
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: accountingArQueryKeys.accountingAr.all,
+        });
+      },
     },
-  });
+  );
 }
 
 export function useUpdateArInvoiceDraft() {
@@ -164,23 +197,38 @@ export function useUpdateArInvoiceDraft() {
   >("accounting:receivables:manage", {
     mutationKey: ["accounting", "ar", "invoices", "update"],
     mutationFn: ({ invoiceId, input }) =>
-      apiClient.patch<ArDocumentView>(`/accounting/ar/invoices/${invoiceId}`, input),
+      apiClient.patch<ArDocumentView>(
+        `/accounting/ar/invoices/${invoiceId}`,
+        input,
+      ),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.invoice(variables.invoiceId) });
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.invoices() });
+      queryClient.invalidateQueries({
+        queryKey: accountingArQueryKeys.accountingAr.invoice(
+          variables.invoiceId,
+        ),
+      });
+      queryClient.invalidateQueries({
+        queryKey: accountingArQueryKeys.accountingAr.invoices(),
+      });
     },
   });
 }
 
 export function useDeleteArInvoiceDraft() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<DeletedResult, Error, string>("accounting:receivables:manage", {
-    mutationKey: ["accounting", "ar", "invoices", "delete"],
-    mutationFn: (invoiceId) => apiClient.delete<DeletedResult>(`/accounting/ar/invoices/${invoiceId}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
+  return useAuthorizedMutation<DeletedResult, Error, string>(
+    "accounting:receivables:manage",
+    {
+      mutationKey: ["accounting", "ar", "invoices", "delete"],
+      mutationFn: (invoiceId) =>
+        apiClient.delete<DeletedResult>(`/accounting/ar/invoices/${invoiceId}`),
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: accountingArQueryKeys.accountingAr.all,
+        });
+      },
     },
-  });
+  );
 }
 
 export function usePostArInvoice() {
@@ -198,7 +246,9 @@ export function usePostArInvoice() {
         { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
+      queryClient.invalidateQueries({
+        queryKey: accountingArQueryKeys.accountingAr.all,
+      });
     },
   });
 }
@@ -212,9 +262,14 @@ export function useCreditNoteFromInvoice() {
   >("accounting:credit-notes:create", {
     mutationKey: ["accounting", "ar", "invoices", "creditNote"],
     mutationFn: ({ invoiceId, input }) =>
-      apiClient.post<ArDocumentView>(`/accounting/ar/invoices/${invoiceId}/credit-note`, input),
+      apiClient.post<ArDocumentView>(
+        `/accounting/ar/invoices/${invoiceId}/credit-note`,
+        input,
+      ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
+      queryClient.invalidateQueries({
+        queryKey: accountingArQueryKeys.accountingAr.all,
+      });
     },
   });
 }
@@ -225,9 +280,15 @@ export function useCreditNotes(
 ) {
   const canRead = useCan(CREDIT_NOTES_READ);
   return useQuery<ArDocumentPage, Error>({
-    queryKey: accountingArQueryKeys.accountingAr.creditNotes(documentParams(query)),
+    queryKey: accountingArQueryKeys.accountingAr.creditNotes(
+      documentParams(query),
+    ),
     queryFn: ({ signal }) =>
-      apiClient.get<ArDocumentPage>("/accounting/ar/credit-notes", documentParams(query), signal),
+      apiClient.get<ArDocumentPage>(
+        "/accounting/ar/credit-notes",
+        documentParams(query),
+        signal,
+      ),
     staleTime: STANDARD_LIST_STALE,
     placeholderData: keepPreviousData,
     ...options,
@@ -235,12 +296,19 @@ export function useCreditNotes(
   });
 }
 
-export function useCreditNote(creditNoteId: string, options?: QueryOpts<ArDocumentView>) {
+export function useCreditNote(
+  creditNoteId: string,
+  options?: QueryOpts<ArDocumentView>,
+) {
   const canRead = useCan(CREDIT_NOTES_READ);
   return useQuery<ArDocumentView, Error>({
     queryKey: accountingArQueryKeys.accountingAr.creditNote(creditNoteId),
     queryFn: ({ signal }) =>
-      apiClient.get<ArDocumentView>(`/accounting/ar/credit-notes/${creditNoteId}`, undefined, signal),
+      apiClient.get<ArDocumentView>(
+        `/accounting/ar/credit-notes/${creditNoteId}`,
+        undefined,
+        signal,
+      ),
     staleTime: ENTITY_STALE,
     ...options,
     enabled: canRead && !!creditNoteId && (options?.enabled ?? true),
@@ -254,7 +322,10 @@ export function useCreditNoteTaxPreview(
 ) {
   const canRead = useCan(CREDIT_NOTES_READ);
   return useQuery<TaxPreview, Error>({
-    queryKey: accountingArQueryKeys.accountingAr.creditNoteTaxPreview(creditNoteId, revision),
+    queryKey: accountingArQueryKeys.accountingAr.creditNoteTaxPreview(
+      creditNoteId,
+      revision,
+    ),
     queryFn: ({ signal }) =>
       apiClient.get<TaxPreview>(
         `/accounting/ar/credit-notes/${creditNoteId}/tax-preview`,
@@ -271,13 +342,19 @@ export function useCreditNoteTaxPreview(
 
 export function useCreateCreditNote() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<ArDocumentView, Error, CreateCreditNoteInput>("accounting:credit-notes:create", {
-    mutationKey: ["accounting", "ar", "creditNotes", "create"],
-    mutationFn: (input) => apiClient.post<ArDocumentView>("/accounting/ar/credit-notes", input),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
+  return useAuthorizedMutation<ArDocumentView, Error, CreateCreditNoteInput>(
+    "accounting:credit-notes:create",
+    {
+      mutationKey: ["accounting", "ar", "creditNotes", "create"],
+      mutationFn: (input) =>
+        apiClient.post<ArDocumentView>("/accounting/ar/credit-notes", input),
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: accountingArQueryKeys.accountingAr.all,
+        });
+      },
     },
-  });
+  );
 }
 
 export function useUpdateCreditNoteDraft() {
@@ -289,26 +366,40 @@ export function useUpdateCreditNoteDraft() {
   >("accounting:credit-notes:manage", {
     mutationKey: ["accounting", "ar", "creditNotes", "update"],
     mutationFn: ({ creditNoteId, input }) =>
-      apiClient.patch<ArDocumentView>(`/accounting/ar/credit-notes/${creditNoteId}`, input),
+      apiClient.patch<ArDocumentView>(
+        `/accounting/ar/credit-notes/${creditNoteId}`,
+        input,
+      ),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
-        queryKey: accountingArQueryKeys.accountingAr.creditNote(variables.creditNoteId),
+        queryKey: accountingArQueryKeys.accountingAr.creditNote(
+          variables.creditNoteId,
+        ),
       });
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.creditNotes() });
+      queryClient.invalidateQueries({
+        queryKey: accountingArQueryKeys.accountingAr.creditNotes(),
+      });
     },
   });
 }
 
 export function useDeleteCreditNoteDraft() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<DeletedResult, Error, string>("accounting:credit-notes:manage", {
-    mutationKey: ["accounting", "ar", "creditNotes", "delete"],
-    mutationFn: (creditNoteId) =>
-      apiClient.delete<DeletedResult>(`/accounting/ar/credit-notes/${creditNoteId}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
+  return useAuthorizedMutation<DeletedResult, Error, string>(
+    "accounting:credit-notes:manage",
+    {
+      mutationKey: ["accounting", "ar", "creditNotes", "delete"],
+      mutationFn: (creditNoteId) =>
+        apiClient.delete<DeletedResult>(
+          `/accounting/ar/credit-notes/${creditNoteId}`,
+        ),
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: accountingArQueryKeys.accountingAr.all,
+        });
+      },
     },
-  });
+  );
 }
 
 export function usePostCreditNote() {
@@ -326,7 +417,9 @@ export function usePostCreditNote() {
         { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
+      queryClient.invalidateQueries({
+        queryKey: accountingArQueryKeys.accountingAr.all,
+      });
     },
   });
 }
@@ -346,17 +439,26 @@ export function useAllocateCreditNote() {
         { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
+      queryClient.invalidateQueries({
+        queryKey: accountingArQueryKeys.accountingAr.all,
+      });
     },
   });
 }
 
-export function useArReceipts(query: ListReceiptsQuery = {}, options?: QueryOpts<ArReceiptPage>) {
+export function useArReceipts(
+  query: ListReceiptsQuery = {},
+  options?: QueryOpts<ArReceiptPage>,
+) {
   const canRead = useCan(RECEIVABLES_READ);
   return useQuery<ArReceiptPage, Error>({
     queryKey: accountingArQueryKeys.accountingAr.receipts(receiptParams(query)),
     queryFn: ({ signal }) =>
-      apiClient.get<ArReceiptPage>("/accounting/ar/receipts", receiptParams(query), signal),
+      apiClient.get<ArReceiptPage>(
+        "/accounting/ar/receipts",
+        receiptParams(query),
+        signal,
+      ),
     staleTime: STANDARD_LIST_STALE,
     placeholderData: keepPreviousData,
     ...options,
@@ -364,12 +466,19 @@ export function useArReceipts(query: ListReceiptsQuery = {}, options?: QueryOpts
   });
 }
 
-export function useArReceipt(receiptId: string, options?: QueryOpts<ArReceiptView>) {
+export function useArReceipt(
+  receiptId: string,
+  options?: QueryOpts<ArReceiptView>,
+) {
   const canRead = useCan(RECEIVABLES_READ);
   return useQuery<ArReceiptView, Error>({
     queryKey: accountingArQueryKeys.accountingAr.receipt(receiptId),
     queryFn: ({ signal }) =>
-      apiClient.get<ArReceiptView>(`/accounting/ar/receipts/${receiptId}`, undefined, signal),
+      apiClient.get<ArReceiptView>(
+        `/accounting/ar/receipts/${receiptId}`,
+        undefined,
+        signal,
+      ),
     staleTime: ENTITY_STALE,
     ...options,
     enabled: canRead && !!receiptId && (options?.enabled ?? true),
@@ -385,11 +494,17 @@ export function useCreateArReceipt() {
   >("accounting:receivables:manage", {
     mutationKey: ["accounting", "ar", "receipts", "create"],
     mutationFn: (input, idempotencyKey) =>
-      apiClient.post<{ receipt: ArReceiptView; journal: Journal }>("/accounting/ar/receipts", input, {
-        headers: { "Idempotency-Key": idempotencyKey },
-      }),
+      apiClient.post<{ receipt: ArReceiptView; journal: Journal }>(
+        "/accounting/ar/receipts",
+        input,
+        {
+          headers: { "Idempotency-Key": idempotencyKey },
+        },
+      ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
+      queryClient.invalidateQueries({
+        queryKey: accountingArQueryKeys.accountingAr.all,
+      });
     },
   });
 }
@@ -409,27 +524,32 @@ export function useAllocateArReceipt() {
         { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
+      queryClient.invalidateQueries({
+        queryKey: accountingArQueryKeys.accountingAr.all,
+      });
     },
   });
 }
 
 export function useAllocateArReceiptFifo() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<ArReceiptView, Error, { receiptId: string; maxAmountMinor?: number }>(
-    "accounting:receivables:manage",
-    {
-      mutationKey: ["accounting", "ar", "receipts", "allocateFifo"],
-      mutationFn: ({ receiptId, maxAmountMinor }) =>
-        apiClient.post<ArReceiptView>(
-          `/accounting/ar/receipts/${receiptId}/allocations/fifo`,
-          maxAmountMinor === undefined ? {} : { maxAmountMinor },
-        ),
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
-      },
+  return useAuthorizedMutation<
+    ArReceiptView,
+    Error,
+    { receiptId: string; maxAmountMinor?: number }
+  >("accounting:receivables:manage", {
+    mutationKey: ["accounting", "ar", "receipts", "allocateFifo"],
+    mutationFn: ({ receiptId, maxAmountMinor }) =>
+      apiClient.post<ArReceiptView>(
+        `/accounting/ar/receipts/${receiptId}/allocations/fifo`,
+        maxAmountMinor === undefined ? {} : { maxAmountMinor },
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: accountingArQueryKeys.accountingAr.all,
+      });
     },
-  );
+  });
 }
 
 export function useReverseArReceipt() {
@@ -441,23 +561,33 @@ export function useReverseArReceipt() {
   >("accounting:receivables:approve", {
     mutationKey: ["accounting", "ar", "receipts", "reverse"],
     mutationFn: ({ receiptId, input }, idempotencyKey) =>
-      apiClient.post<{ receipt: ArReceiptView; reversalJournal: Journal | null }>(
-        `/accounting/ar/receipts/${receiptId}/reverse`,
-        input,
-        { headers: { "Idempotency-Key": idempotencyKey } },
-      ),
+      apiClient.post<{
+        receipt: ArReceiptView;
+        reversalJournal: Journal | null;
+      }>(`/accounting/ar/receipts/${receiptId}/reverse`, input, {
+        headers: { "Idempotency-Key": idempotencyKey },
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
+      queryClient.invalidateQueries({
+        queryKey: accountingArQueryKeys.accountingAr.all,
+      });
     },
   });
 }
 
-export function useArAging(query: AgingQuery = {}, options?: QueryOpts<AgingReport>) {
+export function useArAging(
+  query: AgingQuery = {},
+  options?: QueryOpts<AgingReport>,
+) {
   const canRead = useCan(RECEIVABLES_READ);
   return useQuery<AgingReport, Error>({
     queryKey: accountingArQueryKeys.accountingAr.aging(agingParams(query)),
     queryFn: ({ signal }) =>
-      apiClient.get<AgingReport>("/accounting/ar/aging", agingParams(query), signal),
+      apiClient.get<AgingReport>(
+        "/accounting/ar/aging",
+        agingParams(query),
+        signal,
+      ),
     staleTime: STANDARD_LIST_STALE,
     placeholderData: keepPreviousData,
     ...options,
@@ -465,12 +595,19 @@ export function useArAging(query: AgingQuery = {}, options?: QueryOpts<AgingRepo
   });
 }
 
-export function useArOpenItems(query: AgingQuery = {}, options?: QueryOpts<AgingOpenItem[]>) {
+export function useArOpenItems(
+  query: AgingQuery = {},
+  options?: QueryOpts<AgingOpenItem[]>,
+) {
   const canRead = useCan(RECEIVABLES_READ);
   return useQuery<AgingOpenItem[], Error>({
     queryKey: accountingArQueryKeys.accountingAr.openItems(agingParams(query)),
     queryFn: ({ signal }) =>
-      apiClient.get<AgingOpenItem[]>("/accounting/ar/aging/open-items", agingParams(query), signal),
+      apiClient.get<AgingOpenItem[]>(
+        "/accounting/ar/aging/open-items",
+        agingParams(query),
+        signal,
+      ),
     staleTime: STANDARD_LIST_STALE,
     placeholderData: keepPreviousData,
     ...options,

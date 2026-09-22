@@ -8,15 +8,25 @@ import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { LedgerRejectionCode } from "@/types/accounting-kernel-ext";
+import type { LedgerRejectionCode } from "@/types/accounting/accounting-kernel-ext";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { useAccountingBook, usePostableAccounts } from "@/hooks/api/accounting/ledger";
+import {
+  useAccountingBook,
+  usePostableAccounts,
+} from "@/hooks/api/accounting/ledger";
 import { usePostJournal } from "@/hooks/api/accounting/ledger-mutations";
 import { getApiErrorCode, isApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -41,7 +51,9 @@ export function PostJournalClient() {
   const postJournal = usePostJournal();
 
   const [idempotencyKey, setIdempotencyKey] = useState(newIdempotencyKey);
-  const [offendingLineIndex, setOffendingLineIndex] = useState<number | null>(null);
+  const [offendingLineIndex, setOffendingLineIndex] = useState<number | null>(
+    null,
+  );
   const [rejection, setRejection] = useState<string | null>(null);
 
   const currency = book?.baseCurrency ?? "";
@@ -57,11 +69,17 @@ export function PostJournalClient() {
     defaultValues: {
       journalDate: getTodayString(),
       memo: "",
-      lines: [{ ...EMPTY_JOURNAL_LINE }, { ...EMPTY_JOURNAL_LINE, side: "credit" }],
+      lines: [
+        { ...EMPTY_JOURNAL_LINE },
+        { ...EMPTY_JOURNAL_LINE, side: "credit" },
+      ],
     },
   });
 
-  const { fields, append, remove } = useFieldArray({ control: form.control, name: "lines" });
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "lines",
+  });
   const watchedLines = form.watch("lines");
   const totals = journalTotals(watchedLines ?? [], currency);
 
@@ -107,7 +125,9 @@ export function PostJournalClient() {
           if (isApiError(error) && error.status === 409) {
             const index = readLineIndex(error.details);
             setOffendingLineIndex(index ?? null);
-            setRejection(rejectionMessage(getApiErrorCode(error), getErrorMessage(error)));
+            setRejection(
+              rejectionMessage(getApiErrorCode(error), getErrorMessage(error)),
+            );
             setIdempotencyKey(newIdempotencyKey());
             return;
           }
@@ -117,7 +137,11 @@ export function PostJournalClient() {
     );
   }
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="New journal entry">
         <PageState resolution={pageState} loading={null} className="flex-1">
@@ -145,7 +169,10 @@ export function PostJournalClient() {
                   <FormItem>
                     <FormLabel>Date</FormLabel>
                     <FormControl>
-                      <DatePicker value={field.value} onChange={field.onChange} />
+                      <DatePicker
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -208,19 +235,25 @@ export function PostJournalClient() {
 
           {totals.invalidLineIndexes.length > 0 ? (
             <p className="text-xs text-destructive" role="alert">
-              Some amounts are not valid {currency || "currency"} figures. Use numbers only, with
-              at most the usual number of decimal places.
+              Some amounts are not valid {currency || "currency"} figures. Use
+              numbers only, with at most the usual number of decimal places.
             </p>
           ) : null}
 
           <div className="flex justify-end gap-2 pb-4">
-            <Button type="button" variant="outline" onClick={() => router.back()}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+            >
               Cancel
             </Button>
             <LoadingButton
               type="submit"
               isPending={postJournal.isPending}
-              disabled={!totals.balanced || totals.invalidLineIndexes.length > 0}
+              disabled={
+                !totals.balanced || totals.invalidLineIndexes.length > 0
+              }
             >
               Post entry
             </LoadingButton>

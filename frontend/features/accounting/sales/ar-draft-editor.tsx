@@ -5,8 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { LoadingButton } from "@/components/ui/loading-button";
-import type { ArDocumentView } from "@/types/accounting-ar";
-import type { TaxPreview } from "@/types/accounting-ar-receipts";
+import type { ArDocumentView } from "@/types/accounting/accounting-ar";
+import type { TaxPreview } from "@/types/accounting/accounting-ar-receipts";
 import { ArDocumentForm } from "./ar-document-form";
 import { TaxPreviewPanel } from "./tax-preview-panel";
 import {
@@ -58,7 +58,11 @@ export function ArDraftEditor({
         onSubmit={form.handleSubmit(handleSubmit)}
         className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:items-start"
       >
-        <ArDocumentForm form={form} errorLineIndex={errorLineIndex} disabled={isSaving} />
+        <ArDocumentForm
+          form={form}
+          errorLineIndex={errorLineIndex}
+          disabled={isSaving}
+        />
 
         <div className="flex flex-col gap-4 lg:sticky lg:top-0">
           <TaxPreviewPanel
@@ -70,7 +74,11 @@ export function ArDraftEditor({
             error={preview.error}
           />
           <div className="flex flex-col gap-2">
-            <LoadingButton type="submit" isPending={isSaving} className="w-full">
+            <LoadingButton
+              type="submit"
+              isPending={isSaving}
+              className="w-full"
+            >
               {saveLabel}
             </LoadingButton>
             {actions}

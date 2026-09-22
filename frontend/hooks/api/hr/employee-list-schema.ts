@@ -24,3 +24,8 @@ export const employeeListPageContract = z.object({
     nextCursor: z.string().nullable(),
   }),
 });
+
+export const employeeCountsContract = z.object({
+  active: z.number().int(),
+  inactive: z.number().int(),
+});

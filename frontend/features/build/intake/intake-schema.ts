@@ -15,3 +15,9 @@ export const acceptSchema = z.object({
 });
 
 export type AcceptForm = z.infer<typeof acceptSchema>;
+
+export const declineIntakeSchema = z.object({
+  reason: z.string().min(1, "Reason is required"),
+});
+
+export type DeclineIntakeForm = z.infer<typeof declineIntakeSchema>;

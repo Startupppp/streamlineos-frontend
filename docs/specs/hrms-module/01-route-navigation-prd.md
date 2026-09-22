@@ -61,8 +61,15 @@ These are source findings, not a claim that every path fails in production.
 - [ ] **HRM-01-001** Inventory every `href`, `router.push`, notification
   deep-link template, email CTA, and hub card target under HR / Directory /
   `/me` HR; record missing destinations in the Evidence Log.
-- [ ] **HRM-01-002** Migrate or delete every caller of retired
+- [x] **HRM-01-002** Migrate or delete every caller of retired
   `/hr/onboarding/my-tasks` and `/payroll/me`.
+  **Closed — source proof 2026-09-21.** Neither route directory exists under
+  `frontend/app/(authenticated)/`, and no `href=`, `router.push/replace` or
+  `redirect()` in `app/`, `components/`, `features/` or `lib/` targets either
+  path. Neither appears in the sidebar catalogs or `lib/rbac/route-access`.
+  The surviving `/payroll/me/*` strings are the **backend self-service API**
+  (`contracts/openapi.json`, `scripts/check-response-contracts.mjs`), which is
+  live by design under CLAUDE.md §8 — they are not callers of the retired page.
 - [ ] **HRM-01-003** Remove or correct the stale `/recruitment` product-path
   exception once product resolution uses `/hr/recruitment` and `/me/recruitment`
   only.

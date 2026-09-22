@@ -25,7 +25,7 @@ import { useUpsertFxRate } from "@/hooks/api/accounting/ledger-mutations";
 import { formatRate } from "@/lib/accounting/money";
 import { formatShortDate, getTodayString } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { FxRate } from "@/types/accounting-kernel-ext";
+import type { FxRate } from "@/types/accounting/accounting-kernel-ext";
 import { fxRateFormSchema, type FxRateFormValues } from "./fx-rate-schema";
 
 export function FxRatesCard({ baseCurrency }: { baseCurrency: string }) {
@@ -72,7 +72,9 @@ export function FxRatesCard({ baseCurrency }: { baseCurrency: string }) {
     {
       key: "source",
       header: "Where it came from",
-      cell: (row) => <span className="text-muted-foreground">{row.source}</span>,
+      cell: (row) => (
+        <span className="text-muted-foreground">{row.source}</span>
+      ),
     },
   ];
 
@@ -214,7 +216,8 @@ export function FxRatesCard({ baseCurrency }: { baseCurrency: string }) {
                     <Input inputMode="decimal" placeholder="83.25" {...field} />
                   </FormControl>
                   <FormDescription>
-                    How many units of the second currency one unit of the first buys.
+                    How many units of the second currency one unit of the first
+                    buys.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

@@ -82,7 +82,7 @@ export function CompensationPlanningPage() {
             className="bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             <Plus className="h-4 w-4 mr-2" />
-            New Cycle
+            Create compensation cycle
           </Button>
         ) : undefined
       }

@@ -9,8 +9,8 @@ export default function HrfnfError(props: {
   return (
     <ReportingRouteErrorBoundary
       {...props}
-      title="Full & Final Error"
-      fallbackMessage="Failed to load Full & Final. Please try again."
+      title="Final settlement error"
+      fallbackMessage="Failed to load final settlements. Please try again."
     />
   );
 }

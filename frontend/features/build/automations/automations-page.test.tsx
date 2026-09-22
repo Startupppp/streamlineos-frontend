@@ -20,6 +20,7 @@ jest.mock("@/hooks/api/build/automations", () => ({
 
 jest.mock("@/components/shared/dirty-state-context", () => ({
   useRegisterDirtyState: jest.fn(),
+  useNavigationLeave: () => (action: () => void) => action(),
 }));
 
 jest.mock("@/components/pm-chrome", () => ({

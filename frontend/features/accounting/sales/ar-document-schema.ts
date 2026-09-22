@@ -5,13 +5,20 @@ import type {
   ArDocumentView,
   CreateInvoiceInput,
   UpdateArDraftInput,
-} from "@/types/accounting-ar";
+} from "@/types/accounting/accounting-ar";
 
 const QUANTITY_PATTERN = /^\d+(\.\d{1,3})?$/;
 
 export const arDocumentLineFormSchema = z.object({
-  description: z.string().trim().min(1, "Say what you are billing for").max(1000),
-  quantity: z.string().trim().regex(QUANTITY_PATTERN, "Up to three decimal places"),
+  description: z
+    .string()
+    .trim()
+    .min(1, "Say what you are billing for")
+    .max(1000),
+  quantity: z
+    .string()
+    .trim()
+    .regex(QUANTITY_PATTERN, "Up to three decimal places"),
   unitPrice: z.string().trim().min(1, "Enter a price"),
   discount: z.string().trim(),
   taxCategory: z.enum([
@@ -30,7 +37,10 @@ export const arDocumentFormSchema = z
   .object({
     partyId: z.string().trim().min(1, "Choose a customer"),
     issueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick an issue date"),
-    dueDate: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a due date")]),
+    dueDate: z.union([
+      z.literal(""),
+      z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a due date"),
+    ]),
     currency: z
       .string()
       .trim()
@@ -48,7 +58,10 @@ export const arDocumentFormSchema = z
     taxInclusive: z.boolean(),
     reference: z.string().trim().max(255),
     memo: z.string().trim().max(4000),
-    lines: z.array(arDocumentLineFormSchema).min(1, "Add at least one line").max(500),
+    lines: z
+      .array(arDocumentLineFormSchema)
+      .min(1, "Add at least one line")
+      .max(500),
   })
   .superRefine((values, ctx) => {
     values.lines.forEach((line, index) => {
@@ -112,11 +125,15 @@ export function emptyArDocumentForm(
   };
 }
 
-function isTaxCategory(value: string): value is ArDocumentLineFormValues["taxCategory"] {
+function isTaxCategory(
+  value: string,
+): value is ArDocumentLineFormValues["taxCategory"] {
   return arDocumentLineFormSchema.shape.taxCategory.safeParse(value).success;
 }
 
-export function arDocumentFormFromView(document: ArDocumentView): ArDocumentFormValues {
+export function arDocumentFormFromView(
+  document: ArDocumentView,
+): ArDocumentFormValues {
   return {
     partyId: document.partyId,
     issueDate: document.issueDate,
@@ -133,8 +150,12 @@ export function arDocumentFormFromView(document: ArDocumentView): ArDocumentForm
             quantity: (line.quantityMilli / 1000).toString(),
             unitPrice: moneyInputValue(line.unitPriceMinor, document.currency),
             discount:
-              line.discountMinor > 0 ? moneyInputValue(line.discountMinor, document.currency) : "",
-            taxCategory: isTaxCategory(line.taxCategory) ? line.taxCategory : "standard",
+              line.discountMinor > 0
+                ? moneyInputValue(line.discountMinor, document.currency)
+                : "",
+            taxCategory: isTaxCategory(line.taxCategory)
+              ? line.taxCategory
+              : "standard",
             commodityCode: line.commodityCode ?? "",
           }))
         : [emptyArLine()],
@@ -145,7 +166,8 @@ function toLineInput(
   line: ArDocumentLineFormValues,
   currency: string,
 ): ArDocumentLineInput {
-  const discount = line.discount.length > 0 ? parseMoneyInput(line.discount, currency) : null;
+  const discount =
+    line.discount.length > 0 ? parseMoneyInput(line.discount, currency) : null;
   return {
     description: line.description,
     quantityMilli: Math.round(Number(line.quantity) * 1000),
@@ -156,7 +178,9 @@ function toLineInput(
   };
 }
 
-export function toCreateDocumentInput(values: ArDocumentFormValues): CreateInvoiceInput {
+export function toCreateDocumentInput(
+  values: ArDocumentFormValues,
+): CreateInvoiceInput {
   const currency = values.currency.toUpperCase();
   return {
     partyId: values.partyId,
@@ -171,7 +195,9 @@ export function toCreateDocumentInput(values: ArDocumentFormValues): CreateInvoi
   };
 }
 
-export function toUpdateDocumentInput(values: ArDocumentFormValues): UpdateArDraftInput {
+export function toUpdateDocumentInput(
+  values: ArDocumentFormValues,
+): UpdateArDraftInput {
   return toCreateDocumentInput(values);
 }
 

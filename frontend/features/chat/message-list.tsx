@@ -252,7 +252,7 @@ export function MessageList({
           className="min-h-full"
           style={{
             backgroundImage:
-              "radial-gradient(circle at 50% 50%, hsl(var(--muted) / 0.3) 0%, transparent 70%)",
+              "radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--muted) 30%, transparent) 0%, transparent 70%)",
           }}
         >
         {isLoading ? (

@@ -17,7 +17,15 @@ function makeScope(overrides: Partial<BuildScopeRef> = {}): BuildScopeRef {
   };
 }
 
-const DEFAULT_PROPS = {
+const DEFAULT_PROPS: {
+  scope: BuildScopeRef;
+  isCurrent: boolean;
+  isStarred: boolean;
+  isArchived: boolean;
+  settingsHref: string | null;
+  onSelect: jest.Mock;
+  onToggleStar: jest.Mock;
+} = {
   scope: makeScope(),
   isCurrent: false,
   isStarred: false,
@@ -237,12 +245,6 @@ describe("BSN-02-033 — 44px touch targets on mobile without compressing deskto
     renderRow();
     const actionsBtn = screen.getByRole("button", { name: "Actions for Alpha" });
     expect(actionsBtn.className).toContain("md:opacity-0");
-  });
-});
-
-describe("BSN-02-032 — note: browser-level responsive popover", () => {
-  test("BSN-02-032 is satisfied by BuildScopeSelector wrapping BuildScopeBrowser in ResponsivePopover — jsdom cannot render the Drawer/Popover branch, verified via code review of build-scope-selector.tsx", () => {
-    expect(true).toBe(true);
   });
 });
 

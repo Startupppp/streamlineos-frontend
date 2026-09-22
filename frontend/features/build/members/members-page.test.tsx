@@ -7,7 +7,7 @@ const mockUseProjectWorkspaceMembers = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn() }),
-  usePathname: () => "/build/members",
+  usePathname: () => "/build/settings/access",
   useSearchParams: () => new URLSearchParams(),
 }));
 

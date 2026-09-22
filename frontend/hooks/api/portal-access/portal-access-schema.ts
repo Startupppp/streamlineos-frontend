@@ -64,8 +64,8 @@ const grantRowContract = z.object({
   expiresAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  contactFirstName: z.string().nullable(),
-  contactLastName: z.string().nullable(),
+  contactFirstName: z.string().nullable().optional().transform((v) => v ?? null),
+  contactLastName: z.string().nullable().optional().transform((v) => v ?? null),
 });
 
 export const grantContract = grantRowContract;

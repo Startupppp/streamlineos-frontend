@@ -7,12 +7,19 @@ import { EntityFormSheet } from "@/components/shared";
 import { parseMoneyInput } from "@/lib/accounting/money";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useApDocuments, usePostApPayment } from "@/hooks/api/accounting/ap";
-import type { VendorSummary } from "@/types/accounting-ap";
-import type { ApAllocationInput, PostApPaymentInput, WithholdingInstruction } from "@/types/accounting-ap-payments";
+import type { VendorSummary } from "@/types/accounting/accounting-ap";
+import type {
+  ApAllocationInput,
+  PostApPaymentInput,
+  WithholdingInstruction,
+} from "@/types/accounting/accounting-ap-payments";
 import { todayIso } from "../lib/ap-dates";
 import { textOrNull, textOrUndefined } from "../lib/form-values";
 import { PaymentFormFields } from "./payment-form-fields";
-import { paymentFormSchema, type PaymentFormValues } from "./payment-form-schema";
+import {
+  paymentFormSchema,
+  type PaymentFormValues,
+} from "./payment-form-schema";
 
 interface RecordPaymentSheetProps {
   open: boolean;
@@ -32,7 +39,10 @@ export function RecordPaymentSheet({
     { documentType: "BILL", partyId, openOnly: true, page: 1, pageSize: 50 },
     { enabled: open && !!partyId },
   );
-  const openBills = useMemo(() => openBillsQuery.data?.items ?? [], [openBillsQuery.data]);
+  const openBills = useMemo(
+    () => openBillsQuery.data?.items ?? [],
+    [openBillsQuery.data],
+  );
 
   const defaultValues = useMemo<PaymentFormValues>(
     () => ({
@@ -88,7 +98,9 @@ export function RecordPaymentSheet({
     const grossMinor = grossText ? parseMoneyInput(grossText, currency) : null;
 
     if (grossText && grossMinor === null) {
-      toast.error(`Enter a ${currency} amount with the right number of decimals`);
+      toast.error(
+        `Enter a ${currency} amount with the right number of decimals`,
+      );
       return;
     }
 

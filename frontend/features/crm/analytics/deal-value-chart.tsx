@@ -17,7 +17,7 @@ export function DealValueChart({ data }: DealValueChartProps) {
       ) : (
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis dataKey="stage" tick={AXIS_TICK} />
             <YAxis tick={AXIS_TICK} />
             <Tooltip contentStyle={CHART_TOOLTIP_STYLE} formatter={(value) => [`₹${value}L`, "Value"]} />

@@ -27,7 +27,8 @@ import { InventoryEmptyState } from "@/features/inventory/components/inventory-e
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { Unlock } from "lucide-react";
 import { useReservations, useReleaseReservation } from "@/hooks/api/inventory/stock";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared";
 import {
   RESERVATION_STATUS_BADGE,
   RESERVATION_STATUS_LABEL,
@@ -54,6 +55,7 @@ type ReservationItem = {
 const PAGE_LIMIT = 50;
 
 export function ReservationsPanel() {
+  const reservationsState = useCanState("inventory:stock:read");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [releaseId, setReleaseId] = useState<number | null>(null);
@@ -67,7 +69,7 @@ export function ReservationsPanel() {
     limit: PAGE_LIMIT,
   };
 
-  const { data, isLoading } = useReservations(filters);
+  const { data, isPending } = useReservations(filters);
   const items = data?.items ?? [];
   const total = data?.total ?? 0;
 
@@ -192,46 +194,52 @@ export function ReservationsPanel() {
 
   return (
     <>
-      <div className={`${FILTER_TOOLBAR_ROW} mb-3`}>
-        <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px]")}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="ACTIVE">Active</SelectItem>
-            <SelectItem value="CONSUMED">Consumed</SelectItem>
-            <SelectItem value="RELEASED">Released</SelectItem>
-            <SelectItem value="EXPIRED">Expired</SelectItem>
-          </SelectContent>
-        </Select>
-        {total > 0 && (
-          <span className="text-xs text-muted-foreground ml-auto">
-            {total} reservation{total !== 1 ? "s" : ""}
-          </span>
-        )}
-      </div>
+      {reservationsState === "denied" ? (
+        <NoPermissionState compact permission="inventory:stock:read" className="flex-1" />
+      ) : (
+        <>
+          <div className={`${FILTER_TOOLBAR_ROW} mb-3`}>
+            <Select value={statusFilter} onValueChange={handleStatusChange}>
+              <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px]")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="ACTIVE">Active</SelectItem>
+                <SelectItem value="CONSUMED">Consumed</SelectItem>
+                <SelectItem value="RELEASED">Released</SelectItem>
+                <SelectItem value="EXPIRED">Expired</SelectItem>
+              </SelectContent>
+            </Select>
+            {total > 0 && (
+              <span className="text-xs text-muted-foreground ml-auto">
+                {total} reservation{total !== 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
 
-      <DataTable
-        data={items}
-        columns={columns}
-        getRowKey={(row) => row.id}
-        isLoading={isLoading}
-        emptyState={
-          <InventoryEmptyState
-            title="No active reservations"
-            description="Reservations will appear here when stock is reserved for sales orders or other sources."
-            className="flex-1 min-h-[30dvh]"
+          <DataTable
+            data={items}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            isLoading={isPending}
+            emptyState={
+              <InventoryEmptyState
+                title="No active reservations"
+                description="Reservations will appear here when stock is reserved for sales orders or other sources."
+                className="flex-1 min-h-[30dvh]"
+              />
+            }
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: PAGE_LIMIT,
+              total,
+              onPageChange: setPage,
+            }}
           />
-        }
-        pagination={{
-          mode: "server",
-          page,
-          pageSize: PAGE_LIMIT,
-          total,
-          onPageChange: setPage,
-        }}
-      />
+        </>
+      )}
 
       <AlertDialog open={releaseId !== null} onOpenChange={handleDialogOpenChange}>
         <AlertDialogContent>

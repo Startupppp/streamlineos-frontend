@@ -3,7 +3,15 @@
 import { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Plus, Download, Upload } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import {
   useExpensePageData,
@@ -50,6 +58,7 @@ export function ExpensesPage() {
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
 
   const isAdmin = useCan("hr:expenses:approve");
 
@@ -173,6 +182,7 @@ export function ExpensesPage() {
   }
 
   const handleOpenImport = useCallback(() => setIsImportOpen(true), []);
+  const handleOpenExport = useCallback(() => setIsExportOpen(true), []);
   const handleOpenAdminCreate = useCallback(() => setIsCreateOpen(true), []);
   const handleUserFilterChange = useCallback(
     (userId: string) => setFilter("userId", userId || undefined),
@@ -252,7 +262,7 @@ export function ExpensesPage() {
   if (isAdmin) {
     return (
       <PageWrapper
-        title="Expense Approvals"
+        title="Expense approvals"
         subtitle="Review and manage pending employee expense claims."
         actions={
           <div className="flex items-center gap-2 flex-wrap">
@@ -263,20 +273,29 @@ export function ExpensesPage() {
             )}
             <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" onClick={handleOpenImport}>
               <Upload className="h-4 w-4" />
-              Import
+              Import expenses
             </Button>
-            <ExpenseExportDialog
-              filters={filters}
-              trigger={
-                <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <AnimatedIconButton
+                  icon={EllipsisIcon}
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9"
+                  aria-label="More actions"
+                />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem onSelect={handleOpenExport}>
                   <Download className="h-4 w-4" />
-                  Export
-                </Button>
-              }
-            />
+                  Export expenses
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <ExpenseExportDialog filters={filters} open={isExportOpen} onOpenChange={setIsExportOpen} />
             <Button size="sm" className="h-9 gap-1.5 text-sm" onClick={handleOpenAdminCreate}>
               <Plus className="h-4 w-4" />
-              Add Expense
+              Add expense
             </Button>
           </div>
         }
@@ -342,14 +361,14 @@ export function ExpensesPage() {
 
   return (
     <PageWrapper
-      title="My Expenses"
+      title="My expenses"
       subtitle="Track, manage, and submit your expense claims for reimbursement."
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"
       actions={
         <Button size="sm" className="h-9 gap-1.5 text-sm" onClick={handleOpenMemberCreate}>
           <Plus className="h-4 w-4" />
-          Submit New Claim
+          Submit expense claim
         </Button>
       }
       filters={

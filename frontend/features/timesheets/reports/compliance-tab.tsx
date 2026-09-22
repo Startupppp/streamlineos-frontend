@@ -79,6 +79,8 @@ const COLUMNS: DataTableColumn<ComplianceReportUser>[] = [
   },
 ];
 
+const COLUMN_HEADERS = COLUMNS.map((column) => column.header);
+
 function getComplianceRowKey(row: ComplianceReportUser): string {
   return row.userId;
 }
@@ -136,7 +138,7 @@ export function ComplianceTab({ params, enabled }: ComplianceTabProps) {
       loading={
         <div className="space-y-4">
           <StatCardGridSkeleton cols={4} count={4} />
-          <DataTableSkeleton rows={8} columns={7} />
+          <DataTableSkeleton rows={8} headers={COLUMN_HEADERS} />
         </div>
       }
     >

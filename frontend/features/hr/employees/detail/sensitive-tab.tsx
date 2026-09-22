@@ -22,8 +22,8 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Shield, Lock } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
-import { ErrorState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
 import type { Control } from "react-hook-form";
 import {
@@ -102,14 +102,15 @@ interface Props {
 }
 
 export function EmployeeSensitiveTab({ userId }: Props) {
-  const canView = useCan("hr:sensitive:view");
   const canManage = useCan("hr:sensitive:manage");
   const [editMode, setEditMode] = useState(false);
 
   const { data: employment, isLoading: empLoading, isError: empError, error: empErrorValue, refetch: refetchEmp } = useEmployeeEmployment(userId);
   const { data: sensitive, isLoading: sensitiveLoading, isError: sensitiveError, error: sensitiveErrorValue, refetch: refetchSensitive } = useEmployeeSensitive(
-    canView ? employment?.id : undefined
+    employment?.id
   );
+
+  const pageState = usePageState({ permission: "hr:sensitive:view", isLoading: empLoading || sensitiveLoading, isError: empError || sensitiveError, error: empErrorValue ?? sensitiveErrorValue });
 
   const updateMutation = useUpdateSensitive(employment?.id ?? 0);
 
@@ -138,8 +139,14 @@ export function EmployeeSensitiveTab({ userId }: Props) {
     });
   });
 
-  if (!canView)
-    return <NoPermissionState permission="hr:sensitive:view" className="py-16" />;
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+    const handleRetry = () => { void refetchEmp(); void refetchSensitive(); };
+    return (
+      <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="py-16">
+        {null}
+      </PageState>
+    );
+  }
 
   if (empLoading || sensitiveLoading) {
     return (
@@ -148,21 +155,6 @@ export function EmployeeSensitiveTab({ userId }: Props) {
           <Skeleton key={i} className="h-14 w-full rounded-xl" />
         ))}
       </div>
-    );
-  }
-
-  if (empError || sensitiveError) {
-    const handleRetry = () => {
-      void refetchEmp();
-      void refetchSensitive();
-    };
-    return (
-      <ErrorState
-        title="Couldn't load employee data"
-        description={getErrorMessage(empErrorValue ?? sensitiveErrorValue)}
-        onRetry={handleRetry}
-        className="py-16"
-      />
     );
   }
 

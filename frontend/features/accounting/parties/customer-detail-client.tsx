@@ -1,24 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { useCan } from "@/hooks/api/access";
-import { PARTIES_READ, PARTIES_UPDATE, useParty } from "@/hooks/api/accounting/parties";
-import { RECEIVABLES_MANAGE, useArAging, useArInvoices } from "@/hooks/api/accounting/ar";
-import type { ArDocumentSummary } from "@/types/accounting-ar";
+import { usePageState } from "@/hooks/api/use-page-state";
+import {
+  PARTIES_READ,
+  PARTIES_UPDATE,
+  useParty,
+} from "@/hooks/api/accounting/parties";
+import {
+  RECEIVABLES_MANAGE,
+  useArAging,
+  useArInvoices,
+} from "@/hooks/api/accounting/ar";
+import type { ArDocumentSummary } from "@/types/accounting/accounting-ar";
 import { ArStatusBadge, PARTY_ROLE_LABEL } from "../sales/ar-labels";
 import { useListUrlState } from "../sales/use-list-url-state";
 import { PartyFormSheet } from "./party-form-sheet";
@@ -38,7 +54,6 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 
 export function CustomerDetailClient({ partyId }: CustomerDetailClientProps) {
-  const canRead = useCan(PARTIES_READ);
   const canUpdate = useCan(PARTIES_UPDATE);
   const canBill = useCan(RECEIVABLES_MANAGE);
   const url = useListUrlState(10);
@@ -52,6 +67,16 @@ export function CustomerDetailClient({ partyId }: CustomerDetailClientProps) {
     page: url.page,
     pageSize: url.pageSize,
   });
+
+  const pageState = usePageState({
+    permission: PARTIES_READ,
+    isLoading: partyQuery.isLoading,
+    isError: partyQuery.isError,
+    error: partyQuery.error,
+  });
+  const handleRetry = useCallback(() => {
+    void partyQuery.refetch();
+  }, [partyQuery]);
 
   const columns: DataTableColumn<ArDocumentSummary>[] = [
     {
@@ -70,7 +95,9 @@ export function CustomerDetailClient({ partyId }: CustomerDetailClientProps) {
       key: "issueDate",
       header: "Issued",
       cell: (row) => (
-        <span className="font-mono text-dense tabular-nums">{formatShortDate(row.issueDate)}</span>
+        <span className="font-mono text-dense tabular-nums">
+          {formatShortDate(row.issueDate)}
+        </span>
       ),
     },
     {
@@ -109,30 +136,25 @@ export function CustomerDetailClient({ partyId }: CustomerDetailClientProps) {
     },
   ];
 
-  if (!canRead) {
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="Customer" backHref="/accounting/customers">
-        <NoPermissionState permission={PARTIES_READ} />
-      </PageWrapper>
-    );
-  }
-
-  if (partyQuery.isError) {
-    return (
-      <PageWrapper title="Customer" backHref="/accounting/customers">
-        <ErrorState
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
           className="flex-1"
-          title="Couldn't load this customer"
-          description={getErrorMessage(partyQuery.error)}
-          onRetry={() => void partyQuery.refetch()}
-        />
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
-  const party = partyQuery.data;
-
-  if (partyQuery.isPending || !party) {
+  if (partyQuery.isPending || !partyQuery.data) {
     return (
       <PageWrapper title="Customer" backHref="/accounting/customers">
         <div className="flex flex-1 flex-col gap-4">
@@ -144,11 +166,14 @@ export function CustomerDetailClient({ partyId }: CustomerDetailClientProps) {
     );
   }
 
+  const party = partyQuery.data;
   const aging = agingQuery.data;
   const owedLabel = aging
     ? formatMinorMoney(aging.totals.functionalTotalMinor, aging.baseCurrency)
     : "—";
-  const overdueLabel = aging ? formatMinorMoney(aging.totals.days91Plus, aging.baseCurrency) : "—";
+  const overdueLabel = aging
+    ? formatMinorMoney(aging.totals.days91Plus, aging.baseCurrency)
+    : "—";
   const address = [
     party.billingLine1,
     party.billingLine2,
@@ -162,7 +187,9 @@ export function CustomerDetailClient({ partyId }: CustomerDetailClientProps) {
   return (
     <PageWrapper
       title={party.displayName}
-      subtitle={party.legalName ?? "Customer record and everything they still owe."}
+      subtitle={
+        party.legalName ?? "Customer record and everything they still owe."
+      }
       badge={PARTY_ROLE_LABEL[party.role]}
       backHref="/accounting/customers"
       backLabel="Back to customers"
@@ -180,7 +207,9 @@ export function CustomerDetailClient({ partyId }: CustomerDetailClientProps) {
           ) : null}
           {canBill ? (
             <Button asChild size="sm" className="flex-1 sm:flex-none">
-              <Link href={`/accounting/invoices/new?partyId=${party.id}`}>New invoice</Link>
+              <Link href={`/accounting/invoices/new?partyId=${party.id}`}>
+                New invoice
+              </Link>
             </Button>
           ) : null}
         </div>
@@ -191,7 +220,11 @@ export function CustomerDetailClient({ partyId }: CustomerDetailClientProps) {
           <StatCard
             label="Owes us now"
             value={owedLabel}
-            tone={aging && aging.totals.functionalTotalMinor > 0 ? "amber" : "emerald"}
+            tone={
+              aging && aging.totals.functionalTotalMinor > 0
+                ? "amber"
+                : "emerald"
+            }
             isLoading={agingQuery.isLoading}
           />
           <StatCard
@@ -212,18 +245,25 @@ export function CustomerDetailClient({ partyId }: CustomerDetailClientProps) {
           <Card>
             <CardHeader>
               <CardTitle>Billing details</CardTitle>
-              <CardDescription>What goes on the invoices we send them.</CardDescription>
+              <CardDescription>
+                What goes on the invoices we send them.
+              </CardDescription>
             </CardHeader>
             <CardContent className="divide-y divide-border/60">
               <DetailRow label="Email" value={party.email ?? "Not set"} />
               <DetailRow label="Phone" value={party.phone ?? "Not set"} />
               <DetailRow label="Bills in" value={party.defaultCurrency} />
-              <DetailRow label="Pays within" value={`${party.paymentTermsDays} days`} />
+              <DetailRow
+                label="Pays within"
+                value={`${party.paymentTermsDays} days`}
+              />
               <DetailRow label="Address" value={address || "Not set"} />
               <DetailRow label="Notes" value={party.notes ?? "None"} />
               {party.externalRefs.length > 0 ? (
                 <div className="flex items-center justify-between gap-3 py-1.5">
-                  <span className="text-label text-muted-foreground">Linked from</span>
+                  <span className="text-label text-muted-foreground">
+                    Linked from
+                  </span>
                   <div className="flex flex-wrap justify-end gap-1">
                     {party.externalRefs.map((ref) => (
                       <Badge
@@ -250,7 +290,9 @@ export function CustomerDetailClient({ partyId }: CustomerDetailClientProps) {
         <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
           <CardHeader className="shrink-0 px-4 py-3">
             <CardTitle>What they still owe</CardTitle>
-            <CardDescription>Invoices with a balance left on them.</CardDescription>
+            <CardDescription>
+              Invoices with a balance left on them.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
             {invoicesQuery.isError ? (
@@ -291,7 +333,11 @@ export function CustomerDetailClient({ partyId }: CustomerDetailClientProps) {
         </Card>
       </div>
 
-      <PartyFormSheet open={editOpen} onOpenChange={setEditOpen} party={party} />
+      <PartyFormSheet
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        party={party}
+      />
     </PageWrapper>
   );
 }

@@ -4,7 +4,10 @@ import { useEffect } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import {
+  transitionFormSchema,
+  type TransitionFormValues,
+} from "@/features/build/workflow/workflow-schema";
 import {
   Sheet,
   SheetContent,
@@ -39,17 +42,6 @@ import type { WorkflowTransition, CreateTransitionInput } from "@/types/projects
 
 const ANY_STATUS_SENTINEL = "ANY_STATUS";
 
-const schema = z.object({
-  fromStatusId: z.string(),
-  toStatusId: z.string().min(1, "Required"),
-  name: z.string(),
-  requiresApproval: z.boolean(),
-  requiredFields: z.string(),
-  allowedRoles: z.string(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
 interface TransitionFormSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -69,8 +61,8 @@ export function TransitionFormSheet({
 }: TransitionFormSheetProps) {
   const isEdit = !!transition;
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<TransitionFormValues>({
+    resolver: zodResolver(transitionFormSchema),
     defaultValues: {
       fromStatusId: ANY_STATUS_SENTINEL,
       toStatusId: "",
@@ -114,7 +106,7 @@ export function TransitionFormSheet({
       .filter(Boolean);
   }
 
-  function handleSubmit(values: FormValues) {
+  function handleSubmit(values: TransitionFormValues) {
     const fromStatusId =
       values.fromStatusId === ANY_STATUS_SENTINEL
         ? null

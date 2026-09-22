@@ -128,12 +128,6 @@ describe("BSN-02-014: duplicate prevention contract", () => {
   });
 });
 
-describe("BSN-02-016: isLoading excludes hierarchy-only queries", () => {
-  test("hierarchy-only loading does not contribute to the display isLoading flag by design — the hook tracks only display queries", () => {
-    expect(true).toBe(true);
-  });
-});
-
 describe("BSN-02-017: four states contract", () => {
   test("detectsQuarantinedProject returns false for null managedProductId enabling the no-accessible-scopes state", () => {
     const productNames = makeProductNames([]);

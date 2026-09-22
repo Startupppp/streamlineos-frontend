@@ -21,7 +21,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { Card, CardContent } from "@/components/ui/card";
 import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   Form,
   FormControl,
@@ -32,12 +31,7 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import type { ProjectUpdateRow } from "@/hooks/api/build/project-updates";
-
-const createUpdateSchema = z.object({
-  body: z.string().min(1, "Update body is required").max(10000),
-});
-
-type CreateUpdateInput = z.infer<typeof createUpdateSchema>;
+import { createUpdateSchema, type CreateUpdateInput } from "./updates-schema";
 
 function NewUpdateButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();

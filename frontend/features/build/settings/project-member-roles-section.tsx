@@ -16,10 +16,8 @@ import {
   useUpdateProjectMemberRole,
 } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
-import {
-  getUserDisplayName,
-  getUserInitials,
-} from "@/lib/person-display";
+import { ErrorState } from "@/components/shared/error-state";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { ProjectMemberRecord } from "@/types/projects";
 import { resolveImageUrl } from "@/lib/utils";
 
@@ -117,7 +115,13 @@ export function ProjectMemberRolesSection({
   projectId,
 }: ProjectMemberRolesSectionProps) {
   const canManage = useCan("build:manage");
-  const { data: members, isLoading } = useProjectMembers(projectId);
+  const {
+    data: members,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useProjectMembers(projectId);
 
   if (isLoading) {
     return (
@@ -136,11 +140,20 @@ export function ProjectMemberRolesSection({
     );
   }
 
-  if (!members?.length) {
+  if (isError)
+    return (
+      <ErrorState
+        compact
+        title="Couldn't load member roles"
+        description={getErrorMessage(error)}
+        onRetry={() => void refetch()}
+      />
+    );
+
+  if (!members?.length)
     return (
       <p className="text-sm text-muted-foreground py-2">No members yet.</p>
     );
-  }
 
   return (
     <div className="divide-y divide-border">

@@ -52,7 +52,7 @@ function CircularProgress({ value }: { value: number }) {
         cy="36"
         r={r}
         fill="none"
-        stroke="hsl(var(--primary))"
+        stroke="var(--primary)"
         strokeWidth="6"
         strokeDasharray={circ}
         strokeDashoffset={offset}

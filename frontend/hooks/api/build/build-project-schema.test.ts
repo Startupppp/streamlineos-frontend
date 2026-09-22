@@ -1,3 +1,5 @@
+import { ZodError } from "zod";
+
 import {
   ticketFieldValueCreateContract,
   projectMemberRowContract,
@@ -12,7 +14,7 @@ it("accepts the bare success ack the upsert-ticket-values endpoint actually retu
 it("rejects a falsy success flag on the ticket field value create contract", () => {
   expect(() =>
     ticketFieldValueCreateContract.parse({ success: false }),
-  ).toThrow();
+  ).toThrow(ZodError);
 });
 
 it("accepts the raw project_members row the add-member endpoint returns with no userId column", () => {
@@ -61,5 +63,5 @@ it("rejects a project member row with a non-numeric membershipId", () => {
       rateCurrency: null,
       joinedAt: "2026-09-15T00:00:00.000Z",
     }),
-  ).toThrow();
+  ).toThrow(ZodError);
 });

@@ -39,6 +39,7 @@ export {
   MODULE_ACCENTS,
   PRODUCT_DEFINITIONS,
   PRODUCT_DESCRIPTIONS,
+  PRODUCT_MODULE_KEY,
 } from "./sidebar-products";
 export type { ModuleAccent, ProductDefinition } from "./sidebar-products";
 
@@ -53,7 +54,7 @@ export const PRODUCT_PATH_EXCEPTIONS: ProductPathException[] = [
   { prefix: "/me", product: "home", reason: "Self-service index; only its children are navigable." },
   { prefix: "/knowledge", product: "documents", reason: "Knowledge index; nav lists /knowledge/chat and /knowledge/wiki." },
   { prefix: "/support/kb", product: "documents", reason: "Knowledge base served under the support prefix." },
-  { prefix: "/recruitment", product: "hrms", reason: "Hiring pipeline reached from the Recruitment group's children." },
+  { prefix: "/recruitment", product: "recruitment", reason: "Hiring pipeline reached from the Recruitment group's children." },
   { prefix: "/sales", product: "crm", reason: "CRM operational surface with no nav entry." },
   { prefix: "/customer-executive", product: "crm", reason: "CRM operational surface with no nav entry." },
   { prefix: "/billing/invoices", product: "finance", reason: "The org's own customer invoicing, not platform billing." },
@@ -194,7 +195,8 @@ function filterRoute(
   ];
 }
 
-export function getNavGroupsForUser(
+export function filterNavGroupsForUser(
+  groups: NavGroup[],
   role: string | undefined,
   scopes: GrantedScopes | undefined,
   enabledModules: string[] = [],
@@ -205,7 +207,7 @@ export function getNavGroupsForUser(
   const isOwner = role === ROLES.OWNER;
   const granted = grantedFrom(scopes);
 
-  return NAV_GROUPS.filter(
+  return groups.filter(
     (group) =>
       !group.module ||
       isPlanLocked(group.module, lockedModules) ||
@@ -229,6 +231,21 @@ export function getNavGroupsForUser(
       return { ...group, routes: visibleRoutes };
     })
     .filter((group) => group.routes.length > 0);
+}
+
+export function getNavGroupsForUser(
+  role: string | undefined,
+  scopes: GrantedScopes | undefined,
+  enabledModules: string[] = [],
+  lockedModules: string[] = [],
+): NavGroup[] {
+  return filterNavGroupsForUser(
+    NAV_GROUPS,
+    role,
+    scopes,
+    enabledModules,
+    lockedModules,
+  );
 }
 
 export function flattenNavRoutes(routes: NavRoute[]): NavRoute[] {

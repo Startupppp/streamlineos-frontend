@@ -4,7 +4,10 @@ import { useEffect } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import {
+  actionItemFormSchema,
+  type ActionItemFormValues,
+} from "@/features/build/meetings/meeting-form-schema";
 import {
   Sheet,
   SheetContent,
@@ -27,16 +30,6 @@ import { getUserDisplayName } from "@/lib/person-display";
 import type { ActionItem, CreateActionItemInput, UpdateActionItemInput, ProjectMemberRecord } from "@/types/projects";
 
 const NONE_SENTINEL = "__none__";
-
-const actionItemSchema = z.object({
-  title: z.string().min(1, "Required").max(200),
-  description: z.string(),
-  assigneeId: z.string(),
-  dueDate: z.string(),
-  status: z.enum(["open", "in_progress", "done", "converted", "cancelled"]),
-});
-
-type ActionItemFormValues = z.infer<typeof actionItemSchema>;
 
 const CREATE_DEFAULTS: ActionItemFormValues = {
   title: "",
@@ -73,7 +66,7 @@ export function ActionItemFormSheet({
   open, onOpenChange, mode, defaultValues, onSubmitCreate, onSubmitEdit, isPending, projectMembers,
 }: ActionItemFormSheetProps) {
   const form = useForm<ActionItemFormValues>({
-    resolver: zodResolver(actionItemSchema),
+    resolver: zodResolver(actionItemFormSchema),
     defaultValues: CREATE_DEFAULTS,
   });
   useRegisterDirtyState(open && form.formState.isDirty);

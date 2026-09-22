@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { Sparkles, ExternalLink, RefreshCw, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
-import DOMPurify from "isomorphic-dompurify";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +13,7 @@ import { UserCombobox } from "@/components/ui/user-combobox";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
+import { useSanitizedHtml } from "@/hooks/common/use-sanitized-html";
 import {
   useAnalyzeFeedbucketSubmission,
   useCreateTicketFromFeedbucketAi,
@@ -98,7 +98,7 @@ interface AiAnalysisResultProps {
 
 function AiAnalysisResult({ analysis }: AiAnalysisResultProps) {
   const confidencePct = Math.round(analysis.confidence * 100);
-  const sanitizedDescription = DOMPurify.sanitize(analysis.description);
+  const sanitizedDescription = useSanitizedHtml(analysis.description);
 
   return (
     <div className="space-y-4">

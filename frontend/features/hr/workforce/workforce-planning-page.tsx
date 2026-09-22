@@ -9,10 +9,10 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertTriangle } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { useCan } from "@/hooks/api/access";
 import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useHrBudgetVsActual,
@@ -328,21 +328,21 @@ function SkillsGapTab() {
 }
 
 function SuccessionTab() {
-  const canView = useCan("hr:succession:view");
   const { data, isLoading, isError, error, refetch } = useHrSuccessionRisk();
   const roles = data?.riskyRoles ?? [];
+  const pageState = usePageState({ permission: "hr:succession:view", isLoading, isError, error });
 
-  if (!canView) {
+  function handleRetry() { void refetch(); }
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
-      <div className="flex h-32 items-center justify-center gap-2 text-sm text-muted-foreground">
-        <AlertTriangle className="h-4 w-4" />
-        You do not have permission to view succession data.
-      </div>
+      <PageState resolution={pageState} loading={null} onRetry={handleRetry}>
+        {null}
+      </PageState>
     );
   }
 
-  if (isLoading) return <SectionSkeleton rows={8} />;
-  if (isError) return <ErrorState title="Couldn't load succession data" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
+  if (pageState.kind === "loading") return <SectionSkeleton rows={8} />;
   if (!roles.length) return <EmptyChart label="No succession risks identified" />;
 
   return (

@@ -23,7 +23,12 @@ import { useCan } from "@/hooks/api/access";
 import type { EmployeeSalaryProfile, SalaryProfileStatus } from "@/types/payroll/runs";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { usePayrollWorkforceLabel } from "@/features/payroll/lib/payroll-workforce-label";
+import { SearchInput } from "@/components/ui/search-input";
+import { useCursorPager } from "@/components/ui/table-pagination";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useState } from "react";
+
+const PAGE_SIZE = 20;
 
 const STATUS_CONFIG: Record<SalaryProfileStatus, { className: string; label: string }> = {
   ACTIVE: { className: "bg-status-success-surface text-status-success-ink border-status-success-rule", label: "Active" },
@@ -44,51 +49,60 @@ export function EmployeesListPage() {
   const search = searchParams.get("search") ?? "";
   const workerType = searchParams.get("workerType") ?? "all";
   const status = searchParams.get("status") ?? "all";
-  const page = Number(searchParams.get("page") ?? "1");
+  const debouncedSearch = useDebouncedValue(search.trim(), 300);
+  const pager = useCursorPager(`${debouncedSearch}|${workerType}|${status}`);
 
   function updateParams(updates: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString());
     for (const [key, value] of Object.entries(updates)) {
-      if (value === "" || value === "all" || value === "1") {
+      if (value === "" || value === "all") {
         params.delete(key);
       } else {
         params.set(key, value);
       }
     }
     const qs = params.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname);
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }
 
   function handleSearchChange(val: string) {
-    updateParams({ search: val, page: "1" });
+    updateParams({ search: val });
   }
 
   function handleWorkerTypeChange(val: string) {
-    updateParams({ workerType: val, page: "1" });
+    updateParams({ workerType: val });
   }
 
   function handleStatusChange(val: string) {
-    updateParams({ status: val, page: "1" });
-  }
-
-  function handlePageChange(val: number) {
-    updateParams({ page: String(val) });
+    updateParams({ status: val });
   }
 
   function handleClearFilters() {
-    updateParams({ search: "", workerType: "all", status: "all", page: "1" });
+    updateParams({ search: "", workerType: "all", status: "all" });
   }
 
   const filtersActive =
     search.trim() !== "" || workerType !== "all" || status !== "all";
 
   const { data, isLoading, isError, error, refetch } = useEmployeeProfiles({
-    page,
-    limit: 20,
-    search: search || undefined,
+    cursor: pager.cursor,
+    limit: PAGE_SIZE,
+    search: debouncedSearch || undefined,
     workerType: workerType !== "all" ? workerType : undefined,
     status: status !== "all" ? status : undefined,
   });
+
+  function handleNextPage() {
+    pager.goNext(data?.pagination.nextCursor);
+  }
+
+  function handlePreviousPage() {
+    pager.goPrevious();
+  }
+
+  function handleRetry() {
+    void refetch();
+  }
 
   const columns: DataTableColumn<EmployeeSalaryProfile>[] = [
     {
@@ -192,6 +206,11 @@ export function EmployeesListPage() {
       }
       filters={
         <>
+          <SearchInput
+            value={search}
+            onValueChange={handleSearchChange}
+            placeholder={workforceLabel.searchPlaceholder}
+          />
           <Select value={workerType} onValueChange={handleWorkerTypeChange}>
             <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`}>
               <SelectValue placeholder="Worker type" />
@@ -224,7 +243,7 @@ export function EmployeesListPage() {
           className="flex-1"
           title="Couldn't load salary profiles"
           description={getErrorMessage(error)}
-          onRetry={() => void refetch()}
+          onRetry={handleRetry}
         />
       ) : (
         <DataTable
@@ -235,13 +254,13 @@ export function EmployeesListPage() {
           onRowClick={handleRowClick}
           isLoading={isLoading}
           minWidth="680px"
-          search={{ value: search, onChange: handleSearchChange, placeholder: workforceLabel.searchPlaceholder }}
           pagination={{
-            mode: "server",
-            page,
-            pageSize: 20,
-            total: data?.pagination ? (data.pagination.hasMore ? (page * 20) + 1 : (page - 1) * 20 + data.data.length) : 0,
-            onPageChange: handlePageChange,
+            mode: "cursor",
+            pageSize: PAGE_SIZE,
+            hasMore: data?.pagination.hasMore ?? false,
+            hasPrevious: pager.hasPrevious,
+            onNext: handleNextPage,
+            onPrevious: handlePreviousPage,
           }}
           mobileCard={(row) => {
             const cfg = STATUS_CONFIG[row.status];

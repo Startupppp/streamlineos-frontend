@@ -91,8 +91,15 @@ Directory, Directory Access.
   invalidation owners.
 - [x] **HRM-03-004** announcements dual-listing — **locked Home-only**; remove
   any HR sidebar duplicate if present; keep Home Company entry.
-- [x] **HRM-03-005** biometric/devices — **two children under Time clocks**
+- [ ] **HRM-03-005** biometric/devices — **two children under Time clocks**
   (HRM-00 D06).
+  ⚠ **Reopened 2026-09-21 — was ticked, and source contradicts it.** In
+  `components/layout/sidebar/sidebar-nav-routes-hr-foundation.ts:103-114`,
+  "Biometric" (`/hr/biometric`) and "Time Clock Devices" (`/hr/devices`) are
+  flat siblings alongside Geofencing and Work Logs. No "Time clocks" parent
+  node exists, so they are not two children of anything. They also gate on
+  different keys — `hr:attendance:manage` and `hr:biometric:manage` — which
+  the grouping has to resolve.
 - [ ] **HRM-03-006** entitlement gating for paid HR surfaces uses live
   entitlements, never frontend-only constants.
 - [ ] **HRM-03-007** nav tests assert href existence, access classification, and

@@ -14,7 +14,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDateTime } from "@/lib/date-utils";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
-import { useCan } from "@/hooks/api/access";
+import { useCanState } from "@/hooks/api/access";
 import {
   downloadAuditExport,
   useAuditExportJobs,
@@ -31,16 +31,16 @@ import {
  * the trail — governed nothing a person could do.
  */
 export function AuditExportPanel() {
-  const canExport = useCan("inventory:audit:export");
+  const canExportState = useCanState("inventory:audit:export");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [verifying, setVerifying] = useState<number | null>(null);
 
-  const { data, isLoading, isError, error, refetch } = useAuditExportJobs({ limit: 20 });
+  const { data, isPending, isError, error, refetch } = useAuditExportJobs({ limit: 20 });
   const create = useCreateAuditExportJob();
   const verification = useVerifyAuditExport(verifying, verifying !== null);
 
-  if (!canExport) return null;
+  if (canExportState === "denied") return null;
 
   function handleCreate(): void {
     create.mutate(
@@ -179,7 +179,7 @@ export function AuditExportPanel() {
             data={data?.items ?? []}
             columns={columns}
             getRowKey={(row) => row.id}
-            isLoading={isLoading}
+            isLoading={isPending}
             minWidth="900px"
             emptyState={
               <InventoryEmptyState

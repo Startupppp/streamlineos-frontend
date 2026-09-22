@@ -13,6 +13,7 @@ const queryAccessCases: readonly QueryAccessCase[] = [
   ["employee-departments.ts", "useHrDepartments", "/hr/departments", "hr:employees:view", true],
   ["employee-list.ts", "useHrEmployees", "/hr/employees", "hr:employees:view", true],
   ["employee-list.ts", "useInfiniteHrEmployees", "/hr/employees", "hr:employees:view", true],
+  ["employee-list.ts", "useHrEmployeeCounts", "/hr/employees/counts", "hr:employees:view", true],
   ["employee-insights.ts", "useHrEmployeeStats", "/hr/employees/stats", "hr:employees:view", true],
   ["employee-insights.ts", "useHrEmployeeProjects", "/hr/employees/projects", "hr:employees:view", true],
   ["employee-insights.ts", "useHrEmployeeTickets", "/hr/employees/tickets", "hr:employees:view", true],
@@ -26,7 +27,6 @@ const queryAccessCases: readonly QueryAccessCase[] = [
   ["employee-profile.ts", "useEmployeeSensitive", "/sensitive", "hr:sensitive:view", true],
   ["hr-org.ts", "useOrgJobRoles", "/hr/org/roles", "hr:employees:view", true],
   ["hr-org.ts", "useOrgJobLevels", "/hr/org/levels", "hr:employees:view", true],
-  ["hr-org.ts", "useOrgHeadcount", "/hr/org/headcount", "hr:employees:view", true],
   ["attendance.ts", "useHrAttendanceStatus", "/me/attendance/status", "self:attendance", false],
   ["attendance.ts", "useHrAttendanceHistory", "/me/attendance/history", "self:attendance", false],
   ["attendance.ts", "useHrMonthlyAttendance", "/hr/attendance/monthly", "self:attendance|hr:attendance:view", true],
@@ -53,7 +53,6 @@ const queryAccessCases: readonly QueryAccessCase[] = [
   ["leaves.ts", "useHrLeavesThisWeek", "/me/time-off/team-calendar", "self:leaves", false],
   ["leaves.ts", "useHrMyLeaveRequests", "/me/time-off/requests", "self:leaves", false],
   ["leaves.ts", "useHrMyLeaveRequestsInfinite", "/me/time-off/requests", "self:leaves", false],
-  ["leaves.ts", "useHrHolidaysForYear", "/hr/holidays", "hr:attendance:view", true],
   ["leaves.ts", "useHrHolidaysForCalendar", "/hr/holidays/calendar", "hr:attendance:view", true],
   ["leaves.ts", "useHrLeaveAnalytics", "/hr/leaves/analytics", "hr:leaves:view", true],
   ["leaves.ts", "useLeavePolicy", "/hr/leave-policy", "hr:leaves:view", false],
@@ -86,9 +85,6 @@ const queryAccessCases: readonly QueryAccessCase[] = [
   ["hr-templates.ts", "useHrTemplates", "/hr/templates", "hr:templates:view", true],
   ["hr-templates.ts", "useHrTemplate", "/hr/templates/", "hr:templates:view", true],
   ["hr-templates.ts", "useHrTemplateVariables", "/hr/templates/variables", "hr:templates:view", true],
-  ["dashboard.ts", "useHrDashboardMetrics", "/hr/dashboard/metrics", "hr:analytics:read", true],
-  ["dashboard.ts", "useHrLeaveCalendar", "/hr/leave-calendar", "hr:leaves:read", false],
-  ["dashboard.ts", "useHrOnboardingStatus", "/hr/dashboard/onboarding-status", "hr:analytics:read", true],
 ];
 
 function hookSource(fileName: string, hookName: string): string {

@@ -18,7 +18,7 @@ export default function TimesheetExceptionsLoading() {
     >
       <div className="space-y-4">
         <StatCardGridSkeleton cols={4} count={4} />
-        <DataTableSkeleton rows={12} columns={7} />
+        <DataTableSkeleton rows={12} headers={["Severity", "Rule", "Message", "Member", "Status", "Due", "Detected", ""]} />
       </div>
     </PageWrapper>
   );

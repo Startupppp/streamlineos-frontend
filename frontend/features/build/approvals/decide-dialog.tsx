@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { decideApprovalSchema, type DecideApprovalValues } from "./approvals-schema";
 import {
   Dialog,
   DialogContent,
@@ -31,13 +31,6 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import type { DecideApprovalInput } from "@/types/projects";
 
-const schema = z.object({
-  decision: z.enum(["approved", "rejected", "changes_requested"]),
-  decisionComment: z.string(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
 interface DecideDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -53,12 +46,12 @@ export function DecideDialog({
   isPending,
   approvalTitle,
 }: DecideDialogProps) {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<DecideApprovalValues>({
+    resolver: zodResolver(decideApprovalSchema),
     defaultValues: { decision: "approved", decisionComment: "" },
   });
 
-  function handleSubmit(values: FormValues) {
+  function handleSubmit(values: DecideApprovalValues) {
     onConfirm({
       decision: values.decision,
       decisionComment: values.decisionComment || undefined,
@@ -66,6 +59,7 @@ export function DecideDialog({
   }
 
   function handleOpenChange(open: boolean) {
+    if (!open && isPending) return;
     if (!open) form.reset();
     onOpenChange(open);
   }

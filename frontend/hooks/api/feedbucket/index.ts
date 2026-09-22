@@ -8,5 +8,4 @@ export {
 export {
   useFeedbucketSubmissions,
   useDeleteFeedbucketSubmission,
-  useDeleteFeedbucketSubmissionMedia,
 } from "./use-feedbucket-submissions";

@@ -1,3 +1,5 @@
+import { ZodError } from "zod";
+
 import { notificationListContract } from "./notifications-schema";
 
 const backendRow = {
@@ -77,6 +79,6 @@ describe("the notification list contract against notification-response-schema.ts
     const { ticketContext: _omitted, ...withoutContext } = backendRow;
     expect(() =>
       notificationListContract.parse({ ...page, data: [withoutContext] }),
-    ).toThrow();
+    ).toThrow(ZodError);
   });
 });

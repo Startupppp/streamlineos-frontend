@@ -4,7 +4,10 @@ import { memo, useMemo } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import {
+  incidentUpdateSchema,
+  type IncidentUpdateValues,
+} from "@/features/build/incidents/incident-schema";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -40,12 +43,6 @@ const STATUSES: IncidentStatus[] = [
   "detected", "investigating", "mitigating", "resolved", "postmortem", "closed",
 ];
 
-const updateSchema = z.object({
-  message: z.string().min(1, "Message is required"),
-  newStatus: z.string(),
-});
-type UpdateFormValues = z.infer<typeof updateSchema>;
-
 interface AddUpdateFormProps {
   projectId: number;
   incidentId: number;
@@ -53,13 +50,13 @@ interface AddUpdateFormProps {
 
 function AddUpdateForm({ projectId, incidentId }: AddUpdateFormProps) {
   const addUpdate = useAddIncidentUpdate();
-  const form = useForm<UpdateFormValues>({
-    resolver: zodResolver(updateSchema),
+  const form = useForm<IncidentUpdateValues>({
+    resolver: zodResolver(incidentUpdateSchema),
     defaultValues: { message: "", newStatus: "none" },
   });
   useRegisterDirtyState(form.formState.isDirty);
 
-  function handleSubmit(values: UpdateFormValues) {
+  function handleSubmit(values: IncidentUpdateValues) {
     addUpdate.mutate(
       {
         projectId,

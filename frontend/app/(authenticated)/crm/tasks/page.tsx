@@ -366,7 +366,7 @@ function CrmTasksContent() {
 }
 
 export default function CrmTasksPage() {
-  const pageState = usePageState({ permission: "directory:people:view", isLoading: false, isError: false });
+  const pageState = usePageState({ permission: "crm:tasks:view", isLoading: false, isError: false });
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (

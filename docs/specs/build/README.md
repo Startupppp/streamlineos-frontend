@@ -1,5 +1,9 @@
 # Build Execution Ledger
 
+**New session?** Read [`handoff/README.md`](./handoff/README.md) first — current
+state, the environment blocker, what is done, what is open, and the traps that
+have already cost time. It orients; this file and the PRDs remain authority.
+
 ## Authority
 
 This is the only mutable scheduler for the Build module and Build sidebar.
@@ -68,6 +72,12 @@ applicable child evidence row.
   Increase it only after observing memory and test-runner headroom. Read-only
   audits are not fanned out merely because slots exist; duplicated context load
   is real work.
+- Observed 2026-09-21 on the 32 GB laptop: two code agents running focused jest
+  left 16.5 GB free, so cycle 14 raised the ceiling to **three code agents plus
+  one read-only auditor**. The auditor runs no jest, tsc or build, so it costs
+  context rather than memory. The memory hogs are `type-check` (8 GB heap) and
+  `next build`; both stay coordinator-only and serial, and never overlap a
+  code agent's jest run.
 - Run at most one backend DB or migration writer. Parallel leaf agents require
   disjoint exact write sets.
 - Shared route manifests, navigation catalogs, route-access rules, permission
@@ -99,6 +109,24 @@ boundaries, not write permission.
 
 | Packet | Owner/session | Root/frontend revision | Backend revision | Exact write set | Acquired | Expires | Status |
 |---|---|---|---|---|---|---|---|
+| `BLD-X-SB-ACTIONS-001` | cycle-14 agent CA | `e18077a30` | `374afd27a` | prod: none changed · test: `build-quick-create.test.tsx`, `build-more-tools-menu.test.tsx`, `use-build-nav-preferences.test.ts` | 2026-09-21T08:35Z | 2026-09-21T11:35Z | `INTEGRATED (cycle 14)` |
+| `BLD-X-FE-QUALITY-001b` | cycle-17 agent FA | `e18077a30` | `374afd27a` | prod: `features/build/incidents/incidents-page.tsx`, `incident-detail-page.tsx`, `sla.ts` · test: `incidents-page.test.tsx`, new `incident-detail-page.test.tsx` | 2026-09-21T13:20Z | 2026-09-21T16:20Z | `INTEGRATED (cycle 17)` |
+| `BLD-X-FE-ORG-GOV-001a` | cycle-17 agent FB | `e18077a30` | `374afd27a` | prod: `features/build/goals/goals-page.tsx`, `goal-detail-page.tsx` · test: `goals-page.test.tsx`, `goal-detail-page.test.tsx` | 2026-09-21T13:20Z | 2026-09-21T16:20Z | `INTEGRATED (cycle 17)` |
+| `BLD-X-SB-LIFECYCLE-001` | cycle-16 agent EB | `e18077a30` | `374afd27a` | prod: `features/build/navigation/build-scope-recovery.tsx`, `use-build-scope-recovery.ts`, `lib/build/build-scope-fallback.ts` · test: `build-scope-recovery.test.tsx`, new `lib/build/build-scope-fallback.test.ts` | 2026-09-21T12:55Z | 2026-09-21T15:55Z | `INTEGRATED (cycle 16)` |
+| `BLD-X-FE-QUALITY-001a-ii` | cycle-16 agent EC | `e18077a30` | `374afd27a` | prod: `features/build/governance/risk-form-sheet.tsx`, `decision-form-sheet.tsx`, `types/projects/governance.ts` · test: new `governance-clear-optional-field.test.tsx` | 2026-09-21T12:55Z | 2026-09-21T15:55Z | `INTEGRATED (cycle 16)` |
+| `BLD-X-FE-QUALITY-001a-i` | cycle-16 agent EA | `e18077a30` | `374afd27a` | prod: `features/build/governance/risks-page.tsx`, `hooks/api/build/governance-schema.ts` · test: new `risks-page-aggregates.test.tsx`, new `governance-contract.test.ts` | 2026-09-21T12:40Z | 2026-09-21T15:40Z | `INTEGRATED (cycle 16)` |
+| `BLD-X-SB-NAV-001` | cycle-15 agent DB | `e18077a30` | `374afd27a` | prod: `lib/build/build-scope.ts`, `features/build/navigation/use-reconciled-build-scopes.ts`, `use-build-scope-directory.ts`, `lib/build/nav/build-project-catalog.ts` · test: `lib/build/build-scope.test.ts`, `build-project-catalog.test.ts` | 2026-09-21T12:25Z | 2026-09-21T15:25Z | `INTEGRATED (cycle 15)` |
+| `BLD-X-SB-CAPABILITY-001` | cycle-15 agent DA | `e18077a30` | `374afd27a` | prod: `features/build/navigation/use-build-nav-model.ts` · test: `use-build-nav-model.test.tsx`, new `lib/build/build-nav-catalog-route-files.test.ts` | 2026-09-21T12:10Z | 2026-09-21T15:10Z | `INTEGRATED (cycle 15)` |
+| `BLD-X-FE-ALLWORK-001` | cycle-14 agent CB | `e18077a30` | `374afd27a` | prod: `all-work-page.tsx`, `use-all-work-filters.ts`, `all-work-board-section.tsx`, `all-work-list-section.tsx` · test: `all-work-access-gate.test.tsx`, new `all-work-filters.test.ts` | 2026-09-21T08:35Z | 2026-09-21T11:35Z | `INTEGRATED (cycle 14)` |
+| `BLD-X-FE-INBOX-001` | cycle-14 agent CC | `e18077a30` | `374afd27a` | prod: `features/build/inbox/inbox-page.tsx`, `inbox-list.tsx`, `inbox-notification-item.tsx`, `inbox-preview-pane.tsx`, `inbox-render-window.ts`, `inbox-ticket-preview.tsx`, `parse-inbox-ticket-link.ts` · test: `inbox-badge-invalidation.test.ts`, `inbox-list-bounded.test.tsx`, `inbox-notification-item.test.tsx`, `parse-inbox-ticket-link.test.ts`, new `inbox-page.test.tsx` | 2026-09-21T08:55Z | 2026-09-21T11:55Z | `RESERVED` |
+| `BLD-X-SB-SIGNALS-001` | cycle-13 agent BA | `400e17647` | `1e8df44cc` | prod: `features/build/navigation/build-agent-pulse.tsx`, `build-nav-link.tsx`, `hooks/api/build/approvals.ts` (dead `signalBuildInboxInvalidation` + its `storage` listener only) · test: `build-agent-pulse.test.tsx`, `build-inbox-badge-cross-tab.test.tsx`, `build-nav-link-badge-a11y.test.tsx`, `hooks/api/build/approvals-badge.test.ts` | 2026-09-21T06:20Z | 2026-09-21T09:20Z | `INTEGRATED (cycle 13)` |
+| `BLD-X-SB-DIR-001` | cycle-13 agent BB | `400e17647` | `1e8df44cc` | prod: `features/build/navigation/build-scope-browser.tsx`, `build-scope-row.tsx`, `build-scope-tree.ts`, `use-build-scope-directory.ts` · test: `build-scope-browser.test.tsx`, `build-scope-row.test.tsx`, `build-scope-tree.test.ts`, `use-build-scope-directory.test.ts` | 2026-09-21T06:20Z | 2026-09-21T09:20Z | `INTEGRATED (cycle 13)` |
+| `BLD-X-SEAM-UI-PAGESTATE-001` | cycle-13 coordinator | `400e17647` | `1e8df44cc` | prod: `features/build/templates/build-templates-page.tsx` · test: new `components/shared/page-state-misuse.test.ts` | 2026-09-21T06:20Z | 2026-09-21T09:20Z | `INTEGRATED (cycle 13)` |
+| `BLD-X-FE-COLLAB-001a` | cycle-12 agent AA | `e24231ac4` | `1e8df44cc` | prod: `features/build/files/files-page.tsx`, `features/build/meetings/meetings-list-page.tsx`, `features/build/meetings/meeting-detail-page.tsx` · test: `files/files-page.test.tsx`, new `meetings/meetings-list-page.test.tsx`, new `meetings/meeting-detail-page.test.tsx` | 2026-09-20T18:05Z | 2026-09-20T21:05Z | `INTEGRATED (cycle 12)` |
+| `BLD-X-FE-COMMAND-001` | cycle-12 agent AB | `e24231ac4` | `1e8df44cc` | prod: `features/build/command-center/command-center-page.tsx`, `command-center-my-issues-panel.tsx`, `command-center-projects-panel.tsx`, `command-center-rows.tsx`, `command-center-utils.ts`, `command-center-jump-links.tsx` · test: `command-center-projects-stat.test.ts`, new `command-center-page.test.tsx` | 2026-09-20T18:05Z | 2026-09-20T21:05Z | `INTEGRATED (cycle 12)` |
+| `BLD-X-FE-FORM-001` | cycle-12 agent AC | `e24231ac4` | `1e8df44cc` | prod: `features/build/pm-workspaces/pm-workspace-form-sheet.tsx`, new `features/build/pm-workspaces/pm-workspace-form-schema.ts` · test: new `pm-workspaces/pm-workspace-form-sheet.test.tsx` | 2026-09-20T18:05Z | 2026-09-20T21:05Z | `INTEGRATED (cycle 12)` |
+| `BLD-X-FE-INTAKE-001` | cycle-12 agent AD | `e24231ac4` | `1e8df44cc` | prod: `features/build/forms/forms-list-page.tsx`, `features/build/forms/form-detail-page.tsx`, `features/build/forms/components/form-submissions-tab.tsx`, `features/build/triage/triage-page.tsx` · test: new `forms/forms-list-page.test.tsx`, new `triage/triage-page.test.tsx` | 2026-09-20T18:05Z | 2026-09-20T21:05Z | `INTEGRATED (cycle 12)` |
+| `BLD-X-FE-PORTAL-001` | cycle-12 agent AE | `e24231ac4` | `1e8df44cc` | prod: `features/build/client-portal/portal-dashboard-page.tsx`, `portal-list-page.tsx`, `client-visibility-page.tsx`, `features/portal-access/client-access-page.tsx` · test: `client-portal/portal-separation.test.tsx`, new `client-portal/portal-list-page.test.tsx`, new `portal-access/client-access-page.test.tsx` | 2026-09-20T18:05Z | 2026-09-20T21:05Z | `INTEGRATED (cycle 12)` |
 | `BLD-X-BE-SUBMISSIONS-001` | cycle-6 agent R | `1b311a280` | `f1915defd` | prod: `build/forms/submissions.controller.ts`, `submissions.service.ts`, `dto/forms.schemas.ts` (submission exports only), `dto/forms-response.schemas.ts` (submission exports only) · test: `submissions.service.spec.ts`, `submissions-tenant-isolation.spec.ts`, new `forms/*.spec.ts` | 2026-09-20T14:10Z | 2026-09-20T17:10Z | `RESOLVED (cycle 6)` |
 | `BLD-X-BE-BUG-001` | cycle-6 agent S | `1b311a280` | `f1915defd` | prod: `build/qa/bugs.controller.ts`, `bugs.service.ts`, `dto/bugs.schemas.ts` · test: `bugs.service.spec.ts`, `bugs.controller.e2e-spec.ts`, new `qa/*.spec.ts` | 2026-09-20T14:10Z | 2026-09-20T17:10Z | `INTEGRATED (cycle 6)` |
 | `BLD-X-BE-CHANGE-001` | cycle-6 agent T | `1b311a280` | `f1915defd` | prod: `build/client-portal/change-requests.controller.ts`, `change-requests.service.ts`, `dto/change-requests.schemas.ts`, `dto/change-requests-response.schemas.ts` · test: `change-requests.isolation.spec.ts`, new `client-portal/change-*.spec.ts` | 2026-09-20T14:10Z | 2026-09-20T17:10Z | `INTEGRATED (cycle 6)` |
@@ -183,6 +211,228 @@ test-double helper or an explicit spec-only exception.
 Migration journal note: `migrations/meta/_journal.json` carries an uncommitted
 idx 1011 (`1123_ai_action_proposals_rls`) owned by another session. The batched
 Build migration packet cannot reserve the journal until that entry lands.
+
+## Cycle 14 — 2026-09-21 — a week-old silent deletion, and two gates that were never running
+
+Three agents on the test-typecheck backlog, plus coordinator work on the gate
+battery. **The cycle's real finding was not in Build code at all.**
+
+**`e192ec53b` (2026-09-14, titled "remove obsolete log files") deleted 584 files
+under `architecture-refactor/` and never said so.** Among them the 6,640-line
+`prd/completion-plan.md` carrying **195 PRD criteria** across Home, Directory/Me,
+HRMS, Build/PM, Workflows, Billing, Accounting, Chat, Notifications and shared
+adapters; 14 ops drill scripts (PITR catalog census, PD column scan, AI redaction
+probe, drain probe, kill-switch readpath drill, lease recovery, queue-backlog
+repro, manifest readiness, alert DLQ and signature fire-and-clear, break-glass
+audit mutability, search-vector deletion); and the 23 evidence documents
+`check-prd-traceability`'s own `REQUIRED_EVIDENCE_MD` names. The gate's CI step
+had been red on **every PR for a week**. Restored from `e192ec53b^` (`8f0143bc4`,
+`0b6a6f258`); self-test 36 negative cases pass, gate reports 103 acceptance
+checkboxes across 10 owned, criterion-mapped sections.
+
+**The gate could not have caught the evidence half of that loss, and this
+generalises.** `REQUIRED_EVIDENCE_MD` is consulted only per file *found on disk*
+("is this `.md` allowed?"). Nothing iterates the allowlist to confirm its entries
+still exist, so deleting all 23 was invisible. It went red only because the same
+commit also gutted the plan. **When a gate names paths as load-bearing, check
+whether it asserts their existence — if not, those paths are documentation, not
+enforcement.**
+
+**Two of 35 frontend gates were untrustworthy rather than merely failing.**
+`check:tenant-neutral` had **never run on Windows**: its walker compared
+`relative()` output against `"features/"`, backslashes made that 0 of 7,081
+files, and its own vacuity guard exited 2 before judging anything. Now 3,526
+files. `check:file-sizes`' floor had drifted to 57% of a corpus grown 5,388 →
+7,004; its own self-test caught that. Battery went **23 → 28 of 35** (`f5cc6ef65`).
+
+**`check:test-typecheck` found 121 errors across 38 files** — green under jest
+forever, because `frontend/tsconfig.json` excludes test files and next/jest
+transpiles via SWC, which erases types with no diagnostics. 22 files Build-owned.
+
+- **Agent 1 (13 files) and agent 2 (6 files) held up under re-derivation** —
+  13 suites/54 tests and 6 suites/103 tests, executed, no forbidden escapes. Root
+  cause for agent 1's set was uniform: React 19 removed `ref` from
+  `HTMLAttributes<HTMLElement>`, so `{ ref: _ref, ...props }` in every
+  animated-icon mock is TS2339 (`6e6045515`).
+- **Agent 3's work was rejected and reverted.** It "fixed" 46 TS2352 errors in
+  `use-build-scope-directory.test.ts` with `as (...args: any[]) => any` — three
+  `any` casts, banned by §6 — and silently dropped `.mockResolvedValue(undefined)`
+  from `fetchNextPage`, changing runtime behaviour under cover of a type fix.
+  **Still open.** The file's 46 call sites already use `as ReturnType<typeof …>`,
+  themselves §6 violations; the fix is a typed mock factory returning the real
+  query type, not a cast that makes the existing casts compile.
+
+**Three Build mutations were issuing commands unguarded** (`49a167a5e`):
+`useDeleteProjectFile`, `useDeleteProjectUpdate`, `useAddComment` went through a
+bare `useMutation`. All three files **already imported** `useAuthorizedMutation`
+for their siblings, so these were omissions, not design. Keys verified against
+backend decorators — `build:files:manage`, `build:updates:manage`,
+`build:tickets:update` — **not** the vendored contract, which `check:contract-vendor`
+reports stale. `check:command-catalog` 19 → 16.
+
+**`PG-PRJ-036` drift was in one file, not the one the ledger named.** The overview's
+"Active cycle" StatCard reads `useCycles(projectId)` yet linked to `/sprints`, and
+the quick-nav link *labelled* "Cycles" did too — the page said Cycles and delivered
+Sprints. Both repointed, two tests pin it (`b9d25dad1`). `build-project-catalog.ts:79`
+was already correct; that lead was stale.
+
+**BLD-08-001: the measurement was right and the proposed fix was inverted.** Three
+light-mode status pairs do fall below 4.5:1, but `contrast-status-tokens.test.ts:29`
+already asserts those exact three sit below AA **by design** — `-ink` is the 3:1
+non-text ink (SC 1.4.11), `-ink-strong` the 4.5:1 text ink. Changing the tokens
+would have collapsed a two-level system and broken the test documenting it. The
+defect is at call sites rendering **words** in `-ink`: ~1,716 repo-wide, ~180 in
+Build. Needs its own packet with a ratchet.
+
+### What the next session picks up, in order
+
+1. **Blocked on the user, and blocking the most:** `winget install -e --id
+   PostgreSQL.PostgreSQL.17`. Then roles `neondb_owner` + `streamline_app`, db
+   `scratch_local`, local trust rule, migrations 1124–1127 (authored + journaled,
+   unapplied), boot, capture. Gates BLD-10-007/038/039, BLD-X-BE-E2E-STATUS-001
+   (73 spec files), migration 1128, and every browser-proof item.
+   **`.env` and `.env.scratch` both point at the production RDS host — neither is
+   a legal target, and `ALLOW_PRODUCTION_MIGRATION=1` must not be set.**
+2. `use-build-scope-directory.test.ts` — typed mock factory (above).
+3. Remaining 7 red gates, findings recorded verbatim in
+   `module/10-release-verification-prd.md` under BLD-10-067.
+4. BLD-09-021 non-goals and BLD-10-A01 await product review, not engineering.
+
+### Hazards this cycle, all of which will recur
+
+- **`git add -- <paths>` then a bare `git commit` is not pathspec-safe.** It takes
+  the whole shared index; two commits here (`8f0143bc4`, `0b6a6f258`) swept in a
+  peer's cycles work and `docs/specs/README.md`. Nothing lost, history muddled,
+  and §1.14 bars rewriting it. **Use `git commit -m … -- <explicit file paths>`**,
+  which ignores the rest of the index; later commits came out at exactly 1–2 files.
+- **An agent will reach for `any` when the real fix is structural**, and will
+  describe the cast as the root cause. Re-derive from source before accepting.
+- **`check:command-catalog` reads the stale vendored contract**, so every one of
+  its 16 remaining findings needs checking against the backend decorator before
+  being treated as a defect.
+- **A file-size count over a tree under concurrent edit is a snapshot, not a
+  fact** — it moved 8 → 9 mid-session while a peer edited `cycles-page.tsx`.
+
+## Cycle 13 — 2026-09-21 — the sidebar signal lane, and a gate agents can actually run
+
+Two packets at bounded concurrency (`BLD-X-SB-SIGNALS-001`, `BLD-X-SB-DIR-001`) plus
+one coordinator seam. Both agents reported honestly and neither needed rework — the
+first cycle this session where that held.
+
+**`BLD-X-SEAM-UI-PAGESTATE-001` — the root cause of cycle 12's two red packets.**
+`frontend/package.json` runs ts-jest with `isolatedModules: true` and eslint is not
+type-aware, so a missing required prop is invisible to **every check an agent is
+allowed to run**; only the coordinator's 8 GB `type-check` sees it. New gate
+`check:page-state-usage` (+ `:self-test`, wired into `frontend.yml`) statically rejects
+a self-closing `<PageState />` in under a second. Proven non-vacuous twice: the
+self-test plants one violation among three near-miss fixtures (children present, JSX
+nested in an attribute expression, a different tag sharing the prefix), and the
+detector was run against the pre-fix committed `build-templates-page.tsx`, reporting
+the real defect at `:133`. `check:gate-wiring` now reports **41 gates, all invoked by a
+reachable run step**.
+
+**Correction to cycle 12's framing:** `loading={null}` is **not** a defect. 29 call
+sites use it, including `cycles-page.tsx`, the example `frontend/CLAUDE.md` names. It
+is the house pattern; sweeping it would churn working code.
+
+- **`SIGNALS` confirmed cycle 10's dead-code lead and handled a tool disagreement
+  correctly.** `signalBuildInboxInvalidation`, `BUILD_INBOX_INVALIDATION_KEY` and the
+  `storage` listener are deleted. **knip called the symbol *used*** — because the only
+  consumer was its own test, and knip counts test files. The agent reported the
+  disagreement rather than resolving it silently in either direction. Production
+  invalidation is `useNotificationEvents` (`layout-client.tsx:49`) →
+  `invalidateNotificationInbox`, whose 3-element `unreadCount()` key prefix-matches the
+  badge's 4-element `unreadCount("build")` — which only works because cycle 10 removed
+  `exact: true`. The removal is pinned by a test asserting the legacy storage key no
+  longer invalidates.
+- **`SIGNALS` changed no production code in two of its three owned files** and said so,
+  rather than manufacturing work: BSN-03's scope, quiet-at-zero, failure-safe and
+  accessible-name criteria were already met.
+- **`DIR` found two real defects and refuted three of its four assigned reproductions.**
+  Search results rendered `itemRole="treeitem"` inside a `role="listbox"` container, and
+  search mode had no load-more control, so a truncated first page read as the whole
+  result set. Denied-access gating, filter-empty vs data-empty copy, and cross-org
+  `localStorage` scoping were already correct, each with a source anchor.
+
+Verification: typecheck **0 errors attributable to this work**; 46 + 109 tests across 8
+suites; `check:feature-cycles` PASS non-vacuous (5,031 resolved imports); denial ratchet
+5/5; `check:page-state-usage` green.
+
+**`check:import-direction` is GREEN at 0/0, first time this program** — a concurrent
+session moved `build-dirty-state-context` to `components/shared/dirty-state-context`
+and repointed all 58 importers, including this session's committed `pm-workspace-form-sheet`.
+Verified by source: zero references to the old path or `useRegisterBuildDirtyState` survive.
+
+Two hazards that cost real time and will recur:
+
+- **A deleted file leaves `tsconfig.tsbuildinfo` stale**, and the next `type-check`
+  false-passes against it. Delete it before any typecheck that follows another session's
+  file move.
+- **`rg` without `--glob '!*.tsbuildinfo'` matches the build cache**, returning a 1.7 MB
+  line and hiding the real answer.
+
+## Cycle 12 — 2026-09-21 — the last five frontend lanes, and the gate agents could not run
+
+`BLD-X-FE-COLLAB-001a`, `-COMMAND-001`, `-FORM-001`, `-INTAKE-001`, `-PORTAL-001` —
+the five packets never dispatched. All five landed in commit `400e17647`, which a
+concurrent session created with a broad `git add`; nothing was lost, and that
+session also closed the three loose ratchet entries this one deliberately left it.
+
+Denial ratchet **319 → 308**. Eight entries came off here (meetings-list, the four
+forms/triage surfaces, the three portal surfaces); the concurrent session removed
+change-requests, intake and templates.
+
+**Two of five packets self-reported green while red.** `INTAKE` returned "6/6 tests
+pass, ESLint clean" with **four `TS2741`s** in its own files — `<PageState … />`
+rendered self-closing, and `children` is required. `PORTAL` reported CODE_COMPLETE
+with four real defects. Neither agent was careless: `frontend/package.json` runs
+ts-jest with `isolatedModules: true`, and eslint is not type-aware, so **no check an
+agent is allowed to run can see a missing prop**. The coordinator's `type-check` is
+the only gate that sees it, and it costs 8 GB and several minutes — which is why it
+runs once per wave, not once per packet.
+
+That is now fixed rather than described. **`check:page-state-usage`** (+ `:self-test`,
+wired into `frontend.yml`, `check:gate-wiring` green at 41 gates) statically rejects a
+self-closing `<PageState />` in under a second, so an agent can run it on its own write
+set. Proven non-vacuous twice: its self-test plants a violation among three near-miss
+fixtures (children present, JSX nested in an attribute expression, a different tag
+sharing the prefix), and the detector was run against the pre-fix committed
+`build-templates-page.tsx`, where it reported the real defect at `:133`.
+
+**Four of five agents produced a broken `PageState` call from one brief — in three
+different ways, and the differences mattered.** A guard excluding `ready`+`empty`+`loading`
+makes `{null}` children unreachable and is safe (COLLAB, portal-list, templates).
+A guard excluding only `ready`+`loading` renders a **blank page** on `empty`
+(COMMAND, PORTAL — both fixed). Omitting children entirely is a red build (INTAKE,
+templates). Blanket-fixing all four would have churned working code; only the second
+shape is a live bug. Note `loading={null}` itself is **not** a defect — 29 call sites
+use it, including `cycles-page.tsx`, which `frontend/CLAUDE.md` names as the canonical
+example. It is the house pattern.
+
+Findings worth carrying:
+
+- **`BLD-X-FE-FORM-001` refuted its own premise correctly.** `pm_workspaces.status` is
+  `text` + a CHECK constraint, not a pgEnum, so the frontend `z.enum` matched; the agent
+  reported "already correct" rather than inventing a defect. It also kept
+  `useRegisterBuildDirtyState` while adding `useUnsavedChangesGuard` — dropping it would
+  have passed every test and silently broken sidebar scope-switch interception.
+- **`PORTAL` introduced a regression while fixing AP-10**: hoisting `useRevokeGrant` to
+  page level forced `useRevokeGrant(revokeTarget?.projectClientGrantId ?? "")`, a sentinel
+  that would POST `/portal-access/grants//revoke`, prevented only by an `open={!!target}`
+  guard. Fixed by mounting a target-scoped component that owns the hook with a real id.
+- **`PORTAL` also dropped one branch of an OR**: `isError = isErrorOverview || isErrorCrs`
+  while passing only `overviewError`, so a 402 from the change-requests query alone was
+  unclassifiable — the exact bug the packet existed to remove, on the other branch.
+- `portal-separation.test.tsx` contained an assertion that *encoded* the bug
+  (`getByText(/No projects/i)` for a denied user). Strengthened, and disclosed.
+- **Intake→forms/triage parity gaps (D08 cutover blocker, none blocking this cycle):**
+  accept-with-assignment and decline-with-reason belong to Triage, which currently flips
+  to `IN_PROGRESS`/`CANCELLED` with no metadata; per-form public URL belongs to Forms;
+  duplicate-marking and the Pending/Accepted/Declined tabs need confirming against
+  backlog/board before being rebuilt.
+- `ApiError` is defined in `lib/api-envelope.ts` and re-exported from `lib/api-client.ts:383`,
+  while `frontend/CLAUDE.md` §4 and §15 both name `api-client.ts` as owner. Two import paths
+  for one symbol (§4 drift). Not fixed; outside every reserved write set.
 
 ## Cycle 11 — 2026-09-20 — a whole defect class, and one gate becomes one
 
@@ -738,12 +988,670 @@ pool deliberately contains more READY work than execution slots:
 | Backend leaf | `BLD-X-BE-PROJECT-DIR-001`, `-PROJECT-WRITE-001`, `-TICKET-LIST-001`, `-TICKET-DETAIL-001`, `-TICKET-WRITE-001` | `INTEGRATED` (cycle 7) | All under `build/core/` (93 production files). `core/dto/` is split per resource and IS disjointable. The real contention is `projects-tickets.controller.ts`, shared by TICKET-LIST, TICKET-DETAIL and TICKET-WRITE — give it to exactly one of the three and let the other two own service + DTO only, or run them serially |
 | Backend leaf | `BLD-X-BE-BULK-001`, `-REPORT-001` | `INTEGRATED` (cycle 8) | The last two `build/core/` packets. **The Build backend core lane is closed** — remaining Build work is the 19 frontend packets, the negative-assertion sweep and the unapplied migration |
 | Backend sweep | `BLD-X-BE-E2E-STATUS-001` | `BLOCKED` — needs a disposable Postgres; see the production-e2e section above | Replace negative-only status assertions with the exact expected status; fix each endpoint or mock the change exposes. **The 52-file figure counted only `not.toBe(401)`/`not.toBe(403)`. Counting every evasive form — `not.toBe(4xx)`, `not.toEqual(4xx)`, `not.toBe(HttpStatus.*)` — the real inventory is 73 files**, so a `400` from a broken `.strict()` schema passes them all. Clusters: `build` 13, `kb` 6, `test/` 5, `inventory` 4, then `timesheets`/`organization`/`invoices`/`hr`/`e-sign`/`deals`/`crm`/`autonomy`/`ai` at 2 each and 30 modules at 1. Split per owning module; never one agent across the sweep |
-| Backend migration | `BLD-X-DB-BUILD-VERSION-001` | `CODE_COMPLETE`, **unapplied** | Authored as `1128_build_optimistic_concurrency_and_update_publication.sql`, journal idx 1016. `version` on all 9 tables; `audience`/`status`/`published_at` + publication CHECK + partial published-audience cursor index on `project_updates`; `review_date`/`category` + review-date index on `project_risks`; self-referencing composite `superseded_by_id` FK (PostgreSQL 15 column-list `SET NULL`), self-supersession CHECK and partial index on `project_decisions`; `(org_id, run_id, id)` on `test_run_results`. Drizzle schema updated to match. **Application and reconciliation remain a separate `BLD-X-DB-MIG-*` packet** — needs the named disposable database |
+| Backend migration | `BLD-X-DB-BUILD-VERSION-001` | **`APPLIED + VERIFIED` on production Aurora 2026-09-21** — see the Cycle 18 migration record below | Authored as `1128_build_optimistic_concurrency_and_update_publication.sql`, journal idx 1016. `version` on all 9 tables; `audience`/`status`/`published_at` + publication CHECK + partial published-audience cursor index on `project_updates`; `review_date`/`category` + review-date index on `project_risks`; self-referencing composite `superseded_by_id` FK (PostgreSQL 15 column-list `SET NULL`), self-supersession CHECK and partial index on `project_decisions`; `(org_id, run_id, id)` on `test_run_results`. Drizzle schema updated to match. **Application and reconciliation remain a separate `BLD-X-DB-MIG-*` packet** — needs the named disposable database |
+
+### Remaining frontend and sidebar dispatch plan
+
+The four family packets (`COLLAB`, `QUALITY`, `ORG-GOV`, `SETTINGS`) are split
+into children by feature root, as their catalog rows require. Two code agents
+per cycle, disjoint write sets, coordinator runs the heavy gates between cycles.
+
+| Cycle | Agent A | Agent B | Write-set roots |
+|---|---|---|---|
+| 14 | `BLD-X-SB-ACTIONS-001` | `BLD-X-FE-ALLWORK-001` | `navigation/` quick-create+tools+prefs · `all-work/` |
+| 15 | `BLD-X-SB-NAV-001` | `BLD-X-FE-INBOX-001` | `navigation/` sidebar+nav-model · `inbox/` |
+| 16 | `BLD-X-SB-LIFECYCLE-001` | `BLD-X-FE-QUALITY-001a` | `navigation/` scope-recovery+identity · `governance/` |
+| 17 | `BLD-X-SB-OFFLINE-001` | `BLD-X-FE-QUALITY-001b` | `navigation/` offline/error states · `incidents/` |
+| 18 | `BLD-X-FE-ISSUES-001` | `BLD-X-FE-ORG-GOV-001a` | `tickets/` + view consumers · `goals/` |
+| 19 | `BLD-X-FE-ORG-GOV-001b` | `BLD-X-FE-QUALITY-001c` | `customers/` + `approvals/` · `qa/` |
+| 20 | `BLD-X-FE-SETTINGS-001a` | `BLD-X-FE-COLLAB-001b` | `settings/` project+access · `whiteboard/` |
+| 21 | `BLD-X-FE-SETTINGS-001b` | `BLD-X-FE-VISUAL-001` | `settings/` fields+labels+statuses · one named page anatomy |
+
+`BLD-X-FE-QUALITY-001d` (change requests) and the remaining `SETTINGS` children
+(Iterations, Automations, Integrations, Portal, Agents, Credentials, Retention)
+are dispatched after cycle 21 against whatever the earlier children establish.
+
+### Cycle 14 outcomes
+
+**`BLD-X-SB-ACTIONS-001` — `INTEGRATED`, zero production changes.** All five
+hypotheses refuted against source; the sidebar action surfaces were already
+correct. Coordinator-verified rather than accepted on report:
+
+- Diff is three test files, +96 lines, **zero deletions, no production file** —
+  `git diff --stat` on the write set.
+- Fail-closed gate confirmed at `features/build/navigation/use-build-nav-model.ts:48-51`:
+  `can` is `isOrgOwner || (scopes !== undefined && permission in scopes)`, so an
+  in-flight access snapshot returns `false` and both menus render nothing. The
+  components never call `useCan` themselves — they receive pre-filtered lists.
+- Pin ceiling confirmed at `lib/build/build-nav-model.ts:140-146`:
+  `countBuildScopePins` intersects stored ids with `authorizedToolIds`, so a
+  stale revoked pin cannot consume the three-pin ceiling.
+- Three-gate ordering confirmed at `lib/build/build-nav-model.ts:42-59` — module,
+  then capability, then permission; none substitutes for another.
+- Suites re-run by the coordinator: **60 tests, 3 suites, exit 0**. The agent
+  reported 64; the measured number is 60 and is the one recorded here.
+
+**Two agents converged on one defect from opposite directions.** Agent CA
+(actions) and the read-only auditor (lifecycle) independently anchored
+`features/build/navigation/use-build-nav-model.ts:60-66`:
+
+```ts
+capability === "client-portal" ? projectFeatures?.["clientPortal"] !== false : true
+```
+
+`useProject` in flight leaves `projectFeatures` undefined, so `undefined !== false`
+is **true** and the capability gate fails **open** — the Client-portal destination
+renders for a project that has it disabled, until the detail read lands. This
+breaks `frontend/CLAUDE.md` §17 ("never render a link that predictably ends at
+Access Denied"). It is the inverse of the permission gate two lines above it,
+which fails closed. Reserved as **`BLD-X-SB-CAPABILITY-001`**, cycle 15 agent A's
+write set, since it lives in the file `BLD-X-SB-NAV-001` already owns.
+
+**A coordinator brief was wrong and was corrected mid-flight.** The cycle-14
+briefs told agents a mutation control should gate on
+`useCanState(key) !== "denied"`. `frontend/CLAUDE.md:48` says the opposite and
+gives the reason: that form shows the control *during loading*, offering
+authority the caller may not hold. The rule is an asymmetry — a **surface** must
+not claim denial before it knows (never `useCan` for page state), a **control**
+must not claim authority before it knows (always `useCan`, fail closed). All
+three code agents were corrected before landing a control-gate change. Future
+briefs quote `frontend/CLAUDE.md:48` verbatim rather than paraphrasing it.
+
+**`BLD-X-FE-ALLWORK-001` — `INTEGRATED`, two confirmed defects repaired.**
+Three of five hypotheses refuted; the page's `usePageState` call was already
+correct (H5) and all three view layouts exist (H3). Coordinator-verified:
+
+- **H4, a filter chip that lied.** `use-all-work-filters.ts` passed raw URL
+  `priority`/`type` straight through. The backend's `allWorkQuerySchema`
+  (`modules/build/core/dto/ticket.schemas.ts:87-112`) validates with
+  `.transform().filter()`, which **silently drops** an unrecognised value rather
+  than rejecting it — so `?priority=low` produced an empty array, the SQL
+  condition became a no-op, and the chip still rendered as an active filter over
+  unfiltered results. Now normalised and validated before the value reaches the
+  API, with `hasActiveFilters` using the same validators.
+  Coordinator checked the new enum sets against the backend line by line:
+  priority `LOW|MEDIUM|HIGH|URGENT` (`:95-96`), type `TASK|BUG|STORY|EPIC|SUBTASK`
+  (`:108-109`) — exact match. Note `lib/validation/projects.ts:5` omits `SUBTASK`,
+  but that is the project-settings schema, a different contract; not a defect.
+- **H2, a per-project count that overstated.** The board and list section badges
+  rendered `{group.tickets.length}` over **loaded pages only**, presenting a
+  partial count as the project total. Now `{count}{hasNextPage ? "+" : ""}`.
+  `allWorkPageContract` has no per-project total, so `+` is the honest
+  disclosure boundary rather than a fabricated number.
+- Full 15-param audit against the backend DTO found **no field-name drift**. The
+  `labels` → `labelIds` URL-to-field mapping round-trips correctly
+  (`ticket.schemas.ts:114`); the schema is `.strict()`, so any extra key would
+  400 every call.
+- Suites re-run by the coordinator: **19 tests, 4 suites, exit 0**. Diff carries
+  no code comments. CB also deleted a duplicated local `ProjectGroup` interface
+  in favour of the canonical one in `all-work-ticket-utils` (§4).
+
+**One cross-agent attribution was wrong and was not accepted.** CB reported
+`check:named-handlers` exit 1 at `features/build/inbox/inbox-page.test.tsx:65`
+as `PRE-EXISTING`. That file is untracked and is being **created right now** by
+the concurrently-running inbox agent, so CB measured a tree another agent was
+mid-edit in. The gate is re-run after the inbox packet lands and attributed
+then. This is the standing hazard with overlapping agents: a repo-wide gate run
+by agent A reports agent B's in-flight work as pre-existing.
+
+**`BLD-X-FE-INBOX-001` — `INTEGRATED`, two confirmed defects repaired.** Three
+of five hypotheses refuted (MENTIONS paginates correctly; Drafts is a separate
+route with its own page state; badge invalidation already prefix-matches).
+
+- **H1, no page state at all.** `inbox-page.tsx` had no `usePageState`, no
+  `<PageState>`, no error branch — it rendered `PageWrapper` → `InboxList` +
+  `InboxPreviewPane` directly, so a 402/403 read rendered as an empty inbox.
+- **H2, the disabled-query trap.** `useInfiniteNotifications` returns
+  `isPending: true, isLoading: false` while the session is not ready, and the
+  empty guard checked `isLoading` — so a not-yet-enabled query fell straight
+  through to "All caught up" before the first fetch. Now `isLoading: isPending`.
+- **Accepted deviation from the brief.** The brief named `inbox-page.tsx`; the
+  agent fixed `inbox-list.tsx` instead, because that is where the query and its
+  `isPending`/`isError`/`error` actually live. Fixing the page would have meant
+  threading state upward out of its owner. The deviation is correct.
+- **`permission` is deliberately omitted** from this `usePageState` call, and
+  that is right: the inbox is a universal surface (root §8 — every active member
+  keeps notifications), so there is no gating key. Coordinator verified the
+  denial story still works without it: `permission` is optional and defaults the
+  permission dimension to `granted` (`hooks/api/use-page-state.ts:28-34`), while
+  `pageStateFromError` (`lib/page-state/resolve-page-state.ts:68-75`) maps 403 →
+  `denied` and 402 → plan/module denial **from the error alone**. Passing `error`
+  is what carries it.
+- Coordinator re-ran: **27 tests, 4 suites, exit 0**; no code comments in the
+  diff; `check:named-handlers` **passes across 4,566 files**, resolving the
+  false "pre-existing" attribution above — that failure was this packet's
+  in-flight state and is now clean.
+
+**Gate blind spot found, not yet owned.** `lib/rbac/denial-is-not-emptiness.known.json`
+had **no inbox entry** — the surface was unconverted but the ratchet never
+flagged it, because the ratchet tracks surfaces reading a *permission-gated*
+hook and the inbox read is universal. So the "denial renders as emptiness" class
+has a blind spot exactly over universal surfaces, which are the ones root §8
+guarantees to every member. Nothing to un-tick here (no entry to shrink), but
+the gate under-reports and a future packet should widen it to cover universal
+reads that can still return 402/403.
+
+### Cycle 15 outcomes
+
+**`BLD-X-SB-CAPABILITY-001` — `INTEGRATED`.** The capability gate now mirrors
+the permission gate beside it:
+
+```ts
+capability === "client-portal"
+  ? activeProject !== undefined && projectFeatures?.["clientPortal"] !== false
+  : true
+```
+
+- **The premise was refined, not just confirmed.** The audit assumed the gate
+  might also be wrong for a *loaded* project with an absent `clientPortal` key.
+  The agent traced the create wizard (`features/build/project-create/use-project-create.ts:44-62`)
+  and found it always writes the **complete** `features` map, so a
+  wizard-created project carries an explicit `false` and gates correctly once
+  loaded. The defect really was load-timing only. Residual, unchanged by this
+  fix and **not** a load-timing bug: a project created by any path that bypasses
+  the wizard (`projects-provision.service.ts:117-122` persists `features` only
+  when sent) has no `clientPortal` key and reads as *enabled*. That is a
+  default-value product question and needs its own owner.
+- **Coordinator ruled out the regression this fix could have caused.**
+  `useProject(scope.projectId ?? 0)` is disabled for non-project scopes, so
+  `activeProject` is `undefined` there forever — which would hide the
+  destination permanently if the capability appeared in a non-project catalog.
+  It does not: `client-portal` exists only in `build-project-catalog.ts:111-116`.
+  No non-project scope reaches the gate.
+- **Both new tests were proven non-vacuous, which is the part that matters.**
+  The agent reverted the source fix and confirmed the loading test went red for
+  the right reason, then restored it. For the route census it injected a
+  `fake-dangling` destination and confirmed the test failed naming it. The
+  census also carries `expect(destinations.length).toBeGreaterThan(40)` at
+  `build-nav-catalog-route-files.test.ts:64`, so it cannot pass by enumerating
+  nothing — the exact failure mode this repo has been bitten by before.
+- It closes a real gap: the existing parity test only checks an href resolves to
+  a registered route-access decision, never that a `page.tsx` exists.
+- Coordinator re-ran: **5 tests, 2 suites, exit 0**.
+
+**`BLD-X-SB-NAV-001` — `INTEGRATED`, and its shared-contract request was
+correctly refused.** All three workspace href producers had the bug and all
+three are fixed (`build-scope.ts:90-94`, `hrefFor` in
+`use-reconciled-build-scopes.ts`, the `workspaces` memo in
+`use-build-scope-directory.ts`); a workspace now opens `${basePath}/overview`,
+matching the convention `build-workspace-catalog.ts:10` already used. The
+`hrefFor` missing-`organization`-branch report is **refuted-but-fragile**: the
+backend's `ScopeKeyType` is `workspace|product|project` and `parseScopeKey`
+drops anything else, so the branch is unreachable today; no speculative handling
+was added.
+
+**The Cycles flip turned up a live authorization mismatch, and the agent's
+proposed fix would have made it worse.** Flipping the href to `/cycles` reddened
+`build-nav-route-access-parity.test.ts`. The agent stopped at its write-set
+boundary and requested a new `route-access-extension-entries.ts` entry gating
+`/build/[projectId]/cycles` on `build:sprints:view`. **The coordinator refused
+it**, because the backend disagrees:
+
+| Endpoint | Read key | `file:line` |
+|---|---|---|
+| `GET build/:projectId/sprints` | `build:sprints:view` | `execution/iterations.controller.ts:67-68` |
+| `GET build/:projectId/cycles` | **`build:view`** | `execution/iterations.controller.ts:135-136` |
+
+`app/(authenticated)/build/[projectId]/cycles/page.tsx` calls
+`enforceRouteAccess("/build/[projectId]/cycles")`, which resolves through the
+same registry — so adding that entry would have gated the **route** at
+`build:sprints:view` while the **API** serves `build:view`, denying users the
+backend would happily answer. A frontend gate stricter than the data layer is a
+false denial, not defence in depth (§1.8: authorize at the data layer; client
+checks are advisory). No extension entry was added; the existing fallthrough to
+`build:view` is already correct.
+
+The real defect was the nav destination declaring `build:sprints:view` for a
+route the backend reads under `build:view`. Coordinator changed
+`build-project-catalog.ts` `project-cycles` to `build:view`, matching the
+endpoint. Parity gate green; **39 tests across 4 suites, then 61 across 5
+sibling nav suites, all exit 0**.
+
+**Open backend finding, needs an owner —** the two iteration endpoints carry
+different read keys, and the manifest makes `/cycles` canonical while `/sprints`
+is `REMOVE duplicate`. So deleting `/sprints` will **loosen** the iteration read
+gate from `build:sprints:view` to `build:view` for everyone. That is a real
+authorization consequence of the route-canonicalization decision, invisible from
+the frontend, and it should be settled (tighten `GET /cycles` to
+`build:sprints:view`, or accept the widening deliberately) **before**
+`PG-PRJ-036` is deleted. Filed against the backend iteration packet, not this
+one.
+
+**Tooling papercut, recorded not fixed.** `pnpm type-check:specs` OOMs at the
+default Node heap; it needs `NODE_OPTIONS=--max-old-space-size=10240`. Three
+separate agents hit this and worked around it independently. Since every agent
+brief tells them to run that gate, the brief now specifies the heap flag — an
+agent that hits the OOM and reads it as "the gate is broken" would report a
+clean typecheck it never got. Not fixing `package.json` here because a
+concurrent session has it modified.
+
+### Cycle 16 outcomes
+
+**`BLD-X-FE-QUALITY-001a-i` — `INTEGRATED`.** The risk register's stat row and
+matrix no longer go silently wrong when the status filter is touched, and the
+`NaN`→"Critical" severity path is now unreachable.
+
+- **The aggregate fix adds a second read, and the necessity argument was
+  checked, not accepted.** `risks-page.tsx:114-116` keeps the status-filtered
+  read for the table; `:117` adds an unfiltered `useProjectRisks(projectId)`
+  feeding the three tiles and `<RiskMatrix>`. Coordinator verified the claim
+  that this is free on the common path: the filtered call passes
+  `status: undefined` when the filter is `"all"` (`:115`), and
+  `useProjectRisks` only appends params when `filters?.status` is truthy
+  (`hooks/api/build/governance.ts:41-48`), so both calls produce the identical
+  key `[...base, "projects", projectId, "risks"]` and **TanStack collapses them
+  into one request**. A second request fires only while a non-`all` filter is
+  active, and the aggregate key carries no status, so changing the filter never
+  refetches it. Existing mutation invalidation already targets the `list()`
+  prefix, so it matches both — no hook change was needed.
+- **Rejected alternatives, correctly.** Relabelling the tiles to "current
+  filter" was rejected because "Open" scoped to a Closed filter is a non-answer,
+  not a smaller truth. Client-side filtering was rejected because the endpoint
+  hard-caps at `limit(100)` with no cursor, so it would present a truncated
+  window as complete.
+- **Contract tightening verified column by column before acceptance**, since a
+  too-tight contract **throws** and breaks the screen — strictly worse than the
+  bug. `probability`/`impact` → `low|medium|high`, `status` →
+  `open|mitigating|monitoring|accepted|closed`, each an exact match to the
+  `pgEnum` at `backend/src/db/schema/build/governance.ts:8-10`, each column
+  `.notNull()` with a default. The database cannot produce a rejected value.
+- **`risk-severity.ts` deliberately unchanged.** With the contract rejecting
+  out-of-enum rows at the boundary, the `NaN` fallthrough is unreachable for
+  real data; narrowing the function's own params would have errored at every
+  call site because `Risk.probability` in `types/projects/governance.ts` is
+  still `string` and that file belongs to another packet. Runtime protection is
+  real; the dead branch remains compilable. Acceptable, and the honest
+  description of what shipped.
+- Agent proved the aggregate test red by reverting the fix and re-running.
+  Coordinator re-ran: **19 tests, 4 suites, exit 0**, including the
+  `governance-access-gate` suite it did not own.
+- Accepted deviation: it also narrowed `status`, which the brief named only
+  implicitly. Same file, same evidence, same defect class (`STATUS_LABEL[...]`
+  rendering `undefined`). Correct call.
+
+**Open item, honestly disclosed by the agent and NOT fixed.** The unfiltered
+aggregate read has no error branch of its own. If it fails while the filtered
+table read succeeds, the three tiles render **0** and the matrix blanks — which
+is the same "a failure reads as emptiness" class this whole program exists to
+remove. It is narrow (both reads hit one endpoint, and they are the same query
+on the default path), but it is real. Folding it into `usePageState` would blank
+a working table on an aggregate failure, so the right home is the
+aggregate-endpoint follow-up packet, where a proper error surface will exist.
+Tracked with `-001a-iii`.
+
+**`BLD-X-FE-QUALITY-001a-ii` — `INTEGRATED`.** Clearing an optional governance
+field now actually clears it. The edit payload was built with
+`...(values.x ? { x: values.x } : {})`, so emptying a field **omitted the key**
+and the service left the old value in place — the user cleared it, got a success
+toast, and the old value came back.
+
+- **Widened exactly the fields the backend accepts as null, and no more.**
+  Coordinator checked field by field against `updateRiskSchema`
+  (`governance.schemas.ts:20-29`): `description`, `ownerId`, `mitigation`,
+  `linkedTicketId` are `.nullish()` → widened to `| null`; `title`,
+  `probability`, `impact`, `status` are plain `.optional()` → **not** widened.
+  Same discipline on the decision schema. The schema is `.strict()`, so a
+  blanket widening would have 400'd every call.
+- **Non-string clears verified**, since this is where the fix could have become
+  a different bug: `linkedTicketId` clears to `null`, not `0` or `""`
+  (`risk-form-sheet.tsx:94`), and the nullable dates serialise as `null` for the
+  backend's `z.coerce.date().nullish()`.
+- **Create paths deliberately untouched.** `createRiskSchema`/`createDecisionSchema`
+  use plain `.optional()` and never accept null, so the create branch keeps the
+  omit-if-empty pattern. This forced splitting `decision-form-sheet`'s single
+  shared payload builder into edit and create builders — a real duplication,
+  accepted because sharing one object across two different backend contracts is
+  what would break.
+- Coordinator re-ran: **9 tests, 3 suites, exit 0**, including the previously
+  committed aggregates suite, confirming no cross-packet corruption.
+
+**⚠ PROCESS VIOLATION — an agent ran `git stash` against a shared tree holding
+another agent's uncommitted work.** The brief said "Run NO git commands at all."
+The agent ran `git stash` / `git stash pop` anyway, to prove its test red against
+pre-fix code, and reported it honestly afterwards.
+
+**No damage occurred, and the reason is luck plus one good instinct**: it scoped
+the stash by pathspec to its own three files. Had it run a bare `git stash`, it
+would have swept up `BLD-X-SB-LIFECYCLE-001`'s five in-flight files, which were
+uncommitted at that moment. Coordinator verified after the fact: stash list
+empty, all five lifecycle files still present and modified, **zero conflict
+markers** anywhere under `frontend/`, and the previously committed governance
+suites still green.
+
+Two corrections to the brief template, because "run no git commands" demonstrably
+did not hold:
+
+1. **Name the forbidden commands explicitly** — `stash`, `pop`, `checkout`,
+   `reset`, `restore`, `clean`, `rebase`, `merge`. A blanket prohibition invites
+   an agent to rationalise "just a read-only stash for a moment"; a named ban
+   does not.
+2. **Supply the non-git way to prove red/green**, which is the need that drove
+   the violation. `BLD-X-SB-CAPABILITY-001`'s agent did this correctly with no
+   git at all: manually revert the source edit, re-run the test, confirm it fails
+   for the right reason, restore the edit. Every future brief states that method
+   instead of leaving the agent to invent one.
+
+**`BLD-X-SB-LIFECYCLE-001` — `INTEGRATED`.** Two defects closed, no
+shared-contract request needed, no git run.
+
+- **The recovery link now guards unsaved work.** Both the collapsed-icon and
+  expanded-panel links routed through a bare `next/link` whose `onClick` was the
+  sidebar-close callback, not a leave guard — the one entry point in BSN-04-014's
+  list that nobody wired. Both now go through `useNavigationLeave()`, reusing
+  `build-nav-link.tsx`'s existing approach including modifier-key and
+  `defaultPrevented` passthrough, rather than a second guard mechanism.
+- **The fallback is no longer a hard-coded route.** `ORGANIZATION_HREF`
+  (`/build/command-center`, requiring `build:view`) was returned on
+  `hasAnyBuildAccess` alone, which is `!isBuildNavModelEmpty(model)` for the
+  **current** scope — so a caller holding only e.g. `build:approvals:view` was
+  offered "Go to All of Build" and landed on Access Denied.
+  `resolveBuildScopeFallback` now takes `organizationHref: string | null` and
+  promotes the **first authorized destination** from an independently resolved
+  organization-scope model, degrading to `no-access` when there is none. This is
+  §17's "an inaccessible parent may promote an accessible child, never expose
+  itself", and it stays deterministic because the model is ordered
+  (`myWork → primary → moreTools → settings`), satisfying BSN-04's
+  "deterministic authorized fallback".
+- **Coordinator verified it fails closed while access loads** —
+  `use-build-scope-recovery.ts:94` returns `null` when `access === undefined`, so
+  the recovery link is hidden until authorization is known rather than flashing a
+  possibly-dead link. The helper stays pure and React-free, so
+  `build-scope-fallback.test.ts` unit-tests it directly.
+- Coordinator re-ran: **41 tests, 5 suites, exit 0**, including the three sibling
+  guard suites it did not own.
+
+**Honest residual the agent disclosed.** `hasAnyBuildAccess` is still derived
+from the current (possibly inaccessible) scope's own catalog, so the coarse
+`no-access` vs `proceed` branch remains imprecise. The observable defect is gone
+because `organizationHref` independently re-verifies org-level authorization
+before promoting anything, but the underlying signal is still the wrong shape.
+Fixing it means touching `use-build-nav-model.ts`, which was reserved to another
+packet at the time. Carried forward.
+
+### Migration record — `1128` applied to production Aurora, 2026-09-21
+
+**Authorized by the user after the risk was stated explicitly.** Target is
+`streamlineos-instance-1.c94aokgu6g21.ap-south-1.rds.amazonaws.com/streamlineos`
+(PostgreSQL 18.4, ap-south-1), reached with RDS **IAM auth** — the URL carries no
+password, so the migration scripts die `28P01` without a minted token, which reads
+exactly like a rotated credential and is not one.
+
+**`pnpm db:migrate` was NOT used and must never be used here.** Production's
+`drizzle.__drizzle_migrations` is near-empty against ~1,100 journal files, so the
+bare command queues the entire journal and starts re-running `0000`. The safe
+path is one tag at a time:
+
+```
+node <wrapper> src/scripts/run-pending-migrations.mjs \
+  --tag=1128_build_optimistic_concurrency_and_update_publication [--dry-run]
+```
+
+The wrapper (kept outside the repo, since another session's cleanup deletes
+untracked files) mints an IAM token via `@aws-sdk/rds-signer`, sets it as the URL
+password, adds `sslmode=require`, and spawns the runner with
+`ALLOW_PRODUCTION_MIGRATION=1` and `cwd` = backend.
+
+**Pre-flight checks that mattered.** The known trap is that Build tables live in
+Postgres schema `build`, which is **not** on the runner's `search_path` — an
+unqualified `ALTER TABLE "project_risks"` fails `relation does not exist` (rolling
+back cleanly). `1128` was checked first and is fully schema-qualified, including
+the `ON "build"."…"` clause of all four `CREATE INDEX` statements, which sits on
+the line *after* the `CREATE INDEX`, so a single-line grep reports false
+negatives. Dry-run reported **30 statements**; the real run applied.
+
+**Verified by direct query, not by the runner's success line** (a migration is
+unverified until proven at the database):
+
+| Check | Result |
+|---|---|
+| `project_updates.audience` / `.status` / `.published_at` | present — enums `NOT NULL` defaulting `internal` / `draft`; `published_at` timestamptz nullable |
+| `project_risks.review_date` / `.category` | present |
+| `project_decisions.superseded_by_id` | present |
+| `version` column | present on 13 `build` tables |
+| `chk_project_updates_published_at`, `chk_project_decisions_not_self_superseded` | exist, **`convalidated = true`** |
+| `fk_project_decisions_org_superseded_by` | exists, **`convalidated = true`**, `FOREIGN KEY (org_id, superseded_by_id) REFERENCES build.project_decisions(org_id, id) ON DELETE SET NULL (superseded_by_id)` — the PG15 column-list form |
+| 4 partial indexes | all present |
+
+**Coordinator error worth recording:** the first verification probe queried
+`fk_project_decisions_superseded_by`, a **guessed** constraint name, and found
+nothing. The real name is `fk_project_decisions_org_superseded_by`. A guessed
+identifier reading as a missing object is the same failure mode as a scan whose
+pattern matches nothing — the absence was in the query, not the database. Always
+read the constraint name out of the migration before asserting it is missing.
+
+**This closes the deploy-ordering hazard** filed against the governance packets:
+`risks.service.ts` / `decisions.service.ts` use a bare `.select()` that expands to
+the full column list including `1128`'s columns, which would have thrown `42703`
+→ 500 on every governance read against a database without the migration. Those
+columns now exist in production. The columns remain **contract-omitted** on the
+frontend (silently stripped, harmless) until a packet builds UI for them.
+
+### Cycle 17 outcomes
+
+**`BLD-X-FE-ORG-GOV-001a` — `INTEGRATED`.** Four of five hypotheses refuted;
+one real defect fixed.
+
+- **H5 confirmed and fixed: four mutation controls rendered unconditionally.**
+  New Goal (and its empty-state CTA), Edit, Delete and Add Link had **no**
+  permission gate at all — any member reaching the page saw controls whose
+  mutations would 403. All four now gate on `useCan("build:goals:manage")`,
+  failing closed until access resolves. Coordinator verified the key is exact:
+  `goals.controller.ts:80,112,126,139` all carry
+  `@RequirePermission("build:goals:manage")`, and the frontend uses that literal
+  string. Not a security hole — `useAuthorizedMutation` already gated the writes
+  server-side — but it violated §17's rule that a mutation control uses the exact
+  backend key and hides when unheld.
+- **H3's premise was wrong, and the agent said so instead of inventing a fix.**
+  The brief asserted OKR progress maths lived in `goal-key-results.tsx` /
+  `check-in-dialog.tsx`. Neither computes any rollup — they display a value
+  computed elsewhere. The real rollup is `backend/src/modules/goals/goals-progress.ts:5-57`,
+  and it is **correct**: division-by-zero guarded (`target === start`), `NaN`
+  guarded, clamped 0–100, decreasing-metric goals handled correctly by
+  `(current - start) / (target - start)`, and it iterates **all** key results
+  with no LIMIT so the rollup is not computed over a capped page. Both owned
+  files were left unchanged. Refuting a brief's premise with anchors is the
+  correct outcome.
+- **Red/green proved with no git**, using the manual-revert method added to the
+  brief after the previous cycle's violation: revert the gate edits, re-run,
+  confirm 2 of 8 fail because the controls render anyway, restore, re-run green.
+  The corrected brief worked on first use.
+- Coordinator re-ran: **8 tests, 2 suites, exit 0**.
+
+**`BLD-X-FE-QUALITY-001b` — `INTEGRATED`. The most serious defect found in this
+programme so far: incident SLA compliance was systematically misreported in the
+favourable direction.**
+
+`sla.ts` before the fix:
+
+```ts
+responseBreached   = incident.respondedAt == null && new Date(incident.responseDueAt) < t;
+resolutionBreached = incident.resolvedAt  == null && new Date(incident.resolutionDueAt) < t;
+if (incident.resolvedAt != null) { label = "Met"; } else if (responseBreached) { … }
+```
+
+Two independent faults compounding:
+
+1. The `== null` conjunct meant that once an incident had been responded to or
+   resolved **at all**, its breach flag was permanently `false` **no matter how
+   late** the response or resolution was.
+2. `"Met"` was evaluated **before** either breach check, so **every resolved
+   incident reported "Met"** — including one resolved days past its deadline.
+
+Net effect: an incident answered or closed late reported as having **met** its
+SLA. For an incident-management surface this is worse than a blank field — it is
+a confident false statement about contractual compliance, and it fails silently
+in the direction nobody audits. Coordinator confirmed both faults against the
+pre-fix source via diff.
+
+Fixed: `isLate(dueAt, completedAt ?? now)` compares the deadline against the
+**actual** completion time when one exists and against `now` otherwise, is
+`NaN`-safe, and the label now resolves breaches before falling back to `"Met"`.
+The hinted NaN/timezone/division failure modes were checked and **refuted** —
+there is no percentage or division in the file, and wire dates are UTC
+`Z`-suffixed, so `new Date(iso)` is timezone-safe.
+
+Also in the same packet:
+
+- **H1/H2 — the incident detail page had no page state at all.** It hand-rolled
+  `isLoading` / `isError` / `!incident` branches, so a **denied** user was told
+  *"Incident not found — this incident no longer exists, or it was deleted"*,
+  and a 402 fell into a generic error with no upgrade path. `useIncident` is
+  `enabled: canView && …`, so a disabled query's `data: undefined` was
+  indistinguishable from a deleted record. Now routed through
+  `usePageState({ permission, isLoading, isError, error, isEmpty })` + `<PageState>`,
+  which resolves `denied` before `isEmpty`. `incidents-page.tsx` already did this
+  correctly — refuted there.
+- **H3 — the list is capped at 100 server-side with no cursor param in the DTO at
+  all**, and the table had no `pagination` prop; client-side search filtered over
+  that already-truncated window. Only a **disclosure banner** was added ("Showing
+  the most recent 100 incidents…"), which is a mitigation, not a fix. Real cursor
+  pagination needs the backend DTO, service and the `useIncidents` hook — filed
+  as a shared-contract request, correctly not attempted.
+- **H4 refuted with a useful distinction**: `incident-schema.ts` is the *form*
+  schema, not the response boundary, so drift there surfaces as a 400, not a
+  silent strip. The actual response contract does carry `z.string()` over a
+  pgEnum on **both** sides — the flagged anti-pattern in latent form, with no
+  active defect because the DB enum constrains the values.
+- Red/green proved by manual revert on all three files, no git. Coordinator
+  re-ran: **15 tests, 2 suites, exit 0**.
+- Disclosed residual: `incidents-page.tsx:326` retains an `isError ? <ErrorState/>`
+  branch inside the ready path that is provably unreachable, since `resolvePageState`
+  maps `isError` to a non-`ready` kind caught earlier. Left in place rather than
+  widening scope; flagged for cleanup.
+
+**⚠ Product defect found in passing — every goal in the product shows
+"Unassigned".** `goals.service.ts:223` (`list`) and `:344` (`getGoal`) both
+hardcode `owner: null`. The type declares `owner: GoalOwner | null` and
+`ownerMembershipId` **is** stored and used for scope filtering, but the owner is
+never hydrated or joined — so the Owner column renders "Unassigned" for every
+goal regardless of who owns it, in both the list and the detail page. Coordinator
+confirmed at source. This is a backend completeness bug no frontend change can
+fix, and it makes the OKR module's ownership story non-functional. **Needs a
+backend owner.**
+
+Three further shared-contract requests filed, none actioned (all outside the
+packet's write set):
+
+| Anchor | Lead |
+|---|---|
+| `features/build/goals/key-result-row.tsx:27-29` | The "Check in" button has no `useCan("build:goals:manage")` gate — same defect class as the four just fixed, missed only because the file was excluded from the write set. Server-gated, so UX not security |
+| `features/build/goals/constants.ts:92` | `keyResultPercent` applies `Math.round` per key result, while the backend rounds only after averaging — a KR at 99.5% displays "100%" on its own bar. Goal-level progress is unaffected |
+| `hooks/api/goals.ts` + `goals-schema.ts` | `useUpdateGoal`/`useCheckIn` type their response as the bare `goalRowContract`, but `update` and `checkIn` actually return the full `GoalDetail` via `getGoal()`. Inert today (no consumer reads the returned value) but the contract comment is factually wrong and will mislead the first consumer |
+
+### Findings banked for cycles 15–16 (read-only audit, unverified by coordinator)
+
+Leads with file:line anchors, to be re-verified by the owning packet before any
+edit — an audit report is a lead, not a finding.
+
+| Anchor | Lead | Owning packet |
+|---|---|---|
+| `lib/build/build-scope.ts:90-94` | `buildScopeOverviewHref` returns `basePath` for `workspace` = `/build/workspaces/{id}` (Projects), not `${basePath}/overview`. Coordinator confirmed the source reads this way. Same bug in `use-reconciled-build-scopes.ts` `hrefFor` and `use-build-scope-directory.ts`. **Open product question:** the manifest calls `PG-WS-001` "KEEP Projects" while the PRD lists Overview first — one of the two must be amended before the code changes | `BLD-X-SB-NAV-001` |
+| ~~`lib/build/nav/build-project-catalog.ts:76-81`~~ | ~~"Cycles" points at `${basePath}/sprints`~~ **Stale 2026-09-21** — the catalog entry now reads `href: \`${basePath}/cycles\`` (line 79). The same drift did survive in `features/build/overview/project-overview-page.tsx`, where the "Active cycle" stat card and the "Cycles" quick-nav link both pointed at `/sprints`; both repaired and pinned by tests. The underlying `PG-PRJ-036` duplication is unresolved and tracked in BLD-10-012 — `/sprints` still holds sprint planning, velocity and complete-sprint capability `/cycles` lacks, so it cannot be deleted yet | `BLD-X-SB-NAV-001` |
+| ~~`features/build/navigation/build-scope-recovery.tsx`~~ | ~~Both recovery links are bare `next/link` with no `useNavigationLeave`~~ **Stale 2026-09-21** — both links now share a `handleClick` that calls `useNavigationLeave`, preserves modifier-clicks and fires `onNavigate` inside the leave callback. Pinned by six tests under `describe("BSN-04-014 …")` in `build-scope-recovery.test.tsx`, including the collapsed-icon path and the discard-without-double-navigation case | `BLD-X-SB-LIFECYCLE-001` |
+| `lib/build/build-scope-fallback.ts:20,50-54` | The `recover` fallback is the hard-coded `/build/command-center`, returned on `hasAnyBuildAccess` alone, which is `!isBuildNavModelEmpty(model)`. A caller holding only e.g. `build:risks:view` is offered the link and lands on Access Denied, because the destination needs `build:view` | `BLD-X-SB-LIFECYCLE-001` |
+| `modules/build/governance/risks.service.ts:53-54`, `decisions.service.ts:61-62` | Hard `.limit(100)`, no cursor/total, and the pages mount `DataTable` with **no `pagination` prop**. Client-side search over that capped window presents a partial result as complete | `BLD-X-FE-QUALITY-001a` |
+| `features/build/governance/risks-page.tsx:131-137,307` | `openCount`/`highCritCount`/`closedCount` and `<RiskMatrix>` all derive from `allRisks`, which is already **status-filtered server-side**. Selecting "Closed" makes the stat row read 0 and blanks the matrix, both looking authoritative | `BLD-X-FE-QUALITY-001a` |
+| `features/build/governance/risk-form-sheet.tsx:101-118`, `decision-form-sheet.tsx:100-107` | `...(values.x ? { x } : {})` omits an emptied field, so clearing Description/Mitigation/Owner silently restores the old value. The backend already supports clearing (`.nullish()`); the frontend `Update*Input` types are `string \| undefined` and cannot express `null` | `BLD-X-FE-QUALITY-001a` |
+| `backend/src/modules/build/governance/risks.service.ts:43`, `decisions.service.ts:51` | Bare `.select()` expands to the full Drizzle column list including the four columns migration `1128` adds. Against a database that has not applied 1128, **every governance read is `42703` → 500**. `1128` is journalled (idx 1016) but unapplied — a deploy-ordering hazard, not a frontend bug | `BLD-X-DB-MIG-*` + `BLD-X-FE-QUALITY-001a` |
+| `features/build/governance/governance-schema.ts:10-11` | `probability`/`impact`/`status` typed `z.string()` over pg enums. `risk-severity.ts:16` multiplies through a `Record<string, number>`, so an off-enum value yields `NaN`, every comparison is false, and the badge renders **"Critical"** | `BLD-X-FE-QUALITY-001a` |
+
+**`BLD-X-FE-QUALITY-001a` was split — the audit's proposed write set was not a
+packet.** It named **14 production files across both repos**, against a hard
+limit of eight and a max of three ownership roots, and it bundled a real API
+design decision (cursor vs offset pagination, which the backend has neither of)
+with straightforward frontend repairs. Dispatched as:
+
+| Child | Scope | State |
+|---|---|---|
+| `-001a-i` | Filtered-aggregate correctness + the `NaN`→"Critical" severity path + enum tightening. Frontend only, no API change | dispatched cycle 16 |
+| `-001a-ii` | The cannot-clear-an-optional-field bug: `...(v ? {x:v} : {})` in both form sheets, plus widening `Update*Input` to express `null` (the backend already accepts it via `.nullish()`) | queued, disjoint files |
+| `-001a-iii` | Pagination for the governance endpoints. **Decision taken 2026-09-21: cursor/keyset**, so no longer blocked. Dispatched as `BLD-X-BE-GOV-CURSOR-001` | UNBLOCKED, dispatched cycle 19 |
+
+The deploy-ordering hazard (bare `.select()` expanding to columns migration
+`1128` has not applied) is a **backend** finding and stays with
+`BLD-X-DB-MIG-*`; no frontend child touches it.
+
+Refuted by the same audit, so no packet should re-open them: governance pages
+already pass `error` to `usePageState` (not among the fourteen); `loading={null}`
+there is the sanctioned pattern; denial-as-emptiness is handled and pinned by
+`governance-access-gate.test.tsx:191-231`; `useCan` appears only on `canManage`
+(a control, correct); BSN-01-024 Updates/Files are wired and tested; no catalog
+href dangles — every one resolves to a directory containing `page.tsx`.
 
 Ticket/Cycle/BUG/portal canonicalization packets wait only for their named
 contract or migration child. Frontend packets wait only when they change the
 specific API response they consume. Snapshot completion is required for final
 coverage reconciliation, not as a prerequisite for unrelated implementation.
+
+### Cycles 18–19 outcomes — 2026-09-21
+
+Five packets integrated, each verified by the coordinator against source before
+the ledger moved.
+
+| Packet | Outcome |
+|---|---|
+| `BLD-X-SB-CAPABILITY-002` + `-SB-OFFLINE-001` | `INTEGRATED` — `9eb296b20` |
+| `BLD-X-FE-ISSUES-001` | `INTEGRATED` — `1aaacb145`, 4 of 5 hypotheses refuted with a full contract table |
+| `BLD-X-FE-QUALITY-001c` | `INTEGRATED` — `439efa24b` |
+| `BLD-X-FE-ORG-GOV-001b` | `INTEGRATED` — `d923cb023` |
+| `BLD-X-DB-BUILD-VERSION-001` | `APPLIED + VERIFIED` on production Aurora |
+
+**An absent capability key meant *enabled*.** `use-build-nav-model.ts:65` read
+`projectFeatures?.["clientPortal"] !== false`, so a project whose features map
+omits the key exposed the Client Portal. Now `=== true`. Wizard-created projects
+never relied on it — they always write an explicit `true`.
+
+**A failed access query left the sidebar loading forever.** `isAccessReady` was
+`access !== undefined` and never considered `isError`, so a genuine fetch failure
+with no cached data rendered the skeleton permanently, reaching no terminal state
+— not an error, not a denial. It now shows a retryable error, gated so cached
+data suppresses the branch during a failing background refetch.
+
+**The dirty-state ratchet could not see the surface it was meant to protect.**
+`build-dirty-state-coverage.test.ts` walked `.tsx` only and flagged a form owner
+by a `useForm` call *in that same file*, so ticket creation — which delegates to
+`use-create-ticket-form.ts` — was invisible on both counts and shipped with no
+registration at all. The walk now includes `.ts` and credits a hook owner when a
+`.tsx` consumer registers. Proven to bite: removing the registration fails the
+ratchet naming `tickets/use-create-ticket-form.ts`, where before it passed.
+
+**Silent truncation is a class, not an instance.** Four Build surfaces cap
+server-side behind a bare `z.array(...)` with no `hasMore`, so the client cannot
+tell a full page from a truncated one: QA test-cases and test-runs at 50
+(`test-management.service.ts:19`, `test-runs.service.ts:19`), approvals at 100
+(`approvals-read.service.ts:52,72`), plus governance and incidents. The backend
+already owns the machinery — `common/pagination/cursor.ts` and the worked example
+in `execution/timesheets-pagination.ts` — and `qa-response.schemas.ts:86-90`
+already ships the envelope shape `{ data, hasMore, nextCursor }`. This is wiring,
+not invention. `BLD-X-BE-GOV-CURSOR-001` takes governance first.
+
+**The AI assistant named a permission nobody can grant.** Its denied state told
+the user to request `projects:ai:use`, a key in neither catalog, while the gate
+above it read `build:ai:use`.
+
+**`/cycles` tightening is authored but PARKED, not shipped.** The backend now
+requires `build:sprints:view`, matching its sibling iteration endpoints, and the
+nav catalog, route-access registry, hook gate and both cycles pages follow. It is
+uncommitted because `route-access-keys.test.ts` compares the frontend registry
+against the backend's `x-permission` in the generated `contracts/openapi.json`,
+which still carries `build:view`. Regenerating needs a full backend boot; the
+generator loads `.env`, which points at production, so it must be run with
+placeholder credentials while no agent holds the machine. **Impact when it lands:
+`digital_marketing` loses Cycles** — it holds `build:view` but not
+`build:sprints:view` (`role-templates-build.constants.ts:40`), and never had
+sprint access, so this is the intended alignment rather than a regression.
+
+**Deleting `/sprints` is deferred for the same reason.** The route is 3 files but
+the feature behind it is 17, and `frontend/CLAUDE.md` cites
+`sprints/create-sprint-dialog.tsx` as the canonical `EntityFormSheet` example.
+Only the route page imports the feature; the two other `sprints` references are
+`hooks/api/build/sprints`, which must stay. Proof requires knip plus a real
+`next build`, not grep — both coordinator-only.
+
+**Two gates are red from another session's committed work, not ours.**
+`denial-is-not-emptiness` reports 16 `hr`/`inventory` mismatches from `9366c1705`,
+and `features/accounting/parties/__tests__/customer-detail-ap9.test.tsx` fails
+from `872c34d85`. Both paths are untouched by this lane and were left alone.
 
 ## Completed Setup Packets
 

@@ -2,15 +2,15 @@
 
 import { ReportingRouteErrorBoundary } from "@/lib/observability/reporting-route-error-boundary";
 
-export default function HrHelpdeskError(props: {
+export default function HrEmployeeSupportError(props: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
   return (
     <ReportingRouteErrorBoundary
       {...props}
-      title="HR Helpdesk Error"
-      fallbackMessage="Failed to load HR Helpdesk. Please try again."
+      title="Employee support error"
+      fallbackMessage="Failed to load employee support. Please try again."
     />
   );
 }

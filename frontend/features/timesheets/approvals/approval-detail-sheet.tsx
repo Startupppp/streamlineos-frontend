@@ -33,6 +33,7 @@ import type { TimesheetPeriod, PeriodEntry } from "@/features/timesheets/types";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
+import { ApprovalRouteCell } from "./approval-route-cell";
 
 interface ApprovalDetailSheetProps {
   period: TimesheetPeriod | null;
@@ -222,6 +223,11 @@ export function ApprovalDetailSheet({
               )}
               {period.rejectionReason && (
                 <p className="text-status-danger-ink">Reason: {period.rejectionReason}</p>
+              )}
+              {period.approvalRoute && (
+                <div className="pt-1.5">
+                  <ApprovalRouteCell period={period} detailed />
+                </div>
               )}
             </div>
           )}

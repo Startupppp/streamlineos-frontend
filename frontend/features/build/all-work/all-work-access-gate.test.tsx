@@ -1,5 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
+import type { TicketGroup } from "./all-work-ticket-utils";
+import type { AllWorkTicket } from "@/types/projects";
+import type { BuildListGrouping } from "./use-all-work-filters";
 
 const useAccess = jest.fn();
 const accessLoading = { data: undefined, isLoading: true };
@@ -11,8 +14,9 @@ const accessDenied = {
   data: { isOrgOwner: false, scopes: {}, modules: {} },
   isLoading: false,
 };
-const useInfiniteAllWork = jest.fn();
+const useAllWork = jest.fn();
 const useProjects = jest.fn();
+const groupTicketsMock = jest.fn<TicketGroup[], [AllWorkTicket[], BuildListGrouping]>(() => []);
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -29,16 +33,18 @@ jest.mock("framer-motion", () => ({
 jest.mock("@/hooks/api/access", () => ({
   useAccess: () => useAccess(),
 }));
-
 jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 jest.mock("@/hooks/api/build", () => ({
-  useInfiniteAllWork: () => useInfiniteAllWork(),
+  useAllWork: () => useAllWork(),
   useProjects: () => useProjects(),
 }));
 jest.mock("@/hooks/api/build/custom-states", () => ({
   useOrgCustomStates: () => ({ data: undefined }),
+}));
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => true,
 }));
 jest.mock("@/features/build/shared/ticket-filter-bar", () => ({
   TicketFilterBar: () => null,
@@ -48,10 +54,17 @@ jest.mock("./use-all-work-filters", () => ({
     view: "list" as const,
     scopeMine: false,
     filters: {},
+    grouping: "project" as BuildListGrouping,
+    sortField: "rank",
+    sortDirection: "desc",
+    cursor: null,
     hasActiveFilters: false,
+    isPending: false,
     handleViewChange: jest.fn(),
     handleScopeToggle: jest.fn(),
     handleClearFilters: jest.fn(),
+    setListParams: jest.fn(),
+    setCursor: jest.fn(),
   }),
 }));
 jest.mock("./use-all-work-bulk", () => ({
@@ -64,6 +77,9 @@ jest.mock("./use-all-work-bulk", () => ({
     handleBulkSprintNoOp: jest.fn(),
     handleClearSelection: jest.fn(),
   }),
+}));
+jest.mock("./use-all-work-keyboard", () => ({
+  useAllWorkKeyboard: jest.fn(),
 }));
 jest.mock("./all-work-view-switcher", () => ({
   AllWorkViewSwitcher: () => null,
@@ -101,7 +117,8 @@ jest.mock("@/lib/motion-presets", () => ({
   viewSwapReduced: { initial: {}, animate: {}, exit: {} },
 }));
 jest.mock("./all-work-ticket-utils", () => ({
-  groupByProject: () => [],
+  groupTickets: (tickets: AllWorkTicket[], grouping: BuildListGrouping) =>
+    groupTicketsMock(tickets, grouping),
 }));
 jest.mock("@/components/shared/format-ticket-key", () => ({
   getTicketDetailHref: () => "/build/1/tickets/1",
@@ -109,27 +126,60 @@ jest.mock("@/components/shared/format-ticket-key", () => ({
 jest.mock("@/lib/get-error-message", () => ({
   getErrorMessage: (e: unknown) => String(e),
 }));
+jest.mock("@/features/build/views/list-view", () => ({
+  ListView: () => null,
+}));
+jest.mock("@/features/build/views/kanban-board", () => ({
+  KanbanBoard: () => null,
+}));
+jest.mock("./project-chip", () => ({
+  ProjectChip: () => null,
+}));
+jest.mock("@/components/ui/truncated-text", () => ({
+  TruncatedText: ({ text }: { text: string }) => <span>{text}</span>,
+}));
+jest.mock("@/components/ui/select", () => ({
+  Select: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  SelectTrigger: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  SelectValue: () => null,
+  SelectContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  SelectItem: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+}));
 
 import { AllWorkPage } from "./all-work-page";
 
-function pendingInfiniteQuery() {
+function pendingQuery() {
   return {
     data: undefined,
     isLoading: false,
     isError: false,
     error: null,
-    hasNextPage: false,
-    isFetchingNextPage: false,
-    fetchNextPage: jest.fn(),
     refetch: jest.fn(),
   };
 }
 
+const stubTicket: AllWorkTicket = {
+  id: 1, title: "Stub ticket", type: "TASK", status: "TODO", priority: null,
+  projectId: 1, projectKey: "ENG", projectName: "Engineering", ticketNumber: 1,
+  sprintId: null, epicId: null, assigneeId: null, points: null, estimate: null,
+  rank: null, startDate: null, dueDate: null, cycleId: null,
+  createdAt: null, updatedAt: null, assignee: null, labels: [],
+};
+
+const stubGroup: TicketGroup = {
+  id: 1,
+  label: "Engineering",
+  projectId: 1,
+  projectKey: "ENG",
+  tickets: [stubTicket],
+};
+
 beforeEach(() => {
   jest.clearAllMocks();
   useAccess.mockReturnValue(accessGranted);
-  useInfiniteAllWork.mockReturnValue(pendingInfiniteQuery());
+  useAllWork.mockReturnValue(pendingQuery());
   useProjects.mockReturnValue({ data: undefined });
+  groupTicketsMock.mockReturnValue([]);
 });
 
 describe("AllWorkPage — access is three-valued, not a boolean", () => {
@@ -148,5 +198,32 @@ describe("AllWorkPage — access is three-valued, not a boolean", () => {
     render(<AllWorkPage />);
 
     expect(screen.queryByText(/access restricted/i)).toBeNull();
+  });
+});
+
+describe("AllWorkPage — per-project badge count is honest about how many tickets are loaded when more pages exist", () => {
+  it("list section badge shows a plain count with no suffix when all pages are loaded so users know they see the full set", () => {
+    useAllWork.mockReturnValue({
+      ...pendingQuery(),
+      data: { data: [stubTicket], hasMore: false, nextCursor: null, limit: 50 },
+    });
+    groupTicketsMock.mockReturnValue([stubGroup]);
+
+    render(<AllWorkPage />);
+
+    expect(screen.getByText("1")).toBeInTheDocument();
+    expect(screen.queryByText("1+")).toBeNull();
+  });
+
+  it("list section badge appends + when more pages exist so the loaded-prefix count is not mistaken for the project total", () => {
+    useAllWork.mockReturnValue({
+      ...pendingQuery(),
+      data: { data: [stubTicket], hasMore: true, nextCursor: "cur1", limit: 50 },
+    });
+    groupTicketsMock.mockReturnValue([stubGroup]);
+
+    render(<AllWorkPage />);
+
+    expect(screen.getByText("1+")).toBeInTheDocument();
   });
 });
