@@ -188,12 +188,27 @@ column before the deploy takes Build down; dropping it after is a no-op to every
 Run in this order, one per window, each preceded by a **fresh manual cluster snapshot** taken
 before any DDL:
 
-| # | Migration | Effect | Code ready at `3d4e5a6a6`? | Blocked on |
-|---|---|---|---|---|
-| 1 | `backend/migrations/sql/a-sprint-cycle-04-detach.sql` | drops `sprint_id` from 4 tables, and the 4 FKs that block phase 05 | **Yes** | Stage C |
-| 2 | `backend/migrations/sql/a-sprint-cycle-05-drop.sql` | drops `build.sprints`, renames `sprint_scope_events` | **No** | **A5**, then phase 1, then Stage C |
-| 3 | `backend/migrations/sql/b-qa-bug-04-contract-freeze.sql` | makes `build.bugs` unwritable | **Yes** | nothing — B2 passed 14/14 |
-| 4 | `backend/migrations/sql/b-qa-bug-05-contract-drop.sql` | drops `build.bugs` | **Yes**, after 3 | phase 3 observed clean |
+| # | Migration | Effect | Status |
+|---|---|---|---|
+| 1 | `backend/migrations/sql/a-sprint-cycle-04-detach.sql` | drops `sprint_id` from 4 tables, and the 4 FKs that block phase 05 | **NOT APPLIED** — needs the deploy |
+| 2 | `backend/migrations/sql/a-sprint-cycle-05-drop.sql` | drops `build.sprints`, renames `sprint_scope_events` | **NOT APPLIED** — needs A5, then phase 1, then the deploy |
+| 3 | `backend/migrations/sql/b-qa-bug-04-contract-freeze.sql` | revokes write on `build.bugs`, keeps `SELECT` | **APPLIED 2026-09-22**, snapshot `pre-qa-bug-freeze-20260922173910` |
+| 4 | `backend/migrations/sql/b-qa-bug-05-contract-drop.sql` | drops `build.bugs` | **NOT APPLIED** — the deployed revision still reads the table |
+
+**The deploy is the real gate, and it has not happened.** Production is live
+(`https://api.streamlineos.in/health` → 200, 11 application backends), the backend has no deploy
+workflow, and Actions billing lapsed around 2026-09-10 — so the running revision predates every
+cutover commit from 2026-09-22. Cumulative `pg_stat_all_tables` counters, net of this session's
+own queries, put `build.sprints` at 3024 index scans, `build.bugs` at 127, and `build.tickets` at
+roughly 26k. Dropping any of those now breaks the deployed application the next time someone uses
+the feature — a four-minute idle sample showed zero scans, so the breakage would surface later
+rather than immediately, which is worse.
+
+Phase 3 was applied because it is the one phase that removes nothing: it revokes a write grant
+that has never been exercised (`n_tup_ins = n_tup_upd = n_tup_del = 0` for the table's whole
+history), keeps `SELECT`, and reverses with
+`GRANT INSERT, UPDATE, DELETE ON "build"."bugs" TO streamline_app;`. Full record in
+[`P0-PRODUCTION-EXECUTION-QA-BUG-FREEZE.md`](./P0-PRODUCTION-EXECUTION-QA-BUG-FREEZE.md).
 
 `build.bugs` has no non-test reader or writer left — `grep -rn "from(bugs)\|insert(bugs)\|update(bugs)\|delete(bugs)" backend/src --include='*.ts'` excluding specs returns nothing — and the
 table is empty, so phases 3 and 4 remove an unused object rather than completing a migration.

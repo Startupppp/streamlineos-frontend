@@ -129,12 +129,22 @@ instance. Each phase below must be preceded by a fresh manual snapshot.
 Readiness re-measured at root `f794b484a`, backend `3d4e5a6a6`, and against the live production
 database over a read-only IAM connection on 2026-09-22:
 
-| Phase | Code ready? | Data precondition | What still blocks it |
+| Phase | Code ready? | Data precondition | Status |
 |---|---|---|---|
-| D1 detach | **Yes** | **Met** — 103 tickets carry `sprint_id`, and all 103 are in `sprint_binding_archive`, so the DO-block guard returns `unarchived = 0` | Stage C only |
-| D2 drop `sprints` | **Yes**, after A2 | 4 sprints, all 4 with a cycle counterpart, 0 orphans | **A5** — the phase also renames `sprint_scope_events`, which live code still reads — then D1, then Stage C |
-| D3 QA freeze | **Yes** | All 14 checks in `b-qa-bug-03-verify.sql` return 0, but **vacuously**: `build.bugs` holds **0 rows** | Nothing technical. See the vacuity note below |
-| D4 drop `bugs` | **Yes**, after D3 | Table is empty | D3 applied and observed; **no rollback file exists for this phase** |
+| D1 detach | **Yes** | **Met** — 103 tickets carry `sprint_id`, all 103 in `sprint_binding_archive`, so the guard returns `unarchived = 0` | **NOT APPLIED** — blocked on Stage C |
+| D2 drop `sprints` | **Yes**, after A2 | 4 sprints, all 4 with a cycle counterpart, 0 orphans | **NOT APPLIED** — blocked on A5, then D1, then Stage C |
+| D3 QA freeze | **Yes** | All 14 checks return 0, but **vacuously**: `build.bugs` holds **0 rows** and has never received a write | **APPLIED 2026-09-22** behind snapshot `pre-qa-bug-freeze-20260922173910`. See [`P0-PRODUCTION-EXECUTION-QA-BUG-FREEZE.md`](./P0-PRODUCTION-EXECUTION-QA-BUG-FREEZE.md) |
+| D4 drop `bugs` | **Yes**, after D3 | Table is empty | **NOT APPLIED** — the deployed revision still reads it; **no rollback file exists** |
+
+**Why three of the four did not run.** Production is a live deployment —
+`https://api.streamlineos.in/health` returns 200 with the database up, and the cluster carried 11
+application backends. The backend has **no deploy workflow**, and GitHub Actions billing lapsed
+around 2026-09-10, so the running revision predates the 2026-09-22 cutover commits. Cumulative
+`pg_stat_all_tables` counters, excluding this session's own queries, show `build.sprints` at 3024
+index scans, `build.bugs` at 127 scans, and `build.tickets` at 26k scans. Dropping any of those
+objects now breaks the deployed application the next time the feature is used. D3 was applied
+because it only revokes a write grant that no writer has ever exercised, retains `SELECT`, and
+reverses with a single `GRANT`.
 
 "Code ready" means the merged source no longer touches the object. It does **not** mean the
 running production revision no longer touches it — that is what Stage C establishes, and it is
