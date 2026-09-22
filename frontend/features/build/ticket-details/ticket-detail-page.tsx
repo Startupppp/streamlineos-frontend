@@ -92,7 +92,6 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     isLoading,
     ticketError,
     refetchTicket,
-    sprints,
     subtasks,
     members,
     statuses,
@@ -311,7 +310,6 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
           ticketId={ticketId}
           projectId={projectId}
           projectKey={projectData?.key}
-          sprints={sprints}
           statuses={statuses}
           onAutoSave={autoSave}
           canUpdate={canUpdate}

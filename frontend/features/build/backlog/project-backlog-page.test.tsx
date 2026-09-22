@@ -16,10 +16,10 @@ jest.mock("@/hooks/api/access", () => ({
 }));
 
 const mockUseProject = jest.fn();
-const mockUseSprints = jest.fn((..._args: unknown[]) => ({ data: [] }));
+const mockUseCycles = jest.fn((..._args: unknown[]) => ({ data: [] }));
 jest.mock("@/hooks/api", () => ({
   useProject: (...args: unknown[]) => mockUseProject(...args),
-  useSprints: (...args: unknown[]) => mockUseSprints(...args),
+  useCycles: (...args: unknown[]) => mockUseCycles(...args),
 }));
 
 const mockUseProjectBoardTickets = jest.fn();

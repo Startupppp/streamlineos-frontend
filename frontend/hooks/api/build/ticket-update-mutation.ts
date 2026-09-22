@@ -62,7 +62,6 @@ export function applyTicketPatch(
   if (input.status !== undefined) next.status = input.status;
   if (input.priority !== undefined) next.priority = input.priority;
   if (input.points !== undefined) next.points = input.points;
-  if (input.sprintId !== undefined) next.sprintId = input.sprintId;
   if (input.epicId !== undefined) next.epicId = input.epicId;
   if (input.moduleId !== undefined) next.moduleId = input.moduleId;
   if (input.cycleId !== undefined) next.cycleId = input.cycleId;

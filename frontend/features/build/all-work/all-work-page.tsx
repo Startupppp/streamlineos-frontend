@@ -155,7 +155,7 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
     handleBulkStatus,
     handleBulkPriority,
     handleBulkAssignee,
-    handleBulkSprintNoOp,
+    handleBulkCycleNoOp,
     handleClearSelection,
   } = useAllWorkBulk(tickets);
 
@@ -323,7 +323,6 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
                 members={deduplicatedMembers}
                 projectOptions={projectOptions}
                 showTypeFilter
-                showSprintFilter={false}
                 showAssigneeFilter
                 statuses={orgStates}
               />
@@ -348,13 +347,13 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
                 <BulkActionBar
                   selectedCount={tableSelection.size}
                   members={deduplicatedMembers}
-                  sprints={[]}
+                  cycles={[]}
                   statuses={orgStates}
-                  hideSprint
+                  hideCycle
                   onBulkStatus={handleBulkStatus}
                   onBulkPriority={handleBulkPriority}
                   onBulkAssignee={handleBulkAssignee}
-                  onBulkSprint={handleBulkSprintNoOp}
+                  onBulkCycle={handleBulkCycleNoOp}
                   onClear={handleClearSelection}
                 />
               ) : null}

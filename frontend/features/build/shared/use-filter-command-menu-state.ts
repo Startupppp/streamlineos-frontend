@@ -17,7 +17,6 @@ import {
   type Member,
   type Label,
   type Cycle,
-  type Sprint,
   type ProjectOption,
   type FilterState,
   type CategoryDefinition,
@@ -32,19 +31,16 @@ interface UseFilterCommandMenuStateParams {
   members: Member[];
   labels: Label[];
   cycles: Cycle[];
-  sprints: Sprint[];
   projectOptions?: ProjectOption[];
   showTypeFilter: boolean;
-  showSprintFilter: boolean;
   showAssigneeFilter: boolean;
-  filterState: FilterState;
+  filterState: Omit<FilterState, "sprintParam">;
   onToggleStatus: (value: string) => void;
   onTogglePriority: (value: string) => void;
   onToggleType: (value: string) => void;
   onToggleAssignee: (value: string) => void;
   onToggleLabel: (value: string) => void;
   onToggleCycle: (value: string) => void;
-  onToggleSprint: (value: string) => void;
   onToggleProject: (value: string) => void;
   onDueDateFromChange: (value: string) => void;
   onDueDateToChange: (value: string) => void;
@@ -58,10 +54,8 @@ export function useFilterCommandMenuState({
   members,
   labels,
   cycles,
-  sprints,
   projectOptions,
   showTypeFilter,
-  showSprintFilter,
   showAssigneeFilter,
   filterState,
   onToggleStatus,
@@ -70,7 +64,6 @@ export function useFilterCommandMenuState({
   onToggleAssignee,
   onToggleLabel,
   onToggleCycle,
-  onToggleSprint,
   onToggleProject,
   onDueDateFromChange,
   onDueDateToChange,
@@ -92,7 +85,6 @@ export function useFilterCommandMenuState({
     selectedLabels,
     selectedCycles,
     selectedProjectIds,
-    sprintParam,
     dueDateFrom,
     dueDateTo,
   } = filterState;
@@ -112,12 +104,6 @@ export function useFilterCommandMenuState({
     },
     { key: "label", label: "Label", visible: labels.length > 0, activeCount: selectedLabels.length },
     { key: "cycle", label: "Cycle", visible: cycles.length > 0, activeCount: selectedCycles.length },
-    {
-      key: "sprint",
-      label: "Sprint",
-      visible: showSprintFilter && sprints.length > 0,
-      activeCount: sprintParam ? 1 : 0,
-    },
     {
       key: "dates",
       label: "Due Dates",
@@ -231,7 +217,6 @@ export function useFilterCommandMenuState({
     members,
     labels,
     cycles,
-    sprints,
     projectOptions,
     selectedStatuses,
     selectedPriorities,
@@ -240,7 +225,6 @@ export function useFilterCommandMenuState({
     selectedLabels,
     selectedCycles,
     selectedProjectIds,
-    sprintParam,
     dueDateFrom,
     dueDateTo,
     onToggleStatus,
@@ -249,7 +233,6 @@ export function useFilterCommandMenuState({
     onToggleAssignee,
     onToggleLabel,
     onToggleCycle,
-    onToggleSprint,
     onToggleProject,
     onDueDateFromChange,
     onDueDateToChange,
@@ -285,7 +268,6 @@ export function useFilterCommandMenuState({
     sharedProps,
     categoryListProps,
     showTypeFilter,
-    showSprintFilter,
     showAssigneeFilter,
   };
 }

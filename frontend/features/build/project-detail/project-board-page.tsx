@@ -2,7 +2,7 @@
 
 import { use, useCallback, useMemo } from "react";
 import { format, addDays } from "date-fns";
-import { useProject, useSprints, useBulkUpdateTickets } from "@/hooks/api";
+import { useProject, useCycles, useBulkUpdateTickets } from "@/hooks/api";
 import { useWorkloadCapacity } from "@/hooks/api/build/workload-capacity";
 import type { BulkUpdateTicketsInput } from "@/hooks/api";
 import { useBoardUrlState } from "@/features/build/views/use-board-url-state";
@@ -35,7 +35,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     error: projectErrorValue,
     refetch: refetchProject,
   } = useProject(projectId);
-  const { data: sprints } = useSprints(projectId);
+  const { data: cycles } = useCycles(projectId);
   const bulkUpdate = useBulkUpdateTickets(projectId);
 
   const {
@@ -108,7 +108,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
       update: Partial<
         Pick<
           BulkUpdateTicketsInput,
-          "assigneeId" | "status" | "sprintId" | "priority" | "parentTicketId"
+          "assigneeId" | "status" | "cycleId" | "priority" | "parentTicketId"
         >
       >,
     ) => {
@@ -146,8 +146,8 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     (v: string) => handleBulkUpdate({ assigneeId: v }),
     [handleBulkUpdate],
   );
-  const handleBulkSprint = useCallback(
-    (v: string) => handleBulkUpdate({ sprintId: v === "backlog" ? null : Number(v) }),
+  const handleBulkCycle = useCallback(
+    (v: string) => handleBulkUpdate({ cycleId: v === "backlog" ? null : Number(v) }),
     [handleBulkUpdate],
   );
   const handleBulkParent = useCallback(
@@ -243,12 +243,12 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
         onTicketSelect={handleTicketSelect}
         onWorkloadFilterChange={handleWorkloadFilterChange}
         onClearWorkloadFilters={handleClearWorkloadFilters}
-        sprints={sprints ?? []}
+        cycles={cycles ?? []}
         selectedIds={selectedIds}
         onBulkStatus={handleBulkStatus}
         onBulkPriority={handleBulkPriority}
         onBulkAssignee={handleBulkAssignee}
-        onBulkSprint={handleBulkSprint}
+        onBulkCycle={handleBulkCycle}
         onBulkParent={handleBulkParent}
         onClearSelection={handleClearSelection}
         onSelectionChange={handleSelectionChange}

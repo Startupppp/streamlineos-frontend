@@ -28,10 +28,10 @@ export const accountingAndSupportQueryKeys = {
     all: [...base, "projectReports"] as const,
     velocity: (projectId: number) =>
       [...base, "projectReports", "velocity", projectId] as const,
-    burnup: (projectId: number, sprintId?: number) =>
-      sprintId === undefined
+    burnup: (projectId: number, cycleId?: number) =>
+      cycleId === undefined
         ? ([...base, "projectReports", "burnup", projectId] as const)
-        : ([...base, "projectReports", "burnup", projectId, sprintId] as const),
+        : ([...base, "projectReports", "burnup", projectId, cycleId] as const),
     cfd: (projectId: number, params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "projectReports", "cfd", projectId] as const)

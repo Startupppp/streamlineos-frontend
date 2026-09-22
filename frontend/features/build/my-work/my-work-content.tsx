@@ -172,13 +172,13 @@ export const MyWorkContent = memo(function MyWorkContent({
             <BulkActionBar
               selectedCount={bulk.selectedCount}
               members={[]}
-              sprints={[]}
+              cycles={[]}
               statuses={orgStatuses}
-              hideSprint
+              hideCycle
               onBulkStatus={bulk.handleBulkStatus}
               onBulkPriority={bulk.handleBulkPriority}
               onBulkAssignee={bulk.handleBulkAssignee}
-              onBulkSprint={bulk.handleBulkSprintNoOp}
+              onBulkCycle={bulk.handleBulkCycleNoOp}
               onClear={bulk.handleClearSelection}
             />
           ) : null}

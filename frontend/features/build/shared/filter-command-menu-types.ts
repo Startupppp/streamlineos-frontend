@@ -3,7 +3,6 @@ import type {
   Member,
   Label,
   Cycle,
-  Sprint,
   ProjectOption,
   FilterState,
 } from "@/components/list-view";
@@ -17,19 +16,16 @@ export interface FilterCommandMenuProps {
   members: Member[];
   labels: Label[];
   cycles: Cycle[];
-  sprints: Sprint[];
   projectOptions?: ProjectOption[];
   showTypeFilter: boolean;
-  showSprintFilter: boolean;
   showAssigneeFilter: boolean;
-  filterState: FilterState;
+  filterState: Omit<FilterState, "sprintParam">;
   onToggleStatus: (value: string) => void;
   onTogglePriority: (value: string) => void;
   onToggleType: (value: string) => void;
   onToggleAssignee: (value: string) => void;
   onToggleLabel: (value: string) => void;
   onToggleCycle: (value: string) => void;
-  onToggleSprint: (value: string) => void;
   onToggleProject: (value: string) => void;
   onDueDateFromChange: (value: string) => void;
   onDueDateToChange: (value: string) => void;

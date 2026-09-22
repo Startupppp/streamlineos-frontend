@@ -195,15 +195,6 @@ describe("MyWorkPage — URL param round-trips", () => {
     expect(call?.[0]).toMatchObject({ cycleId: "old-cycle-id" });
   });
 
-  it("forwards sprintId from URL to the all-work request", () => {
-    mockSearchParamsContainer.current = new URLSearchParams("sprintId=7");
-    render(<MyWorkPage />);
-    const call = mockUseAllWork.mock.calls.find(
-      ([f]: [{ scope?: string; sprintId?: number }]) => f?.scope === "mine",
-    );
-    expect(call?.[0]).toMatchObject({ sprintId: 7 });
-  });
-
   it("maps sort/dir URL params to orderBy/orderDir in the API request", () => {
     mockSearchParamsContainer.current = new URLSearchParams("sort=priority&dir=asc");
     render(<MyWorkPage />);

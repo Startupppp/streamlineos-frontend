@@ -2,8 +2,6 @@ export type ProjectStatusValue = "ACTIVE" | "COMPLETED" | "ARCHIVED";
 
 export type TicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
-export type SprintStatus = "PLANNED" | "ACTIVE" | "COMPLETED";
-
 export type CycleStatus = "draft" | "active" | "completed";
 
 export type ModuleStatus =

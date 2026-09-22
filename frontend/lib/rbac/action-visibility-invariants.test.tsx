@@ -235,12 +235,12 @@ describe("Build ticket mutation controls", () => {
       <BulkActionBar
         selectedCount={1}
         members={[]}
-        sprints={[]}
+        cycles={[]}
         statuses={undefined}
         onBulkStatus={noopString}
         onBulkPriority={noopString}
         onBulkAssignee={noopString}
-        onBulkSprint={noopString}
+        onBulkCycle={noopString}
         onClear={noop}
       />,
     );

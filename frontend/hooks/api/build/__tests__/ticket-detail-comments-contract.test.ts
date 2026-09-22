@@ -10,7 +10,6 @@ const TICKET_ROW = {
   priority: "MEDIUM",
   projectId: 3,
   ticketNumber: 42,
-  sprintId: null,
   epicId: null,
   assigneeMembershipId: null,
   reporterId: "user-1",

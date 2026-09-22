@@ -27,13 +27,13 @@ function renderBar(statuses: { name: string; color: string | null; type: string 
     <BulkActionBar
       selectedCount={2}
       members={[]}
-      sprints={[]}
+      cycles={[]}
       statuses={statuses}
-      hideSprint
+      hideCycle
       onBulkStatus={noopString}
       onBulkPriority={noopString}
       onBulkAssignee={noopString}
-      onBulkSprint={noopString}
+      onBulkCycle={noopString}
       onClear={noop}
     />,
   );

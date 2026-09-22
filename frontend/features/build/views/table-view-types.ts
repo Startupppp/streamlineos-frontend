@@ -13,7 +13,6 @@ export interface Ticket {
   dueDate?: string | null;
   assigneeId?: string | null;
   cycleId?: number | null;
-  sprintId?: number | null;
   assignee?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null; image?: string | null } | null;
   labels?: { label?: { id: number; name: string; color?: string | null } }[];
 }

@@ -13,7 +13,6 @@ import {
   AlertTriangle,
   Layers,
   User,
-  Zap,
   RefreshCw,
 } from "lucide-react";
 
@@ -30,7 +29,6 @@ export type { WorkloadFilterMenuProps };
 export function WorkloadFilterMenu({
   filters,
   members,
-  sprints,
   cycles,
   projectStatuses,
   activeFilterCount,
@@ -50,13 +48,6 @@ export function WorkloadFilterMenu({
       visible: boolean;
       activeCount: number;
     }> = [
-      {
-        key: "sprint",
-        label: "Sprint",
-        icon: <Zap className="h-3.5 w-3.5" />,
-        visible: sprints.length > 0,
-        activeCount: filters.sprintId !== "all" ? 1 : 0,
-      },
       {
         key: "cycle",
         label: "Cycle",
@@ -94,7 +85,7 @@ export function WorkloadFilterMenu({
       },
     ];
     return items.filter((c) => c.visible);
-  }, [sprints.length, cycles.length, projectStatuses, filters]);
+  }, [cycles.length, projectStatuses, filters]);
 
   const handleOpenChange = useCallback((next: boolean) => {
     setOpen(next);
@@ -148,13 +139,6 @@ export function WorkloadFilterMenu({
       onFilterChange(key, current === value ? "all" : value);
     },
     [onFilterChange],
-  );
-
-  const handleSelectSprint = useCallback(
-    (value: string) => {
-      selectSingle("sprintId", filters.sprintId, value);
-    },
-    [selectSingle, filters.sprintId],
   );
 
   const handleSelectCycle = useCallback(
@@ -274,12 +258,10 @@ export function WorkloadFilterMenu({
             >
               <WorkloadSubmenu
                 hoveredCategory={hoveredCategory}
-                sprints={sprints}
                 cycles={cycles}
                 projectStatuses={projectStatuses}
                 members={members}
                 filters={filters}
-                onSelectSprint={handleSelectSprint}
                 onSelectCycle={handleSelectCycle}
                 onSelectPriority={handleSelectPriority}
                 onSelectType={handleSelectType}

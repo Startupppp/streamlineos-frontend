@@ -49,7 +49,7 @@ interface UseAllWorkBulkReturn {
   handleBulkStatus: (value: string) => void;
   handleBulkPriority: (value: string) => void;
   handleBulkAssignee: (value: string) => void;
-  handleBulkSprintNoOp: (value: string) => void;
+  handleBulkCycleNoOp: (value: string) => void;
   handleClearSelection: () => void;
 }
 
@@ -197,7 +197,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
     [handleBulkAction],
   );
 
-  const handleBulkSprintNoOp = useCallback((_: string) => {}, []);
+  const handleBulkCycleNoOp = useCallback((_: string) => {}, []);
 
   const handleClearSelection = useCallback(() => {
     setTableSelection(new Set());
@@ -212,7 +212,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
     handleBulkStatus,
     handleBulkPriority,
     handleBulkAssignee,
-    handleBulkSprintNoOp,
+    handleBulkCycleNoOp,
     handleClearSelection,
   };
 }

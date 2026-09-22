@@ -118,6 +118,11 @@ const nextConfig: NextConfig = {
       permanent: false,
     },
     {
+      source: "/build/:projectId(\\d+)/sprints",
+      destination: "/build/:projectId/cycles",
+      permanent: false,
+    },
+    {
       source: "/build/goal",
       destination: "/build/goals",
       permanent: false,

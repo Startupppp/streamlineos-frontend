@@ -95,7 +95,7 @@ describe("cursor invalidation", () => {
 describe("useBuildListUrlState", () => {
   it("forwards every deep-linked filter to the request", () => {
     setUrl(
-      "q=login&status=OPEN&priority=high&type=bug&assigneeId=u1&labels=3,4&projectIds=7&cycleId=c9&sprintId=12&dueDateFrom=2026-01-01&dueDateTo=2026-02-01",
+      "q=login&status=OPEN&priority=high&type=bug&assigneeId=u1&labels=3,4&projectIds=7&cycleId=c9&dueDateFrom=2026-01-01&dueDateTo=2026-02-01",
     );
     const { result } = renderHook(() => useBuildListUrlState());
     expect(result.current.filters).toMatchObject({
@@ -107,24 +107,23 @@ describe("useBuildListUrlState", () => {
       labelIds: "3,4",
       projectIds: "7",
       cycleId: "c9",
-      sprintId: 12,
       dueDateFrom: "2026-01-01",
       dueDateTo: "2026-02-01",
     });
     expect(result.current.hasActiveFilters).toBe(true);
   });
 
-  it("forwards cycleId and sprintId, which the previous My Work reader dropped", () => {
-    setUrl("cycleId=c9&sprintId=12");
+  it("forwards cycleId, which the previous My Work reader dropped", () => {
+    setUrl("cycleId=c9");
     const { result } = renderHook(() => useBuildListUrlState());
     expect(result.current.filters.cycleId).toBe("c9");
-    expect(result.current.filters.sprintId).toBe(12);
   });
 
-  it("ignores a non-numeric sprintId rather than sending NaN", () => {
-    setUrl("sprintId=latest");
+  it("sends no cycleId when the canonical cycleId param is absent", () => {
+    setUrl("");
     const { result } = renderHook(() => useBuildListUrlState());
-    expect(result.current.filters.sprintId).toBeUndefined();
+    expect(result.current.filters).not.toHaveProperty("cycleId");
+    expect(result.current.hasActiveFilters).toBe(false);
   });
 
   it("narrows to a single project when projectId is present", () => {

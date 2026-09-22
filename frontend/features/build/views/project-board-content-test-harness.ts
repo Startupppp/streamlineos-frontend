@@ -33,7 +33,6 @@ export const DISPLAY_OPTIONS: DisplayOptions = {
 
 export const WORKLOAD_FILTERS: WorkloadFilterState = {
   statCard: "all",
-  sprintId: "all",
   cycleId: "all",
   priority: "all",
   type: "all",
@@ -70,12 +69,12 @@ export function buildBaseProps(
       key: K,
       value: WorkloadFilterState[K],
     ) => void,
-    sprints: [],
+    cycles: [],
     selectedIds: new Set<string | number>(),
     onBulkStatus: noop,
     onBulkPriority: noop,
     onBulkAssignee: noop,
-    onBulkSprint: noop,
+    onBulkCycle: noop,
     onBulkParent: noop,
     onClearSelection: noop,
     onSelectionChange: noop as (sel: Set<string | number>) => void,

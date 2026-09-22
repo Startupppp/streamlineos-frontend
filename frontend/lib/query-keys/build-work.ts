@@ -11,12 +11,6 @@ export const buildWorkQueryKeys = {
       [...base, "projects", "list", filters, "infinite"] as const,
     detail: (projectId: number) =>
       [...base, "projects", "detail", projectId] as const,
-    sprints: (projectId?: number) =>
-      projectId === undefined
-        ? ([...base, "projects", "sprints"] as const)
-        : ([...base, "projects", "sprints", projectId] as const),
-    sprint: (sprintId: number) =>
-      [...base, "projects", "sprints", "detail", sprintId] as const,
     tickets: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "projects", "tickets"] as const)

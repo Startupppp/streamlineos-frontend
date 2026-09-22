@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { FilterChip } from "@/components/list-view";
 import { getUserDisplayName } from "@/lib/person-display";
-import { useSprints } from "@/hooks/api/build/sprints";
 import { useCycles } from "@/hooks/api/build/advanced";
 import { WorkloadFilterMenu } from "./workload-filter-menu";
 import type { FilterState } from "./workload-types";
@@ -40,7 +39,6 @@ interface WorkloadFilterBarProps {
 
 function countBarFilters(filters: FilterState): number {
   let count = 0;
-  if (filters.sprintId !== "all") count += 1;
   if (filters.cycleId !== "all") count += 1;
   if (filters.priority !== "all") count += 1;
   if (filters.type !== "all") count += 1;
@@ -63,12 +61,10 @@ export const WorkloadFilterBar = memo(function WorkloadFilterBar({
   className,
   leading,
 }: WorkloadFilterBarProps) {
-  const { data: sprints = [] } = useSprints(projectId);
   const { data: cycles = [] } = useCycles(projectId);
   const hasActiveFilters = hasActiveWorkloadFilters(filters);
   const activeFilterCount = countBarFilters(filters);
 
-  const sprintMap = useMemo(() => new Map(sprints.map((s) => [String(s.id), s])), [sprints]);
   const cycleMap = useMemo(() => new Map(cycles.map((c) => [String(c.id), c])), [cycles]);
   const memberMap = useMemo(() => new Map(members.map((m) => [m.id, m])), [members]);
 
@@ -77,10 +73,6 @@ export const WorkloadFilterBar = memo(function WorkloadFilterBar({
     const member = memberMap.get(filters.assigneeId);
     return member ? getUserDisplayName(member) : filters.assigneeId;
   }, [filters.assigneeId, memberMap]);
-
-  const handleClearSprint = useCallback(() => {
-    onFilterChange("sprintId", "all");
-  }, [onFilterChange]);
 
   const handleClearCycle = useCallback(() => {
     onFilterChange("cycleId", "all");
@@ -119,7 +111,6 @@ export const WorkloadFilterBar = memo(function WorkloadFilterBar({
           <WorkloadFilterMenu
             filters={filters}
             members={members}
-            sprints={sprints}
             cycles={cycles}
             projectStatuses={projectStatuses}
             activeFilterCount={activeFilterCount}
@@ -151,12 +142,6 @@ export const WorkloadFilterBar = memo(function WorkloadFilterBar({
       {hasActiveFilters && activeFilterCount > 0 ? (
         <div className="flex w-full min-w-0 items-center gap-1.5">
           <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-1 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-            {filters.sprintId !== "all" ? (
-              <FilterChip
-                label={sprintMap.get(filters.sprintId)?.name ?? filters.sprintId}
-                onRemove={handleClearSprint}
-              />
-            ) : null}
             {filters.cycleId !== "all" ? (
               <FilterChip
                 label={cycleMap.get(filters.cycleId)?.name ?? filters.cycleId}

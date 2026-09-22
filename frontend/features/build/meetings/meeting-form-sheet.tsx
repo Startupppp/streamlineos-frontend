@@ -50,7 +50,7 @@ interface MeetingFormSheetProps {
   projectMembers?: ProjectMemberRecord[];
   selectedTemplate?: MeetingTemplate | null;
   onGenerateAgenda?: (sources: AgendaSource[]) => string;
-  hasActiveSprint?: boolean;
+  hasActiveCycle?: boolean;
 }
 
 export function MeetingFormSheet({
@@ -64,7 +64,7 @@ export function MeetingFormSheet({
   projectMembers = [],
   selectedTemplate,
   onGenerateAgenda,
-  hasActiveSprint = false,
+  hasActiveCycle = false,
 }: MeetingFormSheetProps) {
   const [selectedAttendees, setSelectedAttendees] = useState<string[]>([]);
   const [attendeeComboValue, setAttendeeComboValue] = useState("");
@@ -189,7 +189,7 @@ export function MeetingFormSheet({
               <MeetingSchedulingFields />
               <MeetingAgendaField
                 onGenerateAgenda={onGenerateAgenda}
-                hasActiveSprint={hasActiveSprint}
+                hasActiveCycle={hasActiveCycle}
               />
               <MeetingRecurrenceFields />
               {mode === "create" && projectMembers.length > 0 && (
