@@ -11,6 +11,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useHrAttritionForecast } from "@/hooks/api/hr/workforce";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   AnalyticsChartCard,
   SectionSkeleton,
@@ -22,7 +24,11 @@ import {
 } from "@/features/hr/analytics/shared";
 
 export function AttritionForecastCard() {
-  const { data, isLoading } = useHrAttritionForecast();
+  const { data, isLoading, isError, error, refetch } = useHrAttritionForecast();
+
+  function handleRetry(): void {
+    void refetch();
+  }
 
   const hasHistory = (data?.historical.length ?? 0) > 0;
   const combined = hasHistory
@@ -36,6 +42,14 @@ export function AttritionForecastCard() {
     <AnalyticsChartCard title="Attrition Forecast (Trend-Based Estimate — Not a Prediction)">
       {isLoading ? (
         <SectionSkeleton rows={8} />
+      ) : isError ? (
+        <ErrorState
+          compact
+          className="border-0 bg-transparent shadow-none"
+          title="Couldn't load attrition forecast"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
       ) : !combined.length ? (
         <EmptyChart label="No exits recorded in the last 12 months — a trend appears once attrition history exists" />
       ) : (

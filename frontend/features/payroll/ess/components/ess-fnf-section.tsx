@@ -67,7 +67,7 @@ export function EssFnfSection({ hideToolbar = false }: { hideToolbar?: boolean }
       <section id="fnf" className="flex min-h-0 w-full flex-1 flex-col">
         <ErrorState
           className="flex-1"
-          title="Couldn't load your final settlement"
+          title="Couldn't load F&F settlement"
           description={getErrorMessage(error)}
           onRetry={handleRetry}
         />

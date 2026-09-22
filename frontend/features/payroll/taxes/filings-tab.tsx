@@ -101,6 +101,10 @@ export function FilingsTab() {
   const { data: entities } = usePayrollEntities();
   const ackMutation = useAttachAcknowledgement();
 
+  function handleRetry() {
+    void refetch();
+  }
+
   const honestyLabel = capability?.honestyLabel ?? FALLBACK_HONESTY_LABEL;
   const capabilityNote = capability?.note ?? FALLBACK_CAPABILITY_NOTE;
   const supportedTypes = capability?.supportedTypes ?? FILING_TYPE_OPTIONS;
@@ -112,9 +116,6 @@ export function FilingsTab() {
   const [challanRef, setChallanRef] = useState("");
   const [ackRef, setAckRef] = useState("");
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
-  function handleRetry() {
-    void refetch();
-  }
   async function handleDownload(filing: PayrollFiling) {
     if (downloadingId != null) return;
     setDownloadingId(filing.id);
@@ -333,7 +334,7 @@ export function FilingsTab() {
               }
             />
           }
-        />
+          />
       )}
 
       <FilingExportDialog
