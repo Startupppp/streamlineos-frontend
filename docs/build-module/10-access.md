@@ -2,12 +2,13 @@
 
 ## Route decision
 
-- **Current/target route:** `/build/access`
+- **Current/target route:** `/build/settings/access` (was `/build/access`)
 - **Scope:** organization
-- **Disposition:** **MOVE**
+- **Disposition:** **MOVE — completed**
 - **Decision:** Migrate the user job to `/build/settings/access`, preserve deep links temporarily, then remove this physical route.
+- **Status:** Done. `frontend/app/(authenticated)/build/access/page.tsx` is deleted and its manifest entry removed; `frontend/next.config.ts` keeps `/build/access` → `/build/settings/access` as the deep-link redirect. The contract below is delivered by `10-settings-access.md`.
 - **User job:** Grant least-privilege Build access and review it.
-- **Evidence:** `frontend/app/(authenticated)/build/access/page.tsx`; Route existence verified in the repository; live behavior not directly observed with a valid detail record. **ASSUMPTION:** the page follows its source component until browser evidence is captured.
+- **Evidence:** `frontend/app/(authenticated)/build/settings/access/page.tsx`; removal audited in `ACCESS-ROUTE-REMOVAL-AUDIT.md` and regression-tested by `frontend/lib/build/build-access-route-removal.test.ts`. Browser evidence still pending — see `ACCESS-ROUTE-BROWSER-QA.md`.
 
 ## Product contract
 

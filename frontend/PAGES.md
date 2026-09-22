@@ -216,7 +216,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/build/members` · **Build** · hooks: `→ features/build`
 - `/build/customers` · **Build** · hooks: `→ features/build`
 - `/build/client-access` · **Build** · hooks: `→ features/build`
-- `/build/access` · **Build** · hooks: `→ features/build`
+- `/build/settings/access` · **Build** · hooks: `→ features/build`
 
 ### PM Workspaces
 - `/build/pm-workspaces` · **Build** · hooks: `→ features/build`

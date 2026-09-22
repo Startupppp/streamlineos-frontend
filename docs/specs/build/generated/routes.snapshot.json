@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "generatedAt": "2026-09-22T04:13:17.009Z",
+  "generatedAt": "2026-09-22T06:07:55.982Z",
   "source": "frontend/app",
-  "count": 97,
+  "count": 96,
   "routes": [
     {
       "path": "/accept-invitation",
@@ -211,10 +211,6 @@
     {
       "path": "/build/{projectId}/workload",
       "file": "frontend/app/(authenticated)/build/[projectId]/workload/page.tsx"
-    },
-    {
-      "path": "/build/access",
-      "file": "frontend/app/(authenticated)/build/access/page.tsx"
     },
     {
       "path": "/build/all-work",
