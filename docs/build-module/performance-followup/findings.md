@@ -24,7 +24,7 @@ Tenant scoping is the module's strongest dimension: one omission in 115 handlers
 
 | Finding | State |
 |---|---|
-| P0-1 report-revision trigger | **fixed** — migration `1152_build_report_revision_cycles` |
+| P0-1 report-revision trigger | **fixed twice** — `1152` for the DROP, `1157` for the phase-06 RENAME |
 | P1-1 analytics cache | **fixed** — read cached, nine evictions repointed |
 | P2-3 false `check:cache-invalidation` findings | **fixed** — gate now passes |
 | P2-9 `listRelatedLinks` | **fixed** — predicate + migration `1154` |
@@ -36,13 +36,15 @@ Tenant scoping is the module's strongest dimension: one omission in 115 handlers
 | P2-4, P2-6, P2-8 | open — each needs a measurement or a product decision, see each |
 | P2-5 | retracted |
 
-Also landed: all nine remaining cycle reads now carry the soft-delete predicate, and `idx_cycles_project_status_live` was replaced with an org-led index by migration `1156`.
+Also landed: all fourteen cycle reads carry the soft-delete predicate, `idx_cycles_project_status_live` was replaced with an org-led index by `1156`, and `1157` re-fixes P0-1 against a rename that `main` introduced after `1152` shipped.
+
+**P0-1 came back.** `a-sprint-cycle-06-rename-scope-events.sql` renames the scope-events table, and `TG_TABLE_NAME` then stops matching the branch, falling through to an arm that selects a column the table does not have. Same outage, different mechanism: `1152` fixed a reference a DROP removed, `1157` fixes a predicate a RENAME stops matching. Neither is visible to PostgreSQL's dependency tracking because both live inside strings. The analyser was extended to detect renames — it caught this one, which is how it was found.
 
 ---
 
 ## P0-1 · Pending Sprint/Cycle DDL silently breaks the report-revision trigger
 
-**Owner: Sprint/Cycle lane. Not actioned by this pass.**
+**Fixed twice: `1152` for the DROP below, `1157` for the RENAME that arrived later. See the note after the status table.**
 
 `build.bump_report_revision()` is the sole invalidation mechanism behind all five cached Build reports. It is defined once, in `backend/migrations/1073_build_report_revision.sql`, and no later migration replaces it.
 

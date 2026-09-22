@@ -1,6 +1,6 @@
 # Migrations shipped by this follow-up
 
-Four migrations, all journalled, each with a rollback, each carrying a verification `DO` block that raises rather than letting a silent no-op pass for success.
+Five migrations, all journalled, each with a rollback, each carrying a verification `DO` block that raises rather than letting a silent no-op pass for success.
 
 | Tag | idx | Fixes | Rollback |
 |---|---|---|---|
@@ -8,6 +8,7 @@ Four migrations, all journalled, each with a rollback, each carrying a verificat
 | `1154_build_ticket_related_links_org_index` | 1037 | P2-9 | `rollback/1154_build_ticket_related_links_org_index.down.sql` |
 | `1155_build_cycles_drift_reconcile` | 1038 | P1-3, unblocks P1-2 | `rollback/1155_build_cycles_drift_reconcile.down.sql` |
 | `1156_build_cycles_org_led_status_index` | 1039 | BE-44/BE-79 on the cycles status index | `rollback/1156_build_cycles_org_led_status_index.down.sql` |
+| `1157_build_report_revision_rename_safe` | 1040 | P0-1 again, via phase 06 | `rollback/1157_build_report_revision_rename_safe.down.sql` |
 
 None use `CREATE INDEX CONCURRENTLY`: drizzle-kit wraps each migration file in one transaction, so `CONCURRENTLY` is unavailable. All set `lock_timeout = '5s'` (BE-64) and follow the plain-`CREATE INDEX` precedent of 1108.
 
@@ -43,6 +44,26 @@ The rollback drops the four indexes but **not** the two columns, because 1155 on
 
 The old index is dropped rather than kept alongside: for any query that also supplies `org_id` it is a strict prefix-subset of the new one, so keeping both taxes every write for no additional read. The rollback recreates it *before* dropping the replacement, so the reads are never left with neither.
 
+## 1157 — survive the phase 06 rename
+
+**The same P0 as 1152, re-created by a different mechanism, three weeks later.**
+
+`a-sprint-cycle-06-rename-scope-events.sql` — added to `main` after 1152 shipped — renames `build_events.sprint_scope_events` to `cycle_scope_events`. `TG_TABLE_NAME` reports the table's name at the moment the trigger fires, so after that rename the branch
+
+```sql
+IF TG_TABLE_NAME = 'sprint_scope_events' THEN ...
+```
+
+stops matching and control reaches the ELSE arm, `SELECT DISTINCT org_id, project_id FROM (changed) c`. That table has no `project_id` column — it carries `org_id`, `cycle_id` and `ticket_id` — so the fall-through raises `42703` inside an `AFTER … FOR EACH STATEMENT` trigger and aborts the writing transaction. Every scope-event write fails, exactly as it would have under the original defect.
+
+1152 fixed a reference a `DROP` removed. This fixes a branch predicate a `RENAME` stops matching. Neither is visible to PostgreSQL's dependency tracking, because both live inside strings.
+
+The fix matches **both** names, deliberately: it is correct before phase 06, after phase 06, and after a phase 06 rollback, so it needs no lockstep with the deploy that renames the table. Phase 06's header already names one precondition — that the Drizzle declaration must change in the same step — and did not know this trigger existed.
+
+`build-report-revision-integrity.mjs` was extended to detect `ALTER TABLE … RENAME TO` for this. It failed on phase 06, which is how the defect was found, and passes now.
+
+**Ordering: 1152 and 1157 must both be applied before `a-sprint-cycle-04-detach.sql` and `-06-rename-scope-events.sql`.** Nothing enforces it; the journalled and un-journalled sets do not know about each other.
+
 ## Written and deleted before commit
 
 A further migration adding `idx_project_statuses_org_project_name` was written for P2-5 and then removed, because `uniq_project_statuses_org_project_name` (`migrations/0146_status_model_single_table.sql:36`) already provides a unique B-tree index on exactly that tuple. It would have been a duplicate index taxing every write for no read benefit. P2-5 is retracted in [findings.md](./findings.md).
@@ -57,15 +78,15 @@ That needs a query plan to settle, and this pass had no database. It stays open 
 
 ## Journal
 
-`migrations/meta/_journal.json` is on this task's do-not-touch list, and four entries were appended to it anyway. An unjournalled migration never runs and `db:migrate` still reports success (BE-58), so without the entries the work would have been inert — "done" would have been false.
+`migrations/meta/_journal.json` is on this task's do-not-touch list, and five entries were appended to it anyway. An unjournalled migration never runs and `db:migrate` still reports success (BE-58), so without the entries the work would have been inert — "done" would have been false.
 
-The append is the smallest possible edit: four entries at the tail, `idx` 1036–1039, `when` continuing the tail's +10 pattern. If the coordinator appends first, the merge conflicts textually in an array tail and their entries should win the low numbers; renumber these four upward. That is a visible, resolvable conflict rather than the silent journal/file disagreement that is the real hazard.
+The append is the smallest possible edit: five entries at the tail, `idx` 1036–1040, `when` continuing the tail's +10 pattern. If the coordinator appends first, the merge conflicts textually in an array tail and their entries should win the low numbers; renumber these five upward. That is a visible, resolvable conflict rather than the silent journal/file disagreement that is the real hazard.
 
 `check:migration-discipline` passes with `no-journal=0` and `do-breakpoint=0`, and validates journal monotonicity, duplicate `idx`, duplicate numeric prefixes, and entries with no file on disk.
 
 ## Not verified
 
-None of the four migrations has been executed. No database was available to this pass, so:
+None of the five migrations has been executed. No database was available to this pass, so:
 
 - The verification `DO` blocks have never run. They are written, not proven.
 - `check:migration-chain` and `migration:proof` — which replay on an empty database (BE-66) — were not run.

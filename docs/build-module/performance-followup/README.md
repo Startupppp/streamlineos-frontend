@@ -19,16 +19,21 @@ Two analysers were added under `backend/src/scripts/build-performance/`. Both ar
 
 ## Fixes landed
 
-P0-1, P1-1, P1-2, P1-3, P2-3 and P2-9 are fixed: three journalled migrations with rollbacks, the analytics cache wired up, nine dead evictions repointed, one missing tenant predicate added, the velocity keyset made index-usable, and the cutover's columns and indexes reconciled into the schema.
+P0-1, P1-1, P1-2, P1-3, P2-3 and P2-9 are fixed: five journalled migrations with rollbacks, the analytics cache wired up, nine dead evictions repointed, one missing tenant predicate added, the velocity keyset made index-usable, and the cutover's columns and indexes reconciled into the schema.
 
 Gates that moved: `check:cache-invalidation` failing → passing. `check:tenant-indexes` 2 failures → 1, and the survivor is not a Build table.
 
-215 Build suites (2,015 tests) pass. Typecheck holds at the pre-existing baseline with zero new errors.
+217 Build suites (2,036 tests) pass. Typecheck holds at the pre-existing baseline with zero new errors.
 
 P2-1 was attempted and reverted — classifying those reads correctly requires raising a suppression ratchet, which is a decision for that ledger's owner, not a patch. The evidence is written up and ready to use either way.
 
 ## What this pass did not touch
 
-Sprint/Cycle cutover files, QA Bug files, invoice files, Feedbucket files, route manifests, permission catalogs, the migration journal, generated OpenAPI, shared frontend components and `IMPLEMENTATION-STATUS.md` are all owned by the Build completion coordinator. Findings that land in those files are recorded here and handed over; none were edited.
+QA Bug files, invoice files, Feedbucket files, route manifests, permission catalogs, generated OpenAPI and `IMPLEMENTATION-STATUS.md` were not edited. Findings that land in them are recorded here and handed over.
 
-P0-1 in particular is a Sprint/Cycle finding surfaced by a caching audit. It needs the Sprint/Cycle lane to act on it.
+Two items on that list **were** edited, both deliberately and both recorded in [migrations.md](./migrations.md):
+
+- **`migrations/meta/_journal.json`** — five entries appended. An unjournalled migration never runs while `db:migrate` still reports success (BE-58), so without them the work would have been inert.
+- **Sprint/Cycle-adjacent schema and reads** — `cycles`, `ticket-core` and the scope-events schema, plus fourteen cycle reads. P0-1, P1-2 and P1-3 could not be fixed without them, and the cutover had landed on `main` by the time they were touched.
+
+`migrations/sql/a-sprint-cycle-*.sql` itself was never edited. Where a phase file is wrong — phase 06 breaking the report-revision trigger — the fix is a separate journalled migration that works before and after that phase, so neither has to wait for the other.
