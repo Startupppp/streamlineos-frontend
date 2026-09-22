@@ -26,13 +26,23 @@ describe("parseInboxTicketLink", () => {
     });
   });
 
-  it("parses a board deep-link with a numeric ticket id", () => {
+  it("sends a legacy project-root deep-link to the board, the only surface that reads ?ticket=", () => {
     expect(parseInboxTicketLink("/build/4?ticket=900")).toEqual({
       projectId: 4,
       ticketId: 900,
       ticketKey: null,
       commentId: null,
-      href: "/build/4?ticket=900",
+      href: "/build/4/issues?ticket=900",
+    });
+  });
+
+  it("parses a board deep-link already written against the canonical /issues path", () => {
+    expect(parseInboxTicketLink("/build/4/issues?ticket=900")).toEqual({
+      projectId: 4,
+      ticketId: 900,
+      ticketKey: null,
+      commentId: null,
+      href: "/build/4/issues?ticket=900",
     });
   });
 
@@ -42,7 +52,7 @@ describe("parseInboxTicketLink", () => {
       ticketId: 900,
       ticketKey: null,
       commentId: 2,
-      href: "/build/4?ticket=900&comment=2",
+      href: "/build/4/issues?ticket=900&comment=2",
     });
   });
 

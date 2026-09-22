@@ -41,6 +41,9 @@ Full dependency census in
 | 2026-09-22 | `app/(authenticated)/build/workspaces/[pmWorkspaceId]/my-work/page.tsx` | `/build/my-work?pmWorkspaceId=…` | redirect **moved into** `next.config.ts` |
 | 2026-09-22 | `features/build/my-tickets/{my-tickets-page,my-tickets-view-body,my-tickets-skeleton,my-tickets-view}` and tests | `/build/my-work` | a11y coverage repointed at `AllWorkListSkeleton` |
 | 2026-09-22 | `features/build/drafts/comment-drafts-page.tsx` and its test | `/build/inbox?view=drafts` | drafts composed inside the Inbox |
+| 2026-09-22 | `app/(authenticated)/build/goal/` (renamed) | `/build/goals` | `next.config.ts` redirect |
+| 2026-09-22 | `app/(authenticated)/build/goal/[goalId]/` (renamed) | `/build/goals/[goalId]` | `next.config.ts` redirect |
+| 2026-09-22 | `app/(authenticated)/build/pm-workspaces/` (renamed) | `/build/workspaces` | `next.config.ts` redirect |
 
 Six of the nine routes already had a `next.config.ts` redirect **and** a
 redirect-only `page.tsx`. Configuration redirects are checked before the
@@ -49,12 +52,29 @@ redirect migrated into `next.config.ts` before the page was deleted, so no deep
 link changed behaviour. **No redirect-only Build page remains**, and
 `frontend/lib/build/build-redirect-route-removal.test.ts` keeps it that way.
 
-Not executed, and why — each is a kill-list entry whose replacement does not
-exist yet, so removing the page would delete the job rather than move it:
-Project Analytics, Project Timeline, Project Saved Views, Standalone Bugs,
-Standalone AI, Authenticated Intake. `/build/goal`, `/build/goal/[goalId]` and
-`/build/pm-workspaces` are `MOVE` rows whose targets `/build/goals` and
-`/build/workspaces` have no page on disk at all.
+The three `MOVE` rows whose targets had no page on disk — `/build/goal`,
+`/build/goal/[goalId]` and `/build/pm-workspaces` — were executed on 2026-09-22
+as directory renames. A rename moves the job rather than deleting it, so no
+replacement had to be built first. `/build/workspaces` is now the index above
+the existing `/build/workspaces/[pmWorkspaceId]`, matching the
+`portfolios`/`teams`/`managed-products` list-plus-detail shape.
+
+Still not executed, and why — each is a kill-list entry whose replacement does
+not exist yet, so removing the page would delete the job rather than move it:
+
+| Route | Replacement it needs first |
+|---|---|
+| `/build/[projectId]/timeline` | `layout=timeline` on `/build/[projectId]/issues` |
+| `/build/[projectId]/bugs` | `type=BUG` filtering on `/build/[projectId]/issues` |
+| `/build/[projectId]/analytics` | `tab=overview` on `/build/[projectId]/reports` |
+| `/build/[projectId]/views` | saved-view management inside Issues plus Settings |
+| `/build/[projectId]/intake` | the Forms-definitions / Triage-submissions split |
+| `/build/[projectId]/ai` | `projectId=` run history on `/build/command-center` |
+| `/build/customers` | the CRM customer linkage `/crm` owns |
+
+Each keeps its page, its sidebar destination and its route-access gate until the
+target behaviour ships. The route manifest records the intended target for all
+seven, so the disposition is not lost.
 
 ## Acceptance criteria
 

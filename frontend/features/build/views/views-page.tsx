@@ -65,7 +65,7 @@ export function ViewsPage({ params }: PageProps) {
       const urlParams = new URLSearchParams();
       urlParams.set("viewId", view.id.toString());
       urlParams.set("view", view.layoutType);
-      router.push(`/build/${projectId}?${urlParams.toString()}`);
+      router.push(`/build/${projectId}/issues?${urlParams.toString()}`);
     },
     [router, projectId],
   );

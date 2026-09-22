@@ -1,5 +1,10 @@
 # Pm Workspaces
 
+> **RETIRED 2026-09-22.** `/build/pm-workspaces` no longer has a page on disk; the route was
+> renamed to `/build/workspaces` and a `next.config.ts` redirect preserves the deep link.
+> The canonical specification is [`10-workspaces.md`](./10-workspaces.md). This file is kept as the
+> record of the retired route and must not be used as a contract.
+
 ## Route decision
 
 - **Current/target route:** `/build/pm-workspaces`

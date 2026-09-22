@@ -130,6 +130,21 @@ const nextConfig: NextConfig = {
       permanent: false,
     },
     {
+      source: "/build/goal",
+      destination: "/build/goals",
+      permanent: false,
+    },
+    {
+      source: "/build/goal/:goalId(\\d+)",
+      destination: "/build/goals/:goalId",
+      permanent: false,
+    },
+    {
+      source: "/build/pm-workspaces",
+      destination: "/build/workspaces",
+      permanent: false,
+    },
+    {
       source: "/build/members",
       destination: "/build/settings/access",
       permanent: false,
@@ -157,16 +172,6 @@ const nextConfig: NextConfig = {
     {
       source: "/build/workspaces/:pmWorkspaceId/my-work",
       destination: "/build/my-work?pmWorkspaceId=:pmWorkspaceId",
-      permanent: false,
-    },
-    {
-      source: "/build/goal",
-      destination: "/build/goals",
-      permanent: false,
-    },
-    {
-      source: "/build/goal/:goalId(\\d+)",
-      destination: "/build/goals/:goalId",
       permanent: false,
     },
   ],

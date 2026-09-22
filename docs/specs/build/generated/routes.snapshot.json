@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generatedAt": "2026-09-22T07:53:12.071Z",
+  "generatedAt": "2026-09-22T08:02:37.016Z",
   "source": "frontend/app",
   "count": 88,
   "routes": [
@@ -257,10 +257,6 @@
       "file": "frontend/app/(authenticated)/build/my-work/page.tsx"
     },
     {
-      "path": "/build/pm-workspaces",
-      "file": "frontend/app/(authenticated)/build/pm-workspaces/page.tsx"
-    },
-    {
       "path": "/build/portfolios",
       "file": "frontend/app/(authenticated)/build/portfolios/page.tsx"
     },
@@ -299,6 +295,10 @@
     {
       "path": "/build/templates",
       "file": "frontend/app/(authenticated)/build/templates/page.tsx"
+    },
+    {
+      "path": "/build/workspaces",
+      "file": "frontend/app/(authenticated)/build/workspaces/page.tsx"
     },
     {
       "path": "/build/workspaces/{pmWorkspaceId}",

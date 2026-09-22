@@ -85,6 +85,12 @@ const REMOVED_ROUTES: RemovedRoute[] = [
     redirectSource: "/build/goal/:goalId(\\\\d+)",
     redirectDestination: "/build/goals/:goalId",
   },
+  {
+    route: "/build/pm-workspaces",
+    appDir: "pm-workspaces",
+    redirectSource: "/build/pm-workspaces",
+    redirectDestination: "/build/workspaces",
+  },
 ];
 
 function nextConfigRedirects(): { source: string; destination: string }[] {
@@ -118,7 +124,7 @@ function everyBuildNavHref(): string[] {
 
 describe("removed Build redirect routes keep their deep link in next.config.ts", () => {
   it("covers every removed route, so a truncated list cannot pass vacuously", () => {
-    expect(REMOVED_ROUTES).toHaveLength(11);
+    expect(REMOVED_ROUTES).toHaveLength(12);
   });
 
   it.each(REMOVED_ROUTES)(
@@ -164,7 +170,7 @@ describe("removed Build redirect routes keep their deep link in next.config.ts",
     const tracked = new Set(BUILD_ROUTE_MANIFEST.map((entry) => entry.route));
     const unresolved = REMOVED_ROUTES.filter((entry) => {
       const path = entry.redirectDestination.split("?")[0];
-      const normalized = path.replace(/:([A-Za-z]+)/g, "[$1]");
+      const normalized = path.replace(/:(\w+)/g, "[$1]");
       return !tracked.has(normalized);
     }).map((entry) => `${entry.route} -> ${entry.redirectDestination}`);
     expect(unresolved).toEqual([]);

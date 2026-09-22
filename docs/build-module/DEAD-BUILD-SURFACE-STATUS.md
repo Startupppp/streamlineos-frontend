@@ -164,13 +164,13 @@ frontend/features/build/drafts/comment-drafts-page.test.tsx
 |---|---|
 | `/build/goal` → `/build/goals` | **EXECUTED.** Route files renamed, `loading.tsx` moved with them so the detail route keeps the same boundary, `enforceRouteAccess` literals follow, all eight in-app callers repointed, `next.config.ts` redirects the old paths. Nothing deleted. |
 | `/build/goal/[goalId]` → `/build/goals/[goalId]` | **EXECUTED.** `/build/goal/:goalId(\d+)` redirects. |
-| `/build/pm-workspaces` → `/build/workspaces` | **BLOCKED.** Implemented in full, then reverted on test evidence. |
+| `/build/pm-workspaces` → `/build/workspaces` | **EXECUTED** — by a parallel session, not by this one. This session implemented it, hit a real collision, reverted, and concluded wrongly that no contained fix existed. Corrected below. |
 
-### Why the workspaces move was reverted
+### The workspaces move, and a wrong call worth recording
 
 `/build/workspaces` is a strict prefix of the workspace **scope** namespace
-`/build/workspaces/[pmWorkspaceId]/…`. Putting the organization-level list there
-made it win route-access resolution for every workspace deep link:
+`/build/workspaces/[pmWorkspaceId]/…`, so the organization-level list wins
+route-access resolution for every workspace deep link:
 
 ```
 /build/workspaces/ws-1/feedbucket
@@ -178,20 +178,30 @@ made it win route-access resolution for every workspace deep link:
   actual    build:workspaces:view
 ```
 
-`build-nav-route-access-parity.test.ts` went red on three cross-scope paths
-(`feedbucket`, `bugs`, `cycles`) plus `workspace-projects -> /build/workspaces/ws-1`
-key drift. Setting `exact: true` on the destination — the pattern `org-projects`
-uses for `/build`, which has the identical shape — **did not fix it**; the
-resolver does not honour `exact` there.
+This session hit that in `build-nav-route-access-parity.test.ts` (three
+cross-scope paths plus `workspace-projects` key drift), tried `exact: true` on
+the nav destination, found it inert, reverted the move, and recorded it as
+needing a reviewed change to shared route-access resolution.
 
-Completing this move means changing shared route-access resolution, which moves
-permission outcomes for every module relying on prefix matching.
-`99-open-questions.md` forbids proceeding by silently choosing an answer that
-changes permissions, so it is reverted and recorded rather than forced. The
-goals move landed precisely because `goals` is not a scope namespace.
+**That was wrong.** A parallel session landed the same move with a *more
+specific route-access extension entry*:
 
-The `page.tsx`, `loading.tsx` and `error.tsx` for `/build/pm-workspaces` are all
-restored to their original content; the revert is complete, not partial.
+```ts
+{ prefix: "/build/workspaces/[pmWorkspaceId]", permission: "build:view", … }
+```
+
+Extension entries match by longest prefix, so the dynamic-segment entry shadows
+the organization index for workspace paths while the index keeps
+`build:workspaces:view` for itself. Nothing shared changed. The instinct not to
+alter permissions silently was correct; the claim that no contained fix existed
+was asserted after one failed attempt instead of being traced through
+`matchRouteAccessExtension`, which already had the answer.
+
+Their move is merged here. After the merge the parity test passes and
+`lib/build lib/rbac features/build/goals features/build/pm-workspaces
+components/layout/sidebar features/module-access` is **58 suites, 712 tests,
+zero failures** — including `sidebar-nav-inventory.test.ts`, whose digest the
+parallel session recomputed.
 
 ## Merged to `main`, and verified there
 

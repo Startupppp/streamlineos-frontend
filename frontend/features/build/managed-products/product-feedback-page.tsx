@@ -146,8 +146,20 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
     error,
   });
 
+  function resolveSubmissionHref(row: SubmissionRow): string | null {
+    const projectId = row.widget?.projectId;
+    if (projectId === null || projectId === undefined) return null;
+    return `/build/${projectId}/feedbucket/${row.id}`;
+  }
+
   function handleRowClick(row: SubmissionRow) {
-    router.push(`/build/feedbucket/${row.id}`);
+    const href = resolveSubmissionHref(row);
+    if (href === null) return;
+    router.push(href);
+  }
+
+  function resolveRowClassName(row: SubmissionRow): string {
+    return resolveSubmissionHref(row) === null ? "" : "cursor-pointer";
   }
 
   function handleRetry() {
@@ -192,7 +204,7 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
                   className={PM_FILL_PANEL}
                 />
               }
-              rowClassName={() => "cursor-pointer"}
+              rowClassName={resolveRowClassName}
             />
           </PageState>
         </PmSection>

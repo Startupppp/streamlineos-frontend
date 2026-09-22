@@ -154,15 +154,13 @@ them destroys a working user surface.
 |---|---|---|---|---|---|
 | Build goals list | route | `/build/goal` | `/build/goals` | **MOVE — EXECUTED** | The move was completed rather than left open: the route files moved to `app/(authenticated)/build/goals/`, the `enforceRouteAccess` literal follows, all eight in-app callers now link to `/build/goals`, and `next.config.ts` redirects the old path. Nothing was deleted. |
 | Build goal detail | route | `/build/goal/[goalId]` | `/build/goals/[goalId]` | **MOVE — EXECUTED** | Same. `/build/goal/:goalId(\d+)` redirects to `/build/goals/:goalId`. `goal/loading.tsx` moved with it, so the detail route keeps exactly the boundary it had. |
-| PM workspaces list | route | `/build/pm-workspaces` | `/build/workspaces` | **BLOCKED — architectural collision, evidence below** | Attempted and reverted. |
+| PM workspaces list | route | `/build/pm-workspaces` | `/build/workspaces` | **MOVE — EXECUTED by a parallel session** | Landed on `main` as `1d07fadad`; this branch merged it. |
 
-#### Why `/build/pm-workspaces` → `/build/workspaces` cannot be done as a rename
+#### The workspaces move: one collision, and the fix this session did not find
 
-The move was implemented in full and then reverted on test evidence.
-`/build/workspaces` is a **strict prefix of the workspace scope namespace**
-`/build/workspaces/[pmWorkspaceId]/…`, so putting the organization-level list
-there makes it swallow every workspace deep link during route-access
-resolution:
+Moving the organization-level list to `/build/workspaces` makes it a **strict
+prefix of the workspace scope namespace** `/build/workspaces/[pmWorkspaceId]/…`,
+so it wins route-access resolution for every workspace deep link:
 
 ```
 /build/workspaces/ws-1/feedbucket
@@ -170,18 +168,32 @@ resolution:
   actual:   build:workspaces:view      ← the org list entry won
 ```
 
-`lib/build/build-nav-route-access-parity.test.ts` failed on three cross-scope
-paths (`feedbucket`, `bugs`, `cycles`) plus `workspace-projects -> /build/workspaces/ws-1`
-key drift. Marking the destination `exact: true` — the pattern `org-projects`
-uses for `/build`, which has the same shape — **did not fix it**: the
-route-access resolver does not honour `exact` on this path.
+This session implemented the move, hit exactly that failure in
+`build-nav-route-access-parity.test.ts` (three cross-scope paths plus
+`workspace-projects -> /build/workspaces/ws-1` key drift), tried `exact: true`
+on the nav destination — the pattern `org-projects` uses for `/build`, which has
+the identical shape — found it had no effect, and **reverted the move**,
+concluding it needed a change to shared route-access resolution.
 
-Making it work therefore requires changing shared route-access resolution
-semantics, which alters permission outcomes for every module that relies on
-prefix matching. `99-open-questions.md` forbids proceeding by silently choosing
-an answer that changes permissions, so the move is recorded here and left for a
-reviewed decision. The goals move has no such collision — `goals` is not a scope
-namespace — which is why it landed and this one did not.
+**That conclusion was wrong, and the correction is worth recording.** A parallel
+session landed the same move and fixed the collision with a *more specific
+route-access extension entry* rather than a resolver change:
+
+```ts
+{ prefix: "/build/workspaces/[pmWorkspaceId]", permission: "build:view", … }
+```
+
+Extension entries resolve by longest prefix, so the dynamic-segment entry
+shadows the organization index for every workspace path while the index keeps
+`build:workspaces:view` for itself. No shared semantics changed. The caution
+about not silently altering permissions was right; the belief that no contained
+fix existed was not — it was asserted after one failed attempt rather than
+traced through `matchRouteAccessExtension`, which had the answer in it.
+
+After merging, `build-nav-route-access-parity.test.ts` and all 58 suites in
+`lib/build lib/rbac features/build/goals features/build/pm-workspaces
+components/layout/sidebar features/module-access` pass — 712 tests, zero
+failures.
 
 ### F. Manifest rows with no page on disk
 
