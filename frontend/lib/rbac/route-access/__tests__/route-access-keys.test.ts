@@ -175,11 +175,11 @@ describe("route-access registry keys", () => {
 
   it("does not treat administrative descendants of universal roots as universal", () => {
     const protectedRoutes = [
-      "/notifications/providers",
-      "/notifications/templates",
-      "/notifications/events",
-      "/notifications/policy",
-      "/notifications/broadcasts",
+      "/settings/notifications/providers",
+      "/settings/notifications/templates",
+      "/settings/notifications/events",
+      "/settings/notifications/policy",
+      "/settings/notifications/broadcasts",
       "/knowledge/wiki/import",
       "/knowledge/wiki/analytics",
       "/knowledge/wiki/reviews",
@@ -194,7 +194,7 @@ describe("route-access registry keys", () => {
       expect(resolveRouteAccess(route).kind).toBe("permission");
     }
     expect(isUniversalRoute("/knowledge/wiki/spaces/1")).toBe(true);
-    expect(isUniversalRoute("/notifications/preferences")).toBe(true);
+    expect(isUniversalRoute("/settings/notifications/my-preferences")).toBe(true);
   });
 
   it("gates a universal page only on a permission every member keeps by default", () => {

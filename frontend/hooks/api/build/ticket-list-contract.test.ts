@@ -2,7 +2,7 @@ import { ticketListPageContract, ticketRowContract } from "./build-tickets-core-
 import { allWorkPageContract } from "./build-tickets-subresource-schema";
 
 it("parses the actual all-work projection without unreturned tenant or membership fields", () => {
-  const row = { id: 1, title: "Ticket", type: "BUG", status: "OPEN", priority: "HIGH", projectId: 42, projectKey: "BUILD", projectName: "Project", ticketNumber: 1, dueDate: null, startDate: null, points: null, estimate: null, rank: "a0", sprintId: null, cycleId: null, epicId: null, assigneeId: null, assignee: null, labels: [], createdAt: "2026-09-09T00:00:00Z", updatedAt: "2026-09-09T00:00:00Z" };
+  const row = { id: 1, title: "Ticket", type: "BUG", status: "OPEN", priority: "HIGH", projectId: 42, projectKey: "BUILD", projectName: "Project", ticketNumber: 1, dueDate: null, startDate: null, points: null, estimate: null, rank: "a0", cycleId: null, epicId: null, assigneeId: null, assignee: null, labels: [], createdAt: "2026-09-09T00:00:00Z", updatedAt: "2026-09-09T00:00:00Z" };
   const result = allWorkPageContract.parse({ data: [row], limit: 1, nextCursor: "opaque", hasMore: true });
   expect(result.data[0]).toEqual(row);
   expect(result.nextCursor).toBe("opaque");
@@ -13,7 +13,7 @@ it("parses light ticket rows and preserves board assignees, labels and cursor", 
   const user = { id: "user-1", name: "Member", firstName: "Member", lastName: null, email: "member@example.test", image: null };
   const row = {
     id: 1, orgId: "org-1", title: "Ticket", type: "BUG", status: "OPEN", priority: "HIGH",
-    projectId: 42, ticketNumber: 1, sprintId: null, epicId: null, assigneeMembershipId: 7,
+    projectId: 42, ticketNumber: 1, epicId: null, assigneeMembershipId: 7,
     reporterId: null, points: null, storyPoints: null, link: null, rank: "a0", parentTicketId: null,
     originalEstimate: null, timeSpent: "0", startDate: null, dueDate: null, moduleId: null,
     cycleId: null, sequenceId: null, estimate: null, createdAt: "2026-09-09T00:00:00Z", updatedAt: "2026-09-09T00:00:00Z",
@@ -34,7 +34,7 @@ it("accepts a board row with no descriptionExcerpt, so a frontend shipped ahead 
   const user = { id: "user-1", name: "Member", firstName: "Member", lastName: null, email: "member@example.test", image: null };
   const row = {
     id: 1, orgId: "org-1", title: "Ticket", type: "BUG", status: "OPEN", priority: "HIGH",
-    projectId: 42, ticketNumber: 1, sprintId: null, epicId: null, assigneeMembershipId: 7,
+    projectId: 42, ticketNumber: 1, epicId: null, assigneeMembershipId: 7,
     reporterId: null, points: null, storyPoints: null, link: null, rank: "a0", parentTicketId: null,
     originalEstimate: null, timeSpent: "0", startDate: null, dueDate: null, moduleId: null,
     cycleId: null, sequenceId: null, estimate: null, createdAt: "2026-09-09T00:00:00Z", updatedAt: "2026-09-09T00:00:00Z",

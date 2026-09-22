@@ -27,7 +27,7 @@ export interface Meeting {
   durationMinutes: number | null;
   timezone: string | null;
   recurrenceRule: unknown;
-  sprintId: number | null;
+  cycleId: number | null;
   createdBy: string | null;
   attendeeCount?: number;
   actionItemCount?: number;
@@ -83,7 +83,7 @@ export interface CreateMeetingInput {
   durationMinutes?: number;
   timezone?: string;
   recurrenceRule?: RecurrenceRule;
-  sprintId?: number;
+  cycleId?: number;
   attendeeUserIds?: string[];
 }
 
@@ -99,7 +99,7 @@ export interface UpdateMeetingInput {
   durationMinutes?: number | null;
   timezone?: string | null;
   recurrenceRule?: RecurrenceRule | null;
-  sprintId?: number | null;
+  cycleId?: number | null;
 }
 
 export interface CreateActionItemInput {

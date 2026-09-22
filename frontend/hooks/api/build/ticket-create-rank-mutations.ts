@@ -105,7 +105,6 @@ export function useCreateTicket(
         priority: variables.priority ?? null,
         projectId: variables.projectId,
         ticketNumber: 0,
-        sprintId: variables.sprintId ?? null,
         epicId: variables.epicId ?? null,
         assigneeId: variables.assigneeId ?? null,
         reporterId: null,
@@ -245,7 +244,6 @@ export interface BulkUpdateTicketsInput {
   ticketIds: number[];
   assigneeId?: string;
   status?: string;
-  sprintId?: number | null;
   cycleId?: number | null;
   priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   parentTicketId?: number | null;
@@ -267,7 +265,6 @@ function toTicketUpdateInput(
     ticketId,
     assigneeId: input.assigneeId,
     status: input.status,
-    sprintId: input.sprintId,
     cycleId: input.cycleId,
     priority: input.priority,
     parentTicketId: input.parentTicketId,

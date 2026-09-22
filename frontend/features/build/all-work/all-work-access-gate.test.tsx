@@ -161,7 +161,7 @@ function pendingQuery() {
 const stubTicket: AllWorkTicket = {
   id: 1, title: "Stub ticket", type: "TASK", status: "TODO", priority: null,
   projectId: 1, projectKey: "ENG", projectName: "Engineering", ticketNumber: 1,
-  sprintId: null, epicId: null, assigneeId: null, points: null, estimate: null,
+  epicId: null, assigneeId: null, points: null, estimate: null,
   rank: null, startDate: null, dueDate: null, cycleId: null,
   createdAt: null, updatedAt: null, assignee: null, labels: [],
 };

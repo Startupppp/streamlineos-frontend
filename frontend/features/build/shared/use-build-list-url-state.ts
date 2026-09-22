@@ -46,7 +46,6 @@ export const BUILD_LIST_FILTER_PARAMS = [
   "projectIds",
   "projectId",
   "cycleId",
-  "sprintId",
   "dueDateFrom",
   "dueDateTo",
 ] as const;
@@ -96,12 +95,6 @@ export function parseGrouping(
 ): BuildListGrouping {
   const match = BUILD_LIST_GROUPINGS.find((grouping) => grouping === raw);
   return match ?? fallback;
-}
-
-function parsePositiveInt(raw: string | null): number | undefined {
-  if (!raw) return undefined;
-  const parsed = Number.parseInt(raw, 10);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
 }
 
 export interface BuildListUrlStateOptions {
@@ -243,9 +236,6 @@ export function useBuildListUrlState(
 
     const cycleId = searchParams.get("cycleId");
     if (cycleId) next.cycleId = cycleId;
-
-    const sprintId = parsePositiveInt(searchParams.get("sprintId"));
-    if (sprintId !== undefined) next.sprintId = sprintId;
 
     const dueDateFrom = searchParams.get("dueDateFrom");
     if (dueDateFrom) next.dueDateFrom = dueDateFrom;

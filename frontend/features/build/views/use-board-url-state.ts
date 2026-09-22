@@ -64,7 +64,6 @@ export function useBoardUrlState(
   const filterAssigneeId = searchParams.get("assigneeId") ?? "";
   const filterLabels = searchParams.get("labels") ?? "";
   const filterCycle = searchParams.get("cycle") ?? "";
-  const filterSprint = searchParams.get("sprint") ?? "";
   const filterModule = searchParams.get("module") ?? "";
   const createParamOpen = searchParams.get("create") === "1";
   const createCycleParam = searchParams.get("cycleId");
@@ -86,7 +85,6 @@ export function useBoardUrlState(
       assigneeId: filterAssigneeId || undefined,
       labels: filterLabels || undefined,
       cycle: filterCycle || undefined,
-      sprint: filterSprint || undefined,
       module: filterModule || undefined,
     }),
     [
@@ -97,7 +95,6 @@ export function useBoardUrlState(
       filterAssigneeId,
       filterLabels,
       filterCycle,
-      filterSprint,
       filterModule,
     ],
   );
@@ -248,7 +245,6 @@ export function useBoardUrlState(
     filterAssigneeId ||
     filterLabels ||
     filterCycle ||
-    filterSprint ||
     filterModule
   );
   const showEmptyFilterState =
@@ -270,7 +266,6 @@ export function useBoardUrlState(
     if (filterAssigneeId) filters.assigneeId = filterAssigneeId;
     if (filterLabels) filters.labels = filterLabels;
     if (filterCycle) filters.cycle = filterCycle;
-    if (filterSprint) filters.sprint = filterSprint;
     if (filterModule) filters.module = filterModule;
     return filters;
   }, [
@@ -281,7 +276,6 @@ export function useBoardUrlState(
     filterAssigneeId,
     filterLabels,
     filterCycle,
-    filterSprint,
     filterModule,
   ]);
 
@@ -376,7 +370,6 @@ export function useBoardUrlState(
     next.delete("assigneeId");
     next.delete("labels");
     next.delete("cycle");
-    next.delete("sprint");
     next.delete("module");
     router.replace(`?${next.toString()}`, { scroll: false });
   }, [router, searchParams]);
@@ -407,7 +400,6 @@ export function useBoardUrlState(
     filterAssigneeId,
     filterLabels,
     filterCycle,
-    filterSprint,
     filterModule,
     selectedTicketId,
     highlightCommentId,

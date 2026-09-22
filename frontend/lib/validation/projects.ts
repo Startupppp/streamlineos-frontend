@@ -31,7 +31,6 @@ export const createTicketInputSchema = z.object({
   assigneeId: z.string().optional(),
   assigneeIds: z.array(z.string()).optional(),
   reporterId: z.string().optional(),
-  sprintId: z.number().int().positive().optional(),
   epicId: z.number().int().positive().optional(),
   cycleId: z.number().int().positive().optional(),
   labelIds: z.array(z.number().int().positive()).optional(),

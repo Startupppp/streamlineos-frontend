@@ -19,10 +19,6 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
     reason: "Home. Every active member keeps the cross-module read projection.",
   },
   {
-    path: "/home",
-    reason: "Home alias. Same surface as /dashboard.",
-  },
-  {
     path: "/me",
     subtree: true,
     reason:
@@ -45,11 +41,6 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
     ],
     reason:
       "Platform core communication surface. Administrative descendants (org-settings, invite-link management) require explicit permission.",
-  },
-  {
-    path: "/notifications",
-    reason:
-      "Platform core communication surface — the root is a compat redirect to /inbox?view=notifications. All sub-routes are handled elsewhere: personal preferences moved to /settings/notifications/my-preferences, administration moved to /settings/notifications/*.",
   },
   {
     path: "/calendar",
@@ -97,12 +88,10 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
       "The personal account landing page. Everything beneath /settings is organization administration and stays permissioned.",
   },
   {
-    path: "/settings/notifications",
-    universalDescendants: [
-      { path: "/settings/notifications/my-preferences", subtree: true },
-    ],
+    path: "/settings/notifications/my-preferences",
+    subtree: true,
     reason:
-      "Notification Settings hub. The root redirects to the personal preference centre which is platform core for every member. Organisation-administration descendants (templates, providers, events, policy, broadcasts) are gated via the extension registry.",
+      "The personal notification preference centre is platform core for every member. Its sibling administration surfaces (templates, providers, events, policy, broadcasts) are gated via the extension registry.",
   },
   {
     path: "/access-denied",

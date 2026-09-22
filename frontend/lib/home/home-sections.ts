@@ -119,6 +119,12 @@ export const HOME_SECTIONS: readonly HomeSection[] = [
     access: accessFromManifest(requiredEntry("/dashboard/recent-activity")),
   },
   {
+    id: "crm-pulse",
+    label: "Business Pulse",
+    endpoint: "/dashboard/crm-pulse",
+    access: accessFromManifest(requiredEntry("/dashboard/crm-pulse")),
+  },
+  {
     id: "today-activities",
     label: "Today's activities",
     endpoint: "/dashboard/today-activities",

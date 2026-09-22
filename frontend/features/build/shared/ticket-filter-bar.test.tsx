@@ -36,7 +36,6 @@ function renderWith(query: string) {
     <TicketFilterBar
       statuses={[{ name: "OPEN" }, { name: "DONE" }]}
       members={[{ id: "u1", name: "Priya", firstName: "Priya", lastName: null }]}
-      sprints={[{ id: 7, name: "Sprint 7" }]}
       projectId={42}
     />,
   );

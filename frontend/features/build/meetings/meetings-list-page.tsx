@@ -6,7 +6,7 @@ import {
   useMeetings,
   useCreateMeeting,
   useProjectMembers,
-  useSprints,
+  useCycles,
   useProjectBoardTickets,
 } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
@@ -85,13 +85,13 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<MeetingTemplate | null>(null);
 
   const { data: projectMembers = [] } = useProjectMembers(projectId);
-  const { data: sprints = [] } = useSprints(projectId);
+  const { data: cycles = [] } = useCycles(projectId);
   const { data: boardTickets } = useProjectBoardTickets(projectId);
   const tickets = useMemo(() => boardTickets ?? [], [boardTickets]);
 
-  const activeSprint = useMemo(
-    () => sprints.find((s) => s.status === "ACTIVE") ?? null,
-    [sprints],
+  const activeCycle = useMemo(
+    () => cycles.find((c) => c.status === "active") ?? null,
+    [cycles],
   );
 
   const { data, isLoading, isError, error, refetch } = useMeetings(projectId, {
@@ -190,8 +190,8 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
 
   const handleGenerateAgenda = useCallback(
     (sources: AgendaSource[]): string =>
-      generateAgenda({ sprint: activeSprint, tickets, sources }),
-    [activeSprint, tickets],
+      generateAgenda({ cycle: activeCycle, tickets, sources }),
+    [activeCycle, tickets],
   );
 
   const handleRetry = useCallback(() => {
@@ -215,14 +215,14 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
     [projectMembers],
   );
 
-  const sprintMap = useMemo(
-    () => new Map(sprints.map((s) => [s.id, s])),
-    [sprints],
+  const cycleMap = useMemo(
+    () => new Map(cycles.map((c) => [c.id, c])),
+    [cycles],
   );
 
   const columns = useMemo(
-    () => buildMeetingsColumns(projectId, memberMap, sprintMap),
-    [projectId, memberMap, sprintMap],
+    () => buildMeetingsColumns(projectId, memberMap, cycleMap),
+    [projectId, memberMap, cycleMap],
   );
 
   const filtersBar = (
@@ -383,7 +383,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
         projectMembers={projectMembers}
         selectedTemplate={selectedTemplate}
         onGenerateAgenda={handleGenerateAgenda}
-        hasActiveSprint={!!activeSprint}
+        hasActiveCycle={!!activeCycle}
       />
     </PageWrapper>
   );

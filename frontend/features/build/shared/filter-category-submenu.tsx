@@ -31,7 +31,6 @@ import {
   type Member,
   type Label,
   type Cycle,
-  type Sprint,
   type ProjectOption,
 } from "@/components/list-view";
 
@@ -45,7 +44,6 @@ interface FilterCategorySubmenuProps {
   members: Member[];
   labels: Label[];
   cycles: Cycle[];
-  sprints: Sprint[];
   projectOptions?: ProjectOption[];
   selectedStatuses: string[];
   selectedPriorities: string[];
@@ -54,7 +52,6 @@ interface FilterCategorySubmenuProps {
   selectedLabels: string[];
   selectedCycles: string[];
   selectedProjectIds: string[];
-  sprintParam: string;
   dueDateFrom: string;
   dueDateTo: string;
   onToggleStatus: (v: string) => void;
@@ -63,7 +60,6 @@ interface FilterCategorySubmenuProps {
   onToggleAssignee: (v: string) => void;
   onToggleLabel: (v: string) => void;
   onToggleCycle: (v: string) => void;
-  onToggleSprint: (v: string) => void;
   onToggleProject: (v: string) => void;
   onDueDateFromChange: (v: string) => void;
   onDueDateToChange: (v: string) => void;
@@ -80,7 +76,6 @@ export function FilterCategorySubmenu({
   members,
   labels,
   cycles,
-  sprints,
   projectOptions,
   selectedStatuses,
   selectedPriorities,
@@ -89,7 +84,6 @@ export function FilterCategorySubmenu({
   selectedLabels,
   selectedCycles,
   selectedProjectIds,
-  sprintParam,
   dueDateFrom,
   dueDateTo,
   onToggleStatus,
@@ -98,7 +92,6 @@ export function FilterCategorySubmenu({
   onToggleAssignee,
   onToggleLabel,
   onToggleCycle,
-  onToggleSprint,
   onToggleProject,
   onDueDateFromChange,
   onDueDateToChange,
@@ -333,30 +326,6 @@ export function FilterCategorySubmenu({
             );
           })}
           {cycles.length === 0 ? <EmptyHint message="No cycles" /> : null}
-        </div>
-      </PanelShell>
-    );
-  }
-
-  if (category === "sprint") {
-    return (
-      <PanelShell category={category} containerRef={containerRef} onKeyDown={handleKeyDown} showTitle={showTitle} className={className}>
-        <div className={listClassName}>
-          {sprints.map((s) => {
-            const sprintId = String(s.id);
-            function handleClick() {
-              onToggleSprint(sprintId);
-            }
-            return (
-              <OptionRow
-                key={s.id}
-                active={sprintParam === sprintId}
-                label={s.name}
-                onClick={handleClick}
-              />
-            );
-          })}
-          {sprints.length === 0 ? <EmptyHint message="No sprints" /> : null}
         </div>
       </PanelShell>
     );

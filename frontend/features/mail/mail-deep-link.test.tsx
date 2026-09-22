@@ -284,7 +284,7 @@ describe("MailShell — deep link with needs_reauth account", () => {
     await waitFor(() => {
       expect(screen.getByText("Reconnect your inbox")).toBeInTheDocument();
     });
-    expect(screen.getByTestId("accounts-sheet")).toBeInTheDocument();
+    expect(await screen.findByTestId("accounts-sheet")).toBeInTheDocument();
     expect(screen.queryByTestId("reading-pane")).toBeNull();
     expect(mailActionMutate).not.toHaveBeenCalled();
   });

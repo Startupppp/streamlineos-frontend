@@ -4,14 +4,19 @@ import { resolveRouteAccess } from "../route-access";
 interface MatrixRow {
   path: string;
   universalMatch: boolean;
-  decisionKind: "universal" | "permission";
+  decisionKind: "universal" | "permission" | "unknown";
   label: string;
 }
 
 const MATRIX: readonly MatrixRow[] = [
+  // ── retired URLs ────────────────────────────────────────────────────────────
+  // No page component remains; next.config.ts redirects serve the old bookmark.
+  { path: "/home", universalMatch: false, decisionKind: "unknown", label: "retired home alias — redirects to /dashboard" },
+  { path: "/notifications", universalMatch: false, decisionKind: "unknown", label: "retired notifications root — redirects to /inbox?view=notifications" },
+  { path: "/settings/notifications", universalMatch: false, decisionKind: "unknown", label: "retired settings notifications index — redirects to my-preferences" },
+
   // ── /notifications ──────────────────────────────────────────────────────────
-  // root is a compat redirect (universal) — sub-routes deleted; handled by next.config.ts redirects
-  { path: "/notifications", universalMatch: true, decisionKind: "universal", label: "notification inbox root — compat redirect to /inbox?view=notifications" },
+  // sub-routes deleted; handled by next.config.ts redirects
 
   // ── /knowledge ──────────────────────────────────────────────────────────────
   // root read allowed
@@ -77,7 +82,6 @@ const MATRIX: readonly MatrixRow[] = [
   // ── /dashboard and /home ────────────────────────────────────────────────────
   // root read allowed — only the root itself is universal; exact-by-default so any new sub-route fails closed
   { path: "/dashboard", universalMatch: true, decisionKind: "universal", label: "dashboard root" },
-  { path: "/home", universalMatch: true, decisionKind: "universal", label: "home alias root" },
 
   // ── /announcements and /hr/announcements ────────────────────────────────────
   // root read allowed — only the root itself is universal; exact-by-default so any new sub-route fails closed
@@ -93,7 +97,6 @@ const MATRIX: readonly MatrixRow[] = [
 
   // ── /settings/notifications ─────────────────────────────────────────────────
   // root and personal preferences are universal
-  { path: "/settings/notifications", universalMatch: true, decisionKind: "universal", label: "notification settings hub root — redirects to my-preferences" },
   { path: "/settings/notifications/my-preferences", universalMatch: true, decisionKind: "universal", label: "personal notification preferences under settings" },
   { path: "/settings/notifications/my-preferences/channels", universalMatch: true, decisionKind: "universal", label: "notification preferences sub-page under settings" },
   // administrative descendants DENIED

@@ -12,14 +12,13 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateTicket, useAddLabelToTicket, useRemoveLabelFromTicket } from "@/hooks/api/build/tickets";
 import { useProjectLabels } from "@/hooks/api/build/projects";
-import { useSprints } from "@/hooks/api/build/sprints";
 import { useCycles } from "@/hooks/api/build/advanced";
 import { popoverOptionBaseClass, popoverOptionSelectedClass } from "../shared/popover-option-classes";
 import { LabelsSearchCommand } from "../shared/labels-search-command";
 import { typeConfig } from "../shared/types";
 import { TicketTypeIcon } from "../shared/ticket-type-icon";
 import { InlineFieldWrapper } from "./card-inline-fields";
-import { Check, Tag, RefreshCw, Zap } from "lucide-react";
+import { Check, Tag, RefreshCw } from "lucide-react";
 import type { TicketLabel } from "@/types/projects";
 import { resolveLabelColor } from "@/components/labels/label-colors";
 
@@ -279,84 +278,6 @@ export const InlineCycle = memo(function InlineCycle({
               <RefreshCw className="h-3 w-3 shrink-0 text-muted-foreground" />
               <span className="truncate">{cycle.name}</span>
               {currentCycleId === cycle.id && <Check className="ml-auto h-3 w-3 shrink-0" />}
-            </button>
-          ))}
-        </ResponsivePopoverContent>
-      </ResponsivePopover>
-    </InlineFieldWrapper>
-  );
-});
-
-interface InlineSprintProps {
-  ticketId: number;
-  projectId: number;
-  currentSprintId?: number | null;
-}
-
-export const InlineSprint = memo(function InlineSprint({
-  ticketId,
-  projectId,
-  currentSprintId,
-}: InlineSprintProps) {
-  const [open, setOpen] = useState(false);
-  const { data: allSprints = [] } = useSprints(projectId);
-  const sprints = allSprints.filter((s) => s.status !== "COMPLETED");
-  const updateTicket = useUpdateTicket(projectId, {
-    onError: (e) => toast.error(getErrorMessage(e)),
-  });
-
-  const currentSprint = allSprints.find((s) => s.id === currentSprintId);
-
-  function makeSprintHandler(sprintId: number | null) {
-    return function selectSprint() {
-      updateTicket.mutate({ ticketId, sprintId });
-      setOpen(false);
-    };
-  }
-
-  return (
-    <InlineFieldWrapper>
-      <ResponsivePopover open={open} onOpenChange={setOpen}>
-        <ResponsivePopoverTrigger asChild>
-          <button
-            type="button"
-            className="inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted/60 transition-colors"
-            aria-label="Change sprint"
-          >
-            <Zap className="h-3 w-3 shrink-0 text-muted-foreground" />
-            <span
-              className={cn(
-                "max-w-[60px] truncate text-micro",
-                currentSprint ? "text-foreground" : "text-muted-foreground",
-              )}
-            >
-              {currentSprint ? currentSprint.name : "No sprint"}
-            </span>
-          </button>
-        </ResponsivePopoverTrigger>
-        <ResponsivePopoverContent title="Sprint" className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-44")} align="start">
-          <button
-            type="button"
-            onClick={makeSprintHandler(null)}
-            className={cn(popoverOptionBaseClass, !currentSprintId && popoverOptionSelectedClass)}
-          >
-            <Zap className="h-3 w-3 shrink-0 text-muted-foreground" />
-            No sprint
-            {!currentSprintId && <Check className="ml-auto h-3 w-3" />}
-          </button>
-          {sprints.map((sprint) => (
-            <button
-              key={sprint.id}
-              type="button"
-              onClick={makeSprintHandler(sprint.id)}
-              className={cn(
-                popoverOptionBaseClass,
-                currentSprintId === sprint.id && popoverOptionSelectedClass,
-              )}
-            >
-              <Zap className="h-3 w-3 shrink-0 text-muted-foreground" />
-              <span className="truncate">{sprint.name}</span>
-              {currentSprintId === sprint.id && <Check className="ml-auto h-3 w-3 shrink-0" />}
             </button>
           ))}
         </ResponsivePopoverContent>

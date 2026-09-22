@@ -6,7 +6,7 @@ import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { cn } from "@/lib/utils";
 import { TicketQuickActions } from "./ticket-quick-actions";
 import { InlineStatus, InlinePriority, InlineAssignee, InlineEstimate, InlineFieldWrapper, InlineFieldCell } from "./card-inline-fields";
-import { InlineType, InlineLabels, InlineCycle, InlineSprint } from "./card-inline-extra-fields";
+import { InlineType, InlineLabels, InlineCycle } from "./card-inline-extra-fields";
 import { InlineDueDate } from "./card-inline-date-fields";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -173,19 +173,6 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
         <InlineFieldCell>
           {hasEditableProject ? (
             <InlineCycle ticketId={ticket.id} projectId={projectId} currentCycleId={ticket.cycleId} />
-          ) : null}
-        </InlineFieldCell>
-      ),
-    },
-    {
-      key: "sprint",
-      header: "Sprint",
-      headerClassName: "hidden xl:table-cell",
-      className: "hidden xl:table-cell w-28",
-      cell: (ticket) => (
-        <InlineFieldCell>
-          {hasEditableProject ? (
-            <InlineSprint ticketId={ticket.id} projectId={projectId} currentSprintId={ticket.sprintId} />
           ) : null}
         </InlineFieldCell>
       ),

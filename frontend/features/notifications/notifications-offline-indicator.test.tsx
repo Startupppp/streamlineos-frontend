@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { render, screen } from "@testing-library/react";
 import type { PropsWithChildren } from "react";
@@ -115,12 +115,13 @@ jest.mock("@/components/ui/content-fill-panel", () => ({
 }));
 
 describe("Notifications page offline indicator", () => {
-  it("the /notifications route is now a redirect to /inbox?view=notifications", () => {
-    const routeSource = readFileSync(
-      join(process.cwd(), "app", "(authenticated)", "notifications", "page.tsx"),
-      "utf8",
-    );
-    expect(routeSource).toContain('redirect("/inbox?view=notifications")');
+  it("no longer ships a /notifications route directory — the URL is served by a next.config.ts redirect", () => {
+    expect(
+      existsSync(join(process.cwd(), "app", "(authenticated)", "notifications")),
+    ).toBe(false);
+    expect(
+      existsSync(join(process.cwd(), "app", "(authenticated)", "inbox", "page.tsx")),
+    ).toBe(true);
   });
 
   afterEach(() => {

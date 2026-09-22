@@ -56,9 +56,6 @@ function applyTicketFilters(
   filters: FilterState,
 ): KanbanTicket[] {
   let result = tickets;
-  if (filters.sprintId !== "all") {
-    result = result.filter((t) => t.sprintId === Number(filters.sprintId));
-  }
   if (filters.cycleId !== "all") {
     result = result.filter((t) => t.cycleId === Number(filters.cycleId));
   }

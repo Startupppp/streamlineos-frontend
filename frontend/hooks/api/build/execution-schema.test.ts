@@ -1,32 +1,4 @@
-import { cycleListContract, cycleRowContract, epicListContract, sprintListContract } from "./execution-schema";
-
-it("preserves sprint tickets used by progress summaries", () => {
-  const tickets = [
-    {
-      id: 7,
-      title: "Scoped ticket",
-      status: "IN_REVIEW",
-      points: 8,
-      sprintId: 2,
-    },
-  ];
-
-  const result = sprintListContract.parse([
-    {
-      id: 2,
-      orgId: "org-1",
-      projectId: 5,
-      name: "Sprint 1",
-      startDate: "2026-09-15T00:00:00.000Z",
-      endDate: "2026-09-29T00:00:00.000Z",
-      goal: null,
-      status: "PLANNED",
-      tickets,
-    },
-  ]);
-
-  expect(result[0]?.tickets).toEqual(tickets);
-});
+import { cycleListContract, cycleRowContract, epicListContract } from "./execution-schema";
 
 it("accepts the unprojected ticket row listEpics actually returns, since the service selects every tickets column with no projection", () => {
   const row = {
@@ -39,7 +11,6 @@ it("accepts the unprojected ticket row listEpics actually returns, since the ser
     priority: "MEDIUM",
     projectId: 5,
     ticketNumber: 3,
-    sprintId: null,
     epicId: null,
     reporterId: "user-1",
     points: null,
@@ -75,7 +46,6 @@ it("rejects an epic row whose reporterId is not a string, so an assignee/reporte
     priority: "MEDIUM",
     projectId: 5,
     ticketNumber: 3,
-    sprintId: null,
     epicId: null,
     reporterId: 12345,
     points: null,

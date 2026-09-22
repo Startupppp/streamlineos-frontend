@@ -22,7 +22,7 @@ import type { AgendaSource } from "./generate-agenda";
 
 interface MeetingAgendaFieldProps {
   onGenerateAgenda?: (sources: AgendaSource[]) => string;
-  hasActiveSprint?: boolean;
+  hasActiveCycle?: boolean;
 }
 
 function generateAgendaFrom(
@@ -35,12 +35,12 @@ function generateAgendaFrom(
   };
 }
 
-function everyAgendaSource(hasActiveSprint: boolean): AgendaSource[] {
-  const sprint: AgendaSource[] = hasActiveSprint ? ["sprint"] : [];
-  return [...sprint, "overdue", "blocked", "open_action_items"];
+function everyAgendaSource(hasActiveCycle: boolean): AgendaSource[] {
+  const cycle: AgendaSource[] = hasActiveCycle ? ["cycle"] : [];
+  return [...cycle, "overdue", "blocked", "open_action_items"];
 }
 
-export function MeetingAgendaField({ onGenerateAgenda, hasActiveSprint }: MeetingAgendaFieldProps) {
+export function MeetingAgendaField({ onGenerateAgenda, hasActiveCycle }: MeetingAgendaFieldProps) {
   const { control } = useFormContext<MeetingFormValues>();
 
   return (
@@ -66,11 +66,11 @@ export function MeetingAgendaField({ onGenerateAgenda, hasActiveSprint }: Meetin
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52 text-xs">
-                  {hasActiveSprint && (
+                  {hasActiveCycle && (
                     <DropdownMenuItem
-                      onClick={generateAgendaFrom(field.onChange, onGenerateAgenda, ["sprint"])}
+                      onClick={generateAgendaFrom(field.onChange, onGenerateAgenda, ["cycle"])}
                     >
-                      From current sprint tickets
+                      From current cycle tickets
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem
@@ -92,7 +92,7 @@ export function MeetingAgendaField({ onGenerateAgenda, hasActiveSprint }: Meetin
                     onClick={generateAgendaFrom(
                       field.onChange,
                       onGenerateAgenda,
-                      everyAgendaSource(hasActiveSprint ?? false),
+                      everyAgendaSource(hasActiveCycle ?? false),
                     )}
                   >
                     All sources

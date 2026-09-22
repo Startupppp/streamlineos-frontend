@@ -12,7 +12,6 @@ import {
   type WorkloadFilterCategory,
   type WorkloadMember,
   type StatusOption,
-  type SprintOption,
   type CycleOption,
   TICKET_TYPES,
   PRIORITIES,
@@ -22,12 +21,10 @@ import { OptionRow } from "./workload-filter-rows";
 
 interface WorkloadSubmenuProps {
   hoveredCategory: WorkloadFilterCategory;
-  sprints: SprintOption[];
   cycles: CycleOption[];
   projectStatuses: StatusOption[] | undefined;
   members: WorkloadMember[];
   filters: FilterState;
-  onSelectSprint: (value: string) => void;
   onSelectCycle: (value: string) => void;
   onSelectPriority: (value: string) => void;
   onSelectType: (value: string) => void;
@@ -37,12 +34,10 @@ interface WorkloadSubmenuProps {
 
 export function WorkloadSubmenu({
   hoveredCategory,
-  sprints,
   cycles,
   projectStatuses,
   members,
   filters,
-  onSelectSprint,
   onSelectCycle,
   onSelectPriority,
   onSelectType,
@@ -51,22 +46,6 @@ export function WorkloadSubmenu({
 }: WorkloadSubmenuProps) {
   return (
     <>
-      {hoveredCategory === "sprint"
-        ? sprints.map((s) => {
-            const id = String(s.id);
-            function handleClick() {
-              onSelectSprint(id);
-            }
-            return (
-              <OptionRow
-                key={s.id}
-                active={filters.sprintId === id}
-                label={s.name}
-                onClick={handleClick}
-              />
-            );
-          })
-        : null}
       {hoveredCategory === "cycle"
         ? cycles.map((c) => {
             const id = String(c.id);

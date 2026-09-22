@@ -67,7 +67,6 @@ const TICKET: AllWorkTicket = {
   projectKey: "PA",
   projectName: "Project A",
   ticketNumber: 10,
-  sprintId: null,
   epicId: null,
   assigneeId: null,
   points: null,

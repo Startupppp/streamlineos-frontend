@@ -215,7 +215,7 @@ export function invalidateBuildViews(
   });
   if (!aggregates) return;
   void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.sprints(projectId),
+    queryKey: buildWorkQueryKeys.projects.cycles(projectId),
   });
   void client.invalidateQueries({
     queryKey: buildWorkQueryKeys.projects.columnCounts(projectId),
@@ -238,7 +238,7 @@ export function invalidateTicketUpdateViews(
   ticketId: number,
   changes: {
     status?: unknown;
-    sprintId?: unknown;
+    cycleId?: unknown;
     points?: unknown;
     startDate?: unknown;
     dueDate?: unknown;
@@ -269,7 +269,7 @@ export function invalidateTicketUpdateViews(
 
   const affectsPlanning =
     changes.status !== undefined ||
-    changes.sprintId !== undefined ||
+    changes.cycleId !== undefined ||
     changes.points !== undefined ||
     changes.startDate !== undefined ||
     changes.dueDate !== undefined;
@@ -277,7 +277,7 @@ export function invalidateTicketUpdateViews(
   if (!affectsPlanning) return;
 
   void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.sprints(projectId),
+    queryKey: buildWorkQueryKeys.projects.cycles(projectId),
     refetchType: "none",
   });
   void client.invalidateQueries({

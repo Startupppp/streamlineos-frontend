@@ -43,10 +43,8 @@ export function FilterCommandMenu({
   members,
   labels,
   cycles,
-  sprints,
   projectOptions,
   showTypeFilter,
-  showSprintFilter,
   showAssigneeFilter,
   filterState,
   onToggleStatus,
@@ -55,7 +53,6 @@ export function FilterCommandMenu({
   onToggleAssignee,
   onToggleLabel,
   onToggleCycle,
-  onToggleSprint,
   onToggleProject,
   onDueDateFromChange,
   onDueDateToChange,
@@ -99,10 +96,8 @@ export function FilterCommandMenu({
     members,
     labels,
     cycles,
-    sprints,
     projectOptions,
     showTypeFilter,
-    showSprintFilter,
     showAssigneeFilter,
     filterState,
     onToggleStatus,
@@ -111,7 +106,6 @@ export function FilterCommandMenu({
     onToggleAssignee,
     onToggleLabel,
     onToggleCycle,
-    onToggleSprint,
     onToggleProject,
     onDueDateFromChange,
     onDueDateToChange,
@@ -169,7 +163,6 @@ export function FilterCommandMenu({
                       search={search}
                       onSearchChange={handleSearchChange}
                       showTypeFilter={showTypeFilter}
-                      showSprintFilter={showSprintFilter}
                       showAssigneeFilter={showAssigneeFilter}
                       {...sharedProps}
                     />
@@ -224,7 +217,6 @@ export function FilterCommandMenu({
             search={search}
             onSearchChange={handleSearchChange}
             showTypeFilter={showTypeFilter}
-            showSprintFilter={showSprintFilter}
             showAssigneeFilter={showAssigneeFilter}
             {...sharedProps}
           />

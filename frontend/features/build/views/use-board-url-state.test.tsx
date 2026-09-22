@@ -65,7 +65,7 @@ beforeEach(() => {
 });
 
 describe("useBoardUrlState — saving a view persists every filter the board was showing", () => {
-  it("carries the sprint and module filters into the saved view, so re-opening it does not silently widen the result set", () => {
+  it("carries the cycle and module filters into the saved view, so re-opening it does not silently widen the result set", () => {
     setParams({
       q: "login",
       status: "In Progress",
@@ -74,7 +74,6 @@ describe("useBoardUrlState — saving a view persists every filter the board was
       assigneeId: "user-1",
       labels: "3",
       cycle: "7",
-      sprint: "12",
       module: "44",
     });
 
@@ -99,7 +98,6 @@ describe("useBoardUrlState — saving a view persists every filter the board was
       assigneeId: "user-1",
       labels: "3",
       cycle: "7",
-      sprint: "12",
       module: "44",
     });
   });
@@ -226,7 +224,7 @@ describe("useBoardUrlState — an applied saved view can be updated in place fro
       viewId: "9",
       view: "list",
       status: "Done",
-      sprint: "3",
+      cycle: "3",
       module: "8",
       groupBy: "assignee",
     });
@@ -248,7 +246,7 @@ describe("useBoardUrlState — an applied saved view can be updated in place fro
     };
     expect(payload.viewId).toBe(9);
     expect(payload.projectId).toBe(1);
-    expect(payload.filters).toEqual({ status: "Done", sprint: "3", module: "8" });
+    expect(payload.filters).toEqual({ status: "Done", cycle: "3", module: "8" });
     expect(payload.layoutType).toBe("list");
     expect(payload.groupBy).toBe("assignee");
     expect(payload.displayOptions.groupBy).toBe("assignee");

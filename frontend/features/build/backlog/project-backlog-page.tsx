@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useCallback, useState, useEffect } from "react";
-import { useProject, useSprints } from "@/hooks/api";
+import { useProject, useCycles } from "@/hooks/api";
 import { useBulkUpdateTickets, useProjectBoardTickets } from "@/hooks/api/build";
 import type { BulkUpdateTicketsInput } from "@/hooks/api/build";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
@@ -40,7 +40,6 @@ const BACKLOG_FILTER_PARAMS = [
   "labels",
   "cycle",
   "projectIds",
-  "sprintId",
   "dueDateFrom",
   "dueDateTo",
   "page",
@@ -70,7 +69,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
   const isLoading = projectLoading || ticketsLoading;
   const handleRetryProject = useCallback(() => void refetchProject(), [refetchProject]);
   const handleRetryTickets = useCallback(() => void refetchTickets(), [refetchTickets]);
-  const { data: sprints } = useSprints(projectId);
+  const { data: cycles } = useCycles(projectId);
   const bulkUpdate = useBulkUpdateTickets(projectId);
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -168,7 +167,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     [handleBulkUpdate],
   );
   const handleBulkAssignee = useCallback((v: string) => handleBulkUpdate({ assigneeId: v }), [handleBulkUpdate]);
-  const handleBulkSprint = useCallback(
+  const handleBulkCycle = useCallback(
     (v: string) => handleBulkUpdate({ cycleId: v === "backlog" ? null : Number(v) }),
     [handleBulkUpdate],
   );
@@ -301,7 +300,6 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
             className="w-full"
             members={members}
             statuses={data?.statuses}
-            showSprintFilter={false}
           />
         </div>
       }
@@ -311,14 +309,14 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
           <BulkActionBar
             selectedCount={selectedIds.size}
             members={members}
-            sprints={sprints ?? []}
+            cycles={cycles ?? []}
             statuses={data?.statuses}
             projectId={projectId}
             excludeIds={selectedIds}
             onBulkStatus={handleBulkStatus}
             onBulkPriority={handleBulkPriority}
             onBulkAssignee={handleBulkAssignee}
-            onBulkSprint={handleBulkSprint}
+            onBulkCycle={handleBulkCycle}
             onBulkParent={handleBulkParent}
             onClear={handleClearSelection}
           />

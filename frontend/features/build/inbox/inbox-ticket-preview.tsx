@@ -125,7 +125,6 @@ export function InboxTicketPreview({
   const {
     ticket,
     saving,
-    sprints,
     members,
     subtasks,
     statuses,
@@ -300,7 +299,6 @@ export function InboxTicketPreview({
           ticketId={resolvedTicketId}
           projectId={target.projectId}
           projectKey={detailProject?.key ?? projectData?.key}
-          sprints={sprints}
           statuses={statuses}
           onAutoSave={autoSave}
           asideClassName="lg:w-72 lg:min-w-72 xl:w-80 xl:min-w-80"

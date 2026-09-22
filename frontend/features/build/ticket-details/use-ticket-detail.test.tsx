@@ -20,7 +20,6 @@ jest.mock("@/hooks/api", () => ({
     refetch: jest.fn(),
   }),
   useProject: () => ({ data: { members: [], statuses: [] } }),
-  useSprints: () => ({ data: [] }),
   useSubtasks: () => ({ data: [] }),
   useUpdateTicket: (_projectId: number, options: typeof mockUpdateOptions) => {
     mockUpdateOptions = options;
@@ -85,7 +84,7 @@ it("serializes rapid ticket updates with the latest server version", async () =>
 
   act(() => {
     result.current.autoSave({ status: "IN_PROGRESS" });
-    result.current.autoSave({ sprintId: 2 });
+    result.current.autoSave({ cycleId: 2 });
   });
   await act(async () => {
     await Promise.resolve();
@@ -108,7 +107,7 @@ it("serializes rapid ticket updates with the latest server version", async () =>
   expect(mockMutateAsync).toHaveBeenNthCalledWith(2, {
     ticketId: 7,
     expectedUpdatedAt: "2026-09-15T10:01:00.000Z",
-    sprintId: 2,
+    cycleId: 2,
   });
 
   await act(async () => {
