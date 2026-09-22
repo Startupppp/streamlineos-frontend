@@ -26,6 +26,7 @@ import { makeScreenshotter } from "./lib/screenshot.mjs";
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const FRONTEND_ROOT = resolve(__dirname, "..");
 const REPO_ROOT = resolve(FRONTEND_ROOT, "..");
+const PUBLIC_ROOT = join(FRONTEND_ROOT, "public");
 const EVIDENCE_DIR = join(REPO_ROOT, "docs", "build-module", "phase-4-browser-evidence");
 const CSS_SOURCE = join(
   REPO_ROOT.replace("slos-phase-4-collab", "Streamlineos"),
@@ -174,6 +175,7 @@ const SURFACES = [
     exportName: "CriticalPathSection",
     props: { projectId: 1 },
     chartSurface: false,
+    focusExpected: false,
     hooks: ["build-reports"],
   },
 ];
@@ -419,6 +421,7 @@ function selfTest() {
   assert("overflowVerdict marks unmeasured as not-measured", overflowVerdict({}).measured === false);
   assert("EVIDENCE_DIR path contains phase-4", EVIDENCE_DIR.includes("phase-4"));
   assert("CSS_SOURCE path exists", existsSync(CSS_SOURCE));
+  assert("public illustration fixture exists", existsSync(join(PUBLIC_ROOT, "illustrations", "empty-clients.svg")));
 
   if (failures.length) {
     for (const f of failures) console.error(`  [FAIL] ${f}`);
@@ -582,6 +585,15 @@ function startServer(bundleDir, cssSource, port) {
         res.writeHead(200, { "Content-Type": "text/css", "Cache-Control": "no-store" });
         res.end(cssContent);
         return;
+      }
+      if (url.startsWith("/illustrations/") && url.endsWith(".svg")) {
+        const name = url.slice("/illustrations/".length);
+        const file = join(PUBLIC_ROOT, "illustrations", name);
+        if (!name.includes("/") && !name.includes("\\") && existsSync(file)) {
+          res.writeHead(200, { "Content-Type": "image/svg+xml", "Cache-Control": "no-store" });
+          res.end(readFileSync(file));
+          return;
+        }
       }
       if (url.endsWith(".js")) {
         const name = url.slice(1);
@@ -970,13 +982,20 @@ async function main() {
         const focusSequence = await walkFocusOrder(cdp, 35);
         const uniqueFocused = new Set(focusSequence).size;
         const onlyBody = focusSequence.length <= 1 && focusSequence.every((k) => k.startsWith("body["));
-        const orderAnalysis = pageRendered && !onlyBody ? await analyzeFocusOrder(cdp) : null;
+        const orderAnalysis = pageRendered ? await analyzeFocusOrder(cdp) : null;
 
         let focusVerdict;
         const focusIssues = [];
 
         if (!pageRendered) {
           focusVerdict = "NOT-RUN";
+        } else if (
+          surface.focusExpected === false &&
+          (focusSequence.length === 0 || onlyBody) &&
+          orderAnalysis?.domFocusableCount === 0 &&
+          orderAnalysis?.mouseOnly?.length === 0
+        ) {
+          focusVerdict = "PASS";
         } else if (focusSequence.length === 0 || onlyBody) {
           focusVerdict = "NOT-RUN";
         } else {
@@ -1007,6 +1026,7 @@ async function main() {
           orderAnalysis,
         };
         if (!pageRendered) focusCheck.reason = mountError ? `mount error: ${mountError.slice(0, 120)}` : "page rendered blank — component did not mount";
+        else if (focusVerdict === "PASS" && surface.focusExpected === false && orderAnalysis?.domFocusableCount === 0) focusCheck.reason = "non-interactive surface verified with no keyboard or mouse-only controls";
         else if (focusSequence.length === 0) focusCheck.reason = "no Tab stops recorded";
         else if (onlyBody) focusCheck.reason = "Tab returned immediately to body — no interactive elements in DOM";
         else if (focusIssues.length > 0) focusCheck.reason = focusIssues.join("; ");

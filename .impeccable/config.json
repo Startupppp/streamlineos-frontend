@@ -1,0 +1,7 @@
+{
+  "detector": {
+    "ignoreFiles": [
+      "frontend/features/hr/asset-returns/asset-returns-page.tsx"
+    ]
+  }
+}

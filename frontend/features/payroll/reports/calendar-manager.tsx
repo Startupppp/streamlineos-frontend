@@ -333,6 +333,7 @@ export function CalendarManager({ month }: CalendarManagerProps) {
       ) : isError ? (
         <ErrorState
           compact
+          className="border-0 bg-transparent shadow-none"
           title="Couldn't load calendar events"
           description={getErrorMessage(error)}
           onRetry={handleRetry}

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { Loader2 } from "lucide-react";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -11,6 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
@@ -31,16 +32,41 @@ export function BulkRejectDialog({
 }: BulkRejectDialogProps) {
   const [reason, setReason] = useState("");
 
+  /**
+   * `reason` clears once the dialog actually closes, not on click — clearing
+   * it inside `handleConfirm` used to run whether the mutation the parent
+   * kicked off (via `onConfirm`) succeeded or failed, so a failed submission
+   * lost the typed reason with no way to retry it. Adjusted during render
+   * (React's prop-change pattern) rather than in an effect, so it takes
+   * effect in the same commit `open` changes instead of one render later.
+   */
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    if (!open) setReason("");
+  }
+
   const handleConfirm = useCallback(() => {
     if (!reason.trim()) return;
     onConfirm(reason.trim());
-    setReason("");
   }, [reason, onConfirm]);
 
   const handleCancel = useCallback(() => {
     onOpenChange(false);
-    setReason("");
   }, [onOpenChange]);
+
+  /**
+   * Guards against ESC/backdrop closing mid-mutation, matching
+   * `ConfirmDialog`'s `handleControlledOpenChange` — the dialog here is a raw
+   * `AlertDialog` because it needs the reason textarea, not that component.
+   */
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      if (!next && isPending) return;
+      onOpenChange(next);
+    },
+    [isPending, onOpenChange],
+  );
 
   const handleReasonChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -50,7 +76,7 @@ export function BulkRejectDialog({
   );
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
@@ -79,13 +105,16 @@ export function BulkRejectDialog({
           <AlertDialogCancel onClick={handleCancel} disabled={isPending}>
             Cancel
           </AlertDialogCancel>
-          <AlertDialogAction
+          <Button
+            type="button"
+            variant="destructive"
             onClick={handleConfirm}
             disabled={!reason.trim() || isPending}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            aria-busy={isPending || undefined}
           >
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
             {isPending ? "Rejecting…" : "Reject"}
-          </AlertDialogAction>
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

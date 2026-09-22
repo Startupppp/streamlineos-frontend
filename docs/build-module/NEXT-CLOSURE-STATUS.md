@@ -8,6 +8,7 @@ Coordinator-owned. Workers never edit this file.
 
 `DONE` = code and automated tests complete and verified here.
 `READY_FOR_CODEX_BROWSER_QA` = code complete; Codex must verify the UI in a real browser. Claude opened no browser this session.
+`PARTIAL_BROWSER_PASS` = the component-level real-browser checks passed, while authenticated or data-dependent checks remain blocked on the documented non-production database requirement.
 
 ## Status
 
@@ -26,7 +27,7 @@ Coordinator-owned. Workers never edit this file.
 | Phase B follow-up — Inbox `type` dropdown | DONE | `2d3b41ed5`, `cfd4b1afd` → merge `ebe2cd0b7` | 105 inbox tests; invalid-category drop mutation-proven | READY_FOR_CODEX_BROWSER_QA | none |
 | Phase B follow-up — physical removal of old redirect routes | DONE | `1d07fadad` | Route census: 88 routes, 79 pages, 0 weak cold-load gates; route and redirect tests pass | READY_FOR_CODEX_BROWSER_QA | `/build/goal` and `/build/pm-workspaces` page trees were removed; config redirects preserve deep links |
 | Phase C — static integration verification | DONE | — | see table below | n/a | none |
-| Phase D — Codex browser QA handoff | DONE | — | n/a | READY_FOR_CODEX_BROWSER_QA | See `CODEX-BROWSER-QA.md` |
+| Phase D — Codex browser QA handoff | DONE | — | 22/22 real-Chrome viewport cells pass | PARTIAL_BROWSER_PASS | Component overflow, focus and SVG paint pass; authenticated/data-dependent checks are blocked without non-production PostgreSQL. See `CODEX-BROWSER-QA-RESULTS.md` |
 
 ## The three Phase 4 findings were already implemented — the gap was coverage
 

@@ -10,8 +10,8 @@ The historical entries below are preserved for audit history. The current source
 
 - **DONE:** release authorization, N-11 cold-load gates, Issues explorer residual, command palette residual, authorization census closure, migration-chain repair, and UX hardening.
 - **Verified:** `VULNERABLE = 0`; 83 Build pages have 0 weak cold-load gates; root route/execution checks and backend typecheck pass.
-- **Database execution blocked:** P0 #6 Sprint/Cycle, P0 #7 QA Bug lifecycle, and P0 #8 live composite `SET NULL` catalog verification require non-production PostgreSQL 15+.
-- **Migrations 1141/1142:** statically complete and ready for staging application; not applied because no safe staging database exists.
+- **Database execution:** explicitly authorized production execution completed on 2026-09-22 after snapshot `streamlineos-pre-build-p0-20260922085750`. P0 #6 and #7 expand/backfill phases pass; their application cutovers and destructive contraction phases remain. P0 #8 is DONE.
+- **Migrations 1141–1144:** live postconditions pass and the production ledger is 905/905. See `P0-PRODUCTION-EXECUTION-2026-09-22.md`.
 - **Documentation authority:** `docs/build-module/PHASE-1-STATUS.md` and the final reconciliation section below supersede earlier historical `Still open` rows.
 
 Integration branch: `build/integration` (not yet created — awaiting approval)
