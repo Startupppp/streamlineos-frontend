@@ -74,3 +74,31 @@ headcount constraint is validated and nulls only `headcount_id`, and no rollback
 - [ ] Sprint detach/drop phases execute after application cutover.
 - [ ] Application uses work-item QA as its only bug identity.
 - [ ] QA freeze/drop phases execute after application cutover and rollback window.
+
+## Migrations 1149, 1150, 1151 — status as of 2026-09-22 (Agent 3 review)
+
+### What each migration does
+
+**1149 `change_requests_client_visible_release_id`** — additive only, not destructive.
+Adds two columns to `build.change_requests`: `client_visible BOOLEAN NOT NULL DEFAULT FALSE` and `release_id INTEGER`. Creates two partial indexes (org+release, org+client_visible). Adds FK `fk_change_requests_org_release` referencing `build.project_releases(org_id, id)` with `ON DELETE SET NULL (release_id) NOT VALID`. No drops, no truncates.
+
+**1150 `invoice_items_timesheet_entry_ref`** — additive only, not destructive.
+Adds `timesheet_entry_id INTEGER` to `public.invoice_items` with FK `ON DELETE SET NULL` to `public.timesheets(id)`. Creates one partial index. No drops, no truncates.
+
+**1151 `notifications_metadata_project_id_index`** — additive only, not destructive.
+Creates one expression index `idx_notifications_metadata_project_id` on `public.notifications(org_id, membership_id, (metadata->>'projectId'))` where `deleted_at IS NULL AND archived_at IS NULL`. No schema changes.
+
+### Journal registration
+
+All three are registered in `migrations/meta/_journal.json`:
+- idx 1033, when 1803000010450 — 1149
+- idx 1034, when 1803000010460 — 1150
+- idx 1035, when 1803000010470 — 1151
+
+### Production application status — UNVERIFIED / NOT YET APPLIED
+
+Prior P0 session recorded production watermark at `1803000010440` (idx 1032 = `1144_repair_inventory_composite_set_null`). All three migrations have `when` values above that watermark and therefore had NOT been applied at the time of the P0 run.
+
+Live ledger check attempted 2026-09-22 in this worktree: BLOCKED — `.env` absent in `slos-next-closure` worktree; `DATABASE_URL` not set; script `check-migration-ledger.mjs` failed closed with "DATABASE_URL is not set". No retry attempted. No credentials printed.
+
+**Conclusion**: 1149, 1150, and 1151 are journalled but UNVERIFIED against the live production ledger. The strongest available evidence (P0 watermark reading) puts them unapplied. They must be applied by the coordinator before the browser QA checks for sections 1–2 are unblocked.
