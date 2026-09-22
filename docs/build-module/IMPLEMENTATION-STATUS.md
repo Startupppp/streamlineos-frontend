@@ -12,6 +12,7 @@ The historical entries below are preserved for audit history. The current source
 - **Verified:** `VULNERABLE = 0`; 83 Build pages have 0 weak cold-load gates; root route/execution checks and backend typecheck pass.
 - **Database execution:** explicitly authorized production execution completed on 2026-09-22 after snapshot `streamlineos-pre-build-p0-20260922085750`. P0 #6 and #7 expand/backfill phases pass; their application cutovers and destructive contraction phases remain. P0 #8 is DONE.
 - **Migrations 1141–1144:** live postconditions pass and the production ledger is 905/905. See `P0-PRODUCTION-EXECUTION-2026-09-22.md`.
+- **Browser verification:** authenticated production smoke workflows pass against Build QA Sandbox; no application console errors. The Feedbucket widget has a non-blocking missing dialog-description warning. See `CODEX-BROWSER-QA-RESULTS.md`.
 - **Documentation authority:** `docs/build-module/PHASE-1-STATUS.md` and the final reconciliation section below supersede earlier historical `Still open` rows.
 
 Integration branch: `build/integration` (not yet created — awaiting approval)

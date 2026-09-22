@@ -4,15 +4,15 @@ Coordinator-owned. Workers never edit this file.
 
 **Session start:** 2026-09-22
 **Phase 1 baseline:** Post-closure, ready to dispatch parallel workstreams
-**Database:** None — no non-production PostgreSQL available
+**Database:** Production Aurora PostgreSQL 18.4 — explicitly authorized for the P0 execution pass
 
 ## Environment snapshot
 
 | Fact | Value |
 |---|---|
-| Root repo | `D:/projects/personal/Streamlineos` — `main` = `1e3ba8c7d`, +1 ahead of origin/main, clean |
-| Backend repo | `D:/projects/personal/Streamlineos/backend` — `main` = `5400534df`, +6 ahead of origin/main, clean |
-| Database | **NONE** — backend `.env` points at production only. No staging Postgres available. |
+| Root repo | `D:/projects/personal/Streamlineos` — `main`, clean at the production browser pass |
+| Backend repo | `D:/projects/personal/Streamlineos/backend` — `main` = `484af9d89`, clean |
+| Database | Production Aurora PostgreSQL 18.4; owner-authorized execution completed after snapshot `streamlineos-pre-build-p0-20260922085750` |
 | Frontend typecheck | PASS (exit 0) |
 | Backend typecheck | PASS (exit 0) |
 | Route census | PASS — 92 Build routes, 83 pages, 0 weak cold-load gates |
@@ -28,7 +28,7 @@ Coordinator-owned. Workers never edit this file.
 | **C — P0 #8 composite FK SET NULL** | production execution | backend main | ✅ **DONE** | migrations 1143/1144 | 814 catalog keys inspected; 0 unsafe | none | Live catalog and migration-text gates pass |
 | **D — Migration chain** | production execution | backend main | ✅ **DONE** | journal head 1144 | static and live watermark checks pass | none | 905/905 ledger; 1141–1144 postconditions verified |
 | **E — Authorization census** | (read-only) | (none) | ✅ **DONE** | none | 29/29 self-tests; report check green | (none) | VULNERABLE = 0, CLOSED = 34, VERIFIED = 176, NEEDS-REVIEW = 111; no regression |
-| **F — UX hardening** | (committed) | (none) | ✅ **DONE** | 6 files | 41/41 ✅ | FE-123 browser QA deferred | N-05 and FE-49 fixed; gate fix landed; N-09/N-11 pre-fixed |
+| **F — UX hardening** | production verification | main | ✅ **DONE** | 6 files plus browser evidence | 41/41 plus authenticated smoke pass | none | Component matrix and production Build QA Sandbox pass; see `CODEX-BROWSER-QA-RESULTS.md` |
 | **G — Documentation reconciliation** | coordinator | main | ✅ **DONE** | this file plus reconciled ledgers | route, typecheck, authz and migration-chain checks pass | none | Historical rows preserved; current status is authoritative from 2026-09-22 reconciliation |
 
 ## Non-negotiable rules enforced
@@ -36,7 +36,7 @@ Coordinator-owned. Workers never edit this file.
 - ✓ No code comments
 - ✓ No destructive git commands
 - ✓ No git stash
-- ✓ Never connect to production
+- ✓ Production access required explicit owner authorization and a recovery snapshot
 - ✓ Preserve existing user changes
 - ✓ One coordinator + multiple parallel agents
 - ✓ Every agent has a separate worktree
