@@ -2,11 +2,10 @@
 
 **Branch:** `build/remove-dead-build-surface`
 **Worktree:** `D:/projects/personal/slos-dead-surface`
-**Status:** `READY_FOR_CODEX_BROWSER_QA`
+**Status:** `DONE_WITH_P1_FINDING`
 
-Claude ran code and automated tests only. **No browser verification is claimed**
-by Claude, and none of the results below may be inferred from unit tests — jsdom
-cannot observe real paint, focus order or layout overflow.
+The cleanup author ran code and automated tests only. Codex completed the production
+browser pass on 2026-09-22; the measured results are recorded below.
 
 Verify every route at **1440×900** and **375×812**.
 
@@ -151,3 +150,21 @@ width, a screenshot and the console output.
 The deletion must be reverted for a specific route if, and only if, a row in
 section **A** fails — that is the only evidence that a deleted page was
 reachable after all.
+
+## Production results — 2026-09-22
+
+| Scope | Result | Evidence |
+|---|---|---|
+| Retained redirects A1-A9 | **PASS 9/9** | Every entered URL landed on its canonical target; `projectId`, `pmWorkspaceId`, and `view=drafts` survived |
+| Invalid `/build/abc/workflow` | **PASS** | Rendered the production Page Not Found surface without an exception |
+| Drafts deep link | **PASS** | `/build/inbox?view=drafts` rendered Comment Drafts and the empty-drafts state |
+| Command palette My Tickets | **PASS** | Opened `/build/my-work?projectId=6`; Back returned to `/build/6`, Forward restored the scoped URL |
+| Desktop canonical targets | **PASS 8/8** | Access, client access, workflow, automations, webhooks, My Work, Inbox Drafts, and Managed Products at 1440x900; no page overflow |
+| Mobile canonical targets | **PASS 8/8** | Same routes at 375x812; no page-level horizontal overflow |
+| Managed Products index | **PASS** | Organization empty state, search, status filter, create actions, and mobile navigation rendered |
+| Managed-product detail routes E2-E8 | **NOT-RUN** | Production contains no managed-product record; no ID was invented and no record was created for this read-only pass |
+| Restricted-role checks G1-G3 | **NOT-RUN** | The available authenticated account is an administrator; no lower-privilege test identity was available |
+| Feedbucket overlay | **P1 FINDING** | At 375x812 the floating toolbar overlaps the Managed Products search field; console also warns that its dialog lacks a description |
+
+No production record was created, edited, or deleted. The Feedbucket finding belongs to the shared
+widget and does not invalidate any route deletion or require a deleted Build page to be restored.

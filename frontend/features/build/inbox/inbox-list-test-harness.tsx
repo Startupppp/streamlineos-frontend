@@ -78,16 +78,3 @@ export function renderInbox(options: RenderInboxOptions = {}) {
     />,
   );
 }
-
-export function inboxElement(options: RenderInboxOptions = {}) {
-  return (
-    <InboxList
-      selectedId={null}
-      onSelect={noop}
-      section={options.section ?? "UNREAD"}
-      q={null}
-      type={options.type}
-      searchInputRef={searchRef}
-    />
-  );
-}

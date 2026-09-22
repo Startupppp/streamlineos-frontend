@@ -14,7 +14,7 @@ import {
 import { parseView, type AllWorkView } from "./all-work-view-switcher";
 
 export { parsePriorityParam, parseTicketTypeParam };
-export type { BuildListGrouping, BuildListSortField, BuildListSortDirection };
+export type { BuildListGrouping };
 
 interface UseAllWorkFiltersReturn {
   view: AllWorkView;

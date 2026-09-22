@@ -37,21 +37,6 @@ export function parseWorkTab(value: string | null): WorkTab {
   return "assigned";
 }
 
-export const MY_WORK_FILTER_PARAMS = [
-  "q",
-  "status",
-  "priority",
-  "type",
-  "assigneeId",
-  "labels",
-  "cycleId",
-  "cycle",
-  "projectIds",
-  "sprintId",
-  "dueDateFrom",
-  "dueDateTo",
-] as const;
-
 function tabToDefaultSort(tab: WorkTab): {
   field: BuildListSortField;
   dir: BuildListSortDirection;

@@ -4,8 +4,10 @@ import { fileURLToPath } from "node:url";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
+const normalizeLineEndings = (content) => content.replace(/\r\n/g, "\n");
+
 const read = (relativePath) =>
-  readFileSync(join(repositoryRoot, relativePath), "utf8");
+  normalizeLineEndings(readFileSync(join(repositoryRoot, relativePath), "utf8"));
 
 const requireText = (content, expected, location, failures) => {
   if (!content.includes(expected))
@@ -145,6 +147,8 @@ const runSelfTest = () => {
   requireText("alpha", "beta", "fixture", failures);
   if (failures.length !== 1 || !failures[0].includes("fixture"))
     throw new Error("build execution plan self-test failed");
+  if (normalizeLineEndings("alpha\r\nbeta") !== "alpha\nbeta")
+    throw new Error("build execution plan line-ending self-test failed");
   process.stdout.write("build execution plan self-test passed\n");
 };
 

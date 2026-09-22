@@ -15,8 +15,6 @@ const BuildRouteManifestEntrySchema = z.union([
 
 type BuildRouteManifestEntry = z.infer<typeof BuildRouteManifestEntrySchema>;
 
-type RouteDecision = BuildRouteManifestEntry["decision"];
-
 const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
   { route: "/build", decision: "KEEP", target: null },
   { route: "/build/[projectId]", decision: "KEEP", target: null },
@@ -188,4 +186,4 @@ const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
 ];
 
 export { BUILD_ROUTE_MANIFEST, BuildRouteManifestEntrySchema };
-export type { BuildRouteManifestEntry, RouteDecision };
+export type { BuildRouteManifestEntry };

@@ -138,6 +138,7 @@ function buildBaseProps(
     hideCompleted: false,
     hasActiveFilters: true,
     workloadFilters: WORKLOAD_FILTERS,
+    onClearWorkloadFilters: noop,
     onTicketSelect: noop,
     onWorkloadFilterChange: noop as <K extends keyof WorkloadFilterState>(
       key: K,

@@ -16,7 +16,7 @@ jest.mock("@/hooks/api/access", () => ({
 }));
 
 const mockUseProject = jest.fn();
-const mockUseSprints = jest.fn(() => ({ data: [] }));
+const mockUseSprints = jest.fn((..._args: unknown[]) => ({ data: [] }));
 jest.mock("@/hooks/api", () => ({
   useProject: (...args: unknown[]) => mockUseProject(...args),
   useSprints: (...args: unknown[]) => mockUseSprints(...args),

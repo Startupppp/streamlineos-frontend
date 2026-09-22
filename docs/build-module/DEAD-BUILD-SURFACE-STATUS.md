@@ -21,11 +21,33 @@ file records only what was done and how it was measured.
 | Phase 3 — remove dead routes and files | **DONE** | 19 deleted, 14 edited | see verification table | READY_FOR_CODEX_BROWSER_QA | Nine redirect-only route pages, four orphaned `loading`/`error` siblings, six orphaned components and tests. Route manifest 88 → 79, census 97 → 88 routes / 88 → 79 pages. |
 | Phase 4 — redirect-only routes | **DONE** | see Phase 3 | `build-redirect-route-removal.test.ts`, 40 cases, all pass | READY_FOR_CODEX_BROWSER_QA | **All nine** redirect-only Build pages are deleted. Six were already shadowed by a `next.config.ts` redirect; for the other three the redirect was migrated into `next.config.ts` first, so no deep link changed behaviour. No redirect-only Build page remains. |
 | Phase 5 — API, types and Zod cleanup | **DONE (nothing became unused)** | none | n/a | n/a | No endpoint, hook, request/response type or Zod schema was orphaned. Every feature behind a deleted redirect is still imported by the canonical settings route that replaced it. See "Phase 5 finding" below. |
-| Phase 6 — verification | **DONE, two pre-existing failures** | n/a | see table below | n/a | Every non-green result reproduced on unmodified code before being attributed. |
-| Phase 7 — browser handoff | **READY_FOR_CODEX_BROWSER_QA** | `docs/build-module/CODEX-DELETION-BROWSER-QA.md` | n/a | **READY_FOR_CODEX_BROWSER_QA** | Claude ran code and automated tests only. No browser verification is claimed. |
-| Backend repository work | **BLOCKED — not required** | none | not run | n/a | `backend/` is a separate repository present only at `D:/projects/personal/Streamlineos/backend`; a worktree of the root repo has no `backend/` sibling, and this session is worktree-isolated. No backend change is required because no endpoint was removed — see "Phase 5 finding". |
+| Phase 6 — verification | **DONE** | two stale test fixtures corrected; six unused public exports removed | route census, execution plan, dead-code census, source/spec typechecks, focused suites | n/a | Current-main revalidation below supersedes the historical baseline failures. |
+| Phase 7 — browser verification | **DONE** | `docs/build-module/CODEX-DELETION-BROWSER-QA.md` | n/a | **DONE WITH P1 FINDING** | All nine retained redirects and eight canonical targets pass at desktop/mobile widths. Managed-product detail routes were not runnable because production has no product record. Feedbucket overlaps controls at mobile width. |
+| Backend repository work | **NOT REQUIRED** | none | build/test typechecks have unrelated failures | n/a | No endpoint was removed. Both backend typechecks report the existing HR error at `src/modules/hr/hub/manager-home.service.ts:71`; the test typecheck also reports `src/modules/portal/client/portal-client-submit-cr.spec.ts:87`. No Build backend file changed. |
 
 ## Verification results
+
+### Current-main revalidation
+
+Codex revalidated the landed cleanup after fast-forwarding this branch to current `main`.
+
+| Check | Current result |
+|---|---|
+| `pnpm check:route-census` | **PASS** — 88 routes, 79 pages, 0 weak cold-load gates |
+| `pnpm check:build-execution-plan` | **PASS** |
+| `pnpm -C frontend check:dead-code` | **PASS** — 0 dead files, 0 dead exports, 0 unclassified findings |
+| `pnpm -C frontend type-check` | **PASS** |
+| `pnpm -C frontend type-check:specs` | **PASS** after correcting two stale test fixtures |
+| Focused Build/navigation/RBAC Jest sweep | **PASS** — 67 suites, 805 tests |
+| Corrected fixture tests | **PASS** — 2 suites, 26 tests |
+| `git diff --check` | **PASS** |
+| Production redirect matrix | **PASS** — 9/9 retained deep links |
+| Desktop canonical targets | **PASS** — 8/8 at 1440x900, no page overflow |
+| Mobile canonical targets | **PASS** — 8/8 at 375x812, no page overflow |
+
+The browser pass found no deleted-route regression. It did find a separate Feedbucket widget defect:
+the floating toolbar overlaps the Managed Products search field at 375x812 and emits a missing
+`DialogContent` description warning. This does not justify restoring any deleted Build file.
 
 | Check | Baseline (before any edit) | After |
 |---|---|---|

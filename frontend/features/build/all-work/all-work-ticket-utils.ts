@@ -2,13 +2,6 @@ import type { AllWorkTicket } from "@/types/projects";
 import type { KanbanTicket } from "@/features/build/shared/types";
 import type { BuildListGrouping } from "@/features/build/shared/use-build-list-url-state";
 
-export interface ProjectGroup {
-  projectId: number;
-  projectKey: string;
-  projectName: string;
-  tickets: AllWorkTicket[];
-}
-
 export interface TicketGroup {
   id: string | number;
   label: string;
