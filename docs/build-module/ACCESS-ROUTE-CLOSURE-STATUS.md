@@ -69,6 +69,27 @@ None. No API contract, endpoint, or schema was specific to this route; `backend/
 
 Every gate above was then re-run on the merged branch with identical results: census 96/87, `typecheck:web` clean, specs typecheck showing only the pre-existing error, contract gate 221/645, eslint clean, 561/562 tests.
 
+### After pulling this merge: clear one stale build artifact
+
+`pnpm typecheck:web` will fail on a checkout with a warm `.next/` cache:
+
+```
+.next/types/app/(authenticated)/build/access/page.ts(2,24): error TS2307:
+  Cannot find module '../../../../../../app/(authenticated)/build/access/page.js'
+```
+
+`next typegen` regenerates route types for routes that exist but does not prune
+types for routes that were deleted, so the generated type outlives its page. The
+source file is correctly gone; only the generated artifact is stale. Fix:
+
+```bash
+rm -rf "frontend/.next/types/app/(authenticated)/build/access"
+```
+
+`.next/` is gitignored build cache, so this is safe. Verified on `main`: the
+typecheck fails before the prune and passes after it. Worktrees created after the
+deletion never see it.
+
 **`check:build-execution-plan` note.** It fails in any fresh worktree because `git worktree add` writes `docs/specs/build/sidebar/02-scope-directory-prd.md` with CRLF while the checker asserts an LF-only literal. Same blob OID in both trees (`4a1d1b8`), 17009 vs 17326 bytes. Verified three ways: passes in the main checkout, passes in the worktree once CRLF is stripped, and the file is not part of this change.
 
 ### Pre-existing failures
