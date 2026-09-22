@@ -387,13 +387,19 @@ same corpus reported `untraceable 1`, `dropped 2`; the three spec tests assertin
 
 | File | Lines | Change |
 | --- | --- | --- |
-| `backend/src/scripts/check-set-null-migration-text.ts` | 971 → 1,401 | extended (§5) |
-| `backend/src/db/schema/phase-2/composite-fk-confdelsetcols.spec.ts` | 488 | new, 58 tests |
+| `backend/src/scripts/check-set-null-migration-text.ts` | 971 → 1,332 (+370/−9) | extended (§5) |
+| `backend/src/db/schema/phase-2/composite-fk-confdelsetcols.spec.ts` | 485 | new, 58 tests |
 | `backend/docs/phase-2/sql/c-confdelsetcols-01-verify.sql` | 166 | new |
 | `backend/docs/phase-2/sql/c-confdelsetcols-02-tenant-pairing.sql` | 81 | new |
 | `backend/docs/phase-2/sql/c-confdelsetcols-03-cross-tenant-delete-proof.sql` | 155 | new |
 | `backend/docs/phase-2/sql/c-confdelsetcols-04-bare-form-regression.sql` | 59 | new |
 | `docs/build-module/phase-2/08-composite-fk-verification.md` | 418 | new |
+
+Neither changed file carries a code comment. Reasoning that was load-bearing
+lives in `it(...)` and self-test assertion strings — the sweep-determinism
+argument, the 77-byte-name resolution, 0982's "keeping the member that carries
+the referential action", and the parenthesis-counting rationale are all readable
+from test output. Everything else is in this document.
 
 The spec lives at `src/db/schema/phase-2/`, **not** `test/phase-2/`: backend jest
 `roots` are `src`, `evals`, `test/security`, `test/perf`, so a spec under
