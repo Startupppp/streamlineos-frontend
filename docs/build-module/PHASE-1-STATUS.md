@@ -23,10 +23,10 @@ Coordinator-owned. Workers never edit this file.
 
 | Workstream | Owner | Worktree | Status | Files | Tests | Blocker | Evidence |
 |---|---|---|---|---|---|---|---|
-| **A — P0 #6 Sprint/Cycle** | — | — | **BLOCKED** | — | — | **No staging PostgreSQL 15+** | Database blocker confirmed; schema migration + backfill unexecutable without DB |
-| **B — P0 #7 QA Bug lifecycle** | — | — | **BLOCKED** | — | — | **No staging PostgreSQL 15+** | Database blocker confirmed; schema migration + backfill unexecutable without DB |
-| **C — P0 #8 composite FK SET NULL** | — | — | **BLOCKED** | — | — | **No staging PostgreSQL 15+** | Database blocker confirmed; `confdelsetcols` verification unexecutable without live DB |
-| **D — Migration chain** | (read-only) | (none) | ✅ **DONE** | none | static checks pass | (none) | Migrations 1141/1142 safe, 1090/0619 safe to leave, journal verified; full DB proof remains environment-dependent |
+| **A — P0 #6 Sprint/Cycle** | production execution | backend main | **DATABASE_EXPAND_COMPLETE** | expand/backfill/constrain | 4/4 mapped; 386 focused tests | Application cutover before detach/drop | See `P0-PRODUCTION-EXECUTION-2026-09-22.md` |
+| **B — P0 #7 QA Bug lifecycle** | production execution | backend main | **DATABASE_EXPAND_COMPLETE** | expand/backfill | 14/14 SQL verifier checks | Application cutover before freeze/drop | Production contains zero legacy bug rows |
+| **C — P0 #8 composite FK SET NULL** | production execution | backend main | ✅ **DONE** | migrations 1143/1144 | 814 catalog keys inspected; 0 unsafe | none | Live catalog and migration-text gates pass |
+| **D — Migration chain** | production execution | backend main | ✅ **DONE** | journal head 1144 | static and live watermark checks pass | none | 905/905 ledger; 1141–1144 postconditions verified |
 | **E — Authorization census** | (read-only) | (none) | ✅ **DONE** | none | 29/29 self-tests; report check green | (none) | VULNERABLE = 0, CLOSED = 34, VERIFIED = 176, NEEDS-REVIEW = 111; no regression |
 | **F — UX hardening** | (committed) | (none) | ✅ **DONE** | 6 files | 41/41 ✅ | FE-123 browser QA deferred | N-05 and FE-49 fixed; gate fix landed; N-09/N-11 pre-fixed |
 | **G — Documentation reconciliation** | coordinator | main | ✅ **DONE** | this file plus reconciled ledgers | route, typecheck, authz and migration-chain checks pass | none | Historical rows preserved; current status is authoritative from 2026-09-22 reconciliation |

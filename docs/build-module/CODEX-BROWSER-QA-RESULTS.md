@@ -17,10 +17,10 @@ compiled Tailwind CSS and drove system Chrome through CDP at 375 x 812 and 1440 
 | Browser harness self-test | PASS | 7/7 |
 | Full authenticated route workflow | BLOCKED | No reachable non-production PostgreSQL 15+ and no disposable seeded tenant |
 
-The machine has no configured `DATABASE_URL` or `SET_NULL_GATE_DATABASE_URL`, and neither Docker nor a
-local `psql` installation is available. The repository documents that `backend/.env` and
-`backend/.env.production` target production. Those files were not used and no production database was
-contacted.
+Production database execution was later explicitly authorized by the repository owner. IAM authentication
+was used against Aurora PostgreSQL 18.4 after a manual snapshot reached `available`. See
+`P0-PRODUCTION-EXECUTION-2026-09-22.md` for the database evidence. Authenticated browser workflows remain
+separate from the completed component-level browser matrix below.
 
 ## Covered surfaces
 
@@ -43,10 +43,10 @@ and screenshots are in `docs/build-module/phase-4-browser-evidence/`.
 
 | P0 item | Current result | Remaining requirement |
 |---|---|---|
-| #6 Sprint/Cycle consolidation | DESIGN_COMPLETE; focused static suites pass | Replay, backfill, row-count proof and rollback on disposable PostgreSQL 15+ |
-| #7 QA Bug consolidation | DESIGN_COMPLETE; focused static suites pass | Replay, backfill, row-count proof and rollback on disposable PostgreSQL 15+ |
-| #8 composite `SET NULL` | STATIC_GAP_CLOSED; text and self-test gates pass | Live `pg_constraint.confdelsetcols` proof using `SET_NULL_GATE_DATABASE_URL` |
-| Migrations 1141/1142 | Applied according to `PHASE-2-DATA-FOUNDATION-FINAL.md`; local journal is 903 entries | Independent live re-read remains prohibited without a non-production database |
+| #6 Sprint/Cycle consolidation | DATABASE_EXPAND_COMPLETE; 4/4 mappings and constraints verified | Application cutover, then detach/drop |
+| #7 QA Bug consolidation | DATABASE_EXPAND_COMPLETE; 14/14 verifier checks pass with zero legacy bug rows | Application cutover, then freeze/drop |
+| #8 composite `SET NULL` | DONE; 814 live constraints inspected, zero unsafe keys | None |
+| Migrations 1141/1142/1143/1144 | Live postconditions pass; production ledger is 905 entries | None |
 
 The focused Phase 2 run completed 7 suites and 386 tests with no failures. The migration-text report
 resolved all 286 keys that require a `SET NULL` column list with zero drift, new, or untraceable keys.
@@ -69,6 +69,7 @@ These static results do not replace database execution evidence.
 - [x] Focus order has no positive-tabindex, zero-size, or mouse-only defects.
 - [x] Covered SVG charts have non-zero painted bounds.
 - [x] Screenshots and measurements are retained as evidence.
-- [x] No production database was contacted.
-- [ ] Authenticated and data-dependent workflows pass against a disposable seeded stack.
-- [ ] P0 #6, #7 and #8 database proofs pass on PostgreSQL 15+.
+- [x] Production execution had explicit owner authorization and a pre-change snapshot.
+- [ ] Authenticated and data-dependent browser workflows pass against a seeded account.
+- [x] P0 #6 and #7 database expand/backfill proofs pass.
+- [x] P0 #8 live catalog proof passes.
