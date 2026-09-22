@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -16,6 +17,7 @@ export function useWorkloadCapacity(
   end: string,
   options?: { enabled?: boolean },
 ): Map<string, MemberCapacityData> {
+  const canView = useCan("build:tickets:view");
   const { data } = useQuery({
     queryKey: buildWorkQueryKeys.projects.workloadCapacity(projectId, start, end),
     queryFn: ({ signal }) =>
@@ -25,7 +27,7 @@ export function useWorkloadCapacity(
         signal,
         workloadCapacityContract,
       ),
-    enabled: options?.enabled !== false,
+    enabled: canView && options?.enabled !== false,
     staleTime: 60_000,
   });
 
