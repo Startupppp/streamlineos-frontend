@@ -13,6 +13,11 @@ moved the artifacts they describe and broke two of the four specs that proved th
 coordinator's "4 suites, 232 tests, 232 passed" was, on arrival, **2 suites, 40 failed, one suite
 unable to run at all**. That is repaired, and the surface is now 7 suites / 386 tests.
 
+**And the unblock path both ledgers recommend is already built and already dead.** The database gates
+they point at have been wired in `db-gates.yml` the whole time; the workflow has failed **100 of its
+last 100 runs** with zero steps executed, because GitHub Actions billing has lapsed since ~2026-09-10.
+Restoring it is the single highest-leverage action available — see *The real blocker* below.
+
 ## Gating: no non-production PostgreSQL, and none can be provisioned
 
 Re-probed rather than inherited. The prior finding holds but the evidence is now harder:
@@ -239,6 +244,7 @@ comments were added to any file.
 | `check:watermark-free` | exit 0 — 5 appliers, all journal-driven |
 | `check:set-null-migration-text` | exit 0 — 286/286 resolved, 2 known bare, 0 new |
 | `check:set-null-column-lists` | exit 2 `INCONCLUSIVE` — declaration half OK, catalog half needs a database |
+| `check:gate-wiring` | self-test 28/28 exit 0; gate exit 1 on **two pre-existing unwired gates**, `check:build-authz-census{,:check}`, which appear in no workflow file. Not caused here — this branch's workflow edit is purely additive (16 insertions, 0 deletions), and adding a `run:` step cannot unwire a `pnpm` script. Build authz, not data model. |
 
 Not run, deliberately: `check:migration-chain`, `check:migration-ledger`, `migration:proof`,
 `migration:proof:focused`, `check:replay-ledger`, `replay:chain-cold`. All carry
@@ -246,13 +252,23 @@ Not run, deliberately: `check:migration-chain`, `check:migration-ledger`, `migra
 
 ## Hazards
 
-**A sixth gate reaches production, and it is not in the known list.** `check:composite-fk-set-null` has
-no `--env-file` flag in its `package.json` script, so it looks safe. It is not: the script itself calls
-`dotenv.config({ path: BACKEND_ROOT/.env })` at `check-composite-fk-set-null.mjs:36`. I ran it once on
-that basis. It reached the Aurora endpoint and was **rejected at authentication**
+**Reaching production is the default, not the exception — and the flag is not the tell.** The known
+list of "four aliases that carry `--env-file-if-exists=.env`" badly understates this. Counted from
+`package.json`: **79 scripts** carry `--env-file*=.env`, and a further **31** resolve a script whose
+own source calls `dotenv` on `backend/.env` with no flag visible in the alias at all — including
+`db:bootstrap`, `db:bootstrap-role`, `db:verify-rls`, `check:dead-code`, `check:tenant-indexes` and
+`check:composite-fk-set-null`.
+
+I hit the last one: its script is plain `node src/scripts/check-composite-fk-set-null.mjs`, and it
+calls `dotenv.config({ path: BACKEND_ROOT/.env })` at line 36. I ran it on the strength of the alias
+looking clean. It reached the Aurora endpoint and was **rejected at authentication**
 (`PAM authentication failed for user "streamline_admin"` — production uses IAM auth and the script
 mints no token), so no session was established and nothing was read. Reporting it because it happened,
-not because it did harm. Treat this gate as production-pointing.
+not because it did harm.
+
+**The rule to carry forward:** assume any backend script reads `backend/.env` and therefore production,
+unless you have read its source and confirmed otherwise. Grepping `package.json` for `--env-file` is
+not sufficient and will give false confidence 31 times.
 
 **A commit message described only additions while deleting 61 files.** `6ac2004f5` is titled
 "Implement contract freeze and rollback for QA bug consolidation" and lists nine bullet points, all
@@ -263,15 +279,49 @@ gives no way to know that.
 at module scope, so a missing file failed the suite at load and 99 tests simply stopped existing. Jest
 reports "2 failed, 2 passed" for that — the missing 99 are invisible unless you know the expected count.
 
+## The real blocker is not a database — it is GitHub Actions billing
+
+Both prior ledgers name the same unblock: "items 2 and 3 drop into `db-gates.yml` with no new
+infrastructure." **That recommendation is wrong twice over, and I only found out by reading the runs.**
+
+They did not need to "drop in" — they were already there:
+
+| Item | Already wired at |
+|---|---|
+| Catalog half of the SET NULL gate, all 286 keys | `db-gates.yml:153-157`, `SET_NULL_GATE_DATABASE_URL` against `pgvector/pgvector:pg16` |
+| `check:composite-fk-set-null` against `pg_constraint` | `db-gates.yml:163-167` |
+| Full cold chain replay into a blank database | `db-gates.yml:462-465`, `COLD_DATABASE_URL` |
+| `check:replay-ledger` over `drizzle.__replay` | `db-gates.yml:470-473` |
+
+And the job has never run. **`db-gates.yml` is `failure` on 100 of its last 100 runs, back to
+2026-09-10; `ci.yml` is `failure` on 100 of its last 100.** Every job reports **zero steps** and
+completes in 3–5 seconds, because no step ever started. The annotation on the check run says why:
+
+> The job was not started because recent account payments have failed or your spending limit needs to
+> be increased. Please check the 'Billing & plans' section in your settings
+
+So for roughly twelve days **no gate in this repository has executed in CI** — not the database gates,
+not the static ones. Any reasoning anywhere that ends "CI will catch it" is currently false.
+
+**This is the single action that unblocks the most work.** Restore GitHub Actions billing and items 1,
+2 and 3 below all execute on the next push, with no database to provision and no code to write. The
+engine floor is **15** (set by `NULLS NOT DISTINCT` at `0220_autonomy_switches.sql:50`), so the
+existing pg16 service is sufficient.
+
 ## Still blocked
 
-1. Cross-tenant delete proof and bare-form regression proof (workstream C SQL 03 and 04) — written, never executed.
-2. The remaining **285** catalog keys — `confdelsetcols` is readable only from `pg_constraint`.
-3. Full cold chain replay — and the 903/903 ledger is not a substitute, per the 47/856 split above.
-4. Row counts sizing the A and B backfills — ticket conflict cases, soft-deleted sprints, orgs already holding two active cycles.
-5. Promotion of all 26 `migrations/sql/` artifacts to journalled migrations — renumber, move, journal, seal, re-apply the discipline gate.
+| # | Item | Blocked by | Wired? |
+|---|---|---|---|
+| 1 | Cross-tenant delete proof and bare-form regression (workstream C SQL 03 and 04) | Actions billing | **Newly wired here** — `db-gates.yml`, two `psql -v ON_ERROR_STOP=1` steps. Both scripts are `BEGIN … ROLLBACK` and assert with `RAISE EXCEPTION` (8 and 1), so they gate rather than report. |
+| 2 | The remaining **285** catalog keys | Actions billing | Already wired since before this work |
+| 3 | Full cold chain replay — the 903/903 ledger is not a substitute, per the 47/856 split above | Actions billing | Already wired since before this work |
+| 4 | Row counts sizing the A and B backfills | **The no-production rule** — these are counts of live customer data and no CI fixture can stand in | Not wirable |
+| 5 | Promotion of the 26 `migrations/sql/` artifacts to journalled migrations | Item 3 — BE-66 requires a replay proof first | Blocked on 3 |
 
-The cheapest unblock is unchanged and does not need a new machine: `.github/workflows/db-gates.yml:157`
-already runs the catalog half of the SET NULL gate against a `pgvector/pgvector:pg16` service. Items 1
-and 2 drop into that job. Note the engine floor is **15** (set by `NULLS NOT DISTINCT` at
-`0220_autonomy_switches.sql:50`), so pg16 is sufficient.
+Item 4 is the only one that cannot be closed by restoring billing. Items 1, 2, 3 and then 5 fall in
+sequence once the runners start.
+
+The repair SQL `c-confdelsetcols-05-bare-key-repair.sql` is deliberately **not** wired. It is DDL, it
+would mutate the CI database that eleven later steps depend on, and with CI dark I cannot test that
+claim. Wiring it is the first thing to do after the first green run, positioned after the catalog
+gates.
