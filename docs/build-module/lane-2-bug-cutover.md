@@ -43,9 +43,18 @@ All QA bug reads and writes now go through `tickets`+`work_item_qa_details`:
 - `bugRowSchema` now reflects ticket+sidecar shape: `ticketNumber`, `type: 'BUG'`, `status` (resolved name), `priority` (UPPER), `qaState`, `severity`, QA narrative fields
 - `testRunResultRowSchema` adds `linkedWorkItemId` alongside `linkedBugId`
 
-### Phase 3: Contract Freeze (PENDING — apply after staging validation)
+### Phase 3: Contract Freeze — BLOCKED
 
-- `b-qa-bug-04-contract-freeze.sql`: REVOKE INSERT/UPDATE/DELETE on `build.bugs` from `streamline_app`. After this, any legacy writer that slips through will error at the DB layer.
+`b-qa-bug-04-contract-freeze.sql` REVOKEs INSERT/UPDATE/DELETE on `build.bugs` from `streamline_app`. After this, any legacy writer that slips through errors at the DB layer. This migration is destructive and irreversible without a follow-on GRANT.
+
+**Agent 3 review 2026-09-22: BLOCKED. Unmet preconditions:**
+
+1. Staging validation not confirmed — `pnpm exec jest src/modules/build/qa/phase-2` (57 tests) has not been reported as passing.
+2. Staging end-to-end checks (POST /build/:projectId/bugs, GET response shape, test-run bug creation) not confirmed.
+3. `build.bugs` write count must reach zero and be observed over a monitoring window before the REVOKE is safe. Not verified.
+4. P0-PRODUCTION-EXECUTION-2026-09-22.md explicitly records: "The write freeze and destructive contract drop did not run."
+
+Do not apply `b-qa-bug-04-contract-freeze.sql` until all four items above are confirmed.
 
 ## Status Mapping
 
@@ -77,7 +86,7 @@ Consumers that hold a legacy `bugId` can look up the canonical `work_item_id` vi
 
 ## Test-Run Failure Evidence Link
 
-Legacy path: `test_run_results.linked_bug_id` → `build.bugs.id`  
+Legacy path: `test_run_results.linked_bug_id` → `build.bugs.id`
 New path: `test_run_results.linked_work_item_id` → `build.tickets.id`
 
 Both columns coexist during transition. The backfill (b-qa-bug-02) copied `linked_bug_id` values into `linked_work_item_id` for existing rows. New rows set only `linked_work_item_id`.
