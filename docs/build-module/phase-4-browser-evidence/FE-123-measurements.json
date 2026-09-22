@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-09-22T04:49:43.112Z",
+  "capturedAt": "2026-09-22T05:38:26.549Z",
   "widths": [
     375,
     1440
@@ -422,26 +422,29 @@
       },
       "focusCheck": {
         "verdict": "PASS",
-        "tabCount": 3,
-        "uniqueElements": 3,
+        "tabCount": 6,
+        "uniqueElements": 6,
         "sequence": [
           "button[]:Widget setup",
-          "div[region]:SubmissionsNo submissions yetSubmissions",
-          "body[]:FeedbackCollect and triage user feedback"
+          "div[region]:SubmissionsAll statusesAll typesAll subm",
+          "button[combobox]:All statuses",
+          "button[combobox]:All types",
+          "button[combobox]:All submissions",
+          "input[]:From date"
         ],
-        "domFocusableCount": 2,
+        "domFocusableCount": 7,
         "orderIssues": [],
         "zeroSizeExempted": [],
         "mouseOnlyExempted": [],
         "orderAnalysis": {
-          "domFocusableCount": 2,
+          "domFocusableCount": 7,
           "positiveTabIndex": [],
           "zeroSizeFocusable": [],
           "zeroSizeExempted": [],
           "mouseOnly": [],
           "mouseOnlyExempted": []
         },
-        "reason": "tab sequence verified: 3 stops, 2 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+        "reason": "tab sequence verified: 6 stops, 7 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
       },
       "svgCheck": null,
       "screenshots": [
@@ -463,28 +466,29 @@
       },
       "focusCheck": {
         "verdict": "PASS",
-        "tabCount": 5,
-        "uniqueElements": 3,
+        "tabCount": 6,
+        "uniqueElements": 6,
         "sequence": [
           "button[]:Widget setup",
-          "div[region]:SubmissionsNo submissions yetSubmissions",
-          "button[]:Widget setup",
-          "div[region]:SubmissionsNo submissions yetSubmissions",
-          "body[]:FeedbackCollect and triage user feedback"
+          "div[region]:SubmissionsAll statusesAll typesAll subm",
+          "button[combobox]:All statuses",
+          "button[combobox]:All types",
+          "button[combobox]:All submissions",
+          "input[]:From date"
         ],
-        "domFocusableCount": 2,
+        "domFocusableCount": 7,
         "orderIssues": [],
         "zeroSizeExempted": [],
         "mouseOnlyExempted": [],
         "orderAnalysis": {
-          "domFocusableCount": 2,
+          "domFocusableCount": 7,
           "positiveTabIndex": [],
           "zeroSizeFocusable": [],
           "zeroSizeExempted": [],
           "mouseOnly": [],
           "mouseOnlyExempted": []
         },
-        "reason": "tab sequence verified: 5 stops, 2 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+        "reason": "tab sequence verified: 6 stops, 7 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
       },
       "svgCheck": null,
       "screenshots": [
@@ -577,11 +581,10 @@
       },
       "focusCheck": {
         "verdict": "PASS",
-        "tabCount": 2,
-        "uniqueElements": 2,
+        "tabCount": 1,
+        "uniqueElements": 1,
         "sequence": [
-          "svg[application]:Sprint 1Sprint 2Sprint 3Sprint 407142128",
-          "body[]:CommittedCompletedSprint 1Sprint 2Sprint"
+          "svg[application]:Sprint 1Sprint 2Sprint 3Sprint 407142128"
         ],
         "domFocusableCount": 1,
         "orderIssues": [],
@@ -595,7 +598,7 @@
           "mouseOnly": [],
           "mouseOnlyExempted": []
         },
-        "reason": "tab sequence verified: 2 stops, 1 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+        "reason": "tab sequence verified: 1 stops, 1 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
       },
       "svgCheck": {
         "verdict": "PASS",
@@ -790,10 +793,11 @@
       },
       "focusCheck": {
         "verdict": "PASS",
-        "tabCount": 1,
-        "uniqueElements": 1,
+        "tabCount": 2,
+        "uniqueElements": 2,
         "sequence": [
-          "svg[application]:Jan 1Jan 8Jan 15"
+          "svg[application]:Jan 1Jan 8Jan 15",
+          "body[]:BacklogCancelledCompletedStartedUnstarte"
         ],
         "domFocusableCount": 1,
         "orderIssues": [],
@@ -807,7 +811,7 @@
           "mouseOnly": [],
           "mouseOnlyExempted": []
         },
-        "reason": "tab sequence verified: 1 stops, 1 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+        "reason": "tab sequence verified: 2 stops, 1 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
       },
       "svgCheck": {
         "verdict": "PASS",
@@ -1034,11 +1038,10 @@
       },
       "focusCheck": {
         "verdict": "PASS",
-        "tabCount": 2,
-        "uniqueElements": 2,
+        "tabCount": 1,
+        "uniqueElements": 1,
         "sequence": [
-          "svg[application]",
-          "body[]:0"
+          "svg[application]"
         ],
         "domFocusableCount": 1,
         "orderIssues": [],
@@ -1052,7 +1055,7 @@
           "mouseOnly": [],
           "mouseOnlyExempted": []
         },
-        "reason": "tab sequence verified: 2 stops, 1 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
+        "reason": "tab sequence verified: 1 stops, 1 DOM-focusable; no positive-tabIndex, no zero-size, no mouse-only interactive elements"
       },
       "svgCheck": {
         "verdict": "PASS",
@@ -1187,34 +1190,66 @@
     {
       "surface": "critical-path-section",
       "label": "CriticalPathSection",
-      "notCovered": true,
       "width": 375,
       "overflowCheck": {
-        "verdict": "NOT-RUN",
-        "reason": "not covered: React Flow dependency loaded via next/dynamic({ssr:false}); no standalone chart component to bundle outside the dynamic wrapper"
+        "verdict": "PASS",
+        "scrollWidth": 375,
+        "innerWidth": 375,
+        "by": 0,
+        "widest": "div",
+        "measured": true,
+        "pageRendered": true
       },
       "focusCheck": {
         "verdict": "NOT-RUN",
-        "reason": "not covered: React Flow dependency loaded via next/dynamic({ssr:false}); no standalone chart component to bundle outside the dynamic wrapper"
+        "tabCount": 1,
+        "uniqueElements": 1,
+        "sequence": [
+          "body[]:Critical PathTotal duration: 144 steps7 "
+        ],
+        "domFocusableCount": null,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": null,
+        "reason": "Tab returned immediately to body — no interactive elements in DOM"
       },
       "svgCheck": null,
-      "screenshots": []
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\critical-path-section-375px-375px.png"
+      ]
     },
     {
       "surface": "critical-path-section",
       "label": "CriticalPathSection",
-      "notCovered": true,
       "width": 1440,
       "overflowCheck": {
-        "verdict": "NOT-RUN",
-        "reason": "not covered: React Flow dependency loaded via next/dynamic({ssr:false}); no standalone chart component to bundle outside the dynamic wrapper"
+        "verdict": "PASS",
+        "scrollWidth": 1440,
+        "innerWidth": 1440,
+        "by": 0,
+        "widest": "div",
+        "measured": true,
+        "pageRendered": true
       },
       "focusCheck": {
         "verdict": "NOT-RUN",
-        "reason": "not covered: React Flow dependency loaded via next/dynamic({ssr:false}); no standalone chart component to bundle outside the dynamic wrapper"
+        "tabCount": 1,
+        "uniqueElements": 1,
+        "sequence": [
+          "body[]:Critical PathTotal duration: 144 steps7 "
+        ],
+        "domFocusableCount": null,
+        "orderIssues": [],
+        "zeroSizeExempted": [],
+        "mouseOnlyExempted": [],
+        "orderAnalysis": null,
+        "reason": "Tab returned immediately to body — no interactive elements in DOM"
       },
       "svgCheck": null,
-      "screenshots": []
+      "screenshots": [
+        "D:\\projects\\personal\\slos-phase-4-collab\\docs\\build-module\\phase-4-browser-evidence\\screenshots\\critical-path-section-1440px-1440px.png"
+      ]
     }
   ]
 }

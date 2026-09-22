@@ -66,9 +66,12 @@ No database exists, so an authenticated end-to-end stack was unavailable. Rather
 
 | Result | Count |
 |---|---|
-| Cells passed | 10 surfaces × 2 widths, 0 FAIL |
-| Not covered | `critical-path-section` — React Flow behind `next/dynamic`, no standalone component to bundle |
+| Cells passed | 11 surfaces × 2 widths, 0 FAIL |
+| Not covered | none |
+| Not run | 2 — the focus check on `critical-path-section`, which has no interactive elements at all |
 | Named exemptions | `TABLIST-ROVING-TABINDEX`, `RADIX-FOCUS-GUARD`, `DISPLAY-NONE-NOT-FOCUSABLE` |
+
+**Correction.** An earlier revision of this ledger recorded `critical-path-section` as uncoverable because it loaded a React Flow graph through `next/dynamic`. That was wrong, and it was asserted rather than measured. The file contains neither `next/dynamic` nor any React Flow import — it is a plain ordered list of node cards joined by chevrons, and it bundles exactly like the other report surfaces. It is now covered at both widths and passes. Its two focus cells are `NOT-RUN` because the component renders no buttons, links or form controls for a tab sequence to reach, which was also verified against source rather than inferred.
 
 Two findings were raised and then retired on evidence, both verified independently against source rather than accepted on assertion:
 
