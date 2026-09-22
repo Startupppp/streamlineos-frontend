@@ -4,10 +4,10 @@
 
 - **Current/target route:** `/build/goals/[goalId]`
 - **Scope:** organization
-- **Disposition:** **ADD**
-- **Decision:** New canonical page required by the final IA.
+- **Disposition:** **KEEP**
+- **Decision:** Canonical page required by the final IA. Executed 2026-09-22 by renaming `/build/goal/[goalId]` on disk; `next.config.ts` preserves the old deep link. Supersedes [`10-goal-goal.md`](./10-goal-goal.md).
 - **User job:** Track whether work changes the intended outcome.
-- **Evidence:** No current route file; this is a target specification.; Not present in production. **ASSUMPTION:** target behavior requires implementation after route migration approval.
+- **Evidence:** `frontend/app/(authenticated)/build/goals/[goalId]/page.tsx`; route file present since the 2026-09-22 rename. Live behavior not directly observed. **ASSUMPTION:** the page follows its source component until browser evidence is captured.
 
 ## Product contract
 

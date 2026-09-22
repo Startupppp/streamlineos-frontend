@@ -1,5 +1,10 @@
 # Goal Detail
 
+> **RETIRED 2026-09-22.** `/build/goal/[goalId]` no longer has a page on disk; the route was
+> renamed to `/build/goals/[goalId]` and a `next.config.ts` redirect preserves the deep link.
+> The canonical specification is [`10-goals-goal.md`](./10-goals-goal.md). This file is kept as the
+> record of the retired route and must not be used as a contract.
+
 ## Route decision
 
 - **Current/target route:** `/build/goal/[goalId]`

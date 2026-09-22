@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generatedAt": "2026-09-22T07:00:50.710Z",
+  "generatedAt": "2026-09-22T07:29:00.619Z",
   "source": "frontend/app",
   "count": 88,
   "routes": [
@@ -213,12 +213,12 @@
       "file": "frontend/app/(authenticated)/build/customers/page.tsx"
     },
     {
-      "path": "/build/goal",
-      "file": "frontend/app/(authenticated)/build/goal/page.tsx"
+      "path": "/build/goals",
+      "file": "frontend/app/(authenticated)/build/goals/page.tsx"
     },
     {
-      "path": "/build/goal/{goalId}",
-      "file": "frontend/app/(authenticated)/build/goal/[goalId]/page.tsx"
+      "path": "/build/goals/{goalId}",
+      "file": "frontend/app/(authenticated)/build/goals/[goalId]/page.tsx"
     },
     {
       "path": "/build/inbox",
@@ -255,10 +255,6 @@
     {
       "path": "/build/my-work",
       "file": "frontend/app/(authenticated)/build/my-work/page.tsx"
-    },
-    {
-      "path": "/build/pm-workspaces",
-      "file": "frontend/app/(authenticated)/build/pm-workspaces/page.tsx"
     },
     {
       "path": "/build/portfolios",
@@ -299,6 +295,10 @@
     {
       "path": "/build/templates",
       "file": "frontend/app/(authenticated)/build/templates/page.tsx"
+    },
+    {
+      "path": "/build/workspaces",
+      "file": "frontend/app/(authenticated)/build/workspaces/page.tsx"
     },
     {
       "path": "/build/workspaces/{pmWorkspaceId}",

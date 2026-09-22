@@ -87,7 +87,7 @@ function GoalCard({ goal }: { goal: GoalListItem }) {
       variants={shouldReduceMotion ? listItemReduced : listItem}
       transition={pmSnappy}
     >
-      <Link href={`/build/goal/${goal.id}`} className="group block">
+      <Link href={`/build/goals/${goal.id}`} className="group block">
         <div
           className={cn(
             PM_PANEL,
