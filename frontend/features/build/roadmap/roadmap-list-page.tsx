@@ -10,7 +10,13 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RequireModule } from "@/components/auth/require-module";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  TABS_CONTENT_PAGE_BODY_CLASS,
+} from "@/components/ui/tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { RoadmapTab } from "@/features/build/roadmap/roadmap-tab";
 import { FeedbackTab } from "@/features/build/roadmap/feedback-tab";
@@ -94,49 +100,59 @@ export function RoadmapListPage() {
           title="Roadmap"
           subtitle="Plan publicly, collect feedback and ship a changelog"
           actions={hasActions ? actions : undefined}
+          filters={
+            <PageTabsToolbar
+              tabsDensity="labeled"
+              tabs={
+                <TabsList>
+                  <TabsTrigger value="roadmap" className="gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Roadmap
+                  </TabsTrigger>
+                  <TabsTrigger value="feedback" className="gap-1.5">
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    Feedback
+                  </TabsTrigger>
+                  <TabsTrigger value="changelog" className="gap-1.5">
+                    <Megaphone className="h-3.5 w-3.5" />
+                    Changelog
+                  </TabsTrigger>
+                </TabsList>
+              }
+              search={
+                showSearch ? (
+                  <SearchInput
+                    placeholder="Search…"
+                    value={search}
+                    onValueChange={setSearch}
+                  />
+                ) : null
+              }
+            />
+          }
         >
           <PmPageShell>
-            <PmSection index={0} className={cn(PM_FILL_SECTION, "gap-3")}>
-              <PageTabsToolbar
-                tabsDensity="labeled"
-                tabs={
-                  <TabsList>
-                    <TabsTrigger value="roadmap" className="gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      Roadmap
-                    </TabsTrigger>
-                    <TabsTrigger value="feedback" className="gap-1.5">
-                      <MessageSquare className="h-3.5 w-3.5" />
-                      Feedback
-                    </TabsTrigger>
-                    <TabsTrigger value="changelog" className="gap-1.5">
-                      <Megaphone className="h-3.5 w-3.5" />
-                      Changelog
-                    </TabsTrigger>
-                  </TabsList>
-                }
-                search={
-                  showSearch ? (
-                    <SearchInput
-                      placeholder="Search…"
-                      value={search}
-                      onValueChange={setSearch}
-                    />
-                  ) : null
-                }
-              />
-
-              <TabsContent value="roadmap" className="mt-0">
+            <PmSection index={0} className={PM_FILL_SECTION}>
+              <TabsContent
+                value="roadmap"
+                className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-y-auto")}
+              >
                 <RoadmapTab
                   search={debouncedSearch}
                   createOpen={roadmapCreateOpen}
                   onCreateOpenChange={handleRoadmapCreateOpenChange}
                 />
               </TabsContent>
-              <TabsContent value="feedback" className="mt-0">
+              <TabsContent
+                value="feedback"
+                className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-y-auto")}
+              >
                 <FeedbackTab search={debouncedSearch} />
               </TabsContent>
-              <TabsContent value="changelog" className="mt-0">
+              <TabsContent
+                value="changelog"
+                className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-y-auto")}
+              >
                 <ChangelogTab
                   createOpen={changelogCreateOpen}
                   onCreateOpenChange={handleChangelogCreateOpenChange}

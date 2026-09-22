@@ -261,7 +261,7 @@ export function TeamHomePage({ teamId }: Props) {
   if (isError || !data) {
     return (
       <PageWrapper title="Team" backHref="/build/teams">
-        <PmPageShell withGlow={false}>
+        <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
             <ErrorState className="flex-1" onRetry={handleRetry} />
           </PmSection>

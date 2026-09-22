@@ -11,6 +11,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/common/use-mobile";
+import { PM_PANEL } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 import type { AllWorkTicket } from "@/types/projects";
 
@@ -329,7 +330,7 @@ export const GroupingSidebar = memo(function GroupingSidebar({
 
       {open ? (
         <aside
-          className="hidden h-full min-w-56 w-60 shrink-0 flex-col overflow-hidden rounded-xl border border-border/80 bg-card/85 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-card/75 md:flex"
+          className={cn(PM_PANEL, "hidden h-full min-w-56 w-60 shrink-0 flex-col overflow-hidden md:flex")}
           aria-label="Group by"
         >
           {!isMobile ? <GroupingSidebarBody {...bodyProps} /> : null}

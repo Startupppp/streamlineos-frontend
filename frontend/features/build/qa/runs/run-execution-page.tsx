@@ -192,7 +192,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
   if (!run) {
     return (
       <PageWrapper title="Run" backHref={`/build/${projectId}/qa`}>
-        <PmPageShell withGlow={false}>
+        <PmPageShell>
           <ErrorState onRetry={handleRetry} />
         </PmPageShell>
       </PageWrapper>

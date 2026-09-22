@@ -247,7 +247,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
   if (resolution.kind !== "ready" || !data) {
     return (
       <PageWrapper title="Portfolio" backHref="/build/portfolios">
-        <PmPageShell withGlow={false}>
+        <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
             <PageState resolution={resolution} loading={<DetailSkeleton />} onRetry={handleRetry}>
               {null}

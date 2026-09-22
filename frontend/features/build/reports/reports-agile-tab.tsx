@@ -1,6 +1,6 @@
 "use client";
 
-import { PmPageShell, PmSection } from "@/components/pm-chrome";
+import { PmSection } from "@/components/pm-chrome";
 import { VelocitySection } from "./velocity-section";
 import { BurnupSection } from "./burnup-section";
 import { CfdSection } from "./cfd-section";
@@ -15,7 +15,7 @@ interface ReportsAgileTabProps {
 
 export function ReportsAgileTab({ projectId }: ReportsAgileTabProps) {
   return (
-    <PmPageShell>
+    <>
       <div className="flex justify-end">
         <ReportsExportButton projectId={projectId} />
       </div>
@@ -37,6 +37,6 @@ export function ReportsAgileTab({ projectId }: ReportsAgileTabProps) {
       <PmSection index={3}>
         <CriticalPathSection projectId={projectId} />
       </PmSection>
-    </PmPageShell>
+    </>
   );
 }

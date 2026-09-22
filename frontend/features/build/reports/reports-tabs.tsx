@@ -10,6 +10,9 @@ import {
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
+import { PmPageShell, PmSection, PM_FILL_SECTION } from "@/components/pm-chrome";
+import { cn } from "@/lib/utils";
 import { parseEnum, useUrlFilters } from "@/lib/url-state/use-url-filters";
 import { ReportsAgileTab } from "./reports-agile-tab";
 import { ReportsOverviewTab } from "./reports-overview-tab";
@@ -35,26 +38,43 @@ export function ReportsTabs({ projectId }: ReportsTabsProps) {
   );
 
   return (
-    <PageWrapper
-      title="Reports"
-      subtitle="Agile metrics and project analytics"
+    <Tabs
+      value={activeTab}
+      onValueChange={handleTabChange}
+      className="flex min-h-0 flex-1 flex-col"
     >
-      <Tabs
-        value={activeTab}
-        onValueChange={handleTabChange}
-        className="flex min-h-0 flex-1 flex-col"
+      <PageWrapper
+        title="Reports"
+        subtitle="Agile metrics and project analytics"
+        filters={
+          <PageTabsToolbar
+            tabs={
+              <TabsList>
+                <TabsTrigger value="agile">Agile Reports</TabsTrigger>
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+              </TabsList>
+            }
+          />
+        }
       >
-        <TabsList>
-          <TabsTrigger value="agile">Agile Reports</TabsTrigger>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-        </TabsList>
-        <TabsContent value="agile" className={TABS_CONTENT_PAGE_BODY_CLASS} forceMount>
-          <ReportsAgileTab projectId={projectId} />
-        </TabsContent>
-        <TabsContent value="overview" className={TABS_CONTENT_PAGE_BODY_CLASS}>
-          <ReportsOverviewTab projectId={projectId} />
-        </TabsContent>
-      </Tabs>
-    </PageWrapper>
+        <PmPageShell>
+          <PmSection index={0} className={PM_FILL_SECTION}>
+            <TabsContent
+              value="agile"
+              className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "gap-4 overflow-y-auto")}
+              forceMount
+            >
+              <ReportsAgileTab projectId={projectId} />
+            </TabsContent>
+            <TabsContent
+              value="overview"
+              className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "gap-4 overflow-y-auto")}
+            >
+              <ReportsOverviewTab projectId={projectId} />
+            </TabsContent>
+          </PmSection>
+        </PmPageShell>
+      </PageWrapper>
+    </Tabs>
   );
 }

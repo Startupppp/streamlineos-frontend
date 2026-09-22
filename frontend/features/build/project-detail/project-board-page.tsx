@@ -11,6 +11,7 @@ import { ProjectAiMenu } from "@/features/build/ai/project-ai-menu";
 import { SaveViewDialog } from "@/features/build/views/save-view-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallback";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -139,7 +140,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Loading..." noInternalScroll>
+      <PageWrapper title={<Skeleton className="h-5 w-40" />} noInternalScroll>
         <KanbanBoardSkeleton />
       </PageWrapper>
     );
@@ -223,6 +224,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
         workloadFilters={workloadFilters}
         onTicketSelect={handleTicketSelect}
         onWorkloadFilterChange={handleWorkloadFilterChange}
+        onClearWorkloadFilters={handleClearWorkloadFilters}
         sprints={sprints ?? []}
         selectedIds={selectedIds}
         onBulkStatus={handleBulkStatus}

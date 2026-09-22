@@ -12,7 +12,12 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  PageWrapper: ({ children, filters }: { children: ReactNode; filters?: ReactNode }) => (
+    <div>
+      {filters}
+      {children}
+    </div>
+  ),
 }));
 
 jest.mock("./reports-agile-tab", () => ({

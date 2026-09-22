@@ -49,8 +49,13 @@ import {
   PmPageShell,
   PmSection,
   PM_FILL_PANEL,
+  PM_FILL_SECTION,
 } from "@/components/pm-chrome";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import {
+  FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
+import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 
@@ -321,11 +326,16 @@ export function ManagedProductsPage({
 
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
+      <SearchInput
+        placeholder="Search products…"
+        value={search}
+        onValueChange={handleSearchChange}
+      />
       <Select value={statusFilter} onValueChange={handleStatusChange}>
-        <SelectTrigger className="w-40">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-40")}>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
           {STATUS_OPTS.map((o) => (
             <SelectItem key={o.value} value={o.value}>
               {o.label}
@@ -333,13 +343,13 @@ export function ManagedProductsPage({
           ))}
         </SelectContent>
       </Select>
-      <SearchInput
-        placeholder="Search products…"
-        value={search}
-        onValueChange={handleSearchChange}
-      />
       {isFiltered ? (
-        <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="ml-auto"
+          onClick={handleClearFilters}
+        >
           Clear
         </Button>
       ) : null}
@@ -354,7 +364,7 @@ export function ManagedProductsPage({
       actions={canCreate ? <NewProductButton onClick={handleOpenCreate} /> : undefined}
     >
       <PmPageShell>
-        <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+        <PmSection index={0} className={PM_FILL_SECTION}>
           <PageState
             resolution={resolution}
             loading={<DataTableSkeleton rows={12} columns={6} className="flex-1" />}

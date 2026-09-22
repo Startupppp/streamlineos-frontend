@@ -61,6 +61,7 @@ interface ProjectBoardContentProps {
     key: K,
     value: WorkloadFilterState[K],
   ) => void;
+  onClearWorkloadFilters: () => void;
   sprints: Sprint[];
   selectedIds: Set<string | number>;
   onBulkStatus: (v: string) => void;
@@ -95,6 +96,7 @@ export function ProjectBoardContent({
   workloadFilters,
   onTicketSelect,
   onWorkloadFilterChange,
+  onClearWorkloadFilters,
   sprints,
   selectedIds,
   onBulkStatus,
@@ -330,6 +332,7 @@ export function ProjectBoardContent({
               members={members}
               filters={workloadFilters}
               onFilterChange={onWorkloadFilterChange}
+              onClearFilters={onClearWorkloadFilters}
             />
           </motion.div>
         );

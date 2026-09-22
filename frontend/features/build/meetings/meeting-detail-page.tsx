@@ -119,7 +119,7 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
   if (!meeting) {
     return (
       <PageWrapper title="Meeting" backHref={`/build/${projectId}/meetings`}>
-        <PmPageShell withGlow={false}>
+        <PmPageShell>
           <ErrorState onRetry={handleRetry} />
         </PmPageShell>
       </PageWrapper>
