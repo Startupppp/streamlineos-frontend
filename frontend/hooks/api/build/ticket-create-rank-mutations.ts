@@ -247,6 +247,7 @@ export interface BulkUpdateTicketsInput {
   assigneeId?: string;
   status?: string;
   sprintId?: number | null;
+  cycleId?: number | null;
   priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   parentTicketId?: number | null;
 }
@@ -268,6 +269,7 @@ function toTicketUpdateInput(
     assigneeId: input.assigneeId,
     status: input.status,
     sprintId: input.sprintId,
+    cycleId: input.cycleId,
     priority: input.priority,
     parentTicketId: input.parentTicketId,
   };
