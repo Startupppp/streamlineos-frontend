@@ -1,6 +1,6 @@
 # FE-123 Browser Evidence Report
 
-Captured: 2026-09-22T04:49:43.126Z
+Captured: 2026-09-22T05:38:26.550Z
 Widths: 375, 1440px
 Approach: (a) static-render via esbuild bundle + compiled Tailwind CSS
 CSS source: main checkout .next/static/css/e4722c266c890a04.css (Tailwind v4, 393 KB)
@@ -89,7 +89,7 @@ elements that matched a named rule; the latter means the harness found nothing t
 - cfd-chart: BUILD OK
 - cycle-time-chart: BUILD OK
 - lead-time-chart: BUILD OK
-- critical-path-section: NOT-COVERED — React Flow dependency loaded via next/dynamic({ssr:false}); no standalone chart component to bundle outside the dynamic 
+- critical-path-section: BUILD OK
 
 ## Coverage Matrix
 
@@ -105,7 +105,7 @@ burnup-chart | PASS | PASS | PASS | PASS | PASS | PASS
 cfd-chart | PASS | PASS | PASS | PASS | PASS | PASS
 cycle-time-chart | PASS | PASS | PASS | PASS | PASS | PASS
 lead-time-chart | PASS | PASS | PASS | PASS | PASS | PASS
-critical-path-section | NOT-RUN | NOT-RUN | n/a | NOT-RUN | NOT-RUN | n/a
+critical-path-section | PASS | NOT-RUN | n/a | PASS | NOT-RUN | n/a
 
 ## Findings
 
@@ -121,11 +121,12 @@ No FAIL findings.
 
 ## NOT-COVERED Surfaces
 
-- **critical-path-section** (CriticalPathSection): React Flow dependency loaded via next/dynamic({ssr:false}); no standalone chart component to bundle outside the dynamic wrapper
+None.
 
 ## NOT-RUN Cells
 
-None.
+- critical-path-section @ 375px [focus]: Tab returned immediately to body — no interactive elements in DOM
+- critical-path-section @ 1440px [focus]: Tab returned immediately to body — no interactive elements in DOM
 
 ## Focus Analysis Detail
 
@@ -139,18 +140,20 @@ change-requests | 375 | 7 | 9 | 0 | 0 | 0 | 0 | 0 | PASS
 change-requests | 1440 | 7 | 9 | 0 | 0 | 0 | 0 | 0 | PASS
 client-access | 375 | 5 | 4 | 0 | 0 | 0 | 0 | 0 | PASS
 client-access | 1440 | 5 | 4 | 0 | 0 | 0 | 0 | 0 | PASS
-feedbucket | 375 | 3 | 2 | 0 | 0 | 0 | 0 | 0 | PASS
-feedbucket | 1440 | 5 | 2 | 0 | 0 | 0 | 0 | 0 | PASS
+feedbucket | 375 | 6 | 7 | 0 | 0 | 0 | 0 | 0 | PASS
+feedbucket | 1440 | 6 | 7 | 0 | 0 | 0 | 0 | 0 | PASS
 velocity-chart | 375 | 2 | 1 | 0 | 0 | 0 | 0 | 0 | PASS
-velocity-chart | 1440 | 2 | 1 | 0 | 0 | 0 | 0 | 0 | PASS
+velocity-chart | 1440 | 1 | 1 | 0 | 0 | 0 | 0 | 0 | PASS
 burnup-chart | 375 | 2 | 1 | 0 | 0 | 0 | 0 | 0 | PASS
 burnup-chart | 1440 | 2 | 1 | 0 | 0 | 0 | 0 | 0 | PASS
-cfd-chart | 375 | 1 | 1 | 0 | 0 | 0 | 0 | 0 | PASS
+cfd-chart | 375 | 2 | 1 | 0 | 0 | 0 | 0 | 0 | PASS
 cfd-chart | 1440 | 2 | 1 | 0 | 0 | 0 | 0 | 0 | PASS
 cycle-time-chart | 375 | 2 | 1 | 0 | 0 | 0 | 0 | 0 | PASS
-cycle-time-chart | 1440 | 2 | 1 | 0 | 0 | 0 | 0 | 0 | PASS
+cycle-time-chart | 1440 | 1 | 1 | 0 | 0 | 0 | 0 | 0 | PASS
 lead-time-chart | 375 | 2 | 1 | 0 | 0 | 0 | 0 | 0 | PASS
 lead-time-chart | 1440 | 2 | 1 | 0 | 0 | 0 | 0 | 0 | PASS
+critical-path-section | 375 | - | - | - | - | - | - | - | NOT-RUN
+critical-path-section | 1440 | - | - | - | - | - | - | - | NOT-RUN
 
 ## Screenshots
 
@@ -174,6 +177,8 @@ lead-time-chart | 1440 | 2 | 1 | 0 | 0 | 0 | 0 | 0 | PASS
 - cycle-time-chart @ 1440px: `D:\projects\personal\slos-phase-4-collab\docs\build-module\phase-4-browser-evidence\screenshots\cycle-time-chart-1440px-1440px.png`
 - lead-time-chart @ 375px: `D:\projects\personal\slos-phase-4-collab\docs\build-module\phase-4-browser-evidence\screenshots\lead-time-chart-375px-375px.png`
 - lead-time-chart @ 1440px: `D:\projects\personal\slos-phase-4-collab\docs\build-module\phase-4-browser-evidence\screenshots\lead-time-chart-1440px-1440px.png`
+- critical-path-section @ 375px: `D:\projects\personal\slos-phase-4-collab\docs\build-module\phase-4-browser-evidence\screenshots\critical-path-section-375px-375px.png`
+- critical-path-section @ 1440px: `D:\projects\personal\slos-phase-4-collab\docs\build-module\phase-4-browser-evidence\screenshots\critical-path-section-1440px-1440px.png`
 
 ## Reproduction
 

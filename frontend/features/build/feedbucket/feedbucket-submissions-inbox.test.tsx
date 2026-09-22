@@ -92,6 +92,26 @@ jest.mock("@/components/ui/badge", () => ({
   Badge: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
 }));
 
+jest.mock("@/components/ui/input", () => ({
+  Input: ({
+    value,
+    onChange,
+    "aria-label": ariaLabel,
+    ...rest
+  }: {
+    value?: string;
+    onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    "aria-label"?: string;
+  } & Record<string, unknown>) => (
+    <input
+      aria-label={ariaLabel}
+      value={value}
+      onChange={onChange}
+      {...rest}
+    />
+  ),
+}));
+
 jest.mock("@/components/ui/truncated-text", () => ({
   TruncatedText: ({ text }: { text: string }) => <span>{text}</span>,
 }));
@@ -261,5 +281,84 @@ describe("ProjectSubmissionsInbox — URL-backed filters passed to API", () => {
 
     const call = mockUseFeedbucketSubmissions.mock.calls[0][0] as Record<string, unknown>;
     expect(call.type).toBeUndefined();
+  });
+
+  it("reads the linked=linked param from the URL and passes it to useFeedbucketSubmissions", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("linked=linked"));
+    render(<ProjectSubmissionsInbox widgetId={4} projectId={1} />);
+
+    expect(mockUseFeedbucketSubmissions).toHaveBeenCalledWith(
+      expect.objectContaining({ widgetId: 4, linked: "linked" }),
+    );
+  });
+
+  it("reads the linked=unlinked param from the URL and passes it to useFeedbucketSubmissions", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("linked=unlinked"));
+    render(<ProjectSubmissionsInbox widgetId={4} projectId={1} />);
+
+    expect(mockUseFeedbucketSubmissions).toHaveBeenCalledWith(
+      expect.objectContaining({ linked: "unlinked" }),
+    );
+  });
+
+  it("omits linked from the API call when no linked param is set so all link states are returned", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
+    render(<ProjectSubmissionsInbox widgetId={4} projectId={1} />);
+
+    const call = mockUseFeedbucketSubmissions.mock.calls[0][0] as Record<string, unknown>;
+    expect(call.linked).toBeUndefined();
+  });
+
+  it("reads the from param from the URL and passes it to useFeedbucketSubmissions", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("from=2026-01-01T00%3A00%3A00Z"));
+    render(<ProjectSubmissionsInbox widgetId={5} projectId={1} />);
+
+    expect(mockUseFeedbucketSubmissions).toHaveBeenCalledWith(
+      expect.objectContaining({ from: "2026-01-01T00:00:00Z" }),
+    );
+  });
+
+  it("reads the to param from the URL and passes it to useFeedbucketSubmissions", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("to=2026-06-01T00%3A00%3A00Z"));
+    render(<ProjectSubmissionsInbox widgetId={5} projectId={1} />);
+
+    expect(mockUseFeedbucketSubmissions).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "2026-06-01T00:00:00Z" }),
+    );
+  });
+
+  it("omits from and to from the API call when those params are not in the URL", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("status=open"));
+    render(<ProjectSubmissionsInbox widgetId={5} projectId={1} />);
+
+    const call = mockUseFeedbucketSubmissions.mock.calls[0][0] as Record<string, unknown>;
+    expect(call.from).toBeUndefined();
+    expect(call.to).toBeUndefined();
+  });
+});
+
+describe("ProjectSubmissionsInbox — new filter params count as active filters", () => {
+  it("shows filtered-empty title when linked param is set and inbox is empty", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("linked=linked"));
+    mockUseFeedbucketSubmissions.mockReturnValue(baseQueryResult({ data: makePagedResult() }));
+    render(<ProjectSubmissionsInbox widgetId={1} projectId={1} />);
+
+    expect(screen.getByTestId("empty-title")).toHaveTextContent("No matching submissions");
+  });
+
+  it("shows filtered-empty title when from param is set and inbox is empty", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("from=2026-01-01T00%3A00%3A00Z"));
+    mockUseFeedbucketSubmissions.mockReturnValue(baseQueryResult({ data: makePagedResult() }));
+    render(<ProjectSubmissionsInbox widgetId={1} projectId={1} />);
+
+    expect(screen.getByTestId("empty-title")).toHaveTextContent("No matching submissions");
+  });
+
+  it("shows filtered-empty title when to param is set and inbox is empty", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("to=2026-06-01T00%3A00%3A00Z"));
+    mockUseFeedbucketSubmissions.mockReturnValue(baseQueryResult({ data: makePagedResult() }));
+    render(<ProjectSubmissionsInbox widgetId={1} projectId={1} />);
+
+    expect(screen.getByTestId("empty-title")).toHaveTextContent("No matching submissions");
   });
 });
