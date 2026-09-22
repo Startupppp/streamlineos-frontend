@@ -72,7 +72,7 @@ interface Props {
 }
 
 export function ReferenceChecksTab({ candidateId }: Props) {
-  const { data: checks, isLoading } = useReferenceChecks(candidateId);
+  const { data: checks, isLoading, isError, error, refetch } = useReferenceChecks(candidateId);
   const createCheck = useCreateReferenceCheck(candidateId);
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -128,6 +128,22 @@ export function ReferenceChecksTab({ candidateId }: Props) {
         {Array.from({ length: 6 }).map((_, i) => (
           <Skeleton key={i} className="h-24 w-full rounded-2xl" />
         ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-status-danger-rule bg-status-danger-surface px-6 py-8 text-center">
+        <div className="text-sm font-medium text-status-danger-ink">
+          Failed to load reference checks
+        </div>
+        <p className="text-xs text-status-danger-ink">
+          {getErrorMessage(error)}
+        </p>
+        <Button variant="outline" size="sm" onClick={() => void refetch()}>
+          Retry
+        </Button>
       </div>
     );
   }
