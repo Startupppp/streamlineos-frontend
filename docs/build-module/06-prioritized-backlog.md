@@ -1,6 +1,7 @@
 # Build Prioritized Backlog
 
-Reconciled against the repository on 2026-09-22 at root `e70089d85` and backend `main`.
+Reconciled against the repository on 2026-09-22. First pass at root `e70089d85`; re-measured at
+root `f794b484a` and backend `de8ccd58a` after the coordinator session landed most of Stage A.
 
 Order is **dependency order, not wish order**: application code cutover → verification →
 deployment → destructive migration → browser verification. A stage cannot start before the
@@ -31,6 +32,10 @@ code. They are kept for audit history and must not be re-opened without new evid
 | Add project filtering to Inbox | `frontend/features/build/inbox/inbox-filter-bar.tsx:23,95-102`; index applied by `backend/migrations/1151_notifications_metadata_project_id_index.sql` |
 | Change Request release and client-visibility fields | `client_visible` and `release_id` exist in `backend/src/db/schema/build/change-requests.ts:36-37`, read and filtered in `backend/src/modules/build/client-portal/change-requests.service.ts:57-58,117-121`; applied to production per `P0-PRODUCTION-EXECUTION-1149-1151.md` |
 | Sprint/Cycle and QA Bug **application** cutover (backend) | `NEXT-CLOSURE-STATUS.md:20-24`; commits merged into backend `main` |
+| **A1 — frontend Sprint→Cycle read cutover** | Landed `36e7402ad` / `f794b484a`. Re-measured at `f794b484a`: the `sprintId` census returns **0** across the whole frontend. `frontend/hooks/api/build/sprints.ts` and `frontend/types/projects/sprints.ts` are deleted |
+| **A1b — backend `tickets.sprint_id` removal** | Landed `e06314424`, `de8ccd58a`. `tickets`, `project_meetings`, `test_runs` and `sprint_scope_events` no longer declare `sprint_id`; the only remaining `sprint_id` in the schema is `cycles.legacy_sprint_id` (`backend/src/db/schema/build/core.ts:165`) |
+| **A4 — invoice → timesheet pointer** | Landed `8bd5a84b4`. `invoice_items.timesheet_entry_id` is written and read — `backend/src/modules/invoices/invoices-write.service.ts:139`, `invoices-update.service.ts:130,168`, `invoices.service.ts:121` |
+| QA Bug legacy writer | Deleted `06b398ec8`. No non-test `from(bugs)`, `insert(bugs)`, `update(bugs)` or `delete(bugs)` remains |
 
 Nine physical route removals are recorded in [`99-kill-list.md`](./99-kill-list.md) and are not
 repeated here.
@@ -42,23 +47,21 @@ repeated here.
 Nothing in Stage D may run until every Stage A task is deployed. Dropping a column that live
 code still reads raises PostgreSQL `42703` on production traffic with no warning.
 
-#### A1 — Frontend Sprint→Cycle read cutover
+A1 (frontend `sprintId`), A1b (backend `tickets.sprint_id`) and A4 (invoice → timesheet
+pointer) landed during this reconciliation and have moved to the historical table above. **A2 and
+A3 are what remain.**
 
-- **User job:** plan timeboxed work in Cycles without the app still reading a field that is about to be dropped.
-- **Owner:** frontend
-- **Depends on:** none — the backend cutover is merged
-- **Acceptance:** `grep -rn "sprintId" --include=*.ts --include=*.tsx frontend | grep -v node_modules | grep -vE "(\.test\.|\.spec\.|__tests__)"` returns zero outside the deliberately retained legacy types; `frontend/hooks/api/build/build-tickets-core-schema.ts` no longer projects `sprintId`; frontend `type-check` passes with 0 errors.
-- **Evidence:** baseline measured 2026-09-22 — **85 occurrences across 48 non-test files**; the projection is `frontend/hooks/api/build/build-tickets-core-schema.ts:24`; the legacy surfaces are `frontend/hooks/api/build/sprints.ts` and `frontend/types/projects/sprints.ts`. Full file list in [`10-next-phase-execution.md`](./10-next-phase-execution.md).
-- **Effort:** 4–6 d
+#### A2 — Retire the `sprints` table access path
 
-#### A2 — Retire the `sprints` table read path
-
-- **User job:** stop the server reading a table that phase 05 deletes.
+- **User job:** stop the server reading and writing a table that phase 05 deletes.
 - **Owner:** backend
-- **Depends on:** A1
-- **Acceptance:** no non-schema `select().from(sprints)` remains; `GET /build/:projectId/sprints` either returns cycle-derived rows or is removed with its route-manifest entry; backend `typecheck` stays at its measured parity of 1 pre-existing error.
-- **Evidence:** `backend/src/modules/build/execution/sprints.service.ts:19-34` still selects eight columns from `sprints`; reached from `backend/src/modules/build/execution/iterations.controller.ts:71-75`.
+- **Depends on:** none — A1 and A1b are merged
+- **Acceptance:** no non-schema `from(sprints)`, `update(sprints)` or `insert(sprints)` remains; `sprintsRelations` is removed; `GET /build/:projectId/sprints` either returns cycle-derived rows or is removed together with its route-manifest entry; backend `typecheck` stays at its measured parity of 1 pre-existing error.
+- **Evidence:** re-measured at backend `de8ccd58a` — **five live non-test call sites**, three of them writes: `backend/src/modules/build/core/projects-write.service.ts:289` (`update`), `backend/src/modules/build/entity/build-entity-reads.service.ts:355` (`from`), `backend/src/modules/build/execution/sprints.service.ts:32` (`from`), `:122` (`update`), `:181` (soft-delete `update`), plus `backend/src/db/schema/build/relations.ts:56`.
 - **Effort:** 2–3 d
+
+**This is the single blocker for migration D2.** Dropping `build.sprints` against the current
+code raises PostgreSQL `42P01` at all five sites.
 
 #### A3 — Change Requests: affected-work linkage
 
@@ -69,22 +72,13 @@ code still reads raises PostgreSQL `42703` on production traffic with no warning
 - **Evidence:** `backend/src/db/schema/build/change-requests.ts:19-58` has `release_id` and `client_visible` but **no affected-work column**; `grep -rni affectedWork` returns nothing in either repository.
 - **Effort:** 3–5 d
 
-#### A4 — Populate the invoice → timesheet pointer
-
-- **User job:** trace an invoice line back to the approved time that justifies it.
-- **Owner:** backend
-- **Depends on:** none
-- **Acceptance:** invoicing writes `invoice_items.timesheet_entry_id` on creation from approved time; a cross-tenant negative test and a positive control both pass.
-- **Evidence:** the column and its composite FK are applied (`backend/migrations/1150_invoice_items_timesheet_entry_ref.sql`, corrected before apply per `P0-PRODUCTION-EXECUTION-1149-1151.md`), and **no code writes it** — `backend/src/db/schema/crm/invoicing.ts` is the target.
-- **Effort:** 3–5 d
-
 ## Stage B — verification
 
 #### B1 — Prove the Sprint/Cycle detach precondition in code, not only in data
 
 - **User job:** none directly — this is the guard that stops A1/A2 shipping half-done.
 - **Owner:** backend
-- **Depends on:** A1, A2
+- **Depends on:** A2
 - **Acceptance:** an invariant spec fails if any non-schema reference to `tickets.sprint_id` reappears, in both string and Drizzle relational (`sprintId: true`) form, with an empty allowlist.
 - **Evidence:** the DO-block guard in `backend/migrations/sql/a-sprint-cycle-04-detach.sql` is a **data** check over `sprint_binding_archive` and has zero visibility into application code — stated at `lane-1-cycle-cutover.md:82`.
 - **Effort:** 1–2 d
@@ -113,7 +107,7 @@ code still reads raises PostgreSQL `42703` on production traffic with no warning
 
 - **User job:** keep Build working while the data model contracts underneath it.
 - **Owner:** repo owner
-- **Depends on:** A1–A4, B1, B3
+- **Depends on:** A2, A3, B1, B3 (A1, A1b and A4 are merged)
 - **Acceptance:** the deployed revision contains every Stage A commit; a production smoke of Cycles, Issues, Change Requests and Workload returns 200 with no `42703` in logs.
 - **Evidence:** the ordering hazard is `lane-1-cycle-cutover.md:82`; the same class already bit Change Requests, recorded at `NEXT-CLOSURE-STATUS.md:160-162`.
 - **Effort:** 0.5 d plus an observation window
@@ -123,6 +117,19 @@ code still reads raises PostgreSQL `42703` on production traffic with no warning
 Every task here is irreversible in practice. The Aurora cluster has **1-day backup retention**,
 so a manual snapshot is the only recovery point — read the posture from the cluster, not the
 instance. Each phase below must be preceded by a fresh manual snapshot.
+
+Readiness re-measured at root `f794b484a` / backend `de8ccd58a`:
+
+| Phase | Code ready? | What still blocks it |
+|---|---|---|
+| D1 detach | **Yes** | Stage C only. No schema or code reference to `sprint_id` remains on any of the 4 tables, but production still serves the pre-cutover revision |
+| D2 drop `sprints` | **No** | A2 — five live non-test call sites, three of them writes |
+| D3 QA freeze | **Yes** | B2 only. No non-test reader or writer of `build.bugs` remains |
+| D4 drop `bugs` | **Yes**, after D3 | D3 applied and observed; no rollback file exists for this phase |
+
+"Code ready" means the merged source no longer touches the object. It does **not** mean the
+running production revision no longer touches it — that is what Stage C establishes, and it is
+the difference between a clean drop and a site-wide `42703`.
 
 #### D1 — `a-sprint-cycle-04-detach.sql`
 
@@ -217,9 +224,9 @@ Ordered by dependency on the closure stages above.
 
 - **User job:** carry one engagement from deal to quote to signed agreement to project to approved time to invoice to payment without re-keying.
 - **Owner:** backend, then frontend
-- **Depends on:** A4
+- **Depends on:** none — the invoice → timesheet pointer is merged
 - **Acceptance:** each handoff is one action with the prior record's identity carried forward; no step requires retyping a value the previous step already holds.
-- **Evidence:** every screen exists today and the handoffs do not — `/crm/quotes`, `/sign/envelopes`, `/timesheets/billing`, `/accounting/invoices` and `/accounting/payments-received` all resolve; the pointer from A4 is the first real link.
+- **Evidence:** every screen exists today and the handoffs do not — `/crm/quotes`, `/sign/envelopes`, `/timesheets/billing`, `/accounting/invoices` and `/accounting/payments-received` all resolve; the merged `invoice_items.timesheet_entry_id` pointer is the first real link.
 - **Effort:** 10–15 d
 
 #### P1-5 — Feedbucket bulk actions and server-side filters

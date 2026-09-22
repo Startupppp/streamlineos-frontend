@@ -1,8 +1,13 @@
 # Build — Next Phase Execution
 
-Written 2026-09-22 against root `e70089d85` and backend `main`. This is the runbook for the work
-that begins **after** the current coordinator session finishes. It does not describe, schedule or
-depend on anything that session is still editing.
+Written 2026-09-22, re-measured the same day against root `f794b484a` and backend `de8ccd58a`
+after the coordinator session landed most of Stage A. This is the runbook for the work that
+begins **after** that session finishes. It does not describe, schedule or depend on anything the
+session is still editing.
+
+**State at re-measurement:** A1, A1b and A4 are done. **A2 and A3 are open.** Of the four
+destructive migrations, one is blocked on code (A2) and three are blocked only on deployment or
+data verification. None has been applied.
 
 Priority and estimates live in [`06-prioritized-backlog.md`](./06-prioritized-backlog.md). This
 document is the how: entry conditions, exact commands, the census that Stage A has to drive to
@@ -38,9 +43,11 @@ The migration will not warn you: its guard is a data check.
 
 ## Stage A — the census that must reach zero
 
-### A1 — frontend `sprintId`
+### A1 — frontend `sprintId` — DONE
 
-Reproduce the count:
+Landed in `36e7402ad`, merged as `f794b484a`. Re-measured at that revision, the census returns
+**0** across the whole frontend, and `frontend/hooks/api/build/sprints.ts` and
+`frontend/types/projects/sprints.ts` are deleted. Reproduce with:
 
 ```bash
 cd frontend
@@ -49,44 +56,45 @@ grep -rn "sprintId" --include='*.ts' --include='*.tsx' . \
   | grep -vE '(\.test\.|\.spec\.|__tests__)'
 ```
 
-Measured 2026-09-22: **85 occurrences across 48 non-test files.**
+### A1b — backend `tickets.sprint_id` — DONE
 
-| Area | Files | Occurrences | Note |
-|---|---|---|---|
-| `frontend/features/build/views/` | 12 | 21 | Workload filter chain is the largest single cluster |
-| `frontend/hooks/api/build/` | 10 | 16 | Contains the projection that must go first |
-| `frontend/types/projects/` | 4 | 11 | `sprints.ts` is the legacy type surface |
-| `frontend/features/build/shared/` | 5 | 11 | Shared filter and URL-state plumbing |
-| `frontend/features/build/all-work/` | 3 | 5 | |
-| `frontend/features/build/ticket-details/` | 3 | 5 | |
-| `frontend/lib/query-keys/` | 2 | 5 | |
-| `frontend/features/build/meetings/` | 2 | 3 | `generate-agenda.ts` is the silent-failure site |
-| `frontend/features/build/project-detail/` | 1 | 2 | |
-| `frontend/features/build/my-work/` | 2 | 2 | |
-| `frontend/features/build/backlog/`, `cycles/`, `my-tickets/`, `lib/validation/` | 4 | 4 | one each |
+Landed in `e06314424` and `de8ccd58a`. `tickets`, `project_meetings`, `test_runs` and
+`sprint_scope_events` no longer declare `sprint_id`. The only `sprint_id` remaining anywhere in
+`backend/src/db/schema/` is `cycles.legacy_sprint_id` at `build/core.ts:165`, which phase 05
+keeps. Reproduce with `grep -rn "sprint_id" backend/src/db/schema/ --include='*.ts'` — one hit.
 
-Order of work within A1:
-
-1. `frontend/hooks/api/build/build-tickets-core-schema.ts:24` — stop projecting `sprintId`. Everything else is downstream of this one line.
-2. The Workload filter chain in `frontend/features/build/views/`, which is the widest blast radius.
-3. Shared filter and URL-state plumbing in `frontend/features/build/shared/`.
-4. `frontend/hooks/api/build/sprints.ts` and `frontend/types/projects/sprints.ts` last — deleting the legacy surface before its callers only moves the error.
+Two traps that this cutover had to clear, recorded because they recur:
 
 **Do not replace a value with `null` and keep the field.** That shipped once already. A Zod
 contract that accepts `null` cannot tell you the value stopped arriving, and
-`frontend/features/build/meetings/generate-agenda.ts` filters on equality — agendas come back
+`frontend/features/build/meetings/generate-agenda.ts` filtered on equality — agendas came back
 empty with no error anywhere.
 
 **Grep both forms.** An earlier invariant scanned for `tickets.sprintId` and reported clean while
-three files selected the column through Drizzle's relational API as `sprintId: true`.
+three files selected the column through Drizzle's relational API as `sprintId: true`. The final
+relational read was closed separately in `de8ccd58a` — "the relational sprint read the three
+scanners could not see".
 
-### A2 — the `sprints` table read path
+### A2 — the `sprints` table access path — OPEN, and the only blocker for D2
 
-`backend/src/modules/build/execution/sprints.service.ts:19-34` still selects eight columns
-`.from(sprints)`, reached through
-`backend/src/modules/build/execution/iterations.controller.ts:71-75`. Phase 05 deletes that
-table. Either derive the response from `cycles.legacy_sprint_id` — which the same method already
-joins — or remove the route together with its route-manifest entry, never one without the other.
+Re-measured at backend `de8ccd58a`: **five live non-test call sites, three of them writes.**
+
+| Site | Operation |
+|---|---|
+| `backend/src/modules/build/core/projects-write.service.ts:289` | `update(sprints)` |
+| `backend/src/modules/build/entity/build-entity-reads.service.ts:355` | `from(sprints)` |
+| `backend/src/modules/build/execution/sprints.service.ts:32` | `from(sprints)` |
+| `backend/src/modules/build/execution/sprints.service.ts:122` | `update(sprints)` |
+| `backend/src/modules/build/execution/sprints.service.ts:181` | `update(sprints)` soft delete |
+
+Plus `backend/src/db/schema/build/relations.ts:56` (`sprintsRelations`) and the live route
+`GET /build/:projectId/sprints` at
+`backend/src/modules/build/execution/iterations.controller.ts:62-92`.
+
+Phase 05 deletes that table. Either derive the responses from `cycles.legacy_sprint_id` — which
+`listSprints` already joins — or remove the route together with its route-manifest entry, never
+one without the other. Until all five sites are gone, `a-sprint-cycle-05-drop.sql` raises
+`42P01` on live traffic.
 
 ### A3 — Change Request affected work
 
@@ -99,12 +107,14 @@ an explicit column list — without one PostgreSQL nulls every column in the key
 `NOT NULL` `org_id`, and the delete fails `23502` surfaced as a 500. That exact defect was caught
 in migration 1150 before it was applied.
 
-### A4 — invoice → timesheet pointer
+### A4 — invoice → timesheet pointer — DONE
 
-`invoice_items.timesheet_entry_id` and its composite FK are applied to production and **no code
-writes the column**. `backend/src/db/schema/crm/invoicing.ts` and the invoicing service are the
-targets. Ship a cross-tenant negative test alongside the positive control; the original 1150 FK
-was single-column and would have permitted a cross-organization reference.
+Landed in `8bd5a84b4`. `invoice_items.timesheet_entry_id` is now written and read at
+`backend/src/modules/invoices/invoices-write.service.ts:139`,
+`invoices-update.service.ts:130,168` and `invoices.service.ts:121`. The column and its composite
+FK were already applied to production; the FK was corrected from single-column to
+`(org_id, timesheet_entry_id)` before it was applied, which is what prevents a cross-organization
+reference.
 
 ## Stage B — verification
 
@@ -128,15 +138,24 @@ missing-export error. Run it from a checkout with its own install.
 Deploy every Stage A commit. Then smoke Cycles, Issues, ticket detail, Change Requests and
 Workload in production and confirm no `42703` appears in logs before Stage D is considered.
 
+**This stage is what makes D1 safe, and it has not happened.** The merged source no longer reads
+`tickets.sprint_id`, but the revision production is currently serving still does. Dropping the
+column before the deploy takes Build down; dropping it after is a no-op to every caller.
+
 ## Stage D — destructive migration
 
 Run in this order, one per window, each preceded by a **fresh manual cluster snapshot** taken
 before any DDL:
 
-1. `backend/migrations/sql/a-sprint-cycle-04-detach.sql` — drops `sprint_id` from 4 tables
-2. `backend/migrations/sql/a-sprint-cycle-05-drop.sql` — drops `build.sprints`
-3. `backend/migrations/sql/b-qa-bug-04-contract-freeze.sql` — makes `build.bugs` unwritable
-4. `backend/migrations/sql/b-qa-bug-05-contract-drop.sql` — drops `build.bugs`
+| # | Migration | Effect | Code ready at `de8ccd58a`? | Blocked on |
+|---|---|---|---|---|
+| 1 | `backend/migrations/sql/a-sprint-cycle-04-detach.sql` | drops `sprint_id` from 4 tables | **Yes** | Stage C |
+| 2 | `backend/migrations/sql/a-sprint-cycle-05-drop.sql` | drops `build.sprints` | **No** | A2 — five live call sites |
+| 3 | `backend/migrations/sql/b-qa-bug-04-contract-freeze.sql` | makes `build.bugs` unwritable | **Yes** | B2 — 14 verify checks |
+| 4 | `backend/migrations/sql/b-qa-bug-05-contract-drop.sql` | drops `build.bugs` | **Yes**, after 3 | phase 3 observed clean |
+
+`build.bugs` has no non-test reader or writer left — `grep -rn "from(bugs)\|insert(bugs)\|update(bugs)\|delete(bugs)" backend/src --include='*.ts'` excluding specs returns nothing — so
+phases 3 and 4 are gated on data verification, not on code.
 
 ### Hazards
 
@@ -179,8 +198,9 @@ result rather than an error.
 
 ## Exit criteria for the next phase
 
-- [ ] The `sprintId` census returns zero outside deliberately retained legacy types.
-- [ ] No non-schema read of the `sprints` table remains.
+- [x] The frontend `sprintId` census returns zero.
+- [x] No table other than `cycles` declares `sprint_id`.
+- [ ] No non-schema read **or write** of the `sprints` table remains — five sites open.
 - [ ] Stage A is deployed and observed clean before any Stage D migration runs.
 - [ ] All four contraction phases are applied, each behind its own fresh snapshot.
 - [ ] `b-qa-bug-03-verify.sql` returned zero on all 14 checks before the freeze.
