@@ -75,7 +75,7 @@ export function TicketPill({
       return;
     }
     if (entity.projectId)
-      router.push(`/build/${entity.projectId}?ticket=${entity.id}`);
+      router.push(`/build/${entity.projectId}/issues?ticket=${entity.id}`);
   }, [router, card?.href, entity.projectId, entity.id]);
 
   const handleStatusChange = useCallback(
