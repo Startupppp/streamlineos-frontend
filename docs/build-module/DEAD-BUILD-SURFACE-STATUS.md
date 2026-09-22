@@ -157,6 +157,38 @@ frontend/features/build/drafts/comment-drafts-page.test.tsx
 - The seven `CONSOLIDATE` pages and three `MOVE` pages with a missing target —
   `BLOCKED`, because deleting them would remove the user job rather than move it.
 
+## After pulling this branch: prune six stale generated route types
+
+`next typegen` regenerates route types for routes that exist but does **not**
+prune types for routes that were deleted, so on any checkout with a warm
+`.next/` cache `pnpm typecheck:web` fails like this:
+
+```
+.next/types/app/(authenticated)/build/members/page.ts(2,24): error TS2307:
+  Cannot find module '.../app/(authenticated)/build/members/page.js'
+```
+
+The source files are correctly gone; only the generated artifacts are stale.
+`.next/` is gitignored build cache, so pruning is safe:
+
+```bash
+cd frontend
+rm -rf ".next/types/app/(authenticated)/build/access"
+rm -rf ".next/types/app/(authenticated)/build/members"
+rm -rf ".next/types/app/(authenticated)/build/client-access"
+rm -rf ".next/types/app/(authenticated)/build/[projectId]/workflow"
+rm -rf ".next/types/app/(authenticated)/build/[projectId]/automations"
+rm -rf ".next/types/app/(authenticated)/build/[projectId]/webhooks"
+```
+
+The parallel session found this for `/build/access` and recorded it in
+`ACCESS-ROUTE-CLOSURE-STATUS.md`; the same applies to the other five.
+**This worktree never reproduced it** — it was created fresh and `next typegen`
+first ran after the deletions, so no stale directory was ever generated. That is
+why `typecheck:web` passes here, and it is why that pass alone does not prove a
+warm checkout is clean. Verified by listing all six paths under
+`frontend/.next/types/`: none exists here.
+
 ## One correction, recorded rather than quietly fixed
 
 The first verification pass ran `lib/build` but **not** `lib/rbac`, and on that
