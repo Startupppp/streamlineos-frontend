@@ -59,14 +59,6 @@ export function useWeekGridCells({
   const [editingValue, setEditingValue] = useState("");
   const cellRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  /**
-   * What the grid announces when a cell writes.
-   *
-   * Every edit here is a silent background mutation — the number just stays
-   * where you typed it — so a screen reader user had no signal that anything
-   * had been saved, or that it had failed. Errors already toast; this covers
-   * the success and in-flight halves.
-   */
   const [cellError, setCellError] = useState<string | null>(null);
   const lastCommitted = useRef<{ cellKey: string; value: string } | null>(null);
 
@@ -85,8 +77,6 @@ export function useWeekGridCells({
   const commitCell = useCallback(
     (rowKey: string, date: string, value: string, row: GridRow): boolean => {
       const existing = entryMap.get(`${rowKey}-${date}`);
-      // A locked cell is read-only rather than disabled now, so it can be
-      // focused and left; nothing it reports may reach a mutation.
       if (isCellLocked(existing)) {
         setEditingCell(null);
         setCellError(null);
@@ -161,16 +151,6 @@ export function useWeekGridCells({
     [allRows, days],
   );
 
-  /**
-   * Move around the grid with the arrow keys.
-   *
-   * Enter alone used to be the whole keyboard story, and a number input eats
-   * Up and Down natively to step its own value — so a keyboard user pressing
-   * Down on Monday silently changed Monday's hours instead of moving to the
-   * next project. Arrow keys now navigate (and are prevented from stepping),
-   * Home/End jump to the ends of the week, and Enter still commits and moves
-   * down. Typing a value is unaffected: only the movement keys are captured.
-   */
   const handleCellKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (!NAV_KEYS.includes(e.key)) return;
@@ -181,9 +161,6 @@ export function useWeekGridCells({
       const rowIdx = allRows.findIndex((r) => r.rowKey === rowKey);
       if (dayIdx < 0 || rowIdx < 0) return;
 
-      // `selectionStart` is null on `input[type=number]`, which reads as "the
-      // whole value", so Left/Right always navigate here. They still leave a
-      // text-mode cell only from its edges if this ever stops being a number.
       const start = e.currentTarget.selectionStart;
       const end = e.currentTarget.selectionEnd;
       const caretAtStart = start === null || start === 0;

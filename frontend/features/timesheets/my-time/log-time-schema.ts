@@ -24,12 +24,6 @@ const PATHS = {
   description: "description",
 } as const;
 
-/**
- * The org's `requiredFields` policy is a runtime value, so the resolver is
- * built per render rather than declared once. Passing an empty list yields the
- * schema this file used to export — which is what a user without
- * `timesheets:settings:view` gets, and the server stays the boundary for them.
- */
 export function logTimeSchemaFor(requiredFields: readonly string[]) {
   return baseLogTimeSchema.superRefine((values, ctx) => {
     for (const field of missingOnCreate(requiredFields, values))

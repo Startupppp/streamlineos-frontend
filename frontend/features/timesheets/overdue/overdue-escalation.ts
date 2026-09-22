@@ -1,18 +1,5 @@
 import type { OverduePeriod } from "@/features/timesheets/types";
 
-/**
- * TS-11. What an escalation level means, given what the organisation configured.
- *
- * `escalationLevel` is zero in two completely different situations — a period
- * that has passed none of the configured thresholds, and an organisation that
- * configured none at all. The server returns `escalationThresholds` precisely
- * so a caller can tell them apart, and a surface that renders the number alone
- * tells half its tenants something false: "level 0" reads as a system that is
- * watching and has decided this one is fine, when the truth may be that nobody
- * set up any reminders and nothing is watching at all.
- *
- * So "unconfigured" is a distinct state here rather than a zero.
- */
 export type EscalationState =
   | { kind: "unconfigured" }
   | { kind: "within-thresholds"; nextAt: number; daysUntilNext: number }
@@ -25,10 +12,6 @@ export function describeEscalation(
   if (thresholds.length === 0) return { kind: "unconfigured" };
 
   const ascending = [...thresholds].sort((a, b) => a - b);
-  /**
-   * Clamped, because the level counts thresholds passed and the list is read
-   * from settings that can be edited between the count and this render.
-   */
   const level = Math.min(Math.max(0, row.escalationLevel), ascending.length);
 
   if (level === 0) {
@@ -48,7 +31,6 @@ export function describeEscalation(
   };
 }
 
-/** The label a reader sees, in words rather than a bare ordinal. */
 export function escalationLabel(state: EscalationState): string {
   switch (state.kind) {
     case "unconfigured":
@@ -62,7 +44,6 @@ export function escalationLabel(state: EscalationState): string {
   }
 }
 
-/** Which status tone the row carries. Escalated is the only one that alarms. */
 export function escalationTone(
   state: EscalationState,
 ): "danger" | "warning" | "neutral" {

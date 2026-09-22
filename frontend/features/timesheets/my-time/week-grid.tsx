@@ -36,12 +36,6 @@ export function WeekGrid({
   weekStart,
   weekEnd,
 }: WeekGridProps) {
-  /**
-   * Marked, not blocked. A holiday is a day the organisation does not expect
-   * work on, which is not the same as a day nobody may log — people do work
-   * public holidays, and refusing the entry would lose that time rather than
-   * record it. So the column is shaded and named, and the input stays live.
-   */
   const { data: holidayData } = useTimesheetHolidays(weekStart, weekEnd);
   const holidayByDate = useMemo(
     () => new Map((holidayData?.holidays ?? []).map((h) => [h.date, h.name])),
@@ -303,16 +297,6 @@ export function WeekGrid({
                             min="0"
                             step="0.25"
                             value={displayValue}
-                            /**
-                             * Read-only rather than disabled: a disabled input
-                             * leaves the tab order and is skipped by screen
-                             * readers, so a week whose first three days are
-                             * approved simply had no Monday, Tuesday or
-                             * Wednesday for a keyboard user. Read-only keeps
-                             * the cell reachable and announces why it cannot
-                             * be changed, which is what the padlock already
-                             * says to everyone else.
-                             */
                             readOnly={locked}
                             aria-readonly={locked || undefined}
                             aria-label={describeCell(

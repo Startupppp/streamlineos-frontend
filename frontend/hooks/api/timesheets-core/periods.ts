@@ -53,11 +53,6 @@ export function usePeriodApproverPreview(periodId: number | null, options?: { en
   });
 }
 
-/**
- * Each action passes its own literal path rather than interpolating the action
- * name: a path segment built from a variable is a path the contract scan cannot
- * read, so drift on it would never be reported.
- */
 function usePeriodAction(
   action: "submit" | "recall",
   message: string,

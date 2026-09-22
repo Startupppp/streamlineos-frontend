@@ -11,7 +11,6 @@ import {
   type ExceptionStatus,
 } from "@/features/timesheets/exception-types";
 
-/** The sentinel that means "do not send this filter at all". */
 export const ALL = "all";
 
 export const DEFAULT_STATUS: ExceptionStatus = "OPEN";
@@ -49,18 +48,6 @@ function isExceptionRule(value: string): value is ExceptionRule {
   return value in EXCEPTION_RULE_LABEL;
 }
 
-/**
- * Read the queue's filters out of the URL, so a queue is a link.
- *
- * An exceptions queue exists to be handed to somebody — "these six are yours"
- * — and until now the filters lived in `useState`, so the only thing you could
- * send was the address of the unfiltered page. Reloading also silently reset
- * you to the default view mid-triage.
- *
- * Status is the one filter with a non-empty default: an absent `status` param
- * means OPEN (what an operator wants on arrival), and `status=all` is the
- * explicit request for every status. Every other filter defaults to unset.
- */
 export function useExceptionFilters(): ExceptionFilters {
   const router = useRouter();
   const pathname = usePathname();

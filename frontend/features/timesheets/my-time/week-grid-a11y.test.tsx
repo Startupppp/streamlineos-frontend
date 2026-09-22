@@ -175,7 +175,6 @@ describe("week grid accessibility", () => {
 
     await user.keyboard("{Home}");
     expect(monday).toHaveFocus();
-    // The value never changed: Down would have stepped it without the handler.
     expect(monday).toHaveValue(4);
   });
 

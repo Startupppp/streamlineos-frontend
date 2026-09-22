@@ -30,15 +30,6 @@ const SOURCE_LABEL: Record<NonNullable<ResolvedRatePreview["source"]>, string> =
   PROJECT_MEMBER: "the project member rate",
 };
 
-/**
- * Exported so the four outcomes can be asserted directly.
- *
- * The panel only queries once a project or member is picked, and that selection
- * is component state a test cannot reach without driving a Radix Select through
- * jsdom. Testing the outcome renderer through the panel would mean testing the
- * combobox instead of the thing that matters, so the renderer is its own unit
- * and the panel keeps a reachability test.
- */
 export function RatePreviewResult({ rate }: { rate: ResolvedRatePreview }) {
   const orgDisplay = useOrgDisplay();
 
@@ -46,11 +37,6 @@ export function RatePreviewResult({ rate }: { rate: ResolvedRatePreview }) {
     const tone = statusToneClasses("warning");
     return (
       <div className={cn("rounded-lg border p-3", tone.surface, tone.rule)}>
-        {/*
-          The case worth building this for. No rate card matched and the person
-          has no rate on the project, so work here bills at nothing — which is
-          silent until an invoice comes out short.
-        */}
         <p className={cn("text-sm font-medium", tone.ink)}>
           Nothing would be billed
         </p>
@@ -83,20 +69,6 @@ export function RatePreviewResult({ rate }: { rate: ResolvedRatePreview }) {
   );
 }
 
-/**
- * TS. "Which rate actually applies here?"
- *
- * Rate cards overlap by design — one for the project, one for a person, one for
- * a window, each with a priority — so which card wins for a given combination
- * is genuinely hard to work out by reading the table above. The backend already
- * had the answer at `GET /timesheets/billing/rate-preview`, running the same
- * resolver that prices an entry at invoicing time, and nothing called it: the
- * only way to find out whether a card you had just written took effect was to
- * invoice and look.
- *
- * Deliberately read-only and beside the cards rather than inside the form. It
- * answers a question about the whole set, not about the row being edited.
- */
 export function RatePreviewPanel() {
   const [projectId, setProjectId] = useState(NONE);
   const [userId, setUserId] = useState("");

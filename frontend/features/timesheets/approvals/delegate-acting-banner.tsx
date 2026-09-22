@@ -6,7 +6,6 @@ import type { BorrowedAuthority } from "./approval-standing";
 
 interface DelegateActingBannerProps {
   authority: BorrowedAuthority | null;
-  /** Resolves an approver's user id to a display name. */
   resolveName: (userId: string) => string;
   className?: string;
 }
@@ -18,16 +17,6 @@ function joinNames(names: string[]): string {
   return `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
 }
 
-/**
- * Says whose authority the viewer is about to use.
- *
- * Approving is an accountable act, and until now the page looked identical
- * whether you were deciding your own team's timesheets or standing in for a
- * manager on leave. The difference matters twice: the decision is recorded
- * against the assigned approver's queue, and it will be refused outright if
- * the delegation has since lapsed — which previously surfaced only as a 403
- * on the button, with no explanation of why the row was there at all.
- */
 export function DelegateActingBanner({
   authority,
   resolveName,

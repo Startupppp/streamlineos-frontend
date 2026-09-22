@@ -12,16 +12,6 @@ export interface FillFromClockProps {
   onResult: (result: AttendanceDraftResult) => void;
 }
 
-/**
- * What the result actually says, rather than a number.
- *
- * The endpoint answers five things at once and they are not degrees of one
- * outcome. `enabled: false` means the organisation never switched the policy on
- * — nothing was read and nothing was written — so showing it as "0 entries
- * created" would tell somebody their clock produced no hours, which is a
- * different statement and a false one. Skipped days are not failures either:
- * `skippedExisting` is the whole reason the endpoint is safe to run twice.
- */
 export function describeDraftResult(
   result: AttendanceDraftResult,
 ): { tone: "info" | "success" | "neutral"; headline: string; detail?: string } {
@@ -36,11 +26,6 @@ export function describeDraftResult(
     return { tone: "neutral", headline: "No completed clock days in this week" };
   }
   if (result.entriesCreated === 0) {
-    /*
-     * Segments were found and nothing was created, which is the case most
-     * likely to read as a bug. It is usually the opposite — the days are
-     * already logged — so it says which.
-     */
     const reasons: string[] = [];
     if (result.skippedExisting > 0)
       reasons.push(`${result.skippedExisting} already had an entry`);
@@ -72,17 +57,6 @@ const TONE_CLASS: Record<"info" | "success" | "neutral", string> = {
   neutral: "border-status-neutral-rule bg-status-neutral-surface text-status-neutral-ink",
 };
 
-/**
- * Runs for the week already on screen rather than asking for a date range.
- *
- * The range is what the person is looking at, so there is nothing to choose and
- * nothing to get wrong — and it cannot exceed the endpoint's 62-day ceiling by
- * construction.
- *
- * The result is handed upward rather than held here: the button belongs in the
- * toolbar and the summary belongs under it, so one component cannot own both
- * without deciding the page's layout for it.
- */
 export function FillFromClockButton({ weekStart, weekEnd, onResult }: FillFromClockProps) {
   const canCreate = useCan("timesheets:entries:create");
   const draft = useDraftEntriesFromAttendance();

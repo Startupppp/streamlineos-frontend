@@ -103,12 +103,6 @@ export function SettingsView() {
           </TabsContent>
         )}
 
-        {/*
-          Not forceMount, unlike its siblings. The history is a separate request
-          and mounting it eagerly would fire it for everyone who opens Settings
-          to change one switch. The tab is where somebody goes to ask a question
-          about the past, so it loads when they ask it.
-        */}
         <TabsContent value="history" className="mt-0">
           <motion.div key="history" {...motionProps}>
             <SettingsHistoryTab />

@@ -86,20 +86,6 @@ export function useCreateTimesheetEntry() {
   });
 }
 
-/**
- * TS-09, which had no caller at all.
- *
- * `POST /timesheets/entries/from-attendance` turns completed clock days into
- * draft entries. It shipped with a permission key, idempotency, an own-time-only
- * guarantee and a careful docblock — and no hook, no button, no route. The
- * feature worked and reached nobody, which is the same defect the overdue queue
- * had and the reason both were found by asking which routes the frontend never
- * names.
- *
- * No toast on success. The result has five outcomes that a single line cannot
- * distinguish, so the caller renders them; a toast here would flatten "your
- * organisation has not enabled this" into "nothing happened".
- */
 export function useDraftEntriesFromAttendance() {
   const qc = useQueryClient();
   return useMutation({

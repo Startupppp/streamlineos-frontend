@@ -14,17 +14,6 @@ interface ApprovalTabFilterProps {
   onChange: (tab: ApprovalTab) => void;
 }
 
-/**
- * The Pending / Approved / Rejected switch, as a tablist rather than three
- * buttons that happen to be next to each other.
- *
- * They were bare `<button>`s whose selected state was carried entirely by a
- * background colour: no role, no `aria-selected`, no `type`, and every one of
- * them in the tab order — so a keyboard user tabbed through all three to reach
- * the table, and a screen reader was told nothing about which was active.
- * Now: one tab stop for the group, arrows and Home/End to move within it, and
- * the selection announced.
- */
 export function ApprovalTabFilter({ value, onChange }: ApprovalTabFilterProps) {
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
 

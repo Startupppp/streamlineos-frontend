@@ -15,15 +15,6 @@ import {
   escalationTone,
 } from "./overdue-escalation";
 
-/**
- * `parseISO` and not `new Date`, for every one of these.
- *
- * All four dates arrive as bare `YYYY-MM-DD`. `new Date("2026-09-01")` is
- * parsed as UTC midnight and then rendered in the reader's zone, so anyone west
- * of UTC is shown the previous day — a period that ended on the 1st reads as
- * ending on the 31st, and the due date a person is being chased about is off by
- * one. `parseISO` reads a date-only string as local midnight.
- */
 function day(value: string): string {
   return format(parseISO(value), "d MMM yyyy");
 }
