@@ -5,9 +5,9 @@ after the coordinator session landed most of Stage A. This is the runbook for th
 begins **after** that session finishes. It does not describe, schedule or depend on anything the
 session is still editing.
 
-**State at re-measurement:** A1, A1b, A2, A4 and A5 are all done on `main`. **No code blocker
-remains.** A3 is open but gates nothing. Of the four destructive migrations, one is applied and
-three wait on a deploy.
+**State, re-verified against the live catalog 2026-09-23.** Stages A through D are **complete**:
+the code cutover, the deploy, and all five destructive migration phases have landed. The only
+open item in this runbook is **Stage E, browser verification**, which has never been performed.
 
 **Production database state, read-only over IAM on 2026-09-22.** Every figure below was measured
 inside a `SET TRANSACTION READ ONLY` transaction; nothing was written.
@@ -156,56 +156,47 @@ earlier.
 the main checkout — it resolves imports back to `main`'s source tree and fails with a spurious
 missing-export error. Run it from a checkout with its own install.
 
-## Stage C — deployment
+## Stage C — deployment — DONE
 
-Deploy every Stage A commit. Then smoke Cycles, Issues, ticket detail, Change Requests and
-Workload in production and confirm no `42703` appears in logs before Stage D is considered.
-
-**This stage is what makes D1 safe, and it has not happened.** The merged source no longer reads
-`tickets.sprint_id`, but the revision production is currently serving still does. Dropping the
-column before the deploy takes Build down; dropping it after is a no-op to every caller.
+Backend and frontend shipped together. The contract change is breaking in both directions, so a
+one-sided deploy would have failed either way round. The owner confirmed it before authorizing the
+contraction; `https://api.streamlineos.in/health` returns 200 with database, cache and queue `up`.
 
 ## Stage D — destructive migration
 
 Run in this order, one per window, each preceded by a **fresh manual cluster snapshot** taken
 before any DDL:
 
-| # | Migration | Effect | Status |
+| # | Migration | Status | Catalog evidence, read 2026-09-23 |
 |---|---|---|---|
-| 1 | `backend/migrations/sql/a-sprint-cycle-04-detach.sql` | drops `sprint_id` from 4 tables, and the 4 FKs that block phase 05 | **NOT APPLIED** — needs the deploy |
-| 2 | `backend/migrations/sql/a-sprint-cycle-05-drop.sql` | drops `build.sprints` | **NOT APPLIED** — needs phase 1 first, then the deploy |
-| 3 | `backend/migrations/sql/b-qa-bug-04-contract-freeze.sql` | revokes write on `build.bugs`, keeps `SELECT` | **APPLIED 2026-09-22**, snapshot `pre-qa-bug-freeze-20260922173910` |
-| 4 | `backend/migrations/sql/b-qa-bug-05-contract-drop.sql` | drops `build.bugs` | **NOT APPLIED** — the deployed revision still reads the table |
+| 1 | `a-sprint-cycle-04-detach.sql` | **APPLIED** | `sprint_id` gone from all four tables; no FK references `build.sprints` |
+| 2 | `a-sprint-cycle-05-drop.sql` | **APPLIED** | `build.sprints` dropped; `sprints_archive` holds 4 rows with RLS |
+| 3 | `a-sprint-cycle-06-rename-scope-events.sql` | **APPLIED** | `cycle_scope_events` exists, old name resolves to nothing, enum is `cycle_scope_event_type` |
+| 4 | `b-qa-bug-04-contract-freeze.sql` | **APPLIED** | `streamline_app` keeps `SELECT`, has no write grants |
+| 5 | `b-qa-bug-05-contract-drop.sql` | **APPLIED** | `build.bugs` and `test_run_results.linked_bug_id` gone |
 
-**The deploy is the real gate, and it has not happened.** Production is live
-(`https://api.streamlineos.in/health` → 200, 11 application backends), the backend has no deploy
-workflow, and Actions billing lapsed around 2026-09-10 — so the running revision predates every
-cutover commit from 2026-09-22. Cumulative `pg_stat_all_tables` counters, net of this session's
-own queries, put `build.sprints` at 3024 index scans, `build.bugs` at 127, and `build.tickets` at
-roughly 26k. Dropping any of those now breaks the deployed application the next time someone uses
-the feature — a four-minute idle sample showed zero scans, so the breakage would surface later
-rather than immediately, which is worse.
+Ledger at 913. Post-state: 220 tickets, 103 with a cycle, 44 of type `BUG`, 5 cycles.
 
-Phase 3 was applied because it is the one phase that removes nothing: it revokes a write grant
-that has never been exercised (`n_tup_ins = n_tup_upd = n_tup_del = 0` for the table's whole
-history), keeps `SELECT`, and reverses with
-`GRANT INSERT, UPDATE, DELETE ON "build"."bugs" TO streamline_app;`. Full record in
-[`P0-PRODUCTION-EXECUTION-QA-BUG-FREEZE.md`](./P0-PRODUCTION-EXECUTION-QA-BUG-FREEZE.md).
+**This document previously recorded phase 3 as deliberately deferred, and
+`FINAL-SPRINT-REMOVAL-STATUS.md` still does. Both were wrong** — the rename ran, and the code was
+renamed in lockstep. Verified two ways: the catalog has `cycle_scope_events` and no
+`sprint_scope_events`, and `backend/src/db/schema/build/cycle-events.ts:23-24` declares the new
+physical name while `projects-reports.service.ts` imports `cycleScopeEvents`.
 
-`build.bugs` has no non-test reader or writer left — `grep -rn "from(bugs)\|insert(bugs)\|update(bugs)\|delete(bugs)" backend/src --include='*.ts'` excluding specs returns nothing — and the
-table is empty, so phases 3 and 4 remove an unused object rather than completing a migration.
+Two things that look like drift and are not:
 
-**Phase 1 must precede phase 2 for a database reason, not a stylistic one.** Four foreign keys
-reference `build.sprints` in production; phase 05 issues a bare `DROP TABLE` with no `CASCADE`
-and fails `2BP01` while any of them exists. Phase 04 drops exactly those four.
+- `cycles.legacy_sprint_id` survives as an unread column, left in place deliberately.
+- Constraints and indexes on `cycle_scope_events` still carry `sprint_scope_events_*` names, because `ALTER TABLE … RENAME TO` does not rename them. The declarations match the live names exactly.
 
-### Hazards
+### Hazards — kept, because each applies again to any future contraction
 
 **The phase-04 guard is not a precondition check.** Its DO block inspects whether each
 `tickets.sprint_id` value has been archived in `sprint_binding_archive`. It has zero visibility
 into application code. If any handler still selects the column, the migration **succeeds**, the
 column disappears, and that handler starts raising `42703` on live traffic. Stage A and Stage C,
-not the guard, are what make phase 04 safe.
+not the guard, are what made phase 04 safe. When it ran, the guard condition read **0** against
+103 archived bindings, and **0** tickets would have lost their iteration — every one carrying
+`sprint_id` also carried `cycle_id`.
 
 **Read the backup posture from the cluster, not the instance.** Retention is 1 day and the
 automatic restore window moves. The manual snapshot is the real recovery point.
@@ -216,18 +207,23 @@ families has one. For this phase the snapshot is the only reversal.
 **Production is the only reachable database.** `.env` and `.env.production` resolve to the same
 RDS host. There is no staging rehearsal available; see open question 15.
 
-## Stage E — browser verification
+## Stage E — browser verification — THE ONLY OPEN ITEM
 
-Execute [`NEXT-CLOSURE-BROWSER-QA.md`](./NEXT-CLOSURE-BROWSER-QA.md). Its preamble states that
-migration 1149 is not yet applied and that sections 1 and 2 are therefore blocked. **That
-preamble is superseded** — 1149, 1150 and 1151 were applied on 2026-09-22 behind snapshot
-`pre-1149-20260922132524`, recorded in
-[`P0-PRODUCTION-EXECUTION-1149-1151.md`](./P0-PRODUCTION-EXECUTION-1149-1151.md). Sections 1
-and 2 are testable. Read the checklist, not its preamble, for what to check.
+Nothing in this programme has been confirmed in a browser. No screenshot was taken, no UI was
+verified, and no such claim should be made on its behalf.
 
-After Stage D, re-verify Cycles, Issues, ticket detail, meeting agenda generation, QA runs and
-Bugs. Agenda generation is the surface where a silent Sprint/Cycle regression appears as an empty
-result rather than an error.
+Run [`FINAL-BROWSER-QA.md`](./FINAL-BROWSER-QA.md) against the deployed build, at desktop width
+and at 375 px. It names the two **deliberate** behaviour changes so neither is filed as a
+regression: stale `?sprintId=` deep links (§1.8) and the Feedbucket cross-project 403 (§6).
+
+Check these two first — both fail quietly rather than loudly:
+
+- **Burnup report.** `cycle_scope_events` was renamed alongside its readers. A mismatch is a `42P01`, not a wrong number.
+- **Meeting agenda generation.** It filtered on sprint equality; a bad cutover returns an **empty agenda with no error**. This programme has already shipped that failure once.
+
+[`NEXT-CLOSURE-BROWSER-QA.md`](./NEXT-CLOSURE-BROWSER-QA.md) remains valid for the 1149–1151
+surfaces. Disregard its "1149 NOT YET APPLIED" preamble — superseded by
+[`P0-PRODUCTION-EXECUTION-1149-1151.md`](./P0-PRODUCTION-EXECUTION-1149-1151.md).
 
 ## Observed but not owned
 
@@ -266,16 +262,15 @@ exists, so their assertions are unverified.**
 - Typechecks run serially, never while jest is running in the same repository.
 - Frontend typecheck needs an 8 GB heap.
 
-## Exit criteria for the next phase
+## Exit criteria
 
 - [x] The frontend `sprintId` census returns zero.
-- [x] No table other than `cycles` declares `sprint_id`.
-- [x] No non-schema read or write of the `sprints` table remains.
+- [x] No table declares `sprint_id`; `cycles.legacy_sprint_id` survives as an unread column.
+- [x] No non-schema read or write of the `sprints` table remains, pinned by `sprint-cycle-drop-invariant.spec.ts`.
 - [x] `b-qa-bug-03-verify.sql` returned zero on all 14 checks — with the vacuity caveat recorded.
-- [x] The phase-05 rename is split into its own phase, so it cannot break the burnup report.
-- [ ] The cutover is **deployed**, which is the only remaining gate on phases 1, 2 and 4.
-- [ ] Stage A is deployed and observed clean before any Stage D migration runs.
-- [ ] All four contraction phases are applied, each behind its own fresh snapshot.
-- [ ] `b-qa-bug-03-verify.sql` returned zero on all 14 checks before the freeze.
-- [ ] The browser checklist is executed and every section is pass or filed.
-- [ ] Open questions 14 and 15 are answered in writing before Stage D begins.
+- [x] The phase-05 rename was split into its own phase, then applied in lockstep with the code rename.
+- [x] The cutover is deployed; backend and frontend shipped together.
+- [x] All five contraction phases are applied, each behind a manual snapshot, with preconditions measured rather than assumed.
+- [ ] **The browser checklist is executed and every section is pass or filed.** Nothing here has been seen in a browser.
+- [ ] Open question 15 — whether a non-production PostgreSQL will ever exist — is answered. Until it is, `*.db.spec.ts` and `*.e2e-spec.ts` cannot run at all.
+- [ ] Open question 17 — whether `build.bugs` being empty was intended — is confirmed, so the consolidation is not recorded as having migrated data it never had.

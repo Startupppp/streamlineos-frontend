@@ -1,7 +1,8 @@
 # StreamlineOS Build: Complete Product Map
 
-Verified against the repository on 2026-09-22, and reconciled the same day against root
-`e70089d85` and backend `main`. Route and capability marks below were re-checked against files
+Verified against the repository on 2026-09-22; reconciled again on 2026-09-23 at root
+`ca83cb100` / backend `7d27370e8`, after the Sprint/Cycle and QA Bug contractions were applied
+to production. Route and capability marks below were re-checked against files
 on disk, not against a prior status claim.
 
 This document explains Build in three simple journeys:
@@ -67,7 +68,7 @@ flowchart TD
 | Execute | Issues views and ticket detail | `/issues`, `/tickets/[ticketKey]` | LIVE |
 | Intake | Forms, public forms, Intake, Triage | `/forms`, `/forms/[formId]`, `/triage`, public `/forms/[formToken]` | LIVE; `/intake` is still its own page rendering `features/build/intake/intake-page`. The route manifest decision is CONSOLIDATE into `/build/[projectId]/forms` and it is **not executed** |
 | Collaboration | Chat, Meetings, Files, Wiki, Whiteboard | `/chat`, `/meetings`, `/files`, `/wiki`, `/whiteboard` | LIVE |
-| Quality | QA, test runs, Bugs | `/qa`, `/qa/runs/[runId]`, `/bugs` | LIVE; Bug data-model cutover remains |
+| Quality | QA, test runs, Bugs | `/qa`, `/qa/runs/[runId]`, `/bugs` | LIVE; the Bug data-model cutover is **complete** — `build.bugs` is dropped and defects live on `tickets` + `work_item_qa_details` |
 | Delivery | Releases, Updates, Approvals | `/releases`, `/updates`, `/approvals` | LIVE |
 | Governance | Risks, Decisions, Budget, Incidents | `/risks`, `/decisions`, `/budget`, `/incidents` | LIVE |
 | Insight | Reports, Analytics, Workload | `/reports`, `/analytics`, `/workload` | LIVE; Workload now reads real capacity from approved leave and timesheet settings via `/build/:projectId/workload/capacity`. `/analytics` is a CONSOLIDATE target awaiting `/reports?tab=overview` |
@@ -179,7 +180,7 @@ This is a capability comparison, not a claim that every StreamlineOS surface has
 | Capability | StreamlineOS | ClickUp | Jira | Linear | Upwork-style freelancer platform |
 |---|---|---|---|---|---|
 | Issues, boards, lists, timeline | LIVE | Strong | Strong | Strong | Basic |
-| Backlog and cycles | LIVE; data-model contraction pending | Strong | Strong | Strong | Weak |
+| Backlog and cycles | LIVE; contraction complete, Cycle is the only iteration identity | Strong | Strong | Strong | Weak |
 | Docs, wiki, whiteboard, chat | LIVE | Strong | Usually needs Atlassian products/apps | Focused, lighter | Messages/files |
 | Product feedback to roadmap | LIVE | Available through connected features | Available with Jira Product Discovery/ecosystem | Strong customer requests | Weak |
 | Client portal and change requests | LIVE | Sharing and guest access | Usually service-management configuration | Customer requests, not a full freelancer portal | Strong |
@@ -198,20 +199,16 @@ step-by-step runbook is [`10-next-phase-execution.md`](./10-next-phase-execution
 
 ### Already shipped — historical, do not re-open
 
-The four rows below were listed here as pending and are disproven by current code.
-
-- The Sprint-to-Cycle **backend** application cutover and legacy writer freeze are merged.
-- The QA Bug-to-work-item application cutover is merged and the legacy writer is unreachable.
+- The Sprint-to-Cycle cutover is **complete end to end**: frontend, backend, contract, deploy, and all five destructive migration phases. `build.sprints` is dropped and archived; Cycle is the only iteration identity. `sprintId` was a **breaking removal**, not a deprecation — the owner ruled mid-programme that the legacy identity would not be maintained.
+- The QA Bug consolidation is **complete**: `build.bugs` and `test_run_results.linked_bug_id` are dropped; defects live on `tickets` + `work_item_qa_details`.
 - Change Request **release** and **client visibility** fields ship and are applied to production.
 - Workload reads real capacity from approved leave and timesheet settings, and Inbox filters by project.
 
 ### P0: finish before calling Build fully consolidated
 
-1. Cut the **frontend** off `tickets.sprint_id` — 85 occurrences across 48 non-test files measured 2026-09-22 — and retire the `sprints` table read path in `sprints.service.ts`.
-2. Deploy that cutover, then run the Sprint/Cycle contraction phases 04 and 05. The phase-04 guard is a data check and cannot see application code.
-3. Verify the QA Bug contract with `b-qa-bug-03-verify.sql`, then run the freeze and drop phases.
-4. Add the remaining Change Request dimension: **affected work**. Release and client visibility are done; no affected-work column exists.
-5. Keep the route, permission, contract, typecheck, and browser gates green across both cutovers, and measure `check:contract-parity` from a checkout that is not junctioned.
+1. **Verify the whole cutover in a browser.** Nothing in this programme has been seen in one. `FINAL-BROWSER-QA.md` is the checklist; burnup and meeting-agenda generation fail quietly rather than loudly and deserve attention first.
+2. Add the remaining Change Request dimension: **affected work**. Release and client visibility are done; no affected-work column exists.
+3. Keep the route, permission, contract and typecheck gates green, and measure `check:contract-parity` from a checkout that is not junctioned.
 
 ### P1: make the three journeys feel complete
 
@@ -237,12 +234,11 @@ An internally-simulated escrow or held balance is refused rather than deferred; 
 ## Recommended product order
 
 ```text
-First:   cut the frontend off sprint_id, then deploy it
-Second:  run the Sprint/Cycle and QA Bug contraction phases, then verify in a browser
-Third:   execute the seven remaining kill-list consolidations
-Fourth:  complete the freelancer cross-module handoff
-Fifth:   close realtime, Feedbucket, URL-state, and import gaps
-Sixth:   add AI, automation, scenario planning, and enterprise governance
+First:   verify the shipped cutover in a browser — nothing has been seen in one
+Second:  execute the seven remaining kill-list consolidations
+Third:   complete the freelancer cross-module handoff
+Fourth:  close realtime, Feedbucket, URL-state, and import gaps
+Fifth:   add AI, automation, scenario planning, and enterprise governance
 ```
 
 The strongest positioning is not “another Jira.” It is: **one operating system where customer demand, product decisions, project delivery, people capacity, client collaboration, time, invoices, and accounting can become one connected flow.**

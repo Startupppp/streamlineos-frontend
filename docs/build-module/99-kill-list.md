@@ -1,14 +1,14 @@
 # Build Kill List
 
-Reconciled 2026-09-22 against root `e70089d85` and backend `main`. Rows marked *historical*
+Reconciled 2026-09-22; re-checked 2026-09-23 after the Sprint/Cycle and QA Bug contractions were applied to production. Rows marked *historical*
 record why a decision was taken; the condition they describe no longer holds and must not be
 re-quoted as current.
 
 | Delete/refuse | User job replacement | Evidence/rationale |
 |---|---|---|
 | Standalone Drafts page | Recover drafts in Inbox | `/build/drafts` duplicates personal notification work. **Executed** — see below |
-| Sprint route/model | Plan timeboxed work through Cycles | *Historical:* the production sidebar pointed at a broken `/sprints`. As of 2026-09-22 no `/sprints` route exists and nav points at `${basePath}/cycles` (`frontend/lib/build/nav/build-project-catalog.ts:76-81`, pinned by `frontend/lib/build/build-project-catalog.test.ts:58`). The **model** is still being retired — see [`06-prioritized-backlog.md`](./06-prioritized-backlog.md) stages A, C and D |
-| Separate QA Bug lifecycle | Track defects as `WorkItem.type=BUG` with QA evidence | Prevents two statuses, assignees, comments, and reports for one defect |
+| Sprint route/model | Plan timeboxed work through Cycles | **EXECUTED 2026-09-22.** The routes are frozen with `GoneException`, `build.sprints` is dropped and archived, and `sprintId` was removed from the published contract. *Historical:* the production sidebar once pointed at a broken `/sprints`; that has not been true since the nav was pinned to `${basePath}/cycles` |
+| Separate QA Bug lifecycle | Track defects as `WorkItem.type=BUG` with QA evidence | **EXECUTED 2026-09-22.** `build.bugs` and `test_run_results.linked_bug_id` are dropped; defects live on `tickets` + `work_item_qa_details`. Note the consolidation moved **zero** rows — the table was already empty |
 | Project Analytics page | Understand delivery through Reports Overview | *Historical:* `/analytics` once rendered “Board” in production. It now renders its own `ProjectAnalyticsPage`, so the surviving rationale is duplication of report metrics, not a wrong-surface defect |
 | Project Timeline page | See issues by time through Issues `layout=timeline` | Same entities and filters; separate route fragments saved views |
 | Project Saved Views page | Create/manage views inside Issues; administer in Settings | A view is configuration of Issues, not a destination |

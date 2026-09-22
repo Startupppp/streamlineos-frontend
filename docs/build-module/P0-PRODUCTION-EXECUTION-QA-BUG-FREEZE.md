@@ -5,8 +5,12 @@ Target: Aurora PostgreSQL 18.4, cluster `streamlineos`, ap-south-1,
 instance `streamlineos-instance-1`, database `streamlineos`, connected as `streamline_admin` over IAM auth.
 Authorization: the repository owner instructed twice, in session, that the migrations be completed.
 
-**One of the four contraction migrations was applied. Three were not, and the reason is measured,
-not cautious.** See "Why the other three did not run" below.
+**Historical.** This records the freeze phase only, applied ahead of the rest. The remaining
+phases were **subsequently applied on the same day** by another session, after the repo owner
+confirmed the merged code was deployed — see
+[`FINAL-SPRINT-REMOVAL-STATUS.md`](./FINAL-SPRINT-REMOVAL-STATUS.md). The contraction is complete;
+the "why the other three did not run" section below is preserved as the state at the time, not as
+current status.
 
 ## Recovery point
 
@@ -81,10 +85,12 @@ GRANT INSERT, UPDATE, DELETE ON "build"."bugs" TO streamline_app;
 
 The FK validation is not reversed and does not need to be; it only proves existing data is sound.
 
-## Why the other three did not run
+## Why the other three had not run *at the time* — historical
 
-`a-sprint-cycle-04-detach`, `a-sprint-cycle-05-drop` and `b-qa-bug-05-contract-drop` were **not**
-applied. Each drops an object that the currently deployed application still reads.
+At the moment this phase ran, `a-sprint-cycle-04-detach`, `a-sprint-cycle-05-drop` and
+`b-qa-bug-05-contract-drop` were **not** applied, because each drops an object the then-deployed
+application still read. That condition was cleared later the same day by deploying the cutover;
+all three then ran. The reasoning is kept because it is the general rule, not a one-off.
 
 **Production is a live deployment.** `https://api.streamlineos.in/health` returns 200 with the
 database, cache and queue all `up`, and the cluster carried 11 application backends at the time of
@@ -111,8 +117,12 @@ than immediately. That is worse, not better.
 `b-qa-bug-05-contract-drop.sql` additionally has **no `-rollback.sql`**; with 1-day cluster
 retention, a manual snapshot would be its only reversal.
 
-## What unblocks the remaining three
+## What unblocked the remaining three — all now done
 
-1. Merge and **deploy** the cutover, so the running revision stops reading those objects.
+1. ~~Merge and **deploy** the cutover, so the running revision stops reading those objects.~~ **Done.** Backend and frontend shipped together; the contract change is breaking in both directions.
 2. ~~Resolve the rename buried in phase 05.~~ **Done** — `1baada9ca` split it into `a-sprint-cycle-06-rename-scope-events.sql`, which runs after a deploy that renames the code.
-3. Then run, in this order and each behind a fresh snapshot: `a-sprint-cycle-04-detach` (which also drops the four foreign keys that would otherwise make the next step fail `2BP01`), `a-sprint-cycle-05-drop`, `b-qa-bug-05-contract-drop`.
+3. ~~Then run, in this order and each behind a fresh snapshot: `a-sprint-cycle-04-detach`, `a-sprint-cycle-05-drop`, `b-qa-bug-05-contract-drop`.~~ **Done**, in that order. Phase 04 first was not a preference: it drops the four foreign keys that would otherwise have failed phase 05 with `2BP01`.
+
+Re-verified against the live catalog on 2026-09-23: `build.sprints`, `build.bugs`,
+`tickets.sprint_id` and `test_run_results.linked_bug_id` are all gone; `sprints_archive` holds 4
+rows with RLS; `cycle_scope_events` carries the renamed table. Ledger at 913.
