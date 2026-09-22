@@ -27,6 +27,7 @@ import type {
 } from "@/types/feedbucket";
 import { resolveImageUrl } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 type SubmissionRow = PaginatedFeedbucketSubmissions["data"][number];
 
@@ -190,7 +191,15 @@ export function ProjectSubmissionsInbox({
 
   const statusFilter = searchParams.get("status") as FeedbucketSubmissionStatus | null;
   const typeFilter = searchParams.get("type") as FeedbucketSubmissionType | null;
-  const hasActiveFilters = statusFilter !== null || typeFilter !== null;
+  const linkedFilter = searchParams.get("linked") as "linked" | "unlinked" | null;
+  const fromFilter = searchParams.get("from");
+  const toFilter = searchParams.get("to");
+  const hasActiveFilters =
+    statusFilter !== null ||
+    typeFilter !== null ||
+    linkedFilter !== null ||
+    fromFilter !== null ||
+    toFilter !== null;
 
   function updateUrlParam(key: string, value: string | null) {
     const params = new URLSearchParams(searchParams.toString());
@@ -215,11 +224,29 @@ export function ProjectSubmissionsInbox({
     updateUrlParam("type", value === "all" ? null : value);
   }
 
+  function handleLinkedChange(value: string) {
+    setPage(1);
+    updateUrlParam("linked", value === "all" ? null : value);
+  }
+
+  function handleFromChange(value: string) {
+    setPage(1);
+    updateUrlParam("from", value || null);
+  }
+
+  function handleToChange(value: string) {
+    setPage(1);
+    updateUrlParam("to", value || null);
+  }
+
   function handleClearFilters() {
     setPage(1);
     const params = new URLSearchParams(searchParams.toString());
     params.delete("status");
     params.delete("type");
+    params.delete("linked");
+    params.delete("from");
+    params.delete("to");
     params.delete("page");
     startTransition(() => {
       router.replace(params.toString() ? `${pathname}?${params.toString()}` : pathname, { scroll: false });
@@ -232,6 +259,9 @@ export function ProjectSubmissionsInbox({
     widgetId,
     ...(statusFilter ? { status: statusFilter } : {}),
     ...(typeFilter ? { type: typeFilter } : {}),
+    ...(linkedFilter ? { linked: linkedFilter } : {}),
+    ...(fromFilter ? { from: fromFilter } : {}),
+    ...(toFilter ? { to: toFilter } : {}),
   });
 
   function handleRowClick(row: SubmissionRow) {
@@ -346,6 +376,33 @@ export function ProjectSubmissionsInbox({
             ))}
           </SelectContent>
         </Select>
+
+        <Select value={linkedFilter ?? "all"} onValueChange={handleLinkedChange}>
+          <SelectTrigger className="h-7 w-[130px] text-xs">
+            <SelectValue placeholder="All submissions" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All submissions</SelectItem>
+            <SelectItem value="linked">Linked to ticket</SelectItem>
+            <SelectItem value="unlinked">Not linked</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Input
+          type="date"
+          aria-label="From date"
+          value={fromFilter ?? ""}
+          onChange={(e) => handleFromChange(e.target.value ? `${e.target.value}T00:00:00Z` : "")}
+          className="h-7 w-[140px] text-xs"
+        />
+
+        <Input
+          type="date"
+          aria-label="To date"
+          value={toFilter ? toFilter.slice(0, 10) : ""}
+          onChange={(e) => handleToChange(e.target.value ? `${e.target.value}T00:00:00Z` : "")}
+          className="h-7 w-[140px] text-xs"
+        />
       </div>
 
       <DataTable
