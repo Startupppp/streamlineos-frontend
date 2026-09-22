@@ -14,11 +14,24 @@ Every row cites source. No latency, buffer or row-count figure is claimed anywhe
 | Missing project predicate | census `parentScoping` | 2 `PASSED-UNBOUND`; both read directly — one sound, one real (**P2-9**) |
 | N+1 queries | `check:n1-growing-loops --list` | 0 confirmed growing loops in Build, against 90 repo-wide. The single unresolved site is sound — see below |
 | Unbounded reads | `check:unbounded-reads` | 16 unclassified Build sites, all input-bounded (**P2-1**); 2 genuinely unbounded endpoints (**P2-2**) |
-| Missing indexes | schema read + `check:tenant-indexes` | **P1-2**, **P1-3**, **P2-5**, **P2-9** |
+| Missing indexes | schema read + `check:tenant-indexes` | **P1-2**, **P1-3**, **P2-9** (**P2-5** retracted — the index exists) |
 | Incorrect cache keys | `build-cache-key-readers.mjs` | **P1-1** |
 | Unsafe invalidation | both new analysers | **P0-1**, **P1-1**, **P2-3**, **P2-4** |
 
 Tenant scoping is the module's strongest dimension: one omission in 115 handlers, and RLS still fences that one. Caching and the Sprint/Cycle seam are where the defects are.
+
+## Status
+
+| Finding | State |
+|---|---|
+| P0-1 report-revision trigger | **fixed** — migration `1152_build_report_revision_cycles` |
+| P1-1 analytics cache | **fixed** — read cached, nine evictions repointed |
+| P2-3 false `check:cache-invalidation` findings | **fixed** — gate now passes |
+| P2-9 `listRelatedLinks` | **fixed** — predicate + migration `1154` |
+| P1-2 velocity index unusable | open — needs `cycles.deletedAt`, Sprint/Cycle lane |
+| P1-3 schema/migration drift | open — Sprint/Cycle lane |
+| P2-1, P2-2, P2-4, P2-6, P2-7, P2-8 | open — see each |
+| P2-5 | retracted |
 
 ---
 
@@ -52,14 +65,11 @@ The Drizzle model already moved: `src/db/schema/build/sprint-events.ts:31` decla
 
 **Detected by** `node src/scripts/build-performance/build-report-revision-integrity.mjs` (exit 1, 2 findings).
 
-**Recommendation.** Ship a migration that replaces `build.bump_report_revision()` before `04-detach` runs, rewriting the branch against `cycle_id` and `build.cycles`:
+**FIXED — `migrations/1152_build_report_revision_cycles.sql`.** It replaces the function, repointing the branch at `cycle_id` and `build.cycles`, and additionally attaches the triggers to `build.cycles`, which 1073 never covered — burnup reads a cycle's dates and velocity reads its status, so a cycle edit must bump the revision.
 
-```sql
-affected := 'SELECT DISTINCT c.org_id, y.project_id FROM (' || changed || ') c
-             JOIN build.cycles y ON y.org_id = c.org_id AND y.id = c.cycle_id';
-```
+The migration carries a verification `DO` block that raises if the installed body still contains `c.sprint_id` or `build.sprints`, or if `build.cycles` does not end up with all three triggers. `build-report-revision-integrity.mjs` now exits 0.
 
-Sequence it as a phase `03b` so it lands between `constrain` and `detach`. Add the integrity check to the detach runbook.
+**It must be applied before `a-sprint-cycle-04-detach.sql`.** Add that ordering to the detach runbook; nothing in the repository enforces it, because the two live in different migration sets.
 
 ---
 
@@ -86,9 +96,11 @@ Two consequences, both real:
 
 **Detected by** `node src/scripts/build-performance/build-cache-key-readers.mjs`.
 
-**Recommendation.** Decide one way and make the code say it. Either inject `CacheService` and wrap `computeProjectAnalytics` in `cachedVersioned` under namespace `build:analytics:<orgId>` — at which point the nine evictions become `invalidateNamespace` and start working — or delete all nine `del` calls. Leaving them is the worst of both: the cost of invalidation with none of the benefit.
+**FIXED.** `ProjectsAnalyticsService` now injects `CacheService` and reads through `cachedVersioned("build:analytics:<orgId>", "<projectId>", …, CACHE_TTL.SHORT)`; all nine `del` sites became `invalidateNamespace(\`build:analytics:${orgId}\`)`. The namespace is per-org rather than per-project, matching the `billingSummary` precedent: invalidation is an O(1) counter bump with no SCAN (BE-122), and at a 30 s TTL the cost of also expiring sibling projects is trivial.
 
-Prefer the first. The read is the heaviest uncached aggregate in the module and the invalidation sites already exist at exactly the right places.
+The key literal is passed inline rather than through a local `const`, because `check:cache-invalidation` resolves literal arguments only — binding it to a name would have reproduced exactly the blind spot recorded as P2-3.
+
+The four specs that construct this service were updated with a cache double that invokes the fetcher. A double that returned a canned value instead would have made the cross-tenant 404 assertions in `build-project-scoped-lists-404.spec.ts` vacuous — that spec pairs each negative with a positive control asserting the aggregate is actually reached.
 
 ---
 
@@ -179,7 +191,9 @@ It does. `timesheets.service.ts:372` binds `const billingSummaryNs = \`build:bil
 
 Confirmed by `build-cache-key-readers.mjs`, which resolves single-assignment `const` bindings and reports zero orphans for this shape.
 
-**Recommendation.** Teach the gate's resolver the same single-assignment resolution. Until then the gate is red for a non-defect, which is how a real namespace mismatch gets ignored.
+**FIXED, by moving the code to the gate rather than the gate to the code.** `timesheets.service.ts` now passes the namespace literal inline to `cachedVersioned`. `check:cache-invalidation` went from `FAIL — 3 medium` to `LOW-only — 0 documentation gaps`.
+
+Teaching the resolver single-assignment resolution is still the better long-term fix — the next author to bind a namespace to a name will re-create the false positive. The inline literal is the cheap half; the resolver is the durable half.
 
 ---
 
@@ -195,17 +209,23 @@ The bump also runs `UPDATE build.projects … FOR UPDATE OF p` on the project ro
 
 ---
 
-## P2-5 · `project_statuses` carries no org-led index for the join four reports use
+## ~~P2-5 · `project_statuses` carries no org-led index~~ — RETRACTED, the index exists
 
-`src/db/schema/build/core.ts:148` declares one index: `idx_project_statuses_project` on `(project_id)`.
+**This finding was wrong and is withdrawn.** It is kept here rather than deleted so the next reader does not rediscover it.
 
-Four Build reads join it on `(org_id, project_id, name)` — cycle-time (`projects-reports.service.ts:302-306`), lead-time (`:338-342`), `snapshot` (`:236-243`) and velocity's stats query (`projects-velocity-report.ts:34-36`).
+The claim was that `build.project_statuses` declares only `idx_project_statuses_project` on `(project_id)`, leaving the `(org_id, project_id, name)` report join unindexed.
 
-Under RLS the policy qual on `org_id` is not leakproof, so `org_id` must be inside the covering index for an index-only scan (BE-79). It is not. BE-44 also requires the composite to lead with `org_id`.
+`src/db/schema/build/core.ts:150` declares:
 
-Per-project status counts are small, so the cost is bounded — this is P2, not P1.
+```ts
+unique("uniq_project_statuses_org_project_name").on(table.orgId, table.projectId, table.name)
+```
 
-**Recommendation.** `index("idx_project_statuses_org_project_name").on(orgId, projectId, name)`, declared in the schema and shipped as a journalled migration.
+applied by `migrations/0146_status_model_single_table.sql:36`. A unique constraint is backed by a unique B-tree index, so `(org_id, project_id, name)` is already indexed — exactly the tuple the four report joins key on. BE-44 and BE-79 are satisfied.
+
+**How the error happened, because it generalises.** The finding came from grepping the schema for `index(` and `uniqueIndex(`. That pattern does not match `unique(`, which is how this index is declared. A text scan for index declarations must cover all three spellings or it under-reports — the same class of blind spot as P2-3 and the census resolver in P2-9.
+
+A migration adding a duplicate index was written and deleted before commit. Nothing shipped.
 
 ---
 
@@ -265,7 +285,11 @@ Per-ticket link counts are small, so the cost is bounded — P2, not P1.
 
 Separately, `.limit(50)` with no cursor silently truncates a ticket's related links at 50, the same shape as P2-8.
 
-**Recommendation.** Add `eq(ticketRelatedLinks.orgId, u.orgId)` to the `WHERE`, and widen the index to `(org_id, ticket_id)`. Both are one-line changes and they only help together — the predicate without the index still cannot do an index-only scan.
+**FIXED.** `listRelatedLinks` now filters `eq(ticketRelatedLinks.orgId, u.orgId)` alongside the ticket predicate, and `migrations/1154_build_ticket_related_links_org_index.sql` adds `(org_id, ticket_id, created_at)` — `created_at` included so the index also serves the `ORDER BY`. The schema declaration was added in the same change, so schema and database do not drift apart the way P1-3 records.
+
+The two halves only help together: the predicate without the index still cannot do an index-only scan, and the index without the predicate cannot be chosen.
+
+The `.limit(50)` truncation is untouched and remains open.
 
 ---
 

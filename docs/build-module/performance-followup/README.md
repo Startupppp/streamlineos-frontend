@@ -4,7 +4,8 @@ Independent audit of the Build list and detail endpoints for unbounded reads, N+
 
 | Document | Contents |
 |---|---|
-| [findings.md](./findings.md) | Every finding, P0–P2, with file and line evidence |
+| [findings.md](./findings.md) | Every finding, P0–P2, with file and line evidence, and what is fixed |
+| [migrations.md](./migrations.md) | The two migrations shipped, the one deleted, and the one deliberately not written |
 | [cache-policy.md](./cache-policy.md) | Cache key, stale time, invalidation and optimistic-update recommendations |
 | [tooling.md](./tooling.md) | The two analysers added by this pass, how to run them, and what they cannot see |
 
@@ -15,6 +16,14 @@ Independent audit of the Build list and detail endpoints for unbounded reads, N+
 Static source inspection plus the repository's own gates. No production credentials were used, so no query plan, buffer count or latency figure appears anywhere in this pass. Where a claim needs measurement, it is stated as needing measurement.
 
 Two analysers were added under `backend/src/scripts/build-performance/`. Both are read-only static analysers with no import path into application code, so neither can change runtime behaviour.
+
+## Fixes landed
+
+P0-1, P1-1, P2-3 and P2-9 are fixed in this branch: two journalled migrations with rollbacks, the analytics cache wired up, nine dead evictions repointed, and one missing tenant predicate added. `check:cache-invalidation` went from failing to passing. Both new analysers exit 0.
+
+Typecheck holds at the baseline 30 pre-existing errors — zero new — measured against a clean checkout of the merge-base. All 214 Build suites (1,903 tests) pass.
+
+P1-2 and P1-3 are left open on purpose: both need `cycles.deletedAt` in the Drizzle model, which is the Sprint/Cycle lane's file mid-cutover.
 
 ## What this pass did not touch
 
