@@ -30,9 +30,13 @@ Tenant scoping is the module's strongest dimension: one omission in 115 handlers
 | P2-9 `listRelatedLinks` | **fixed** — predicate + migration `1154` |
 | P1-2 velocity index unusable | **fixed** — casts dropped, soft-delete predicate added |
 | P1-3 schema/migration drift | **fixed** — migration `1155_build_cycles_drift_reconcile` + schema |
+| P2-7 report keys in the wrong domain module | **fixed** — moved to `build-work.ts` |
 | P2-1 unbounded-reads ledger | open — **blocked on a ratchet decision**, see below |
-| P2-2, P2-4, P2-6, P2-7, P2-8 | open — see each |
+| P2-2 unpaginated org-wide reads | open — `resource-allocation` turns out to have **no caller**; see below |
+| P2-4, P2-6, P2-8 | open — each needs a measurement or a product decision, see each |
 | P2-5 | retracted |
+
+Also landed: all nine remaining cycle reads now carry the soft-delete predicate, and `idx_cycles_project_status_live` was replaced with an org-led index by migration `1156`.
 
 ---
 
@@ -208,7 +212,15 @@ Both are in `backend/src/modules/build/core/projects-analytics.service.ts`:
 - **`resourceAllocation`** backs `GET /build/resource-allocation` (`projects-reports.controller.ts:55`). It reads every `ACTIVE` project in the org with no limit, runs an org-wide `UNION` over `tickets` and `ticket_assignees`, reads every distinct assignee from `users`, and returns `[...byMember.values()]` — an unbounded array, sorted in JS. `@ResponseSchema(z.array(...))` confirms there is no envelope and no cursor. This violates BE-24 and BE-132.
 - **`getOrgProjectHealthSummary`** aggregates `tickets` and `cycles` across the whole org with no project predicate and no limit, then reads every project row.
 
-**Recommendation.** Give `resource-allocation` the standard cursor envelope with `PAGE_SIZE_CAP`, keyed on `(org_id, member)`. `getOrgProjectHealthSummary` returns five scalars, so bound it instead: the two aggregates are already grouped, but the `projects` read should be capped and the summary computed in SQL.
+**`GET /build/resource-allocation` has no caller.** An exhaustive search across `backend/src` and `frontend` finds the controller, the service, three spec files and the census — and nothing else. No frontend hook, no AI tool, no internal service. It is live, permissioned, module-gated, unbounded, and dead.
+
+That changes the recommendation. Paginating an endpoint nothing calls is contract churn for no reader; the question is whether it should exist. It belongs in the dead-surface process alongside `docs/build-module/DEAD-BUILD-SURFACE-INVENTORY.md`, not in a pagination change.
+
+It was **not** deleted here: removing a Build route trips three disk-bound gates — the route manifest, the authorization census and module-access — all of which read the live tree and all of which are on this task's do-not-touch list.
+
+**Recommendation.** Route `resource-allocation` to dead-surface removal. If it is kept, give it the standard cursor envelope with `PAGE_SIZE_CAP`, keyed on `(org_id, member)`.
+
+`getOrgProjectHealthSummary` does have a caller — `executive-brief.service.ts:175`. It returns five scalars, so bound it rather than paginate: the two aggregates are already grouped, but the `projects` read is uncapped and the summary is assembled in JS rather than SQL.
 
 ---
 
@@ -276,7 +288,13 @@ FE-18 exists so a consumer pulls one domain, not the aggregate; importing the wr
 
 The factory is also stale: `burnup: (projectId: number, sprintId?: number)` (`:31`) while the endpoint's query parameter is `cycleId` and the hook passes `cycleId` (`reports.ts:95-98`). The value is right and the name is wrong, which is how the next reader gets it backwards.
 
-**Recommendation.** Move `projectReports` into `build-work.ts`, rename the parameter to `cycleId`, and update the importers. Shared frontend components were out of scope for this pass; the key factory is not a component, but the move touches `ticket-cache.ts`, so it belongs with the Build coordinator's frontend lane.
+**FIXED.** `projectReports` now lives in `build-work.ts`, and the five importers — `reports.ts`, `ticket-cache.ts`, `build-cache-sync.ts` and two tests — read it from there. `ticket-cache.ts` keeps its `accountingAndSupportQueryKeys` import for `ticketActivity`, which genuinely belongs to that domain.
+
+Both modules spread the same `queryKeyBase`, so every key array is **byte-identical** before and after. This is a pure relocation: no cache identity changes, no invalidation prefix moves, nothing to migrate at runtime.
+
+The `sprintId` → `cycleId` rename landed upstream in main's legacy-sprint purge before this change, so only the move remained.
+
+Verified: frontend `type-check` and `type-check:specs` both 0 errors, `check:query-scope` clean over 7,193 files, and 45 suites / 273 tests pass — including `aggregate-import-boundary.test.ts` and `dead-key-factory.test.ts`, which would have caught an orphaned factory.
 
 ---
 
@@ -339,11 +357,14 @@ Recorded so the next pass does not re-open them.
 
 ## Still open
 
-- **Nine cycle reads lack the soft-delete predicate** — `build-due-sweep.service.ts:123`, `build-ticket-bulk-mutation.ts:70`, `projects-activity.service.ts:348`, `projects-tickets-create.service.ts:85`, `projects-tickets-update.service.ts:159`, `cycles.service.ts:32,75,113`, `qa/test-runs.service.ts:37`. Inert while `deleteCycle` is a hard delete. The three reads this audit names — velocity, burnup and analytics — were fixed; the rest span the QA, sweep and ticket-write lanes and should move with them.
-- **`idx_cycles_project_status_live` leads with `project_id`**, against BE-44. Copied verbatim from `a-sprint-cycle-03-constrain.sql` so a migrated database and a cold build agree. Changing it needs one migration that alters both.
-- **`listRelatedLinks` truncates at 50** with no cursor.
-- **P2-2** `resource-allocation` is unpaginated. Fixing it changes the response contract, so it needs the frontend hook and its contract in the same change — a cross-repo change this pass did not take on.
-- **P2-4, P2-6, P2-7, P2-8** unchanged.
+Each of these is open for a stated reason, not because it was missed.
+
+- **`deleteCycle` is still a hard delete** (`cycles.service.ts:133`), so `cycles.deleted_at` is never written and all fourteen predicates are inert. Converting it is *not* a one-line change: `tickets.cycle_id` and `sprint_scope_events.cycle_id` are `ON DELETE SET NULL`, so a hard delete currently clears them. A soft delete would leave tickets pointing at an invisible cycle and `projects-activity.service.ts` resolving no name for it. Doing this properly means clearing `tickets.cycle_id` in the same transaction — a data-lifecycle change, not a performance one.
+- **P2-4** — the report-revision trigger set is coarser than the reports depend on, and the bump takes `FOR UPDATE` on the project row. Both the write-amplification cost and the cache hit rate are plan-dependent; changing the trigger set on a guess could easily be worse. Needs measurement first.
+- **P2-6** — roadmap search. The house answer for text search under RLS is the id-only `SECURITY DEFINER` resolver (BE-80), not a bare trigram index that may never be chosen while taxing every write. Needs a query plan to settle.
+- **P2-8** — the velocity chart shows one page of 100 cycles and does not say so. Surfacing it means either a UI cap notice or `useInfiniteQuery`; the hook currently discards the `X-Has-More` header `apiClient.get` does not expose. A product decision, not a defect to patch silently.
+- **`listRelatedLinks` truncates at 50** with no cursor — same shape as P2-8.
+- **P2-1** — blocked on the ratchet decision above.
 
 ## Not verified
 

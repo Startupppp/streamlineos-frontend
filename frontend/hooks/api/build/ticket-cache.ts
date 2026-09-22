@@ -192,7 +192,7 @@ export function invalidateBuildViews(
   });
   void client.invalidateQueries({
     queryKey:
-      accountingAndSupportQueryKeys.projectReports.criticalPath(projectId),
+      buildWorkQueryKeys.projectReports.criticalPath(projectId),
   });
   void client.invalidateQueries({
     queryKey: collaborationQueryKeys.dashboard.myIssues(),
@@ -221,10 +221,10 @@ export function invalidateBuildViews(
     queryKey: buildWorkQueryKeys.projects.columnCounts(projectId),
   });
   void client.invalidateQueries({
-    queryKey: accountingAndSupportQueryKeys.projectReports.all,
+    queryKey: buildWorkQueryKeys.projectReports.all,
     predicate: (query) =>
       query.queryKey[
-        accountingAndSupportQueryKeys.projectReports.all.length + 1
+        buildWorkQueryKeys.projectReports.all.length + 1
       ] === projectId,
   });
   void client.invalidateQueries({
@@ -286,15 +286,15 @@ export function invalidateTicketUpdateViews(
   });
   void client.invalidateQueries({
     queryKey:
-      accountingAndSupportQueryKeys.projectReports.criticalPath(projectId),
+      buildWorkQueryKeys.projectReports.criticalPath(projectId),
     refetchType: "none",
   });
   void client.invalidateQueries({
-    queryKey: accountingAndSupportQueryKeys.projectReports.all,
+    queryKey: buildWorkQueryKeys.projectReports.all,
     refetchType: "none",
     predicate: (query) =>
       query.queryKey[
-        accountingAndSupportQueryKeys.projectReports.all.length + 1
+        buildWorkQueryKeys.projectReports.all.length + 1
       ] === projectId,
   });
   void client.invalidateQueries({

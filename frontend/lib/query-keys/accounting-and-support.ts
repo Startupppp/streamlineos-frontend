@@ -24,26 +24,6 @@ export const accountingAndSupportQueryKeys = {
     stats: () => [...base, "goals", "stats"] as const,
   },
 
-  projectReports: {
-    all: [...base, "projectReports"] as const,
-    velocity: (projectId: number) =>
-      [...base, "projectReports", "velocity", projectId] as const,
-    burnup: (projectId: number, cycleId?: number) =>
-      cycleId === undefined
-        ? ([...base, "projectReports", "burnup", projectId] as const)
-        : ([...base, "projectReports", "burnup", projectId, cycleId] as const),
-    cfd: (projectId: number, params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "projectReports", "cfd", projectId] as const)
-        : ([...base, "projectReports", "cfd", projectId, params] as const),
-    criticalPath: (projectId: number) =>
-      [...base, "projectReports", "criticalPath", projectId] as const,
-    cycleTime: (projectId: number) =>
-      [...base, "projectReports", "cycleTime", projectId] as const,
-    leadTime: (projectId: number) =>
-      [...base, "projectReports", "leadTime", projectId] as const,
-  },
-
   whiteboards: {
     all: [...base, "whiteboards"] as const,
     list: (projectId: number) =>

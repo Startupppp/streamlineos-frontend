@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
-import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -85,7 +85,7 @@ interface CriticalPathReport {
 export function useVelocityReport(projectId: number) {
   const canView = useCan("build:view");
   return useQuery({
-    queryKey: accountingAndSupportQueryKeys.projectReports.velocity(projectId),
+    queryKey: buildWorkQueryKeys.projectReports.velocity(projectId),
     queryFn: ({ signal }) => apiClient.get<VelocitySprint[]>(`/build/${projectId}/reports/velocity`, undefined, signal, velocityContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
@@ -95,7 +95,7 @@ export function useVelocityReport(projectId: number) {
 export function useBurnupReport(projectId: number, cycleId?: number) {
   const canView = useCan("build:view");
   return useQuery({
-    queryKey: accountingAndSupportQueryKeys.projectReports.burnup(projectId, cycleId),
+    queryKey: buildWorkQueryKeys.projectReports.burnup(projectId, cycleId),
     queryFn: ({ signal }) =>
       apiClient.get<BurnupPoint[]>(
         `/build/${projectId}/reports/burnup`,
@@ -111,7 +111,7 @@ export function useBurnupReport(projectId: number, cycleId?: number) {
 export function useCfdReport(projectId: number, days = 30) {
   const canView = useCan("build:view");
   return useQuery({
-    queryKey: accountingAndSupportQueryKeys.projectReports.cfd(projectId, { days }),
+    queryKey: buildWorkQueryKeys.projectReports.cfd(projectId, { days }),
     queryFn: ({ signal }) =>
       apiClient.get<CfdReport>(`/build/${projectId}/reports/cfd`, { days }, signal, cfdDataContract),
     enabled: canView && !!projectId,
@@ -122,7 +122,7 @@ export function useCfdReport(projectId: number, days = 30) {
 export function useCriticalPath(projectId: number) {
   const canView = useCan("build:view");
   return useQuery({
-    queryKey: accountingAndSupportQueryKeys.projectReports.criticalPath(projectId),
+    queryKey: buildWorkQueryKeys.projectReports.criticalPath(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<CriticalPathReport>(`/build/${projectId}/reports/critical-path`, undefined, signal, criticalPathContract),
     enabled: canView && !!projectId,
@@ -133,7 +133,7 @@ export function useCriticalPath(projectId: number) {
 export function useCycleTimeReport(projectId: number) {
   const canView = useCan("build:view");
   return useQuery<Array<{ week: string; avgDays: number; count: number }>>({
-    queryKey: accountingAndSupportQueryKeys.projectReports.cycleTime(projectId),
+    queryKey: buildWorkQueryKeys.projectReports.cycleTime(projectId),
     queryFn: ({ signal }) => apiClient.get(`/build/${projectId}/reports/cycle-time`, undefined, signal, cycleTimeContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
@@ -143,7 +143,7 @@ export function useCycleTimeReport(projectId: number) {
 export function useLeadTimeReport(projectId: number) {
   const canView = useCan("build:view");
   return useQuery<Array<{ week: string; avgDays: number; p50Days: number; p90Days: number; count: number }>>({
-    queryKey: accountingAndSupportQueryKeys.projectReports.leadTime(projectId),
+    queryKey: buildWorkQueryKeys.projectReports.leadTime(projectId),
     queryFn: ({ signal }) => apiClient.get(`/build/${projectId}/reports/lead-time`, undefined, signal, leadTimeContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
@@ -157,7 +157,7 @@ export function useCaptureSnapshot(projectId: number) {
     mutationFn: () =>
       apiClient.post<CaptureSnapshotResult>(`/build/${projectId}/reports/snapshot`, undefined, undefined, snapshotResultContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.projectReports.cfd(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projectReports.cfd(projectId) });
     },
   });
 }
