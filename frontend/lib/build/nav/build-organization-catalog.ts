@@ -72,7 +72,7 @@ export function buildOrganizationCatalog(): BuildScopeCatalog {
       {
         id: "org-workspaces",
         label: "Workspaces",
-        href: `${BUILD_ROOT_PATH}/pm-workspaces`,
+        href: `${BUILD_ROOT_PATH}/workspaces`,
         icon: Boxes,
         requiredPermission: "build:workspaces:view",
       },
@@ -86,7 +86,7 @@ export function buildOrganizationCatalog(): BuildScopeCatalog {
       {
         id: "org-goals",
         label: "Goals",
-        href: `${BUILD_ROOT_PATH}/goal`,
+        href: `${BUILD_ROOT_PATH}/goals`,
         icon: Target,
         requiredPermission: "build:goals:view",
       },

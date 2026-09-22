@@ -2,9 +2,10 @@
 
 ## Evidence
 
-- Physical routes: `frontend/app/(authenticated)/build/**/page.tsx` (83 pages on 2026-09-21).
+- Physical routes: `frontend/app/(authenticated)/build/**/page.tsx` (79 pages on 2026-09-22).
 - Scope model: `frontend/lib/build/build-scope.ts`.
-- Catalog/model: `frontend/lib/build/build-nav-model.ts`, `frontend/lib/build/build-nav-groups.ts`.
+- Catalog/model: `frontend/lib/build/build-nav-model.ts`, `frontend/lib/build/build-nav-groups.ts`, `frontend/lib/build/nav/`.
+- Canonical route list: `frontend/lib/build/build-route-manifest.ts`, snapshotted in `docs/specs/build/generated/routes.snapshot.json`.
 - Production sidebar: organization scope at `/build/command-center`; project scope at `/build/1`.
 
 ## Navigation principles
@@ -61,8 +62,8 @@
 ### Move or consolidate
 
 - `/build/drafts` → `/build/inbox?view=drafts`.
-- `/build/goal*` → `/build/goals*`.
-- `/build/pm-workspaces` → `/build/workspaces`.
+- `/build/goal*` → `/build/goals*`. **EXECUTED 2026-09-22.**
+- `/build/pm-workspaces` → `/build/workspaces`. **EXECUTED 2026-09-22.**
 - `/build/members` and `/build/access` → `/build/settings/access`.
 - `/build/client-access` → `/build/settings/client-access`.
 - Workspace My Work → `/build/my-work?pmWorkspaceId=...`.
@@ -99,7 +100,7 @@
 
 ## Complete existing-page inventory
 
-This census contains all 92 physical Build-owned page routes found in the repository: 83 authenticated `/build/**` pages plus nine authenticated portal, external portal, and public collaboration pages. Each linked page spec contains the full interaction, state, permission, component, API, gap, and acceptance contract.
+This census is the 2026-09-21 baseline: all 92 physical Build-owned page routes found in the repository at that date — 83 authenticated `/build/**` pages plus nine authenticated portal, external portal, and public collaboration pages. Rows marked **EXECUTED** have since been removed or renamed on disk and no longer describe a live route; the live tree is 79 `/build/**` pages, enumerated in `frontend/lib/build/build-route-manifest.ts`. Each linked page spec contains the full interaction, state, permission, component, API, gap, and acceptance contract.
 
 | Route | Purpose | Primary persona | Decision | Rationale |
 |---|---|---|---|---|
@@ -159,8 +160,8 @@ This census contains all 92 physical Build-owned page routes found in the reposi
 | `/build/command-center` | Provide a prioritized operating home across Build. | Product or project manager. | [KEEP](./10-command-center.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/customers` | Show CRM customers linked to Build delivery. | Client project manager. | [KEEP](./10-customers.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/drafts` | Collect actionable Build notifications and recover drafts. | Contributor. | [CONSOLIDATE — EXECUTED 2026-09-22](./10-drafts.md) | Job lives at `/build/inbox?view=drafts`. Page deleted; the redirect moved into `next.config.ts` and the sidebar Drafts entry now links straight to the canonical URL. |
-| `/build/goal` | Define measurable outcomes and connect delivery evidence. | Product manager. | [MOVE](./10-goal.md) | Migrate the user job to `/build/goals`, preserve deep links temporarily, then remove this physical route. |
-| `/build/goal/[goalId]` | Define measurable outcomes and connect delivery evidence. | Product manager. | [MOVE](./10-goal-goal.md) | Migrate the user job to `/build/goals/[goalId]`, preserve deep links temporarily, then remove this physical route. |
+| `/build/goal` | Define measurable outcomes and connect delivery evidence. | Product manager. | [MOVE — EXECUTED 2026-09-22](./10-goals.md) | Job lives at `/build/goals`. Directory renamed; the `next.config.ts` redirect preserves the deep link. |
+| `/build/goal/[goalId]` | Define measurable outcomes and connect delivery evidence. | Product manager. | [MOVE — EXECUTED 2026-09-22](./10-goals-goal.md) | Job lives at `/build/goals/[goalId]`. Directory renamed; the `next.config.ts` redirect preserves the deep link. |
 | `/build/inbox` | Collect actionable Build notifications and recover drafts. | Contributor. | [KEEP](./10-inbox.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/managed-products` | Manage products independently from delivery projects. | Product manager. | [KEEP](./10-managed-products.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/managed-products/[managedProductId]` | Manage products independently from delivery projects. | Product manager. | [KEEP](./10-managed-products-product.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
@@ -171,7 +172,7 @@ This census contains all 92 physical Build-owned page routes found in the reposi
 | `/build/managed-products/[managedProductId]/roadmap` | Connect outcomes and releases to planned product work. | Product manager. | [KEEP](./10-managed-products-product-roadmap.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/members` | Administer Build access at organization scope. | Organization administrator. | [MOVE — EXECUTED 2026-09-22](./10-members.md) | Job lives at `/build/settings/access`. Page deleted; the `next.config.ts` redirect preserves the deep link. |
 | `/build/my-work` | Unify work assigned to, reported by, or watched by the current actor. | Contributor. | [KEEP](./10-my-work.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
-| `/build/pm-workspaces` | Optionally group projects, products, and teams. | Program administrator. | [MOVE](./10-pm-workspaces.md) | Migrate the user job to `/build/workspaces`, preserve deep links temporarily, then remove this physical route. |
+| `/build/pm-workspaces` | Optionally group projects, products, and teams. | Program administrator. | [MOVE — EXECUTED 2026-09-22](./10-workspaces.md) | Job lives at `/build/workspaces`, the index above `/build/workspaces/[pmWorkspaceId]`. Directory renamed; the `next.config.ts` redirect preserves the deep link. |
 | `/build/portfolios` | Group investments across projects and programs. | Portfolio manager. | [KEEP](./10-portfolios.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/portfolios/[portfolioId]` | Group investments across projects and programs. | Portfolio manager. | [KEEP](./10-portfolios-portfolio.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/programs` | Coordinate related projects toward one delivery outcome. | Program manager. | [KEEP](./10-programs.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |

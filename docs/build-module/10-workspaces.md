@@ -4,10 +4,10 @@
 
 - **Current/target route:** `/build/workspaces`
 - **Scope:** organization
-- **Disposition:** **ADD**
-- **Decision:** New canonical page required by the final IA.
+- **Disposition:** **KEEP**
+- **Decision:** Canonical page required by the final IA. Executed 2026-09-22 by renaming `/build/pm-workspaces` on disk; `next.config.ts` preserves the old deep link. Supersedes [`10-pm-workspaces.md`](./10-pm-workspaces.md).
 - **User job:** Create a coherent operating area without forcing hierarchy.
-- **Evidence:** No current route file; this is a target specification.; Not present in production. **ASSUMPTION:** target behavior requires implementation after route migration approval.
+- **Evidence:** `frontend/app/(authenticated)/build/workspaces/page.tsx`; route file present since the 2026-09-22 rename. Live behavior not directly observed. **ASSUMPTION:** the page follows its source component until browser evidence is captured.
 
 ## Product contract
 

@@ -2,6 +2,6 @@
 import { PmWorkspacesPage } from "@/features/build/pm-workspaces/pm-workspaces-page";
 
 export default async function PmWorkspacesRoute() {
-  await enforceRouteAccess("/build/pm-workspaces");
+  await enforceRouteAccess("/build/workspaces");
   return <PmWorkspacesPage />;
 }

@@ -160,9 +160,12 @@ reconciles cleanly against the journal:
 
 Two consequences the prior documents do not state:
 
-1. **The arithmetic in `PHASE-2-STATUS.md` finding 4 does not close.** It records the ledger going
-   "38 → 903" with 856 rows backfilled. 38 + 856 = 894, not 903. The complement of the audit against
-   the journal is 47, so the pre-existing count was **47**, not 38.
+1. **The three numbers in `PHASE-2-STATUS.md` finding 4 cannot be read together.** It records the
+   ledger going "38 → 903" with 856 rows backfilled, but 38 + 856 = 894. The gap is that "38" and the
+   backfill are different measurement points: eight tags (`1112`, `1115`, `1119`, `1122`, `1131`,
+   `1132`, `1141`, `1142`) were applied separately in the same session, taking the ledger to 46 before
+   the backfill ran. **47** journal entries are absent from the audit, so 47 rows are not attributable
+   to it. Quote the split, not the "38 → 903" arrow.
 2. **"903/903, 0 pending" is a reconciled ledger, not a replayed one.** Only 47 rows (5%) record an
    actual execution; 856 (95%) were inserted after verifying the objects were already live. The number
    is trustworthy as a statement about object existence and worthless as evidence that the chain

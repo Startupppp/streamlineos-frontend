@@ -152,6 +152,14 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
       "Organisation-wide chat configuration is administrative. Only org owners and admins hold chat:org-settings:manage; it is org-only and cannot be delegated.",
   },
   {
+    prefix: "/build/workspaces/[pmWorkspaceId]",
+    product: "build",
+    permission: "build:view",
+    reason:
+      "A workspace body is the project list filtered to that workspace, so it carries the project read key. The organization Workspaces index at /build/workspaces owns build:workspaces:view, and without this entry the renamed index would extend that stricter key over every workspace a build:view caller reaches from the scope switcher, which gates on build:view alone.",
+    backendRoute: { method: "get", path: "/build" },
+  },
+  {
     prefix: "/build/workspaces/[pmWorkspaceId]/products",
     product: "build",
     permission: "build:managed-products:view",

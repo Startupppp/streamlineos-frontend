@@ -221,8 +221,9 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/build/settings/client-access` · **Build** · hooks: `→ features/portal-access` — canonical owner of the external grant job
 
 ### PM Workspaces
-- `/build/pm-workspaces` · **Build** · hooks: `→ features/build`
-- `/build/workspaces/[pmWorkspaceId]` · **Build** · hooks: `enforceRouteAccess`, `→ features/build/project-list` — workspace-scoped counterpart of `/build`; added because `withPmWorkspacePath("/build", …)` resolved here and 404'd
+- `/build/workspaces` · **Build** · hooks: `enforceRouteAccess`, `→ features/build/pm-workspaces` — canonical workspaces index; renamed from `/build/pm-workspaces` on 2026-09-22 so the index sits above its own detail route, with a `next.config.ts` redirect for the old path. Gated `build:workspaces:view`
+- `/build/pm-workspaces` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/pm-workspaces/] — renamed to `/build/workspaces`; the deep link is preserved by `next.config.ts`
+- `/build/workspaces/[pmWorkspaceId]` · **Build** · hooks: `enforceRouteAccess`, `→ features/build/project-list` — workspace-scoped counterpart of `/build`; added because `withPmWorkspacePath("/build", …)` resolved here and 404'd. Gated `build:view`, pinned by a route-access extension so the stricter `build:workspaces:view` the index owns cannot extend over it
 - `/build/workspaces/[pmWorkspaceId]/all` · **Build** · [RETIRED app/(authenticated)/build/workspaces/[pmWorkspaceId]/all/page.tsx] — superseded by the workspace root above, which renders the same `ProjectsPage` with the same `pmWorkspaceId` prop
 - `/build/workspaces/[pmWorkspaceId]/pm-workspaces` · **Build** · [RETIRED app/(authenticated)/build/workspaces/[pmWorkspaceId]/pm-workspaces/page.tsx] — byte-identical to `/build/pm-workspaces` and never read its own `pmWorkspaceId`; zero inbound links
 - `/build/workspaces/[pmWorkspaceId]/all-work` · **Build** · hooks: `→ features/build`
@@ -238,8 +239,9 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/build/programs` · **Build** · hooks: `→ features/build`
 - `/build/portfolios` · **Build** · hooks: `→ features/build`
 - `/build/portfolios/[portfolioId]` · **Build** · hooks: `→ features/build`
-- `/build/goal` · **Build** · hooks: `→ features/build`
-- `/build/goal/[goalId]` · **Build** · hooks: `→ features/build`
+- `/build/goals` · **Build** · hooks: `→ features/build/goals` — renamed from `/build/goal` on 2026-09-22; `next.config.ts` redirects the old path
+- `/build/goals/[goalId]` · **Build** · hooks: `→ features/build/goals` — renamed from `/build/goal/[goalId]` on 2026-09-22; `next.config.ts` redirects the old path
+- `/build/goal`, `/build/goal/[goalId]` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/goal/] — renamed to the plural form; deep links preserved by `next.config.ts`
 - `/build/roadmap` · **Build** · hooks: `→ features/build`
 - `/build/teams` · **Build** · hooks: `→ features/build`
 - `/build/teams/[teamId]` · **Build** · hooks: `→ features/build`

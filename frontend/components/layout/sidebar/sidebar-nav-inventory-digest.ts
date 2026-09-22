@@ -3,5 +3,9 @@
 // 2026-09-21: "Recruitment OS" carved out of the HRMS product into its own top-level product
 // (group.product/module "hrms" -> "recruitment"), matching CRM/Inventory/Finance; routes, hrefs
 // and permissions unchanged.
+// 2026-09-22: Build "Workspaces" href /build/pm-workspaces -> /build/workspaces and Build "Goals"
+// href /build/goal -> /build/goals. Both route directories were renamed on disk so each index sits
+// at the canonical path above its own detail route; next.config.ts redirects the old paths. Labels
+// and permissions unchanged.
 export const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "5ec432bda0f972ca8125e9bdf53c6fed32732e768c8f8ba99e1826e30172febb";
+  "d1a851f0edb658b2464094b1b37762681d60fff660f6ef4dce6049faabc22b7b";

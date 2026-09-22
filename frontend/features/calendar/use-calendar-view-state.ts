@@ -131,7 +131,7 @@ export function useCalendarViewState() {
         event.resource.entityId != null
       ) {
         router.push(
-          `/build/${event.resource.projectId}?ticket=${event.resource.entityId}`,
+          `/build/${event.resource.projectId}/issues?ticket=${event.resource.entityId}`,
         );
         return;
       }

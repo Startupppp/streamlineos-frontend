@@ -343,7 +343,7 @@ export function QuickCreateMenu({
             ) : null}
             {showNewGoal ? (
               <QuickCreateDrawerLink
-                href="/build/goal?create=1"
+                href="/build/goals?create=1"
                 label="New goal"
                 icon={Target}
               />
@@ -393,7 +393,7 @@ export function QuickCreateMenu({
         ) : null}
         {showNewGoal ? (
           <DropdownMenuItem asChild className="cursor-pointer gap-2">
-            <Link href="/build/goal?create=1">
+            <Link href="/build/goals?create=1">
               <Target className="h-4 w-4 text-muted-foreground" />
               <span>New goal</span>
             </Link>
