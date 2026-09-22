@@ -111,7 +111,7 @@ This is the highest-value check on the page, and it is the one jsdom proved but 
 - [ ] `/build/roadmap` and the managed-product roadmap render each item's status.
 - [ ] Filtering by `?status=` returns the matching subset and the filter round-trips through the URL.
 - [ ] The feedback surface renders status and filters by it.
-- [ ] Confirm status is not blank. **Known risk:** the published `openapi.json` was deliberately not regenerated, so the generated client may not carry `status` even though the backend sends it. If status renders blank, that is the expected symptom of the unregenerated artifact — report it, do not patch the client.
+- [ ] Confirm status is not blank. The published `openapi.json` was verified on 2026-09-22 to carry `status` on `GET /build/roadmap`, `GET /build/feedback` and both PATCH routes, with the correct enum values, so a blank status here is a **real defect** and not an artifact gap. Report it rather than patching the client.
 - [ ] Follow a feedback item → its linked roadmap item → its linked project. All three hops must be clickable.
 
 ### H. Keyboard focus order
@@ -156,7 +156,7 @@ The repo's design tokens are complete hex values, so the common `hsl(var(--token
 
 - No browser was opened. No screenshot was taken by Claude in this session.
 - No database was contacted. No migration was applied.
-- `openapi.json` was deliberately not regenerated (it rewrites 30 unrelated path parameters across tickets, projects and checklists).
+- `openapi.json` was regenerated with placeholder env to test the standing "artifact is stale" blocker. It came back byte-identical to the committed artifact, which already carried `status`, so nothing was committed and the blocker is retired.
 - Mobile layout, real focus order and paint are unverified by Claude across the entire Build module.
 
 ## Recording results
