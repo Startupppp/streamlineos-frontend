@@ -24,6 +24,12 @@ const ALL_KINDS: InboxKind[] = [
   "mail",
   "build_approval",
 ];
+
+const VALID_KIND_SET: ReadonlySet<string> = new Set<InboxKind>(ALL_KINDS);
+
+function parseKind(value: string): InboxKind | null {
+  return VALID_KIND_SET.has(value) ? (ALL_KINDS.find((k) => k === value) ?? null) : null;
+}
 const SEARCH_DEBOUNCE_MS = 300;
 
 const PRIORITY_OPTIONS = [
@@ -88,7 +94,12 @@ export function InboxToolbar({
 
   const handleKindValueChange = useCallback(
     (value: string) => {
-      onKindOverrideChange(value === "__all__" ? [] : [value as InboxKind]);
+      if (value === "__all__") {
+        onKindOverrideChange([]);
+        return;
+      }
+      const kind = parseKind(value);
+      if (kind !== null) onKindOverrideChange([kind]);
     },
     [onKindOverrideChange],
   );

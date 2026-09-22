@@ -3,8 +3,20 @@ import userEvent from "@testing-library/user-event";
 import { createElement, type ReactNode } from "react";
 import { InboxShell } from "./inbox-shell";
 
+const MOCK_VIEWS = [
+  { value: "primary", label: "All" },
+  { value: "updates", label: "Updates" },
+  { value: "notifications", label: "Notifications" },
+  { value: "mail", label: "Mail" },
+  { value: "approvals", label: "Approvals" },
+  { value: "later", label: "Later" },
+  { value: "done", label: "Done" },
+] as const;
+
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/inbox",
 }));
 
 jest.mock("next-auth/react", () => ({
@@ -111,6 +123,48 @@ jest.mock("./inbox-virtual-list", () => ({
   },
 }));
 
+jest.mock("./inbox-toolbar", () => {
+  const { createElement: ce } = require("react") as typeof import("react");
+  const views = [
+    { value: "primary", label: "All" },
+    { value: "updates", label: "Updates" },
+    { value: "notifications", label: "Notifications" },
+    { value: "mail", label: "Mail" },
+    { value: "approvals", label: "Approvals" },
+    { value: "later", label: "Later" },
+    { value: "done", label: "Done" },
+  ];
+  return {
+    InboxToolbar: ({
+      state,
+      onViewChange,
+    }: {
+      state: { view: string };
+      onViewChange: (v: string) => void;
+    }) =>
+      ce(
+        "div",
+        null,
+        ...views.map((opt) =>
+          ce(
+            "button",
+            {
+              key: opt.value,
+              type: "button",
+              onClick: () => onViewChange(opt.value),
+              "aria-pressed": state.view === opt.value,
+            },
+            opt.label,
+          ),
+        ),
+      ),
+  };
+});
+
+jest.mock("./inbox-bulk-actions", () => ({
+  BulkActionsBar: () => null,
+}));
+
 jest.mock("@/components/ui/page-wrapper", () => ({
   PageWrapper: ({
     children,
@@ -140,16 +194,7 @@ jest.mock("@/lib/utils", () => ({
   cn: (...args: string[]) => args.filter(Boolean).join(" "),
 }));
 
-jest.mock("@/components/ui/page-tabs-toolbar", () => ({
-  PageTabsToolbar: ({ tabs }: { tabs?: ReactNode }) => createElement("div", null, tabs),
-}));
-
 type SonerMock = { toast: { error: jest.Mock; success: jest.Mock } };
-/**
- * The three lifecycle hooks are overwritten per test with a plain stub, not a
- * jest.fn, so they are typed as the hook shape the component consumes rather
- * than as `jest.Mock` — which the stubs never satisfied.
- */
 type NotificationMutationStub = () => {
   mutate: (
     id: number,
@@ -268,18 +313,28 @@ describe("inbox lifecycle mutations — error toast on failure", () => {
 });
 
 describe("inbox view switcher — filter semantics and view switching", () => {
-  const VIEW_LABELS = ["All", "Notifications", "Mail", "Approvals"];
+  const LEGACY_VIEW_LABELS = ["All", "Notifications", "Mail", "Approvals"];
 
   function viewControl(label: string): HTMLElement {
     return screen.getByRole("button", { name: label });
   }
 
-  it("renders all four views as pressed-state filter controls", async () => {
+  it("renders the original four view controls among the full seven", async () => {
     await act(async () => { render(<InboxShell />); });
 
-    const controls = VIEW_LABELS.map(viewControl);
-    expect(controls.map((control) => control.textContent)).toEqual(VIEW_LABELS);
+    const controls = LEGACY_VIEW_LABELS.map(viewControl);
+    expect(controls.map((control) => control.textContent)).toEqual(LEGACY_VIEW_LABELS);
     for (const control of controls) expect(control).toHaveAttribute("aria-pressed");
+  });
+
+  it("renders all seven view controls", async () => {
+    await act(async () => { render(<InboxShell />); });
+
+    for (const { label } of MOCK_VIEWS) {
+      expect(screen.getByRole("button", { name: label })).toHaveAttribute(
+        "aria-pressed",
+      );
+    }
   });
 
   it("BITE PROOF — no control claims a tab panel it never renders", async () => {
@@ -288,7 +343,7 @@ describe("inbox view switcher — filter semantics and view switching", () => {
     expect(screen.queryAllByRole("tab")).toHaveLength(0);
     expect(screen.queryAllByRole("tablist")).toHaveLength(0);
     expect(screen.queryAllByRole("tabpanel")).toHaveLength(0);
-    for (const label of VIEW_LABELS)
+    for (const { label } of MOCK_VIEWS)
       expect(viewControl(label)).not.toHaveAttribute("aria-controls");
   });
 
@@ -308,13 +363,13 @@ describe("inbox view switcher — filter semantics and view switching", () => {
     expect(viewControl("All")).toHaveAttribute("aria-pressed", "false");
   });
 
-  it("Tab moves focus from one view control to the next", async () => {
+  it("Tab moves focus from All to the next adjacent view control", async () => {
     const user = userEvent.setup();
     await act(async () => { render(<InboxShell />); });
 
     await act(async () => { viewControl("All").focus(); });
     await user.tab();
 
-    expect(viewControl("Notifications")).toHaveFocus();
+    expect(viewControl("Updates")).toHaveFocus();
   });
 });

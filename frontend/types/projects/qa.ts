@@ -48,7 +48,7 @@ export interface TestRunResult {
   notes: string | null;
   executedBy: string | null;
   executedAt: string | null;
-  linkedBugId: number | null;
+  linkedWorkItemId: number | null;
   testCase?: {
     caseNumber: number;
     title: string;

@@ -81,7 +81,6 @@ export const testRunResultRowContract = z.object({
   notes: z.string().nullable(),
   executedBy: z.string().nullable(),
   executedAt: z.string().nullable(),
-  linkedBugId: z.number().int().nullable(),
   linkedWorkItemId: z.number().int().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),

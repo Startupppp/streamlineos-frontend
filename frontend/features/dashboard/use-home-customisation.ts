@@ -22,24 +22,27 @@ export interface HomeCustomisationState {
   density: HomeDensity;
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function readState(storageKey: string): HomeCustomisationState {
   if (typeof window === "undefined") return HOME_CUSTOMISATION_DEFAULT;
   try {
     const raw = window.localStorage.getItem(storageKey);
     if (raw === null) return HOME_CUSTOMISATION_DEFAULT;
     const parsed: unknown = JSON.parse(raw);
-    if (typeof parsed !== "object" || parsed === null)
-      return HOME_CUSTOMISATION_DEFAULT;
-    const p = parsed as Record<string, unknown>;
-    const hiddenWidgets = Array.isArray(p.hiddenWidgets)
-      ? p.hiddenWidgets.filter((s): s is string => typeof s === "string")
+    if (!isPlainObject(parsed)) return HOME_CUSTOMISATION_DEFAULT;
+    const hiddenWidgets = Array.isArray(parsed.hiddenWidgets)
+      ? parsed.hiddenWidgets.filter((s): s is string => typeof s === "string")
       : [];
-    const widgetOrder = Array.isArray(p.widgetOrder)
-      ? p.widgetOrder.filter((s): s is string => typeof s === "string")
+    const widgetOrder = Array.isArray(parsed.widgetOrder)
+      ? parsed.widgetOrder.filter((s): s is string => typeof s === "string")
       : [];
+    const rawDensity = parsed.density;
     const density: HomeDensity =
-      p.density === "compact" || p.density === "comfortable"
-        ? p.density
+      rawDensity === "compact" || rawDensity === "comfortable"
+        ? rawDensity
         : "comfortable";
     return { hiddenWidgets, widgetOrder, density };
   } catch {

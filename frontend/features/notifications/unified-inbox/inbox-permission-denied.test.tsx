@@ -10,7 +10,9 @@ const state: { items: UnifiedInboxItem[]; sources: InboxSourceStatus[] } = {
 };
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/inbox",
 }));
 
 jest.mock("next-auth/react", () => ({
@@ -74,6 +76,48 @@ jest.mock("@/features/notifications/notification-list-skeleton", () => ({
 }));
 
 jest.mock("next/dynamic", () => () => () => null);
+
+jest.mock("./inbox-toolbar", () => {
+  const { createElement: ce } = require("react") as typeof import("react");
+  const views = [
+    { value: "primary", label: "All" },
+    { value: "updates", label: "Updates" },
+    { value: "notifications", label: "Notifications" },
+    { value: "mail", label: "Mail" },
+    { value: "approvals", label: "Approvals" },
+    { value: "later", label: "Later" },
+    { value: "done", label: "Done" },
+  ];
+  return {
+    InboxToolbar: ({
+      state,
+      onViewChange,
+    }: {
+      state: { view: string };
+      onViewChange: (v: string) => void;
+    }) =>
+      ce(
+        "div",
+        null,
+        ...views.map((opt) =>
+          ce(
+            "button",
+            {
+              key: opt.value,
+              type: "button",
+              onClick: () => onViewChange(opt.value),
+              "aria-pressed": state.view === opt.value,
+            },
+            opt.label,
+          ),
+        ),
+      ),
+  };
+});
+
+jest.mock("./inbox-bulk-actions", () => ({
+  BulkActionsBar: () => null,
+}));
 
 const MAIL_DENIED: InboxSourceStatus = {
   kind: "mail",

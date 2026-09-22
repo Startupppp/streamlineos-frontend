@@ -11,7 +11,7 @@ export type InboxView =
   | "later"
   | "done";
 
-const VALID_VIEWS: ReadonlySet<string> = new Set<InboxView>([
+const ALL_VIEW_VALUES: InboxView[] = [
   "primary",
   "updates",
   "notifications",
@@ -19,10 +19,17 @@ const VALID_VIEWS: ReadonlySet<string> = new Set<InboxView>([
   "approvals",
   "later",
   "done",
-]);
+];
+
+function findView(raw: string): InboxView | undefined {
+  return ALL_VIEW_VALUES.find((v) => v === raw);
+}
 
 export function parseView(raw: string | null): InboxView {
-  if (raw !== null && VALID_VIEWS.has(raw)) return raw as InboxView;
+  if (raw !== null) {
+    const match = findView(raw);
+    if (match !== undefined) return match;
+  }
   return "primary";
 }
 

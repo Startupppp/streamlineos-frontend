@@ -10,7 +10,9 @@ import { InboxShell } from "./inbox-shell";
 const pushMock = jest.fn<void, [string]>();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: pushMock }),
+  useRouter: () => ({ push: pushMock, replace: jest.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/inbox",
 }));
 
 jest.mock("next-auth/react", () => ({
@@ -138,6 +140,14 @@ jest.mock("@/lib/utils", () => ({
   cn: (...args: string[]) => args.filter(Boolean).join(" "),
 }));
 
+jest.mock("./inbox-toolbar", () => ({
+  InboxToolbar: () => null,
+}));
+
+jest.mock("./inbox-bulk-actions", () => ({
+  BulkActionsBar: () => null,
+}));
+
 function makeMailItem(id: string, accountId: number): MailInboxItem {
   return {
     kind: "mail",
@@ -156,11 +166,12 @@ function makeMailItem(id: string, accountId: number): MailInboxItem {
   };
 }
 
-function makeApprovalItem(projectId: number): BuildApprovalInboxItem {
+function makeApprovalItem(projectId: number | null): BuildApprovalInboxItem {
   return {
     kind: "build_approval",
     id: 9,
     status: "pending",
+    approvalKind: "manual",
     projectId,
     ticketId: null,
     dueAt: null,

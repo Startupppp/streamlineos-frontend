@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useDeferredValue, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -11,6 +11,7 @@ import { NotificationDetailDrawerLazy } from "@/features/notifications/notificat
 import dynamic from "next/dynamic";
 import { useUnifiedInbox } from "@/hooks/api/inbox";
 import { useInboxActions } from "./use-inbox-actions";
+import { useInboxFilterState } from "./use-inbox-filter-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toSearchParams } from "@/lib/route-search-params";
 import { normalizeBuildDeepLink } from "@/lib/build/normalize-build-deep-link";
@@ -22,32 +23,41 @@ import type {
   MailInboxItem,
   BuildApprovalInboxItem,
 } from "@/types/inbox";
-import { ViewToggle } from "@/components/ui/view-toggle";
-import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { toDrawerNotification } from "./inbox-schema";
 import {
-  VIEWS,
-  VIEW_KINDS,
   dedupeInboxItems,
   deniedPermissionFor,
   degradedSources,
   isDegraded,
-  type InboxView,
+  unsupportedSourcesFor,
+  INBOX_SOURCE_LABELS,
 } from "./inbox-sources";
 import { InboxDegradedBanner } from "./inbox-degraded-banner";
+import { InboxToolbar } from "./inbox-toolbar";
+import { BulkActionsBar } from "./inbox-bulk-actions";
 import type { InboxVirtualListProps } from "./inbox-virtual-list";
 
-const InboxVirtualList = dynamic<InboxVirtualListProps>(
-  () => import("./inbox-virtual-list").then((m) => m.InboxVirtualList),
+const InboxVirtualList = dynamic<InboxVirtualListProps>(() =>
+  import("./inbox-virtual-list").then((m) => m.InboxVirtualList),
 );
-
 
 export function InboxShell() {
   const router = useRouter();
-  const [view, setView] = useState<InboxView>("ALL");
-  const [selectedNotification, setSelectedNotification] =
-    useState<Notification | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const searchParams = useSearchParams();
+
+  const {
+    filterState,
+    queryParams,
+    selectedKeys,
+    handleViewChange,
+    handleSearchChange,
+    handleUnreadOnlyChange,
+    handleCategoryChange,
+    handlePriorityChange,
+    handleKindOverrideChange,
+    handleToggleSelect,
+    handleClearSelection,
+  } = useInboxFilterState(searchParams, router);
 
   const {
     data,
@@ -58,38 +68,30 @@ export function InboxShell() {
     hasNextPage,
     isFetchingNextPage,
     refetch,
-  } = useUnifiedInbox({ kinds: VIEW_KINDS[view], limit: 25 });
+  } = useUnifiedInbox(queryParams);
 
-  const {
-    isOnline,
-    markReadOnOpen,
-    dismissBroadcastOnOpen,
-    handleMarkRead,
-    handleArchive,
-    handleUnarchive,
-    handlePin,
-    handleSnooze,
-    handleDelete,
-    handleApprove,
-    handleReject,
-    approvingId,
-    rejectingId,
-    archivingId,
-    deletingId,
-  } = useInboxActions();
+  const actions = useInboxActions();
+
+  const [selectedNotification, setSelectedNotification] =
+    useState<Notification | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const pages = useMemo(() => data?.pages ?? [], [data]);
   const items = useMemo(() => dedupeInboxItems(pages), [pages]);
   const deferredItems = useDeferredValue(items);
-  const deniedPermission = deniedPermissionFor(view, pages[0]?.sources ?? []);
+  const deniedPermission = deniedPermissionFor(filterState.view, pages[0]?.sources ?? []);
   const degraded = useMemo(
     () => (isDegraded(pages) ? degradedSources(pages) : []),
+    [pages],
+  );
+  const unsupported = useMemo(
+    () => unsupportedSourcesFor(pages[0]?.sources ?? []),
     [pages],
   );
 
   const handleNotificationClick = useCallback(
     (item: NotificationInboxItem) => {
-      if (!item.isRead) markReadOnOpen(item.id);
+      if (!item.isRead) actions.markReadOnOpen(item.id);
       if (item.deepLink) {
         router.push(normalizeBuildDeepLink(item.deepLink));
         return;
@@ -97,12 +99,12 @@ export function InboxShell() {
       setSelectedNotification(toDrawerNotification(item));
       setDrawerOpen(true);
     },
-    [markReadOnOpen, router],
+    [actions, router],
   );
 
   const handleBroadcastClick = useCallback(
     (item: BroadcastInboxItem) => {
-      if (!item.isRead) dismissBroadcastOnOpen(item.id);
+      if (!item.isRead) actions.dismissBroadcastOnOpen(item.id);
       if (item.deepLink) {
         router.push(normalizeBuildDeepLink(item.deepLink));
         return;
@@ -110,24 +112,28 @@ export function InboxShell() {
       setSelectedNotification(toDrawerNotification(item));
       setDrawerOpen(true);
     },
-    [dismissBroadcastOnOpen, router],
+    [actions, router],
   );
 
   const handleMailClick = useCallback(
     (item: MailInboxItem) => {
-      const params = toSearchParams({
-        messageId: item.id,
-        accountId: String(item.accountId),
-      });
-      router.push(`/mail?${params.toString()}`);
+      const idParams =
+        item.threadId !== null
+          ? { threadId: item.threadId, accountId: String(item.accountId) }
+          : { messageId: item.id, accountId: String(item.accountId) };
+      router.push(`/mail?${toSearchParams(idParams).toString()}`);
     },
     [router],
   );
 
   const handleApprovalClick = useCallback(
     (item: BuildApprovalInboxItem) => {
-      const params = toSearchParams({ projectId: String(item.projectId) });
-      router.push(`/build/approvals?${params.toString()}`);
+      if (item.projectId !== null) {
+        const params = toSearchParams({ projectId: String(item.projectId) });
+        router.push(`/build/approvals?${params.toString()}`);
+      } else {
+        router.push("/build/approvals");
+      }
     },
     [router],
   );
@@ -138,26 +144,21 @@ export function InboxShell() {
   );
 
   const handleRetry = useCallback(() => void refetch(), [refetch]);
-  const handleLoadMore = useCallback(
-    () => void fetchNextPage(),
-    [fetchNextPage],
-  );
-  const handleViewChange = useCallback((next: InboxView) => setView(next), []);
+  const handleLoadMore = useCallback(() => void fetchNextPage(), [fetchNextPage]);
 
   return (
     <PageWrapper
       title="Inbox"
       subtitle="Notifications, mail and approvals waiting for your attention"
       filters={
-        <PageTabsToolbar
-          tabs={
-            <ViewToggle<InboxView>
-              value={view}
-              options={VIEWS}
-              onChange={handleViewChange}
-              showLabel
-            />
-          }
+        <InboxToolbar
+          state={filterState}
+          onViewChange={handleViewChange}
+          onSearchChange={handleSearchChange}
+          onUnreadOnlyChange={handleUnreadOnlyChange}
+          onCategoryChange={handleCategoryChange}
+          onPriorityChange={handlePriorityChange}
+          onKindOverrideChange={handleKindOverrideChange}
         />
       }
     >
@@ -169,7 +170,7 @@ export function InboxShell() {
         ) : isError ? (
           <ErrorState
             className="flex-1"
-            title="Couldn’t load inbox"
+            title="Couldn't load inbox"
             description={getErrorMessage(error)}
             onRetry={handleRetry}
           />
@@ -181,9 +182,25 @@ export function InboxShell() {
           />
         ) : (
           <>
-            <InboxDegradedBanner
-              sources={degraded}
-              onRetry={handleRetry}
+            <InboxDegradedBanner sources={degraded} onRetry={handleRetry} />
+            {unsupported.length > 0 && (
+              <div className="shrink-0 rounded-lg border border-border/70 bg-muted/30 px-4 py-2 flex flex-col gap-1">
+                {unsupported.map(({ source, why }) => (
+                  <p key={source.kind} className="text-xs text-muted-foreground">
+                    <span className="font-medium">
+                      {INBOX_SOURCE_LABELS[source.kind]}
+                    </span>
+                    {" is excluded from this view: "}
+                    {why}
+                  </p>
+                ))}
+              </div>
+            )}
+            <BulkActionsBar
+              selectedKeys={selectedKeys}
+              items={deferredItems}
+              actions={actions}
+              onClearSelection={handleClearSelection}
             />
             {items.length === 0 ? (
               <EmptyState
@@ -200,19 +217,21 @@ export function InboxShell() {
                   items={deferredItems}
                   hasNextPage={hasNextPage ?? false}
                   isFetchingNextPage={isFetchingNextPage}
-                  isOnline={isOnline}
+                  isOnline={actions.isOnline}
+                  selectedKeys={selectedKeys}
+                  onToggleSelect={handleToggleSelect}
                   onNotificationClick={handleNotificationClick}
                   onBroadcastClick={handleBroadcastClick}
                   onMailClick={handleMailClick}
                   onApprovalClick={handleApprovalClick}
-                  onArchive={handleArchive}
-                  onDelete={handleDelete}
-                  onApprove={handleApprove}
-                  onReject={handleReject}
-                  approvingId={approvingId}
-                  rejectingId={rejectingId}
-                  archivingId={archivingId}
-                  deletingId={deletingId}
+                  onArchive={actions.handleArchive}
+                  onDelete={actions.handleDelete}
+                  onApprove={actions.handleApprove}
+                  onReject={actions.handleReject}
+                  approvingId={actions.approvingId}
+                  rejectingId={actions.rejectingId}
+                  archivingId={actions.archivingId}
+                  deletingId={actions.deletingId}
                   onLoadMore={handleLoadMore}
                 />
               </div>
@@ -227,12 +246,12 @@ export function InboxShell() {
           notification={selectedNotification}
           onOpenChange={setDrawerOpen}
           onOpenLink={handleOpenLink}
-          onMarkRead={handleMarkRead}
-          onArchive={handleArchive}
-          onUnarchive={handleUnarchive}
-          onPin={handlePin}
-          onSnooze={handleSnooze}
-          onDelete={handleDelete}
+          onMarkRead={actions.handleMarkRead}
+          onArchive={actions.handleArchive}
+          onUnarchive={actions.handleUnarchive}
+          onPin={actions.handlePin}
+          onSnooze={actions.handleSnooze}
+          onDelete={actions.handleDelete}
         />
       )}
     </PageWrapper>

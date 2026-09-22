@@ -51,7 +51,7 @@ const baseAccess: DashboardAccess = {
 };
 
 const emptyData = {
-  inboxCount: { notification: 0, mail: 0, approval: 0, total: 0, mailExact: true as const },
+  inboxCount: { notification: 0, mail: 0, approval: 0, total: 0, mailExact: true },
   approvals: { pendingLeaves: 0, pendingResignations: 0, total: 0 },
   personal: { myTasks: [], timesheetStatus: null, upcomingEvents: [], degraded: [] },
 };
