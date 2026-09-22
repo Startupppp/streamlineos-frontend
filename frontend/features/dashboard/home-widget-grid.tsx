@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
@@ -108,12 +108,6 @@ export function HomeWidgetGrid({
   const { isHidden, state } = customisation;
   const gapClass = state.density === "compact" ? "gap-2" : "gap-4";
 
-  const [batch2Ready, setBatch2Ready] = useState(false);
-  useEffect(() => {
-    const id = setTimeout(() => setBatch2Ready(true), 0);
-    return () => clearTimeout(id);
-  }, []);
-
   const availableWidgets = useMemo((): readonly WidgetOption[] => {
     const candidates: Array<WidgetOption & { visible: boolean }> = [
       { id: "My tasks", label: "My tasks", visible: projectsEnabled },
@@ -196,33 +190,31 @@ export function HomeWidgetGrid({
             <UpcomingEventsWidget />
           </HomeSectionBoundary>
         ) : null}
-        {batch2Ready && canViewExecutive && !isHidden("Business pulse") ? (
+        {canViewExecutive && !isHidden("Business pulse") ? (
           <HomeSectionBoundary sectionLabel="Business pulse">
             <BusinessPulseWidget />
           </HomeSectionBoundary>
         ) : null}
-        {batch2Ready &&
-        crmEnabled &&
+        {crmEnabled &&
         canViewCrmLeads &&
         !isHidden("Today's activities") ? (
           <HomeSectionBoundary sectionLabel="Today's activities">
             <TodayActivitiesWidget />
           </HomeSectionBoundary>
         ) : null}
-        {batch2Ready &&
-        hrEnabled &&
+        {hrEnabled &&
         canSelfAttendance &&
         !isHidden("My attendance") ? (
           <HomeSectionBoundary sectionLabel="My attendance">
             <MyAttendanceWidget />
           </HomeSectionBoundary>
         ) : null}
-        {batch2Ready && !isHidden("Payroll") ? (
+        {!isHidden("Payroll") ? (
           <HomeSectionBoundary sectionLabel="Payroll">
             <PayrollWidget />
           </HomeSectionBoundary>
         ) : null}
-        {batch2Ready && expensesSlot && !isHidden("Expenses") ? (
+        {expensesSlot && !isHidden("Expenses") ? (
           <HomeSectionBoundary sectionLabel="Expenses">
             {expensesSlot}
           </HomeSectionBoundary>

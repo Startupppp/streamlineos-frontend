@@ -12,13 +12,11 @@ const STORAGE_NAME = "home-widget-customisation";
 
 export const HOME_CUSTOMISATION_DEFAULT: HomeCustomisationState = {
   hiddenWidgets: [],
-  widgetOrder: [],
   density: "comfortable",
 };
 
 export interface HomeCustomisationState {
   hiddenWidgets: readonly string[];
-  widgetOrder: readonly string[];
   density: HomeDensity;
 }
 
@@ -36,15 +34,12 @@ function readState(storageKey: string): HomeCustomisationState {
     const hiddenWidgets = Array.isArray(parsed.hiddenWidgets)
       ? parsed.hiddenWidgets.filter((s): s is string => typeof s === "string")
       : [];
-    const widgetOrder = Array.isArray(parsed.widgetOrder)
-      ? parsed.widgetOrder.filter((s): s is string => typeof s === "string")
-      : [];
     const rawDensity = parsed.density;
     const density: HomeDensity =
       rawDensity === "compact" || rawDensity === "comfortable"
         ? rawDensity
         : "comfortable";
-    return { hiddenWidgets, widgetOrder, density };
+    return { hiddenWidgets, density };
   } catch {
     return HOME_CUSTOMISATION_DEFAULT;
   }
