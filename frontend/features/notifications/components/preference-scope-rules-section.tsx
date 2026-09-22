@@ -29,13 +29,21 @@ import type {
   SetPreferenceRuleInput,
 } from "@/types/notifications";
 
-const RULE_CHANNELS: ReadonlyArray<{ key: NotificationChannel; label: string }> = [
+const NO_RULES: PreferenceRuleRow[] = [];
+
+const RULE_CHANNELS: ReadonlyArray<{
+  key: NotificationChannel;
+  label: string;
+}> = [
   { key: "IN_APP", label: "In-App" },
   { key: "EMAIL", label: "Email" },
   { key: "PUSH", label: "Push" },
 ];
 
-const MODE_OPTIONS: ReadonlyArray<{ value: PreferenceRuleMode; label: string }> = [
+const MODE_OPTIONS: ReadonlyArray<{
+  value: PreferenceRuleMode;
+  label: string;
+}> = [
   { value: "ON", label: "Default" },
   { value: "OFF", label: "Off" },
   { value: "DIGEST", label: "Digest" },
@@ -48,7 +56,10 @@ function resolveMode(
   channel: NotificationChannel,
 ): PreferenceRuleMode {
   const rule = rules.find(
-    (r) => r.scopeType === scopeType && r.scopeKey === scopeKey && r.channel === channel,
+    (r) =>
+      r.scopeType === scopeType &&
+      r.scopeKey === scopeKey &&
+      r.channel === channel,
   );
   return rule?.mode ?? "ON";
 }
@@ -94,7 +105,11 @@ function ChannelCell({
   return (
     <div className="flex items-center justify-between gap-2 sm:flex-col sm:items-center sm:justify-start sm:gap-0.5">
       <span className="text-xs text-muted-foreground">{channelLabel}</span>
-      <Select value={mode} onValueChange={handleValueChange} disabled={isPending}>
+      <Select
+        value={mode}
+        onValueChange={handleValueChange}
+        disabled={isPending}
+      >
         <SelectTrigger
           className="w-28"
           aria-label={`${scopeLabel} ${channelLabel} notification preference`}
@@ -116,8 +131,18 @@ interface ScopeRowProps {
   onSetRule: (input: SetPreferenceRuleInput) => void;
 }
 
-function ScopeRow({ label, scopeType, scopeKey, rules, pendingVars, onSetRule }: ScopeRowProps) {
-  function renderChannelCell({ key: channel, label: channelLabel }: (typeof RULE_CHANNELS)[number]) {
+function ScopeRow({
+  label,
+  scopeType,
+  scopeKey,
+  rules,
+  pendingVars,
+  onSetRule,
+}: ScopeRowProps) {
+  function renderChannelCell({
+    key: channel,
+    label: channelLabel,
+  }: (typeof RULE_CHANNELS)[number]) {
     const mode = resolveMode(rules, scopeType, scopeKey, channel);
     const isPending =
       !!pendingVars &&
@@ -185,9 +210,10 @@ function ScopeRulesSkeleton() {
 }
 
 export function PreferenceScopeRulesSection() {
-  const { data: rules, isLoading } = useNotificationPreferenceRules();
+  const { data, isLoading } = useNotificationPreferenceRules();
   const setRule = useSetNotificationPreferenceRule();
   const enabledModules = useEnabledModules();
+  const rules = data ?? NO_RULES;
 
   const handleSetRule = useCallback(
     (input: SetPreferenceRuleInput) => {
@@ -203,8 +229,6 @@ export function PreferenceScopeRulesSection() {
     return <ScopeRulesSkeleton />;
   }
 
-  if (!rules) return null;
-
   const pendingVars = setRule.isPending ? setRule.variables : undefined;
 
   const moduleRows = enabledModules.map((key) => ({
@@ -219,7 +243,11 @@ export function PreferenceScopeRulesSection() {
     label: NOTIFICATION_CATEGORY_CONFIG[cat].label,
   }));
 
-  function renderModuleRow(row: { key: string; scopeKey: string; label: string }) {
+  function renderModuleRow(row: {
+    key: string;
+    scopeKey: string;
+    label: string;
+  }) {
     return (
       <ScopeRow
         key={row.key}
@@ -233,7 +261,11 @@ export function PreferenceScopeRulesSection() {
     );
   }
 
-  function renderCategoryRow(row: { key: string; scopeKey: string; label: string }) {
+  function renderCategoryRow(row: {
+    key: string;
+    scopeKey: string;
+    label: string;
+  }) {
     return (
       <ScopeRow
         key={row.key}
@@ -255,7 +287,8 @@ export function PreferenceScopeRulesSection() {
             Per-Module Preferences
           </h2>
           <p className="text-xs text-muted-foreground mb-3">
-            &ldquo;Default&rdquo; follows your global channel settings. Set Off to suppress a module on a channel, or Digest to bundle it.
+            &ldquo;Default&rdquo; follows your global channel settings. Set Off
+            to suppress a module on a channel, or Digest to bundle it.
           </p>
           <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
             {moduleRows.map(renderModuleRow)}
@@ -267,7 +300,8 @@ export function PreferenceScopeRulesSection() {
           Per-Source Preferences
         </h2>
         <p className="text-xs text-muted-foreground mb-3">
-          &ldquo;Default&rdquo; follows your global channel settings. Set Off to suppress a source on a channel, or Digest to bundle it.
+          &ldquo;Default&rdquo; follows your global channel settings. Set Off to
+          suppress a source on a channel, or Digest to bundle it.
         </p>
         <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
           {categoryRows.map(renderCategoryRow)}
