@@ -20,7 +20,13 @@ Five-phase migration plan. Phases 01–03 already ran in production per `docs/bu
 - `sprint_id integer FK → build.sprints ON DELETE SET NULL`
 - `cycle_id integer FK → build.cycles ON DELETE SET NULL`
 
-The tripwire tests in `sprint-cycle-consolidation.spec.ts` assert both columns and both FK names are present until phase 05 removes them. Do not remove either column from Drizzle schema until phase 05 SQL is applied and the tripwires are deliberately retired.
+**CORRECTED 2026-09-22 — the instruction below was backwards and is retained only to show what was wrong.**
+~~Do not remove either column from Drizzle schema until phase 05 SQL is applied.~~ Drizzle names every
+**declared** column in its INSERT column list, with `default` as the value, even for an insert whose
+TypeScript object never mentions the field. A declaration that outlives its column therefore raises
+`42703` on every insert and every bare select. The Drizzle declarations must be removed and **deployed
+before** phase 04 runs, not after phase 05. They were removed on 2026-09-22; see
+`FINAL-SPRINT-REMOVAL-STATUS.md`.
 
 ---
 
