@@ -4,6 +4,22 @@ Severity is blast radius, not effort. P0 breaks a write path or serves wrong dat
 
 Every row cites source. No latency, buffer or row-count figure is claimed anywhere — none was measured.
 
+## Coverage
+
+115 GET handlers across 48 Build controllers, from `docs/build-module/authorization-census.json` (322 handlers total). Each of the seven risk classes was swept mechanically, then every hit was read against source.
+
+| Risk class | How it was swept | Result |
+|---|---|---|
+| Missing tenant predicate | census `orgScoping` over all 115 GETs | 114 `BOUND`, 1 `N/A` — the `@Public` whiteboard token route, sound by design. One gap the census missed: **P2-9** |
+| Missing project predicate | census `parentScoping` | 2 `PASSED-UNBOUND`; both read directly — one sound, one real (**P2-9**) |
+| N+1 queries | `check:n1-growing-loops --list` | 0 confirmed growing loops in Build, against 90 repo-wide. The single unresolved site is sound — see below |
+| Unbounded reads | `check:unbounded-reads` | 16 unclassified Build sites, all input-bounded (**P2-1**); 2 genuinely unbounded endpoints (**P2-2**) |
+| Missing indexes | schema read + `check:tenant-indexes` | **P1-2**, **P1-3**, **P2-5**, **P2-9** |
+| Incorrect cache keys | `build-cache-key-readers.mjs` | **P1-1** |
+| Unsafe invalidation | both new analysers | **P0-1**, **P1-1**, **P2-3**, **P2-4** |
+
+Tenant scoping is the module's strongest dimension: one omission in 115 handlers, and RLS still fences that one. Caching and the Sprint/Cycle seam are where the defects are.
+
 ---
 
 ## P0-1 · Pending Sprint/Cycle DDL silently breaks the report-revision trigger
@@ -227,6 +243,32 @@ The default `limit` is 100 (`dto/analytics.schemas.ts:12`), so the truncation on
 
 ---
 
+## P2-9 · `listRelatedLinks` is the one Build read with no tenant predicate
+
+`backend/src/modules/build/core/projects-ticket-links.service.ts:110-123`:
+
+```ts
+.from(ticketRelatedLinks)
+.where(eq(ticketRelatedLinks.ticketId, ticketId))
+.orderBy(ticketRelatedLinks.createdAt)
+.limit(50);
+```
+
+The `WHERE` carries `ticket_id` only. Every sibling read in the module supplies `org_id`; this one does not, although the projection selects it and the table declares it.
+
+**This is not a tenant leak.** `assertTicketAccess(u, projectId, ticketId)` runs first and 404s a ticket outside the caller's org, and RLS fences the table independently. It is a performance finding:
+
+- The supporting index is `idx_ticket_related_links_ticket` on `(ticket_id)` alone (`src/db/schema/build/ticket-collaboration.ts:311`) — not org-led, against BE-44.
+- BE-79: the RLS policy qual is not leakproof, so with `org_id` absent from both the query and the index, every candidate row is heap-fetched to evaluate `app.current_org_id()`. No index-only scan is possible.
+
+Per-ticket link counts are small, so the cost is bounded — P2, not P1.
+
+Separately, `.limit(50)` with no cursor silently truncates a ticket's related links at 50, the same shape as P2-8.
+
+**Recommendation.** Add `eq(ticketRelatedLinks.orgId, u.orgId)` to the `WHERE`, and widen the index to `(org_id, ticket_id)`. Both are one-line changes and they only help together — the predicate without the index still cannot do an index-only scan.
+
+---
+
 ## Verified as sound
 
 Recorded so the next pass does not re-open them.
@@ -238,8 +280,16 @@ Recorded so the next pass does not re-open them.
 - **Critical-path is project-scoped.** `workItemRelations` carries no project predicate in its own `WHERE`, but both `INNER JOIN`s pin `tickets.projectId` (`projects-reports.service.ts:387-397`). The project predicate is present, via the join.
 - **`resolveScopeDirectory` is input-bounded** at 26 keys and issues a fixed number of queries regardless of input size — it is not an N+1.
 - **The velocity response contract matches.** The controller returns an array and puts pagination in headers; `velocityContract` is `z.array(...)`. No drift.
+- **Build has no N+1.** The only Build site in the growing-loop detector's list is `build-ticket-batch-workflow.ts:20-21`, flagged because the helper call could not be resolved in-file. `validateBatchTransition` reads the workflow once before the loop and passes `prefetched`, and `assertTransitionAllowed` consults `prefetched.ticketFields` before falling back to a per-ticket read (`projects-tickets-workflow-utils.ts:161-163`). The batch path issues no per-row query. The fallback is correct for single-ticket callers.
+- **`listTicketTimeEntries` carries both predicates.** The census marks it `PASSED-UNBOUND` because `projectId` is forwarded through an options spread the resolver does not follow. `listTimeEntries` pushes `eq(timesheets.orgId, …)` and `eq(timesheets.projectId, query.projectId)` (`timesheets.service.ts:87, :108-109`) and pre-validates that the ticket belongs to the project (`:77-79`).
+- **`GET /public/whiteboard-links/:token` needs no `orgId`.** The hashed token is the capability, the row must be public and unexpired, and the read runs under the `app.public_token` GUC.
 
 ## Not verified
 
 - Whether the `1073` triggers and the `a-sprint-cycle-01/03` indexes are installed in any given database. The repository defines them; deploy state needs a live connection and none was used.
 - Every plan-dependent claim above. Nothing here rests on a measured query plan, and no figure is quoted as if it were.
+- The 25 GET handlers the authorization census marks `NEEDS-REVIEW`. Their open questions are authorization, not performance; this pass read the two whose lead was a scoping gap and left the rest to that lane.
+
+## Observed in passing
+
+`docs/build-module/authorization-census.json` is stale against current source: regenerating it moves 14 `orgEvidence` and `parentEvidence` line numbers in `qa/test-runs.service.ts`, a file the QA lane is actively changing. The verdicts are unaffected — only the line references drift. Noted rather than regenerated, because the census belongs to the authorization lane and a regenerated artefact in this branch would collide with theirs.

@@ -10,6 +10,8 @@ Independent audit of the Build list and detail endpoints for unbounded reads, N+
 
 ## Scope and method
 
+115 GET handlers across 48 Build controllers, swept for all seven risk classes — see the coverage table at the top of [findings.md](./findings.md).
+
 Static source inspection plus the repository's own gates. No production credentials were used, so no query plan, buffer count or latency figure appears anywhere in this pass. Where a claim needs measurement, it is stated as needing measurement.
 
 Two analysers were added under `backend/src/scripts/build-performance/`. Both are read-only static analysers with no import path into application code, so neither can change runtime behaviour.
