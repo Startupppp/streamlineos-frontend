@@ -10,6 +10,7 @@ import { useReviewCycles } from "@/hooks/api/hr";
 import { useCalibrationEntries, useUpsertCalibrationEntry, type CalibrationEntry } from "@/hooks/api/hr/calibration";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared/error-state";
 import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
@@ -27,7 +28,7 @@ export function CalibrationTab() {
   const [rowErrors, setRowErrors] = useState<Record<string, Record<string, string>>>({});
 
   const { data: cycles = [] } = useReviewCycles();
-  const { data: entries = [], isLoading } = useCalibrationEntries(selectedCycleId);
+  const { data: entries = [], isLoading, isError, error, refetch } = useCalibrationEntries(selectedCycleId);
   const { data: membersData } = useOrgMembers(1, 200);
   const upsert = useUpsertCalibrationEntry(selectedCycleId);
 
@@ -203,27 +204,38 @@ export function CalibrationTab() {
       </div>
 
       {selectedCycleId > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">Calibration Grid</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={entries}
-              columns={columns}
-              getRowKey={(row) => row.employeeId}
-              isLoading={isLoading}
-              emptyState={
-                <EmptyState
-                  illustration={<EmptyChartIllustration className="h-full w-full" />}
-                  title="No calibration entries yet"
-                  description="Entries will appear here once ratings are ready for this cycle."
-                  compact
-                />
-              }
+        <>
+          {isError ? (
+            <ErrorState
+              className="flex-1"
+              title="Couldn't load calibration entries"
+              description={getErrorMessage(error)}
+              onRetry={refetch}
             />
-          </CardContent>
-        </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm font-medium">Calibration Grid</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DataTable
+                  data={entries}
+                  columns={columns}
+                  getRowKey={(row) => row.employeeId}
+                  isLoading={isLoading}
+                  emptyState={
+                    <EmptyState
+                      illustration={<EmptyChartIllustration className="h-full w-full" />}
+                      title="No calibration entries yet"
+                      description="Entries will appear here once ratings are ready for this cycle."
+                      compact
+                    />
+                  }
+                />
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
 
       {selectedCycleId === 0 && (

@@ -30,11 +30,11 @@ import {
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { formatShortDate } from "@/lib/date-utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   usePayrollCalendar,
   useGenerateCalendarMonth,
@@ -224,6 +224,10 @@ export function CalendarManager({ month }: CalendarManagerProps) {
   const generate = useGenerateCalendarMonth();
   const deleteEvent = useDeleteCalendarEvent();
 
+  function handleRetry() {
+    void refetch();
+  }
+
   function handleGenerate() {
     generate.mutate(
       { month },
@@ -262,10 +266,6 @@ export function CalendarManager({ month }: CalendarManagerProps) {
   function handleFormCancel() {
     setEditingEvent(null);
     setShowForm(false);
-  }
-
-  function handleRetry() {
-    void refetch();
   }
 
   return (

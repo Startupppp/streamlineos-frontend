@@ -282,59 +282,59 @@ export function FilingsTab() {
           getRowKey={(row) => row.id}
           isLoading={isLoading}
           minWidth="720px"
-        mobileCard={(row) => (
-          <div className="flex flex-col gap-1.5 px-1 py-2">
-            <div className="flex items-center justify-between">
-              <span className="text-label font-medium text-foreground">
-                {FILING_TYPE_LABEL[row.filingType]}
-              </span>
-              <StatusBadge status={row.status} />
-            </div>
-            {row.statusLabel && (
-              <span className="text-dense text-muted-foreground">{row.statusLabel}</span>
-            )}
-            <div className="flex items-center justify-between text-dense text-muted-foreground tabular-nums">
-              <span>{row.fiscalYear ?? "—"}</span>
-              <span>{row.acknowledgementRef ?? row.challanRef ?? "No ref"}</span>
-            </div>
-            <div className="mt-1 flex gap-1.5">
-              {row.status !== "DRAFT" && (
-                <LoadingButton
-                  size="sm"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => void handleDownload(row)}
-                  isPending={downloadingId === row.id}
-                >
-                  Download CSV
-                </LoadingButton>
+          mobileCard={(row) => (
+            <div className="flex flex-col gap-1.5 px-1 py-2">
+              <div className="flex items-center justify-between">
+                <span className="text-label font-medium text-foreground">
+                  {FILING_TYPE_LABEL[row.filingType]}
+                </span>
+                <StatusBadge status={row.status} />
+              </div>
+              {row.statusLabel && (
+                <span className="text-dense text-muted-foreground">{row.statusLabel}</span>
               )}
-              {canManage && row.status !== "ACKNOWLEDGED" && row.status !== "RECONCILED" && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => handleAckOpen(row)}
-                >
-                  Record ack
-                </Button>
-              )}
+              <div className="flex items-center justify-between text-dense text-muted-foreground tabular-nums">
+                <span>{row.fiscalYear ?? "—"}</span>
+                <span>{row.acknowledgementRef ?? row.challanRef ?? "No ref"}</span>
+              </div>
+              <div className="mt-1 flex gap-1.5">
+                {row.status !== "DRAFT" && (
+                  <LoadingButton
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => void handleDownload(row)}
+                    isPending={downloadingId === row.id}
+                  >
+                    Download CSV
+                  </LoadingButton>
+                )}
+                {canManage && row.status !== "ACKNOWLEDGED" && row.status !== "RECONCILED" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => handleAckOpen(row)}
+                  >
+                    Record ack
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
-        )}
-        emptyState={
-          <EmptyState
-            illustration={<EmptyApprovalIllustration />}
-            title="No filings prepared"
-            description="Prepare a statutory filing export from a payroll month to track submission and acknowledgement."
-            action={
-              canManage
-                ? { label: "Prepare filing export", onClick: () => setShowExport(true) }
-                : undefined
-            }
+          )}
+          emptyState={
+            <EmptyState
+              illustration={<EmptyApprovalIllustration />}
+              title="No filings prepared"
+              description="Prepare a statutory filing export from a payroll month to track submission and acknowledgement."
+              action={
+                canManage
+                  ? { label: "Prepare filing export", onClick: () => setShowExport(true) }
+                  : undefined
+              }
+            />
+          }
           />
-        }
-        />
       )}
 
       <FilingExportDialog

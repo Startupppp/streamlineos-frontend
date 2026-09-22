@@ -335,7 +335,19 @@ Closed in the fourth pass (2026-09-19):
 
 ## Acceptance Checklist
 
-- [ ] **BSN-03-A03** Zero-count and no-action states add no visual noise.
+- [x] **BSN-03-A03** Zero-count and no-action states add no visual noise.
+  **Closed — unit proof, executed 2026-09-21 (5 suites / 56 tests).**
+  Zero is omitted, not rendered as "0": `build-nav-link.tsx:49` gates on
+  `hasBadge = badgeCount > 0`, pinned by `build-nav-link-badge-a11y.test.tsx:51`
+  (collapsed — no dot) and `:86` (expanded — no badge element).
+  No-action Agent Pulse renders nothing for a missing signal, undefined data, or a
+  no-evidence draft (`build-agent-pulse.test.tsx:53,61,183`), and the server is quiet
+  at source (`agent-pulse.service.spec.ts:200,215,230`). Zero-count pins at
+  `build-nav-model.test.ts:199`; empty nav groups are conditionally unmounted rather
+  than rendered empty (`build-sidebar.tsx:157,164`).
+  Stated plainly: "no visual noise" is a judgement, and what is verified here is the
+  three enumerable signal surfaces — badge, Pulse, group — not a visual snapshot.
+  Pixel-level confirmation belongs to the browser tier at BSN-05-011/-050.
 - [ ] **BSN-03-A05** Agent Pulse never links to an unrelated scope and follows
   the priority order under concurrent signals. **The priority half is CLOSED**
   (fifth pass) and proven by a stronger technique than a return-value check:

@@ -129,7 +129,7 @@ export function AccommodationsPageContent() {
           canManage ? (
             <Button size="sm" onClick={() => setShowCreate(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
               <PlusIcon size={16} className="mr-1.5" />
-              New Request
+              Create accommodation request
             </Button>
           ) : null
         }
@@ -157,7 +157,7 @@ export function AccommodationsPageContent() {
                   description="Create a request to track workplace accommodations from intake through decision."
                   action={
                     canManage
-                      ? { label: "New Request", onClick: () => setShowCreate(true) }
+                      ? { label: "Create accommodation request", onClick: () => setShowCreate(true) }
                       : undefined
                   }
                   compact

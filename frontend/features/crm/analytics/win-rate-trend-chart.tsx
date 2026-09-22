@@ -50,7 +50,7 @@ export function WinRateTrendChart({ kpis }: WinRateTrendChartProps) {
             data={chartData}
             margin={{ top: 16, right: 16, bottom: 8, left: 8 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis dataKey="period" tick={AXIS_TICK} />
             <YAxis
               tick={AXIS_TICK}
@@ -67,7 +67,7 @@ export function WinRateTrendChart({ kpis }: WinRateTrendChartProps) {
               strokeDasharray="4 4"
               label={{
                 value: "50%",
-                fill: "hsl(var(--muted-foreground))",
+                fill: "var(--muted-foreground)",
                 fontSize: 10,
               }}
             />

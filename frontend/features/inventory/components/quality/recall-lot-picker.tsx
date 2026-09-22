@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCan } from "@/hooks/api/access";
+import { useCanState } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useLots } from "@/hooks/api/inventory/traceability";
 import { formatQuantity } from "@/features/inventory/components/planning/forecast-format";
@@ -39,10 +40,7 @@ interface PickedLot {
  * are about to quarantine before the simulator confirms it.
  */
 export function RecallLotPicker({ value, onChange }: Props) {
-  // `useLots` reads `inventory:stock:read`. Without it the list is empty for a
-  // reason the operator cannot see, and "no lots exist" is a very different
-  // message from "you may not read the lot register" — denied is not empty.
-  const canReadLots = useCan("inventory:stock:read");
+  const canReadLotsState = useCanState("inventory:stock:read");
   const [search, setSearch] = useState("");
   const [picked, setPicked] = useState<PickedLot[]>([]);
   const debouncedSearch = useDebouncedValue(search, 300);
@@ -68,14 +66,8 @@ export function RecallLotPicker({ value, onChange }: Props) {
     setPicked([]);
   }
 
-  if (!canReadLots) {
-    return (
-      <div className="rounded-md border border-border px-3 py-2 text-xs text-muted-foreground">
-        Picking lots needs the <span className="font-mono">inventory:stock:read</span> permission.
-        Recall by product or supplier instead, or ask an administrator for lot access.
-      </div>
-    );
-  }
+  if (canReadLotsState === "denied")
+    return <NoPermissionState compact permission="inventory:stock:read" />;
 
   return (
     <div className="flex flex-col gap-3">
@@ -118,7 +110,7 @@ export function RecallLotPicker({ value, onChange }: Props) {
       ) : null}
 
       <div className="max-h-64 min-h-0 overflow-y-auto rounded-md border border-border">
-        {lotsQuery.isLoading ? (
+        {lotsQuery.isPending ? (
           <div className="flex flex-col gap-2 p-3">
             {Array.from({ length: 5 }, (_, i) => (
               <Skeleton key={i} className="h-8 w-full" />

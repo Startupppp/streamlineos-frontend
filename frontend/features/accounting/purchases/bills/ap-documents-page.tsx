@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -8,10 +9,13 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { DatePicker } from "@/components/ui/date-picker";
-import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import {
+  FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import {
   Select,
@@ -21,12 +25,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useApDocuments } from "@/hooks/api/accounting/ap";
-import type { ApDocumentStatus, ApDocumentSummary, ApDocumentType } from "@/types/accounting-ap";
+import type {
+  ApDocumentStatus,
+  ApDocumentSummary,
+  ApDocumentType,
+} from "@/types/accounting/accounting-ap";
 import { AP_STATUS_LABELS, AP_STATUS_TONES } from "../lib/ap-labels";
 import { useUrlListState } from "../lib/use-url-list-state";
 import { VendorPickerField } from "./vendor-picker-field";
@@ -65,7 +73,6 @@ export function ApDocumentsPage({
   emptyDescription,
 }: ApDocumentsPageProps) {
   const router = useRouter();
-  const canRead = useCan("accounting:payables:read");
   const canManage = useCan("accounting:payables:manage");
 
   const { getParam, setParams, page, setPage } = useUrlListState();
@@ -84,6 +91,16 @@ export function ApDocumentsPage({
     pageSize: PAGE_SIZE,
   });
 
+  const pageState = usePageState({
+    permission: "accounting:payables:read",
+    isLoading: documentsQuery.isLoading,
+    isError: documentsQuery.isError,
+    error: documentsQuery.error,
+  });
+  const handleRetry = useCallback(() => {
+    void documentsQuery.refetch();
+  }, [documentsQuery]);
+
   function handleCreate(): void {
     router.push(createHref);
   }
@@ -101,7 +118,9 @@ export function ApDocumentsPage({
             {row.vendorDocumentNumber ?? "Not numbered"}
           </Link>
           {row.documentNumber ? (
-            <p className="truncate text-dense text-muted-foreground">Ours: {row.documentNumber}</p>
+            <p className="truncate text-dense text-muted-foreground">
+              Ours: {row.documentNumber}
+            </p>
           ) : null}
         </div>
       ),
@@ -127,7 +146,10 @@ export function ApDocumentsPage({
       key: "status",
       header: "Status",
       cell: (row) => (
-        <SemanticBadge tone={AP_STATUS_TONES[row.status]} label={AP_STATUS_LABELS[row.status]} />
+        <SemanticBadge
+          tone={AP_STATUS_TONES[row.status]}
+          label={AP_STATUS_LABELS[row.status]}
+        />
       ),
     },
     {
@@ -146,13 +168,23 @@ export function ApDocumentsPage({
     },
   ];
 
-  if (!canRead) {
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title={title}>
-        <NoPermissionState permission="accounting:payables:read" />
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
   const rows = documentsQuery.data?.items ?? [];
   const filtersActive = !!status || !!partyId || !!from || !!to;
@@ -181,7 +213,9 @@ export function ApDocumentsPage({
         <div className={FILTER_TOOLBAR_ROW}>
           <Select
             value={status || "all"}
-            onValueChange={(value) => setParams({ status: value === "all" ? undefined : value })}
+            onValueChange={(value) =>
+              setParams({ status: value === "all" ? undefined : value })
+            }
           >
             <SelectTrigger className={FILTER_SELECT_TRIGGER}>
               <SelectValue />
@@ -233,57 +267,52 @@ export function ApDocumentsPage({
         />
       </StatCardGrid>
 
-      {documentsQuery.isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load what you owe"
-          description={getErrorMessage(documentsQuery.error)}
-          onRetry={() => void documentsQuery.refetch()}
-        />
-      ) : (
-        <DataTable
-          data={rows}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          isLoading={documentsQuery.isPending}
-          minWidth="1000px"
-          className="flex-1 min-h-0"
-          emptyState={
-            filtersActive ? (
-              <EmptyState
-                className="border-0 bg-transparent min-h-[40vh]"
-                title="No results match your filters"
-                description="Widen the dates or clear the vendor to see more."
-                action={{
-                  label: "Clear filters",
-                  onClick: () =>
-                    setParams({
-                      status: undefined,
-                      vendor: undefined,
-                      from: undefined,
-                      to: undefined,
-                    }),
-                }}
-              />
-            ) : (
-              <EmptyState
-                className="border-0 bg-transparent min-h-[40vh]"
-                title={emptyTitle}
-                description={emptyDescription}
-                action={canManage ? { label: createLabel, onClick: handleCreate } : undefined}
-              />
-            )
-          }
-          pagination={{
-            mode: "server",
-            page,
-            pageSize: PAGE_SIZE,
-            total: documentsQuery.data?.total ?? 0,
-            onPageChange: setPage,
-            pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
-          }}
-        />
-      )}
+      <DataTable
+        data={rows}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        isLoading={documentsQuery.isPending}
+        minWidth="1000px"
+        className="flex-1 min-h-0"
+        emptyState={
+          filtersActive ? (
+            <EmptyState
+              className="border-0 bg-transparent min-h-[40vh]"
+              title="No results match your filters"
+              description="Widen the dates or clear the vendor to see more."
+              action={{
+                label: "Clear filters",
+                onClick: () =>
+                  setParams({
+                    status: undefined,
+                    vendor: undefined,
+                    from: undefined,
+                    to: undefined,
+                  }),
+              }}
+            />
+          ) : (
+            <EmptyState
+              className="border-0 bg-transparent min-h-[40vh]"
+              title={emptyTitle}
+              description={emptyDescription}
+              action={
+                canManage
+                  ? { label: createLabel, onClick: handleCreate }
+                  : undefined
+              }
+            />
+          )
+        }
+        pagination={{
+          mode: "server",
+          page,
+          pageSize: PAGE_SIZE,
+          total: documentsQuery.data?.total ?? 0,
+          onPageChange: setPage,
+          pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+        }}
+      />
     </PageWrapper>
   );
 }

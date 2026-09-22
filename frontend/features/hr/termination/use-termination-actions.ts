@@ -227,7 +227,7 @@ export function useTerminationActions({
     completeTermination.mutate(completeTerminationId, {
       onSuccess: () => {
         toast.success(
-          "Termination completed. Employee deactivated, FnF and asset return initiated.",
+          "Termination completed. Employee deactivated, final settlement and asset return initiated.",
         );
         setCompleteTerminationId(null);
       },

@@ -30,7 +30,7 @@
  */
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { extname, join, relative } from "node:path";
+import { extname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -68,6 +68,10 @@ const SCAN_FILES = [".gitignore", "package.json", "tsconfig.json", "tsconfig.spe
 const ALLOWED = [
   { file: "scripts/check-tenant-neutral.mjs", why: "this gate; the banned list is the list" },
 ];
+
+export function repoRelative(full) {
+  return relative(ROOT, full).split(sep).join("/");
+}
 
 export function bannedIn(line) {
   const lower = line.toLowerCase();
@@ -110,7 +114,7 @@ function scan() {
   const allowedHit = new Set();
 
   for (const full of files) {
-    const rel = relative(ROOT, full);
+    const rel = repoRelative(full);
     let source;
     try {
       source = readFileSync(full, "utf8");
@@ -137,7 +141,7 @@ function scan() {
     violations.push({ file: rel, pathHits, lineHits });
   }
 
-  const featureCount = files.filter((f) => relative(ROOT, f).startsWith("features/")).length;
+  const featureCount = files.filter((f) => repoRelative(f).startsWith("features/")).length;
   return { files, featureCount, violations, allowedHit };
 }
 

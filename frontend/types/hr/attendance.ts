@@ -95,30 +95,12 @@ export interface RequestLeaveInput {
 export interface CreateWfhRequestInput {
   date: Date | string;
   reason?: string;
-  approverId: string;
 }
 
 export interface ProcessWfhRequestInput {
   requestId: number;
   status: "APPROVED" | "REJECTED";
   rejectionReason?: string;
-}
-
-export interface AddHolidayInput {
-  name: string;
-  date: Date | string;
-  message?: string;
-}
-
-export interface DeleteHolidayInput {
-  holidayId: number;
-}
-
-export interface UpdateHolidayInput {
-  holidayId: number;
-  name: string;
-  date: string;
-  message?: string;
 }
 
 export interface GetMonthlyAttendanceInput {

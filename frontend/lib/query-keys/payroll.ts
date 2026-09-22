@@ -81,6 +81,7 @@ export const payrollQueryKeys = {
     commandCenterAll: [...base, "payroll", "command-center"] as const,
     commandCenter: (month: string) =>
       [...base, "payroll", "command-center", month] as const,
+    readiness: (month: string) => [...base, "payroll", "readiness", month] as const,
     employees: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "payroll", "employees", "list"] as const)

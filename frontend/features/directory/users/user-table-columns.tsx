@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
+import { resolveImageUrl } from "@/lib/utils";
 import type { User } from "@/hooks/api/users";
 import { resolveOrgUnitName } from "./resolve-org-unit-name";
 import { UserActionsMenu } from "./user-actions-menu";
@@ -42,7 +43,7 @@ export function getUserTableColumns(
     return (
       <div className="flex items-center gap-2">
         <AvatarWithPresence
-          src={user.image}
+          src={resolveImageUrl(user.image)}
           fallback={getUserInitials(user)}
           status={presenceMap.get(user.id)}
           avatarClassName="h-6 w-6"

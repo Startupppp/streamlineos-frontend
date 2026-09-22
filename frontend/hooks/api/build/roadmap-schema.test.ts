@@ -1,3 +1,5 @@
+import { ZodError } from "zod";
+
 import {
   roadmapItemContract,
   roadmapPageContract,
@@ -80,7 +82,7 @@ it("accepts every roadmap_status value the roadmap_items pgEnum actually holds",
 });
 
 it("rejects a roadmap status outside the roadmap_status pgEnum instead of accepting any string", () => {
-  expect(() => roadmapItemContract.parse(baseRoadmapItem("archived"))).toThrow();
+  expect(() => roadmapItemContract.parse(baseRoadmapItem("archived"))).toThrow(ZodError);
 });
 
 it("parses a GET /build/roadmap page whose rows carry status, matching the full row .returning() sends", () => {
@@ -98,7 +100,7 @@ it("accepts every feedback_status value the feedback_posts pgEnum actually holds
 });
 
 it("rejects a feedback status outside the feedback_status pgEnum instead of accepting any string", () => {
-  expect(() => feedbackPostContract.parse(baseFeedbackPost("closed"))).toThrow();
+  expect(() => feedbackPostContract.parse(baseFeedbackPost("closed"))).toThrow(ZodError);
 });
 
 it("parses a GET /build/feedback page whose rows carry status, matching the full row .returning() sends", () => {
@@ -116,7 +118,7 @@ it("accepts every changelog_type value the changelog_entries pgEnum actually hol
 });
 
 it("rejects a changelog type outside the changelog_type pgEnum instead of accepting any string", () => {
-  expect(() => changelogEntryContract.parse(baseChangelogEntry("breaking"))).toThrow();
+  expect(() => changelogEntryContract.parse(baseChangelogEntry("breaking"))).toThrow(ZodError);
 });
 
 it("parses a GET /build/changelog page whose rows carry type, matching the full row .returning() sends", () => {

@@ -6,13 +6,14 @@ import { Clock, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import { useApprovalInbox, useDecideApproval } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -40,7 +41,7 @@ const APPROVAL_STATUS_VALUES: ApprovalStatus[] = ["requested", "pending", "appro
 export function ApprovalsInboxPage() {
   const canDecide = useCan("build:approvals:decide");
 
-  const { data, isLoading, isError, refetch } = useApprovalInbox();
+  const { data, isLoading, isError, error, refetch } = useApprovalInbox();
   const { data: membersRes } = useOrgMembers(1, 100);
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
 
@@ -185,7 +186,9 @@ export function ApprovalsInboxPage() {
     },
   ], [canDecide, memberName, handleDecideClick]);
 
-  if (isLoading) {
+  const pageState = usePageState({ permission: "build:approvals:view", isLoading, isError, error });
+
+  if (pageState.kind === "loading" || isLoading) {
     return (
       <PageWrapper title="Approvals" subtitle="Approvals waiting for your decision across all projects">
         <PmPageShell>
@@ -196,11 +199,13 @@ export function ApprovalsInboxPage() {
     );
   }
 
-  if (isError) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
     return (
       <PageWrapper title="Approvals" subtitle="Approvals waiting for your decision across all projects">
-        <PmPageShell withGlow={false}>
-          <ErrorState onRetry={handleRetry} />
+        <PmPageShell>
+          <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+            {null}
+          </PageState>
         </PmPageShell>
       </PageWrapper>
     );

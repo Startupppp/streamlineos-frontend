@@ -4,13 +4,13 @@
 
 This is the only mutable scheduler for the HRMS People program. The numbered
 HRM-00 through HRM-15 documents are the normative acceptance library; their
-347 open checkboxes are program-level roll-ups, not agent assignments. Never
+346 open checkboxes are program-level roll-ups, not agent assignments. Never
 send one of those broad checkboxes to an implementation agent.
 
 The old README's 34 duplicate parent/phase boxes were removed from the work
-count when it became this scheduler. The current source baseline contains 162 authenticated HR, Directory, `/me`,
-and Payroll page files plus the `/employee-onboarding` gate (163 accounted page
-files), 169 HR/Directory/Payroll controllers, and 96 schema files. Generated
+count when it became this scheduler. The current source baseline contains 165 authenticated HR, Directory, `/me`,
+and Payroll page files plus the `/employee-onboarding` gate (166 accounted page
+files), 174 HR/Directory/Payroll controllers, and 96 schema files. Generated
 censuses supersede these snapshot counts when source changes.
 
 Use the system in this order:

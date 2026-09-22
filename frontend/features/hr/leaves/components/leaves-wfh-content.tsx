@@ -31,7 +31,7 @@ import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { HouseIcon, PlusIcon, DownloadIcon } from "@animateicons/react/lucide";
+import { CheckCheckIcon, HouseIcon, PlusIcon, DownloadIcon } from "@animateicons/react/lucide";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared";
 import { LeaveRequestSheet } from "@/features/hr/leaves/leave-request-sheet";
@@ -45,7 +45,6 @@ import { LeavesThisWeekCard } from "./leaves-this-week-card";
 import type {
   LeaveBalance,
   LeaveType,
-  Approver,
   LeaveRequest,
   ApprovedLeave,
 } from "./leaves-shared";
@@ -82,10 +81,15 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
     isFetchingNextPage: isLoadingMoreMyRequests,
     fetchNextPage: fetchMoreMyRequests,
   } = useHrMyLeaveRequestsInfinite();
-  const { data: approvalsData, isLoading: approvalsLoading } =
-    useHrLeaveApprovals({
-      enabled: isAdmin,
-    });
+  const {
+    data: approvalPages,
+    isLoading: approvalsLoading,
+    isError: approvalsError,
+    error: approvalsErrorValue,
+    refetch: refetchApprovals,
+  } = useHrLeaveApprovals({
+    enabled: isAdmin,
+  });
   const { data: thisWeekData } = useHrLeavesThisWeek({
     enabled: !selfService,
   });
@@ -112,17 +116,20 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
   const handleTabChange = useCallback((value: string) => {
     setActiveTab(value);
   }, []);
+  const handleReviewRequests = useCallback(() => setActiveTab("approvals"), []);
 
   const balances = (contextData?.balances ?? []) as LeaveBalance[];
   const leaveTypes = (contextData?.types ?? []) as LeaveType[];
-  const approvers = (contextData?.approvers ?? []) as Approver[];
   const joiningDate = contextData?.joiningDate ?? null;
 
   const myLeaveRequests = (myPages?.pages.flatMap((page) => page.data) ??
     []) as LeaveRequest[];
-  const incomingLeaveRequests = (approvalsData?.pending ??
-    []) as LeaveRequest[];
-  const allIncomingLeaveRequests = (approvalsData?.all ?? []) as LeaveRequest[];
+  const allIncomingLeaveRequests = (approvalPages?.pages.flatMap(
+    (page) => page.data,
+  ) ?? []) as LeaveRequest[];
+  const incomingLeaveRequests = allIncomingLeaveRequests.filter(
+    (r) => r.status === "PENDING",
+  );
   const approvedLeavesThisWeek = (thisWeekData ?? []) as ApprovedLeave[];
 
   const totalPendingApprovals =
@@ -255,7 +262,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
               <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide">
                 <TabsList className="w-full shrink-0 md:w-auto">
                   <TabsTrigger value="my-leaves" className="gap-1.5 truncate">
-                    My Leaves
+                    My leaves
                     {myLeaveRequests.length > 0 ? (
                       <span className="tabular-nums text-xs opacity-70">
                         {myLeaveRequests.length}
@@ -263,7 +270,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
                     ) : null}
                   </TabsTrigger>
                   <TabsTrigger value="wfh" className="gap-1.5 truncate">
-                    Work From Home
+                    Work from home
                   </TabsTrigger>
                   {isAdmin ? (
                     <TabsTrigger value="approvals" className="gap-1.5 truncate">
@@ -298,7 +305,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                        <SelectItem value="ALL">All Status</SelectItem>
+                        <SelectItem value="ALL">All statuses</SelectItem>
                         <SelectItem value="PENDING">Pending</SelectItem>
                         <SelectItem value="APPROVED">Approved</SelectItem>
                         <SelectItem value="REJECTED">Rejected</SelectItem>
@@ -326,12 +333,25 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
                 icon={PlusIcon}
                 iconSize={14}
                 iconClassName="mr-1.5"
+                variant={isAdmin ? "outline" : "default"}
                 size="sm"
                 onClick={handleOpenLeaveSheet}
                 className="h-8 gap-1.5"
               >
-                Request Leave
+                Request leave
               </AnimatedIconButton>
+              {isAdmin ? (
+                <AnimatedIconButton
+                  icon={CheckCheckIcon}
+                  iconSize={14}
+                  iconClassName="mr-1.5"
+                  size="sm"
+                  onClick={handleReviewRequests}
+                  className="h-8 gap-1.5"
+                >
+                  Review requests
+                </AnimatedIconButton>
+              ) : null}
             </>
           }
         >
@@ -363,12 +383,20 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
 
             {isAdmin ? (
               <TabsContent value="approvals" className={TAB_PANEL_CLASS}>
-                <LeaveApprovalsContent
-                  incomingLeaveRequests={incomingLeaveRequests}
-                  allIncomingLeaveRequests={allIncomingLeaveRequests}
-                  currentUserId={session?.user?.id}
-                  isLoading={approvalsLoading}
-                />
+                {approvalsError ? (
+                  <ErrorState
+                    description={getErrorMessage(approvalsErrorValue)}
+                    onRetry={refetchApprovals}
+                    className="flex-1"
+                  />
+                ) : (
+                  <LeaveApprovalsContent
+                    incomingLeaveRequests={incomingLeaveRequests}
+                    allIncomingLeaveRequests={allIncomingLeaveRequests}
+                    currentUserId={session?.user?.id}
+                    isLoading={approvalsLoading}
+                  />
+                )}
               </TabsContent>
             ) : null}
           </div>
@@ -379,14 +407,13 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
         open={leaveSheetOpen}
         onOpenChange={setLeaveSheetOpen}
         leaveTypes={leaveTypes}
-        approvers={approvers}
+        approvalRoute={contextData?.approvalRoute}
         joiningDate={joiningDate}
         balances={balances}
       />
       <WfhRequestSheet
         open={wfhSheetOpen}
         onOpenChange={setWfhSheetOpen}
-        approvers={approvers}
       />
     </div>
   );

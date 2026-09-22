@@ -1,8 +1,8 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import {
-  BuildDirtyStateProvider,
-  useBuildHasUnsavedWork,
-} from "@/features/build/navigation/build-dirty-state-context";
+  DirtyStateProvider,
+  useHasUnsavedWork,
+} from "@/components/shared/dirty-state-context";
 import { ManagedProductFormSheet } from "./managed-product-form-sheet";
 
 jest.mock("@/components/shared", () => ({
@@ -26,13 +26,13 @@ jest.mock("@/components/shared", () => ({
 }));
 
 function HasUnsavedWorkProbe() {
-  const hasUnsavedWork = useBuildHasUnsavedWork();
+  const hasUnsavedWork = useHasUnsavedWork();
   return <span data-testid="probe">{hasUnsavedWork ? "dirty" : "clean"}</span>;
 }
 
 function renderCreateHarness() {
   return render(
-    <BuildDirtyStateProvider>
+    <DirtyStateProvider>
       <HasUnsavedWorkProbe />
       <ManagedProductFormSheet
         open
@@ -40,7 +40,7 @@ function renderCreateHarness() {
         mode="create"
         onSubmitCreate={jest.fn()}
       />
-    </BuildDirtyStateProvider>,
+    </DirtyStateProvider>,
   );
 }
 
@@ -84,7 +84,7 @@ describe("managed product form sheet dirty guard (BSN-04-010, BSN-04-013)", () =
 
   test("closed sheet does not register as dirty even if form was previously dirty", () => {
     render(
-      <BuildDirtyStateProvider>
+      <DirtyStateProvider>
         <HasUnsavedWorkProbe />
         <ManagedProductFormSheet
           open={false}
@@ -92,7 +92,7 @@ describe("managed product form sheet dirty guard (BSN-04-010, BSN-04-013)", () =
           mode="create"
           onSubmitCreate={jest.fn()}
         />
-      </BuildDirtyStateProvider>,
+      </DirtyStateProvider>,
     );
     expect(screen.getByTestId("probe")).toHaveTextContent("clean");
   });

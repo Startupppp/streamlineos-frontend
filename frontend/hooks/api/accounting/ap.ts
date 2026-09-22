@@ -1,6 +1,10 @@
 "use client";
 
-import { useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
+import {
+  useQuery,
+  useQueryClient,
+  type UseQueryOptions,
+} from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { accountingApQueryKeys } from "@/lib/query-keys/accounting-ap";
 import { accountingArQueryKeys } from "@/lib/query-keys/accounting-ar";
@@ -9,8 +13,30 @@ import { accountingLedgerQueryKeys } from "@/lib/query-keys/accounting-ledger";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
-import type { ApDocumentDetail, ApDocumentPage, ApTaxPreview, ListVendorsParams, SaveVendorInput, VendorDetail, VendorPage } from "@/types/accounting-ap";
-import type { ApAgingParams, ApAgingReport, ApAllocationInput, ApLedgerTieOut, ApPayment, ApPaymentPage, ApPaymentPostResult, ApPostResult, CreateApDocumentInput, ListApDocumentsParams, ListApPaymentsParams, PostApPaymentInput, UpdateApDocumentInput } from "@/types/accounting-ap-payments";
+import type {
+  ApDocumentDetail,
+  ApDocumentPage,
+  ApTaxPreview,
+  ListVendorsParams,
+  SaveVendorInput,
+  VendorDetail,
+  VendorPage,
+} from "@/types/accounting/accounting-ap";
+import type {
+  ApAgingParams,
+  ApAgingReport,
+  ApAllocationInput,
+  ApLedgerTieOut,
+  ApPayment,
+  ApPaymentPage,
+  ApPaymentPostResult,
+  ApPostResult,
+  CreateApDocumentInput,
+  ListApDocumentsParams,
+  ListApPaymentsParams,
+  PostApPaymentInput,
+  UpdateApDocumentInput,
+} from "@/types/accounting/accounting-ap-payments";
 
 type QueryOpts<T> = Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">;
 
@@ -20,11 +46,16 @@ const SLOW_LIST_STALE = 2 * 60 * 1000;
 
 function queryParams(params: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(
-    Object.entries(params).filter(([, value]) => value !== undefined && value !== ""),
+    Object.entries(params).filter(
+      ([, value]) => value !== undefined && value !== "",
+    ),
   );
 }
 
-export function useVendors(params: ListVendorsParams = {}, options?: QueryOpts<VendorPage>) {
+export function useVendors(
+  params: ListVendorsParams = {},
+  options?: QueryOpts<VendorPage>,
+) {
   const canRead = useCan("accounting:read");
   const request = queryParams({
     role: params.role ?? "vendor",
@@ -35,7 +66,8 @@ export function useVendors(params: ListVendorsParams = {}, options?: QueryOpts<V
   });
   return useQuery<VendorPage, Error>({
     queryKey: accountingApQueryKeys.accountingAp.vendors(request),
-    queryFn: ({ signal }) => apiClient.get<VendorPage>("/accounting/parties", request, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get<VendorPage>("/accounting/parties", request, signal),
     staleTime: STANDARD_LIST_STALE,
     ...options,
     enabled: canRead && (options?.enabled ?? true),
@@ -47,7 +79,11 @@ export function useVendor(partyId: string, options?: QueryOpts<VendorDetail>) {
   return useQuery<VendorDetail, Error>({
     queryKey: accountingApQueryKeys.accountingAp.vendor(partyId),
     queryFn: ({ signal }) =>
-      apiClient.get<VendorDetail>(`/accounting/parties/${partyId}`, undefined, signal),
+      apiClient.get<VendorDetail>(
+        `/accounting/parties/${partyId}`,
+        undefined,
+        signal,
+      ),
     staleTime: ENTITY_STALE,
     ...options,
     enabled: canRead && !!partyId && (options?.enabled ?? true),
@@ -56,14 +92,22 @@ export function useVendor(partyId: string, options?: QueryOpts<VendorDetail>) {
 
 export function useCreateVendor() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<VendorDetail, Error, SaveVendorInput>("accounting:create", {
-    mutationKey: ["accounting", "ap", "vendors", "create"],
-    mutationFn: (input) => apiClient.post<VendorDetail>("/accounting/parties", input),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: accountingApQueryKeys.accountingAp.vendorsAll });
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
+  return useAuthorizedMutation<VendorDetail, Error, SaveVendorInput>(
+    "accounting:create",
+    {
+      mutationKey: ["accounting", "ap", "vendors", "create"],
+      mutationFn: (input) =>
+        apiClient.post<VendorDetail>("/accounting/parties", input),
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: accountingApQueryKeys.accountingAp.vendorsAll,
+        });
+        queryClient.invalidateQueries({
+          queryKey: accountingArQueryKeys.accountingAr.all,
+        });
+      },
     },
-  });
+  );
 }
 
 export function useUpdateVendor() {
@@ -77,11 +121,15 @@ export function useUpdateVendor() {
     mutationFn: ({ partyId, input }) =>
       apiClient.patch<VendorDetail>(`/accounting/parties/${partyId}`, input),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: accountingApQueryKeys.accountingAp.vendorsAll });
+      queryClient.invalidateQueries({
+        queryKey: accountingApQueryKeys.accountingAp.vendorsAll,
+      });
       queryClient.invalidateQueries({
         queryKey: accountingApQueryKeys.accountingAp.vendor(variables.partyId),
       });
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
+      queryClient.invalidateQueries({
+        queryKey: accountingArQueryKeys.accountingAr.all,
+      });
     },
   });
 }
@@ -95,14 +143,21 @@ export function useApDocuments(
   return useQuery<ApDocumentPage, Error>({
     queryKey: accountingApQueryKeys.accountingAp.documents(request),
     queryFn: ({ signal }) =>
-      apiClient.get<ApDocumentPage>("/accounting/payables/documents", request, signal),
+      apiClient.get<ApDocumentPage>(
+        "/accounting/payables/documents",
+        request,
+        signal,
+      ),
     staleTime: STANDARD_LIST_STALE,
     ...options,
     enabled: canRead && (options?.enabled ?? true),
   });
 }
 
-export function useApDocument(apDocumentId: string, options?: QueryOpts<ApDocumentDetail>) {
+export function useApDocument(
+  apDocumentId: string,
+  options?: QueryOpts<ApDocumentDetail>,
+) {
   const canRead = useCan("accounting:payables:read");
   return useQuery<ApDocumentDetail, Error>({
     queryKey: accountingApQueryKeys.accountingAp.document(apDocumentId),
@@ -124,7 +179,8 @@ export function useApDocumentTaxPreview(
 ) {
   const canRead = useCan("accounting:payables:read");
   return useQuery<ApTaxPreview, Error>({
-    queryKey: accountingApQueryKeys.accountingAp.documentTaxPreview(apDocumentId),
+    queryKey:
+      accountingApQueryKeys.accountingAp.documentTaxPreview(apDocumentId),
     queryFn: ({ signal }) =>
       apiClient.get<ApTaxPreview>(
         `/accounting/payables/documents/${apDocumentId}/tax-preview`,
@@ -141,12 +197,19 @@ function invalidateApDocuments(
   queryClient: ReturnType<typeof useQueryClient>,
   apDocumentId?: string,
 ): void {
-  queryClient.invalidateQueries({ queryKey: accountingApQueryKeys.accountingAp.documentsAll });
-  queryClient.invalidateQueries({ queryKey: accountingApQueryKeys.accountingAp.agingAll });
+  queryClient.invalidateQueries({
+    queryKey: accountingApQueryKeys.accountingAp.documentsAll,
+  });
+  queryClient.invalidateQueries({
+    queryKey: accountingApQueryKeys.accountingAp.agingAll,
+  });
   if (apDocumentId) {
-    queryClient.invalidateQueries({ queryKey: accountingApQueryKeys.accountingAp.document(apDocumentId) });
     queryClient.invalidateQueries({
-      queryKey: accountingApQueryKeys.accountingAp.documentTaxPreview(apDocumentId),
+      queryKey: accountingApQueryKeys.accountingAp.document(apDocumentId),
+    });
+    queryClient.invalidateQueries({
+      queryKey:
+        accountingApQueryKeys.accountingAp.documentTaxPreview(apDocumentId),
     });
   }
 }
@@ -158,7 +221,10 @@ export function useCreateApDocument() {
     {
       mutationKey: ["accounting", "ap", "documents", "create"],
       mutationFn: (input) =>
-        apiClient.post<ApDocumentDetail>("/accounting/payables/documents", input),
+        apiClient.post<ApDocumentDetail>(
+          "/accounting/payables/documents",
+          input,
+        ),
       onSuccess: (data) => invalidateApDocuments(queryClient, data.id),
     },
   );
@@ -173,8 +239,12 @@ export function useUpdateApDocument() {
   >("accounting:payables:manage", {
     mutationKey: ["accounting", "ap", "documents", "update"],
     mutationFn: ({ apDocumentId, input }) =>
-      apiClient.patch<ApDocumentDetail>(`/accounting/payables/documents/${apDocumentId}`, input),
-    onSuccess: (_data, variables) => invalidateApDocuments(queryClient, variables.apDocumentId),
+      apiClient.patch<ApDocumentDetail>(
+        `/accounting/payables/documents/${apDocumentId}`,
+        input,
+      ),
+    onSuccess: (_data, variables) =>
+      invalidateApDocuments(queryClient, variables.apDocumentId),
   });
 }
 
@@ -188,7 +258,8 @@ export function useDeleteApDocument() {
         apiClient.delete<{ id: string; deleted: true }>(
           `/accounting/payables/documents/${apDocumentId}`,
         ),
-      onSuccess: (_data, apDocumentId) => invalidateApDocuments(queryClient, apDocumentId),
+      onSuccess: (_data, apDocumentId) =>
+        invalidateApDocuments(queryClient, apDocumentId),
     },
   );
 }
@@ -207,7 +278,9 @@ export function usePostApDocument() {
         ),
       onSuccess: (_data, apDocumentId) => {
         invalidateApDocuments(queryClient, apDocumentId);
-        queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.all });
+        queryClient.invalidateQueries({
+          queryKey: accountingLedgerQueryKeys.accountingLedger.all,
+        });
       },
     },
   );
@@ -222,19 +295,30 @@ export function useApPayments(
   return useQuery<ApPaymentPage, Error>({
     queryKey: accountingApQueryKeys.accountingAp.payments(request),
     queryFn: ({ signal }) =>
-      apiClient.get<ApPaymentPage>("/accounting/payables/payments", request, signal),
+      apiClient.get<ApPaymentPage>(
+        "/accounting/payables/payments",
+        request,
+        signal,
+      ),
     staleTime: STANDARD_LIST_STALE,
     ...options,
     enabled: canRead && (options?.enabled ?? true),
   });
 }
 
-export function useApPayment(paymentId: string, options?: QueryOpts<ApPayment>) {
+export function useApPayment(
+  paymentId: string,
+  options?: QueryOpts<ApPayment>,
+) {
   const canRead = useCan("accounting:payables:read");
   return useQuery<ApPayment, Error>({
     queryKey: accountingApQueryKeys.accountingAp.payment(paymentId),
     queryFn: ({ signal }) =>
-      apiClient.get<ApPayment>(`/accounting/payables/payments/${paymentId}`, undefined, signal),
+      apiClient.get<ApPayment>(
+        `/accounting/payables/payments/${paymentId}`,
+        undefined,
+        signal,
+      ),
     staleTime: ENTITY_STALE,
     ...options,
     enabled: canRead && !!paymentId && (options?.enabled ?? true),
@@ -245,27 +329,42 @@ function invalidateApPayments(
   queryClient: ReturnType<typeof useQueryClient>,
   paymentId?: string,
 ): void {
-  queryClient.invalidateQueries({ queryKey: accountingApQueryKeys.accountingAp.paymentsAll });
-  queryClient.invalidateQueries({ queryKey: accountingApQueryKeys.accountingAp.documentsAll });
-  queryClient.invalidateQueries({ queryKey: accountingApQueryKeys.accountingAp.agingAll });
-  queryClient.invalidateQueries({ queryKey: accountingBankingQueryKeys.accountingBanking.all });
+  queryClient.invalidateQueries({
+    queryKey: accountingApQueryKeys.accountingAp.paymentsAll,
+  });
+  queryClient.invalidateQueries({
+    queryKey: accountingApQueryKeys.accountingAp.documentsAll,
+  });
+  queryClient.invalidateQueries({
+    queryKey: accountingApQueryKeys.accountingAp.agingAll,
+  });
+  queryClient.invalidateQueries({
+    queryKey: accountingBankingQueryKeys.accountingBanking.all,
+  });
   if (paymentId)
-    queryClient.invalidateQueries({ queryKey: accountingApQueryKeys.accountingAp.payment(paymentId) });
+    queryClient.invalidateQueries({
+      queryKey: accountingApQueryKeys.accountingAp.payment(paymentId),
+    });
 }
 
 export function usePostApPayment() {
   const queryClient = useQueryClient();
-  return useAuthorizedIdempotentMutation<ApPaymentPostResult, Error, PostApPaymentInput>(
-    "accounting:payables:manage",
-    {
-      mutationKey: ["accounting", "ap", "payments", "post"],
-      mutationFn: (input, idempotencyKey) =>
-        apiClient.post<ApPaymentPostResult>("/accounting/payables/payments", input, {
+  return useAuthorizedIdempotentMutation<
+    ApPaymentPostResult,
+    Error,
+    PostApPaymentInput
+  >("accounting:payables:manage", {
+    mutationKey: ["accounting", "ap", "payments", "post"],
+    mutationFn: (input, idempotencyKey) =>
+      apiClient.post<ApPaymentPostResult>(
+        "/accounting/payables/payments",
+        input,
+        {
           headers: { "Idempotency-Key": idempotencyKey },
-        }),
-      onSuccess: (data) => invalidateApPayments(queryClient, data.payment.id),
-    },
-  );
+        },
+      ),
+    onSuccess: (data) => invalidateApPayments(queryClient, data.payment.id),
+  });
 }
 
 export function useAllocateApPayment() {
@@ -282,7 +381,8 @@ export function useAllocateApPayment() {
         { allocations },
         { headers: { "Idempotency-Key": idempotencyKey } },
       ),
-    onSuccess: (_data, variables) => invalidateApPayments(queryClient, variables.paymentId),
+    onSuccess: (_data, variables) =>
+      invalidateApPayments(queryClient, variables.paymentId),
   });
 }
 
@@ -299,7 +399,8 @@ export function useAllocateDebitNote() {
         `/accounting/payables/debit-notes/${debitNoteId}/allocations`,
         { allocations },
       ),
-    onSuccess: (_data, variables) => invalidateApDocuments(queryClient, variables.debitNoteId),
+    onSuccess: (_data, variables) =>
+      invalidateApDocuments(queryClient, variables.debitNoteId),
   });
 }
 
@@ -319,25 +420,37 @@ export function useReverseApPayment() {
       ),
     onSuccess: (_data, variables) => {
       invalidateApPayments(queryClient, variables.paymentId);
-      queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.all });
+      queryClient.invalidateQueries({
+        queryKey: accountingLedgerQueryKeys.accountingLedger.all,
+      });
     },
   });
 }
 
-export function useApAging(params: ApAgingParams = {}, options?: QueryOpts<ApAgingReport>) {
+export function useApAging(
+  params: ApAgingParams = {},
+  options?: QueryOpts<ApAgingReport>,
+) {
   const canRead = useCan("accounting:reports:read");
   const request = queryParams({ ...params });
   return useQuery<ApAgingReport, Error>({
     queryKey: accountingApQueryKeys.accountingAp.aging(request),
     queryFn: ({ signal }) =>
-      apiClient.get<ApAgingReport>("/accounting/payables/aging", request, signal),
+      apiClient.get<ApAgingReport>(
+        "/accounting/payables/aging",
+        request,
+        signal,
+      ),
     staleTime: SLOW_LIST_STALE,
     ...options,
     enabled: canRead && (options?.enabled ?? true),
   });
 }
 
-export function useApLedgerTieOut(asOf: string, options?: QueryOpts<ApLedgerTieOut>) {
+export function useApLedgerTieOut(
+  asOf: string,
+  options?: QueryOpts<ApLedgerTieOut>,
+) {
   const canRead = useCan("accounting:reports:read");
   return useQuery<ApLedgerTieOut, Error>({
     queryKey: accountingApQueryKeys.accountingAp.agingTieOut(asOf),

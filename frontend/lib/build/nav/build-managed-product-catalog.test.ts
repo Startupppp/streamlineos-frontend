@@ -76,4 +76,32 @@ describe("buildManagedProductCatalog (BSN-01-032)", () => {
     const ids = catalog.primary.map((d) => d.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
+
+  it("orders the product scope evidence-first, exactly as the 01-ia-navigation.md scope table specifies", () => {
+    expect(catalog.primary.map((d) => d.id)).toEqual([
+      "product-overview",
+      "product-feedback",
+      "product-insights",
+      "product-roadmap",
+      "product-goals",
+      "product-projects",
+    ]);
+  });
+
+  it("keeps mobilePriority in the same order as the desktop rail so the mobile bar cannot disagree with the sidebar", () => {
+    const priorities = catalog.primary.map((d) => d.mobilePriority);
+    expect(priorities).toEqual([...priorities].sort((a, b) => (a ?? 0) - (b ?? 0)));
+    expect(priorities.every((p) => p !== undefined)).toBe(true);
+  });
+
+  it("covers every managed-product route on disk except the list index, so no product sub-route is unreachable from the rail", () => {
+    expect(catalog.primary.map((d) => d.href)).toEqual([
+      BASE,
+      `${BASE}/feedback`,
+      `${BASE}/insights`,
+      `${BASE}/roadmap`,
+      `${BASE}/goals`,
+      `${BASE}/projects`,
+    ]);
+  });
 });

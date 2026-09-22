@@ -26,7 +26,6 @@ export const wfhFormSchema = z.object({
     .string()
     .max(WFH_NOTES_MAX_LENGTH, `Notes must be ${WFH_NOTES_MAX_LENGTH} characters or fewer`)
     .optional(),
-  approverId: z.string().min(1, "Approver is required"),
 }).superRefine((values, ctx) => {
   const composed = composeWfhReason(values.reason, values.notes);
   if (composed.length > WFH_REASON_MAX_LENGTH) {

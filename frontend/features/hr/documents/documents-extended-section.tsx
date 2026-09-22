@@ -14,8 +14,8 @@ import { useCan } from "@/hooks/api/access";
 export function DocumentsExtendedSection() {
   const [activeTab, setActiveTab] = useState("letters");
   const canManageCompliance = useCan("hr:compliance:manage");
-  const { data: letters = [], isLoading: lettersLoading } = useLetters();
-  const { data: expiry, isLoading: expiryLoading } = useHrDocumentExpiry(30, {
+  const { data: letters = [], isLoading: lettersLoading, isError: lettersError, error: lettersErrorDetail, refetch: lettersRefetch } = useLetters();
+  const { data: expiry, isLoading: expiryLoading, isError: expiryError, error: expiryErrorDetail, refetch: expiryRefetch } = useHrDocumentExpiry(30, {
     enabled: activeTab === "expiring",
   });
 
@@ -41,7 +41,13 @@ export function DocumentsExtendedSection() {
           </TabsList>
 
           <TabsContent value="letters" className="mt-0">
-            <LettersHistoryTable letters={letters} isLoading={lettersLoading} />
+            <LettersHistoryTable
+              letters={letters}
+              isLoading={lettersLoading}
+              isError={lettersError}
+              error={lettersErrorDetail}
+              onRetry={lettersRefetch}
+            />
           </TabsContent>
 
           <TabsContent value="expiring" className="mt-0">
@@ -63,6 +69,9 @@ export function DocumentsExtendedSection() {
                   : [],
               )}
               isLoading={expiryLoading}
+              isError={expiryError}
+              error={expiryErrorDetail}
+              onRetry={expiryRefetch}
             />
           </TabsContent>
 

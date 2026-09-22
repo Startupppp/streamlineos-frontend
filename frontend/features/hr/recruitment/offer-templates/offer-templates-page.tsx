@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import DOMPurify from "isomorphic-dompurify";
 import { useOfferTemplates, useCreateOfferTemplate, useUpdateOfferTemplate, useDeleteOfferTemplate, useGenerateOfferPdf } from "@/hooks/api/hr/recruitment/offer-templates";
 import type { OfferLetterTemplate } from "@/hooks/api/hr/recruitment/offer-templates";
 import { Button } from "@/components/ui/button";
@@ -25,6 +24,7 @@ import {
 } from "@/components/ui/sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { SanitizedHtml } from "@/components/shared/sanitized-html";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -245,9 +245,9 @@ function PreviewSheet({ template, onClose }: PreviewSheetProps) {
           </SheetDescription>
         </SheetHeader>
         <SheetBody className="px-6 py-5">
-          <div
+          <SanitizedHtml
+            html={preview}
             className="prose prose-sm max-w-none border rounded-lg p-4 bg-card text-foreground"
-            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(preview) }}
           />
         </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">

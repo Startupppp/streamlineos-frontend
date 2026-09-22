@@ -17,6 +17,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
@@ -66,7 +67,7 @@ function getStatusConfig(s: string | null) {
 }
 
 function ComplianceDashboard() {
-  const { data: rows, isLoading } = useBgvComplianceDashboard();
+  const { data: rows, isLoading, isError, error, refetch } = useBgvComplianceDashboard();
 
   if (isLoading) {
     return (
@@ -75,6 +76,17 @@ function ComplianceDashboard() {
           <Skeleton key={i} className="h-24 rounded-2xl" />
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Couldn't load compliance data"
+        description={getErrorMessage(error)}
+        onRetry={refetch}
+        className="py-16"
+      />
     );
   }
 

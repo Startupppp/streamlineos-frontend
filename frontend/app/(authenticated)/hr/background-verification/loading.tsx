@@ -11,7 +11,7 @@ export default function BackgroundVerificationLoading() {
     >
       <div className="flex flex-col flex-1 min-h-0 gap-4">
         <Skeleton className="h-9 w-64 rounded-md" />
-        <DataTableSkeleton rows={12} columns={7} className="flex-1 min-h-0" />
+        <DataTableSkeleton rows={12} headers={["Employee", "Type", "Vendor", "Reference", "Initiated", "Status", ""]} className="flex-1 min-h-0" />
       </div>
     </PageWrapper>
   );

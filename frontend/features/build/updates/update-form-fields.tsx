@@ -10,11 +10,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
+import type { CreateUpdateInput } from "./updates-schema";
 
-export interface CreateUpdateInput {
-  body: string;
-}
 
 interface UpdateFormFieldsProps {
   form: UseFormReturn<CreateUpdateInput>;
@@ -22,7 +20,7 @@ interface UpdateFormFieldsProps {
 }
 
 export function UpdateFormFields({ form, isOpen }: UpdateFormFieldsProps) {
-  useRegisterBuildDirtyState(isOpen && form.formState.isDirty);
+  useRegisterDirtyState(isOpen && form.formState.isDirty);
 
   function renderBodyField({ field }: { field: React.ComponentProps<typeof Textarea> }) {
     return (

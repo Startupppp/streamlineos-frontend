@@ -49,13 +49,8 @@ Fix: `@NoTenantTransaction()` on the handler + each `db.transaction` becomes `ru
 ⚠ This makes the compensation path **load-bearing** where a rollback currently masks it.
 **Write the compensation tests first.**
 
-- [x] H1a — tests pinning `abandonIntent` + `releaseReservation` on provider failure
-- [x] H1b — split the transaction, verify no connection is held across `createOrder`
-
 ### H2 — Billing marketplace addon order
 `modules/billing/core/billing-marketplace.ts:38` — same shape, same 10s budget.
-
-- [x] H2
 
 ### H3 — GST e-invoice filing — ✅ DONE
 
@@ -113,8 +108,6 @@ passes every static check."
    depends on no statement escaping a tenant transaction, which is structural and testable here. The
    blocker generalised a rule past what it says.
 
-- [x] H3 — shipped, see above
-
 ### H3 — carried forward
 
 `compliance-transport.spec.ts` text-scanned for `this.compliance.submitToTransport(` in two places, one
@@ -127,30 +120,20 @@ asserting posting does not contain it.
 repeats the transaction-hold / TOCTOU-SSRF defects the automation copy had.
 ⚠ `build/` carries another session's uncommitted work — **audit read-only, do not edit**.
 
-- [x] H4
-
 ### H5 — Only one replica runs the org sweep
 The sweep left the boot path but still runs on **every** replica. Needs a lease. No reusable primitive
 exists; session-scoped advisory locks over a pool are not safe as-is.
-
-- [x] H5
 
 ### H6 — Container heap — ✅ NOT A DEFECT
 Closed on inspection, correcting my own earlier framing. `start:prod` is used only by the local runner
 (`scripts/run.mjs:21`); the container's flagless `CMD` lets Node 22 size its heap from the cgroup limit,
 which is the correct behaviour. The two *should* differ, and no change is warranted.
 
-- [x] H6
-
 ### H7 — Ratchet: no outbound network call inside the request transaction
 The rule exists in `backend/CLAUDE.md` §4 and nothing enforces it, which is how it drifted at five sites.
 Build the gate the way `check:get-route-writes` was built: `--self-test`, vacuity floors, a frozen
 baseline, wired into the CI `gates` job. **Recall must be established by a systematic sweep, not by the
 five sites already known.**
-
-- [x] H7a — enumeration produced by the gate itself (reproducible), not by an agent
-- [x] H7b — the gate, self-tested and bite-checked
-- [x] H7c — wired into `package.json` + CI
 
 ---
 
@@ -377,22 +360,245 @@ fallback).
 Blocked on a prerequisite, not on effort: `notifications-dispatch#dispatch` needs outbox scope resolution
 fixed first, and `feedbucket#createTicketFromAnalysis` needs an idempotency fence — see above.
 
+⚠ **Both of those prerequisites have since moved, though the routes are still frozen (gate: 8, 2026-09-21).**
+H20 fixed the outbox scope resolution that `notifications-dispatch#dispatch` was waiting on, and the
+idempotency-fence claim for `feedbucket#createTicketFromAnalysis` is retracted further down. Re-read those
+two sections before picking either route up — the reason recorded here is no longer the reason.
+
 The four rule-test / send-test routes are deliberate synchronous pings where the user is shown the
 delivery result. Each needs its own product decision about whether that result is worth a pooled
 connection, rather than a blanket opt-out.
 
-### ⚠ Known recall gaps in the gate — one closed, one open
+### H14 — the four frozen send-tests, capped rather than detached ✅ DONE
 
-Two misses, by construction, both confirmed against real code:
-1. **A service arriving as a parameter.** `compliance.controller.ts#submitDocument` reached `fetch` via
-   `adapter.submit(payload)`, where `adapter` is a local — so H3's own site was invisible to the gate
-   while it was still a defect. H3 is fixed, but the blind spot is not: the next route that reaches the
-   network through a local or an injected-at-call-time port will be missed the same way.
-2. **A free function wrapping the client.** `crm-mailbox.controller.ts#sync` reaches Gmail/Outlook through
-   `fetchGmailMessages(this.gmail, …)` and then `gmail.listMessages(…)` on a *parameter*. The gate now
-   indexes exported functions and resolves declared parameter types, so both hops are followed — but this
-   route is still missed, because the receiver is a Composio client whose own outbound call is further
-   away than the depth limit. **Still open, still a real hold.**
+Decision: keep the synchronous result the user is shown, bound the wait.
+
+| Route | Before | After |
+|---|---|---|
+| `projects-webhooks#sendTest` | 10s | **5s** |
+| `feedbucket#analyzeSubmission` | 60s (standard tier) | **25s** explicit `AbortSignal` |
+| `automation#testAutomation` | — | **already 5s**, verified, unchanged |
+| `support-automations#testAutomation` | — | **already 5s**, verified, unchanged |
+
+The two rule-tests reach the network through **email**, not a webhook. Their action sends only
+`to`/`subject`/`html`, so `rowReproducesSend` is true and `INLINE_SEND_BUDGET_MS` (5s) applies —
+the cap this item would have added is already there.
+
+⚠ **That budget is conditional.** `email-outbox.service.ts:195` passes
+`reproducible ? INLINE_SEND_BUDGET_MS : undefined`, and `email.provider.ts:298` does
+`if (budgetMs === undefined) { await send; return; }`. An email carrying cc, bcc, `replyTo`,
+custom headers or attachments therefore gets **no timeout at all**. Deliberate — an outbox row
+that cannot reproduce the send must not be retried — but it means "email is bounded at 5s" is
+true only for the reproducible shape.
+
+`AiInvokeBaseOpts.signal` already reaches the provider (`resolveSignal` →
+`gate.signal` → `invokeStructuredWithImageWithUsage`), so feedbucket needed no change to the
+shared AI gateway. The attempts cap and timeout became one `DeliveryBudget` value rather than two
+adjacent `number` parameters. Commit `83148d72e`.
+
+### H15 — `landed_cost`: a required role and a declared purpose that nothing resolves ✅ DONE
+
+`INVENTORY_SEAM_ROLES` required `landed_cost` and `INVENTORY_JOURNAL_PURPOSES` declared
+`INVENTORY_LANDED_COST`, but **no account seeds that tag and no call site posts that purpose** —
+`landed-cost-journal.ts` posts `INVENTORY_ASSET` / `INVENTORY_COGS` / `AP`. `resolveAccountCodes`
+queried a seventh role and returned `null` forever; provisioning reported a gap no operator could
+close. Four specs red.
+
+Not a missing account — an entry no call site backs, which is exactly what that list's own
+docstring forbids. Both removed.
+
+The bridge's `names no purpose it has no call site for` test **hand-listed three names**, which is
+how this got in. It now also derives the rule: no purpose may resolve to a role outside the seam
+list. Bite-checked by restoring the dead purpose — it fails naming the exact purpose → role pair.
+Commit `5e65e7cc0`.
+
+### H16 — the email-caller scan was blind, and red ✅ DONE
+
+Two defects in `notification-delivery-class.spec.ts`:
+
+1. The predicate matched `*EmailService`, so **`EmailSignService` was invisible**. The inventory
+   already carried `modules/e-sign/sign-notifications.service.ts`, so the staleness test reported a
+   classified file as one that had *stopped* reaching `EmailService` — **the suite was already
+   failing**. 38 → 39; no new classification needed.
+2. The comment stripper split on `\n` then applied `/\/\/.*$/` per line. On CRLF every line keeps a
+   trailing `\r`, which `.` cannot match and `$` then requires end-of-input, so **no line comment
+   was ever stripped** and a commented mention counted as a call. The same defect class as the
+   `india-compliance` and `ledger-boundary` scans.
+
+Still under-detects by design: `Email[A-Za-z]*Service` reaches 49 files and needs ten
+delivery-class decisions from the notifications owner. Commit `bd3c63996`.
+
+### H17 — the CRM mailbox sweep, the worst hold in the tree ✅ DONE
+
+`POST /crm-mailbox/:id/sync` and `POST /crm-mailbox/sync` read a mailbox over the network **inside the
+request transaction**. `sweepAll` does it once per mailbox, up to **fifty times on one borrowed
+connection** out of a pool of ten.
+
+Invisible to the gate, for the reason recorded below as gap 2.
+
+`sync` is now three phases — one transaction for the row/connection/plan, the provider fetch in none,
+one more to accept messages and move the watermark — with the failure path opening its own. Both routes
+carry `@NoTenantTransaction()`; `sweepAll`'s due-list read is wrapped because it no longer has an
+ambient context. `push()` dropped its `runInNewTenantTransaction` wrapper, which would otherwise have
+become exactly the ambient transaction the fetch needed to escape.
+
+`crm-mailbox-connection-hold.spec.ts` runs the real primitive against a recording double: no context
+during the fetch, two transactions, the GUC set in each. Bite-checked by moving the fetch back inside a
+transaction — two of three fail. The existing sweep spec needed `primeRelocationTrafficTracker`, because
+`withTenant`'s `refreshRelocationTargets` issues its own `select` and was consuming the double's call
+counter. Commit `8595d784a`.
+
+### H18 — the walk went to depth 8, and three strip defects fell out ✅ DONE
+
+Depth 6 was hiding real holds. At depth 8 the scan surfaced **16 more routes**. Reading every one
+produced two real defects and three reasons the gate lies — each now pinned by a self-test case that
+fails on the old code.
+
+| Defect | Effect |
+|---|---|
+| A service arriving as a **method parameter** was never followed | The walk carried only constructor-injected types, so `adapter.submit(payload)` was invisible — **this is what hid H3's own site while it was still a defect** |
+| A deferral **named before it is handed over** escaped the strip | `const dispatch = () => …; if (!registerAfterCommit(dispatch)) void dispatch();` — the detacher's argument region is just an identifier. **9 of the 16 were false positives from this alone** |
+| A **voided async IIFE** survived | The void strip ended at the first `;`, and an IIFE body is full of them. Now depth-aware, and excluded from matching a `: void {` return annotation |
+
+**Two real holds, fixed at the root:**
+
+- **`HrAutomationEngineService.emit` awaited `runEvent`**, which reaches `callWebhook`. Six routes across
+  contracts, exit, probation and termination held a pooled connection across a *customer's* webhook
+  endpoint. `emit` already swallowed every error and returned `void`, so no caller could depend on the
+  result — deferring changes no contract, and stops rules observing uncommitted state.
+- **`exit-write`'s private `deferAfterCommit`** duplicated logic living in three other files, and being
+  private it was invisible to any gate. Moved to `common/tenant/defer-after-commit.ts` and named in
+  `DETACHERS`. The per-file `Logger.error` channel is kept via `reportDeferred`, because
+  `exit-write-deferred-failure.spec` pins that level and message.
+
+**Net: non-AI holds stay at the frozen 8 — now verified at depth 8 rather than 6 — and the AI ceiling
+falls 24 → 18.** Two frozen reasons were rewritten: `sendTest` and `analyzeSubmission` are now bounded,
+and a frozen entry describing a budget that no longer applies is worse than no entry.
+
+`--explain` prints the hop chain behind each reported route. **Every verdict above came from it**, not
+from reading services one at a time — the manual approach had already produced one wrong guess.
+Commit `b2ab4f361`.
+
+### H19 — the AI ceiling, worked down 24 → 13 → **1** ✅ ceiling holds at 1 (measured 2026-09-21)
+
+Five more routes three-phased the way H3 and H13 established. Commit `3782ec03f`.
+
+| Route | Service | Shape |
+|---|---|---|
+| `support-ai#translateMessage` · `#translateDraft` · `#improveReply` | `SupportAiTranslationService` | reads → provider → **no writes**, so only the read phase needed wrapping |
+| `support-ai#suggestMacro` | `SupportAiTriageService` | reads → provider → writes, two short transactions |
+| `support-ai#analyze` | `SupportAiTriageAnalysisService` | same |
+
+⚠ **Three siblings on the same controllers were deliberately left, because their "read phase" is not
+one.** `suggestReply` and `generateHandoffSummary` call `searchKbForTicket`; `findRootCauseCluster` calls
+`upsertAndSearchSimilar`. Both **embed through the AI gateway partway through the reads**, so wrapping
+that phase in a transaction would hold a connection across an *embedding* call — a new hold in place of
+the old one. They need the KB search split first: reads, embed, vector query. My own first pass
+classified `findRootCauseCluster` as safe because I grepped only for `searchKbForTicket`; the second
+helper does the same thing under another name.
+
+~~**The remaining 13, and what each needs:**~~ *(superseded — see the 2026-09-21 measurement after these tables. Kept because each row records why that route was blocked at the time.)*
+
+| Blocked on a real constraint | Why |
+|---|---|
+| `support-ai#suggestReply` · `#generateHandoffSummary` · `#findRootCauseCluster` | embed mid-phase, see above |
+| `inv-ai-explain#getReorderProposal` | `inv-ai-proposal.spec.ts:572` pins that the service holds no DB handle |
+| `mail#aiInboxSummary` | `MailService.listMessages` falls through to a Gmail/Outlook fetch |
+
+| Tractable, same pattern as above | `comment-drafts#generateDraft` · `chat-summarize#summarize` · `hr-email-templates#generateAi` · `recruitment#aiScore` · `#compositeScore` · `#resumeParse` · `mail#aiDraft` · `mail#aiThreadSummary` |
+
+#### 2026-09-21 — measured: the AI ceiling is **1**, not 13
+
+```
+$ pnpm check:request-txn-outbound
+check-request-txn-outbound: 3451 route(s) across 598 controller(s);
+8 holding across an outbound call (frozen), 1 across an AI call (ceiling 1).
+```
+
+Twelve of the thirteen above were closed after H19 was written, including all three
+`support-ai` embed-mid-phase routes and `inv-ai-explain#getReorderProposal` — so the two
+constraints this section recorded as blocking (`searchKbForTicket` / `upsertAndSearchSimilar`
+embedding partway through the reads, and `inv-ai-proposal.spec.ts:572`'s no-DB-handle
+invariant) were both solved rather than waived. **The one remaining hold is
+`mail#aiInboxSummary`**, for the reason already given at H13: `MailService.listMessages`
+falls through to a Gmail/Outlook fetch when metadata cannot serve the page, so wrapping its
+read would create a new hold rather than remove one. Mail still needs its own lane.
+
+⚠ **The earlier counts in this document are history, not status, and are deliberately left
+in place** — H10's "ceilinged at 24", H18's "24 → 18", H19's "24 → 13" and the "count rises
+to 25" arithmetic at H10 each record what was true when it was measured. Read the ceiling
+from the gate, never from a heading: the gate is the only current number.
+
+**Testing note that cost real time:** four specs needed `withDelegatingTransaction` *and*
+`primeRelocationTrafficTracker`. The second is not optional — `withTenant` fires
+`refreshRelocationTargets`, which issues its own `select`, so a double that counts `select` calls
+silently answers the **wrong row**. That is what made a mailbox sweep read `disabled` in H17.
+
+### H20 — the outbox writer now fails closed ✅ DONE
+
+`resolveScope` fell back to `PLATFORM` whenever neither an explicit `organizationId` nor an ambient
+tenant context supplied one. A tenant send that merely ran without a context was therefore attributed to
+**no tenant instead of failing**, and the suppression read silently missed that org's entries. That is
+the defect that kept `notifications-dispatch#dispatch` frozen.
+
+`EmailOptions.organizationId` is `string | null | undefined`, so *omitted* was already distinguishable
+from *deliberately null* — the fix needed no new field:
+
+| Input | Result |
+|---|---|
+| explicit org id | `TENANT` |
+| explicit `null` | `PLATFORM` — mail that genuinely predates any tenant (verification, password reset) |
+| omitted, ambient context present | `TENANT` from the context |
+| omitted, **no** context | **throws** |
+
+The change immediately caught a spec fixture: `PLAIN_SEND` ("Approval needed") is tenant mail that was
+relying on the PLATFORM fallback. Two tests pin the rule by name. Email suite 159/159.
+
+### H21 — the email-caller scan detects senders, not mentions ✅ DONE
+
+Widening to `Email[A-Za-z]*Service` was going to add **10** files. Reading them found the predicate was
+wrong in two ways, and only **2** are genuinely new direct senders:
+
+| File | Verdict |
+|---|---|
+| `ai/core/confirm-actions/comms-confirm-actions.ts:26` | **PENDING_MIGRATION** — real `outbox.enqueueAndTry` |
+| `reporting/report-schedule.consumer.ts:92` | **PENDING_MIGRATION** — real `this.email.enqueueAndTry` |
+| `cron/cron-email-outbox.service.ts` | EXEMPT — calls `processRetries()`; it drains what the seam already accepted and originates nothing |
+| `autonomy/lib/outbound-send.types.ts` · `autonomy/outbound.workflow.ts` · `hr/onboarding/core/onboarding-admin.service.ts` | EXEMPT — name the port type, issue no send |
+| `autonomy/**` (2 files), `data-quality-producers.service.ts` | **not callers at all** — matched only `EmailSuppressionService`, which is the *gate* that decides whether a send happens |
+| `notifications/providers/notification-email.provider.ts` | **not a caller** — that directory IS the dispatch seam, excluded like `modules/email/` |
+
+The predicate is now an explicit sender list, and `modules/notifications/providers/` is skipped for the
+same reason `modules/email/` is. Detection 39 → 45. 36/36.
+
+### ⚠ `feedbucket#createTicketFromAnalysis` — the recorded blocker is narrower than it reads
+
+The freeze says an idempotency fence is needed first. Re-reading the code, **it is not**:
+`ProjectsTicketsCreateService.createFromFeedback` uses `db.transaction`, which nests as a savepoint — so
+putting `createFromFeedback` **and** the `linkedTicketId` update in ONE `runInTenantTransaction` after
+the AI call keeps them atomic, which is exactly what the ambient transaction does today. The duplicate
+ticket only appears in a *naive* split that separates them. A retry after a committed phase 3 already
+hits the `submission.linkedTicketId` guard and gets a 409.
+
+The real prerequisite is different and bigger: `createTicketFromAnalysis` calls `this.analyze(...)`, so
+opting it out requires three-phasing `analyze` — which is the same work that would un-freeze
+`feedbucket#analyzeSubmission`. Doing it once clears **both** frozen entries.
+
+### ⚠ Known recall gaps in the gate — both now closed
+
+Two misses, by construction, both confirmed against real code — **both closed by H18/H17**:
+1. ~~**A service arriving as a parameter.**~~ `compliance.controller.ts#submitDocument` reached `fetch`
+   via `adapter.submit(payload)`, where `adapter` is a parameter — so H3's own site was invisible while
+   it was still a defect. **Closed:** every hop now carries its own parameter types, pinned by a
+   self-test that plants a two-file chain and fails on the old walk.
+2. ~~**A free function wrapping the client.**~~ `crm-mailbox.controller.ts#sync` reaches Gmail/Outlook
+   through `fetchGmailMessages(this.gmail, …)` and then `gmail.listMessages(…)` on a *parameter*, behind
+   a Composio client further away than the depth limit. **Closed twice over:** the limit is now 8, and
+   the route itself was fixed in H17.
+
+Recall is measured, not assumed. Closing these two does not make it 100% — it makes the two known holes
+shut. The gate's baseline was wrong in **both** directions until it was checked against source, and the
+depth-8 sweep found 9 more false positives on top of that.
 
 Recall is measured, not assumed, and it is not 100%. A green gate is not a licence to assume the rule
 holds — the gate's own baseline was wrong in both directions until it was checked against source.

@@ -54,6 +54,15 @@ describe("BSN-01-033 — Overview is the selected scope landing destination", ()
   });
 });
 
+describe("BSN-01-033 — Cycles points at the canonical iteration route", () => {
+  it("project-cycles href is the basePath's /cycles route, not the removed /sprints duplicate", () => {
+    const cycles = catalog.primary.find(
+      (destination) => destination.id === "project-cycles",
+    );
+    expect(cycles?.href).toBe(`${scope.basePath}/cycles`);
+  });
+});
+
 describe("BSN-01-033 — complete project catalog", () => {
   it("project-updates is in primary so Updates is directly visible without opening More tools", () => {
     expect(primaryIds).toContain("project-updates");

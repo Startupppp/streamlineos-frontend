@@ -18,6 +18,7 @@ const mockRecheck = jest.fn();
 let mockProvisioning: SetupProvisioning = {
   isReady: false,
   background: "unknown",
+  orgId: null,
   issue: null,
   isRechecking: false,
   hasTimedOut: false,
@@ -145,6 +146,7 @@ function resetMocks() {
   mockProvisioning = {
     isReady: false,
     background: "unknown",
+    orgId: null,
     issue: null,
     isRechecking: false,
     hasTimedOut: false,

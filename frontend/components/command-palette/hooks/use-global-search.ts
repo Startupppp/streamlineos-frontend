@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { lazyContract } from "@/lib/api-envelope";
 import { apiClient } from "@/lib/api-client";
@@ -34,7 +35,7 @@ export function useGlobalSearch(query: string) {
   const trimmed = query.trim();
   const enabled = trimmed.length >= GLOBAL_SEARCH_MIN_LENGTH;
 
-  const { data, isFetching } = useQuery({
+  const { data, isFetching, isError, error, refetch } = useQuery({
     queryKey: platformCoreQueryKeys.globalSearch.query(trimmed),
     queryFn: ({ signal }) =>
       apiClient.get<GlobalSearchResponse>("/search", { q: trimmed }, signal, globalSearchC),
@@ -43,8 +44,15 @@ export function useGlobalSearch(query: string) {
     enabled,
   });
 
+  const retry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   return {
     results: enabled ? (data?.results ?? EMPTY_RESULTS) : EMPTY_RESULTS,
     isSearching: enabled && isFetching,
+    isError: enabled && isError,
+    error: enabled ? error : null,
+    retry,
   };
 }

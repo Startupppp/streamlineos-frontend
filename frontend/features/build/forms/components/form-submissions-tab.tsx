@@ -1,18 +1,18 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable, type DataTableColumn, DataTableSkeleton } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { PageState } from "@/components/shared/page-state";
 import { useCan } from "@/hooks/api/access";
 import { useFormSubmissions, useUpdateSubmission } from "@/hooks/api/build";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { usePageState } from "@/hooks/api/use-page-state";
 import type { FormSubmission, FormSubmissionStatus } from "@/types/projects/forms";
 
 const STATUS_VARIANT: Record<FormSubmissionStatus, "default" | "secondary" | "destructive"> = {
@@ -32,12 +32,60 @@ interface FormSubmissionsTabProps {
   formId: number;
 }
 
+interface SubmissionActionsCellProps {
+  row: FormSubmission;
+  canManage: boolean;
+  onView: (row: FormSubmission) => void;
+  onStatusUpdate: (row: FormSubmission, status: FormSubmissionStatus) => void;
+}
+
+function SubmissionActionsCell({ row, canManage, onView, onStatusUpdate }: SubmissionActionsCellProps) {
+  function handleView() { onView(row); }
+  function handleProcess() { onStatusUpdate(row, "processed"); }
+  function handleReject() { onStatusUpdate(row, "rejected"); }
+
+  return (
+    <div className="flex items-center gap-1">
+      <Button variant="ghost" size="sm" className="text-xs" onClick={handleView}>
+        View
+      </Button>
+      {canManage && row.status === "submitted" && (
+        <>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs text-status-success-ink hover:text-status-success-ink"
+            onClick={handleProcess}
+          >
+            Process
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs text-destructive hover:text-destructive"
+            onClick={handleReject}
+          >
+            Reject
+          </Button>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProps) {
   const canManage = useCan("build:forms:manage");
   const [viewTarget, setViewTarget] = useState<FormSubmission | null>(null);
 
-  const { data, isLoading, isError, refetch } = useFormSubmissions(projectId, formId);
+  const { data, isLoading, isError, error, refetch } = useFormSubmissions(projectId, formId);
   const updateSubmission = useUpdateSubmission(projectId, formId);
+
+  const pageState = usePageState({
+    permission: "build:forms:manage",
+    isLoading,
+    isError,
+    error,
+  });
 
   function handleStatusUpdate(submission: FormSubmission, status: FormSubmissionStatus) {
     updateSubmission.mutate(
@@ -101,31 +149,12 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
       header: "",
       className: "w-40",
       cell: (row) => (
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" className="text-xs" onClick={() => handleViewOpen(row)}>
-            View
-          </Button>
-          {canManage && row.status === "submitted" && (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs text-status-success-ink hover:text-status-success-ink"
-                onClick={() => handleStatusUpdate(row, "processed")}
-              >
-                Process
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs text-destructive hover:text-destructive"
-                onClick={() => handleStatusUpdate(row, "rejected")}
-              >
-                Reject
-              </Button>
-            </>
-          )}
-        </div>
+        <SubmissionActionsCell
+          row={row}
+          canManage={canManage}
+          onView={handleViewOpen}
+          onStatusUpdate={handleStatusUpdate}
+        />
       ),
     },
   ];
@@ -134,19 +163,22 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
 
   return (
     <div className="pt-3 space-y-3">
-      {isLoading ? (
-        <DataTableSkeleton rows={12} columns={6} />
-      ) : isError ? (
-        <ErrorState compact onRetry={handleRetry} />
-      ) : items.length === 0 ? (
-        <EmptyState
-          illustrationPreset="documents"
-          title="No submissions yet"
-          description="Submissions will appear here once the form is filled out."
-        />
-      ) : (
-        <DataTable data={items} columns={columns} getRowKey={(row) => row.id} minWidth="640px" />
-      )}
+      <PageState
+        resolution={pageState}
+        loading={<DataTableSkeleton rows={12} columns={6} />}
+        onRetry={handleRetry}
+        className="min-h-[40vh]"
+      >
+        {items.length === 0 ? (
+          <EmptyState
+            illustrationPreset="documents"
+            title="No submissions yet"
+            description="Submissions will appear here once the form is filled out."
+          />
+        ) : (
+          <DataTable data={items} columns={columns} getRowKey={(row) => row.id} minWidth="640px" />
+        )}
+      </PageState>
 
       <Dialog open={!!viewTarget} onOpenChange={handleViewClose}>
         <DialogContent className="max-w-lg">

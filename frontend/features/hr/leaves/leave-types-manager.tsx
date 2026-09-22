@@ -2,34 +2,26 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Pencil, Sparkles } from "lucide-react";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EntityFormDialog } from "@/components/shared";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCreateLeaveType,
@@ -39,22 +31,18 @@ import {
   useUpdateLeaveType,
   type HrLeaveType,
 } from "@/hooks/api/hr/leaves";
+import {
+  leaveTypeFormValues,
+  leaveTypeSchema,
+  type LeaveTypeFormValues,
+} from "@/features/hr/leaves/leave-type-schema";
 
 interface EditorState {
   open: boolean;
   editing: HrLeaveType | null;
-  name: string;
-  days: string;
-  carryForward: boolean;
 }
 
-const CLOSED_EDITOR: EditorState = {
-  open: false,
-  editing: null,
-  name: "",
-  days: "12",
-  carryForward: false,
-};
+const CLOSED_EDITOR: EditorState = { open: false, editing: null };
 
 export function LeaveTypesManager({ canManage }: { canManage: boolean }) {
   const { data: types, isLoading, isError, refetch } = useLeaveTypesAdmin();
@@ -67,33 +55,15 @@ export function LeaveTypesManager({ canManage }: { canManage: boolean }) {
   const [deleteTarget, setDeleteTarget] = useState<HrLeaveType | null>(null);
 
   function handleOpenCreate() {
-    setEditor({ ...CLOSED_EDITOR, open: true });
+    setEditor({ open: true, editing: null });
   }
 
   function handleOpenEdit(type: HrLeaveType) {
-    setEditor({
-      open: true,
-      editing: type,
-      name: type.name,
-      days: String(type.daysPerYear),
-      carryForward: type.carryForward,
-    });
+    setEditor({ open: true, editing: type });
   }
 
   function handleEditorOpenChange(open: boolean) {
     setEditor((prev) => (open ? prev : CLOSED_EDITOR));
-  }
-
-  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setEditor((prev) => ({ ...prev, name: e.target.value }));
-  }
-
-  function handleDaysChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setEditor((prev) => ({ ...prev, days: e.target.value }));
-  }
-
-  function handleCarryForwardChange(checked: boolean) {
-    setEditor((prev) => ({ ...prev, carryForward: checked }));
   }
 
   function handleSeed() {
@@ -109,20 +79,15 @@ export function LeaveTypesManager({ canManage }: { canManage: boolean }) {
     });
   }
 
-  function handleSave() {
-    const days = parseInt(editor.days, 10);
-    if (!editor.name.trim() || Number.isNaN(days) || days < 0 || days > 365) {
-      toast.error("Enter a name and a days-per-year value between 0 and 365");
-      return;
-    }
+  function handleSave(values: LeaveTypeFormValues) {
+    const payload = {
+      name: values.name,
+      daysPerYear: Number(values.daysPerYear),
+      carryForward: values.carryForward,
+    };
     if (editor.editing) {
       update.mutate(
-        {
-          typeId: editor.editing.id,
-          name: editor.name.trim(),
-          daysPerYear: days,
-          carryForward: editor.carryForward,
-        },
+        { typeId: editor.editing.id, ...payload },
         {
           onSuccess: () => {
             toast.success("Leave type updated");
@@ -133,16 +98,13 @@ export function LeaveTypesManager({ canManage }: { canManage: boolean }) {
       );
       return;
     }
-    create.mutate(
-      { name: editor.name.trim(), daysPerYear: days, carryForward: editor.carryForward },
-      {
-        onSuccess: () => {
-          toast.success("Leave type created");
-          setEditor(CLOSED_EDITOR);
-        },
-        onError: (err) => toast.error(getErrorMessage(err)),
+    create.mutate(payload, {
+      onSuccess: () => {
+        toast.success("Leave type created");
+        setEditor(CLOSED_EDITOR);
       },
-    );
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
   }
 
   function handleDeleteConfirm() {
@@ -190,7 +152,7 @@ export function LeaveTypesManager({ canManage }: { canManage: boolean }) {
             )}
             <Button size="sm" variant="outline" className="gap-1.5" onClick={handleOpenCreate}>
               <PlusIcon size={14} />
-              Add type
+              Add leave type
             </Button>
           </div>
         )}
@@ -257,72 +219,80 @@ export function LeaveTypesManager({ canManage }: { canManage: boolean }) {
         </div>
       )}
 
-      <Dialog open={editor.open} onOpenChange={handleEditorOpenChange}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{editor.editing ? "Edit Leave Type" : "New Leave Type"}</DialogTitle>
-            <DialogDescription>
-              {editor.editing
-                ? "Changes apply to future accruals and new requests."
-                : "Create a category employees can request leave against."}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="leave-type-name">Name</Label>
-              <Input
-                id="leave-type-name"
-                value={editor.name}
-                onChange={handleNameChange}
-                placeholder="e.g. Sick Leave"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="leave-type-days">Days per year</Label>
-              <Input
-                id="leave-type-days"
-                type="number"
-                min={0}
-                max={365}
-                value={editor.days}
-                onChange={handleDaysChange}
-              />
-            </div>
-            <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
-              <div>
-                <p className="text-sm font-medium text-foreground">Carry forward</p>
-                <p className="text-xs text-muted-foreground">
-                  Unused balance rolls into the next year
-                </p>
-              </div>
-              <Switch checked={editor.carryForward} onCheckedChange={handleCarryForwardChange} />
-            </div>
-          </div>
-          <DialogFooter>
-            <LoadingButton size="sm" isPending={savePending} onClick={handleSave}>
-              {editor.editing ? "Save changes" : "Create type"}
-            </LoadingButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EntityFormDialog<LeaveTypeFormValues>
+        open={editor.open}
+        onOpenChange={handleEditorOpenChange}
+        title={editor.editing ? "Edit leave type" : "Add leave type"}
+        description={
+          editor.editing
+            ? "Changes apply to future accruals and new requests."
+            : "Create a category employees can request leave against."
+        }
+        resolver={zodResolver(leaveTypeSchema)}
+        defaultValues={leaveTypeFormValues(editor.editing)}
+        resetOnOpen
+        onSubmit={handleSave}
+        isSubmitting={savePending}
+        submitLabel={editor.editing ? "Save changes" : "Add leave type"}
+        className="sm:max-w-sm"
+      >
+        {(form) => (
+          <>
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. Sick leave" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="daysPerYear"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Days per year</FormLabel>
+                  <FormControl>
+                    <Input type="number" inputMode="numeric" min={0} max={365} step={1} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="carryForward"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5">
+                  <div>
+                    <FormLabel>Carry forward</FormLabel>
+                    <FormDescription>Unused balance rolls into the next year</FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </>
+        )}
+      </EntityFormDialog>
 
-      <AlertDialog open={deleteTarget !== null} onOpenChange={handleDeleteOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete &quot;{deleteTarget?.name}&quot;?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Leave types with existing requests or attached policies cannot be deleted.
-              Employee balances for this type will be removed.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} disabled={remove.isPending}>
-              {remove.isPending ? "Deleting…" : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={handleDeleteOpenChange}
+        title={`Delete "${deleteTarget?.name ?? ""}"?`}
+        description="Leave types with existing requests or attached policies cannot be deleted. Employee balances for this type will be removed."
+        confirmLabel="Delete leave type"
+        destructive
+        isPending={remove.isPending}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 }

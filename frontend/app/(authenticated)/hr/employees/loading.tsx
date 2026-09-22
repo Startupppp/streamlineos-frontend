@@ -5,7 +5,7 @@ import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 export default function EmployeesLoading() {
   return (
     <PageWrapper
-      title="Employee Directory"
+      title="Employee directory"
       subtitle="Browse and manage all team members"
       actions={
         <div className="flex items-center gap-2">

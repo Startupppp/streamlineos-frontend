@@ -352,7 +352,7 @@ export function HeadcountPage() {
       actions={
         <Button size="sm" onClick={handleNewRequest}>
           <Plus className="mr-1.5 h-3.5 w-3.5" />
-          New Request
+          Create headcount request
         </Button>
       }
     >

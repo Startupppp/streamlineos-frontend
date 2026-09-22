@@ -17,12 +17,17 @@ import { ProjectFilterBar } from "@/features/build/project-list/project-filter-b
 import { ProjectsEmptyState } from "@/features/build/project-list/projects-empty-state";
 import { getUserDisplayName } from "@/lib/person-display";
 import { useDisplayPrefs } from "@/features/build/project-list/use-display-prefs";
-import type { ProjectActiveFilters } from "@/features/build/project-list/add-filter-popover";
+import {
+  HEALTH_OPTIONS,
+  STATUS_OPTIONS,
+  type ProjectActiveFilters,
+} from "@/features/build/project-list/add-filter-popover";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   PmPageShell,
   PmPanel,
@@ -115,24 +120,39 @@ function ListSkeleton() {
   );
 }
 
+function assertNever(value: never): never {
+  throw new Error(`Unhandled project order-by: ${String(value)}`);
+}
+
+function compareProjectsByOrder(
+  a: ProjectListItem,
+  b: ProjectListItem,
+  orderBy: ProjectOrderBy,
+): number {
+  switch (orderBy) {
+    case "name":
+      return a.name.localeCompare(b.name);
+    case "status":
+      return (a.status ?? "").localeCompare(b.status ?? "");
+    case "targetDate": {
+      const aT = a.endDate ? new Date(a.endDate).getTime() : Infinity;
+      const bT = b.endDate ? new Date(b.endDate).getTime() : Infinity;
+      return aT - bT;
+    }
+    case "progress":
+      return a.progress.percentage - b.progress.percentage;
+    default:
+      return assertNever(orderBy);
+  }
+}
+
 function sortProjects(
   projects: ProjectListItem[],
   orderBy: ProjectOrderBy,
   orderDir: ProjectSortDir,
 ): ProjectListItem[] {
   return [...projects].sort((a, b) => {
-    let cmp = 0;
-    if (orderBy === "name") {
-      cmp = a.name.localeCompare(b.name);
-    } else if (orderBy === "status") {
-      cmp = (a.status ?? "").localeCompare(b.status ?? "");
-    } else if (orderBy === "targetDate") {
-      const aT = a.endDate ? new Date(a.endDate).getTime() : Infinity;
-      const bT = b.endDate ? new Date(b.endDate).getTime() : Infinity;
-      cmp = aT - bT;
-    } else if (orderBy === "progress") {
-      cmp = a.progress.percentage - b.progress.percentage;
-    }
+    const cmp = compareProjectsByOrder(a, b, orderBy);
     return orderDir === "asc" ? cmp : -cmp;
   });
 }
@@ -156,6 +176,26 @@ function groupProjects(
     return projects;
   }
   return projects;
+}
+
+export function filterVisibleProjects(
+  projects: ProjectListItem[],
+  activeFilters: ProjectActiveFilters,
+  showClosed: boolean,
+): ProjectListItem[] {
+  let result = projects;
+  if (activeFilters.status) {
+    result = result.filter((p) => p.status === activeFilters.status);
+  }
+  if (activeFilters.health) {
+    result = result.filter((p) => p.health === activeFilters.health);
+  }
+  if (!showClosed) {
+    result = result.filter(
+      (p) => p.status !== "ARCHIVED" && p.status !== "COMPLETED",
+    );
+  }
+  return result;
 }
 
 function NewProjectTrigger({
@@ -230,8 +270,8 @@ export function ProjectsPage({
   const viewMode =
     VIEW_MODES.find((v) => v === searchParams.get("view")) ?? "list";
 
-  const filterStatus = searchParams.get("filterStatus") ?? undefined;
-  const filterHealth = searchParams.get("filterHealth") ?? undefined;
+  const filterStatus = STATUS_OPTIONS.find((s) => s === searchParams.get("filterStatus"));
+  const filterHealth = HEALTH_OPTIONS.find((h) => h === searchParams.get("filterHealth"));
   const filterLead = searchParams.get("filterLead") ?? undefined;
 
   const activeFilters: ProjectActiveFilters = useMemo(
@@ -291,8 +331,6 @@ export function ProjectsPage({
     });
   }, [updateParams]);
 
-  const apiStatus =
-    activeFilters.status ?? (prefs.showClosed ? undefined : undefined);
 
   const {
     data,
@@ -306,14 +344,16 @@ export function ProjectsPage({
   } = useInfiniteProjects({
     limit: viewMode === "grid" ? 12 : 25,
     search: debouncedSearch || undefined,
-    status: apiStatus as
-      | "ALL"
-      | "ACTIVE"
-      | "COMPLETED"
-      | "ARCHIVED"
-      | undefined,
+    status: activeFilters.status,
     ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
     ...(managedProductId !== undefined ? { managedProductId } : {}),
+  });
+
+  const pageState = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError,
+    error,
   });
 
   const handleRetry = useCallback(() => {
@@ -338,19 +378,11 @@ export function ProjectsPage({
   }, [activeFilters.lead, allProjects]);
 
   const visibleProjects = useMemo(() => {
-    let result = allProjects;
-    if (activeFilters.status) {
-      result = result.filter((p) => p.status === activeFilters.status);
-    }
-    if (!prefs.showClosed) {
-      result = result.filter(
-        (p) => p.status !== "ARCHIVED" && p.status !== "COMPLETED",
-      );
-    }
+    let result = filterVisibleProjects(allProjects, activeFilters, prefs.showClosed);
     result = groupProjects(result, activeGroup);
     result = sortProjects(result, prefs.orderBy, prefs.orderDir);
     return result;
-  }, [allProjects, activeFilters.status, prefs, activeGroup]);
+  }, [allProjects, activeFilters, prefs, activeGroup]);
 
   const hasFiltersOrSearch =
     Boolean(debouncedSearch) || Object.values(activeFilters).some(Boolean);
@@ -404,21 +436,15 @@ export function ProjectsPage({
             />
           </PmSection>
 
-          {isLoading ? (
-            viewMode === "grid" ? (
-              <GridSkeleton />
-            ) : (
-              <ListSkeleton />
-            )
-          ) : isError ? (
-            <PmPanel className="flex flex-1 items-center justify-center">
-              <ErrorState
-                title="Couldn't load projects"
-                description={getErrorMessage(error)}
-                onRetry={handleRetry}
-                className="border-0 bg-transparent"
-              />
-            </PmPanel>
+          {pageState.kind !== "ready" ? (
+            <PageState
+              resolution={pageState}
+              loading={viewMode === "grid" ? <GridSkeleton /> : <ListSkeleton />}
+              onRetry={handleRetry}
+              className="flex-1"
+            >
+              {null}
+            </PageState>
           ) : allProjects.length === 0 && !hasFiltersOrSearch ? (
             <ProjectsEmptyState onCreate={handleOpenCreate} />
           ) : visibleProjects.length === 0 ? (

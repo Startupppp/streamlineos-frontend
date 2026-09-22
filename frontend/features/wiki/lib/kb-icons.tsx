@@ -41,7 +41,6 @@ import {
 import {
   Building2,
   Clock,
-  Database,
   FileDown,
   History,
   Image as ImageIcon,
@@ -166,7 +165,6 @@ export const KbPanelRightCloseIcon = createLucideIcon(PanelRightClose);
 export const KbImageIcon = createLucideIcon(ImageIcon);
 export const KbSmileIcon = createLucideIcon(Smile);
 export const KbBuilding2Icon = createLucideIcon(Building2);
-export const KbDatabaseIcon = createLucideIcon(Database);
 export const KbLink2Icon = createLucideIcon(Link2);
 export const KbUnlockIcon = createLucideIcon(Unlock);
 export const KbFileDownIcon = createLucideIcon(FileDown);

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useState, useCallback } from "react";
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Bot, ExternalLink, GitBranch } from "lucide-react";
@@ -106,7 +106,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
     resolver: zodResolver(gitConnectionSchema),
     defaultValues: { provider: "github", repoUrl: "", repoName: "" },
   });
-  useRegisterBuildDirtyState(dialogOpen && gitForm.formState.isDirty);
+  useRegisterDirtyState(dialogOpen && gitForm.formState.isDirty);
 
   const selectedProvider = gitForm.watch("provider");
 

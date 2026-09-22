@@ -1,14 +1,13 @@
-﻿"use client";
-
-import { use } from "react";
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { FormDetailPage } from "@/features/build/forms/form-detail-page";
 
 interface PageProps {
   params: Promise<{ projectId: string; formId: string }>;
 }
 
-export default function FormDetailRoute({ params }: PageProps) {
-  const { projectId, formId } = use(params);
+export default async function FormDetailRoute({ params }: PageProps) {
+  await enforceRouteAccess("/build/[projectId]/forms/[formId]");
+  const { projectId, formId } = await params;
   return (
     <FormDetailPage
       projectId={parseInt(projectId, 10)}

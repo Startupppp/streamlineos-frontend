@@ -14,26 +14,26 @@ export default async function PmWorkspaceLayout({
   children,
   params,
 }: PmWorkspaceLayoutProps) {
-  await enforceRouteAccess("/build/workspaces");
+  await enforceRouteAccess("/build/workspaces/[pmWorkspaceId]");
   const { pmWorkspaceId } = await params;
   const session = await getServerAuth();
   const token = session?.backendJwt;
-  if (!token) {
-    redirect("/build");
-  }
 
-  const response = await fetch(`${BACKEND_URL}/build/workspaces/${pmWorkspaceId}`, {
-    headers: withCorrelation(new Headers({ Authorization: `Bearer ${token}` })),
-    cache: "no-store",
-  });
+  if (!token) redirect("/build");
 
-  if (response.status === 404) {
-    notFound();
-  }
+  const response = await fetch(
+    `${BACKEND_URL}/build/workspaces/${pmWorkspaceId}`,
+    {
+      headers: withCorrelation(
+        new Headers({ Authorization: `Bearer ${token}` }),
+      ),
+      cache: "no-store",
+    },
+  );
 
-  if (!response.ok) {
-    redirect("/build");
-  }
+  if (response.status === 404) notFound();
+
+  if (!response.ok) redirect("/build");
 
   return children;
 }

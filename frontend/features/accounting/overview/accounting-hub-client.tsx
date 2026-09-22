@@ -5,8 +5,9 @@ import { Banknote, Receipt, TrendingUp, Users } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { ErrorState, PageState } from "@/components/shared";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useAccountingBook } from "@/hooks/api/accounting/ledger";
 import {
   useAgingReport,
@@ -21,13 +22,19 @@ import { ReconciliationBanner } from "@/features/accounting/reports";
 import { HubQuickLinks } from "./hub-quick-links";
 
 export function AccountingHubClient() {
-  const canRead = useCan("accounting:read");
   const canReadReports = useCan("accounting:reports:read");
 
   const today = getTodayString();
   const monthStart = formatDateOnly(startOfMonth(new Date()));
 
   const book = useAccountingBook();
+
+  const pageState = usePageState({
+    permission: "accounting:read",
+    isLoading: book.isLoading,
+    isError: book.isError,
+    error: book.error,
+  });
   const enabled = !!book.data && !book.isError;
 
   const cashFlow = useCashFlowReport(
@@ -65,15 +72,22 @@ export function AccountingHubClient() {
     trialBalance.refetch();
   }
 
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper title="Accounting" variant="display">
+        <PageState resolution={pageState} loading={null} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+
   return (
     <PageWrapper
       title="Accounting"
       subtitle="Where the money is, who owes what, and whether this month made a profit."
       variant="display"
     >
-      {!canRead ? (
-        <NoPermissionState permission="accounting:read" />
-      ) : book.isLoading ? (
+      {book.isLoading ? (
         <StatCardGridSkeleton cols={4} />
       ) : !enabled ? (
         <EmptyState

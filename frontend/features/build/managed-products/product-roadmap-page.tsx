@@ -4,19 +4,17 @@ import { useCallback, useMemo, useState } from "react";
 import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/build/roadmap";
 import type { RoadmapItem, RoadmapStatus } from "@/types/projects";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { usePermissionGate } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { resolveGate } from "@/lib/rbac/gate";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { cn } from "@/lib/utils";
 import { ROADMAP_COLUMNS } from "@/features/build/roadmap/roadmap-constants";
 import { RoadmapItemCard } from "@/features/build/roadmap/roadmap-item-card";
@@ -65,7 +63,6 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
     [managedProductId, debouncedSearch, currentCursor],
   );
 
-  const viewGate = usePermissionGate("build:roadmap:view");
   const { data, isLoading, isError, error, refetch } = useRoadmapItems(filters);
   const deleteItem = useDeleteRoadmapItem();
 
@@ -79,10 +76,11 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
     return map;
   }, [data]);
 
-  const gate = resolveGate({
-    access: viewGate.pending ? "loading" : viewGate.denied ? "denied" : "granted",
+  const resolution = usePageState({
+    permission: "build:roadmap:view",
     isLoading,
     isError,
+    error,
     isEmpty: (data?.data ?? []).length === 0 && cursorIdx === 0,
   });
 
@@ -133,7 +131,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
       title="Roadmap"
       subtitle="Product roadmap items"
       actions={
-        gate !== "denied" ? (
+        resolution.kind !== "denied" ? (
           <Button size="sm" onClick={handleOpenCreate}>New Item</Button>
         ) : undefined
       }
@@ -145,21 +143,21 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-4">
-          {gate === "loading" ? (
-            <RoadmapSkeleton />
-          ) : gate === "denied" ? (
-            <NoPermissionState permission="build:roadmap:view" className={PM_FILL_PANEL} />
-          ) : gate === "error" ? (
-            <ErrorState className={PM_FILL_PANEL} title="Couldn't load roadmap" description={getErrorMessage(error)} onRetry={handleRetry} />
-          ) : gate === "empty" ? (
-            <EmptyState
-              className={PM_FILL_PANEL}
-              illustration={<EmptyProjectsIllustration />}
-              title="No roadmap items yet"
-              description="Add items to plan what this product is working toward."
-              action={{ label: "Add roadmap item", onClick: handleOpenCreate }}
-            />
-          ) : (
+          <PageState
+            resolution={resolution}
+            loading={<RoadmapSkeleton />}
+            empty={
+              <EmptyState
+                className={PM_FILL_PANEL}
+                illustration={<EmptyProjectsIllustration />}
+                title="No roadmap items yet"
+                description="Add items to plan what this product is working toward."
+                action={{ label: "Add roadmap item", onClick: handleOpenCreate }}
+              />
+            }
+            onRetry={handleRetry}
+            className={PM_FILL_PANEL}
+          >
             <div className="flex min-h-0 flex-1 flex-col gap-2">
               <div className="grid min-h-0 flex-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
                 {ROADMAP_COLUMNS.map((col) => (
@@ -189,7 +187,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
                 </div>
               ) : null}
             </div>
-          )}
+          </PageState>
         </PmSection>
       </PmPageShell>
 

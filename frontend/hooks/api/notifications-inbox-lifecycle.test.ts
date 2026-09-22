@@ -148,7 +148,7 @@ describe("lifecycle mutation rollback on error", () => {
     const { result } = renderHook(() => useSnoozeNotification(), { wrapper: wrapper(client) });
 
     await act(async () => {
-      result.current.mutate({ id: 205, snoozedUntil: "2026-12-31T00:00:00.000Z" });
+      result.current.mutate({ notificationId: 205, snoozedUntil: "2026-12-31T00:00:00.000Z" });
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
 

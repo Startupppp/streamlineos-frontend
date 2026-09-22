@@ -15,7 +15,7 @@ export default function DocumentReviewLoading() {
         </div>
       }
     >
-      <DataTableSkeleton rows={12} columns={4} className="flex-1 min-h-0" />
+      <DataTableSkeleton rows={12} headers={["Employee", "Progress", "Status", "Actions"]} className="flex-1 min-h-0" />
     </PageWrapper>
   );
 }

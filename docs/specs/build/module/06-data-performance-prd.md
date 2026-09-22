@@ -237,10 +237,36 @@ Every cache has a writer matrix:
   when a bounded patch is possible.
 - [ ] **BLD-06-033** access, client grant, approval, payment, or agent policy
   cache never authorizes an atomic write.
-- [ ] **BLD-06-034** revoked access and organization switch remove stale data
+- [x] **BLD-06-034** revoked access and organization switch remove stale data
   before rendering.
-- [ ] **BLD-06-035** cache failure degrades to the database without returning
+  **Closed — unit proof, executed 2026-09-21 (21 tests / 2 suites).**
+  Organization switch: `frontend/lib/query-scope-isolation.test.tsx` asserts data
+  written under Org A is not readable under Org B without an explicit `clear()`,
+  backed by the build-failing gate `frontend/scripts/check-query-scope.mjs` (green in
+  the 41-gate battery).
+  Revocation: `frontend/hooks/api/build/build-revocation-guard.test.ts` pins the
+  ordering clause specifically — "the entries field is already pruned before
+  `onPrune` fires, so the sidebar never renders the revoked entry" — which is what
+  *before rendering* means here. Server side, `projects-tickets-detail-revocation.spec.ts`.
+  Two caveats, neither in this criterion's scope: an in-flight switch is not fenced
+  (`frontend/CLAUDE.md:26`), open at BSN-04-A07; and `hooks/api/entitlements.ts:21-25`
+  keys on a different prefix from the one the access listener invalidates, with
+  `staleTime: 900_000`, so a plan change lags a sibling tab — open at BSN-04-A08.
+- [x] **BLD-06-035** cache failure degrades to the database without returning
   cross-scope or falsely fresh data.
+  **Closed — unit proof, executed 2026-09-21 (part of a 4-suite / 32-test batch).**
+  `backend/src/common/cache/cache-degradation.spec.ts` passed, covering all three
+  clauses of this criterion by name: degrades to source under outage, does not
+  memoise beyond the window, "never memoises a null, so a denial cannot outlive the
+  grant that ends it", and "the outage memo cannot answer an authorization
+  question". `cache-circuit-breaker.ts` is the mechanism.
+  Scope stated honestly: this is proven at the `CacheService` layer that both Build
+  caches use, not per Build namespace. The residual cross-scope risk is the **key
+  shape**, not the degradation path — the five `projects:{burnup,velocity,cycle-time,
+  lead-time,critical-path}` keys (`core/projects-reports.service.ts:92,225,296,330,366`)
+  carry no actor, DataScope or permissions-version segment, which 06A's Reports row
+  requires. That stays open at BLD-06-033, and their absence from
+  `CACHE_INVALIDATION_MATRIX` stays open at BLD-06-030.
 
 ## Performance Budgets
 

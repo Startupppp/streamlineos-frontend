@@ -6,7 +6,7 @@ import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
-import type { ApAgingPartyRow } from "@/types/accounting-ap-payments";
+import type { ApAgingPartyRow } from "@/types/accounting/accounting-ap-payments";
 import { AGING_BUCKET_LABELS } from "../lib/ap-labels";
 
 interface VendorAgingSheetProps {
@@ -52,11 +52,15 @@ export function VendorAgingSheet({
                     href={`/accounting/purchase-bills/${item.documentId}`}
                     className="block truncate text-sm font-medium text-status-info-ink hover:underline"
                   >
-                    {item.vendorDocumentNumber ?? item.documentNumber ?? "Unnumbered"}
+                    {item.vendorDocumentNumber ??
+                      item.documentNumber ??
+                      "Unnumbered"}
                   </Link>
                   <p className="text-dense text-muted-foreground">
                     Dated {formatShortDate(item.issueDate)}
-                    {item.dueDate ? ` · due ${formatShortDate(item.dueDate)}` : ""}
+                    {item.dueDate
+                      ? ` · due ${formatShortDate(item.dueDate)}`
+                      : ""}
                   </p>
                   <div className="mt-1">
                     <SemanticBadge

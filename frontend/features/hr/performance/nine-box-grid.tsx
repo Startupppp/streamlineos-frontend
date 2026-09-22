@@ -11,6 +11,8 @@ import {
   type NamedUser,
 } from "@/lib/person-display";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 import { numericSelectChange } from "@/lib/numeric-field";
 
@@ -34,8 +36,8 @@ const BOX_ORDER = [
 
 export function NineBoxGrid() {
   const [selectedCycleId, setSelectedCycleId] = useState<number>(0);
-  const { data: cycles = [] } = useReviewCycles();
-  const { data: entries = [] } = useNineBox(selectedCycleId);
+  const { data: cycles = [], isError: cyclesError, error: cyclesErrorData, refetch: refetchCycles } = useReviewCycles();
+  const { data: entries = [], isError: nineBoxError, error: nineBoxErrorData, refetch: refetchNineBox } = useNineBox(selectedCycleId);
   const { data: membersData } = useOrgMembers(1, 200);
 
   const memberById = useMemo(() => {
@@ -59,6 +61,28 @@ export function NineBoxGrid() {
     const cell = grouped.get(entry.box) ?? [];
     cell.push(entry);
     grouped.set(entry.box, cell);
+  }
+
+  if (cyclesError) {
+    return (
+      <ErrorState
+        title="Couldn't load review cycles"
+        description={getErrorMessage(cyclesErrorData)}
+        onRetry={() => void refetchCycles()}
+        className="flex-1"
+      />
+    );
+  }
+
+  if (selectedCycleId > 0 && nineBoxError) {
+    return (
+      <ErrorState
+        title="Couldn't load 9-box data"
+        description={getErrorMessage(nineBoxErrorData)}
+        onRetry={() => void refetchNineBox()}
+        className="flex-1"
+      />
+    );
   }
 
   return (

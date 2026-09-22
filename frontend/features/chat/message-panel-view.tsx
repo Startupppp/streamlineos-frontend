@@ -215,7 +215,7 @@ export function MessagePanelView({
           <button
             type="button"
             onClick={onBack}
-            className="rounded-lg p-1.5 hover:bg-muted/50 md:hidden"
+            className="rounded-lg p-1.5 hover:bg-muted/50 lg:hidden"
             aria-label="Back to channels"
           >
             <ArrowLeft className="size-4" />

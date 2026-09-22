@@ -29,6 +29,7 @@ import {
   encodeNestedAccordionValue,
   buildGroupFieldPatch,
   applyLocalPatch,
+  useItemSelectHandler,
 } from "./list-view-shared";
 import { compareByRank, computeOptimisticRank } from "./kanban-board-utils";
 import { ListViewItem } from "./list-view-item";
@@ -48,6 +49,7 @@ export const ListView = memo(function ListView({
   projectStatuses,
   displayOptions,
   showEmptyRows,
+  selection,
 }: ListViewProps) {
   const hasRowBy = !!rowBy && rowBy !== "none";
   const shouldReduceMotion = useReducedMotion();
@@ -66,6 +68,8 @@ export const ListView = memo(function ListView({
   const handleShowMoreFlat = useCallback(() => {
     setVisibleFlatCount((count) => count + LIST_RENDER_PAGE_SIZE);
   }, []);
+
+  const handleItemSelect = useItemSelectHandler(selection);
 
   const isDnDMode = canUpdate && (groupBy !== "assignee" || canAssign) && !hasRowBy && !!groupBy && groupBy !== "none" && DROPPABLE_MODES.has(groupBy) && projectId != null;
 
@@ -238,6 +242,7 @@ export const ListView = memo(function ListView({
                           projectStatuses={projectStatuses}
                           displayOptions={displayOptions}
                           onTicketClick={onTicketClick}
+                          selection={selection}
                         />
                       ))}
                     </Accordion>
@@ -290,6 +295,7 @@ export const ListView = memo(function ListView({
                     displayOptions={displayOptions}
                     onTicketClick={onTicketClick}
                     shouldReduceMotion={shouldReduceMotion}
+                    selection={selection}
                   />
                 </AccordionContent>
               </AccordionItem>
@@ -334,6 +340,7 @@ export const ListView = memo(function ListView({
                   projectStatuses={projectStatuses}
                   displayOptions={displayOptions}
                   onTicketClick={onTicketClick}
+                  selection={selection}
                 />
               </AccordionContent>
             </AccordionItem>
@@ -351,6 +358,8 @@ export const ListView = memo(function ListView({
                 projectStatuses={projectStatuses}
                 onClick={onTicketClick}
                 displayOptions={displayOptions}
+                isSelected={selection?.selected.has(ticket.id)}
+                onSelect={selection ? handleItemSelect : undefined}
               />
             ))}
           </div>

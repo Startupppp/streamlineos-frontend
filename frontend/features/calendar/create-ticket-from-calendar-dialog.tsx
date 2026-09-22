@@ -122,7 +122,8 @@ export function CreateTicketFromCalendarDialog({
         toast.success("Ticket created", {
           action: {
             label: "View ticket",
-            onClick: () => router.push(`/build/${targetProjectId}?ticket=${ticket.id}`),
+            onClick: () =>
+              router.push(`/build/${targetProjectId}/issues?ticket=${ticket.id}`),
           },
         });
         handleOpenChange(false);

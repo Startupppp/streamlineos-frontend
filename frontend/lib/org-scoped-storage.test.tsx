@@ -83,7 +83,7 @@ const PIN_SCOPE_TOOL_IDS = ["project-triage", "project-analytics"];
 describe("useBuildNavPins — cross-org isolation", () => {
   it("value written under Org A is invisible under Org B", () => {
     const { result: resultA } = renderHook(
-      () => useBuildNavPins(PIN_SCOPE_TOOL_IDS),
+      () => useBuildNavPins(PIN_SCOPE_TOOL_IDS, false),
       { wrapper: wrapWith(SCOPE_A) },
     );
 
@@ -93,7 +93,7 @@ describe("useBuildNavPins — cross-org isolation", () => {
     expect(resultA.current.isPinned("project-triage")).toBe(true);
 
     const { result: resultB } = renderHook(
-      () => useBuildNavPins(PIN_SCOPE_TOOL_IDS),
+      () => useBuildNavPins(PIN_SCOPE_TOOL_IDS, false),
       { wrapper: wrapWith(SCOPE_B) },
     );
     expect(resultB.current.isPinned("project-triage")).toBe(false);
@@ -101,7 +101,7 @@ describe("useBuildNavPins — cross-org isolation", () => {
 
   it("module-level cache does not leak: Org B returns default after Org A writes", () => {
     const { result: resultA, unmount: unmountA } = renderHook(
-      () => useBuildNavPins(PIN_SCOPE_TOOL_IDS),
+      () => useBuildNavPins(PIN_SCOPE_TOOL_IDS, false),
       { wrapper: wrapWith(SCOPE_A) },
     );
 
@@ -112,7 +112,7 @@ describe("useBuildNavPins — cross-org isolation", () => {
     unmountA();
 
     const { result: resultB } = renderHook(
-      () => useBuildNavPins(PIN_SCOPE_TOOL_IDS),
+      () => useBuildNavPins(PIN_SCOPE_TOOL_IDS, false),
       { wrapper: wrapWith(SCOPE_B) },
     );
     expect(resultB.current.isPinned("project-analytics")).toBe(false);

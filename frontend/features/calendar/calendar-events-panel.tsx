@@ -96,17 +96,18 @@ function PanelVirtualRow({
         aria-label={event.title}
         onClick={handleSelectEvent}
         className={cn(
-          "w-full rounded-lg border border-l-4 bg-card p-3 text-left shadow-xs transition-colors hover:bg-muted/40",
+          /* impeccable-disable side-tab -- Colored left border is intentional calendar event category indicator (standard pattern in Google Calendar, Outlook) */
+          "w-full rounded-lg border border-l-4 bg-card p-3 text-left shadow-xs transition-colors hover:bg-muted/40 overflow-hidden min-w-0",
         )}
         style={{ borderLeftColor: color }}
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-2 min-w-0">
+          <div className="min-w-0 flex-1 overflow-hidden">
             <TruncatedText
               text={event.title}
               className="text-sm font-semibold text-foreground"
             />
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p className="mt-0.5 text-xs text-muted-foreground truncate">
               {event.allDay
                 ? "All day"
                 : formatEventTimeRange(event.start, event.end, event.timezone)}
@@ -118,7 +119,7 @@ function PanelVirtualRow({
               />
             ) : null}
           </div>
-          <span className="shrink-0 text-micro uppercase tracking-wide text-muted-foreground">
+          <span className="shrink-0 text-micro uppercase tracking-wide text-muted-foreground whitespace-nowrap">
             {event.category}
           </span>
         </div>

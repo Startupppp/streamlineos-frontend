@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { AlertCircle, CheckCircle, Search } from "lucide-react";
 import { useExitVerification } from "@/hooks/api/hr/enterprise-ops-identity";
 
@@ -12,7 +14,7 @@ export function ExitVerificationView() {
   const [userId, setUserId] = useState("");
   const [queryId, setQueryId] = useState("");
 
-  const { data, isLoading } = useExitVerification(queryId);
+  const { data, isLoading, isError, error, refetch } = useExitVerification(queryId);
 
   function handleSearch() {
     setQueryId(userId.trim());
@@ -44,7 +46,7 @@ export function ExitVerificationView() {
         <div className="animate-pulse h-16 bg-muted rounded-xl" />
       )}
 
-      {!queryId && !isLoading && (
+      {!queryId && !isLoading && !isError && (
         <EmptyState
           illustrationPreset="security"
           title="Select an employee to verify"
@@ -53,7 +55,16 @@ export function ExitVerificationView() {
         />
       )}
 
-      {data && !isLoading && (
+      {isError && queryId && (
+        <ErrorState
+          title="Couldn't load exit verification"
+          description={getErrorMessage(error)}
+          onRetry={refetch}
+          compact
+        />
+      )}
+
+      {data && !isLoading && !isError && (
         <div className={`rounded-xl border p-4 ${data.hasUnverifiedRevokes ? "border-status-danger-rule bg-status-danger-surface" : "border-status-success-rule bg-status-success-surface"}`}>
           <div className="flex items-center gap-2 mb-3">
             {data.hasUnverifiedRevokes ? (

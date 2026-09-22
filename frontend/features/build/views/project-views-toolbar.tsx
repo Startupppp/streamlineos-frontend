@@ -1,11 +1,12 @@
 ﻿"use client";
 
 import { useCallback } from "react";
-import { X } from "lucide-react";
+import { Save, X } from "lucide-react";
 import { BookmarkIcon } from "@animateicons/react/lucide";
 import type { IconHandle } from "@animateicons/react";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
 import { DisplayOptionsPanel } from "@/features/build/views/display-options-panel";
 import { ViewSwitcher, type ViewType } from "@/features/build/views/view-switcher";
@@ -62,6 +63,8 @@ interface ProjectViewsToolbarProps {
   activeViewName?: string | null;
   onClearView?: () => void;
   onOpenSaveView: () => void;
+  onUpdateView?: () => void;
+  isUpdatingView?: boolean;
   projectId: number;
   members: Member[];
   statuses?: StatusOption[];
@@ -84,6 +87,8 @@ export function ProjectViewsToolbar({
   activeViewName,
   onClearView,
   onOpenSaveView,
+  onUpdateView,
+  isUpdatingView = false,
   projectId,
   members,
   statuses,
@@ -134,6 +139,22 @@ export function ProjectViewsToolbar({
             <X className="h-3 w-3" />
           </button>
         </Badge>
+      ) : null}
+
+      {activeViewName && onUpdateView && canManageViews ? (
+        <LoadingButton
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-6 shrink-0 gap-1 px-2 text-xs"
+          isPending={isUpdatingView}
+          loadingText="Updating…"
+          onClick={onUpdateView}
+          aria-label="Update view from current filters"
+        >
+          <Save className="h-3 w-3" />
+          Update
+        </LoadingButton>
       ) : null}
     </div>
   );

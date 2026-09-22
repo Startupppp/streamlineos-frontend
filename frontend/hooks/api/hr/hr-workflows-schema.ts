@@ -13,12 +13,7 @@ import type {
   PaginatedResult,
   CursorPaginatedResult,
 } from "@/types/hr/workflows";
-
-const cursorPagination = z.object({
-  limit: z.number().int(),
-  hasMore: z.boolean(),
-  nextCursor: z.string().nullable(),
-});
+import { cursorPaginationContract } from "@/hooks/api/cursor-page-schema";
 
 const workflowObjectTypeContract = z.custom<HrWorkflowObjectType>((v) => typeof v === "string");
 const workflowStatusContract = z.custom<HrWorkflowStatus>((v) => typeof v === "string");
@@ -61,10 +56,8 @@ const workflowDefinitionContract = z.object({
 export const workflowDefinitionWithStepsContract = z.custom<HrWorkflowDefinition>((v) => typeof v === "object" && v !== null);
 
 export const workflowDefinitionListContract = z.object({
-  data: z.array(workflowDefinitionContract.extend({ stepCount: z.number().int().optional() })),
-  page: z.number().int(),
-  limit: z.number().int(),
-  total: z.number().int().optional(),
+  data: z.array(workflowDefinitionContract.extend({ stepCount: z.number().int() })),
+  pagination: cursorPaginationContract,
 });
 
 const simulateStepContract = z.object({

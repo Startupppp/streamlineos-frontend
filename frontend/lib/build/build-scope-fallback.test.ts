@@ -1,29 +1,87 @@
 import { resolveBuildScopeFallback } from "./build-scope-fallback";
-import { ORGANIZATION_BUILD_SCOPE, resolveBuildScope } from "./build-scope";
+import type { BuildScope } from "./build-scope";
 
-const projectScope = resolveBuildScope("/build/42");
-const productScope = resolveBuildScope("/build/managed-products/7");
-const workspaceScope = resolveBuildScope("/build/workspaces/ws-1");
+const PROJECT_SCOPE: BuildScope = {
+  type: "project",
+  pmWorkspaceId: null,
+  managedProductId: null,
+  projectId: 42,
+  basePath: "/build/42",
+};
+
+const WORKSPACE_SCOPE: BuildScope = {
+  type: "workspace",
+  pmWorkspaceId: "ws-1",
+  managedProductId: null,
+  projectId: null,
+  basePath: "/build/workspaces/ws-1",
+};
+
+const ORGANIZATION_SCOPE: BuildScope = {
+  type: "organization",
+  pmWorkspaceId: null,
+  managedProductId: null,
+  projectId: null,
+  basePath: "/build",
+};
 
 describe("resolveBuildScopeFallback", () => {
-  it("leaves an accessible scope alone", () => {
+  it("stays when the scope is still accessible, regardless of every other input", () => {
     expect(
       resolveBuildScopeFallback({
-        scope: projectScope,
+        scope: PROJECT_SCOPE,
         isInaccessible: false,
-        hasAnyBuildAccess: true,
+        hasAnyBuildAccess: false,
         accessibleParent: null,
+        organizationHref: null,
       }),
     ).toEqual({ kind: "stay" });
   });
 
-  it("offers the parent product when a linked project is lost", () => {
+  it("stays for an inaccessible organization scope when the caller still has any build access", () => {
     expect(
       resolveBuildScopeFallback({
-        scope: projectScope,
+        scope: ORGANIZATION_SCOPE,
+        isInaccessible: true,
+        hasAnyBuildAccess: true,
+        accessibleParent: null,
+        organizationHref: null,
+      }),
+    ).toEqual({ kind: "stay" });
+  });
+
+  it("gives up with no-access for an inaccessible organization scope when the caller has no build access at all", () => {
+    expect(
+      resolveBuildScopeFallback({
+        scope: ORGANIZATION_SCOPE,
+        isInaccessible: true,
+        hasAnyBuildAccess: false,
+        accessibleParent: null,
+        organizationHref: null,
+      }),
+    ).toEqual({ kind: "no-access" });
+  });
+
+  it("gives up with no-access for an inaccessible non-organization scope when the caller has no build access at all", () => {
+    expect(
+      resolveBuildScopeFallback({
+        scope: PROJECT_SCOPE,
+        isInaccessible: true,
+        hasAnyBuildAccess: false,
+        accessibleParent: null,
+        organizationHref: "/build/command-center",
+      }),
+    ).toEqual({ kind: "no-access" });
+  });
+
+  it("recovers to the accessible parent product ahead of the organization destination", () => {
+    expect(
+      resolveBuildScopeFallback({
+        scope: PROJECT_SCOPE,
         isInaccessible: true,
         hasAnyBuildAccess: true,
         accessibleParent: { type: "product", id: "7" },
+        organizationHref: "/build/command-center",
       }),
     ).toEqual({
       kind: "recover",
@@ -32,54 +90,30 @@ describe("resolveBuildScopeFallback", () => {
     });
   });
 
-  it("falls back to All of Build when a workspace is lost, because a workspace has no parent scope to offer", () => {
+  it("recovers to the accessible parent workspace ahead of the organization destination", () => {
     expect(
       resolveBuildScopeFallback({
-        scope: workspaceScope,
+        scope: WORKSPACE_SCOPE,
         isInaccessible: true,
         hasAnyBuildAccess: true,
-        accessibleParent: null,
+        accessibleParent: { type: "workspace", id: "ws-9" },
+        organizationHref: "/build/command-center",
       }),
     ).toEqual({
       kind: "recover",
-      href: "/build/command-center",
-      label: "Go to All of Build",
-    });
-  });
-
-  it("offers no recovery when a workspace is lost and no Build access remains", () => {
-    expect(
-      resolveBuildScopeFallback({
-        scope: workspaceScope,
-        isInaccessible: true,
-        hasAnyBuildAccess: false,
-        accessibleParent: null,
-      }),
-    ).toEqual({ kind: "no-access" });
-  });
-
-  it("offers the parent workspace when a standalone project is lost", () => {
-    expect(
-      resolveBuildScopeFallback({
-        scope: projectScope,
-        isInaccessible: true,
-        hasAnyBuildAccess: true,
-        accessibleParent: { type: "workspace", id: "ws-1" },
-      }),
-    ).toEqual({
-      kind: "recover",
-      href: "/build/workspaces/ws-1",
+      href: "/build/workspaces/ws-9",
       label: "Go to the parent workspace",
     });
   });
 
-  it("falls back to All of Build when no parent is accessible", () => {
+  it("BSN-04-014: promotes the first authorized organization destination when command-center itself is authorized", () => {
     expect(
       resolveBuildScopeFallback({
-        scope: productScope,
+        scope: PROJECT_SCOPE,
         isInaccessible: true,
         hasAnyBuildAccess: true,
         accessibleParent: null,
+        organizationHref: "/build/command-center",
       }),
     ).toEqual({
       kind: "recover",
@@ -88,38 +122,31 @@ describe("resolveBuildScopeFallback", () => {
     });
   });
 
-  it("never invents a parent above the organization root", () => {
+  it("BSN-04-014: promotes a non-command-center organization destination instead of the hardcoded command-center route when build:view is not held", () => {
     expect(
       resolveBuildScopeFallback({
-        scope: ORGANIZATION_BUILD_SCOPE,
-        isInaccessible: true,
-        hasAnyBuildAccess: false,
-        accessibleParent: null,
-      }),
-    ).toEqual({ kind: "no-access" });
-  });
-
-  it("shows the empty state rather than a recovery link when the actor has zero Build access", () => {
-    for (const scope of [projectScope, productScope, workspaceScope]) {
-      expect(
-        resolveBuildScopeFallback({
-          scope,
-          isInaccessible: true,
-          hasAnyBuildAccess: false,
-          accessibleParent: { type: "workspace", id: "ws-1" },
-        }),
-      ).toEqual({ kind: "no-access" });
-    }
-  });
-
-  it("keeps an inaccessible organization scope in place while any Build access remains", () => {
-    expect(
-      resolveBuildScopeFallback({
-        scope: ORGANIZATION_BUILD_SCOPE,
+        scope: PROJECT_SCOPE,
         isInaccessible: true,
         hasAnyBuildAccess: true,
         accessibleParent: null,
+        organizationHref: "/build/approvals",
       }),
-    ).toEqual({ kind: "stay" });
+    ).toEqual({
+      kind: "recover",
+      href: "/build/approvals",
+      label: "Go to All of Build",
+    });
+  });
+
+  it("BSN-04-014: degrades to no-access instead of offering a dead command-center link when the organization model has no authorized destination", () => {
+    expect(
+      resolveBuildScopeFallback({
+        scope: PROJECT_SCOPE,
+        isInaccessible: true,
+        hasAnyBuildAccess: true,
+        accessibleParent: null,
+        organizationHref: null,
+      }),
+    ).toEqual({ kind: "no-access" });
   });
 });

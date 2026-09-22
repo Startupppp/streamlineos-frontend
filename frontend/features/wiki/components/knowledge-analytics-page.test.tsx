@@ -3,7 +3,16 @@ import type { ReactElement } from "react";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-const useCanState = jest.fn();
+const useAccess = jest.fn();
+const accessLoading = { data: undefined, isLoading: true };
+const accessGranted = {
+  data: { isOrgOwner: false, scopes: { "kb:analytics:view": "all" }, modules: {} },
+  isLoading: false,
+};
+const accessDenied = {
+  data: { isOrgOwner: false, scopes: {}, modules: {} },
+  isLoading: false,
+};
 const useKbAnalyticsOverview = jest.fn();
 const useKbNoResults = jest.fn();
 const usePageAnalytics = jest.fn();
@@ -15,7 +24,11 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
-  useCanState: (key: string) => useCanState(key),
+  useAccess: () => useAccess(),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
 }));
 
 jest.mock("@/hooks/api/kb", () => ({
@@ -61,7 +74,7 @@ function cancelled() {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  useCanState.mockReturnValue("granted");
+  useAccess.mockReturnValue(accessGranted);
   useKbAnalyticsOverview.mockReturnValue(settled(OVERVIEW));
   useKbNoResults.mockReturnValue(settled([]));
   usePageAnalytics.mockReturnValue(settled([]));
@@ -70,7 +83,7 @@ beforeEach(() => {
 
 describe("KnowledgeAnalyticsPage — access is three-valued, not a boolean", () => {
   it("shows the skeleton while the access snapshot is still in flight, never an access denial", () => {
-    useCanState.mockReturnValue("loading");
+    useAccess.mockReturnValue(accessLoading);
 
     render(<KnowledgeAnalyticsPage />);
 
@@ -79,7 +92,7 @@ describe("KnowledgeAnalyticsPage — access is three-valued, not a boolean", () 
   });
 
   it("says denied only once the snapshot has actually said no", () => {
-    useCanState.mockReturnValue("denied");
+    useAccess.mockReturnValue(accessDenied);
 
     render(<KnowledgeAnalyticsPage />);
 

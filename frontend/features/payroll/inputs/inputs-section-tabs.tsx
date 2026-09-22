@@ -14,6 +14,8 @@ import {
 } from "@/hooks/api/payroll/payroll-inputs";
 import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import {
   attendanceColumns,
@@ -59,21 +61,33 @@ const EMPTY_NO_ADJ: ReactNode = (
 
 function AttendanceTab({ periodId }: { periodId: number }) {
   const pager = useCursorPager();
-  const { data, isLoading, isFetching } = useAttendanceSnapshot(periodId, {
+  const { data, isLoading, isFetching, isError, error, refetch } = useAttendanceSnapshot(periodId, {
     cursor: pager.cursor,
     limit: 25,
   });
+  function handleRetry() {
+    void refetch();
+  }
   const rows = data?.data ?? [];
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <DataTable
-        className="flex-1 min-h-0"
-        data={rows}
-        columns={attendanceColumns}
-        getRowKey={(row) => row.id}
-        isLoading={isLoading}
-        emptyState={EMPTY_NO_DATA}
-      />
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load attendance inputs"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <DataTable
+          className="flex-1 min-h-0"
+          data={rows}
+          columns={attendanceColumns}
+          getRowKey={(row) => row.id}
+          isLoading={isLoading}
+          emptyState={EMPTY_NO_DATA}
+        />
+      )}
       {data && (pager.page > 1 || data.pagination.hasMore) ? (
         <CursorPageControls
           page={pager.page}
@@ -89,21 +103,33 @@ function AttendanceTab({ periodId }: { periodId: number }) {
 
 function LeaveTab({ periodId }: { periodId: number }) {
   const pager = useCursorPager();
-  const { data, isLoading, isFetching } = useLeaveSnapshot(periodId, {
+  const { data, isLoading, isFetching, isError, error, refetch } = useLeaveSnapshot(periodId, {
     cursor: pager.cursor,
     limit: 25,
   });
+  function handleRetry() {
+    void refetch();
+  }
   const rows = data?.data ?? [];
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <DataTable
-        className="flex-1 min-h-0"
-        data={rows}
-        columns={leaveColumns}
-        getRowKey={(row) => row.id}
-        isLoading={isLoading}
-        emptyState={EMPTY_NO_DATA}
-      />
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load leave inputs"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <DataTable
+          className="flex-1 min-h-0"
+          data={rows}
+          columns={leaveColumns}
+          getRowKey={(row) => row.id}
+          isLoading={isLoading}
+          emptyState={EMPTY_NO_DATA}
+        />
+      )}
       {data && (pager.page > 1 || data.pagination.hasMore) ? (
         <CursorPageControls
           page={pager.page}
@@ -119,21 +145,33 @@ function LeaveTab({ periodId }: { periodId: number }) {
 
 function OvertimeTab({ periodId }: { periodId: number }) {
   const pager = useCursorPager();
-  const { data, isLoading, isFetching } = useOvertimeSnapshot(periodId, {
+  const { data, isLoading, isFetching, isError, error, refetch } = useOvertimeSnapshot(periodId, {
     cursor: pager.cursor,
     limit: 25,
   });
+  function handleRetry() {
+    void refetch();
+  }
   const rows = data?.data ?? [];
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <DataTable
-        className="flex-1 min-h-0"
-        data={rows}
-        columns={overtimeColumns}
-        getRowKey={(row) => row.id}
-        isLoading={isLoading}
-        emptyState={EMPTY_NO_OT}
-      />
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load overtime inputs"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <DataTable
+          className="flex-1 min-h-0"
+          data={rows}
+          columns={overtimeColumns}
+          getRowKey={(row) => row.id}
+          isLoading={isLoading}
+          emptyState={EMPTY_NO_OT}
+        />
+      )}
       {data && (pager.page > 1 || data.pagination.hasMore) ? (
         <CursorPageControls
           page={pager.page}
@@ -149,21 +187,33 @@ function OvertimeTab({ periodId }: { periodId: number }) {
 
 function ReimbursementsTab({ periodId }: { periodId: number }) {
   const pager = useCursorPager();
-  const { data, isLoading, isFetching } = useReimbursementSnapshot(periodId, {
+  const { data, isLoading, isFetching, isError, error, refetch } = useReimbursementSnapshot(periodId, {
     cursor: pager.cursor,
     limit: 25,
   });
+  function handleRetry() {
+    void refetch();
+  }
   const rows = data?.data ?? [];
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <DataTable
-        className="flex-1 min-h-0"
-        data={rows}
-        columns={reimbursementColumns}
-        getRowKey={(row) => row.id}
-        isLoading={isLoading}
-        emptyState={EMPTY_NO_REIMB}
-      />
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load reimbursement inputs"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <DataTable
+          className="flex-1 min-h-0"
+          data={rows}
+          columns={reimbursementColumns}
+          getRowKey={(row) => row.id}
+          isLoading={isLoading}
+          emptyState={EMPTY_NO_REIMB}
+        />
+      )}
       {data && (pager.page > 1 || data.pagination.hasMore) ? (
         <CursorPageControls
           page={pager.page}
@@ -179,10 +229,13 @@ function ReimbursementsTab({ periodId }: { periodId: number }) {
 
 function AdjustmentsTab({ periodId, isLocked }: { periodId: number; isLocked: boolean }) {
   const pager = useCursorPager();
-  const { data, isLoading, isFetching } = usePayrollAdjustments(periodId, {
+  const { data, isLoading, isFetching, isError, error, refetch } = usePayrollAdjustments(periodId, {
     cursor: pager.cursor,
     limit: 25,
   });
+  function handleRetry() {
+    void refetch();
+  }
   const approve = useApprovePayrollAdjustment();
   const rows = data?.data ?? [];
   const columns = buildAdjustmentColumns(isLocked, {
@@ -191,14 +244,23 @@ function AdjustmentsTab({ periodId, isLocked }: { periodId: number; isLocked: bo
   });
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <DataTable
-        className="flex-1 min-h-0"
-        data={rows}
-        columns={columns}
-        getRowKey={(row) => row.id}
-        isLoading={isLoading}
-        emptyState={EMPTY_NO_ADJ}
-      />
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load adjustments"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <DataTable
+          className="flex-1 min-h-0"
+          data={rows}
+          columns={columns}
+          getRowKey={(row) => row.id}
+          isLoading={isLoading}
+          emptyState={EMPTY_NO_ADJ}
+        />
+      )}
       {data && (pager.page > 1 || data.pagination.hasMore) ? (
         <CursorPageControls
           page={pager.page}

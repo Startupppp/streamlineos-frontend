@@ -119,8 +119,17 @@ Documents product. Change a decision only by editing this file.
 - Build sidebar remains the project chrome; WikiShell is optional later, not
   a second product.
 
-- [ ] **DOC-00-D08-A** project wiki mutations hit `/kb/pages` with project
+- [x] **DOC-00-D08-A** project wiki mutations hit `/kb/pages` with project
       ACL; no parallel Build wiki table.
+      **Closed — source proof 2026-09-21.** No `pgTable` under
+      `backend/src/db/schema/build/` declares a wiki, page or doc table, so no
+      parallel model exists. The Build route
+      `app/(authenticated)/build/[projectId]/wiki/page.tsx` renders
+      `@/features/wiki/components/wiki-home-page` — the Documents feature, not
+      a second editor. Project scope is a real column and a real predicate:
+      `kb-page-visibility.ts:10,32,43` admits a row only when
+      `project_id = ANY(<caller's projects>)`, and the mutation path asserts it
+      — `kb-pages.service.ts:179` calls `assertPageAccessible` before update.
 
 ## D09 — Filters, Search, and Views Are Server Contracts
 

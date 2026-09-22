@@ -8,12 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { ViewCard } from "@/features/build/views/saved-views/view-card";
+import { ViewCard, type ViewItem } from "@/features/build/views/saved-views/view-card";
+import { RenameViewDialog } from "@/features/build/views/saved-views/rename-view-dialog";
 import { CreateViewSheet } from "@/features/build/views/saved-views/create-view-sheet";
 import {
   PmPageShell,
@@ -24,6 +24,8 @@ import {
 } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -33,6 +35,9 @@ export function ViewsPage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
   const [createOpen, setCreateOpen] = useState(false);
+  const [renameTarget, setRenameTarget] = useState<ViewItem | null>(null);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameSeq, setRenameSeq] = useState(0);
   const router = useRouter();
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
@@ -46,14 +51,21 @@ export function ViewsPage({ params }: PageProps) {
     refetch,
   } = useViews(projectId);
   const togglePinMutation = useUpdateView();
+  const renameMutation = useUpdateView();
   const deleteMutation = useDeleteView();
+  const pageState = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError,
+    error,
+  });
 
   const handleNavigateToView = useCallback(
     (view: { id: number; layoutType: string }) => {
       const urlParams = new URLSearchParams();
       urlParams.set("viewId", view.id.toString());
       urlParams.set("view", view.layoutType);
-      router.push(`/build/${projectId}?${urlParams.toString()}`);
+      router.push(`/build/${projectId}/issues?${urlParams.toString()}`);
     },
     [router, projectId],
   );
@@ -66,6 +78,29 @@ export function ViewsPage({ params }: PageProps) {
       );
     },
     [togglePinMutation, projectId],
+  );
+
+  const handleOpenRename = useCallback((view: ViewItem) => {
+    setRenameTarget(view);
+    setRenameSeq((seq) => seq + 1);
+    setRenameOpen(true);
+  }, []);
+
+  const handleRename = useCallback(
+    (name: string) => {
+      if (!renameTarget) return;
+      renameMutation.mutate(
+        { viewId: renameTarget.id, projectId, name },
+        {
+          onSuccess: () => {
+            toast.success("View renamed");
+            setRenameOpen(false);
+          },
+          onError: (err) => toast.error(getErrorMessage(err)),
+        },
+      );
+    },
+    [renameMutation, projectId, renameTarget],
   );
 
   const handleDelete = useCallback(
@@ -91,7 +126,31 @@ export function ViewsPage({ params }: PageProps) {
   const pinnedViews = (views ?? []).filter((v) => v.isPinned);
   const unpinnedViews = (views ?? []).filter((v) => !v.isPinned);
 
-  if (isLoading) {
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  ) {
+    return (
+      <PageWrapper
+        title="Views"
+        subtitle="Saved filters and layouts for this project"
+      >
+        <PmPageShell>
+          <PageState
+            resolution={pageState}
+            loading={null}
+            onRetry={handleRetry}
+            className="flex-1"
+          >
+            {null}
+          </PageState>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (pageState.kind === "loading") {
     return (
       <PageWrapper title="Views">
         <PmPageShell>
@@ -105,45 +164,34 @@ export function ViewsPage({ params }: PageProps) {
     );
   }
 
-  if (isError) {
-    return (
-      <PageWrapper title="Views" subtitle="Saved filters and layouts for this project">
-        <PmPageShell>
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load views"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
   return (
     <PageWrapper
       title="Views"
       subtitle="Saved filters and layouts for this project"
       actions={
-        canManage ? <Button size="sm" onClick={handleOpenCreate}>
-          <Plus className="h-4 w-4 mr-1" /> New View
-        </Button> : undefined
+        canManage ? (
+          <Button size="sm" onClick={handleOpenCreate}>
+            <Plus className="h-4 w-4 mr-1" /> New View
+          </Button>
+        ) : undefined
       }
     >
       <PmPageShell>
         {!views?.length ? (
           <EmptyState
-              className={PM_FILL_PANEL}
-              illustration={<EmptySearchIllustration />}
-              title="No saved views"
-              description="Create custom views with saved filters and layouts."
-              action={{ label: "Create First View", onClick: handleOpenCreate }}
-            />
+            className={PM_FILL_PANEL}
+            illustration={<EmptySearchIllustration />}
+            title="No saved views"
+            description="Create custom views with saved filters and layouts."
+            action={{ label: "Create First View", onClick: handleOpenCreate }}
+          />
         ) : (
           <div className="flex flex-1 min-h-0 flex-col gap-4">
             {pinnedViews.length > 0 ? (
               <PmSection index={0}>
-                <h2 className={`mb-2 px-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${TEXT_ONE_LINE}`}>
+                <h2
+                  className={`mb-2 px-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${TEXT_ONE_LINE}`}
+                >
                   Pinned
                 </h2>
                 <PmPanel className="space-y-0.5 p-1.5" solid>
@@ -156,6 +204,7 @@ export function ViewsPage({ params }: PageProps) {
                         currentUserId={currentUserId}
                         onNavigate={handleNavigateToView}
                         onTogglePin={handleTogglePin}
+                        onRename={handleOpenRename}
                         onDelete={handleDelete}
                         canManage={canManage}
                       />
@@ -167,7 +216,9 @@ export function ViewsPage({ params }: PageProps) {
             {unpinnedViews.length > 0 ? (
               <PmSection index={1}>
                 {pinnedViews.length > 0 ? (
-                  <h2 className={`mb-2 px-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${TEXT_ONE_LINE}`}>
+                  <h2
+                    className={`mb-2 px-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${TEXT_ONE_LINE}`}
+                  >
                     All Views
                   </h2>
                 ) : null}
@@ -181,6 +232,7 @@ export function ViewsPage({ params }: PageProps) {
                         currentUserId={currentUserId}
                         onNavigate={handleNavigateToView}
                         onTogglePin={handleTogglePin}
+                        onRename={handleOpenRename}
                         onDelete={handleDelete}
                         canManage={canManage}
                       />
@@ -199,6 +251,17 @@ export function ViewsPage({ params }: PageProps) {
           open={createOpen}
           onOpenChange={setCreateOpen}
           onCreated={handleCreated}
+        />
+      ) : null}
+
+      {canManage ? (
+        <RenameViewDialog
+          key={renameSeq}
+          open={renameOpen}
+          onOpenChange={setRenameOpen}
+          currentName={renameTarget?.name ?? ""}
+          onRename={handleRename}
+          isSaving={renameMutation.isPending}
         />
       ) : null}
     </PageWrapper>

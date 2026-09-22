@@ -73,7 +73,7 @@ export function useAddComment(
   options?: Omit<UseMutationOptions<CommentCreateResponse, Error, AddCommentInput, AddCommentContext>, "mutationFn" | "mutationKey" | "onMutate">
 ) {
   const queryClient = useQueryClient();
-  return useMutation<CommentCreateResponse, Error, AddCommentInput, AddCommentContext>({
+  return useAuthorizedMutation<CommentCreateResponse, Error, AddCommentInput, AddCommentContext>("build:tickets:update", {
     ...options,
     mutationKey: ["projects", "tickets", "comments", "add"],
     mutationFn: ({ ticketId, projectId, content, parentCommentId }) =>

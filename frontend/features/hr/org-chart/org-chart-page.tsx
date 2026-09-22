@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ChevronDownIcon,
@@ -288,16 +288,23 @@ export function OrgChartPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const searchInput = searchParams.get("q") ?? "";
+  const urlSearchValue = searchParams.get("q") ?? "";
+  const [searchDraft, setSearchDraft] = useState({ sourceQuery: urlSearchValue, value: urlSearchValue });
+  const searchInput = searchDraft.sourceQuery === urlSearchValue ? searchDraft.value : urlSearchValue;
   const debouncedSearch = useDebouncedValue(searchInput.trim(), 300);
   const validSearch = debouncedSearch.length >= 2 ? debouncedSearch : undefined;
 
-  function handleSearchChange(value: string) {
+  useEffect(() => {
+    if (debouncedSearch === urlSearchValue) return;
     const next = new URLSearchParams(searchParams.toString());
-    if (value.trim()) next.set("q", value);
+    if (debouncedSearch) next.set("q", debouncedSearch);
     else next.delete("q");
     const query = next.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [debouncedSearch, urlSearchValue, searchParams, router, pathname]);
+
+  function handleSearchChange(value: string) {
+    setSearchDraft({ sourceQuery: urlSearchValue, value });
   }
 
   return (

@@ -118,10 +118,9 @@ function claimsEmptiness(source: string): boolean {
  *
  * `<Gated>` was the second of them, since folded into `<PageState
  * resolution={usePageState(...)}>` (components/shared/page-state.tsx), which
- * resolves "denied" ahead of "empty" the same way `resolveGate` did. The
- * oldest is `usePermissionGate` plus `<EmptyState access={gate}>`:
- * `EmptyState` returns `NoPermissionState` when `access.denied`, and the gate
- * keeps "denied" apart from "not known yet" the same way `resolveGate` does.
+ * resolves "denied" ahead of "empty". The oldest is `usePermissionGate` plus
+ * `<EmptyState access={gate}>`: `EmptyState` returns `NoPermissionState` when
+ * `access.denied`, and the gate keeps "denied" apart from "not known yet".
  * All three are the same fix, reached through a different component, and a
  * surface using any of them does not have this bug.
  *
@@ -139,6 +138,7 @@ function handlesDenial(source: string): boolean {
   if (source.includes("NoPermissionState")) return true;
   if (/<PageState\b/.test(source)) return true;
   if (/usePageState\(/.test(source)) return true;
+  if (/useCanState\(/.test(source) && /["']denied["']/.test(source)) return true;
   return /usePermissionGate\(/.test(source) && /\baccess=\{/.test(source);
 }
 
@@ -216,7 +216,9 @@ function permissionKeyForGatedHook(relativeFile: string, hookName: string): stri
 }
 
 function deniedPermissionKeys(source: string): string[] {
-  return [...source.matchAll(/useCanState\(\s*["']([^"']+)["']\s*\)/g)].map((m) => m[1] as string);
+  const canStateKeys = [...source.matchAll(/useCanState\(\s*["']([^"']+)["']\s*\)/g)].map((m) => m[1] as string);
+  const pageStateKeys = [...source.matchAll(/usePageState\s*\(\s*\{[^}]*permission\s*:\s*["']([^"']+)["']/g)].map((m) => m[1] as string);
+  return [...canStateKeys, ...pageStateKeys];
 }
 
 describe("the deals list denies on the permission that actually gates its data", () => {
@@ -240,5 +242,38 @@ describe("the deals list denies on the permission that actually gates its data",
       "utf8",
     );
     expect(deniedPermissionKeys(source)).toContain(dealsReadKey);
+  });
+});
+
+describe("an explicit useCanState denied branch is a refusal, whatever it renders", () => {
+  it("accepts a disabled control whose placeholder reads Access restricted, because an inline form field states its refusal in place rather than replacing the form with a permission wall", () => {
+    const source = `
+      const categoriesState = useCanState("inventory:products:read");
+      <Select disabled={categoriesState !== "granted"}>
+        <SelectValue placeholder={categoriesState === "denied" ? "Access restricted" : "Select category"} />
+      </Select>
+      <EmptyState title="No categories yet" />
+    `;
+    expect(claimsEmptiness(source)).toBe(true);
+    expect(handlesDenial(source)).toBe(true);
+  });
+
+  it("accepts a nested panel that renders nothing when denied, because hiding an unauthorised export control is what the navigation rules require of a mutation control", () => {
+    const source = `
+      const canExportState = useCanState("inventory:audit:export");
+      if (canExportState === "denied") return null;
+      return <EmptyState title="No evidence has been exported yet" />;
+    `;
+    expect(claimsEmptiness(source)).toBe(true);
+    expect(handlesDenial(source)).toBe(true);
+  });
+
+  it("still reports a surface that reads a gated hook and claims emptiness without ever naming the denied state", () => {
+    const source = `
+      const { data } = useAuditExportJobs({ limit: 20 });
+      if (!data?.length) return <EmptyState title="No evidence has been exported yet" />;
+    `;
+    expect(claimsEmptiness(source)).toBe(true);
+    expect(handlesDenial(source)).toBe(false);
   });
 });

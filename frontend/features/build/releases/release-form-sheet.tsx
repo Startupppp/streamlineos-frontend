@@ -1,10 +1,10 @@
 ﻿"use client";
 
 import { useCallback } from "react";
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { releaseFormSchema, type ReleaseFormValues } from "./release-form-schema";
 import {
   Sheet,
   SheetContent,
@@ -51,38 +51,6 @@ import {
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-const MEANINGFUL_TEXT_RE = /[a-zA-Z0-9À-ɏЀ-ӿ一-鿿]/;
-const VERSION_RE = /^v?\d+(\.\d+)*(-[\w.]+)?(\+[\w.]+)?$|^\d{4}\.\d{2}(\.\d+)?$/;
-
-const schema = z.object({
-  name: z
-    .string()
-    .min(1, "Name is required")
-    .trim()
-    .min(3, "Name must be at least 3 characters")
-    .max(120, "Name must be 120 characters or fewer")
-    .refine((v) => MEANINGFUL_TEXT_RE.test(v), "Name must contain at least one letter or number"),
-  version: z
-    .string()
-    .min(1, "Version is required")
-    .trim()
-    .max(30, "Version must be 30 characters or fewer")
-    .refine((v) => v.trim().length > 0, "Version cannot be whitespace only")
-    .refine((v) => MEANINGFUL_TEXT_RE.test(v) || VERSION_RE.test(v.trim()), "Enter a valid version, e.g. 1.4.0 or v2.0.0-beta"),
-  description: z
-    .string()
-    .nullable()
-    .optional()
-    .refine(
-      (v) => !v || v.replace(/<[^>]*>/g, "").length <= 10000,
-      "Release notes must be 10,000 characters or fewer",
-    ),
-  status: z.enum(["draft", "released", "archived"]),
-  releaseDate: z.string().nullable().optional(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
 interface ReleaseFormSheetProps {
   projectId: number;
   release?: Release;
@@ -95,8 +63,8 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
   const update = useUpdateRelease(projectId);
   const isPending = create.isPending || update.isPending;
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<ReleaseFormValues>({
+    resolver: zodResolver(releaseFormSchema),
     defaultValues: {
       name: release?.name ?? "",
       version: release?.version ?? "",
@@ -105,14 +73,14 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
       releaseDate: release?.releaseDate ?? null,
     },
   });
-  useRegisterBuildDirtyState(form.formState.isDirty);
+  useRegisterDirtyState(form.formState.isDirty);
 
   const descriptionValue = form.watch("description");
 
   const descriptionCharCount = (descriptionValue ?? "").replace(/<[^>]*>/g, "").length;
 
   const onSubmit = useCallback(
-    (values: FormValues) => {
+    (values: ReleaseFormValues) => {
       if (isEdit) {
         update.mutate(
           {

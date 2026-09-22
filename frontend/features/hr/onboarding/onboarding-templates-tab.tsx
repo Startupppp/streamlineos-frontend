@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
+import { useFieldArray, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -10,6 +12,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -25,203 +35,258 @@ import {
   useHrOnboardingTemplates,
   useCreateHrOnboardingTemplate,
   useOnboardingTemplateDepartments,
-  type OnboardingTemplateStep,
 } from "@/hooks/api/hr/onboarding";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { numericFieldChangeOr } from "@/lib/numeric-field";
-
-const OWNER_ROLES = ["NEW_HIRE", "HR", "MANAGER", "IT"] as const;
-
-function emptyStep(): OnboardingTemplateStep {
-  return { title: "", ownerRole: "NEW_HIRE", dueOffsetDays: 0, isRequired: true, isComplianceItem: false };
-}
+import {
+  ONBOARDING_PLAN_DEFAULTS,
+  ONBOARDING_STEP_OWNER_ROLES,
+  emptyOnboardingPlanStep,
+  onboardingPlanSchema,
+  type OnboardingPlanFormValues,
+} from "@/features/hr/onboarding/onboarding-plan-schema";
 
 function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
-  const [name, setName] = useState("");
-  const [departmentId, setDepartmentId] = useState<string>("");
-  const [description, setDescription] = useState("");
-  const [steps, setSteps] = useState<OnboardingTemplateStep[]>([emptyStep()]);
-
   const { data: departments } = useOnboardingTemplateDepartments();
   const createTemplate = useCreateHrOnboardingTemplate();
+  const form = useForm<OnboardingPlanFormValues>({
+    resolver: zodResolver(onboardingPlanSchema),
+    defaultValues: ONBOARDING_PLAN_DEFAULTS,
+  });
+  const steps = useFieldArray({ control: form.control, name: "steps" });
+  const stepsError = form.formState.errors.steps?.root?.message ?? form.formState.errors.steps?.message;
 
-  const resetForm = useCallback(() => {
-    setName("");
-    setDepartmentId("");
-    setDescription("");
-    setSteps([emptyStep()]);
-  }, []);
-
-  function updateStep(index: number, patch: Partial<OnboardingTemplateStep>) {
-    setSteps((prev) => prev.map((s, i) => (i === index ? { ...s, ...patch } : s)));
+  function handleDiscard() {
+    form.reset(ONBOARDING_PLAN_DEFAULTS);
   }
 
   function handleAddStep(): void {
-    setSteps((prev) => [...prev, emptyStep()]);
+    steps.append(emptyOnboardingPlanStep());
   }
 
   function handleRemoveStep(index: number) {
     return function removeStep(): void {
-      setSteps((prev) => prev.filter((_, i) => i !== index));
+      steps.remove(index);
     };
   }
 
-  function handleDueOffsetChange(index: number) {
-    return numericFieldChangeOr(
-      (days) => updateStep(index, { dueOffsetDays: Math.max(0, days) }),
-      0,
-    );
-  }
-
-  const handleSubmit = useCallback(() => {
-    if (!name.trim()) {
-      toast.error("Template name is required");
-      return;
-    }
-    const validSteps = steps.filter((s) => s.title.trim().length > 0);
-    if (validSteps.length === 0) {
-      toast.error("Add at least one step");
-      return;
-    }
+  function handleSubmit(values: OnboardingPlanFormValues) {
     createTemplate.mutate(
       {
-        name: name.trim(),
-        departmentId: departmentId || undefined,
-        description: description.trim() || undefined,
-        steps: validSteps,
+        name: values.name,
+        departmentId: values.departmentId || undefined,
+        description: values.description || undefined,
+        steps: values.steps,
       },
       {
         onSuccess: () => {
           toast.success("Onboarding plan created");
-          resetForm();
+          form.reset(ONBOARDING_PLAN_DEFAULTS);
           onOpenChange(false);
         },
         onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
-  }, [name, departmentId, description, steps, createTemplate, onOpenChange, resetForm]);
+  }
 
   return (
     <HrSheet
       open={open}
       onOpenChange={onOpenChange}
-      title="New Onboarding Plan"
+      title="Create onboarding plan"
       description="Create a reusable plan with steps, owners, and due dates. Department-specific plans are used automatically for employees in that department."
-      onSubmit={handleSubmit}
+      onSubmit={form.handleSubmit(handleSubmit)}
       isPending={createTemplate.isPending}
-      submitLabel="Create Plan"
+      submitLabel="Create plan"
+      isDirty={form.formState.isDirty}
+      onDiscard={handleDiscard}
     >
-      <div className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="template-name">Plan name</Label>
-          <Input id="template-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Engineering Onboarding" />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label>Department (optional)</Label>
-          <Select
-            value={departmentId || "all"}
-            onValueChange={(v) => setDepartmentId(v === "all" ? "" : v)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="All departments (default plan)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All departments (default plan)</SelectItem>
-              {(departments ?? []).map((d) => (
-                <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="template-description">Description (optional)</Label>
-          <Textarea
-            id="template-description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="What this plan covers"
-            rows={2}
+      <Form {...form}>
+        <div className="space-y-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Plan name</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. Engineering onboarding" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label>Steps</Label>
-            <AnimatedIconButton
-              icon={PlusIcon}
-              iconSize={12}
-              iconClassName="mr-1"
-              type="button"
-              size="sm"
-              variant="outline"
-              className="text-xs gap-1"
-              onClick={handleAddStep}
-            >
-              Add step
-            </AnimatedIconButton>
-          </div>
-
-          {steps.map((step, i) => (
-            <Card key={i} className="border border-border">
-              <CardContent className="p-3 space-y-2">
-                <div className="flex items-start gap-2">
-                  <Input
-                    value={step.title}
-                    onChange={(e) => updateStep(i, { title: e.target.value })}
-                    placeholder="Step title (e.g. Collect signed offer letter)"
-                    className="text-sm flex-1"
-                  />
-                  {steps.length > 1 && (
-                    <AnimatedIconButton
-                      icon={Trash2Icon}
-                      iconSize={14}
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
-                      onClick={handleRemoveStep(i)}
-                      aria-label="Remove step"
-                    />
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Select value={step.ownerRole} onValueChange={(v) => updateStep(i, { ownerRole: v })}>
+          <FormField
+            control={form.control}
+            name="departmentId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Department (optional)</FormLabel>
+                <Select value={field.value || "all"} onValueChange={(v) => field.onChange(v === "all" ? "" : v)}>
+                  <FormControl>
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="All departments (default plan)" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {OWNER_ROLES.map((r) => (
-                        <SelectItem key={r} value={r}>{r}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={step.dueOffsetDays}
-                    onChange={handleDueOffsetChange(i)}
-                    placeholder="Due (days after joining)"
-                    className="text-xs"
-                  />
-                </div>
-                <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Checkbox checked={step.isRequired} onCheckedChange={(v) => updateStep(i, { isRequired: v === true })} />
-                    Required
-                  </label>
-                  <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Checkbox checked={step.isComplianceItem} onCheckedChange={(v) => updateStep(i, { isComplianceItem: v === true })} />
-                    Compliance item (applies across all plans)
-                  </label>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="all">All departments (default plan)</SelectItem>
+                    {(departments ?? []).map((d) => (
+                      <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description (optional)</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="What this plan covers" rows={2} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Steps</Label>
+              <AnimatedIconButton
+                icon={PlusIcon}
+                iconSize={12}
+                iconClassName="mr-1"
+                type="button"
+                size="sm"
+                variant="outline"
+                className="text-xs gap-1"
+                onClick={handleAddStep}
+              >
+                Add step
+              </AnimatedIconButton>
+            </div>
+            {stepsError ? (
+              <p className="text-destructive text-xs" role="alert">
+                {stepsError}
+              </p>
+            ) : null}
+
+            {steps.fields.map((step, i) => (
+              <Card key={step.id} className="border border-border">
+                <CardContent className="p-3 space-y-2">
+                  <div className="flex items-start gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`steps.${i}.title`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input
+                              placeholder="Step title (e.g. Collect signed offer letter)"
+                              className="text-sm"
+                              aria-label={`Step ${i + 1} title`}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {steps.fields.length > 1 && (
+                      <AnimatedIconButton
+                        icon={Trash2Icon}
+                        iconSize={14}
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
+                        onClick={handleRemoveStep(i)}
+                        aria-label="Remove step"
+                      />
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`steps.${i}.ownerRole`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger aria-label={`Step ${i + 1} owner`}>
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {ONBOARDING_STEP_OWNER_ROLES.map((r) => (
+                                <SelectItem key={r} value={r}>{r}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`steps.${i}.dueOffsetDays`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              inputMode="numeric"
+                              min={0}
+                              step={1}
+                              placeholder="Due (days after joining)"
+                              className="text-xs"
+                              aria-label={`Step ${i + 1} due day`}
+                              value={field.value}
+                              onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                              onBlur={field.onBlur}
+                              name={field.name}
+                              ref={field.ref}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <FormField
+                      control={form.control}
+                      name={`steps.${i}.isRequired`}
+                      render={({ field }) => (
+                        <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Checkbox checked={field.value} onCheckedChange={(v) => field.onChange(v === true)} />
+                          Required
+                        </label>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`steps.${i}.isComplianceItem`}
+                      render={({ field }) => (
+                        <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Checkbox checked={field.value} onCheckedChange={(v) => field.onChange(v === true)} />
+                          Compliance item (applies across all plans)
+                        </label>
+                      )}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
+      </Form>
     </HrSheet>
   );
 }
@@ -242,7 +307,7 @@ export function OnboardingTemplatesTab() {
           automatically when launching onboarding for an employee in that department.
         </p>
         <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1" size="sm" className="gap-1.5 shrink-0" onClick={() => setSheetOpen(true)}>
-          New Plan
+          Create plan
         </AnimatedIconButton>
       </div>
 
@@ -259,7 +324,7 @@ export function OnboardingTemplatesTab() {
           illustrationPreset="documents"
           title="No onboarding plans yet"
           description="Create a plan to standardize onboarding steps for a department or your whole org."
-          action={{ label: "New Plan", onClick: () => setSheetOpen(true) }}
+          action={{ label: "Create plan", onClick: () => setSheetOpen(true) }}
           compact
         />
       ) : (

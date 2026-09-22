@@ -9,7 +9,7 @@ export default function DocumentTypesLoading() {
       subtitle="Configure required onboarding documents"
       actions={<Skeleton className="h-9 w-40 rounded-md" />}
     >
-      <DataTableSkeleton rows={12} columns={6} className="flex-1 min-h-0" />
+      <DataTableSkeleton rows={12} headers={["Name", "Mandatory", "Status", "Sort Order", "Applicable Roles", "Actions"]} className="flex-1 min-h-0" />
     </PageWrapper>
   );
 }

@@ -214,7 +214,7 @@ function PoolMembersList({ poolId }: { poolId: number }) {
   const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
   const page = cursorHistory.length;
   const cursor = cursorHistory.at(-1);
-  const { data: membersData, isLoading, isFetching } = usePoolMembers(poolId, { cursor, limit: 20 });
+  const { data: membersData, isLoading, isError, isFetching, refetch } = usePoolMembers(poolId, { cursor, limit: 20 });
   const members = membersData?.data;
   const pagination = membersData?.pagination;
   const removeMember = useRemovePoolMember(poolId);
@@ -235,8 +235,22 @@ function PoolMembersList({ poolId }: { poolId: number }) {
     if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
   }
 
+  function handleRetry(): void {
+    void refetch();
+  }
+
   if (isLoading) {
     return <div className="space-y-2">{[1, 2].map((i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}</div>;
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Unable to load pool members"
+        description="Try again. If this keeps happening, check your permissions or contact an admin."
+        onRetry={handleRetry}
+      />
+    );
   }
 
   if (!members?.length) {

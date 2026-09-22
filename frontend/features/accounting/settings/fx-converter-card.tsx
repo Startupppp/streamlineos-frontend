@@ -12,7 +12,7 @@ import { usePreviewFx } from "@/hooks/api/accounting/ledger-mutations";
 import { formatRate, parseMoneyInput } from "@/lib/accounting/money";
 import { getTodayString } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { FxPreview } from "@/types/accounting-kernel-ext";
+import type { FxPreview } from "@/types/accounting/accounting-kernel-ext";
 
 export function FxConverterCard({ baseCurrency }: { baseCurrency: string }) {
   const currencies = useCurrencies();
@@ -41,7 +41,9 @@ export function FxConverterCard({ baseCurrency }: { baseCurrency: string }) {
 
     const amountMinor = fromCode ? parseMoneyInput(amount, fromCode) : null;
     if (amountMinor === null || amountMinor <= 0) {
-      setProblem(`Enter an amount in ${fromCode || "the currency you are converting from"}.`);
+      setProblem(
+        `Enter an amount in ${fromCode || "the currency you are converting from"}.`,
+      );
       return;
     }
     if (!toCode) {
@@ -61,7 +63,9 @@ export function FxConverterCard({ baseCurrency }: { baseCurrency: string }) {
   return (
     <Card className="py-0">
       <CardHeader className="px-4 py-3">
-        <CardTitle className="text-sm font-semibold">Try a conversion</CardTitle>
+        <CardTitle className="text-sm font-semibold">
+          Try a conversion
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 p-4 pt-0">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -122,7 +126,8 @@ export function FxConverterCard({ baseCurrency }: { baseCurrency: string }) {
               {preview.from.display} = {preview.to.display}
             </p>
             <p className="mt-1 text-label text-muted-foreground">
-              Using the rate {formatRate(preview.rate)} recorded for {preview.rateDate}.
+              Using the rate {formatRate(preview.rate)} recorded for{" "}
+              {preview.rateDate}.
             </p>
           </div>
         ) : null}

@@ -4,10 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { useCan } from "@/hooks/api/access";
 import { useTaxSummaryReport } from "@/hooks/api/accounting/reports";
 import { formatBasisPoints, formatMinorMoney } from "@/lib/accounting/money";
-import type { TaxSummaryRow } from "@/types/accounting-reports";
+import type { TaxSummaryRow } from "@/types/accounting/accounting-reports";
 import { ExportReportButton } from "./export-report-button";
 import { RangeControls } from "./report-date-controls";
 import { ReportNotes } from "./report-notes";
@@ -15,17 +14,23 @@ import { ReportShell } from "./report-shell";
 import { useReportControls } from "./use-report-controls";
 
 export function TaxSummaryReport() {
-  const canView = useCan("accounting:reports:read");
   const controls = useReportControls();
 
-  const params = { from: controls.from, to: controls.to, labelMode: controls.labelMode };
-  const { data, isLoading, isError, error, refetch } = useTaxSummaryReport(params);
+  const params = {
+    from: controls.from,
+    to: controls.to,
+    labelMode: controls.labelMode,
+  };
+  const { data, isLoading, isError, error, refetch } =
+    useTaxSummaryReport(params);
 
   const columns: DataTableColumn<TaxSummaryRow>[] = [
     {
       key: "role",
       header: "Kind",
-      cell: (row) => <span className="truncate font-medium">{row.glRoleLabel}</span>,
+      cell: (row) => (
+        <span className="truncate font-medium">{row.glRoleLabel}</span>
+      ),
     },
     {
       key: "component",
@@ -35,7 +40,11 @@ export function TaxSummaryReport() {
     {
       key: "jurisdiction",
       header: "Where",
-      cell: (row) => <span className="truncate text-muted-foreground">{row.jurisdiction}</span>,
+      cell: (row) => (
+        <span className="truncate text-muted-foreground">
+          {row.jurisdiction}
+        </span>
+      ),
     },
     {
       key: "rate",
@@ -54,7 +63,8 @@ export function TaxSummaryReport() {
     {
       key: "tax",
       header: "Tax",
-      className: "text-right font-mono font-semibold tabular-nums whitespace-nowrap",
+      className:
+        "text-right font-mono font-semibold tabular-nums whitespace-nowrap",
       headerClassName: "text-right",
       cell: (row) => formatMinorMoney(row.taxMinor, row.currency),
     },
@@ -72,7 +82,6 @@ export function TaxSummaryReport() {
       title={data?.title ?? "Tax collected and tax paid"}
       subtitle="Every tax line frozen onto invoices and bills in this period."
       backHref="/accounting"
-      canView={canView}
       permission="accounting:reports:read"
       isLoading={isLoading}
       isError={isError}
@@ -104,32 +113,49 @@ export function TaxSummaryReport() {
           <StatCardGrid className="shrink-0">
             <StatCard
               label="Tax we charged customers"
-              value={formatMinorMoney(data.totals.outputTaxMinor, data.totals.currency)}
+              value={formatMinorMoney(
+                data.totals.outputTaxMinor,
+                data.totals.currency,
+              )}
             />
             <StatCard
               label="Tax we paid and can claim back"
-              value={formatMinorMoney(data.totals.recoverableInputTaxMinor, data.totals.currency)}
+              value={formatMinorMoney(
+                data.totals.recoverableInputTaxMinor,
+                data.totals.currency,
+              )}
             />
             <StatCard
               label="Tax we paid and cannot claim"
-              value={formatMinorMoney(data.totals.blockedInputTaxMinor, data.totals.currency)}
+              value={formatMinorMoney(
+                data.totals.blockedInputTaxMinor,
+                data.totals.currency,
+              )}
               tone="amber"
             />
             <StatCard
               label="Net tax payable"
-              value={formatMinorMoney(data.totals.netPayableMinor, data.totals.currency)}
+              value={formatMinorMoney(
+                data.totals.netPayableMinor,
+                data.totals.currency,
+              )}
               tone={data.totals.netPayableMinor > 0 ? "amber" : "emerald"}
             />
           </StatCardGrid>
 
-          <ReportNotes title="What to know about this report" notes={data.notes} />
+          <ReportNotes
+            title="What to know about this report"
+            notes={data.notes}
+          />
 
           <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
             <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
               <DataTable
                 data={data.rows}
                 columns={columns}
-                getRowKey={(row) => `${row.glRole}-${row.component}-${row.jurisdiction}-${row.rateBp}-${row.currency}`}
+                getRowKey={(row) =>
+                  `${row.glRole}-${row.component}-${row.jurisdiction}-${row.rateBp}-${row.currency}`
+                }
                 className="min-h-0 flex-1"
                 minWidth="1000px"
                 pagination={{ pageSize: 50 }}

@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { EssStatusBadge } from "./ess-status-badge";
 import { useEssLoans, useCreateLoan } from "@/hooks/api/payroll/ess";
@@ -186,7 +187,7 @@ export function EssLoansSection({
   dialogOpen: dialogOpenProp,
   onDialogOpenChange,
 }: EssLoansSectionProps) {
-  const { data: loans, isLoading } = useEssLoans();
+  const { data: loans, isLoading, isError, error, refetch } = useEssLoans();
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const dialogOpen = dialogOpenProp ?? uncontrolledOpen;
   const setDialogOpen = onDialogOpenChange ?? setUncontrolledOpen;
@@ -225,6 +226,12 @@ export function EssLoansSection({
               <LoanSkeleton key={i} />
             ))}
           </div>
+        ) : isError ? (
+          <ErrorState
+            title="Couldn't load loans"
+            description={getErrorMessage(error)}
+            onRetry={() => void refetch()}
+          />
         ) : !loans || loans.length === 0 ? (
           <EmptyState
             illustrationPreset="payroll"

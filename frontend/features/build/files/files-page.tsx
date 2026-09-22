@@ -13,10 +13,10 @@ import {
   type ProjectFileRow,
 } from "@/hooks/api/build/project-files";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -152,11 +152,10 @@ interface FilesPageProps {
 }
 
 export function FilesPage({ projectId }: FilesPageProps) {
-  const canView = useCan("build:files:view");
   const canManage = useCan("build:files:manage");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data, isLoading, isError, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } =
+  const { data, isLoading, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useProjectFiles(projectId);
   const uploadFile = useUploadProjectFile(projectId);
   const deleteFile = useDeleteProjectFile(projectId);
@@ -204,10 +203,26 @@ export function FilesPage({ projectId }: FilesPageProps) {
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleFetchMore = useCallback(() => { void fetchNextPage(); }, [fetchNextPage]);
 
-  if (!canView) {
+  const pageState = usePageState({ permission: "build:files:view", isLoading, isError, error });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
       <PageWrapper title="Files" subtitle="Project files and documents">
-        <NoPermissionState permission="build:files:view" className="flex-1" />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+  }
+
+  if (pageState.kind === "loading") {
+    return (
+      <PageWrapper title="Files" subtitle="Project files and documents">
+        <div className="flex flex-col gap-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className={`${CONTENT_PANEL_SOLID} h-16 animate-pulse`} />
+          ))}
+        </div>
       </PageWrapper>
     );
   }
@@ -233,15 +248,7 @@ export function FilesPage({ projectId }: FilesPageProps) {
       }
     >
       <div className="flex flex-col gap-4 pb-6">
-        {isLoading ? (
-          <div className="flex flex-col gap-3">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className={`${CONTENT_PANEL_SOLID} h-16 animate-pulse`} />
-            ))}
-          </div>
-        ) : isError ? (
-          <ErrorState className="flex-1" onRetry={handleRetry} />
-        ) : data.length === 0 ? (
+        {data.length === 0 ? (
           <EmptyState
             className="flex-1 min-h-[40vh]"
             illustrationPreset="activity"

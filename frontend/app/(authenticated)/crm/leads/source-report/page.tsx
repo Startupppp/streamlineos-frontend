@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useCallback } from "react";
-import { NoPermissionState } from "@/components/shared";
-import { useCanState } from "@/hooks/api/access";
 import { motion, useReducedMotion } from "framer-motion";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import {
   BarChart3,
   TrendingUp,
@@ -19,7 +19,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyLeadsIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { useLeadSourceReport } from "@/hooks/api/crm/leads";
@@ -55,7 +54,7 @@ function getSourceColor(index: number) {
 export default function LeadSourceReportPage() {
   const shouldReduceMotion = useReducedMotion();
   const { staggerContainer, fadeUp } = useMotionVariants();
-  const { data, isLoading, isError, refetch, access } = useLeadSourceReport();
+  const { data, isLoading, isError, error, refetch, access } = useLeadSourceReport();
 
   const maxCount = useMemo(
     () => Math.max(1, ...(data?.sources.map((s) => s.count) ?? [])),
@@ -78,33 +77,23 @@ export default function LeadSourceReportPage() {
     void refetch();
   }, [refetch]);
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
-  if (useCanState("crm:leads:view") === "denied")
-    return <NoPermissionState permission="crm:leads:view" />;
+  const pageState = usePageState({ permission: "crm:leads:view", isLoading, isError, error });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper title="Lead Source Report" subtitle="Attribution analysis across all lead sources">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper
       title="Lead Source Report"
       subtitle="Attribution analysis across all lead sources"
     >
-      {isError ? (
-        <ErrorState
-          title="Report unavailable"
-          description="Failed to load lead source report. Please try again."
-          onRetry={handleRetry}
-          className="flex-1"
-        />
-      ) : (
-        <motion.div
+      <motion.div
           className="space-y-4"
           variants={staggerContainer}
           initial="hidden"
@@ -314,7 +303,6 @@ export default function LeadSourceReportPage() {
             </motion.div>
           )}
         </motion.div>
-      )}
     </PageWrapper>
   );
 }

@@ -9,15 +9,26 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { moneyInputValue } from "@/lib/accounting/money";
-import { useCreateApDocument, useUpdateApDocument } from "@/hooks/api/accounting/ap";
-import type { ApDocumentDetail, ApDocumentType, VendorSummary } from "@/types/accounting-ap";
+import {
+  useCreateApDocument,
+  useUpdateApDocument,
+} from "@/hooks/api/accounting/ap";
+import type {
+  ApDocumentDetail,
+  ApDocumentType,
+  VendorSummary,
+} from "@/types/accounting/accounting-ap";
 import { describeBillWriteError } from "../lib/ap-errors";
 import { todayIso } from "../lib/ap-dates";
 import { BillDocumentFlags } from "./bill-document-flags";
 import { BillHeaderFields } from "./bill-header-fields";
 import { BillLineEditor } from "./bill-line-editor";
 import { buildBillPayload } from "./bill-payload";
-import { billFormSchema, EMPTY_BILL_LINE, type BillFormValues } from "./bill-form-schema";
+import {
+  billFormSchema,
+  EMPTY_BILL_LINE,
+  type BillFormValues,
+} from "./bill-form-schema";
 
 interface BillEditorFormProps {
   documentType: ApDocumentType;
@@ -84,7 +95,9 @@ export function BillEditorForm({
 }: BillEditorFormProps) {
   const createDocument = useCreateApDocument();
   const updateDocument = useUpdateApDocument();
-  const [vendorName, setVendorName] = useState(document?.partyName ?? "This vendor");
+  const [vendorName, setVendorName] = useState(
+    document?.partyName ?? "This vendor",
+  );
 
   const defaultValues = useMemo(
     () => toFormValues(document, defaultCurrency),
@@ -105,12 +118,20 @@ export function BillEditorForm({
   function handleSubmit(values: BillFormValues): void {
     const built = buildBillPayload(values);
     if (!built.ok) {
-      form.setError(`lines.${built.lineIndex}.${built.field}`, { message: built.message });
+      form.setError(`lines.${built.lineIndex}.${built.field}`, {
+        message: built.message,
+      });
       return;
     }
 
     const onError = (error: unknown) => {
-      toast.error(describeBillWriteError(error, vendorName, values.vendorDocumentNumber.trim()));
+      toast.error(
+        describeBillWriteError(
+          error,
+          vendorName,
+          values.vendorDocumentNumber.trim(),
+        ),
+      );
     };
 
     if (document) {
@@ -127,17 +148,20 @@ export function BillEditorForm({
       return;
     }
 
-    createDocument.mutate({ ...built.payload, documentType }, {
-      onSuccess: (saved) => {
-        toast.success(
-          documentType === "DEBIT_NOTE"
-            ? "Vendor credit entered as a draft"
-            : "Bill entered as a draft",
-        );
-        onSaved(saved);
+    createDocument.mutate(
+      { ...built.payload, documentType },
+      {
+        onSuccess: (saved) => {
+          toast.success(
+            documentType === "DEBIT_NOTE"
+              ? "Vendor credit entered as a draft"
+              : "Bill entered as a draft",
+          );
+          onSaved(saved);
+        },
+        onError,
       },
-      onError,
-    });
+    );
   }
 
   const isSubmitting = createDocument.isPending || updateDocument.isPending;
@@ -147,7 +171,9 @@ export function BillEditorForm({
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <Card>
           <CardHeader className="px-4 py-3">
-            <CardTitle className="text-sm font-semibold">Who billed you</CardTitle>
+            <CardTitle className="text-sm font-semibold">
+              Who billed you
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 p-4 pt-0">
             <BillHeaderFields
@@ -162,7 +188,9 @@ export function BillEditorForm({
 
         <Card>
           <CardHeader className="px-4 py-3">
-            <CardTitle className="text-sm font-semibold">How the tax works on this bill</CardTitle>
+            <CardTitle className="text-sm font-semibold">
+              How the tax works on this bill
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <BillDocumentFlags form={form} />

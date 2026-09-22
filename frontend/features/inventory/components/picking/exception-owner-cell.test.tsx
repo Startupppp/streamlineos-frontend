@@ -26,6 +26,10 @@ let mockRoster: {
 jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => mockCan[key] ?? false,
   useCanState: (key: string) => (mockCan[key] ? "granted" : "denied"),
+  useAccess: () => ({
+    data: { modules: {}, scopes: mockCan, isOrgOwner: false },
+    isLoading: false,
+  }),
 }));
 
 jest.mock("@/hooks/api/inventory/pick-exceptions", () => ({

@@ -15,6 +15,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useMyDelegations, useCreateDelegation, useDeleteDelegation } from "@/hooks/api/hr/hr-workflows";
 import { HR_WORKFLOW_OBJECT_TYPES, HR_WORKFLOW_OBJECT_TYPE_LABELS } from "@/types/hr/workflows";
@@ -37,9 +38,13 @@ interface Props {
 }
 
 export function DelegationSettings({ open, onOpenChange }: Props) {
-  const { data: delegations, isLoading } = useMyDelegations({ enabled: open });
+  const { data: delegations, isLoading, isError, error, refetch } = useMyDelegations({ enabled: open });
   const create = useCreateDelegation();
   const remove = useDeleteDelegation();
+
+  function handleRetry() {
+    void refetch();
+  }
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -76,16 +81,24 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-base font-semibold">My Delegations</DialogTitle>
+          <DialogTitle className="text-base font-semibold">My delegations</DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="max-h-64 pr-2">
           {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
-          {!isLoading && !delegations?.length && (
+          {isError && (
+            <ErrorState
+              compact
+              title="Couldn't load delegations"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+            />
+          )}
+          {!isLoading && !isError && !delegations?.length && (
             <p className="text-sm text-muted-foreground">No active delegations</p>
           )}
           <div className="space-y-2">
-            {delegations?.map((d) => (
+            {!isError && delegations?.map((d) => (
               <div key={d.id} className="flex items-center gap-2 rounded-lg border p-2.5 text-xs">
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">{d.delegateName ?? d.delegateEmail?.split("@")[0] ?? "Unknown user"}</p>

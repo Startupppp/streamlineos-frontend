@@ -37,6 +37,7 @@ import { TicketDialogTitleField } from "./ticket-dialog-title-field";
 import { TicketDialogDescriptionSection } from "./ticket-dialog-description-section";
 import { TicketDialogFooter } from "./ticket-dialog-footer";
 import { useCan } from "@/hooks/api/access";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 
 interface CreateTicketDialogProps {
   projectId?: number;
@@ -105,6 +106,8 @@ function CreateTicketDialogContent({
 
   const resolvedOpen =
     externalOpen !== undefined ? externalOpen || internalOpen : internalOpen;
+
+  useRegisterDirtyState(resolvedOpen && form.formState.isDirty);
 
   const { data: projectsData, isLoading: projectsLoading } = useProjects(
     { status: "ACTIVE", limit: 100 },

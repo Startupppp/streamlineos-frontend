@@ -138,7 +138,7 @@ export function EventStreamPageContent() {
 
   return (
     <PageWrapper
-      title="HR Event Stream"
+      title="HR audit log"
       subtitle="Immutable append-only log of all HR domain events"
       badge={
         <Badge variant="outline" className="text-xs bg-muted text-muted-foreground flex items-center gap-1">

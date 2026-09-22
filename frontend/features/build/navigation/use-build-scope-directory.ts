@@ -136,7 +136,7 @@ export function useBuildScopeDirectory(
         parentPath: ORGANIZATION_PARENT,
         parentKey: null,
         projectKey: null,
-        href: `${BUILD_ROOT_PATH}/workspaces/${row.pmWorkspaceId}`,
+        href: `${BUILD_ROOT_PATH}/workspaces/${row.pmWorkspaceId}/overview`,
         isArchived: row.status === "archived",
       }));
   }, [wsInfinite.data, includeArchived]);

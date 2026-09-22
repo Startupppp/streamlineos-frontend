@@ -4,10 +4,9 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useCan } from "@/hooks/api/access";
 import { useTrialBalanceReport } from "@/hooks/api/accounting/reports";
 import { formatMinorMoney } from "@/lib/accounting/money";
-import type { TrialBalanceLine } from "@/types/accounting-reports";
+import type { TrialBalanceLine } from "@/types/accounting/accounting-reports";
 import { AsOfControls } from "./report-date-controls";
 import { ExportReportButton } from "./export-report-button";
 import { ReportSwitch } from "./report-switch";
@@ -16,12 +15,16 @@ import { ReportShell } from "./report-shell";
 import { useReportControls } from "./use-report-controls";
 
 export function TrialBalanceReport() {
-  const canView = useCan("accounting:reports:read");
   const controls = useReportControls();
   const includeZeroActivity = controls.includeZeroActivity;
 
-  const params = { asOf: controls.asOf, labelMode: controls.labelMode, includeZeroActivity };
-  const { data, isLoading, isError, error, refetch } = useTrialBalanceReport(params);
+  const params = {
+    asOf: controls.asOf,
+    labelMode: controls.labelMode,
+    includeZeroActivity,
+  };
+  const { data, isLoading, isError, error, refetch } =
+    useTrialBalanceReport(params);
 
   const currency = data?.currency ?? "";
 
@@ -79,7 +82,6 @@ export function TrialBalanceReport() {
       title={data?.title ?? "Trial balance"}
       subtitle="Every account with a closing balance, checked against itself."
       backHref="/accounting"
-      canView={canView}
       permission="accounting:reports:read"
       isLoading={isLoading}
       isError={isError}
@@ -135,16 +137,21 @@ export function TrialBalanceReport() {
                     className="min-h-[40vh] flex-1 border-0 bg-transparent"
                     title="Nothing has been posted yet"
                     description="Once journals, invoices or bills are posted, every account that moved will appear here."
-                    action={{ label: "Post a journal entry", href: "/accounting/journal" }}
+                    action={{
+                      label: "Post a journal entry",
+                      href: "/accounting/journal",
+                    }}
                   />
                 }
                 footer={
                   <div className="flex items-center justify-end gap-6 font-mono text-label font-semibold tabular-nums text-foreground">
                     <span>
-                      {data.columns.debit}: {formatMinorMoney(data.totalDebitMinor, data.currency)}
+                      {data.columns.debit}:{" "}
+                      {formatMinorMoney(data.totalDebitMinor, data.currency)}
                     </span>
                     <span>
-                      {data.columns.credit}: {formatMinorMoney(data.totalCreditMinor, data.currency)}
+                      {data.columns.credit}:{" "}
+                      {formatMinorMoney(data.totalCreditMinor, data.currency)}
                     </span>
                   </div>
                 }

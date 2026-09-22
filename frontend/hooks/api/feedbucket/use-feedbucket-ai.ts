@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { FeedbucketAiAnalysis, FeedbucketAiTicketType } from "@/types/feedbucket";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -42,6 +43,7 @@ export function useCreateTicketFromFeedbucketAi() {
     onSuccess: (_, { submissionId }) => {
       void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.submission(submissionId) });
       void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.all });
+      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.tickets() });
     },
   });
 }

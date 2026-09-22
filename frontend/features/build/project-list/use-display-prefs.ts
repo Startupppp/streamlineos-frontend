@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 
 export type ProjectGroupBy = "none" | "status" | "lead";
 
-export type ProjectOrderBy = "name" | "status" | "targetDate" | "progress" | "createdAt";
+export type ProjectOrderBy = "name" | "status" | "targetDate" | "progress";
 
 export type ProjectSortDir = "asc" | "desc";
 

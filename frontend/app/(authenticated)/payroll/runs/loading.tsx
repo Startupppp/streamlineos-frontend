@@ -8,7 +8,7 @@ export default function PayrollRunsLoading() {
       title="Payroll Runs"
       actions={<Skeleton className="h-9 w-24 rounded-md" />}
     >
-      <DataTableSkeleton rows={12} columns={6} />
+      <DataTableSkeleton rows={12} headers={["Month", "Entity", "Status", "Employees", "Gross", "Net", "Exceptions"]} />
     </PageWrapper>
   );
 }

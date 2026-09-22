@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { WorkspaceGoalsPage } from "./workspace-goals-page";
 import { WorkspaceRoadmapPage } from "./workspace-roadmap-page";
+import { PmWorkspacesPage } from "./pm-workspaces-page";
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
@@ -10,7 +11,6 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
-  usePermissionGate: jest.fn(() => ({ permission: "build:roadmap:view", allowed: false, denied: true, pending: false })),
 }));
 
 jest.mock("@/hooks/api/goals", () => ({
@@ -21,6 +21,43 @@ jest.mock("@/hooks/api/goals", () => ({
 jest.mock("@/hooks/api/build/roadmap", () => ({
   useRoadmapItems: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, error: null, refetch: jest.fn() })),
   useDeleteRoadmapItem: jest.fn(() => ({ mutate: jest.fn() })),
+}));
+
+jest.mock("@/hooks/api/build", () => ({
+  usePmWorkspaces: jest.fn(),
+  useCreatePmWorkspace: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUpdatePmWorkspace: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useDeletePmWorkspace: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: jest.fn(),
+}));
+
+jest.mock("@/components/shared/page-state", () => ({
+  PageState: ({ resolution, loading, empty, children }: {
+    resolution: { kind: string; permission?: string | null };
+    loading: React.ReactNode;
+    empty?: React.ReactNode;
+    children: React.ReactNode;
+  }) => {
+    if (resolution.kind === "loading") return <>{loading}</>;
+    if (
+      resolution.kind === "denied" ||
+      resolution.kind === "module-disabled" ||
+      resolution.kind === "module-denied" ||
+      resolution.kind === "plan-required"
+    )
+      return (
+        <div
+          data-testid="denied-state"
+          data-permission={resolution.kind === "denied" ? resolution.permission : undefined}
+        />
+      );
+    if (resolution.kind === "error") return <div data-testid="error-state" />;
+    if (resolution.kind === "empty") return <>{empty ?? children}</>;
+    return <>{children}</>;
+  },
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
@@ -39,18 +76,17 @@ jest.mock("@/components/pm-chrome", () => ({
   PM_TOOLBAR: "",
 }));
 
-jest.mock("@/components/shared", () => ({
-  NoPermissionState: ({ permission }: { permission: string }) => (
-    <div data-testid="no-permission" data-permission={permission} />
-  ),
-}));
-
 jest.mock("@/components/shared/error-state", () => ({
   ErrorState: () => <div data-testid="error-state" />,
 }));
 
 jest.mock("@/components/ui/empty-state", () => ({
   EmptyState: () => <div data-testid="empty-state" />,
+}));
+
+jest.mock("@/components/ui/data-table", () => ({
+  DataTable: () => <div data-testid="data-table" />,
+  DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 
 jest.mock("@/components/ui/stat-card", () => ({
@@ -94,6 +130,21 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
   ConfirmDialog: () => null,
 }));
 
+jest.mock("@/components/ui/select", () => ({
+  Select: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SelectTrigger: () => null,
+  SelectContent: () => null,
+  SelectItem: () => null,
+  SelectValue: () => null,
+}));
+
+jest.mock("@/components/ui/dropdown-menu", () => ({
+  DropdownMenu: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenuContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenuItem: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
 jest.mock("@/components/illustrations", () => ({
   EmptyTargetIllustration: () => null,
   EmptyProjectsIllustration: () => null,
@@ -113,9 +164,24 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 
 jest.mock("@animateicons/react/lucide", () => ({
   PlusIcon: () => null,
+  EllipsisIcon: () => null,
+}));
+
+jest.mock("./pm-workspace-status-badge", () => ({
+  PmWorkspaceStatusBadge: () => null,
+}));
+
+jest.mock("./pm-workspace-form-sheet", () => ({
+  PmWorkspaceFormSheet: () => null,
+}));
+
+jest.mock("./pm-workspace-members-sheet", () => ({
+  PmWorkspaceMembersSheet: () => null,
 }));
 
 const { useGoals } = jest.requireMock("@/hooks/api/goals") as { useGoals: jest.Mock };
+const { usePmWorkspaces } = jest.requireMock("@/hooks/api/build") as { usePmWorkspaces: jest.Mock };
+const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as { usePageState: jest.Mock };
 
 const DENIED_GATE = { permission: "build:goals:view" as const, allowed: false, denied: true, pending: false };
 const PENDING_GATE = { permission: "build:goals:view" as const, allowed: false, denied: false, pending: true };
@@ -149,29 +215,33 @@ const EMPTY_GOALS_RESULT = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  usePageState.mockReturnValue({ kind: "ready" });
 });
 
 describe("WorkspaceGoalsPage — denied state (BSN-01-027)", () => {
-  it("shows NoPermissionState when useGoals access.denied is true, not an empty state", () => {
+  it("shows denied state when usePageState returns denied, not an empty state", () => {
     useGoals.mockReturnValue(DENIED_GOALS_RESULT);
+    usePageState.mockReturnValue({ kind: "denied", permission: "build:goals:view" });
     render(<WorkspaceGoalsPage pmWorkspaceId="ws-1" />);
-    expect(screen.getByTestId("no-permission")).toBeInTheDocument();
+    expect(screen.getByTestId("denied-state")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
   });
 
-  it("passes the goals permission key to NoPermissionState", () => {
+  it("passes the goals permission key to denied state", () => {
     useGoals.mockReturnValue(DENIED_GOALS_RESULT);
+    usePageState.mockReturnValue({ kind: "denied", permission: "build:goals:view" });
     render(<WorkspaceGoalsPage pmWorkspaceId="ws-1" />);
-    expect(screen.getByTestId("no-permission")).toHaveAttribute(
+    expect(screen.getByTestId("denied-state")).toHaveAttribute(
       "data-permission",
       "build:goals:view",
     );
   });
 
-  it("renders loading skeleton when access is pending instead of denied state", () => {
+  it("renders loading skeleton when usePageState returns loading instead of denied state", () => {
     useGoals.mockReturnValue(PENDING_GOALS_RESULT);
+    usePageState.mockReturnValue({ kind: "loading" });
     render(<WorkspaceGoalsPage pmWorkspaceId="ws-1" />);
-    expect(screen.queryByTestId("no-permission")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("denied-state")).not.toBeInTheDocument();
     expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
   });
 
@@ -184,30 +254,71 @@ describe("WorkspaceGoalsPage — denied state (BSN-01-027)", () => {
 });
 
 describe("WorkspaceRoadmapPage — denied state (BSN-01-027)", () => {
-  const { usePermissionGate } = jest.requireMock("@/hooks/api/access") as {
-    usePermissionGate: jest.Mock;
-  };
-
-  it("shows NoPermissionState when usePermissionGate returns denied for roadmap view", () => {
-    usePermissionGate.mockReturnValue({
-      permission: "build:roadmap:view",
-      allowed: false,
-      denied: true,
-      pending: false,
-    });
+  it("shows denied state when usePageState returns denied for roadmap view", () => {
+    usePageState.mockReturnValue({ kind: "denied", permission: "build:roadmap:view" });
     render(<WorkspaceRoadmapPage pmWorkspaceId="ws-1" />);
-    expect(screen.getByTestId("no-permission")).toBeInTheDocument();
+    expect(screen.getByTestId("denied-state")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
   });
 
   it("does not show create button when denied (BSN-01-027)", () => {
-    usePermissionGate.mockReturnValue({
-      permission: "build:roadmap:view",
-      allowed: false,
-      denied: true,
-      pending: false,
-    });
+    usePageState.mockReturnValue({ kind: "denied", permission: "build:roadmap:view" });
     render(<WorkspaceRoadmapPage pmWorkspaceId="ws-1" />);
     expect(screen.queryByRole("button", { name: /new item/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("PmWorkspacesPage — denied state (BSN-FE-D3)", () => {
+  it("shows denied state when usePageState returns denied, not empty state", () => {
+    usePmWorkspaces.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "denied", permission: "build:workspaces:view" });
+
+    render(<PmWorkspacesPage />);
+
+    expect(screen.getByTestId("denied-state")).toBeInTheDocument();
+    expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+  });
+
+  it("passes the workspaces permission key to denied state", () => {
+    usePmWorkspaces.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "denied", permission: "build:workspaces:view" });
+
+    render(<PmWorkspacesPage />);
+
+    expect(screen.getByTestId("denied-state")).toHaveAttribute(
+      "data-permission",
+      "build:workspaces:view",
+    );
+  });
+
+  it("shows data table when usePageState returns ready with data", () => {
+    usePmWorkspaces.mockReturnValue({
+      data: {
+        data: [{ pmWorkspaceId: "ws-1", name: "Test Workspace", status: "active", memberCount: 1 }],
+        pagination: { nextCursor: null, hasMore: false },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    render(<PmWorkspacesPage />);
+
+    expect(screen.getByTestId("data-table")).toBeInTheDocument();
+    expect(screen.queryByTestId("denied-state")).not.toBeInTheDocument();
   });
 });

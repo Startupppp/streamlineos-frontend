@@ -16,6 +16,8 @@
     "build:web": "pnpm -C frontend build",
     "typecheck:api": "pnpm -C backend typecheck",
     "typecheck:web": "pnpm -C frontend type-check",
+    "check:route-census": "node scripts/build-route-census.mjs --check",
+    "check:route-census:self-test": "node scripts/build-route-census.mjs --self-test",
     "check:build-execution-plan": "node scripts/check-build-execution-plan.mjs",
     "check:build-execution-plan:self-test": "node scripts/check-build-execution-plan.mjs --self-test",
     "check:hrms-execution-plan": "node scripts/check-hrms-execution-plan.mjs",

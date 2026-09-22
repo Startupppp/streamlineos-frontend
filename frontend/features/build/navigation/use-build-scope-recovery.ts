@@ -1,14 +1,31 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import { useAccess } from "@/hooks/api/access";
 import { useManagedProduct } from "@/hooks/api/build/managed-products";
 import { usePmWorkspace } from "@/hooks/api/build/pm-workspaces";
+import { resolveBuildNavModel } from "@/lib/build/build-nav-model";
+import type {
+  BuildNavAccess,
+  BuildNavModel,
+} from "@/lib/build/nav/build-nav-destination";
 import {
   resolveBuildScopeFallback,
   type BuildScopeFallback,
   type BuildScopeParent,
 } from "@/lib/build/build-scope-fallback";
-import type { BuildScope } from "@/lib/build/build-scope";
+import { ORGANIZATION_BUILD_SCOPE, type BuildScope } from "@/lib/build/build-scope";
+import type { PermissionKey } from "@/lib/rbac/permissions";
+
+function firstAuthorizedOrganizationHref(model: BuildNavModel): string | null {
+  return (
+    model.myWork[0]?.href ??
+    model.primary[0]?.href ??
+    model.moreTools[0]?.href ??
+    model.settings?.href ??
+    null
+  );
+}
 
 function parseParentKey(parentKey: string | null): BuildScopeParent | null {
   if (parentKey === null) return null;
@@ -54,6 +71,35 @@ export function useBuildScopeRecovery({
     return workspaceQuery.data ? candidate : null;
   }, [candidate, productQuery.data, workspaceQuery.data]);
 
+  const { data: access } = useAccess();
+  const isOrgOwner = access?.isOrgOwner === true;
+  const scopes = access?.scopes;
+
+  const canAtOrganization = useCallback(
+    (permission: PermissionKey) =>
+      isOrgOwner || (scopes !== undefined && permission in scopes),
+    [isOrgOwner, scopes],
+  );
+
+  const organizationNavAccess = useMemo<BuildNavAccess>(
+    () => ({
+      can: canAtOrganization,
+      isOrgModuleEnabled: () => true,
+      isCapabilityEnabled: () => true,
+    }),
+    [canAtOrganization],
+  );
+
+  const organizationHref = useMemo(() => {
+    if (access === undefined) return null;
+    const organizationModel = resolveBuildNavModel({
+      scope: ORGANIZATION_BUILD_SCOPE,
+      access: organizationNavAccess,
+      pinnedIds: [],
+    });
+    return firstAuthorizedOrganizationHref(organizationModel);
+  }, [access, organizationNavAccess]);
+
   return useMemo(
     () =>
       resolveBuildScopeFallback({
@@ -61,7 +107,8 @@ export function useBuildScopeRecovery({
         isInaccessible,
         hasAnyBuildAccess,
         accessibleParent,
+        organizationHref,
       }),
-    [scope, isInaccessible, hasAnyBuildAccess, accessibleParent],
+    [scope, isInaccessible, hasAnyBuildAccess, accessibleParent, organizationHref],
   );
 }

@@ -2,10 +2,11 @@
 
 import { Badge } from "@/components/ui/badge";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useStockTransactions, type TransactionType, type StockTransaction } from "@/hooks/api/inventory/stock";
+import { useCanState } from "@/hooks/api/access";
 
 const MOVEMENT_TYPE_CONFIG: Record<TransactionType, { label: string; className: string }> = {
   PURCHASE: { label: "Purchase", className: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
@@ -141,11 +142,16 @@ const MOVEMENTS_EMPTY = (
 );
 
 export function RecentMovementsTable() {
-  const { data, isLoading, error, refetch } = useStockTransactions({ limit: 10 });
+  const movementsState = useCanState("inventory:stock:read");
+  const { data, isPending, error, refetch } = useStockTransactions({ limit: 10 });
   const movements = data?.items ?? [];
 
   function handleRetry(): void {
     void refetch();
+  }
+
+  if (movementsState === "denied") {
+    return <NoPermissionState compact permission="inventory:stock:read" />;
   }
 
   if (error) {
@@ -164,7 +170,7 @@ export function RecentMovementsTable() {
       data={movements}
       columns={MOVEMENTS_COLUMNS}
       getRowKey={(row) => row.id}
-      isLoading={isLoading}
+      isLoading={isPending}
       emptyState={MOVEMENTS_EMPTY}
     />
   );

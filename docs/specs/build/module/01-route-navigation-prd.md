@@ -85,8 +85,25 @@ application.
 - [ ] **BLD-01-006** the organization goal collection is canonicalized to
   `/build/goals`; every caller and access rule is migrated before the singular
   route is deleted.
-- [ ] **BLD-01-007** iteration routes follow the normative BLD-00 Cycle
+- [x] **BLD-01-007** iteration routes follow the normative BLD-00 Cycle
   decision; the `/sprints` route and every stale caller are deleted.
+  **Closed — source proof plus an executed regression, 2026-09-21.**
+  `9662485c9` deleted `app/(authenticated)/build/[projectId]/sprints/` and all of
+  `features/build/sprints/**`. `rg "/sprints"` over `frontend/` (excluding
+  `PAGES.md`, the vendored contract and the build cache) returns **zero** customer
+  routes; the only survivors are the API hook `hooks/api/build/sprints.ts`, which
+  addresses a backend endpoint, not a page. `project-overview-page.test.tsx` pins
+  the two repaired Cycles destinations; run 2026-09-21 as part of 5 suites / 56
+  tests, all passing. The route census also agrees: `--check` exits 0 at 92 routes
+  with no `/sprints` row.
+  This closes the *route and caller* clause only. The canonical-iteration decision
+  behind it is **not** met and stays open at BLD-00-D03-A: the backend still ships
+  `sprints.service.ts` and a `build.sprint.completed` consumer beside
+  `cycles.service.ts`, `tickets` still carries both `sprintId` and `cycleId`, and
+  `build:cycles:view`/`:manage` do not exist in either catalog — the Cycles API is
+  authorized by `build:sprints:view`. Deleting the route also removed cycle
+  edit/complete/planning capability with no frontend replacement; recorded at
+  BLD-10-012.
 - [ ] **BLD-01-008** calendar links open `/calendar` with a validated Build
   source and scope filter.
 - [ ] **BLD-01-009** configuration links moved by BLD-02B resolve under

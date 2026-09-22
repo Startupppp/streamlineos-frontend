@@ -1,10 +1,13 @@
 ﻿"use client";
 
 import { useEffect } from "react";
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import {
+  incidentFormSchema,
+  type IncidentFormValues,
+} from "@/features/build/incidents/incident-schema";
 import {
   Sheet,
   SheetContent,
@@ -76,29 +79,7 @@ const STATUS_LABELS: Record<IncidentStatus, string> = {
   closed: "Closed",
 };
 
-const schema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string(),
-  severity: z.enum(["critical", "high", "medium", "low"]),
-  status: z.enum([
-    "detected",
-    "investigating",
-    "mitigating",
-    "resolved",
-    "postmortem",
-    "closed",
-  ]),
-  impact: z.string(),
-  ownerId: z.string(),
-  detectedAt: z.string(),
-  responseDueAt: z.string(),
-  resolutionDueAt: z.string(),
-  linkedTicketId: z.string(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
-const DEFAULT_VALUES: FormValues = {
+const DEFAULT_VALUES: IncidentFormValues = {
   title: "",
   description: "",
   severity: "medium",
@@ -134,11 +115,11 @@ export function IncidentSheet({
   const { data: project } = useProject(projectId);
   const projectKey = project?.key ?? "";
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<IncidentFormValues>({
+    resolver: zodResolver(incidentFormSchema),
     defaultValues: DEFAULT_VALUES,
   });
-  useRegisterBuildDirtyState(open && form.formState.isDirty);
+  useRegisterDirtyState(open && form.formState.isDirty);
 
   const INCIDENT_SEVERITIES = ["critical", "high", "medium", "low"] as const;
   const INCIDENT_STATUSES = ["detected", "investigating", "mitigating", "resolved", "postmortem", "closed"] as const;
@@ -166,7 +147,7 @@ export function IncidentSheet({
     }
   }, [open, editIncident, form]);
 
-  function handleSubmit(values: FormValues) {
+  function handleSubmit(values: IncidentFormValues) {
     const input = {
       projectId,
       title: values.title,

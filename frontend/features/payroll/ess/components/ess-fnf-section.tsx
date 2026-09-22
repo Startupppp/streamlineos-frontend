@@ -30,6 +30,10 @@ export function EssFnfSection({ hideToolbar = false }: { hideToolbar?: boolean }
   const { data: settlement, isLoading, isError, error, refetch } = useEssFnf();
   const [downloading, setDownloading] = useState(false);
 
+  function handleRetry() {
+    void refetch();
+  }
+
   async function handleDownloadStatement() {
     if (!settlement || downloading) return;
     setDownloading(true);
@@ -41,10 +45,6 @@ export function EssFnfSection({ hideToolbar = false }: { hideToolbar?: boolean }
     } finally {
       setDownloading(false);
     }
-  }
-
-  function handleRetry(): void {
-    void refetch();
   }
 
   if (isLoading) {

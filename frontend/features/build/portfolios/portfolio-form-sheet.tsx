@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import {
+  portfolioFormSchema,
+  type PortfolioFormValues,
+} from "@/features/build/portfolios/portfolio-schema";
 import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
 } from "@/components/ui/form";
@@ -16,25 +19,14 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { FormSheetChrome, MemberPicker } from "@/components/shared";
 import type { Portfolio, CreatePortfolioInput, UpdatePortfolioInput } from "@/types/projects";
 
-const schema = z.object({
-  name: z.string().min(1, "Required").max(200),
-  description: z.string(),
-  ownerId: z.string(),
-  status: z.enum(["active", "on_hold", "completed", "archived"]),
-  health: z.enum(["", "on_track", "at_risk", "off_track"]),
-  strategicGoal: z.string(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
-const DEFAULTS: FormValues = {
+const DEFAULTS: PortfolioFormValues = {
   name: "", description: "", ownerId: "", status: "active", health: "", strategicGoal: "",
 };
 
 const PORTFOLIO_STATUSES = ["active", "on_hold", "completed", "archived"] as const;
 const PORTFOLIO_HEALTHS = ["", "on_track", "at_risk", "off_track"] as const;
 
-function toForm(p: Portfolio): FormValues {
+function toForm(p: Portfolio): PortfolioFormValues {
   return {
     name: p.name,
     description: p.description ?? "",
@@ -64,14 +56,14 @@ export function PortfolioFormSheet({
   onSubmitEdit,
   isPending,
 }: Props) {
-  const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: DEFAULTS });
-  useRegisterBuildDirtyState(open && form.formState.isDirty);
+  const form = useForm<PortfolioFormValues>({ resolver: zodResolver(portfolioFormSchema), defaultValues: DEFAULTS });
+  useRegisterDirtyState(open && form.formState.isDirty);
 
   useEffect(() => {
     if (open) form.reset(mode === "edit" && defaultValues ? toForm(defaultValues) : DEFAULTS);
   }, [open, mode, defaultValues, form]);
 
-  function handleSubmit(v: FormValues) {
+  function handleSubmit(v: PortfolioFormValues) {
     const HEALTH_VALUES = ["on_track", "at_risk", "off_track"] as const;
     const healthValue = HEALTH_VALUES.find((h) => h === v.health);
     const base: CreatePortfolioInput = {

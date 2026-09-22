@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, type ChangeEvent } from "react";
 import { ChevronUpIcon, ChevronDownIcon, XIcon, PlusIcon } from "@animateicons/react/lucide";
 import { Input } from "@/components/ui/input";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -119,22 +119,29 @@ const FieldRow = memo(function FieldRow({
     if (found) onTypeChange(index, found);
   }
 
+  function handleMoveUp() { onMoveUp(index); }
+  function handleMoveDown() { onMoveDown(index); }
+  function handleLabelChange(e: ChangeEvent<HTMLInputElement>) { onLabelChange(index, e.target.value); }
+  function handleRequiredChange(v: boolean) { onRequiredChange(index, v); }
+  function handleRemove() { onRemove(index); }
+  function handleOptionsChange(e: ChangeEvent<HTMLTextAreaElement>) { onOptionsChange(index, e.target.value); }
+
   return (
     <div className="rounded-lg border bg-card p-3 space-y-2">
       <div className="flex items-center gap-2">
         <div className="flex flex-col gap-0.5 shrink-0">
           <AnimatedIconButton
             type="button" variant="ghost" size="icon" icon={ChevronUpIcon} iconSize={12} className="h-5 w-5"
-            onClick={() => onMoveUp(index)} disabled={index === 0} aria-label="Move field up"
+            onClick={handleMoveUp} disabled={index === 0} aria-label="Move field up"
           />
           <AnimatedIconButton
             type="button" variant="ghost" size="icon" icon={ChevronDownIcon} iconSize={12} className="h-5 w-5"
-            onClick={() => onMoveDown(index)} disabled={index === total - 1} aria-label="Move field down"
+            onClick={handleMoveDown} disabled={index === total - 1} aria-label="Move field down"
           />
         </div>
         <Input
           value={field.label}
-          onChange={(e) => onLabelChange(index, e.target.value)}
+          onChange={handleLabelChange}
           placeholder="Field label"
           className="text-sm flex-1 min-w-0"
         />
@@ -150,18 +157,18 @@ const FieldRow = memo(function FieldRow({
         </Select>
         <div className="flex items-center gap-1.5 shrink-0">
           <Label className="text-xs text-muted-foreground">Req</Label>
-          <Switch checked={field.required} onCheckedChange={(v) => onRequiredChange(index, v)} />
+          <Switch checked={field.required} onCheckedChange={handleRequiredChange} />
         </div>
         <AnimatedIconButton
           type="button" variant="ghost" size="icon" icon={XIcon} iconSize={14}
           className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
-          onClick={() => onRemove(index)} aria-label="Remove field"
+          onClick={handleRemove} aria-label="Remove field"
         />
       </div>
       {meta.needsOptions && (
         <Textarea
           value={(field.options ?? []).join("\n")}
-          onChange={(e) => onOptionsChange(index, e.target.value)}
+          onChange={handleOptionsChange}
           placeholder="Options — one per line or comma-separated"
           className="text-xs h-16 resize-none"
         />

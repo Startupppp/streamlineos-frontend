@@ -69,7 +69,7 @@ export const InlineAssignee = memo(function InlineAssignee({
 
   const trigger = assignee ? (
     <AvatarWithPresence
-      src={assignee.image}
+      src={resolveImageUrl(assignee.image)}
       fallback={getUserInitials(assignee)}
       status={presenceMap.get(assignee.id)}
       avatarClassName="h-5 w-5 border border-background cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all"

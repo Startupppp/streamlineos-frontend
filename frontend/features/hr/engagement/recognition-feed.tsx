@@ -11,6 +11,8 @@ import { MemberPicker } from "@/components/shared";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   Select,
   SelectContent,
@@ -20,7 +22,6 @@ import {
 } from "@/components/ui/select";
 import { useLeaderboard, useEngagementBadges, useAwardBadge } from "@/hooks/api/hr/engagement";
 import { useOrgMembers } from "@/hooks/api/organization";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import {
   getUserDisplayName,
@@ -42,6 +43,9 @@ interface Recognition {
 interface RecognitionFeedProps {
   recognitions: Recognition[];
   isLoading: boolean;
+  isError?: boolean;
+  error?: unknown;
+  onRetry?: () => void;
   onGiveKudos: () => void;
 }
 
@@ -149,7 +153,7 @@ const LeaderboardRow = memo(function LeaderboardRow({
   );
 });
 
-export function RecognitionFeed({ recognitions, isLoading, onGiveKudos }: RecognitionFeedProps) {
+export function RecognitionFeed({ recognitions, isLoading, isError, error, onRetry, onGiveKudos }: RecognitionFeedProps) {
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -165,6 +169,16 @@ export function RecognitionFeed({ recognitions, isLoading, onGiveKudos }: Recogn
           </div>
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Couldn't load recognitions"
+        description={getErrorMessage(error)}
+        onRetry={onRetry}
+      />
     );
   }
 
@@ -192,12 +206,16 @@ export function RecognitionFeed({ recognitions, isLoading, onGiveKudos }: Recogn
 }
 
 export function BadgesGrid() {
-  const { data: badges, isLoading } = useEngagementBadges();
+  const { data: badges, isLoading, isError, error, refetch } = useEngagementBadges();
   const canManage = useCan("hr:engagement:manage");
   const award = useAwardBadge();
   const [awardBadgeId, setAwardBadgeId] = useState<number | null>(null);
   const [recipientId, setRecipientId] = useState("");
   const [reason, setReason] = useState("");
+
+  function handleRetry(): void {
+    void refetch();
+  }
 
   const handleAward = useCallback(() => {
     if (!awardBadgeId || !recipientId.trim()) return;
@@ -228,6 +246,17 @@ export function BadgesGrid() {
           <Skeleton key={i} className="h-24 rounded-lg" />
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        compact
+        title="Couldn't load badges"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
     );
   }
 
@@ -304,8 +333,12 @@ export function BadgesGrid() {
 }
 
 export function PointsLeaderboard() {
-  const { data: entries, isLoading } = useLeaderboard(20);
+  const { data: entries, isLoading, isError, error, refetch } = useLeaderboard(20);
   const { resolveMemberName, resolveMemberInitials } = useMemberLookup();
+
+  function handleRetry(): void {
+    void refetch();
+  }
 
   if (isLoading) {
     return (
@@ -319,6 +352,17 @@ export function PointsLeaderboard() {
           </div>
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        compact
+        title="Couldn't load the leaderboard"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
     );
   }
 

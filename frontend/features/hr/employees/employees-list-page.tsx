@@ -28,6 +28,7 @@ import {
   parseEmployeeListFilters,
   toHrEmployeesApiParams,
   hasActiveEmployeeFilters,
+  applyEmployeeUrlUpdates,
   employeeFiltersToUrlUpdates,
   DEFAULT_PAGE_SIZE,
   type EmployeeStatusFilter,
@@ -221,14 +222,21 @@ export function EmployeesListPage() {
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      for (const [k, v] of Object.entries(updates)) {
-        if (v == null || v === "") params.delete(k);
-        else params.set(k, v);
-      }
+      const params = applyEmployeeUrlUpdates(searchParams, updates);
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
     [searchParams, router, pathname],
+  );
+
+  const statusHref = useCallback(
+    (status: Exclude<EmployeeStatusFilter, "all">) => {
+      const params = applyEmployeeUrlUpdates(
+        searchParams,
+        employeeFiltersToUrlUpdates({ status }, { size: PAGE_SIZE, status: "all" }),
+      );
+      return `${pathname}?${params.toString()}`;
+    },
+    [searchParams, pathname],
   );
 
   const handleDepartmentFilterChange = useCallback(
@@ -283,11 +291,11 @@ export function EmployeesListPage() {
 
   return (
     <PageWrapper
-      title="Employee Directory"
+      title="Employee directory"
       subtitle={
         isFetching && !isLoading
           ? "Updating…"
-          : "Search, filter, and open employee profiles"
+          : "Employment administration for people with HR records — everyone in the organization is in the Directory."
       }
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col gap-3 sm:gap-4"
@@ -325,7 +333,7 @@ export function EmployeesListPage() {
               <Link href="/hr/onboarding">
                 <UserPlus className="h-3.5 w-3.5" />
                 <span className="sm:hidden">Add</span>
-                <span className="hidden sm:inline">Add Employee</span>
+                <span className="hidden sm:inline">Add employee</span>
               </Link>
             </Button>
           )}
@@ -352,6 +360,13 @@ export function EmployeesListPage() {
             <EmployeesDirectoryStats
               loadedCount={employees.length}
               hasMore={Boolean(hasNextPage)}
+              statusFilter={filters.status}
+              filters={{
+                search: apiParams.search,
+                departmentId: apiParams.departmentId,
+                role: apiParams.role,
+              }}
+              statusHref={statusHref}
             />
           </div>
 
@@ -363,11 +378,11 @@ export function EmployeesListPage() {
                 description={
                   hasFilters
                     ? "No results match your filters."
-                    : "Your employee directory is empty. Add your first team member to get started."
+                    : "No workers with active employment records. Onboard your first employee to get started."
                 }
                 filtersActive={hasFilters}
                 onClearFilters={clearFilters}
-                action={!hasFilters && canOnboard ? { label: "Add Employee", href: "/hr/onboarding" } : undefined}
+                action={!hasFilters && canOnboard ? { label: "Add employee", href: "/hr/onboarding" } : undefined}
                 className={PAGE_BODY_EMPTY_CLASS}
               />
             ) : view === "grid" ? (

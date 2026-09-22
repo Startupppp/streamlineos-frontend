@@ -15,7 +15,9 @@ export function readErrorReachesBoundary(
 
 export const INLINE_READ_ERROR = { throwOnError: false } as const;
 
-export async function optionalSignalRead<T>(read: Promise<T>): Promise<T | null> {
+export async function optionalSignalRead<T>(
+  read: Promise<T>,
+): Promise<T | null> {
   try {
     return await read;
   } catch (error) {

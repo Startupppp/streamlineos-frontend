@@ -99,8 +99,9 @@ const nextConfig: NextConfig = {
       permanent: true,
     },
     {
-      source: "/build/:projectId/workload",
-      destination: "/build/:projectId?view=workload",
+      source: "/build/:projectId(\\d+)",
+      has: [{ type: "query", key: "view", value: "workload" }],
+      destination: "/build/:projectId/workload",
       permanent: false,
     },
     {
@@ -111,6 +112,66 @@ const nextConfig: NextConfig = {
     {
       source: "/knowledge/wiki/pages/:pageId/history",
       destination: "/knowledge/wiki/doc/:pageId/history",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/workflow",
+      destination: "/build/:projectId/settings/workflow",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/automations",
+      destination: "/build/:projectId/settings/automations",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/webhooks",
+      destination: "/build/:projectId/settings/integrations/webhooks",
+      permanent: false,
+    },
+    {
+      source: "/build/goal",
+      destination: "/build/goals",
+      permanent: false,
+    },
+    {
+      source: "/build/goal/:goalId(\\d+)",
+      destination: "/build/goals/:goalId",
+      permanent: false,
+    },
+    {
+      source: "/build/pm-workspaces",
+      destination: "/build/workspaces",
+      permanent: false,
+    },
+    {
+      source: "/build/members",
+      destination: "/build/settings/access",
+      permanent: false,
+    },
+    {
+      source: "/build/access",
+      destination: "/build/settings/access",
+      permanent: false,
+    },
+    {
+      source: "/build/client-access",
+      destination: "/build/settings/client-access",
+      permanent: false,
+    },
+    {
+      source: "/build/drafts",
+      destination: "/build/inbox?view=drafts",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/my-tickets",
+      destination: "/build/my-work?projectId=:projectId",
+      permanent: false,
+    },
+    {
+      source: "/build/workspaces/:pmWorkspaceId/my-work",
+      destination: "/build/my-work?pmWorkspaceId=:pmWorkspaceId",
       permanent: false,
     },
   ],

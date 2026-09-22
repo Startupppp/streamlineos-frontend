@@ -2,13 +2,19 @@
 
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
-import type { StatementImportResult } from "@/types/accounting-banking";
+import type { StatementImportResult } from "@/types/accounting/accounting-banking";
 
 interface ImportResultPanelProps {
   result: StatementImportResult;
@@ -18,14 +24,19 @@ interface ImportResultPanelProps {
 const successTone = statusToneClasses("success");
 const warningTone = statusToneClasses("warning");
 
-export function ImportResultPanel({ result, onImportAnother }: ImportResultPanelProps) {
+export function ImportResultPanel({
+  result,
+  onImportAnother,
+}: ImportResultPanelProps) {
   return (
     <Card>
       <CardHeader className="px-4 py-3">
-        <CardTitle className="text-sm font-semibold">The statement is in</CardTitle>
+        <CardTitle className="text-sm font-semibold">
+          The statement is in
+        </CardTitle>
         <CardDescription className="text-label">
-          {formatShortDate(result.periodStart)} to {formatShortDate(result.periodEnd)} ·{" "}
-          {result.lineCount} line(s)
+          {formatShortDate(result.periodStart)} to{" "}
+          {formatShortDate(result.periodEnd)} · {result.lineCount} line(s)
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 p-4 pt-0">
@@ -39,8 +50,9 @@ export function ImportResultPanel({ result, onImportAnother }: ImportResultPanel
         >
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
           <span>
-            Opened at {formatMinorMoney(result.openingMinor, result.currency)}, closed at{" "}
-            {formatMinorMoney(result.closingMinor, result.currency)}, a movement of{" "}
+            Opened at {formatMinorMoney(result.openingMinor, result.currency)},
+            closed at {formatMinorMoney(result.closingMinor, result.currency)},
+            a movement of{" "}
             {formatMinorMoney(result.movementMinor, result.currency)}.
           </span>
         </div>

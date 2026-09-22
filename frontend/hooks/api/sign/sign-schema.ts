@@ -35,7 +35,6 @@ const signEnvelopeRowContract = z.object({
   finalizedAt: z.string().nullable(),
   finalPdfFileKey: z.string().nullable(),
   finalPdfHash: z.string().nullable(),
-  publicFormId: z.number().int().nullable(),
   metadataJson: z.record(z.string(), z.unknown()),
   createdAt: z.string(),
   updatedAt: z.string(),

@@ -7,7 +7,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ErrorState, NoPermissionState } from "@/components/shared";
-import { useCanState } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import {
   useCommissionAccrual,
@@ -82,14 +83,21 @@ export default function CommissionsPage() {
     );
   }, [accrual.data, display.locale]);
 
-  /**
-   * Ticket 26. Every read on this page is gated on the earnings key, and a
-   * disabled TanStack query reports no rows with `isLoading: false` — the same
-   * flags an empty ledger has. Without this the screen would tell somebody they
-   * have earned nothing, when the truth is that they may not look.
-   */
-  if (useCanState("crm:commission-earnings:view") === "denied")
-    return <NoPermissionState permission="crm:commission-earnings:view" />;
+  const pageState = usePageState({
+    permission: "crm:commission-earnings:view",
+    isLoading: accrual.isLoading,
+    isError: accrual.isError,
+    error: accrual.error,
+  });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper title="My Commissions" subtitle={subtitle}>
+        <PageState resolution={pageState} loading={null} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper

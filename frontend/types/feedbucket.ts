@@ -110,6 +110,9 @@ export interface ListFeedbucketSubmissionsQuery {
   status?: FeedbucketSubmissionStatus;
   assigneeId?: string;
   search?: string;
+  linked?: "linked" | "unlinked";
+  from?: string;
+  to?: string;
 }
 
 export interface UpdateFeedbucketSubmissionInput {

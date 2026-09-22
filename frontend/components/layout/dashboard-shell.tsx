@@ -20,7 +20,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AskOsProvider } from "@/components/assistant/ask-os-provider";
 import { CommandPaletteProvider } from "@/components/command-palette";
-import { BuildDirtyStateProvider } from "@/features/build/navigation/build-dirty-state-context";
+import { DirtyStateProvider } from "@/components/shared/dirty-state-context";
 import { getChatMobileContentPaddingClassName } from "./mobile/chat-mobile-chrome-layout";
 import { MobileModuleBottomNav } from "./mobile/mobile-module-bottom-nav";
 import { MobileShellFab } from "./mobile/mobile-shell-fab";
@@ -238,7 +238,7 @@ export function DashboardShell({
       </Link>
 
       <CommandPaletteProvider createTicketDialog={createTicketDialog}>
-        <BuildDirtyStateProvider>
+        <DirtyStateProvider>
           <AskOsProvider>
             <CommandPalette />
             <TrialBanner />
@@ -266,7 +266,7 @@ export function DashboardShell({
                     <aside
                       aria-label="Sidebar"
                       style={{ width: sidebarW }}
-                      className="relative z-50 hidden h-full shrink-0 flex-col overflow-visible border-r border-sidebar-border bg-sidebar transition-[width] duration-300 ease-in-out md:flex"
+                      className="relative z-50 hidden h-full shrink-0 flex-col overflow-visible border-r border-sidebar-border bg-sidebar transition-[width] duration-300 ease-in-out lg:flex"
                     >
                       <AppSidebar
                         isCollapsed={isSidebarCollapsed}
@@ -349,7 +349,7 @@ export function DashboardShell({
               />
             )}
           </AskOsProvider>
-        </BuildDirtyStateProvider>
+        </DirtyStateProvider>
       </CommandPaletteProvider>
     </div>
   );

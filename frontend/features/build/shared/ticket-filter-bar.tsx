@@ -24,7 +24,11 @@ import { useProjectLabels } from "@/hooks/api/build/projects";
 import { FilterChip } from "@/components/list-view/filter-chip";
 import { FilterTriggerButton } from "@/components/list-view/filter-trigger-button";
 import type { StatusFilterOption } from "@/components/list-view/filter-types";
-import { buildStatusConfig } from "@/features/build/shared/types";
+import {
+  buildStatusConfig,
+  resolveStatusOptions,
+  type StatusOptionSource,
+} from "@/features/build/shared/types";
 import { useTicketFilterParams } from "./use-ticket-filter-params";
 
 const FilterCommandMenu = dynamic(
@@ -53,11 +57,7 @@ interface ProjectOption {
 interface TicketFilterBarProps {
   sprints?: { id: number; name: string }[];
   members?: Member[];
-  statuses?: Array<{
-    name: string;
-    color?: string | null;
-    type?: string | null;
-  }>;
+  statuses?: readonly StatusOptionSource[];
   projectId?: number;
   projectOptions?: ProjectOption[];
   showTypeFilter?: boolean;
@@ -152,22 +152,10 @@ export function TicketFilterBar({
     enabled: loadTaxonomyOptions,
   });
 
-  const statusItems = useMemo<StatusFilterOption[]>(() => {
-    if (statuses && statuses.length > 0) {
-      return statuses.map((s) => ({
-        name: s.name,
-        color: s.color ?? null,
-        type: s.type ?? null,
-      }));
-    }
-    return (["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const).map(
-      (name) => ({
-        name,
-        color: null,
-        type: null,
-      }),
-    );
-  }, [statuses]);
+  const statusItems = useMemo<StatusFilterOption[]>(
+    () => resolveStatusOptions(statuses),
+    [statuses],
+  );
 
   const statusConfig = useMemo(
     () => buildStatusConfig(statusItems),

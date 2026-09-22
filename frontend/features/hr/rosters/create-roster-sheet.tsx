@@ -3,8 +3,6 @@
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { addDays, format } from "date-fns";
 import { toast } from "sonner";
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -19,13 +17,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
-
-const schema = z.object({
-  name: z.string().min(1, "Name is required"),
-  weekStart: z.string().min(1, "Week start is required"),
-});
-
-type FormValues = z.infer<typeof schema>;
+import {
+  isNotMonday,
+  nextRosterMonday,
+  rosterSchema,
+  rosterWeekEnd,
+  type RosterFormValues,
+} from "@/features/hr/rosters/roster-schema";
 
 interface Props {
   open: boolean;
@@ -34,22 +32,21 @@ interface Props {
 
 export function CreateRosterSheet({ open, onOpenChange }: Props) {
   const createRoster = useCreateRoster();
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<RosterFormValues>({
+    resolver: zodResolver(rosterSchema),
     defaultValues: {
       name: "",
-      weekStart: format(new Date(), "yyyy-MM-dd"),
+      weekStart: nextRosterMonday(new Date()),
     },
   });
 
   const weekStart = form.watch("weekStart");
-  const weekEnd = weekStart ? format(addDays(new Date(weekStart), 6), "yyyy-MM-dd") : "";
+  const weekEnd = rosterWeekEnd(weekStart);
 
   const onSubmit = useCallback(
-    (data: FormValues) => {
-      const end = format(addDays(new Date(data.weekStart), 6), "yyyy-MM-dd");
+    (data: RosterFormValues) => {
       createRoster.mutate(
-        { name: data.name, weekStart: data.weekStart, weekEnd: end },
+        { name: data.name, weekStart: data.weekStart, weekEnd: rosterWeekEnd(data.weekStart) },
         {
           onSuccess: () => {
             toast.success("Roster created");
@@ -67,10 +64,10 @@ export function CreateRosterSheet({ open, onOpenChange }: Props) {
     <HrSheet
       open={open}
       onOpenChange={onOpenChange}
-      title="Create Roster"
+      title="Create roster"
       description="Set up a new weekly scheduling roster"
       onSubmit={form.handleSubmit(onSubmit)}
-      submitLabel="Create Roster"
+      submitLabel="Create roster"
       isPending={createRoster.isPending}
     >
       <Form {...form}>
@@ -81,7 +78,7 @@ export function CreateRosterSheet({ open, onOpenChange }: Props) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                  Roster Name
+                  Roster name
                 </FormLabel>
                 <FormControl>
                   <Input placeholder="e.g. Week 26 Roster" className="text-sm" {...field} />
@@ -97,13 +94,14 @@ export function CreateRosterSheet({ open, onOpenChange }: Props) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                  Week Start (Monday)
+                  Week start (a Monday)
                 </FormLabel>
                 <FormControl>
                   <DatePicker
                     value={field.value}
                     onChange={field.onChange}
-                    placeholder="Select week start"
+                    placeholder="Select a Monday"
+                    disabledDays={isNotMonday}
                   />
                 </FormControl>
                 <FormMessage />

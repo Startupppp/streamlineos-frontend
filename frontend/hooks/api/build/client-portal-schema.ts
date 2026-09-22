@@ -85,6 +85,17 @@ export const toggleVisibilityContract = z
   })
   .transform((row) => ({ ...row, success: row.success ?? true }));
 
+export const CHANGE_REQUEST_STATUSES = [
+  "submitted",
+  "under_review",
+  "estimated",
+  "awaiting_approval",
+  "approved",
+  "rejected",
+  "in_progress",
+  "completed",
+] as const;
+
 export const changeRequestRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -96,7 +107,7 @@ export const changeRequestRowContract = z.object({
   estimateMinutes: z.number().int().nullable(),
   budgetImpactCents: z.number().int().nullable(),
   timelineImpactDays: z.number().int().nullable(),
-  status: z.string(),
+  status: z.enum(CHANGE_REQUEST_STATUSES),
   requestedById: z.string().nullable(),
   approvalOwnerId: z.string().nullable(),
   approvalOwnerMembershipId: z.number().int().nullable(),
@@ -108,4 +119,23 @@ export const changeRequestRowContract = z.object({
   deletedAt: z.string().nullable(),
 });
 
-export const changeRequestListContract = z.array(changeRequestRowContract);
+const crPagePaginationContract = z.object({
+  limit: z.number(),
+  hasMore: z.boolean(),
+  nextCursor: z.string().nullable(),
+});
+
+export const changeRequestListContract = z.union([
+  z.array(changeRequestRowContract).transform((rows) => ({
+    data: rows,
+    pagination: {
+      limit: rows.length,
+      hasMore: false as boolean,
+      nextCursor: null as string | null,
+    },
+  })),
+  z.object({
+    data: z.array(changeRequestRowContract),
+    pagination: crPagePaginationContract,
+  }),
+]);

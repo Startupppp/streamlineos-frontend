@@ -1,8 +1,10 @@
-# Deferred-items lane — closing out the two prior lanes
+# Deferred-items lane — closing out the prior lanes
 
 **Opened:** 2026-09-20 · **Owner:** backend
 **Absorbs and replaces:** `2026-09-19-tenant-connection-hold-prd.md` · `2026-09-20-read-cost-lane.md`
 Both were 100% ticked with their acceptance met, so they were deleted on 2026-09-20 and their durable content folded in below (§A, §B). Recover either with `git show HEAD:docs/specs/<name>.md`.
+
+**This file is not finished work.** Every R-item below is closed, but the lane still carries the R6 deferral table and the open `[dup-prefix]` migration numbers.
 
 Both prior lanes are 100% ticked. What remains is their **deferred** tables. A deferral is a claim, and a claim can be wrong — so each item below is re-tested against source before it is either implemented or re-deferred with a sharper reason.
 
@@ -18,57 +20,6 @@ The governing constraint is unchanged: `DB_POOL_MAX` is 15, and an authenticated
 ---
 
 ## Todo
-
-- [x] **R1 — inline email send holds the pooled connection for the provider call**
-  *Premise: **WRONG**, and the item was understated.* PRD §7 framed this as "~75 call sites, its own lane". All 75 already funnel through `EmailService.sendEmail` → `EmailOutboxService.enqueueAndTry` (`email.service.ts:30-32`), so the seam is **one method, not 75**. The real offender is a path the PRD never named: `AutomationEmailService.send` (`automation-email.service.ts:31`) bypassed the outbox entirely and called `EmailProviderService.dispatchEmail`, which retries **3 × 30s with 1s+2s backoff plus a 30s fallback provider** (`email.provider.ts:15-18, 323-370`) — a worst case near **123 seconds** holding one of 15 pooled connections, reached from request-path services that `await` automations inside the request transaction (`deals.service.ts:60`, `sign-integrations.service.ts:48`, `employee-onboarding.service.ts:82`).
-  *Files touched:* `src/modules/email/email.provider.ts` (`sendEmailOnceDirect` gains an optional budget) · `src/modules/email/email-provider-selection.ts` (`EmailDispatcher`) · `src/modules/email/email-outbox.service.ts` (`INLINE_SEND_BUDGET_MS`, `rowReproducesSend`) · `src/modules/automation/automation-email.service.ts` · `src/modules/email/email-outbox.service.spec.ts` (+6 tests) · `src/modules/automation/automation-email.service.spec.ts` (new, 3 tests)
-  *Result:*
-  1. **The inline attempt is now bounded by a connection-hold budget, not a delivery timeout.** The outbox row commits *before* the provider call and the cron drain owns delivery, so the inline attempt is only a latency optimisation — its budget belongs to the pool, not the provider. `INLINE_SEND_BUDGET_MS = 5_000` against 30s. An overrun raises the existing transient error, so the row simply stays PENDING for the drain: **no caller contract changes**.
-  2. **Automation mail is now durable.** It previously went straight to the provider with no outbox row, so a failed automation email was **lost**. It now enqueues first, which also subjects it to the platform suppression list (hard bounces) it had been skipping — `email-suppression.service.ts:19` claims to cover "all 75 direct-send call sites", and this one was outside that claim.
-  3. Worst-case hold on an automation email path: **~123s → ~5s**.
-  *Correctness defect found and fixed on the way:* the retry rule only guarded `attachments`, but the outbox row stores just `to/subject/html/text/recipientUserId`. A transient failure therefore re-sent **without** `cc`, `bcc`, `replyTo` or `headers` — meaning a retried CRM marketing email lost its RFC 8058 `List-Unsubscribe`, and a retried approval email silently dropped its cc. Generalised to one rule, `rowReproducesSend`: if the row cannot faithfully reproduce the message, it is never retried. Pinned by *"refuses to retry a send carrying headers, because the drain would redeliver it without its List-Unsubscribe"*.
-  *Deliberate trade, stated:* automation mail loses `dispatchEmail`'s in-request provider fallback (zeptomail↔resend) and gains durable cron retry. The cron drain also uses `sendEmailOnceDirect`, so this makes automation mail behave like all other mail rather than introducing a new failure mode.
-  *Verified:* no comment added, no cast added in production code. `jest src/modules/automation src/modules/email src/modules/crm/consent` → **310 passed / 310**, 31 suites. `new AutomationEmailService(` has **zero** construction sites outside the new spec (every other spec injects a `useValue` double), so the added constructor parameter breaks no arity. `EmailModule` is `@Global()` and already exports `EmailOutboxService`, so no module wiring changed and no import cycle is created.
-
-- [x] **R2 — upload antivirus scan holds the connection for up to 10s**
-  *Premise: CONFIRMED in shape, WRONG on magnitude and on the work required.* The bound is not 10s but **35s** — ClamAV is `CONNECT_TIMEOUT_MS = 5_000` + `SCAN_TIMEOUT_MS = 30_000` (`clamd-av-scanner.ts:5-6`); only the VirusTotal path is 10s (`virustotal-av-scanner.ts:16`). And the stated work ("needs every `this.db` touch on the path wrapped") was **already done** — both upload handlers were written with every database touch inside an explicit `runInTenantTransaction(..., { orgId })` and every non-database step in `runOutsideTenantContext`. The opt-out decorator was the one missing piece of a design already in place.
-  *Files touched:* `src/modules/storage/storage.controller.ts` (`@NoTenantTransaction()` on `upload`) · `src/modules/storage/storage-onboarding.controller.ts` (same) · `src/modules/storage/storage-av-gate.spec.ts` (+2 tests)
-  *Result:* the scan, the magic-byte check and the object-store round trip now run with **no pooled connection held**. Worst case per upload: **35s → 0s** of connection hold across the scan.
-  *Coordinator verification (the agent only checked the controller files, which is not sufficient):* I traced every call reachable from both handlers outside a wrap. `storage.controller.ts` is clean — the scan at `:161` sits between two wrapped blocks, and the author's own note at `:258-265` shows the design was already built for exactly this. `storage-onboarding.controller.ts:100` calls `this.storage.planUpload` **outside** the wrap, which looked like a live no-GUC defect; it resolves to `StoragePlacement.forOrg` → `RegionRegistry.storageForOrg` (in-process cached, control-plane read). That read is already performed with no ambient tenant transaction on **every** request — `with-tenant.ts:117` calls `resolvePlacement` before opening the transaction — so it is safe by construction, not by luck. Everything else before the wrap is validation.
-  *The ratchet from the previous lane caught my own change, and it was right to.* Opting `upload` out made `storage.controller.ts` a controller that carries `@NoTenantTransaction()`, so `check:ai-route-tenant-optout`'s file-local rule correctly flagged its two siblings `download` and `image` and **went red (exit 1)**. Those two were the same defect: `assertKeyReadable` (pure database) and `openStream`/`getFileUrl` (pure object store) both ran under one held connection. Fixed rather than frozen — both now carry `@NoTenantTransaction()` with `assertKeyReadable` wrapped in `runInTenantTransaction`. Gate back to green at **65 frozen**, unchanged.
-  *Second coordinator fix:* that change broke **35 tests across 5 specs** — all cross-tenant isolation tests on the download/image paths, which must keep asserting. Repaired with the callback-invoking module mock so every 404 and every "never opens the byte stream" assertion still runs.
-  *Also corrected:* my first gate run reported `EXIT=0` because `$?` was reading the exit status of `tail` through the pipe, not of node. The gate was red the whole time. Re-checked without the pipe.
-  *Verified:* `jest src/modules/storage` → **273 passed / 273**, 26 suites.
-  *Not certified:* that each inner `runInTenantTransaction` sets its GUC correctly once the interceptor is opted out. Needs one real upload and one real download against a live RLS-enabled database.
-
-- [x] **R3 — kb-media sharp transform runs inside the request transaction**
-  *Premise: **WRONG** — it named the wrong file and the wrong problem.* PRD §7 blamed `MediaTransformRunner` being fire-and-forget. **`MediaTransformRunner` does not appear in `kb-media.service.ts` at all**; that class belongs to `storage.controller.ts`. The `sharp` call here is a plain inline `await`. The real cost is that three expensive steps run while the pooled connection is held: the AV scan (`:113`), the CPU-bound encode (`:126`) and the object-store upload (`:142`). No "synchronous transform seam" was needed — `storage.controller.ts:101-102` had already solved the identical problem with `@NoTenantTransaction()` plus short `runInTenantTransaction` windows.
-  *Files touched:* `src/modules/kb/wiki/kb-media.controller.ts` (`@NoTenantTransaction()`) · `src/modules/kb/wiki/kb-media.service.ts` (`upload` restructured into two short transactions) · `src/modules/kb/wiki/kb-media.service.spec.ts` (+3 tests) · `src/modules/kb/wiki/kb-media-connection-release.spec.ts` (new, 4 tests) · `src/modules/kb/wiki/kb-media-ledger-compensation.spec.ts` (coordinator fix)
-  *Result:* `upload` is now three windows — a short transaction for the page-ownership read, **no connection held** for scan + encode + upload, then a short transaction for the attachment row and the indexing hook.
-  *Coordinator corrections — three, none of which the agent's green run would have shown:*
-  1. **It deleted a 20-line existing comment** while relocating the `registerAfterCommit` block. That comment records why page-document uploads once reported success and were never searchable. CLAUDE.md §6 says existing comments stay; restored verbatim.
-  2. **It broke 6 tests in `kb-media-ledger-compensation.spec.ts`**, a file outside its ownership, and correctly reported rather than edited. Fixed with the same module mock — which still invokes its callback, so no assertion is voided (the trap in CLAUDE.md §8).
-  3. **I checked what the agent did not: `@Idempotent("kb.media.upload")` on this route.** Opting out removes the ambient context the idempotency store might have relied on. It does not — `idempotency.interceptor.ts:195,230` branches explicitly on `getTenantContext()`, `command-fence-store.ts:123` opens its own transaction, and there is a spec named `command-fence-store-no-ambient-tx.spec.ts`. The route moves onto the branch its author documents as the **durable** one.
-  *Coverage the agent's approach would have lost, restored:* mocking `runInTenantTransaction` erases the very boundary this task creates. I added three ordering tests that pin it — scan/encode/upload observed at transaction depth **0**, both database touches at depth **1**, and exactly **two** transactions rather than one spanning the upload. Tests 2 and 3 fail against the pre-change code (depth 0, zero transactions), so they are not vacuous.
-  *Verified:* `jest src/modules/kb/wiki` → **333 passed / 333**, 47 suites.
-  *Not certified:* that each short window receives the correct `app.organization_id` GUC, and that the deferred indexing hook drains on a live handle. Needs one real upload against an RLS-enabled database.
-
-- [x] **R4 — `accessMode: "read only"` for read-intent transactions — investigated, NOT implemented**
-  *Premise: partly right, badly understated.* `recordTargetRequest` **is** guarded by `isRelocationTarget` (`with-tenant.ts:193`), so it fires only for an org mid-relocation — but that makes it a *worse* blocker than the PRD described, not a lesser one: it writes on the request's own `tx` for **every** request including GETs, so read-only mode would make **every GET 500 on the target cell for the duration of a relocation**. Invisible in testing, catastrophic during a migration.
-  *Files touched:* **none.** This was a read-only audit; implementing would have shipped a regression.
-  *The real blocker:* **15 GET routes write inside the interceptor's transaction**, out of 1,646 total. The plumbing is otherwise ready — `READ_ONLY_METHODS = {GET, HEAD, OPTIONS}` (`tenant-context.interceptor.ts:39`), intent already reaches `withTenant` (`:116`), and `run-in-tenant-transaction.ts:110` already proves drizzle accepts `{ accessMode: "read only" }`. Only `with-tenant.ts:188` would need the option. That is one line, and it is the wrong line to write.
-  *Dominant cause, verified by me directly:* `AuditService.logCritical` (`audit.service.ts:87-89`) awaits `write()`, which with an ambient context inserts straight into the **request's** transaction — 5 of the 15. Its sibling `log` (`:77-84`) defers through `registerAfterCommit` + `runOutsideTenantContext` and is safe. The class's own docblock states the coupling is deliberate ("an audit of a mutation belongs in that mutation's transaction"), so this is a real design constraint, not an oversight to patch away.
-  *Verdict:* **UNSAFE to ship, and UNPROVABLE safe without live traffic.** Six of the 15 write only on a conditional branch; one (`InventorySettingsService.get`) writes only on a **Redis cache miss**, so it passes every warm-cache test and 500s after a deploy. A static pass cannot distinguish "no GET writes" from "no GET writes on the paths it could resolve".
-  *Separate finding worth its own lane:* those 15 routes violate the repo's own rule — backend/CLAUDE.md §2 says "no writes in a GET". A written rule is not a control; it has been broken 15 times. Notably `inv-products.controller.ts:170` carries the comment *"A read — it computes and returns, and writes nothing"*, which is true of the handler and false of its call graph.
-  *What would close it:* fix the 15; exempt relocation-target orgs or move `recordTargetRequest` off the request transaction; then roll out per-module rather than as a global `intent` flip, so a missed path costs one surface instead of every GET.
-
-- [x] **R5 — re-check the two reserved Build files**
-  *Premise: no longer matches source, and the reservation still stands.* The read-cost lane recorded "`projects-work-query.service.ts` unbounded count". At current source the count reads are **already** `Promise.all`-parallel with the page read **and** conditional — `:462` and `:522` both compute `total` only when a count was requested (`countRows ? Number(...) : undefined`), so an ordinary page pays for no count at all. That is not an unbounded count.
-  *Files touched:* **none.** Both files were modified by the concurrent session 17 minutes before this check (`06:42` / `06:15` against a `06:59` clock), so they remain reserved under the shared-edit rule.
-  *Remaining marginal win, recorded not taken:* folding the conditional count into `count(*) OVER ()` would save one round trip on count-requesting pages only. It spans a `UNION` in `work-scope-union.ts:89`, so it is a real change to a file another session holds — not worth taking from them for one conditional round trip.
-
-- [x] **R6 — re-state what stays deferred, with certification steps**
-  *Files touched:* this document (table below).
 
 | Item | Blocked on | Exactly what closes it |
 |---|---|---|
@@ -144,12 +95,7 @@ Verified in the production catalog afterwards rather than trusted from the runne
 columns; all three `build` tables. `job_requisitions` held **0 rows**, so the FK validation and the
 column add were both trivial and took no rewrite.
 
-⚠ **Still open, and deliberately not touched: two duplicate migration numbers.** `1120` is claimed by
-both `1120_add_landed_cost_tag.sql` and `1120_feedbucket_widget_defaults.sql`; `1121` by both
-`1121_requisition_headcount_link.sql` and `1121_chat_presence_custom_status.sql`. Two lanes numbered
-independently. The journal keys on `tag`, not the number, so this breaks nothing at runtime — but
-`check:migration-discipline` still reports `[dup-prefix]` for both, and renaming a file belongs to the
-lane that owns it.
+✅ **The two duplicate migration numbers are closed 2026-09-21** — see the migration closeout below.
 
 **The lesson this lane should carry:** journalling is not bookkeeping. An unjournalled migration is
 indistinguishable from an applied one at every static gate — typecheck passes, jest passes, the build
@@ -200,3 +146,304 @@ These are the reason a peer's green run is not integration proof.
 
 1. **A silent behaviour narrowing.** Reusing `listMemberChannelIds` also inherited its `isArchived = false` filter, which `searchChannels` never had. An archived private channel the caller belongs to stopped being findable — and search is exactly how a person finds one. Fixed with an `includeArchived` option defaulting to `false`, so the Ably token route keeps its old behaviour.
 2. **A constructor arity break.** Adding `ChatChannelListService` as a third constructor parameter broke four `new ChatSearchService(...)` call sites in two **unmodified** specs. Every chat jest run stayed green because ts-jest does not fail on type errors — **only the typecheck sees arity.**
+
+---
+
+## 2026-09-21 — closeout session
+
+### Migration 1129 (onboarding session race) — APPLIED TO PRODUCTION
+
+The race this migration exists to prevent had **already happened in production**.
+`getOrCreateSession` could insert a second flow session for one actor, and
+because it orders by `created_at DESC` the newest row wins.
+
+| Evidence | Value |
+|---|---|
+| Conflicting pair | org `c26140dd…`, user `6fcc8aa8…`, type `org_setup` |
+| Row 4 | `completed` at 2026-09-14T02:36:34.612Z |
+| Row 5 | `not_started`, inserted 02:36:38.732Z, empty, untouched for 7 days |
+| Effect | that org's owner was handed the stale `not_started` row for a week |
+
+`CREATE UNIQUE INDEX` would have failed outright on this pair. The migration now
+abandons losers first, keeping the most advanced session per actor
+(`completed` > `skipped` > `in_progress` > `not_started`, newest first) — the
+same status its partial indexes already exclude.
+
+**A defect in the migration itself was caught before applying.** It dropped
+`idx_onb_flow_sessions_org_membership_type` and replaced it with two *partial*
+indexes. The first read in `getOrCreateSession` filters org + actor + type with
+**no status predicate**, so neither partial index can serve it and
+`idx_onb_flow_sessions_status` leads on `(org_id, status)`. That read would have
+been left with no usable index. The plain index is kept and restored to the
+Drizzle schema.
+
+Applied over IAM auth by explicit tag — never the full chain, which would have
+replayed ~1,100 migrations against the near-empty production ledger. The `.env`
+password is stale; that cluster is IAM-only.
+
+Verified on production: both partial unique indexes present with correct
+predicates · plain actor index intact · row 5 `abandoned`, row 4 untouched ·
+zero remaining conflicts · ledger hash matches the file on disk · a duplicate
+insert **rejected `23505` on `uq_onb_flow_sessions_user_type`**.
+
+### Notification emails bypassed the suppression list
+
+`EmailService` overrides `sendEmail` to route through `outbox.enqueueAndTry`, so
+named senders were gated. `NotificationEmailProvider` called
+`EmailProviderService.dispatchEmail` directly and skipped suppression entirely —
+falsifying the clause in `email-outbox.service.ts` that the gate "applies to
+mandatory notification types too". Hard-bounced addresses kept receiving mail,
+degrading domain reputation for every other recipient.
+
+Fixed in the provider, reusing the existing `EmailSuppressionService` seam, as a
+**terminal** failure (`retryable: false`) so `notificationQueue` does not retry
+forever. Not routed through the outbox: that would have given notifications two
+competing retry systems, which root §9 forbids.
+
+### The verification log above is now out of date
+
+It records "62 pre-existing errors remain in files owned by concurrent sessions".
+That is no longer true.
+
+| Check | Result |
+|---|---|
+| `tsc --noEmit -p tsconfig.json` | **exit 0, zero errors** across `src`, `evals` and `test` |
+
+Three of the last errors were a regression: adding the suppression dependency
+changed `NotificationEmailProvider`'s constructor arity, and three specs still
+constructed it with two arguments. All four provider suites were green
+throughout — ts-jest runs with `isolatedModules`, so **jest cannot see a type
+error**. Typecheck remains the only gate that sees an arity change.
+
+The suppression parameter is narrowed to
+`Pick<EmailSuppressionService, "findSuppressed">` with an explicit `@Inject`,
+matching how `PUBLIC_API_URL` already arrives on that constructor — so no spec
+needed a cast.
+
+### Suites repaired
+
+All previously failing, all now green, none weakened:
+`payroll-inputs` ×2 · `assets.service` · `recruitment-handoff` ·
+`employee-attach-employment-duplicate-primary` · `hr-lifecycle-read-caps` ·
+`notification-email.provider`.
+
+`hr-analytics.service.ts` `deptDistribution` grouped departments with no cap and
+now carries `.limit(1_000)`.
+
+### Premises that did not survive inspection
+
+Four this session, all in the direction of making work look larger than it was:
+
+| Claimed | Actual |
+|---|---|
+| Outbox writes a PLATFORM/NULL row for notifications | Notifications never touch the outbox at all — no such row exists |
+| ~89 unused knip exports in the AI modules | **0** in `src/modules/ai/**`; the ~90 repo-wide total is spread across billing, build, CRM, HR, inventory, KB and others |
+| 64 TS7006 errors | 4 errors total, **none** of them TS7006 |
+| `markProposalDeclined` omits its `orgId` argument | It passes `{ orgId }`; the reviewer had not read far enough |
+
+The knip figure is since **confirmed standalone** with
+`NODE_OPTIONS=--max-old-space-size=8192`: 1 unused file, 14 unused exports,
+76 unused exported types, 18 duplicate exports — `0` under `src/modules/ai/**`,
+8 under `src/modules/inventory/ai/`.
+
+A fifth premise fell after the above was written:
+
+| Claimed | Actual |
+|---|---|
+| Making `ticket.updateStatus` atomic "means changing both service signatures" | No signature changes at all — see below |
+
+### Test-inclusive typecheck is now blocking
+
+`.github/workflows/ci.yml` — `continue-on-error: true` removed from the
+**Typecheck (test-inclusive)** step (`pnpm typecheck:test`, `tsconfig.test.json`
+covering `src`, `evals`, `test`).
+
+The flag was justified in a comment block by 62 pre-existing errors. That count
+no longer holds: the step exits **0 with zero errors from cold**, with
+`dist/*.tsbuildinfo` deleted first so no stale incremental cache could fake the
+pass. The comment block was removed except for the heap note, which is still
+load-bearing — at 8192 tsc exits 134 after printing zero errors, a silent
+false-pass rather than a typecheck.
+
+Bite proven by scratch-removing a type annotation in
+`rank-gap-matches-board-order.spec.ts`: TS7034 + TS7005, exit 2. Reverted.
+
+### `ticket.updateStatus` atomicity — the deferral's reason was false
+
+The deferral at `2026-09-19-ask-os-architecture-remediation-prd.md:170` was
+right on three clauses and wrong on the one that mattered. `updateTicket` and
+`addComment` do each open their own transaction, neither accepts an external
+`tx`, and `confirmAction` is `@NoTenantTransaction()` — all true. But atomicity
+needed **no signature change**:
+
+Both services take `@Inject(DRIZZLE)`, which is the `createTenantAwareDb`
+proxy. Under an ambient tenant context that proxy resolves every property to
+the ambient `tx`, so `this.db.transaction(...)` becomes `tx.transaction(...)`
+— and drizzle's postgres-js driver implements that as
+`client.savepoint(...)` (`postgres-js/session.js:131`), a savepoint on the same
+connection, not a second one. One outer
+`runInTenantTransaction(db, fn, { orgId })` is therefore sufficient, and it was
+already present in `build-confirm-actions.ts:44`.
+
+`runInNewTenantTransaction` would have been actively worse here — a second
+pooled connection against a ceiling of 10.
+
+What was missing was the test. The pair that existed asserted the same three
+things twice; one was replaced with an assertion that both writes are
+**unreachable when the transaction callback never runs**. Mutation-proved by
+moving `updateTicket` outside the wrapper: the new test fails, and **the
+original one still passed** — so the duplicate would not have caught a write
+escaping the transaction.
+
+Limit worth stating: `runInTenantTransaction` is mocked in these specs, so they
+prove the call shape and the containment, not rollback itself. Rollback rests on
+the savepoint mechanism verified at source above; proving it end to end needs a
+live database, which this machine does not have.
+
+### Migration closeout — production is now consistent
+
+Three separate defects, all found by reading the production catalog rather than
+trusting a runner's output.
+
+| Migration | State found | Action |
+|---|---|---|
+| `1130_chat_invite_link_token_hardening` | journalled, never applied | **Applied.** Verified beforehand to be a no-op: `chat_channel_invite_links` holds **0 rows**, `token_hash` was already `NOT NULL`, and `uniq_chat_invite_link_token` was already absent. Nothing was erased and no invite link broke — the apparent destructiveness of its `UPDATE … SET token = NULL` was against an empty table. |
+| `1129_onb_flow_sessions_unique_type_per_actor` | **applied, but reading as pending** | Its ledger row (id 24) carried `created_at=1789959560734` while the journal had been renumbered to `…346` by another session *after* it was applied. That made the row an orphan and put the migration above the watermark, so the next `db:migrate` would have re-run an applied migration. Reconciled with one guarded `UPDATE`, hash-checked against the file first. |
+| `1120`/`1121` duplicate numbers | `check:migration-discipline` red | Renumbered to `1128a`/`1128b` — see commit. |
+
+Ledger before: 24 rows, 2 pending, 1 orphan. After: **26 rows, 0 pending, 0
+orphans, 0 duplicates.**
+
+⚠ **One pre-existing condition is NOT fixed and is not mine:** 867 journal
+entries sit below the watermark with no ledger row, so they will never apply on
+this database. Production was built by push/bootstrap rather than by the
+migration chain, which is why the ledger is near-empty against 893 files. A
+cold rebuild from this journal and the live database are therefore not
+guaranteed to agree. Unchanged by this lane, recorded so it is not rediscovered.
+
+`check:migration-chain` still fails on two pre-existing issues — the baselined
+`1090` duplicate prefix and the `0619` timestamp regression. It went from three
+duplicate prefixes to one.
+
+### Dead code — 33 exports deleted, scoped to modules nobody else was editing
+
+Backend knip: 13 unused exports + 76 unused types → **10 + 46**. Most deletions
+were not merely unused but root §4 violations — a service re-exporting a type it
+does not own, creating a second import path that rots.
+
+**The dead-code ledger beat the tool three times.** `check-dead-code.mjs` carries
+verdicts knip cannot see, and all three were correct to honour:
+`PresenceStatus` (KEEP — companion alias of the live `PRESENCE_STATUSES`; knip
+misses the `(typeof X)[number]` derivation), `EmployeeAdmissionStatus` (KEEP),
+and `runInNewOrgTransaction` (**WIRE**, not delete — its missing caller is
+`bootstrapCellOrganization`, and the `runInNewTenantTransaction` it currently
+uses resolves region by reading the organisation's own uncommitted row).
+
+Left alone deliberately: `inventory/purchase-orders/po-lifecycle.ts`, a verified
+stale pre-extraction duplicate of the live `lib/po-lifecycle.ts` (its four
+exports are shadowed by same-named ones with different signatures). Zero
+references, safe to delete — but inventory is being actively edited by another
+session, so it stays for its owner. The 18 duplicate exports were also left:
+they sit in `*-response.schemas.ts` files where a rename risks contract drift.
+
+### Deferral premises re-tested — six fell, one survived
+
+An audit claimed seven documented blockers were already satisfied. Each was
+re-verified adversarially before any doc was edited, and that was worth doing:
+
+| Item | Verdict |
+|---|---|
+| chat-os P4-6 "no `data-*` directive frame is emitted at all" | ⚠ **Unresolved — and this verdict's own first reason was wrong.** The emitter *is* wired end to end on a single unbranched path (`ask-os-tool-registry.ts:185` → `chat-assistant.service.ts:205, 247` → `ai-stream-response.ts:140-168`, `transient: true`). But "the SSE census predates the wiring" is **refuted by timestamps**: the emitter landed in backend `448c4e25b` at 2026-09-20T12:24+05:30 and the census was committed 2026-09-21T00:07+05:30. Either the scratch stack ran a pre-`448c4e25b` build, or the census decoded UI messages rather than raw SSE and dropped transient parts by construction. Needs a raw-SSE re-run; **P4-6 stays open**. |
+| ask-os F-06 multiple directives per turn | **Done** — `global-ask-os.tsx:219-220` appends rather than overwrites; the renderer maps N cards. |
+| ask-os F-07 confirm card surviving reload | ⚠ **Still open — the audit overreached.** The reloaded card renders in `mode="record"` and is **read-only**: the token is stripped at persist time (`streaming/ask-os-directive.ts:43`). Only the "card vanishes" half was fixed. There is still no way to confirm or decline after a reload, and `cancelProposal` was deleted, so a live proposal dangles until expiry. |
+| ask-os F-10 "`react-window` is installed but unused anywhere" | **False** — **8** production consumers (recounted 2026-09-21; an earlier "nine" here included `features/__tests__/virtual-row-listitem.contract.test.ts`). The defect (`ask-os-chat-view.tsx:112` maps every row) is real, but the stated reason to defer is not. |
+| `ai-credits-reservation.service.ts` live billing bug | **Already fixed** — `:103` returns `existing.id`. |
+| "impersonation is never recorded in any audit log" | **False** — the context reaches a real write at `audit.service.ts:200-204`, and the interceptor is registered *before* `TenantContextInterceptor`, so the scope encloses the after-commit drain. |
+| ask-os 11.4 registry parity spec "has not landed" | **Landed and non-vacuous** — asserts both directions plus anti-vacuity floors. `ACTION_LABELS` 24 ↔ `CONFIRMABLE_ACTION_DEFINITIONS` 24; the "20 against 22" is stale. |
+| ask-os 15.1 `AmbiguousCandidate` duplicate | **Unified** — one declaration, three importers, no alias. |
+
+**A stale count worth correcting elsewhere:** the connection-hold PRD's "13 AI
+holds remaining" is now **1**. `check:request-txn-outbound` reports
+`8 holding across an outbound call (frozen), 1 across an AI call (ceiling 1)`,
+and the one is `mail#aiInboxSummary`. ✅ **Propagated 2026-09-21** — H19 now
+carries the measured ceiling, and the older 24/18/13 figures are explicitly
+labelled history rather than status.
+
+That makes **twelve** deferral premises refuted across this lane. The pattern is
+consistent: every one made the work look larger than it was.
+
+⚠ **A thirteenth, and this one was mine.** The P4-6 verdict above originally read
+"the SSE census predates the wiring". Checking the commit timestamps refuted it:
+the emitter landed 2026-09-20T12:24, the census was recorded 2026-09-21T00:07.
+The verdict is corrected in place and P4-6 is back to open. The lesson cuts both
+ways — a premise offered to *close* an item needs the same adversarial check as
+one offered to defer it.
+
+### Corrections propagated into the individual PRDs — 2026-09-21
+
+Every verdict above lived only in this lane, so each source document still carried
+its refuted rationale. All six are now fixed at the point of use:
+
+| Document | What was corrected |
+|---|---|
+| `2026-09-19-ask-os-architecture-remediation-prd.md` | The ⚠ under 3.6 claiming **"impersonation is never recorded in any audit log"** — retracted. The setter *is* called, by `ImpersonationContextInterceptor.intercept` (`impersonation-context.interceptor.ts:20`), registered before `TenantContextInterceptor`. 15.1's `AmbiguousCandidate` duplicate marked closed with the three importers named. The knip figure under 17.4 re-measured 89 → 56. |
+| `2026-09-19-ask-os-hardening-prd.md` | F-06 struck as closed. F-07's rationale replaced — the renderer is not the blocker; the token is stripped at persist time (`ask-os-directive.ts:43`), so the reloaded card is `mode="record"`. F-10's "`react-window` is installed but unused" replaced with the 8 production consumers and three named patterns to copy. |
+| `2026-09-18-chat-os-prd.md` | P4-6 annotated in both places with the source trace and the timestamp refutation; kept **open** pending a raw-SSE re-run. |
+| `2026-09-20-connection-hold-remediation-prd.md` | H19 heading and the "remaining 13" block superseded by the measured ceiling of 1; the historical counts labelled as history. The 8-frozen list now points at H20 and the retraction, because the prerequisites it records have moved. |
+| `2026-09-20-get-route-writes-lane.md` | Its opening ⚠ and the detail note both called `ai-credits-reservation.service.ts:103` a live billing bug. It is fixed — the call site unwraps `existing.id`. This also resolves a direct contradiction between two lane documents. |
+
+### Still open
+
+- ~~**The 56 remaining knip findings** … plus the 18 duplicate exports and `po-lifecycle.ts`.~~ **Closed — it was almost entirely phantom work. See the section below.**
+- The 50 unbudgeted connection-hold sweeps — not dispatched.
+- Every chat-os item needing a live environment: no local Postgres, Redis or Docker on this machine (5432/5433/6379 all refuse).
+- ~~ask-os 11.1 (directive column needs a migration)~~ **— premise refuted, no migration is needed** (below) — and the email-predicate widening (needs the notifications owner).
+- **ask-os F-07 and F-10**, both now with their false rationale removed — F-07 needs a decline endpoint and a token-bearing reload path; F-10 needs windowing on an established in-repo pattern.
+- **chat-os P4-6** — reopened. Source and the live census disagree and nothing here can settle it; needs a raw-SSE census on a stack built from backend `448c4e25b` or later.
+- The unapplied-below-watermark journal entries described above — now **869**, because three more migrations landed above the watermark.
+
+### No migration needs to run — and both "missing migration" items were false
+
+Re-checked against the production catalogue over IAM, 2026-09-21:
+
+```
+Ledger: 27 applied row(s) against 896 journal entr(ies).
+Watermark 1803000010350; 0 migration(s) pending.
+```
+
+| Item | Claim | What the catalogue says |
+|---|---|---|
+| hardening **M6** | "`unique(\"uniq_ai_action_proposals_org_id\")` declared in Drizzle has no migration." | ⚠ **Half true, and the dangerous half is the other one.** No migration file creates it — but the constraint **already exists in production**, `contype = 'u'`, `convalidated = true`, with its index, on a 10-row table with zero duplicate `(org_id, id)` pairs. Writing and applying the migration would have failed `42710`. This is [[a-migration-is-unverified-until-applied]] in reverse: production was built by push/bootstrap, so "no migration creates it" says nothing about whether it is there. **Probe `pg_constraint` before authoring a migration for a declared-but-unmigrated object.** |
+| ask-os **11.1** | "the directive column needs a migration" | **False.** Directives are not a column. `serializeDirective()` appends `CONFIRM_ACTION:{…}` lines to the assistant message text and `chat-history.service.ts:29` stores it in `ai_chat_messages.content` — `text NOT NULL` since `0000`. The PRD's own note ("No migration was needed or written") was right and the open item contradicting it was wrong. |
+
+**The residual risk M6 really names is cold-rebuild divergence**, not a missing object: a database built from the migration chain would lack this constraint while production has it. That is the same structural condition as the 869 below-watermark entries, and it does not get fixed one constraint at a time.
+
+### `check:dead-code` was RED — now green, and the remaining findings are phantom work
+
+⚠ **The gate was failing with 13 stale verdicts.** Its rule is that the ledger only ever
+shrinks: once a symbol is deleted, knip stops reporting it and the verdict must go. **It was
+already red before this session's deletions** — `loadLeadProfile` and the four
+`confirm-actions/index.ts` barrel entries were orphaned by `448c4e25b` (the ask-os lane) — and
+`36d8d31bc` added seven more without shrinking the ledger. That is the lesson: **deleting code
+is only half of a deletion here.** Fixed by removing all 14 stale entries.
+
+```
+=== ledger: 23 verdict(s) — 20 KEEP, 3 WIRE, 0 REMOVE (debt) ===
+PASS: every dead-code finding is classified and no verdict is stale.
+PASS: self-test (33 assertions)
+```
+
+Then each remaining knip finding was classified against the ledger rather than deleted on
+knip's word. **Exactly one was real work:**
+
+| Outcome | Count | Why |
+|---|---|---|
+| **Deleted** | 1 | `stopImpersonationSchema` — a `z.object({})` the stop-impersonation route never validates against. It carried an explicit REMOVE verdict; discharging it took the ledger's REMOVE debt to zero. |
+| KEEP / WIRE by ledger verdict | 10 | `runInNewOrgTransaction`, `currencyForCountry`, `UNSCHEDULED_BILLING_JOBS`, `timesheetPayPeriodSchema`, `PresenceStatus` and the `z.infer` aliases whose backing schema is parsed at a live boundary. Several are **WIRE**, i.e. a feature that is unwired rather than code that is dead — deleting them would destroy the record of the gap. |
+| Out of scope by design | 7 | `EXCLUDED_MODULE_RE = /^src\/modules\/(crm\|inventory)\//` at `check-dead-code.mjs:80` — CRM and Inventory are "reported separately, never deleted here". `po-lifecycle.ts` is one of these. |
+
+⚠ **The "18 duplicate exports" were never work at all.** Every one is `export const <routeName>ResponseSchema = <rowSchema>;` — a per-route contract name bound to a shared row model, live via `@ResponseSchema`, with the canonical name independently consumed. knip reports them only because two exported names bind one value. **13 already carried KEEP verdicts** spelling this out; the other 5 are the Inventory ones, excluded. Collapsing them would merge separate route contracts into one name, which is the opposite of the §4 alias rule — these are not two import paths for one symbol, they are two contracts that happen to agree today.
+
+**So the open list's "56 knip findings + 18 duplicates + `po-lifecycle.ts`" resolved to one
+deletion.** The count was real; the work behind it was not. That is the same pattern as every
+other refuted premise in this lane, arriving one more time.
