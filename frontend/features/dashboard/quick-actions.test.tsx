@@ -99,22 +99,16 @@ describe("useQuickActions — default order for a fresh user", () => {
   it("admin ordering ranks admin actions first — Add Employee scores above My Leads", () => {
     const { result } = renderHook(() => useQuickActions());
     const labels = result.current.actions.map((a) => a.label);
-    const addEmployeeIdx = labels.indexOf("Add Employee");
-    const myLeadsIdx = labels.indexOf("My Leads");
-    if (addEmployeeIdx >= 0 && myLeadsIdx >= 0) {
-      expect(addEmployeeIdx).toBeLessThan(myLeadsIdx);
-    }
+    expect(labels).toContain("Add Employee");
+    expect(labels.indexOf("Add Employee")).toBeLessThan(3);
   });
 
-  it("member ordering ranks self-service actions first — My Leads scores above Add Employee", () => {
+  it("a member without hr:employees:create never sees Add Employee, while their own self-service action survives", () => {
     mockAccess = { ...accessDefaults, canCreateEmployees: false };
     const { result } = renderHook(() => useQuickActions());
     const labels = result.current.actions.map((a) => a.label);
-    const addEmployeeIdx = labels.indexOf("Add Employee");
-    const myLeadsIdx = labels.indexOf("My Leads");
-    if (addEmployeeIdx >= 0 && myLeadsIdx >= 0) {
-      expect(myLeadsIdx).toBeLessThan(addEmployeeIdx);
-    }
+    expect(labels).not.toContain("Add Employee");
+    expect(labels).toContain("My Leads");
   });
 });
 
@@ -123,8 +117,9 @@ describe("useQuickActions — recency reorders", () => {
     const { result } = renderHook(() => useQuickActions());
     const labelsBefore = result.current.actions.map((a) => a.label);
 
+    expect(labelsBefore.length).toBeGreaterThan(1);
     const lastLabel = labelsBefore[labelsBefore.length - 1];
-    if (!lastLabel) return;
+    expect(lastLabel).toBeDefined();
 
     act(() => {
       result.current.recordRecent(lastLabel);

@@ -21,6 +21,7 @@ import { useMotionVariants } from "@/lib/motion-variants";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
 import { DeferredDashboardContent } from "./deferred-dashboard-content";
 import { HomeSectionBoundary } from "./home-section-boundary";
+import { HomeSectionHeader } from "./home-section-header";
 import { HomeWidgetGrid } from "./home-widget-grid";
 import type { DashboardTicket } from "@/features/dashboard/my-issues-card";
 import type { DashboardAccess } from "@/features/dashboard/use-dashboard-access";
@@ -272,6 +273,9 @@ export function DashboardDeferredBody({
             animate="visible"
             className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
           >
+            <div className="col-span-full">
+              <HomeSectionHeader title="Team" />
+            </div>
             {canViewLeaves && (
               <HomeSectionBoundary sectionLabel="Who is out today">
                 <LeavesTodayWidget />
@@ -326,6 +330,9 @@ export function DashboardDeferredBody({
             animate="visible"
             className="grid grid-cols-1 gap-4 md:auto-rows-[22rem] lg:grid-cols-7"
           >
+            <div className="col-span-full">
+              <HomeSectionHeader title="Business" />
+            </div>
             <div className="min-h-0 lg:col-span-4">
               <HomeSectionBoundary sectionLabel="My issues">
                 <MyIssuesCard

@@ -88,9 +88,8 @@ describe("§8 platform-core surfaces are universally accessible to every active 
     expect(resolveRouteAccess("/chat/channels").kind).toBe("universal");
   });
 
-  it("notifications inbox is universal", () => {
-    expect(isUniversalRoute("/notifications")).toBe(true);
-    expect(resolveRouteAccess("/notifications").kind).toBe("universal");
+  it("retired /notifications root is no longer a declared app route — next.config.ts redirects it to /inbox", () => {
+    expect(isUniversalRoute("/notifications")).toBe(false);
   });
 
   it("unified inbox is universal", () => {

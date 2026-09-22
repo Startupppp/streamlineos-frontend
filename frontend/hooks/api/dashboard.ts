@@ -60,6 +60,9 @@ const personalDashboardContract = lazyContract(() =>
 const hrDocumentsListContract = lazyContract(() =>
   import("@/hooks/api/dashboard-schema").then((m) => m.hrDocumentsListContract),
 );
+const crmPulseDashboardContract = lazyContract(() =>
+  import("@/hooks/api/dashboard-schema").then((m) => m.crmPulseDashboardContract),
+);
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -416,6 +419,29 @@ export const useExecutiveDashboard = (
     staleTime: 5 * 60_000,
     ...options,
     enabled: !!orgId && canView && (options?.enabled ?? true),
+  });
+};
+
+export interface CrmPulseFigures {
+  mrr: number;
+  pipelineValue: number;
+  newLeadsThisWeek: number;
+  conversionRate: number;
+}
+
+export const useCrmPulse = (
+  options?: Omit<UseQueryOptions<CrmPulseFigures, Error>, "queryKey" | "queryFn">
+) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  const crmEnabled = useModuleEnabled("crm");
+  const canView = useCan("crm:leads:view");
+  return useQuery<CrmPulseFigures, Error>({
+    queryKey: collaborationQueryKeys.dashboard.crmPulse(),
+    queryFn: ({ signal }) => apiClient.get<CrmPulseFigures>("/dashboard/crm-pulse", undefined, signal, crmPulseDashboardContract),
+    staleTime: 5 * 60_000,
+    ...options,
+    enabled: !!orgId && crmEnabled && canView && (options?.enabled ?? true),
   });
 };
 

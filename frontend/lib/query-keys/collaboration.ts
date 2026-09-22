@@ -71,6 +71,7 @@ export const collaborationQueryKeys = {
     announcements: () => [...base, "dashboard", "announcements"] as const,
     personal: () => [...base, "dashboard", "personal"] as const,
     executive: () => [...base, "dashboard", "executive"] as const,
+    crmPulse: () => [...base, "dashboard", "crmPulse"] as const,
     publicDocuments: (limit: number) =>
       [...base, "dashboard", "publicDocuments", limit] as const,
   },

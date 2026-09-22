@@ -36,6 +36,23 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
   }),
 }));
 
+jest.mock("@/hooks/api/inbox", () => ({
+  useUnifiedInboxCount: () => ({
+    data: {
+      notification: mockUnreadCount,
+      mail: 0,
+      approval: 0,
+      total: mockUnreadCount,
+      mailExact: true,
+    },
+  }),
+  useUnifiedInbox: () => ({
+    data: { pages: [] },
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 jest.mock("@/hooks/api/notifications", () => ({
   useUnreadNotificationCount: () => ({ data: { count: mockUnreadCount } }),
   useUnreadNotifications: () => ({
@@ -103,7 +120,7 @@ describe("NotificationBell", () => {
     render(<NotificationBell />);
 
     const region = screen.getByRole("status");
-    expect(region).toHaveTextContent("5 unread notifications");
+    expect(region).toHaveTextContent("5 unread items in inbox");
   });
 
   it("live region is empty when unread count is zero", () => {

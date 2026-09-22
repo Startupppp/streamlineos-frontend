@@ -1,26 +1,5 @@
-import { Bell, CircleCheck, Inbox, Mail } from "lucide-react";
-import type { ViewOption } from "@/components/ui/view-toggle";
-import type {
-  InboxKind,
-  InboxSourceStatus,
-  UnifiedInboxResponse,
-} from "@/types/inbox";
-
-export type InboxView = "ALL" | "NOTIFICATIONS" | "MAIL" | "APPROVALS";
-
-export const VIEW_KINDS: Record<InboxView, InboxKind[] | undefined> = {
-  ALL: undefined,
-  NOTIFICATIONS: ["notification", "broadcast"],
-  MAIL: ["mail"],
-  APPROVALS: ["build_approval"],
-};
-
-export const VIEWS: ViewOption<InboxView>[] = [
-  { value: "ALL", label: "All", icon: Inbox },
-  { value: "NOTIFICATIONS", label: "Notifications", icon: Bell },
-  { value: "MAIL", label: "Mail", icon: Mail },
-  { value: "APPROVALS", label: "Approvals", icon: CircleCheck },
-];
+import type { InboxKind, InboxSourceStatus, UnifiedInboxResponse } from "@/types/inbox";
+import { VIEW_KINDS, type InboxView } from "./inbox-view-params";
 
 export const INBOX_SOURCE_LABELS: Record<InboxKind, string> = {
   notification: "Notifications",
@@ -30,6 +9,7 @@ export const INBOX_SOURCE_LABELS: Record<InboxKind, string> = {
 };
 
 const PERMISSION_REASON_PREFIX = "no permission: ";
+const UNSUPPORTED_REASON_PREFIX = "unsupported: ";
 
 export function deniedPermissionFor(
   view: InboxView,
@@ -46,6 +26,24 @@ export function deniedPermissionFor(
   if (refused.length !== relevant.length) return null;
   const first = refused[0];
   return first?.reason?.slice(PERMISSION_REASON_PREFIX.length) ?? null;
+}
+
+export interface UnsupportedSource {
+  source: InboxSourceStatus;
+  why: string;
+}
+
+export function unsupportedSourcesFor(
+  sources: InboxSourceStatus[],
+): UnsupportedSource[] {
+  return sources
+    .filter(
+      (s) => !s.included && s.reason?.startsWith(UNSUPPORTED_REASON_PREFIX),
+    )
+    .map((s) => ({
+      source: s,
+      why: s.reason!.slice(UNSUPPORTED_REASON_PREFIX.length),
+    }));
 }
 
 export function degradedSources(

@@ -23,6 +23,11 @@ import type { AccessResponse } from "@/types/access";
  * hook+argument identities) found 20 identities observed from two or more sites
  * with differing `enabled`. Only the co-mounted ones are defects; this file
  * pins the mechanism and the two that were.
+ *
+ * BusinessPulseWidget and ExecutiveKpiWidget now read DIFFERENT query keys —
+ * `crmPulse` vs `executive` — so the shared-observer hazard is eliminated.
+ * The suite below now asserts the separation rather than the mount-gating
+ * workaround that patched over the shared key.
  */
 
 jest.mock("next-auth/react", () => ({
@@ -49,7 +54,7 @@ function makeClient(scopes: string[]): QueryClient {
     ) as AccessResponse["scopes"],
     isOrgOwner: false,
     canManageOrganizationMembership: false,
-    modules: { HR: true, CRM: true },
+    modules: { hr: true, crm: true },
   };
   client.setQueryData(queryKeys.access.me(), access);
   return client;
@@ -112,9 +117,17 @@ describe("the least restrictive observer decides, which is why a sibling gate is
   });
 });
 
-describe("BusinessPulseWidget gates its mount, not an enabled flag it cannot own", () => {
-  it("mounts no executive-dashboard read for a viewer without crm:leads:view", async () => {
-    const client = makeClient(["hr:analytics:read"]);
+describe("BusinessPulseWidget and ExecutiveKpiWidget use distinct query keys — the hazard is gone", () => {
+  it("the two keys are not equal — there can be no shared-observer union", () => {
+    const executiveKey = queryKeys.dashboard.executive();
+    const crmPulseKey = queryKeys.dashboard.crmPulse();
+
+    expect(executiveKey).not.toEqual(crmPulseKey);
+    expect(executiveKey.join(":")).not.toBe(crmPulseKey.join(":"));
+  });
+
+  it("BusinessPulseWidget reads /dashboard/crm-pulse, not /dashboard/executive", async () => {
+    const client = makeClient(["crm:leads:view"]);
     const Wrapper = wrap(client);
     const { BusinessPulseWidget } = await import(
       "@/components/dashboard/project-health-widget"
@@ -124,19 +137,27 @@ describe("BusinessPulseWidget gates its mount, not an enabled flag it cannot own
         <BusinessPulseWidget />
       </Wrapper>,
     );
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await waitFor(() => expect(urlsFor("/dashboard/crm-pulse")).toHaveLength(1));
     expect(urlsFor("/dashboard/executive")).toHaveLength(0);
   });
 
-  /**
-   * The regression that matters. `/dashboard` mounts BOTH widgets, so the
-   * question is not whether this widget's own gate holds alone — an `enabled`
-   * flag holds alone too — but whether it still holds beside the sibling that
-   * observes the same key without a CRM condition. This is the assertion the
-   * inert `enabled: hasCrmAccess` could not satisfy.
-   */
-  it("still mounts nothing of its own beside the sibling that observes the same key", async () => {
+  it("ExecutiveKpiWidget reads /dashboard/executive, not /dashboard/crm-pulse", async () => {
     const client = makeClient(["hr:analytics:read"]);
+    const Wrapper = wrap(client);
+    const { ExecutiveKpiWidget } = await import(
+      "@/components/dashboard/executive-kpi-widget"
+    );
+    render(
+      <Wrapper>
+        <ExecutiveKpiWidget />
+      </Wrapper>,
+    );
+    await waitFor(() => expect(urlsFor("/dashboard/executive")).toHaveLength(1));
+    expect(urlsFor("/dashboard/crm-pulse")).toHaveLength(0);
+  });
+
+  it("co-mounting both widgets fires two separate requests, never a shared observer", async () => {
+    const client = makeClient(["hr:analytics:read", "crm:leads:view"]);
     const Wrapper = wrap(client);
     const { BusinessPulseWidget } = await import(
       "@/components/dashboard/project-health-widget"
@@ -150,18 +171,19 @@ describe("BusinessPulseWidget gates its mount, not an enabled flag it cannot own
         <BusinessPulseWidget />
       </Wrapper>,
     );
-    // The sibling is entitled to the read: `/dashboard/executive` declares
-    // `hr:analytics:read`, which this viewer holds. Exactly one request, and it
-    // is the sibling's — never a second observer this widget should not have.
     await waitFor(() => expect(urlsFor("/dashboard/executive")).toHaveLength(1));
-    expect(
-      client.getQueryCache().find({ queryKey: queryKeys.dashboard.executive() })
-        ?.observers.length,
-    ).toBe(1);
-  });
+    await waitFor(() => expect(urlsFor("/dashboard/crm-pulse")).toHaveLength(1));
 
-  it("reads the executive dashboard once the viewer holds crm:leads:view", async () => {
-    const client = makeClient(["hr:analytics:read", "crm:leads:view"]);
+    const execCache = client.getQueryCache().find({ queryKey: queryKeys.dashboard.executive() });
+    const pulseCache = client.getQueryCache().find({ queryKey: queryKeys.dashboard.crmPulse() });
+    expect(execCache?.observers.length).toBe(1);
+    expect(pulseCache?.observers.length).toBe(1);
+  });
+});
+
+describe("BusinessPulseWidget access gating", () => {
+  it("renders NoPermissionState, not a crm-pulse fetch, for a viewer without crm:leads:view", async () => {
+    const client = makeClient(["hr:analytics:read"]);
     const Wrapper = wrap(client);
     const { BusinessPulseWidget } = await import(
       "@/components/dashboard/project-health-widget"
@@ -171,10 +193,12 @@ describe("BusinessPulseWidget gates its mount, not an enabled flag it cannot own
         <BusinessPulseWidget />
       </Wrapper>,
     );
-    await waitFor(() => expect(urlsFor("/dashboard/executive")).toHaveLength(1));
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(urlsFor("/dashboard/crm-pulse")).toHaveLength(0);
+    expect(urlsFor("/dashboard/executive")).toHaveLength(0);
   });
 
-  it("stays silent for a viewer holding neither key, so the hook's own gate still bites", async () => {
+  it("stays silent when the viewer holds neither key", async () => {
     const client = makeClient([]);
     const Wrapper = wrap(client);
     const { BusinessPulseWidget } = await import(
@@ -186,6 +210,6 @@ describe("BusinessPulseWidget gates its mount, not an enabled flag it cannot own
       </Wrapper>,
     );
     await new Promise((resolve) => setTimeout(resolve, 10));
-    expect(urlsFor("/dashboard/executive")).toHaveLength(0);
+    expect(urlsFor("/dashboard/crm-pulse")).toHaveLength(0);
   });
 });

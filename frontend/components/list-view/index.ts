@@ -14,7 +14,6 @@ export {
   type Label,
   type Member,
   type ProjectOption,
-  type Sprint,
   type StatusFilterOption,
 } from "./filter-types";
 export {
