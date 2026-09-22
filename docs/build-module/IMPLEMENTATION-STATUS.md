@@ -803,3 +803,26 @@ Cycle phases 04/05 and the QA destructive contraction remain **BLOCKED** on unme
 **Browser QA: READY_FOR_CODEX_BROWSER_QA.** Not performed and not claimed. Owned by Codex.
 The velocity/burnup fix above is exercised only by unit tests and typecheck — it has not been
 observed in a browser, and it is the change most worth looking at first.
+
+---
+
+# SUPERSEDED FROM HERE — see `FINAL-SPRINT-REMOVAL-STATUS.md`
+
+On 2026-09-22 the repo owner ruled that the legacy sprint identity is not to be maintained at all.
+`sprintId` was removed outright from the frontend, the backend contract and the Drizzle schema, rather
+than bridged through `cycles.legacy_sprint_id`. Every row above that describes `sprintId` as retained,
+derived or backward-compatible is **historical**.
+
+`docs/build-module/FINAL-SPRINT-REMOVAL-STATUS.md` is authoritative for the final state, the merge list,
+the verified gate results, and the four migrations that remain BLOCKED.
+
+Two corrections that section makes to instructions written above, because following them would cause an
+outage or hide a defect:
+
+- `lane-1-cycle-cutover.md` says not to remove a Drizzle declaration until phase 05 is applied. That
+  ordering is **backwards**. Drizzle names every declared column in its INSERT list, so a declaration
+  that outlives its column raises `42703` on every insert. Declarations must be removed and **deployed
+  before** phase 04 runs.
+- The browser-QA note attributing the missing-dialog-description warning to `feedbucket-widget.js` is
+  **wrong**. That bundle contains no Radix and no React; the warning comes from the app's own Dialog and
+  Sheet overlays.
