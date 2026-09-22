@@ -1,13 +1,13 @@
 import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
+import * as mockReact from "react";
 import { InboxFilterBar } from "./inbox-filter-bar";
 
 jest.useFakeTimers();
 
 jest.mock("@/components/ui/select", () => {
-  const React = require("react");
-  const SelectCtx = React.createContext<{ onValueChange?: (v: string) => void }>({});
+  const SelectCtx = mockReact.createContext<{ onValueChange?: (v: string) => void }>({});
 
   function Select({ value, onValueChange, children }: { value?: string; onValueChange?: (v: string) => void; children: React.ReactNode }) {
     return (
@@ -26,7 +26,7 @@ jest.mock("@/components/ui/select", () => {
     return <div>{children}</div>;
   }
   function SelectItem({ value, children }: { value: string; children: React.ReactNode }) {
-    const { onValueChange } = React.useContext(SelectCtx);
+    const { onValueChange } = mockReact.useContext(SelectCtx);
     return (
       <div role="option" onClick={() => onValueChange?.(value)}>
         {children}

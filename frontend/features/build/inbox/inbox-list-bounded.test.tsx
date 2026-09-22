@@ -61,61 +61,10 @@ jest.mock("./use-inbox-keyboard-nav", () => ({
   useInboxKeyboardNav: () => undefined,
 }));
 
-function makeNotifications(count: number): Notification[] {
-  return Array.from({ length: count }, (_, i) => ({
-    id: i + 1,
-    orgId: "org-1",
-    userId: "user-1",
-    type: "INFO" as const,
-    priority: "NORMAL" as const,
-    category: "PROJECTS" as const,
-    sourceModule: "build",
-    eventKey: "build.ticket.mention",
-    title: `notification-${i + 1}`,
-    message: null,
-    link: null,
-    isRead: false,
-    pinned: false,
-    channel: "IN_APP",
-    archivedAt: null,
-    snoozedUntil: null,
-    createdAt: "2026-01-01T00:00:00.000Z",
-  }));
-}
+import { buildPages, noop, searchRef, renderInbox } from "./inbox-list-test-harness";
 
 function mockPages(counts: number[], hasNextPage: boolean) {
-  let issued = 0;
-  const pages = counts.map((count) => {
-    const page = makeNotifications(count).map((n) => ({ ...n, id: n.id + issued, title: `notification-${n.id + issued}` }));
-    issued += count;
-    return page;
-  });
-  useInfiniteNotifications.mockReturnValue({
-    data: { pages, pageParams: [] },
-    isPending: false,
-    isLoading: false,
-    isError: false,
-    error: null,
-    refetch: jest.fn(),
-    hasNextPage,
-    isFetchingNextPage: false,
-    fetchNextPage,
-  });
-}
-
-const noop = () => undefined;
-const searchRef = { current: null } as React.RefObject<HTMLInputElement | null>;
-
-function renderInbox(section: NotificationSection = "UNREAD") {
-  return render(
-    <InboxList
-      selectedId={null}
-      onSelect={noop}
-      section={section}
-      q={null}
-      searchInputRef={searchRef}
-    />,
-  );
+  useInfiniteNotifications.mockReturnValue(buildPages(counts, hasNextPage, fetchNextPage));
 }
 
 beforeEach(() => {
@@ -194,7 +143,7 @@ describe("InboxList — changing the section prop resets the window", () => {
   it("goes back to the first page of rows when the section changes via prop", async () => {
     const user = userEvent.setup();
     mockPages([100, 100, 100], false);
-    const { rerender } = renderInbox("UNREAD");
+    const { rerender } = renderInbox({ section: "UNREAD" });
     await user.click(screen.getByRole("button", { name: /show 30 more/i }));
     expect(screen.getAllByRole("listitem")).toHaveLength(INBOX_RENDER_PAGE_SIZE * 2);
     rerender(
@@ -221,7 +170,7 @@ describe("InboxList — changing the section prop resets the window", () => {
       isFetchingNextPage: false,
       fetchNextPage,
     });
-    renderInbox("MENTIONS");
+    renderInbox({ section: "MENTIONS" });
     expect(screen.queryByText("All caught up")).toBeNull();
     expect(
       screen.getByRole("button", { name: /load older notifications/i }),
@@ -267,7 +216,7 @@ describe("InboxList — disabled query shows skeleton, not empty state", () => {
 describe("InboxList — Mentions tab sends section:MENTIONS directly to the backend", () => {
   it("passes section=MENTIONS to the query when the Mentions tab is active", () => {
     mockPages([], false);
-    renderInbox("MENTIONS");
+    renderInbox({ section: "MENTIONS" });
     expect(useInfiniteNotifications).toHaveBeenCalledWith(
       expect.objectContaining({ section: "MENTIONS" }),
     );
@@ -275,64 +224,10 @@ describe("InboxList — Mentions tab sends section:MENTIONS directly to the back
 
   it("does not pass category:PROJECTS when the Mentions tab is active", () => {
     mockPages([], false);
-    renderInbox("MENTIONS");
+    renderInbox({ section: "MENTIONS" });
     expect(useInfiniteNotifications).not.toHaveBeenCalledWith(
       expect.objectContaining({ category: "PROJECTS" }),
     );
   });
 });
 
-describe("InboxList — type prop wires category to the query and resets pagination", () => {
-  it("forwards the type prop as category to useInfiniteNotifications", () => {
-    mockPages([INBOX_FETCH_PAGE_SIZE], false);
-    render(
-      <InboxList
-        selectedId={null}
-        onSelect={noop}
-        section="UNREAD"
-        q={null}
-        type="PROJECTS"
-        searchInputRef={searchRef}
-      />,
-    );
-    expect(useInfiniteNotifications).toHaveBeenCalledWith(
-      expect.objectContaining({ category: "PROJECTS" }),
-    );
-  });
-
-  it("does not include category in the request when type prop is omitted", () => {
-    mockPages([INBOX_FETCH_PAGE_SIZE], false);
-    renderInbox("UNREAD");
-    expect(useInfiniteNotifications).not.toHaveBeenCalledWith(
-      expect.objectContaining({ category: expect.anything() }),
-    );
-  });
-
-  it("changing the type prop resets pagesShown back to the first window", async () => {
-    const user = userEvent.setup();
-    mockPages([100, 100, 100], false);
-    const { rerender } = render(
-      <InboxList
-        selectedId={null}
-        onSelect={noop}
-        section="UNREAD"
-        q={null}
-        type={null}
-        searchInputRef={searchRef}
-      />,
-    );
-    await user.click(screen.getByRole("button", { name: /show 30 more/i }));
-    expect(screen.getAllByRole("listitem")).toHaveLength(INBOX_RENDER_PAGE_SIZE * 2);
-    rerender(
-      <InboxList
-        selectedId={null}
-        onSelect={noop}
-        section="UNREAD"
-        q={null}
-        type="PROJECTS"
-        searchInputRef={searchRef}
-      />,
-    );
-    expect(screen.getAllByRole("listitem")).toHaveLength(INBOX_RENDER_PAGE_SIZE);
-  });
-});

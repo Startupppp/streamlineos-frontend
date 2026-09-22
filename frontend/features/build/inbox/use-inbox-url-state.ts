@@ -20,7 +20,7 @@ function parseSection(raw: string | null): NotificationSection {
   return match ?? "UNREAD";
 }
 
-function isNotificationCategory(v: string): v is NotificationCategory {
+export function isNotificationCategory(v: string): v is NotificationCategory {
   return NOTIFICATION_CATEGORY_VALUES.some((category) => category === v);
 }
 
