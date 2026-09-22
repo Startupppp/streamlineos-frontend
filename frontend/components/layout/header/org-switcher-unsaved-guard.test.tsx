@@ -47,6 +47,7 @@ jest.mock("@/components/ui/drawer", () => ({
     open ? <>{children}</> : null,
   DrawerContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   DrawerTitle: ({ children }: { children: ReactNode }) => <h2>{children}</h2>,
+  DrawerDescription: ({ children }: { children: ReactNode }) => <p>{children}</p>,
 }));
 
 function DirtySurface() {

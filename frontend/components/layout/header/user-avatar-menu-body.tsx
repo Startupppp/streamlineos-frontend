@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   DrawerClose,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
@@ -127,6 +128,10 @@ export function UserAvatarMenuBody({
       <>
         <DrawerHeader className="min-w-0 shrink-0 overflow-hidden border-b px-4 py-3 text-left">
           <DrawerTitle className="sr-only">Account menu</DrawerTitle>
+          <DrawerDescription className="sr-only">
+            Your presence status, appearance settings, account and workspace
+            links, and the control to sign out.
+          </DrawerDescription>
           <UserIdentity name={name} email={email} className="px-0 py-0" />
         </DrawerHeader>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">

@@ -13,7 +13,12 @@ import {
   shouldShowMobileModuleBottomNav,
 } from "./mobile-module-nav-items";
 import type { NavRoute } from "../sidebar/sidebar-nav-items";
-import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -150,6 +155,10 @@ function MoreDrawer({
     <Drawer open={open} onOpenChange={onOpenChange} modal>
       <DrawerContent className="gap-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] motion-reduce:transition-none">
         <DrawerTitle className="sr-only">More navigation options</DrawerTitle>
+        <DrawerDescription className="sr-only">
+          The sections of this module that did not fit in the bottom bar.
+          Choosing one navigates there and closes this sheet.
+        </DrawerDescription>
         <div className="flex flex-col gap-0.5 px-2 py-2">
           {groups.map((group) => (
             <div key={group.label}>

@@ -5,6 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
@@ -87,9 +88,13 @@ function ResponsivePopoverTrigger({
   return <PopoverTrigger {...props} />;
 }
 
+const DEFAULT_DRAWER_DESCRIPTION =
+  "A sheet of controls for the button you just activated. Press Escape, or swipe the sheet down, to close it and return to the page.";
+
 interface ResponsivePopoverContentProps
   extends React.ComponentPropsWithoutRef<typeof PopoverContent> {
   title?: string;
+  description?: string;
   drawerClassName?: string;
   stickyFooter?: boolean;
 }
@@ -101,6 +106,7 @@ const ResponsivePopoverContent = React.forwardRef<
   {
     className,
     title = "Options",
+    description = DEFAULT_DRAWER_DESCRIPTION,
     drawerClassName,
     stickyFooter = false,
     children,
@@ -126,6 +132,7 @@ const ResponsivePopoverContent = React.forwardRef<
       >
         <DrawerHeader className="sr-only">
           <DrawerTitle>{title}</DrawerTitle>
+          <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
         {stickyFooter ? (
           <div

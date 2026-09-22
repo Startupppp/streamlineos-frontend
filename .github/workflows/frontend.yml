@@ -519,6 +519,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run check:icon-labels:self-test && pnpm run check:icon-button-rule && pnpm run check:icon-labels
 
+      - name: Modal overlays carry a description
+        if: ${{ !cancelled() }}
+        run: pnpm run check:dialog-descriptions:self-test && pnpm run check:dialog-descriptions
+
       - name: Client-page ratio stays within its ceiling
         if: ${{ !cancelled() }}
         run: pnpm run check:client-pages:self-test && pnpm run check:client-pages

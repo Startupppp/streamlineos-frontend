@@ -13,6 +13,7 @@ import {
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
@@ -209,6 +210,10 @@ export function ProductSwitcherMenu({
   const drawerContent = (
     <DrawerContent className="flex h-[min(96dvh,40rem)] max-h-[96dvh] w-full flex-col gap-0 overflow-hidden rounded-t-xl border-t bg-sidebar p-4 pb-[env(safe-area-inset-bottom)] shadow-2xl">
       <DrawerTitle className="sr-only">Modules</DrawerTitle>
+      <DrawerDescription className="sr-only">
+        The product modules enabled for this organization. Choosing one moves
+        the workspace into it; locked modules are shown but cannot be opened.
+      </DrawerDescription>
       <AnimatePresence>
         {open && <ProductGrid {...gridProps} />}
       </AnimatePresence>

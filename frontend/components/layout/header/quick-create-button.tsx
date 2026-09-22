@@ -21,6 +21,7 @@ import {
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
@@ -356,6 +357,10 @@ export function QuickCreateButton() {
             <DrawerTitle className="text-sm font-semibold text-foreground">
               Create
             </DrawerTitle>
+            <DrawerDescription className="sr-only">
+              Shortcuts that start a new record in the modules you have access
+              to, without leaving the page you are on.
+            </DrawerDescription>
           </DrawerHeader>
           <QuickCreatePanel
             groups={groups}
