@@ -21,6 +21,10 @@ export interface UnifiedInboxParams {
   limit?: number;
   kinds?: InboxKind[];
   unreadOnly?: boolean;
+  q?: string;
+  category?: string;
+  priority?: string;
+  triage?: "active" | "later" | "done";
 }
 
 export const INBOX_ERROR_RECOVERY_MS = 3_000;
@@ -74,6 +78,10 @@ export function useUnifiedInbox(
       ? [...params.kinds].sort()
       : undefined;
   const unreadOnly = params?.unreadOnly ?? false;
+  const q = params?.q?.trim() || undefined;
+  const category = params?.category || undefined;
+  const priority = params?.priority || undefined;
+  const triage = params?.triage;
 
   return useInfiniteQuery<UnifiedInboxResponse, Error>({
     ...INLINE_READ_ERROR,
@@ -81,14 +89,22 @@ export function useUnifiedInbox(
       limit,
       kinds,
       unreadOnly,
+      q,
+      category,
+      priority,
+      triage,
       infinite: true,
     }),
     initialPageParam: NO_CURSOR_YET,
-    queryFn: ({ pageParam , signal }) => {
+    queryFn: ({ pageParam, signal }) => {
       const query: Record<string, string> = { limit: String(limit) };
       if (pageParam !== undefined) query["cursor"] = String(pageParam);
       if (kinds) query["kinds"] = kinds.join(",");
       if (unreadOnly) query["unreadOnly"] = "true";
+      if (q) query["q"] = q;
+      if (category) query["category"] = category;
+      if (priority) query["priority"] = priority;
+      if (triage) query["triage"] = triage;
       return apiClient.get<UnifiedInboxResponse>("/me/inbox/unified", query, signal, unifiedInboxContract);
     },
     getNextPageParam: (lastPage) => lastPage.hasMore ? (lastPage.nextCursor ?? undefined) : undefined,

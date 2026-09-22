@@ -3,6 +3,7 @@
 import { memo, useCallback, useMemo, type Key } from "react";
 import { List, useDynamicRowHeight, type RowComponentProps } from "react-window";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { InboxItemCard, type InboxItemCardProps } from "./inbox-item-card";
 import type { UnifiedInboxItem } from "@/types/inbox";
 
@@ -17,6 +18,8 @@ interface InboxVirtualRowData {
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   isOnline: boolean;
+  selectedKeys: Set<string> | undefined;
+  onToggleSelect: ((key: string) => void) | undefined;
   onNotificationClick: InboxItemCardProps["onNotificationClick"];
   onBroadcastClick: InboxItemCardProps["onBroadcastClick"];
   onMailClick: InboxItemCardProps["onMailClick"];
@@ -51,6 +54,8 @@ function InboxVirtualRow({
   hasNextPage,
   isFetchingNextPage,
   isOnline,
+  selectedKeys,
+  onToggleSelect,
   onNotificationClick,
   onBroadcastClick,
   onMailClick,
@@ -92,27 +97,40 @@ function InboxVirtualRow({
   if (!item) return <div style={style} {...ariaAttributes} />;
 
   const notificationId = pendingNotificationId(item);
+  const isSelected = selectedKeys?.has(item.dedupKey) ?? false;
+  const showCheckbox = selectedKeys !== undefined;
 
   return (
     <div
       style={{ ...style, paddingBottom: ROW_GAP_PX, boxSizing: "border-box" }}
       {...ariaAttributes}
+      className={showCheckbox ? "flex items-start gap-2" : undefined}
     >
-      <InboxItemCard
-        item={item}
-        onNotificationClick={onNotificationClick}
-        onBroadcastClick={onBroadcastClick}
-        onMailClick={onMailClick}
-        onApprovalClick={onApprovalClick}
-        onArchive={onArchive}
-        onDelete={onDelete}
-        onApprove={onApprove}
-        onReject={onReject}
-        isApproving={notificationId !== undefined && approvingId === notificationId}
-        isRejecting={notificationId !== undefined && rejectingId === notificationId}
-        isArchiving={notificationId !== undefined && archivingId === notificationId}
-        isDeleting={notificationId !== undefined && deletingId === notificationId}
-      />
+      {showCheckbox && onToggleSelect && (
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={() => onToggleSelect(item.dedupKey)}
+          aria-label={`Select ${item.subject}`}
+          className="mt-3 shrink-0"
+        />
+      )}
+      <div className={showCheckbox ? "flex-1 min-w-0" : undefined}>
+        <InboxItemCard
+          item={item}
+          onNotificationClick={onNotificationClick}
+          onBroadcastClick={onBroadcastClick}
+          onMailClick={onMailClick}
+          onApprovalClick={onApprovalClick}
+          onArchive={onArchive}
+          onDelete={onDelete}
+          onApprove={onApprove}
+          onReject={onReject}
+          isApproving={notificationId !== undefined && approvingId === notificationId}
+          isRejecting={notificationId !== undefined && rejectingId === notificationId}
+          isArchiving={notificationId !== undefined && archivingId === notificationId}
+          isDeleting={notificationId !== undefined && deletingId === notificationId}
+        />
+      </div>
     </div>
   );
 }
@@ -122,6 +140,8 @@ export interface InboxVirtualListProps {
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   isOnline: boolean;
+  selectedKeys?: Set<string>;
+  onToggleSelect?: (key: string) => void;
   onNotificationClick: InboxItemCardProps["onNotificationClick"];
   onBroadcastClick: InboxItemCardProps["onBroadcastClick"];
   onMailClick: InboxItemCardProps["onMailClick"];
@@ -142,6 +162,8 @@ export const InboxVirtualList = memo(function InboxVirtualList({
   hasNextPage,
   isFetchingNextPage,
   isOnline,
+  selectedKeys,
+  onToggleSelect,
   onNotificationClick,
   onBroadcastClick,
   onMailClick,
@@ -175,6 +197,8 @@ export const InboxVirtualList = memo(function InboxVirtualList({
       hasNextPage,
       isFetchingNextPage,
       isOnline,
+      selectedKeys,
+      onToggleSelect,
       onNotificationClick,
       onBroadcastClick,
       onMailClick,
@@ -194,6 +218,8 @@ export const InboxVirtualList = memo(function InboxVirtualList({
       hasNextPage,
       isFetchingNextPage,
       isOnline,
+      selectedKeys,
+      onToggleSelect,
       onNotificationClick,
       onBroadcastClick,
       onMailClick,

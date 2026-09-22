@@ -1,11 +1,15 @@
 # Build Kill List
 
+Reconciled 2026-09-22 against root `e70089d85` and backend `main`. Rows marked *historical*
+record why a decision was taken; the condition they describe no longer holds and must not be
+re-quoted as current.
+
 | Delete/refuse | User job replacement | Evidence/rationale |
 |---|---|---|
-| Standalone Drafts page | Recover drafts in Inbox | `/build/drafts` duplicates personal notification work |
-| Sprint route/model | Plan timeboxed work through Cycles | Production sidebar currently points to broken `/sprints`; canonical page is `/cycles` |
+| Standalone Drafts page | Recover drafts in Inbox | `/build/drafts` duplicates personal notification work. **Executed** — see below |
+| Sprint route/model | Plan timeboxed work through Cycles | *Historical:* the production sidebar pointed at a broken `/sprints`. As of 2026-09-22 no `/sprints` route exists and nav points at `${basePath}/cycles` (`frontend/lib/build/nav/build-project-catalog.ts:76-81`, pinned by `frontend/lib/build/build-project-catalog.test.ts:58`). The **model** is still being retired — see [`06-prioritized-backlog.md`](./06-prioritized-backlog.md) stages A, C and D |
 | Separate QA Bug lifecycle | Track defects as `WorkItem.type=BUG` with QA evidence | Prevents two statuses, assignees, comments, and reports for one defect |
-| Project Analytics page | Understand delivery through Reports Overview | `/analytics` rendered “Board” in production and duplicates report metrics |
+| Project Analytics page | Understand delivery through Reports Overview | *Historical:* `/analytics` once rendered “Board” in production. It now renders its own `ProjectAnalyticsPage`, so the surviving rationale is duplication of report metrics, not a wrong-surface defect |
 | Project Timeline page | See issues by time through Issues `layout=timeline` | Same entities and filters; separate route fragments saved views |
 | Project Saved Views page | Create/manage views inside Issues; administer in Settings | A view is configuration of Issues, not a destination |
 | Project My Tickets page | Filter global My Work by project | Personal work has one cross-project owner |
@@ -75,6 +79,32 @@ not exist yet, so removing the page would delete the job rather than move it:
 Each keeps its page, its sidebar destination and its route-access gate until the
 target behaviour ships. The route manifest records the intended target for all
 seven, so the disposition is not lost.
+
+Re-verified 2026-09-22: `frontend/lib/build/build-route-manifest.ts` holds exactly **79 entries,
+7 of them non-KEEP** — 6 `CONSOLIDATE` and 1 `DELETE` — matching the seven rows above
+one for one, and `app/(authenticated)/build` contains exactly 79 `page.tsx` files.
+
+Two replacement descriptions above are broader than the manifest target and should not be read
+as authority:
+
+- `/build/[projectId]/views` — the manifest target is `/build/[projectId]/issues`. "Plus Settings" is a proposal, not a recorded decision.
+- `/build/[projectId]/intake` — the manifest target is `/build/[projectId]/forms`, with no Triage half. The Forms-definitions / Triage-submissions split is an **open question**, not a decision; see [`99-open-questions.md`](./99-open-questions.md).
+
+Sequencing, owners and acceptance criteria for these seven are P1-1 in
+[`06-prioritized-backlog.md`](./06-prioritized-backlog.md).
+
+## Refused work
+
+Not pages — *work items* that are duplicate, obsolete or speculative. Each is recorded so it is
+not picked up again. Retired 2026-09-22 during backlog reconciliation.
+
+| Refused work | Why | Evidence |
+|---|---|---|
+| Re-authoring the Sprint/Cycle or QA Bug cutover migrations | Both plans already exist, fully authored with rollbacks and spec coverage, and phases 01–03 / 01–02 are applied to production. One agent wrote duplicate migrations `1145`/`1146` before this was discovered; they were deleted | 18 files in `backend/migrations/sql/` matching `a-sprint-cycle-*` and `b-qa-bug-*`; `NEXT-CLOSURE-STATUS.md:138-147` |
+| Chasing `check:permission-catalog` and `check:build-execution-plan` failures on a fresh Windows checkout | The generator writes LF, a Windows checkout holds CRLF, and the regenerated file is the **same git blob** as `main`'s. The gate fails on line endings regardless of content. Fixing "the drift" changes nothing | `NEXT-CLOSURE-STATUS.md:73-80`; blob `bddf8207dc2ddfaa714d6cd73e9706cee20b996d`, 24762 vs 25606 bytes |
+| Internally-simulated escrow or a held client balance | Holding client money against a database column is a regulated activity being imitated with a number. If payment protection is wanted, integrate a provider that actually holds the funds | [`08-build-os-flowcharts.md`](./08-build-os-flowcharts.md) P2 |
+| Monolithic "consolidate Sprint/Cycle" and "consolidate QA Bug" backlog items | Both were single 8–15 d entries that hid the fact that the irreversible half depends on a deployment. They are replaced by staged tasks whose order is enforced | [`06-prioritized-backlog.md`](./06-prioritized-backlog.md) stages A–E |
+| A second frontend `sprintId` compatibility shim | `sprintId: null` already shipped once as "backward compatibility". A contract that accepts `null` cannot tell you the value stopped arriving; meeting agendas would have silently come back empty | `NEXT-CLOSURE-STATUS.md:104-107`; `frontend/features/build/meetings/generate-agenda.ts` |
 
 ## Acceptance criteria
 
