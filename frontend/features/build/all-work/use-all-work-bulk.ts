@@ -37,6 +37,7 @@ interface BulkPayload {
 interface ProjectOutcome {
   projectId: number;
   updated: number;
+  failures: unknown[];
 }
 
 interface UseAllWorkBulkReturn {
@@ -83,7 +84,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
       const projectCalls = [...payload.ticketsByProject.entries()].map(
         async ([projectId, ids]): Promise<ProjectOutcome> => {
           const chunks = chunkArray(ids, MAX_BULK_CHUNK);
-          const chunkResults = await Promise.all(
+          const chunkResults = await Promise.allSettled(
             chunks.map((chunk) =>
               apiClient.post<{ updated: number; ticketIds: number[] }>(
                 `/build/${projectId}/tickets/bulk`,
@@ -100,7 +101,13 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
           );
           return {
             projectId,
-            updated: chunkResults.reduce((acc, r) => acc + r.updated, 0),
+            updated: chunkResults.reduce(
+              (acc, r) => (r.status === "fulfilled" ? acc + r.value.updated : acc),
+              0,
+            ),
+            failures: chunkResults
+              .filter((r) => r.status === "rejected")
+              .map((r) => r.reason),
           };
         },
       );
@@ -114,10 +121,20 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
 
       for (const result of settled) {
         if (result.status === "fulfilled") {
-          succeeded.push(result.value);
-          queryClient.invalidateQueries({
-            queryKey: buildWorkQueryKeys.projects.tickets({ projectId: result.value.projectId }),
-          });
+          const outcome = result.value;
+          if (outcome.updated > 0) {
+            succeeded.push(outcome);
+            queryClient.invalidateQueries({
+              queryKey: buildWorkQueryKeys.projects.tickets({ projectId: outcome.projectId }),
+            });
+          }
+          for (const reason of outcome.failures) {
+            if (isApiError(reason) && reason.status === 409) {
+              conflictIds.push(outcome.projectId);
+            } else {
+              errorMessages.push(getErrorMessage(reason));
+            }
+          }
         } else {
           const reason: unknown = result.reason;
           if (isApiError(reason) && reason.status === 409) {

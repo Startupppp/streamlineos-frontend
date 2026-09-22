@@ -304,3 +304,41 @@ describe("ChangeRequestsPage — URL state for status and impact filters", () =>
     });
   });
 });
+
+describe("ChangeRequestsPage — URL state for q (server-side text search)", () => {
+  it("calls useChangeRequests without q when the q param is absent so no spurious search filter is sent", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
+    render(<ChangeRequestsPage projectId={1} />);
+    const call = mockUseChangeRequests.mock.calls[0];
+    const filters = call[1] as Record<string, string> | undefined;
+    expect(filters?.q).toBeUndefined();
+  });
+
+  it("reads the q param from the URL and passes it to useChangeRequests for server-side text search", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("q=foundation"));
+    render(<ChangeRequestsPage projectId={1} />);
+    expect(mockUseChangeRequests).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ q: "foundation" }),
+    );
+  });
+
+  it("shows the search input populated with the q param value so the filter is visible", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("q=urgent+scope"));
+    render(<ChangeRequestsPage projectId={1} />);
+    const searchInput = screen.getByPlaceholderText(/Search/i);
+    expect(searchInput).toHaveValue("urgent scope");
+  });
+
+  it("passes all three filters together when status, impact, and q are in the URL", () => {
+    mockUseSearchParams.mockReturnValue(
+      new URLSearchParams("status=submitted&impact=High&q=roof"),
+    );
+    render(<ChangeRequestsPage projectId={1} />);
+    expect(mockUseChangeRequests).toHaveBeenCalledWith(1, {
+      status: "submitted",
+      impact: "High",
+      q: "roof",
+    });
+  });
+});

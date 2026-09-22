@@ -17,11 +17,11 @@ jest.mock("@/lib/api-client", () => ({
     post: (...args: unknown[]) => mockPost(...args),
     get: jest.fn(),
   },
-  isApiError: (...args: unknown[]) => mockIsApiError(...args),
 }));
 
 jest.mock("@/lib/api-envelope", () => ({
   lazyContract: (fn: () => Promise<unknown>) => fn,
+  isApiError: (...args: unknown[]) => mockIsApiError(...args),
 }));
 
 jest.mock("@/lib/query-keys/build-work", () => ({

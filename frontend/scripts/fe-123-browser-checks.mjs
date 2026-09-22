@@ -170,13 +170,11 @@ const SURFACES = [
   {
     key: "critical-path-section",
     label: "CriticalPathSection",
-    notCovered: true,
-    notCoveredReason: "React Flow dependency loaded via next/dynamic({ssr:false}); no standalone chart component to bundle outside the dynamic wrapper",
-    componentPath: null,
-    exportName: null,
-    props: {},
+    componentPath: "features/build/reports/critical-path-section.tsx",
+    exportName: "CriticalPathSection",
+    props: { projectId: 1 },
     chartSurface: false,
-    hooks: [],
+    hooks: ["build-reports"],
   },
 ];
 
@@ -382,6 +380,32 @@ export const useProject = () => ({
 export const useProjectMembers = () => ({ data: [], isLoading: false });
 export const useProjects = () => ({ data: [], isLoading: false });
 `,
+  "mock-hooks-build-reports.js": `
+export const useCriticalPath = () => ({
+  data: {
+    criticalPath: [
+      { ticketId: 1, title: "Design system tokens", estimate: 3, earliestStart: 0, earliestFinish: 3 },
+      { ticketId: 2, title: "API schema migration", estimate: 5, earliestStart: 3, earliestFinish: 8 },
+      { ticketId: 3, title: "Frontend integration", estimate: 4, earliestStart: 8, earliestFinish: 12 },
+      { ticketId: 4, title: "QA and deployment", estimate: 2, earliestStart: 12, earliestFinish: 14 },
+    ],
+    totalDuration: 14,
+    nodeCount: 10,
+    edgeCount: 7,
+    hasCycle: false,
+  },
+  isLoading: false,
+  isError: false,
+  error: null,
+  refetch: () => {},
+});
+export const useVelocityReport = () => ({ data: undefined, isLoading: false, isError: false, error: null, refetch: () => {} });
+export const useBurnupReport = () => ({ data: undefined, isLoading: false, isError: false, error: null, refetch: () => {} });
+export const useCfdReport = () => ({ data: undefined, isLoading: false, isError: false, error: null, refetch: () => {} });
+export const useCycleTimeReport = () => ({ data: undefined, isLoading: false, isError: false, error: null, refetch: () => {} });
+export const useLeadTimeReport = () => ({ data: undefined, isLoading: false, isError: false, error: null, refetch: () => {} });
+export const useCaptureSnapshot = () => ({ mutate: () => {}, isPending: false });
+`,
 };
 
 function selfTest() {
@@ -471,6 +495,7 @@ function buildAliases(surface, tmpDir) {
   if (surface.hooks.includes("portal-grants")) m("@/hooks/api/portal-access/grants", "mock-hooks-portal-grants.js");
   if (surface.hooks.includes("feedbucket")) m("@/hooks/api/feedbucket", "mock-hooks-feedbucket.js");
   if (surface.hooks.includes("build-projects")) m("@/hooks/api/build/projects", "mock-hooks-build-projects.js");
+  if (surface.hooks.includes("build-reports")) m("@/hooks/api/build/reports", "mock-hooks-build-reports.js");
 
   return a;
 }

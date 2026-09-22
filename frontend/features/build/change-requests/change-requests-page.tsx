@@ -91,7 +91,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
 
   const statusFilter = searchParams.get("status") ?? "all";
   const impactFilter = searchParams.get("impact") ?? "";
-  const [search, setSearch] = useState("");
+  const qFilter = searchParams.get("q") ?? "";
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editCr, setEditCr] = useState<ChangeRequest | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ChangeRequest | null>(null);
@@ -112,9 +112,10 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const activeFilters = {
     ...(statusFilter !== "all" ? { status: statusFilter } : {}),
     ...(impactFilter ? { impact: impactFilter } : {}),
+    ...(qFilter ? { q: qFilter } : {}),
   };
 
-  const { data: crs, isLoading, isError, error, refetch } = useChangeRequests(
+  const { data: crPage, isLoading, isError, error, refetch } = useChangeRequests(
     projectId,
     Object.keys(activeFilters).length > 0 ? activeFilters : undefined,
   );
@@ -122,12 +123,15 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const deleteCr = useDeleteChangeRequest(projectId);
   const members = useMemo(() => membersData?.data ?? [], [membersData]);
 
+  const crs = crPage?.data ?? [];
+  const pagination = crPage?.pagination;
+
   const handleNew = useCallback(() => { setEditCr(null); setSheetOpen(true); }, []);
   const handleEdit = useCallback((cr: ChangeRequest) => { setEditCr(cr); setSheetOpen(true); }, []);
   const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) setDeleteTarget(null); }, []);
   const handleSearchChange = useCallback((value: string) => {
-    setSearch(value);
-  }, []);
+    updateUrlParam("q", value || null);
+  }, [searchParams, pathname]);
 
   function handleStatusChange(value: string) {
     updateUrlParam("status", value === "all" ? null : value);
@@ -151,18 +155,19 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     void refetch();
   }, [refetch]);
 
-  const filtersActive = !!(search || statusFilter !== "all" || impactFilter);
+  const filtersActive = !!(qFilter || statusFilter !== "all" || impactFilter);
 
   function handleClearFilters() {
-    setSearch("");
+    updateUrlParam("q", null);
     updateUrlParam("status", null);
     updateUrlParam("impact", null);
   }
 
-  const filtered = useMemo(
-    () => (crs ?? []).filter((cr) => !search || cr.title.toLowerCase().includes(search.toLowerCase())),
-    [crs, search],
-  );
+  function handleLoadMore() {
+    if (pagination?.nextCursor) {
+      updateUrlParam("cursor", pagination.nextCursor);
+    }
+  }
 
   const columns = useMemo<DataTableColumn<ChangeRequest>[]>(() => [
     {
@@ -246,7 +251,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput
         placeholder="Search..."
-        value={search}
+        value={qFilter}
         onValueChange={handleSearchChange}
       />
       <Select value={statusFilter} onValueChange={handleStatusChange}>
@@ -289,7 +294,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           {pageState.kind === "loading" ? (
             <DataTableSkeleton rows={12} columns={7} className="flex-1" />
-          ) : filtered.length === 0 ? (
+          ) : crs.length === 0 ? (
             <EmptyState
               className={PM_FILL_PANEL}
               illustrationPreset="ticket"
@@ -300,12 +305,21 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
               action={canCreate && !filtersActive ? { label: "New Change Request", onClick: handleNew } : undefined}
             />
           ) : (
-            <DataTable<ChangeRequest>
-                data={filtered}
+            <>
+              <DataTable<ChangeRequest>
+                data={crs}
                 columns={columns}
                 getRowKey={(row) => row.id}
                 className={PM_FILL_PANEL}
               />
+              {pagination?.hasMore && (
+                <div className="flex justify-center py-2">
+                  <Button variant="ghost" size="sm" className="text-dense" onClick={handleLoadMore}>
+                    Load more
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </PmSection>
       </PmPageShell>

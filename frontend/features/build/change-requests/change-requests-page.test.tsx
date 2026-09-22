@@ -241,3 +241,68 @@ it("offers the upgrade path the backend sent with a 402 rather than a generic er
     screen.getByRole("link", { name: /plan|billing|upgrade/i }),
   ).toHaveAttribute("href", "/settings/billing");
 });
+
+describe("ChangeRequestsPage — cursor page consumption", () => {
+  const crRow = {
+    id: 1,
+    orgId: "org-1",
+    projectId: 1,
+    crNumber: 1,
+    title: "Add feature",
+    description: null,
+    impact: null,
+    estimateMinutes: null,
+    budgetImpactCents: null,
+    timelineImpactDays: null,
+    status: "submitted" as const,
+    requestedById: null,
+    approvalOwnerId: null,
+    approvalOwnerMembershipId: null,
+    decisionComment: null,
+    decidedAt: null,
+    createdBy: null,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    updatedAt: "2024-01-01T00:00:00.000Z",
+    deletedAt: null,
+  };
+
+  it("renders the data table when the cursor page contains rows", () => {
+    mockUseChangeRequests.mockReturnValue(
+      baseQueryResult({
+        data: {
+          data: [crRow],
+          pagination: { hasMore: false, nextCursor: null, limit: 25 },
+        },
+      }),
+    );
+    render(<ChangeRequestsPage projectId={1} />);
+    expect(screen.getByTestId("data-table")).toBeInTheDocument();
+    expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+  });
+
+  it("shows a load-more button when the server reports hasMore so the user can fetch the next page", () => {
+    mockUseChangeRequests.mockReturnValue(
+      baseQueryResult({
+        data: {
+          data: [crRow],
+          pagination: { hasMore: true, nextCursor: "cursor-xyz", limit: 25 },
+        },
+      }),
+    );
+    render(<ChangeRequestsPage projectId={1} />);
+    expect(screen.getByRole("button", { name: /load more/i })).toBeInTheDocument();
+  });
+
+  it("does not show a load-more button when the page is complete so the user knows they have seen all records", () => {
+    mockUseChangeRequests.mockReturnValue(
+      baseQueryResult({
+        data: {
+          data: [crRow],
+          pagination: { hasMore: false, nextCursor: null, limit: 25 },
+        },
+      }),
+    );
+    render(<ChangeRequestsPage projectId={1} />);
+    expect(screen.queryByRole("button", { name: /load more/i })).not.toBeInTheDocument();
+  });
+});

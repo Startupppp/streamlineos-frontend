@@ -34,7 +34,14 @@ export function usePortalMemberships(params?: { cursor?: string; limit?: number;
   });
 }
 
-export function useProjectClientGrants(params?: { cursor?: string; limit?: number; projectId?: number }) {
+export function useProjectClientGrants(params?: {
+  cursor?: string;
+  limit?: number;
+  projectId?: number;
+  q?: string;
+  state?: string;
+  permission?: string;
+}) {
   const canView = useCan("build:portal:view");
   return useQuery<ProjectClientGrantsPage>({
     queryKey: directoryAndOwnershipQueryKeys.portalAccess.grants(params),

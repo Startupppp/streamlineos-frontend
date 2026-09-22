@@ -4,7 +4,7 @@ import { useMemo, useCallback, useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { isApiError } from "@/lib/api-client";
+import { isApiError } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { lazyContract } from "@/lib/api-envelope";
