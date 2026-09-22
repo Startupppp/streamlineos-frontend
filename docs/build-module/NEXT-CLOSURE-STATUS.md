@@ -18,10 +18,10 @@ Coordinator-owned. Workers never edit this file.
 | P4-17 — grant mutation response / client Zod parity | DONE (already closed) | landed earlier in `6de3fa51c` | 6 existing tests cover absent / present / null contacts | READY_FOR_CODEX_BROWSER_QA | none |
 | P4-18 — revoke-grant cache invalidation | DONE | `66e257dc0` → merge `d589996f6` | 13/13 `hooks/api/portal-access`; mutation-proven red | READY_FOR_CODEX_BROWSER_QA | none |
 | Phase B — Phase 3 workflow integration | DONE (already merged) | `ade105b12`, merged before this session | 220 suites / 1558 tests pass on merged main | READY_FOR_CODEX_BROWSER_QA | none |
-| Phase B follow-up — FE-77 import in `use-my-work-bulk.ts` | TODO | — | — | n/a | Out of this session's allowed scope (My Work implementation) |
-| Phase B follow-up — two code comments in `use-my-work-data.ts` | TODO | — | — | n/a | Out of this session's allowed scope (My Work implementation) |
-| Phase B follow-up — inner `Promise.all` in All Work chunking | TODO | — | — | n/a | Out of this session's allowed scope |
-| Phase B follow-up — Inbox `view` change does not reset cursor | TODO | — | — | n/a | Out of this session's allowed scope (Inbox implementation) |
+| Phase B follow-up — FE-77 import in `use-my-work-bulk.ts` | DONE | `871103532` → merge `1ee2ca90c` | 166/166 across 22 suites | n/a | none |
+| Phase B follow-up — two code comments in `use-my-work-data.ts` | DONE | `871103532` | 3 legacy-cycle tests carry the reason; mutation-proven | n/a | none |
+| Phase B follow-up — inner `Promise.all` in All Work chunking | DONE | `871103532` | 4 new tests; 3 fail against the reverted mutant | READY_FOR_CODEX_BROWSER_QA | none |
+| Phase B follow-up — Inbox `view` change does not reset cursor | DONE | `871103532` | 2 new tests; 1 fails against the reverted mutant | READY_FOR_CODEX_BROWSER_QA | none |
 | Phase B follow-up — All Work selection for List/Board | TODO | — | — | READY_FOR_CODEX_BROWSER_QA (known gap, not a defect) | `ListView` / `KanbanBoard` expose no selection API |
 | Phase B follow-up — Inbox `type` dropdown | TODO | — | — | n/a | Needs a real select over 18 `NotificationCategory` values plus enum validation |
 | Phase B follow-up — physical removal of old redirect routes | TODO | — | — | n/a | Census, redirects, deep links and pinned manifest count must move together |
@@ -85,6 +85,43 @@ Guarded against a vacuous pass: `tsc --listFilesOnly` resolves **6187** files fo
 `git rev-list --left-right --count main...build/phase-3-workflows` returns `9  0`. Zero commits on the branch are absent from `main`; Phase 3 landed as `ade105b12` in a prior session. **There was nothing to merge.** The review that was to precede the merge was run after the fact instead; its findings are recorded in `PHASE-3-STATUS.md`.
 
 Nine of nine review items came back CLEAN or CONCERN except code comments. No unrelated files, no migration or schema touched, manifest consistent at 88 with resolvable targets, all redirects placed after `enforceRouteAccess` with byte-identical literals and no loop, all new routes resolving to a real permission decision rather than `unknown`.
+
+## Phase 3 follow-ups — closed 2026-09-22
+
+Branch `build/phase-3-followups`, commit `871103532`, merged as `1ee2ca90c`.
+
+**The All Work chunk fix was the one with teeth.** The outer per-project fan-out already used
+`Promise.allSettled`, but the intra-project chunk loop used `Promise.all`. Selecting more than 100 tickets from
+one project and having chunk 2 fail after chunk 1 committed rejected the whole project: it landed in `failed`,
+its `projects.tickets({ projectId })` cache was never invalidated, and the rows chunk 1 had genuinely committed
+read stale until `staleTime` elapsed. The per-project call now settles each chunk, sums what committed,
+invalidates that project when anything did, and still reports the failed chunk with 409 kept distinct from a
+generic error.
+
+**The FE-77 import fix exposed a coupled test.** Changing `use-my-work-bulk.ts` to import `isApiError` from its
+owner `@/lib/api-envelope` broke two tests, because the suite mocked `isApiError` on `@/lib/api-client` and gave
+`api-envelope` only `lazyContract`. The test had been written against the violation. The mock moved to the
+owning module; both tests pass without weakening an assertion.
+
+**The removed comments were replaced by tests, not deleted outright.** The legacy `cycle` deep-link fallback now
+has three tests — normalises `cycle` to `cycleId`, prefers an explicit `cycleId` when both are present, and
+sends neither when absent — so the reasoning survives somewhere it can fail.
+
+Mutation proof for all three behavioural changes, run here:
+
+| Mutant | Result |
+|---|---|
+| `Promise.allSettled` → `Promise.all` in the chunk loop | **3 of 4 new tests fail** |
+| `view` re-excluded from the Inbox `filterChanged` guard | **1 new test fails** |
+| legacy `cycle` fallback disabled | **1 new test fails** |
+| all three restored | **166/166 pass, 22 suites** |
+
+The fourth All Work test asserts that a failed chunk is still surfaced, which holds under both implementations —
+kept deliberately as the positive pair to the three that bite.
+
+Verification after the merge: `features/build` + `lib/build` → **177 suites, 1307 tests, all pass**;
+`pnpm type-check` exit 0; eslint clean on all four touched files; `type-check:specs` shows only the one
+pre-existing `project-backlog-page.test.tsx` error; route census still 97/88/0.
 
 ## Blockers
 
