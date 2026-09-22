@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -73,7 +73,7 @@ export function MeetingFormSheet({
     resolver: zodResolver(meetingSchema),
     defaultValues: CREATE_DEFAULTS,
   });
-  useRegisterBuildDirtyState(open && form.formState.isDirty);
+  useRegisterDirtyState(open && form.formState.isDirty);
 
   const watchScheduledAt = form.watch("scheduledAt");
   const watchDuration = form.watch("durationMinutes");

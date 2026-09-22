@@ -1,3 +1,5 @@
+import { ZodError } from "zod";
+
 import { ticketRelationListContract } from "./build-tickets-subresource-schema";
 
 it("accepts the joined relation shape listRelations actually returns, not the raw work_item_relations row", () => {
@@ -49,5 +51,5 @@ it("rejects an unknown relation type such as the raw row's absent relationType d
         direction: "outgoing",
       },
     ]),
-  ).toThrow();
+  ).toThrow(ZodError);
 });

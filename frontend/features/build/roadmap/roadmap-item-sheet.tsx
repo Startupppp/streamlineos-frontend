@@ -1,9 +1,9 @@
 ﻿"use client";
 
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { roadmapItemSchema, type RoadmapItemFormValues } from "./roadmap-schema";
 import {
   Form,
   FormField,
@@ -41,17 +41,6 @@ import {
 import type { RoadmapItem } from "@/types/projects";
 import { ROADMAP_STATUS_OPTIONS } from "./roadmap-constants";
 
-const roadmapItemSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string(),
-  status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
-  category: z.string(),
-  targetQuarter: z.string(),
-  isPublic: z.boolean(),
-});
-
-type RoadmapItemFormValues = z.infer<typeof roadmapItemSchema>;
-
 interface RoadmapItemSheetProps {
   item?: RoadmapItem;
   onClose: () => void;
@@ -63,7 +52,7 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
   const update = useUpdateRoadmapItem();
   const isPending = create.isPending || update.isPending;
 
-  const form = useForm<RoadmapItemFormValues, any, RoadmapItemFormValues>({
+  const form = useForm<RoadmapItemFormValues, unknown, RoadmapItemFormValues>({
     resolver: zodResolver(roadmapItemSchema),
     defaultValues: {
       title: item?.title ?? "",
@@ -74,7 +63,7 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
       isPublic: item?.isPublic ?? true,
     },
   });
-  useRegisterBuildDirtyState(form.formState.isDirty);
+  useRegisterDirtyState(form.formState.isDirty);
 
   function handleSave(values: RoadmapItemFormValues) {
     const payload = {

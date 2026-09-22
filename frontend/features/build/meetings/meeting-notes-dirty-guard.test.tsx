@@ -2,9 +2,9 @@
 
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import {
-  BuildDirtyStateProvider,
-  useBuildHasUnsavedWork,
-} from "@/features/build/navigation/build-dirty-state-context";
+  DirtyStateProvider,
+  useHasUnsavedWork,
+} from "@/components/shared/dirty-state-context";
 import { MeetingNotesSection } from "./meeting-notes-section";
 import type { MeetingDetail } from "@/types/projects";
 
@@ -48,20 +48,20 @@ const MOCK_MEETING: MeetingDetail = {
 } as unknown as MeetingDetail;
 
 function HasUnsavedWorkProbe() {
-  const hasUnsavedWork = useBuildHasUnsavedWork();
+  const hasUnsavedWork = useHasUnsavedWork();
   return <span data-testid="probe">{hasUnsavedWork ? "dirty" : "clean"}</span>;
 }
 
 function renderHarness() {
   return render(
-    <BuildDirtyStateProvider>
+    <DirtyStateProvider>
       <HasUnsavedWorkProbe />
       <MeetingNotesSection
         meeting={MOCK_MEETING}
         projectId={1}
         canManage
       />
-    </BuildDirtyStateProvider>,
+    </DirtyStateProvider>,
   );
 }
 

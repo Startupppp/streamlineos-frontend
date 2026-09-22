@@ -1,5 +1,6 @@
 import { render } from "@testing-library/react";
 import { AllWorkPage } from "./all-work-page";
+import type { BuildListGrouping } from "./use-all-work-filters";
 
 const CUSTOM_STATUSES = [
   { name: "CODE REVIEW", color: "#0f0", type: "started" },
@@ -18,21 +19,30 @@ jest.mock("framer-motion", () => ({
   },
   useReducedMotion: () => false,
 }));
+jest.mock("@/hooks/api/access", () => ({
+  useAccess: () => ({
+    data: { isOrgOwner: false, scopes: { "build:tickets:view": "all" }, modules: {} },
+    isLoading: false,
+  }),
+}));
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
 jest.mock("@/hooks/api/build", () => ({
-  useInfiniteAllWork: () => ({
+  useAllWork: () => ({
     data: undefined,
     isLoading: true,
     isError: false,
     error: null,
-    hasNextPage: false,
-    isFetchingNextPage: false,
-    fetchNextPage: jest.fn(),
     refetch: jest.fn(),
   }),
   useProjects: () => ({ data: undefined }),
 }));
-type OrgStates = typeof CUSTOM_STATUSES | undefined;
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => true,
+}));
 
+type OrgStates = typeof CUSTOM_STATUSES | undefined;
 const mockUseOrgCustomStates = jest.fn<{ data: OrgStates }, []>(() => ({ data: CUSTOM_STATUSES }));
 jest.mock("@/hooks/api/build/custom-states", () => ({
   useOrgCustomStates: () => mockUseOrgCustomStates(),
@@ -54,10 +64,17 @@ jest.mock("./use-all-work-filters", () => ({
     view: "list" as const,
     scopeMine: false,
     filters: {},
+    grouping: "project" as BuildListGrouping,
+    sortField: "rank",
+    sortDirection: "desc",
+    cursor: null,
     hasActiveFilters: false,
+    isPending: false,
     handleViewChange: jest.fn(),
     handleScopeToggle: jest.fn(),
     handleClearFilters: jest.fn(),
+    setListParams: jest.fn(),
+    setCursor: jest.fn(),
   }),
 }));
 jest.mock("./use-all-work-bulk", () => ({
@@ -70,6 +87,9 @@ jest.mock("./use-all-work-bulk", () => ({
     handleBulkSprintNoOp: jest.fn(),
     handleClearSelection: jest.fn(),
   }),
+}));
+jest.mock("./use-all-work-keyboard", () => ({
+  useAllWorkKeyboard: jest.fn(),
 }));
 jest.mock("./all-work-view-switcher", () => ({
   AllWorkViewSwitcher: () => null,
@@ -107,13 +127,20 @@ jest.mock("@/lib/motion-presets", () => ({
   viewSwapReduced: { initial: {}, animate: {}, exit: {} },
 }));
 jest.mock("./all-work-ticket-utils", () => ({
-  groupByProject: () => [],
+  groupTickets: () => [],
 }));
 jest.mock("@/components/shared/format-ticket-key", () => ({
   getTicketDetailHref: () => "/build/1/tickets/1",
 }));
 jest.mock("@/lib/get-error-message", () => ({
   getErrorMessage: (e: unknown) => String(e),
+}));
+jest.mock("@/components/ui/select", () => ({
+  Select: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SelectTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SelectValue: () => null,
+  SelectContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SelectItem: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 import React from "react";

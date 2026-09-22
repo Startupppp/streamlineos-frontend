@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import {
   Select,
   SelectContent,
@@ -15,16 +15,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import {
+  FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useAccountingBook } from "@/hooks/api/accounting/ledger";
-import { RECEIVABLES_MANAGE, RECEIVABLES_READ, useArReceipts } from "@/hooks/api/accounting/ar";
-import type { ArReceiptSummary } from "@/types/accounting-ar-receipts";
+import {
+  RECEIVABLES_MANAGE,
+  RECEIVABLES_READ,
+  useArReceipts,
+} from "@/hooks/api/accounting/ar";
+import type { ArReceiptSummary } from "@/types/accounting/accounting-ar-receipts";
 import { usePartyNames } from "../parties/use-party-names";
 import { ReceiptStatusBadge } from "./ar-labels";
 import { ReceiptDetailSheet } from "./receipt-detail-sheet";
@@ -36,7 +43,6 @@ function isReceiptStatus(value: string): value is ArReceiptSummary["status"] {
 }
 
 export function ReceiptsPageClient() {
-  const canRead = useCan(RECEIVABLES_READ);
   const canManage = useCan(RECEIVABLES_MANAGE);
   const url = useListUrlState();
   const [recordOpen, setRecordOpen] = useState(false);
@@ -94,7 +100,9 @@ export function ReceiptsPageClient() {
     {
       key: "paymentMethod",
       header: "How",
-      cell: (row) => <span className="text-sm">{row.paymentMethod ?? "—"}</span>,
+      cell: (row) => (
+        <span className="text-sm">{row.paymentMethod ?? "—"}</span>
+      ),
     },
     {
       key: "status",
@@ -123,13 +131,25 @@ export function ReceiptsPageClient() {
     },
   ];
 
+  const pageState = usePageState({
+    permission: RECEIVABLES_READ,
+    isLoading: receiptsQuery.isLoading,
+    isError: receiptsQuery.isError,
+    error: receiptsQuery.error,
+  });
+  const handleRetry = useCallback(() => {
+    void receiptsQuery.refetch();
+  }, [receiptsQuery]);
+
   const hasFilters = statusParam.length > 0 || unappliedOnly;
 
   const filters = (
     <div className={FILTER_TOOLBAR_ROW}>
       <Select
         value={statusParam || "all"}
-        onValueChange={(value) => url.setParams({ status: value === "all" ? undefined : value })}
+        onValueChange={(value) =>
+          url.setParams({ status: value === "all" ? undefined : value })
+        }
       >
         <SelectTrigger className={FILTER_SELECT_TRIGGER} aria-label="Status">
           <SelectValue />
@@ -142,7 +162,9 @@ export function ReceiptsPageClient() {
       </Select>
       <Select
         value={unappliedOnly ? "true" : "any"}
-        onValueChange={(value) => url.setParams({ unapplied: value === "any" ? undefined : value })}
+        onValueChange={(value) =>
+          url.setParams({ unapplied: value === "any" ? undefined : value })
+        }
       >
         <SelectTrigger className={FILTER_SELECT_TRIGGER} aria-label="Applied">
           <SelectValue />
@@ -155,13 +177,23 @@ export function ReceiptsPageClient() {
     </div>
   );
 
-  if (!canRead) {
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="Money in">
-        <NoPermissionState permission={RECEIVABLES_READ} />
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
   return (
     <PageWrapper
@@ -186,54 +218,54 @@ export function ReceiptsPageClient() {
       }
       filters={filters}
     >
-      {receiptsQuery.isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load your payments"
-          description={getErrorMessage(receiptsQuery.error)}
-          onRetry={() => void receiptsQuery.refetch()}
-        />
-      ) : (
-        <DataTable
-          data={rows}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          isLoading={receiptsQuery.isLoading}
-          minWidth="1000px"
-          className="flex-1 min-h-0"
-          emptyState={
-            <EmptyState
-              className="border-0 bg-transparent min-h-[40vh]"
-              illustrationPreset="expenses"
-              title={hasFilters ? "No payments match your filters" : "No payments yet"}
-              description={
-                hasFilters
-                  ? "Try switching the filters back to all payments."
-                  : "Record the first payment a customer sends you."
-              }
-              action={
-                hasFilters
+      <DataTable
+        data={rows}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        isLoading={receiptsQuery.isLoading}
+        minWidth="1000px"
+        className="flex-1 min-h-0"
+        emptyState={
+          <EmptyState
+            className="border-0 bg-transparent min-h-[40vh]"
+            illustrationPreset="expenses"
+            title={
+              hasFilters ? "No payments match your filters" : "No payments yet"
+            }
+            description={
+              hasFilters
+                ? "Try switching the filters back to all payments."
+                : "Record the first payment a customer sends you."
+            }
+            action={
+              hasFilters
+                ? {
+                    label: "Clear filters",
+                    onClick: () =>
+                      url.setParams({
+                        status: undefined,
+                        unapplied: undefined,
+                      }),
+                  }
+                : canManage
                   ? {
-                      label: "Clear filters",
-                      onClick: () => url.setParams({ status: undefined, unapplied: undefined }),
+                      label: "Record money in",
+                      onClick: () => setRecordOpen(true),
                     }
-                  : canManage
-                    ? { label: "Record money in", onClick: () => setRecordOpen(true) }
-                    : undefined
-              }
-            />
-          }
-          pagination={{
-            mode: "server",
-            page: url.page,
-            pageSize: url.pageSize,
-            total: receiptsQuery.data?.total ?? 0,
-            onPageChange: url.setPage,
-            onPageSizeChange: url.setPageSize,
-            pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
-          }}
-        />
-      )}
+                  : undefined
+            }
+          />
+        }
+        pagination={{
+          mode: "server",
+          page: url.page,
+          pageSize: url.pageSize,
+          total: receiptsQuery.data?.total ?? 0,
+          onPageChange: url.setPage,
+          onPageSizeChange: url.setPageSize,
+          pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+        }}
+      />
 
       {bookQuery.data ? (
         <RecordReceiptSheet

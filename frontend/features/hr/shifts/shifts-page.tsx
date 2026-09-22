@@ -41,7 +41,7 @@ export function ShiftsPage() {
         canManage ? (
           <Button onClick={handleOpenSheet}>
             <Plus className="h-4 w-4 mr-2" />
-            New Shift
+            Create shift
           </Button>
         ) : undefined
       }

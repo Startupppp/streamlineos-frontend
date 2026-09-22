@@ -18,7 +18,8 @@ import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -148,7 +149,15 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [linkProjectId, setLinkProjectId] = useState("");
 
-  const { data, isLoading, isError, refetch } = usePortfolio(portfolioId);
+  const { data, isLoading, isError, error, refetch } = usePortfolio(portfolioId);
+
+  const resolution = usePageState({
+    permission: "build:portfolios:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: data === undefined,
+  });
   const { data: allProjectsRes } = useProjects({ limit: 200 });
   const { data: membersRes } = useOrgMembers(1, 100);
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
@@ -223,11 +232,11 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
     void refetch();
   }
 
-  function handleUnlinkClick(projectId: number) {
-    handleUnlink(projectId);
+  function handleNoopCreate() {
+    return undefined;
   }
 
-  if (isLoading) {
+  if (resolution.kind === "loading") {
     return (
       <PageWrapper title="Portfolio" backHref="/build/portfolios">
         <DetailSkeleton />
@@ -235,12 +244,14 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
     );
   }
 
-  if (isError || !data) {
+  if (resolution.kind !== "ready" || !data) {
     return (
       <PageWrapper title="Portfolio" backHref="/build/portfolios">
-        <PmPageShell withGlow={false}>
+        <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            <ErrorState className="flex-1" onRetry={handleRetry} />
+            <PageState resolution={resolution} loading={<DetailSkeleton />} onRetry={handleRetry}>
+              {null}
+            </PageState>
           </PmSection>
         </PmPageShell>
       </PageWrapper>
@@ -362,7 +373,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
                       projectName={proj.name}
                       projectId={proj.id}
                       isPending={unlinkProject.isPending}
-                      onUnlink={handleUnlinkClick}
+                      onUnlink={handleUnlink}
                     />
                   ) : null}
                 </div>
@@ -377,7 +388,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
         onOpenChange={setEditOpen}
         mode="edit"
         defaultValues={data}
-        onSubmitCreate={() => undefined}
+        onSubmitCreate={handleNoopCreate}
         onSubmitEdit={handleEdit}
         isPending={updatePortfolio.isPending}
       />

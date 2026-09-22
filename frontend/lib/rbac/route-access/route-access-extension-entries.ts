@@ -152,6 +152,14 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
       "Organisation-wide chat configuration is administrative. Only org owners and admins hold chat:org-settings:manage; it is org-only and cannot be delegated.",
   },
   {
+    prefix: "/build/workspaces/[pmWorkspaceId]",
+    product: "build",
+    permission: "build:view",
+    reason:
+      "A workspace body is the project list filtered to that workspace, so it carries the project read key. The organization Workspaces index at /build/workspaces owns build:workspaces:view, and without this entry the renamed index would extend that stricter key over every workspace a build:view caller reaches from the scope switcher, which gates on build:view alone.",
+    backendRoute: { method: "get", path: "/build" },
+  },
+  {
     prefix: "/build/workspaces/[pmWorkspaceId]/products",
     product: "build",
     permission: "build:managed-products:view",
@@ -262,11 +270,11 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     backendRoute: { method: "get", path: "/build/{projectId}/meetings" },
   },
   {
-    prefix: "/build/[projectId]/sprints",
+    prefix: "/build/[projectId]/cycles",
     product: "build",
     permission: "build:sprints:view",
-    reason: "Project-scoped sprint planning carries its own read key, not the generic build:view.",
-    backendRoute: { method: "get", path: "/build/{projectId}/sprints" },
+    reason: "Cycles supersede sprints and share their iteration-planning read key; the generic build:view let a role without sprint access open cycle planning.",
+    backendRoute: { method: "get", path: "/build/{projectId}/cycles" },
   },
   {
     prefix: "/build/[projectId]/settings",
@@ -337,22 +345,6 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     reason:
       "Triage page calls useTickets, whose first read is GET /build/{projectId}/tickets requiring build:tickets:view.",
     backendRoute: { method: "get", path: "/build/{projectId}/tickets" },
-  },
-  {
-    prefix: "/build/[projectId]/workflow",
-    product: "build",
-    permission: "build:workflow:view",
-    reason:
-      "Workflow page first reads GET /build/{projectId}/workflow/transitions, which carries @RequirePermission('build:workflow:view'). The nav already declares this key; this entry closes the direct-navigation gap.",
-    backendRoute: { method: "get", path: "/build/{projectId}/workflow/transitions" },
-  },
-  {
-    prefix: "/build/[projectId]/webhooks",
-    product: "build",
-    permission: "build:manage",
-    reason:
-      "Webhooks are delivery administration. First read is GET /build/{projectId}/webhooks, which carries @RequirePermission('build:manage'). The nav already declares this key.",
-    backendRoute: { method: "get", path: "/build/{projectId}/webhooks" },
   },
   {
     prefix: "/build/[projectId]/ai",

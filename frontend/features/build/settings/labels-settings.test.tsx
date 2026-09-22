@@ -1,10 +1,12 @@
 import { render, screen } from "@testing-library/react";
+import type { AccessState } from "@/lib/rbac/gate";
 import { LabelsSettings } from "./labels-settings";
 
-let mockCanManage = false;
+let mockAccessState: AccessState = "denied";
 
 jest.mock("@/hooks/api/access", () => ({
-  useCan: (permission: string) => permission === "build:manage" && mockCanManage,
+  useCan: (permission: string) => permission === "build:manage" && mockAccessState === "granted",
+  useCanState: (_permission: string): AccessState => mockAccessState,
 }));
 
 jest.mock("@/hooks/api/build/labels", () => ({
@@ -24,12 +26,12 @@ jest.mock("@/hooks/api/build/labels", () => ({
 }));
 
 beforeEach(() => {
-  mockCanManage = false;
+  mockAccessState = "denied";
 });
 
 describe("LabelsSettings — build:manage gates", () => {
   it("shows the Add Label button when the viewer holds build:manage", () => {
-    mockCanManage = true;
+    mockAccessState = "granted";
     render(<LabelsSettings />);
     expect(screen.getByRole("button", { name: /add label/i })).toBeInTheDocument();
   });
@@ -40,7 +42,7 @@ describe("LabelsSettings — build:manage gates", () => {
   });
 
   it("shows a Delete button on every label row when the viewer holds build:manage", () => {
-    mockCanManage = true;
+    mockAccessState = "granted";
     render(<LabelsSettings />);
     expect(screen.getAllByRole("button", { name: "Delete label" })).toHaveLength(2);
   });
@@ -51,7 +53,7 @@ describe("LabelsSettings — build:manage gates", () => {
   });
 
   it("shows an edit control on every label row when the viewer holds build:manage", () => {
-    mockCanManage = true;
+    mockAccessState = "granted";
     render(<LabelsSettings />);
     expect(screen.getByRole("button", { name: "Edit label Bug" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Edit label Feature" })).toBeInTheDocument();
@@ -66,5 +68,11 @@ describe("LabelsSettings — build:manage gates", () => {
     render(<LabelsSettings />);
     expect(screen.getByText("Bug")).toBeInTheDocument();
     expect(screen.getByText("Feature")).toBeInTheDocument();
+  });
+
+  it("hides Add Label while the access snapshot is in flight, because a mutation control that appears and then vanishes offers authority the caller may not hold", () => {
+    mockAccessState = "loading";
+    render(<LabelsSettings />);
+    expect(screen.queryByRole("button", { name: /add label/i })).not.toBeInTheDocument();
   });
 });

@@ -3,7 +3,7 @@
 import { ReactNode, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { editEpicSchema, EPIC_PRIORITIES, EPIC_STATUSES, type EditEpicInput } from "./epic-schema";
 import { Pencil, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EntityFormSheet } from "@/components/shared";
@@ -29,26 +29,6 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { activationProps } from "@/lib/keyboard-activation";
 
-const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
-const STATUSES = ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const;
-
-const MEANINGFUL_TEXT_RE = /[a-zA-Z0-9À-ɏЀ-ӿ一-鿿]/;
-
-const editEpicSchema = z.object({
-  title: z
-    .string()
-    .min(1, "Title is required")
-    .trim()
-    .min(3, "Title must be at least 3 characters")
-    .max(120, "Title must be 120 characters or fewer")
-    .refine((v) => MEANINGFUL_TEXT_RE.test(v), "Title must contain at least one letter or number"),
-  description: z.string().max(2000, "Description must be 2,000 characters or fewer").optional(),
-  priority: z.enum(PRIORITIES),
-  status: z.enum(STATUSES),
-});
-
-type EditEpicInput = z.infer<typeof editEpicSchema>;
-
 interface EditEpicDialogProps {
   epic: {
     id: number;
@@ -71,11 +51,11 @@ interface EditEpicDialogProps {
 }
 
 function toPriority(value: string | null | undefined): EditEpicInput["priority"] {
-  return PRIORITIES.find((p) => p === value) ?? "MEDIUM";
+  return EPIC_PRIORITIES.find((p) => p === value) ?? "MEDIUM";
 }
 
 function toStatus(value: string | null | undefined): EditEpicInput["status"] {
-  return STATUSES.find((s) => s === value) ?? "TODO";
+  return EPIC_STATUSES.find((s) => s === value) ?? "TODO";
 }
 
 const STATUS_LABEL: Record<EditEpicInput["status"], string> = {
@@ -208,7 +188,7 @@ export function EditEpicDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {PRIORITIES.map((p) => (
+                        {EPIC_PRIORITIES.map((p) => (
                           <SelectItem key={p} value={p}>
                             {p.charAt(0) + p.slice(1).toLowerCase()}
                           </SelectItem>
@@ -232,7 +212,7 @@ export function EditEpicDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {STATUSES.map((s) => (
+                        {EPIC_STATUSES.map((s) => (
                           <SelectItem key={s} value={s}>
                             {STATUS_LABEL[s]}
                           </SelectItem>

@@ -13,7 +13,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   useProjectWorkspaceMembers,
@@ -21,6 +20,8 @@ import {
 } from "@/hooks/api/build/workspace-members";
 import type { ProjectWorkspaceMember } from "@/hooks/api/build/workspace-members";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getUserDisplayName } from "@/lib/person-display";
 import { PmAccessButton } from "@/features/build/members/pm-access-sheet";
@@ -102,8 +103,10 @@ export function MembersPage() {
 
   const { data, isLoading, isError, error, refetch } = useProjectWorkspaceMembers(
     { cursor, limit: 25, search: q || undefined },
-    { placeholderData: keepPreviousData },
+    { placeholderData: keepPreviousData, enabled: canView },
   );
+
+  const pageState = usePageState({ permission: "build:members:view", isLoading, isError, error });
 
   const removeMember = useRemoveProjectWorkspaceMember();
 
@@ -136,11 +139,21 @@ export function MembersPage() {
     });
   }, [removeTarget, removeMember]);
 
+  const columns = useMembersColumns({ displayProps, canManage, handleRemoveRequest });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+    return (
+      <PageWrapper title="Members" subtitle="People who can access Build, and their roles.">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+  }
+
   const members = data?.data ?? [];
   const hasPrev = cursorStack.length > 0;
   const hasNext = !!data?.pagination.hasMore;
-
-  const columns = useMembersColumns({ displayProps, canManage, handleRemoveRequest });
 
   return (
     <>
@@ -179,26 +192,13 @@ export function MembersPage() {
           </div>
         }
       >
-        {!canView ? (
-          <EmptyState
-            illustrationPreset="team"
-            title="Access restricted"
-            description="You don't have permission to view workspace members."
-          />
-        ) : isError ? (
-          <ErrorState
-            title="Failed to load members"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
-        ) : (
-          <>
+        <>
             <DataTable
               className="flex-1 min-h-0"
               data={members}
               columns={columns}
               getRowKey={(member) => member.id}
-              isLoading={isLoading}
+              isLoading={isLoading || pageState.kind === "loading"}
               emptyState={
                 <EmptyState
                   illustrationPreset="team"
@@ -232,7 +232,6 @@ export function MembersPage() {
               </div>
             ) : null}
           </>
-        )}
       </PageWrapper>
 
       <AddMemberDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} />

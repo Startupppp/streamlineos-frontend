@@ -2,11 +2,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { createElement } from "react";
 import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider, onlineManager } from "@tanstack/react-query";
-import {
-  useBuildNotificationUnreadCount,
-  signalBuildInboxInvalidation,
-  BUILD_INBOX_INVALIDATION_KEY,
-} from "@/hooks/api/build/approvals";
+import { useBuildNotificationUnreadCount } from "@/hooks/api/build/approvals";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 
 const mockUseCan = jest.fn<boolean, [string]>().mockReturnValue(true);
@@ -50,7 +46,6 @@ function wrap(client: QueryClient) {
 }
 
 beforeEach(() => {
-  localStorage.clear();
   jest.clearAllMocks();
   mockUseCan.mockReturnValue(true);
   onlineManager.setOnline(true);
@@ -107,68 +102,44 @@ describe("BSN-03-024 — Build Inbox badge reconnect behavior", () => {
   });
 });
 
-describe("BSN-03-024 — Build Inbox badge cross-tab update", () => {
-  it("signalBuildInboxInvalidation writes the canonical key to localStorage", () => {
-    signalBuildInboxInvalidation();
-    expect(localStorage.getItem(BUILD_INBOX_INVALIDATION_KEY)).toBeTruthy();
-  });
-
-  it("a storage event from another tab causes useBuildNotificationUnreadCount to invalidate the badge count", () => {
+describe("BSN-03-024 — Build Inbox badge storage listener removed", () => {
+  it("BSN-03-SL: a storage event with the legacy build inbox invalidation key does not invalidate the badge — the storage listener has been removed", () => {
     const client = makeClient();
     const invalidateSpy = jest.spyOn(client, "invalidateQueries");
-
     renderHook(() => useBuildNotificationUnreadCount(), { wrapper: wrap(client) });
-
     act(() => {
       window.dispatchEvent(
         new StorageEvent("storage", {
-          key: BUILD_INBOX_INVALIDATION_KEY,
+          key: "build:inbox:invalidated",
           newValue: Date.now().toString(),
         }),
       );
     });
-
-    expect(invalidateSpy).toHaveBeenCalledWith({
-      queryKey: platformCoreQueryKeys.notifications.unreadCount("build"),
-    });
-  });
-
-  it("a storage event with an unrelated key does not cause the badge count to invalidate", () => {
-    const client = makeClient();
-    const invalidateSpy = jest.spyOn(client, "invalidateQueries");
-
-    renderHook(() => useBuildNotificationUnreadCount(), { wrapper: wrap(client) });
-
-    act(() => {
-      window.dispatchEvent(
-        new StorageEvent("storage", {
-          key: "some-other-key",
-          newValue: "1",
-        }),
-      );
-    });
-
     expect(invalidateSpy).not.toHaveBeenCalled();
   });
+});
 
-  it("isolation bites: the listener is removed on unmount so stale listeners do not accumulate", () => {
+describe("BSN-03-024 — Build Inbox badge production cross-tab path", () => {
+  it("the Build badge key is a strict prefix extension of the global unreadCount key so useNotificationEvents' invalidateNotificationInbox covers it without a storage event", () => {
+    const globalKey = platformCoreQueryKeys.notifications.unreadCount();
+    const buildKey = platformCoreQueryKeys.notifications.unreadCount("build");
+    for (let i = 0; i < globalKey.length; i++)
+      expect(buildKey[i]).toBe(globalKey[i]);
+    expect(buildKey.length).toBeGreaterThan(globalKey.length);
+  });
+
+  it("a QueryClient prefix-invalidation on the global unreadCount key marks the Build badge entry as stale so it gets refetched", async () => {
     const client = makeClient();
-    const invalidateSpy = jest.spyOn(client, "invalidateQueries");
-
-    const { unmount } = renderHook(() => useBuildNotificationUnreadCount(), {
-      wrapper: wrap(client),
+    client.setQueryData(
+      platformCoreQueryKeys.notifications.unreadCount("build"),
+      { count: 5 },
+    );
+    await client.invalidateQueries({
+      queryKey: platformCoreQueryKeys.notifications.unreadCount(),
     });
-    unmount();
-
-    act(() => {
-      window.dispatchEvent(
-        new StorageEvent("storage", {
-          key: BUILD_INBOX_INVALIDATION_KEY,
-          newValue: "1",
-        }),
-      );
-    });
-
-    expect(invalidateSpy).not.toHaveBeenCalled();
+    const state = client.getQueryState(
+      platformCoreQueryKeys.notifications.unreadCount("build"),
+    );
+    expect(state?.isInvalidated).toBe(true);
   });
 });

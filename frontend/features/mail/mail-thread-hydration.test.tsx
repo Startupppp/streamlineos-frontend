@@ -201,7 +201,7 @@ describe("MailReadingPane — a seeded thread renders its chrome, not a full ske
     expect(screen.queryByTestId("mail-body-skeleton")).not.toBeInTheDocument();
   });
 
-  it("a hydrated body replaces the placeholder", () => {
+  it("a hydrated body replaces the placeholder", async () => {
     threadResult = {
       data: [{ ...SEEDED_DETAIL, bodyHtml: "<p>the real body</p>" }],
       isLoading: false,
@@ -214,6 +214,6 @@ describe("MailReadingPane — a seeded thread renders its chrome, not a full ske
     renderReadingPane();
 
     expect(screen.queryByTestId("mail-body-skeleton")).not.toBeInTheDocument();
-    expect(screen.getByText("the real body")).toBeInTheDocument();
+    expect(await screen.findByText("the real body")).toBeInTheDocument();
   });
 });

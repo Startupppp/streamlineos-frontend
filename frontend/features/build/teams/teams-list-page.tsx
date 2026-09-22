@@ -8,11 +8,12 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import Link from "next/link";
 import { useProjectTeams, useCreateProjectTeam, useUpdateProjectTeam, useDeleteProjectTeam } from "@/hooks/api/build/teams";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
@@ -107,6 +108,14 @@ export function TeamsListPage({ pmWorkspaceId }: TeamsListPageProps = {}) {
   const deleteTeam = useDeleteProjectTeam();
 
   const teams = useMemo(() => data?.data ?? [], [data]);
+
+  const resolution = usePageState({
+    permission: "build:teams:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: teams.length === 0,
+  });
 
   function handleCreate(input: CreateTeamInput) {
     createTeam.mutate(input, {
@@ -296,34 +305,31 @@ export function TeamsListPage({ pmWorkspaceId }: TeamsListPageProps = {}) {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          {isLoading ? (
-            <DataTableSkeleton rows={12} columns={4} className="flex-1" />
-          ) : isError ? (
-            <ErrorState
-              className={PM_FILL_PANEL}
-              title="Couldn't load teams"
-              description={getErrorMessage(error)}
-              onRetry={handleRetry}
-            />
-          ) : teams.length === 0 ? (
-            <EmptyState
-              className={PM_FILL_PANEL}
-              illustrationPreset="projects"
-              title="No teams yet"
-              description={
-                isFiltered
-                  ? undefined
-                  : "Create a team to group members and track work together."
-              }
-              filtersActive={isFiltered}
-              onClearFilters={handleClearSearch}
-              action={
-                !isFiltered && canCreate
-                  ? { label: "New Team", onClick: handleOpenCreate }
-                  : undefined
-              }
-            />
-          ) : (
+          <PageState
+            resolution={resolution}
+            loading={<DataTableSkeleton rows={12} columns={4} className="flex-1" />}
+            empty={
+              <EmptyState
+                className={PM_FILL_PANEL}
+                illustrationPreset="projects"
+                title="No teams yet"
+                description={
+                  isFiltered
+                    ? undefined
+                    : "Create a team to group members and track work together."
+                }
+                filtersActive={isFiltered}
+                onClearFilters={handleClearSearch}
+                action={
+                  !isFiltered && canCreate
+                    ? { label: "New Team", onClick: handleOpenCreate }
+                    : undefined
+                }
+              />
+            }
+            onRetry={handleRetry}
+            className={PM_FILL_PANEL}
+          >
             <>
               <DataTable
                 data={teams}
@@ -343,7 +349,7 @@ export function TeamsListPage({ pmWorkspaceId }: TeamsListPageProps = {}) {
                 </div>
               ) : null}
             </>
-          )}
+          </PageState>
         </PmSection>
       </PmPageShell>
 

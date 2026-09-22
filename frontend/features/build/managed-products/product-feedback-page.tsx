@@ -4,16 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 import { useFeedbucketSubmissions } from "@/hooks/api/feedbucket";
-import { resolveGate } from "@/lib/rbac/gate";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { resolveImageUrl } from "@/lib/utils";
 import type {
   PaginatedFeedbucketSubmissions,
@@ -135,21 +133,33 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
   const router = useRouter();
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, isError, error, refetch, access } = useFeedbucketSubmissions({
+  const { data, isLoading, isError, error, refetch } = useFeedbucketSubmissions({
     managedProductId,
     page,
     limit: PAGE_SIZE,
   });
 
-  const gate = resolveGate({
-    access: access.pending ? "loading" : access.denied ? "denied" : "granted",
+  const resolution = usePageState({
+    permission: "feedbucket:submissions:view",
     isLoading,
     isError,
-    isEmpty: (data?.data ?? []).length === 0,
+    error,
   });
 
+  function resolveSubmissionHref(row: SubmissionRow): string | null {
+    const projectId = row.widget?.projectId;
+    if (projectId === null || projectId === undefined) return null;
+    return `/build/${projectId}/feedbucket/${row.id}`;
+  }
+
   function handleRowClick(row: SubmissionRow) {
-    router.push(`/build/feedbucket/${row.id}`);
+    const href = resolveSubmissionHref(row);
+    if (href === null) return;
+    router.push(href);
+  }
+
+  function resolveRowClassName(row: SubmissionRow): string {
+    return resolveSubmissionHref(row) === null ? "" : "cursor-pointer";
   }
 
   function handleRetry() {
@@ -167,22 +177,17 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
     >
       <PmPageShell>
         <PmSection index={0} className="flex flex-1 min-h-0 flex-col">
-          {gate === "denied" ? (
-            <NoPermissionState permission="feedbucket:submissions:view" className={PM_FILL_PANEL} />
-          ) : gate === "error" ? (
-            <ErrorState
-              className={PM_FILL_PANEL}
-              title="Couldn't load feedback"
-              description={getErrorMessage(error)}
-              onRetry={handleRetry}
-            />
-          ) : (
+          <PageState
+            resolution={resolution}
+            loading={<DataTableSkeleton rows={10} columns={5} />}
+            onRetry={handleRetry}
+            className={PM_FILL_PANEL}
+          >
             <DataTable
               data={data?.data ?? []}
               columns={FEEDBACK_COLUMNS}
               getRowKey={(row) => row.id}
               onRowClick={handleRowClick}
-              isLoading={gate === "loading"}
               pagination={{
                 mode: "server",
                 page,
@@ -199,9 +204,9 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
                   className={PM_FILL_PANEL}
                 />
               }
-              rowClassName={() => "cursor-pointer"}
+              rowClassName={resolveRowClassName}
             />
-          )}
+          </PageState>
         </PmSection>
       </PmPageShell>
     </PageWrapper>

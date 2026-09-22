@@ -12,7 +12,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { InventoryDetailPageLoading } from "@/features/inventory/components/inventory-detail-page-loading";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { Tabs, TabsList, TabsTrigger, TabsContent, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { useWarehouse, useLocations } from "@/hooks/api/inventory/warehouses";
 import type { LocationType, WarehouseLocation } from "@/hooks/api/inventory/warehouses";
@@ -52,6 +53,7 @@ export default function WarehouseDetailPage({
     data: warehouseData,
     isLoading: whLoading,
     isError: whError,
+    error: whFetchError,
     refetch: refetchWarehouse,
   } = useWarehouse(warehouseId);
   const {
@@ -72,13 +74,31 @@ export default function WarehouseDetailPage({
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
+  const pageState = usePageState({
+    permission: "inventory:warehouses:read",
+    isLoading: whLoading || locLoading,
+    isError: whError || locError,
+    error: whFetchError,
+  });
+
   function handleRetry(): void {
     void refetchWarehouse();
     void refetchLocations();
   }
 
   const isLoading = whLoading || locLoading;
-  const isError = whError || locError;
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper
+        title="Warehouse"
+        backHref="/inventory/warehouses"
+      >
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
 
   if (isLoading) {
     return (
@@ -88,23 +108,6 @@ export default function WarehouseDetailPage({
         backHref="/inventory/warehouses"
         actions={null}
       />
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper
-        title="Warehouse"
-        backHref="/inventory/warehouses"
-      >
-        <div className="flex flex-1 min-h-0 flex-col gap-4">
-          <ErrorState
-            title="Failed to load warehouse"
-            description="An error occurred while fetching warehouse data. Please try again."
-            onRetry={handleRetry}
-          />
-        </div>
-      </PageWrapper>
     );
   }
 

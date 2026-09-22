@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useCallback } from "react";
-import { NoPermissionState } from "@/components/shared";
-import { useCanState } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   Trophy,
@@ -21,7 +21,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDealsIllustration } from "@/components/illustrations";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { useWinLossAnalysis } from "@/hooks/api/crm";
@@ -39,7 +38,7 @@ const REASON_COLORS = [
 export default function WinLossAnalysisPage() {
   const { staggerContainer, fadeUp } = useMotionVariants();
   const shouldReduceMotion = useReducedMotion();
-  const { data, isLoading, isError, refetch, access } = useWinLossAnalysis();
+  const { data, isLoading, isError, error, refetch, access } = useWinLossAnalysis();
 
   const maxReasonCount = useMemo(
     () => Math.max(1, ...(data?.lostByReason.map((r) => r.count) ?? [])),
@@ -50,21 +49,21 @@ export default function WinLossAnalysisPage() {
     void refetch();
   }, [refetch]);
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Placed after the last hook and before the first branch that can return:
-   * denial outranks loading, error and emptiness alike, and a hook below a
-   * conditional return would run in a different order on different renders.
-   */
-  if (useCanState("crm:deals:read") === "denied")
-    return <NoPermissionState permission="crm:deals:read" />;
+  const pageState = usePageState({ permission: "crm:deals:read", isLoading, isError, error });
 
-  if (isLoading) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper
+        title="Win/Loss Analysis"
+        subtitle="Deal outcome breakdown and lost reason attribution"
+      >
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+
+  if (pageState.kind === "loading") {
     return (
       <PageWrapper
         title="Win/Loss Analysis"
@@ -82,22 +81,6 @@ export default function WinLossAnalysisPage() {
             <Skeleton className="h-64 rounded-lg" />
           </div>
         </div>
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper
-        title="Win/Loss Analysis"
-        subtitle="Deal outcome breakdown and lost reason attribution"
-      >
-        <ErrorState
-          title="Failed to load win/loss data"
-          description="An error occurred while loading the analysis."
-          onRetry={handleRetry}
-          className="flex-1"
-        />
       </PageWrapper>
     );
   }

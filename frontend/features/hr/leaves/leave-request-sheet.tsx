@@ -21,15 +21,15 @@ import { countWorkdays } from "./leave-date-helpers";
 import { LeaveRequestFormFields } from "./leave-request-form-fields";
 import type {
   LeaveType,
-  Approver,
   LeaveBalance,
 } from "@/features/hr/leaves/components/leaves-shared";
+import type { ApprovalRoute } from "@/hooks/api/hr/approval-route-schema";
 
 interface LeaveRequestSheetProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   leaveTypes: LeaveType[];
-  approvers: Approver[];
+  approvalRoute: ApprovalRoute | undefined;
   joiningDate: string | null;
   balances?: LeaveBalance[];
 }
@@ -38,10 +38,11 @@ export function LeaveRequestSheet({
   open,
   onOpenChange,
   leaveTypes,
-  approvers,
+  approvalRoute,
   joiningDate,
   balances = [],
 }: LeaveRequestSheetProps) {
+  const approverAvailable = approvalRoute !== undefined && approvalRoute.rung !== null;
   const requestLeaveMutation = useRequestLeave();
   const { data: policy } = useLeavePolicy();
   const leaveMaxDays: Record<string, number> = Object.fromEntries(
@@ -180,15 +181,15 @@ export function LeaveRequestSheet({
     <HrSheet
       open={open}
       onOpenChange={onOpenChange}
-      title="Request Leave"
+      title="Request leave"
       description="Fill in the details to submit a leave request"
       onSubmit={form.handleSubmit(onSubmit)}
-      submitLabel={approvers.length === 0 ? "No approver available" : "Submit Request"}
+      submitLabel={approverAvailable ? "Submit leave request" : "No approver available"}
       isPending={requestLeaveMutation.isPending}
       submitDisabled={
         (!isValid && isDirty) ||
         leaveTypes.length === 0 ||
-        approvers.length === 0
+        !approverAvailable
       }
       isDirty={isDirty}
       onDiscard={() => form.reset()}
@@ -197,7 +198,7 @@ export function LeaveRequestSheet({
         <LeaveRequestFormFields
           form={form}
           leaveTypes={leaveTypes}
-          approvers={approvers}
+          approvalRoute={approvalRoute}
           balances={balances}
           leaveStartBounds={leaveStartBounds}
           leaveEndBounds={leaveEndBounds}

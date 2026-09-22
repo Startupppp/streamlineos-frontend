@@ -1,37 +1,35 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PmPageShell, PmSection } from "@/components/pm-chrome";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { PmPageShell, PmSection, PM_FILL_SECTION } from "@/components/pm-chrome";
 import { ViewSwitcher, type ViewType } from "@/features/build/views/view-switcher";
 import { DisplayOptionsPanel } from "@/features/build/views/display-options-panel";
 import { useDisplayOptions } from "@/features/build/views/use-display-options";
 import { Button } from "@/components/ui/button";
 import { PanelRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCan } from "@/hooks/api/access";
 import { useAfterLoad } from "@/hooks/common/use-after-load";
 import { useOrgCustomStates } from "@/hooks/api/build/custom-states";
+import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { MY_WORK_VIEWS } from "./my-work-view";
-import { MyWorkViewBody } from "./my-work-view-body-lazy";
-import { BucketSection, AllWorkListSkeleton, BUCKET_ORDER } from "./my-work-rows";
+import { MyWorkContent } from "./my-work-content";
+import { MyWorkSortControl } from "./my-work-sort-control";
+import { useMyWorkBulk } from "./use-my-work-bulk";
+import { useMyWorkKeyboard } from "./use-my-work-keyboard";
 import {
   useMyWorkData,
   parseWorkTab,
   parseMyWorkView,
   WORK_TABS,
   TAB_CONFIG,
-  MY_WORK_FILTER_PARAMS,
 } from "./use-my-work-data";
 
 const GroupingSidebar = dynamic(
@@ -48,16 +46,12 @@ const TicketFilterBar = dynamic(
 
 const DISPLAY_STORAGE_ID = -1;
 
-interface MyWorkPageProps {
-  pmWorkspaceId?: string;
-}
-
-export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
+export function MyWorkPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const canViewWork = useCan("build:tickets:view");
 
+  const pmWorkspaceId = searchParams.get("pmWorkspaceId") ?? undefined;
   const activeTab = parseWorkTab(searchParams.get("tab"));
   const activeView = parseMyWorkView(searchParams.get("view"));
 
@@ -66,15 +60,24 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
   const [displayOptions, setDisplayOptions] = useDisplayOptions(DISPLAY_STORAGE_ID);
   const filterBarReady = useAfterLoad();
   const { data: orgStates } = useOrgCustomStates();
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   const {
     hasActiveFilters,
     isLoading,
     isError,
+    error,
+    isEmpty,
     activeData,
     handleRetry,
     filtersActive,
     handleClearFilters,
+    setListParams,
+    setCursor,
+    sortField,
+    sortDirection,
+    grouping,
+    cursor: _cursor,
     kanbanTickets,
     ticketMeta,
     dueBuckets,
@@ -83,6 +86,31 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
     emptyTitle,
     emptyDescription,
   } = useMyWorkData({ activeTab, activeView, pmWorkspaceId });
+
+  const pagination = useCursorPagination();
+
+  const bulk = useMyWorkBulk(activeData?.data ?? [], sortField, sortDirection);
+
+  useMyWorkKeyboard({
+    itemCount: kanbanTickets.length,
+    onOpen: (index) => {
+      const ticket = kanbanTickets[index];
+      if (ticket) {
+        const meta = ticketMeta.get(ticket.id);
+        if (meta) router.push(`/build/${meta.projectId}/${meta.projectKey}-${meta.ticketNumber}`);
+      }
+    },
+    onClearSelection: bulk.handleClearSelection,
+    searchInputRef,
+  });
+
+  const pageState = usePageState({
+    permission: "build:tickets:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty,
+  });
 
   const handleTabChange = useCallback(
     (value: string) => {
@@ -108,11 +136,10 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
     [router, pathname, searchParams],
   );
 
-  const handleDisplayOptionsChange = useCallback(
-    (opts: typeof displayOptions) => {
-      setDisplayOptions(opts);
-    },
-    [setDisplayOptions],
+  const handleSortChange = useCallback(
+    (field: string, direction: "asc" | "desc") =>
+      setListParams({ sort: field, dir: direction }),
+    [setListParams],
   );
 
   function handleToggleSidebar() {
@@ -120,26 +147,18 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
     setShowGroupingSidebar((prev) => !prev);
   }
 
-  const groupingSidebarButton = (
-    <Button
-      variant="outline"
-      size="icon"
-      className={cn(
-        "size-9 shrink-0",
-        showGroupingSidebar && "border-primary bg-primary/10 text-primary",
-      )}
-      aria-label="Toggle grouping sidebar"
-      aria-pressed={showGroupingSidebar}
-      onClick={handleToggleSidebar}
-    >
-      <PanelRight className="h-3.5 w-3.5" />
-    </Button>
-  );
+  const isGateState =
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "error" &&
+    pageState.kind !== "loading";
 
-  if (!canViewWork)
+  if (isGateState)
     return (
-      <PageWrapper title="My Issues">
-        <NoPermissionState permission="build:tickets:view" />
+      <PageWrapper title="My Work" subtitle="Your tickets across all projects">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
 
@@ -150,7 +169,7 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
       className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden"
     >
       <PageWrapper
-        title="My Issues"
+        title="My Work"
         subtitle="Your tickets across all projects"
         noInternalScroll
         filtersClassName="flex-col items-stretch gap-0 overflow-visible pb-2 [&>*]:w-full [&>*]:min-w-0 [&>*]:shrink"
@@ -182,6 +201,11 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
             actions={
               showViewSwitcher ? (
                 <>
+                  <MyWorkSortControl
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSortChange={handleSortChange}
+                  />
                   <ViewSwitcher
                     activeView={activeView}
                     onViewChange={handleViewChange}
@@ -191,76 +215,64 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
                   <DisplayOptionsPanel
                     viewType={activeView}
                     options={displayOptions}
-                    onChange={handleDisplayOptionsChange}
+                    onChange={setDisplayOptions}
                   />
-                  {groupingSidebarButton}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className={cn(
+                      "size-9 shrink-0",
+                      showGroupingSidebar && "border-primary bg-primary/10 text-primary",
+                    )}
+                    aria-label="Toggle grouping sidebar"
+                    aria-pressed={showGroupingSidebar}
+                    onClick={handleToggleSidebar}
+                  >
+                    <PanelRight className="h-3.5 w-3.5" />
+                  </Button>
                 </>
               ) : null
             }
           />
         }
       >
-        <PmPageShell className="min-h-0 flex-1 overflow-hidden">
-          <PmSection
-            index={0}
-            className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden"
-          >
+        <PmPageShell>
+          <PmSection index={0} className={cn(PM_FILL_SECTION, "gap-3")}>
             <div className="flex min-h-0 flex-1 gap-3 overflow-hidden">
               <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-                {isLoading ? (
-                  <AllWorkListSkeleton />
-                ) : isError ? (
-                  <ErrorState
-                    className="min-h-[14rem]"
-                    title="Failed to load your issues"
-                    description="Could not fetch tickets. Please try again."
-                    onRetry={handleRetry}
-                  />
-                ) : !activeData?.data || activeData.data.length === 0 ? (
-                  <EmptyState
-                    illustrationPreset="projects"
-                    title={emptyTitle}
-                    description={filtersActive ? undefined : emptyDescription}
-                    filtersActive={filtersActive}
-                    onClearFilters={handleClearFilters}
-                    className={CONTENT_FILL_PANEL}
-                  />
-                ) : showBucketList ? (
-                  <ScrollArea className="min-h-0 flex-1" hideScrollbar>
-                    <div className="flex flex-col gap-3">
-                      {BUCKET_ORDER.map((bucket) => {
-                        const items =
-                          dueBuckets?.[bucket]?.map((t) => ({
-                            id: t.id,
-                            projectId: t.projectId ?? 0,
-                            projectName: t.projectName ?? "",
-                            projectKey: t.projectKey ?? "",
-                            ticketNumber: t.ticketNumber,
-                            title: t.title,
-                            status: t.status,
-                            priority: t.priority,
-                            type: t.type,
-                            dueDate: t.dueDate,
-                          })) ?? [];
-                        if (items.length === 0) return null;
-                        return (
-                          <BucketSection key={bucket} bucket={bucket} items={items} />
-                        );
-                      })}
-                    </div>
-                  </ScrollArea>
-                ) : (
-                  <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                    <MyWorkViewBody
-                      view={activeView}
-                      tickets={kanbanTickets}
-                      displayOptions={displayOptions}
-                      ticketMeta={ticketMeta}
-                    />
-                  </div>
-                )}
+                <MyWorkContent
+                  pageState={pageState}
+                  view={activeView}
+                  grouping={grouping}
+                  showBucketList={showBucketList}
+                  activeData={activeData}
+                  kanbanTickets={kanbanTickets}
+                  ticketMeta={ticketMeta}
+                  dueBuckets={dueBuckets}
+                  displayOptions={displayOptions}
+                  emptyTitle={emptyTitle}
+                  emptyDescription={emptyDescription}
+                  filtersActive={filtersActive}
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  pageNumber={pagination.pageNumber}
+                  hasPrevious={pagination.hasPrevious}
+                  onRetry={handleRetry}
+                  onClearFilters={handleClearFilters}
+                  onSortChange={handleSortChange}
+                  onNextPage={() => {
+                    pagination.goNext(activeData?.nextCursor);
+                    setCursor(activeData?.nextCursor ?? null);
+                  }}
+                  onPreviousPage={() => {
+                    pagination.goPrevious();
+                    setCursor(null);
+                  }}
+                  bulk={bulk}
+                  orgStatuses={orgStates}
+                />
               </div>
-
               {groupingMounted ? (
                 <GroupingSidebar
                   open={showGroupingSidebar}

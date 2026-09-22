@@ -1,7 +1,7 @@
 "use client";
 import type { z } from "zod";
 import type { communityBaseContract, listCommunitiesContract, campaignContract } from "@/hooks/api/hr/engagement-schema";
-import type { pollContract } from "@/hooks/api/hr/engagement-schema";
+import type { orgMoodAggregateContract, pollContract, pollResultsContract } from "@/hooks/api/hr/engagement-schema";
 
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { hrEngagementQueryKeys } from "@/lib/query-keys/hr-engagement";
@@ -22,11 +22,7 @@ export interface MoodCheckin {
   note?: string;
 }
 
-export interface MoodAggregate {
-  date: string;
-  avgMood: number;
-  count: number;
-}
+export type MoodAggregate = z.infer<typeof orgMoodAggregateContract>;
 
 export interface HrBadge {
   id: number;
@@ -55,14 +51,7 @@ export interface LeaderboardEntry {
 
 export type HrPoll = z.infer<typeof pollContract>;
 
-export interface PollResults {
-  pollId: number;
-  question: string;
-  anonymous: boolean;
-  status: string;
-  totalVotes: number;
-  counts: { option: string; optionIndex: number; count: number }[];
-}
+export type PollResults = z.infer<typeof pollResultsContract>;
 
 export type HrCommunity = z.infer<typeof listCommunitiesContract>["items"][number];
 
@@ -154,7 +143,7 @@ export function useMyMoodHistory() {
 export function useOrgMoodAggregate() {
   const canManage = useCan("hr:engagement:manage");
   const hrEnabled = useModuleEnabled("hr");
-  return useQuery<MoodAggregate[]>({
+  return useQuery<MoodAggregate>({
     queryKey: hrEngagementQueryKeys.hrEngagementHub.moodAggregate(),
     queryFn: ({ signal }) => apiClient.get("/hr/engagement/mood/aggregate", undefined, signal, _moodAggregateContract),
     staleTime: 5 * 60_000,

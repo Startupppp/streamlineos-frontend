@@ -11,7 +11,7 @@ export default function EquityLoading() {
     >
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <div className="lg:col-span-5">
-          <DataTableSkeleton rows={10} columns={8} />
+          <DataTableSkeleton rows={10} headers={["Employee", "Type", "Units", "Grant Date", "Cliff", "Vesting", "Status", "Board Approved"]} />
         </div>
       </div>
     </PageWrapper>

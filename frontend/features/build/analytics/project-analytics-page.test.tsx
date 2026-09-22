@@ -1,11 +1,24 @@
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 
-const useCanState = jest.fn();
+const useAccess = jest.fn();
+const accessLoading = { data: undefined, isLoading: true };
+const accessGranted = {
+  data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} },
+  isLoading: false,
+};
+const accessDenied = {
+  data: { isOrgOwner: false, scopes: {}, modules: {} },
+  isLoading: false,
+};
 const useProjectAnalytics = jest.fn();
 
 jest.mock("@/hooks/api/access", () => ({
-  useCanState: (key: string) => useCanState(key),
+  useAccess: () => useAccess(),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
 }));
 
 jest.mock("@/hooks/api/build", () => ({
@@ -61,13 +74,13 @@ function settled<T>(data: T) {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  useCanState.mockReturnValue("granted");
+  useAccess.mockReturnValue(accessGranted);
   useProjectAnalytics.mockReturnValue(settled(ANALYTICS));
 });
 
 describe("ProjectAnalyticsPage — access is three-valued, not a boolean", () => {
   it("shows the loading skeleton while the access snapshot is still in flight, never an access denial", () => {
-    useCanState.mockReturnValue("loading");
+    useAccess.mockReturnValue(accessLoading);
 
     render(<ProjectAnalyticsPage projectId={101} />);
 
@@ -76,7 +89,7 @@ describe("ProjectAnalyticsPage — access is three-valued, not a boolean", () =>
   });
 
   it("renders NoPermissionState once build:view has actually said no, instead of falling through to the empty state", () => {
-    useCanState.mockReturnValue("denied");
+    useAccess.mockReturnValue(accessDenied);
     useProjectAnalytics.mockReturnValue({ data: undefined, isLoading: false, isError: false, error: null, refetch: jest.fn() });
 
     render(<ProjectAnalyticsPage projectId={101} />);

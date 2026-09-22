@@ -9,7 +9,10 @@ import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useArOpenItems } from "@/hooks/api/accounting/ar";
-import type { AgingBasis, AgingOpenItem } from "@/types/accounting-ar-receipts";
+import type {
+  AgingBasis,
+  AgingOpenItem,
+} from "@/types/accounting/accounting-ar-receipts";
 import { AGING_BUCKET_LABEL } from "./ar-labels";
 
 interface AgingOpenItemsSheetProps {
@@ -27,7 +30,8 @@ const KIND_LABEL: Readonly<Record<AgingOpenItem["kind"], string>> = {
 
 function itemHref(item: AgingOpenItem): string | null {
   if (item.kind === "invoice") return `/accounting/invoices/${item.documentId}`;
-  if (item.kind === "credit_note") return `/accounting/credit-notes/${item.documentId}`;
+  if (item.kind === "credit_note")
+    return `/accounting/credit-notes/${item.documentId}`;
   return null;
 }
 
@@ -94,8 +98,8 @@ export function AgingOpenItemsSheet({
                     </p>
                   )}
                   <p className="text-dense text-muted-foreground">
-                    {KIND_LABEL[item.kind]} · {formatShortDate(item.basisDate)} ·{" "}
-                    {AGING_BUCKET_LABEL[item.bucket]}
+                    {KIND_LABEL[item.kind]} · {formatShortDate(item.basisDate)}{" "}
+                    · {AGING_BUCKET_LABEL[item.bucket]}
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1">
@@ -103,7 +107,10 @@ export function AgingOpenItemsSheet({
                     {formatMinorMoney(item.openMinor, item.currency)}
                   </span>
                   {item.daysOverdue > 0 ? (
-                    <Badge variant="outline" className="h-4 px-1.5 py-0 text-micro">
+                    <Badge
+                      variant="outline"
+                      className="h-4 px-1.5 py-0 text-micro"
+                    >
                       {item.daysOverdue} days late
                     </Badge>
                   ) : null}

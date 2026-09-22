@@ -174,12 +174,12 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
               <span className="font-medium tabular-nums">{formatRoundedInr(breakdown.hra)}</span>
               <span className="text-muted-foreground">Other allowances:</span>
               <span className="font-medium tabular-nums">{formatRoundedInr(breakdown.balance)}</span>
-              <span className="text-muted-foreground">Professional Tax:</span>
+              <span className="text-muted-foreground">Professional Tax (estimate):</span>
               <span className="font-medium text-status-danger-ink tabular-nums">
                 -{formatRoundedInr(breakdown.professionalTax)}
               </span>
               <span className="text-muted-foreground font-semibold border-t pt-2">
-                Net Salary:
+                Net Salary (estimate):
               </span>
               <span className="font-bold text-status-success-ink border-t pt-2 tabular-nums">
                 {formatRoundedInr(breakdown.net)}
@@ -188,6 +188,8 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
             <p className="mt-3 text-dense leading-relaxed text-muted-foreground">
               Basic and HRA are saved exactly as shown. The remaining balance is
               allocated across your organisation&apos;s payroll components.
+              Professional tax and net pay are estimates: payroll applies the
+              state slab and any deductions when the salary structure runs.
             </p>
           </div>
         )}

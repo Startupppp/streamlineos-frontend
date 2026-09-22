@@ -7,7 +7,12 @@ import type { PerformanceReviewListItem } from "@/types/hr";
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
+  useCanState: jest.fn(() => "granted"),
   useModuleEnabled: jest.fn(() => true),
+  useAccess: jest.fn(() => ({
+    data: { modules: {}, scopes: {}, isOrgOwner: true },
+    isLoading: false,
+  })),
 }));
 
 jest.mock("@/hooks/api/hr", () => ({

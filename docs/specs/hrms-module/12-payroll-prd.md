@@ -82,7 +82,14 @@ overrides them for payroll-specific contracts.
 
 - [ ] **HRM-12-001** add `/payroll/setup` to Payroll sidebar (Settings child or
   first-run entry) and route-access tests.
-- [ ] **HRM-12-002** purge remaining `/payroll/me` callers.
+- [x] **HRM-12-002** purge remaining `/payroll/me` callers.
+  **Closed — source proof 2026-09-21; same evidence as `HRM-01-002`.**
+  No `frontend/app/(authenticated)/payroll/me` directory exists, and no `href`,
+  `router.push/replace` or `redirect()` anywhere in `app/`, `components/`,
+  `features/` or `lib/` targets it. The remaining `/payroll/me/*` strings are
+  the **backend employee self-service API** consumed by
+  `hooks/api/payroll/ess.ts` — live by design under CLAUDE.md §8, and not a
+  caller of the retired page.
 - [ ] **HRM-12-003** every KEEP payroll page documents HRM-02 anatomy fields.
 - [ ] **HRM-12-004** run detail `backHref` → `/payroll/runs` with restored
   filters.
@@ -161,8 +168,16 @@ Preview, Download, Republish (admin), Void (confirm).
 
 - [ ] **HRM-12-014** ship bulk publish payslips for a locked run.
 - [ ] **HRM-12-015** ship bulk exception resolve with per-id results.
-- [ ] **HRM-12-016** fix payout/bank-transfer React Query key collision
-  (run id vs batch id).
+- [x] **HRM-12-016** fix payout/bank-transfer React Query key collision
+  (run id vs batch id). **Closed — source plus a passing regression test
+  (2026-09-21).** `lib/query-keys/payroll.ts:34-39` discriminates the two:
+  `bankBatches(runId)` ends `…"batches","by-run",runId` and
+  `bankBatch(batchId)` ends `…"batches","detail",batchId`, while
+  `bankBatches()` with no argument stays the bare prefix so create-batch
+  invalidation still sweeps both. `payout-batch-key-collision.test.tsx` mounts
+  both hooks with `runId === batchId === 1` — the first payroll any customer
+  runs — and passes (3 tests). The org+user hash prefix does not separate
+  them, because the collision is inside one org and one user.
 
 ## Forms and Validation
 

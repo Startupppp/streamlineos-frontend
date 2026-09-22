@@ -43,6 +43,13 @@ export interface SessionUser {
    * about the role. Assert permission behaviour with a non-owner deliberately.
    */
   isOrgOwner?: boolean;
+  /**
+   * A `user_sessions.id` the backend has registered. `POST /auth/session-exchange`
+   * refuses a session it has never seen, so a minted cookie only becomes a
+   * backend JWT when this names an unrevoked row. Omitted, a fresh random id is
+   * minted per context, which is enough for specs that never reach the API.
+   */
+  sessionId?: string;
 }
 
 /**
@@ -72,7 +79,7 @@ function buildToken(user: SessionUser, now: number) {
      * ties its rate limits and audit rows to it. A fresh one per context keeps
      * two specs from sharing a session identity.
      */
-    sessionId: crypto.randomUUID(),
+    sessionId: user.sessionId ?? crypto.randomUUID(),
 
     sub: user.userId,
     iat: now,

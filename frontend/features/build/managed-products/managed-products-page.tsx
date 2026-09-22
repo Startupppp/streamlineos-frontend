@@ -14,12 +14,13 @@ import {
 } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-
+import { PageState } from "@/components/shared/page-state";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import {
@@ -44,15 +45,17 @@ import type {
   UpdateManagedProductInput,
 } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { NoPermissionState } from "@/components/shared";
-import { usePermissionGate } from "@/hooks/api/access";
-import { resolveGate } from "@/lib/rbac/gate";
 import {
   PmPageShell,
   PmSection,
   PM_FILL_PANEL,
+  PM_FILL_SECTION,
 } from "@/components/pm-chrome";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import {
+  FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
+import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 
@@ -115,7 +118,6 @@ interface ManagedProductsPageProps {
 export function ManagedProductsPage({
   pmWorkspaceId,
 }: ManagedProductsPageProps = {}) {
-  const viewGate = usePermissionGate("build:managed-products:view");
   const canCreate = useCan("build:managed-products:create");
   const canUpdate = useCan("build:managed-products:update");
   const canDelete = useCan("build:managed-products:delete");
@@ -124,16 +126,17 @@ export function ManagedProductsPage({
   const [cursorStack, setCursorStack] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<ManagedProduct | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ManagedProduct | null>(null);
 
-  const { data, isLoading, isError, refetch } = useManagedProducts({
+  const { data, isLoading, isError, error, refetch } = useManagedProducts({
     cursor,
     limit: PAGE_SIZE,
     status: statusFilter !== "all" ? statusFilter : undefined,
-    search: search.trim() || undefined,
+    search: debouncedSearch.trim() || undefined,
     ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
   });
 
@@ -150,15 +153,7 @@ export function ManagedProductsPage({
     return m?.name ?? m?.email ?? "Unknown";
   }
 
-  const displayed = useMemo(() => {
-    if (!search.trim()) return data?.data ?? [];
-    const q = search.toLowerCase();
-    return (data?.data ?? []).filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.key.toLowerCase().includes(q),
-    );
-  }, [data, search]);
+  const displayed = data?.data ?? [];
 
   function handleCreate(input: CreateManagedProductInput) {
     createProduct.mutate(input, {
@@ -317,10 +312,11 @@ export function ManagedProductsPage({
     },
   ];
 
-  const gate = resolveGate({
-    access: viewGate.pending ? "loading" : viewGate.denied ? "denied" : "granted",
+  const resolution = usePageState({
+    permission: "build:managed-products:view",
     isLoading,
     isError,
+    error,
     isEmpty: displayed.length === 0,
   });
 
@@ -330,11 +326,16 @@ export function ManagedProductsPage({
 
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
+      <SearchInput
+        placeholder="Search products…"
+        value={search}
+        onValueChange={handleSearchChange}
+      />
       <Select value={statusFilter} onValueChange={handleStatusChange}>
-        <SelectTrigger className="w-40">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-40")}>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
           {STATUS_OPTS.map((o) => (
             <SelectItem key={o.value} value={o.value}>
               {o.label}
@@ -342,13 +343,13 @@ export function ManagedProductsPage({
           ))}
         </SelectContent>
       </Select>
-      <SearchInput
-        placeholder="Search products…"
-        value={search}
-        onValueChange={handleSearchChange}
-      />
       {isFiltered ? (
-        <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="ml-auto"
+          onClick={handleClearFilters}
+        >
           Clear
         </Button>
       ) : null}
@@ -363,24 +364,24 @@ export function ManagedProductsPage({
       actions={canCreate ? <NewProductButton onClick={handleOpenCreate} /> : undefined}
     >
       <PmPageShell>
-        <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          {gate === "loading" ? (
-            <DataTableSkeleton rows={12} columns={6} className="flex-1" />
-          ) : gate === "denied" ? (
-            <NoPermissionState permission="build:managed-products:view" className={PM_FILL_PANEL} />
-          ) : gate === "error" ? (
-            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
-          ) : gate === "empty" ? (
-            <EmptyState
-              className={PM_FILL_PANEL}
-              illustrationPreset="projects"
-              title="No managed products yet"
-              description={isFiltered ? undefined : "Create a managed product to track delivery across projects."}
-              filtersActive={isFiltered}
-              onClearFilters={handleClearFilters}
-              action={canCreate && !isFiltered ? { label: "New Product", onClick: handleOpenCreate } : undefined}
-            />
-          ) : (
+        <PmSection index={0} className={PM_FILL_SECTION}>
+          <PageState
+            resolution={resolution}
+            loading={<DataTableSkeleton rows={12} columns={6} className="flex-1" />}
+            empty={
+              <EmptyState
+                className={PM_FILL_PANEL}
+                illustrationPreset="projects"
+                title="No managed products yet"
+                description={isFiltered ? undefined : "Create a managed product to track delivery across projects."}
+                filtersActive={isFiltered}
+                onClearFilters={handleClearFilters}
+                action={canCreate && !isFiltered ? { label: "New Product", onClick: handleOpenCreate } : undefined}
+              />
+            }
+            onRetry={handleRetry}
+            className={PM_FILL_PANEL}
+          >
             <>
               <DataTable
                 data={displayed}
@@ -400,7 +401,7 @@ export function ManagedProductsPage({
                 </div>
               ) : null}
             </>
-          )}
+          </PageState>
         </PmSection>
       </PmPageShell>
 

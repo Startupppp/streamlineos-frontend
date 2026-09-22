@@ -180,10 +180,35 @@ view changes. The toolbar states count and scope.
 
 - [ ] **BLD-04-016** bulk API accepts a bounded ID set or a signed,
   short-lived server query token for `all matching`.
-- [ ] **BLD-04-017** authorization and record scope are checked for every
+- [x] **BLD-04-017** authorization and record scope are checked for every
   target; one allowed record never authorizes another.
-- [ ] **BLD-04-018** project-local bulk updates are transactional and
+  **Closed — unit proof, executed 2026-09-21.**
+  `projects-bulk-write-isolation.spec.ts` and `ticket-scope-predicate.spec.ts` both
+  passed (6-suite / 42-test batch). `readMutationTickets`
+  (`core/build-ticket-mutation-policy.ts:34`) evaluates the caller's scope predicate
+  **per row** as `allowed: sql\`${policy.predicate}\``, then refuses if the id set is
+  incomplete for the project (`:39`) and if **any** row fails scope (`:40`) — so a
+  mixed batch cannot be partially applied on the strength of its permitted members.
+  The specs pin both halves directly: "rejects a mixed tenant batch without any
+  update" and "returns 403 for a same-tenant ticket outside DataScope".
+- [x] **BLD-04-018** project-local bulk updates are transactional and
   idempotent.
+  **Closed — unit proof, executed 2026-09-21.**
+  `build-bulk-mutation-invariants.spec.ts` passed (6-suite / 42-test batch),
+  asserting no write occurs on any invalid input. The mutation runs as one
+  `db.transaction` under the per-project advisory lock
+  (`core/build-ticket-bulk-mutation.ts:43-45`), and the route is fenced by
+  `@Idempotent("build.ticket.bulk-update")`
+  (`core/projects-tickets.controller.ts:163`), whose header the interceptor requires
+  by default. The mutation sets **absolute** values, so a replay is naturally
+  convergent.
+  Scope: *project-local* bulk only. Cross-project bulk is a different path and
+  fails three adjacent criteria — it bypasses the hook layer
+  (`use-all-work-bulk.ts:72`), `Promise.all`s per-project calls so one rejection
+  fails the whole operation, and reports a single summed toast. Those stay open at
+  BLD-04-019, BLD-04-020 and BLD-04-021. The client also mints a **fresh**
+  `Idempotency-Key` per attempt (`lib/api-client.ts:285-291`), so a user-initiated
+  retry is a new command rather than a replay.
 - [ ] **BLD-04-019** cross-project bulk returns per-project/per-record outcomes,
   never a misleading global success toast.
 - [ ] **BLD-04-020** retry reuses an idempotency key and targets failed records

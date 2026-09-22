@@ -1,5 +1,15 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { BuildScopeRecovery } from "./build-scope-recovery";
+import {
+  DirtyStateProvider,
+  useRegisterDirtyState,
+} from "@/components/shared/dirty-state-context";
+
+const push = jest.fn();
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push }),
+}));
 
 jest.mock("next/link", () => ({
   __esModule: true,
@@ -13,7 +23,7 @@ jest.mock("next/link", () => ({
   }: {
     children: React.ReactNode;
     href: string;
-    onClick?: () => void;
+    onClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
     className?: string;
     "aria-label"?: string;
     title?: string;
@@ -72,5 +82,83 @@ describe("BSN-04-A06 — no-access fallback renders nothing so no misleading rec
     const link = screen.getByRole("link");
     expect(link).toBeInTheDocument();
     expect(link.getAttribute("href")).toBe("/build/workspaces/ws-1");
+  });
+});
+
+const RECOVER_FALLBACK = {
+  kind: "recover" as const,
+  href: "/build/command-center",
+  label: "Go to All of Build",
+};
+
+function DirtySurface({ isDirty }: { isDirty: boolean }) {
+  useRegisterDirtyState(isDirty);
+  return null;
+}
+
+function renderExpandedRecovery(isDirty: boolean) {
+  return render(
+    <DirtyStateProvider>
+      <DirtySurface isDirty={isDirty} />
+      <BuildScopeRecovery fallback={RECOVER_FALLBACK} isCollapsed={false} />
+    </DirtyStateProvider>,
+  );
+}
+
+describe("BSN-04-014 — the scope recovery link is the one navigation path that used to escape the unsaved-work guard", () => {
+  beforeEach(() => {
+    push.mockReset();
+  });
+
+  it("navigates immediately when no Build surface holds unsaved work", () => {
+    renderExpandedRecovery(false);
+
+    fireEvent.click(screen.getByRole("link", { name: "Go to All of Build" }));
+
+    expect(push).toHaveBeenCalledWith("/build/command-center");
+  });
+
+  it("blocks navigation and prompts when a Build surface is dirty, instead of losing the draft silently", () => {
+    renderExpandedRecovery(true);
+
+    fireEvent.click(screen.getByRole("link", { name: "Go to All of Build" }));
+
+    expect(push).not.toHaveBeenCalled();
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+  });
+
+  it("navigates once the user discards, without double navigation", () => {
+    renderExpandedRecovery(true);
+
+    fireEvent.click(screen.getByRole("link", { name: "Go to All of Build" }));
+    fireEvent.click(screen.getByRole("button", { name: /discard/i }));
+
+    expect(push).toHaveBeenCalledTimes(1);
+    expect(push).toHaveBeenCalledWith("/build/command-center");
+  });
+
+  it("leaves a modifier-click to the browser so opening the recovery link in a new tab still works", () => {
+    renderExpandedRecovery(true);
+
+    fireEvent.click(screen.getByRole("link", { name: "Go to All of Build" }), {
+      metaKey: true,
+    });
+
+    expect(push).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
+  it("guards the collapsed-icon recovery link the same way as the expanded panel link", () => {
+    render(
+      <DirtyStateProvider>
+        <DirtySurface isDirty={true} />
+        <BuildScopeRecovery fallback={RECOVER_FALLBACK} isCollapsed={true} />
+      </DirtyStateProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("link"));
+
+    expect(push).not.toHaveBeenCalled();
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
   });
 });

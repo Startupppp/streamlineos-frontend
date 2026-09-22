@@ -178,7 +178,7 @@ function FnfDetailSheetInner({ settlementId, onClose }: FnfDetailSheetInnerProps
               <AlertDialogHeader>
                 <AlertDialogTitle>Approve Settlement</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will approve the Full & Final Settlement for{" "}
+                  This will approve the final settlement for{" "}
                   <strong>{settlement?.userName}</strong>. This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>

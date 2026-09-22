@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { memo } from "react";
+import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowBigUp, Pencil } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
@@ -87,6 +88,15 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
             <ArrowBigUp className="h-3.5 w-3.5" />
             {item.votes}
           </span>
+          {item.projectId !== null ? (
+            <Link
+              href={`/build/${item.projectId}`}
+              aria-label="View project"
+              className="text-dense text-primary underline-offset-2 hover:underline"
+            >
+              View project
+            </Link>
+          ) : null}
         </div>
       </div>
     </motion.div>

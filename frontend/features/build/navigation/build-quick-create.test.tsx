@@ -371,6 +371,18 @@ describe("permission denial and edge cases", () => {
   });
 });
 
+describe("BSN-03-A03 — zero authorized actions add no visual noise", () => {
+  it("Quick Create trigger is absent when access is in flight so the user never opens an empty dropdown", () => {
+    const { container } = renderQuickCreate(ORG_SCOPE, []);
+    expect(container.firstChild).toBeNull();
+  });
+
+  it("Quick Create trigger is absent at project scope with an empty action set so no affordance appears before access resolves", () => {
+    const { container } = renderQuickCreate(PROJECT_SCOPE, []);
+    expect(container.firstChild).toBeNull();
+  });
+});
+
 describe("invalid-target combination — upstream guard bypass", () => {
   it("calls openCreateTicket with null when Issue action is present at organization scope where no projectId exists", async () => {
     const user = userEvent.setup();

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useCanState } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { motion } from "framer-motion";
 import { TrendingUp, Target, Layers, Camera } from "lucide-react";
 import { toast } from "sonner";
@@ -18,8 +18,7 @@ import { DealForecastSummary } from "@/features/crm/deals/deal-forecast-summary"
 import { DealForecastChart } from "@/features/crm/deals/deal-forecast-chart";
 import { DealCloseDateList } from "@/features/crm/deals/deal-close-date-list";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { PageState } from "@/components/shared/page-state";
 
 function ForecastSkeleton() {
   return (
@@ -47,6 +46,8 @@ export default function DealForecastPage() {
 
   const handleRefetch = useCallback(() => { void refetch(); }, [refetch]);
 
+  const pageState = usePageState({ permission: "crm:deals:forecast", isLoading, isError, error });
+
   const handleCapture = useCallback(() => {
     captureForecast.mutate(
       { period: currentPeriod },
@@ -57,21 +58,20 @@ export default function DealForecastPage() {
     );
   }, [captureForecast, currentPeriod]);
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Placed after the last hook and before the first branch that can return:
-   * denial outranks loading, error and emptiness alike, and a hook below a
-   * conditional return would run in a different order on different renders.
-   */
-  if (useCanState("crm:deals:forecast") === "denied")
-    return <NoPermissionState permission="crm:deals:forecast" />;
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper
+        title="Deal Forecast"
+        subtitle="Pipeline forecast and revenue projection"
+        backHref="/crm/deals"
+      >
+        <PageState resolution={pageState} loading={null} onRetry={handleRefetch} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
 
-  if (isLoading) {
+  if (pageState.kind === "loading") {
     return (
       <PageWrapper
         title="Deal Forecast"
@@ -79,22 +79,6 @@ export default function DealForecastPage() {
         backHref="/crm/deals"
       >
         <ForecastSkeleton />
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper
-        title="Deal Forecast"
-        subtitle="Pipeline forecast and revenue projection"
-        backHref="/crm/deals"
-      >
-        <ErrorState
-          description={getErrorMessage(error)}
-          onRetry={handleRefetch}
-          className="flex-1"
-        />
       </PageWrapper>
     );
   }

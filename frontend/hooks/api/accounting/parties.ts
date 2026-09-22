@@ -19,7 +19,7 @@ import type {
   PartyPage,
   PartyTaxRegistration,
   UpdatePartyInput,
-} from "@/types/accounting-ar";
+} from "@/types/accounting/accounting-ar";
 
 type QueryOpts<T> = Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">;
 
@@ -41,12 +41,19 @@ function partiesParams(query: ListPartiesQuery): Record<string, unknown> {
   };
 }
 
-export function useParties(query: ListPartiesQuery = {}, options?: QueryOpts<PartyPage>) {
+export function useParties(
+  query: ListPartiesQuery = {},
+  options?: QueryOpts<PartyPage>,
+) {
   const canRead = useCan(PARTIES_READ);
   return useQuery<PartyPage, Error>({
     queryKey: accountingArQueryKeys.accountingAr.parties(partiesParams(query)),
     queryFn: ({ signal }) =>
-      apiClient.get<PartyPage>("/accounting/parties", partiesParams(query), signal),
+      apiClient.get<PartyPage>(
+        "/accounting/parties",
+        partiesParams(query),
+        signal,
+      ),
     staleTime: STANDARD_LIST_STALE,
     placeholderData: keepPreviousData,
     ...options,
@@ -59,7 +66,11 @@ export function useParty(partyId: string, options?: QueryOpts<PartyDetail>) {
   return useQuery<PartyDetail, Error>({
     queryKey: accountingArQueryKeys.accountingAr.party(partyId),
     queryFn: ({ signal }) =>
-      apiClient.get<PartyDetail>(`/accounting/parties/${partyId}`, undefined, signal),
+      apiClient.get<PartyDetail>(
+        `/accounting/parties/${partyId}`,
+        undefined,
+        signal,
+      ),
     staleTime: ENTITY_STALE,
     ...options,
     enabled: canRead && !!partyId && (options?.enabled ?? true),
@@ -87,41 +98,60 @@ export function usePartyTaxRegistrations(
 
 export function useCreateParty() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<PartyDetail, Error, CreatePartyInput>("accounting:create", {
-    mutationKey: ["accounting", "parties", "create"],
-    mutationFn: (input) => apiClient.post<PartyDetail>("/accounting/parties", input),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.all });
-    },
-  });
-}
-
-export function useUpdateParty() {
-  const queryClient = useQueryClient();
-  return useAuthorizedMutation<PartyDetail, Error, { partyId: string; input: UpdatePartyInput }>(
-    "accounting:update",
+  return useAuthorizedMutation<PartyDetail, Error, CreatePartyInput>(
+    "accounting:create",
     {
-      mutationKey: ["accounting", "parties", "update"],
-      mutationFn: ({ partyId, input }) =>
-        apiClient.patch<PartyDetail>(`/accounting/parties/${partyId}`, input),
-      onSuccess: (_data, variables) => {
-        queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.party(variables.partyId) });
-        queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.parties() });
+      mutationKey: ["accounting", "parties", "create"],
+      mutationFn: (input) =>
+        apiClient.post<PartyDetail>("/accounting/parties", input),
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: accountingArQueryKeys.accountingAr.all,
+        });
       },
     },
   );
 }
 
-export function useDeleteParty() {
+export function useUpdateParty() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<DeletedResult, Error, string>("accounting:update", {
-    mutationKey: ["accounting", "parties", "delete"],
-    mutationFn: (partyId) => apiClient.delete<DeletedResult>(`/accounting/parties/${partyId}`),
-    onSuccess: (_data, partyId) => {
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.party(partyId) });
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.parties() });
+  return useAuthorizedMutation<
+    PartyDetail,
+    Error,
+    { partyId: string; input: UpdatePartyInput }
+  >("accounting:update", {
+    mutationKey: ["accounting", "parties", "update"],
+    mutationFn: ({ partyId, input }) =>
+      apiClient.patch<PartyDetail>(`/accounting/parties/${partyId}`, input),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: accountingArQueryKeys.accountingAr.party(variables.partyId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: accountingArQueryKeys.accountingAr.parties(),
+      });
     },
   });
+}
+
+export function useDeleteParty() {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation<DeletedResult, Error, string>(
+    "accounting:update",
+    {
+      mutationKey: ["accounting", "parties", "delete"],
+      mutationFn: (partyId) =>
+        apiClient.delete<DeletedResult>(`/accounting/parties/${partyId}`),
+      onSuccess: (_data, partyId) => {
+        queryClient.invalidateQueries({
+          queryKey: accountingArQueryKeys.accountingAr.party(partyId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: accountingArQueryKeys.accountingAr.parties(),
+        });
+      },
+    },
+  );
 }
 
 export function useAddPartyTaxRegistration() {
@@ -139,29 +169,38 @@ export function useAddPartyTaxRegistration() {
       ),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
-        queryKey: accountingArQueryKeys.accountingAr.partyTaxRegistrations(variables.partyId),
+        queryKey: accountingArQueryKeys.accountingAr.partyTaxRegistrations(
+          variables.partyId,
+        ),
       });
-      queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.party(variables.partyId) });
+      queryClient.invalidateQueries({
+        queryKey: accountingArQueryKeys.accountingAr.party(variables.partyId),
+      });
     },
   });
 }
 
 export function useRemovePartyTaxRegistration() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<DeletedResult, Error, { partyId: string; registrationId: string }>(
-    "accounting:taxes:manage",
-    {
-      mutationKey: ["accounting", "parties", "taxRegistrations", "remove"],
-      mutationFn: ({ partyId, registrationId }) =>
-        apiClient.delete<DeletedResult>(
-          `/accounting/parties/${partyId}/tax-registrations/${registrationId}`,
+  return useAuthorizedMutation<
+    DeletedResult,
+    Error,
+    { partyId: string; registrationId: string }
+  >("accounting:taxes:manage", {
+    mutationKey: ["accounting", "parties", "taxRegistrations", "remove"],
+    mutationFn: ({ partyId, registrationId }) =>
+      apiClient.delete<DeletedResult>(
+        `/accounting/parties/${partyId}/tax-registrations/${registrationId}`,
+      ),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: accountingArQueryKeys.accountingAr.partyTaxRegistrations(
+          variables.partyId,
         ),
-      onSuccess: (_data, variables) => {
-        queryClient.invalidateQueries({
-          queryKey: accountingArQueryKeys.accountingAr.partyTaxRegistrations(variables.partyId),
-        });
-        queryClient.invalidateQueries({ queryKey: accountingArQueryKeys.accountingAr.party(variables.partyId) });
-      },
+      });
+      queryClient.invalidateQueries({
+        queryKey: accountingArQueryKeys.accountingAr.party(variables.partyId),
+      });
     },
-  );
+  });
 }

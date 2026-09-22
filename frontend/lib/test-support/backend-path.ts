@@ -76,6 +76,9 @@ function pairedSibling(root: string, relative: string): string | null {
  * `"src/modules/rbac/permissions"`.
  */
 export function backendPath(relative: string): string {
+  const override = process.env.STREAMLINE_BACKEND_ROOT;
+  if (override) return path.resolve(override, relative);
+
   const root = frontendRoot();
   const paired = pairedSibling(root, relative);
   const candidates = [

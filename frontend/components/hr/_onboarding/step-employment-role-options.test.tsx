@@ -15,6 +15,10 @@ jest.mock("@/components/hr/department-combobox", () => ({
   DepartmentCombobox: () => <div data-testid="department-combobox" />,
 }));
 
+jest.mock("@/components/ui/user-combobox", () => ({
+  UserCombobox: () => <div data-testid="reporting-manager-combobox" />,
+}));
+
 jest.mock("@/components/ui/select", () => ({
   Select: ({
     value,

@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import type { FeedbucketSubmissionRow } from "@/hooks/api/feedbucket/feedbucket-schema";
 import { lazyContract } from "@/lib/api-envelope";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
   FeedbucketMediaKind,
   FeedbucketSubmission,
@@ -126,6 +127,7 @@ export function useConvertFeedbucketToTicket() {
     onSuccess: (_, { submissionId }) => {
       void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.submission(submissionId) });
       void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.all });
+      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.tickets() });
     },
   });
 }

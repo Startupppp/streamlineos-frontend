@@ -9,8 +9,9 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState as UiEmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import {
   useLeavePolicies,
   useDeleteLeavePolicy,
@@ -45,6 +46,8 @@ export function LeavePoliciesPage() {
   const leaveTypeOptions = leaveTypesData ?? [];
   const deleteMutation = useDeleteLeavePolicy();
   const canManage = useCan("hr:leaves:manage");
+  const pageState = usePageState({ permission: "hr:leaves:view", isLoading, isError, error, isEmpty: !policies?.length });
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingPolicy, setEditingPolicy] = useState<LeavePolicy | null>(null);
@@ -93,7 +96,7 @@ export function LeavePoliciesPage() {
             iconSize={16}
             onClick={handleCreateClick}
           >
-            {" New Policy"}
+            {" Create leave policy"}
           </AnimatedIconButton>
         ) : undefined
       }
@@ -101,24 +104,21 @@ export function LeavePoliciesPage() {
       <div className="mb-4">
         <LeaveTypesManager canManage={canManage} />
       </div>
-      {isLoading ? (
+      <PageState
+        resolution={pageState}
+        loading={
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <Skeleton key={i} className="h-52 rounded-lg" />
+            ))}
+          </div>
+        }
+        empty={<LeavePoliciesEmptyState onCreateClick={handleCreateClick} />}
+        onRetry={handleRetry}
+        className="flex-1"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <Skeleton key={i} className="h-52 rounded-lg" />
-          ))}
-        </div>
-      ) : isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load leave policies"
-          description={getErrorMessage(error)}
-          onRetry={refetch}
-        />
-      ) : !policies?.length ? (
-        <LeavePoliciesEmptyState onCreateClick={handleCreateClick} />
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {policies.map((policy, i) => (
+          {policies?.map((policy, i) => (
             <PolicyCard
               key={policy.id}
               policy={policy}
@@ -132,7 +132,7 @@ export function LeavePoliciesPage() {
             />
           ))}
         </div>
-      )}
+      </PageState>
 
       <PolicyFormSheet
         open={sheetOpen}

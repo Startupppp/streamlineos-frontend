@@ -55,6 +55,41 @@ Rules:
 
 - [ ] **BLD-08-001** measure current light/dark surface combinations and approve
   token changes with screenshots, not subjective labels.
+  **Measured 2026-09-21; open on the approval clause.**
+  Ratios are WCAG 2.1 relative luminance computed from the resolved
+  `globals.css` token values, alpha-blending each tint against its real backdrop
+  before comparing. The method was checked against the Annex A 21.00:1
+  black-on-white reference and two hand-computed mid-greys (`#808080` on white =
+  3.95:1) before the pairs were read, so the numbers are not self-certified.
+  41 light/dark pairs measured; every chrome, foreground,
+  primary, secondary, accent, popover, sidebar and ring pair passes, in both
+  modes. All dark-mode status pairs pass with ≥1.6:1 of margin.
+  **Three light-mode pairs fall below AA normal text (4.5:1):**
+  `status-success-ink` on its surface 3.58:1, `status-warning-ink` 3.46:1,
+  `status-danger-ink` 4.41:1.
+  **These are not token defects, and the tokens must not be "fixed".** The
+  system is deliberately two-level: `-ink` is the 3:1 non-text ink for icons and
+  borders (SC 1.4.11), `-ink-strong` is the 4.5:1 text ink.
+  `components/ui/__tests__/contrast-status-tokens.test.ts:29` already asserts
+  that exactly `["success", "warning", "danger"]` sit below AA — so raising
+  `-ink` to the `-ink-strong` value would collapse the two levels and fail the
+  test that documents the design.
+  **The defect is at call sites that render words in `-ink`.** Extending the
+  measurement to the untinted surfaces the audit did not cover:
+  `success-ink` and `warning-ink` fail 4.5:1 on **every** light surface —
+  card (3.77, 3.58), background (3.60, 3.43) and muted (3.44, 3.27) — so there
+  is no light context in which they are safe for text. `danger-ink` (4.41) and
+  `neutral-ink` (4.34) additionally fail on `muted`. Every `-ink-strong` clears
+  4.5:1 on all three.
+  Scope: 1,716 `text-status-{success,warning,danger}-ink` call sites repo-wide;
+  about 180 under `features/build/**`, of which 72 pair the ink with a tinted
+  `-surface` and are therefore measured failures today. A confirmed example is
+  `features/build/navigation/build-scope-recovery.tsx:66`, whose warning
+  paragraph renders at 3.46:1.
+  Not closed: the item also requires approving changes **with screenshots**, and
+  no browser has run. The repo-wide call-site sweep is larger than Build and
+  needs its own packet with a ratchet, since a gate over 1,716 sites cannot land
+  green in one change.
 - [ ] **BLD-08-002** Card, Popover, Dialog, Sheet, menu, tooltip, and board
   column have distinct documented elevation roles.
 - [ ] **BLD-08-003** no retained Build page uses identical adjacent surface
@@ -276,7 +311,21 @@ mark a state N/A only with a product reason in its page contract.
 - progress does not simulate certainty or invent status.
 - AI is absent when it cannot provide scoped, evidence-backed value.
 
-- [ ] **BLD-08-025** no agent count reuses unrelated global notification data.
+- [x] **BLD-08-025** no agent count reuses unrelated global notification data.
+  **Closed — unit proof, executed 2026-09-21 (5 suites / 56 tests).**
+  There is no agent *count* at all: `BuildAgentPulse` reads a dedicated
+  `/build/agent-pulse/top-signal` under its own key
+  `buildWorkQueryKeys.projects.agentPulse(scopeKey)`, gated `build:approvals:view`
+  and parameterised by scope (`hooks/api/build/agent-pulse.ts:16-48`), and renders
+  one signal. `agent-pulse.test.ts` (4 cases, including per-scope cache isolation)
+  and `build-agent-pulse.test.tsx` (18 cases) both passed.
+  The one Build badge count is module-filtered rather than global:
+  `sourceModule: "build"` with key `notifications.unreadCount("build")`
+  (`hooks/api/build/approvals.ts:54-66`), consumed at `build-sidebar.tsx:65,111-113`.
+  **Residual worth fixing:** no test pins that `sourceModule` parameter, so a
+  regression to the global count would keep every suite green. A one-assertion
+  addition to `approvals-badge.test.ts` would protect this closure; recorded as a
+  quick win in the 2026-09-21 audit.
 - [ ] **BLD-08-026** pending proposals remain distinguishable from executed
   actions and expire safely.
 - [ ] **BLD-08-027** client-visible AI drafts require explicit human approval.

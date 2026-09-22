@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   CREDIT_NOTES_CREATE,
   RECEIVABLES_MANAGE,
@@ -39,7 +40,6 @@ import { documentRevision, toUpdateDocumentInput, type ArDocumentFormValues } fr
 const PREVIEW_DEBOUNCE_MS = 400;
 
 export function InvoiceDetailClient({ invoiceId }: { invoiceId: string }) {
-  const canRead = useCan(RECEIVABLES_READ);
   const canManage = useCan(RECEIVABLES_MANAGE);
   const canCredit = useCan(CREDIT_NOTES_CREATE);
   const canReadTax = useCan(TAXES_READ);
@@ -67,6 +67,14 @@ export function InvoiceDetailClient({ invoiceId }: { invoiceId: string }) {
   const updateDraft = useUpdateArInvoiceDraft();
   const deleteDraft = useDeleteArInvoiceDraft();
   const postInvoice = usePostArInvoice();
+
+  const pageState = usePageState({
+    permission: RECEIVABLES_READ,
+    isLoading: invoiceQuery.isLoading,
+    isError: invoiceQuery.isError,
+    error: invoiceQuery.error,
+  });
+  const handleRetry = useCallback(() => { void invoiceQuery.refetch(); }, [invoiceQuery]);
 
   function handleFailure(error: unknown): void {
     const rejection = readArRejection(error);
@@ -112,26 +120,14 @@ export function InvoiceDetailClient({ invoiceId }: { invoiceId: string }) {
     });
   }
 
-  if (!canRead) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper title="Invoice" backHref="/accounting/invoices">
-        <NoPermissionState permission={RECEIVABLES_READ} />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
-
-  if (invoiceQuery.isError) {
-    return (
-      <PageWrapper title="Invoice" backHref="/accounting/invoices">
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load this invoice"
-          description={getErrorMessage(invoiceQuery.error)}
-          onRetry={() => void invoiceQuery.refetch()}
-        />
-      </PageWrapper>
-    );
-  }
 
   if (invoiceQuery.isPending || !invoice) {
     return (

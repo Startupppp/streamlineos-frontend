@@ -27,6 +27,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -63,8 +64,12 @@ export function LegalHoldSheet({ open, onClose, hold }: LegalHoldSheetProps) {
   const createHold = useCreateLegalHold();
   const attachItem = useAttachHoldItem();
   const detachItem = useDetachHoldItem();
-  const { data: items, isLoading: itemsLoading } = useHoldItems(hold?.id);
+  const { data: items, isLoading: itemsLoading, isError: itemsError, error: itemsErrorData, refetch: itemsRefetch } = useHoldItems(hold?.id);
   const { data: membersData } = useOrgMembers(1, 200);
+
+  function handleItemsRetry() {
+    void itemsRefetch();
+  }
 
   const memberById = useMemo(() => {
     const map = new Map<string, NamedUser>();
@@ -182,6 +187,14 @@ export function LegalHoldSheet({ open, onClose, hold }: LegalHoldSheetProps) {
                 <div className="space-y-2">
                   {[1, 2].map((i) => <Skeleton key={i} className="h-4 w-full rounded" />)}
                 </div>
+              ) : itemsError ? (
+                <ErrorState
+                  compact
+                  className="border-0 bg-transparent shadow-none"
+                  title="Couldn't load hold items"
+                  description={getErrorMessage(itemsErrorData)}
+                  onRetry={handleItemsRetry}
+                />
               ) : (items ?? []).length === 0 ? (
                 <p className="text-sm text-muted-foreground">No items attached to this hold.</p>
               ) : (

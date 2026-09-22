@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DepartmentCombobox } from "@/components/hr/department-combobox";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { Briefcase } from "lucide-react";
 import type { EmployeeFormValues } from "@/features/hr/employees/detail/employee-form-schema";
 
@@ -23,7 +24,17 @@ function joiningDateChange(
   };
 }
 
-export function ProfessionalInfoSection() {
+interface ProfessionalInfoSectionProps {
+  employeeUserId: string;
+}
+
+function reportingToChange(onChange: (value: string | null) => void): (value: string) => void {
+  return function handleReportingToChange(value) {
+    onChange(value === "" ? null : value);
+  };
+}
+
+export function ProfessionalInfoSection({ employeeUserId }: ProfessionalInfoSectionProps) {
   const { control } = useFormContext<EmployeeFormValues>();
 
   return (
@@ -60,6 +71,28 @@ export function ProfessionalInfoSection() {
                   onValueChange={(value) => field.onChange(value ?? undefined)}
                   placeholder="Select Department"
                 />
+        <FormField
+          control={control}
+          name="reportingTo"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Reports to</FormLabel>
+              <FormControl>
+                <UserCombobox
+                  value={field.value ?? ""}
+                  onChange={reportingToChange(field.onChange)}
+                  placeholder="Select reporting manager"
+                  excludeUserId={employeeUserId}
+                  allowUnassigned
+                />
+              </FormControl>
+              <FormDescription>
+                Changing the manager takes effect today and is kept in the reporting-line history.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
               </FormControl>
               <FormDescription>
                 Organizational unit (e.g. Engineering, Sales)

@@ -8,11 +8,16 @@ import { useProjectMilestones } from "@/hooks/api/build/milestones";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
+import {
+  StatCard,
+  StatCardGrid,
+  StatCardGridSkeleton,
+} from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { formatShortDate } from "@/lib/date-utils";
+import { EmptyState } from "@/components/ui/empty-state";
 import { LayoutGrid, Target, Zap } from "lucide-react";
 
 interface ProjectOverviewPageProps {
@@ -52,10 +57,18 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
     columnCountsQuery.isError ||
     milestonesQuery.isError;
 
+  const error =
+    projectQuery.error ??
+    analyticsQuery.error ??
+    cyclesQuery.error ??
+    columnCountsQuery.error ??
+    milestonesQuery.error;
+
   const resolution = usePageState({
     permission: "build:view",
     isLoading,
     isError,
+    error,
     isEmpty: !projectQuery.data,
   });
 
@@ -83,15 +96,22 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
 
   return (
     <PageWrapper
-      title={project?.name ?? "Project overview"}
       badge={project?.key}
+      title={project?.name ?? "Project overview"}
       subtitle={project?.description ?? undefined}
     >
       <PageState
-        resolution={resolution}
-        loading={<ProjectOverviewSkeleton />}
         onRetry={handleRetry}
+        resolution={resolution}
         className="flex-1 min-h-0"
+        loading={<ProjectOverviewSkeleton />}
+        empty={
+          <EmptyState
+            title="Project not found"
+            description="This project may have been deleted or moved."
+            className="flex-1"
+          />
+        }
       >
         <div className="flex flex-1 min-h-0 flex-col gap-6">
           <StatCardGrid cols={3}>
@@ -109,7 +129,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
               icon={Zap}
               tone="violet"
               isLoading={cyclesQuery.isLoading}
-              href={activeCycle ? `${basePath}/sprints` : undefined}
+              href={activeCycle ? `${basePath}/cycles` : undefined}
             />
             <StatCard
               label="Health"
@@ -134,9 +154,16 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {Object.entries(columnCounts).map(([status, count]) => (
-                    <div key={status} className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground truncate">{status}</span>
-                      <span className="font-mono tabular-nums font-medium">{count}</span>
+                    <div
+                      key={status}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <span className="text-muted-foreground truncate">
+                        {status}
+                      </span>
+                      <span className="font-mono tabular-nums font-medium">
+                        {count}
+                      </span>
                     </div>
                   ))}
                 </CardContent>
@@ -149,13 +176,18 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
                   <h2 className="text-sm font-semibold">Next milestone</h2>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <p className="text-sm font-medium truncate">{nextMilestone.name}</p>
+                  <p className="text-sm font-medium truncate">
+                    {nextMilestone.name}
+                  </p>
                   {nextMilestone.targetDate && (
                     <p className="text-label text-muted-foreground">
                       Due {formatShortDate(nextMilestone.targetDate)}
                     </p>
                   )}
-                  <Badge variant="outline" className="h-5 px-2 py-0.5 text-micro">
+                  <Badge
+                    variant="outline"
+                    className="h-5 px-2 py-0.5 text-micro"
+                  >
                     {nextMilestone.status}
                   </Badge>
                 </CardContent>
@@ -171,7 +203,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
               Issues
             </Link>
             <Link
-              href={`${basePath}/sprints`}
+              href={`${basePath}/cycles`}
               className="text-primary hover:underline"
             >
               Cycles

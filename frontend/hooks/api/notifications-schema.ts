@@ -34,6 +34,24 @@ const notificationItemContract = z.object({
   archivedAt: z.string().nullable(),
   snoozedUntil: z.string().nullable(),
   createdAt: z.string(),
+  ticketContext: z
+    .object({
+      ticketId: z.number().int(),
+      ticketKey: z.string(),
+      priority: z.string().nullable(),
+      status: z.string().nullable(),
+      type: z.string().nullable(),
+      assignee: z
+        .object({
+          id: z.string(),
+          name: z.string().nullable(),
+          firstName: z.string().nullable(),
+          lastName: z.string().nullable(),
+          image: z.string().nullable(),
+        })
+        .nullable(),
+    })
+    .nullable(),
   actions: z
     .array(z.object({ label: z.string(), url: z.string().optional(), action: z.string().optional() }))
     .optional(),

@@ -54,13 +54,17 @@ describe("Timesheets contract enum alignment", () => {
     expect(contractBillingType).toContain("FIXED");
   });
 
-  it("approvalMode contract does not contain NONE, PROJECT, or CLIENT", () => {
+  it("approvalMode contract offers manager and auto only; multi-level stays unconfigurable until it exists", () => {
     expect(contractApprovalMode).not.toContain("NONE");
     expect(contractApprovalMode).not.toContain("PROJECT");
     expect(contractApprovalMode).not.toContain("CLIENT");
+    expect(contractApprovalMode).not.toContain("MULTI_LEVEL");
     expect(contractApprovalMode).toContain("MANAGER");
     expect(contractApprovalMode).toContain("AUTO");
-    expect(contractApprovalMode).toContain("MULTI_LEVEL");
+  });
+
+  it("approverSource contract offers the reporting manager default and the project-manager override", () => {
+    expect(getBodyEnum("patch", "/timesheets/settings", "approverSource")).toEqual(["REPORTING_MANAGER", "PROJECT_MANAGER"]);
   });
 
   it("BILLING_TYPE_LABEL is exhaustive over BillingType", () => {

@@ -148,8 +148,20 @@ Rules:
 
 - [ ] **BLD-03-007** every retained collection implements its applicable row
   with no decorative filter that the backend ignores.
-- [ ] **BLD-03-008** no client sends its own user or organization ID to express
+- [x] **BLD-03-008** no client sends its own user or organization ID to express
   `mine`; identity comes from the token.
+  **Closed — unit proof, executed 2026-09-21.**
+  `backend/src/modules/build/core/work-scope-mine.spec.ts` passed (part of a 6-suite
+  / 42-test batch). It is non-vacuous by construction: it captures the emitted
+  predicate and asserts **exactly two** `user_id =` bindings, so neither branch of
+  the `mine` UNION can widen to the organisation. `scope` is a `z.enum` resolved
+  from `@CurrentUser()` (`projects-work-query.service.ts:182-188`), and per-person
+  filtering uses a `@me` sentinel the server resolves
+  (`projects-tickets-read.service.ts:272`, `projects-work-query.service.ts:225`;
+  client side `filter-command-menu.tsx:68`, `ticket-filter-bar.tsx:382`). No
+  authenticated Build query key carries an org id.
+  Scope *widening* by a permitted actor is a different criterion and stays open at
+  BLD-03-009.
 - [ ] **BLD-03-009** a user without widening scope cannot select or query
   another actor's private workload.
 - [ ] **BLD-03-010** option APIs project only ID, label, state, and required
@@ -174,7 +186,19 @@ Rules:
 
 - [ ] **BLD-03-011** project and cross-project search use indexed plans at
   realistic scale.
-- [ ] **BLD-03-012** out-of-order responses cannot replace newer results.
+- [x] **BLD-03-012** out-of-order responses cannot replace newer results.
+  **Closed — gate proof, executed 2026-09-21.**
+  `pnpm check:query-signal` passed with its self-test (run as part of the full
+  41-gate battery; both exit 0). The gate resolves the `signal` argument **by
+  position**, which is the failure mode that matters here — a `signal` passed into
+  the wrong parameter slot would otherwise satisfy a text scan while aborting
+  nothing. Every Build `queryFn` destructures and forwards it
+  (`hooks/api/build/ticket-queries.ts:78-94`, into `apiClient` at `:41-42`), so a
+  superseded request is aborted rather than allowed to resolve late. Search commits
+  are debounced 300 ms (`components/list-view/use-list-filter-params.ts:63,210`).
+  Note this covers request **abortion**. It does not cover a late *session* or
+  *scope* switch: `frontend/CLAUDE.md:26` records that the scoped query hash does
+  not fence in-flight switches, which stays open at BLD-03-A02 and BSN-04-A07.
 - [ ] **BLD-03-013** search, filters, count, export, and bulk target the same
   result predicate.
 - [ ] **BLD-03-014** direct URL search works on hard refresh and rejects
@@ -229,7 +253,20 @@ It never stores a cursor, tenant ID from the client, or unauthorized option.
   archive, and delete are permission checked.
 - [ ] **BLD-03-020** opening a view reports missing/archived fields and offers a
   safe repair rather than silently changing meaning.
-- [ ] **BLD-03-021** private views cannot be resolved by another actor.
+- [x] **BLD-03-021** private views cannot be resolved by another actor.
+  **Closed — source proof plus a bite-proven regression test (2026-09-21).**
+  `ViewsService` exposes no get-by-id route: `workspace.controller.ts:166-266`
+  registers list/create/update/delete only, at both project and workspace scope.
+  Both read paths narrow the WHERE to
+  `or(visibility = "shared", createdBy = userId)`
+  (`workspace.service.ts:234-240`, `:300-306`), and all four mutation paths
+  reject a non-owner private view with `ForbiddenException`
+  (`:271-274`, `:288-291`, `:342-345`, `:364-367`) — 403 rather than 404
+  because the caller is inside the correct tenant.
+  Eight tests added to `workspace-tenant-isolation.spec.ts`, including the
+  shared-view and owner controls so the guard is proven to gate privacy rather
+  than authorship. Bite-proved: neutering the four guards fails exactly the
+  four negative tests.
 - [ ] **BLD-03-022** default-view resolution has a deterministic fallback when
   access is revoked.
 

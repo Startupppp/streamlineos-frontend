@@ -194,7 +194,7 @@ export function DynamicFormRenderer({
               <RatingField value={numVal} onChange={(v) => setFieldValue(field.key, v)} />
             )}
             {errors[field.key] && (
-              <p className="text-xs text-destructive">{errors[field.key]}</p>
+              <p className="text-xs text-destructive" aria-live="polite">{errors[field.key]}</p>
             )}
           </div>
         );

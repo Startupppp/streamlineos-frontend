@@ -1,20 +1,14 @@
 import type { z } from "zod";
 import type {
   changeRequestRowContract,
+  changeRequestListContract,
   portalChangeRequestItemContract,
 } from "@/hooks/api/build/client-portal-schema";
 
-export type ChangeRequestStatus =
-  | "submitted"
-  | "under_review"
-  | "estimated"
-  | "awaiting_approval"
-  | "approved"
-  | "rejected"
-  | "in_progress"
-  | "completed";
-
 export type ChangeRequest = z.infer<typeof changeRequestRowContract>;
+export type ChangeRequestPage = z.infer<typeof changeRequestListContract>;
+
+export type ChangeRequestStatus = ChangeRequest["status"];
 
 export type PortalChangeRequest = z.infer<typeof portalChangeRequestItemContract>;
 

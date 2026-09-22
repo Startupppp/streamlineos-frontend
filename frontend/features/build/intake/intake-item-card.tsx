@@ -2,6 +2,7 @@
 
 import { memo, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { formatShortDate } from "@/lib/date-utils";
 import { Badge } from "@/components/ui/badge";
 import { CheckIcon, XIcon, CopyIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -47,12 +48,13 @@ interface IntakeItem {
 
 interface IntakeItemCardProps {
   item: IntakeItem;
+  canManage?: boolean;
   onAccept: (id: number) => void;
   onDecline: (id: number) => void;
   onDuplicate: (id: number) => void;
 }
 
-export const IntakeItemCard = memo(function IntakeItemCard({ item, onAccept, onDecline, onDuplicate }: IntakeItemCardProps) {
+export const IntakeItemCard = memo(function IntakeItemCard({ item, canManage, onAccept, onDecline, onDuplicate }: IntakeItemCardProps) {
   const handleAccept = useCallback(() => onAccept(item.id), [item.id, onAccept]);
   const handleDecline = useCallback(() => onDecline(item.id), [item.id, onDecline]);
   const handleDuplicate = useCallback(() => onDuplicate(item.id), [item.id, onDuplicate]);
@@ -86,14 +88,14 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, onAccept, onD
           </p>
         ) : null}
         <p className={cn(TEXT_ONE_LINE, "mt-1 text-xs text-muted-foreground")}>
-          {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ""}
+          {item.createdAt ? formatShortDate(item.createdAt) : ""}
           {submitterDisplay ? ` · ${submitterDisplay}` : ""}
         </p>
         {item.declineReason && (
           <p className="text-xs text-destructive mt-1">Reason: {item.declineReason}</p>
         )}
       </div>
-      {item.status === "pending" && (
+      {item.status === "pending" && canManage && (
         <div className="flex items-center gap-1 shrink-0 py-3 pr-3">
           <AnimatedIconButton
             icon={CheckIcon}

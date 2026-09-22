@@ -18,11 +18,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const SOURCE_COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
 ];
 
 interface RecruitmentAnalyticsChartsProps {
@@ -61,7 +61,7 @@ export function RecruitmentAnalyticsCharts({ funnelData, sourceData, isLoading }
                 />
                 <Bar
                   dataKey="count"
-                  fill="hsl(var(--primary))"
+                  fill="var(--primary)"
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>
@@ -144,7 +144,7 @@ export function RecruitmentAnalyticsCharts({ funnelData, sourceData, isLoading }
                 />
                 <Bar
                   dataKey="avgDays"
-                  fill="hsl(var(--chart-2))"
+                  fill="var(--chart-2)"
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>

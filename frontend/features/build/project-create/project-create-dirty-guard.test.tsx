@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import {
-  BuildDirtyStateProvider,
-  useBuildHasUnsavedWork,
-} from "@/features/build/navigation/build-dirty-state-context";
+  DirtyStateProvider,
+  useHasUnsavedWork,
+} from "@/components/shared/dirty-state-context";
 import { ProjectCreateWizard } from "./project-create-wizard";
 
 let mockStep = 1;
@@ -71,16 +71,16 @@ jest.mock("./steps/step-review", () => ({
 }));
 
 function HasUnsavedWorkProbe() {
-  const hasUnsavedWork = useBuildHasUnsavedWork();
+  const hasUnsavedWork = useHasUnsavedWork();
   return <span data-testid="probe">{hasUnsavedWork ? "dirty" : "clean"}</span>;
 }
 
 function renderHarness(open: boolean) {
   return render(
-    <BuildDirtyStateProvider>
+    <DirtyStateProvider>
       <HasUnsavedWorkProbe />
       <ProjectCreateWizard open={open} onOpenChange={jest.fn()} />
-    </BuildDirtyStateProvider>,
+    </DirtyStateProvider>,
   );
 }
 

@@ -19,7 +19,7 @@ import {
   type AssetReturn,
 } from "@/features/hr/asset-returns/asset-return-constants";
 import { buildAssetReturnColumns } from "@/features/hr/asset-returns/asset-return-columns";
-import { AssetReturnLogSheet } from "@/features/hr/asset-returns/asset-return-log-sheet";
+import { AssetReturnLogSheet, type AssetReturnFieldErrors } from "@/features/hr/asset-returns/asset-return-log-sheet";
 import {
   AssetReturnsSkeleton,
   AssetReturnsError,
@@ -71,7 +71,7 @@ export function AssetReturnsPage() {
   const [condition, setCondition] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [notesError, setNotesError] = useState("");
-  const [validationError, setValidationError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<AssetReturnFieldErrors>({});
 
   const selectedAsset = useMemo<Asset | undefined>(
     () => allAssignedAssets.find((a) => String(a.id) === selectedAssetId),
@@ -96,7 +96,7 @@ export function AssetReturnsPage() {
     setCondition("");
     setNotes("");
     setNotesError("");
-    setValidationError("");
+    setFieldErrors({});
   }, []);
 
   const handleSheetOpenChange = useCallback(
@@ -112,10 +112,17 @@ export function AssetReturnsPage() {
   const handleAssetChange = useCallback((id: string) => {
     setSelectedAssetId(id);
     setOverrideUserId(null);
+    setFieldErrors((prev) => ({ ...prev, asset: undefined, employee: undefined }));
   }, []);
 
   const handleEmployeeOverrideChange = useCallback((id: string) => {
     setOverrideUserId(id || null);
+    setFieldErrors((prev) => ({ ...prev, employee: undefined }));
+  }, []);
+
+  const handleConditionChange = useCallback((value: string) => {
+    setCondition(value);
+    setFieldErrors((prev) => ({ ...prev, condition: undefined }));
   }, []);
 
   const handleNotesChange = useCallback(
@@ -132,38 +139,20 @@ export function AssetReturnsPage() {
   );
 
   const handleCreate = useCallback(() => {
-    setValidationError("");
-    
-    if (!selectedAssetId) {
-      setValidationError("Please select an asset to return");
-      return;
-    }
-    if (!resolvedUserId) {
-      setValidationError("Please select an employee");
-      return;
-    }
-    if (!condition) {
-      setValidationError("Please select the asset condition");
-      return;
-    }
-    if (notes.length > 1000) {
-      setValidationError("Notes must be at most 1000 characters");
-      return;
-    }
-    
+    const errors: AssetReturnFieldErrors = {
+      asset: selectedAssetId ? undefined : "Select the asset being returned",
+      employee: resolvedUserId ? undefined : "Select the employee returning it",
+      condition: condition ? undefined : "Select the asset's condition",
+    };
+    setFieldErrors(errors);
+    if (errors.asset || errors.employee || errors.condition || notes.length > 1000) return;
     const asset = allAssignedAssets.find((a) => String(a.id) === selectedAssetId);
-    if (!asset) {
-      setValidationError("Selected asset not found");
-      return;
-    }
-    
+    if (!asset) return;
     create.mutate(
       { userId: resolvedUserId, assetName: asset.name, assetId: asset.id, condition, notes: notes.trim() || undefined },
       {
         onSuccess: () => { toast.success("Asset return logged"); setSheetOpen(false); resetSheetState(); },
-        onError: (e) => {
-          setValidationError(getErrorMessage(e));
-        },
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }, [selectedAssetId, resolvedUserId, condition, notes, allAssignedAssets, create, resetSheetState]);
@@ -224,11 +213,11 @@ export function AssetReturnsPage() {
         condition={condition}
         notes={notes}
         notesError={notesError}
-        validationError={validationError}
+        fieldErrors={fieldErrors}
         isPending={create.isPending}
         onAssetChange={handleAssetChange}
         onEmployeeOverrideChange={handleEmployeeOverrideChange}
-        onConditionChange={setCondition}
+        onConditionChange={handleConditionChange}
         onNotesChange={handleNotesChange}
         onOverrideUserId={setOverrideUserId}
         onSubmit={handleCreate}

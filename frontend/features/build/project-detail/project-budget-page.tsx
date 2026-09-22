@@ -10,12 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { IndianRupee, TrendingUp, Pencil } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { PageState } from "@/components/shared/page-state";
 import { useProjectBudget, useUpdateProjectBudget, useProjectMembers } from "@/hooks/api/build";
 import { useOrgMembers } from "@/hooks/api/organization";
-import { useCanState } from "@/hooks/api/access";
-import { resolveGate } from "@/lib/rbac/gate";
+import { usePageState } from "@/hooks/api/use-page-state";
 import type { NamedUser } from "@/lib/person-display";
 import { toast } from "sonner";
 import { DataTable } from "@/components/ui/data-table";
@@ -39,7 +37,6 @@ interface ProjectBudgetPageProps {
 export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPageProps) {
   const projectId = Number(projectIdStr);
   const display = useOrgDisplay();
-  const access = useCanState("build:manage");
   const {
     data: budget,
     isLoading,
@@ -47,10 +44,11 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
     error,
     refetch,
   } = useProjectBudget(projectId);
-  const gate = resolveGate({
-    access,
+  const pageState = usePageState({
+    permission: "build:manage",
     isLoading,
     isError,
+    error,
     isEmpty: !budget,
   });
   const { data: members } = useProjectMembers(projectId);
@@ -140,71 +138,7 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
     </Button>
   );
 
-  if (gate === "loading") {
-    return (
-      <PageWrapper
-        title="Budget"
-        subtitle="Planned budget vs actual cost from billable timesheets"
-        actions={<Skeleton className="h-8 w-32 rounded-md" />}
-      >
-        <PmPageShell>
-          <StatCardGridSkeleton cols={3} className="mb-4" />
-          <Skeleton className="h-20 rounded-xl border border-border bg-card" />
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
-  if (gate === "denied") {
-    return (
-      <PageWrapper
-        title="Budget"
-        subtitle="Planned budget vs actual cost from billable timesheets"
-      >
-        <PmPageShell>
-          <NoPermissionState permission="build:manage" className={PM_FILL_PANEL} />
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
-  if (gate === "error") {
-    return (
-      <PageWrapper
-        title="Budget"
-        subtitle="Planned budget vs actual cost from billable timesheets"
-      >
-        <PmPageShell>
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load budget"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
-  if (gate === "empty" || !budget) {
-    return (
-      <PageWrapper
-        title="Budget"
-        subtitle="Planned budget vs actual cost from billable timesheets"
-      >
-        <PmPageShell>
-          <EmptyState
-            className={PM_FILL_PANEL}
-            illustrationPreset="calendar"
-            title="No budget data"
-            description="Budget details are unavailable for this project."
-          />
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
-  const overBudget = budget.remaining < 0;
+  const overBudget = (budget?.remaining ?? 0) < 0;
   // Hours the API could not put a price on: no rate was stamped on the entry, or
   // the entry was rated in a currency other than the budget's. Actual Cost omits
   // them, so saying only "under budget" beside them would understate the spend.
@@ -216,9 +150,28 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
     <PageWrapper
       title="Budget"
       subtitle="Planned budget vs actual cost from billable timesheets"
-      actions={budgetActions}
+      actions={pageState.kind === "loading" ? <Skeleton className="h-8 w-32 rounded-md" /> : budgetActions}
     >
       <PmPageShell>
+        <PageState
+          resolution={pageState}
+          className={PM_FILL_PANEL}
+          onRetry={handleRetry}
+          loading={
+            <>
+              <StatCardGridSkeleton cols={3} className="mb-4" />
+              <Skeleton className="h-20 rounded-xl border border-border bg-card" />
+            </>
+          }
+          empty={
+            <EmptyState
+              className={PM_FILL_PANEL}
+              illustrationPreset="calendar"
+              title="No budget data"
+              description="Budget details are unavailable for this project."
+            />
+          }
+        >
         <PmSection index={0}>
           <StatCardGrid cols={3}>
             <StatCard
@@ -299,6 +252,7 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
               description="Log billable hours to track costs against this project's budget."
             />
         ) : null}
+        </PageState>
       </PmPageShell>
     </PageWrapper>
   );

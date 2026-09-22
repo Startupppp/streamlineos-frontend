@@ -3,6 +3,14 @@
 **Opened:** 2026-09-20 · **Owner:** backend
 **Follows:** `2026-09-20-deferred-items-lane.md` R4, which found these while proving `accessMode: "read only"` unsafe.
 
+⚠ **Every W-item is ticked and the lane is NOT finished.** Do not delete this file on the strength of its checkboxes. It still carries the documented recall limits of `check:get-route-writes` — without which a green gate reads as proof it is not. ~~It also carries a live billing-path defect at `ai-credits-reservation.service.ts:103`.~~ **That defect is now fixed — verified at source 2026-09-21; see below.**
+
+**2026-09-21 — three of the four open items are now closed** (both races, plus the
+`onboarding_flow_sessions` index), each verified against production. What remains open is the
+`GET → POST` contract change for the payroll export and the `accessMode: "read only"` flip,
+which needs a week of production signal rather than another code change. One closure corrected
+the fix this document originally proposed — see the races section below.
+
 backend/CLAUDE.md §2 says **"no writes in a GET"**. It is violated **15 times** across 1,646 GET routes. A written rule is not a control.
 
 This is not a tidiness lane. Those 15 routes are the reason two separate capacity wins are blocked:
@@ -41,32 +49,6 @@ Five of the 15 are `AuditService.logCritical` on a read path. `logCritical` awai
   ⚠️ *Coordinator finding the agent flagged and I confirmed against schema:* `onboarding_flow_sessions` (`db/schema/common/onboarding.ts:38-40`) has only a plain `index` on `(orgId, membershipId, type)` — the sole `unique` is `(orgId, id)`, the tenant key. So `getOrCreateSession`'s find-then-insert **can genuinely double-insert** under concurrent first access. This is pre-existing and unchanged by the move (the race window sits between the read and the insert either way), but it is a real defect and closing it needs a partial unique index, i.e. a migration.
   *Verified:* 7 suites, 65 tests pass. 6 pre-existing HR failures in untouched files, unrelated.
 
-- [x] **W2 — e-sign: a read-path audit write and a lazy settings seed**
-  *Files touched:* `sign-finalization.service.ts` · `sign-settings.service.ts` (new `get`) · `sign-admin.controller.ts` · `sign-reports.service.ts` (coordinator) · `__tests__/e-sign-services-tenant-isolation.spec.ts` (coordinator) · 2 spec files
-  *Result:* the `document_downloaded` audit now commits in its own `runInNewTenantTransaction`. `SignSettingsService.get` reads without seeding; `getSettings` uses it, while all 6 mutation callers keep `getOrCreate`.
-  **The agent found two GET routes the original audit missed** — `sign-reports.service.ts:38` (`getDashboard`) and `:128` (`getSummary`) both called `getOrCreate`. It correctly reported rather than reaching outside its scope; I fixed both. Each reads only `orgSettings.expirationWarningDays`, so neither depends on the row existing. **The set was 15; it is at least 17.** This is exactly the under-detection the R4 audit warned about in its own limitations section.
-  *Coordinator check on the one risky part — the synthesised defaults.* `get` returns `{ id: 0, createdAt: new Date(), updatedAt: new Date(), ...defaults }` when no row exists, which is fabricated data. I verified it is inert: the backend PATCH keys on `u.orgId` from the token and never reads `id` (`sign-admin.controller.ts:60`), and the frontend renders none of `id`, `createdAt` or `updatedAt` (`frontend/hooks/api/sign/sign-schema.ts:211-232` types them but no component consumes them). The contract is satisfied — `id: z.number().int()` accepts 0, and the `Date`s serialise to the `z.string()` the frontend expects. Acceptable, and recorded because a fabricated id is the kind of thing that grows teeth later.
-  *Also verified:* `sign-auth-method.policy.ts:45` keeps `getOrCreate` — its only callers are `sign-recipients.service.ts` and `sign-templates.service.ts`, both mutation paths, so it is not GET-reachable.
-  *Verified:* 39 suites, 297 tests pass.
-
-- [x] **W3 — inventory: a cache-gated lazy seed reached from four GET routes**
-  *Files touched:* `src/modules/inventory/stock-engine/inventory-settings.service.ts` (`get`, :110-114) · `src/modules/inventory/stock-engine/__tests__/inventory-settings-get-no-write.spec.ts` (new, 2 tests)
-  *Repair: option (a) — the write is gone, not relocated.* On a cache miss with no row, `get()` inserted defaults, re-read them, and fell back to `toSettingsRow(seeded ?? buildDefaults(orgId))`. That fallback was **already correct on its own**, so the whole insert-and-re-read collapses to it. Net diff is 5 lines out, 1 in.
-  *Also removes two queries.* The miss-with-no-row path went `findFirst` → `insert` → `findFirst` (3 round trips) → now a single `findFirst`.
-  *Caller evidence that this is safe:* `update()` (`:137-143`) creates the row itself with `insert(...).onConflictDoUpdate(...)` seeded from `{ ...buildDefaults(orgId), ...patch }`, so first-save still persists regardless of whether a read ever seeded it — and it invalidates the cache key, so the next read picks up the real row. Every other caller consumes only the returned `InvSettingsRow`.
-  *Coordinator verification of the "pre-existing failures" claim — not taken on trust:* I reverted **only** this file to HEAD and re-ran `jest src/modules/inventory`. The **same 9 suites** failed (`quantity.property` is missing the `fast-check` package entirely, plus 8 unrelated), **and** the agent's new spec failed — which proves the new test is a genuine failing-first test rather than a tautology. With the change applied, the new spec passes and the 9 remain. File restored and diff confirmed present.
-  *The comment that was the trap:* `inv-products.controller.ts:169` says *"A read — it computes and returns, and writes nothing."* It was true of the handler and false of its call graph. It is now true of both. Left untouched, as §6 requires.
-  *Not certified:* that `update()`'s `onConflictDoUpdate` creates the row correctly on a fresh org. Mocked tests cover the branch, not the SQL.
-
-- [x] **W4 — billing, calls, calendar, surveys: four conditional writers**
-  *Files touched:* `ai-credits-reservation.service.ts` · `call-recording-consent.service.ts` · `external-calendar-events.service.ts` · `survey-version.service.ts` · 6 spec files (3 new)
-  *Result:* all four writes moved into `runInNewTenantTransaction`. Coordinator-verified: each of the four imports from the direct module path (not a barrel) and uses the **escaping** primitive, not the joining one.
-  *Both traps I warned it about were confirmed against source, not assumed:*
-  1. **`runInTenantTransaction` joins rather than escapes.** `run-in-tenant-transaction.ts:73` is `if (ambient) return fn(ambient.tx)` — when the explicit `orgId` matches the request's, it hands back the *request's* transaction. `ensureWalletForOrg` used it, so its inner `db.transaction` was only a SAVEPOINT, which inherits read-only. The "it already has its own transaction" reading was wrong, and only `runInNewTenantTransaction` (via `runOutsideTenantContext`) actually escapes.
-  2. **`.catch(() => undefined)` does not save the calendar write.** Swallowing the JS rejection cannot un-abort a Postgres transaction: after `25006` every later statement returns `25P02` and COMMIT becomes ROLLBACK. It would have converted a bookkeeping failure into a 500 for the whole GET.
-  *Each test drives its conditional branch, which is the only way these are testable:* no wallet row, `verdict.allowed = false` (with an allowed-case anti-vacuity control), a `ComposioToolError(isAuthError)`, and a null active version.
-  *Verified:* 16 new tests pass.
-
 - [x] **W5 — payroll: the one route that mutates business state on a GET**
   *Files touched:* `src/modules/payroll/insights/journal-outbox.service.ts` (`markExported`) · `src/modules/payroll/insights/__tests__/journal-outbox.service.spec.ts` (+1 test)
   *The write is NOT forced, and that is the right call.* `markExported` (`journal-outbox.service.ts:294`) implements a real business rule — downloading the CSV is what marks a payroll journal batch `EXPORTED`, stamping `exportedAt`/`exportedBy`. It is guarded (`:296`, only a `POSTED` or `EXPORTED` batch may export) and effectively idempotent. Relocating it to its own transaction would not help: the route would still write during a read-intent request, so it would still have to be excluded from read-only and from replica routing. **This is the one genuine write-on-read in the set.**
@@ -75,8 +57,6 @@ Five of the 15 are `AuditService.logCritical` on a read path. `logCritical` awai
   **Export path: 7 queries → 5** (the controller's own `get` is 2, `requireBatch` 1, the UPDATE 1, the membership lookup 1).
   *Verified:* no comment added, no cast added. `jest src/modules/payroll/insights` → **134 passed / 134**, 22 suites. New test is non-vacuous — it queues exactly the two reads the method still needs, so before the change the removed re-read would have drained the queue and thrown `NotFoundException`.
   *Noted, not changed:* `requireBatch:479` uses an unprojected `.select()`, which backend/CLAUDE.md §3 bans. Pre-existing and shared by many callers — out of scope for this lane.
-
-- [x] **W6 — integration, verification, and what remains**
 
 ---
 
@@ -107,6 +87,8 @@ Three things worth keeping from this:
 **The one type error that was ours, and why jest could not see it.** W2's mock spread `unknown[]` into a three-parameter function (`TS2556`) in `sign-certificate-download-scope.spec.ts`. Every e-sign run was green throughout, because **ts-jest does not fail on type errors — typecheck is the only gate that sees a spread or an arity mismatch.** Fixed by naming the three parameters. This is the second time this exact class has slipped past a green agent run in two days.
 
 **A pre-existing defect found while separating ours from theirs, reported not fixed:** `ai-credits-reservation.service.ts:103` returns `{ reservationId: existingId }` where `existingId` is now `{ id, status }`, not a `number` — a concurrent session widened `findByIdempotencyKey`'s return type and left this call site behind. It is present at `HEAD`, so it is not this lane's. On the idempotent-replay path a duplicate reserve hands the caller an **object where `settle`/`release` expect a reservation id**. That is a live billing-path bug; it is left alone because the right fix depends on what that session intends `status` for.
+
+✅ **Closed 2026-09-21 — that session finished the cutover.** The call site now reads `const existing = await this.findByIdempotencyKey(orgId, idempotencyKey); if (existing !== null) return { reservationId: existing.id };` — the object is unwrapped, so `settle`/`release` receive a `number` again. Note the file is `src/modules/billing/core/ai-credits-reservation.service.ts`, not under `modules/ai/`; the path was recorded bare here and cost a search. This closure also resolves the contradiction with `2026-09-20-deferred-items-lane.md`, which had already recorded it as fixed while this document still called it live.
 
 ## What this lane changed
 
@@ -146,9 +128,31 @@ All four fixed with `runInNewTenantTransaction`. Gate now reads **1,487 read rou
 
 **What the gate cannot see, stated rather than implied:** it resolves `this.<prop>.<method>()` chains three hops deep via constructor parameter types. It misses destructured services, callbacks, free functions taking `db`, `SELECT … FOR UPDATE`, and outbox emits. Precision is high; recall is not proven. The vacuity floor (≥200 controllers, ≥800 read routes) stops a broken scan from passing silently.
 
-**Two pre-existing races the agents found and correctly did not paper over** — both need a migration, neither was authored here:
-- `payslip_templates` has no unique constraint on `(org_id, layout)`, so two concurrent first reads seed **six** templates.
-- `user_sessions` find-then-insert can raise `23505` on a concurrent first listing.
+**Two pre-existing races the agents found and correctly did not paper over.** ~~Both need a
+migration, neither was authored here.~~ **BOTH CLOSED 2026-09-21 — and the first one's proposed
+fix was wrong.**
+
+- ~~`payslip_templates` has no unique constraint on `(org_id, layout)`~~ — **the race is real,
+  the proposed key is not.** `create()` (`payslip-templates.service.ts:78-91`) deliberately lets
+  a customer keep several templates on one layout, so a unique index on `(org_id, layout)` would
+  have rejected a legitimate action with a 23505. The invariant that *is* true is **one default
+  per org**, and all three write sites already enforce it in application code — `create()`
+  demotes every other row before inserting a default, `update()` demotes all but the target, and
+  `delete()` refuses to remove the default. **Migration 1132** writes that invariant into the
+  database as `uq_payslip_templates_org_default ON payslip_templates (org_id) WHERE is_default`,
+  which closes the seed race as a consequence: the seed inserts exactly one default, so the
+  second concurrent seeder loses on the index instead of doubling the set. Applied to production
+  (0 rows, so nothing to deduplicate) and bitten three ways in a rolled-back transaction: the
+  legitimate seed **accepted**, the double-seed **rejected 23505**, and two templates on the same
+  layout **still accepted** — that third case is the proof the original proposal would have
+  broken the product. `payslip-templates.service.ts` now rescues that one constraint and falls
+  through to the normal read, so the losing request returns the winner's templates instead of a
+  500; a spec pins that it rethrows on any other constraint.
+- ~~`user_sessions` find-then-insert can raise `23505` on a concurrent first listing~~ —
+  **CLOSED, and it needed no migration.** The primary key already exists; the defect was that
+  `sessions.service.ts:52` did a bare insert after a find. Now `.onConflictDoNothing()`, which is
+  backend/CLAUDE.md §3's "atomic upserts for idempotent creates". This one mattered most of the
+  three: the route is `@Universal()`, so every active member hits it.
 
 **A regression the agents' scoped runs could not see.** The HR fix broke `src/modules/hr/__tests__/sensitive-projection-exposure.spec.ts` — a projection-allowlist security spec one directory *above* the `hr/core` the agent was told to test, so its green run was honest but blind. It failed `regional.transaction is not a function` because its mock db carries only `select`. Giving it a real `transaction` was the wrong fix: `withTenant` calls `refreshRelocationTargets(db, …)`, which would have consumed a captured projection and quietly corrupted the very allowlist assertions the spec exists for. Mocked the transaction seam instead; all 16 tests pass and every projection assertion still runs.
 
@@ -159,6 +163,12 @@ All four fixed with `runInNewTenantTransaction`. Gate now reads **1,487 read rou
 ## Still open
 
 - **`GET /payroll/.../:batchId/export` should be a `POST`.** It stamps `exportedBy`/`exportedAt` and emits an audit event; a prefetch, retry or link scanner fires it with no human involved. Frontend contract change → two-repo lane.
-- **`onboarding_flow_sessions` needs a partial unique index** on `(orgId, membershipId, type)`. Today only a plain index exists, so find-then-insert can double-insert. Needs a migration.
+- ~~**`onboarding_flow_sessions` needs a partial unique index**~~ — **DONE, verified against
+  production 2026-09-21.** Migration `1129_onb_flow_sessions_unique_type_per_actor` landed two
+  partial unique indexes, not one, which is more correct than this bullet asked for:
+  `uq_onb_flow_sessions_membership_type` on `(org_id, membership_id, type)
+  WHERE membership_id IS NOT NULL AND status <> 'abandoned'`, and
+  `uq_onb_flow_sessions_user_type` on `(org_id, user_id, type)` for the membership-less case.
+  Excluding `abandoned` is what lets a user legitimately restart a flow they walked away from.
 - **`accessMode: "read only"` is still not safe to ship.** The 17 are fixed, but the R4 audit's own limitations stand: its rule resolved `this.prop.method()` call graphs three hops deep and misses raw-SQL DML, `SELECT ... FOR UPDATE`, and outbox emits. W2 finding two more is the proof. Before flipping `with-tenant.ts:188`, get a production signal over a full week including a deploy.
 - **Nothing here was run against a live database.**

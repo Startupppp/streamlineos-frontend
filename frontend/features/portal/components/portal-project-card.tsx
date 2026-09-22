@@ -37,7 +37,7 @@ interface PortalProjectCardProps {
 }
 
 export function PortalProjectCard({ project }: PortalProjectCardProps) {
-  const { capabilities } = project;
+  const capabilities = project.capabilities;
 
   return (
     <Link
@@ -74,11 +74,13 @@ export function PortalProjectCard({ project }: PortalProjectCardProps) {
         <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all shrink-0 mt-0.5" />
       </div>
 
-      {(capabilities.canViewMilestones ||
+      {capabilities && (
+        capabilities.canViewMilestones ||
         capabilities.canViewTasks ||
         capabilities.canViewAttachments ||
         capabilities.canViewComments ||
-        capabilities.canSubmitChangeRequests) && (
+        capabilities.canSubmitChangeRequests
+      ) && (
         <div className="mt-3 flex flex-wrap gap-1">
           {capabilities.canViewMilestones && (
             <CapabilityChip icon={<Milestone className="h-2.5 w-2.5" />} label="Milestones" />

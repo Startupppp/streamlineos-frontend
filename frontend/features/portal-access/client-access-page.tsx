@@ -12,20 +12,10 @@ import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +33,9 @@ import {
 } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
+import { useClientAccessUrlState } from "./use-client-access-url-state";
 
 const PAGE_SIZE = 20;
 
@@ -137,38 +130,39 @@ function GrantRowActions({
   );
 }
 
-function RevokeGrantAction({
+function RevokeGrantDialog({
   grant,
-  onSuccess,
-  onSettled,
+  onOpenChange,
 }: {
   grant: ProjectClientGrant;
-  onSuccess: () => void;
-  onSettled: () => void;
+  onOpenChange: (open: boolean) => void;
 }) {
   const revokeGrant = useRevokeGrant(grant.projectClientGrantId);
 
-  const handleConfirm = useCallback(() => {
+  function handleConfirm() {
     revokeGrant.mutate(undefined, {
       onSuccess: () => {
         toast.success("Access revoked");
-        onSuccess();
+        onOpenChange(false);
       },
       onError: (e) => {
         toast.error(getErrorMessage(e));
-        onSettled();
       },
-      onSettled,
     });
-  }, [revokeGrant, onSuccess, onSettled]);
+  }
 
   return (
-    <AlertDialogAction
-      variant="destructive"
-      onClick={handleConfirm}
-    >
-      Revoke
-    </AlertDialogAction>
+    <ConfirmDialog
+      open
+      onOpenChange={onOpenChange}
+      title="Revoke client access?"
+      description={`This will revoke the client's visibility into project #${grant.projectId}. The client will no longer be able to see any project data. This action cannot be undone.`}
+      confirmLabel="Revoke"
+      destructive
+      isPending={revokeGrant.isPending}
+      onConfirm={handleConfirm}
+      keepOpenOnConfirm
+    />
   );
 }
 
@@ -176,38 +170,34 @@ export function ClientAccessPage() {
   const canManage = useCan("build:clientvisibility:manage");
 
   const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
-  const [search, setSearch] = useState("");
+  const { q, state: grantState, permission, hasActiveFilters, setFilter } = useClientAccessUrlState();
 
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<ProjectClientGrant | null>(null);
   const [revokeTarget, setRevokeTarget] = useState<ProjectClientGrant | null>(null);
 
-  const { data, isLoading, isError, refetch } = useProjectClientGrants({
+  const { data, isLoading, isError, error, refetch } = useProjectClientGrants({
     cursor: cursorHistory.at(-1),
     limit: PAGE_SIZE,
+    q: q || undefined,
+    state: grantState || undefined,
+    permission: permission || undefined,
   });
 
-  const filteredRows = (() => {
-    const rows = data?.data ?? [];
-    const term = search.trim().toLowerCase();
-    if (!term) return rows;
-    return rows.filter((g) => {
-      const contactName = resolveContactName(g.contactFirstName, g.contactLastName) ?? "";
-      return (
-        contactName.toLowerCase().includes(term) ||
-        g.partyContactId.toLowerCase().includes(term) ||
-        String(g.projectId).includes(term) ||
-        g.portalMembershipId.toLowerCase().includes(term)
-      );
-    });
-  })();
+  const pageState = usePageState({
+    permission: "build:portal:view",
+    isLoading,
+    isError,
+    error,
+  });
 
+  const filteredRows = data?.data ?? [];
   const pagination = data?.pagination;
-  const isFiltered = !!search.trim();
+  const isFiltered = hasActiveFilters;
 
   function handleSearchChange(value: string) {
-    setSearch(value);
+    setFilter("q", value);
     setCursorHistory([undefined]);
   }
 
@@ -241,14 +231,6 @@ export function ClientAccessPage() {
 
   function handleRevokeRow(row: ProjectClientGrant) {
     setRevokeTarget(row);
-  }
-
-  function handleRevokeSuccess() {
-    setRevokeTarget(null);
-  }
-
-  function handleRevokeSettled() {
-    setRevokeTarget(null);
   }
 
   function handleNextPage(): void {
@@ -352,7 +334,7 @@ export function ClientAccessPage() {
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput
         placeholder="Search by contact or project…"
-        value={search}
+        value={q}
         onValueChange={handleSearchChange}
       />
     </div>
@@ -361,61 +343,64 @@ export function ClientAccessPage() {
   return (
     <PageWrapper
       title="Client Access"
-      subtitle="Grant clients visibility into project progress"
-      filters={filtersBar}
+      subtitle={pageState.kind === "ready" ? "Grant clients visibility into project progress" : undefined}
+      filters={pageState.kind === "ready" ? filtersBar : undefined}
       actions={
-        canManage ? (
+        pageState.kind === "ready" && canManage ? (
           <GrantAccessButton onClick={handleOpenCreate} />
         ) : undefined
       }
     >
-      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden">
-        <div className="flex min-h-0 flex-1 flex-col">
-          {isLoading ? (
-            <DataTableSkeleton rows={12} columns={5} className="flex-1" />
-          ) : isError ? (
-            <ErrorState className={CONTENT_FILL_PANEL} onRetry={handleRetry} />
-          ) : filteredRows.length === 0 ? (
-            <EmptyState
-              className={CONTENT_FILL_PANEL}
-              illustrationPreset="clients"
-              title={isFiltered ? "No matching grants" : "No client access grants"}
-              description={
-                isFiltered
-                  ? "Try adjusting your search."
-                  : "Grant clients read-only visibility into project milestones, tasks, and more."
-              }
-              action={
-                isFiltered
-                  ? undefined
-                  : canManage
-                    ? { label: "Grant Access", onClick: handleOpenCreate }
-                    : undefined
-              }
-            />
-          ) : (
-            <>
-              <DataTable
-                data={filteredRows}
-                columns={columns}
-                getRowKey={(row) => row.projectClientGrantId}
-                minWidth="680px"
+      <PageState
+        resolution={pageState}
+        loading={<DataTableSkeleton rows={12} columns={5} className="flex-1" />}
+        onRetry={handleRetry}
+        className="flex-1"
+      >
+        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden">
+          <div className="flex min-h-0 flex-1 flex-col">
+            {filteredRows.length === 0 ? (
+              <EmptyState
                 className={CONTENT_FILL_PANEL}
+                illustrationPreset="clients"
+                title={isFiltered ? "No matching grants" : "No client access grants"}
+                description={
+                  isFiltered
+                    ? "Try adjusting your search."
+                    : "Grant clients read-only visibility into project milestones, tasks, and more."
+                }
+                action={
+                  isFiltered
+                    ? undefined
+                    : canManage
+                      ? { label: "Grant Access", onClick: handleOpenCreate }
+                      : undefined
+                }
               />
-              {pagination && (cursorHistory.length > 1 || pagination.hasMore) ? (
-                <CursorPageControls
-                  page={cursorHistory.length}
-                  hasNext={pagination.hasMore}
-                  disabled={isLoading}
-                  onPrevious={handlePreviousPage}
-                  onNext={handleNextPage}
-                  className="mt-2 px-1"
+            ) : (
+              <>
+                <DataTable
+                  data={filteredRows}
+                  columns={columns}
+                  getRowKey={(row) => row.projectClientGrantId}
+                  minWidth="680px"
+                  className={CONTENT_FILL_PANEL}
                 />
-              ) : null}
-            </>
-          )}
+                {pagination && (cursorHistory.length > 1 || pagination.hasMore) ? (
+                  <CursorPageControls
+                    page={cursorHistory.length}
+                    hasNext={pagination.hasMore}
+                    disabled={isLoading}
+                    onPrevious={handlePreviousPage}
+                    onNext={handleNextPage}
+                    className="mt-2 px-1"
+                  />
+                ) : null}
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      </PageState>
 
       {createOpen && (
         <GrantFormDialog
@@ -434,32 +419,12 @@ export function ClientAccessPage() {
         />
       )}
 
-      <AlertDialog
-        open={!!revokeTarget}
-        onOpenChange={handleRevokeDialogChange}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Revoke client access?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will revoke the client&apos;s visibility into project{" "}
-              {revokeTarget ? `#${revokeTarget.projectId}` : "this project"}.
-              The client will no longer be able to see any project data. This
-              action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            {revokeTarget && (
-              <RevokeGrantAction
-                grant={revokeTarget}
-                onSuccess={handleRevokeSuccess}
-                onSettled={handleRevokeSettled}
-              />
-            )}
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {revokeTarget && (
+        <RevokeGrantDialog
+          grant={revokeTarget}
+          onOpenChange={handleRevokeDialogChange}
+        />
+      )}
     </PageWrapper>
   );
 }

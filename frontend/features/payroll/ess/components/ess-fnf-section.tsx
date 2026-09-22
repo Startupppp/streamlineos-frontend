@@ -7,6 +7,8 @@ import { DownloadIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EssStatusBadge } from "./ess-status-badge";
 import { useEssFnf } from "@/hooks/api/payroll/ess";
 import { downloadFnfStatement } from "@/hooks/api/payroll/fnf";
@@ -25,8 +27,12 @@ const FnfRow = memo(function FnfRow({ label, value, highlight }: { label: string
 });
 
 export function EssFnfSection({ hideToolbar = false }: { hideToolbar?: boolean }) {
-  const { data: settlement, isLoading } = useEssFnf();
+  const { data: settlement, isLoading, isError, error, refetch } = useEssFnf();
   const [downloading, setDownloading] = useState(false);
+
+  function handleRetry() {
+    void refetch();
+  }
 
   async function handleDownloadStatement() {
     if (!settlement || downloading) return;
@@ -52,6 +58,19 @@ export function EssFnfSection({ hideToolbar = false }: { hideToolbar?: boolean }
             </div>
           ))}
         </div>
+      </section>
+    );
+  }
+
+  if (isError) {
+    return (
+      <section id="fnf" className="flex min-h-0 w-full flex-1 flex-col">
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load F&F settlement"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
       </section>
     );
   }

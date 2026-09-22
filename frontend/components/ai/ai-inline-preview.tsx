@@ -1,6 +1,5 @@
 "use client";
 
-import DOMPurify from "isomorphic-dompurify";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,6 +14,7 @@ import {
 import { AiCancelledOutput, AiStreamingOutput } from "./ai-partial-output";
 import { AiUsageChip } from "./ai-usage-chip";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { SanitizedHtml } from "@/components/shared/sanitized-html";
 import type { AiActionResultState } from "./ai-action-result-body";
 import { cn } from "@/lib/utils";
 
@@ -129,9 +129,9 @@ export function AiInlinePreview({
               className="text-label font-medium leading-snug text-foreground"
             />
           ) : previewMode === "description" ? (
-            <div
+            <SanitizedHtml
+              html={state.result.text}
               className="max-h-32 overflow-y-auto text-xs leading-relaxed text-foreground [&_p]:mb-1 [&_ul]:list-disc [&_ul]:pl-4"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(state.result.text) }}
             />
           ) : (
             <p className="whitespace-pre-wrap text-xs leading-relaxed text-foreground">

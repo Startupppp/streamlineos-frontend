@@ -47,10 +47,13 @@ export function OrganizationOverviewPage() {
 
   const isError = projectsQuery.isError || myWorkQuery.isError;
 
+  const error = projectsQuery.error ?? myWorkQuery.error;
+
   const resolution = usePageState({
     permission: "build:view",
     isLoading,
     isError,
+    error,
     isEmpty: false,
   });
 

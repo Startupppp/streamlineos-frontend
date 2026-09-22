@@ -1,14 +1,27 @@
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 
-const useCanState = jest.fn();
+const useAccess = jest.fn();
+const accessLoading = { data: undefined, isLoading: true };
+const accessGranted = {
+  data: { isOrgOwner: false, scopes: { "build:manage": "all" }, modules: {} },
+  isLoading: false,
+};
+const accessDenied = {
+  data: { isOrgOwner: false, scopes: {}, modules: {} },
+  isLoading: false,
+};
 const useProjectBudget = jest.fn();
 const useUpdateProjectBudget = jest.fn();
 const useProjectMembers = jest.fn();
 const useOrgMembers = jest.fn();
 
 jest.mock("@/hooks/api/access", () => ({
-  useCanState: (key: string) => useCanState(key),
+  useAccess: () => useAccess(),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
 }));
 
 jest.mock("@/hooks/api/build", () => ({
@@ -54,7 +67,7 @@ function settled<T>(data: T) {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  useCanState.mockReturnValue("granted");
+  useAccess.mockReturnValue(accessGranted);
   useProjectBudget.mockReturnValue(settled(BUDGET));
   useUpdateProjectBudget.mockReturnValue({ mutate: jest.fn(), isPending: false });
   useProjectMembers.mockReturnValue({ data: [] });
@@ -63,7 +76,7 @@ beforeEach(() => {
 
 describe("ProjectBudgetPage — access is three-valued, not a boolean", () => {
   it("shows the loading skeleton while the access snapshot is still in flight, never an access denial", () => {
-    useCanState.mockReturnValue("loading");
+    useAccess.mockReturnValue(accessLoading);
 
     render(<ProjectBudgetPage projectId="101" />);
 
@@ -71,7 +84,7 @@ describe("ProjectBudgetPage — access is three-valued, not a boolean", () => {
   });
 
   it("renders NoPermissionState once build:manage has actually said no, instead of falling through to a zeroed-out budget", () => {
-    useCanState.mockReturnValue("denied");
+    useAccess.mockReturnValue(accessDenied);
     useProjectBudget.mockReturnValue({ data: undefined, isLoading: false, isError: false, error: null, refetch: jest.fn() });
 
     render(<ProjectBudgetPage projectId="101" />);

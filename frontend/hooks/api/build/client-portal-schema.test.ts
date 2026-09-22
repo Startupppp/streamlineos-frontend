@@ -1,5 +1,6 @@
 import {
   changeRequestRowContract,
+  changeRequestListContract,
   portalChangeRequestItemContract,
   portalChangeRequestListContract,
   toggleVisibilityContract,
@@ -106,6 +107,65 @@ describe("changeRequestRowContract", () => {
 
   it("rejects a budgetImpactCents sent as a string instead of a number", () => {
     expect(changeRequestRowContract.safeParse({ ...internalRow, budgetImpactCents: "50000" }).success).toBe(false);
+  });
+});
+
+const minimalRow = {
+  id: 1,
+  orgId: "org-1",
+  projectId: 42,
+  crNumber: 1,
+  title: "Add feature",
+  description: null,
+  impact: null,
+  estimateMinutes: null,
+  budgetImpactCents: null,
+  timelineImpactDays: null,
+  status: "submitted",
+  requestedById: null,
+  approvalOwnerId: null,
+  approvalOwnerMembershipId: null,
+  decisionComment: null,
+  decidedAt: null,
+  createdBy: null,
+  createdAt: "2026-09-01T00:00:00.000Z",
+  updatedAt: "2026-09-01T00:00:00.000Z",
+  deletedAt: null,
+};
+
+describe("changeRequestListContract — tolerates both backend shapes for rolling deploy", () => {
+  it("normalises a legacy flat array to a page envelope with hasMore false and nextCursor null so the old backend shape does not break the new frontend", () => {
+    const result = changeRequestListContract.safeParse([minimalRow]);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.pagination.hasMore).toBe(false);
+    expect(result.data.pagination.nextCursor).toBeNull();
+    expect(result.data.data).toHaveLength(1);
+    expect(result.data.data[0].id).toBe(1);
+  });
+
+  it("passes the new envelope shape through unchanged so the cursor and hasMore survive", () => {
+    const envelope = {
+      data: [minimalRow],
+      pagination: { limit: 25, hasMore: true, nextCursor: "cursor-abc" },
+    };
+    const result = changeRequestListContract.safeParse(envelope);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.pagination.hasMore).toBe(true);
+    expect(result.data.pagination.nextCursor).toBe("cursor-abc");
+    expect(result.data.data).toHaveLength(1);
+  });
+
+  it("rejects a payload that is neither a flat array nor the envelope so the contract is not silently vacuous", () => {
+    expect(changeRequestListContract.safeParse({ foo: "bar" }).success).toBe(false);
+    expect(changeRequestListContract.safeParse(42).success).toBe(false);
+    expect(changeRequestListContract.safeParse(null).success).toBe(false);
+  });
+
+  it("rejects a flat array whose elements fail the row contract so malformed rows are caught in both deploy states", () => {
+    const badRow = { ...minimalRow, crNumber: "not-a-number" };
+    expect(changeRequestListContract.safeParse([badRow]).success).toBe(false);
   });
 });
 

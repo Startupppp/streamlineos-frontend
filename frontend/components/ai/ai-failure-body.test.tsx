@@ -30,7 +30,7 @@ const CASES: Case[] = [
   },
   {
     label: "the concurrency cap",
-    error: new ApiError("Too many concurrent AI requests", 503),
+    error: new ApiError("Too many concurrent AI requests", 503, "AI_CONCURRENCY_LIMIT"),
     shows: /AI is busy right now/i,
     offersRetry: true,
   },

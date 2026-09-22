@@ -51,7 +51,19 @@ describe("platform billing accepts what the backend builds", () => {
   });
 
   it("accepts an org with no subscription at all", () => {
-    const body = { subscription: null, publicKeyId: null, isConfigured: false };
+    const body = {
+      subscription: null,
+      publicKeyId: null,
+      isConfigured: false,
+      platformCheckout: {
+        configured: false,
+        providerKey: null,
+        environment: null,
+        publicKeyId: null,
+        webhookConfigured: false,
+        unavailableReason: "no_credentials",
+      },
+    };
     expect(subscriptionResponseContract.safeParse(body).success).toBe(true);
   });
 });
@@ -248,5 +260,12 @@ describe("accounting money", () => {
       },
     ];
     expect(glAccountsContract.safeParse(wire).success).toBe(false);
+  });
+});
+
+describe("platformCheckout is required, because the backend returns it on every path", () => {
+  it("rejects a response missing platformCheckout, so a backend that stopped sending it fails loudly instead of hiding the checkout button", () => {
+    const { platformCheckout: _platformCheckout, ...withoutCheckout } = SUBSCRIPTION_RESPONSE;
+    expect(subscriptionResponseContract.safeParse(withoutCheckout).success).toBe(false);
   });
 });

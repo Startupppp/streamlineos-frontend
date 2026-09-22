@@ -63,7 +63,7 @@ export function parseInboxTicketLink(link: string | null | undefined): InboxTick
     return parseTicketSegment(projectId, ticketKeyRaw, search, commentId);
   }
 
-  const projectPath = pathname.match(/^\/build\/(\d+)\/?$/);
+  const projectPath = pathname.match(/^\/build\/(\d+)(?:\/issues)?\/?$/);
   if (projectPath) {
     const projectId = Number.parseInt(projectPath[1] ?? "", 10);
     const ticketParam = url.searchParams.get("ticket");
@@ -75,7 +75,7 @@ export function parseInboxTicketLink(link: string | null | undefined): InboxTick
       ticketId,
       ticketKey: null,
       commentId,
-      href: `/build/${projectId}?ticket=${ticketId}${
+      href: `/build/${projectId}/issues?ticket=${ticketId}${
         commentId != null ? `&comment=${commentId}` : ""
       }`,
     };

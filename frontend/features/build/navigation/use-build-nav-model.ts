@@ -32,12 +32,14 @@ export function useBuildNavView(): string | null {
 export function useBuildNavModel(): {
   model: BuildNavModel;
   isAccessReady: boolean;
+  isAccessError: boolean;
+  refetchAccess: () => void;
   isPinned: (toolId: string) => boolean;
   canPinMore: boolean;
   togglePin: (toolId: string) => void;
 } {
   const scope = useBuildScope();
-  const { data: access } = useAccess();
+  const { data: access, isError: isAccessQueryError, refetch: refetchAccess } = useAccess();
   const isFeedbackEnabled = useModuleEnabled(FEEDBACK_ORG_MODULE);
   const { data: activeProject } = useProject(scope.projectId ?? 0);
   const projectFeatures = activeProject?.settings?.features;
@@ -60,9 +62,9 @@ export function useBuildNavModel(): {
   const isCapabilityEnabled = useCallback(
     (capability: BuildNavCapability) =>
       capability === "client-portal"
-        ? projectFeatures?.["clientPortal"] !== false
+        ? activeProject !== undefined && projectFeatures?.["clientPortal"] === true
         : true,
-    [projectFeatures],
+    [activeProject, projectFeatures],
   );
 
   const navAccess = useMemo<BuildNavAccess>(
@@ -88,6 +90,10 @@ export function useBuildNavModel(): {
   return {
     model,
     isAccessReady: access !== undefined,
+    isAccessError: isAccessQueryError && access === undefined,
+    refetchAccess: () => {
+      void refetchAccess();
+    },
     isPinned,
     canPinMore,
     togglePin,

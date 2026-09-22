@@ -75,7 +75,7 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
       {
         id: "project-cycles",
         label: "Cycles",
-        href: `${basePath}/sprints`,
+        href: `${basePath}/cycles`,
         icon: Calendar,
         requiredPermission: "build:sprints:view",
       },
@@ -275,9 +275,9 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
       {
         id: "project-workflow",
         label: "Workflow",
-        href: `${basePath}/workflow`,
+        href: `${basePath}/settings/workflow`,
         icon: GitBranch,
-        requiredPermission: "build:workflow:view",
+        requiredPermission: "build:update",
       },
       {
         id: "project-modules",
@@ -289,16 +289,16 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
       {
         id: "project-automations",
         label: "Automations",
-        href: `${basePath}/automations`,
+        href: `${basePath}/settings/automations`,
         icon: Zap,
-        requiredPermission: "build:view",
+        requiredPermission: "build:update",
       },
       {
         id: "project-webhooks",
         label: "Webhooks",
-        href: `${basePath}/webhooks`,
+        href: `${basePath}/settings/integrations/webhooks`,
         icon: Webhook,
-        requiredPermission: "build:manage",
+        requiredPermission: "build:update",
       },
       {
         id: "project-ai",

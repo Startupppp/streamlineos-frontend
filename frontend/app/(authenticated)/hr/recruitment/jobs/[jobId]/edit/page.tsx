@@ -3,7 +3,8 @@
 import { use, useCallback, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { CreateJobForm } from "@/features/hr/recruitment/jobs/create-job-form";
 import { useJobPosting } from "@/hooks/api/hr/recruitment";
@@ -15,7 +16,8 @@ interface Props {
 }
 
 function EditJobContent({ jobId }: { jobId: number }) {
-  const { data: job, isLoading, isError, refetch } = useJobPosting(jobId);
+  const { data: job, isLoading, isError, error, refetch } = useJobPosting(jobId);
+  const pageState = usePageState({ isLoading: false, isError, error });
   const generateJd = useGenerateJobDescription();
 
   const handleRetry = useCallback(() => {
@@ -47,6 +49,14 @@ function EditJobContent({ jobId }: { jobId: number }) {
     ];
   }, [job, generateJd]);
 
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+    return (
+      <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        {null}
+      </PageState>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4 p-6">
@@ -54,16 +64,6 @@ function EditJobContent({ jobId }: { jobId: number }) {
           <Skeleton key={i} className="h-10 w-full" />
         ))}
       </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <ErrorState
-        title="Couldn't load this job"
-        description="The job posting could not be read. Please try again."
-        onRetry={handleRetry}
-      />
     );
   }
 

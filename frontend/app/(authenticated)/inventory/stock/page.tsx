@@ -9,9 +9,9 @@ import { SearchInput } from "@/components/ui/search-input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   Select,
   SelectContent,
@@ -74,7 +74,6 @@ export default function StockLevelsPage() {
   const [availabilityOpen, setAvailabilityOpen] = useState(false);
   const [openingStockOpen, setOpeningStockOpen] = useState(false);
 
-  const canView = useCan("inventory:stock:read");
   const canAdjust = useCan("inventory:stock:adjust");
 
   const filters = useMemo(
@@ -90,8 +89,15 @@ export default function StockLevelsPage() {
     [warehouseId, locationId, lowStock, negative, debouncedSearch, page],
   );
 
-  const { data: stockData, isLoading: stockLoading, isError: stockError, refetch } =
+  const { data: stockData, isLoading: stockLoading, isError: stockError, error: stockFetchError, refetch } =
     useStockLevels(filters);
+
+  const pageState = usePageState({
+    permission: "inventory:stock:read",
+    isLoading: stockLoading,
+    isError: stockError,
+    error: stockFetchError,
+  });
   const { data: warehousesData } = useWarehouses();
   const { data: locationsData = [] } = useLocations(warehouseId ?? 0);
 
@@ -278,13 +284,15 @@ export default function StockLevelsPage() {
     </div>
   );
 
-  if (!canView)
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper
         title="Stock Levels"
         subtitle="Track real-time stock levels across all warehouses and locations."
       >
-        <NoPermissionState permission="inventory:stock:read" className="flex-1" />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
 
@@ -310,13 +318,6 @@ export default function StockLevelsPage() {
           <ReservationsPanel />
         ) : stockLoading ? (
           <DataTableSkeleton rows={12} columns={8} className="flex-1" />
-        ) : stockError ? (
-          <ErrorState
-            title="Failed to load stock levels"
-            description="An error occurred while fetching stock data. Please try again."
-            onRetry={handleRetry}
-            className="flex-1"
-          />
         ) : rows.length === 0 ? (
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
             <InventoryEmptyState

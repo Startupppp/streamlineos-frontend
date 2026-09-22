@@ -9,6 +9,8 @@ export const humanResourcesQueryKeys = {
       params === undefined
         ? ([...base, "hr", "employees"] as const)
         : ([...base, "hr", "employees", params] as const),
+    employeeCounts: (params: QueryKeyParams) =>
+      [...base, "hr", "employees", "counts", params] as const,
     employee: (employeeUserId: string) =>
       [...base, "hr", "employees", employeeUserId] as const,
     attendanceStatus: () => [...base, "hr", "attendanceStatus"] as const,
@@ -47,8 +49,6 @@ export const humanResourcesQueryKeys = {
     orgChart: () => [...base, "hr", "orgChart"] as const,
     wfhRequests: () => [...base, "hr", "wfhRequests"] as const,
     pendingWfhRequests: () => [...base, "hr", "pendingWfhRequests"] as const,
-    holidaysYear: (year: number) =>
-      [...base, "hr", "holidaysYear", year] as const,
     holidaysCalendar: (params: { year: number; month: number }) =>
       [...base, "hr", "holidaysCalendar", params] as const,
     monthlyAttendance: (params: {
@@ -146,13 +146,8 @@ export const humanResourcesQueryKeys = {
     ) => [...base, "hr", orgId, userId, accessVersion, "leavesMyRequests", "pages"] as const,
     leaveAnalytics: (year: number) =>
       [...base, "hr", "leaveAnalytics", year] as const,
-    dashboardMetrics: () => [...base, "hr", "dashboard", "metrics"] as const,
-    leaveCalendar: (month: number, year: number) =>
-      [...base, "hr", "leaveCalendar", month, year] as const,
     headcount: (groupBy: string) =>
       [...base, "hr", "headcount", groupBy] as const,
-    dashboardOnboardingStatus: () =>
-      [...base, "hr", "dashboard", "onboardingStatus"] as const,
     directory: () => [...base, "hr", "directory"] as const,
     onboardingAll: [...base, "hr", "onboarding"] as const,
     onboardingStatus: () => [...base, "hr", "onboarding", "status"] as const,
@@ -224,6 +219,11 @@ export const humanResourcesQueryKeys = {
     hrTemplateVariables: () => [...base, "hr", "templateVariables"] as const,
     employeeEmployment: (userId: string) =>
       [...base, "hr", "employeeEmployment", userId] as const,
+    reportingLine: (userId: string) =>
+      [...base, "hr", "reportingLine", userId] as const,
+    managerCoverage: () => [...base, "hr", "reportingLines", "coverage"] as const,
+    myApprover: (kind: string) => [...base, "me", "approvers", kind] as const,
+    myTeam: () => [...base, "me", "team"] as const,
     employeeTimeline: (employmentId: number, params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "employeeTimeline", employmentId] as const)
@@ -232,8 +232,6 @@ export const humanResourcesQueryKeys = {
       [...base, "hr", "employeeSensitive", employmentId] as const,
     orgRoles: () => [...base, "hr", "org", "roles"] as const,
     orgLevels: () => [...base, "hr", "org", "levels"] as const,
-    orgHeadcount: (groupBy: string) =>
-      [...base, "hr", "org", "headcount", groupBy] as const,
     workAuthorizations: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "global", "workAuthorizations"] as const)

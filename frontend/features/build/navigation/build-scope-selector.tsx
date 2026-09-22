@@ -31,7 +31,7 @@ import {
   type BuildScopeRef,
 } from "./use-build-nav-preferences";
 import { useBuildScopeIdentity } from "./use-build-scope-identity";
-import { useBuildHasUnsavedWork } from "./build-dirty-state-context";
+import { useHasUnsavedWork } from "@/components/shared/dirty-state-context";
 
 interface BuildScopeSelectorProps {
   scope: BuildScope;
@@ -56,7 +56,7 @@ export function BuildScopeSelector({
   const identity = useBuildScopeIdentity(scope);
   const canUpdateProject = useCan("build:update");
   const canManageIntegrations = useCan("integrations:git:view");
-  const hasUnsavedWork = useBuildHasUnsavedWork();
+  const hasUnsavedWork = useHasUnsavedWork();
   const { requestLeave, dialogProps } = useUnsavedChangesGuard({
     isDirty: hasUnsavedWork,
   });

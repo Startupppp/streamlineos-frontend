@@ -33,7 +33,10 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => true,
+  useCanState: () => "granted",
+}));
 jest.mock("@/hooks/api/org-display", () => ({
   useOrgDisplay: () => ({ currency: "INR", locale: "en-IN" }),
 }));

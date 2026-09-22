@@ -4,6 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useDirectReports, useManagerScorecard, useEmployeeAvailability } from "@/hooks/api/hr";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import Link from "next/link";
@@ -97,7 +99,11 @@ export function InfoField({
 }
 
 export function DirectReportsSection({ employeeId }: { employeeId: string }) {
-  const { data: reports, isLoading } = useDirectReports(employeeId);
+  const { data: reports, isLoading, isError, error, refetch } = useDirectReports(employeeId);
+
+  function handleRetry(): void {
+    void refetch();
+  }
 
   if (isLoading) {
     return (
@@ -120,6 +126,23 @@ export function DirectReportsSection({ employeeId }: { employeeId: string }) {
       </Card>
     );
   }
+
+  if (isError) {
+    return (
+      <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
+        <CardContent className="p-4">
+          <ErrorState
+            compact
+            className="border-0 bg-transparent shadow-none"
+            title="Couldn't load direct reports"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!reports || reports.length === 0) return null;
 
   return (
@@ -170,9 +193,30 @@ export function DirectReportsSection({ employeeId }: { employeeId: string }) {
 }
 
 export function ManagerScorecardSection({ employeeId }: { employeeId: string }) {
-  const { data: scorecard, isLoading } = useManagerScorecard(employeeId);
+  const { data: scorecard, isLoading, isError, error, refetch } = useManagerScorecard(employeeId);
+
+  function handleRetry(): void {
+    void refetch();
+  }
 
   if (isLoading) return <Skeleton className="h-28 w-full rounded-2xl" />;
+
+  if (isError) {
+    return (
+      <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
+        <CardContent className="p-4">
+          <ErrorState
+            compact
+            className="border-0 bg-transparent shadow-none"
+            title="Couldn't load manager scorecard"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!scorecard || scorecard.teamSize === 0) return null;
 
   return (

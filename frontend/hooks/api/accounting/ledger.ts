@@ -14,7 +14,7 @@ import type {
   LocalizationPackSummary,
   PostableAccount,
   TrialBalanceReport,
-} from "@/types/accounting-kernel";
+} from "@/types/accounting/accounting-kernel";
 import type {
   AccountSystemTagMapping,
   AccountingSetupStatus,
@@ -22,7 +22,7 @@ import type {
   Currency,
   FxRate,
   TaxRegistration,
-} from "@/types/accounting-kernel-ext";
+} from "@/types/accounting/accounting-kernel-ext";
 
 type QueryOpts<T> = Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">;
 
@@ -31,24 +31,36 @@ const SESSION_STALE = 5 * 60 * 1000;
 const SLOW_LIST_STALE = 2 * 60 * 1000;
 const ENTITY_STALE = 60 * 1000;
 
-export function useAccountingSetupStatus(options?: QueryOpts<AccountingSetupStatus>) {
+export function useAccountingSetupStatus(
+  options?: QueryOpts<AccountingSetupStatus>,
+) {
   const canRead = useCan("accounting:settings:read");
   return useQuery<AccountingSetupStatus, Error>({
     queryKey: accountingLedgerQueryKeys.accountingLedger.setupStatus(),
     queryFn: ({ signal }) =>
-      apiClient.get<AccountingSetupStatus>("/accounting/setup/status", undefined, signal),
+      apiClient.get<AccountingSetupStatus>(
+        "/accounting/setup/status",
+        undefined,
+        signal,
+      ),
     staleTime: SESSION_STALE,
     ...options,
     enabled: canRead && (options?.enabled ?? true),
   });
 }
 
-export function useLocalizationPacks(options?: QueryOpts<LocalizationPackSummary[]>) {
+export function useLocalizationPacks(
+  options?: QueryOpts<LocalizationPackSummary[]>,
+) {
   const canRead = useCan("accounting:settings:read");
   return useQuery<LocalizationPackSummary[], Error>({
     queryKey: accountingLedgerQueryKeys.accountingLedger.packs(),
     queryFn: ({ signal }) =>
-      apiClient.get<LocalizationPackSummary[]>("/accounting/packs", undefined, signal),
+      apiClient.get<LocalizationPackSummary[]>(
+        "/accounting/packs",
+        undefined,
+        signal,
+      ),
     staleTime: CATALOG_STALE,
     ...options,
     enabled: canRead && (options?.enabled ?? true),
@@ -59,7 +71,8 @@ export function useAccountingBook(options?: QueryOpts<AccountingBook>) {
   const canRead = useCan("accounting:read");
   return useQuery<AccountingBook, Error>({
     queryKey: accountingLedgerQueryKeys.accountingLedger.book(),
-    queryFn: ({ signal }) => apiClient.get<AccountingBook>("/accounting/book", undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get<AccountingBook>("/accounting/book", undefined, signal),
     staleTime: SESSION_STALE,
     retry: false,
     ...options,
@@ -91,19 +104,29 @@ export function usePostableAccounts(options?: QueryOpts<PostableAccount[]>) {
   return useQuery<PostableAccount[], Error>({
     queryKey: accountingLedgerQueryKeys.accountingLedger.accountsPostable(),
     queryFn: ({ signal }) =>
-      apiClient.get<PostableAccount[]>("/accounting/accounts/postable", undefined, signal),
+      apiClient.get<PostableAccount[]>(
+        "/accounting/accounts/postable",
+        undefined,
+        signal,
+      ),
     staleTime: SLOW_LIST_STALE,
     ...options,
     enabled: canRead && (options?.enabled ?? true),
   });
 }
 
-export function useAccountMappings(options?: QueryOpts<AccountSystemTagMapping[]>) {
+export function useAccountMappings(
+  options?: QueryOpts<AccountSystemTagMapping[]>,
+) {
   const canRead = useCan("accounting:accounts:read");
   return useQuery<AccountSystemTagMapping[], Error>({
     queryKey: accountingLedgerQueryKeys.accountingLedger.accountMappings(),
     queryFn: ({ signal }) =>
-      apiClient.get<AccountSystemTagMapping[]>("/accounting/accounts/mappings", undefined, signal),
+      apiClient.get<AccountSystemTagMapping[]>(
+        "/accounting/accounts/mappings",
+        undefined,
+        signal,
+      ),
     staleTime: CATALOG_STALE,
     ...options,
     enabled: canRead && (options?.enabled ?? true),
@@ -114,7 +137,12 @@ export function useFiscalYears(options?: QueryOpts<FiscalYear[]>) {
   const canRead = useCan("accounting:periods:read");
   return useQuery<FiscalYear[], Error>({
     queryKey: accountingLedgerQueryKeys.accountingLedger.fiscalYears(),
-    queryFn: ({ signal }) => apiClient.get<FiscalYear[]>("/accounting/fiscal-years", undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get<FiscalYear[]>(
+        "/accounting/fiscal-years",
+        undefined,
+        signal,
+      ),
     staleTime: SLOW_LIST_STALE,
     ...options,
     enabled: canRead && (options?.enabled ?? true),
@@ -145,19 +173,30 @@ export function useJournal(journalId: string, options?: QueryOpts<Journal>) {
   return useQuery<Journal, Error>({
     queryKey: accountingLedgerQueryKeys.accountingLedger.journal(journalId),
     queryFn: ({ signal }) =>
-      apiClient.get<Journal>(`/accounting/journals/${journalId}`, undefined, signal),
+      apiClient.get<Journal>(
+        `/accounting/journals/${journalId}`,
+        undefined,
+        signal,
+      ),
     staleTime: ENTITY_STALE,
     ...options,
     enabled: canRead && !!journalId && (options?.enabled ?? true),
   });
 }
 
-export function useTrialBalance(asOf: string, options?: QueryOpts<TrialBalanceReport>) {
+export function useTrialBalance(
+  asOf: string,
+  options?: QueryOpts<TrialBalanceReport>,
+) {
   const canRead = useCan("accounting:reports:read");
   return useQuery<TrialBalanceReport, Error>({
     queryKey: accountingLedgerQueryKeys.accountingLedger.trialBalance(asOf),
     queryFn: ({ signal }) =>
-      apiClient.get<TrialBalanceReport>("/accounting/trial-balance", { asOf }, signal),
+      apiClient.get<TrialBalanceReport>(
+        "/accounting/trial-balance",
+        { asOf },
+        signal,
+      ),
     staleTime: ENTITY_STALE,
     ...options,
     enabled: canRead && !!asOf && (options?.enabled ?? true),
@@ -184,13 +223,24 @@ export function useAccountLedger(
     ...(params.pageSize ? { pageSize: params.pageSize } : {}),
   };
   return useQuery<AccountLedger, Error>({
-    queryKey: accountingLedgerQueryKeys.accountingLedger.accountLedger(accountId, search),
+    queryKey: accountingLedgerQueryKeys.accountingLedger.accountLedger(
+      accountId,
+      search,
+    ),
     queryFn: ({ signal }) =>
-      apiClient.get<AccountLedger>(`/accounting/accounts/${accountId}/ledger`, search, signal),
+      apiClient.get<AccountLedger>(
+        `/accounting/accounts/${accountId}/ledger`,
+        search,
+        signal,
+      ),
     staleTime: ENTITY_STALE,
     ...options,
     enabled:
-      canRead && !!accountId && !!params.from && !!params.to && (options?.enabled ?? true),
+      canRead &&
+      !!accountId &&
+      !!params.from &&
+      !!params.to &&
+      (options?.enabled ?? true),
   });
 }
 
@@ -198,7 +248,8 @@ export function useCurrencies(options?: QueryOpts<Currency[]>) {
   const canRead = useCan("accounting:read");
   return useQuery<Currency[], Error>({
     queryKey: accountingLedgerQueryKeys.accountingLedger.currencies(),
-    queryFn: ({ signal }) => apiClient.get<Currency[]>("/accounting/currencies", undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get<Currency[]>("/accounting/currencies", undefined, signal),
     staleTime: CATALOG_STALE,
     ...options,
     enabled: canRead && (options?.enabled ?? true),
@@ -210,7 +261,11 @@ export function useBookCurrencies(options?: QueryOpts<BookCurrency[]>) {
   return useQuery<BookCurrency[], Error>({
     queryKey: accountingLedgerQueryKeys.accountingLedger.bookCurrencies(),
     queryFn: ({ signal }) =>
-      apiClient.get<BookCurrency[]>("/accounting/book-currencies", undefined, signal),
+      apiClient.get<BookCurrency[]>(
+        "/accounting/book-currencies",
+        undefined,
+        signal,
+      ),
     staleTime: SESSION_STALE,
     ...options,
     enabled: canRead && (options?.enabled ?? true),
@@ -241,7 +296,11 @@ export function useTaxRegistrations(options?: QueryOpts<TaxRegistration[]>) {
   return useQuery<TaxRegistration[], Error>({
     queryKey: accountingLedgerQueryKeys.accountingLedger.taxRegistrations(),
     queryFn: ({ signal }) =>
-      apiClient.get<TaxRegistration[]>("/accounting/setup/tax-registrations", undefined, signal),
+      apiClient.get<TaxRegistration[]>(
+        "/accounting/setup/tax-registrations",
+        undefined,
+        signal,
+      ),
     staleTime: SESSION_STALE,
     ...options,
     enabled: canRead && (options?.enabled ?? true),

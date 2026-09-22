@@ -125,10 +125,12 @@ describe("BSN-04-026 — recovery notice reveals no restricted scope name or met
         projectId: 99,
         managedProductId: 5,
         pmWorkspaceId: null,
+        basePath: "/build/99",
       },
       isInaccessible: true,
       hasAnyBuildAccess: true,
       accessibleParent: { type: "product", id: "5" },
+      organizationHref: "/build",
     });
 
     expect(fallback.kind).toBe("recover");
@@ -146,10 +148,12 @@ describe("BSN-04-026 — recovery notice reveals no restricted scope name or met
         projectId: 42,
         managedProductId: null,
         pmWorkspaceId: null,
+        basePath: "/build/42",
       },
       isInaccessible: true,
       hasAnyBuildAccess: true,
       accessibleParent: null,
+      organizationHref: "/build",
     });
 
     expect(fallback.kind).toBe("recover");
@@ -166,10 +170,12 @@ describe("BSN-04-026 — recovery notice reveals no restricted scope name or met
         projectId: 99,
         managedProductId: 5,
         pmWorkspaceId: null,
+        basePath: "/build/99",
       },
       isInaccessible: true,
       hasAnyBuildAccess: true,
       accessibleParent: { type: "product", id: "5" },
+      organizationHref: "/build",
     });
 
     expect(fallback.kind).toBe("recover");
@@ -183,10 +189,11 @@ describe("BSN-04-026 — recovery notice reveals no restricted scope name or met
 describe("BSN-04-027 — stale recents, stars, and deep links cannot bypass authorization", () => {
   it("an inaccessible project with any Build access results in recover not stay, so the user is redirected instead of served stale content", () => {
     const fallback = resolveBuildScopeFallback({
-      scope: { type: "project", projectId: 10, managedProductId: null, pmWorkspaceId: null },
+      scope: { type: "project", projectId: 10, managedProductId: null, pmWorkspaceId: null, basePath: "/build/10" },
       isInaccessible: true,
       hasAnyBuildAccess: true,
       accessibleParent: null,
+      organizationHref: "/build",
     });
     expect(fallback.kind).not.toBe("stay");
     expect(fallback.kind).toBe("recover");
@@ -194,20 +201,22 @@ describe("BSN-04-027 — stale recents, stars, and deep links cannot bypass auth
 
   it("an inaccessible product with any Build access results in recover rather than exposing the product", () => {
     const fallback = resolveBuildScopeFallback({
-      scope: { type: "product", projectId: null, managedProductId: 8, pmWorkspaceId: null },
+      scope: { type: "product", projectId: null, managedProductId: 8, pmWorkspaceId: null, basePath: "/build/managed-products/8" },
       isInaccessible: true,
       hasAnyBuildAccess: true,
       accessibleParent: null,
+      organizationHref: "/build",
     });
     expect(fallback.kind).not.toBe("stay");
   });
 
   it("an inaccessible scope with no remaining Build access results in no-access rather than a parent redirect", () => {
     const fallback = resolveBuildScopeFallback({
-      scope: { type: "project", projectId: 10, managedProductId: null, pmWorkspaceId: null },
+      scope: { type: "project", projectId: 10, managedProductId: null, pmWorkspaceId: null, basePath: "/build/10" },
       isInaccessible: true,
       hasAnyBuildAccess: false,
       accessibleParent: { type: "workspace", id: "ws-1" },
+      organizationHref: "/build",
     });
     expect(fallback.kind).toBe("no-access");
   });

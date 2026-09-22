@@ -67,7 +67,7 @@ export function AiAssistantPage({ projectId }: AiAssistantPageProps) {
             className={PM_FILL_PANEL}
             illustration={<ShieldOff className="h-10 w-10 text-muted-foreground" />}
             title="Access restricted"
-            description="You need the projects:ai:use permission to use the AI Assistant."
+            description="You need the build:ai:use permission to use the AI Assistant."
           />
         </PmPageShell>
       </PageWrapper>
@@ -114,7 +114,7 @@ export function AiAssistantPage({ projectId }: AiAssistantPageProps) {
         </div>
       }
     >
-      <PmPageShell className="min-h-0 flex-1 gap-0" withGlow={false}>
+      <PmPageShell className="min-h-0 flex-1 gap-0">
         <div className="relative flex min-h-0 flex-1 overflow-hidden bg-background">
           <AiChatPanel
             {...sharedProps}

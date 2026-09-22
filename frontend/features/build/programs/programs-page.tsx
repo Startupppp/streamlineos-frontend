@@ -18,7 +18,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import {
@@ -143,6 +144,14 @@ export function ProgramsPage() {
     const q = search.toLowerCase();
     return (data ?? []).filter((p) => p.name.toLowerCase().includes(q));
   }, [data, search]);
+
+  const resolution = usePageState({
+    permission: "build:programs:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: displayed.length === 0,
+  });
 
   function handleCreate(input: CreateProgramInput) {
     createProgram.mutate(input, {
@@ -309,34 +318,31 @@ export function ProgramsPage() {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          {isLoading ? (
-            <DataTableSkeleton rows={12} columns={7} className="flex-1" />
-          ) : isError ? (
-            <ErrorState
-              className={PM_FILL_PANEL}
-              title="Couldn't load programs"
-              description={getErrorMessage(error)}
-              onRetry={handleRetry}
-            />
-          ) : displayed.length === 0 ? (
-            <EmptyState
-              className={PM_FILL_PANEL}
-              illustrationPreset="projects"
-              title="No programs yet"
-              description={
-                isFiltered
-                  ? undefined
-                  : "Create a program to coordinate related projects toward one outcome."
-              }
-              filtersActive={isFiltered}
-              onClearFilters={handleClearFilters}
-              action={
-                !isFiltered && canManage
-                  ? { label: "New Program", onClick: handleOpenCreate }
-                  : undefined
-              }
-            />
-          ) : (
+          <PageState
+            resolution={resolution}
+            loading={<DataTableSkeleton rows={12} columns={7} className="flex-1" />}
+            empty={
+              <EmptyState
+                className={PM_FILL_PANEL}
+                illustrationPreset="projects"
+                title="No programs yet"
+                description={
+                  isFiltered
+                    ? undefined
+                    : "Create a program to coordinate related projects toward one outcome."
+                }
+                filtersActive={isFiltered}
+                onClearFilters={handleClearFilters}
+                action={
+                  !isFiltered && canManage
+                    ? { label: "New Program", onClick: handleOpenCreate }
+                    : undefined
+                }
+              />
+            }
+            onRetry={handleRetry}
+            className={PM_FILL_PANEL}
+          >
             <DataTable
               data={displayed}
               columns={columns}
@@ -344,7 +350,7 @@ export function ProgramsPage() {
               minWidth="780px"
               className={PM_FILL_PANEL}
             />
-          )}
+          </PageState>
         </PmSection>
       </PmPageShell>
 

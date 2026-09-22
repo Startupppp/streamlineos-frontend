@@ -28,7 +28,7 @@ export function UpcomingView({ holidays, canManage, onEdit, onDelete, onAdd }: U
         illustrationPreset="calendar"
         illustrationSize="md"
         title="No upcoming holidays"
-        action={canManage ? { label: "Add Holiday", onClick: onAdd } : undefined}
+        action={canManage ? { label: "Add holiday", onClick: onAdd } : undefined}
         compact
         className="rounded-lg border border-border bg-muted/20 py-10"
       />

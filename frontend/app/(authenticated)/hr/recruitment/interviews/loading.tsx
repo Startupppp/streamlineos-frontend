@@ -23,7 +23,7 @@ export default function InterviewsLoading() {
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-32 rounded-lg" />
         </div>
-        <DataTableSkeleton rows={12} columns={6} className="flex-1 min-h-0" />
+        <DataTableSkeleton rows={12} headers={["Candidate", "Type", "Scheduled", "Duration", "Result", ""]} className="flex-1 min-h-0" />
       </div>
     </PageWrapper>
   );

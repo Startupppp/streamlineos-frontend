@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, Suspense } from "react";
-import { useCanState } from "@/hooks/api/access";
 import dynamic from "next/dynamic";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { motion, AnimatePresence, useReducedMotion, type Variants } from "framer-motion";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -10,7 +11,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { useInbox, useInboxCounts, useSnoozeCrmTask, useCompleteCrmTask } from "@/hooks/api/crm/inbox";
@@ -192,18 +192,16 @@ function InboxContent() {
 }
 
 export default function CrmInboxPage() {
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
-  if (useCanState("crm:leads:view") === "denied")
-    return <NoPermissionState permission="crm:leads:view" />;
+  const pageState = usePageState({ permission: "crm:leads:view", isLoading: false, isError: false });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper title="Sales Inbox" subtitle="Your daily command center">
+        <PageState resolution={pageState} loading={null} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
 
   return (
     <Suspense fallback={<InboxSkeleton />}>

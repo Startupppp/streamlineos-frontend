@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -13,6 +12,8 @@ import type { RoadmapItem, RoadmapStatus } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PmPanel, PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { ROADMAP_COLUMNS } from "./roadmap-constants";
 import { RoadmapItemCard } from "./roadmap-item-card";
 import { RoadmapItemSheet } from "./roadmap-item-sheet";
@@ -42,7 +43,7 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
   const [cursorIdx, setCursorIdx] = useState(0);
   const currentCursor = cursorHistory[cursorIdx];
 
-  const { data, isLoading, isError, refetch } = useRoadmapItems(
+  const { data, isLoading, isError, error, refetch } = useRoadmapItems(
     search.trim()
       ? { search: search.trim(), cursor: currentCursor }
       : { cursor: currentCursor },
@@ -51,6 +52,16 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
   const [internalCreateOpen, setInternalCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<RoadmapItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<RoadmapItem | null>(null);
+
+  const isEmpty = (data?.data ?? []).length === 0 && cursorIdx === 0;
+
+  const resolution = usePageState({
+    permission: "build:roadmap:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty,
+  });
 
   useEffect(() => {
     setCursorHistory([undefined]);
@@ -124,29 +135,26 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
     setCursorIdx((prev) => prev - 1);
   }
 
-  if (isLoading) return <RoadmapBoardSkeleton />;
-
-  if (isError) {
-    return (
-      <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
-    );
-  }
-
-  const isEmpty = (data?.data ?? []).length === 0 && cursorIdx === 0;
   const hasPrev = cursorIdx > 0;
   const hasNext = data?.pagination.hasMore ?? false;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      {isEmpty ? (
-        <EmptyState
-          className={PM_FILL_PANEL}
-          illustration={<EmptyProjectsIllustration />}
-          title="No roadmap items yet"
-          description="Plan what's coming and share it publicly with your users."
-          action={{ label: "Add roadmap item", onClick: handleOpenSheet }}
-        />
-      ) : (
+      <PageState
+        resolution={resolution}
+        loading={<RoadmapBoardSkeleton />}
+        empty={
+          <EmptyState
+            className={PM_FILL_PANEL}
+            illustration={<EmptyProjectsIllustration />}
+            title="No roadmap items yet"
+            description="Plan what's coming and share it publicly with your users."
+            action={{ label: "Add roadmap item", onClick: handleOpenSheet }}
+          />
+        }
+        onRetry={handleRetry}
+        className={PM_FILL_PANEL}
+      >
         <div className="flex min-h-0 flex-1 flex-col gap-2">
           <div className="grid min-h-0 flex-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
             {ROADMAP_COLUMNS.map((col) => (
@@ -156,16 +164,16 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
                     {col.label}
                   </span>
                   <span className="min-w-[20px] rounded-full border border-border/50 bg-background/80 px-1.5 py-0.5 text-center text-dense tabular-nums text-muted-foreground">
-                    {grouped[col.status].length}
+                    {(grouped[col.status as RoadmapStatus] ?? []).length}
                   </span>
                 </div>
-                {grouped[col.status].length === 0 ? (
+                {(grouped[col.status as RoadmapStatus] ?? []).length === 0 ? (
                   <div className="rounded-lg border border-dashed border-border/60 py-6 text-center text-xs text-muted-foreground">
                     Empty
                   </div>
                 ) : (
                   <PmStaggerList className="flex flex-col gap-1.5">
-                    {grouped[col.status].map((item) => (
+                    {(grouped[col.status as RoadmapStatus] ?? []).map((item) => (
                       <RoadmapItemCard
                         key={item.id}
                         item={item}
@@ -189,7 +197,7 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
             </div>
           ) : null}
         </div>
-      )}
+      </PageState>
 
       {sheetOpen ? <RoadmapItemSheet onClose={handleCloseSheet} /> : null}
       {editTarget ? <RoadmapItemSheet item={editTarget} onClose={handleCloseEdit} /> : null}

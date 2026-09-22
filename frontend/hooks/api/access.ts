@@ -112,8 +112,7 @@ export function useCan(permissionKey: PermissionKey): boolean {
  * the boolean tells a user who does hold the permission that access is
  * restricted, for as long as their own rights take to arrive.
  *
- * Ticket 26 is the other half of the same conflation, one layer down. Use this
- * with `resolveGate` wherever the answer decides what a person sees.
+ * Ticket 26 is the other half of the same conflation, one layer down.
  */
 export function useCanState(permissionKey: PermissionKey): AccessState {
   const { data, isLoading } = useAccess();

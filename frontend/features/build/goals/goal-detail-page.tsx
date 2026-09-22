@@ -4,18 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   EmptyTasksIllustration,
@@ -42,6 +33,7 @@ import {
   type KeyResult,
   type GoalDetail,
 } from "@/hooks/api/goals";
+import { useCan } from "@/hooks/api/access";
 import { GoalFormSheet } from "@/features/build/goals/goal-form-sheet";
 import { CheckInDialog } from "@/features/build/goals/check-in-dialog";
 import { AddLinkDialog } from "@/features/build/goals/add-link-dialog";
@@ -53,10 +45,13 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
+  PM_FILL_SECTION,
 } from "@/components/pm-chrome";
 import { TEXT_BODY } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { cn } from "@/lib/utils";
 
 function GoalDetailActions({
@@ -98,8 +93,9 @@ function AddLinkButton({ onClick }: { onClick: () => void }) {
 
 export function GoalDetailPage({ goalId }: { goalId: number }) {
   const router = useRouter();
+  const canManage = useCan("build:goals:manage");
 
-  const { data: goal, isLoading, isError, refetch } = useGoal(goalId);
+  const { data: goal, isLoading, isError, error, refetch } = useGoal(goalId);
   const deleteGoal = useDeleteGoal();
   const removeLink = useRemoveGoalLink(goalId);
 
@@ -116,11 +112,13 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
   function handleCheckIn(kr: KeyResult) { setCheckInTarget(kr); }
   function handleRetry() { void refetch(); }
 
+  const pageState = usePageState({ permission: "build:goals:view", isLoading, isError, error });
+
   function handleDelete() {
     deleteGoal.mutate(goalId, {
       onSuccess: () => {
         toast.success("Goal deleted");
-        router.push("/build/goal");
+        router.push("/build/goals");
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
@@ -133,19 +131,33 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
     });
   }
 
-  if (isLoading) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
-      <PageWrapper title="Goal" backHref="/build/goal">
+      <PageWrapper title="Goal" backHref="/build/goals">
+        <PmPageShell>
+          <PmSection index={0} className={PM_FILL_SECTION}>
+            <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+              {null}
+            </PageState>
+          </PmSection>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (pageState.kind === "loading") {
+    return (
+      <PageWrapper title="Goal" backHref="/build/goals">
         <GoalDetailSkeleton />
       </PageWrapper>
     );
   }
 
-  if (isError || !goal) {
+  if (!goal) {
     return (
-      <PageWrapper title="Goal" backHref="/build/goal">
-        <PmPageShell withGlow={false}>
-          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+      <PageWrapper title="Goal" backHref="/build/goals">
+        <PmPageShell>
+          <PmSection index={0} className={PM_FILL_SECTION}>
             <ErrorState
               title="Failed to load goal"
               description="This goal may have been removed or is unavailable."
@@ -164,8 +176,12 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
   return (
     <PageWrapper
       title={detail.title}
-      backHref="/build/goal"
-      actions={<GoalDetailActions onEdit={handleOpenEdit} onDelete={handleOpenDelete} />}
+      backHref="/build/goals"
+      actions={
+        canManage ? (
+          <GoalDetailActions onEdit={handleOpenEdit} onDelete={handleOpenDelete} />
+        ) : undefined
+      }
     >
       <PmPageShell>
         <PmSection index={0}>
@@ -247,7 +263,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
                 {detail.links.length}
               </Badge>
             </div>
-            <AddLinkButton onClick={handleOpenAddLink} />
+            {canManage ? <AddLinkButton onClick={handleOpenAddLink} /> : null}
           </div>
           {detail.links.length === 0 ? (
             <PmPanel className="flex items-center justify-center p-4">
@@ -329,28 +345,16 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
       ) : null}
       {addLinkOpen ? <AddLinkDialog goalId={goalId} onClose={handleCloseAddLink} /> : null}
 
-      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete goal?</AlertDialogTitle>
-            <AlertDialogDescription>
-              &ldquo;{detail.title}&rdquo; and all its key results, updates, and links will be
-              permanently deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <LoadingButton
-              variant="destructive"
-              isPending={deleteGoal.isPending}
-              loadingText="Deleting…"
-              onClick={handleDelete}
-            >
-              Delete
-            </LoadingButton>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete goal?"
+        description={`“${detail.title}” and all its key results, updates, and links will be permanently deleted.`}
+        confirmLabel="Delete"
+        destructive
+        isPending={deleteGoal.isPending}
+        onConfirm={handleDelete}
+      />
     </PageWrapper>
   );
 }

@@ -42,15 +42,6 @@ export const leavesThisWeekC = lazyContract(() =>
 export const leaveRequestsPageC = lazyContract(() =>
   import("@/hooks/api/hr/leaves-schema").then((m) => m.leaveRequestsPageContract),
 );
-export const addHolidayC = lazyContract(() =>
-  import("@/hooks/api/hr/leaves-schema").then((m) => m.addHolidayContract),
-);
-export const deleteHolidayC = lazyContract(() =>
-  import("@/hooks/api/hr/leaves-schema").then((m) => m.deleteHolidayContract),
-);
-export const updateHolidayC = lazyContract(() =>
-  import("@/hooks/api/hr/leaves-schema").then((m) => m.updateHolidayContract),
-);
 export const hrHolidaysListC = lazyContract(() =>
   import("@/hooks/api/hr/leaves-schema").then((m) => m.hrHolidaysListContract),
 );

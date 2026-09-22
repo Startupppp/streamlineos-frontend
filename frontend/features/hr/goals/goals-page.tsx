@@ -6,7 +6,8 @@ import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingState } from "@/components/shared/loading-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useHrGoals, useCreateHrGoal, useUpdateGoal, type HrGoal } from "@/hooks/api/hr";
@@ -38,9 +39,10 @@ export function GoalsPage() {
   const [progressValue, setProgressValue] = useState(0);
   const [form, setForm] = useState<CreateGoalForm>(EMPTY_FORM);
 
-  const { data: goals = [], isLoading, isError, refetch } = useHrGoals();
+  const { data: goals = [], isLoading, isError, error, refetch } = useHrGoals();
   const createGoal = useCreateHrGoal();
   const updateGoal = useUpdateGoal();
+  const pageState = usePageState({ permission: "hr:performance:view", isLoading, isError, error });
 
   const filtered = goals.filter(
     (g) => statusFilter === "ALL" || g.status === statusFilter,
@@ -149,7 +151,7 @@ export function GoalsPage() {
     void refetch();
   }
 
-  if (isLoading) {
+  if (pageState.kind === "loading") {
     return (
       <PageWrapper
         title="Goals & OKRs"
@@ -160,17 +162,15 @@ export function GoalsPage() {
     );
   }
 
-  if (isError) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
     return (
       <PageWrapper
         title="Goals & OKRs"
         subtitle="Track your personal and team goals"
       >
-        <ErrorState
-          title="Failed to load goals"
-          description="We couldn't load your goals. Please try again."
-          onRetry={handleRetry}
-        />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
   }

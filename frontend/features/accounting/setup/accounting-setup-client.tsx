@@ -12,8 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { ErrorState } from "@/components/shared";
-import { NoPermissionState } from "@/components/shared";
+import { NoPermissionState, PageState } from "@/components/shared";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import {
   Form,
@@ -36,6 +35,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { accountingLedgerQueryKeys } from "@/lib/query-keys/accounting-ledger";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useAccountingSetupStatus, useTaxRegistrations } from "@/hooks/api/accounting/ledger";
 import { useAddTaxRegistration } from "@/hooks/api/accounting/ledger-mutations";
 import { EnableAccountingCard } from "./enable-accounting-card";
@@ -193,22 +193,29 @@ function TaxRegistrationCard() {
 }
 
 export function AccountingSetupClient() {
-  const canRead = useCan("accounting:settings:read");
   const canManage = useCan("accounting:settings:manage");
   const queryClient = useQueryClient();
   const statusQuery = useAccountingSetupStatus();
+
+  const pageState = usePageState({
+    permission: "accounting:settings:read",
+    isLoading: statusQuery.isLoading,
+    isError: statusQuery.isError,
+    error: statusQuery.error,
+  });
 
   function handleEnabled(): void {
     void queryClient.invalidateQueries({ queryKey: accountingLedgerQueryKeys.accountingLedger.all });
   }
 
-  if (!canRead) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper title="Accounting setup">
-        <NoPermissionState permission="accounting:settings:read" />
+        <PageState resolution={pageState} loading={null} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
   if (statusQuery.isPending) {
     return (
@@ -217,18 +224,6 @@ export function AccountingSetupClient() {
           <Skeleton className="h-24 w-full" />
           <Skeleton className="h-64 w-full" />
         </div>
-      </PageWrapper>
-    );
-  }
-
-  if (statusQuery.isError) {
-    return (
-      <PageWrapper title="Accounting setup">
-        <ErrorState
-          description={getErrorMessage(statusQuery.error)}
-          onRetry={() => void statusQuery.refetch()}
-          className="flex-1"
-        />
       </PageWrapper>
     );
   }

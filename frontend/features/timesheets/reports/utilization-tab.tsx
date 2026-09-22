@@ -61,6 +61,8 @@ const COLUMNS: DataTableColumn<UtilizationReportUser>[] = [
   },
 ];
 
+const COLUMN_HEADERS = COLUMNS.map((column) => column.header);
+
 function getUtilizationRowKey(row: UtilizationReportUser): string {
   return row.userId ?? row.email ?? String(row.totalHours);
 }
@@ -114,7 +116,7 @@ export function UtilizationTab({ params, enabled }: UtilizationTabProps) {
         <div className="space-y-4">
           <StatCardGridSkeleton cols={5} count={5} />
           <Skeleton className="h-[220px] rounded-md" />
-          <DataTableSkeleton rows={8} columns={5} />
+          <DataTableSkeleton rows={8} headers={COLUMN_HEADERS} />
         </div>
       }
     >

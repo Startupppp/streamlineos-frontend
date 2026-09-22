@@ -18,8 +18,11 @@ import {
   useApPayment,
   useReverseApPayment,
 } from "@/hooks/api/accounting/ap";
-import type { ApAllocationInput } from "@/types/accounting-ap-payments";
-import { AP_PAYMENT_STATUS_LABELS, AP_PAYMENT_STATUS_TONES } from "../lib/ap-labels";
+import type { ApAllocationInput } from "@/types/accounting/accounting-ap-payments";
+import {
+  AP_PAYMENT_STATUS_LABELS,
+  AP_PAYMENT_STATUS_TONES,
+} from "../lib/ap-labels";
 import { AllocateOpenBillsSheet } from "../shared/allocate-open-bills-sheet";
 
 interface PaymentDetailSheetProps {
@@ -27,7 +30,15 @@ interface PaymentDetailSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-function FigureTile({ label, value, hint }: { label: string; value: string; hint: string }) {
+function FigureTile({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+}) {
   return (
     <div className="rounded-md border border-border bg-card px-3 py-2.5">
       <p className="text-dense font-medium text-muted-foreground">{label}</p>
@@ -37,7 +48,10 @@ function FigureTile({ label, value, hint }: { label: string; value: string; hint
   );
 }
 
-export function PaymentDetailSheet({ paymentId, onOpenChange }: PaymentDetailSheetProps) {
+export function PaymentDetailSheet({
+  paymentId,
+  onOpenChange,
+}: PaymentDetailSheetProps) {
   const canApprove = useCan("accounting:payables:approve");
   const canManage = useCan("accounting:payables:manage");
   const [isReverseOpen, setIsReverseOpen] = useState(false);
@@ -61,7 +75,10 @@ export function PaymentDetailSheet({ paymentId, onOpenChange }: PaymentDetailShe
   );
 
   const withheldRates = useMemo(
-    () => (payment?.withholding ?? []).map((entry) => formatBasisPoints(entry.rateBp)).join(", "),
+    () =>
+      (payment?.withholding ?? [])
+        .map((entry) => formatBasisPoints(entry.rateBp))
+        .join(", "),
     [payment?.withholding],
   );
 
@@ -157,8 +174,13 @@ export function PaymentDetailSheet({ paymentId, onOpenChange }: PaymentDetailShe
               />
               <FigureTile
                 label="Tax withheld"
-                value={formatMinorMoney(payment.withheldMinor, payment.currency)}
-                hint={withheldRates ? `At ${withheldRates}` : "Nothing held back"}
+                value={formatMinorMoney(
+                  payment.withheldMinor,
+                  payment.currency,
+                )}
+                hint={
+                  withheldRates ? `At ${withheldRates}` : "Nothing held back"
+                }
               />
               <FigureTile
                 label="Actually left the account"
@@ -169,13 +191,16 @@ export function PaymentDetailSheet({ paymentId, onOpenChange }: PaymentDetailShe
 
             {payment.unappliedMinor > 0 ? (
               <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-label">
-                {formatMinorMoney(payment.unappliedMinor, payment.currency)} of this payment is not against
-                any bill yet. It sits as money on account with this vendor.
+                {formatMinorMoney(payment.unappliedMinor, payment.currency)} of
+                this payment is not against any bill yet. It sits as money on
+                account with this vendor.
               </p>
             ) : null}
 
             <div>
-              <p className="mb-2 text-sm font-semibold">Bills this payment settled</p>
+              <p className="mb-2 text-sm font-semibold">
+                Bills this payment settled
+              </p>
               {payment.allocations.length === 0 ? (
                 <p className="text-label text-muted-foreground">
                   None yet — the whole payment is on account.
@@ -193,7 +218,10 @@ export function PaymentDetailSheet({ paymentId, onOpenChange }: PaymentDetailShe
                           "Unnumbered bill"}
                       </span>
                       <span className="font-mono text-sm tabular-nums">
-                        {formatMinorMoney(allocation.amountMinor, payment.currency)}
+                        {formatMinorMoney(
+                          allocation.amountMinor,
+                          payment.currency,
+                        )}
                       </span>
                     </li>
                   ))}
@@ -203,8 +231,12 @@ export function PaymentDetailSheet({ paymentId, onOpenChange }: PaymentDetailShe
 
             {payment.reference || payment.paymentMethod || payment.memo ? (
               <div className="space-y-1 border-t border-border pt-3 text-label text-muted-foreground">
-                {payment.paymentMethod ? <p>Paid by {payment.paymentMethod}</p> : null}
-                {payment.reference ? <p>Reference {payment.reference}</p> : null}
+                {payment.paymentMethod ? (
+                  <p>Paid by {payment.paymentMethod}</p>
+                ) : null}
+                {payment.reference ? (
+                  <p>Reference {payment.reference}</p>
+                ) : null}
                 {payment.memo ? <p>{payment.memo}</p> : null}
               </div>
             ) : null}

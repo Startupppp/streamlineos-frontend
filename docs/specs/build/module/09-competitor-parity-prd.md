@@ -84,8 +84,29 @@ errors, mobile, accessibility, lifecycle, and end-to-end customer outcome work.
 
 - [ ] **BLD-09-001** revalidate every source URL and claim within 30 days of
   product sign-off.
+  **Open — swept 2026-09-21; the baseline is substantially unverified.**
+  Of the 39 cited URLs: **18 resolve** and support their claim; **3 are dead**
+  (Asana Portfolios, Goals and Workload — three of the most strategically
+  significant rows cited); **15 are unreachable to automated retrieval** (all 9
+  ClickUp and all 6 monday.com articles are bot-blocked, which is evidence of
+  neither presence nor absence). Jira's "Advanced Roadmaps" is now **Plans**;
+  the URL still redirects, but the name change is unrecorded here.
+  The most consequential gap is not a URL. *"risk, decision, approval, change,
+  incident, and QA workflows"* appears in the Planning and Management baseline
+  with **no source for any competitor**. If that is not actually table stakes,
+  it is a StreamlineOS differentiator filed as a competitor obligation, which
+  would distort both the gap review and the non-goals.
+  Closing this needs live product access for the two bot-blocked vendors and a
+  decision on the unsourced row; neither is reachable from source alone.
 - [ ] **BLD-09-002** record pricing/plan constraints for any capability used in
   positioning.
+  **Open — one constraint found and recorded, the rest unsurveyed.**
+  Jira **Plans** (formerly Advanced Roadmaps) is **Premium-only**. Anything
+  positioned against it is positioned against a paid Jira tier, not against
+  baseline Jira — which is also why Jira sandbox scenario planning sits in the
+  non-goals rather than the baseline. The remaining cited capabilities have not
+  been checked for plan gating, and the two bot-blocked vendors cannot be
+  surveyed without live access.
 
 ## Baseline Capability Matrix
 
@@ -285,24 +306,84 @@ The Build agent can:
 ## Deliberate Non-Goals
 
 - a second chat, mail, calendar, document, CRM, timesheet, or accounting system
-  inside Build;
-- separate Sprint and Cycle models for terminology preference;
-- unlimited custom query language in the first release;
-- every possible view on every page;
-- decorative AI controls without an evidence-backed customer action;
-- unbounded dashboards or custom fields;
-- public client data by default;
+  inside Build.
+  **Reason:** StreamlineOS already owns each of these as a module. A Build-local
+  copy would create a second editable record of the same customer, thread, file
+  or time entry, which BLD-09-018 forbids outright. The competitor need this
+  answers — context without tab-switching — is met by linking, not copying.
+- separate Sprint and Cycle models for terminology preference.
+  **Reason:** the duplication is real and costly today: two routes, two models,
+  and a nav label that pointed at the wrong one. Terminology is a display
+  concern and belongs in per-project labels; carrying two schemas to satisfy two
+  vocabularies doubles migration, permission and reporting surface for nothing.
+- unlimited custom query language in the first release.
+  **Reason:** BLD-09-006 requires advanced filtering to stay usable without a
+  query language, and BLD-09-011 requires every customization to sit on an
+  indexed data contract. A free-form language guarantees unindexed queries we
+  cannot bound. Structured include/exclude filters cover the common cases; JQL
+  syntax is optional future scope, not table stakes.
+- every possible view on every page.
+  **Reason:** a view is only parity when its filters, counts, sort, pagination
+  and access all hold at scale (BLD-09-014). Four correct views beat eight that
+  disagree with each other's counts. The known defects here are count parity and
+  filtered-board completeness, not a missing view type.
+- decorative AI controls without an evidence-backed customer action.
+  **Reason:** BLD-09-019 and BLD-09-020 set the bar — citations, diffs, cost,
+  revocation, and a product that still works when credits run out. An AI button
+  that cannot meet that bar spends the customer's credits to produce something
+  they must verify by hand.
+- unbounded dashboards or custom fields.
+  **Reason:** same indexed-contract limit as the query language. An unbounded
+  dashboard is an unbounded query against a tenant's data; an unbounded custom
+  field set defeats projection and indexing. Both degrade every other tenant on
+  the instance, which is a multi-tenant cost competitors with per-workspace
+  isolation do not pay the same way.
+- public client data by default.
+  **Reason:** the Client Progress Studio publishes from live internal records,
+  so default-public would leak costs, notes, people data and unapproved work the
+  moment a record is created. Default-private with explicit per-grant preview
+  (BLD-09-015, BLD-09-016) is the only safe direction for that architecture.
 - feature-count parity that compromises simplicity, speed, or security.
+  **Reason:** this is the rule the rest derive from. "Feature presence is not
+  parity" is already the Outcome's standard; a checklist match that makes the
+  product slower or less safe loses on the dimension customers actually feel.
 - a second Build-owned calendar record or route; Calendar is a baseline view
-  fulfilled only through permission-safe sources on `/calendar`;
-- arbitrary user-authored formula languages in the first release;
+  fulfilled only through permission-safe sources on `/calendar`.
+  **Reason:** the product rule is one unified calendar with module events as
+  toggleable sources. A Build-local calendar would fragment the one surface that
+  is supposed to answer "what is happening to me this week" across every module.
+- arbitrary user-authored formula languages in the first release.
+  **Reason:** monday's Formula and Mirror columns and Notion's rollups are the
+  cited baseline, and BLD-09-009 requires every roll-up to reconcile to source
+  records and never present an unexplained score. A user-authored formula is
+  unexplainable by construction. Defined roll-ups with drill-down meet the need
+  that matters and stay auditable.
 - multi-homed work items that copy the same ticket into many projects; a work
   item has one owning project, and cross-project visibility uses relations,
-  saved views, programs, and portfolios;
+  saved views, programs, and portfolios.
+  **Reason:** Asana's multi-home and ClickUp's tasks-in-multiple-lists solve
+  visibility by giving one item several parents, which makes ownership,
+  permission scope, tenant isolation and roll-up arithmetic ambiguous. One
+  owning project keeps authorization decidable at the data layer; the visibility
+  need is met by the four mechanisms named above.
 - Jira sandbox scenario planning and automatic schedule commitment; agents may
   propose a reviewed schedule diff.
+  **Reason:** scenario planning is a Jira Premium capability (see the plan-limit
+  note below), not a baseline expectation. Automatic schedule commitment also
+  contradicts the agent policy: propose a diff, execute only after review.
 
 - [ ] **BLD-09-021** excluded competitor features have a written product reason.
+  **Drafted 2026-09-21 — awaiting product review, not closed.**
+  Every one of the twelve non-goals above now carries a `**Reason:**` stating
+  what the customer need is, how Build meets it instead, and which acceptance
+  item or product rule forces the exclusion. Each reason is derived from a rule
+  already in this corpus rather than invented here, so the exclusions and the
+  acceptance items cannot drift apart.
+  Two reasons rest on competitor claims that BLD-09-001 has not confirmed —
+  multi-homing (Asana, ClickUp) and scenario planning (Jira). Both citations are
+  first-party and one is corroborated by the Premium plan limit; neither changes
+  the product decision, which stands on our own tenancy and agent-policy rules.
+  This item stays open until the product owner reads and accepts the wording.
 - [ ] **BLD-09-022** sales/marketing claims match shipped, plan-entitled,
   evidenced behavior.
 

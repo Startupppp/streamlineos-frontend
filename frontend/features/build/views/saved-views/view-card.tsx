@@ -9,6 +9,7 @@ import {
   GitBranch,
   Pin,
   PinOff,
+  Pencil,
   ArrowRight,
 } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -45,6 +46,7 @@ interface ViewCardProps {
   currentUserId?: string;
   onNavigate: (view: ViewItem) => void;
   onTogglePin: (viewId: number, isPinned: boolean) => void;
+  onRename: (view: ViewItem) => void;
   onDelete: (viewId: number) => void;
   canManage: boolean;
 }
@@ -55,6 +57,7 @@ export const ViewCard = memo(function ViewCard({
   currentUserId,
   onNavigate,
   onTogglePin,
+  onRename,
   onDelete,
   canManage,
 }: ViewCardProps) {
@@ -67,6 +70,7 @@ export const ViewCard = memo(function ViewCard({
     () => onTogglePin(view.id, !isPinned),
     [onTogglePin, view.id, isPinned],
   );
+  const handleRename = useCallback(() => onRename(view), [onRename, view]);
   const handleDelete = useCallback(() => onDelete(view.id), [onDelete, view.id]);
 
   const filterCount = view.filters ? Object.keys(view.filters).length : 0;
@@ -110,6 +114,17 @@ export const ViewCard = memo(function ViewCard({
         {isOwner && (
           <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleTogglePin}>
             {isPinned ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
+          </Button>
+        )}
+        {isOwner && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0"
+            onClick={handleRename}
+            aria-label="Rename saved view"
+          >
+            <Pencil className="h-3.5 w-3.5" />
           </Button>
         )}
         {isOwner && (

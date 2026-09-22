@@ -115,6 +115,19 @@ export function countActiveEmployeeFilters(
   ].filter(Boolean).length;
 }
 
+/** Apply router-style updates (null deletes the key) to a copy of the current params. */
+export function applyEmployeeUrlUpdates(
+  current: URLSearchParams,
+  updates: Record<string, string | null>,
+): URLSearchParams {
+  const params = new URLSearchParams(current.toString());
+  for (const [key, value] of Object.entries(updates)) {
+    if (value == null || value === "") params.delete(key);
+    else params.set(key, value);
+  }
+  return params;
+}
+
 /** Build URL updates for router; null deletes the key. */
 export function employeeFiltersToUrlUpdates(
   next: Partial<EmployeeListFilters> & {

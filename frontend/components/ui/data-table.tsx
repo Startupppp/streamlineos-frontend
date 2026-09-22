@@ -335,11 +335,7 @@ export function DataTable<T>({
       )}
       <div className="flex-1 min-h-0 overflow-auto overscroll-x-contain flex flex-col [-webkit-overflow-scrolling:touch]">
         {isLoading ? (
-          <div
-            aria-busy={isOnline}
-            style={minWidth && minWidth !== "auto" ? { minWidth } : undefined}
-            className={cn((!minWidth || minWidth === "content") && "min-w-max")}
-          >
+          <div aria-busy={isOnline}>
             <span role="status" className="sr-only">
               {isOnline ? "Loading results…" : PAUSED_LABEL}
             </span>
@@ -349,20 +345,35 @@ export function DataTable<T>({
                 {PAUSED_MESSAGE}
               </p>
             )}
-            <Table containerClassName="overflow-visible">
-              <DataTableHeader table={table} announceSort={false} rowIndex={1} />
-              <TableBody>
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <TableRow key={i} className="h-10 hover:bg-transparent">
-                    {columnDefs.map((_, j) => (
-                      <TableCell key={j} className="px-2 py-2 text-sm">
-                        <Skeleton className="h-3.5 w-full" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
+            {mobileCard ? (
+              <div className="sm:hidden flex flex-col gap-2 p-2">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-20 w-full rounded-lg" />
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+            ) : null}
+            <div
+              style={minWidth && minWidth !== "auto" ? { minWidth } : undefined}
+              className={cn(
+                (!minWidth || minWidth === "content") && "min-w-max",
+                mobileCard && "hidden sm:block",
+              )}
+            >
+              <Table containerClassName="overflow-visible">
+                <DataTableHeader table={table} announceSort={false} rowIndex={1} />
+                <TableBody>
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <TableRow key={i} className="h-10 hover:bg-transparent">
+                      {columnDefs.map((_, j) => (
+                        <TableCell key={j} className="px-2 py-2 text-sm">
+                          <Skeleton className="h-3.5 w-full" />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         ) : rows.length === 0 ? (
           <div

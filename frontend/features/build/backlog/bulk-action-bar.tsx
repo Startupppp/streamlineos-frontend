@@ -23,6 +23,11 @@ import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { useTicketSearch } from "@/hooks/api/build/ticket-search";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
+import {
+  buildStatusConfig,
+  resolveStatusOptions,
+  type StatusOptionSource,
+} from "@/features/build/shared/types";
 
 interface Member {
   id: string;
@@ -40,6 +45,7 @@ interface BulkActionBarProps {
   selectedCount: number;
   members: Member[];
   sprints: Sprint[];
+  statuses: readonly StatusOptionSource[] | undefined;
   labels?: LabelOption[];
   hideSprint?: boolean;
   projectId?: number;
@@ -146,6 +152,7 @@ export const BulkActionBar = memo(function BulkActionBar({
   selectedCount,
   members,
   sprints,
+  statuses,
   labels,
   hideSprint = false,
   projectId,
@@ -161,6 +168,8 @@ export const BulkActionBar = memo(function BulkActionBar({
   const canUpdate = useCan("build:tickets:update");
   const canAssign = useCan("build:tickets:assign");
   const resolvedExcludeIds = excludeIds ?? new Set<string | number>();
+  const statusOptions = resolveStatusOptions(statuses);
+  const statusLabels = buildStatusConfig(statusOptions);
 
   if (!canUpdate) return null;
 
@@ -180,9 +189,9 @@ export const BulkActionBar = memo(function BulkActionBar({
             <SelectValue placeholder="Set Status" />
           </SelectTrigger>
           <SelectContent>
-            {["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"].map((s) => (
-              <SelectItem key={s} value={s} className="text-xs">
-                {s.replace("_", " ")}
+            {statusOptions.map((s) => (
+              <SelectItem key={s.name} value={s.name} className="text-xs">
+                {statusLabels[s.name]?.label ?? s.name.replace(/_/g, " ")}
               </SelectItem>
             ))}
           </SelectContent>

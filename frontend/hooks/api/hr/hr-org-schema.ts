@@ -28,12 +28,4 @@ export const jobLevelRowContract = z.object({
 
 export const jobLevelListContract = z.array(jobLevelRowContract);
 
-export const headcountItemContract = z.object({
-  groupId: z.union([z.string(), z.number().int()]).nullable(),
-  groupName: z.string().nullable(),
-  headcount: z.number().int(),
-});
-
-export const headcountItemListContract = z.array(headcountItemContract);
-
 export const successResponseContract = z.object({ success: z.boolean() });

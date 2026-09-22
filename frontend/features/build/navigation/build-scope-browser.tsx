@@ -274,6 +274,22 @@ export function BuildScopeBrowser({
     );
   }
 
+  function renderSearchRow(entry: BuildScopeDirectoryEntry) {
+    return (
+      <BuildScopeRow
+        key={entry.key}
+        scope={entry}
+        isCurrent={entry.key === currentScopeKey}
+        isStarred={isStarred(entry.key)}
+        isArchived={entry.isArchived}
+        itemRole="option"
+        settingsHref={settingsHrefFor(entry)}
+        onSelect={onSelect}
+        onToggleStar={toggleStar}
+      />
+    );
+  }
+
   return (
     <>
       <div
@@ -343,8 +359,34 @@ export function BuildScopeBrowser({
                 description="Try another name, key, or include archived scopes."
               />
             ) : (
-              searchResults.map(renderRootRow)
+              searchResults.map(renderSearchRow)
             )}
+            {directory.hasMoreHierarchy ? (
+              <div className="flex justify-center py-1">
+                <LoadingButton
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  isPending={directory.isFetchingMoreHierarchy}
+                  onClick={handleFetchMoreHierarchy}
+                >
+                  Load more workspaces / products
+                </LoadingButton>
+              </div>
+            ) : null}
+            {directory.hasMoreProjects ? (
+              <div className="flex justify-center py-1">
+                <LoadingButton
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  isPending={directory.isFetchingMoreProjects}
+                  onClick={handleFetchMoreProjects}
+                >
+                  Load more projects
+                </LoadingButton>
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="p-1.5">

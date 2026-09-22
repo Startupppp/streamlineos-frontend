@@ -19,7 +19,10 @@ const mockAddMutate = jest.fn();
 let mockAddPending = false;
 let mockVoucher: Record<string, unknown> | undefined;
 
-jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => true,
+  useCanState: () => "granted",
+}));
 
 jest.mock("@/hooks/api/inventory/landed-cost", () => ({
   ...jest.requireActual("@/hooks/api/inventory/landed-cost"),

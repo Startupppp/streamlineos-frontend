@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { AppSheet } from "@/components/shared";
+import { AppSheet, ErrorState, NoPermissionState } from "@/components/shared";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { ErrorState } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,6 +17,7 @@ import {
   type LandedCostAllocation,
   type LandedCostCharge,
 } from "@/hooks/api/inventory/landed-cost";
+import { useCanState } from "@/hooks/api/access";
 import { fromMinorUnits } from "./landed-cost-schema";
 import { LandedCostAddChargeDialog } from "./landed-cost-add-charge-dialog";
 
@@ -95,8 +95,9 @@ export function LandedCostDetailSheet({
   canManage: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const valuationState = useCanState("inventory:valuation:read");
   const [addingCharge, setAddingCharge] = useState(false);
-  const { data, isLoading, isError, error, refetch } =
+  const { data, isPending, isError, error, refetch } =
     useLandedCostVoucher(voucherId);
   const apply = useApplyLandedCostVoucher();
 
@@ -145,13 +146,15 @@ export function LandedCostDetailSheet({
           ) : null
         }
       >
-        {isError ? (
+        {valuationState === "denied" ? (
+          <NoPermissionState compact permission="inventory:valuation:read" />
+        ) : isError ? (
           <ErrorState
             title="Couldn't load the voucher"
             description={getErrorMessage(error)}
             onRetry={() => void refetch()}
           />
-        ) : isLoading || !data ? (
+        ) : isPending || !data ? (
           <div className="space-y-3">
             <Skeleton className="h-20 w-full rounded-xl" />
             <Skeleton className="h-40 w-full rounded-xl" />

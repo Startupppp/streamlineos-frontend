@@ -16,7 +16,10 @@ import type { InventoryMetricsSnapshot, ShelfLifeRule } from "@/hooks/api/invent
  */
 
 const mockUseCan = jest.fn(() => true);
-jest.mock("@/hooks/api/access", () => ({ useCan: () => mockUseCan() }));
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => mockUseCan(),
+  useCanState: () => (mockUseCan() ? "granted" : "denied"),
+}));
 
 const mockUseInventoryMetrics = jest.fn();
 const mockUseShelfLifeRules = jest.fn();

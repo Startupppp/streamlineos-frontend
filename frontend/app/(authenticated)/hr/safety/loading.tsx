@@ -22,7 +22,7 @@ export default function HrSafetyLoading() {
           <Skeleton className="h-9 w-20 rounded-none" />
           <Skeleton className="h-9 w-20 rounded-none" />
         </div>
-        <DataTableSkeleton rows={12} columns={6} />
+        <DataTableSkeleton rows={12} headers={["Incident #", "Type", "Severity", "Status", "Location", "When"]} />
       </div>
     </PageWrapper>
   );

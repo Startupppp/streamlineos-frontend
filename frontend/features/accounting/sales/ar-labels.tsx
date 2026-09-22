@@ -6,8 +6,11 @@ import type {
   PartyRole,
   SupplyNature,
   TaxCategory,
-} from "@/types/accounting-ar";
-import type { AgingBucketKey, ArReceiptStatus } from "@/types/accounting-ar-receipts";
+} from "@/types/accounting/accounting-ar";
+import type {
+  AgingBucketKey,
+  ArReceiptStatus,
+} from "@/types/accounting/accounting-ar-receipts";
 
 const DOCUMENT_STATUS_LABEL: Readonly<Record<ArDocumentStatus, string>> = {
   DRAFT: "Draft",
@@ -25,7 +28,10 @@ const DOCUMENT_STATUS_TONE: Readonly<Record<ArDocumentStatus, StatusTone>> = {
   VOID: "danger",
 };
 
-export const DOCUMENT_STATUS_OPTIONS: ReadonlyArray<{ value: ArDocumentStatus; label: string }> = [
+export const DOCUMENT_STATUS_OPTIONS: ReadonlyArray<{
+  value: ArDocumentStatus;
+  label: string;
+}> = [
   { value: "DRAFT", label: DOCUMENT_STATUS_LABEL.DRAFT },
   { value: "POSTED", label: DOCUMENT_STATUS_LABEL.POSTED },
   { value: "PARTIALLY_PAID", label: DOCUMENT_STATUS_LABEL.PARTIALLY_PAID },
@@ -52,7 +58,13 @@ export function ArStatusBadge({
   return (
     <Badge
       variant="outline"
-      className={cn("h-5 px-2 py-0.5 text-micro", tone.surface, tone.ink, tone.rule, className)}
+      className={cn(
+        "h-5 px-2 py-0.5 text-micro",
+        tone.surface,
+        tone.ink,
+        tone.rule,
+        className,
+      )}
     >
       {DOCUMENT_STATUS_LABEL[status]}
     </Badge>
@@ -80,7 +92,13 @@ export function ReceiptStatusBadge({
   return (
     <Badge
       variant="outline"
-      className={cn("h-5 px-2 py-0.5 text-micro", tone.surface, tone.ink, tone.rule, className)}
+      className={cn(
+        "h-5 px-2 py-0.5 text-micro",
+        tone.surface,
+        tone.ink,
+        tone.rule,
+        className,
+      )}
     >
       {RECEIPT_STATUS_LABEL[status]}
     </Badge>
@@ -93,7 +111,10 @@ export const PARTY_ROLE_LABEL: Readonly<Record<PartyRole, string>> = {
   both: "Customer and supplier",
 };
 
-export const TAX_CATEGORY_OPTIONS: ReadonlyArray<{ value: TaxCategory; label: string }> = [
+export const TAX_CATEGORY_OPTIONS: ReadonlyArray<{
+  value: TaxCategory;
+  label: string;
+}> = [
   { value: "standard", label: "Standard rate" },
   { value: "reduced", label: "Reduced rate" },
   { value: "super_reduced", label: "Super reduced rate" },
@@ -103,7 +124,10 @@ export const TAX_CATEGORY_OPTIONS: ReadonlyArray<{ value: TaxCategory; label: st
   { value: "reverse_charge", label: "Reverse charge" },
 ];
 
-export const SUPPLY_NATURE_OPTIONS: ReadonlyArray<{ value: SupplyNature; label: string }> = [
+export const SUPPLY_NATURE_OPTIONS: ReadonlyArray<{
+  value: SupplyNature;
+  label: string;
+}> = [
   { value: "domestic_b2b", label: "Domestic business" },
   { value: "domestic_b2c", label: "Domestic consumer" },
   { value: "export", label: "Export" },

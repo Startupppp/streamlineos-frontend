@@ -16,6 +16,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useHrWebhookDeliveries,
@@ -120,7 +121,9 @@ function DeliveryRow({
 }
 
 export function WebhookDeliveriesSheet({ open, onOpenChange, subscription }: Props) {
-  const { data: deliveries, isLoading } = useHrWebhookDeliveries(subscription.id);
+  const { data: deliveries, isLoading, isError, error, refetch } = useHrWebhookDeliveries(subscription.id);
+
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -141,6 +144,16 @@ export function WebhookDeliveriesSheet({ open, onOpenChange, subscription }: Pro
               {Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} className="h-14 w-full rounded-md" />
               ))}
+            </div>
+          ) : isError ? (
+            <div className="flex items-center justify-center h-48">
+              <ErrorState
+                compact
+                className="border-0 bg-transparent shadow-none"
+                title="Couldn't load deliveries"
+                description={getErrorMessage(error)}
+                onRetry={handleRetry}
+              />
             </div>
           ) : !deliveries || deliveries.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 text-center text-sm text-muted-foreground">

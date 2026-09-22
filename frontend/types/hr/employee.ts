@@ -286,6 +286,9 @@ export interface OnboardEmployeeInput {
   gender?: string;
   designation: string;
   departmentId?: string;
+  reportingManagerUserId?: string;
+  topLevelRole?: boolean;
+  topLevelRoleReason?: string;
   role: string;
   employeeId?: string;
   joiningDate?: Date | string;
@@ -316,6 +319,10 @@ export interface BulkOnboardEmployeeRow {
   designation: string;
   departmentId?: string;
   department?: string;
+  reportingManagerUserId?: string;
+  reportingManagerEmail?: string;
+  topLevelRole?: boolean;
+  topLevelRoleReason?: string;
   role?: string;
   employeeId?: string;
   joiningDate?: string;

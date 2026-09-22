@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { ShieldAlert } from "lucide-react";
+import { AlertTriangle, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBuildNotificationUnreadCount } from "@/hooks/api/build/approvals";
 import {
@@ -14,6 +14,7 @@ import {
   isBuildNavModelEmpty,
 } from "@/lib/build/build-nav-model";
 import type { BuildNavDestination } from "@/lib/build/nav/build-nav-destination";
+import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { BuildAgentPulse } from "./build-agent-pulse";
 import { BuildSidebarSkeleton } from "./build-sidebar-skeleton";
@@ -52,8 +53,15 @@ function SectionLabel({
 export function BuildSidebar({ isCollapsed, onNavigate }: BuildSidebarProps) {
   const pathname = usePathname() ?? "";
   const view = useBuildNavView();
-  const { model, isAccessReady, isPinned, canPinMore, togglePin } =
-    useBuildNavModel();
+  const {
+    model,
+    isAccessReady,
+    isAccessError,
+    refetchAccess,
+    isPinned,
+    canPinMore,
+    togglePin,
+  } = useBuildNavModel();
   const { data: buildInbox } = useBuildNotificationUnreadCount();
   const identity = useBuildScopeIdentity(model.scope);
   const fallback = useBuildScopeRecovery({
@@ -63,14 +71,33 @@ export function BuildSidebar({ isCollapsed, onNavigate }: BuildSidebarProps) {
     parentKey: identity.ref.parentKey,
   });
 
-  if (!isAccessReady) return <BuildSidebarSkeleton isCollapsed={isCollapsed} />;
+  if (!isAccessReady) {
+    if (isAccessError)
+      return isCollapsed ? (
+        <div className="px-1 py-2">
+          <AlertTriangle
+            role="img"
+            aria-label="Build navigation failed to load"
+            className="mx-auto h-5 w-5 text-destructive/70"
+          />
+        </div>
+      ) : (
+        <ErrorState
+          compact
+          title="Couldn't load Build navigation"
+          description="Check your connection and try again."
+          onRetry={refetchAccess}
+        />
+      );
+    return <BuildSidebarSkeleton isCollapsed={isCollapsed} />;
+  }
   if (isBuildNavModelEmpty(model))
     return isCollapsed ? (
       <div className="px-1 py-2">
         <ShieldAlert
           role="img"
           aria-label="Build access required"
-          className="mx-auto h-5 w-5 text-muted-foreground/60"
+          className="mx-auto h-5 w-5 text-muted-foreground"
         />
       </div>
     ) : (

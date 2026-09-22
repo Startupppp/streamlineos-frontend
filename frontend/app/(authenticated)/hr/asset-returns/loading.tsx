@@ -8,7 +8,7 @@ export default function AssetReturnsLoading() {
       subtitle="Track and manage company asset returns from employees"
       actions={<div className="h-9 w-[130px]" />}
     >
-      <DataTableSkeleton rows={12} columns={5} className="flex-1 min-h-0" />
+      <DataTableSkeleton rows={12} headers={["Asset", "Employee", "Status", "Condition", "Date", ""]} className="flex-1 min-h-0" />
     </PageWrapper>
   );
 }

@@ -4,7 +4,7 @@ import { useCallback, type MouseEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useBuildRequestLeave } from "./build-dirty-state-context";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import {
   Tooltip,
   TooltipContent,
@@ -43,7 +43,7 @@ export function BuildNavLink({
   onNavigate,
 }: BuildNavLinkProps) {
   const prefetchOnIntent = useNavIntentPrefetch();
-  const requestLeave = useBuildRequestLeave();
+  const requestLeave = useNavigationLeave();
   const router = useRouter();
   const Icon = destination.icon;
   const hasBadge = badgeCount > 0;

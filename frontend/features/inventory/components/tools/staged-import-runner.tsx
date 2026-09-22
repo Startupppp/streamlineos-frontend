@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Progress } from "@/components/ui/progress";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { parseCsv, CsvParseError } from "@/lib/csv-parse";
 import { cn } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/design-tokens";
+import { useCanState } from "@/hooks/api/access";
 import {
   checksumOf,
   STAGE_CHUNK_SIZE,
@@ -64,6 +65,7 @@ export function StagedImportRunner({
   importType: StagedImportType;
   onDone: () => void;
 }) {
+  const importState = useCanState("inventory:import");
   const [phase, setPhase] = useState<Phase>("ready");
   const [progress, setProgress] = useState<StagedImportProgress | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
@@ -223,7 +225,9 @@ export function StagedImportRunner({
       {progress !== null && progress.failedRows > 0 ? (
         <div className="space-y-2">
           <p className="text-sm font-semibold">Rows the import rejected</p>
-          {errors.isError ? (
+          {importState === "denied" ? (
+            <NoPermissionState compact permission="inventory:import" />
+          ) : errors.isError ? (
             <ErrorState
               title="Couldn't load the rejected rows"
               description={getErrorMessage(errors.error)}
@@ -235,7 +239,7 @@ export function StagedImportRunner({
                 data={errors.data?.items ?? []}
                 columns={ERROR_COLUMNS}
                 getRowKey={(row) => row.rowNumber}
-                isLoading={errors.isLoading}
+                isLoading={errors.isPending}
                 emptyState={
                   <InventoryEmptyState
                     illustrationPreset="default"

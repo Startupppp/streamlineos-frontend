@@ -1,15 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, type ReactNode } from "react";
+import { useCallback, useMemo } from "react";
 import { useProjectAnalytics } from "@/hooks/api/build";
-import { useCanState } from "@/hooks/api/access";
-import { resolveGate } from "@/lib/rbac/gate";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { getErrorMessage } from "@/lib/get-error-message";
 import {
   AnalyticsKpiStrip,
   AnalyticsKpiStripSkeleton,
@@ -21,32 +18,27 @@ import {
   AssigneeCompletionChart,
   CycleVelocityChart,
   EstimateVsActualChart,
-  STATE_COLORS,
-  PRIORITY_COLORS,
 } from "@/features/build/analytics/project-charts";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
   PM_FILL_PANEL,
 } from "@/components/pm-chrome";
-import { TEXT_ONE_LINE } from "@/lib/text-overflow";
+import { ChartShell } from "./chart-shell";
+import {
+  buildStateData,
+  buildPriorityData,
+  buildVolumeData,
+  buildAssigneeData,
+  buildVelocityData,
+  buildEstimateData,
+} from "./analytics-chart-data";
 
 interface ProjectAnalyticsPageProps {
   projectId: number;
 }
 
-function ChartShell({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <PmPanel className="p-4">
-      <h3 className={`mb-3 text-sm font-semibold ${TEXT_ONE_LINE}`}>{title}</h3>
-      {children}
-    </PmPanel>
-  );
-}
-
 export function ProjectAnalyticsPage({ projectId }: ProjectAnalyticsPageProps) {
-  const access = useCanState("build:view");
   const {
     data: analytics,
     isLoading,
@@ -55,10 +47,11 @@ export function ProjectAnalyticsPage({ projectId }: ProjectAnalyticsPageProps) {
     refetch,
   } = useProjectAnalytics(projectId);
 
-  const gate = resolveGate({
-    access,
+  const pageState = usePageState({
+    permission: "build:view",
     isLoading,
     isError,
+    error,
     isEmpty: !analytics,
   });
 
@@ -66,134 +59,12 @@ export function ProjectAnalyticsPage({ projectId }: ProjectAnalyticsPageProps) {
     void refetch();
   }, [refetch]);
 
-  const stateData = useMemo(() => {
-    if (!analytics?.stateDistribution) return [];
-    return analytics.stateDistribution.map((row) => {
-      const state = row.status ?? "unknown";
-      return {
-        state: state
-          .replace(/_/g, " ")
-          .replace(/\b\w/g, (c: string) => c.toUpperCase()),
-        count: row.count,
-        fill: STATE_COLORS[state.toLowerCase()] ?? "#94a3b8",
-      };
-    });
-  }, [analytics?.stateDistribution]);
-
-  const priorityData = useMemo(() => {
-    if (!analytics?.priorityBreakdown) return [];
-    return analytics.priorityBreakdown.map((row) => {
-      const priority = row.priority ?? "none";
-      return {
-        name: priority.charAt(0).toUpperCase() + priority.slice(1),
-        value: row.count,
-        fill: PRIORITY_COLORS[priority.toLowerCase()] ?? "#94a3b8",
-      };
-    });
-  }, [analytics?.priorityBreakdown]);
-
-  const volumeData = useMemo(() => {
-    if (!analytics?.volumeOverTime) return [];
-    return analytics.volumeOverTime.map((entry) => ({
-      date: entry.week ?? "",
-      created: entry.count,
-    }));
-  }, [analytics?.volumeOverTime]);
-
-  const assigneeData = useMemo(() => {
-    if (!analytics?.assigneeCompletion) return [];
-    return analytics.assigneeCompletion.map((entry) => ({
-      name: entry.assigneeName ?? "Unassigned",
-      completed: entry.completed,
-      total: entry.total,
-      rate:
-        entry.total > 0 ? Math.round((entry.completed / entry.total) * 100) : 0,
-    }));
-  }, [analytics?.assigneeCompletion]);
-
-  const velocityData = useMemo(() => {
-    if (!analytics?.cycleVelocity) return [];
-    return analytics.cycleVelocity.map((entry) => ({
-      cycle: entry.cycleName ?? "Deleted cycle",
-      points: entry.completedPoints,
-    }));
-  }, [analytics?.cycleVelocity]);
-
-  const estimateData = useMemo(() => {
-    if (!analytics?.estimateVsActual) return [];
-    return analytics.estimateVsActual.map((entry) => ({
-      label: entry.title || `#${entry.ticketId}`,
-      estimate: entry.estimated ? parseFloat(entry.estimated) : 0,
-      actual: entry.actual,
-    }));
-  }, [analytics?.estimateVsActual]);
-
-  if (gate === "loading") {
-    return (
-      <PageWrapper
-        title="Analytics"
-        subtitle="Velocity, health, and ticket insights"
-      >
-        <PmPageShell>
-          <AnalyticsKpiStripSkeleton />
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-[296px] w-full rounded-xl" />
-            ))}
-          </div>
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
-  if (gate === "denied") {
-    return (
-      <PageWrapper
-        title="Analytics"
-        subtitle="Velocity, health, and ticket insights"
-      >
-        <PmPageShell>
-          <NoPermissionState permission="build:view" className={PM_FILL_PANEL} />
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
-  if (gate === "error") {
-    return (
-      <PageWrapper
-        title="Analytics"
-        subtitle="Velocity, health, and ticket insights"
-      >
-        <PmPageShell>
-          <ErrorState
-            className={PM_FILL_PANEL}
-            title="Couldn't load analytics"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
-  if (gate === "empty" || !analytics) {
-    return (
-      <PageWrapper
-        title="Analytics"
-        subtitle="Velocity, health, and ticket insights"
-      >
-        <PmPageShell>
-          <EmptyState
-            className={PM_FILL_PANEL}
-            illustrationPreset="chart"
-            title="No analytics yet"
-            description="Analytics will appear once your project has tickets."
-          />
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
+  const stateData = useMemo(() => buildStateData(analytics), [analytics]);
+  const priorityData = useMemo(() => buildPriorityData(analytics), [analytics]);
+  const volumeData = useMemo(() => buildVolumeData(analytics), [analytics]);
+  const assigneeData = useMemo(() => buildAssigneeData(analytics), [analytics]);
+  const velocityData = useMemo(() => buildVelocityData(analytics), [analytics]);
+  const estimateData = useMemo(() => buildEstimateData(analytics), [analytics]);
 
   return (
     <PageWrapper
@@ -201,8 +72,31 @@ export function ProjectAnalyticsPage({ projectId }: ProjectAnalyticsPageProps) {
       subtitle="Velocity, health, and ticket insights"
     >
       <PmPageShell>
+        <PageState
+          resolution={pageState}
+          className={PM_FILL_PANEL}
+          onRetry={handleRetry}
+          loading={
+            <>
+              <AnalyticsKpiStripSkeleton />
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-[296px] w-full rounded-xl" />
+                ))}
+              </div>
+            </>
+          }
+          empty={
+            <EmptyState
+              className={PM_FILL_PANEL}
+              illustrationPreset="chart"
+              title="No analytics yet"
+              description="Analytics will appear once your project has tickets."
+            />
+          }
+        >
         <PmSection index={0}>
-          <AnalyticsKpiStrip analytics={analytics} />
+          {analytics ? <AnalyticsKpiStrip analytics={analytics} /> : null}
         </PmSection>
 
         <PmSection index={1}>
@@ -232,6 +126,7 @@ export function ProjectAnalyticsPage({ projectId }: ProjectAnalyticsPageProps) {
             </ChartShell>
           </div>
         </PmSection>
+        </PageState>
       </PmPageShell>
     </PageWrapper>
   );

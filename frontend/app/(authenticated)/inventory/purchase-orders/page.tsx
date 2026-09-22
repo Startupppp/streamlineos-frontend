@@ -32,9 +32,9 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { formatShortDate } from "@/lib/date-utils";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyOrdersIllustration, EmptySearchIllustration } from "@/components/illustrations";
@@ -50,7 +50,7 @@ import {
   type ListFilterSpec,
 } from "@/components/list-view";
 import type { PurchaseOrderStatus, PurchaseOrderSummary } from "@/types/inventory";
-import { useCan } from "@/hooks/api/access";
+
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All statuses" },
@@ -278,7 +278,6 @@ const PURCHASE_ORDER_FILTERS: ListFilterSpec = {
 const ALL = "all";
 
 export default function PurchaseOrdersListPage() {
-  const canView = useCan("inventory:purchase-orders:read");
   const router = useRouter();
   const filters = useListFilterParams(PURCHASE_ORDER_FILTERS);
 
@@ -315,6 +314,13 @@ export default function PurchaseOrdersListPage() {
     pageSize: 50,
     status: resolvedStatus,
     vendorId: resolvedVendorId,
+  });
+
+  const pageState = usePageState({
+    permission: "inventory:purchase-orders:read",
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
   });
 
   const allItems = query.data?.items ?? [];
@@ -379,13 +385,15 @@ export default function PurchaseOrdersListPage() {
     </div>
   );
 
-  if (!canView)
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper
         title="Purchase Orders"
         subtitle="Track and manage orders sent to your suppliers."
       >
-        <NoPermissionState permission="inventory:purchase-orders:read" className="flex-1" />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
 
@@ -419,29 +427,25 @@ export default function PurchaseOrdersListPage() {
           onRowClick={handleRowClick}
           isLoading={query.isLoading}
           emptyState={
-            query.error ? (
-              <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} compact />
-            ) : (
-              <InventoryEmptyState
-                illustration={
-                  hasFilters ? <EmptySearchIllustration /> : <EmptyOrdersIllustration />
-                }
-                title={hasFilters ? "No orders found" : "No purchase orders yet"}
-                description={
-                  hasFilters
-                    ? "No results match your current filters."
-                    : "Create your first purchase order to start ordering from suppliers. Workflow: Create Vendor → New PO → Receive Stock."
-                }
-                action={
-                  hasFilters
-                    ? { label: "Clear filters", onClick: handleClearFilters }
-                    : hasNoVendors
-                      ? { label: "Create a vendor first", href: "/inventory/vendors/new" }
-                      : { label: "New PO", href: "/inventory/purchase-orders/new" }
-                }
-                compact
-              />
-            )
+            <InventoryEmptyState
+              illustration={
+                hasFilters ? <EmptySearchIllustration /> : <EmptyOrdersIllustration />
+              }
+              title={hasFilters ? "No orders found" : "No purchase orders yet"}
+              description={
+                hasFilters
+                  ? "No results match your current filters."
+                  : "Create your first purchase order to start ordering from suppliers. Workflow: Create Vendor → New PO → Receive Stock."
+              }
+              action={
+                hasFilters
+                  ? { label: "Clear filters", onClick: handleClearFilters }
+                  : hasNoVendors
+                    ? { label: "Create a vendor first", href: "/inventory/vendors/new" }
+                    : { label: "New PO", href: "/inventory/purchase-orders/new" }
+              }
+              compact
+            />
           }
           pagination={
             totalPages > 1

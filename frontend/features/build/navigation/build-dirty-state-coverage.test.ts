@@ -1,14 +1,14 @@
 import { readdirSync, readFileSync } from "node:fs";
-import { join, resolve, relative } from "node:path";
+import { basename, join, resolve, relative } from "node:path";
 
 const FEATURES_BUILD_DIR = resolve(process.cwd(), "features", "build");
 
-function walkTsxFiles(dir: string): string[] {
+function walkSourceFiles(dir: string): string[] {
   const out: string[] = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...walkTsxFiles(full));
-    else if (entry.name.endsWith(".tsx") && !entry.name.endsWith(".test.tsx"))
+    if (entry.isDirectory()) out.push(...walkSourceFiles(full));
+    else if (/\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name))
       out.push(full);
   }
   return out;
@@ -25,18 +25,37 @@ interface FileSummary {
   hasRegistration: boolean;
 }
 
+const REGISTRATION_CALL = /\buseRegisterDirtyState\s*\(/;
+
 function buildSummaries(): FileSummary[] {
-  return walkTsxFiles(FEATURES_BUILD_DIR).map((absPath) => {
-    const source = readFileSync(absPath, "utf8");
-    return {
-      relPath: rel(absPath),
-      absPath,
-      isFormOwner:
-        source.includes('from "react-hook-form"') &&
-        /\buseForm\s*[<(]/.test(source),
-      hasRegistration: /\buseRegisterBuildDirtyState\s*\(/.test(source),
-    };
-  });
+  const files = walkSourceFiles(FEATURES_BUILD_DIR).map((absPath) => ({
+    absPath,
+    relPath: rel(absPath),
+    source: readFileSync(absPath, "utf8"),
+  }));
+
+  function isRegisteredByAConsumer(absPath: string): boolean {
+    const stem = basename(absPath).replace(/\.tsx?$/, "");
+    const importsThisModule = new RegExp(`from "[^"]*/${stem}"`);
+    return files.some(
+      (candidate) =>
+        candidate.absPath !== absPath &&
+        candidate.absPath.endsWith(".tsx") &&
+        importsThisModule.test(candidate.source) &&
+        REGISTRATION_CALL.test(candidate.source),
+    );
+  }
+
+  return files.map((file) => ({
+    relPath: file.relPath,
+    absPath: file.absPath,
+    isFormOwner:
+      file.source.includes('from "react-hook-form"') &&
+      /\buseForm\s*[<(]/.test(file.source),
+    hasRegistration:
+      REGISTRATION_CALL.test(file.source) ||
+      isRegisteredByAConsumer(file.absPath),
+  }));
 }
 
 const summaries = buildSummaries().filter((s) => s.isFormOwner);
@@ -73,11 +92,15 @@ describe("BSN-04-A03 every Build RHF form owner registers with the shared dirty-
     expect(rhfFormOwners.length).toBeGreaterThan(30);
   });
 
+  it("walks .ts hook files too, so a component delegating useForm to a sibling hook cannot hide from this ratchet the way create-ticket-dialog did", () => {
+    expect(rhfFormOwners.some((f) => f.endsWith(".ts"))).toBe(true);
+  });
+
   it("finds more registered surfaces than named exclusions, so the test cannot be trivially satisfied by excluding everything", () => {
     expect(registeredSurfaces.length).toBeGreaterThan(ALL_EXPLICIT_EXCLUSIONS.size);
   });
 
-  it("every RHF form owner not in a named exclusion set calls useRegisterBuildDirtyState, so a scope switch prompts rather than discarding typed content", () => {
+  it("every RHF form owner not in a named exclusion set calls useRegisterDirtyState, so a scope switch prompts rather than discarding typed content", () => {
     const ungated = unregisteredSurfaces.filter(
       (f) => !ALL_EXPLICIT_EXCLUSIONS.has(f),
     );

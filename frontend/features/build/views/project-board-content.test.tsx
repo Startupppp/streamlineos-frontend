@@ -17,8 +17,18 @@ jest.mock("framer-motion", () => ({
 
 jest.mock("next/dynamic", () => () => () => null);
 
+let mockScopes: Record<string, boolean> = { "build:tickets:view": true };
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => false,
+  useAccess: () => ({
+    data: { isOrgOwner: false, scopes: mockScopes, modules: {} },
+    isLoading: false,
+  }),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
 }));
 
 jest.mock("./table-view", () => ({ TableView: () => null }));
@@ -60,6 +70,8 @@ jest.mock("@/lib/utils", () => ({
 }));
 
 import { ProjectBoardContent } from "./project-board-content";
+import { VIEW_TYPES } from "@/lib/build/view-types";
+import type { ViewType } from "@/lib/build/view-types";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
 import type { FilterState as WorkloadFilterState } from "./workload-types";
 import type { ProjectStatus, BoardMember } from "./use-board-url-state";
@@ -143,8 +155,29 @@ function buildBaseProps(
     isTruncated: truncation.isTruncated,
     isFetchingMore: truncation.isFetchingMore ?? false,
     onLoadMore: truncation.onLoadMore ?? noop,
+    isLoading: false,
+    isError: false,
+    error: undefined as unknown,
+    onRetry: noop,
   };
 }
+
+beforeEach(() => {
+  mockScopes = { "build:tickets:view": true };
+});
+
+describe("ProjectBoardContent — render-ladder exhaustiveness", () => {
+  it.each([...VIEW_TYPES])(
+    "view=%s is handled by the render switch and does not throw",
+    (view) => {
+      expect(() => {
+        render(
+          <ProjectBoardContent {...buildBaseProps()} view={view as ViewType} />,
+        );
+      }).not.toThrow();
+    },
+  );
+});
 
 describe("ProjectBoardContent — truncation notice", () => {
   beforeEach(() => {
@@ -177,5 +210,48 @@ describe("ProjectBoardContent — truncation notice", () => {
     await userEvent.click(screen.getByRole("button", { name: /load more/i }));
 
     expect(onLoadMore).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("ProjectBoardContent — the ticket query's loading, error, empty and denied states all resolve through usePageState", () => {
+  it("renders a denied state instead of an empty board when the viewer lacks build:tickets:view", () => {
+    mockScopes = {};
+
+    render(<ProjectBoardContent {...buildBaseProps()} />);
+
+    expect(screen.getByRole("heading", { name: /access restricted/i })).toBeInTheDocument();
+    expect(screen.getByText("build:tickets:view")).toBeInTheDocument();
+  });
+
+  it("renders the filtered-empty panel through the empty slot rather than a bare early return", () => {
+    render(
+      <ProjectBoardContent {...buildBaseProps()} showEmptyFilterState />,
+    );
+
+    expect(screen.getByText("No tickets match your filters")).toBeInTheDocument();
+  });
+
+  it("renders the ticket query's error with a retry, so a 500 is not shown as an empty board", async () => {
+    const onRetry = jest.fn();
+
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps()}
+        isError
+        error={new Error("boom")}
+        onRetry={onRetry}
+      />,
+    );
+
+    expect(screen.getByText(/boom/i)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /retry|try again/i }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not render any view pane while the ticket query is still loading", () => {
+    render(<ProjectBoardContent {...buildBaseProps()} isLoading />);
+
+    expect(screen.queryByText("No tickets match your filters")).not.toBeInTheDocument();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 });
