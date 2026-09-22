@@ -41,14 +41,15 @@ import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { COMPANY_LAYOUT } from "@/lib/renderer/crm/company-layout";
 import { withColumns } from "@/lib/renderer/layout-adjustment";
 import { useLeadLayout } from "@/features/crm/leads/use-lead-layout";
-import { useCan, useCanState } from "@/hooks/api/access";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { Customer360Section } from "@/features/crm/shared/customer-360-section";
 import { Customer360Timeline } from "@/features/crm/shared/customer-360-timeline";
 import { formatCurrency } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
 
 /** How this panel frames a lead: who they are, where they are, and how they arrived. */
 const RELATED_LEAD_COLUMNS = ["name", "email", "status", "priority", "source"] as const;
@@ -158,32 +159,23 @@ export default function CompanyDetailPage({
 
   const handleRetryRelatedLeads = useCallback(() => { void refetchRelatedLeads(); }, [refetchRelatedLeads]);
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
-  if (useCanState("crm:organizations:view") === "denied")
-    return <NoPermissionState permission="crm:organizations:view" />;
+  const pageState = usePageState({
+    permission: "crm:organizations:view",
+    isLoading: orgLoading,
+    isError: orgError,
+    error: orgDetailError,
+  });
 
-  if (orgLoading) return <DetailPageSkeleton />;
-
-  if (orgError) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
-      <PageWrapper title="Company" subtitle="" backHref="/crm/companies">
-        <ErrorState
-          description={getErrorMessage(orgDetailError)}
-          onRetry={handleRefetchOrg}
-          className="flex-1"
-        />
+      <PageWrapper title="Company" backHref="/crm/companies">
+        <PageState resolution={pageState} loading={null} onRetry={handleRefetchOrg} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
+
+  if (pageState.kind === "loading") return <DetailPageSkeleton />;
 
   if (!org) {
     return (

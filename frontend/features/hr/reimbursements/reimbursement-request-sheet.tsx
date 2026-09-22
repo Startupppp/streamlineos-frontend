@@ -1,11 +1,22 @@
 "use client";
 
 import { useCallback, useRef, useState, type ChangeEvent } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Upload, FileText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -18,11 +29,15 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCreateReimbursement } from "@/hooks/api/hr";
 import { useUploadFile } from "@/hooks/api/use-upload-file";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { CATEGORIES, MAX_RECEIPT_BYTES } from "./reimbursement-status";
 import {
-  CATEGORIES,
-  MAX_RECEIPT_BYTES,
-  isValidOtherLabel,
-} from "./reimbursement-status";
+  REIMBURSEMENT_DEFAULTS,
+  REIMBURSEMENT_MAX_AMOUNT,
+  REIMBURSEMENT_MIN_AMOUNT,
+  reimbursementSchema,
+  resolvedReimbursementCategory,
+  type ReimbursementFormValues,
+} from "./reimbursement-schema";
 
 interface ReimbursementRequestSheetProps {
   open: boolean;
@@ -35,37 +50,29 @@ export function ReimbursementRequestSheet({
 }: ReimbursementRequestSheetProps) {
   const create = useCreateReimbursement();
   const uploadFile = useUploadFile();
+  const form = useForm<ReimbursementFormValues>({
+    resolver: zodResolver(reimbursementSchema),
+    defaultValues: REIMBURSEMENT_DEFAULTS,
+    mode: "onChange",
+  });
+  const category = form.watch("category");
 
-  const [category, setCategory] = useState("Travel");
-  const [customCategory, setCustomCategory] = useState("");
-  const [amount, setAmount] = useState("");
-  const [description, setDescription] = useState("");
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const [receiptFileName, setReceiptFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetForm = useCallback(() => {
-    setCategory("Travel");
-    setCustomCategory("");
-    setAmount("");
-    setDescription("");
+    form.reset(REIMBURSEMENT_DEFAULTS);
     setReceiptUrl(null);
     setReceiptFileName(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
-  }, []);
+  }, [form]);
 
   const handleSheetOpenChange = useCallback((open: boolean) => {
     if (!open) resetForm();
     onOpenChange(open);
-  }, [resetForm]);
+  }, [resetForm, onOpenChange]);
 
-  const handleAmountChange = useCallback((e: ChangeEvent<HTMLInputElement>) => setAmount(e.target.value), []);
-  const handleDescriptionChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value), []);
-  const handleCustomCategoryChange = useCallback((e: ChangeEvent<HTMLInputElement>) => setCustomCategory(e.target.value), []);
-  const handleCategoryChange = useCallback((value: string) => {
-    setCategory(value);
-    if (value !== "Other") setCustomCategory("");
-  }, []);
   const handleClickUpload = useCallback(() => fileInputRef.current?.click(), []);
   const handleRemoveReceipt = useCallback(() => {
     setReceiptUrl(null);
@@ -93,31 +100,12 @@ export function ReimbursementRequestSheet({
     );
   }, [uploadFile]);
 
-  const handleCreate = useCallback(() => {
-    const numAmount = Number(amount);
-    if (!amount || numAmount <= 0) { toast.error("Valid amount is required"); return; }
-    if (numAmount < 1) { toast.error("Amount must be at least ₹1"); return; }
-    if (numAmount > 999999) { toast.error("Amount must be at most ₹9,99,999"); return; }
-
-    let resolvedCategory = category;
-    if (category === "Other") {
-      const other = customCategory.trim().replace(/\s+/g, " ");
-      if (!other) {
-        toast.error("Please describe what the other category is");
-        return;
-      }
-      if (!isValidOtherLabel(other)) {
-        toast.error("Category can only use letters, numbers, spaces, apostrophes, periods, and hyphens");
-        return;
-      }
-      resolvedCategory = other;
-    }
-
+  const handleCreate = useCallback((values: ReimbursementFormValues) => {
     create.mutate(
       {
-        category: resolvedCategory,
-        amount: numAmount,
-        description: description || undefined,
+        category: resolvedReimbursementCategory(values),
+        amount: Number(values.amount),
+        description: values.description || undefined,
         receiptUrl: receiptUrl || undefined,
       },
       {
@@ -129,72 +117,104 @@ export function ReimbursementRequestSheet({
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [category, customCategory, amount, description, receiptUrl, create, resetForm]);
+  }, [receiptUrl, create, onOpenChange, resetForm]);
 
   return (
       <HrSheet
         open={open}
         onOpenChange={handleSheetOpenChange}
-        title="Submit Reimbursement"
-        onSubmit={handleCreate}
-        submitLabel="Submit"
+        title="Submit reimbursement"
+        onSubmit={form.handleSubmit(handleCreate)}
+        submitLabel="Submit reimbursement"
         isPending={create.isPending || uploadFile.isPending}
+        isDirty={form.formState.isDirty}
+        onDiscard={resetForm}
       >
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Category</label>
-          <Select value={category} onValueChange={handleCategoryChange}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-              {CATEGORIES.map((c) => (
-                <SelectItem key={c} value={c}>{c}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Form {...form}>
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category</FormLabel>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                  {CATEGORIES.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {category === "Other" && (
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">
-              What is the other category? <span className="text-destructive">*</span>
-            </label>
-            <Input
-              placeholder="e.g. Client entertainment, Team offsite"
-              value={customCategory}
-              onChange={handleCustomCategoryChange}
-            />
-            <p className="text-dense text-muted-foreground">
-              Letters, numbers, spaces, apostrophes, periods, and hyphens only.
-            </p>
-          </div>
+          <FormField
+            control={form.control}
+            name="customCategory"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  What is the other category? <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. Client entertainment, Team offsite" {...field} />
+                </FormControl>
+                <FormDescription>Letters, numbers, spaces, apostrophes, periods, and hyphens only.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         )}
 
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">
-            Amount (₹) <span className="text-destructive">*</span>
-          </label>
-          <Input
-            type="number"
-            min="1"
-            max="999999"
-            step="0.01"
-            placeholder="0.00"
-            value={amount}
-            onChange={handleAmountChange}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Description</label>
-          <Textarea
-            placeholder="Details about the expense..."
-            value={description}
-            onChange={handleDescriptionChange}
-            rows={3}
-            maxLength={1000}
-            className="resize-none w-full"
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="amount"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Amount (₹) <span className="text-destructive">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  inputMode="decimal"
+                  min={REIMBURSEMENT_MIN_AMOUNT}
+                  max={REIMBURSEMENT_MAX_AMOUNT}
+                  step="0.01"
+                  placeholder="0.00"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Details about the expense..."
+                  rows={3}
+                  maxLength={1000}
+                  className="resize-none w-full"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Receipt</label>
           {!receiptUrl ? (
@@ -242,6 +262,7 @@ export function ReimbursementRequestSheet({
             aria-label="Upload receipt"
           />
         </div>
+        </Form>
       </HrSheet>
   );
 }

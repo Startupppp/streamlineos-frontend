@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useCallback } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { motion, useReducedMotion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,8 +31,16 @@ export const ListViewItem = memo(function ListViewItem({
   displayOptions,
   dragHandleProps,
   isDragging,
+  isSelected,
+  onSelect,
 }: ListViewItemProps) {
   const handleClick = useCallback(() => onClick(ticket.id), [onClick, ticket.id]);
+  const handleSelectChange = useCallback(
+    (v: boolean | "indeterminate") => {
+      onSelect?.(ticket.id, v === true);
+    },
+    [onSelect, ticket.id],
+  );
   const shouldReduceMotion = useReducedMotion();
   const { iconRef: chevronIconRef, hoverHandlers: chevronHoverHandlers } = useAnimatedIcon();
   const canUpdate = useCan("build:tickets:update");
@@ -66,6 +75,15 @@ export const ListViewItem = memo(function ListViewItem({
           : { x: 1 }
       }
     >
+      {onSelect !== undefined && (
+        <div className="flex-shrink-0 pl-2 pr-0.5">
+          <Checkbox
+            checked={isSelected ?? false}
+            onCheckedChange={handleSelectChange}
+            aria-label={`Select ${ticket.title ?? "ticket"}`}
+          />
+        </div>
+      )}
       {hasDragHandle && (
         <div
           {...dragHandleProps}

@@ -4,7 +4,11 @@ import { useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { startOfMonth } from "date-fns";
 import { formatDateOnly, getTodayString } from "@/lib/date-utils";
-import type { AgingBasis, AgingSide, LabelMode } from "@/types/accounting-reports";
+import type {
+  AgingBasis,
+  AgingSide,
+  LabelMode,
+} from "@/types/accounting/accounting-reports";
 
 export interface ReportControls {
   labelMode: LabelMode;
@@ -43,7 +47,9 @@ export function useReportControls(): ReportControls {
       if (value === null) params.delete(key);
       else params.set(key, value);
       const query = params.toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      router.replace(query ? `${pathname}?${query}` : pathname, {
+        scroll: false,
+      });
     },
     [pathname, router, searchParams],
   );
@@ -52,9 +58,18 @@ export function useReportControls(): ReportControls {
     (mode: LabelMode) => setParam("labels", mode === "founder" ? null : mode),
     [setParam],
   );
-  const setAsOf = useCallback((value: string) => setParam("asOf", value || null), [setParam]);
-  const setFrom = useCallback((value: string) => setParam("from", value || null), [setParam]);
-  const setTo = useCallback((value: string) => setParam("to", value || null), [setParam]);
+  const setAsOf = useCallback(
+    (value: string) => setParam("asOf", value || null),
+    [setParam],
+  );
+  const setFrom = useCallback(
+    (value: string) => setParam("from", value || null),
+    [setParam],
+  );
+  const setTo = useCallback(
+    (value: string) => setParam("to", value || null),
+    [setParam],
+  );
   const setComparative = useCallback(
     (value: boolean) => setParam("comparative", value ? "1" : null),
     [setParam],

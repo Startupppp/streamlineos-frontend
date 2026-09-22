@@ -5,16 +5,18 @@ import { toast } from "sonner";
 import { ShieldAlert, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { useProjectRisks, useCreateRisk, useUpdateRisk, useDeleteRisk, useProjectMembers } from "@/hooks/api/build";
+import { useProjectRisks, useProjectRiskStats, useCreateRisk, useUpdateRisk, useDeleteRisk, useProjectMembers, GOVERNANCE_PAGE_SIZE } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { getUserDisplayName } from "@/lib/person-display";
 import type { Risk, RiskStatus, RiskProbability, RiskImpact, CreateRiskInput, UpdateRiskInput } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -110,9 +112,14 @@ export function RisksPage({ projectId }: RisksPageProps) {
   const [editRisk, setEditRisk] = useState<Risk | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Risk | null>(null);
 
-  const { data, isLoading, isError, refetch } = useProjectRisks(projectId, {
+  const pager = useCursorPager(statusFilter);
+  const { data, isLoading, isError, error, refetch } = useProjectRisks(projectId, {
     status: statusFilter !== "all" ? statusFilter : undefined,
+    cursor: pager.cursor === undefined ? undefined : Number(pager.cursor),
   });
+  const { data: stats, isLoading: isStatsLoading } = useProjectRiskStats(projectId);
+
+  const pageState = usePageState({ permission: "build:risks:view", isLoading, isError, error });
   const { data: members = [] } = useProjectMembers(projectId);
 
   const createRisk = useCreateRisk(projectId);
@@ -125,16 +132,13 @@ export function RisksPage({ projectId }: RisksPageProps) {
     return getUserDisplayName(m) || userId;
   }, [members]);
 
-  const allRisks = useMemo(() => data ?? [], [data]);
-  const openCount = allRisks.filter((r) => r.status === "open").length;
-  const highCritCount = allRisks.filter((r) => {
-    const { label } = getRiskSeverity(r.probability, r.impact);
-    return label === "High" || label === "Critical";
-  }).length;
-  const closedCount = allRisks.filter((r) => r.status === "closed").length;
+  const filteredRisks = useMemo(() => data?.data ?? [], [data]);
+  const openCount = stats?.open ?? 0;
+  const highCritCount = stats?.highCritical ?? 0;
+  const closedCount = stats?.closed ?? 0;
 
   const displayed = useMemo(() => {
-    let items = allRisks;
+    let items = filteredRisks;
     if (matrixCell) {
       items = items.filter((r) => r.probability === matrixCell.probability && r.impact === matrixCell.impact);
     }
@@ -143,7 +147,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
       items = items.filter((r) => r.title.toLowerCase().includes(q) || `risk-${r.riskNumber}`.includes(q));
     }
     return items;
-  }, [allRisks, matrixCell, search]);
+  }, [filteredRisks, matrixCell, search]);
 
   function handleCreate(input: CreateRiskInput) {
     createRisk.mutate(input, {
@@ -177,6 +181,9 @@ export function RisksPage({ projectId }: RisksPageProps) {
     setMatrixCell(null);
   }, []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleNextPage = useCallback(() => {
+    pager.goNext(data?.nextCursor == null ? null : String(data.nextCursor));
+  }, [pager, data]);
   const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) setDeleteTarget(null); }, []);
   const handleSheetOpenChange = useCallback((open: boolean) => {
     if (!open) { setSheetOpen(false); setEditRisk(null); }
@@ -243,6 +250,16 @@ export function RisksPage({ projectId }: RisksPageProps) {
     },
   ], [canManage, memberName]);
 
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+    return (
+      <PageWrapper title="Risk Register" subtitle="Identify, assess, and mitigate project risks">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+  }
+
   const isFiltered = statusFilter !== "all" || !!search.trim() || !!matrixCell;
 
   const filtersBar = (
@@ -282,25 +299,23 @@ export function RisksPage({ projectId }: RisksPageProps) {
       <PmPageShell>
         <PmSection index={0} className="shrink-0">
           <StatCardGrid cols={3}>
-            <StatCard label="Open" value={openCount} icon={ShieldAlert} tone="default" isLoading={isLoading} />
-            <StatCard label="High / Critical" value={highCritCount} icon={AlertTriangle} tone="red" isLoading={isLoading} />
-            <StatCard label="Closed" value={closedCount} icon={CheckCircle2} tone="emerald" isLoading={isLoading} />
+            <StatCard label="Open" value={openCount} icon={ShieldAlert} tone="default" isLoading={isStatsLoading} />
+            <StatCard label="High / Critical" value={highCritCount} icon={AlertTriangle} tone="red" isLoading={isStatsLoading} />
+            <StatCard label="Closed" value={closedCount} icon={CheckCircle2} tone="emerald" isLoading={isStatsLoading} />
           </StatCardGrid>
         </PmSection>
 
-        {!isLoading && !isError ? (
+        {!isStatsLoading && pageState.kind !== "loading" ? (
           <PmSection index={1} className="shrink-0">
             <PmPanel className="p-3" solid>
-              <RiskMatrix risks={allRisks} onCellClick={handleCellClick} selectedCell={matrixCell} />
+              <RiskMatrix cells={stats?.matrix ?? []} onCellClick={handleCellClick} selectedCell={matrixCell} />
             </PmPanel>
           </PmSection>
         ) : null}
 
         <PmSection index={2} className="flex min-h-0 flex-1 flex-col">
-          {isLoading ? (
+          {isLoading || pageState.kind === "loading" ? (
             <DataTableSkeleton rows={12} columns={8} className="flex-1" />
-          ) : isError ? (
-            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : displayed.length === 0 ? (
             <EmptyState
               className={PM_FILL_PANEL}
@@ -318,6 +333,14 @@ export function RisksPage({ projectId }: RisksPageProps) {
                 getRowKey={(row) => row.id}
                 minWidth="780px"
                 className={PM_FILL_PANEL}
+                pagination={{
+                  mode: "cursor",
+                  pageSize: GOVERNANCE_PAGE_SIZE,
+                  hasMore: data?.hasMore ?? false,
+                  hasPrevious: pager.hasPrevious,
+                  onNext: handleNextPage,
+                  onPrevious: pager.goPrevious,
+                }}
               />
           )}
         </PmSection>

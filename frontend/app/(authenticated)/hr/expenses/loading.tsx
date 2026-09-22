@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function ExpensesLoading() {
   return (
     <PageWrapper
-      title="Expense Approvals"
+      title="Expense approvals"
       subtitle="Review and manage pending employee expense claims."
       actions={
         <div className="flex items-center gap-2">

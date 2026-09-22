@@ -20,7 +20,6 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 export type {
   LeaveBalance,
   LeaveType,
-  Approver,
   LeaveRequest,
   ApprovedLeave,
   WfhRequest,

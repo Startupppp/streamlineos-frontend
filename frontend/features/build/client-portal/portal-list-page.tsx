@@ -1,11 +1,10 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { usePortalProjects } from "@/hooks/api/build/client-portal";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarDays, ArrowRight } from "lucide-react";
@@ -21,6 +20,8 @@ import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatShortDate } from "@/lib/date-utils";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 
 function ProjectCardSkeleton() {
   return (
@@ -37,12 +38,64 @@ function ProjectCardSkeleton() {
   );
 }
 
+function LoadingGrid() {
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 9 }).map((_, i) => (
+        <ProjectCardSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
+
 export function PortalListPage() {
-  const { data, isLoading, isError, refetch } = usePortalProjects();
+  const { data, isLoading, isError, error, refetch } = usePortalProjects();
   const shouldReduceMotion = useReducedMotion();
+  const pageState = usePageState({
+    permission: "build:portal:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: (data?.length ?? 0) === 0,
+  });
 
   function handleRetry() {
     void refetch();
+  }
+
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  ) {
+    return (
+      <PageWrapper title="Client Portal" subtitle="Your projects and their current status">
+        <PmPageShell>
+          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+            <PageState
+              resolution={pageState}
+              loading={null}
+              onRetry={handleRetry}
+              className="flex-1"
+            >
+              {null}
+            </PageState>
+          </PmSection>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (pageState.kind === "loading") {
+    return (
+      <PageWrapper title="Client Portal" subtitle="Your projects and their current status">
+        <PmPageShell>
+          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+            <LoadingGrid />
+          </PmSection>
+        </PmPageShell>
+      </PageWrapper>
+    );
   }
 
   return (
@@ -52,21 +105,13 @@ export function PortalListPage() {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          {isLoading ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 9 }).map((_, i) => (
-                <ProjectCardSkeleton key={i} />
-              ))}
-            </div>
-          ) : isError ? (
-            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
-          ) : (data ?? []).length === 0 ? (
+          {pageState.kind === "empty" ? (
             <EmptyState
-                className={PM_FILL_PANEL}
-                illustrationPreset="projects"
-                title="No projects"
-                description="You don't have access to any projects yet. Contact your project manager."
-              />
+              className={PM_FILL_PANEL}
+              illustrationPreset="projects"
+              title="No projects"
+              description="You don't have access to any projects yet. Contact your project manager."
+            />
           ) : (
             <PmStaggerList className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {data?.map((project) => (

@@ -18,10 +18,8 @@ import {
   useKnowledgeGaps,
   useCreateKbPage,
 } from "@/hooks/api/kb";
-import { useCanState } from "@/hooks/api/access";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
-import { resolveGate } from "@/lib/rbac/gate";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { pageHref } from "@/lib/knowledge-routes";
 import {
   KbBarChart2Icon,
@@ -167,7 +165,6 @@ function AnalyticsSkeleton() {
 }
 
 export default function KnowledgeAnalyticsPage() {
-  const access = useCanState("kb:analytics:view");
   const { data: overview, isLoading: overviewLoading, isError: overviewError, error: overviewQueryError, refetch: refetchOverview } =
     useKbAnalyticsOverview();
   const { data: noResults = [], isLoading: noResultsLoading, isError: noResultsError, refetch: refetchNoResults } =
@@ -196,57 +193,31 @@ export default function KnowledgeAnalyticsPage() {
     );
   }
 
-  const gate = resolveGate({
-    access,
+  const pageState = usePageState({
+    permission: "kb:analytics:view",
     isLoading: overviewLoading || noResultsLoading || pagesLoading || gapsLoading,
     isError: overviewError || noResultsError || pagesError || gapsError,
-    isEmpty: false,
+    error: overviewQueryError,
+    isEmpty: !overview,
   });
-
-  if (gate === "loading") {
-    return (
-      <PageWrapper title="Analytics">
-        <AnalyticsSkeleton />
-      </PageWrapper>
-    );
-  }
-
-  if (gate === "denied") {
-    return (
-      <PageWrapper title="Analytics">
-        <NoPermissionState permission="kb:analytics:view" />
-      </PageWrapper>
-    );
-  }
-
-  if (gate === "error") {
-    return (
-      <PageWrapper title="Analytics">
-        <ErrorState
-          title="Couldn't load analytics"
-          description={getErrorMessage(overviewQueryError)}
-          onRetry={handleRetry}
-          className="flex-1"
-        />
-      </PageWrapper>
-    );
-  }
-
-  if (!overview) {
-    return (
-      <PageWrapper title="Analytics">
-        <ErrorState
-          title="Analytics didn't finish loading"
-          description="The request was interrupted before the figures arrived, so nothing here would be accurate."
-          onRetry={handleRetry}
-          className="flex-1"
-        />
-      </PageWrapper>
-    );
-  }
 
   return (
     <PageWrapper title="Analytics">
+      <PageState
+        resolution={pageState}
+        className="flex-1"
+        onRetry={handleRetry}
+        loading={<AnalyticsSkeleton />}
+        empty={
+          <ErrorState
+            title="Analytics didn't finish loading"
+            description="The request was interrupted before the figures arrived, so nothing here would be accurate."
+            onRetry={handleRetry}
+            className="flex-1"
+          />
+        }
+      >
+      {overview ? (
       <StatCardGrid cols={5} className="mb-4">
         <StatCard
           label="Help centre articles"
@@ -279,6 +250,7 @@ export default function KnowledgeAnalyticsPage() {
           tone="amber"
         />
       </StatCardGrid>
+      ) : null}
 
       <div className="space-y-4">
         <section className="space-y-2">
@@ -425,6 +397,7 @@ export default function KnowledgeAnalyticsPage() {
           )}
         </section>
       </div>
+      </PageState>
     </PageWrapper>
   );
 }

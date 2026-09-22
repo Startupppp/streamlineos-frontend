@@ -16,7 +16,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -134,7 +135,7 @@ export function PmWorkspacesPage() {
   const [deleteTarget, setDeleteTarget] = useState<PmWorkspace | null>(null);
   const [membersTarget, setMembersTarget] = useState<PmWorkspace | null>(null);
 
-  const { data, isLoading, isError, refetch } = usePmWorkspaces({
+  const { data, isLoading, isError, error, refetch } = usePmWorkspaces({
     cursor,
     limit: PAGE_SIZE,
     status: statusFilter !== "all" ? statusFilter : undefined,
@@ -151,6 +152,14 @@ export function PmWorkspacesPage() {
       (w) => w.name.toLowerCase().includes(q) || w.slug.toLowerCase().includes(q),
     );
   }, [data, search]);
+
+  const resolution = usePageState({
+    permission: "build:workspaces:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: displayed.length === 0,
+  });
 
   function handleCreate(input: CreatePmWorkspaceInput) {
     createWorkspace.mutate(input, {
@@ -347,21 +356,23 @@ export function PmWorkspacesPage() {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          {isLoading ? (
-            <DataTableSkeleton rows={12} columns={4} className="flex-1" />
-          ) : isError ? (
-            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
-          ) : displayed.length === 0 ? (
-            <EmptyState
-              className={PM_FILL_PANEL}
-              illustrationPreset="projects"
-              title="No PM workspaces yet"
-              description={isFiltered ? undefined : "Create a workspace to organize products, teams and projects."}
-              filtersActive={isFiltered}
-              onClearFilters={handleClearFilters}
-              action={canCreate && !isFiltered ? { label: "New Workspace", onClick: handleOpenCreate } : undefined}
-            />
-          ) : (
+          <PageState
+            resolution={resolution}
+            loading={<DataTableSkeleton rows={12} columns={4} className="flex-1" />}
+            empty={
+              <EmptyState
+                className={PM_FILL_PANEL}
+                illustrationPreset="projects"
+                title="No PM workspaces yet"
+                description={isFiltered ? undefined : "Create a workspace to organize products, teams and projects."}
+                filtersActive={isFiltered}
+                onClearFilters={handleClearFilters}
+                action={canCreate && !isFiltered ? { label: "New Workspace", onClick: handleOpenCreate } : undefined}
+              />
+            }
+            onRetry={handleRetry}
+            className={PM_FILL_PANEL}
+          >
             <>
               <DataTable
                 data={displayed}
@@ -381,7 +392,7 @@ export function PmWorkspacesPage() {
                 </div>
               ) : null}
             </>
-          )}
+          </PageState>
         </PmSection>
       </PmPageShell>
 

@@ -10,10 +10,11 @@ import {
   useProjectBoardTickets,
 } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PageState } from "@/components/shared/page-state";
 import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
@@ -30,6 +31,8 @@ import {
   PM_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { SearchInput } from "@/components/ui/search-input";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getUserDisplayName } from "@/lib/person-display";
 
 const TYPE_OPTS = [
@@ -77,6 +80,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
   const [attendeeId, setAttendeeId] = useState("");
   const [actionItemFilter, setActionItemFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<MeetingTemplate | null>(null);
 
@@ -90,7 +94,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
     [sprints],
   );
 
-  const { data, isLoading, isError, refetch } = useMeetings(projectId, {
+  const { data, isLoading, isError, error, refetch } = useMeetings(projectId, {
     type: typeFilter !== "all" ? typeFilter : undefined,
     status: statusFilter !== "all" ? statusFilter : undefined,
     dateFilter: dateFilter !== "all" ? (dateFilter as "today" | "this_week" | "upcoming" | "past") : undefined,
@@ -116,14 +120,14 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
 
   const displayed = useMemo(() => {
     const meetings = data ?? [];
-    if (!search.trim()) return meetings;
-    const q = search.toLowerCase();
+    if (!debouncedSearch.trim()) return meetings;
+    const q = debouncedSearch.toLowerCase();
     return meetings.filter(
       (m) =>
         m.title.toLowerCase().includes(q) ||
         `mtg-${m.meetingNumber}`.includes(q),
     );
-  }, [data, search]);
+  }, [data, debouncedSearch]);
 
   const isFiltered =
     typeFilter !== "all" ||
@@ -132,7 +136,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
     !!hostId ||
     !!attendeeId ||
     actionItemFilter !== "all" ||
-    !!search.trim();
+    !!debouncedSearch.trim();
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
@@ -194,6 +198,8 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
     void refetch();
   }, [refetch]);
 
+  const pageState = usePageState({ permission: "build:meetings:view", isLoading, isError, error });
+
   const memberOptions = useMemo(
     () =>
       projectMembers.map((m) => ({
@@ -221,6 +227,12 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
 
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
+      <SearchInput
+        value={search}
+        onValueChange={handleSearchChange}
+        placeholder="Search meetings…"
+        className="min-w-[12rem] sm:max-w-xs"
+      />
       <Select value={typeFilter} onValueChange={setTypeFilter}>
         <SelectTrigger className="w-36">
           <SelectValue />
@@ -316,6 +328,16 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
     />
   );
 
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+    return (
+      <PageWrapper title="Meetings" subtitle="Schedule meetings, standups, and retros for your project">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+  }
+
   return (
     <PageWrapper
       title="Meetings"
@@ -339,24 +361,15 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
         ) : null}
 
         <PmSection index={nextMeeting ? 1 : 0} className="flex min-h-0 flex-1 flex-col">
-          {isError ? (
-            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
-          ) : (
-            <DataTable
-                className={PM_FILL_PANEL}
-                data={displayed}
-                columns={columns}
-                getRowKey={(row) => row.id}
-                minWidth="1020px"
-                isLoading={isLoading}
-                search={{
-                  value: search,
-                  onChange: handleSearchChange,
-                  placeholder: "Search meetings…",
-                }}
-                emptyState={emptyStateNode}
-              />
-          )}
+          <DataTable
+            className={PM_FILL_PANEL}
+            data={displayed}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            minWidth="1020px"
+            isLoading={pageState.kind === "loading"}
+            emptyState={emptyStateNode}
+          />
         </PmSection>
       </PmPageShell>
 

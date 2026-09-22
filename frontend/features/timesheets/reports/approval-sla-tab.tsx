@@ -69,6 +69,8 @@ const COLUMNS: DataTableColumn<ApprovalSlaApprover>[] = [
   },
 ];
 
+const COLUMN_HEADERS = COLUMNS.map((column) => column.header);
+
 function getApproverRowKey(row: ApprovalSlaApprover): string {
   return row.approverId;
 }
@@ -114,7 +116,7 @@ export function ApprovalSlaTab({ params, enabled }: ApprovalSlaTabProps) {
         <div className="space-y-4">
           <StatCardGridSkeleton cols={4} count={4} />
           <Skeleton className="h-[72px] rounded-lg" />
-          <DataTableSkeleton rows={6} columns={3} />
+          <DataTableSkeleton rows={6} headers={COLUMN_HEADERS} />
         </div>
       }
     >

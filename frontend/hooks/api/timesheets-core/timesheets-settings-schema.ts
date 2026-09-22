@@ -11,6 +11,7 @@ export const timesheetSettingsContract = z.object({
   allowBackdatedEntries: z.boolean(),
   backdateLimitDays: z.number().nullable(),
   approvalMode: z.enum(["MANAGER", "AUTO", "MULTI_LEVEL"]),
+  approverSource: z.enum(["REPORTING_MANAGER", "PROJECT_MANAGER"]),
   clientApprovalEnabled: z.boolean(),
   lockAfterApproval: z.boolean(),
   lockAfterInvoice: z.boolean(),

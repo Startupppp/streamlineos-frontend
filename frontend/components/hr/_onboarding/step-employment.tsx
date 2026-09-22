@@ -17,6 +17,8 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DepartmentCombobox } from "@/components/hr/department-combobox";
+import { UserCombobox } from "@/components/ui/user-combobox";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useCan } from "@/hooks/api/access";
 import { USER_INVITE_ROLES } from "@/lib/constants/user-invite-roles";
 
@@ -29,6 +31,20 @@ interface StepEmploymentProps {
 
 export function StepEmployment({ form, departments }: StepEmploymentProps) {
   const canCreateDept = useCan("hr:employees:manage");
+  const topLevelRole = form.watch("topLevelRole") === true;
+
+  function handleTopLevelRoleChange(checked: boolean | "indeterminate") {
+    const isTopLevel = checked === true;
+    form.setValue("topLevelRole", isTopLevel, { shouldDirty: true });
+    if (isTopLevel) form.setValue("reportingManagerUserId", undefined, { shouldDirty: true });
+    else form.setValue("topLevelRoleReason", undefined, { shouldDirty: true });
+    void form.trigger(["reportingManagerUserId", "topLevelRole", "topLevelRoleReason"]);
+  }
+
+  function handleReportingManagerChange(userId: string) {
+    form.setValue("reportingManagerUserId", userId || undefined, { shouldDirty: true });
+    void form.trigger("reportingManagerUserId");
+  }
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -67,6 +83,56 @@ export function StepEmployment({ form, departments }: StepEmploymentProps) {
           </FormItem>
         )}
       />
+      <FormField
+        control={form.control}
+        name="reportingManagerUserId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Reports to {!topLevelRole && <span className="text-destructive">*</span>}</FormLabel>
+            <FormControl>
+              <UserCombobox
+                value={field.value ?? ""}
+                onChange={handleReportingManagerChange}
+                placeholder="Select reporting manager"
+                disabled={topLevelRole}
+              />
+            </FormControl>
+            <FormDescription className="text-xs">
+              Approves this employee&apos;s leave, time and expenses unless a policy overrides it.
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <div className="flex flex-col gap-3">
+        <FormField
+          control={form.control}
+          name="topLevelRole"
+          render={({ field }) => (
+            <FormItem className="flex items-center gap-2 space-y-0 pt-7">
+              <FormControl>
+                <Checkbox checked={field.value === true} onCheckedChange={handleTopLevelRoleChange} />
+              </FormControl>
+              <FormLabel className="text-sm font-normal cursor-pointer">Top-level role — no reporting manager</FormLabel>
+            </FormItem>
+          )}
+        />
+        {topLevelRole && (
+          <FormField
+            control={form.control}
+            name="topLevelRoleReason"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Reason <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. Founder and chief executive" {...field} value={field.value ?? ""} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+      </div>
       <FormField
         control={form.control}
         name="role"

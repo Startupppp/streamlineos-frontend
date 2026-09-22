@@ -1,11 +1,11 @@
 ﻿"use client";
 
 import { useCallback } from "react";
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { LayoutGrid, List, Kanban, Calendar, GitBranch } from "lucide-react";
+import { LAYOUT_TYPES, createViewSchema, type CreateViewForm } from "./create-view-schema";
 import {
   Form,
   FormField,
@@ -28,18 +28,10 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useCreateView } from "@/hooks/api/build";
 
-const LAYOUT_TYPES = ["board", "list", "table", "calendar", "gantt"] as const;
 const VISIBILITY_OPTIONS = [
   { value: "shared" as const, label: "Shared" },
   { value: "private" as const, label: "Personal" },
 ];
-
-const createViewSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  layoutType: z.enum(LAYOUT_TYPES).optional(),
-  visibility: z.enum(["shared", "private"]).optional(),
-});
-type CreateViewForm = z.infer<typeof createViewSchema>;
 
 const LAYOUT_META: Record<string, { icon: React.ReactNode; label: string }> = {
   board: { icon: <Kanban className="h-4 w-4" />, label: "Board" },
@@ -62,7 +54,7 @@ export function CreateViewSheet({ projectId, open, onOpenChange, onCreated }: Cr
     resolver: zodResolver(createViewSchema),
     defaultValues: { layoutType: "board", visibility: "shared" },
   });
-  useRegisterBuildDirtyState(open && form.formState.isDirty);
+  useRegisterDirtyState(open && form.formState.isDirty);
 
   const onSubmit = useCallback(
     (data: CreateViewForm) => {

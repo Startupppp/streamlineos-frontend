@@ -75,7 +75,7 @@ export function TicketPill({
       return;
     }
     if (entity.projectId)
-      router.push(`/build/${entity.projectId}?ticket=${entity.id}`);
+      router.push(`/build/${entity.projectId}/issues?ticket=${entity.id}`);
   }, [router, card?.href, entity.projectId, entity.id]);
 
   const handleStatusChange = useCallback(
@@ -206,7 +206,7 @@ export function CommentPill({ entity }: { entity: CommentEntityRef }) {
     },
   );
 
-  const href = `/build/${entity.projectId}?ticket=${entity.ticketId}&comment=${entity.id}`;
+  const href = `/build/${entity.projectId}/issues?ticket=${entity.ticketId}&comment=${entity.id}`;
   const label = ticket
     ? `Comment on ${formatTicketKey(ticket.projectKey, ticket.ticketNumber)}`
     : "Comment";

@@ -1,22 +1,25 @@
 "use client";
 
 import { use, useState, useCallback, useRef } from "react";
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useProject, useUpdateProject } from "@/hooks/api/build";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { updateProjectSettingsInputSchema } from "@/lib/validation/projects";
-import { z } from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { ProjectInfoSection } from "@/features/build/settings/project-info-section";
+import { PageState } from "@/components/shared/page-state";
+import {
+  ProjectInfoSection,
+  formSchema,
+} from "@/features/build/settings/project-info-section";
 import {
   MembersSelector,
   ReassignDialog,
@@ -41,7 +44,6 @@ interface PageProps {
   params: Promise<{ projectId: string }>;
 }
 
-const formSchema = updateProjectSettingsInputSchema.omit({ projectId: true });
 type FormValues = z.infer<typeof formSchema>;
 
 type SectionId =
@@ -82,7 +84,8 @@ export function ProjectSettingsPage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
   const router = useRouter();
-  const [activeSection, setActiveSection] = useState<SectionId>("general");
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
 
   const {
     data: project,
@@ -103,18 +106,25 @@ export function ProjectSettingsPage({ params }: PageProps) {
       ? {
           name: project.name || "",
           description: project.description || "",
-          status:
-            (project.status as "ACTIVE" | "COMPLETED" | "ARCHIVED") || "ACTIVE",
+          status: project.status ?? "ACTIVE",
           memberIds:
             project.members?.map((m: { userId: string }) => m.userId) || [],
         }
       : undefined,
   });
 
-  useRegisterBuildDirtyState(form.formState.isDirty);
+  useRegisterDirtyState(form.formState.isDirty);
 
   const isOwner = useCan("build:delete");
   const updateMutation = useUpdateProject();
+
+  const pageState = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: project === null,
+  });
 
   const [reassignDialog, setReassignDialog] = useState<{
     memberId: string;
@@ -124,6 +134,11 @@ export function ProjectSettingsPage({ params }: PageProps) {
   const reassignmentsRef = useRef<Record<string, string>>({});
   const pendingFieldChangeRef = useRef<(() => void) | null>(null);
 
+  const rawSection = searchParams.get("section") ?? "general";
+  const parsedSection: SectionId = isSectionId(rawSection) ? rawSection : "general";
+  const activeSection: SectionId =
+    parsedSection === "danger" && !isOwner ? "general" : parsedSection;
+
   const navSections: NavSection[] = isOwner
     ? [...BASE_NAV, DANGER_SECTION]
     : BASE_NAV;
@@ -131,11 +146,12 @@ export function ProjectSettingsPage({ params }: PageProps) {
   const handleSectionClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       const rawId = e.currentTarget.dataset.section;
-      if (rawId && isSectionId(rawId)) {
-        setActiveSection(rawId);
-      }
+      if (!rawId || !isSectionId(rawId)) return;
+      const next = new URLSearchParams(searchParams.toString());
+      next.set("section", rawId);
+      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
     },
-    [],
+    [router, pathname, searchParams],
   );
 
   const handleMemberRemoved = useCallback(
@@ -186,8 +202,8 @@ export function ProjectSettingsPage({ params }: PageProps) {
             toast.success("Project settings updated");
             router.push(`/build/${projectId}`);
           },
-          onError: (error) => {
-            toast.error(getErrorMessage(error));
+          onError: (mutationError) => {
+            toast.error(getErrorMessage(mutationError));
           },
         },
       );
@@ -195,215 +211,194 @@ export function ProjectSettingsPage({ params }: PageProps) {
     [updateMutation, projectId, router],
   );
 
-  if (isLoading) {
-    return (
-      <PageWrapper title="Settings">
-        <PmPageShell>
-          <div className="flex flex-col gap-4 pb-8 md:flex-row">
-            <div className="flex shrink-0 gap-0.5 border-b border-border pb-2 md:w-48 md:flex-col md:border-b-0 md:border-r md:pb-0 md:pr-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-8 w-24 rounded-md md:w-full" />
-              ))}
-            </div>
-            <div className="min-w-0 flex-1 space-y-3">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-          </div>
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper title="Settings">
-        <PmPageShell>
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load project settings"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
-  if (!project) {
-    return (
-      <PageWrapper title="Settings">
-        <PmPageShell>
-          <EmptyState
-            className="flex-1"
-            illustrationPreset="projects"
-            title="Project not found"
-            description="This project no longer exists, or you no longer have access to it."
-            action={{ label: "Back to projects", href: "/build" }}
-          />
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
   return (
-    <PageWrapper title="Settings" subtitle={project.name}>
+    <PageWrapper title="Settings" subtitle={project?.name}>
       <PmPageShell>
-        <div className="flex flex-col gap-4 pb-8 md:flex-row">
-          <PmSection index={0} className="w-full shrink-0 md:w-48">
-            <PmPanel className="p-1.5">
-              <nav
-                aria-label="Project settings"
-                className="flex w-full gap-0.5 overflow-x-auto md:flex-col md:overflow-visible [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-              >
-                {navSections.map((section) => (
-                  <button
-                    key={section.id}
-                    type="button"
-                    data-section={section.id}
-                    onClick={handleSectionClick}
-                    className={cn(
-                      "shrink-0 rounded-md px-3 py-2 text-left text-xs transition-colors",
-                      TEXT_ONE_LINE,
-                      section.id === "danger" &&
-                        "md:mt-2 md:border-t md:border-border md:pt-2 max-md:ml-1 max-md:border-l max-md:border-border max-md:pl-2",
-                      activeSection === section.id
-                        ? section.id === "danger"
-                          ? "bg-destructive/10 font-medium text-destructive"
-                          : "bg-primary/10 font-medium text-foreground"
-                        : section.id === "danger"
-                          ? "text-destructive hover:bg-destructive/5 hover:text-destructive"
-                          : "text-foreground/80 hover:bg-muted hover:text-foreground",
-                    )}
-                  >
-                    {section.label}
-                  </button>
+        <PageState
+          resolution={pageState}
+          loading={
+            <div className="flex flex-col gap-4 pb-8 md:flex-row">
+              <div className="flex shrink-0 gap-0.5 border-b border-border pb-2 md:w-48 md:flex-col md:border-b-0 md:border-r md:pb-0 md:pr-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-8 w-24 rounded-md md:w-full" />
                 ))}
-              </nav>
-            </PmPanel>
-          </PmSection>
-
-          <PmSection index={1} className="min-w-0 flex-1">
-            {activeSection === "general" ? (
-              <div className="space-y-4">
-                <PmPanel className="p-4" solid>
-                  <div className="mb-3 border-b border-border pb-3">
-                    <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
-                      General
-                    </h3>
-                    <p
-                      className={cn(
-                        "mt-0.5 text-xs text-muted-foreground",
-                        TEXT_BODY,
-                      )}
-                    >
-                      Project name, description, status, and members.
-                    </p>
-                  </div>
-                  <ProjectInfoSection
-                    form={form}
-                    isPending={updateMutation.isPending}
-                    originalMemberIds={
-                      project.members?.map(
-                        (m: { userId: string }) => m.userId,
-                      ) ?? []
-                    }
-                    onMemberRemoved={handleMemberRemoved}
-                    onSubmit={handleSubmit}
-                    MembersSelector={MembersSelector}
-                  />
-                </PmPanel>
-                <PmPanel className="p-4" solid>
-                  <div className="mb-3 border-b border-border pb-3">
-                    <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
-                      Member Roles
-                    </h3>
-                    <p
-                      className={cn(
-                        "mt-0.5 text-xs text-muted-foreground",
-                        TEXT_BODY,
-                      )}
-                    >
-                      Project-level roles are informational. Access is governed
-                      by org-level permissions.
-                    </p>
-                  </div>
-                  <ProjectMemberRolesSection projectId={projectId} />
-                </PmPanel>
               </div>
-            ) : null}
-
-            {activeSection === "labels" ? (
-              <PmPanel className="p-4" solid>
-                <LabelsSettings />
-              </PmPanel>
-            ) : null}
-
-            {activeSection === "statuses" ? (
-              <PmPanel className="p-4" solid>
-                <StatusesSettings projectId={projectId} />
-              </PmPanel>
-            ) : null}
-
-            {activeSection === "custom-fields" ? (
-              <PmPanel className="p-4" solid>
-                <CustomFieldsSettings projectId={projectId} />
-              </PmPanel>
-            ) : null}
-
-            {activeSection === "teams" ? (
-              <PmPanel className="p-4" solid>
-                <div className="mb-3 border-b border-border pb-3">
-                  <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
-                    Teams &amp; Roster
-                  </h3>
-                  <p
-                    className={cn(
-                      "mt-0.5 text-xs text-muted-foreground",
-                      TEXT_BODY,
-                    )}
+              <div className="min-w-0 flex-1 space-y-3">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </div>
+          }
+          empty={
+            <EmptyState
+              className="flex-1"
+              illustrationPreset="projects"
+              title="Project not found"
+              description="This project no longer exists, or you no longer have access to it."
+              action={{ label: "Back to projects", href: "/build" }}
+            />
+          }
+          onRetry={handleRetry}
+          className="flex-1"
+        >
+          {project && (
+            <div className="flex flex-col gap-4 pb-8 md:flex-row">
+              <PmSection index={0} className="w-full shrink-0 md:w-48">
+                <PmPanel className="p-1.5">
+                  <nav
+                    aria-label="Project settings"
+                    className="flex w-full gap-0.5 overflow-x-auto md:flex-col md:overflow-visible [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
                   >
-                    Teams this project belongs to and their effective members.
-                    Assign from a team&rsquo;s detail page.
-                  </p>
-                </div>
-                <TeamRosterSection projectId={projectId} />
-              </PmPanel>
-            ) : null}
+                    {navSections.map((section) => (
+                      <button
+                        key={section.id}
+                        type="button"
+                        data-section={section.id}
+                        onClick={handleSectionClick}
+                        className={cn(
+                          "shrink-0 rounded-md px-3 py-2 text-left text-xs transition-colors",
+                          TEXT_ONE_LINE,
+                          section.id === "danger" &&
+                            "md:mt-2 md:border-t md:border-border md:pt-2 max-md:ml-1 max-md:border-l max-md:border-border max-md:pl-2",
+                          activeSection === section.id
+                            ? section.id === "danger"
+                              ? "bg-destructive/10 font-medium text-destructive"
+                              : "bg-primary/10 font-medium text-foreground"
+                            : section.id === "danger"
+                              ? "text-destructive hover:bg-destructive/5 hover:text-destructive"
+                              : "text-foreground/80 hover:bg-muted hover:text-foreground",
+                        )}
+                      >
+                        {section.label}
+                      </button>
+                    ))}
+                  </nav>
+                </PmPanel>
+              </PmSection>
 
-            {activeSection === "danger" && isOwner ? (
-              <PmPanel
-                className="border-destructive/30 bg-destructive/5 p-4"
-                solid
-              >
-                <div className="mb-3 border-b border-destructive/20 pb-3">
-                  <h3
-                    className={cn(
-                      "text-sm font-semibold text-destructive",
-                      TEXT_ONE_LINE,
-                    )}
+              <PmSection index={1} className="min-w-0 flex-1">
+                {activeSection === "general" ? (
+                  <div className="space-y-4">
+                    <PmPanel className="p-4" solid>
+                      <div className="mb-3 border-b border-border pb-3">
+                        <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
+                          General
+                        </h3>
+                        <p
+                          className={cn(
+                            "mt-0.5 text-xs text-muted-foreground",
+                            TEXT_BODY,
+                          )}
+                        >
+                          Project name, description, status, and members.
+                        </p>
+                      </div>
+                      <ProjectInfoSection
+                        form={form}
+                        isPending={updateMutation.isPending}
+                        originalMemberIds={
+                          project.members?.map(
+                            (m: { userId: string }) => m.userId,
+                          ) ?? []
+                        }
+                        onMemberRemoved={handleMemberRemoved}
+                        onSubmit={handleSubmit}
+                        MembersSelector={MembersSelector}
+                      />
+                    </PmPanel>
+                    <PmPanel className="p-4" solid>
+                      <div className="mb-3 border-b border-border pb-3">
+                        <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
+                          Member Roles
+                        </h3>
+                        <p
+                          className={cn(
+                            "mt-0.5 text-xs text-muted-foreground",
+                            TEXT_BODY,
+                          )}
+                        >
+                          Project-level roles are informational. Access is governed
+                          by org-level permissions.
+                        </p>
+                      </div>
+                      <ProjectMemberRolesSection projectId={projectId} />
+                    </PmPanel>
+                  </div>
+                ) : null}
+
+                {activeSection === "labels" ? (
+                  <PmPanel className="p-4" solid>
+                    <LabelsSettings />
+                  </PmPanel>
+                ) : null}
+
+                {activeSection === "statuses" ? (
+                  <PmPanel className="p-4" solid>
+                    <StatusesSettings projectId={projectId} />
+                  </PmPanel>
+                ) : null}
+
+                {activeSection === "custom-fields" ? (
+                  <PmPanel className="p-4" solid>
+                    <CustomFieldsSettings projectId={projectId} />
+                  </PmPanel>
+                ) : null}
+
+                {activeSection === "teams" ? (
+                  <PmPanel className="p-4" solid>
+                    <div className="mb-3 border-b border-border pb-3">
+                      <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
+                        Teams &amp; Roster
+                      </h3>
+                      <p
+                        className={cn(
+                          "mt-0.5 text-xs text-muted-foreground",
+                          TEXT_BODY,
+                        )}
+                      >
+                        Teams this project belongs to and their effective members.
+                        Assign from a team&rsquo;s detail page.
+                      </p>
+                    </div>
+                    <TeamRosterSection projectId={projectId} />
+                  </PmPanel>
+                ) : null}
+
+                {activeSection === "danger" && isOwner ? (
+                  <PmPanel
+                    className="border-destructive/30 bg-destructive/5 p-4"
+                    solid
                   >
-                    Danger Zone
-                  </h3>
-                  <p
-                    className={cn(
-                      "mt-0.5 text-xs text-muted-foreground",
-                      TEXT_BODY,
-                    )}
-                  >
-                    Irreversible actions for this project.
-                  </p>
-                </div>
-                <DangerZoneSection
-                  projectId={projectId}
-                  projectName={project.name}
-                  onDeleted={handleDeleteSuccess}
-                />
-              </PmPanel>
-            ) : null}
-          </PmSection>
-        </div>
+                    <div className="mb-3 border-b border-destructive/20 pb-3">
+                      <h3
+                        className={cn(
+                          "text-sm font-semibold text-destructive",
+                          TEXT_ONE_LINE,
+                        )}
+                      >
+                        Danger Zone
+                      </h3>
+                      <p
+                        className={cn(
+                          "mt-0.5 text-xs text-muted-foreground",
+                          TEXT_BODY,
+                        )}
+                      >
+                        Irreversible actions for this project.
+                      </p>
+                    </div>
+                    <DangerZoneSection
+                      projectId={projectId}
+                      projectName={project.name}
+                      onDeleted={handleDeleteSuccess}
+                    />
+                  </PmPanel>
+                ) : null}
+              </PmSection>
+            </div>
+          )}
+        </PageState>
       </PmPageShell>
 
       <ReassignDialog

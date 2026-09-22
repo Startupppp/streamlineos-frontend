@@ -4,6 +4,8 @@ import { useCallback, useMemo, useState } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useBugs, useDeleteBug } from "@/hooks/api/build/bugs";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useProjectMembers } from "@/hooks/api/build";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getUserDisplayName } from "@/lib/person-display";
@@ -141,9 +143,10 @@ export function BugsPage({ projectId }: BugsPageProps) {
     q: debouncedSearch || undefined,
   };
 
-  const { data: bugs, isLoading, isError, refetch } = useBugs(projectId, filters);
+  const { data: bugs, isLoading, isError, error, refetch } = useBugs(projectId, filters);
   const { data: members = [] } = useProjectMembers(projectId);
   const deleteBug = useDeleteBug();
+  const pageState = usePageState({ permission: "build:bugs:view", isLoading, isError, error });
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
@@ -257,6 +260,30 @@ export function BugsPage({ projectId }: BugsPageProps) {
       className: "w-[40px]",
     },
   ], [canUpdate, canDelete, handleEdit, members]);
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+    return (
+      <PageWrapper title="Bugs" subtitle="Track and triage project bugs">
+        <PmPageShell>
+          <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+            {null}
+          </PageState>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (!isLoading && pageState.kind === "loading") {
+    return (
+      <PageWrapper title="Bugs" subtitle="Track and triage project bugs">
+        <PmPageShell>
+          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+            <DataTableSkeleton rows={12} columns={6} className="flex-1" />
+          </PmSection>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
 
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>

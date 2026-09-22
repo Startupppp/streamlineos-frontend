@@ -6,7 +6,6 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -21,8 +20,8 @@ import {
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { ShipmentDetailSheet } from "@/features/inventory/components/shipping/shipment-detail-sheet";
 import { ShipmentCreateDialog } from "@/features/inventory/components/shipping/shipment-create-dialog";
 import {
@@ -31,12 +30,11 @@ import {
   type ShipmentStatus,
 } from "@/features/inventory/lib";
 import { useShipments, type Shipment } from "@/hooks/api/inventory/shipping";
-import { useCan } from "@/hooks/api/access";
+
 
 const PAGE_LIMIT = 20;
 
 function ShipmentsPageInner() {
-  const canView = useCan("inventory:shipments:manage");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [detailOpen, setDetailOpen] = useState<boolean>(false);
@@ -88,6 +86,13 @@ function ShipmentsPageInner() {
     status: statusFilter,
     page,
     limit: PAGE_LIMIT,
+  });
+
+  const pageState = usePageState({
+    permission: "inventory:shipments:manage",
+    isLoading: shipmentsQuery.isLoading,
+    isError: shipmentsQuery.isError,
+    error: shipmentsQuery.error,
   });
 
   const items = shipmentsQuery.data?.items ?? [];
@@ -174,13 +179,15 @@ function ShipmentsPageInner() {
     </div>
   );
 
-  if (!canView)
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper
         title="Shipments"
         subtitle="Track and manage outbound shipments"
       >
-        <NoPermissionState permission="inventory:shipments:manage" className="flex-1" />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
 
@@ -197,13 +204,6 @@ function ShipmentsPageInner() {
         filters={filtersRow}
       >
         <div className="flex flex-1 min-h-0 flex-col gap-4">
-          {shipmentsQuery.error ? (
-            <ErrorState
-              title="Failed to load shipments"
-              description={getErrorMessage(shipmentsQuery.error)}
-              onRetry={handleRetry}
-            />
-          ) : (
             <DataTable
               data={items}
               columns={columns}
@@ -229,7 +229,6 @@ function ShipmentsPageInner() {
               }}
               minWidth="640px"
             />
-          )}
         </div>
       </PageWrapper>
 

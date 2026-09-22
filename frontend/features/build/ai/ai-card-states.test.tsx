@@ -19,7 +19,7 @@ const askMutation = {
   data: undefined as unknown,
   isPending: false,
   isError: true,
-  error: new ApiError("Too many concurrent AI requests", 503) as unknown,
+  error: new ApiError("Too many concurrent AI requests", 503, "AI_CONCURRENCY_LIMIT") as unknown,
   mutate: jest.fn(),
   reset: jest.fn(),
 };

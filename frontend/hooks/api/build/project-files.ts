@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -110,7 +110,7 @@ export function useProjectFileSignedUrl(projectId: number, fileId: number | null
 
 export function useDeleteProjectFile(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:files:manage", {
     mutationKey: ["projects", projectId, "files", "delete"],
     mutationFn: (fileId: number) =>
       apiClient.delete<void>(

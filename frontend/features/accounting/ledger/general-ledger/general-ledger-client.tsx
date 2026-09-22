@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { startOfMonth } from "date-fns";
 import { Combobox } from "@/components/ui/combobox";
 import { DataTable } from "@/components/ui/data-table";
@@ -9,9 +9,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { ErrorState, PageState } from "@/components/shared";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
-import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useAccountLedger, usePostableAccounts } from "@/hooks/api/accounting/ledger";
 import { balanceDirection, formatMinorMoney } from "@/lib/accounting/money";
 import { formatDateOnly, getTodayString } from "@/lib/date-utils";
@@ -22,7 +22,6 @@ import { buildLedgerColumns } from "./general-ledger-columns";
 const LEDGER_READ = "accounting:general-ledger:read";
 
 export function GeneralLedgerClient() {
-  const canRead = useCan(LEDGER_READ);
   const url = useListUrlState();
 
   const accountId = url.get("accountId");
@@ -35,6 +34,14 @@ export function GeneralLedgerClient() {
     { from, to, page: url.page, pageSize: url.pageSize },
     { enabled: !!accountId },
   );
+
+  const pageState = usePageState({
+    permission: LEDGER_READ,
+    isLoading: accounts.isLoading,
+    isError: accounts.isError,
+    error: accounts.error,
+  });
+  const handleRetry = useCallback(() => { void accounts.refetch(); }, [accounts]);
 
   const accountOptions = useMemo(
     () =>
@@ -53,13 +60,14 @@ export function GeneralLedgerClient() {
 
   const columns = buildLedgerColumns(currency);
 
-  if (!canRead) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper title="Account ledger">
-        <NoPermissionState permission={LEDGER_READ} />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
   return (
     <PageWrapper

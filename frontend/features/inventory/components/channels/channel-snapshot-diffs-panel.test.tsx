@@ -15,7 +15,11 @@ import type { Channel, ChannelSnapshotDiff } from "@/hooks/api/inventory/channel
  */
 
 const mockUseCan = jest.fn(() => true);
-jest.mock("@/hooks/api/access", () => ({ useCan: () => mockUseCan() }));
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => mockUseCan(),
+  useCanState: (key: string) =>
+    key === "inventory:stock:adjust" && !mockUseCan() ? "denied" : "granted",
+}));
 
 const mockUseDiffs = jest.fn();
 jest.mock("@/hooks/api/inventory/channels", () => ({

@@ -13,6 +13,8 @@ import {
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import type { AccessState } from "@/lib/rbac/gate";
 import type { ProjectListResponse } from "@/types/projects";
+import type { InfiniteData, UseInfiniteQueryResult, UseQueryResult } from "@tanstack/react-query";
+import { idleInfiniteQueryResult, idleQueryResult } from "@/test-utils/query-result";
 
 jest.mock("@/hooks/api/access");
 jest.mock("@/hooks/api/build/projects");
@@ -28,31 +30,24 @@ const mockUsePmWorkspaces = usePmWorkspaces as jest.MockedFunction<typeof usePmW
 const mockUseInfinitePmWorkspaces = useInfinitePmWorkspaces as jest.MockedFunction<typeof useInfinitePmWorkspaces>;
 const mockUseDebouncedValue = useDebouncedValue as jest.MockedFunction<typeof useDebouncedValue>;
 
-function makeEmptyQuery(overrides: Record<string, unknown> = {}) {
-  return {
-    data: undefined,
-    isLoading: false,
-    isFetching: false,
-    isError: false,
-    isSuccess: false,
-    refetch: jest.fn(),
-    ...overrides,
-  };
+function makeEmptyQuery<TData = unknown>(
+  overrides: Partial<UseQueryResult<TData, Error>> = {},
+): UseQueryResult<TData, Error> {
+  return { ...idleQueryResult<TData>(), refetch: jest.fn(), ...overrides } as UseQueryResult<
+    TData,
+    Error
+  >;
 }
 
-function makeEmptyInfiniteQuery(overrides: Record<string, unknown> = {}) {
+function makeEmptyInfiniteQuery<TPage = unknown>(
+  overrides: Partial<UseInfiniteQueryResult<InfiniteData<TPage, unknown>, Error>> = {},
+): UseInfiniteQueryResult<InfiniteData<TPage, unknown>, Error> {
   return {
-    data: undefined,
-    isLoading: false,
-    isFetching: false,
-    isFetchingNextPage: false,
-    isError: false,
-    isSuccess: false,
-    hasNextPage: false,
+    ...idleInfiniteQueryResult<TPage>(),
     fetchNextPage: jest.fn().mockResolvedValue(undefined),
     refetch: jest.fn(),
     ...overrides,
-  };
+  } as UseInfiniteQueryResult<InfiniteData<TPage, unknown>, Error>;
 }
 
 function makePmWorkspacesPage(

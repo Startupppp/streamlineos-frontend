@@ -53,13 +53,13 @@ export interface CreateRiskInput {
 
 export interface UpdateRiskInput {
   title?: string;
-  description?: string;
+  description?: string | null;
   probability?: RiskProbability;
   impact?: RiskImpact;
   status?: RiskStatus;
-  ownerId?: string;
-  mitigation?: string;
-  linkedTicketId?: number;
+  ownerId?: string | null;
+  mitigation?: string | null;
+  linkedTicketId?: number | null;
 }
 
 export interface CreateDecisionInput {
@@ -76,12 +76,12 @@ export interface CreateDecisionInput {
 
 export interface UpdateDecisionInput {
   title?: string;
-  context?: string;
-  decision?: string;
-  optionsConsidered?: string;
+  context?: string | null;
+  decision?: string | null;
+  optionsConsidered?: string | null;
   status?: DecisionStatus;
-  ownerId?: string;
-  decidedAt?: string;
-  revisitAt?: string;
-  linkedTicketId?: number;
+  ownerId?: string | null;
+  decidedAt?: string | null;
+  revisitAt?: string | null;
+  linkedTicketId?: number | null;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -8,7 +8,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { SearchInput } from "@/components/ui/search-input";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -17,14 +17,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import {
+  FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
-import { PARTIES_CREATE, PARTIES_READ, useParties } from "@/hooks/api/accounting/parties";
-import type { PartyRole, PartySummary } from "@/types/accounting-ar";
+import { usePageState } from "@/hooks/api/use-page-state";
+import {
+  PARTIES_CREATE,
+  PARTIES_READ,
+  useParties,
+} from "@/hooks/api/accounting/parties";
+import type { PartyRole, PartySummary } from "@/types/accounting/accounting-ar";
 import { PARTY_ROLE_LABEL } from "../sales/ar-labels";
 import { useListUrlState } from "../sales/use-list-url-state";
 import { PartyFormSheet } from "./party-form-sheet";
@@ -48,7 +55,9 @@ const columns: DataTableColumn<PartySummary>[] = [
           {row.displayName}
         </Link>
         {row.legalName && row.legalName !== row.displayName ? (
-          <p className="truncate text-dense text-muted-foreground">{row.legalName}</p>
+          <p className="truncate text-dense text-muted-foreground">
+            {row.legalName}
+          </p>
         ) : null}
       </div>
     ),
@@ -60,7 +69,9 @@ const columns: DataTableColumn<PartySummary>[] = [
       <div className="min-w-0">
         <p className="truncate text-sm">{row.email ?? "No email"}</p>
         {row.phone ? (
-          <p className="truncate font-mono text-dense text-muted-foreground">{row.phone}</p>
+          <p className="truncate font-mono text-dense text-muted-foreground">
+            {row.phone}
+          </p>
         ) : null}
       </div>
     ),
@@ -77,14 +88,18 @@ const columns: DataTableColumn<PartySummary>[] = [
   {
     key: "defaultCurrency",
     header: "Bills in",
-    cell: (row) => <span className="font-mono text-dense">{row.defaultCurrency}</span>,
+    cell: (row) => (
+      <span className="font-mono text-dense">{row.defaultCurrency}</span>
+    ),
   },
   {
     key: "paymentTermsDays",
     header: "Pays within",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-dense tabular-nums">{row.paymentTermsDays} days</span>
+      <span className="font-mono text-dense tabular-nums">
+        {row.paymentTermsDays} days
+      </span>
     ),
   },
   {
@@ -99,7 +114,6 @@ const columns: DataTableColumn<PartySummary>[] = [
 ];
 
 export function CustomersPageClient() {
-  const canRead = useCan(PARTIES_READ);
   const canCreate = useCan(PARTIES_CREATE);
   const url = useListUrlState();
   const [createOpen, setCreateOpen] = useState(false);
@@ -131,8 +145,19 @@ export function CustomersPageClient() {
     url.setParams({ include: value === "active" ? undefined : value });
   }
 
+  const pageState = usePageState({
+    permission: PARTIES_READ,
+    isLoading: partiesQuery.isLoading,
+    isError: partiesQuery.isError,
+    error: partiesQuery.error,
+  });
+  const handleRetry = useCallback(() => {
+    void partiesQuery.refetch();
+  }, [partiesQuery]);
+
   const rows = partiesQuery.data?.items ?? [];
-  const hasFilters = debouncedSearch.length > 0 || roleParam.length > 0 || includeInactive;
+  const hasFilters =
+    debouncedSearch.length > 0 || roleParam.length > 0 || includeInactive;
 
   const filters = (
     <div className={FILTER_TOOLBAR_ROW}>
@@ -143,7 +168,10 @@ export function CustomersPageClient() {
         className="min-w-0 flex-1 lg:max-w-md"
       />
       <Select value={roleParam || "customer"} onValueChange={handleRoleChange}>
-        <SelectTrigger className={FILTER_SELECT_TRIGGER} aria-label="Relationship">
+        <SelectTrigger
+          className={FILTER_SELECT_TRIGGER}
+          aria-label="Relationship"
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
@@ -153,8 +181,14 @@ export function CustomersPageClient() {
           <SelectItem value="any">Everyone</SelectItem>
         </SelectContent>
       </Select>
-      <Select value={includeInactive ? "all" : "active"} onValueChange={handleIncludeChange}>
-        <SelectTrigger className={FILTER_SELECT_TRIGGER} aria-label="Visibility">
+      <Select
+        value={includeInactive ? "all" : "active"}
+        onValueChange={handleIncludeChange}
+      >
+        <SelectTrigger
+          className={FILTER_SELECT_TRIGGER}
+          aria-label="Visibility"
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
@@ -165,13 +199,23 @@ export function CustomersPageClient() {
     </div>
   );
 
-  if (!canRead) {
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="Customers">
-        <NoPermissionState permission={PARTIES_READ} />
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
   return (
     <PageWrapper
@@ -195,51 +239,44 @@ export function CustomersPageClient() {
       }
       filters={filters}
     >
-      {partiesQuery.isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load your customers"
-          description={getErrorMessage(partiesQuery.error)}
-          onRetry={() => void partiesQuery.refetch()}
-        />
-      ) : (
-        <DataTable
-          data={rows}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          isLoading={partiesQuery.isLoading}
-          minWidth="900px"
-          className="flex-1 min-h-0"
-          emptyState={
-            <EmptyState
-              className="border-0 bg-transparent min-h-[40vh]"
-              illustrationPreset="clients"
-              title={hasFilters ? "No customers match your filters" : "No customers yet"}
-              description={
-                hasFilters
-                  ? "Try a different search or widen the relationship filter."
-                  : "Add the first company you bill and their invoices will follow."
-              }
-              action={
-                hasFilters
-                  ? { label: "Clear filters", onClick: () => url.setParams({ search: undefined, role: undefined, include: undefined }) }
-                  : canCreate
-                    ? { label: "Add customer", onClick: () => setCreateOpen(true) }
-                    : undefined
-              }
-            />
-          }
-          pagination={{
-            mode: "server",
-            page: url.page,
-            pageSize: url.pageSize,
-            total: partiesQuery.data?.total ?? 0,
-            onPageChange: url.setPage,
-            onPageSizeChange: url.setPageSize,
-            pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
-          }}
-        />
-      )}
+      <DataTable
+        data={rows}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        isLoading={partiesQuery.isLoading}
+        minWidth="900px"
+        className="flex-1 min-h-0"
+        emptyState={
+          <EmptyState
+            className="border-0 bg-transparent min-h-[40vh]"
+            illustrationPreset="clients"
+            title="No customers yet"
+            description="Add the first company you bill and their invoices will follow."
+            action={
+              canCreate
+                ? { label: "Add customer", onClick: () => setCreateOpen(true) }
+                : undefined
+            }
+            filtersActive={hasFilters}
+            onClearFilters={() =>
+              url.setParams({
+                search: undefined,
+                role: undefined,
+                include: undefined,
+              })
+            }
+          />
+        }
+        pagination={{
+          mode: "server",
+          page: url.page,
+          pageSize: url.pageSize,
+          total: partiesQuery.data?.total ?? 0,
+          onPageChange: url.setPage,
+          onPageSizeChange: url.setPageSize,
+          pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+        }}
+      />
 
       <PartyFormSheet open={createOpen} onOpenChange={setCreateOpen} />
     </PageWrapper>

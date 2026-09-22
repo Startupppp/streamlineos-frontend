@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { addLinkSchema, type AddLinkFormValues } from "./goal-form-schema";
 import {
   Dialog,
   DialogContent,
@@ -31,13 +31,6 @@ import { toast } from "sonner";
 import { useProjects, useTickets } from "@/hooks/api/build";
 import { useAddGoalLink } from "@/hooks/api/goals";
 import { getErrorMessage } from "@/lib/get-error-message";
-
-const addLinkSchema = z.object({
-  projectId: z.string().min(1, "Select a project"),
-  ticketId: z.string(),
-});
-
-type AddLinkFormValues = z.infer<typeof addLinkSchema>;
 
 interface AddLinkDialogProps {
   goalId: number;

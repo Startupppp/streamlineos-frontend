@@ -3,7 +3,6 @@ import {
   Briefcase,
   Building2,
   ClipboardCheck,
-  KeyRound,
   Layers,
   LayoutDashboard,
   LayoutGrid,
@@ -73,7 +72,7 @@ export function buildOrganizationCatalog(): BuildScopeCatalog {
       {
         id: "org-workspaces",
         label: "Workspaces",
-        href: `${BUILD_ROOT_PATH}/pm-workspaces`,
+        href: `${BUILD_ROOT_PATH}/workspaces`,
         icon: Boxes,
         requiredPermission: "build:workspaces:view",
       },
@@ -87,7 +86,7 @@ export function buildOrganizationCatalog(): BuildScopeCatalog {
       {
         id: "org-goals",
         label: "Goals",
-        href: `${BUILD_ROOT_PATH}/goal`,
+        href: `${BUILD_ROOT_PATH}/goals`,
         icon: Target,
         requiredPermission: "build:goals:view",
       },
@@ -115,23 +114,16 @@ export function buildOrganizationCatalog(): BuildScopeCatalog {
       {
         id: "org-client-access",
         label: "Client access",
-        href: `${BUILD_ROOT_PATH}/client-access`,
+        href: `${BUILD_ROOT_PATH}/settings/client-access`,
         icon: ShieldCheck,
         requiredPermission: "build:portal:view",
       },
       {
         id: "org-members",
-        label: "Members",
-        href: `${BUILD_ROOT_PATH}/members`,
+        label: "Members & access",
+        href: `${BUILD_ROOT_PATH}/settings/access`,
         icon: Users,
-        requiredPermission: "build:members:view",
-      },
-      {
-        id: "org-access",
-        label: "Build access",
-        href: `${BUILD_ROOT_PATH}/access`,
-        icon: KeyRound,
-        requiredPermission: "build:access:view",
+        requiredPermission: ["build:members:view", "build:access:view"],
       },
     ],
     settings: {

@@ -1,12 +1,14 @@
 ﻿"use client";
 
 import { useCallback, useState } from "react";
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { createBugFromResultSchema, type CreateBugFromResultFormValues } from "./run-schema";
 import { useTestRunDetail, useUpdateTestRun, useCreateBugFromResult } from "@/hooks/api/build/qa";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -45,13 +47,6 @@ import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { ResultRow } from "./result-row";
 import type { TestRunStatus, TestRunCounts } from "@/types/projects";
 
-const createBugFromResultSchema = z.object({
-  bugTitle: z.string().min(1, "Title is required"),
-  bugSeverity: z.string(),
-});
-
-type CreateBugFromResultFormValues = z.infer<typeof createBugFromResultSchema>;
-
 const STATUS_STYLES: Record<string, string> = {
   not_started: "text-muted-foreground border-border",
   in_progress: "text-status-info-ink border-status-info-rule",
@@ -66,8 +61,8 @@ const STATUS_LABELS: Record<string, string> = {
   aborted: "Aborted",
 };
 
-function ProgressBar({ counts }: { counts?: TestRunCounts }) {
-  if (!counts || counts.total === 0) return null;
+function ProgressBar({ counts }: { counts: TestRunCounts }) {
+  if (counts.total === 0) return null;
   const pct = Math.round(((counts.passed + counts.failed + counts.blocked + counts.skipped) / counts.total) * 100);
   const passPct = Math.round((counts.passed / counts.total) * 100);
   return (
@@ -112,7 +107,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
   const canExecute = useCan("build:qa:execute");
   const canCreateBug = useCan("build:bugs:create");
 
-  const { data: run, isLoading, isError, refetch } = useTestRunDetail(projectId, runId);
+  const { data: run, isLoading, isError, error, refetch } = useTestRunDetail(projectId, runId);
   const updateRun = useUpdateTestRun();
   const createBugFromResult = useCreateBugFromResult();
 
@@ -123,7 +118,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
     resolver: zodResolver(createBugFromResultSchema),
     defaultValues: { bugTitle: "", bugSeverity: "major" },
   });
-  useRegisterBuildDirtyState(bugSheetOpen && bugForm.formState.isDirty);
+  useRegisterDirtyState(bugSheetOpen && bugForm.formState.isDirty);
 
   const handleCompleteRun = useCallback(() => {
     if (!run) return;
@@ -166,7 +161,21 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
     void refetch();
   }, [refetch]);
 
-  if (isLoading) {
+  const pageState = usePageState({ permission: "build:qa:view", isLoading, isError, error });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+    return (
+      <PageWrapper title="Run" backHref={`/build/${projectId}/qa`}>
+        <PmPageShell>
+          <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+            {null}
+          </PageState>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (pageState.kind === "loading") {
     return (
       <PageWrapper title="Loading…" backHref={`/build/${projectId}/qa`}>
         <PmPageShell>
@@ -180,10 +189,10 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
     );
   }
 
-  if (isError || !run) {
+  if (!run) {
     return (
       <PageWrapper title="Run" backHref={`/build/${projectId}/qa`}>
-        <PmPageShell withGlow={false}>
+        <PmPageShell>
           <ErrorState onRetry={handleRetry} />
         </PmPageShell>
       </PageWrapper>
@@ -191,6 +200,14 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
   }
 
   const results = run.results ?? [];
+  const runCounts: TestRunCounts = {
+    total: results.length,
+    passed: results.filter((result) => result.status === "passed").length,
+    failed: results.filter((result) => result.status === "failed").length,
+    blocked: results.filter((result) => result.status === "blocked").length,
+    skipped: results.filter((result) => result.status === "skipped").length,
+    notRun: results.filter((result) => result.status === "not_run").length,
+  };
 
   return (
     <PageWrapper
@@ -213,7 +230,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
                 {run.environment}
               </span>
             ) : null}
-            <ProgressBar counts={run.counts} />
+            <ProgressBar counts={runCounts} />
           </PmPanel>
         </PmSection>
 

@@ -25,7 +25,7 @@ export default function HrAssetsLoading() {
     >
       <div className="flex flex-1 min-h-0 flex-col space-y-4">
         <StatCardGridSkeleton cols={4} count={4} />
-        <DataTableSkeleton rows={10} columns={7} className="flex-1 min-h-0" />
+        <DataTableSkeleton rows={10} headers={["Asset", "Type", "Serial #", "Status", "Assigned To", "Cost", "Purchased", ""]} className="flex-1 min-h-0" />
       </div>
     </PageWrapper>
   );

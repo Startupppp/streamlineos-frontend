@@ -26,8 +26,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import {
   CONTENT_FILL_PANEL,
@@ -44,7 +42,9 @@ import {
 import { withDealStages } from "@/lib/renderer/crm/deal-layout";
 import { useDealApprovals, useResolveDealApproval } from "@/hooks/api/crm";
 import { useCrmStages } from "@/hooks/api/crm/metadata";
-import { useCan, useCanState } from "@/hooks/api/access";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -146,7 +146,7 @@ export default function DealApprovalsPage() {
   const { data: stages } = useCrmStages("deal");
   const layout = useMemo(() => withDealStages(tenantLayout, stages ?? []), [tenantLayout, stages]);
 
-  const { data, isLoading, isError, refetch } = useDealApprovals({
+  const { data, isLoading, isError, error, refetch } = useDealApprovals({
     status: statusFilter === "all" ? undefined : statusFilter,
   });
   const resolve = useResolveDealApproval();
@@ -216,18 +216,16 @@ export default function DealApprovalsPage() {
   const statusFilterLabel =
     STATUS_OPTIONS.find((option) => option.value === statusFilter)?.label ?? statusFilter;
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
-  if (useCanState("crm:deals:read") === "denied")
-    return <NoPermissionState permission="crm:deals:read" />;
+  const pageState = usePageState({ permission: "crm:deals:read", isLoading, isError, error });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper title="Deal approvals" subtitle="Deals that need sign-off before they can move">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper
@@ -254,13 +252,6 @@ export default function DealApprovalsPage() {
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
         {isLoading ? (
           <DataTableSkeleton rows={12} columns={layout.list.columns.length} className="flex-1" />
-        ) : isError ? (
-          <ErrorState
-            title="Couldn't load approvals"
-            description="The approval queue didn't load. Check your connection and try again."
-            onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          />
         ) : rows.length === 0 ? (
           <EmptyState
             illustration={<EmptyApprovalIllustration />}

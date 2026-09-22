@@ -17,7 +17,7 @@ export default function TimesheetApprovalsLoading() {
         </div>
       }
     >
-      <DataTableSkeleton rows={12} columns={6} />
+      <DataTableSkeleton rows={12} headers={["Member", "Period", "Hours", "Billable", "Submitted", "Approver", "Status"]} />
     </PageWrapper>
   );
 }

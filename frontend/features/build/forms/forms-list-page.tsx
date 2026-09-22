@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
 
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useCan } from "@/hooks/api/access";
 import { useForms, useCreateForm } from "@/hooks/api/build";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   PmPageShell,
   PmSection,
@@ -38,6 +39,16 @@ const ACTIVE_OPTIONS = [
   { value: "inactive", label: "Inactive" },
 ];
 
+function FormsListPageSkeleton() {
+  return (
+    <PmPageShell>
+      <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+        <DataTableSkeleton rows={12} columns={6} className="flex-1" />
+      </PmSection>
+    </PmPageShell>
+  );
+}
+
 interface FormsListPageProps {
   projectId: number;
 }
@@ -55,12 +66,21 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
 
   const formTypeValue = FORM_TYPES.find((t) => t === typeFilter);
 
-  const { data, isLoading, isError, refetch } = useForms(projectId, {
+  const { data, isLoading, isError, error, refetch } = useForms(projectId, {
     type: formTypeValue,
     isActive: isActiveParam,
   });
 
   const createForm = useCreateForm(projectId);
+
+  const pageState = usePageState({
+    permission: "build:forms:view",
+    isLoading,
+    isError,
+    error,
+  });
+
+  const isReady = pageState.kind === "ready";
 
   function handleNewForm() {
     createForm.mutate(
@@ -196,9 +216,9 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
     <PageWrapper
       title="Forms"
       subtitle="Build and manage data collection forms for your project"
-      filters={filtersBar}
+      filters={isReady ? filtersBar : undefined}
       actions={
-        canManage ? (
+        isReady && canManage ? (
           <LoadingButton
             size="sm"
             className="text-xs"
@@ -211,33 +231,36 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
         ) : undefined
       }
     >
-      <PmPageShell>
-        <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          {isLoading ? (
-            <DataTableSkeleton rows={12} columns={6} className="flex-1" />
-          ) : isError ? (
-            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
-          ) : filtered.length === 0 ? (
-            <EmptyState
-              className={PM_FILL_PANEL}
-              illustrationPreset="documents"
-              title="No forms yet"
-              description={isFiltered ? undefined : "Create a form to collect structured data from your team or clients."}
-              filtersActive={isFiltered}
-              onClearFilters={handleClearFilters}
-              action={canManage && !isFiltered ? { label: "New Form", onClick: handleNewForm } : undefined}
-            />
-          ) : (
-            <DataTable
+      <PageState
+        resolution={pageState}
+        loading={<FormsListPageSkeleton />}
+        onRetry={handleRetry}
+        className="flex-1"
+      >
+        <PmPageShell>
+          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+            {filtered.length === 0 ? (
+              <EmptyState
+                className={PM_FILL_PANEL}
+                illustrationPreset="documents"
+                title="No forms yet"
+                description={isFiltered ? undefined : "Create a form to collect structured data from your team or clients."}
+                filtersActive={isFiltered}
+                onClearFilters={handleClearFilters}
+                action={canManage && !isFiltered ? { label: "New Form", onClick: handleNewForm } : undefined}
+              />
+            ) : (
+              <DataTable
                 data={filtered}
                 columns={columns}
                 getRowKey={(row) => row.id}
                 minWidth="680px"
                 className={PM_FILL_PANEL}
               />
-          )}
-        </PmSection>
-      </PmPageShell>
+            )}
+          </PmSection>
+        </PmPageShell>
+      </PageState>
     </PageWrapper>
   );
 }

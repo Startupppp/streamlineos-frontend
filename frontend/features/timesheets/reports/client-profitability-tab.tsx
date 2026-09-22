@@ -111,6 +111,8 @@ const COLUMNS: DataTableColumn<ClientProfitabilityClient>[] = [
   },
 ];
 
+const COLUMN_HEADERS = COLUMNS.map((column) => column.header);
+
 function getClientRowKey(row: ClientProfitabilityClient): string {
   return row.clientId != null ? String(row.clientId) : "no-client";
 }
@@ -169,7 +171,7 @@ export function ClientProfitabilityTab({ params, enabled }: ClientProfitabilityT
       loading={
         <div className="space-y-4">
           <StatCardGridSkeleton cols={3} count={3} />
-          <DataTableSkeleton rows={8} columns={6} />
+          <DataTableSkeleton rows={8} headers={COLUMN_HEADERS} />
         </div>
       }
     >

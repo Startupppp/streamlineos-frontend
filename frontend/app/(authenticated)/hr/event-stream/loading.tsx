@@ -6,7 +6,7 @@ import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 export default function HrEventStreamLoading() {
   return (
     <PageWrapper
-      title="HR Event Stream"
+      title="HR audit log"
       subtitle="Immutable append-only log of all HR domain events"
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
@@ -17,7 +17,7 @@ export default function HrEventStreamLoading() {
       }
     >
       <div className="flex flex-col flex-1 min-h-0 gap-4">
-        <DataTableSkeleton rows={12} columns={5} />
+        <DataTableSkeleton rows={12} headers={["Event", "Entity", "Entity ID", "Actor", "Occurred"]} />
       </div>
     </PageWrapper>
   );

@@ -289,16 +289,19 @@ export interface Checklist {
   updatedAt: string;
 }
 
-export type CustomFieldType =
-  | "text"
-  | "number"
-  | "date"
-  | "user"
-  | "select"
-  | "multi_select"
-  | "checkbox"
-  | "url"
-  | "currency";
+export const CUSTOM_FIELD_TYPES = [
+  "text",
+  "number",
+  "date",
+  "user",
+  "select",
+  "multi_select",
+  "checkbox",
+  "url",
+  "currency",
+] as const;
+
+export type CustomFieldType = (typeof CUSTOM_FIELD_TYPES)[number];
 
 export interface ProjectCustomField {
   id: number;

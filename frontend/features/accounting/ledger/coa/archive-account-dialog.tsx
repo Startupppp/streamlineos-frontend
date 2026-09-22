@@ -4,14 +4,17 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useArchiveAccount } from "@/hooks/api/accounting/ledger-mutations";
-import type { AccountNode } from "@/types/accounting-kernel";
+import type { AccountNode } from "@/types/accounting/accounting-kernel";
 
 interface ArchiveAccountDialogProps {
   account: AccountNode | null;
   onOpenChange: (open: boolean) => void;
 }
 
-export function ArchiveAccountDialog({ account, onOpenChange }: ArchiveAccountDialogProps) {
+export function ArchiveAccountDialog({
+  account,
+  onOpenChange,
+}: ArchiveAccountDialogProps) {
   const archiveAccount = useArchiveAccount();
 
   if (!account) return null;

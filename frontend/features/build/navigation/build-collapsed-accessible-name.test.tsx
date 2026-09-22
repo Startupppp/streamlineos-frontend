@@ -4,7 +4,7 @@ import { FolderIcon } from "lucide-react";
 import { BuildNavLink } from "./build-nav-link";
 import { BuildQuickCreate } from "./build-quick-create";
 import { BuildMoreToolsMenu } from "./build-more-tools-menu";
-import { BuildDirtyStateProvider } from "./build-dirty-state-context";
+import { DirtyStateProvider } from "@/components/shared/dirty-state-context";
 import type { BuildNavDestination, BuildCreateAction } from "@/lib/build/nav/build-nav-destination";
 import type { ModuleAccent } from "@/components/layout/sidebar/sidebar-nav-items";
 import type { BuildScope } from "@/lib/build/build-scope";
@@ -107,27 +107,27 @@ describe("BSN-03-A08 — collapsed Build nav controls have an equivalent accessi
 
   it("a collapsed BuildNavLink link keeps the same accessible name as in expanded state, so a screen-reader user does not lose the nav item label when the rail collapses", () => {
     const { unmount: unmountExpanded } = render(
-      <BuildDirtyStateProvider>
+      <DirtyStateProvider>
         <BuildNavLink
           destination={DEST}
           isActive={false}
           isCollapsed={false}
           accent={ACCENT}
         />
-      </BuildDirtyStateProvider>,
+      </DirtyStateProvider>,
     );
     expect(screen.getByRole("link", { name: "Inbox" })).toHaveAccessibleName("Inbox");
     unmountExpanded();
 
     render(
-      <BuildDirtyStateProvider>
+      <DirtyStateProvider>
         <BuildNavLink
           destination={DEST}
           isActive={false}
           isCollapsed={true}
           accent={ACCENT}
         />
-      </BuildDirtyStateProvider>,
+      </DirtyStateProvider>,
     );
     expect(screen.getByRole("link", { name: "Inbox" })).toHaveAccessibleName("Inbox");
 

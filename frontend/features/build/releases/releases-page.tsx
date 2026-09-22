@@ -2,10 +2,12 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -40,10 +42,17 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
     data: releases,
     isLoading,
     isError,
+    error,
     refetch,
   } = useReleases(projectId);
-  const deleteRelease = useDeleteRelease(projectId);
+  const pageState = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError,
+    error,
+  });
   const canManage = useCan("build:manage");
+  const deleteRelease = useDeleteRelease(projectId);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Release | null>(null);
@@ -179,6 +188,20 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
     [handleOpenEdit, handleDeleteTarget],
   );
 
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "error")
+    return (
+      <PageWrapper title="Releases">
+        <PageState
+          resolution={pageState}
+          loading={<DataTableSkeleton rows={8} columns={5} className="flex-1" />}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+
   return (
     <PageWrapper
       title="Releases"
@@ -226,7 +249,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
             <ErrorState
               className={PM_FILL_PANEL}
               title="Failed to load releases"
-              description="Could not fetch release data. Please try again."
+              description={getErrorMessage(error)}
               onRetry={handleRetry}
             />
           ) : (

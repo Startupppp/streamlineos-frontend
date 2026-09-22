@@ -268,9 +268,12 @@ inert, which is what was added:
 
 ## Acceptance Checklist
 
-- [x] **BSN-04-A03** Every inventoried dirty surface is covered by the shared
-  unsaved-work guard for every scope-changing entry point. **All surfaces covered;
-  every entry point but browser Back proven** (sixth pass).
+- [ ] **BSN-04-A03** Every inventoried dirty surface is covered by the shared
+  unsaved-work guard for every scope-changing entry point. **REOPENED (seventh
+  pass) — surfaces are covered, entry points are not.** See the correction at the
+  end of this item; the sixth-pass evidence below is preserved as written.
+  *(sixth pass, as recorded then:)* **All surfaces covered;
+  every entry point but browser Back proven**.
   The fifth pass registered six surfaces and proved four entry points. This pass
   extended coverage to every remaining React Hook Form owner under
   `features/build/**` using a filesystem-walking matrix test
@@ -298,6 +301,28 @@ inert, which is what was added:
   `goals/check-in-dialog.tsx`, `goals/add-link-dialog.tsx`,
   `whiteboard/create-board-dialog.tsx`, `sidebar/delete-project-dialog.tsx`,
   `settings/agent-token-create-dialog.tsx`, `templates/apply-template-dialog.tsx`).
+
+  **Seventh-pass correction (2026-09-21) — why this was reopened.**
+  The acceptance has two halves, "every inventoried dirty surface" and "every
+  scope-changing entry point". The matrix test above proves only the first: it
+  asserts each form *registers* with the guard. Registration is not interception
+  — a surface can be correctly registered and still be navigated away from by an
+  entry point that never asks the guard, which is precisely what was happening.
+  Two independent audits reached this conclusion separately.
+  Entry-point status as measured this pass: sidebar, command palette, scope
+  selector and organization switcher call the guard; browser Back is now
+  implemented via a `popstate` listener in `hooks/common/use-unsaved-changes-guard.ts`
+  (with a disclosed flash, because `history.go(1)` is async and the App Router has
+  no `beforePopState`); breadcrumb and Back-button navigation was unguarded across
+  every `PageWrapper` `backHref` page and the ticket parent link, and was repaired
+  in commit `8374d53a2` with `components/ui/page-wrapper-unsaved-guard.test.tsx`.
+  **Still open, and the reason this box is unticked:** programmatic `router.push`
+  navigation is not guarded — `features/build/command-center/use-keyboard-shortcuts.ts`
+  (owned by another lane) and row-click handlers in `features/build/backlog/`,
+  `features/build/drafts/` and `features/build/my-work/`.
+  Stale symbol: the evidence above names `useRegisterBuildDirtyState`; the hook was
+  renamed to `useRegisterDirtyState` in `3ff0b057a` and now lives at
+  `components/shared/dirty-state-context.tsx`, not under `features/build/navigation/`.
   **Remaining open item (BSN-04-014):** browser **Back**. jsdom's
   `history.back()` emits no `popstate` the App Router intercepts, so the guard
   cannot be observed on that entry point in the test suite. This needs a real

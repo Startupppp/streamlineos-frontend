@@ -18,7 +18,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
@@ -36,15 +37,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PortfolioStatusBadge, PortfolioHealthBadge } from "./portfolio-status-badge";
-import { PortfolioFormSheet } from "./portfolio-form-sheet";
-import type { Portfolio, CreatePortfolioInput, UpdatePortfolioInput } from "@/types/projects";
-import { getErrorMessage } from "@/lib/get-error-message";
 import {
-  PmPageShell,
-  PmSection,
-  PM_FILL_PANEL,
-} from "@/components/pm-chrome";
+  PortfolioStatusBadge,
+  PortfolioHealthBadge,
+} from "./portfolio-status-badge";
+import { PortfolioFormSheet } from "./portfolio-form-sheet";
+import type {
+  Portfolio,
+  CreatePortfolioInput,
+  UpdatePortfolioInput,
+} from "@/types/projects";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
@@ -69,17 +73,28 @@ function PortfolioRowActions({
 }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   const handleEdit = useCallback(() => onEdit(portfolio), [portfolio, onEdit]);
-  const handleDelete = useCallback(() => onDelete(portfolio), [portfolio, onDelete]);
+  const handleDelete = useCallback(
+    () => onDelete(portfolio),
+    [portfolio, onDelete],
+  );
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="w-7" aria-label="Portfolio actions" {...hoverHandlers}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="w-7"
+          aria-label="Portfolio actions"
+          {...hoverHandlers}
+        >
           <EllipsisIcon ref={iconRef} size={14} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" onClick={handleDelete}>Delete</DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+          Delete
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -100,8 +115,11 @@ export function PortfoliosPage() {
   const [search, setSearch] = useState("");
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [cursorStack, setCursorStack] = useState<string[]>([]);
-  const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
-    useQueryParamOpen("create");
+  const {
+    open: createOpen,
+    onOpenChange: setCreateOpen,
+    setOpen: openCreate,
+  } = useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<Portfolio | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Portfolio | null>(null);
 
@@ -129,6 +147,14 @@ export function PortfoliosPage() {
     const q = search.toLowerCase();
     return rows.filter((p) => p.name.toLowerCase().includes(q));
   }, [rows, search]);
+
+  const resolution = usePageState({
+    permission: "build:portfolios:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: displayed.length === 0,
+  });
 
   function handleCreate(input: CreatePortfolioInput) {
     createPortfolio.mutate(input, {
@@ -233,7 +259,10 @@ export function PortfoliosPage() {
       cell: (row) => (
         <Link
           href={`/build/portfolios/${row.id}`}
-          className={cn("font-medium text-foreground hover:text-primary", TEXT_ONE_LINE)}
+          className={cn(
+            "font-medium text-foreground hover:text-primary",
+            TEXT_ONE_LINE,
+          )}
           title={row.name}
         >
           {row.name}
@@ -254,7 +283,12 @@ export function PortfoliosPage() {
       key: "ownerId",
       header: "Owner",
       cell: (row) => (
-        <span className={cn("max-w-[140px] text-sm text-muted-foreground", TEXT_ONE_LINE)}>
+        <span
+          className={cn(
+            "max-w-[140px] text-sm text-muted-foreground",
+            TEXT_ONE_LINE,
+          )}
+        >
           {memberName(row.ownerId)}
         </span>
       ),
@@ -264,7 +298,9 @@ export function PortfoliosPage() {
       header: "Projects",
       className: "w-20",
       cell: (row) => (
-        <span className="tabular-nums text-muted-foreground">{row.projectCount ?? 0}</span>
+        <span className="tabular-nums text-muted-foreground">
+          {row.projectCount ?? 0}
+        </span>
       ),
     },
     {
@@ -272,7 +308,10 @@ export function PortfoliosPage() {
       header: "Strategic Goal",
       cell: (row) => (
         <span
-          className={cn("max-w-[200px] text-sm text-muted-foreground", TEXT_ONE_LINE)}
+          className={cn(
+            "max-w-[200px] text-sm text-muted-foreground",
+            TEXT_ONE_LINE,
+          )}
           title={row.strategicGoal ?? undefined}
         >
           {row.strategicGoal ?? "—"}
@@ -285,7 +324,11 @@ export function PortfoliosPage() {
       className: "w-10",
       cell: (row) =>
         canManage ? (
-          <PortfolioRowActions portfolio={row} onEdit={handleEditRow} onDelete={handleDeleteRow} />
+          <PortfolioRowActions
+            portfolio={row}
+            onEdit={handleEditRow}
+            onDelete={handleDeleteRow}
+          />
         ) : null,
     },
   ];
@@ -314,7 +357,12 @@ export function PortfoliosPage() {
         onValueChange={handleSearchChange}
       />
       {isFiltered ? (
-        <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-xs"
+          onClick={handleClearFilters}
+        >
           Clear
         </Button>
       ) : null}
@@ -326,30 +374,41 @@ export function PortfoliosPage() {
       title="Portfolios"
       subtitle="Group related projects into portfolios"
       filters={filtersBar}
-      actions={canManage ? <NewPortfolioButton onClick={handleOpenCreate} /> : undefined}
+      actions={
+        canManage ? (
+          <NewPortfolioButton onClick={handleOpenCreate} />
+        ) : undefined
+      }
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          {isLoading ? (
-            <DataTableSkeleton rows={12} columns={7} className="flex-1" />
-          ) : isError ? (
-            <ErrorState
-              className={PM_FILL_PANEL}
-              title="Couldn't load portfolios"
-              description={getErrorMessage(error)}
-              onRetry={handleRetry}
-            />
-          ) : displayed.length === 0 ? (
-            <EmptyState
-              className={PM_FILL_PANEL}
-              illustrationPreset="projects"
-              title="No portfolios yet"
-              description={isFiltered ? undefined : "Create a portfolio to group and govern your projects."}
-              filtersActive={isFiltered}
-              onClearFilters={handleClearFilters}
-              action={canManage && !isFiltered ? { label: "New Portfolio", onClick: handleOpenCreate } : undefined}
-            />
-          ) : (
+          <PageState
+            resolution={resolution}
+            loading={
+              <DataTableSkeleton rows={12} columns={7} className="flex-1" />
+            }
+            empty={
+              <EmptyState
+                className={PM_FILL_PANEL}
+                illustrationPreset="projects"
+                title="No portfolios yet"
+                description={
+                  isFiltered
+                    ? undefined
+                    : "Create a portfolio to group and govern your projects."
+                }
+                filtersActive={isFiltered}
+                onClearFilters={handleClearFilters}
+                action={
+                  canManage && !isFiltered
+                    ? { label: "New Portfolio", onClick: handleOpenCreate }
+                    : undefined
+                }
+              />
+            }
+            onRetry={handleRetry}
+            className={PM_FILL_PANEL}
+          >
             <>
               <DataTable
                 data={displayed}
@@ -358,18 +417,28 @@ export function PortfoliosPage() {
                 minWidth="780px"
                 className={PM_FILL_PANEL}
               />
-              {(hasPrev || hasNext) ? (
+              {hasPrev || hasNext ? (
                 <div className="flex items-center justify-end gap-2 border-t px-2 py-2">
-                  <Button variant="outline" size="sm" disabled={!hasPrev} onClick={handlePrevPage}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!hasPrev}
+                    onClick={handlePrevPage}
+                  >
                     Previous
                   </Button>
-                  <Button variant="outline" size="sm" disabled={!hasNext} onClick={handleNextPage}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!hasNext}
+                    onClick={handleNextPage}
+                  >
                     Next
                   </Button>
                 </div>
               ) : null}
             </>
-          )}
+          </PageState>
         </PmSection>
       </PmPageShell>
 

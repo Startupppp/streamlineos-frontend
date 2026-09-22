@@ -1,7 +1,7 @@
-import { requirePermission } from "@/lib/rbac/require-permission";
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { InboxPage } from "@/features/build/inbox/inbox-page";
 
 export default async function BuildInboxRoute() {
-  await requirePermission("build:tickets:view");
+  await enforceRouteAccess("/build/inbox");
   return <InboxPage />;
 }

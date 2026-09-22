@@ -36,6 +36,7 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { ErrorState } from "@/components/shared/error-state";
+import { AnonymitySuppressedNotice } from "@/components/shared/anonymity-suppressed-notice";
 
 const pollSchema = z.object({
   question: z.string().trim().min(1, "Question is required").max(300, "Question must be at most 300 characters"),
@@ -103,7 +104,8 @@ function PollCard({
     closed: "bg-muted text-muted-foreground border-border",
   };
 
-  const maxCount = results ? Math.max(...results.counts.map((c) => c.count), 1) : 1;
+  const counts = results?.counts ?? [];
+  const maxCount = Math.max(...counts.map((c) => c.count), 1);
 
   return (
     <div className="bg-card border border-border rounded-lg p-4 space-y-3">
@@ -154,9 +156,11 @@ function PollCard({
         </div>
       </div>
 
-      {showResults && results ? (
+      {showResults && results?.suppressed ? (
+        <AnonymitySuppressedNotice minResponses={results.minResponses} responses={results.totalVotes} />
+      ) : showResults && results ? (
         <div className="space-y-2">
-          {results.counts.map((c) => (
+          {counts.map((c) => (
             <div key={c.optionIndex} className="space-y-0.5">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-foreground">{c.option}</span>
@@ -273,7 +277,7 @@ export function PollsTab() {
             className="gap-1.5"
             onClick={() => setSheetOpen(true)}
           >
-            New Poll
+            Create poll
           </AnimatedIconButton>
         </div>
       )}

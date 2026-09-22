@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -9,8 +9,11 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { SearchInput } from "@/components/ui/search-input";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState, NoPermissionState } from "@/components/shared";
-import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { PageState } from "@/components/shared/page-state";
+import {
+  FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import {
   Select,
@@ -20,19 +23,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useAccountingBook } from "@/hooks/api/accounting/ledger";
 import { useVendor, useVendors } from "@/hooks/api/accounting/ap";
-import type { VendorSummary } from "@/types/accounting-ap";
+import type { VendorSummary } from "@/types/accounting/accounting-ap";
 import { useUrlListState } from "../lib/use-url-list-state";
 import { VendorFormSheet } from "./vendor-form-sheet";
 
 const PAGE_SIZE = 20;
 
 export function VendorsPage() {
-  const canRead = useCan("accounting:read");
   const canCreate = useCan("accounting:create");
   const canUpdate = useCan("accounting:update");
 
@@ -54,6 +56,16 @@ export function VendorsPage() {
   const editingVendorQuery = useVendor(editingVendorId ?? "", {
     enabled: !!editingVendorId,
   });
+
+  const pageState = usePageState({
+    permission: "accounting:read",
+    isLoading: vendorsQuery.isLoading,
+    isError: vendorsQuery.isError,
+    error: vendorsQuery.error,
+  });
+  const handleRetry = useCallback(() => {
+    void vendorsQuery.refetch();
+  }, [vendorsQuery]);
 
   function handleSearchChange(value: string): void {
     setParams({ q: value || undefined });
@@ -84,7 +96,9 @@ export function VendorsPage() {
             {row.displayName}
           </Link>
           {row.legalName && row.legalName !== row.displayName ? (
-            <p className="truncate text-xs text-muted-foreground">{row.legalName}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {row.legalName}
+            </p>
           ) : null}
         </div>
       ),
@@ -93,7 +107,9 @@ export function VendorsPage() {
       key: "contact",
       header: "Contact",
       cell: (row) => (
-        <span className="truncate text-sm text-muted-foreground">{row.email ?? row.phone ?? "—"}</span>
+        <span className="truncate text-sm text-muted-foreground">
+          {row.email ?? row.phone ?? "—"}
+        </span>
       ),
     },
     {
@@ -101,7 +117,9 @@ export function VendorsPage() {
       header: "Where",
       cell: (row) => (
         <span className="text-sm text-muted-foreground">
-          {[row.billingRegion, row.billingCountryCode ?? row.countryCode].filter(Boolean).join(", ")}
+          {[row.billingRegion, row.billingCountryCode ?? row.countryCode]
+            .filter(Boolean)
+            .join(", ")}
         </span>
       ),
     },
@@ -146,13 +164,23 @@ export function VendorsPage() {
     },
   ];
 
-  if (!canRead) {
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="Vendors">
-        <NoPermissionState permission="accounting:read" />
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
   const rows = vendorsQuery.data?.items ?? [];
   const filtersActive = search.length > 0 || activity === "all";
@@ -184,7 +212,10 @@ export function VendorsPage() {
             value={search}
             onValueChange={handleSearchChange}
           />
-          <Select value={activity || "active"} onValueChange={handleActivityChange}>
+          <Select
+            value={activity || "active"}
+            onValueChange={handleActivityChange}
+          >
             <SelectTrigger className={FILTER_SELECT_TRIGGER}>
               <SelectValue />
             </SelectTrigger>
@@ -196,48 +227,46 @@ export function VendorsPage() {
         </div>
       }
     >
-      {vendorsQuery.isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load your vendors"
-          description={getErrorMessage(vendorsQuery.error)}
-          onRetry={() => void vendorsQuery.refetch()}
-        />
-      ) : (
-        <DataTable
-          data={rows}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          isLoading={vendorsQuery.isPending}
-          minWidth="900px"
-          className="flex-1 min-h-0"
-          emptyState={
-            filtersActive ? (
-              <EmptyState
-                className="border-0 bg-transparent min-h-[40vh]"
-                title="No vendors match your filters"
-                description="Clear the search to see everyone you buy from."
-                action={{ label: "Clear filters", onClick: () => setParams({ q: undefined, activity: undefined }) }}
-              />
-            ) : (
-              <EmptyState
-                className="border-0 bg-transparent min-h-[40vh]"
-                title="No vendors yet"
-                description="Add the businesses you buy from so their bills can be entered."
-                action={canCreate ? { label: "Add vendor", onClick: () => setIsCreating(true) } : undefined}
-              />
-            )
-          }
-          pagination={{
-            mode: "server",
-            page,
-            pageSize: PAGE_SIZE,
-            total: vendorsQuery.data?.total ?? 0,
-            onPageChange: setPage,
-            pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
-          }}
-        />
-      )}
+      <DataTable
+        data={rows}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        isLoading={vendorsQuery.isPending}
+        minWidth="900px"
+        className="flex-1 min-h-0"
+        emptyState={
+          filtersActive ? (
+            <EmptyState
+              className="border-0 bg-transparent min-h-[40vh]"
+              title="No vendors match your filters"
+              description="Clear the search to see everyone you buy from."
+              action={{
+                label: "Clear filters",
+                onClick: () => setParams({ q: undefined, activity: undefined }),
+              }}
+            />
+          ) : (
+            <EmptyState
+              className="border-0 bg-transparent min-h-[40vh]"
+              title="No vendors yet"
+              description="Add the businesses you buy from so their bills can be entered."
+              action={
+                canCreate
+                  ? { label: "Add vendor", onClick: () => setIsCreating(true) }
+                  : undefined
+              }
+            />
+          )
+        }
+        pagination={{
+          mode: "server",
+          page,
+          pageSize: PAGE_SIZE,
+          total: vendorsQuery.data?.total ?? 0,
+          onPageChange: setPage,
+          pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+        }}
+      />
 
       {canCreate ? (
         <VendorFormSheet

@@ -1,11 +1,18 @@
 import { z } from "zod";
-import type { CreatePartyInput, PartyDetail, UpdatePartyInput } from "@/types/accounting-ar";
+import type {
+  CreatePartyInput,
+  PartyDetail,
+  UpdatePartyInput,
+} from "@/types/accounting/accounting-ar";
 
 export const partyFormSchema = z.object({
   role: z.enum(["customer", "vendor", "both"]),
   displayName: z.string().trim().min(1, "Enter a name").max(255),
   legalName: z.string().trim().max(255),
-  email: z.union([z.literal(""), z.string().trim().email("Enter a valid email").max(255)]),
+  email: z.union([
+    z.literal(""),
+    z.string().trim().email("Enter a valid email").max(255),
+  ]),
   phone: z.string().trim().max(64),
   countryCode: z
     .string()

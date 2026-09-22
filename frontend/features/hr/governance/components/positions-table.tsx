@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -17,6 +19,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { usePositions, useDeletePosition, type Position } from "../hooks/use-positions";
+import { CreatePositionDialog } from "./create-position-dialog";
 import { format } from "date-fns";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
@@ -35,6 +38,7 @@ export function PositionsTable() {
   const canManage = useCan("hr:positions:manage");
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(SENTINEL);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const { data, isLoading, isError, error, refetch } = usePositions({
     status: statusFilter === SENTINEL ? undefined : statusFilter,
@@ -45,6 +49,10 @@ export function PositionsTable() {
 
   function handleDelete(id: number) {
     deletePosition.mutate(id);
+  }
+
+  function handleOpenCreate() {
+    setCreateOpen(true);
   }
 
   function handleStatusChange(value: StatusFilter) {
@@ -161,7 +169,7 @@ export function PositionsTable() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-3 mb-4">
         <Select
           value={statusFilter}
           onValueChange={handleStatusFilterSelect}
@@ -178,6 +186,11 @@ export function PositionsTable() {
           </SelectContent>
         </Select>
         <p className="text-sm text-muted-foreground whitespace-nowrap">{data?.data?.length ?? 0} positions</p>
+        {canManage ? (
+          <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" className="ml-auto" onClick={handleOpenCreate}>
+            Create position
+          </AnimatedIconButton>
+        ) : null}
       </div>
       <DataTable
         className="flex-1 min-h-0"
@@ -192,12 +205,13 @@ export function PositionsTable() {
             description={filtersActive ? undefined : "Create positions to track roles, incumbents, and org structure."}
             filtersActive={filtersActive}
             onClearFilters={handleClearFilters}
-            action={!filtersActive && canManage ? { label: "Create position", onClick: () => {}} : undefined}
+            action={!filtersActive && canManage ? { label: "Create position", onClick: handleOpenCreate } : undefined}
             compact
           />
         }
         pagination={{ mode: "server", page, pageSize: 20, total: data?.data?.length ?? 0, onPageChange: setPage }}
       />
+      <CreatePositionDialog open={createOpen} onOpenChange={setCreateOpen} />
     </>
   );
 }

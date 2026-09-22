@@ -132,8 +132,8 @@ function AnnouncementsContent() {
   if (!canManage) {
     return (
       <PageWrapper
-        title="Announcements"
-        subtitle="Stay updated with company news and updates"
+        title="Company announcements"
+        subtitle="Company-wide news and updates, shared with every member from Home"
         noInternalScroll
         contentClassName="flex min-h-0 flex-1 flex-col"
       >
@@ -149,8 +149,8 @@ function AnnouncementsContent() {
       className="flex min-h-0 flex-1 flex-col"
     >
       <PageWrapper
-        title="Announcements"
-        subtitle="Stay updated with company news and updates"
+        title="Company announcements"
+        subtitle="Company-wide news and updates, shared with every member from Home"
         noInternalScroll
         contentClassName="flex min-h-0 flex-1 flex-col"
         filters={

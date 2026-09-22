@@ -412,6 +412,7 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run check:query-scope:self-test && pnpm run check:query-scope
 
+
       - name: Every queryFn forwards the abort signal
         if: ${{ !cancelled() }}
         run: pnpm run check:query-signal:self-test && pnpm run check:query-signal
@@ -487,6 +488,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run check:colors:self-test && pnpm run check:colors
 
+      - name: No hsl(var(--TOKEN)) wrappers around hex-valued tokens
+        if: ${{ !cancelled() }}
+        run: pnpm run check:css-tokens:self-test && pnpm run check:css-tokens
+
       - name: No customer proper noun in the source every tenant runs
         if: ${{ !cancelled() }}
         run: pnpm run check:tenant-neutral:self-test && pnpm run check:tenant-neutral
@@ -525,6 +530,18 @@ jobs:
       - name: No hand-rolled empty states
         if: ${{ !cancelled() }}
         run: pnpm run check:empty-states:self-test && pnpm run check:empty-states
+
+      - name: PageState is never rendered self-closing
+        if: ${{ !cancelled() }}
+        run: pnpm run check:page-state-usage:self-test && pnpm run check:page-state-usage
+
+      # The census lives at the repo root because it reads frontend/app and writes
+      # docs/specs/build/generated. It was invoked by no script in either package.json,
+      # so the one gate that catches Build route drift had never run in CI; it was
+      # red on disk (a deleted /sprints route still recorded) when it was first run.
+      - name: Build route census matches the generated snapshot
+        if: ${{ !cancelled() }}
+        run: node ../scripts/build-route-census.mjs --self-test && node ../scripts/build-route-census.mjs --check
 
       # Budgets only; no measurement runs in CI yet. Swap --self-test for --results=<file>
       # once a capture step produces one. Budgets live in scripts/check-web-vitals-budget.mjs

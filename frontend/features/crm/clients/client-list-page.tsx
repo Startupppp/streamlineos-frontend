@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState, useTransition, type MouseEvent } from "react";
-import { useCanState } from "@/hooks/api/access";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
@@ -24,7 +23,7 @@ import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import {
   CONTENT_FILL_PANEL,
   FILTER_SELECT_TRIGGER,
@@ -39,7 +38,7 @@ import { CLIENT_LAYOUT } from "@/lib/renderer/crm/client-layout";
 import { useClientAccounts } from "@/hooks/api/crm/clients";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { cn } from "@/lib/utils";
 import { clientRecords } from "./client-record";
 import type { ClientAccountStatus } from "@/types/crm";
@@ -182,18 +181,21 @@ export function ClientListPage() {
 
   const statusField = layout.fields.find((field) => field.name === "status");
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
-  if (useCanState("crm:clients:read") === "denied")
-    return <NoPermissionState permission="crm:clients:read" />;
+  const pageState = usePageState({
+    permission: "crm:clients:read",
+    isLoading,
+    isError,
+    error,
+  });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper title="Clients" subtitle="Accounts converted from a won lead">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper
@@ -226,13 +228,6 @@ export function ClientListPage() {
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {isLoading ? (
           <DataTableSkeleton rows={12} columns={layout.list.columns.length} className="flex-1" />
-        ) : isError ? (
-          <ErrorState
-            title="Couldn't load clients"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          />
         ) : accounts.length === 0 ? (
           <EmptyState
             illustration={<EmptyClientsIllustration />}

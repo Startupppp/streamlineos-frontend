@@ -17,9 +17,9 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/shared/loading-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { PageState } from "@/components/shared/page-state";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useHrAutomationEvents,
@@ -37,7 +37,6 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 
 export function AutomationsSettingsPage() {
-  const canView = useCan("hr:automations:view");
   const canManage = useCan("hr:automations:manage");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
@@ -53,7 +52,7 @@ export function AutomationsSettingsPage() {
 
   const enabledFilter = statusFilter === "enabled" ? true : statusFilter === "disabled" ? false : undefined;
 
-  const { data: rules, isLoading, isError, refetch } = useHrAutomations({
+  const { data: rules, isLoading, isError, error, refetch } = useHrAutomations({
     search: debouncedSearch.trim() || undefined,
     triggerEvent: triggerFilter === "all" ? undefined : triggerFilter,
     isEnabled: enabledFilter,
@@ -110,17 +109,7 @@ export function AutomationsSettingsPage() {
   function handleDeleteDialogChange(open: boolean) { if (!open) setDeleteTarget(null); }
   function handleRetry() { void refetch(); }
 
-  if (!canView) {
-    return (
-      <PageWrapper title="HR Automations" subtitle="Configure rules that fire automatically on HR events">
-        <NoPermissionState
-          permission="hr:automations:view"
-          title="Access Restricted"
-          description="You don't have permission to view HR automation rules. HR Admin role is required."
-        />
-      </PageWrapper>
-    );
-  }
+  const pageState = usePageState({ permission: "hr:automations:view", isLoading: false, isError, error });
 
   return (
     <PageWrapper
@@ -129,20 +118,20 @@ export function AutomationsSettingsPage() {
       actions={
         canManage ? (
           <AnimatedIconButton icon={PlusIcon} size="sm" iconSize={16} onClick={handleOpenCreate}>
-            {" New Rule"}
+            {" Create automation"}
           </AnimatedIconButton>
         ) : undefined
       }
     >
-      {stats.total > 0 && (
-        <div className="flex items-center gap-6 py-2 mb-2 text-xs text-muted-foreground">
-          <span><span className="font-semibold text-foreground">{stats.total}</span> rules</span>
-          <span><span className="font-semibold text-foreground">{stats.enabled}</span> enabled</span>
-          <span><span className="font-semibold text-foreground">{stats.totalRuns}</span> total runs</span>
-        </div>
-      )}
+      <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        {stats.total > 0 && (
+          <div className="flex items-center gap-6 py-2 mb-2 text-xs text-muted-foreground">
+            <span><span className="font-semibold text-foreground">{stats.total}</span> rules</span>
+            <span><span className="font-semibold text-foreground">{stats.enabled}</span> enabled</span>
+            <span><span className="font-semibold text-foreground">{stats.totalRuns}</span> total runs</span>
+          </div>
+        )}
 
-      {!isError && (
         <div className="flex flex-col sm:flex-row gap-2 mb-4">
           <SearchInput
             placeholder="Search rules…"
@@ -171,46 +160,39 @@ export function AutomationsSettingsPage() {
             </SelectContent>
           </Select>
         </div>
-      )}
-      {isLoading ? (
-        <LoadingState variant="list" rows={12} />
-      ) : isError ? (
-        <ErrorState
-          title="Couldn't load automation rules"
-          description="Something went wrong while fetching your HR automation rules."
-          onRetry={handleRetry}
-          className="flex-1"
-        />
-      ) : !rules || rules.length === 0 ? (
-        <EmptyState
-          illustrationPreset="automations"
-          title="No HR automation rules yet"
-          description="Create a rule to automatically trigger actions on HR events like onboarding, leave, or resignation."
-          action={{ label: "New Rule", onClick: handleOpenCreate }}
-          className="flex-1"
-        />
-      ) : (
-        <div className="space-y-3">
-          {rules.map((rule) => (
-            <AutomationRuleCard
-              key={rule.id}
-              rule={rule}
-              isToggling={togglingId === rule.id}
-              canManage={canManage}
-              onToggle={(next) => handleToggle(rule, next)}
-              onEdit={() => setEditTarget(rule)}
-              onDelete={() => setDeleteTarget(rule)}
-              onViewRuns={() => setRunsTarget(rule)}
-              onTest={() => setTestTarget(rule)}
-            />
-          ))}
-        </div>
-      )}
+        {isLoading ? (
+          <LoadingState variant="list" rows={12} />
+        ) : !rules || rules.length === 0 ? (
+          <EmptyState
+            illustrationPreset="automations"
+            title="No HR automation rules yet"
+            description="Create a rule to automatically trigger actions on HR events like onboarding, leave, or resignation."
+            action={{ label: "Create automation", onClick: handleOpenCreate }}
+            className="flex-1"
+          />
+        ) : (
+          <div className="space-y-3">
+            {rules.map((rule) => (
+              <AutomationRuleCard
+                key={rule.id}
+                rule={rule}
+                isToggling={togglingId === rule.id}
+                canManage={canManage}
+                onToggle={(next) => handleToggle(rule, next)}
+                onEdit={() => setEditTarget(rule)}
+                onDelete={() => setDeleteTarget(rule)}
+                onViewRuns={() => setRunsTarget(rule)}
+                onTest={() => setTestTarget(rule)}
+              />
+            ))}
+          </div>
+        )}
 
-      {createOpen && <AutomationUpsertSheet onClose={handleCloseCreate} />}
-      {editTarget && <AutomationUpsertSheet rule={editTarget} onClose={handleCloseEdit} />}
-      {runsTarget && <AutomationRunsSheet ruleId={runsTarget.id} ruleName={runsTarget.name} onClose={handleCloseRuns} />}
-      {testTarget && <AutomationTestDialog rule={testTarget} onClose={handleCloseTest} />}
+        {createOpen && <AutomationUpsertSheet onClose={handleCloseCreate} />}
+        {editTarget && <AutomationUpsertSheet rule={editTarget} onClose={handleCloseEdit} />}
+        {runsTarget && <AutomationRunsSheet ruleId={runsTarget.id} ruleName={runsTarget.name} onClose={handleCloseRuns} />}
+        {testTarget && <AutomationTestDialog rule={testTarget} onClose={handleCloseTest} />}
+      </PageState>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>

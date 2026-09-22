@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import Link from "next/link";
 import type { Resignation } from "@/hooks/api/hr";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ import {
   Undo2,
   FileText,
   ExternalLink,
+  ListChecks,
 } from "lucide-react";
 import { ProgressTimeline } from "./progress-timeline";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -219,7 +221,7 @@ export function ResignationCard({
             </Button>
           )}
 
-          {r.resignationLetterUrl && (
+          {r.hasResignationLetter && (
             <button
               type="button"
               onClick={handleViewUploadedLetter}
@@ -243,6 +245,13 @@ export function ResignationCard({
               <FileText className="h-3.5 w-3.5" />
             </Button>
           )}
+
+          <Button asChild size="sm" variant="outline" className="text-xs gap-1.5 duration-200">
+            <Link href={`/hr/exit/${r.id}`}>
+              <ListChecks className="h-3 w-3" />
+              Checklist
+            </Link>
+          </Button>
 
           <Button
             size="sm"

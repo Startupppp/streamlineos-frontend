@@ -120,9 +120,9 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
               />
             )}
             <div className="space-y-5">
-              <ul role="list" className="space-y-5">
+              <ul className="space-y-5">
                 {topLevel.map((comment) => (
-                  <li key={comment.id} role="listitem">
+                  <li key={comment.id}>
                     <PageCommentThread
                       comment={comment}
                       replies={comments.filter((c) => c.parentId === comment.id)}
@@ -140,9 +140,9 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
                   <p className="text-xs font-medium text-muted-foreground">
                     Resolved ({resolved.length})
                   </p>
-                  <ul role="list" className="space-y-5">
+                  <ul className="space-y-5">
                     {resolved.map((comment) => (
-                      <li key={comment.id} role="listitem">
+                      <li key={comment.id}>
                         <PageCommentThread
                           comment={comment}
                           replies={comments.filter((c) => c.parentId === comment.id)}

@@ -3,9 +3,22 @@
 Active module and platform specifications. Completed historical architecture
 candidate PRDs were removed; Git history remains their archive.
 
+## Start here
+
+- [**Pending work — consolidated**](2026-09-21-pending-work.md) — every open item in one
+  index, grouped by what is actually blocking it, plus the closed-by-refutation list.
+- [Session handoff](2026-09-21-session-handoff.md) — state up to the migration closeout.
+- [Migration repair handoff](2026-09-21-migration-repair-handoff.md) — the `0466`/`0467`
+  production break, the billing-webhook fix, and the rollback work. **Read before applying
+  any historical migration.**
+- [Open-items register](2026-09-21-open-items-register.md) — per-item detail annex to the
+  pending-work index: source line, what closes it, what it is blocked on. Carries ~15
+  items the index does not yet list.
+
 ## HRMS + Payroll + WFH/WFO
 
-- [HRMS module completion program](hrms-module/README.md)
+- [HRMS People execution ledger and PRD program](hrms-module/README.md)
+- [HRMS People product blueprint](hrms-module/product-blueprint-prd.md)
 - [HRM-00 product decisions](hrms-module/00-product-decisions-prd.md)
 
 ## Documents / Knowledge / Wiki

@@ -76,7 +76,7 @@ function getYear(month: string): string {
 
 export function MyPayrollPageContent() {
   const payrollModuleEnabled = useModuleEnabled("payroll");
-  const { data: fnf } = useEssFnf();
+  const { data: fnf, isError: fnfFailed } = useEssFnf();
   const { data: payslips } = useEssPayslips();
   const { data: managerInbox } = useManagerInbox(payrollModuleEnabled);
   const {
@@ -139,9 +139,9 @@ export function MyPayrollPageContent() {
     }
     if (toggles?.essAllowBankUpdate)
       items.push({ id: "bank", label: "Bank Details" });
-    if (fnf) items.push({ id: "fnf", label: "FNF Settlement" });
+    if (fnf || fnfFailed) items.push({ id: "fnf", label: "Final settlement" });
     return items;
-  }, [toggles, overview?.activeLoanBalance, fnf]);
+  }, [toggles, overview?.activeLoanBalance, fnf, fnfFailed]);
 
   const showLoans =
     toggles?.essAllowLoanRequests ||
@@ -449,7 +449,7 @@ export function MyPayrollPageContent() {
               />
             </TabsContent>
           )}
-          {fnf && (
+          {(fnf || fnfFailed) && (
             <TabsContent value="fnf" className={TAB_PANEL_CLASS}>
               <EssFnfSection hideToolbar />
             </TabsContent>

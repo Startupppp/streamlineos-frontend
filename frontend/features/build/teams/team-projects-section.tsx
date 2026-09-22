@@ -10,7 +10,7 @@ import {
   useRemoveTeamProject,
 } from "@/hooks/api/build/teams";
 import { useProjects } from "@/hooks/api/build/projects";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -207,6 +207,7 @@ interface TeamProjectsSectionProps {
 
 export function TeamProjectsSection({ teamId }: TeamProjectsSectionProps) {
   const canManage = useCan("build:teams:manage");
+  const canViewState = useCanState("build:teams:view");
   const [removeTarget, setRemoveTarget] = useState<TeamProject | null>(null);
 
   const { data: teamProjects = [], isLoading } = useTeamProjects(teamId);
@@ -245,6 +246,14 @@ export function TeamProjectsSection({ teamId }: TeamProjectsSectionProps) {
     setRemoveTarget(null);
   }
 
+  function handleRemoveConfirmOpenChange(open: boolean) {
+    if (!open) handleRemoveCancel();
+  }
+
+  if (canViewState === "denied") return null;
+
+  const effectiveLoading = isLoading || canViewState === "loading";
+
   return (
     <>
       <PmSection index={2} className="space-y-3">
@@ -262,7 +271,7 @@ export function TeamProjectsSection({ teamId }: TeamProjectsSectionProps) {
           ) : null}
         </div>
 
-        {isLoading ? (
+        {effectiveLoading ? (
           <PmPanel className="space-y-2 p-2">
             {Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-10 w-full rounded-md" />
@@ -303,7 +312,7 @@ export function TeamProjectsSection({ teamId }: TeamProjectsSectionProps) {
 
       <ConfirmDialog
         open={removeTarget !== null}
-        onOpenChange={(o) => { if (!o) handleRemoveCancel(); }}
+        onOpenChange={handleRemoveConfirmOpenChange}
         title={`Remove "${removeTarget?.name ?? ""}"?`}
         description="This will remove the project from the team. Team members will lose the access they gained through this team."
         confirmLabel="Remove"

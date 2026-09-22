@@ -16,16 +16,14 @@ import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTargetIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared";
 import { useGoals, useGoalStats, type GoalListItem, type GoalLevel, type GoalStatus } from "@/hooks/api/goals";
 import { GoalFormSheet } from "@/features/build/goals/goal-form-sheet";
 import { GoalLevelStatusFilters, GoalFiltersPopover } from "@/features/build/goals/goal-filters-popover";
 import { STATUS_CONFIG, LEVEL_LABEL, STATUS_OPTIONS, LEVEL_OPTIONS } from "@/features/build/goals/constants";
-import { resolveGate } from "@/lib/rbac/gate";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
-import { getErrorMessage } from "@/lib/get-error-message";
 import {
   PmPageShell,
   PmSection,
@@ -46,7 +44,7 @@ function GoalCard({ goal }: { goal: GoalListItem }) {
   const cfg = STATUS_CONFIG[goal.status];
   const ownerName = goal.owner?.name ?? goal.owner?.email ?? null;
   return (
-    <Link href={`/build/goal/${goal.id}`} className="group block">
+    <Link href={`/build/goals/${goal.id}`} className="group block">
       <div className={cn(PM_PANEL, "space-y-3 p-4 transition-[border-color,box-shadow] duration-200 group-hover:border-primary/40 group-hover:shadow-md")}>
         <div className="flex min-w-0 items-start justify-between gap-2">
           <p className={cn(TEXT_TWO_LINES, "text-sm font-medium leading-snug")} title={goal.title}>{goal.title}</p>
@@ -124,7 +122,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
     [managedProductId, statusFilter, levelFilter, debouncedSearch],
   );
 
-  const { data: goals, isLoading, isError, error, refetch, access } = useGoals(params);
+  const { data: goals, isLoading, isError, error, refetch } = useGoals(params);
   const { data: stats } = useGoalStats();
 
   const grouped = useMemo(() => {
@@ -136,10 +134,11 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
 
   const filtersActive = search.trim() !== "" || statusFilter !== "all" || levelFilter !== "all";
 
-  const gate = resolveGate({
-    access: access.pending ? "loading" : access.denied ? "denied" : "granted",
+  const resolution = usePageState({
+    permission: "build:goals:view",
     isLoading,
     isError,
+    error,
     isEmpty: (goals?.length ?? 0) === 0,
   });
 
@@ -175,7 +174,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
           <div className="md:hidden">
             <GoalFiltersPopover levelFilter={levelFilter} statusFilter={statusFilter} onLevelChange={handleLevelFilterChange} onStatusChange={handleStatusFilterChange} />
           </div>
-          {gate !== "denied" ? <NewGoalButton onClick={handleOpenCreate} /> : null}
+          {resolution.kind !== "denied" ? <NewGoalButton onClick={handleOpenCreate} /> : null}
         </div>
       }
       filters={
@@ -190,31 +189,31 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
       <PmPageShell>
         <PmSection index={0} className="shrink-0">
           <StatCardGrid cols={4}>
-            <StatCard label="Total Goals" value={stats?.total ?? 0} icon={Target} tone="default" isLoading={gate === "loading"} />
-            <StatCard label="On Track" value={stats?.byStatus.on_track ?? 0} icon={TrendingUp} tone="emerald" isLoading={gate === "loading"} />
-            <StatCard label="At Risk" value={stats?.atRisk ?? 0} icon={AlertTriangle} tone="amber" isLoading={gate === "loading"} />
-            <StatCard label="Avg Progress" value={`${stats?.avgProgress ?? 0}%`} icon={TrendingUp} tone="default" isLoading={gate === "loading"} />
+            <StatCard label="Total Goals" value={stats?.total ?? 0} icon={Target} tone="default" isLoading={isLoading} />
+            <StatCard label="On Track" value={stats?.byStatus.on_track ?? 0} icon={TrendingUp} tone="emerald" isLoading={isLoading} />
+            <StatCard label="At Risk" value={stats?.atRisk ?? 0} icon={AlertTriangle} tone="amber" isLoading={isLoading} />
+            <StatCard label="Avg Progress" value={`${stats?.avgProgress ?? 0}%`} icon={TrendingUp} tone="default" isLoading={isLoading} />
           </StatCardGrid>
         </PmSection>
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
-          {gate === "loading" ? (
-            <GoalsSkeleton />
-          ) : gate === "denied" ? (
-            <NoPermissionState permission="build:goals:view" className={PM_FILL_PANEL} />
-          ) : gate === "error" ? (
-            <ErrorState className={PM_FILL_PANEL} title="Couldn't load goals" description={getErrorMessage(error)} onRetry={handleRetry} />
-          ) : gate === "empty" ? (
-            <EmptyState
-              className={PM_FILL_PANEL}
-              illustration={<EmptyTargetIllustration />}
-              title="No goals yet"
-              description={filtersActive ? undefined : "Create goals linked to this product."}
-              filtersActive={filtersActive}
-              onClearFilters={handleClearFilters}
-              action={filtersActive ? undefined : { label: "New Goal", onClick: handleOpenCreate }}
-            />
-          ) : (
+          <PageState
+            resolution={resolution}
+            loading={<GoalsSkeleton />}
+            empty={
+              <EmptyState
+                className={PM_FILL_PANEL}
+                illustration={<EmptyTargetIllustration />}
+                title="No goals yet"
+                description={filtersActive ? undefined : "Create goals linked to this product."}
+                filtersActive={filtersActive}
+                onClearFilters={handleClearFilters}
+                action={filtersActive ? undefined : { label: "New Goal", onClick: handleOpenCreate }}
+              />
+            }
+            onRetry={handleRetry}
+            className={PM_FILL_PANEL}
+          >
             <div className="space-y-8">
               {LEVEL_ORDER.map((level) => {
                 const levelGoals = grouped.get(level) ?? [];
@@ -232,7 +231,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
                 );
               })}
             </div>
-          )}
+          </PageState>
         </PmSection>
       </PmPageShell>
 

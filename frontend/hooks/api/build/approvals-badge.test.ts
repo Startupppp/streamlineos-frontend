@@ -254,6 +254,17 @@ describe("BSN-04-A04 — revoking build:tickets:view stops rendering data withou
   });
 });
 
+describe("BSN-03 — badge query error safety", () => {
+  it("when the query is pending the hook returns undefined data so badgeFor defaults to 0 without throwing", () => {
+    mockUseCan.mockReturnValue(true);
+    const client = makeClient();
+    const { result } = renderHook(() => useBuildNotificationUnreadCount(), {
+      wrapper: wrap(client),
+    });
+    expect(result.current.data).toBeUndefined();
+  });
+});
+
 describe("useDeleteApproval — BSN-03-024 cache-patch on delete", () => {
   let client: QueryClient;
 

@@ -19,13 +19,13 @@ import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { colorForKey } from "./lib/format";
 
 const TOOLTIP_STYLE = {
-  background: "hsl(var(--card))",
-  border: "1px solid hsl(var(--border))",
+  background: "var(--card)",
+  border: "1px solid var(--border)",
   borderRadius: 8,
 } as const;
 
 const AXIS_TICK = {
-  fill: "hsl(var(--muted-foreground))",
+  fill: "var(--muted-foreground)",
   fontSize: 11,
 } as const;
 
@@ -56,7 +56,7 @@ function BarPanel({ title, data }: { title: string; data: { label: string; count
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="label" tick={AXIS_TICK} tickLine={false} axisLine={false} />
                 <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} allowDecimals={false} />
                 <Tooltip contentStyle={TOOLTIP_STYLE} />

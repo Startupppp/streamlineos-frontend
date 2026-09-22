@@ -1,9 +1,9 @@
 ﻿"use client";
 
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { changelogSchema, type ChangelogFormValues } from "./roadmap-schema";
 import {
   Form,
   FormField,
@@ -41,16 +41,6 @@ import {
 import type { ChangelogEntry } from "@/types/projects";
 import { CHANGELOG_TYPE_OPTIONS } from "./roadmap-constants";
 
-const changelogSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  content: z.string(),
-  type: z.enum(["feature", "improvement", "fix"]),
-  version: z.string(),
-  isPublished: z.boolean(),
-});
-
-type ChangelogFormValues = z.infer<typeof changelogSchema>;
-
 interface ChangelogSheetProps {
   entry?: ChangelogEntry;
   onClose: () => void;
@@ -62,7 +52,7 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
   const update = useUpdateChangelogEntry();
   const isPending = create.isPending || update.isPending;
 
-  const form = useForm<ChangelogFormValues, any, ChangelogFormValues>({
+  const form = useForm<ChangelogFormValues, unknown, ChangelogFormValues>({
     resolver: zodResolver(changelogSchema),
     defaultValues: {
       title: entry?.title ?? "",
@@ -72,7 +62,7 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
       isPublished: entry?.isPublished ?? false,
     },
   });
-  useRegisterBuildDirtyState(form.formState.isDirty);
+  useRegisterDirtyState(form.formState.isDirty);
 
   function handleSave(values: ChangelogFormValues) {
     if (isEdit) {

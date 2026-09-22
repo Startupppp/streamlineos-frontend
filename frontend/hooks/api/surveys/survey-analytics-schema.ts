@@ -81,5 +81,7 @@ export const surveyQuestionAnalyticsContract = z.array(
       }),
     ),
     textResponses: z.array(z.string().nullable()).optional(),
+    minResponses: z.number(),
+    suppressed: z.boolean(),
   }),
 );

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireModulePermission } from "@/lib/rbac/require-permission";
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { ProductInsightsPage } from "@/features/build/managed-products/product-insights-page";
 
 export const metadata = {
@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default async function ProductInsightsRoute({ params }: Props) {
-  await requireModulePermission("build", "build:managed-products:view");
+  await enforceRouteAccess("/build/managed-products/[managedProductId]/insights");
   const { managedProductId } = await params;
   const parsed = Number(managedProductId);
   if (!Number.isInteger(parsed) || parsed <= 0) notFound();

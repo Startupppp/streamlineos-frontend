@@ -2,9 +2,9 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { FolderIcon } from "lucide-react";
 import { BuildNavLink } from "./build-nav-link";
 import {
-  BuildDirtyStateProvider,
-  useRegisterBuildDirtyState,
-} from "./build-dirty-state-context";
+  DirtyStateProvider,
+  useRegisterDirtyState,
+} from "@/components/shared/dirty-state-context";
 import type { BuildNavDestination } from "@/lib/build/nav/build-nav-destination";
 import type { ModuleAccent } from "@/components/layout/sidebar/sidebar-nav-items";
 
@@ -37,13 +37,13 @@ const accent: ModuleAccent = {
 } as ModuleAccent;
 
 function DirtySurface({ isDirty }: { isDirty: boolean }) {
-  useRegisterBuildDirtyState(isDirty);
+  useRegisterDirtyState(isDirty);
   return null;
 }
 
 function renderLink(isDirty: boolean) {
   return render(
-    <BuildDirtyStateProvider>
+    <DirtyStateProvider>
       <DirtySurface isDirty={isDirty} />
       <BuildNavLink
         destination={destination}
@@ -51,7 +51,7 @@ function renderLink(isDirty: boolean) {
         isCollapsed={false}
         accent={accent}
       />
-    </BuildDirtyStateProvider>,
+    </DirtyStateProvider>,
   );
 }
 

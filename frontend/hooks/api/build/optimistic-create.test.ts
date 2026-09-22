@@ -76,7 +76,7 @@ function makeTicket(id: number, overrides?: Partial<Ticket>): Ticket {
 function makeTicketPage(tickets: Ticket[]): CursorPageResponse<Ticket> {
   return {
     data: tickets,
-    pagination: { nextCursor: null, hasMore: false, total: tickets.length },
+    pagination: { limit: 50, nextCursor: null, hasMore: false },
   };
 }
 

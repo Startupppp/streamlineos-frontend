@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RequireModule } from "@/components/auth/require-module";
-import { NoPermissionState } from "@/components/shared";
 import { CallAnalysisPanel } from "@/components/call-intelligence/call-analysis-panel";
 import { CallParticipantsCard } from "@/features/crm/intelligence/call-participants-card";
-import { useCanState } from "@/hooks/api/access";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useCallAnalysis } from "@/hooks/api/crm/call-intelligence";
 import { formatShortDate } from "@/lib/date-utils";
 
@@ -48,27 +49,18 @@ function CallIntelligenceDetail({ activityId }: { activityId: string }) {
    * somebody this call has never been analysed, when the truth is that they are
    * not allowed to read it.
    */
-  const state = useCanState("crm:call-analysis:view");
-  /**
-   * Whether `/crm/intelligence` is somewhere this reader can actually go. The
-   * digest is gated on the team key, so the back button used to land a rep on a
-   * permission wall — worse than having no back button. `/crm/intelligence/reps`
-   * carries the same key as this page, so it is the honest destination for
-   * everybody else and doubles as the way a rep reaches their own metrics at all.
-   */
-  const canReadTeam = useCanState("crm:call-analysis:view-team") === "granted";
-  /**
-   * Read here as well as inside the panel so the subtitle can say when the call
-   * was analysed. Same query key, so TanStack serves both from one request.
-   */
+  const canReadTeam = useCan("crm:call-analysis:view-team");
   const { data } = useCallAnalysis(activityId);
 
-  if (state === "denied")
+  const pageState = usePageState({ permission: "crm:call-analysis:view", isLoading: false, isError: false });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
-      <NoPermissionState
-        permission="crm:call-analysis:view"
-        description="Reading a call's analysis needs the call-analysis key. Your own calls' analyses appear on the calls themselves."
-      />
+      <PageWrapper title="Call analysis" backHref={canReadTeam ? "/crm/intelligence/reps" : undefined}>
+        <PageState resolution={pageState} loading={null} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
     );
 
   /**

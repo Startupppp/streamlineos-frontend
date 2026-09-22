@@ -1,7 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { Risk, RiskProbability, RiskImpact } from "@/types/projects";
+import type { RiskProbability, RiskImpact } from "@/types/projects";
+import type { RiskMatrixCell } from "@/hooks/api/build/governance-schema";
 import { getRiskSeverity } from "./risk-severity";
 
 const PROBABILITIES: RiskProbability[] = ["low", "medium", "high"];
@@ -15,16 +16,14 @@ const LEGEND = [
 ] as const;
 
 interface RiskMatrixProps {
-  risks: Risk[];
+  cells: RiskMatrixCell[];
   onCellClick?: (probability: RiskProbability, impact: RiskImpact) => void;
   selectedCell?: { probability: RiskProbability; impact: RiskImpact } | null;
 }
 
-export function RiskMatrix({ risks, onCellClick, selectedCell }: RiskMatrixProps) {
-  const openRisks = risks.filter((r) => r.status !== "closed" && r.status !== "accepted");
-
+export function RiskMatrix({ cells, onCellClick, selectedCell }: RiskMatrixProps) {
   function cellCount(probability: RiskProbability, impact: RiskImpact): number {
-    return openRisks.filter((r) => r.probability === probability && r.impact === impact).length;
+    return cells.find((c) => c.probability === probability && c.impact === impact)?.openCount ?? 0;
   }
 
   return (

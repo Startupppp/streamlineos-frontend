@@ -86,8 +86,14 @@ invalidation, failure behavior, tests.
       (`kb-spaces.service.ts:86-97`). Switch to `kb_pages` (or a combined
       field named honestly). Stop scanning the full page tree on the
       client (`spaces-page.tsx:35-44`).
-- [ ] **DOC-07-018** Settings GET/PATCH remain `kb:settings:manage`;
+- [x] **DOC-07-018** Settings GET/PATCH remain `kb:settings:manage`;
       retention only until more settings are approved.
+      **Closed — source proof 2026-09-21.** `kb-settings.controller.ts:19` and
+      `:26` both carry `@RequirePermission("kb:settings:manage")`, and the
+      PATCH body is `updateKbSettingsSchema`
+      (`kb/core/dto/kb.schemas.ts:92-94`), a `z.object` whose only key is
+      `trashRetentionDays`. Any further setting therefore needs a deliberate
+      schema change, which is the gate this item asks for.
 - [ ] **DOC-07-019** Unify or document `/kb/pages/search` vs `/kb/search`.
       Wiki full search uses pages search + facets. Help-centre deflection
       keeps unified search. Align permission keys.

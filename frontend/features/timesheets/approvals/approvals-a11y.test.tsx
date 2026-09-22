@@ -7,6 +7,16 @@ import { useApprovals } from "@/hooks/api/timesheets-core/approvals";
 import type { TimesheetPeriod } from "@/features/timesheets/types";
 import { ApprovalsView } from "./approvals-view";
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
+  usePathname: () => "/timesheets/approvals",
+  useSearchParams: () => ({ get: () => null }),
+}));
+
+jest.mock("@/hooks/api/timesheets-core/periods", () => ({
+  usePeriod: () => ({ data: undefined }),
+}));
+
 jest.mock("next-auth/react", () => ({
   useSession: jest.fn(() => ({ data: { user: { id: "usr_me" }, orgId: "org_1" } })),
 }));
@@ -56,6 +66,9 @@ function period(over: Partial<TimesheetPeriod>): TimesheetPeriod {
     rejectedAt: null,
     lockedAt: null,
     currentApproverMembershipId: 200,
+    approvalRoute: null,
+    approvalDueAt: null,
+    approvalEscalatedAt: null,
     rejectionReason: null,
     createdAt: "2026-09-07T00:00:00.000Z",
     updatedAt: "2026-09-14T09:00:00.000Z",

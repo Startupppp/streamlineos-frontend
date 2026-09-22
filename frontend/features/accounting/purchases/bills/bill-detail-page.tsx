@@ -1,15 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useAccountingBook } from "@/hooks/api/accounting/ledger";
 import {
   useApDocument,
@@ -29,7 +30,6 @@ interface BillDetailPageProps {
 
 export function BillDetailPage({ apDocumentId }: BillDetailPageProps) {
   const router = useRouter();
-  const canRead = useCan("accounting:payables:read");
   const canManage = useCan("accounting:payables:manage");
 
   const [isEditing, setIsEditing] = useState(false);
@@ -40,6 +40,14 @@ export function BillDetailPage({ apDocumentId }: BillDetailPageProps) {
   const documentQuery = useApDocument(apDocumentId);
   const postDocument = usePostApDocument();
   const deleteDocument = useDeleteApDocument();
+
+  const pageState = usePageState({
+    permission: "accounting:payables:read",
+    isLoading: documentQuery.isLoading,
+    isError: documentQuery.isError,
+    error: documentQuery.error,
+  });
+  const handleRetry = useCallback(() => { void documentQuery.refetch(); }, [documentQuery]);
 
   const lineDescriptions = useMemo(() => {
     const map: Record<string, string> = {};
@@ -69,34 +77,22 @@ export function BillDetailPage({ apDocumentId }: BillDetailPageProps) {
     });
   }
 
-  if (!canRead) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper title="Bill" backHref="/accounting/purchase-bills" backLabel="Back to bills">
-        <NoPermissionState permission="accounting:payables:read" />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
-  if (documentQuery.isPending) {
+  if (documentQuery.isPending || !documentQuery.data) {
     return (
       <PageWrapper title="Bill" backHref="/accounting/purchase-bills" backLabel="Back to bills">
         <div className="grid flex-1 gap-4 lg:grid-cols-3">
           <Skeleton className="h-96 w-full lg:col-span-2" />
           <Skeleton className="h-96 w-full" />
         </div>
-      </PageWrapper>
-    );
-  }
-
-  if (documentQuery.isError || !documentQuery.data) {
-    return (
-      <PageWrapper title="Bill" backHref="/accounting/purchase-bills" backLabel="Back to bills">
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load this bill"
-          description={getErrorMessage(documentQuery.error)}
-          onRetry={() => void documentQuery.refetch()}
-        />
       </PageWrapper>
     );
   }

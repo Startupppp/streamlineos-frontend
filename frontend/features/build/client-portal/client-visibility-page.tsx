@@ -1,8 +1,6 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
-import { useCan } from "@/hooks/api/access";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
 import {
   useClientVisibility,
   useUpdateTicketVisibility,
@@ -10,7 +8,6 @@ import {
 } from "@/hooks/api/build/client-portal";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +27,8 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 
 type VisibilityTab = "tickets" | "milestones";
 
@@ -102,9 +101,15 @@ function MilestoneRow({
 }
 
 export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
-  const canManage = useCan("build:clientvisibility:manage");
-  const { data, isLoading, isError, refetch } = useClientVisibility(projectId);
+  const { data, isLoading, isError, error, refetch } = useClientVisibility(projectId);
   const [activeTab, setActiveTab] = useState<VisibilityTab>("tickets");
+
+  const pageState = usePageState({
+    permission: "build:clientvisibility:manage",
+    isLoading,
+    isError,
+    error,
+  });
 
   const ticketCount = data?.tickets.length ?? 0;
   const milestoneCount = data?.milestones.length ?? 0;
@@ -119,6 +124,14 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
   function handleRetry() {
     void refetch();
   }
+
+  const visibilitySkeleton = (
+    <div className="flex flex-col gap-2">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <Skeleton key={i} className="h-10 w-full rounded-md" />
+      ))}
+    </div>
+  );
 
   return (
     <PageWrapper
@@ -137,17 +150,12 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
         </PmSection>
 
         <PmSection index={1}>
-          {!canManage ? (
-            <NoPermissionState permission="build:clientvisibility:manage" />
-          ) : isLoading ? (
-            <div className="flex flex-col gap-2">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full rounded-md" />
-              ))}
-            </div>
-          ) : isError ? (
-            <ErrorState className="min-h-[14rem]" onRetry={handleRetry} />
-          ) : (
+          <PageState
+            resolution={pageState}
+            loading={visibilitySkeleton}
+            onRetry={handleRetry}
+            className="flex min-h-0 flex-1 flex-col"
+          >
             <Tabs value={activeTab} onValueChange={handleTabChange} className="flex min-h-0 flex-1 flex-col gap-3">
               <PageTabsToolbar
                 tabsDensity="labeled"
@@ -227,7 +235,7 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
                 )}
               </TabsContent>
             </Tabs>
-          )}
+          </PageState>
         </PmSection>
       </PmPageShell>
     </PageWrapper>

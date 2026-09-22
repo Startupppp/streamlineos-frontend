@@ -1,10 +1,10 @@
 ﻿"use client";
 
 import { useEffect } from "react";
-import { useRegisterBuildDirtyState } from "@/features/build/navigation/build-dirty-state-context";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { riskFormSchema, type RiskFormValues } from "./governance-schema";
 import {
   Sheet,
   SheetContent,
@@ -28,19 +28,6 @@ import { ProjectMemberSelect } from "@/components/members/project-member-select"
 import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
 import { useProject } from "@/hooks/api/build/projects";
 import type { Risk, CreateRiskInput, UpdateRiskInput } from "@/types/projects";
-
-const riskSchema = z.object({
-  title: z.string().min(1, "Required").max(200),
-  description: z.string(),
-  probability: z.enum(["low", "medium", "high"]),
-  impact: z.enum(["low", "medium", "high"]),
-  status: z.enum(["open", "mitigating", "monitoring", "accepted", "closed"]),
-  ownerId: z.string(),
-  mitigation: z.string(),
-  linkedTicketId: z.string(),
-});
-
-type RiskFormValues = z.infer<typeof riskSchema>;
 
 const CREATE_DEFAULTS: RiskFormValues = {
   title: "", description: "", probability: "medium", impact: "medium",
@@ -82,10 +69,10 @@ export function RiskFormSheet({
   const { data: project } = useProject(projectId);
   const projectKey = project?.key ?? "";
   const form = useForm<RiskFormValues>({
-    resolver: zodResolver(riskSchema),
+    resolver: zodResolver(riskFormSchema),
     defaultValues: CREATE_DEFAULTS,
   });
-  useRegisterBuildDirtyState(open && form.formState.isDirty);
+  useRegisterDirtyState(open && form.formState.isDirty);
 
   useEffect(() => {
     if (open) {
@@ -98,13 +85,13 @@ export function RiskFormSheet({
       onSubmitEdit({
         riskId: defaultValues.id,
         title: values.title,
-        ...(values.description ? { description: values.description } : {}),
+        description: values.description ? values.description : null,
         probability: values.probability,
         impact: values.impact,
         status: values.status,
-        ...(values.ownerId ? { ownerId: values.ownerId } : {}),
-        ...(values.mitigation ? { mitigation: values.mitigation } : {}),
-        ...(values.linkedTicketId ? { linkedTicketId: parseInt(values.linkedTicketId, 10) } : {}),
+        ownerId: values.ownerId ? values.ownerId : null,
+        mitigation: values.mitigation ? values.mitigation : null,
+        linkedTicketId: values.linkedTicketId ? parseInt(values.linkedTicketId, 10) : null,
       });
     } else {
       onSubmitCreate({

@@ -59,7 +59,7 @@ describe("public Help Centre first HTML", () => {
     });
 
     const tree = await PublicHelpArticlePage({
-      params: Promise.resolve({ orgId: "acme", slug: "reset-password" }),
+      params: Promise.resolve({ orgId: "acme", articleSlug: "reset-password" }),
     });
     const html = renderToStaticMarkup(tree);
 

@@ -130,6 +130,7 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
     () => buildColumns(canManage, handleAction, resolveMemberName),
     [canManage, handleAction, resolveMemberName],
   );
+  const columnHeaders = columns.map((column) => column.header);
 
   return (
     <>
@@ -187,7 +188,7 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
 
           <SheetBody className="px-6 py-4">
             {isLoading ? (
-              <DataTableSkeleton rows={8} columns={canManage ? 7 : 6} />
+              <DataTableSkeleton rows={8} headers={columnHeaders} />
             ) : isError ? (
               <ErrorState
                 compact

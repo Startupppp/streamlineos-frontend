@@ -20,6 +20,7 @@ import {
   XCircle,
 } from "lucide-react";
 import type { EmployeeData } from "@/features/hr/employees/detail/edit-employee-form";
+import { ResendInviteButton } from "@/components/hr/resend-invite-button";
 
 interface EmployeeStats {
   attendance?: { daysPresent?: number } | null;
@@ -181,6 +182,10 @@ export function EmployeeHeaderCard({
                 }
               />
             </div>
+
+            {!isSelf && !isAlreadyTerminated && (
+              <ResendInviteButton employeeId={employee.id} employeeName={employeeName} />
+            )}
 
             {typeof employee.bio === "string" && employee.bio && (
               <TruncatedText

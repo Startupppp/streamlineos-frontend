@@ -7,6 +7,7 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type {
   ChangeRequest,
+  ChangeRequestPage,
   CreateChangeRequestInput,
   UpdateChangeRequestInput,
 } from "@/types/projects";
@@ -23,22 +24,42 @@ const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
-interface CrFilters {
+export interface CrFilters {
   status?: string;
+  impact?: string;
+  requesterId?: string;
+  approverId?: string;
+  q?: string;
+  cursor?: string;
+  limit?: number;
 }
 
 export function useChangeRequests(projectId: number, filters?: CrFilters) {
   const canView = useCan("build:changerequests:view");
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
+  if (filters?.impact) params["impact"] = filters.impact;
+  if (filters?.requesterId) params["requesterId"] = filters.requesterId;
+  if (filters?.approverId) params["approverId"] = filters.approverId;
+  if (filters?.q) params["q"] = filters.q;
+  if (filters?.cursor) params["cursor"] = filters.cursor;
+  if (filters?.limit !== undefined) params["limit"] = String(filters.limit);
 
-  return useQuery<ChangeRequest[]>({
+  const activeFilters: CrFilters = {};
+  if (filters?.status) activeFilters.status = filters.status;
+  if (filters?.impact) activeFilters.impact = filters.impact;
+  if (filters?.requesterId) activeFilters.requesterId = filters.requesterId;
+  if (filters?.approverId) activeFilters.approverId = filters.approverId;
+  if (filters?.q) activeFilters.q = filters.q;
+  if (filters?.cursor) activeFilters.cursor = filters.cursor;
+
+  return useQuery<ChangeRequestPage>({
     queryKey: buildWorkQueryKeys.projects.changeRequests.list(
       projectId,
-      filters?.status ? { status: filters.status } : undefined,
+      Object.keys(activeFilters).length > 0 ? activeFilters : undefined,
     ),
     queryFn: ({ signal }) =>
-      apiClient.get<ChangeRequest[]>(`/build/${projectId}/change-requests`, params, signal, changeRequestListContract),
+      apiClient.get<ChangeRequestPage>(`/build/${projectId}/change-requests`, params, signal, changeRequestListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });

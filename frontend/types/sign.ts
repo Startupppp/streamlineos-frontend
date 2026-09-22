@@ -92,7 +92,6 @@ export interface SignEnvelope {
   finalizedAt: string | null;
   finalPdfFileKey: string | null;
   finalPdfHash: string | null;
-  publicFormId: number | null;
   metadataJson: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;

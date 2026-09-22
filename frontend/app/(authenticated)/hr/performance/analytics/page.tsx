@@ -135,7 +135,7 @@ export default function PerformanceAnalyticsPage() {
       actions={
         <Button asChild variant="outline" size="sm">
           <Link href="/hr/analytics">
-            Full Analytics
+            Open people analytics
             <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
           </Link>
         </Button>

@@ -6,11 +6,10 @@ import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ErrorState, NoPermissionState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useCanState } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useCoachingDigest } from "@/hooks/api/crm/call-intelligence";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { CoachingDigestView } from "@/features/crm/intelligence/coaching-digest";
 
 const WINDOWS = [
@@ -34,18 +33,20 @@ export default function CallIntelligencePage() {
 
   const handleWindowChange = useCallback((value: string) => setSinceDays(Number(value)), []);
 
-  /**
-   * Ticket 26. Without this the read below is disabled by the gate and reports
-   * no rows with `isLoading: false` — indistinguishable from a team that has
-   * made no calls. A rep landing here should be told they need the team key, not
-   * that their colleagues have never spoken to anybody.
-   */
-  if (useCanState("crm:call-analysis:view-team") === "denied")
+  const pageState = usePageState({
+    permission: "crm:call-analysis:view-team",
+    isLoading: digest.isLoading,
+    isError: !!digest.error,
+    error: digest.error,
+  });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
-      <NoPermissionState
-        permission="crm:call-analysis:view-team"
-        description="The team coaching digest is for managers. Your own calls' analyses appear on the calls themselves."
-      />
+      <PageWrapper title="Call intelligence" subtitle="How the team's calls are going">
+        <PageState resolution={pageState} loading={null} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
     );
 
   return (
@@ -86,12 +87,6 @@ export default function CallIntelligencePage() {
             </div>
             <Skeleton className="h-64 w-full" />
           </div>
-        ) : digest.error ? (
-          <ErrorState
-            title="Couldn't load the coaching digest"
-            description={getErrorMessage(digest.error)}
-            onRetry={() => void digest.refetch()}
-          />
         ) : digest.data && digest.data.data.cohort === 0 ? (
           <EmptyState
             illustrationPreset="report"

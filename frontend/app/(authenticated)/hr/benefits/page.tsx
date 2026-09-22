@@ -20,7 +20,7 @@ export default function BenefitsPage() {
         <TabsList>
           <TabsTrigger value="my-benefits" className="gap-1.5">
             <Shield className="h-3.5 w-3.5" />
-            My Benefits
+            My benefits
           </TabsTrigger>
           <TabsTrigger value="claims" className="gap-1.5">
             <FileText className="h-3.5 w-3.5" />
@@ -29,7 +29,7 @@ export default function BenefitsPage() {
           {canManage ? (
             <TabsTrigger value="plans" className="gap-1.5">
               <LayoutGrid className="h-3.5 w-3.5" />
-              Plans Admin
+              Manage plans
             </TabsTrigger>
           ) : null}
         </TabsList>

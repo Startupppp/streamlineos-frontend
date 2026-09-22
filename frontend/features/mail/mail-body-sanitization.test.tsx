@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MailReadingPane } from "./mail-reading-pane";
 import type { MailMessageDetail, MailMessageSummary } from "@/types/mail";
@@ -63,11 +63,14 @@ jest.mock("@/hooks/api/mail", () => ({
   useMailAiDraft: () => ({ mutateAsync: jest.fn(), isPending: false }),
 }));
 
-function renderPane() {
+async function renderPane(): Promise<Element> {
   render(
     <TooltipProvider>
       <MailReadingPane selectedMessage={SELECTED} onReply={jest.fn()} />
     </TooltipProvider>,
+  );
+  await waitFor(() =>
+    expect(document.querySelector(".mail-html-body")?.childElementCount ?? 0).toBeGreaterThan(0),
   );
   const body = document.querySelector(".mail-html-body");
   if (!body) throw new Error("the thread body never reached the sanitizing renderer");
@@ -83,13 +86,13 @@ describe("mail body sanitization runs on the real thread render path", () => {
     Reflect.deleteProperty(window, "__MAIL_XSS__");
   });
 
-  it("the reading pane routes provider HTML through the sanitizing renderer", () => {
-    const body = renderPane();
+  it("the reading pane routes provider HTML through the sanitizing renderer", async () => {
+    const body = await renderPane();
     expect(body.innerHTML).toContain("Invoice attached, please pay.");
   });
 
-  it("no script from the thread body ever executes or survives into the DOM", () => {
-    const body = renderPane();
+  it("no script from the thread body ever executes or survives into the DOM", async () => {
+    const body = await renderPane();
 
     expect(body.innerHTML).not.toMatch(/<script/i);
     expect(body.innerHTML).not.toContain("__MAIL_XSS__");
@@ -97,8 +100,8 @@ describe("mail body sanitization runs on the real thread render path", () => {
     expect(xssFlag()).toBeUndefined();
   });
 
-  it("event handlers and javascript: hrefs are stripped from the rendered message", () => {
-    const body = renderPane();
+  it("event handlers and javascript: hrefs are stripped from the rendered message", async () => {
+    const body = await renderPane();
 
     expect(body.innerHTML).not.toContain("onerror");
     expect(body.innerHTML).not.toContain("javascript:");
@@ -112,15 +115,15 @@ describe("mail body sanitization runs on the real thread render path", () => {
     expect(legit?.getAttribute("rel")).toContain("noopener");
   });
 
-  it("remote tracking pixels are held back until the reader asks for them", () => {
-    const body = renderPane();
+  it("remote tracking pixels are held back until the reader asks for them", async () => {
+    const body = await renderPane();
     const img = body.querySelector("img");
 
     expect(img?.getAttribute("src")).toBeFalsy();
     expect(img?.getAttribute("data-blocked-src")).toBe(
       "https://tracker.evil.com/pixel.gif",
     );
-    expect(screen.getByText(/1 remote image blocked/i)).toBeInTheDocument();
+    expect(await screen.findByText(/1 remote image blocked/i)).toBeInTheDocument();
   });
 
   it("BITE PROOF — the payload really is hostile, so a green result means the sanitizer worked", () => {

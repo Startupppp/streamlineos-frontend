@@ -10,10 +10,17 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
   useModuleEnabled: () => true,
-  useAccess: () => ({ data: undefined, isLoading: false, isError: false }),
+  useAccess: () => ({
+    data: { isOrgOwner: true, scopes: {}, modules: {} },
+    isLoading: false,
+  }),
 }));
 
 jest.mock("@/components/auth/require-module", () => ({

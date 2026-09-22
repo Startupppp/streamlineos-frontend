@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   CREDIT_NOTES_MANAGE,
   CREDIT_NOTES_READ,
@@ -23,12 +24,15 @@ import {
   useUpdateCreditNoteDraft,
 } from "@/hooks/api/accounting/ar";
 import { usePartyNames } from "../parties/use-party-names";
-import type { AllocationLineInput } from "@/types/accounting-ar-receipts";
+import type { AllocationLineInput } from "@/types/accounting/accounting-ar-receipts";
 import { AllocationEditorDialog } from "./allocation-editor-dialog";
 import { ArStatusBadge } from "./ar-labels";
 import { ArDraftEditor } from "./ar-draft-editor";
 import { readArRejection } from "./ar-document-errors";
-import { ArDocumentLinesCard, ArDocumentTotalsCard } from "./ar-document-readonly";
+import {
+  ArDocumentLinesCard,
+  ArDocumentTotalsCard,
+} from "./ar-document-readonly";
 import {
   documentRevision,
   toUpdateDocumentInput,
@@ -37,12 +41,17 @@ import {
 
 const PREVIEW_DEBOUNCE_MS = 400;
 
-export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string }) {
-  const canRead = useCan(CREDIT_NOTES_READ);
+export function CreditNoteDetailClient({
+  creditNoteId,
+}: {
+  creditNoteId: string;
+}) {
   const canManage = useCan(CREDIT_NOTES_MANAGE);
   const router = useRouter();
 
-  const [errorLineIndex, setErrorLineIndex] = useState<number | undefined>(undefined);
+  const [errorLineIndex, setErrorLineIndex] = useState<number | undefined>(
+    undefined,
+  );
   const [postOpen, setPostOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [applyOpen, setApplyOpen] = useState(false);
@@ -53,15 +62,29 @@ export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string 
 
   const revision = creditNote ? documentRevision(creditNote) : "";
   const debouncedRevision = useDebouncedValue(revision, PREVIEW_DEBOUNCE_MS);
-  const previewQuery = useCreditNoteTaxPreview(creditNoteId, debouncedRevision, {
-    enabled: isDraft && debouncedRevision.length > 0,
-  });
+  const previewQuery = useCreditNoteTaxPreview(
+    creditNoteId,
+    debouncedRevision,
+    {
+      enabled: isDraft && debouncedRevision.length > 0,
+    },
+  );
 
   const partyNames = usePartyNames(creditNote ? [creditNote.partyId] : []);
   const updateDraft = useUpdateCreditNoteDraft();
   const deleteDraft = useDeleteCreditNoteDraft();
   const postCreditNote = usePostCreditNote();
   const allocate = useAllocateCreditNote();
+
+  const pageState = usePageState({
+    permission: CREDIT_NOTES_READ,
+    isLoading: creditNoteQuery.isLoading,
+    isError: creditNoteQuery.isError,
+    error: creditNoteQuery.error,
+  });
+  const handleRetry = useCallback(() => {
+    void creditNoteQuery.refetch();
+  }, [creditNoteQuery]);
 
   function handleFailure(error: unknown): void {
     const rejection = readArRejection(error);
@@ -72,7 +95,10 @@ export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string 
   async function handleSave(values: ArDocumentFormValues): Promise<void> {
     setErrorLineIndex(undefined);
     try {
-      await updateDraft.mutateAsync({ creditNoteId, input: toUpdateDocumentInput(values) });
+      await updateDraft.mutateAsync({
+        creditNoteId,
+        input: toUpdateDocumentInput(values),
+      });
       toast.success("Draft saved");
     } catch (error) {
       handleFailure(error);
@@ -119,26 +145,23 @@ export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string 
     });
   }
 
-  if (!canRead) {
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="Credit note" backHref="/accounting/credit-notes">
-        <NoPermissionState permission={CREDIT_NOTES_READ} />
-      </PageWrapper>
-    );
-  }
-
-  if (creditNoteQuery.isError) {
-    return (
-      <PageWrapper title="Credit note" backHref="/accounting/credit-notes">
-        <ErrorState
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
           className="flex-1"
-          title="Couldn't load this credit note"
-          description={getErrorMessage(creditNoteQuery.error)}
-          onRetry={() => void creditNoteQuery.refetch()}
-        />
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
   if (creditNoteQuery.isPending || !creditNote) {
     return (
@@ -163,7 +186,11 @@ export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string 
       backLabel="Back to credit notes"
       actions={
         canApply ? (
-          <Button size="sm" variant="outline" onClick={() => setApplyOpen(true)}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setApplyOpen(true)}
+          >
             Apply to invoices
           </Button>
         ) : null
@@ -210,7 +237,10 @@ export function CreditNoteDetailClient({ creditNoteId }: { creditNoteId: string 
             <ArDocumentLinesCard arDocument={creditNote} />
           </div>
           <div className="w-full lg:max-w-sm">
-            <ArDocumentTotalsCard arDocument={creditNote} partyName={partyName} />
+            <ArDocumentTotalsCard
+              arDocument={creditNote}
+              partyName={partyName}
+            />
           </div>
         </div>
       )}

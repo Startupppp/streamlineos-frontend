@@ -15,7 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
@@ -69,6 +70,7 @@ export function ReviewsTab() {
   const statusParam: ReviewStatus | undefined = statusFilter === "all" ? undefined : statusFilter;
 
   const { data, isLoading, isFetching, isError, error, refetch } = useHrPerformanceReviews({ status: statusParam, cursor });
+  const pageState = usePageState({ isLoading: false, isError, error });
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const { data: cycles } = useReviewCycles();
   const createReview = useCreatePerformanceReview();
@@ -227,9 +229,16 @@ export function ReviewsTab() {
     setFieldErrors((prev) => { const next = { ...prev }; delete next.periodEnd; return next; });
   }, []);
 
-  if (isLoading) return <LoadingState variant="cards" rows={9} />;
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+    const handleRetry = () => { void refetch(); };
+    return (
+      <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        {null}
+      </PageState>
+    );
+  }
 
-  if (isError) return <ErrorState className="flex-1" title="Couldn't load reviews" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
+  if (isLoading) return <LoadingState variant="cards" rows={9} />;
 
   const reviewsList = data?.data ?? [];
 

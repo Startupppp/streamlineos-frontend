@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -162,6 +162,7 @@ export function EventCreateForm({
                     <button type="button" onClick={onOpenTicketPicker} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-dashed rounded-lg px-3 py-1.5 w-full transition-colors hover:border-primary/50"><Ticket className="h-3.5 w-3.5" />Link a ticket…</button>
                   )}
                 </div>
+              </div>
               </div>
             </ScrollArea>
             <div className="px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] border-t bg-muted/20 shrink-0 flex flex-row items-center justify-end gap-2">

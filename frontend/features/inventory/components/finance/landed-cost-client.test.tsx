@@ -23,7 +23,10 @@ jest.mock("next/navigation", () => ({
 }));
 
 const mockUseCan = jest.fn();
-jest.mock("@/hooks/api/access", () => ({ useCan: (key: string) => mockUseCan(key) as boolean }));
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (key: string) => mockUseCan(key) as boolean,
+  useCanState: (key: string) => ((mockUseCan(key) as boolean) ? "granted" : "denied"),
+}));
 
 const mockUseVouchers = jest.fn();
 jest.mock("@/hooks/api/inventory/landed-cost", () => ({

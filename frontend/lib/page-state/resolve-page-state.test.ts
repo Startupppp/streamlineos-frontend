@@ -91,3 +91,23 @@ describe("resolvePageState", () => {
     });
   });
 });
+
+describe("resolvePageState — the branch order below denial", () => {
+  const granted = { access: "granted", isLoading: false, isError: false } as const;
+
+  it("reports emptiness only once something has actually looked, so an in-flight read is never called empty", () => {
+    expect(resolvePageState({ ...granted, isEmpty: true })).toEqual({ kind: "empty" });
+    expect(resolvePageState({ ...granted, isLoading: true, isEmpty: true }))
+      .toEqual({ kind: "loading" });
+  });
+
+  it("prefers an error to an empty result, so a failure is not read as no data", () => {
+    const error = new Error("boom");
+    expect(resolvePageState({ ...granted, isError: true, error, isEmpty: true }))
+      .toEqual({ kind: "error", error });
+  });
+
+  it("shows the data when there is data and the caller may see it", () => {
+    expect(resolvePageState({ ...granted, isEmpty: false })).toEqual({ kind: "ready" });
+  });
+});

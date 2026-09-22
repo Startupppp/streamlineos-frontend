@@ -88,9 +88,9 @@ export function resolveBuildScope(pathname: string): BuildScope {
 }
 
 export function buildScopeOverviewHref(scope: BuildScope): string {
-  return scope.type === "organization"
-    ? `${BUILD_ROOT_PATH}/command-center`
-    : scope.basePath;
+  if (scope.type === "organization") return `${BUILD_ROOT_PATH}/command-center`;
+  if (scope.type === "workspace") return `${scope.basePath}/overview`;
+  return scope.basePath;
 }
 
 export function buildScopeKey(scope: BuildScope): string {

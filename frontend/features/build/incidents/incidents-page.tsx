@@ -8,6 +8,8 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { useIncidents, useDeleteIncident } from "@/hooks/api/build/incidents";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -63,6 +65,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 const SEVERITIES: IncidentSeverity[] = ["critical", "high", "medium", "low"];
 const STATUSES: IncidentStatus[] = ["detected", "investigating", "mitigating", "resolved", "postmortem", "closed"];
+const INCIDENTS_LIST_CAP = 100;
 
 function IncidentRowActions({
   incident,
@@ -108,9 +111,10 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
     severity: severityFilter !== "all" ? severityFilter : undefined,
   };
 
-  const { data: incidents, isLoading, isError, refetch } = useIncidents(projectId, filters);
+  const { data: incidents, isLoading, isError, error, refetch } = useIncidents(projectId, filters);
   const { data: membersData } = useOrgMembers(1, 100);
   const deleteIncident = useDeleteIncident();
+  const pageState = usePageState({ permission: "build:incidents:view", isLoading, isError, error });
   const members = useMemo(() => membersData?.data ?? [], [membersData]);
 
   const all = useMemo(() => incidents ?? [], [incidents]);
@@ -126,6 +130,10 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+  }, []);
 
   const filtersActive = !!(search || statusFilter !== "all" || severityFilter !== "all");
 
@@ -230,12 +238,36 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
     },
   ], [canManage, projectId, handleEdit, members]);
 
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+    return (
+      <PageWrapper title="Incidents" subtitle="Track incidents and SLA compliance">
+        <PmPageShell>
+          <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+            {null}
+          </PageState>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (!isLoading && pageState.kind === "loading") {
+    return (
+      <PageWrapper title="Incidents" subtitle="Track incidents and SLA compliance">
+        <PmPageShell>
+          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+            <DataTableSkeleton rows={12} columns={7} className="flex-1" />
+          </PmSection>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput
         placeholder="Search incidents..."
         value={search}
-        onValueChange={setSearch}
+        onValueChange={handleSearchChange}
       />
       <Select value={statusFilter} onValueChange={setStatusFilter}>
         <SelectTrigger className="w-36">
@@ -290,6 +322,11 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
         </PmSection>
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
+          {!isLoading && !isError && all.length >= INCIDENTS_LIST_CAP ? (
+            <p className="mb-2 shrink-0 text-micro text-muted-foreground">
+              Showing the most recent {INCIDENTS_LIST_CAP} incidents. Narrow the status or severity filter to see more.
+            </p>
+          ) : null}
           {isLoading ? (
             <DataTableSkeleton rows={12} columns={7} className="flex-1" />
           ) : isError ? (

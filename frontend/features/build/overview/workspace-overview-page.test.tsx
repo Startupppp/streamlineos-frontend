@@ -138,4 +138,23 @@ describe("WorkspaceOverviewPage", () => {
 
     expect(screen.getByRole("alert")).toBeInTheDocument();
   });
+
+  it("passes the first erroring query error to usePageState so a 402 plan-upgrade or 403 response is not silently degraded", () => {
+    const networkError = new Error("MODULE_NOT_ENABLED");
+    const { usePmWorkspace } = jest.requireMock("@/hooks/api/build/pm-workspaces");
+    (usePmWorkspace as jest.Mock).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: networkError,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "error", error: networkError });
+
+    render(<WorkspaceOverviewPage pmWorkspaceId="ws-1" />);
+
+    expect(usePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ error: networkError }),
+    );
+  });
 });

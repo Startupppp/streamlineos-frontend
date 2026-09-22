@@ -69,6 +69,7 @@ export const grantSourceKindContract = z.enum([
   "org-standing",
   "universal-member",
   "employee-self-service",
+  "manager-authority",
   "role-grant",
   "role-default",
   "delegation",

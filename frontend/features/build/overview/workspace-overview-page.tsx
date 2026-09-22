@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ProjectCreateWizard } from "@/features/build/project-create/project-create-wizard";
 import { PlusIcon } from "@animateicons/react/lucide";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Users, LayoutGrid } from "lucide-react";
 
 interface WorkspaceOverviewPageProps {
@@ -48,10 +49,13 @@ export function WorkspaceOverviewPage({ pmWorkspaceId }: WorkspaceOverviewPagePr
   const isError =
     workspaceQuery.isError || membersQuery.isError || myWorkQuery.isError;
 
+  const error = workspaceQuery.error ?? membersQuery.error ?? myWorkQuery.error;
+
   const resolution = usePageState({
     permission: "build:workspaces:view",
     isLoading,
     isError,
+    error,
     isEmpty: !workspaceQuery.data,
   });
 
@@ -102,6 +106,7 @@ export function WorkspaceOverviewPage({ pmWorkspaceId }: WorkspaceOverviewPagePr
       <PageState
         resolution={resolution}
         loading={<WorkspaceOverviewSkeleton />}
+        empty={<EmptyState title="Workspace not found" description="This workspace may have been deleted or moved." className="flex-1" />}
         onRetry={handleRetry}
         className="flex-1 min-h-0"
       >

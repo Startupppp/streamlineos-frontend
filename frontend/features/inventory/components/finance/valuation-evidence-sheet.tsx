@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AppSheet, ErrorState } from "@/components/shared";
+import { AppSheet, ErrorState, NoPermissionState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -16,6 +16,7 @@ import { InventoryEmptyState } from "@/features/inventory/components/inventory-e
 import { formatMoney } from "@/lib/format-utils";
 import { formatCalendarDate, formatShortDate } from "@/lib/date-utils";
 import { useOrgDisplay } from "@/hooks/api/org-display";
+import { useCanState } from "@/hooks/api/access";
 import {
   useValuationConsumptions,
   useValuationLayers,
@@ -47,6 +48,7 @@ const ALL_PERIODS = "__all__";
  * organisation's own currency. It is never divided and never parsed.
  */
 export function ValuationEvidenceSheet({ variantId, open, onClose }: ValuationEvidenceSheetProps) {
+  const valuationState = useCanState("inventory:valuation:read");
   const display = useOrgDisplay();
   const [tab, setTab] = useState("layers");
   const [layersPage, setLayersPage] = useState(1);
@@ -177,6 +179,9 @@ export function ValuationEvidenceSheet({ variantId, open, onClose }: ValuationEv
       description="The layers this variant's value stands on, and what each issue drew out of them."
       className="sm:max-w-2xl"
     >
+      {valuationState === "denied" ? (
+        <NoPermissionState compact permission="inventory:valuation:read" />
+      ) : (
       <Tabs value={tab} onValueChange={setTab} className="flex min-h-0 flex-1 flex-col gap-3">
         <TabsList>
           <TabsTrigger value="layers">Layers</TabsTrigger>
@@ -190,7 +195,7 @@ export function ValuationEvidenceSheet({ variantId, open, onClose }: ValuationEv
               title="Couldn't load cost layers"
               onRetry={handleLayersRetry}
             />
-          ) : !layersQuery.isLoading && layers.length === 0 ? (
+          ) : !layersQuery.isPending && layers.length === 0 ? (
             <InventoryEmptyState
               illustrationPreset="inventory"
               title="No cost layers"
@@ -202,7 +207,7 @@ export function ValuationEvidenceSheet({ variantId, open, onClose }: ValuationEv
               data={layers}
               columns={layerColumns}
               getRowKey={(row) => row.layerId}
-              isLoading={layersQuery.isLoading}
+              isLoading={layersQuery.isPending}
               minWidth="620px"
               pagination={{
                 mode: "server",
@@ -243,7 +248,7 @@ export function ValuationEvidenceSheet({ variantId, open, onClose }: ValuationEv
               title="Couldn't load consumption lines"
               onRetry={handleConsumptionsRetry}
             />
-          ) : !consumptionsQuery.isLoading && consumptions.length === 0 ? (
+          ) : !consumptionsQuery.isPending && consumptions.length === 0 ? (
             <InventoryEmptyState
               illustrationPreset="inventory"
               title="Nothing drawn in this window"
@@ -255,7 +260,7 @@ export function ValuationEvidenceSheet({ variantId, open, onClose }: ValuationEv
               data={consumptions}
               columns={consumptionColumns}
               getRowKey={(row) => row.consumptionId}
-              isLoading={consumptionsQuery.isLoading}
+              isLoading={consumptionsQuery.isPending}
               minWidth="760px"
               pagination={{
                 mode: "server",
@@ -268,6 +273,7 @@ export function ValuationEvidenceSheet({ variantId, open, onClose }: ValuationEv
           )}
         </TabsContent>
       </Tabs>
+      )}
     </AppSheet>
   );
 }

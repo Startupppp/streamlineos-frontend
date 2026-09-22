@@ -12,6 +12,7 @@ import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/st
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Briefcase, Map, Target } from "lucide-react";
 
 interface ManagedProductOverviewPageProps {
@@ -40,10 +41,13 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
 
   const isError = productQuery.isError || projectsQuery.isError;
 
+  const error = productQuery.error ?? projectsQuery.error;
+
   const resolution = usePageState({
     permission: "build:managed-products:view",
     isLoading,
     isError,
+    error,
     isEmpty: !productQuery.data,
   });
 
@@ -77,6 +81,7 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
       <PageState
         resolution={resolution}
         loading={<ManagedProductOverviewSkeleton />}
+        empty={<EmptyState title="Product not found" description="This product may have been deleted or moved." className="flex-1" />}
         onRetry={handleRetry}
         className="flex-1 min-h-0"
       >

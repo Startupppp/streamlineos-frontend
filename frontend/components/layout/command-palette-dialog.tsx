@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { extractBuildProjectId } from "@/lib/build/extract-build-project-id";
 import { useAccess } from "@/hooks/api/access";
 import {
   Contact2,
@@ -12,13 +13,6 @@ import {
   Search,
   Loader2,
   ArrowRight,
-  Plus,
-  LayoutDashboard,
-  Kanban,
-  ListTodo,
-  RefreshCw,
-  BarChart2,
-  Star,
 } from "lucide-react";
 import {
   CommandDialog,
@@ -33,18 +27,28 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
+  filterNavGroupsForUser,
   flattenNavRoutes,
   getNavGroupsForUser,
 } from "./sidebar/sidebar-nav-items";
+import { buildProjectNavGroups } from "@/lib/build/build-nav-groups";
+import { BUILD_ROOT_PATH } from "@/lib/build/build-scope";
+import { BUILD_FEEDBACK_ORG_MODULE } from "@/lib/build/nav/build-nav-destination";
+import { matchesOrgModule } from "@/lib/org-module-keys";
+import { useProject } from "@/hooks/api/build/projects";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { useEntitlements } from "@/hooks/api/entitlements";
 import { cn } from "@/lib/utils";
 import { useCommandPalette } from "@/components/command-palette";
-import { useBuildRequestLeave } from "@/features/build/navigation/build-dirty-state-context";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import {
+  GLOBAL_SEARCH_MIN_LENGTH,
   useGlobalSearch,
   type GlobalSearchResult,
 } from "@/components/command-palette/hooks/use-global-search";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useCommandRegistry } from "./command-palette-commands";
 
 
 const ENTITY_TYPES = [
@@ -75,6 +79,7 @@ const ENTITY_LABELS: Record<EntityType, string> = {
   client: "Clients",
   ticket: "Tickets",
 };
+
 
 function ItemIcon({
   icon: Icon,
@@ -109,35 +114,14 @@ const COMMAND_SHORTCUT_CLASS =
 const COMMAND_GROUP_CLASS =
   "[&_[cmdk-group-heading]]:text-muted-foreground";
 
-function extractProjectId(pathname: string): number | null {
-  const match = /^\/build\/(?:workspaces\/[^/]+\/)?(\d+)(?:\/|$)/.exec(pathname);
-  if (!match) return null;
-  const parsed = parseInt(match[1] ?? "", 10);
-  return Number.isNaN(parsed) ? null : parsed;
-}
-
-interface ProjectNavItem {
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  segment: string;
-  shortcut?: string;
-}
-
-const PROJECT_NAV_ITEMS: ProjectNavItem[] = [
-  { label: "Board", icon: Kanban, segment: "", shortcut: "G B" },
-  { label: "Backlog", icon: ListTodo, segment: "/backlog" },
-  { label: "Sprints", icon: RefreshCw, segment: "/sprints" },
-  { label: "My Tickets", icon: Star, segment: "/my-tickets", shortcut: "G I" },
-  { label: "Analytics", icon: BarChart2, segment: "/analytics" },
-];
 
 export function CommandPaletteDialogBody() {
   const router = useRouter();
   const pathname = usePathname();
   const { data: access } = useAccess();
-  const requestLeave = useBuildRequestLeave();
+  const requestLeave = useNavigationLeave();
   const [query, setQuery] = useState("");
-  
+
   const role =
     access?.isOrgOwner
       ? "OWNER"
@@ -145,19 +129,56 @@ export function CommandPaletteDialogBody() {
   const scopes = access?.scopes;
   const enabledModules = useEnabledModules();
   const { data: entitlements } = useEntitlements();
-  const lockedModules = entitlements?.lockedModules ?? [];
+  const lockedModules = useMemo(
+    () => entitlements?.lockedModules ?? [],
+    [entitlements],
+  );
   const { paletteOpen, setPaletteOpen, openCreateTicket } = useCommandPalette();
 
-  const projectId = useMemo(() => extractProjectId(pathname), [pathname]);
+  const projectId = useMemo(() => extractBuildProjectId(pathname), [pathname]);
 
   const navGroups = useMemo(
     () => getNavGroupsForUser(role, scopes, enabledModules, lockedModules),
     [role, scopes, enabledModules, lockedModules],
   );
 
+  const { data: activeProject } = useProject(projectId ?? 0);
+  const isClientPortalEnabled =
+    activeProject?.settings?.features?.["clientPortal"] === true;
+  const isFeedbackEnabled = matchesOrgModule(
+    enabledModules,
+    BUILD_FEEDBACK_ORG_MODULE,
+  );
+
+  const projectNavGroups = useMemo(() => {
+    if (projectId === null) return [];
+    return filterNavGroupsForUser(
+      buildProjectNavGroups(`${BUILD_ROOT_PATH}/${projectId}`, {
+        isOrgModuleEnabled: (orgModuleKey) =>
+          orgModuleKey === BUILD_FEEDBACK_ORG_MODULE
+            ? isFeedbackEnabled
+            : true,
+        isCapabilityEnabled: (capability) =>
+          capability === "client-portal" ? isClientPortalEnabled : true,
+      }),
+      role,
+      scopes,
+      enabledModules,
+      lockedModules,
+    );
+  }, [
+    projectId,
+    isFeedbackEnabled,
+    isClientPortalEnabled,
+    role,
+    scopes,
+    enabledModules,
+    lockedModules,
+  ]);
+
   const pages = useMemo(() => {
     const seen = new Set<string>();
-    return navGroups.flatMap((group) =>
+    return [...navGroups, ...projectNavGroups].flatMap((group) =>
       flattenNavRoutes(group.routes)
         .filter((r) => {
           if (seen.has(r.href)) return false;
@@ -171,11 +192,16 @@ export function CommandPaletteDialogBody() {
           group: group.label,
         })),
     );
-  }, [navGroups]);
+  }, [navGroups, projectNavGroups]);
 
   const debouncedQuery = useDebouncedValue(query, 300);
-  const { results: entityResults, isSearching } =
-    useGlobalSearch(debouncedQuery);
+  const {
+    results: entityResults,
+    isSearching,
+    isError: isSearchError,
+    error: searchError,
+    retry: retrySearch,
+  } = useGlobalSearch(debouncedQuery);
 
   const handleSelect = useCallback(
     (href: string) => {
@@ -199,6 +225,12 @@ export function CommandPaletteDialogBody() {
     setQuery("");
     openCreateTicket(projectId);
   }, [projectId, setPaletteOpen, openCreateTicket]);
+
+  const commands = useCommandRegistry({
+    projectId,
+    handleSelect,
+    handleCreateTicket,
+  });
 
   const filteredPages = useMemo(() => {
     if (!query) return [];
@@ -247,7 +279,20 @@ export function CommandPaletteDialogBody() {
   }, [navGroups]);
 
   const hasResults = filteredPages.length > 0 || entityResults.length > 0;
-  const showEmpty = !isSearching && query.length >= 2 && !hasResults;
+  const showSearchError =
+    isSearchError && query.length >= GLOBAL_SEARCH_MIN_LENGTH;
+  const showEmpty =
+    !isSearching &&
+    !showSearchError &&
+    query.length >= GLOBAL_SEARCH_MIN_LENGTH &&
+    !hasResults;
+
+  const actionsCommands = commands.filter(
+    (c) => c.group === "actions" && c.isAvailable,
+  );
+  const navCommands = commands.filter(
+    (c) => c.group === "navigation" && c.isAvailable,
+  );
 
   return (
     <CommandDialog open={paletteOpen} onOpenChange={handleOpenChange}>
@@ -261,6 +306,16 @@ export function CommandPaletteDialogBody() {
           <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-muted-foreground pointer-events-none" />
         )}
       </div>
+
+      {showSearchError && (
+        <ErrorState
+          compact
+          className="m-2"
+          title="Couldn't search"
+          description={getErrorMessage(searchError)}
+          onRetry={retrySearch}
+        />
+      )}
 
       <CommandList className="max-h-[420px] px-1 py-1">
         {showEmpty && (
@@ -354,70 +409,55 @@ export function CommandPaletteDialogBody() {
 
         {!query && (
           <>
-            <CommandGroup
-              heading={projectId !== null ? "This project" : "Actions"}
-              className={COMMAND_GROUP_CLASS}
-            >
-              <CommandItem
-                value="create ticket issue"
-                onSelect={handleCreateTicket}
-                className={COMMAND_ITEM_CLASS}
-              >
-                <ItemIcon icon={Plus} />
-                <span className="flex-1 text-sm text-foreground">
-                  Create ticket
-                </span>
-                <CommandShortcut className={COMMAND_SHORTCUT_CLASS}>
-                  C
-                </CommandShortcut>
-              </CommandItem>
-              {projectId !== null &&
-                PROJECT_NAV_ITEMS.map((item) => (
-                  <CommandItem
-                    key={item.segment}
-                    value={`project ${item.label}`}
-                    onSelect={() =>
-                      handleSelect(`/build/${projectId}${item.segment}`)
-                    }
-                    className={COMMAND_ITEM_CLASS}
-                  >
-                    <ItemIcon icon={item.icon} />
-                    <span className="flex-1 text-sm text-foreground">
-                      {item.label}
-                    </span>
-                    {item.shortcut && (
-                      <CommandShortcut className={COMMAND_SHORTCUT_CLASS}>
-                        {item.shortcut}
-                      </CommandShortcut>
-                    )}
-                  </CommandItem>
-                ))}
-            </CommandGroup>
-            <CommandSeparator className="my-1" />
+            {actionsCommands.length > 0 && (
+              <>
+                <CommandGroup
+                  heading={projectId !== null ? "This project" : "Actions"}
+                  className={COMMAND_GROUP_CLASS}
+                >
+                  {actionsCommands.map((cmd) => (
+                    <CommandItem
+                      key={cmd.id}
+                      value={cmd.keywords.join(" ")}
+                      onSelect={cmd.execute}
+                      className={COMMAND_ITEM_CLASS}
+                    >
+                      <ItemIcon icon={cmd.icon} />
+                      <span className="flex-1 text-sm text-foreground">
+                        {cmd.label}
+                      </span>
+                      {cmd.shortcut && (
+                        <CommandShortcut className={COMMAND_SHORTCUT_CLASS}>
+                          {cmd.shortcut}
+                        </CommandShortcut>
+                      )}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+                <CommandSeparator className="my-1" />
+              </>
+            )}
 
-            <CommandGroup heading="Navigation" className={COMMAND_GROUP_CLASS}>
-              <CommandItem
-                value="all projects overview"
-                onSelect={() => handleSelect("/build")}
-                className={COMMAND_ITEM_CLASS}
-              >
-                <ItemIcon icon={LayoutDashboard} />
-                <span className="flex-1 text-sm text-foreground">
-                  All Projects
-                </span>
-              </CommandItem>
-              <CommandItem
-                value="my work tickets assigned"
-                onSelect={() => handleSelect("/build/my-work")}
-                className={COMMAND_ITEM_CLASS}
-              >
-                <ItemIcon icon={Star} />
-                <span className="flex-1 text-sm text-foreground">
-                  My Work
-                </span>
-              </CommandItem>
-            </CommandGroup>
-            <CommandSeparator className="my-1" />
+            {navCommands.length > 0 && (
+              <>
+                <CommandGroup heading="Navigation" className={COMMAND_GROUP_CLASS}>
+                  {navCommands.map((cmd) => (
+                    <CommandItem
+                      key={cmd.id}
+                      value={cmd.keywords.join(" ")}
+                      onSelect={cmd.execute}
+                      className={COMMAND_ITEM_CLASS}
+                    >
+                      <ItemIcon icon={cmd.icon} />
+                      <span className="flex-1 text-sm text-foreground">
+                        {cmd.label}
+                      </span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+                <CommandSeparator className="my-1" />
+              </>
+            )}
 
             <div className="px-2 pb-1 pt-2">
               <p className="text-micro font-semibold uppercase tracking-widest text-muted-foreground">

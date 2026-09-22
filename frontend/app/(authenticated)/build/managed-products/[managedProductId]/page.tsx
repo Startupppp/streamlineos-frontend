@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requirePermission } from "@/lib/rbac/require-permission";
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { ManagedProductOverviewPage } from "@/features/build/overview/managed-product-overview-page";
 
 export default async function ManagedProductOverviewRoute({
@@ -7,7 +7,7 @@ export default async function ManagedProductOverviewRoute({
 }: {
   params: Promise<{ managedProductId: string }>;
 }) {
-  await requirePermission("build:managed-products:view");
+  await enforceRouteAccess("/build/managed-products/[managedProductId]");
   const { managedProductId } = await params;
   const id = Number(managedProductId);
   if (!Number.isInteger(id) || id <= 0) notFound();
