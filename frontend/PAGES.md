@@ -215,8 +215,10 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/build/approvals` · **Build** · hooks: `→ features/build`
 - `/build/members` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/members/page.tsx + error.tsx] — redirect-only page shadowed by the `next.config.ts:132` redirect to `/build/settings/access`, which fires before the filesystem, so the page never executed; the URL still redirects
 - `/build/customers` · **Build** · hooks: `→ features/build`
-- `/build/client-access` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/client-access/page.tsx + loading.tsx] — redirect-only page shadowed by the `next.config.ts:142` redirect to `/build/settings/client-access`; the URL still redirects
-- `/build/access` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/access/page.tsx] — redirect-only page shadowed by the `next.config.ts:137` redirect to `/build/settings/access`; the URL still redirects
+- `/build/client-access` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/client-access/page.tsx + loading.tsx] — redirect-only page shadowed by the `next.config.ts` redirect to `/build/settings/client-access`; the URL still redirects
+- `/build/access` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/access/page.tsx] — redirect-only page shadowed by the `next.config.ts` redirect to `/build/settings/access`; the URL still redirects
+- `/build/settings/access` · **Build** · hooks: `→ features/build` — canonical owner of the Build members and access job
+- `/build/settings/client-access` · **Build** · hooks: `→ features/portal-access` — canonical owner of the external grant job
 
 ### PM Workspaces
 - `/build/pm-workspaces` · **Build** · hooks: `→ features/build`

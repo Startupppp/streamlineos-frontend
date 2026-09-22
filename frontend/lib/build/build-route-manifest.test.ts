@@ -34,6 +34,29 @@ describe("BLD-001 — build route manifest covers all 82 authenticated build pag
     expect(BUILD_ROUTE_MANIFEST).toHaveLength(82);
   });
 
+  it("no longer tracks the six redirect-only routes whose next.config.ts redirect already serves the URL, because a manifest entry without a page is a phantom disposition", () => {
+    const routes = BUILD_ROUTE_MANIFEST.map((entry) => entry.route);
+    for (const removed of [
+      "/build/access",
+      "/build/members",
+      "/build/client-access",
+      "/build/[projectId]/workflow",
+      "/build/[projectId]/automations",
+      "/build/[projectId]/webhooks",
+    ]) {
+      expect(routes).not.toContain(removed);
+    }
+    for (const canonical of [
+      "/build/settings/access",
+      "/build/settings/client-access",
+      "/build/[projectId]/settings/workflow",
+      "/build/[projectId]/settings/automations",
+      "/build/[projectId]/settings/integrations/webhooks",
+    ]) {
+      expect(routes).toContain(canonical);
+    }
+  });
+
   it("disk route count matches manifest count so neither direction can silently absorb extra entries", () => {
     expect(diskRoutes.size).toBe(BUILD_ROUTE_MANIFEST.length);
   });

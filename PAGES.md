@@ -137,7 +137,7 @@ Full text of any pre-2026-08-03 entry is in git history.
 - Universal member access review: Home, My Documents, and Knowledge Base reading remain available for every active organization member, including custom roles with no grants. Typed baseline scopes drive effective RBAC and the role editor; backend core-module metadata drives locked “Included” controls; targeted module-access reads validate membership; request schemas are boundary-validated; document ownership, KB content ACLs, and management permissions remain enforced. Access/RBAC services · permission catalogs · module-access controller/DTO · sidebar/product navigation · permission matrix · user module access · frontend + backend typecheck.
 - Org Structure hub is the base `/organization` route (sidebar Structure → `/organization`); `/organization/structure` redirects there. `organization/page.tsx` · `organization/structure/page.tsx` · `sidebar-nav-items.ts` · frontend typecheck.
 - Dialog density pass (shared): AlertDialog `p-4 gap-3`, Dialog title `text-base` / header `gap-1`, AppDialog zones `px-4`, compact simple dialogs (create-group, rename-role, tokens, signature pad, member dialogs, workspace/board/save-view/decide/decline/exception, etc.). Account `/settings` Profile+Security card chrome; MFA nested subsection. `dialog.tsx` · `alert-dialog.tsx` · `app-dialog.tsx` · `settings/page.tsx` · `mfa-settings.tsx` · `settings-security.tsx` · dialog call sites · frontend typecheck.
-- Module Access (`/hr/access`, `/crm/access`, `/build/access`, …): Roles/Members actions (New group / Add member) sit inline on the tabs row via shared `ModuleAccessPage`; Ownership tab fills page body height (`TABS_CONTENT_PAGE_BODY_CLASS` + `CONTENT_FILL_PANEL`). `module-access-page.tsx` · `ownership-section.tsx` · `roles-tab.tsx` · `module-members-tab.tsx` · frontend typecheck.
+- Module Access (`/hr/access`, `/crm/access`, `/build/settings/access`, …): Roles/Members actions (New group / Add member) sit inline on the tabs row via shared `ModuleAccessPage`; Ownership tab fills page body height (`TABS_CONTENT_PAGE_BODY_CLASS` + `CONTENT_FILL_PANEL`). `module-access-page.tsx` · `ownership-section.tsx` · `roles-tab.tsx` · `module-members-tab.tsx` · frontend typecheck.
 - Unified calendar attendance is policy-aware: canonical holidays, employment start, roster/weekly-off rules, approved leave/WFH precedence, multi-session net hours, stored/derived Present · Half day · Late · Absent states, and past-day missing-attendance exceptions; `/me/attendance` History now uses server pagination (10/20/50) instead of the ten-record status payload. `calendar-events-aggregate.service.ts` · `attendance-policy.service.ts` · `daily-history-table.tsx` · attendance history API · frontend + backend typecheck.
 - Upload Document sheet: document-type select restores options (controlled value, sheet pointer-events, loading/empty/error + self-upload fallback from my docs). `upload-doc-sheet.tsx` · `select.tsx` · frontend typecheck.
 - `/hr/announcements` card redesigned: denser padding, inline meta (date · audience · reads), title-case status chip, expand only when content is long. `announcement-card.tsx` · frontend typecheck.
@@ -330,7 +330,7 @@ Full text of any pre-2026-08-03 entry is in git history.
 - [x] `/build/[projectId]/workload` — route file exists but `next.config.ts` redirects it to `/build/:projectId?view=workload`, so it is unreachable
 - [x] `/build/[projectId]/my-tickets` · `/build/[projectId]/tickets/[ticketKey]` — Board/List/Table via `?view=`; Jira-like 2-column detail
 - [x] `/build/[projectId]/analytics` · `/build/[projectId]/reports` (velocity, burnup, CFD + daily snapshots) · `/build/[projectId]/budget`
-- [x] `/build/[projectId]/settings` · `/build/[projectId]/workflow` · `/build/[projectId]/automations` · `/build/[projectId]/webhooks` — Editable workflow statuses (inline CRUD, optimistic), WIP limits, from→to transition rules
+- [x] `/build/[projectId]/settings` · `/build/[projectId]/settings/workflow` · `/build/[projectId]/settings/automations` · `/build/[projectId]/settings/integrations/webhooks` — Editable workflow statuses (inline CRUD, optimistic), WIP limits, from→to transition rules (the flat `/workflow`, `/automations` and `/webhooks` pages were deleted 2026-09-22; the legacy paths redirect)
 - [x] `/build/[projectId]/qa` · `/build/[projectId]/qa/runs/[runId]` · `/build/[projectId]/bugs` — Test management + first-class bugs
 - [x] `/build/[projectId]/approvals` · `/build/[projectId]/risks` (probability×impact heatmap) · `/build/[projectId]/decisions` — Governance
 - [x] `/build/[projectId]/meetings` · `/build/[projectId]/meetings/[meetingId]` — Meetings, standups, action items
@@ -340,7 +340,7 @@ Full text of any pre-2026-08-03 entry is in git history.
 - [x] `/build/[projectId]/whiteboard` · `/board/[shareToken]` — Excalidraw scenes; private/project/public; rate-limited public token endpoints
 - [x] `/build/[projectId]/feedbucket` · `/build/[projectId]/feedbucket/[submissionId]` — Widget setup + vision-model feedback→ticket triage
 - [x] `/build/[projectId]/releases` · `/build/[projectId]/chat` · `/build/[projectId]/ai` (6 capability cards, `build:ai:use`) · `/build/[projectId]/wiki` · `/build/[projectId]/wiki/[pageId]`
-- [x] `/build/my-work` · `/build/all-work` · `/build/approvals` · `/build/inbox` · `/build/drafts` · `/build/members` · `/build/customers`
+- [x] `/build/my-work` · `/build/all-work` · `/build/approvals` · `/build/inbox` · `/build/drafts` · `/build/settings/access` · `/build/customers` (`/build/members` deleted 2026-09-22, the legacy path redirects; `/build/drafts` is a redirect to `/build/inbox?view=drafts`)
 - [x] `/build/teams` · `/build/teams/[teamId]` — First-class teams (members + projects, M:N to projects, access inheritance)
 - [x] `/build/command-center` · `/build/portfolios` · `/build/portfolios/[portfolioId]` · `/build/programs` · `/build/templates` · `/build/roadmap`
 - [x] `/build/goal` · `/build/goal/[goalId]` — Goals & OKRs
@@ -348,11 +348,11 @@ Full text of any pre-2026-08-03 entry is in git history.
 - [x] `/build/managed-products/[managedProductId]/projects` · `/roadmap` · `/goals` · `/feedback` · `/insights` — Managed-product scope catalog
 - [x] `/build/pm-workspaces` — Container list, default-workspace delete guard, members sheet
 - [x] `/build/workspaces/[pmWorkspaceId]` · `/overview` · `/all-work` · `/my-work` · `/products` · `/teams` · `/roadmap` · `/goals` — PM workspace scope catalog
-- [x] `/build/client-access` — Client access management
+- [x] `/build/settings/client-access` — Client access management (replaces `/build/client-access`, deleted 2026-09-22; the legacy path redirects)
 - [x] ~~`/build/portal` · `/build/portal/[projectId]`~~ — retired, no route file; the client portal is `/portal/**` below
 - [x] `/portal` · `/portal/[projectId]` — Client portal (chromeless shell: no module/org switcher sidebar)
 - [x] `/build/settings/integrations` — Connections · Agent access (GitHub); `/agent-tokens` + `/agent/v1/*`
-- [x] `/build/access` — Module access management
+- [x] `/build/settings/access` — Module access management (replaces `/build/access`, deleted; the legacy path redirects)
 
 ### CRM
 - [x] `/crm` · `/crm/access` · `/crm/inbox` · `/crm/activities` · `/crm/tasks` · `/crm/analytics` · `/crm/reports` · `/crm/calendar`

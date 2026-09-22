@@ -2,12 +2,13 @@
 
 ## Route decision
 
-- **Current/target route:** `/build/access`
+- **Current/target route:** `/build/settings/access` (was `/build/access`)
 - **Scope:** organization
-- **Disposition:** **MOVE — EXECUTED 2026-09-22**
-- **Decision:** The user job lives at `/build/settings/access`. The physical page was deleted; the deep link is preserved by the `next.config.ts` redirect, which fires before the filesystem.
+- **Disposition:** **MOVE — completed**
+- **Decision:** Migrate the user job to `/build/settings/access`, preserve deep links temporarily, then remove this physical route.
+- **Status:** Done. `frontend/app/(authenticated)/build/access/page.tsx` is deleted and its manifest entry removed; `frontend/next.config.ts` keeps `/build/access` → `/build/settings/access` as the deep-link redirect, and that redirect is checked before the filesystem, so the deleted page was unreachable anyway. The contract below is delivered by `10-settings-access.md`.
 - **User job:** Grant least-privilege Build access and review it.
-- **Evidence:** page deleted 2026-09-22; the job renders from `frontend/app/(authenticated)/build/settings/access/page.tsx`. Redirect: `frontend/next.config.ts`. Census: `docs/build-module/DEAD-BUILD-SURFACE-INVENTORY.md`. Everything below describes the surface at its canonical path.
+- **Evidence:** `frontend/app/(authenticated)/build/settings/access/page.tsx`; removal audited in `ACCESS-ROUTE-REMOVAL-AUDIT.md` and `DEAD-BUILD-SURFACE-INVENTORY.md`, regression-tested by `frontend/lib/build/build-access-route-removal.test.ts` and the manifest coverage suite. Browser evidence still pending — see `ACCESS-ROUTE-BROWSER-QA.md` and `CODEX-DELETION-BROWSER-QA.md`.
 
 ## Product contract
 
