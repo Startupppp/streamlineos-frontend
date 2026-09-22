@@ -13,7 +13,7 @@ Coordinator-owned. Workers never edit this file.
 
 | Task | Status | Commit | Tests | Browser status | Blocker |
 |---|---|---|---|---|---|
-| P4-10 — roadmap/feedback `status` in server schemas | DONE | `b85b0110b` → merge `c6cc31231` | 14/14 in `build-roadmap-response.spec.ts`; 288/288 backend focused | READY_FOR_CODEX_BROWSER_QA | Published `openapi.json` still omits `status` — regeneration deliberately out of scope |
+| P4-10 — roadmap/feedback `status` in server schemas | DONE | `b85b0110b` → merge `c6cc31231` | 14/14 in `build-roadmap-response.spec.ts`; 288/288 backend focused | READY_FOR_CODEX_BROWSER_QA | none — published contract verified to carry `status`, see below |
 | P4-10a — response/filter enum drift protection | DONE | `b85b0110b` | 2 drift tests compare filter `.options` to pgEnum `enumValues` | n/a | none |
 | P4-17 — grant mutation response / client Zod parity | DONE (already closed) | landed earlier in `6de3fa51c` | 6 existing tests cover absent / present / null contacts | READY_FOR_CODEX_BROWSER_QA | none |
 | P4-18 — revoke-grant cache invalidation | DONE | `66e257dc0` → merge `d589996f6` | 13/13 `hooks/api/portal-access`; mutation-proven red | READY_FOR_CODEX_BROWSER_QA | none |
@@ -123,13 +123,50 @@ Verification after the merge: `features/build` + `lib/build` → **177 suites, 1
 `pnpm type-check` exit 0; eslint clean on all four touched files; `type-check:specs` shows only the one
 pre-existing `project-backlog-page.test.tsx` error; route census still 97/88/0.
 
+## The OpenAPI blocker was not real, and the way it was concluded is the lesson
+
+`PHASE-4-STATUS.md` recorded `openapi.json not regenerated` as a standing blocker: the roadmap/feedback `status`
+fix was said to be correct in source but absent from the published artifact, so the generated client could not
+read the field. This session repeated that claim, on the strength of the vendored copy's file mtime
+(2026-09-21 22:17) predating backend commit `32f0e070b`.
+
+**Both were wrong. The committed artifact already carried `status`, and had for some time.**
+
+Verified by reading the artifact rather than reasoning about its timestamp:
+
+| Route | Published `status` enum |
+|---|---|
+| `GET /build/roadmap` | `["planned","in_progress","completed","cancelled"]` |
+| `GET /build/feedback` | `["open","planned","in_progress","completed","declined"]` |
+| `PATCH /build/roadmap/{itemId}` | same as roadmap |
+| `PATCH /build/feedback/{postId}` | same as feedback |
+
+A regeneration was run to settle it, with placeholder env and **no** `--env-file` flag, so nothing contacted any
+database — the placeholder `DATABASE_URL` pointed at `127.0.0.1:1`, which would have failed instantly had a
+connection been attempted. `src/scripts/openapi-env.ts` requires only that the variable be non-empty and says so
+in its own header.
+
+The regenerated artifact is **byte-identical to the committed one**: same sha256 (`0f621e4e…`), same 68,224,720
+bytes, 0 paths added, 0 removed, 0 operations changed. Git reported it as modified only because the generator
+writes LF where the Windows working copy holds CRLF — the same class of artifact as the execution-plan gate. The
+regenerated file was discarded rather than committed, since a 68 MB line-ending-only diff is pure noise.
+
+**The 30 path-parameter rewrites no longer exist either.** That was the stated reason to keep regeneration out of
+Phase 4. A direct comparison of every `in: path` parameter across all 2959 paths returns **0 changed**. Whatever
+staleness existed then has since been reconciled on `main`.
+
+Two lessons worth keeping. A file's mtime is not evidence about its contents — the artifact was right there and
+could have been read at any point. And a blocker is a claim: this one survived two phases without anyone testing
+it, which is the same failure the BLD-003 ledger already recorded about a "needs a scratch database" blocker that
+also turned out to be false.
+
 ## Blockers
 
 | Blocker | Impact | Exact unblock condition |
 |---|---|---|
 | No non-production PostgreSQL 15+ | No `*.db.spec.ts` or `*.e2e-spec.ts` can run. Every fix this session is covered by specs that need no database. | Provision Postgres 15+, apply the chain, set `DATABASE_URL` in the worktree. **`.env` and `.env.production` both resolve to production RDS** — neither may be used. |
 | No running application stack | No authenticated end-to-end browser journey. | The database blocker, plus a seeded disposable tenant and a frontend built against the local API with `API_INTERNAL_URL` set. |
-| `openapi.json` not regenerated | The roadmap/feedback `status` fix is correct in source and in the response contract, but absent from the published artifact, so the generated client may not read the field. Vendored copy is dated 2026-09-21 22:17, predating backend `32f0e070b`. | Regenerate as its own reviewed change. It also rewrites 30 stale path parameters across tickets, projects and checklists, which is why it stayed out of scope. `openapi:generate` needs no database — placeholder env is safe; the hazard is the `--env-file-if-exists=.env` in the npm script. |
+| ~~`openapi.json` not regenerated~~ | **RETIRED 2026-09-22 — the premise was false.** See "The OpenAPI blocker was not real" below. | n/a |
 
 ## Rules enforced
 
