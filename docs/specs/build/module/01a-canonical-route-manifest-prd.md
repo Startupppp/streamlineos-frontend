@@ -11,6 +11,15 @@ all 93 current Build-owned pages: 84 authenticated Build pages, five internal or
 external portal pages, and four public Build pages. Detailed UX and data
 contracts live in BLD-02C through BLD-02F.
 
+The `93`/`84` counts above are the figures this manifest was authored with and
+they are stale: the generated census at
+`docs/specs/build/generated/routes.snapshot.json` measured 88 authenticated
+Build pages before the 2026-09-22 dead-surface removal and 82 after. Per the
+closing note of this document the generated census is authoritative; the header
+counts are not reconciled here because doing so needs a decision on the
+`/portal`, `/portal/{projectId}` and `/build/customers` rows recorded in
+`docs/build-module/DEAD-BUILD-SURFACE-INVENTORY.md`.
+
 `KEEP` means the current path remains. `MOVE` changes the canonical path.
 `CONSOLIDATE` preserves the customer job at the target and deletes the current
 page after parity. `REMOVE` deletes the duplicate after migration. `ADD` means
@@ -21,10 +30,10 @@ the final route has no current physical page.
 | Stable ID | Current path | Final path · disposition | Contract |
 |---|---|---|---|
 | `PG-ORG-001` | `/build` | same · KEEP Projects | BLD-02C |
-| `PG-ORG-002` | `/build/access` | `/build/settings/access` · MOVE | BLD-02C |
+| `PG-ORG-002` | `/build/access` | `/build/settings/access` · MOVE — **page deleted 2026-09-22**, redirect retained in `next.config.ts` | BLD-02C |
 | `PG-ORG-003` | `/build/all-work` | same · KEEP | BLD-02C |
 | `PG-ORG-004` | `/build/approvals` | same · KEEP | BLD-02C |
-| `PG-ORG-005` | `/build/client-access` | `/build/settings/client-access` · MOVE | BLD-02C |
+| `PG-ORG-005` | `/build/client-access` | `/build/settings/client-access` · MOVE — **page deleted 2026-09-22**, redirect retained in `next.config.ts` | BLD-02C |
 | `PG-ORG-006` | `/build/command-center` | same · KEEP | BLD-02C |
 | `PG-ORG-007` | `/build/customers` | same · KEEP CRM relation view | BLD-02C |
 | `PG-ORG-008` | `/build/drafts` | `/build/inbox?view=drafts` · CONSOLIDATE | BLD-02C |
@@ -32,7 +41,7 @@ the final route has no current physical page.
 | `PG-ORG-010` | `/build/goal/{goalId}` | `/build/goals/{goalId}` · MOVE | BLD-02C |
 | `PG-ORG-011` | `/build/inbox` | same · KEEP | BLD-02C |
 | `PG-ORG-012` | `/build/managed-products` | same · KEEP | BLD-02D |
-| `PG-ORG-013` | `/build/members` | `/build/settings/access` · CONSOLIDATE | BLD-02C |
+| `PG-ORG-013` | `/build/members` | `/build/settings/access` · CONSOLIDATE — **page deleted 2026-09-22**, redirect retained in `next.config.ts` | BLD-02C |
 | `PG-ORG-014` | `/build/my-work` | same · KEEP | BLD-02C |
 | `PG-ORG-015` | `/build/pm-workspaces` | `/build/workspaces` · MOVE | BLD-02C |
 | `PG-ORG-016` | `/build/portfolios` | same · KEEP | BLD-02C |
@@ -76,7 +85,7 @@ the final route has no current physical page.
 | `PG-PRJ-002` | `/build/{projectId}/ai` | `/build/command-center?projectId=...` · CONSOLIDATE | BLD-02F |
 | `PG-PRJ-003` | `/build/{projectId}/analytics` | `/build/{projectId}/reports` · CONSOLIDATE | BLD-02F |
 | `PG-PRJ-004` | `/build/{projectId}/approvals` | same · KEEP | BLD-02F |
-| `PG-PRJ-005` | `/build/{projectId}/automations` | `/build/{projectId}/settings/automations` · MOVE | BLD-02F |
+| `PG-PRJ-005` | `/build/{projectId}/automations` | `/build/{projectId}/settings/automations` · MOVE — **page deleted 2026-09-22**, redirect retained in `next.config.ts` | BLD-02F |
 | `PG-PRJ-006` | `/build/{projectId}/backlog` | same · KEEP | BLD-02E |
 | `PG-PRJ-007` | `/build/{projectId}/budget` | same · KEEP | BLD-02F |
 | `PG-PRJ-008` | `/build/{projectId}/bugs` | `/build/{projectId}/issues?type=BUG` · CONSOLIDATE | BLD-02F |
@@ -113,11 +122,11 @@ the final route has no current physical page.
 | `PG-PRJ-039` | `/build/{projectId}/triage` | same · KEEP | BLD-02E |
 | `PG-PRJ-040` | `/build/{projectId}/updates` | same · KEEP | BLD-02E |
 | `PG-PRJ-041` | `/build/{projectId}/views` | `/build/{projectId}/issues` saved-view menu · CONSOLIDATE | BLD-02E |
-| `PG-PRJ-042` | `/build/{projectId}/webhooks` | `/build/{projectId}/settings/integrations/webhooks` · MOVE | BLD-02F |
+| `PG-PRJ-042` | `/build/{projectId}/webhooks` | `/build/{projectId}/settings/integrations/webhooks` · MOVE — **page deleted 2026-09-22**, redirect retained in `next.config.ts` | BLD-02F |
 | `PG-PRJ-043` | `/build/{projectId}/whiteboard` | same · KEEP single project canvas | BLD-02E |
 | `PG-PRJ-044` | `/build/{projectId}/wiki` | same · KEEP Knowledge projection | BLD-02E |
 | `PG-PRJ-045` | `/build/{projectId}/wiki/{pageId}` | same · KEEP | BLD-02E |
-| `PG-PRJ-046` | `/build/{projectId}/workflow` | `/build/{projectId}/settings/workflow` · MOVE | BLD-02F |
+| `PG-PRJ-046` | `/build/{projectId}/workflow` | `/build/{projectId}/settings/workflow` · MOVE — **page deleted 2026-09-22**, redirect retained in `next.config.ts` | BLD-02F |
 | `PG-PRJ-047` | `/build/{projectId}/workload` | same · KEEP | BLD-02E |
 
 ## Internal and External Portal Routes

@@ -22,6 +22,35 @@
 | Decorative AI summaries without citations/freshness | Durable cited proposal or no AI | Trust beats novelty |
 | Unlimited custom statuses/fields/views | Bounded, archived, governed configuration | Prevents unusable filters and schema/query explosion |
 
+## Executed removals
+
+Physical pages removed from disk, with the user job preserved at the target.
+Full dependency census in
+[`DEAD-BUILD-SURFACE-INVENTORY.md`](./DEAD-BUILD-SURFACE-INVENTORY.md).
+
+| Date | Removed | Job preserved at | Deep link preserved by |
+|---|---|---|---|
+| 2026-09-22 | `app/(authenticated)/build/access/page.tsx` | `/build/settings/access` | `next.config.ts` redirect |
+| 2026-09-22 | `app/(authenticated)/build/members/page.tsx`, `error.tsx` | `/build/settings/access` | `next.config.ts` redirect |
+| 2026-09-22 | `app/(authenticated)/build/client-access/page.tsx`, `loading.tsx` | `/build/settings/client-access` | `next.config.ts` redirect |
+| 2026-09-22 | `app/(authenticated)/build/[projectId]/workflow/page.tsx`, `error.tsx`, `loading.tsx` | `/build/[projectId]/settings/workflow` | `next.config.ts` redirect |
+| 2026-09-22 | `app/(authenticated)/build/[projectId]/automations/page.tsx`, `loading.tsx` | `/build/[projectId]/settings/automations` | `next.config.ts` redirect |
+| 2026-09-22 | `app/(authenticated)/build/[projectId]/webhooks/page.tsx`, `loading.tsx` | `/build/[projectId]/settings/integrations/webhooks` | `next.config.ts` redirect |
+| 2026-09-22 | `features/build/my-tickets/my-tickets-page.tsx`, `my-tickets-view-body.tsx` and their test | `/build/my-work?projectId=…` | route redirect retained |
+| 2026-09-22 | `features/build/drafts/comment-drafts-page.tsx` and its test | `/build/inbox?view=drafts` | route redirect retained |
+
+Every one of the six routes had a `next.config.ts` redirect **and** a
+redirect-only `page.tsx`. Configuration redirects are checked before the
+filesystem, so those page files could never execute.
+
+Not executed, and why — each is a kill-list entry whose replacement does not
+exist yet, so removing the page would delete the job rather than move it:
+Standalone Drafts page (route still the only deep-link contract), Project
+Analytics, Project Timeline, Project Saved Views, Standalone Bugs, Standalone
+AI, Authenticated Intake. `/build/goal`, `/build/goal/[goalId]` and
+`/build/pm-workspaces` are `MOVE` rows whose targets `/build/goals` and
+`/build/workspaces` have no page on disk at all.
+
 ## Acceptance criteria
 
 - [ ] Every killed page has a migration target and caller census.

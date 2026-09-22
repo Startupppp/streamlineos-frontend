@@ -31,11 +31,6 @@ const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
     target: "/build/[projectId]/reports?tab=overview",
   },
   { route: "/build/[projectId]/approvals", decision: "KEEP", target: null },
-  {
-    route: "/build/[projectId]/automations",
-    decision: "MOVE",
-    target: "/build/[projectId]/settings/automations",
-  },
   { route: "/build/[projectId]/backlog", decision: "KEEP", target: null },
   { route: "/build/[projectId]/budget", decision: "KEEP", target: null },
   {
@@ -110,28 +105,12 @@ const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
     decision: "CONSOLIDATE",
     target: "/build/[projectId]/issues",
   },
-  {
-    route: "/build/[projectId]/webhooks",
-    decision: "MOVE",
-    target: "/build/[projectId]/settings/integrations/webhooks",
-  },
   { route: "/build/[projectId]/whiteboard", decision: "KEEP", target: null },
   { route: "/build/[projectId]/wiki", decision: "KEEP", target: null },
   { route: "/build/[projectId]/wiki/[pageId]", decision: "KEEP", target: null },
-  {
-    route: "/build/[projectId]/workflow",
-    decision: "MOVE",
-    target: "/build/[projectId]/settings/workflow",
-  },
   { route: "/build/[projectId]/workload", decision: "KEEP", target: null },
-  { route: "/build/access", decision: "MOVE", target: "/build/settings/access" },
   { route: "/build/all-work", decision: "KEEP", target: null },
   { route: "/build/approvals", decision: "KEEP", target: null },
-  {
-    route: "/build/client-access",
-    decision: "MOVE",
-    target: "/build/settings/client-access",
-  },
   { route: "/build/command-center", decision: "KEEP", target: null },
   { route: "/build/customers", decision: "DELETE", target: "/crm" },
   {
@@ -173,7 +152,6 @@ const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
     decision: "KEEP",
     target: null,
   },
-  { route: "/build/members", decision: "MOVE", target: "/build/settings/access" },
   { route: "/build/my-work", decision: "KEEP", target: null },
   { route: "/build/pm-workspaces", decision: "MOVE", target: "/build/workspaces" },
   { route: "/build/portfolios", decision: "KEEP", target: null },

@@ -75,12 +75,12 @@ describe("extractProjectId — regex fix", () => {
     expect(mockPush).toHaveBeenCalledWith("/build/7");
   });
 
-  it("fires g+i chord and navigates to /build/<id>/my-tickets", () => {
+  it("fires g+i chord and navigates to the canonical /build/my-work scoped to the project", () => {
     mockPathname.current = "/build/7/backlog";
     renderHook(() => useKeyboardShortcuts());
     press("g");
     press("i");
-    expect(mockPush).toHaveBeenCalledWith("/build/7/my-tickets");
+    expect(mockPush).toHaveBeenCalledWith("/build/my-work?projectId=7");
   });
 });
 

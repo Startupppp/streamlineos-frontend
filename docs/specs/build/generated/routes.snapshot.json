@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "generatedAt": "2026-09-22T04:13:17.009Z",
+  "generatedAt": "2026-09-22T06:25:43.849Z",
   "source": "frontend/app",
-  "count": 97,
+  "count": 91,
   "routes": [
     {
       "path": "/accept-invitation",
@@ -31,10 +31,6 @@
     {
       "path": "/build/{projectId}/approvals",
       "file": "frontend/app/(authenticated)/build/[projectId]/approvals/page.tsx"
-    },
-    {
-      "path": "/build/{projectId}/automations",
-      "file": "frontend/app/(authenticated)/build/[projectId]/automations/page.tsx"
     },
     {
       "path": "/build/{projectId}/backlog",
@@ -189,10 +185,6 @@
       "file": "frontend/app/(authenticated)/build/[projectId]/views/page.tsx"
     },
     {
-      "path": "/build/{projectId}/webhooks",
-      "file": "frontend/app/(authenticated)/build/[projectId]/webhooks/page.tsx"
-    },
-    {
       "path": "/build/{projectId}/whiteboard",
       "file": "frontend/app/(authenticated)/build/[projectId]/whiteboard/page.tsx"
     },
@@ -205,16 +197,8 @@
       "file": "frontend/app/(authenticated)/build/[projectId]/wiki/[pageId]/page.tsx"
     },
     {
-      "path": "/build/{projectId}/workflow",
-      "file": "frontend/app/(authenticated)/build/[projectId]/workflow/page.tsx"
-    },
-    {
       "path": "/build/{projectId}/workload",
       "file": "frontend/app/(authenticated)/build/[projectId]/workload/page.tsx"
-    },
-    {
-      "path": "/build/access",
-      "file": "frontend/app/(authenticated)/build/access/page.tsx"
     },
     {
       "path": "/build/all-work",
@@ -223,10 +207,6 @@
     {
       "path": "/build/approvals",
       "file": "frontend/app/(authenticated)/build/approvals/page.tsx"
-    },
-    {
-      "path": "/build/client-access",
-      "file": "frontend/app/(authenticated)/build/client-access/page.tsx"
     },
     {
       "path": "/build/command-center",
@@ -279,10 +259,6 @@
     {
       "path": "/build/managed-products/{managedProductId}/roadmap",
       "file": "frontend/app/(authenticated)/build/managed-products/[managedProductId]/roadmap/page.tsx"
-    },
-    {
-      "path": "/build/members",
-      "file": "frontend/app/(authenticated)/build/members/page.tsx"
     },
     {
       "path": "/build/my-work",

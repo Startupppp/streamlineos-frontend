@@ -213,10 +213,10 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/build/drafts` · **Build** · hooks: `→ features/build`
 - `/build/command-center` · **Build** · hooks: `→ features/build`
 - `/build/approvals` · **Build** · hooks: `→ features/build`
-- `/build/members` · **Build** · hooks: `→ features/build`
+- `/build/members` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/members/page.tsx + error.tsx] — redirect-only page shadowed by the `next.config.ts:132` redirect to `/build/settings/access`, which fires before the filesystem, so the page never executed; the URL still redirects
 - `/build/customers` · **Build** · hooks: `→ features/build`
-- `/build/client-access` · **Build** · hooks: `→ features/build`
-- `/build/access` · **Build** · hooks: `→ features/build`
+- `/build/client-access` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/client-access/page.tsx + loading.tsx] — redirect-only page shadowed by the `next.config.ts:142` redirect to `/build/settings/client-access`; the URL still redirects
+- `/build/access` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/access/page.tsx] — redirect-only page shadowed by the `next.config.ts:137` redirect to `/build/settings/access`; the URL still redirects
 
 ### PM Workspaces
 - `/build/pm-workspaces` · **Build** · hooks: `→ features/build`
@@ -260,7 +260,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/build/[projectId]/ai` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/analytics` · **Build** · hooks: `→ features/build/analytics/project-analytics-page` (`useProjectAnalytics`) · renders `NoPermissionState` without `build:view` (2026-09-20: previously the page had no permission gate of its own — a denied user fell through the disabled query's `data: undefined` straight to "No analytics yet", denial read as emptiness). Route file is now a thin server wrapper delegating to the feature component, matching the `/build/[projectId]/budget` pattern.
 - `/build/[projectId]/approvals` · **Build** · hooks: `→ features/build/project`
-- `/build/[projectId]/automations` · **Build** · hooks: `→ features/build/project`
+- `/build/[projectId]/automations` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/[projectId]/automations/page.tsx + loading.tsx] — redirect-only page shadowed by the `next.config.ts:122` redirect to `/build/:projectId/settings/automations`; the URL still redirects
 - `/build/[projectId]/backlog` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/budget` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/bugs` · **Build** · hooks: `→ features/build/project`
@@ -296,11 +296,11 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/build/[projectId]/triage` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/updates` · **Build** · hooks: `→ features/build/updates` — project status updates; gated `build:updates:view` via `requireModulePermission`
 - `/build/[projectId]/views` · **Build** · hooks: `→ features/build/project`
-- `/build/[projectId]/webhooks` · **Build** · hooks: `→ features/build/project`
+- `/build/[projectId]/webhooks` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/[projectId]/webhooks/page.tsx + loading.tsx] — redirect-only page shadowed by the `next.config.ts:127` redirect to `/build/:projectId/settings/integrations/webhooks`; the URL still redirects
 - `/build/[projectId]/whiteboard` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/wiki` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/wiki/[pageId]` · **Build** · hooks: `→ features/build/project`
-- `/build/[projectId]/workflow` · **Build** · hooks: `→ features/build/project`
+- `/build/[projectId]/workflow` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/[projectId]/workflow/page.tsx + error.tsx + loading.tsx] — redirect-only page shadowed by the `next.config.ts:117` redirect to `/build/:projectId/settings/workflow`; the URL still redirects
 - `/build/[projectId]/workload` · **Build** · hooks: `→ features/build/project` — workload view alias; `enforceRouteAccess`
 
 ---

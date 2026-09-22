@@ -90,7 +90,9 @@ export function useCommandRegistry({
         isAvailable: projectId !== null,
         execute: () => {
           if (projectId !== null)
-            handleSelect(`/build/${projectId}/my-tickets`);
+            handleSelect(
+              `/build/my-work?projectId=${encodeURIComponent(projectId)}`,
+            );
         },
       },
       {

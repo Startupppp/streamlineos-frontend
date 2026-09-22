@@ -29,9 +29,9 @@ const diskRoutes = new Set(
   collectPageFilePaths(APP_BUILD_DIR).map(absolutePathToRoute),
 );
 
-describe("BLD-001 — build route manifest covers all 88 authenticated build pages bidirectionally", () => {
-  it("manifest has 88 entries so the coverage check cannot pass vacuously with an empty or truncated list", () => {
-    expect(BUILD_ROUTE_MANIFEST).toHaveLength(88);
+describe("BLD-001 — build route manifest covers all 82 authenticated build pages bidirectionally", () => {
+  it("manifest has 82 entries so the coverage check cannot pass vacuously with an empty or truncated list", () => {
+    expect(BUILD_ROUTE_MANIFEST).toHaveLength(82);
   });
 
   it("disk route count matches manifest count so neither direction can silently absorb extra entries", () => {

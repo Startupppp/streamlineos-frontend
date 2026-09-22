@@ -51,7 +51,7 @@ export function useKeyboardShortcuts() {
         }
         if (e.key === "i") {
           e.preventDefault();
-          router.push(`/build/${projectId}/my-tickets`);
+          router.push(`/build/my-work?projectId=${encodeURIComponent(projectId)}`);
           return;
         }
         return;
