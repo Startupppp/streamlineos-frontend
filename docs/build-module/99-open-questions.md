@@ -30,6 +30,10 @@ canonical document for the decision.
 15. **Is a non-production PostgreSQL going to exist?** `.env` and `.env.production` resolve to the same production RDS host. Until that changes, no `*.db.spec.ts` or `*.e2e-spec.ts` can run, and `check:tenant-relationships` cannot report at all. The choice is to provision one, or to accept permanently unmeasurable database gates and say so explicitly.
 16. **What is the affected-work relationship on a Change Request?** A change request may affect specific tickets, a milestone, a release, or a free-text scope statement. The column does not exist yet, so the cardinality and the tenancy key are both unchosen — and the choice determines the composite foreign key.
 
+17. **How is the `sprint_scope_events` rename taken out of phase 05?** `a-sprint-cycle-05-drop.sql` drops `build.sprints` *and* renames `build_events.sprint_scope_events` to `cycle_scope_events` plus its enum, in one phase. The code still reads the old physical names, so the rename requires a code deploy at the same instant as the DDL — which is not achievable. Either split the rename into its own phase run after a renaming deploy, or delete the two `RENAME` statements and keep the historical name. The table holds 0 rows, so nothing is at stake but the choice; it must be made before the drop runs. See A5 in [`06-prioritized-backlog.md`](./06-prioritized-backlog.md).
+
+18. **Is `build.bugs` meant to be empty?** It holds 0 rows in production, as does `bug_work_item_map` and `work_item_qa_details`, while 44 tickets already carry `type = 'BUG'`. That makes the QA Bug contraction a no-op and its 14 verification checks vacuous. If the intent was that historical bugs would be migrated into work items, nothing was there to migrate and the expand/backfill phases moved nothing — worth confirming before the freeze is recorded as a completed consolidation.
+
 ## Acceptance criteria
 
 - [ ] Each answered question is removed and captured in the appropriate canonical document.

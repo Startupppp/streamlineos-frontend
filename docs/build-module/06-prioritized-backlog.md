@@ -36,6 +36,7 @@ code. They are kept for audit history and must not be re-opened without new evid
 | **A1b — backend `tickets.sprint_id` removal** | Landed `e06314424`, `de8ccd58a`. `tickets`, `project_meetings`, `test_runs` and `sprint_scope_events` no longer declare `sprint_id`; the only remaining `sprint_id` in the schema is `cycles.legacy_sprint_id` (`backend/src/db/schema/build/core.ts:165`) |
 | **A4 — invoice → timesheet pointer** | Landed `8bd5a84b4`. `invoice_items.timesheet_entry_id` is written and read — `backend/src/modules/invoices/invoices-write.service.ts:139`, `invoices-update.service.ts:130,168`, `invoices.service.ts:121` |
 | QA Bug legacy writer | Deleted `06b398ec8`. No non-test `from(bugs)`, `insert(bugs)`, `update(bugs)` or `delete(bugs)` remains |
+| **A2 — retire the `build.sprints` access path** | Landed `3d4e5a6a6` on `build/a2-sprints-table-cutover`. All five call sites are gone; every sprint endpoint is served from `cycles` via `legacy_sprint_id`. 215 build suites / 1932 tests pass; backend `typecheck` 1 error and `typecheck:test` 2 errors, both at the recorded pre-existing baseline |
 
 Nine physical route removals are recorded in [`99-kill-list.md`](./99-kill-list.md) and are not
 repeated here.
@@ -47,21 +48,28 @@ repeated here.
 Nothing in Stage D may run until every Stage A task is deployed. Dropping a column that live
 code still reads raises PostgreSQL `42703` on production traffic with no warning.
 
-A1 (frontend `sprintId`), A1b (backend `tickets.sprint_id`) and A4 (invoice → timesheet
-pointer) landed during this reconciliation and have moved to the historical table above. **A2 and
-A3 are what remain.**
+A1 (frontend `sprintId`), A1b (backend `tickets.sprint_id`), A2 (the `build.sprints` access
+path) and A4 (invoice → timesheet pointer) have all landed and moved to the historical table
+above. **A5 is the one remaining migration blocker.** A3 is open but gates nothing.
 
-#### A2 — Retire the `sprints` table access path
+#### A5 — Resolve the `sprint_scope_events` rename that phase 05 performs
 
-- **User job:** stop the server reading and writing a table that phase 05 deletes.
-- **Owner:** backend
-- **Depends on:** none — A1 and A1b are merged
-- **Acceptance:** no non-schema `from(sprints)`, `update(sprints)` or `insert(sprints)` remains; `sprintsRelations` is removed; `GET /build/:projectId/sprints` either returns cycle-derived rows or is removed together with its route-manifest entry; backend `typecheck` stays at its measured parity of 1 pre-existing error.
-- **Evidence:** re-measured at backend `de8ccd58a` — **five live non-test call sites**, three of them writes: `backend/src/modules/build/core/projects-write.service.ts:289` (`update`), `backend/src/modules/build/entity/build-entity-reads.service.ts:355` (`from`), `backend/src/modules/build/execution/sprints.service.ts:32` (`from`), `:122` (`update`), `:181` (soft-delete `update`), plus `backend/src/db/schema/build/relations.ts:56`.
-- **Effort:** 2–3 d
+- **User job:** keep the burnup report working across the drop.
+- **Owner:** repo owner decides the approach; backend implements
+- **Depends on:** nothing — but it **must be settled before D2 runs**
+- **Acceptance:** after `a-sprint-cycle-05-drop.sql` is applied, `GET /build/:projectId/reports/burnup` still returns 200.
+- **Evidence:** `a-sprint-cycle-05-drop.sql` ends with `ALTER TABLE "build_events"."sprint_scope_events" RENAME TO "cycle_scope_events"` and `ALTER TYPE "sprint_scope_event_type" RENAME TO "cycle_scope_event_type"`. The schema still declares the old physical names — `backend/src/db/schema/build/sprint-events.ts:23-24` and `:15` — and `backend/src/modules/build/core/projects-reports.service.ts:102` selects from the table. The moment phase 05 commits, that read raises `42P01`.
+- **Effort:** 0.5–1 d
 
-**This is the single blocker for migration D2.** Dropping `build.sprints` against the current
-code raises PostgreSQL `42P01` at all five sites.
+This is a genuine ordering defect in the migration, not a code gap: a rename inside the same
+phase as the drop requires the code rename to deploy at the same instant, which is not possible.
+Two resolutions, both acceptable, neither yet chosen — see open question 17:
+
+1. Split the rename out of phase 05 into its own phase, run it after a deploy that renames the code.
+2. Drop the two `RENAME` statements entirely and keep the historical table name.
+
+The table currently holds **0 rows**, so no data is at risk either way — but row count does not
+save a `SELECT` from a renamed table.
 
 #### A3 — Change Requests: affected-work linkage
 
@@ -78,19 +86,19 @@ code raises PostgreSQL `42P01` at all five sites.
 
 - **User job:** none directly — this is the guard that stops A1/A2 shipping half-done.
 - **Owner:** backend
-- **Depends on:** A2
-- **Acceptance:** an invariant spec fails if any non-schema reference to `tickets.sprint_id` reappears, in both string and Drizzle relational (`sprintId: true`) form, with an empty allowlist.
-- **Evidence:** the DO-block guard in `backend/migrations/sql/a-sprint-cycle-04-detach.sql` is a **data** check over `sprint_binding_archive` and has zero visibility into application code — stated at `lane-1-cycle-cutover.md:82`.
-- **Effort:** 1–2 d
+- **Depends on:** nothing further
+- **Acceptance:** an invariant spec fails if any non-schema reference to `tickets.sprint_id` or to the `sprints` table reappears, in string, Drizzle relational (`sprintId: true`) and query-builder form, with an empty allowlist.
+- **Evidence:** the `tickets.sprint_id` half is `backend/src/modules/build/phase-2/sprint-cycle-detach-invariant.spec.ts`; the table half is `backend/src/modules/build/phase-2/sprint-cycle-drop-invariant.spec.ts`, added in `3d4e5a6a6` with non-vacuity proofs for each scanner form. The DO-block guard in `backend/migrations/sql/a-sprint-cycle-04-detach.sql` is a **data** check over `sprint_binding_archive` and has zero visibility into application code — stated at `lane-1-cycle-cutover.md:82`.
+- **Effort:** spent
 
-#### B2 — Run the QA Bug contract verification
+#### B2 — Run the QA Bug contract verification — **DONE 2026-09-22**
 
 - **User job:** none directly — it is the precondition for freezing `build.bugs`.
 - **Owner:** repo owner (needs a database)
-- **Depends on:** Stage A deployed
-- **Acceptance:** all 14 checks in `b-qa-bug-03-verify.sql` return zero.
-- **Evidence:** `backend/migrations/sql/b-qa-bug-03-verify.sql`; blocker 5 in `NEXT-CLOSURE-STATUS.md:172`.
-- **Effort:** 0.5 d execution, gated by database access
+- **Depends on:** nothing further
+- **Acceptance:** all 14 checks in `b-qa-bug-03-verify.sql` return zero. **Met.**
+- **Evidence:** executed against the production Aurora cluster over a read-only IAM connection inside a `SET TRANSACTION READ ONLY` transaction on 2026-09-22. All 14 named checks returned 0. **Read the vacuity caveat in Stage D before treating this as a successful migration:** `build.bugs` has 0 rows, so the checks passed over an empty table.
+- **Effort:** spent
 
 #### B3 — Measure `check:contract-parity` outside a junctioned worktree
 
@@ -107,7 +115,7 @@ code raises PostgreSQL `42P01` at all five sites.
 
 - **User job:** keep Build working while the data model contracts underneath it.
 - **Owner:** repo owner
-- **Depends on:** A2, A3, B1, B3 (A1, A1b and A4 are merged)
+- **Depends on:** merging `build/a2-sprints-table-cutover`, plus B1 and B3. A3 does not gate any migration and can ship separately.
 - **Acceptance:** the deployed revision contains every Stage A commit; a production smoke of Cycles, Issues, Change Requests and Workload returns 200 with no `42703` in logs.
 - **Evidence:** the ordering hazard is `lane-1-cycle-cutover.md:82`; the same class already bit Change Requests, recorded at `NEXT-CLOSURE-STATUS.md:160-162`.
 - **Effort:** 0.5 d plus an observation window
@@ -118,18 +126,33 @@ Every task here is irreversible in practice. The Aurora cluster has **1-day back
 so a manual snapshot is the only recovery point — read the posture from the cluster, not the
 instance. Each phase below must be preceded by a fresh manual snapshot.
 
-Readiness re-measured at root `f794b484a` / backend `de8ccd58a`:
+Readiness re-measured at root `f794b484a`, backend `3d4e5a6a6`, and against the live production
+database over a read-only IAM connection on 2026-09-22:
 
-| Phase | Code ready? | What still blocks it |
-|---|---|---|
-| D1 detach | **Yes** | Stage C only. No schema or code reference to `sprint_id` remains on any of the 4 tables, but production still serves the pre-cutover revision |
-| D2 drop `sprints` | **No** | A2 — five live non-test call sites, three of them writes |
-| D3 QA freeze | **Yes** | B2 only. No non-test reader or writer of `build.bugs` remains |
-| D4 drop `bugs` | **Yes**, after D3 | D3 applied and observed; no rollback file exists for this phase |
+| Phase | Code ready? | Data precondition | What still blocks it |
+|---|---|---|---|
+| D1 detach | **Yes** | **Met** — 103 tickets carry `sprint_id`, and all 103 are in `sprint_binding_archive`, so the DO-block guard returns `unarchived = 0` | Stage C only |
+| D2 drop `sprints` | **Yes**, after A2 | 4 sprints, all 4 with a cycle counterpart, 0 orphans | **A5** — the phase also renames `sprint_scope_events`, which live code still reads — then D1, then Stage C |
+| D3 QA freeze | **Yes** | All 14 checks in `b-qa-bug-03-verify.sql` return 0, but **vacuously**: `build.bugs` holds **0 rows** | Nothing technical. See the vacuity note below |
+| D4 drop `bugs` | **Yes**, after D3 | Table is empty | D3 applied and observed; **no rollback file exists for this phase** |
 
 "Code ready" means the merged source no longer touches the object. It does **not** mean the
 running production revision no longer touches it — that is what Stage C establishes, and it is
 the difference between a clean drop and a site-wide `42703`.
+
+**D2 cannot run before D1, and this is a hard database constraint rather than a preference.**
+Four foreign keys still reference `build.sprints` in production — `fk_tickets_org_sprint`,
+`fk_project_meetings_org_sprint`, `fk_test_runs_org_sprint` and
+`fk_sprint_scope_events_org_sprint`. `a-sprint-cycle-05-drop.sql` issues a bare
+`DROP TABLE "build"."sprints"` with no `CASCADE`, so it fails `2BP01` while any of them exists.
+Phase 04 drops exactly those four. The ordering is therefore already correct — but only in that
+order.
+
+**The QA Bug checks pass because there is nothing to check.** `build.bugs` has 0 rows,
+`bug_work_item_map` has 0 rows, and the file's own informational lifecycle distribution returns
+no rows at all. The 14 zeroes are therefore evidence that the freeze and drop are *harmless*,
+not evidence that a migration was performed correctly. Treat D3 and D4 as removing an unused
+table. 44 tickets already carry `type = 'BUG'`, and `work_item_qa_details` is empty.
 
 #### D1 — `a-sprint-cycle-04-detach.sql`
 
