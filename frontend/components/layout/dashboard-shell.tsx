@@ -7,7 +7,12 @@ import { usePathname } from "next/navigation";
 import { AppSidebar } from "./app-sidebar";
 import { GlobalHeader } from "./header/global-header";
 import { CommandPalette } from "./command-palette";
-import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { usePushSubscription } from "@/hooks/common/use-push-subscription";
 import { TrialBanner } from "@/components/billing/trial-banner";
 import { ImpersonationBanner } from "@/components/impersonation/impersonation-banner";
@@ -314,6 +319,11 @@ export function DashboardShell({
               >
                 <DrawerContent className="z-[100] flex h-[96dvh] max-h-[96dvh] w-full flex-col gap-0 overflow-hidden rounded-t-xl border-t border-sidebar-border bg-sidebar p-0 pb-[env(safe-area-inset-bottom)]">
                   <DrawerTitle className="sr-only">Navigation</DrawerTitle>
+                  <DrawerDescription className="sr-only">
+                    The workspace navigation sidebar, opened as a sheet. It
+                    lists every section of the current module, plus the
+                    switchers for organizations and modules.
+                  </DrawerDescription>
                   <AppSidebar
                     isMobile
                     onNavigate={handleCloseMobileMenu}

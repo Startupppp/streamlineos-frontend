@@ -115,6 +115,7 @@ jest.mock("@/components/ui/drawer", () => ({
   },
   DrawerContent: ({ children }: PropsWithChildren) => <>{children}</>,
   DrawerTitle: ({ children }: PropsWithChildren) => <>{children}</>,
+  DrawerDescription: ({ children }: PropsWithChildren) => <>{children}</>,
 }));
 
 jest.mock("@/hooks/api/access", () => ({

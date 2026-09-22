@@ -6,10 +6,16 @@ import { Command as CommandPrimitive } from "cmdk"
 import { Search } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
   DrawerTitle,
 } from "@/components/ui/drawer"
 import { useIsMobile } from "@/hooks/common/use-mobile"
@@ -33,7 +39,20 @@ const Command = React.forwardRef<
 ))
 Command.displayName = CommandPrimitive.displayName
 
-function CommandDialog({ children, open, onOpenChange, ...props }: DialogProps) {
+const COMMAND_DIALOG_DESCRIPTION =
+  "Search pages, records and actions. Type to filter, use the arrow keys to move through the results, and press Enter to run the highlighted one."
+
+interface CommandDialogProps extends DialogProps {
+  description?: string
+}
+
+function CommandDialog({
+  children,
+  open,
+  onOpenChange,
+  description = COMMAND_DIALOG_DESCRIPTION,
+  ...props
+}: CommandDialogProps) {
   const isMobile = useIsMobile()
 
   const command = (
@@ -59,6 +78,7 @@ function CommandDialog({ children, open, onOpenChange, ...props }: DialogProps) 
         >
           <VisuallyHidden>
             <DrawerTitle>Command Palette</DrawerTitle>
+            <DrawerDescription>{description}</DrawerDescription>
           </VisuallyHidden>
           {command}
         </DrawerContent>
@@ -74,6 +94,7 @@ function CommandDialog({ children, open, onOpenChange, ...props }: DialogProps) 
       >
         <VisuallyHidden>
           <DialogTitle>Command Palette</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </VisuallyHidden>
         {command}
       </DialogContent>

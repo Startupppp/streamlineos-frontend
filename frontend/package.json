@@ -28,6 +28,8 @@
     "check:page-state-usage:self-test": "node scripts/check-page-state-usage.mjs --self-test",
     "check:icon-labels": "node scripts/check-no-unlabeled-icon-buttons.mjs",
     "check:icon-button-rule": "node eslint-rules/no-unlabelled-icon-button.test.mjs",
+    "check:dialog-descriptions": "node scripts/check-dialog-descriptions.mjs",
+    "check:dialog-descriptions:self-test": "node scripts/check-dialog-descriptions.mjs --self-test",
     "check:query-scope": "node scripts/check-query-scope.mjs",
     "check:query-scope:self-test": "node scripts/check-query-scope.mjs --self-test",
     "check:dead-code": "node scripts/check-dead-code.mjs",

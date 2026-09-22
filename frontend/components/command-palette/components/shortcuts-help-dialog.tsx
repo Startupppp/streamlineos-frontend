@@ -1,7 +1,13 @@
 "use client";
 
 import { useCallback } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useCommandPalette } from "../hooks/use-command-palette";
 
 interface ShortcutRowProps {
@@ -52,6 +58,10 @@ export function ShortcutsHelpDialog() {
       <DialogContent className="max-w-sm gap-0">
         <DialogHeader className="pb-3">
           <DialogTitle className="text-base">Keyboard shortcuts</DialogTitle>
+          <DialogDescription>
+            Key combinations that move you around the workspace and start common
+            actions without reaching for the mouse.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>
