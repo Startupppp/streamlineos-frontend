@@ -40,11 +40,6 @@ export interface LeaveContextResult {
   approvalRoute: ApprovalRoute;
 }
 
-export interface LeaveApprovalsResult {
-  pending: unknown[];
-  all: unknown[];
-}
-
 export interface LeaveRequestsPage {
   data: unknown[];
   pageInfo: {
