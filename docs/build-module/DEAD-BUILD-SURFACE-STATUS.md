@@ -2,8 +2,13 @@
 
 **Branch:** `build/remove-dead-build-surface`
 **Worktree:** `D:/projects/personal/slos-dead-surface`
-**Base:** local `main` = `e21246395`
+**Base:** local `main` = `e21246395`, later merged forward twice as `main` moved to `ed55029d4` and then `29842b3e2`
 **Date:** 2026-09-22
+
+`main` moved twice during this session. The second move was a **parallel session
+deleting `/build/access`**, one of the same six routes. The conflicts were
+resolved by union, and the peer's two new regression suites pass against these
+deletions. See the merge commit for the file-by-file resolution.
 
 Decisions and their evidence live in
 [`DEAD-BUILD-SURFACE-INVENTORY.md`](./DEAD-BUILD-SURFACE-INVENTORY.md). This
@@ -31,7 +36,8 @@ file records only what was done and how it was measured.
 | `pnpm typecheck:web` | PASS | **PASS (exit 0)**, re-run after the `main` merge |
 | `pnpm type-check:specs` | PASS before the merge | **FAIL (exit 2) after merging `main`** — one error in `features/build/backlog/project-backlog-page.test.tsx:22`, the exact file and error `PHASE-3-STATUS.md` documents as pre-existing. Untouched by this branch; it arrived with `main`. |
 | `pnpm jest lib/build lib/rbac` | — | **35 suites, 505 tests, all pass** |
-| `pnpm jest features/build features/portal features/portal-access lib components/layout components/command-palette hooks/api/build hooks/api/portal-access` | — | all pass **except** five pre-existing failures listed below |
+| `pnpm jest features/build lib components/layout components/command-palette features/portal features/portal-access features/module-access hooks/api/build` | — | **391 of 396 suites pass, 4077 of 4086 tests.** The five failing suites are the pre-existing ones listed below. |
+| Peer regression suites `build-access-route-removal.test.ts`, `module-access-route-invariants.test.ts` | added on `main` mid-session | **pass against this branch's deletions** |
 | `pnpm check:gated-reads`, `check:route-thinness` | — | **PASS** |
 | `pnpm check:dead-code` | **FAIL** — 6 unclassified exports, 3 dead files | **FAIL — same 6 unclassified exports, 0 dead files** |
 | `pnpm check:empty-states` | PASS | **PASS** — 4652 files scanned |
