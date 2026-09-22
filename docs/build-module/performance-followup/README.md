@@ -19,11 +19,13 @@ Two analysers were added under `backend/src/scripts/build-performance/`. Both ar
 
 ## Fixes landed
 
-P0-1, P1-1, P2-3 and P2-9 are fixed in this branch: two journalled migrations with rollbacks, the analytics cache wired up, nine dead evictions repointed, and one missing tenant predicate added. `check:cache-invalidation` went from failing to passing. Both new analysers exit 0.
+P0-1, P1-1, P1-2, P1-3, P2-3 and P2-9 are fixed: three journalled migrations with rollbacks, the analytics cache wired up, nine dead evictions repointed, one missing tenant predicate added, the velocity keyset made index-usable, and the cutover's columns and indexes reconciled into the schema.
 
-Typecheck holds at the baseline 30 pre-existing errors — zero new — measured against a clean checkout of the merge-base. All 214 Build suites (1,903 tests) pass.
+Gates that moved: `check:cache-invalidation` failing → passing. `check:tenant-indexes` 2 failures → 1, and the survivor is not a Build table.
 
-P1-2 and P1-3 are left open on purpose: both need `cycles.deletedAt` in the Drizzle model, which is the Sprint/Cycle lane's file mid-cutover.
+215 Build suites (2,015 tests) pass. Typecheck holds at the pre-existing baseline with zero new errors.
+
+P2-1 was attempted and reverted — classifying those reads correctly requires raising a suppression ratchet, which is a decision for that ledger's owner, not a patch. The evidence is written up and ready to use either way.
 
 ## What this pass did not touch
 

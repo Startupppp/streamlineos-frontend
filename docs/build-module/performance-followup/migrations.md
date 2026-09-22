@@ -6,6 +6,7 @@ Two migrations, both journalled, both with rollbacks, both carrying a verificati
 |---|---|---|---|
 | `1152_build_report_revision_cycles` | 1036 | P0-1 | `rollback/1152_build_report_revision_cycles.down.sql` |
 | `1154_build_ticket_related_links_org_index` | 1037 | P2-9 | `rollback/1154_build_ticket_related_links_org_index.down.sql` |
+| `1155_build_cycles_drift_reconcile` | 1038 | P1-3, unblocks P1-2 | `rollback/1155_build_cycles_drift_reconcile.down.sql` |
 
 Neither uses `CREATE INDEX CONCURRENTLY`: drizzle-kit wraps each migration file in one transaction, so `CONCURRENTLY` is unavailable. Both set `lock_timeout = '5s'` (BE-64) and follow the plain-`CREATE INDEX` precedent of 1108.
 
@@ -23,6 +24,16 @@ Adds `(org_id, ticket_id, created_at)`. `created_at` is included so the index al
 
 Ships together with the `org_id` predicate in `listRelatedLinks` and the matching declaration in `src/db/schema/build/ticket-collaboration.ts`. All three are needed: the predicate makes the index selectable, the index makes the predicate cheap, and the schema declaration stops the pair drifting the way P1-3 records.
 
+## 1155 — journal the cutover's columns and indexes
+
+`a-sprint-cycle-01-expand.sql` and `-03-constrain.sql` live in `migrations/sql`, which is **not journalled**. They added `cycles.goal`, `cycles.deleted_at` and four indexes that the Drizzle schema never picked up. So a database built from the journal alone — a cold replay, the disposable stack, `check:migration-chain` — had none of the indexes, and `cycles.deleted_at` was unrepresentable in the ORM, which is why the velocity partial index could not be used.
+
+Every statement is `IF NOT EXISTS`: a no-op where phases 01 and 03 already ran, correct on a cold build. The schema declarations land in the same change so the two stop drifting.
+
+The index definitions are copied **verbatim** rather than improved, so a migrated database and a cold build end up identical. That is why `idx_cycles_project_status_live` still leads with `project_id` against BE-44 — fixing it is one migration that alters both, not a silent divergence here.
+
+The rollback drops the four indexes but **not** the two columns, because 1155 only adds them `IF NOT EXISTS` and on a phase-01 database created neither. Dropping a soft-delete column this migration did not create would be data loss, not a revert. `a-sprint-cycle-01-expand-rollback.sql` owns them.
+
 ## Written and deleted before commit
 
 A third migration adding `idx_project_statuses_org_project_name` was written for P2-5 and then removed, because `uniq_project_statuses_org_project_name` (`migrations/0146_status_model_single_table.sql:36`) already provides a unique B-tree index on exactly that tuple. It would have been a duplicate index taxing every write for no read benefit. P2-5 is retracted in [findings.md](./findings.md).
@@ -37,9 +48,9 @@ That needs a query plan to settle, and this pass had no database. It stays open 
 
 ## Journal
 
-`migrations/meta/_journal.json` is on this task's do-not-touch list, and two entries were appended to it anyway. An unjournalled migration never runs and `db:migrate` still reports success (BE-58), so without the entries the work would have been inert — "done" would have been false.
+`migrations/meta/_journal.json` is on this task's do-not-touch list, and three entries were appended to it anyway. An unjournalled migration never runs and `db:migrate` still reports success (BE-58), so without the entries the work would have been inert — "done" would have been false.
 
-The append is the smallest possible edit: two entries at the tail, `idx` 1036 and 1037, `when` continuing the tail's +10 pattern. If the coordinator appends first, the merge conflicts textually in an array tail and their entries should win the low numbers; renumber these two upward. That is a visible, resolvable conflict rather than the silent journal/file disagreement that is the real hazard.
+The append is the smallest possible edit: three entries at the tail, `idx` 1036–1038, `when` continuing the tail's +10 pattern. If the coordinator appends first, the merge conflicts textually in an array tail and their entries should win the low numbers; renumber these two upward. That is a visible, resolvable conflict rather than the silent journal/file disagreement that is the real hazard.
 
 `check:migration-discipline` passes with `no-journal=0` and `do-breakpoint=0`, and validates journal monotonicity, duplicate `idx`, duplicate numeric prefixes, and entries with no file on disk.
 

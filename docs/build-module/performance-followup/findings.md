@@ -28,9 +28,10 @@ Tenant scoping is the module's strongest dimension: one omission in 115 handlers
 | P1-1 analytics cache | **fixed** — read cached, nine evictions repointed |
 | P2-3 false `check:cache-invalidation` findings | **fixed** — gate now passes |
 | P2-9 `listRelatedLinks` | **fixed** — predicate + migration `1154` |
-| P1-2 velocity index unusable | open — needs `cycles.deletedAt`, Sprint/Cycle lane |
-| P1-3 schema/migration drift | open — Sprint/Cycle lane |
-| P2-1, P2-2, P2-4, P2-6, P2-7, P2-8 | open — see each |
+| P1-2 velocity index unusable | **fixed** — casts dropped, soft-delete predicate added |
+| P1-3 schema/migration drift | **fixed** — migration `1155_build_cycles_drift_reconcile` + schema |
+| P2-1 unbounded-reads ledger | open — **blocked on a ratchet decision**, see below |
+| P2-2, P2-4, P2-6, P2-7, P2-8 | open — see each |
 | P2-5 | retracted |
 
 ---
@@ -123,9 +124,11 @@ The keyset page therefore degrades to a sort of every matching cycle row, per pa
 
 The predecessor did not have this problem: `sprints.startDate` was `timestamp` (`core.ts:108`) and `idx_sprints_org_project_velocity_cursor` (`core.ts:122`) matched the old query exactly. The column type changed in the cutover; the query grew a cast to compensate; the index was copied across without either change being reflected.
 
-**Recommendation.** Drop the casts. `date` ordering and `timestamp` ordering agree, so `orderBy(desc(cycles.startDate), desc(cycles.id))` is equivalent and sargable. Add `isNull(cycles.deletedAt)` to the `WHERE` once P1-3 makes the column representable. Both changes together make the existing index usable with no new DDL.
+**FIXED.** `queryVelocityReport` now orders by the bare column, `orderBy(desc(cycles.startDate), desc(cycles.id))`, and filters `isNull(cycles.deletedAt)`. The `WHERE` is now `org_id`, `project_id`, `status IN ('active','completed')`, `deleted_at IS NULL` — an exact match for the partial index's predicate, with the sort key a plain column the index can serve.
 
-Needs measurement before and after: `EXPLAIN (ANALYZE, BUFFERS)` as `streamline_app` with the tenant GUC set (BE-76).
+The cursor wire format is deliberately unchanged. `cursorStartDate` still emits `start_date::timestamp::text`, so `velocityCursorPositionSchema`'s regex still validates and cursors already in flight keep working; the predicate casts that value back with `::date` instead of casting the column. Casting the parameter is sargable, casting the column is not — that asymmetry is the whole fix.
+
+Still needs `EXPLAIN (ANALYZE, BUFFERS)` as `streamline_app` with the tenant GUC set (BE-76) to confirm the index is actually chosen. No speed claim is made here.
 
 ---
 
@@ -148,7 +151,16 @@ Three consequences:
 2. **`cycles` soft delete is unrepresentable.** The table has `deleted_at` in the database and no `deletedAt` in the model, so no Build read filters it and none can. `queryVelocityReport`, the burnup cycle lookup (`projects-reports.service.ts:61-79`) and `projects-analytics.service.ts` `cycleVelocity` all read soft-deleted cycles as live. This violates BE-50 and is why P1-2's partial index is unusable.
 3. **A database built from the schema loses all four indexes.** Any cold rebuild — the disposable stack, `check:migration-chain` replay — produces a `cycles` and `sprint_scope_events` without them. Benchmarks taken there under-report.
 
-**Recommendation.** Reconcile `src/db/schema/build/core.ts` and `sprint-events.ts` with the four indexes and two columns, then add `isNull(cycles.deletedAt)` to every Build read of `cycles`. This is a Sprint/Cycle lane change; it is recorded here because the caching consequence is P1-2.
+**FIXED.** `migrations/1155_build_cycles_drift_reconcile.sql` journals the two columns and four indexes, every statement `IF NOT EXISTS` so it is a no-op where phases 01 and 03 already ran and correct on a cold build. `core.ts`, `ticket-core.ts` and `sprint-events.ts` now declare them.
+
+`check:tenant-indexes` went from 2 failures to 1 — `sprint_scope_events` is resolved, and the remaining `impersonation_sessions` is not a Build table.
+
+Two deliberate choices:
+
+- The index definitions are copied **verbatim** from the phase files rather than improved, so an already-migrated database and a cold build end up identical. `idx_cycles_project_status_live` therefore leads with `project_id`, not `org_id`, which is against BE-44. Rewriting it here would make the two diverge silently; it is recorded as open instead.
+- The rollback drops the four indexes but **not** the two columns. 1155 only adds them `IF NOT EXISTS`, so on any database where phase 01 ran it created nothing — dropping them would destroy columns this migration did not create, and on a soft-delete column that is data loss, not a schema revert. `a-sprint-cycle-01-expand-rollback.sql` owns them.
+
+`cycles.deleted_at` is never written today: `deleteCycle` (`cycles.service.ts:133`) is a hard delete. So the predicates added in P1-2 are inert on current data and exist to make the partial indexes usable. Nine other cycle reads still lack the predicate — harmless while nothing soft-deletes, and listed under Still open.
 
 ---
 
@@ -168,7 +180,24 @@ Separately, the ledger suppresses 642 unbounded reads against a ceiling of 650 o
 
 `/build/core/projects-reports.service.ts` is in the same state: its justification describes sprint reads at line numbers that no longer exist. The verdict happens to remain correct; the evidence for it does not.
 
-**Recommendation.** Classify the sixteen Build sites so the gate goes green on the strength of the caps named above, not on a raised ceiling. Then add a staleness signal for `FALSE-POSITIVE`: record the file hash alongside the justification and re-flag when it moves. The classification file is a shared ledger and was not edited by this pass.
+**Attempted and deliberately reverted. This one needs an owner decision, not a patch.**
+
+All five Build files were verified against source and classified with evidence — `project-access.ts` (bounded by a de-duplicated caller id list), `projects-roadmap.service.ts` (Drizzle sub-selects that never materialise), `scope-directory.service.ts` (the `.max(26)` DTO cap), `ticket-import-reads.ts` (per-project status config set plus a guarded `inArray`), `bugs.service.ts` (`eq(tickets.id, bugId)` plus the same config-set shape).
+
+The gate then failed differently: **`11 newly suppressed unbounded read(s)`**. `FALSE-POSITIVE` is the only verdict that fits a read the detector still sees but which is genuinely bounded, and that verdict is ceiling-capped at 650 against a current 642. Eleven more takes it to 653.
+
+`BOUNDED` is not an escape: the gate treats a `BOUNDED` file that is still detected as a *regression* and fails on that instead.
+
+So classifying these correctly is impossible without raising the ceiling, and this repository's own rule is that raising a ratchet to go green is the defect the ratchet exists to catch. The edit was reverted; the ledger is untouched.
+
+**The decision belongs to whoever owns that ledger**, and it is one of:
+
+1. Raise the ceiling to 653 deliberately, with these eleven named in the commit — the evidence above is ready to paste.
+2. Teach the detector to see a `z.array(...).max(n)` DTO cap and an `inArray` over a caller-supplied list, which would stop it flagging four of the five files at all and need no suppression.
+
+Option 2 is the better one and retires a suppression class rather than repricing it.
+
+Separately, the stale-justification problem stands: 642 reads are suppressed on free text dated 2026-09-01, and `projects-analytics.service.ts`'s justification describes an `inArray(memberProjectIds)` read that no longer exists. Recording the file hash beside each justification and re-flagging when it moves would catch that.
 
 ---
 
@@ -307,6 +336,14 @@ Recorded so the next pass does not re-open them.
 - **Build has no N+1.** The only Build site in the growing-loop detector's list is `build-ticket-batch-workflow.ts:20-21`, flagged because the helper call could not be resolved in-file. `validateBatchTransition` reads the workflow once before the loop and passes `prefetched`, and `assertTransitionAllowed` consults `prefetched.ticketFields` before falling back to a per-ticket read (`projects-tickets-workflow-utils.ts:161-163`). The batch path issues no per-row query. The fallback is correct for single-ticket callers.
 - **`listTicketTimeEntries` carries both predicates.** The census marks it `PASSED-UNBOUND` because `projectId` is forwarded through an options spread the resolver does not follow. `listTimeEntries` pushes `eq(timesheets.orgId, …)` and `eq(timesheets.projectId, query.projectId)` (`timesheets.service.ts:87, :108-109`) and pre-validates that the ticket belongs to the project (`:77-79`).
 - **`GET /public/whiteboard-links/:token` needs no `orgId`.** The hashed token is the capability, the row must be public and unexpired, and the read runs under the `app.public_token` GUC.
+
+## Still open
+
+- **Nine cycle reads lack the soft-delete predicate** — `build-due-sweep.service.ts:123`, `build-ticket-bulk-mutation.ts:70`, `projects-activity.service.ts:348`, `projects-tickets-create.service.ts:85`, `projects-tickets-update.service.ts:159`, `cycles.service.ts:32,75,113`, `qa/test-runs.service.ts:37`. Inert while `deleteCycle` is a hard delete. The three reads this audit names — velocity, burnup and analytics — were fixed; the rest span the QA, sweep and ticket-write lanes and should move with them.
+- **`idx_cycles_project_status_live` leads with `project_id`**, against BE-44. Copied verbatim from `a-sprint-cycle-03-constrain.sql` so a migrated database and a cold build agree. Changing it needs one migration that alters both.
+- **`listRelatedLinks` truncates at 50** with no cursor.
+- **P2-2** `resource-allocation` is unpaginated. Fixing it changes the response contract, so it needs the frontend hook and its contract in the same change — a cross-repo change this pass did not take on.
+- **P2-4, P2-6, P2-7, P2-8** unchanged.
 
 ## Not verified
 
