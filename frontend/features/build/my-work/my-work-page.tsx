@@ -9,7 +9,7 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PmPageShell, PmSection } from "@/components/pm-chrome";
+import { PmPageShell, PmSection, PM_FILL_SECTION } from "@/components/pm-chrome";
 import { ViewSwitcher, type ViewType } from "@/features/build/views/view-switcher";
 import { DisplayOptionsPanel } from "@/features/build/views/display-options-panel";
 import { useDisplayOptions } from "@/features/build/views/use-display-options";
@@ -155,7 +155,7 @@ export function MyWorkPage() {
 
   if (isGateState)
     return (
-      <PageWrapper title="My Issues">
+      <PageWrapper title="My Work" subtitle="Your tickets across all projects">
         <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
           {null}
         </PageState>
@@ -169,7 +169,7 @@ export function MyWorkPage() {
       className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden"
     >
       <PageWrapper
-        title="My Issues"
+        title="My Work"
         subtitle="Your tickets across all projects"
         noInternalScroll
         filtersClassName="flex-col items-stretch gap-0 overflow-visible pb-2 [&>*]:w-full [&>*]:min-w-0 [&>*]:shrink"
@@ -237,11 +237,8 @@ export function MyWorkPage() {
           />
         }
       >
-        <PmPageShell className="min-h-0 flex-1 overflow-hidden">
-          <PmSection
-            index={0}
-            className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden"
-          >
+        <PmPageShell>
+          <PmSection index={0} className={cn(PM_FILL_SECTION, "gap-3")}>
             <div className="flex min-h-0 flex-1 gap-3 overflow-hidden">
               <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                 <MyWorkContent

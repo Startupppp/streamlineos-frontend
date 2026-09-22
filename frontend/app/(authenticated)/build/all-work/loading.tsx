@@ -16,7 +16,7 @@ export default function AllWorkLoading() {
       noInternalScroll
       contentClassName="!p-0"
     >
-      <PmPageShell className="min-h-0 flex-1 gap-0 overflow-hidden" withGlow>
+      <PmPageShell className="min-h-0 flex-1 gap-0 overflow-hidden">
         <PmSection
           index={0}
           className={cn(

@@ -370,7 +370,7 @@ export function WhiteboardPage({
       contentClassName="flex min-h-0"
       actions={headerActions}
     >
-      <PmPageShell className="h-full min-h-0 gap-3" withGlow={false}>
+      <PmPageShell className="h-full min-h-0 gap-3">
         {pageState.kind === "loading" ? (
           <div className="flex-1">
             <LoadingState variant="page" />

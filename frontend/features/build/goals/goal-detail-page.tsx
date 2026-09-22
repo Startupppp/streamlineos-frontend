@@ -133,7 +133,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
   if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
       <PageWrapper title="Goal" backHref="/build/goal">
-        <PmPageShell withGlow={false}>
+        <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
             <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
               {null}
@@ -155,7 +155,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
   if (!goal) {
     return (
       <PageWrapper title="Goal" backHref="/build/goal">
-        <PmPageShell withGlow={false}>
+        <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
             <ErrorState
               title="Failed to load goal"

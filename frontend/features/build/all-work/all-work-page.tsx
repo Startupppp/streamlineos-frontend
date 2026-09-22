@@ -8,7 +8,6 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
-import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +30,7 @@ import {
   PmPanel,
   PmSection,
   PM_FILL_PANEL,
+  PM_FILL_SECTION,
 } from "@/components/pm-chrome";
 import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
 import { groupTickets } from "./all-work-ticket-utils";
@@ -244,14 +244,14 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
   const emptyNode =
     !isOnline ? (
       <EmptyState
-        className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
+        className={PM_FILL_PANEL}
         illustrationPreset="projects"
         title="You are offline"
         description="Showing cached data. Reconnect to see the latest tickets."
       />
     ) : (
       <EmptyState
-        className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
+        className={PM_FILL_PANEL}
         illustrationPreset="projects"
         title="No tickets yet"
         description={
@@ -268,16 +268,9 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
       title="All Work"
       subtitle={subtitleText}
       noInternalScroll
-      contentClassName="!p-0"
     >
-      <PmPageShell className="min-h-0 flex-1 gap-0 overflow-hidden" withGlow>
-        <PmSection
-          index={0}
-          className={cn(
-            PAGE_CHROME_X,
-            "flex min-h-0 flex-1 flex-col gap-3 overflow-hidden",
-          )}
-        >
+      <PmPageShell>
+        <PmSection index={0} className={cn(PM_FILL_SECTION, "gap-3")}>
           <PageTabsToolbar
             tabsDensity="icons"
             tabs={
@@ -339,10 +332,10 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
 
           <PageState
             resolution={pageState}
-            className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
+            className={PM_FILL_PANEL}
             onRetry={handleRetry}
             loading={
-              <PmPanel solid className="mb-2 mt-2 flex-1 overflow-auto">
+              <PmPanel solid className="flex-1 overflow-auto">
                 <div className="py-2">
                   <AllWorkSkeleton view={view} />
                 </div>
