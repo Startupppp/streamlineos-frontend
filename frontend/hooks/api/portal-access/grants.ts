@@ -88,6 +88,7 @@ export function useRevokeGrant(projectClientGrantId: string) {
     onSuccess: (updated) => {
       qc.setQueryData(directoryAndOwnershipQueryKeys.portalAccess.grant(projectClientGrantId), updated);
       qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.portalAccess.grants() });
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.portal.all });
     },
   });
 }
