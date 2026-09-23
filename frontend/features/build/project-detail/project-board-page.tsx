@@ -6,10 +6,12 @@ import { useProject, useCycles, useBulkUpdateTickets } from "@/hooks/api";
 import { useWorkloadCapacity } from "@/hooks/api/build/workload-capacity";
 import type { BulkUpdateTicketsInput } from "@/hooks/api";
 import { useBoardUrlState } from "@/features/build/views/use-board-url-state";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { ProjectBoardContent } from "@/features/build/views/project-board-content";
 import { ProjectViewsToolbar } from "@/features/build/views/project-views-toolbar";
 import { CreateTicketDialog } from "@/features/build/tickets/create-ticket-dialog";
 import { ProjectAiMenu } from "@/features/build/ai/project-ai-menu";
+import { TicketImportExportDialog } from "@/features/build/import-export/components/ticket-import-export-dialog";
 import { SaveViewDialog } from "@/features/build/views/save-view-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
@@ -40,6 +42,9 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
 
   const {
     view,
+    filterType,
+    filterSeverity,
+    filterQaState,
     displayOptions,
     setDisplayOptions,
     hideCompleted,
@@ -70,6 +75,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     createDefaultCycleId,
     handleViewChange,
     handleClearSearch,
+    handleQaFilterChange,
     handleClearView,
     handleCreateOpenChange,
     handleOpenSaveView,
@@ -99,6 +105,24 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     capacityWindow.end,
     { enabled: view === "workload" },
   );
+
+  const handleOpenFocusedTicket = useCallback(
+    (index: number) => {
+      const ticket = filteredTickets[index];
+      if (ticket) handleTicketSelect(Number(ticket.id));
+    },
+    [filteredTickets, handleTicketSelect],
+  );
+
+  const { focusedIndex } = useBuildListKeyboard({
+    itemCount: filteredTickets.length,
+    onOpen: handleOpenFocusedTicket,
+    onClearSelection: handleClearSelection,
+    enabled: view === "list",
+  });
+
+  const focusedTicketId =
+    focusedIndex === null ? null : Number(filteredTickets[focusedIndex]?.id ?? null);
 
   const handleRetryProject = useCallback(() => void refetchProject(), [refetchProject]);
   const handleRetryTickets = useCallback(() => void refetchTickets(), [refetchTickets]);
@@ -188,6 +212,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
       actions={
         <div className="flex items-center gap-2">
           <ProjectAiMenu projectId={projectId} />
+          <TicketImportExportDialog projectId={projectId} />
           <CreateTicketDialog
             projectId={projectId}
             defaultCycleId={createDefaultCycleId}
@@ -216,6 +241,10 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
           workloadFilters={workloadFilters}
           onWorkloadFilterChange={handleWorkloadFilterChange}
           onClearWorkloadFilters={handleClearWorkloadFilters}
+          filterType={filterType}
+          filterSeverity={filterSeverity}
+          filterQaState={filterQaState}
+          onQaFilterChange={handleQaFilterChange}
         />
       }
     >
@@ -227,6 +256,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
       */}
       <ProjectBoardContent
         view={view}
+        focusedTicketId={focusedTicketId}
         filteredTickets={filteredTickets}
         showEmptyFilterState={showEmptyFilterState}
         onClearSearch={handleClearSearch}

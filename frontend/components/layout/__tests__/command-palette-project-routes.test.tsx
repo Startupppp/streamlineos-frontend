@@ -128,14 +128,14 @@ describe("CommandPaletteDialogBody — project-scoped route catalog", () => {
   it("navigates to the project route the palette offered", () => {
     accessData = {
       isOrgOwner: false,
-      scopes: { "build:view": "all", "build:bugs:view": "all" },
+      scopes: { "build:view": "all", "build:risks:view": "all" },
     };
 
     render(<CommandPaletteDialogBody />);
-    typeQuery("bugs");
-    fireEvent.click(screen.getByText(`${PROJECT_BASE_PATH}/bugs`));
+    typeQuery("risks");
+    fireEvent.click(screen.getByText(`${PROJECT_BASE_PATH}/risks`));
 
-    expect(mockPush).toHaveBeenCalledWith(`${PROJECT_BASE_PATH}/bugs`);
+    expect(mockPush).toHaveBeenCalledWith(`${PROJECT_BASE_PATH}/risks`);
   });
 
   it("reaches every route in the project catalog for an owner of an org with the Build and Feedbucket modules", () => {

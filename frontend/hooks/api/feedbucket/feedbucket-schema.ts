@@ -142,10 +142,27 @@ export const feedbucketSubmissionListContract = z.object({
       z.object({ widget: feedbucketWidgetRowContract.nullable() }),
     ),
   ),
-  total: z.number(),
-  page: z.number(),
-  limit: z.number(),
-  totalPages: z.number(),
+  pagination: z.object({
+    limit: z.number(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+  page: z.number().optional(),
+  total: z.number().optional(),
+  totalPages: z.number().optional(),
+});
+
+export const feedbucketBulkSubmissionsContract = z.object({
+  requested: z.number(),
+  succeeded: z.number(),
+  skipped: z.number(),
+  results: z.array(
+    z.object({
+      submissionId: z.number(),
+      outcome: z.enum(["updated", "deleted", "skipped"]),
+      reason: z.enum(["not_found_or_filtered"]).nullable(),
+    }),
+  ),
 });
 
 export const feedbucketSubmissionDetailContract = feedbucketSubmissionRowContract.and(

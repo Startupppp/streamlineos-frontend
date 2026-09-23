@@ -16,6 +16,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateCrmOrganization, useUpdateCrmOrganization } from "@/hooks/api/crm";
 import type {
   CreateCrmOrganizationInput,
+  CrmAccountTier,
   CrmOrganization,
   OrgSize,
   UpdateCrmOrganizationInput,
@@ -36,9 +37,14 @@ interface CompanySheetProps {
 }
 
 const ORG_SIZES: readonly OrgSize[] = ["1-10", "11-50", "51-200", "201-1000", "1000+"];
+const ACCOUNT_TIERS: readonly CrmAccountTier[] = ["free", "pro", "enterprise"];
 
 function asOrgSize(value: string | undefined): OrgSize | undefined {
   return ORG_SIZES.find((candidate) => candidate === value?.trim());
+}
+
+function asAccountTier(value: string | undefined): CrmAccountTier | undefined {
+  return ACCOUNT_TIERS.find((candidate) => candidate === value?.trim());
 }
 
 /** Omitted keys never reach the wire, and create rejects anything it did not ask for. */
@@ -72,6 +78,7 @@ function forCreate(values: RecordFormValues): CreateCrmOrganizationInput {
     website: absolute(orUndefined(values.website)),
     linkedinUrl: absolute(orUndefined(values.linkedinUrl)),
     description: orUndefined(values.description),
+    tier: asAccountTier(values.tier),
   };
 }
 
@@ -84,6 +91,7 @@ function forUpdate(values: RecordFormValues): UpdateCrmOrganizationInput {
     website: absolute(orNull(values.website)) ?? null,
     linkedinUrl: absolute(orNull(values.linkedinUrl)) ?? null,
     description: orNull(values.description),
+    tier: asAccountTier(values.tier) ?? null,
   };
 }
 

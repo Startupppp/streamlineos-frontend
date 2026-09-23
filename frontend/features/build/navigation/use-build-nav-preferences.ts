@@ -152,7 +152,7 @@ function isScopeRef(entry: unknown): entry is BuildScopeRef {
   const candidate = entry as Record<string, unknown>;
   return (
     typeof candidate["key"] === "string" &&
-    typeof candidate["type"] === "string" &&
+    (candidate["type"] === "product" || candidate["type"] === "project") &&
     typeof candidate["id"] === "string" &&
     typeof candidate["name"] === "string" &&
     typeof candidate["href"] === "string"
@@ -239,6 +239,7 @@ export function useBuildScopeStars(): {
 
   const toggleStar = useCallback(
     (scope: BuildScopeRef) => {
+      if (scope.type === "organization") return;
       if (starred.some((entry) => entry.key === scope.key)) {
         write(starred.filter((entry) => entry.key !== scope.key));
         return;
@@ -269,6 +270,7 @@ export function useBuildScopeRecents(): {
 
   const recordScope = useCallback(
     (scope: BuildScopeRef) => {
+      if (scope.type === "organization") return;
       const head = recents[0];
       if (head?.key === scope.key && head.name === scope.name) return;
       write(

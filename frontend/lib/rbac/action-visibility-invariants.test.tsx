@@ -102,6 +102,10 @@ jest.mock("@/features/build/shared/ticket-filter-bar", () => ({
   TicketFilterBar: ({ leading }: { leading: ReactNode }) => <div>{leading}</div>,
 }));
 
+jest.mock("@/features/build/views/saved-views-menu", () => ({
+  SavedViewsMenu: () => null,
+}));
+
 jest.mock("@/features/build/views/display-options-panel", () => ({
   ...jest.requireActual("@/features/build/views/display-options-panel"),
   DisplayOptionsPanel: () => null,
@@ -265,6 +269,10 @@ describe("Build ticket mutation controls", () => {
         workloadFilters={INITIAL_FILTERS}
         onWorkloadFilterChange={noop}
         onClearWorkloadFilters={noop}
+        filterType=""
+        filterSeverity=""
+        filterQaState=""
+        onQaFilterChange={noop}
       />,
     );
     expect(screen.queryByRole("button", { name: "Save view" })).not.toBeInTheDocument();
@@ -289,6 +297,10 @@ describe("Build ticket mutation controls", () => {
         workloadFilters={INITIAL_FILTERS}
         onWorkloadFilterChange={noop}
         onClearWorkloadFilters={noop}
+        filterType=""
+        filterSeverity=""
+        filterQaState=""
+        onQaFilterChange={noop}
       />,
     );
     expect(screen.getByRole("button", { name: "Save view" })).toBeInTheDocument();

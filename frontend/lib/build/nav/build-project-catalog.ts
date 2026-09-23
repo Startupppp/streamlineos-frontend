@@ -1,9 +1,6 @@
 import {
   Activity,
-  BarChart3,
-  Bookmark,
   BookOpenText,
-  Bug,
   Calendar,
   CalendarClock,
   CircleCheck,
@@ -12,7 +9,6 @@ import {
   Diamond,
   FilePen,
   FlaskConical,
-  GanttChart,
   Gavel,
   GitBranch,
   Globe,
@@ -31,7 +27,6 @@ import {
   Rocket,
   Settings,
   ShieldX,
-  Sparkles,
   TriangleAlert,
   Users,
   Webhook,
@@ -78,13 +73,6 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
         href: `${basePath}/cycles`,
         icon: Calendar,
         requiredPermission: "build:sprints:view",
-      },
-      {
-        id: "project-timeline",
-        label: "Timeline",
-        href: `${basePath}/timeline`,
-        icon: GanttChart,
-        requiredPermission: "build:tickets:view",
       },
       {
         id: "project-releases",
@@ -167,13 +155,6 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
         requiredPermission: "build:qa:view",
       },
       {
-        id: "project-bugs",
-        label: "Bugs",
-        href: `${basePath}/bugs`,
-        icon: Bug,
-        requiredPermission: "build:bugs:view",
-      },
-      {
         id: "project-incidents",
         label: "Incidents",
         href: `${basePath}/incidents`,
@@ -224,13 +205,6 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
         requiredPermission: "build:view",
       },
       {
-        id: "project-analytics",
-        label: "Analytics",
-        href: `${basePath}/analytics`,
-        icon: BarChart3,
-        requiredPermission: "build:view",
-      },
-      {
         id: "project-reports",
         label: "Agile reports",
         href: `${basePath}/reports`,
@@ -257,13 +231,6 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
         href: `${basePath}/decisions`,
         icon: Gavel,
         requiredPermission: "build:decisions:view",
-      },
-      {
-        id: "project-views",
-        label: "Saved views",
-        href: `${basePath}/views`,
-        icon: Bookmark,
-        requiredPermission: "build:view",
       },
       {
         id: "project-forms",
@@ -299,13 +266,6 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
         href: `${basePath}/settings/integrations/webhooks`,
         icon: Webhook,
         requiredPermission: "build:update",
-      },
-      {
-        id: "project-ai",
-        label: "AI settings",
-        href: `${basePath}/ai`,
-        icon: Sparkles,
-        requiredPermission: "build:ai:use",
       },
     ],
     settings: {

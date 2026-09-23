@@ -51,6 +51,19 @@ jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: () => ({ kind: "ready" }),
 }));
 
+jest.mock("@/hooks/api/invoices/project-invoice-line-detail", () => ({
+  useProjectInvoiceLineDetail: () => ({
+    data: { projectId: 1, invoiceLineDetail: "summary" as const },
+    isLoading: false,
+    isError: false,
+    refetch: jest.fn(),
+  }),
+  useUpdateProjectInvoiceLineDetail: () => ({
+    mutate: jest.fn(),
+    isPending: false,
+  }),
+}));
+
 jest.mock("@/features/build/settings/project-members-section", () => ({
   MembersSelector: () => <div data-testid="members-selector" />,
   ReassignDialog: () => null,

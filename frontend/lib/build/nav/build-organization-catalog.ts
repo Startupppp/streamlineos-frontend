@@ -1,6 +1,5 @@
 import {
   Briefcase,
-  Building2,
   ClipboardCheck,
   Layers,
   LayoutDashboard,
@@ -88,13 +87,6 @@ export function buildOrganizationCatalog(): BuildScopeCatalog {
         href: `${BUILD_ROOT_PATH}/approvals`,
         icon: ClipboardCheck,
         requiredPermission: "build:approvals:view",
-      },
-      {
-        id: "org-customers",
-        label: "Customers",
-        href: `${BUILD_ROOT_PATH}/customers`,
-        icon: Building2,
-        requiredPermission: "build:customers:view",
       },
       {
         id: "org-templates",

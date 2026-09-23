@@ -28,6 +28,12 @@ jest.mock("@/hooks/api/organization", () => ({
   useOrgMembers: () => ({ data: undefined }),
 }));
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: jest.fn() }),
+  usePathname: () => "/build/approvals",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: { user: { id: "user-1" } } }),
 }));

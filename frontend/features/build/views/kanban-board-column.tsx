@@ -79,7 +79,7 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
       {...columnDraggableProps}
       data-wip-state={wipState}
       className={cn(
-        "flex min-h-0 w-72 min-w-[280px] shrink-0 flex-col self-stretch rounded-xl border border-border bg-muted/30",
+        "flex min-h-0 w-72 min-w-[280px] shrink-0 flex-col self-stretch rounded-xl border border-border bg-muted",
         wipState === "at" && statusToneClasses("warning").rule,
         wipState === "over" && statusToneClasses("danger").rule,
         isColumnDragging && "opacity-95 shadow-lg ring-2 ring-primary/20",
@@ -170,7 +170,7 @@ export function ColumnEmptyState({
       <div className="space-y-0.5">
         <p className="text-xs font-medium text-foreground">{title}</p>
         {compact ? null : (
-          <p className="max-w-[12rem] text-[11px] text-muted-foreground">{hint}</p>
+          <p className="max-w-[12rem] text-dense text-muted-foreground">{hint}</p>
         )}
       </div>
     </div>

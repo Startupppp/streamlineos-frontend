@@ -8,6 +8,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { currentSearchParams } from "@/lib/current-search-params";
 import type { DisplayOptions } from "@/features/build/shared/types";
 import { type SaveViewMeta } from "./save-view-dialog";
+import { toSavedViewLayout } from "@/lib/build/view-types";
 import type { ViewType } from "./view-switcher";
 
 interface BoardSavedViewsInput {
@@ -32,7 +33,7 @@ export function useBoardSavedViews({
   const [saveViewOpen, setSaveViewOpen] = useState(false);
   const [saveViewName, setSaveViewName] = useState("");
 
-  const layoutType = view === "workload" ? "board" : view;
+  const layoutType = toSavedViewLayout(view);
 
   const handleSaveView = useCallback(
     (meta?: SaveViewMeta) => {

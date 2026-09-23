@@ -50,6 +50,7 @@ export const ListView = memo(function ListView({
   displayOptions,
   showEmptyRows,
   selection,
+  focusedTicketId,
 }: ListViewProps) {
   const hasRowBy = !!rowBy && rowBy !== "none";
   const shouldReduceMotion = useReducedMotion();
@@ -243,6 +244,7 @@ export const ListView = memo(function ListView({
                           displayOptions={displayOptions}
                           onTicketClick={onTicketClick}
                           selection={selection}
+                          focusedTicketId={focusedTicketId}
                         />
                       ))}
                     </Accordion>
@@ -296,6 +298,7 @@ export const ListView = memo(function ListView({
                     onTicketClick={onTicketClick}
                     shouldReduceMotion={shouldReduceMotion}
                     selection={selection}
+                    focusedTicketId={focusedTicketId}
                   />
                 </AccordionContent>
               </AccordionItem>
@@ -341,6 +344,7 @@ export const ListView = memo(function ListView({
                   displayOptions={displayOptions}
                   onTicketClick={onTicketClick}
                   selection={selection}
+                  focusedTicketId={focusedTicketId}
                 />
               </AccordionContent>
             </AccordionItem>
@@ -360,6 +364,7 @@ export const ListView = memo(function ListView({
                 displayOptions={displayOptions}
                 isSelected={selection?.selected.has(ticket.id)}
                 onSelect={selection ? handleItemSelect : undefined}
+                isKeyboardFocused={focusedTicketId === ticket.id}
               />
             ))}
           </div>

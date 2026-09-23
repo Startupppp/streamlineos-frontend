@@ -77,6 +77,8 @@ export const knowledgeAndSurveysQueryKeys = {
         : ([...base, "roadmap", "items", params] as const),
     item: (roadmapItemId: number) =>
       [...base, "roadmap", "item", roadmapItemId] as const,
+    itemSignals: (roadmapItemId: number) =>
+      [...base, "roadmap", "item", roadmapItemId, "signals"] as const,
     feedback: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "roadmap", "feedback"] as const)

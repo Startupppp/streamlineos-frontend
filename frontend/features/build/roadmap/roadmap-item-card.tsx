@@ -14,11 +14,22 @@ import { PM_PANEL } from "@/components/pm-chrome";
 import { listItem, listItemReduced, pmSnappy } from "@/lib/motion-presets";
 import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import type { RoadmapPrioritization, RoadmapTierWeighting } from "@/hooks/api/build/roadmap";
+import { RoadmapPriorityScore } from "./roadmap-priority-score";
+
+export type ScorableRoadmapItem = RoadmapItem & {
+  reach?: number | null;
+  impact?: number | null;
+  confidence?: number | null;
+  effort?: number | null;
+  prioritization?: RoadmapPrioritization;
+  tierWeighting?: RoadmapTierWeighting;
+};
 
 interface RoadmapItemCardProps {
-  item: RoadmapItem;
-  onEdit: (item: RoadmapItem) => void;
-  onDelete: (item: RoadmapItem) => void;
+  item: ScorableRoadmapItem;
+  onEdit: (item: ScorableRoadmapItem) => void;
+  onDelete: (item: ScorableRoadmapItem) => void;
 }
 
 export const RoadmapItemCard = memo(function RoadmapItemCard({
@@ -69,6 +80,10 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
           </p>
         ) : null}
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <RoadmapPriorityScore
+            prioritization={item.prioritization}
+            tierWeighting={item.tierWeighting}
+          />
           {item.targetQuarter ? (
             <Badge variant="outline" className="text-micro">
               {item.targetQuarter}

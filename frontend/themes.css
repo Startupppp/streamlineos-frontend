@@ -297,10 +297,10 @@
   --muted: color-mix(in srgb, var(--brand-core) 7%, #f1f5f9);
   --secondary: color-mix(in srgb, var(--brand-core) 7%, #f1f5f9);
   --accent: color-mix(in srgb, var(--brand-core) 7%, #f1f5f9);
-  --border: color-mix(in srgb, var(--brand-core) 14%, #e2e8f0);
-  --input: color-mix(in srgb, var(--brand-core) 14%, #e2e8f0);
+  --border: color-mix(in srgb, var(--brand-core) 14%, #cbd5e1);
+  --input: color-mix(in srgb, var(--brand-core) 14%, #cbd5e1);
   --sidebar: color-mix(in srgb, var(--brand-core) 3%, #ffffff);
-  --sidebar-border: color-mix(in srgb, var(--brand-core) 12%, #e2e8f0);
+  --sidebar-border: color-mix(in srgb, var(--brand-core) 12%, #cbd5e1);
   --ring: var(--brand-deep);
   --sidebar-ring: var(--brand-deep);
 }

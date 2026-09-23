@@ -7,14 +7,14 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/build/roadmap";
-import type { RoadmapItem, RoadmapStatus } from "@/types/projects";
+import type { RoadmapStatus } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PmPanel, PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { ROADMAP_COLUMNS } from "./roadmap-constants";
-import { RoadmapItemCard } from "./roadmap-item-card";
+import { RoadmapItemCard, type ScorableRoadmapItem } from "./roadmap-item-card";
 import { RoadmapItemSheet } from "./roadmap-item-sheet";
 
 interface RoadmapTabProps {
@@ -47,8 +47,8 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
   );
   const deleteItem = useDeleteRoadmapItem();
   const [internalCreateOpen, setInternalCreateOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<RoadmapItem | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<RoadmapItem | null>(null);
+  const [editTarget, setEditTarget] = useState<ScorableRoadmapItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ScorableRoadmapItem | null>(null);
 
   const isEmpty = (data?.data ?? []).length === 0 && !pager.hasPrevious;
 
@@ -64,7 +64,7 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
   const sheetOpen = isCreateControlled ? (createOpen ?? false) : internalCreateOpen;
 
   const grouped = useMemo(() => {
-    const map: Record<string, RoadmapItem[]> = {
+    const map: Record<string, ScorableRoadmapItem[]> = {
       planned: [],
       in_progress: [],
       completed: [],
@@ -96,11 +96,11 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
     if (!open) setDeleteTarget(null);
   }
 
-  const handleEditItem = useCallback((item: RoadmapItem) => {
+  const handleEditItem = useCallback((item: ScorableRoadmapItem) => {
     setEditTarget(item);
   }, []);
 
-  const handleDeleteItem = useCallback((item: RoadmapItem) => {
+  const handleDeleteItem = useCallback((item: ScorableRoadmapItem) => {
     setDeleteTarget(item);
   }, []);
 

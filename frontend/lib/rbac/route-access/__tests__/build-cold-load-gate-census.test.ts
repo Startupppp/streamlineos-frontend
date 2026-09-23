@@ -123,7 +123,7 @@ describe("Build cold-load gate census — with no middleware the literal argumen
   const rows = census();
 
   it("sweeps every Build page, so a census that resolved nothing cannot report a clean tree", () => {
-    expect(rows.length).toBeGreaterThanOrEqual(70);
+    expect(rows.length).toBeGreaterThanOrEqual(60);
   });
 
   it("every Build route resolves to a permission decision warm, so the comparison below is never against an empty set", () => {

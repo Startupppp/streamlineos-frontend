@@ -14,18 +14,15 @@ type PermissionCase = [path: string, expectedKey: PermissionKey];
 const PROJECT_CASES: PermissionCase[] = [
   ["/build/42/backlog", "build:tickets:view"],
   ["/build/42/epics", "build:tickets:view"],
-  ["/build/42/timeline", "build:tickets:view"],
   ["/build/42/triage", "build:tickets:view"],
   ["/build/42/workload", "build:tickets:view"],
   ["/build/42/settings/workflow", "build:update"],
   ["/build/42/settings/integrations/webhooks", "build:update"],
-  ["/build/42/ai", "build:ai:use"],
   ["/build/42/settings", "build:update"],
   ["/build/42/budget", "build:manage"],
   ["/build/42/client-portal", "build:clientvisibility:manage"],
   ["/build/42/feedbucket", "feedbucket:widgets:view"],
   ["/build/42/qa", "build:qa:view"],
-  ["/build/42/bugs", "build:bugs:view"],
   ["/build/42/incidents", "build:incidents:view"],
   ["/build/42/change-requests", "build:changerequests:view"],
   ["/build/42/approvals", "build:approvals:view"],
@@ -39,7 +36,6 @@ const ORG_CASES: PermissionCase[] = [
   ["/build/all-work", "build:tickets:view"],
   ["/build/managed-products", "build:managed-products:view"],
   ["/build/teams", "build:teams:view"],
-  ["/build/customers", "build:customers:view"],
   ["/portal", "build:portal:view"],
 ];
 

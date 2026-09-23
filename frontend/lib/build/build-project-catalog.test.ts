@@ -20,7 +20,6 @@ const PRD_PRIMARY_IDS = [
   "project-issues",
   "project-backlog",
   "project-cycles",
-  "project-timeline",
   "project-releases",
   "project-updates",
   "project-files",
@@ -80,12 +79,18 @@ describe("BSN-01-033 — complete project catalog", () => {
     expect(moreToolsIds).not.toContain("project-files");
   });
 
-  it("the complete project primary set matches the PRD order: Overview, Issues, Backlog, Cycles, Timeline, Releases, Updates, Files, Client portal", () => {
+  it("the complete project primary set matches the PRD order: Overview, Issues, Backlog, Cycles, Releases, Updates, Files, Client portal", () => {
     expect(primaryIds).toEqual(PRD_PRIMARY_IDS);
   });
 
-  it("the project primary catalog sits at the BUILD_NAV_MAX_PRIMARY ceiling, so a tenth destination fails here instead of silently truncating Client portal", () => {
-    expect(catalog.primary.length).toBe(BUILD_NAV_MAX_PRIMARY);
+  it("no longer offers Timeline as its own primary destination, because it is now a view of Issues", () => {
+    expect(primaryIds).not.toContain("project-timeline");
+    expect(moreToolsIds).not.toContain("project-timeline");
+  });
+
+  it("stays within the BUILD_NAV_MAX_PRIMARY ceiling, so a tenth destination fails here instead of silently truncating Client portal", () => {
+    expect(catalog.primary.length).toBeLessThanOrEqual(BUILD_NAV_MAX_PRIMARY);
+    expect(catalog.primary.length).toBe(PRD_PRIMARY_IDS.length);
   });
 });
 

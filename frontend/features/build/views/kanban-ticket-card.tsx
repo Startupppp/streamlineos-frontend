@@ -77,7 +77,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
         "group relative rounded-xl border border-border/70 bg-card px-3 py-2.5 shadow-sm",
         "cursor-grab active:cursor-grabbing will-change-transform",
         isDragging
-          ? "z-20 border-primary/30 bg-card opacity-95 shadow-xl ring-1 ring-primary/25 rotate-1 scale-[1.02]"
+          ? "z-20 rotate-1 scale-[1.02] border-primary/30 bg-card opacity-95 shadow-xl ring-1 ring-primary/25"
           : "hover:border-border hover:shadow-md",
       )}
     >
@@ -109,14 +109,14 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
       </div>
 
       {showDescription && ticket.descriptionExcerpt ? (
-        <p className={cn(TEXT_TWO_LINES, "mt-1 text-[11px] leading-relaxed text-muted-foreground")}>
+        <p className={cn(TEXT_TWO_LINES, "mt-1 text-dense leading-relaxed text-muted-foreground")}>
           {ticket.descriptionExcerpt}
         </p>
       ) : null}
 
       <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5">
         {showId ? (
-          <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
+          <span className="shrink-0 font-mono text-dense tabular-nums text-muted-foreground">
             {ticketKey}
           </span>
         ) : null}
@@ -183,7 +183,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
             fallbackDate={ticket.createdAt}
           />
         ) : createdDate ? (
-          <span className="inline-flex items-center gap-1 text-[11px] tabular-nums text-muted-foreground">
+          <span className="inline-flex items-center gap-1 text-dense tabular-nums text-muted-foreground">
             <Calendar className="h-3.5 w-3.5" />
             {format(createdDate, "MMM d, yyyy")}
           </span>
@@ -200,12 +200,12 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
               assignee={primaryAssignee}
             />
             {primaryAssignee ? (
-              <span className="min-w-0 truncate text-[11px] font-medium text-muted-foreground">
+              <span className="min-w-0 truncate text-dense font-medium text-muted-foreground">
                 {getUserDisplayName(primaryAssignee)}
               </span>
             ) : null}
             {extraCount > 0 ? (
-              <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+              <span className="shrink-0 text-dense tabular-nums text-muted-foreground">
                 +{extraCount}
               </span>
             ) : null}

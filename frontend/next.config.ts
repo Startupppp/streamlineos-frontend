@@ -103,6 +103,31 @@ const nextConfig: NextConfig = {
       permanent: false,
     },
     {
+      source: "/build/:projectId(\\d+)/timeline",
+      destination: "/build/:projectId/issues?view=timeline",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/bugs",
+      destination: "/build/:projectId/issues?type=BUG",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/analytics",
+      destination: "/build/:projectId/reports?tab=overview",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/views",
+      destination: "/build/:projectId/issues",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/ai",
+      destination: "/build/command-center?projectId=:projectId",
+      permanent: false,
+    },
+    {
       source: "/build/:projectId(\\d+)/workflow",
       destination: "/build/:projectId/settings/workflow",
       permanent: false,
@@ -135,6 +160,11 @@ const nextConfig: NextConfig = {
     {
       source: "/build/pm-workspaces",
       destination: "/build",
+      permanent: false,
+    },
+    {
+      source: "/build/customers",
+      destination: "/crm",
       permanent: false,
     },
     {

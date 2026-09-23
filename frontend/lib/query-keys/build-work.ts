@@ -53,6 +53,8 @@ export const buildWorkQueryKeys = {
       [...base, "projects", projectId, "tickets", ticketId, "custom-field-values"] as const,
     automations: (projectId: number) =>
       [...base, "projects", projectId, "automations"] as const,
+    invoiceLineDetail: (projectId: number) =>
+      [...base, "projects", projectId, "invoice-line-detail"] as const,
     intake: (projectId: number, params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "projects", "intake", projectId] as const)
@@ -245,6 +247,15 @@ export const buildWorkQueryKeys = {
       [...base, "projects", "org-custom-states"] as const,
     columnCounts: (projectId: number) =>
       [...base, "projects", "column-counts", projectId] as const,
+    importExport: {
+      all: [...base, "projects", "import-export"] as const,
+      preview: (projectId: number) =>
+        [...base, "projects", "import-export", "preview", projectId] as const,
+      commit: (projectId: number) =>
+        [...base, "projects", "import-export", "commit", projectId] as const,
+      export: (projectId: number) =>
+        [...base, "projects", "import-export", "export", projectId] as const,
+    },
     webhooks: (projectId: number) =>
       [...base, "projects", projectId, "webhooks"] as const,
     webhookDeliveries: (projectId: number, webhookId: number) =>

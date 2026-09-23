@@ -35,7 +35,7 @@ the final route has no current physical page.
 | `PG-ORG-004` | `/build/approvals` | same · KEEP | BLD-02C |
 | `PG-ORG-005` | `/build/client-access` | `/build/settings/client-access` · MOVE — **page deleted 2026-09-22**, redirect retained in `next.config.ts` | BLD-02C |
 | `PG-ORG-006` | `/build/command-center` | same · KEEP | BLD-02C |
-| `PG-ORG-007` | `/build/customers` | same · KEEP CRM relation view | BLD-02C |
+| `PG-ORG-007` | `/build/customers` | `/crm` · DELETE — **page deleted 2026-09-23**, redirect retained in `next.config.ts` | BLD-02C |
 | `PG-ORG-008` | `/build/drafts` | `/build/inbox?view=drafts` · CONSOLIDATE | BLD-02C |
 | `PG-ORG-009` | `/build/goal` | `/build/goals` · MOVE — **executed 2026-09-22**, redirect in `next.config.ts` | BLD-02C |
 | `PG-ORG-010` | `/build/goal/{goalId}` | `/build/goals/{goalId}` · MOVE — **executed 2026-09-22**, redirect in `next.config.ts` | BLD-02C |
@@ -87,13 +87,13 @@ route and each deep link redirects via `next.config.ts`.
 | Stable ID | Current path | Final path · disposition | Contract |
 |---|---|---|---|
 | `PG-PRJ-001` | `/build/{projectId}` | same · KEEP Overview | BLD-02E |
-| `PG-PRJ-002` | `/build/{projectId}/ai` | `/build/command-center?projectId=...` · CONSOLIDATE | BLD-02F |
-| `PG-PRJ-003` | `/build/{projectId}/analytics` | `/build/{projectId}/reports` · CONSOLIDATE | BLD-02F |
+| `PG-PRJ-002` | `/build/{projectId}/ai` | `/build/command-center?projectId=...` · CONSOLIDATE — **page deleted 2026-09-23**, redirect retained in `next.config.ts` | BLD-02F |
+| `PG-PRJ-003` | `/build/{projectId}/analytics` | `/build/{projectId}/reports?tab=overview` · CONSOLIDATE — **page deleted 2026-09-23**, redirect retained in `next.config.ts` | BLD-02F |
 | `PG-PRJ-004` | `/build/{projectId}/approvals` | same · KEEP | BLD-02F |
 | `PG-PRJ-005` | `/build/{projectId}/automations` | `/build/{projectId}/settings/automations` · MOVE — **page deleted 2026-09-22**, redirect retained in `next.config.ts` | BLD-02F |
 | `PG-PRJ-006` | `/build/{projectId}/backlog` | same · KEEP | BLD-02E |
 | `PG-PRJ-007` | `/build/{projectId}/budget` | same · KEEP | BLD-02F |
-| `PG-PRJ-008` | `/build/{projectId}/bugs` | `/build/{projectId}/issues?type=BUG` · CONSOLIDATE | BLD-02F |
+| `PG-PRJ-008` | `/build/{projectId}/bugs` | `/build/{projectId}/issues?type=BUG` · CONSOLIDATE — **page deleted 2026-09-23**, redirect retained in `next.config.ts` | BLD-02F |
 | `PG-PRJ-009` | `/build/{projectId}/change-requests` | same · KEEP | BLD-02F |
 | `PG-PRJ-010` | `/build/{projectId}/chat` | same · KEEP Chat projection | BLD-02E |
 | `PG-PRJ-011` | `/build/{projectId}/client-portal` | same · KEEP_ROUTE_MOVE_CONFIG; operational editor/preview remains, configuration moves to Settings | BLD-02F |
@@ -123,10 +123,10 @@ route and each deep link redirects via `next.config.ts`.
 | `PG-PRJ-035` | `/build/{projectId}/settings` | same · KEEP landing/general | BLD-02F |
 | `PG-PRJ-036` | `/build/{projectId}/sprints` | `/build/{projectId}/cycles` · REMOVE duplicate | BLD-02E |
 | `PG-PRJ-037` | `/build/{projectId}/tickets/{ticketKey}` | same · KEEP | BLD-02E |
-| `PG-PRJ-038` | `/build/{projectId}/timeline` | `/build/{projectId}/issues?layout=timeline` · CONSOLIDATE | BLD-02E |
+| `PG-PRJ-038` | `/build/{projectId}/timeline` | `/build/{projectId}/issues?view=timeline` · CONSOLIDATE — **page deleted 2026-09-23**, redirect retained in `next.config.ts`. No `layout` param ever existed; the shipped `?view=` value `gantt` was renamed to `timeline` and still resolves | BLD-02E |
 | `PG-PRJ-039` | `/build/{projectId}/triage` | same · KEEP | BLD-02E |
 | `PG-PRJ-040` | `/build/{projectId}/updates` | same · KEEP | BLD-02E |
-| `PG-PRJ-041` | `/build/{projectId}/views` | `/build/{projectId}/issues` saved-view menu · CONSOLIDATE | BLD-02E |
+| `PG-PRJ-041` | `/build/{projectId}/views` | `/build/{projectId}/issues` saved-view menu · CONSOLIDATE — **page deleted 2026-09-23**, redirect retained in `next.config.ts` | BLD-02E |
 | `PG-PRJ-042` | `/build/{projectId}/webhooks` | `/build/{projectId}/settings/integrations/webhooks` · MOVE — **page deleted 2026-09-22**, redirect retained in `next.config.ts` | BLD-02F |
 | `PG-PRJ-043` | `/build/{projectId}/whiteboard` | same · KEEP single project canvas | BLD-02E |
 | `PG-PRJ-044` | `/build/{projectId}/wiki` | same · KEEP Knowledge projection | BLD-02E |

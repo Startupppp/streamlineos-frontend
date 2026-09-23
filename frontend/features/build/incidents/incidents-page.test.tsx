@@ -8,6 +8,12 @@ const mockUseOrgMembers = jest.fn();
 const mockUseCan = jest.fn();
 const mockUseAccess = jest.fn();
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  usePathname: () => "/build/1/incidents",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 jest.mock("@/hooks/api/build/incidents", () => ({
   useIncidents: (...args: unknown[]) => mockUseIncidents(...args),
   useDeleteIncident: () => mockUseDeleteIncident(),

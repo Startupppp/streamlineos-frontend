@@ -157,6 +157,8 @@ const REMAINING_BY_MODULE: Readonly<Record<string, number>> = {
  * against the six surfaces named at the top of this file.
  */
 const CRAFTED_BY_DESIGN: Readonly<Record<string, string>> = {
+  "features/guided-chain/generate-invoice-sheet.tsx":
+    "A multi-step flow, not a record form: step one selects which approved timesheet entries to bill and step two prices the invoice they produce. RecordForm has a single-submit contract and no vocabulary for a selection that determines the next step's fields.",
   "features/crm/quotes/components/quote-create-sheet.tsx":
     "A quote is priced line by line with a `useFieldArray` grid; the renderer has no vocabulary for a repeating priced row that recalculates a total.",
   "features/crm/settings/assignment-rule-sheet.tsx":

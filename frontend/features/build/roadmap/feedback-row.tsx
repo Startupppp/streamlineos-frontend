@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useUpdateFeedbackPost } from "@/hooks/api/build/roadmap";
+import { useCrmOrganizationsForPicker } from "@/hooks/api/crm";
 import { useCan } from "@/hooks/api/access";
 import type { FeedbackPost, RoadmapItem } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -41,7 +42,10 @@ export const FeedbackRow = memo(function FeedbackRow({
 }: FeedbackRowProps) {
   const update = useUpdateFeedbackPost();
   const canManage = useCan("build:roadmap:manage");
+  const canLinkAccount = useCan("crm:organizations:view");
   const shouldReduceMotion = useReducedMotion();
+  const { data: accountPage } = useCrmOrganizationsForPicker();
+  const accounts = accountPage?.organizations ?? [];
 
   const handleStatusChange = useCallback(
     (value: string) => {
@@ -64,6 +68,19 @@ export const FeedbackRow = memo(function FeedbackRow({
         { postId: post.id, linkedRoadmapItemId: value === "none" ? null : Number(value) },
         {
           onSuccess: () => toast.success("Linked roadmap item updated"),
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+    },
+    [update, post.id],
+  );
+
+  const handleAccountChange = useCallback(
+    (value: string) => {
+      update.mutate(
+        { postId: post.id, crmOrganizationId: value === "none" ? null : Number(value) },
+        {
+          onSuccess: () => toast.success("Linked account updated"),
           onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
@@ -167,6 +184,24 @@ export const FeedbackRow = memo(function FeedbackRow({
                 ))}
               </SelectContent>
             </Select>
+            {canManage && canLinkAccount ? (
+              <Select
+                value={post.crmOrganizationId ? String(post.crmOrganizationId) : "none"}
+                onValueChange={handleAccountChange}
+              >
+                <SelectTrigger className="w-48" aria-label="Linked account">
+                  <SelectValue placeholder="Link account" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No account</SelectItem>
+                  {accounts.map((account) => (
+                    <SelectItem key={account.id} value={String(account.id)}>
+                      {account.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : null}
             <Badge variant={FEEDBACK_STATUS_VARIANT[post.status]} className="text-micro">
               {FEEDBACK_STATUS_OPTIONS.find((o) => o.value === post.status)?.label}
             </Badge>

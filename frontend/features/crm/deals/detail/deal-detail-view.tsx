@@ -14,7 +14,7 @@ import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDealId, formatMoneyCompact } from "@/lib/format-utils";
 import { useOrgDisplay } from "@/hooks/api/org-display";
-import { useCanState } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import {
   useDealDetail,
   useUpdateDeal,
@@ -48,6 +48,7 @@ export function DealDetailView({ dealIdParam }: DealDetailViewProps) {
   const updateStage = useUpdateDealStage();
   const cloneDeal = useCloneDeal();
   const { data: stages = [] } = useCrmStages("deal");
+  const canCreateProject = useCan("build:create");
   const actions = useDealDetailActions(dealId);
 
   const wonStage = useMemo(
@@ -234,7 +235,7 @@ export function DealDetailView({ dealIdParam }: DealDetailViewProps) {
                 </Button>
               </>
             )}
-            {deal.stage === wonStage && (
+            {deal.stage === wonStage && canCreateProject && (
               <Button size="sm" variant="outline" onClick={actions.handleOpenCreateProject}>
                 <FolderKanban className="h-3.5 w-3.5 mr-1" />
                 Create Project
@@ -277,13 +278,17 @@ export function DealDetailView({ dealIdParam }: DealDetailViewProps) {
         isPending={actions.isCreatingMeeting}
       />
 
-      <CreateProjectDialog
-        open={actions.createProjectOpen}
-        onOpenChange={actions.setCreateProjectOpen}
-        defaultName={deal.name}
-        onSubmit={actions.handleCreateProject}
-        isPending={actions.isCreatingProject}
-      />
+      {actions.createProjectOpen ? (
+        <CreateProjectDialog
+          open={actions.createProjectOpen}
+          onOpenChange={actions.setCreateProjectOpen}
+          defaultName={deal.name}
+          defaultDescription={deal.notes ?? undefined}
+          defaultEndDate={deal.expectedCloseDate ?? undefined}
+          onSubmit={actions.handleCreateProject}
+          isPending={actions.isCreatingProject}
+        />
+      ) : null}
 
       <LogActivityDialog
         open={actions.pendingAction !== null}

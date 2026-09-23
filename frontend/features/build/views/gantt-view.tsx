@@ -112,10 +112,10 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
   }, []);
 
   const numDays = viewportWidth < 640 ? 14 : viewportWidth < 1024 ? 21 : 28;
-  const dayWidth = viewportWidth < 640 ? 28 : viewportWidth < 1024 ? 34 : 40;
-  const rowHeight = 36;
+  const dayWidth = viewportWidth < 640 ? 32 : viewportWidth < 1024 ? 36 : 40;
+  const rowHeight = 40;
   const headerHeight = 40;
-  const labelWidth = viewportWidth < 640 ? 120 : viewportWidth < 1024 ? 180 : 240;
+  const labelWidth = viewportWidth < 640 ? 144 : viewportWidth < 1024 ? 192 : 240;
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollViewportHeight, setScrollViewportHeight] = useState(0);
   const [scrollTop, setScrollTop] = useState(0);
@@ -235,7 +235,7 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
       <div className={cn(PM_TOOLBAR, "gap-2")}>
         <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Select value={String(displayMonth)} onValueChange={handleMonthChange}>
-            <SelectTrigger className="w-[120px] shrink-0">
+            <SelectTrigger className="w-40 shrink-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -247,7 +247,7 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
             </SelectContent>
           </Select>
           <Select value={String(displayYear)} onValueChange={handleYearChange}>
-            <SelectTrigger className="w-[80px] shrink-0">
+            <SelectTrigger className="w-28 shrink-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -344,7 +344,7 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
                       y={16}
                       textAnchor="middle"
                       className="fill-muted-foreground"
-                      fontSize={10}
+                      fontSize={11}
                     >
                       {day.toLocaleDateString("en-IN", { weekday: "short" })}
                     </text>
@@ -353,7 +353,7 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
                       y={32}
                       textAnchor="middle"
                       className={isToday ? "fill-primary" : "fill-muted-foreground"}
-                      fontSize={10}
+                      fontSize={11}
                       fontWeight={isToday ? 600 : 400}
                     >
                       {day.getDate()}
@@ -378,7 +378,7 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
                 svgWidth={svgWidth}
                 rowHeight={rowHeight}
                 titleMax={titleMax}
-                labelFontSize={labelWidth < 180 ? 9 : 11}
+                labelFontSize={11}
                 onTicketClick={onTicketClick}
               />
 

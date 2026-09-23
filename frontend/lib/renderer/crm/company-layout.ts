@@ -3,11 +3,15 @@ import type { RecordLayout } from "../layout";
 /**
  * Companies, as data.
  *
- * The seven fields the create endpoint accepts are the seven the form renders,
- * and `organizationUpdateSchema` accepts the same seven — so nothing here is
+ * The eight fields the create endpoint accepts are the eight the form renders,
+ * and `organizationUpdateSchema` accepts the same eight — so nothing here is
  * `editOnly`. What the update endpoint accepts and this description withholds is
  * `parentId`, `notes` and `healthScore`, and each is withheld for its own
  * reason.
+ *
+ * `tier` is the eighth, and unlike `healthScore` it is editable on purpose:
+ * nothing derives it, a person states it, and the roadmap weights by it. A
+ * company with no tier set is the normal case and weights nothing.
  *
  * `parentId` and `notes` already have owners on the detail page — the parent
  * picker and the notes editor — and a second control writing the same column
@@ -55,6 +59,17 @@ export const COMPANY_LAYOUT: RecordLayout = {
     { name: "website", label: "Website", kind: "url" },
     { name: "linkedinUrl", label: "LinkedIn", kind: "url" },
     { name: "description", label: "Description", kind: "longText" },
+    {
+      name: "tier",
+      label: "Account tier",
+      kind: "select",
+      hint: "Weights this account's feedback when the roadmap is prioritized.",
+      options: [
+        { value: "free", label: "Free" },
+        { value: "pro", label: "Pro" },
+        { value: "enterprise", label: "Enterprise" },
+      ],
+    },
     { name: "healthScore", label: "Health", kind: "percent", readOnly: true },
     { name: "createdAt", label: "Added", kind: "date", readOnly: true },
   ],
@@ -65,6 +80,7 @@ export const COMPANY_LAYOUT: RecordLayout = {
       { field: "industry", width: "w-40 shrink-0" },
       { field: "size", width: "w-36 shrink-0" },
       { field: "website", width: "w-48 shrink-0" },
+      { field: "tier", width: "w-28 shrink-0" },
       { field: "healthScore", width: "w-24 shrink-0" },
     ],
   },
@@ -72,7 +88,7 @@ export const COMPANY_LAYOUT: RecordLayout = {
     sections: [
       { title: "Company", fields: ["name", "industry", "size", "domain"] },
       { title: "Reach", fields: ["website", "linkedinUrl"] },
-      { title: "Account", fields: ["healthScore", "createdAt"] },
+      { title: "Account", fields: ["tier", "healthScore", "createdAt"] },
       { title: "Description", fields: ["description"] },
     ],
   },
@@ -80,6 +96,7 @@ export const COMPANY_LAYOUT: RecordLayout = {
     sections: [
       { title: "Company", fields: ["name", "industry", "size", "domain"] },
       { title: "Reach", fields: ["website", "linkedinUrl"] },
+      { title: "Account", fields: ["tier"] },
       { title: "Description", fields: ["description"] },
     ],
   },

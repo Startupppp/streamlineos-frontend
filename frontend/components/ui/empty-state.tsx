@@ -85,8 +85,8 @@ function ActionButton({
 const FILTERED_EMPTY_TITLE = "No results match your filters.";
 
 const ILLUSTRATION_BOX_CLASS: Record<"sm" | "md", string> = {
-  sm: "mb-2 h-24 w-24",
-  md: "mb-5 h-40 w-40",
+  sm: "mb-2 size-24",
+  md: "mb-5 size-48 sm:size-56",
 };
 
 export function EmptyState({
@@ -133,7 +133,7 @@ export function EmptyState({
         "flex flex-col items-center justify-center text-center",
         compact
           ? "py-4 px-2"
-          : "h-full min-h-full w-full flex-1 py-12 px-6 rounded-xl border border-dashed border-border bg-card",
+          : "h-full min-h-80 w-full flex-1 rounded-xl border border-dashed border-border bg-card px-6 py-12",
         className
       )}
     >

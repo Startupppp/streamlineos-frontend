@@ -145,6 +145,42 @@ const REMOVED_ROUTES: RemovedRoute[] = [
     redirectSource: "/build/workspaces/:pmWorkspaceId/teams",
     redirectDestination: "/build/teams",
   },
+  {
+    route: "/build/[projectId]/timeline",
+    appDir: join("[projectId]", "timeline"),
+    redirectSource: "/build/:projectId(\\\\d+)/timeline",
+    redirectDestination: "/build/:projectId/issues?view=timeline",
+  },
+  {
+    route: "/build/[projectId]/bugs",
+    appDir: join("[projectId]", "bugs"),
+    redirectSource: "/build/:projectId(\\\\d+)/bugs",
+    redirectDestination: "/build/:projectId/issues?type=BUG",
+  },
+  {
+    route: "/build/[projectId]/analytics",
+    appDir: join("[projectId]", "analytics"),
+    redirectSource: "/build/:projectId(\\\\d+)/analytics",
+    redirectDestination: "/build/:projectId/reports?tab=overview",
+  },
+  {
+    route: "/build/[projectId]/views",
+    appDir: join("[projectId]", "views"),
+    redirectSource: "/build/:projectId(\\\\d+)/views",
+    redirectDestination: "/build/:projectId/issues",
+  },
+  {
+    route: "/build/[projectId]/ai",
+    appDir: join("[projectId]", "ai"),
+    redirectSource: "/build/:projectId(\\\\d+)/ai",
+    redirectDestination: "/build/command-center?projectId=:projectId",
+  },
+  {
+    route: "/build/customers",
+    appDir: "customers",
+    redirectSource: "/build/customers",
+    redirectDestination: "/crm",
+  },
 ];
 
 function nextConfigRedirects(): { source: string; destination: string }[] {
@@ -173,7 +209,7 @@ function everyBuildNavHref(): string[] {
 
 describe("removed Build redirect routes keep their deep link in next.config.ts", () => {
   it("covers every removed route, so a truncated list cannot pass vacuously", () => {
-    expect(REMOVED_ROUTES).toHaveLength(21);
+    expect(REMOVED_ROUTES).toHaveLength(27);
   });
 
   it.each(REMOVED_ROUTES)(
@@ -213,13 +249,29 @@ describe("removed Build redirect routes keep their deep link in next.config.ts",
     expect(offending).toEqual([]);
   });
 
-  it("every redirect destination resolves to a route the manifest still tracks", () => {
+  it("every redirect destination inside Build resolves to a route the manifest still tracks", () => {
     const tracked = new Set(BUILD_ROUTE_MANIFEST.map((entry) => entry.route));
     const unresolved = REMOVED_ROUTES.filter((entry) => {
       const path = entry.redirectDestination.split("?")[0];
+      if (!path.startsWith("/build")) return false;
       const normalized = path.replace(/:(\w+)/g, "[$1]");
       return !tracked.has(normalized);
     }).map((entry) => `${entry.route} -> ${entry.redirectDestination}`);
     expect(unresolved).toEqual([]);
+  });
+
+  it("every redirect destination that leaves Build still lands on a page that exists, so a cross-product handover cannot dangle", () => {
+    const crossProduct = REMOVED_ROUTES.filter(
+      (entry) => !entry.redirectDestination.split("?")[0].startsWith("/build"),
+    );
+    expect(crossProduct.length).toBeGreaterThan(0);
+    const dangling = crossProduct.filter((entry) => {
+      const path = entry.redirectDestination.split("?")[0];
+      const segments = path.replace(/^\//, "").split("/");
+      return !existsSync(
+        join(resolve(ROOT, "app", "(authenticated)"), ...segments, "page.tsx"),
+      );
+    }).map((entry) => `${entry.route} -> ${entry.redirectDestination}`);
+    expect(dangling).toEqual([]);
   });
 });

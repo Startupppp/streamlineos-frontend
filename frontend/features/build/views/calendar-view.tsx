@@ -118,13 +118,13 @@ export function CalendarView({ tickets, onTicketClick, projectId }: CalendarView
           <div className="overscroll-contain">
           <div className="grid grid-cols-7">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-              <div key={day} className="sticky top-0 z-10 border-b bg-muted/50 px-2 py-1.5 text-center text-xs font-medium text-muted-foreground">
+              <div key={day} className="sticky top-0 z-10 border-b bg-secondary px-2 py-1.5 text-center text-xs font-semibold text-secondary-foreground">
                 {day}
               </div>
             ))}
             {days.map((day, idx) => {
               if (day === null) {
-                return <div key={`empty-${idx}`} className="min-h-[100px] border-b border-r bg-muted/20" />;
+                return <div key={`empty-${idx}`} className="min-h-[100px] border-b border-r bg-muted" />;
               }
 
               const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;

@@ -2,6 +2,7 @@ import type { z } from "zod";
 import type { feedbucketSubmissionListContract } from "@/hooks/api/feedbucket/feedbucket-schema";
 import type { feedbucketSubmissionDetailContract } from "@/hooks/api/feedbucket/feedbucket-schema";
 import type { feedbucketWidgetRowContract } from "@/hooks/api/feedbucket/feedbucket-schema";
+import type { feedbucketBulkSubmissionsContract } from "@/hooks/api/feedbucket/feedbucket-schema";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 export type FeedbucketSubmissionType = "bug" | "idea" | "feature" | "question" | "praise" | "other";
@@ -101,9 +102,7 @@ export interface UpdateFeedbucketWidgetInput {
   assigneeRules?: Partial<Record<FeedbucketSubmissionType, string>> | null;
 }
 
-export interface ListFeedbucketSubmissionsQuery {
-  page?: number;
-  limit?: number;
+export interface FeedbucketSubmissionFilters {
   widgetId?: number;
   managedProductId?: number;
   type?: FeedbucketSubmissionType;
@@ -114,6 +113,28 @@ export interface ListFeedbucketSubmissionsQuery {
   from?: string;
   to?: string;
 }
+
+export interface ListFeedbucketSubmissionsQuery extends FeedbucketSubmissionFilters {
+  page?: number;
+  limit?: number;
+  cursor?: string;
+}
+
+export type FeedbucketBulkAction =
+  | { type: "status"; status: FeedbucketSubmissionStatus }
+  | { type: "priority"; priority: FeedbucketSubmissionPriority }
+  | { type: "assign"; assigneeId: string | null }
+  | { type: "delete" };
+
+export interface BulkFeedbucketSubmissionsInput {
+  submissionIds: number[];
+  action: FeedbucketBulkAction;
+  filters?: FeedbucketSubmissionFilters;
+}
+
+export type BulkFeedbucketSubmissionsResult = z.infer<
+  typeof feedbucketBulkSubmissionsContract
+>;
 
 export interface UpdateFeedbucketSubmissionInput {
   status?: FeedbucketSubmissionStatus;

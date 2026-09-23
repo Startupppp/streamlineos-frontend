@@ -7,6 +7,8 @@ import { lazyContract } from "@/lib/api-envelope";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
+  BulkFeedbucketSubmissionsInput,
+  BulkFeedbucketSubmissionsResult,
   FeedbucketMediaKind,
   FeedbucketSubmission,
   PaginatedFeedbucketSubmissions,
@@ -15,6 +17,7 @@ import type {
 } from "@/types/feedbucket";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
 const feedbucketSubmissionListC = lazyContract(() =>
   import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketSubmissionListContract),
@@ -30,6 +33,9 @@ const feedbucketConvertTicketC = lazyContract(() =>
 );
 const feedbucketDeleteSubmissionC = lazyContract(() =>
   import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketDeleteSubmissionContract),
+);
+const feedbucketBulkSubmissionsC = lazyContract(() =>
+  import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketBulkSubmissionsContract),
 );
 
 export function useFeedbucketSubmissions(params?: ListFeedbucketSubmissionsQuery) {
@@ -71,6 +77,34 @@ export function useUpdateFeedbucketSubmission() {
       ),
     onSuccess: (_, { submissionId }) => {
       void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.submission(submissionId) });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.all });
+    },
+  });
+}
+
+export function useBulkMutateFeedbucketSubmissions() {
+  const qc = useQueryClient();
+  const operation = useIdempotentOperation();
+  return useAuthorizedMutation<
+    BulkFeedbucketSubmissionsResult,
+    Error,
+    BulkFeedbucketSubmissionsInput
+  >("feedbucket:submissions:update", {
+    mutationKey: ["feedbucket", "submissions", "bulk"],
+    mutationFn: (input) =>
+      apiClient.post<BulkFeedbucketSubmissionsResult>(
+        "/feedbucket/submissions/bulk",
+        input,
+        operation.configFor(input),
+        feedbucketBulkSubmissionsC,
+      ),
+    onSuccess: (result) => {
+      operation.settle();
+      for (const item of result.results)
+        if (item.outcome !== "skipped")
+          qc.removeQueries({
+            queryKey: growthAndSignQueryKeys.feedbucket.submission(item.submissionId),
+          });
       void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.all });
     },
   });
