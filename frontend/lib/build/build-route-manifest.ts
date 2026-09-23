@@ -125,38 +125,6 @@ const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
   { route: "/build/teams", decision: "KEEP", target: null },
   { route: "/build/teams/[teamId]", decision: "KEEP", target: null },
   { route: "/build/templates", decision: "KEEP", target: null },
-  { route: "/build/workspaces", decision: "KEEP", target: null },
-  { route: "/build/workspaces/[pmWorkspaceId]", decision: "KEEP", target: null },
-  {
-    route: "/build/workspaces/[pmWorkspaceId]/all-work",
-    decision: "KEEP",
-    target: null,
-  },
-  {
-    route: "/build/workspaces/[pmWorkspaceId]/goals",
-    decision: "KEEP",
-    target: null,
-  },
-  {
-    route: "/build/workspaces/[pmWorkspaceId]/overview",
-    decision: "KEEP",
-    target: null,
-  },
-  {
-    route: "/build/workspaces/[pmWorkspaceId]/products",
-    decision: "KEEP",
-    target: null,
-  },
-  {
-    route: "/build/workspaces/[pmWorkspaceId]/roadmap",
-    decision: "KEEP",
-    target: null,
-  },
-  {
-    route: "/build/workspaces/[pmWorkspaceId]/teams",
-    decision: "KEEP",
-    target: null,
-  },
 ];
 
 export { BUILD_ROUTE_MANIFEST, BuildRouteManifestEntrySchema };

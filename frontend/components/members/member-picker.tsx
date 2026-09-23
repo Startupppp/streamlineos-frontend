@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/field-control";
 import { useOrgMembers, useOrgMembersByIds } from "@/hooks/api/organization";
 import { useProjectMembers } from "@/hooks/api/build/projects";
-import { useProjectWorkspaceMembers } from "@/hooks/api/build/workspace-members";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { useModuleMemberCandidates } from "@/hooks/api/module-access";
 import { useCan } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -94,7 +94,7 @@ function useMemberOptions(
 ): { options: MemberOption[]; selectedMembers: MemberOption[] } {
   const explicit = candidates !== undefined;
   const canViewOrgMembers = useCan("settings:view");
-  const canViewProjectWorkspaceMembers = useCan("build:members:view");
+  const canViewBuildMembers = useCan("build:members:view");
   const useOrgDirectory =
     enabled && !explicit && projectId === undefined && moduleKey === undefined && canViewOrgMembers;
   const useWorkspaceDirectory =
@@ -103,7 +103,7 @@ function useMemberOptions(
     projectId === undefined &&
     moduleKey === undefined &&
     !canViewOrgMembers &&
-    canViewProjectWorkspaceMembers;
+    canViewBuildMembers;
   const useModuleDirectory = !explicit && moduleKey !== undefined && enabled;
 
   const debouncedSearch = useDebouncedValue(search.trim(), 300);
@@ -112,7 +112,7 @@ function useMemberOptions(
     staleTime: 30_000,
     placeholderData: (prev) => prev,
   });
-  const { data: workspaceData } = useProjectWorkspaceMembers(
+  const { data: workspaceData } = useBuildMembers(
     { limit: 200, search: debouncedSearch || undefined },
     {
       enabled: useWorkspaceDirectory,

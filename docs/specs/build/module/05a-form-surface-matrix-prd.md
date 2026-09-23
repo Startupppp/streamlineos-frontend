@@ -29,7 +29,7 @@ here until it is removed or migrated. Paths are relative to
 | Project create | `project-create/project-create-wizard.tsx` | `project-create/project-create-schema.ts` | `core/dto/project-core.schemas.ts` · `build/core.ts` | Explicit · registered |
 | Project edit | `project-list/edit-project-sheet.tsx` | `project-list/edit-project-schema.ts` | `project-core.schemas.ts` · `projects` | Explicit · missing |
 | Project settings | `settings/project-settings-page.tsx` | current shared validation must move to Build owner | `project-core.schemas.ts` · `projects` and section tables | Explicit · registered |
-| Workspace create/edit | `pm-workspaces/pm-workspace-form-sheet.tsx` | Inline, migrate to owned schema | `pm-workspaces/dto/pm-workspaces.schemas.ts` · `pm-workspaces.ts` | Explicit · missing |
+| ~~Workspace create/edit~~ | **REMOVED (BLD-00 D01)** — `pm-workspaces/pm-workspace-form-sheet.tsx` and its schema no longer exist | — | — | — |
 | Managed Product create/edit | `managed-products/managed-product-form-sheet.tsx` | Inline, migrate to owned schema | `managed-products/dto/managed-products.schemas.ts` · `managed-products.ts` | Explicit · registered |
 | Ticket rich create | `tickets/create-ticket-dialog.tsx` | current shared validation must move to `tickets/*-schema.ts` | `core/dto/ticket.schemas.ts` · `ticket-core.ts` | Explicit · missing; move to sheet |
 | Global ticket create | `tickets/global-create-ticket-dialog.tsx` | Must reuse ticket create owner | Same as ticket create | Explicit · missing |

@@ -17,10 +17,6 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => false),
 }));
 
-jest.mock("@/hooks/api/build/pm-workspaces", () => ({
-  usePmWorkspaces: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
-}));
-
 jest.mock("@/hooks/api/build/projects", () => ({
   useProjects: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
 }));
@@ -65,19 +61,11 @@ describe("OrganizationOverviewPage", () => {
     expect(screen.getByText(/access restricted/i)).toBeInTheDocument();
   });
 
-  it("renders workspace and project stat cards in the populated state", () => {
+  it("renders the project stat card in the populated state", () => {
     usePageState.mockReturnValue({ kind: "ready" });
 
     const { useCan } = jest.requireMock("@/hooks/api/access");
     useCan.mockReturnValue(false);
-
-    const { usePmWorkspaces } = jest.requireMock("@/hooks/api/build/pm-workspaces");
-    (usePmWorkspaces as jest.Mock).mockReturnValue({
-      data: { data: [{ id: "ws1", name: "Workspace 1" }], pagination: { hasMore: false } },
-      isLoading: false,
-      isError: false,
-      refetch: jest.fn(),
-    });
 
     const { useProjects } = jest.requireMock("@/hooks/api/build/projects");
     (useProjects as jest.Mock).mockReturnValue({
@@ -89,16 +77,15 @@ describe("OrganizationOverviewPage", () => {
 
     render(<OrganizationOverviewPage />);
 
-    expect(screen.getByText("Active workspaces")).toBeInTheDocument();
     expect(screen.getByText("Active projects")).toBeInTheDocument();
   });
 
-  it("renders the cursor-honest plus-suffixed count when the workspace page has more results", () => {
+  it("renders the cursor-honest plus-suffixed count when the project page has more results", () => {
     usePageState.mockReturnValue({ kind: "ready" });
 
-    const { usePmWorkspaces } = jest.requireMock("@/hooks/api/build/pm-workspaces");
-    (usePmWorkspaces as jest.Mock).mockReturnValue({
-      data: { data: Array(10).fill({ id: "ws", name: "W" }), pagination: { hasMore: true } },
+    const { useProjects } = jest.requireMock("@/hooks/api/build/projects");
+    (useProjects as jest.Mock).mockReturnValue({
+      data: { data: Array(10).fill({ id: 1, name: "Project", key: "P", status: "ACTIVE" }), hasMore: true },
       isLoading: false,
       isError: false,
       refetch: jest.fn(),

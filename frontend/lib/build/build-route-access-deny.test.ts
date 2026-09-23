@@ -32,10 +32,10 @@ const PROJECT_CASES: PermissionCase[] = [
   ["/build/42/meetings", "build:meetings:view"],
 ];
 
-const WORKSPACE_AND_ORG_CASES: PermissionCase[] = [
-  ["/build/workspaces/ws-1/all-work", "build:tickets:view"],
-  ["/build/workspaces/ws-1/products", "build:managed-products:view"],
-  ["/build/workspaces/ws-1/teams", "build:teams:view"],
+const ORG_CASES: PermissionCase[] = [
+  ["/build/all-work", "build:tickets:view"],
+  ["/build/managed-products", "build:managed-products:view"],
+  ["/build/teams", "build:teams:view"],
   ["/portal", "build:portal:view"],
 ];
 
@@ -49,7 +49,7 @@ describe("Build direct-route deny — every guarded URL resolves to a permission
     },
   );
 
-  it.each(WORKSPACE_AND_ORG_CASES)(
+  it.each(ORG_CASES)(
     "direct navigation to %s requires %s",
     (path, expectedKey) => {
       const decision = resolveRouteAccess(path);
@@ -60,7 +60,7 @@ describe("Build direct-route deny — every guarded URL resolves to a permission
 
   it("no guarded Build path resolves to unknown so enforceRouteAccess never bypasses the permission check", () => {
     const guardedPaths = PROJECT_CASES.map(([path]) => path).concat(
-      WORKSPACE_AND_ORG_CASES.map(([path]) => path),
+      ORG_CASES.map(([path]) => path),
     );
     const unknown = guardedPaths.filter(
       (p) => resolveRouteAccess(p).kind === "unknown",

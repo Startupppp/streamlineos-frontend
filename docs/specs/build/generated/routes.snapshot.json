@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "generatedAt": "2026-09-23T02:03:07.401Z",
+  "generatedAt": "2026-09-23T06:28:41.663Z",
   "source": "frontend/app",
-  "count": 82,
+  "count": 74,
   "routes": [
     {
       "path": "/accept-invitation",
@@ -273,38 +273,6 @@
       "file": "frontend/app/(authenticated)/build/templates/page.tsx"
     },
     {
-      "path": "/build/workspaces",
-      "file": "frontend/app/(authenticated)/build/workspaces/page.tsx"
-    },
-    {
-      "path": "/build/workspaces/{pmWorkspaceId}",
-      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/page.tsx"
-    },
-    {
-      "path": "/build/workspaces/{pmWorkspaceId}/all-work",
-      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/all-work/page.tsx"
-    },
-    {
-      "path": "/build/workspaces/{pmWorkspaceId}/goals",
-      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/goals/page.tsx"
-    },
-    {
-      "path": "/build/workspaces/{pmWorkspaceId}/overview",
-      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/overview/page.tsx"
-    },
-    {
-      "path": "/build/workspaces/{pmWorkspaceId}/products",
-      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/products/page.tsx"
-    },
-    {
-      "path": "/build/workspaces/{pmWorkspaceId}/roadmap",
-      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/roadmap/page.tsx"
-    },
-    {
-      "path": "/build/workspaces/{pmWorkspaceId}/teams",
-      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/teams/page.tsx"
-    },
-    {
       "path": "/client-portal",
       "file": "frontend/app/(portal)/client-portal/page.tsx"
     },
@@ -370,7 +338,7 @@
       {
         "id": "PG-ORG-007",
         "path": "/build/customers",
-        "disposition": "KEEP"
+        "disposition": "DELETE"
       },
       {
         "id": "PG-ORG-008",
@@ -410,7 +378,7 @@
       {
         "id": "PG-ORG-015",
         "path": "/build/pm-workspaces",
-        "disposition": "MOVE"
+        "disposition": "REMOVE"
       },
       {
         "id": "PG-ORG-016",
@@ -455,42 +423,47 @@
       {
         "id": "PG-WS-001",
         "path": "/build/workspaces/{pmWorkspaceId}",
-        "disposition": "KEEP"
+        "disposition": "REMOVE"
       },
       {
         "id": "PG-WS-002",
         "path": "/build/workspaces/{pmWorkspaceId}/all-work",
-        "disposition": "KEEP"
+        "disposition": "REMOVE"
       },
       {
         "id": "PG-WS-003",
         "path": "/build/workspaces/{pmWorkspaceId}/goals",
-        "disposition": "KEEP"
+        "disposition": "REMOVE"
       },
       {
         "id": "PG-WS-004",
         "path": "/build/workspaces/{pmWorkspaceId}/my-work",
-        "disposition": "CONSOLIDATE"
+        "disposition": "REMOVE"
       },
       {
         "id": "PG-WS-005",
         "path": "/build/workspaces/{pmWorkspaceId}/overview",
-        "disposition": "KEEP"
+        "disposition": "REMOVE"
       },
       {
         "id": "PG-WS-006",
         "path": "/build/workspaces/{pmWorkspaceId}/products",
-        "disposition": "KEEP"
+        "disposition": "REMOVE"
       },
       {
         "id": "PG-WS-007",
         "path": "/build/workspaces/{pmWorkspaceId}/roadmap",
-        "disposition": "KEEP"
+        "disposition": "REMOVE"
       },
       {
         "id": "PG-WS-008",
         "path": "/build/workspaces/{pmWorkspaceId}/teams",
-        "disposition": "KEEP"
+        "disposition": "REMOVE"
+      },
+      {
+        "id": "PG-WS-009",
+        "path": "/build/workspaces",
+        "disposition": "REMOVE"
       },
       {
         "id": "PG-PROD-001",
@@ -836,8 +809,8 @@
       },
       {
         "id": "PG-ORG-007",
-        "path": "/build/customers",
-        "disposition": "KEEP"
+        "path": "/crm",
+        "disposition": "DELETE"
       },
       {
         "id": "PG-ORG-009",
@@ -863,11 +836,6 @@
         "id": "PG-ORG-014",
         "path": "/build/my-work",
         "disposition": "KEEP"
-      },
-      {
-        "id": "PG-ORG-015",
-        "path": "/build/workspaces",
-        "disposition": "MOVE"
       },
       {
         "id": "PG-ORG-016",
@@ -907,41 +875,6 @@
       {
         "id": "PG-ORG-023",
         "path": "/build/templates",
-        "disposition": "KEEP"
-      },
-      {
-        "id": "PG-WS-001",
-        "path": "/build/workspaces/{pmWorkspaceId}",
-        "disposition": "KEEP"
-      },
-      {
-        "id": "PG-WS-002",
-        "path": "/build/workspaces/{pmWorkspaceId}/all-work",
-        "disposition": "KEEP"
-      },
-      {
-        "id": "PG-WS-003",
-        "path": "/build/workspaces/{pmWorkspaceId}/goals",
-        "disposition": "KEEP"
-      },
-      {
-        "id": "PG-WS-005",
-        "path": "/build/workspaces/{pmWorkspaceId}/overview",
-        "disposition": "KEEP"
-      },
-      {
-        "id": "PG-WS-006",
-        "path": "/build/workspaces/{pmWorkspaceId}/products",
-        "disposition": "KEEP"
-      },
-      {
-        "id": "PG-WS-007",
-        "path": "/build/workspaces/{pmWorkspaceId}/roadmap",
-        "disposition": "KEEP"
-      },
-      {
-        "id": "PG-WS-008",
-        "path": "/build/workspaces/{pmWorkspaceId}/teams",
         "disposition": "KEEP"
       },
       {
@@ -1222,11 +1155,6 @@
       {
         "id": "PG-ADD-003",
         "path": "/build/settings/client-access",
-        "disposition": "ADD"
-      },
-      {
-        "id": "PG-ADD-004",
-        "path": "/build/workspaces/{pmWorkspaceId}/settings",
         "disposition": "ADD"
       },
       {

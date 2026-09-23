@@ -56,7 +56,6 @@ const ALL_BUILD_PERMISSIONS: PermissionKey[] = [
   "build:portfolios:view",
   "build:programs:view",
   "build:teams:view",
-  "build:workspaces:view",
   "build:roadmap:view",
   "build:goals:view",
   "build:approvals:view",
@@ -164,7 +163,6 @@ describe("resolveBuildNavModel — primary destination ceiling", () => {
       orgScope,
       projectScope,
       resolveBuildScope("/build/managed-products/7"),
-      resolveBuildScope("/build/workspaces/ws-1"),
     ];
     for (const scope of scopes) {
       const { primary } = resolveBuildNavModel({ scope, access, pinnedIds: [] });
@@ -189,10 +187,10 @@ describe("resolveBuildNavModel — pin resolution", () => {
     const model = resolveBuildNavModel({
       scope: projectScope,
       access,
-      pinnedIds: ["org-workspaces", "project-triage"],
+      pinnedIds: ["org-roadmap", "project-triage"],
     });
     const pinnedIds = model.pinned.map((d) => d.id);
-    expect(pinnedIds).not.toContain("org-workspaces");
+    expect(pinnedIds).not.toContain("org-roadmap");
     expect(pinnedIds).toContain("project-triage");
   });
 
@@ -326,23 +324,16 @@ describe("resolveBuildNavModel — createActions", () => {
   it("offers Issue only at project scope, because no other scope names an unambiguous project", () => {
     expect(actionIdsAt("/build/42")).toContain("issue");
     expect(actionIdsAt("/build")).not.toContain("issue");
-    expect(actionIdsAt("/build/workspaces/ws-1")).not.toContain("issue");
     expect(actionIdsAt("/build/managed-products/7")).not.toContain("issue");
   });
 
   it("offers Project at every scope", () => {
-    for (const path of [
-      "/build",
-      "/build/workspaces/ws-1",
-      "/build/managed-products/7",
-      "/build/42",
-    ])
+    for (const path of ["/build", "/build/managed-products/7", "/build/42"])
       expect(actionIdsAt(path)).toContain("project");
   });
 
-  it("offers Product only where a workspace can own it, never under a product or project", () => {
+  it("offers Product only at organization scope, never under a product or project, now that no workspace scope can own it", () => {
     expect(actionIdsAt("/build")).toContain("managed-product");
-    expect(actionIdsAt("/build/workspaces/ws-1")).toContain("managed-product");
     expect(actionIdsAt("/build/managed-products/7")).not.toContain(
       "managed-product",
     );

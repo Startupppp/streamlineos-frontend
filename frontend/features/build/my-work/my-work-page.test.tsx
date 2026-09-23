@@ -204,16 +204,6 @@ describe("MyWorkPage — URL param round-trips", () => {
     expect(call?.[0]).toMatchObject({ orderBy: "priority", orderDir: "asc" });
   });
 
-  it("reads pmWorkspaceId from the URL and forwards it to the API request", () => {
-    mockSearchParamsContainer.current = new URLSearchParams("pmWorkspaceId=ws-42");
-    render(<MyWorkPage />);
-    const call = mockUseAllWork.mock.calls.find(
-      ([f]: [{ scope?: string; pmWorkspaceId?: string }]) =>
-        f?.scope === "mine",
-    );
-    expect(call?.[0]).toMatchObject({ pmWorkspaceId: "ws-42" });
-  });
-
   it("cursor URL param is forwarded to the all-work request", () => {
     mockSearchParamsContainer.current = new URLSearchParams("cursor=abc123");
     render(<MyWorkPage />);

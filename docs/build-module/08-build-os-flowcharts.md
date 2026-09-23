@@ -33,8 +33,7 @@ flowchart TD
     A --> D[Inbox and Drafts<br/>LIVE]
     A --> E[All Work<br/>LIVE]
 
-    B --> F[Choose Workspace<br/>LIVE]
-    F --> G[Choose or create Project<br/>LIVE]
+    B --> G[Choose or create Project<br/>LIVE]
     G --> H[Project Overview<br/>LIVE]
 
     H --> I[Collect requests<br/>Forms, Intake, Triage<br/>LIVE]
@@ -63,7 +62,7 @@ flowchart TD
 | Stage | Screens | Canonical routes | State |
 |---|---|---|---|
 | Personal work | Command Center, My Work, Inbox/Drafts, All Work | `/build/command-center`, `/build/my-work`, `/build/inbox`, `/build/all-work` | LIVE |
-| Structure | Projects, Workspaces, Teams, Templates | `/build`, `/build/workspaces`, `/build/teams`, `/build/templates` | LIVE |
+| Structure | Projects, Teams, Templates | `/build`, `/build/teams`, `/build/templates` | LIVE |
 | Plan | Overview, Backlog, Epics, Milestones, Cycles, Timeline | `/build/[projectId]`, `/backlog`, `/epics`, `/milestones`, `/cycles`, `/timeline` | LIVE |
 | Execute | Issues views and ticket detail | `/issues`, `/tickets/[ticketKey]` | LIVE |
 | Intake | Forms, public forms, Intake, Triage | `/forms`, `/forms/[formId]`, `/triage`, public `/forms/[formToken]` | LIVE; `/intake` is still its own page rendering `features/build/intake/intake-page`. The route manifest decision is CONSOLIDATE into `/build/[projectId]/forms` and it is **not executed** |
@@ -171,7 +170,7 @@ flowchart TD
 | Built-in client collaboration | Client grants, publication controls, guest portal, change requests | Clients see approved information without becoming internal workspace members. |
 | Engineering and operations together | QA, test runs, releases, incidents, risks, decisions, webhooks | Delivery evidence remains attached to the work. |
 | Product discovery chain | Feedback to insight to roadmap to project to release | Product decisions retain their source and delivery outcome. |
-| Organization hierarchy | Workspaces, products, projects, programs, portfolios, teams, goals | The same system supports a solo freelancer and a multi-team organization. |
+| Organization hierarchy | Products, projects, programs, portfolios, teams, goals owned directly by the organization | The same system supports a solo freelancer and a multi-team organization. |
 
 ## Competitor comparison
 

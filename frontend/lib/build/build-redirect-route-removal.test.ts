@@ -77,7 +77,7 @@ const REMOVED_ROUTES: RemovedRoute[] = [
     route: "/build/workspaces/[pmWorkspaceId]/my-work",
     appDir: join("workspaces", "[pmWorkspaceId]", "my-work"),
     redirectSource: "/build/workspaces/:pmWorkspaceId/my-work",
-    redirectDestination: "/build/my-work?pmWorkspaceId=:pmWorkspaceId",
+    redirectDestination: "/build/my-work",
   },
   {
     route: "/build/goal",
@@ -95,7 +95,55 @@ const REMOVED_ROUTES: RemovedRoute[] = [
     route: "/build/pm-workspaces",
     appDir: "pm-workspaces",
     redirectSource: "/build/pm-workspaces",
-    redirectDestination: "/build/workspaces",
+    redirectDestination: "/build",
+  },
+  {
+    route: "/build/workspaces",
+    appDir: "workspaces",
+    redirectSource: "/build/workspaces",
+    redirectDestination: "/build",
+  },
+  {
+    route: "/build/workspaces/[pmWorkspaceId]",
+    appDir: join("workspaces", "[pmWorkspaceId]"),
+    redirectSource: "/build/workspaces/:pmWorkspaceId",
+    redirectDestination: "/build",
+  },
+  {
+    route: "/build/workspaces/[pmWorkspaceId]/overview",
+    appDir: join("workspaces", "[pmWorkspaceId]", "overview"),
+    redirectSource: "/build/workspaces/:pmWorkspaceId/overview",
+    redirectDestination: "/build/command-center",
+  },
+  {
+    route: "/build/workspaces/[pmWorkspaceId]/all-work",
+    appDir: join("workspaces", "[pmWorkspaceId]", "all-work"),
+    redirectSource: "/build/workspaces/:pmWorkspaceId/all-work",
+    redirectDestination: "/build/all-work",
+  },
+  {
+    route: "/build/workspaces/[pmWorkspaceId]/goals",
+    appDir: join("workspaces", "[pmWorkspaceId]", "goals"),
+    redirectSource: "/build/workspaces/:pmWorkspaceId/goals",
+    redirectDestination: "/build/goals",
+  },
+  {
+    route: "/build/workspaces/[pmWorkspaceId]/products",
+    appDir: join("workspaces", "[pmWorkspaceId]", "products"),
+    redirectSource: "/build/workspaces/:pmWorkspaceId/products",
+    redirectDestination: "/build/managed-products",
+  },
+  {
+    route: "/build/workspaces/[pmWorkspaceId]/roadmap",
+    appDir: join("workspaces", "[pmWorkspaceId]", "roadmap"),
+    redirectSource: "/build/workspaces/:pmWorkspaceId/roadmap",
+    redirectDestination: "/build/roadmap",
+  },
+  {
+    route: "/build/workspaces/[pmWorkspaceId]/teams",
+    appDir: join("workspaces", "[pmWorkspaceId]", "teams"),
+    redirectSource: "/build/workspaces/:pmWorkspaceId/teams",
+    redirectDestination: "/build/teams",
   },
   {
     route: "/build/[projectId]/timeline",
@@ -145,12 +193,7 @@ function nextConfigRedirects(): { source: string; destination: string }[] {
 }
 
 function everyBuildNavHref(): string[] {
-  const scopePaths = [
-    "/build",
-    "/build/workspaces/ws-1",
-    "/build/managed-products/7",
-    "/build/42",
-  ];
+  const scopePaths = ["/build", "/build/managed-products/7", "/build/42"];
   const hrefs = [
     ...BUILD_MY_WORK_DESTINATIONS.map((destination) => destination.href),
     BUILD_BROWSE_ALL_DESTINATION.href,
@@ -166,7 +209,7 @@ function everyBuildNavHref(): string[] {
 
 describe("removed Build redirect routes keep their deep link in next.config.ts", () => {
   it("covers every removed route, so a truncated list cannot pass vacuously", () => {
-    expect(REMOVED_ROUTES).toHaveLength(19);
+    expect(REMOVED_ROUTES).toHaveLength(27);
   });
 
   it.each(REMOVED_ROUTES)(
@@ -200,9 +243,7 @@ describe("removed Build redirect routes keep their deep link in next.config.ts",
     const removed = new Set(REMOVED_ROUTES.map((entry) => entry.route));
     const offending = everyBuildNavHref().filter((href) => {
       const path = href.split("?")[0];
-      const normalized = path
-        .replace(/^\/build\/\d+/, "/build/[projectId]")
-        .replace(/^\/build\/workspaces\/[^/]+/, "/build/workspaces/[pmWorkspaceId]");
+      const normalized = path.replace(/^\/build\/\d+/, "/build/[projectId]");
       return removed.has(normalized);
     });
     expect(offending).toEqual([]);

@@ -26,7 +26,7 @@ shared seam. A strong first cycle is:
 
 | Slot | Packet | Why independent |
 |---|---|---|
-| Agent A | `BLD-X-BE-WORKSPACE-001` | Owns `pm-workspaces` module-local files |
+| Agent A | `BLD-X-BE-PRODUCT-001` | Owns `managed-products` module-local files |
 | Agent B | `BLD-X-BE-FORMS-001` | Owns `forms` module-local files |
 | Coordinator | `BLD-X-CENSUS-ROUTES-001` or integration of prior work | Read-only/generated route lane, no leaf files |
 

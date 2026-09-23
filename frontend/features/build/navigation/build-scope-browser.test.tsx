@@ -47,10 +47,8 @@ function makeRef(overrides: Partial<BuildScopeRef> = {}): BuildScopeRef {
 
 function makeDirectory(overrides: Partial<BuildScopeDirectory> = {}): BuildScopeDirectory {
   return {
-    workspaces: [],
     products: [],
     projects: [],
-    quarantinedProducts: [],
     quarantinedProjects: [],
     isLoading: false,
     isRefreshing: false,
@@ -248,76 +246,76 @@ describe("BSN-02-030 — ARIA roles for browse tree and flat lists", () => {
   });
 
   test("ArrowRight on a collapsed expandable treeitem expands it", async () => {
-    const workspace = makeEntry({
-      key: "workspace:ws1",
-      type: "workspace",
-      name: "Workspace1",
+    const product = makeEntry({
+      key: "product:p1",
+      type: "product",
+      name: "Product1",
       parentKey: null,
     });
     const child = makeEntry({
       key: "project:1",
       name: "ChildProject",
-      parentKey: "workspace:ws1",
+      parentKey: "product:p1",
     });
-    setupMocks({ workspaces: [workspace], projects: [child] });
+    setupMocks({ products: [product], projects: [child] });
     renderBrowser();
 
-    const expandBtn = screen.getByRole("button", { name: "Expand Workspace1" });
+    const expandBtn = screen.getByRole("button", { name: "Expand Product1" });
     expect(expandBtn).toHaveAttribute("aria-expanded", "false");
 
-    const workspaceItem = screen.getByRole("treeitem", { name: /Workspace1/ });
-    workspaceItem.focus();
+    const productItem = screen.getByRole("treeitem", { name: /Product1/ });
+    productItem.focus();
 
-    fireEvent.keyDown(workspaceItem, { key: "ArrowRight" });
+    fireEvent.keyDown(productItem, { key: "ArrowRight" });
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Collapse Workspace1" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Collapse Product1" })).toBeInTheDocument();
     });
   });
 
   test("ArrowLeft on an expanded treeitem collapses it", async () => {
-    const workspace = makeEntry({
-      key: "workspace:ws1",
-      type: "workspace",
-      name: "Workspace1",
+    const product = makeEntry({
+      key: "product:p1",
+      type: "product",
+      name: "Product1",
       parentKey: null,
     });
     const child = makeEntry({
       key: "project:1",
       name: "ChildProject",
-      parentKey: "workspace:ws1",
+      parentKey: "product:p1",
     });
-    setupMocks({ workspaces: [workspace], projects: [child] });
+    setupMocks({ products: [product], projects: [child] });
     renderBrowser();
 
-    await userEvent.click(screen.getByRole("button", { name: "Expand Workspace1" }));
-    await waitFor(() => screen.getByRole("button", { name: "Collapse Workspace1" }));
+    await userEvent.click(screen.getByRole("button", { name: "Expand Product1" }));
+    await waitFor(() => screen.getByRole("button", { name: "Collapse Product1" }));
 
-    const workspaceItem = screen.getByRole("treeitem", { name: /Workspace1/ });
-    workspaceItem.focus();
-    fireEvent.keyDown(workspaceItem, { key: "ArrowLeft" });
+    const productItem = screen.getByRole("treeitem", { name: /Product1/ });
+    productItem.focus();
+    fireEvent.keyDown(productItem, { key: "ArrowLeft" });
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Expand Workspace1" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Expand Product1" })).toBeInTheDocument();
     });
   });
 
   test("children of an expanded item are wrapped in role=group", async () => {
-    const workspace = makeEntry({
-      key: "workspace:ws1",
-      type: "workspace",
-      name: "Workspace1",
+    const product = makeEntry({
+      key: "product:p1",
+      type: "product",
+      name: "Product1",
       parentKey: null,
     });
     const child = makeEntry({
       key: "project:1",
       name: "ChildProject",
-      parentKey: "workspace:ws1",
+      parentKey: "product:p1",
     });
-    setupMocks({ workspaces: [workspace], projects: [child] });
+    setupMocks({ products: [product], projects: [child] });
     renderBrowser();
 
-    await userEvent.click(screen.getByRole("button", { name: "Expand Workspace1" }));
+    await userEvent.click(screen.getByRole("button", { name: "Expand Product1" }));
 
     await waitFor(() => {
       expect(document.querySelector('[role="group"]')).toBeInTheDocument();
@@ -327,18 +325,18 @@ describe("BSN-02-030 — ARIA roles for browse tree and flat lists", () => {
 
 describe("BSN-02-033 — 44px touch targets on expand buttons (class assertion — not layout-verified in jsdom)", () => {
   test("expand button carries h-11 for 44px mobile touch target", () => {
-    const workspace = makeEntry({ key: "workspace:ws1", type: "workspace", name: "WS", parentKey: null });
-    const child = makeEntry({ key: "project:1", parentKey: "workspace:ws1" });
-    setupMocks({ workspaces: [workspace], projects: [child] });
+    const product = makeEntry({ key: "product:p1", type: "product", name: "WS", parentKey: null });
+    const child = makeEntry({ key: "project:1", parentKey: "product:p1" });
+    setupMocks({ products: [product], projects: [child] });
     renderBrowser();
     const expandBtn = screen.getByRole("button", { name: /Expand WS/ });
     expect(expandBtn.className).toContain("h-11");
   });
 
   test("expand button reverts to h-5 at md breakpoint for desktop density", () => {
-    const workspace = makeEntry({ key: "workspace:ws1", type: "workspace", name: "WS", parentKey: null });
-    const child = makeEntry({ key: "project:1", parentKey: "workspace:ws1" });
-    setupMocks({ workspaces: [workspace], projects: [child] });
+    const product = makeEntry({ key: "product:p1", type: "product", name: "WS", parentKey: null });
+    const child = makeEntry({ key: "project:1", parentKey: "product:p1" });
+    setupMocks({ products: [product], projects: [child] });
     renderBrowser();
     const expandBtn = screen.getByRole("button", { name: /Expand WS/ });
     expect(expandBtn.className).toContain("md:h-5");
@@ -347,9 +345,9 @@ describe("BSN-02-033 — 44px touch targets on expand buttons (class assertion �
 
 describe("BSN-02-034 — reduced motion (class assertion — not browser-verified in jsdom)", () => {
   test("expand chevron carries motion-reduce:transition-none to disable rotation animation under reduced motion", () => {
-    const workspace = makeEntry({ key: "workspace:ws1", type: "workspace", name: "WS", parentKey: null });
-    const child = makeEntry({ key: "project:1", parentKey: "workspace:ws1" });
-    setupMocks({ workspaces: [workspace], projects: [child] });
+    const product = makeEntry({ key: "product:p1", type: "product", name: "WS", parentKey: null });
+    const child = makeEntry({ key: "project:1", parentKey: "product:p1" });
+    setupMocks({ products: [product], projects: [child] });
     renderBrowser();
     const expandBtn = screen.getByRole("button", { name: /Expand WS/ });
     const chevron = expandBtn.querySelector("svg");
@@ -395,19 +393,19 @@ describe("BSN-02-014 — real load-more buttons replace the old silent truncatio
     expect(screen.getByRole("button", { name: /Load more projects/i })).toBeDisabled();
   });
 
-  test("Load more workspaces / products button is present when hasMoreHierarchy is true", () => {
-    const workspace = makeEntry({ key: "workspace:ws1", type: "workspace", name: "WS", parentKey: null });
-    setupMocks({ workspaces: [workspace], hasMoreHierarchy: true });
+  test("Load more products button is present when hasMoreHierarchy is true", () => {
+    const product = makeEntry({ key: "product:p1", type: "product", name: "WS", parentKey: null });
+    setupMocks({ products: [product], hasMoreHierarchy: true });
     renderBrowser();
-    expect(screen.getByRole("button", { name: /Load more workspaces/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Load more products/i })).toBeInTheDocument();
   });
 
-  test("clicking Load more workspaces / products calls fetchMoreHierarchy so the next cursor page is requested", async () => {
+  test("clicking Load more products calls fetchMoreHierarchy so the next cursor page is requested", async () => {
     const fetchMoreHierarchy = jest.fn();
-    const workspace = makeEntry({ key: "workspace:ws1", type: "workspace", name: "WS", parentKey: null });
-    setupMocks({ workspaces: [workspace], hasMoreHierarchy: true, fetchMoreHierarchy });
+    const product = makeEntry({ key: "product:p1", type: "product", name: "WS", parentKey: null });
+    setupMocks({ products: [product], hasMoreHierarchy: true, fetchMoreHierarchy });
     renderBrowser();
-    await userEvent.click(screen.getByRole("button", { name: /Load more workspaces/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Load more products/i }));
     expect(fetchMoreHierarchy).toHaveBeenCalledTimes(1);
   });
 
@@ -453,13 +451,13 @@ describe("BLD-X-SB-DIR-001 — search-mode load-more: a paginated search result 
     });
   });
 
-  test("Load more workspaces / products button appears in search mode when hasMoreHierarchy is true", async () => {
-    const workspace = makeEntry({ key: "workspace:ws1", type: "workspace", name: "SearchWS", parentKey: null });
-    setupMocks({ workspaces: [workspace], hasMoreHierarchy: true });
+  test("Load more products button appears in search mode when hasMoreHierarchy is true", async () => {
+    const product = makeEntry({ key: "product:p1", type: "product", name: "SearchWS", parentKey: null });
+    setupMocks({ products: [product], hasMoreHierarchy: true });
     renderBrowser();
     await userEvent.type(screen.getByPlaceholderText(/Search projects/), "Se");
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /Load more workspaces/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Load more products/i })).toBeInTheDocument();
     });
   });
 

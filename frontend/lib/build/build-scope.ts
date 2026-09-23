@@ -1,17 +1,7 @@
-import {
-  parsePmWorkspaceIdFromPath,
-  stripPmWorkspacePrefix,
-} from "./pm-workspace-path";
-
-export type BuildScopeType =
-  | "organization"
-  | "workspace"
-  | "product"
-  | "project";
+export type BuildScopeType = "organization" | "product" | "project";
 
 export interface BuildScope {
   type: BuildScopeType;
-  pmWorkspaceId: string | null;
   managedProductId: number | null;
   projectId: number | null;
   basePath: string;
@@ -24,14 +14,12 @@ const MANAGED_PRODUCT_SEGMENT = /^\/build\/managed-products\/(\d+)(?:\/|$)/;
 
 export const BUILD_SCOPE_TYPE_LABELS: Record<BuildScopeType, string> = {
   organization: "Organization",
-  workspace: "Workspace",
   product: "Product",
   project: "Project",
 };
 
 export const ORGANIZATION_BUILD_SCOPE: BuildScope = {
   type: "organization",
-  pmWorkspaceId: null,
   managedProductId: null,
   projectId: null,
   basePath: BUILD_ROOT_PATH,
@@ -47,40 +35,25 @@ export function isBuildPath(pathname: string): boolean {
 export function resolveBuildScope(pathname: string): BuildScope {
   if (!isBuildPath(pathname)) return ORGANIZATION_BUILD_SCOPE;
 
-  const pmWorkspaceId = parsePmWorkspaceIdFromPath(pathname);
-  const withoutWorkspace = stripPmWorkspacePrefix(pathname);
-
-  const productMatch = MANAGED_PRODUCT_SEGMENT.exec(withoutWorkspace);
+  const productMatch = MANAGED_PRODUCT_SEGMENT.exec(pathname);
   if (productMatch) {
     const managedProductId = Number(productMatch[1]);
     return {
       type: "product",
-      pmWorkspaceId,
       managedProductId,
       projectId: null,
       basePath: `${BUILD_ROOT_PATH}/managed-products/${managedProductId}`,
     };
   }
 
-  const projectMatch = PROJECT_SEGMENT.exec(withoutWorkspace);
+  const projectMatch = PROJECT_SEGMENT.exec(pathname);
   if (projectMatch) {
     const projectId = Number(projectMatch[1]);
     return {
       type: "project",
-      pmWorkspaceId,
       managedProductId: null,
       projectId,
       basePath: `${BUILD_ROOT_PATH}/${projectId}`,
-    };
-  }
-
-  if (pmWorkspaceId) {
-    return {
-      type: "workspace",
-      pmWorkspaceId,
-      managedProductId: null,
-      projectId: null,
-      basePath: `${BUILD_ROOT_PATH}/workspaces/${pmWorkspaceId}`,
     };
   }
 
@@ -89,14 +62,11 @@ export function resolveBuildScope(pathname: string): BuildScope {
 
 export function buildScopeOverviewHref(scope: BuildScope): string {
   if (scope.type === "organization") return `${BUILD_ROOT_PATH}/command-center`;
-  if (scope.type === "workspace") return `${scope.basePath}/overview`;
   return scope.basePath;
 }
 
 export function buildScopeKey(scope: BuildScope): string {
   switch (scope.type) {
-    case "workspace":
-      return `workspace:${scope.pmWorkspaceId ?? ""}`;
     case "product":
       return `product:${scope.managedProductId ?? ""}`;
     case "project":
@@ -105,4 +75,3 @@ export function buildScopeKey(scope: BuildScope): string {
       return "organization";
   }
 }
-

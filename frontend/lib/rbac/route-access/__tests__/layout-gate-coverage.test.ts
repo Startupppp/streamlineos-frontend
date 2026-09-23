@@ -1,19 +1,19 @@
 import { resolveRouteAccess } from "../route-access";
 
 describe("L11 layout gate upgrades — enforceRouteAccess replaces requireSession", () => {
-  describe("build/workspaces layouts — upgraded from requireSession to enforceRouteAccess", () => {
-    it("resolves /build/workspaces/1 to a permission decision so the gate bites", () => {
-      expect(resolveRouteAccess("/build/workspaces/1").kind).toBe("permission");
+  describe("build scope layouts — upgraded from requireSession to enforceRouteAccess", () => {
+    it("resolves /build/managed-products/7 to a permission decision so the gate bites", () => {
+      expect(resolveRouteAccess("/build/managed-products/7").kind).toBe("permission");
     });
 
     it("the decision carries a module key so the build module must be enabled", () => {
-      const decision = resolveRouteAccess("/build/workspaces/1");
+      const decision = resolveRouteAccess("/build/managed-products/7");
       if (decision.kind !== "permission") throw new Error("unexpected kind");
       expect(decision.orgModuleKey).not.toBeNull();
     });
 
     it("BITE: a member with an empty scope set is denied — the permission requirement is non-empty", () => {
-      const decision = resolveRouteAccess("/build/workspaces/1");
+      const decision = resolveRouteAccess("/build/managed-products/7");
       if (decision.kind !== "permission") throw new Error("unexpected kind");
       const required = Array.isArray(decision.permission)
         ? decision.permission
@@ -26,8 +26,8 @@ describe("L11 layout gate upgrades — enforceRouteAccess replaces requireSessio
       expect(granted).toBe(false);
     });
 
-    it("BITE: removing build:view from the fixture — member without that key is denied", () => {
-      const decision = resolveRouteAccess("/build/workspaces/1");
+    it("BITE: removing build:managed-products:view from the fixture — member without that key is denied", () => {
+      const decision = resolveRouteAccess("/build/managed-products/7");
       if (decision.kind !== "permission") throw new Error("unexpected kind");
       const required = Array.isArray(decision.permission)
         ? decision.permission

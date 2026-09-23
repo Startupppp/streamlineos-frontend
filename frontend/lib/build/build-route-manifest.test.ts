@@ -29,12 +29,12 @@ const diskRoutes = new Set(
   collectPageFilePaths(APP_BUILD_DIR).map(absolutePathToRoute),
 );
 
-describe("BLD-001 — build route manifest covers all 73 authenticated build pages bidirectionally", () => {
-  it("manifest has 73 entries so the coverage check cannot pass vacuously with an empty or truncated list", () => {
-    expect(BUILD_ROUTE_MANIFEST).toHaveLength(73);
+describe("BLD-001 — build route manifest covers all 65 authenticated build pages bidirectionally", () => {
+  it("manifest has 65 entries so the coverage check cannot pass vacuously with an empty or truncated list", () => {
+    expect(BUILD_ROUTE_MANIFEST).toHaveLength(65);
   });
 
-  it("no longer tracks the eighteen routes whose next.config.ts redirect now serves the URL, because a manifest entry without a page is a phantom disposition", () => {
+  it("no longer tracks the twenty-six routes whose next.config.ts redirect now serves the URL, because a manifest entry without a page is a phantom disposition", () => {
     const routes = BUILD_ROUTE_MANIFEST.map((entry) => entry.route);
     for (const removed of [
       "/build/access",
@@ -48,6 +48,14 @@ describe("BLD-001 — build route manifest covers all 73 authenticated build pag
       "/build/[projectId]/automations",
       "/build/[projectId]/webhooks",
       "/build/[projectId]/my-tickets",
+      "/build/workspaces",
+      "/build/workspaces/[pmWorkspaceId]",
+      "/build/workspaces/[pmWorkspaceId]/all-work",
+      "/build/workspaces/[pmWorkspaceId]/goals",
+      "/build/workspaces/[pmWorkspaceId]/overview",
+      "/build/workspaces/[pmWorkspaceId]/products",
+      "/build/workspaces/[pmWorkspaceId]/roadmap",
+      "/build/workspaces/[pmWorkspaceId]/teams",
       "/build/workspaces/[pmWorkspaceId]/my-work",
       "/build/[projectId]/timeline",
       "/build/[projectId]/bugs",
@@ -65,13 +73,16 @@ describe("BLD-001 — build route manifest covers all 73 authenticated build pag
       "/build/my-work",
       "/build/goals",
       "/build/goals/[goalId]",
-      "/build/workspaces",
+      "/build/command-center",
+      "/build/all-work",
+      "/build/managed-products",
+      "/build/roadmap",
+      "/build/teams",
       "/build/[projectId]/settings/workflow",
       "/build/[projectId]/settings/automations",
       "/build/[projectId]/settings/integrations/webhooks",
       "/build/[projectId]/issues",
       "/build/[projectId]/reports",
-      "/build/command-center",
     ]) {
       expect(routes).toContain(canonical);
     }

@@ -14,7 +14,6 @@ import {
   BUILD_MY_WORK_DESTINATIONS,
 } from "./nav/build-stable-destinations";
 import { buildOrganizationCatalog } from "./nav/build-organization-catalog";
-import { buildWorkspaceCatalog } from "./nav/build-workspace-catalog";
 import { buildManagedProductCatalog } from "./nav/build-managed-product-catalog";
 import { buildProjectCatalog } from "./nav/build-project-catalog";
 import { VIEW_TYPES, isKnownViewParam } from "./view-types";
@@ -23,8 +22,6 @@ const WORK_BOARD_VIEWS: ReadonlySet<string> = new Set(VIEW_TYPES);
 
 export function buildScopeCatalog(scope: BuildScope): BuildScopeCatalog {
   switch (scope.type) {
-    case "workspace":
-      return buildWorkspaceCatalog(scope.basePath);
     case "product":
       return buildManagedProductCatalog(scope.basePath);
     case "project":
@@ -76,7 +73,7 @@ function createActionsFor(
     label: "Project",
     requiredPermission: "build:create",
   });
-  if (scope.type === "organization" || scope.type === "workspace")
+  if (scope.type === "organization")
     actions.push({
       id: "managed-product",
       label: "Product",

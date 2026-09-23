@@ -32,7 +32,6 @@ const REVOKED_GRANT = {
   portalMembershipId: "mem-1",
   partyContactId: "contact-1",
   projectId: 42,
-  pmWorkspaceId: null,
   canViewMilestones: false,
   canViewTasks: false,
   canViewAttachments: false,

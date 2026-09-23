@@ -164,8 +164,6 @@ export function toBuildNavGroups(model: BuildNavModel): NavGroup[] {
 
 export function buildScopeGroupLabel(scope: BuildScope): string {
   switch (scope.type) {
-    case "workspace":
-      return "Workspace";
     case "product":
       return "Product";
     case "project":

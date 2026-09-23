@@ -3,23 +3,13 @@ import type { BuildScope } from "./build-scope";
 
 const PROJECT_SCOPE: BuildScope = {
   type: "project",
-  pmWorkspaceId: null,
   managedProductId: null,
   projectId: 42,
   basePath: "/build/42",
 };
 
-const WORKSPACE_SCOPE: BuildScope = {
-  type: "workspace",
-  pmWorkspaceId: "ws-1",
-  managedProductId: null,
-  projectId: null,
-  basePath: "/build/workspaces/ws-1",
-};
-
 const ORGANIZATION_SCOPE: BuildScope = {
   type: "organization",
-  pmWorkspaceId: null,
   managedProductId: null,
   projectId: null,
   basePath: "/build",
@@ -87,22 +77,6 @@ describe("resolveBuildScopeFallback", () => {
       kind: "recover",
       href: "/build/managed-products/7",
       label: "Go to the parent product",
-    });
-  });
-
-  it("recovers to the accessible parent workspace ahead of the organization destination", () => {
-    expect(
-      resolveBuildScopeFallback({
-        scope: WORKSPACE_SCOPE,
-        isInaccessible: true,
-        hasAnyBuildAccess: true,
-        accessibleParent: { type: "workspace", id: "ws-9" },
-        organizationHref: "/build/command-center",
-      }),
-    ).toEqual({
-      kind: "recover",
-      href: "/build/workspaces/ws-9",
-      label: "Go to the parent workspace",
     });
   });
 

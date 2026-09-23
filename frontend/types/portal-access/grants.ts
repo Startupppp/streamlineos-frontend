@@ -22,7 +22,6 @@ export interface ProjectClientGrant {
   portalMembershipId: string;
   partyContactId: string;
   projectId: number;
-  pmWorkspaceId: string | null;
   canViewMilestones: boolean;
   canViewTasks: boolean;
   canViewAttachments: boolean;
@@ -55,7 +54,6 @@ export interface ProjectClientGrantsPage {
 export interface CreateGrantInput {
   portalMembershipId: string;
   projectId: number;
-  pmWorkspaceId?: string;
   canViewMilestones?: boolean;
   canViewTasks?: boolean;
   canViewAttachments?: boolean;

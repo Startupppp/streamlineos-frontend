@@ -28,26 +28,24 @@ access through stale local preferences.
 
 ## Directory Model
 
-The hierarchy is:
+PM Workspace is removed (BLD-00 D01). The hierarchy is:
 
 ```text
 Organization
-└── PM workspace
-    ├── Managed product
-    │   └── Linked project
-    └── Standalone project
+├── Managed product
+│   └── Linked project
+└── Standalone project
 ```
 
 Portfolios, programs, and teams are not selector parents. A project may be
-standalone with no PM workspace. When a project has a managed product, the
-product and project must belong to the same PM workspace when either side has a
-workspace; mismatched non-null workspaces are invalid.
+standalone with no managed product — that is a valid organization-level
+project, not an orphan.
 
 ## Search and Pagination
 
-- Search is server-backed for workspaces, managed products, and projects.
-- Search matches normalized name, workspace or product name, and project key
-  where applicable.
+- Search is server-backed for managed products and projects.
+- Search matches normalized name, product name, and project key where
+  applicable.
 - Search results include type, parent path, stable identifier, archived state,
   and project key.
 - Results are permission-filtered before they leave the backend.
@@ -79,9 +77,10 @@ duplicated as TODO checkboxes.
 
 ### Backend Directory Contract
 
-- [ ] **BSN-02-005** Enforce tenant, workspace, product, project, and record
-  authorization in the directory query. **Workspace, project and tenant halves
-  are CLOSED** (fourth pass). **The product half is now authored** (fifth pass)
+- [ ] **BSN-02-005** Enforce tenant, product, project, and record
+  authorization in the directory query. PM Workspace is removed, so its half
+  is void rather than required. **Project and tenant halves are CLOSED**
+  (fourth pass). **The product half is now authored** (fifth pass)
   and stays open only as DONE-PENDING-MIGRATION. `build.managed_product_memberships`
   exists in `db/schema/build/managed-product-memberships.ts`, is exported from
   the build barrel, and is created by migration
@@ -98,10 +97,10 @@ duplicated as TODO checkboxes.
   `orgId`. 34 tests in `scope-directory.service.spec.ts`, including the negative
   gate. **The migration is UNAPPLIED** — no database is available, and a
   migration is unverified until applied (same blocker as BSN-02-006).
-- [ ] **BSN-02-006** Apply and measure the authored workspace hierarchy indexes
-  in a named disposable database. Migration `1122` is authored and
-  journal-registered; **no database exists on this machine**, and a migration is
-  unverified until applied.
+- [x] **BSN-02-006** VOID, not done — migration `1122` targeted PM Workspace
+  hierarchy indexes; PM Workspace is removed (BLD-00 D01, migration
+  `1159_build_remove_pm_workspaces`), so those indexes have no column left to
+  serve.
 
 ### Frontend Directory and Hierarchy
 
@@ -218,9 +217,10 @@ behavior regresses:
 
 - [ ] **BSN-02-A01** A scope beyond the first 50 records is discoverable by
   search and pagination.
-- [ ] **BSN-02-A02** A standalone project appears under its PM workspace.
+- [x] **BSN-02-A02** VOID — PM Workspace is removed; a standalone project
+  appears directly under the organization.
 - [ ] **BSN-02-A03** A linked project appears under its product with an
-  unambiguous workspace path.
+  unambiguous parent path.
 - [ ] **BSN-02-A04** Duplicate names remain distinguishable to visual and
   screen-reader users.
 - [ ] **BSN-02-A05** Revoking access removes a scope from search, stars, and

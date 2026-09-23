@@ -159,7 +159,7 @@ const nextConfig: NextConfig = {
     },
     {
       source: "/build/pm-workspaces",
-      destination: "/build/workspaces",
+      destination: "/build",
       permanent: false,
     },
     {
@@ -194,7 +194,47 @@ const nextConfig: NextConfig = {
     },
     {
       source: "/build/workspaces/:pmWorkspaceId/my-work",
-      destination: "/build/my-work?pmWorkspaceId=:pmWorkspaceId",
+      destination: "/build/my-work",
+      permanent: false,
+    },
+    {
+      source: "/build/workspaces/:pmWorkspaceId/overview",
+      destination: "/build/command-center",
+      permanent: false,
+    },
+    {
+      source: "/build/workspaces/:pmWorkspaceId/all-work",
+      destination: "/build/all-work",
+      permanent: false,
+    },
+    {
+      source: "/build/workspaces/:pmWorkspaceId/goals",
+      destination: "/build/goals",
+      permanent: false,
+    },
+    {
+      source: "/build/workspaces/:pmWorkspaceId/products",
+      destination: "/build/managed-products",
+      permanent: false,
+    },
+    {
+      source: "/build/workspaces/:pmWorkspaceId/roadmap",
+      destination: "/build/roadmap",
+      permanent: false,
+    },
+    {
+      source: "/build/workspaces/:pmWorkspaceId/teams",
+      destination: "/build/teams",
+      permanent: false,
+    },
+    {
+      source: "/build/workspaces/:pmWorkspaceId",
+      destination: "/build",
+      permanent: false,
+    },
+    {
+      source: "/build/workspaces",
+      destination: "/build",
       permanent: false,
     },
     {

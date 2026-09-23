@@ -6,6 +6,7 @@ re-quoted as current.
 
 | Delete/refuse | User job replacement | Evidence/rationale |
 |---|---|---|
+| PM Workspace (routes, permissions, tables) | Organization directly owns Products, Projects, Teams, Programs, Portfolios; a project without a product is an organization-level project | **EXECUTED.** Migration `1159_build_remove_pm_workspaces` drops `build.pm_workspaces`, `build.pm_workspace_memberships`, and every `pm_workspace_id` column; `build.project_workspace_members` is renamed to `build.build_members` (workspace relationship dropped, roster job kept). All 9 `/build/workspaces*` endpoints, the 6 `build:workspaces:*` permission keys (`view`, `create`, `update`, `delete`, `members:view`, `members:manage`), and the routes below are deleted. See below and [`WORKSPACE-REMOVAL-CENSUS.md`](./WORKSPACE-REMOVAL-CENSUS.md) |
 | Standalone Drafts page | Recover drafts in Inbox | `/build/drafts` duplicates personal notification work. **Executed** — see below |
 | Sprint route/model | Plan timeboxed work through Cycles | **EXECUTED 2026-09-22.** The routes are frozen with `GoneException`, `build.sprints` is dropped and archived, and `sprintId` was removed from the published contract. *Historical:* the production sidebar once pointed at a broken `/sprints`; that has not been true since the nav was pinned to `${basePath}/cycles` |
 | Separate QA Bug lifecycle | Track defects as `WorkItem.type=BUG` with QA evidence | **EXECUTED 2026-09-22.** `build.bugs` and `test_run_results.linked_bug_id` are dropped; defects live on `tickets` + `work_item_qa_details`. Note the consolidation moved **zero** rows — the table was already empty |
@@ -54,6 +55,9 @@ Full dependency census in
 | 2026-09-23 | `app/(authenticated)/build/[projectId]/views/` and `features/build/views/views-page` | `/build/[projectId]/issues` | `next.config.ts` redirect |
 | 2026-09-23 | `app/(authenticated)/build/[projectId]/ai/` and the 12 assistant-only files in `features/build/ai/` | `/build/command-center?projectId=…` | `next.config.ts` redirect |
 | 2026-09-23 | `app/(authenticated)/build/customers/` and `features/build/customers/` | `/crm` | `next.config.ts` redirect |
+| 2026-09-23 | `app/(authenticated)/build/workspaces/page.tsx` and the whole `workspaces/[pmWorkspaceId]/` tree (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, and nested `overview`, `all-work`, `goals`, `products`, `roadmap`, `teams`) | `/build`, `/build/command-center`, `/build/all-work`, `/build/goals`, `/build/managed-products`, `/build/roadmap`, `/build/teams` (job split across these; no single replacement page) | `next.config.ts` redirects, one per source path; `/build/pm-workspaces` now redirects straight to `/build` instead of to the deleted `/build/workspaces` |
+
+The 2026-09-22 rename of `/build/pm-workspaces` to `/build/workspaces` (row above) was superseded the next day: `/build/workspaces` itself is now deleted, not a live target. Read the 2026-09-23 row as authoritative for where each job lives today.
 
 Six of the nine routes already had a `next.config.ts` redirect **and** a
 redirect-only `page.tsx`. Configuration redirects are checked before the
@@ -65,9 +69,11 @@ link changed behaviour. **No redirect-only Build page remains**, and
 The three `MOVE` rows whose targets had no page on disk — `/build/goal`,
 `/build/goal/[goalId]` and `/build/pm-workspaces` — were executed on 2026-09-22
 as directory renames. A rename moves the job rather than deleting it, so no
-replacement had to be built first. `/build/workspaces` is now the index above
-the existing `/build/workspaces/[pmWorkspaceId]`, matching the
-`portfolios`/`teams`/`managed-products` list-plus-detail shape.
+replacement had to be built first. `/build/workspaces` was, at that time, the
+index above `/build/workspaces/[pmWorkspaceId]`, matching the
+`portfolios`/`teams`/`managed-products` list-plus-detail shape. **That shape no
+longer exists** — PM Workspace was removed entirely on 2026-09-23 (row above),
+and `/build/pm-workspaces` now redirects straight to `/build`.
 
 Still not executed, and why — each is a kill-list entry whose replacement does
 not exist yet, so removing the page would delete the job rather than move it:

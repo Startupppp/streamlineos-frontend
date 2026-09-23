@@ -9,7 +9,7 @@ function makeScope(overrides: Partial<BuildScopeRef> = {}): BuildScopeRef {
     type: "project",
     id: "1",
     name: "Alpha",
-    parentPath: "Products · Workspace",
+    parentPath: "Acme Product",
     parentKey: "product:42",
     projectKey: "ALPHA",
     href: "/build/1",
@@ -167,7 +167,7 @@ describe("BSN-02-031 — accessible label carries full scope identity for disamb
     renderRow();
     expect(screen.getByRole("option")).toHaveAttribute(
       "aria-label",
-      expect.stringContaining("Products · Workspace"),
+      expect.stringContaining("Acme Product"),
     );
   });
 
@@ -195,20 +195,20 @@ describe("BSN-02-031 — accessible label carries full scope identity for disamb
     );
   });
 
-  test("workspace scope with no secondary path still gets a complete label", () => {
-    const wsScope = makeScope({
-      key: "workspace:w1",
-      type: "workspace",
+  test("organization-level product with no secondary path still gets a complete label, because a product no longer nests under a workspace", () => {
+    const productScope = makeScope({
+      key: "product:9",
+      type: "product",
       name: "Backend",
       parentPath: null,
       parentKey: null,
       projectKey: null,
-      href: "/build/workspaces/w1",
+      href: "/build/managed-products/9",
     });
-    renderRow({ scope: wsScope, settingsHref: null });
+    renderRow({ scope: productScope, settingsHref: null });
     const label = screen.getByRole("option").getAttribute("aria-label") ?? "";
     expect(label).toContain("Backend");
-    expect(label).toContain("Workspace");
+    expect(label).toContain("Product");
   });
 });
 

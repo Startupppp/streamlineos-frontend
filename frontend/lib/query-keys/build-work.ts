@@ -228,20 +228,6 @@ export const buildWorkQueryKeys = {
       insights: (managedProductId: number) =>
         [...base, "projects", "managed-products", "insights", managedProductId] as const,
     },
-    pmWorkspaces: {
-      list: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "projects", "pm-workspaces", "list"] as const)
-        : ([...base, "projects", "pm-workspaces", "list", params] as const),
-      listInfinite: (filters: QueryKeyParams) =>
-        [...base, "projects", "pm-workspaces", "list", filters, "infinite"] as const,
-      detail: (workspaceId: string) =>
-        [...base, "projects", "pm-workspaces", "detail", workspaceId] as const,
-      members: (workspaceId: string, params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "projects", "pm-workspaces", "members", workspaceId] as const)
-        : ([...base, "projects", "pm-workspaces", "members", workspaceId, params] as const),
-    },
     workflow: {
       transitions: (projectId: number) =>
         [...base, "projects", projectId, "workflow", "transitions"] as const,
@@ -259,6 +245,15 @@ export const buildWorkQueryKeys = {
       [...base, "projects", "org-custom-states"] as const,
     columnCounts: (projectId: number) =>
       [...base, "projects", "column-counts", projectId] as const,
+    importExport: {
+      all: [...base, "projects", "import-export"] as const,
+      preview: (projectId: number) =>
+        [...base, "projects", "import-export", "preview", projectId] as const,
+      commit: (projectId: number) =>
+        [...base, "projects", "import-export", "commit", projectId] as const,
+      export: (projectId: number) =>
+        [...base, "projects", "import-export", "export", projectId] as const,
+    },
     webhooks: (projectId: number) =>
       [...base, "projects", projectId, "webhooks"] as const,
     webhookDeliveries: (projectId: number, webhookId: number) =>
@@ -313,12 +308,12 @@ export const buildWorkQueryKeys = {
       teamProjects: (teamId: number) =>
         [...base, "projects", "teams", "projects", teamId] as const,
     },
-    workspaceMembers: {
-      all: [...base, "projects", "workspaceMembers"] as const,
+    buildMembers: {
+      all: [...base, "projects", "buildMembers"] as const,
       list: (params?: QueryKeyParams) =>
       params === undefined
-        ? ([...base, "projects", "workspaceMembers", "list"] as const)
-        : ([...base, "projects", "workspaceMembers", "list", params] as const),
+        ? ([...base, "projects", "buildMembers", "list"] as const)
+        : ([...base, "projects", "buildMembers", "list", params] as const),
     },
     publicForms: {
       token: (token: string) =>

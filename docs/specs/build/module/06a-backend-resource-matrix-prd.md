@@ -51,7 +51,7 @@ query is preferred when invalidation or access shaping makes cache unsafe.
 | Resource · controller | Read/query and pagination contract | Write, schema, cache, and scale contract |
 |---|---|---|
 | Scope directory · `scope-directory/scope-directory.controller.ts` | Backend paged search across authorized workspaces/products/projects; rank exact/prefix/fuzzy; cancellable; no fixed first-50 local filter | Read-only cache includes org/actor/access version/query/cursor; rename/move/archive/revoke invalidates; late tenant response discarded |
-| PM workspaces · `pm-workspaces/pm-workspaces.controller.ts` | Search/owner/status/member/has-record filters; projected counts; cursor | Create/update/move/archive/versioned; memberships and links tenant FKs; scope catalog/list invalidation |
+| ~~PM workspaces~~ | **REMOVED (BLD-00 D01).** `pm-workspaces/pm-workspaces.controller.ts` and the whole module no longer exist | — |
 | Managed products · `managed-products/managed-products.controller.ts` | Workspace/owner/lifecycle/health filters; paged directory/detail relations and bounded roll-ups | Create/update/link/move/archive transactional; memberships and project links authorized both sides; roadmap/goal/feedback/cache invalidation |
 | Teams · `teams/teams.controller.ts` | Search/lead/member/workspace/status filters; paged roster/project relations | Create/update/member/link/archive protects access; Directory IDs tenant safe; team/filter/scope invalidation |
 | Programs · `portfolios/programs.controller.ts` | Search/owner/status/health/portfolio/date; paged links and bounded roll-up | Create/update/link/archive versioned; relation unique/FKs; program/portfolio/overview invalidation |

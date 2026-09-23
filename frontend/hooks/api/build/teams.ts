@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import type { z } from "zod";
 import { apiClient } from "@/lib/api-client";
@@ -53,13 +53,11 @@ export function useProjectTeams(params?: {
   cursor?: string;
   search?: string;
   pageSize?: number;
-  pmWorkspaceId?: string;
 }) {
   const query: Record<string, string> = {};
   if (params?.cursor) query["cursor"] = params.cursor;
   if (params?.pageSize) query["pageSize"] = String(params.pageSize);
   if (params?.search) query["search"] = params.search;
-  if (params?.pmWorkspaceId) query["pmWorkspaceId"] = params.pmWorkspaceId;
   return useGatedQuery<TeamListResponse>("build:teams:view", {
     queryKey: buildWorkQueryKeys.projects.teams.list(Object.keys(query).length ? query : undefined),
     queryFn: ({ signal }) => apiClient.get<TeamListResponse>("/build/teams", query, signal, teamPageContract),

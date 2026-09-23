@@ -43,7 +43,7 @@ the final route has no current physical page.
 | `PG-ORG-012` | `/build/managed-products` | same · KEEP | BLD-02D |
 | `PG-ORG-013` | `/build/members` | `/build/settings/access` · CONSOLIDATE — **page deleted 2026-09-22**, redirect retained in `next.config.ts` | BLD-02C |
 | `PG-ORG-014` | `/build/my-work` | same · KEEP | BLD-02C |
-| `PG-ORG-015` | `/build/pm-workspaces` | `/build/workspaces` · MOVE — **blocked**: the target is a strict prefix of the workspace scope namespace | BLD-02C |
+| `PG-ORG-015` | `/build/pm-workspaces` | `/build` · REMOVE — PM Workspace deleted, not moved; `next.config.ts` redirects the deep link | BLD-02C |
 | `PG-ORG-016` | `/build/portfolios` | same · KEEP | BLD-02C |
 | `PG-ORG-017` | `/build/portfolios/{portfolioId}` | same · KEEP | BLD-02C |
 | `PG-ORG-018` | `/build/programs` | same · KEEP | BLD-02C |
@@ -53,18 +53,23 @@ the final route has no current physical page.
 | `PG-ORG-022` | `/build/teams/{teamId}` | same · KEEP | BLD-02C |
 | `PG-ORG-023` | `/build/templates` | same · KEEP | BLD-02C |
 
-## Workspace Routes
+## PM Workspace Routes — Removed
 
-| Stable ID | Current path | Final path · disposition | Contract |
+PM Workspace is removed, not renamed (BLD-00 D01). All nine routes below are
+deleted with no replacement page; each job moves to an organization-scope
+route and each deep link redirects via `next.config.ts`.
+
+| Stable ID | Former path | Redirect target · disposition | Contract |
 |---|---|---|---|
-| `PG-WS-001` | `/build/workspaces/{pmWorkspaceId}` | same · KEEP Projects | BLD-02D |
-| `PG-WS-002` | `/build/workspaces/{pmWorkspaceId}/all-work` | same · KEEP | BLD-02D |
-| `PG-WS-003` | `/build/workspaces/{pmWorkspaceId}/goals` | same · KEEP | BLD-02D |
-| `PG-WS-004` | `/build/workspaces/{pmWorkspaceId}/my-work` | `/build/my-work?pmWorkspaceId=...` · CONSOLIDATE | BLD-02D |
-| `PG-WS-005` | `/build/workspaces/{pmWorkspaceId}/overview` | same · KEEP | BLD-02D |
-| `PG-WS-006` | `/build/workspaces/{pmWorkspaceId}/products` | same · KEEP | BLD-02D |
-| `PG-WS-007` | `/build/workspaces/{pmWorkspaceId}/roadmap` | same · KEEP projection | BLD-02D |
-| `PG-WS-008` | `/build/workspaces/{pmWorkspaceId}/teams` | same · KEEP | BLD-02D |
+| `PG-WS-001` | `/build/workspaces/{pmWorkspaceId}` | `/build` · REMOVE | — |
+| `PG-WS-002` | `/build/workspaces/{pmWorkspaceId}/all-work` | `/build/all-work` · REMOVE | — |
+| `PG-WS-003` | `/build/workspaces/{pmWorkspaceId}/goals` | `/build/goals` · REMOVE | — |
+| `PG-WS-004` | `/build/workspaces/{pmWorkspaceId}/my-work` | `/build/my-work?projectId=...` · REMOVE | — |
+| `PG-WS-005` | `/build/workspaces/{pmWorkspaceId}/overview` | `/build/command-center` · REMOVE | — |
+| `PG-WS-006` | `/build/workspaces/{pmWorkspaceId}/products` | `/build/managed-products` · REMOVE | — |
+| `PG-WS-007` | `/build/workspaces/{pmWorkspaceId}/roadmap` | `/build/roadmap` · REMOVE | — |
+| `PG-WS-008` | `/build/workspaces/{pmWorkspaceId}/teams` | `/build/teams` · REMOVE | — |
+| `PG-WS-009` | `/build/workspaces` (index) | `/build` · REMOVE | — |
 
 ## Managed Product Routes
 
@@ -155,7 +160,6 @@ the final route has no current physical page.
 | `PG-ADD-001` | `/build/settings` · ADD | Build configuration directory | BLD-02C |
 | `PG-ADD-002` | `/build/settings/access` · ADD | Build membership/access administration | BLD-02C |
 | `PG-ADD-003` | `/build/settings/client-access` · ADD | External grant administration | BLD-02C |
-| `PG-ADD-004` | `/build/workspaces/{pmWorkspaceId}/settings` · ADD | Workspace configuration | BLD-02D |
 | `PG-ADD-005` | `/build/managed-products/{managedProductId}/settings` · ADD | Product configuration | BLD-02D |
 | `PG-ADD-006` | `/build/{projectId}/goals` · ADD | Goals-owned project projection | BLD-02E |
 | `PG-ADD-007` | `/build/{projectId}/settings/access` · ADD | Project membership administration | BLD-02F |
@@ -171,14 +175,18 @@ the final route has no current physical page.
 | `PG-ADD-017` | `/build/{projectId}/settings/agents/credentials` · ADD | Credential issue/rotate/revoke | BLD-02F |
 | `PG-ADD-018` | `/build/{projectId}/settings/retention` · ADD | Archive, retention, transfer, recovery | BLD-02F |
 
-`/build/goals`, `/build/goals/{goalId}`, and `/build/workspaces` are final
-MOVE targets already represented by `PG-ORG-009`, `PG-ORG-010`, and
-`PG-ORG-015`; they are not double-counted as ADD routes.
+`/build/goals` and `/build/goals/{goalId}` are final MOVE targets already
+represented by `PG-ORG-009` and `PG-ORG-010`; they are not double-counted as
+ADD routes. `PG-ORG-015` (`/build/pm-workspaces`) is REMOVE, not MOVE — PM
+Workspace has no final path, so it is not represented as an ADD route either.
 
 The generated final-route set contains retained routes, MOVE targets, and ADD
-routes. It excludes REMOVE rows and CONSOLIDATE source routes. The current
-decisions yield 99 final page routes; the generated census becomes authoritative
-when an approved route decision changes.
+routes. It excludes REMOVE rows and CONSOLIDATE source routes. The PM Workspace
+removal drops 9 routes (`PG-WS-001` through `PG-WS-009`) and 1 ADD route
+(former `PG-ADD-004`, workspace settings), so the current decisions yield
+89 final page routes, down from 99; the generated census at
+`docs/specs/build/generated/routes.snapshot.json` becomes authoritative when an
+approved route decision changes.
 
 ## Explicit Non-Pages
 

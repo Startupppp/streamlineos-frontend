@@ -83,11 +83,7 @@ function TeamRowActions({
   );
 }
 
-interface TeamsListPageProps {
-  pmWorkspaceId?: string;
-}
-
-export function TeamsListPage({ pmWorkspaceId }: TeamsListPageProps = {}) {
+export function TeamsListPage() {
   const canCreate = useCan("build:teams:create");
   const canManage = useCan("build:teams:manage");
 
@@ -114,7 +110,6 @@ export function TeamsListPage({ pmWorkspaceId }: TeamsListPageProps = {}) {
     cursor: cursor ?? undefined,
     pageSize: 50,
     search: urlQ.trim() || undefined,
-    ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
   });
 
   const createTeam = useCreateProjectTeam();

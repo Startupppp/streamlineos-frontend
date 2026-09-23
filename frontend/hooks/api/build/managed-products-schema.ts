@@ -8,7 +8,6 @@ export const managedProductRowContract = z.object({
   description: z.string().nullable(),
   status: z.enum(["active", "archived"]),
   ownerId: z.string().nullable(),
-  pmWorkspaceId: z.string().nullable(),
   vision: z.string().nullable(),
   missionStatement: z.string().nullable(),
   targetCustomer: z.string().nullable(),

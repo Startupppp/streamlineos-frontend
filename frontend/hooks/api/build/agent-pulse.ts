@@ -19,8 +19,6 @@ function buildScopeParams(scope: BuildScope): Record<string, unknown> {
       return scope.projectId !== null ? { projectId: scope.projectId } : {};
     case "product":
       return scope.managedProductId !== null ? { managedProductId: scope.managedProductId } : {};
-    case "workspace":
-      return scope.pmWorkspaceId !== null ? { pmWorkspaceId: scope.pmWorkspaceId } : {};
     default:
       return {};
   }

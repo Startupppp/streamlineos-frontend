@@ -152,7 +152,7 @@ export const projectBudgetUpdateContract = z.object({ id: z.number().int(), budg
 export const analyticsContract = analyticsSchema;
 export const successContract = z.object({ success: z.literal(true) });
 
-const workspaceMemberItemSchema = z.object({
+const buildMemberItemSchema = z.object({
   id: z.string(),
   role: z.enum(['member', 'admin']),
   addedAt: z.string(),
@@ -164,8 +164,8 @@ const workspaceMemberItemSchema = z.object({
   teams: z.array(z.string()),
 });
 
-export const workspaceMemberPageContract = z.object({
-  data: z.array(workspaceMemberItemSchema),
+export const buildMemberPageContract = z.object({
+  data: z.array(buildMemberItemSchema),
   pagination: z.object({
     limit: z.number().int(),
     hasMore: z.boolean(),

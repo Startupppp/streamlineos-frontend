@@ -44,7 +44,6 @@ function projectFixture(
     description: null,
     key: "BIL",
     managedProductId: null,
-    pmWorkspaceId: null,
     startDate: null,
     endDate: null,
     status: null,

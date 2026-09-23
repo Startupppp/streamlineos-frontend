@@ -31,7 +31,6 @@ export interface Project {
   managerId?: string | null;
   managerMembershipId?: number | null;
   managedProductId: number | null;
-  pmWorkspaceId: string | null;
   startDate: string | Date | null;
   endDate: string | Date | null;
   status: ProjectStatusValue | null;
@@ -95,7 +94,6 @@ export interface ProjectListItem {
   priority: ProjectPriority | null;
   health: ProjectHealth;
   managedProductId: number | null;
-  pmWorkspaceId?: string;
   startDate: string | Date | null;
   endDate: string | Date | null;
   manager: {
@@ -236,7 +234,6 @@ export interface CreateProjectInput {
   projectType?: string;
   workflow?: string;
   features?: Record<string, boolean>;
-  pmWorkspaceId?: string;
   managedProductId?: number;
 }
 
@@ -360,7 +357,6 @@ export interface ProjectFilters {
   limit?: number;
   search?: string;
   status?: "ALL" | ProjectStatusValue;
-  pmWorkspaceId?: string;
   managedProductId?: number;
 }
 
