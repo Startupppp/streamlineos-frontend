@@ -65,7 +65,6 @@ const ACCENT: ModuleAccent = { bg: "", text: "", indicator: "", border: "" };
 
 const ORG_SCOPE: BuildScope = {
   type: "organization",
-  pmWorkspaceId: null,
   managedProductId: null,
   projectId: null,
   basePath: "/build",

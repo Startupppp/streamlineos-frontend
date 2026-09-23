@@ -1,5 +1,4 @@
 import {
-  Boxes,
   Briefcase,
   Building2,
   ClipboardCheck,
@@ -69,13 +68,6 @@ export function buildOrganizationCatalog(): BuildScopeCatalog {
       },
     ],
     moreTools: [
-      {
-        id: "org-workspaces",
-        label: "Workspaces",
-        href: `${BUILD_ROOT_PATH}/workspaces`,
-        icon: Boxes,
-        requiredPermission: "build:workspaces:view",
-      },
       {
         id: "org-roadmap",
         label: "Roadmap",

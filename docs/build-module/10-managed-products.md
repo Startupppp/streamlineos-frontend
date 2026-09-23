@@ -15,7 +15,7 @@
 - **Primary persona:** Product manager.
 - **Success metric:** Products with current outcome and roadmap evidence.
 - **Required density:** compact by default with a comfortable-density toggle.
-- **Core fields:** name, owner, workspace, status, goals, projects, feedback, updated.
+- **Core fields:** name, owner, status, goals, projects, feedback, updated.
 
 ## Above-the-fold text wireframe
 
@@ -42,7 +42,7 @@ Priority is identity and next action first, filters/layout second, bounded conte
 
 ## URL state
 
-Deep-linkable query parameters: `workspaceId`, `ownerId`, `status`, `q`, `sort`, `cursor`. Cursor may be shared only when it is stable for the same normalized filter/sort/access revision. Selection, open menus, drafts, and unsaved form state are not placed in the URL.
+Deep-linkable query parameters: `ownerId`, `status`, `q`, `sort`, `cursor`. Cursor may be shared only when it is stable for the same normalized filter/sort/access revision. Selection, open menus, drafts, and unsaved form state are not placed in the URL.
 
 ## Bulk, keyboard, and context actions
 
@@ -82,7 +82,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - **Client schema/hooks:** `frontend/hooks/api/build/managed-products.ts; managed-products-schema.ts` where present.
 - **List request:** `{ cursor?, limit<=100, q?, filters, sort }`; filters are the normalized URL state above.
 - **List response:** `{ data: <row>[], pageInfo: { nextCursor, hasMore }, aggregates?, meta: { requestId, revision? } }`.
-- **Detail response:** `{ data: { name, owner, workspace, status, goals, projects, feedback, updated, version, createdAt, updatedAt }, meta }`.
+- **Detail response:** `{ data: { name, owner, status, goals, projects, feedback, updated, version, createdAt, updatedAt }, meta }`.
 - **Mutation:** Zod-validated command, `Idempotency-Key` when retriable, `If-Match` for versioned updates; response returns the complete cache-patch projection.
 - **Pagination:** cursor for unbounded activity/work; numbered pages only when an exact total is already computed cheaply.
 - **Caching:** key includes scope, normalized filters, sort, cursor, and source revision. Standard list stale time 30 s; entity 60 s; live queues 0–15 s; reports 2 min.

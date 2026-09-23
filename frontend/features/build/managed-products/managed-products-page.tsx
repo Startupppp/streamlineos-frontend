@@ -56,13 +56,7 @@ const FILTER_DEFINITIONS = [
   },
 ] as const;
 
-interface ManagedProductsPageProps {
-  pmWorkspaceId?: string;
-}
-
-export function ManagedProductsPage({
-  pmWorkspaceId,
-}: ManagedProductsPageProps = {}) {
+export function ManagedProductsPage() {
   const canCreate = useCan("build:managed-products:create");
   const canUpdate = useCan("build:managed-products:update");
   const canDelete = useCan("build:managed-products:delete");
@@ -86,7 +80,6 @@ export function ManagedProductsPage({
     limit: PAGE_SIZE,
     status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
     search: listFilters.debouncedSearch.trim() || undefined,
-    ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
   });
 
   const { data: membersRes } = useOrgMembers(1, 100);
@@ -271,7 +264,8 @@ export function ManagedProductsPage({
           <PageState
             resolution={resolution}
             loading={
-              <DataTableSkeleton mobileCards
+              <DataTableSkeleton
+                mobileCards
                 rows={12}
                 headers={MANAGED_PRODUCT_TABLE_HEADERS}
                 className="flex-1"

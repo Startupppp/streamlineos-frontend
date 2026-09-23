@@ -10,7 +10,6 @@ jest.mock("@/lib/build/build-scope", () => ({
   BUILD_ROOT_PATH: "/build",
   resolveBuildScope: jest.fn().mockReturnValue({
     type: "organization",
-    pmWorkspaceId: null,
     managedProductId: null,
     projectId: null,
     basePath: "/build",
@@ -192,7 +191,6 @@ describe("BuildAgentPulse", () => {
     };
     const projectScope = {
       type: "project" as const,
-      pmWorkspaceId: null,
       managedProductId: null,
       projectId: 7,
       basePath: "/build/7",

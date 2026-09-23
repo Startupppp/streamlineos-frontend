@@ -39,11 +39,7 @@ const PAGE_SIZE = 50;
 
 const FILTER_DEFINITIONS = [] as const;
 
-interface TeamsListPageProps {
-  pmWorkspaceId?: string;
-}
-
-export function TeamsListPage({ pmWorkspaceId }: TeamsListPageProps = {}) {
+export function TeamsListPage() {
   const canCreate = useCan("build:teams:create");
   const canManage = useCan("build:teams:manage");
 
@@ -64,9 +60,7 @@ export function TeamsListPage({ pmWorkspaceId }: TeamsListPageProps = {}) {
     cursor,
     pageSize: PAGE_SIZE,
     search: listFilters.debouncedSearch.trim() || undefined,
-    ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
   });
-
   const createTeam = useCreateProjectTeam();
   const updateTeam = useUpdateProjectTeam();
   const deleteTeam = useDeleteProjectTeam();
@@ -213,7 +207,8 @@ export function TeamsListPage({ pmWorkspaceId }: TeamsListPageProps = {}) {
           <PageState
             resolution={resolution}
             loading={
-              <DataTableSkeleton mobileCards
+              <DataTableSkeleton
+                mobileCards
                 rows={12}
                 headers={TEAM_TABLE_HEADERS}
                 className="flex-1"

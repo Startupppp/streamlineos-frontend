@@ -10,7 +10,6 @@ import { backendPermissionNames } from "@/test-utils/permission-catalog";
 
 const SCOPE_PATHS = [
   "/build",
-  "/build/workspaces/ws-1",
   "/build/managed-products/7",
   "/build/42",
 ];
@@ -116,33 +115,33 @@ type CrossScopeCase = [
 
 const CROSS_SCOPE_CASES: CrossScopeCase[] = [
   [
-    "/build/workspaces/ws-1/feedbucket",
-    "feedbucket:widgets:view",
-    "build:view",
-  ],
-  [
-    "/build/workspaces/ws-1/bugs",
-    "build:bugs:view",
-    "build:view",
-  ],
-  [
     "/build/managed-products/7/feedbucket",
     "feedbucket:widgets:view",
     "build:managed-products:view",
-  ],
-  [
-    "/build/workspaces/ws-1/cycles",
-    "build:sprints:view",
-    "build:view",
   ],
   [
     "/build/managed-products/7/cycles",
     "build:sprints:view",
     "build:managed-products:view",
   ],
+  [
+    "/build/managed-products/7/bugs",
+    "build:bugs:view",
+    "build:managed-products:view",
+  ],
+  [
+    "/build/managed-products/7/qa",
+    "build:qa:view",
+    "build:managed-products:view",
+  ],
+  [
+    "/build/managed-products/7/approvals",
+    "build:approvals:view",
+    "build:managed-products:view",
+  ],
 ];
 
-describe("BSN-01-026 cross-scope deep links — project extensions do not over-match workspace or product URLs", () => {
+describe("BSN-01-026 cross-scope deep links — project extensions do not over-match product URLs", () => {
   it("covers representative cross-scope paths so a missing entry cannot pass vacuously", () => {
     expect(CROSS_SCOPE_CASES.length).toBeGreaterThan(3);
   });

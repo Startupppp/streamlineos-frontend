@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import { isApiError } from "@/lib/api-client";
 import { useProject } from "@/hooks/api/build/projects";
 import { useManagedProduct } from "@/hooks/api/build/managed-products";
-import { usePmWorkspace } from "@/hooks/api/build/pm-workspaces";
 import {
   buildScopeKey,
   buildScopeOverviewHref,
@@ -34,9 +33,6 @@ export function useBuildScopeIdentity(scope: BuildScope): BuildScopeIdentity {
 
   const projectQuery = useProject(scope.projectId ?? 0);
   const productQuery = useManagedProduct(scope.managedProductId ?? 0);
-  const workspaceQuery = usePmWorkspace(
-    scope.type === "workspace" ? scope.pmWorkspaceId : null,
-  );
 
   const scopeKey = buildScopeKey(scope);
   const known = useMemo(
@@ -83,17 +79,6 @@ export function useBuildScopeIdentity(scope: BuildScope): BuildScopeIdentity {
           isArchived: productQuery.data?.status === "archived",
           isInaccessible: isMissingAccess(productQuery.error),
         };
-      case "workspace":
-        return {
-          ref: {
-            ...base,
-            id: scope.pmWorkspaceId ?? "",
-            name: workspaceQuery.data?.name ?? (base.name || "Workspace"),
-          },
-          isLoading: workspaceQuery.isLoading,
-          isArchived: workspaceQuery.data?.status === "archived",
-          isInaccessible: isMissingAccess(workspaceQuery.error),
-        };
       default:
         return {
           ref: ORGANIZATION_SCOPE_REF,
@@ -102,5 +87,5 @@ export function useBuildScopeIdentity(scope: BuildScope): BuildScopeIdentity {
           isInaccessible: false,
         };
     }
-  }, [scope, scopeKey, known, projectQuery, productQuery, workspaceQuery]);
+  }, [scope, scopeKey, known, projectQuery, productQuery]);
 }

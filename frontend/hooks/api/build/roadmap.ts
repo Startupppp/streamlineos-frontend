@@ -36,9 +36,6 @@ const changelogPageContract = lazyContract(() =>
 const changelogEntryContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.changelogEntryContract),
 );
-const roadmapSuccessContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapSuccessContract),
-);
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
@@ -76,7 +73,6 @@ interface RoadmapItemFilters {
   search?: string;
   cursor?: string;
   limit?: number;
-  pmWorkspaceId?: string;
   managedProductId?: number;
 }
 

@@ -2,7 +2,16 @@
 
 ## Status
 
-Approved design direction awaiting written-spec review.
+Approved design direction awaiting written-spec review, **except for every PM
+Workspace element, which is superseded and must not be implemented.**
+
+PM Workspace was removed from Build on 2026-09-23. The scope ladder is
+Organization → managed product or standalone project; there is no PM workspace
+scope, no `/build/workspaces*` route, no `build:workspaces:*` permission and no
+`pm_workspace_id` column. Read every "PM workspace" passage below as a record of
+what was designed before that decision, not as work to do. The current contract is
+`docs/specs/build/sidebar/01-scope-navigation-prd.md` and
+`docs/build-module/00-overview.md`.
 
 ## Summary
 

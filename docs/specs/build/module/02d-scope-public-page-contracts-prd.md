@@ -1,4 +1,4 @@
-# BLD-02D — Workspace, Product, and Public Page Contracts PRD
+# BLD-02D — Product and Public Page Contracts PRD
 
 > Acceptance reference only. Dispatch and status live in
 > [`Build execution`](../README.md); do not assign
@@ -6,37 +6,35 @@
 
 ## Purpose
 
-This file completes the page-level UI and data contract for PM Workspace,
-Managed Product, external-client, and public Build surfaces present or required
-by the 2026-09-19 source tree. It inherits the state, discovery, validation,
+This file completes the page-level UI and data contract for Managed Product,
+external-client, and public Build surfaces present or required by the
+2026-09-19 source tree. It inherits the state, discovery, validation,
 authorization, performance, and accessibility contracts referenced by BLD-02C.
 
-## PM Workspace Pages
+## PM Workspace Pages — Removed
 
-| Route · disposition | Components and actions | Filters, views, and paging | Backend, cache, schema, and confirmation |
-|---|---|---|---|
-| `/build/workspaces/{pmWorkspaceId}/overview` · KEEP | Scope header; health/KPI strip; active projects/products; goals; delivery attention; recent updates; quick create preselected to workspace | Time window and optional product/team chips; no arbitrary view switcher; every panel bounded with source link | One workspace summary contract or measured grouped queries; counts permission scoped; refresh timestamp; quick create validates membership |
-| `/build/workspaces/{pmWorkspaceId}` · KEEP Projects | Project table/grid and same project actions as `/build`, with workspace locked and visible | Search; product, team, customer, owner, status, health, date, archived; table/grid; server paging | Endpoint enforces workspace membership and project relation; cache key includes workspace; create/move/archive updates both org and workspace directories |
-| `/build/workspaces/{pmWorkspaceId}/all-work` · KEEP | Reuse canonical All Work toolbar/body/bulk components; workspace scope chip locked and removable only by navigating to org All Work | Full ticket filters plus product/project/team/customer; board/list/table; truthful cursor/per-column continuation | Same `/all-work` contract with required `pmWorkspaceId`; count/export/bulk parity; no client filtering of org first page |
-| `/build/workspaces/{pmWorkspaceId}/my-work` · CONSOLIDATE to scoped `/build/my-work` | Reuse My Work with visible workspace scope and exact result predicate | Personal filters plus project/product/team within workspace; list/table/board; cursor | Token-derived actor plus narrowing workspace; replacement must preserve deep links before route deletion |
-| `/build/workspaces/{pmWorkspaceId}/products` · KEEP | Product table/grid; owner/lifecycle/health; project and goal counts; roadmap/release summary; actions | Search; owner, lifecycle, health, team, has project, goal state, archived; table/grid; server paging | Managed-product list accepts authorized workspace filter; counts bounded; create/edit sheet locks workspace; unlink/move impact confirmation |
-| `/build/workspaces/{pmWorkspaceId}/teams` · KEEP | Team table/cards; lead/members; project/product assignments; capacity summary | Search; lead/member, status, archived, has project/product; table/cards; server paging | Team list accepts workspace filter at DB layer; manage assignment sheet; unlink/archive confirmation; Directory remains identity owner |
-| `/build/workspaces/{pmWorkspaceId}/goals` · KEEP | Goal tree/list; status/health/progress; owners; linked products/projects; stale check-in signal | Search; level, owner, status, health, parent, product/project, timebox; tree/list/table; cursor | Goals owner accepts workspace scope; link/check-in sheets; close/archive confirmation; progress sources authorized |
-| `/build/workspaces/{pmWorkspaceId}/roadmap` · KEEP projection | Product roadmap timeline/board/table; releases/milestones; dependencies; health | Product, owner, status, health, date, goal, customer visibility; timeline/board/table; date-window cursor | Roadmap query requires workspace filter and source product access; edit actions open canonical product record; publication confirmation |
-| `/build/workspaces/{pmWorkspaceId}/settings` · ADD | General, access, linked products/projects/teams, defaults/terminology, archive/transfer sections | No list views; access/link selectors use paginated server search | Dirty-state form; move/transfer/archive impact dialogs; every setting has version, permission, inherited source, and exact invalidation |
+PM Workspace is removed, not renamed (BLD-00 D01). The entire
+`/build/workspaces/{pmWorkspaceId}*` page tree and `/build/pm-workspaces` are
+deleted with no replacement page. Each job moves to an organization-scope
+route already covered elsewhere in this PRD set: Projects at `/build`
+(BLD-02C), All Work at `/build/all-work` (BLD-02A), My Work at
+`/build/my-work` (BLD-02A), Goals at `/build/goals` (BLD-02A), Products at
+`/build/managed-products` (below), Teams at `/build/teams` (BLD-02A), and
+Overview at `/build/command-center` (BLD-02A). `next.config.ts` redirects
+every deep link. There is no workspace settings page.
 
 ## Managed Product Pages
 
 | Route · disposition | Components and actions | Filters, views, and paging | Backend, cache, schema, and confirmation |
 |---|---|---|---|
-| `/build/managed-products` · KEEP | Product table/grid; workspace, owner, lifecycle, health; projects; roadmap/goals/feedback/release summary | Search; workspace, owner, lifecycle, health, team, customer segment, linked-project state, archived; table/grid; server paging | Backend filtered directory with projected counts; create/edit sheet; archive/restore and workspace move confirmations; exact list/overview invalidation |
-| `/build/managed-products/{managedProductId}` · KEEP | Product header; outcome KPIs; roadmap/release preview; goal progress; feedback trends; linked projects; client progress preview | Time window and workspace/project/customer segment scope; no decorative layouts; bounded panels | Product detail authorization; grouped/bounded metrics; every aggregate source-linked; edit/settings actions; archive and publish confirmation |
-| `/build/managed-products/{managedProductId}/projects` · KEEP | Linked-project table; contribution/progress; owner/health; release and goal links | Search; workspace/team/customer, owner, status, health, contribution state; table; server paging | Product-project relation authorized on both records; link/move sheet with compatibility preview; unlink confirmation; roll-up invalidation |
+| `/build/managed-products` · KEEP | Product table/grid; owner, lifecycle, health; projects; roadmap/goals/feedback/release summary | Search; owner, lifecycle, health, team, customer segment, linked-project state, archived; table/grid; server paging | Backend filtered directory with projected counts; create/edit sheet; archive/restore confirmations; exact list/overview invalidation |
+| `/build/managed-products/{managedProductId}` · KEEP | Product header; outcome KPIs; roadmap/release preview; goal progress; feedback trends; linked projects; client progress preview | Time window and project/customer segment scope; no decorative layouts; bounded panels | Product detail authorization; grouped/bounded metrics; every aggregate source-linked; edit/settings actions; archive and publish confirmation |
+| `/build/managed-products/{managedProductId}/projects` · KEEP | Linked-project table; contribution/progress; owner/health; release and goal links | Search; team/customer, owner, status, health, contribution state; table; server paging | Product-project relation authorized on both records; link/move sheet with compatibility preview; unlink confirmation; roll-up invalidation |
 | `/build/managed-products/{managedProductId}/roadmap` · KEEP | Outcome hierarchy; timeline/board/table; evidence, goals, releases, dependencies, customer visibility | Owner, status, health, date, goal, release, customer segment/visibility, evidence state; timeline/board/table; date-window paging | Canonical roadmap endpoint filtered by managed product; create/edit sheet; reprioritize/move; publish/unpublish confirmation; public/client cache writer matrix |
 | `/build/managed-products/{managedProductId}/goals` · KEEP | Goal tree/list; progress/health; key results; contribution links; check-in freshness | Owner, status, health, parent, timebox, linked project/roadmap item; tree/list/table; cursor | Goals owner filtered by product; create/link/check-in overlays; close/archive confirmation; no parallel Build goal storage |
 | `/build/managed-products/{managedProductId}/feedback` · KEEP | Feedback queue/table; source/customer; theme/sentiment evidence; status/owner; linked roadmap/issue; preview panel | Search; source, customer, theme, sentiment, status, owner, date, linked/unlinked, duplicate; list/table; cursor | Feedback endpoint requires product filter and grant; merge dialog; link/create-ticket sheet; archive/delete according source retention; row route includes owning project |
 | `/build/managed-products/{managedProductId}/insights` · KEEP | KPI cards; trend charts with text summaries; themes; customer/source evidence; freshness and confidence | Date, source, segment, project, theme; chart + evidence table; evidence cursor | Server aggregates bounded and source-linked; AI inference labelled and human-verifiable; no cache across grants; export async |
-| `/build/managed-products/{managedProductId}/settings` · ADD | General/lifecycle, workspace, members/access, project links, roadmap defaults, feedback channels, client publication, archive | No general views; all relation selectors paginated | Dirty-state form; move/link/archive impact dialogs; last-owner and client visibility checks transactional; settings versioned |
+| `/build/managed-products/{managedProductId}/settings` · ADD | General/lifecycle, members/access, project links, roadmap defaults, feedback channels, client publication, archive | No general views; all relation selectors paginated | Dirty-state form; move/link/archive impact dialogs; last-owner and client visibility checks transactional; settings versioned |
 
 ## Internal Portal Preview
 
@@ -79,8 +77,8 @@ the existence/count of hidden records.
 
 ## Completion Checks
 
-- [ ] **BLD-02D-001** every current workspace, product, portal, and public Build
-  route appears exactly once.
+- [ ] **BLD-02D-001** every current product, portal, and public Build route
+  appears exactly once.
 - [ ] **BLD-02D-002** every scope collection has explicit components, filters,
   views, paging, overlays, backend predicate, cache behavior, and lifecycle.
 - [ ] **BLD-02D-003** public routes pass token-guessing, expiry, revocation,

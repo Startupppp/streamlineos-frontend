@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { usePmWorkspaces } from "@/hooks/api/build/pm-workspaces";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useAllWork } from "@/hooks/api/build/all-work";
 import { usePortfolios } from "@/hooks/api/build/portfolios";
@@ -16,13 +15,13 @@ import { Badge } from "@/components/ui/badge";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ProjectCreateWizard } from "@/features/build/project-create/project-create-wizard";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { Briefcase, FolderOpen, LayoutGrid } from "lucide-react";
+import { FolderOpen, LayoutGrid } from "lucide-react";
 import { resolveOverviewStatLabel } from "./overview-stat-label";
 
 function OrganizationOverviewSkeleton() {
   return (
     <div className="flex flex-1 min-h-0 flex-col gap-6">
-      <StatCardGridSkeleton cols={2} count={2} />
+      <StatCardGridSkeleton cols={2} count={1} />
       <Skeleton className="h-48 rounded-xl" />
     </div>
   );
@@ -33,7 +32,6 @@ export function OrganizationOverviewPage() {
   const canCreate = useCan("build:create");
   const canViewPortfolios = useCan("build:portfolios:view");
 
-  const workspacesQuery = usePmWorkspaces({ status: "active", limit: 10 });
   const projectsQuery = useProjects({ status: "ACTIVE", limit: 10 });
   const myWorkQuery = useAllWork({
     scope: "mine",
@@ -42,8 +40,7 @@ export function OrganizationOverviewPage() {
   });
   const portfoliosQuery = usePortfolios({ limit: 5, status: "active" });
 
-  const isLoading =
-    workspacesQuery.isLoading || projectsQuery.isLoading || myWorkQuery.isLoading;
+  const isLoading = projectsQuery.isLoading || myWorkQuery.isLoading;
 
   const isError = projectsQuery.isError || myWorkQuery.isError;
 
@@ -57,14 +54,10 @@ export function OrganizationOverviewPage() {
     isEmpty: false,
   });
 
-  const workspacesData = workspacesQuery.data;
   const projectsData = projectsQuery.data;
   const myWorkItems = myWorkQuery.data?.data ?? [];
   const portfoliosData = portfoliosQuery.data;
 
-  const workspaceCountLabel = workspacesData
-    ? resolveOverviewStatLabel(workspacesData.data.length, workspacesData.pagination.hasMore)
-    : null;
   const projectCountLabel = projectsData
     ? resolveOverviewStatLabel(projectsData.data.length, projectsData.hasMore)
     : null;
@@ -80,10 +73,9 @@ export function OrganizationOverviewPage() {
   function handleRetry() {
     void projectsQuery.refetch();
     void myWorkQuery.refetch();
-    void workspacesQuery.refetch();
   }
 
-  const hasStats = workspaceCountLabel !== null || projectCountLabel !== null;
+  const hasStats = projectCountLabel !== null;
 
   return (
     <PageWrapper
@@ -111,16 +103,6 @@ export function OrganizationOverviewPage() {
         <div className="flex flex-1 min-h-0 flex-col gap-6">
           {hasStats && (
             <StatCardGrid cols={2}>
-              {workspaceCountLabel !== null && (
-                <StatCard
-                  label="Active workspaces"
-                  value={workspaceCountLabel}
-                  icon={Briefcase}
-                  tone="violet"
-                  isLoading={workspacesQuery.isLoading}
-                  hint={workspacesData?.pagination.hasMore ? "First page shown" : undefined}
-                />
-              )}
               {projectCountLabel !== null && (
                 <StatCard
                   label="Active projects"

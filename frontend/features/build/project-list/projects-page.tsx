@@ -33,7 +33,10 @@ import { motion, useReducedMotion } from "framer-motion";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { useResumeLastProject } from "@/features/build/project-list/use-resume-last-project";
-import { GridSkeleton, ListSkeleton } from "@/features/build/project-list/projects-page-skeletons";
+import {
+  GridSkeleton,
+  ListSkeleton,
+} from "@/features/build/project-list/projects-page-skeletons";
 import {
   filterVisibleProjects,
   groupProjects,
@@ -43,11 +46,15 @@ import {
 export { filterVisibleProjects };
 
 const NewProjectDialog = dynamic(
-  () => import("./new-project-dialog").then((m) => ({ default: m.NewProjectDialog })),
+  () =>
+    import("./new-project-dialog").then((m) => ({
+      default: m.NewProjectDialog,
+    })),
   { ssr: false },
 );
 const GroupingSidebar = dynamic(
-  () => import("./grouping-sidebar").then((m) => ({ default: m.GroupingSidebar })),
+  () =>
+    import("./grouping-sidebar").then((m) => ({ default: m.GroupingSidebar })),
   { ssr: false, loading: () => null },
 );
 
@@ -55,14 +62,10 @@ type ViewMode = "grid" | "list";
 const VIEW_MODES: readonly ViewMode[] = ["grid", "list"];
 
 interface ProjectsPageProps {
-  pmWorkspaceId?: string;
   managedProductId?: number;
 }
 
-export function ProjectsPage({
-  pmWorkspaceId,
-  managedProductId,
-}: ProjectsPageProps) {
+export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -119,9 +122,14 @@ export function ProjectsPage({
   );
 
   const search = searchParams.get("q") || "";
-  const viewMode = VIEW_MODES.find((v) => v === searchParams.get("view")) ?? "list";
-  const filterStatus = STATUS_OPTIONS.find((s) => s === searchParams.get("filterStatus"));
-  const filterHealth = HEALTH_OPTIONS.find((h) => h === searchParams.get("filterHealth"));
+  const viewMode =
+    VIEW_MODES.find((v) => v === searchParams.get("view")) ?? "list";
+  const filterStatus = STATUS_OPTIONS.find(
+    (s) => s === searchParams.get("filterStatus"),
+  );
+  const filterHealth = HEALTH_OPTIONS.find(
+    (h) => h === searchParams.get("filterHealth"),
+  );
   const filterLead = searchParams.get("filterLead") ?? undefined;
 
   const activeFilters: ProjectActiveFilters = useMemo(
@@ -141,7 +149,8 @@ export function ProjectsPage({
   );
 
   const handleViewModeChange = useCallback(
-    (value: ViewMode) => updateParams({ view: value === "list" ? null : value }),
+    (value: ViewMode) =>
+      updateParams({ view: value === "list" ? null : value }),
     [updateParams],
   );
 
@@ -158,7 +167,12 @@ export function ProjectsPage({
 
   const handleClearFilters = useCallback(() => {
     setActiveGroup(null);
-    updateParams({ q: null, filterLead: null, filterStatus: null, filterHealth: null });
+    updateParams({
+      q: null,
+      filterLead: null,
+      filterStatus: null,
+      filterHealth: null,
+    });
   }, [updateParams]);
 
   const handleNoOp = useCallback(() => {}, []);
@@ -176,7 +190,6 @@ export function ProjectsPage({
     limit: viewMode === "grid" ? 12 : 25,
     search: debouncedSearch || undefined,
     status: activeFilters.status,
-    ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
     ...(managedProductId !== undefined ? { managedProductId } : {}),
   });
 
@@ -187,8 +200,12 @@ export function ProjectsPage({
     error,
   });
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const handleLoadMore = useCallback(() => { void fetchNextPage(); }, [fetchNextPage]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+  const handleLoadMore = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
 
   const allProjects = useMemo(
     () => (data?.pages ?? []).flatMap((p) => p.data),
@@ -196,20 +213,31 @@ export function ProjectsPage({
   );
 
   const visibleProjects = useMemo(() => {
-    let result = filterVisibleProjects(allProjects, activeFilters, prefs.showClosed);
+    let result = filterVisibleProjects(
+      allProjects,
+      activeFilters,
+      prefs.showClosed,
+    );
     result = groupProjects(result, activeGroup);
     result = sortProjects(result, prefs.orderBy, prefs.orderDir);
     return result;
   }, [allProjects, activeFilters, prefs, activeGroup]);
 
-  const hasFiltersOrSearch = Boolean(debouncedSearch) || Object.values(activeFilters).some(Boolean);
+  const hasFiltersOrSearch =
+    Boolean(debouncedSearch) || Object.values(activeFilters).some(Boolean);
   const filtersActive = hasFiltersOrSearch || activeGroup !== null;
 
   const headerActions = useMemo(() => {
     const actions = [];
     if (resumeAction) actions.push(resumeAction);
     if (canCreate) {
-      actions.push({ id: "create", label: "New Project", icon: Plus, primary: true, onSelect: handleOpenCreate });
+      actions.push({
+        id: "create",
+        label: "New Project",
+        icon: Plus,
+        primary: true,
+        onSelect: handleOpenCreate,
+      });
     }
     return actions;
   }, [resumeAction, canCreate, handleOpenCreate]);
@@ -217,7 +245,11 @@ export function ProjectsPage({
   return (
     <RequireModule module="build">
       {(canCreate || createOpen) && (
-        <NewProjectDialog open={createOpen} onOpenChange={handleCreateOpenChange} trigger={null} />
+        <NewProjectDialog
+          open={createOpen}
+          onOpenChange={handleCreateOpenChange}
+          trigger={null}
+        />
       )}
       <PageWrapper
         title="All Projects"
@@ -245,7 +277,9 @@ export function ProjectsPage({
             {pageState.kind !== "ready" ? (
               <PageState
                 resolution={pageState}
-                loading={viewMode === "grid" ? <GridSkeleton /> : <ListSkeleton />}
+                loading={
+                  viewMode === "grid" ? <GridSkeleton /> : <ListSkeleton />
+                }
                 onRetry={handleRetry}
                 className={PM_FILL_PANEL}
               >
@@ -257,14 +291,22 @@ export function ProjectsPage({
               <EmptyState
                 className={PM_FILL_PANEL}
                 illustrationPreset="search"
-                title={filtersActive ? "No projects match your filters" : "No projects found"}
+                title={
+                  filtersActive
+                    ? "No projects match your filters"
+                    : "No projects found"
+                }
                 description="Try adjusting the search or filters."
                 filtersActive={filtersActive}
                 onClearFilters={handleClearFilters}
               />
             ) : viewMode === "grid" ? (
               <>
-                <PmStaggerList className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3" role="list" aria-label="Projects grid">
+                <PmStaggerList
+                  className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3"
+                  role="list"
+                  aria-label="Projects grid"
+                >
                   {visibleProjects.map((project) => (
                     <motion.div
                       key={project.id}

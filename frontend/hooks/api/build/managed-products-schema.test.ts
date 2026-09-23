@@ -10,7 +10,6 @@ function baseRow(status: string) {
     description: null,
     status,
     ownerId: null,
-    pmWorkspaceId: null,
     vision: null,
     missionStatement: null,
     targetCustomer: null,

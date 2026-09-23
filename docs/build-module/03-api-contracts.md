@@ -116,11 +116,18 @@ Mutations return the complete projection needed to patch current caches (FE-35),
 | Governance | `backend/src/modules/build/governance/` |
 | Forms/intake | `backend/src/modules/build/forms/` |
 | QA/bugs | `backend/src/modules/build/qa/` |
-| Products/workspaces/teams | `managed-products/`, `pm-workspaces/`, `teams/` |
+| Products/teams | `managed-products/`, `teams/` |
+| Build members | `build/core/` member-roster service backing `/build/members`; the underlying table is `build.build_members` |
 | Portal/change requests | `client-portal/` |
 | Meetings/files/updates/workflow | matching folders under `backend/src/modules/build/` |
 
 Each `10-*.md` lists the exact subset used by that page and its payload fields.
+
+## PM Workspace removal
+
+All 9 `/build/workspaces*` endpoints are deleted, along with `src/modules/build/pm-workspaces/` (controller, module, `PmWorkspacesService`, `PmWorkspaceMembershipsService`, DTOs, response schemas). Permission keys `build:workspaces:view|create|update|delete|members:view|members:manage` no longer exist. Do not reintroduce a workspace-scoped endpoint, DTO field, or permission key.
+
+`/build/members` survives and is unrelated to the removal: it is the organization-level Build member roster, backed by `build.build_members` (renamed from `build.project_workspace_members`; PM Workspace relationship dropped, org/membership/role/added-at kept). `build:members:view` and `build:members:manage` remain live permission keys. Client naming follows the rename: `hooks/api/build/build-members.ts` and Build-member-named contracts, not `workspace-members`/`workspaceMemberPageContract`.
 
 ## Realtime
 

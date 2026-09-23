@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "generatedAt": "2026-09-22T08:02:37.016Z",
+  "generatedAt": "2026-09-23T02:45:16.291Z",
   "source": "frontend/app",
-  "count": 88,
+  "count": 80,
   "routes": [
     {
       "path": "/accept-invitation",
@@ -295,38 +295,6 @@
     {
       "path": "/build/templates",
       "file": "frontend/app/(authenticated)/build/templates/page.tsx"
-    },
-    {
-      "path": "/build/workspaces",
-      "file": "frontend/app/(authenticated)/build/workspaces/page.tsx"
-    },
-    {
-      "path": "/build/workspaces/{pmWorkspaceId}",
-      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/page.tsx"
-    },
-    {
-      "path": "/build/workspaces/{pmWorkspaceId}/all-work",
-      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/all-work/page.tsx"
-    },
-    {
-      "path": "/build/workspaces/{pmWorkspaceId}/goals",
-      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/goals/page.tsx"
-    },
-    {
-      "path": "/build/workspaces/{pmWorkspaceId}/overview",
-      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/overview/page.tsx"
-    },
-    {
-      "path": "/build/workspaces/{pmWorkspaceId}/products",
-      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/products/page.tsx"
-    },
-    {
-      "path": "/build/workspaces/{pmWorkspaceId}/roadmap",
-      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/roadmap/page.tsx"
-    },
-    {
-      "path": "/build/workspaces/{pmWorkspaceId}/teams",
-      "file": "frontend/app/(authenticated)/build/workspaces/[pmWorkspaceId]/teams/page.tsx"
     },
     {
       "path": "/client-portal",

@@ -33,7 +33,7 @@ interface UseAllWorkFiltersReturn {
   setCursor: (cursor: string | null) => void;
 }
 
-export function useAllWorkFilters(pmWorkspaceId?: string): UseAllWorkFiltersReturn {
+export function useAllWorkFilters(): UseAllWorkFiltersReturn {
   const searchParams = useSearchParams();
   const scopeMine = searchParams.get("scope") === "mine";
   const view = parseView(searchParams.get("view"));
@@ -52,7 +52,6 @@ export function useAllWorkFilters(pmWorkspaceId?: string): UseAllWorkFiltersRetu
     defaultGrouping: "project",
     defaultSortField: "rank",
     defaultSortDirection: "desc",
-    pmWorkspaceId,
   });
 
   const filters: AllWorkFilters = {

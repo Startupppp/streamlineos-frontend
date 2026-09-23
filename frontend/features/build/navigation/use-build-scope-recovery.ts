@@ -3,7 +3,6 @@
 import { useCallback, useMemo } from "react";
 import { useAccess } from "@/hooks/api/access";
 import { useManagedProduct } from "@/hooks/api/build/managed-products";
-import { usePmWorkspace } from "@/hooks/api/build/pm-workspaces";
 import { resolveBuildNavModel } from "@/lib/build/build-nav-model";
 import type {
   BuildNavAccess,
@@ -35,7 +34,6 @@ function parseParentKey(parentKey: string | null): BuildScopeParent | null {
   const id = parentKey.slice(separator + 1);
   if (id.length === 0) return null;
   if (type === "product") return { type: "product", id };
-  if (type === "workspace") return { type: "workspace", id };
   return null;
 }
 
@@ -60,16 +58,11 @@ export function useBuildScopeRecovery({
   const productQuery = useManagedProduct(
     Number.isFinite(productId) ? productId : 0,
   );
-  const workspaceQuery = usePmWorkspace(
-    candidate?.type === "workspace" ? candidate.id : null,
-  );
 
   const accessibleParent = useMemo<BuildScopeParent | null>(() => {
     if (candidate === null) return null;
-    if (candidate.type === "product")
-      return productQuery.data ? candidate : null;
-    return workspaceQuery.data ? candidate : null;
-  }, [candidate, productQuery.data, workspaceQuery.data]);
+    return productQuery.data ? candidate : null;
+  }, [candidate, productQuery.data]);
 
   const { data: access } = useAccess();
   const isOrgOwner = access?.isOrgOwner === true;

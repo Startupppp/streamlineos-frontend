@@ -52,11 +52,7 @@ const GROUP_OPTIONS = [
   { value: "none", label: "No grouping" },
 ] as const;
 
-interface AllWorkPageProps {
-  pmWorkspaceId?: string;
-}
-
-export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
+export function AllWorkPage() {
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
   const swapVariants = shouldReduceMotion ? viewSwapReduced : viewSwap;
@@ -76,12 +72,11 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
     handleClearFilters,
     setListParams,
     setCursor,
-  } = useAllWorkFilters(pmWorkspaceId);
+  } = useAllWorkFilters();
 
   const { data, isLoading, isError, error, refetch } = useAllWork(filters);
   const { data: projectsData } = useProjects({
     limit: 100,
-    ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
   });
   const { data: orgStates } = useOrgCustomStates();
 

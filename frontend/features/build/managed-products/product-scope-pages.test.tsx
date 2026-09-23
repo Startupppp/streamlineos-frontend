@@ -291,13 +291,6 @@ describe("ProductGoalsPage — usePageState integration (BSN-01-027)", () => {
     const [callParams] = useGoals.mock.calls[0] as [Record<string, unknown>];
     expect(callParams).toMatchObject({ managedProductId: 7 });
   });
-
-  it("does not pass pmWorkspaceId to useGoals on the product scope page", () => {
-    useGoals.mockReturnValue(EMPTY_GOALS_RESULT);
-    render(<ProductGoalsPage managedProductId={7} />);
-    const [callParams] = useGoals.mock.calls[0] as [Record<string, unknown>];
-    expect(callParams).not.toHaveProperty("pmWorkspaceId");
-  });
 });
 
 describe("ProductRoadmapPage — usePageState integration (BSN-01-027)", () => {
@@ -443,8 +436,8 @@ describe("ManagedProductsPage — usePageState integration (BSN-01-027)", () => 
 
   it("displays hook data without additional client-side filtering (BSN-FE-MP-001)", () => {
     const products = [
-      { id: 1, name: "Alpha Service", key: "ALPHA-001", status: "active", ownerId: null, description: null, orgId: "org-1", pmWorkspaceId: null, vision: null, missionStatement: null, targetCustomer: null, differentiators: null, currentPhase: null, targetLaunchDate: null, successMetrics: null, ownerMembershipId: null, deletedAt: null, createdAt: "2025-01-01T00:00:00Z", updatedAt: "2025-01-01T00:00:00Z" },
-      { id: 2, name: "Beta Platform", key: "BETA-002", status: "active", ownerId: null, description: null, orgId: "org-1", pmWorkspaceId: null, vision: null, missionStatement: null, targetCustomer: null, differentiators: null, currentPhase: null, targetLaunchDate: null, successMetrics: null, ownerMembershipId: null, deletedAt: null, createdAt: "2025-01-01T00:00:00Z", updatedAt: "2025-01-01T00:00:00Z" },
+      { id: 1, name: "Alpha Service", key: "ALPHA-001", status: "active", ownerId: null, description: null, orgId: "org-1", vision: null, missionStatement: null, targetCustomer: null, differentiators: null, currentPhase: null, targetLaunchDate: null, successMetrics: null, ownerMembershipId: null, deletedAt: null, createdAt: "2025-01-01T00:00:00Z", updatedAt: "2025-01-01T00:00:00Z" },
+      { id: 2, name: "Beta Platform", key: "BETA-002", status: "active", ownerId: null, description: null, orgId: "org-1", vision: null, missionStatement: null, targetCustomer: null, differentiators: null, currentPhase: null, targetLaunchDate: null, successMetrics: null, ownerMembershipId: null, deletedAt: null, createdAt: "2025-01-01T00:00:00Z", updatedAt: "2025-01-01T00:00:00Z" },
     ];
     useManagedProducts.mockReturnValue({
       data: { data: products, pagination: { hasMore: false, nextCursor: null, limit: 20 } },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 
@@ -65,7 +65,6 @@ interface GoalsParams {
   level?: GoalLevel;
   ownerId?: string;
   projectId?: number;
-  pmWorkspaceId?: string;
   managedProductId?: number;
   search?: string;
 }

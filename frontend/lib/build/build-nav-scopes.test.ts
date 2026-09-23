@@ -38,7 +38,6 @@ const ALL_BUILD_PERMISSIONS: PermissionKey[] = [
   "build:portfolios:view",
   "build:programs:view",
   "build:teams:view",
-  "build:workspaces:view",
   "build:roadmap:view",
   "build:goals:view",
   "build:approvals:view",
@@ -136,48 +135,9 @@ describe("resolveAuthorizedToolIds", () => {
   });
 });
 
-describe("workspace and product scope catalogs", () => {
-  const workspaceScope = resolveBuildScope("/build/workspaces/ws-1");
+describe("product scope catalog", () => {
   const productScope = resolveBuildScope("/build/managed-products/7");
   const fullAccess = accessWith(ALL_BUILD_PERMISSIONS, { feedbucket: true });
-
-  it("exposes workspace Overview, Projects, Products, Teams, All work, Roadmap and Goals under the workspace base path", () => {
-    const model = resolveBuildNavModel({
-      scope: workspaceScope,
-      access: fullAccess,
-      pinnedIds: [],
-    });
-    expect(model.primary.map((d) => d.href)).toEqual([
-      "/build/workspaces/ws-1/overview",
-      "/build/workspaces/ws-1",
-      "/build/workspaces/ws-1/products",
-      "/build/workspaces/ws-1/teams",
-      "/build/workspaces/ws-1/all-work",
-      "/build/workspaces/ws-1/roadmap",
-      "/build/workspaces/ws-1/goals",
-    ]);
-  });
-
-  it("labels the workspace base path Projects rather than Overview, because it renders the project list", () => {
-    const model = resolveBuildNavModel({
-      scope: workspaceScope,
-      access: fullAccess,
-      pinnedIds: [],
-    });
-    const root = model.primary.find((d) => d.href === "/build/workspaces/ws-1");
-    expect(root?.label).toBe("Projects");
-  });
-
-  it("hides workspace Products from a caller without the managed-product read key", () => {
-    const model = resolveBuildNavModel({
-      scope: workspaceScope,
-      access: accessWith(["build:view", "build:teams:view"]),
-      pinnedIds: [],
-    });
-    const ids = model.primary.map((d) => d.id);
-    expect(ids).not.toContain("workspace-products");
-    expect(ids).toContain("workspace-teams");
-  });
 
   it("exposes Overview, Feedback, Insights, Roadmap, Goals and Linked projects under the managed product base path (BSN-01-012, BSN-01-022)", () => {
     const model = resolveBuildNavModel({
@@ -195,18 +155,21 @@ describe("workspace and product scope catalogs", () => {
     ]);
   });
 
-  it("keeps every workspace and product destination inside its own scope base path", () => {
-    for (const scope of [workspaceScope, productScope]) {
-      const model = resolveBuildNavModel({
-        scope,
-        access: fullAccess,
-        pinnedIds: [],
-      });
-      for (const destination of model.primary)
-        expect(
-          destination.href === scope.basePath ||
-            destination.href.startsWith(`${scope.basePath}/`),
-        ).toBe(true);
-    }
+  it("keeps every product destination inside its own scope base path", () => {
+    const model = resolveBuildNavModel({
+      scope: productScope,
+      access: fullAccess,
+      pinnedIds: [],
+    });
+    for (const destination of model.primary)
+      expect(
+        destination.href === productScope.basePath ||
+          destination.href.startsWith(`${productScope.basePath}/`),
+      ).toBe(true);
+  });
+
+  it("resolving a removed /build/workspaces path no longer produces a workspace scope, because the PM Workspace scope type is gone", () => {
+    const scope = resolveBuildScope("/build/workspaces/ws-1");
+    expect(scope.type).not.toBe("workspace");
   });
 });

@@ -22,7 +22,6 @@ jest.mock("@/hooks/api/build/agent-pulse-schema", () => ({
 
 const ORG_SCOPE: BuildScope = {
   type: "organization",
-  pmWorkspaceId: null,
   managedProductId: null,
   projectId: null,
   basePath: "/build",
@@ -87,7 +86,6 @@ describe("useAgentPulse", () => {
 
     const projectScope: BuildScope = {
       type: "project",
-      pmWorkspaceId: null,
       managedProductId: null,
       projectId: 7,
       basePath: "/build/7",

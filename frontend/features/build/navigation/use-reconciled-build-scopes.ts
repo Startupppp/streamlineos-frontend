@@ -7,8 +7,6 @@ import type { BuildScopeResolvedRef } from "@/hooks/api/build/scope-directory";
 import type { BuildScopeRef } from "./use-build-nav-preferences";
 
 function hrefFor(ref: BuildScopeResolvedRef): string {
-  if (ref.type === "workspace")
-    return `${BUILD_ROOT_PATH}/workspaces/${ref.id}/overview`;
   if (ref.type === "product")
     return `${BUILD_ROOT_PATH}/managed-products/${ref.id}`;
   return `${BUILD_ROOT_PATH}/${ref.id}`;

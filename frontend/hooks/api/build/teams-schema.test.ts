@@ -10,7 +10,6 @@ const bareTeamRow = {
   icon: null,
   color: null,
   isPrivate: false,
-  pmWorkspaceId: "ws-1",
   createdAt: "2026-09-15T00:00:00.000Z",
   updatedAt: "2026-09-15T00:00:00.000Z",
   deletedAt: null,

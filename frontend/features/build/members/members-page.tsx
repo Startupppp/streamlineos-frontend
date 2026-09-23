@@ -10,10 +10,10 @@ import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
-  useProjectWorkspaceMembers,
-  useRemoveProjectWorkspaceMember,
-} from "@/hooks/api/build/workspace-members";
-import type { ProjectWorkspaceMember } from "@/hooks/api/build/workspace-members";
+  useBuildMembers,
+  useRemoveBuildMember,
+} from "@/hooks/api/build/build-members";
+import type { BuildMember } from "@/hooks/api/build/build-members";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -23,7 +23,11 @@ import { resolveImageUrl } from "@/lib/utils";
 import { PmAccessButton } from "@/features/build/members/pm-access-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-import { type DisplayProps, loadDisplayProps, saveDisplayProps } from "./display-props";
+import {
+  type DisplayProps,
+  loadDisplayProps,
+  saveDisplayProps,
+} from "./display-props";
 import { DisplayPropsToggle } from "./members-toolbar";
 import { MemberActions } from "./member-row-actions";
 import { AddMemberDialog } from "./add-member-dialog";
@@ -37,20 +41,28 @@ import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 const MEMBER_TABLE_HEADERS = ["Name", "Role", "Added", "Actions"] as const;
 
 export function MembersPage() {
-  const [displayProps, setDisplayProps] = useState<DisplayProps>(loadDisplayProps);
+  const [displayProps, setDisplayProps] =
+    useState<DisplayProps>(loadDisplayProps);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [removeTarget, setRemoveTarget] = useState<ProjectWorkspaceMember | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<BuildMember | null>(null);
 
   const listFilters = useBuildListFilters({ searchParam: "search" });
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(listFilters.resetKey);
+  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+    listFilters.resetKey,
+  );
 
   const canView = useCan("build:members:view");
   const canManage = useCan("build:members:manage");
 
-  const { data, isLoading, isError, error, refetch } = useProjectWorkspaceMembers(
-    { cursor, limit: 25, search: listFilters.debouncedSearch.trim() || undefined },
-    { placeholderData: keepPreviousData, enabled: canView },
-  );
+  const { data, isLoading, isError, error, refetch } =
+    useProjectWorkspaceMembers(
+      {
+        cursor,
+        limit: 25,
+        search: listFilters.debouncedSearch.trim() || undefined,
+      },
+      { placeholderData: keepPreviousData, enabled: canView },
+    );
 
   const members = data?.data ?? [];
 
@@ -64,7 +76,9 @@ export function MembersPage() {
 
   const removeMember = useRemoveProjectWorkspaceMember();
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handleDisplayChange = useCallback((next: DisplayProps) => {
     setDisplayProps(next);
@@ -73,7 +87,7 @@ export function MembersPage() {
 
   const handleOpenAddDialog = useCallback(() => setAddDialogOpen(true), []);
 
-  const handleRemoveRequest = useCallback((member: ProjectWorkspaceMember) => {
+  const handleRemoveRequest = useCallback((member: BuildMember) => {
     setRemoveTarget(member);
   }, []);
 
@@ -100,7 +114,11 @@ export function MembersPage() {
     goNext(data?.pagination.nextCursor);
   }, [data, goNext]);
 
-  const columns = useMembersColumns({ displayProps, canManage, handleRemoveRequest });
+  const columns = useMembersColumns({
+    displayProps,
+    canManage,
+    handleRemoveRequest,
+  });
 
   const renderMobileCard = useCallback(
     (member: ProjectWorkspaceMember) => {
@@ -166,7 +184,10 @@ export function MembersPage() {
             }}
             trailing={
               <>
-                <DisplayPropsToggle value={displayProps} onChange={handleDisplayChange} />
+                <DisplayPropsToggle
+                  value={displayProps}
+                  onChange={handleDisplayChange}
+                />
                 {canManage ? <PmAccessButton /> : null}
               </>
             }
@@ -178,7 +199,8 @@ export function MembersPage() {
             <PageState
               resolution={pageState}
               loading={
-                <DataTableSkeleton mobileCards
+                <DataTableSkeleton
+                  mobileCards
                   rows={12}
                   headers={MEMBER_TABLE_HEADERS}
                   className="flex-1"

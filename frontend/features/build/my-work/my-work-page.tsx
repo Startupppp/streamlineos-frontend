@@ -51,7 +51,6 @@ export function MyWorkPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const pmWorkspaceId = searchParams.get("pmWorkspaceId") ?? undefined;
   const activeTab = parseWorkTab(searchParams.get("tab"));
   const activeView = parseMyWorkView(searchParams.get("view"));
 
@@ -85,7 +84,7 @@ export function MyWorkPage() {
     showBucketList,
     emptyTitle,
     emptyDescription,
-  } = useMyWorkData({ activeTab, activeView, pmWorkspaceId });
+  } = useMyWorkData({ activeTab, activeView });
 
   const pagination = useCursorPagination();
 

@@ -41,7 +41,7 @@ entitlement where applicable. CLIENT never inherits employee permissions.
 | `PG-ORG-011` | recipient-scoped Build inbox read | source action key for resolve/approve/retry | Token-derived recipient and source ACL; all internal Build personas |
 | `PG-ORG-012`, `PG-PROD-001`–`006`, `PG-ADD-005` | `build:managed-products:view` plus row-specific source gates | create/update/delete managed-product keys; roadmap/goals/feedback use their owners | Managed-product membership/audience and linked-project intersection; PM, PMO, BA, permitted PL/IC |
 | `PG-ORG-014`, `PG-WS-004` | `build:tickets:view` | ticket action-specific keys | Actor derived from token; workspace/project only narrows; IC through BA |
-| `PG-ORG-015`, `PG-WS-001`, `005`, `PG-ADD-004` | `build:workspaces:view` | workspace create/update/delete/member keys | Workspace membership for scoped pages; PMO, BA, workspace members |
+| `PG-ORG-015`, `PG-WS-001`..`009` | REMOVED (BLD-00 D01) | `build:workspaces:*` and its 6 keys no longer exist | PM Workspace is deleted; there is no workspace membership persona |
 | `PG-ORG-016`, `017` | `build:portfolios:view` | `build:portfolios:manage` | Only contributing records actor may read; PMO, BA, permitted PM/PL |
 | `PG-ORG-018` | `build:programs:view` | `build:programs:manage` | Program and child record intersection; PMO, BA, permitted PM/PL |
 | `PG-ORG-019`, `PG-WS-007`, `PG-PROD-006` | `build:roadmap:view` | `build:roadmap:manage` and publication permission | Product/workspace/record scope; PM, PMO, BA, permitted PL/IC |

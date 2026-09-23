@@ -3,7 +3,6 @@
 import {
   useQuery,
   useInfiniteQuery,
-  useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
 import type { UseInfiniteQueryOptions, InfiniteData } from "@tanstack/react-query";
@@ -40,7 +39,6 @@ interface ListManagedProductsParams {
   cursor?: string;
   status?: string;
   search?: string;
-  pmWorkspaceId?: string;
 }
 
 export function useManagedProducts(params?: ListManagedProductsParams) {
@@ -51,7 +49,6 @@ export function useManagedProducts(params?: ListManagedProductsParams) {
   if (params?.status) queryParams["status"] = params.status;
   if (params?.search) queryParams["search"] = params.search;
   if (params?.limit) queryParams["limit"] = String(params.limit);
-  if (params?.pmWorkspaceId) queryParams["pmWorkspaceId"] = params.pmWorkspaceId;
 
   return useQuery<ManagedProductsPage>({
     queryKey: buildWorkQueryKeys.projects.managedProducts.list(
@@ -85,7 +82,6 @@ export function useInfiniteManagedProducts(
   if (params.status) queryParams["status"] = params.status;
   if (params.search) queryParams["search"] = params.search;
   if (params.limit) queryParams["limit"] = String(params.limit);
-  if (params.pmWorkspaceId) queryParams["pmWorkspaceId"] = params.pmWorkspaceId;
 
   return useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.managedProducts.listInfinite(queryParams),

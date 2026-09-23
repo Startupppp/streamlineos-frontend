@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/responsive-popover";
 import { Check, ChevronsUpDown, User, UserX } from "lucide-react";
 import { useOrgMembers } from "@/hooks/api/organization";
-import { useProjectWorkspaceMembers } from "@/hooks/api/build/workspace-members";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { useCan } from "@/hooks/api/access";
 
 type DirectoryPerson = {
@@ -37,14 +37,14 @@ type DirectoryPerson = {
 
 function useWorkspaceDirectoryPeople(enabled = true): DirectoryPerson[] {
   const canViewOrgMembers = useCan("settings:view");
-  const canViewProjectWorkspaceMembers = useCan("build:members:view");
+  const canViewBuildMembers = useCan("build:members:view");
   const useOrg = enabled && canViewOrgMembers;
-  const useWorkspace = enabled && !canViewOrgMembers && canViewProjectWorkspaceMembers;
+  const useWorkspace = enabled && !canViewOrgMembers && canViewBuildMembers;
 
   const { data: orgMembersData } = useOrgMembers(1, 200, undefined, {
     enabled: useOrg,
   });
-  const { data: workspaceData } = useProjectWorkspaceMembers(
+  const { data: workspaceData } = useBuildMembers(
     { limit: 200 },
     { enabled: useWorkspace },
   );
