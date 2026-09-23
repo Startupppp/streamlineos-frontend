@@ -217,7 +217,7 @@ export function ChannelSidebar({
           onNewGroupOpen={handleOpenNewGroup}
         />
 
-        <ScrollArea className={cn("flex-1", isCollapsed ? "md:px-1 px-2" : "px-2")}>
+        <ScrollArea className={cn("flex-1", isCollapsed ? "px-2 lg:px-1" : "px-2")}>
           {!canReadChannels ? (
             <NoPermissionState
               compact
@@ -256,7 +256,7 @@ export function ChannelSidebar({
               {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="flex items-center gap-2.5 px-2 py-2">
                   <Skeleton className="h-10 w-10 rounded-full" />
-                  <div className={cn("flex-1 space-y-1.5", isCollapsed && "md:hidden")}>
+                  <div className={cn("flex-1 space-y-1.5", isCollapsed && "lg:hidden")}>
                     <Skeleton className="h-3.5 w-24" />
                     <Skeleton className="h-3 w-36" />
                   </div>
@@ -265,7 +265,7 @@ export function ChannelSidebar({
             </div>
           ) : (
             <>
-              <div className={cn("py-1", isCollapsed && "hidden md:block")}>
+              <div className={cn("py-1", isCollapsed && "hidden lg:block")}>
                 <ChannelSectionList
                   channels={compactChannels}
                   label="Conversations"
@@ -278,7 +278,7 @@ export function ChannelSidebar({
                 />
               </div>
 
-              <div className={cn("py-1", isCollapsed && "md:hidden")}>
+              <div className={cn("py-1", isCollapsed && "lg:hidden")}>
                 {favorites.length > 0 && (
                   <ChannelSidebarSection
                     title="Favorites"
@@ -301,7 +301,7 @@ export function ChannelSidebar({
                 )}
               </div>
 
-              <div className={cn("py-1", isCollapsed && "md:hidden")}>
+              <div className={cn("py-1", isCollapsed && "lg:hidden")}>
                 {!search && archivedChannels.length > 0 && (
                   <button
                     type="button"

@@ -41,7 +41,7 @@ export function ChannelArchivedSection({
   onOpenSettings,
 }: ChannelArchivedSectionProps) {
   return (
-    <div className={cn("py-1", isCollapsed && "md:hidden")}>
+    <div className={cn("py-1", isCollapsed && "lg:hidden")}>
       <button
         type="button"
         onClick={onClose}

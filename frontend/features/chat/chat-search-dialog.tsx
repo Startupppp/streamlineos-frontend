@@ -2,13 +2,18 @@
 
 import { useState, useCallback } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Hash, Loader2, MessageSquare, Search, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useSearchMessages, useSearchChannels, useSearchUsers } from "@/hooks/api";
+import {
+  useSearchMessages,
+  useSearchChannels,
+  useSearchUsers,
+} from "@/hooks/api";
 import { formatMessageTime } from "./chat-helpers";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ChatDialogHeader } from "./chat-dialog-header";
 
 interface ChatSearchDialogProps {
   open: boolean;
@@ -16,30 +21,60 @@ interface ChatSearchDialogProps {
   onSelectChannel: (channelId: number) => void;
 }
 
-export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSearchDialogProps) {
+export function ChatSearchDialog({
+  open,
+  onOpenChange,
+  onSelectChannel,
+}: ChatSearchDialogProps) {
   const [query, setQuery] = useState("");
-  const [tab, setTab] = useState<"messages" | "channels" | "people">("messages");
+  const [tab, setTab] = useState<"messages" | "channels" | "people">(
+    "messages",
+  );
   const debouncedQuery = useDebouncedValue(query, 300);
 
-  const { data: messageResults, isLoading: loadingMessages, isError: messageError } = useSearchMessages(debouncedQuery, open && tab === "messages");
-  const { data: channelResults, isLoading: loadingChannels, isError: channelError } = useSearchChannels(debouncedQuery, open && tab === "channels");
-  const { data: userResults, isLoading: loadingUsers, isError: userError } = useSearchUsers(debouncedQuery, open && tab === "people");
+  const {
+    data: messageResults,
+    isLoading: loadingMessages,
+    isError: messageError,
+  } = useSearchMessages(debouncedQuery, open && tab === "messages");
+  const {
+    data: channelResults,
+    isLoading: loadingChannels,
+    isError: channelError,
+  } = useSearchChannels(debouncedQuery, open && tab === "channels");
+  const {
+    data: userResults,
+    isLoading: loadingUsers,
+    isError: userError,
+  } = useSearchUsers(debouncedQuery, open && tab === "people");
 
-  const handleQueryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value), []);
+  const handleQueryChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value),
+    [],
+  );
 
-  const handleSelectChannel = useCallback((id: number) => {
-    onSelectChannel(id);
-    onOpenChange(false);
-    setQuery("");
-  }, [onSelectChannel, onOpenChange]);
+  const handleSelectChannel = useCallback(
+    (id: number) => {
+      onSelectChannel(id);
+      onOpenChange(false);
+      setQuery("");
+    },
+    [onSelectChannel, onOpenChange],
+  );
 
-  const isLoading = (tab === "messages" && loadingMessages) || (tab === "channels" && loadingChannels) || (tab === "people" && loadingUsers);
+  const isLoading =
+    (tab === "messages" && loadingMessages) ||
+    (tab === "channels" && loadingChannels) ||
+    (tab === "people" && loadingUsers);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[580px] p-0 gap-0">
-        <DialogHeader className="px-4 pt-4 pb-0">
-          <DialogTitle className="sr-only">Search</DialogTitle>
+        <ChatDialogHeader
+          title="Search chat"
+          description="Search messages, channels, and people."
+        />
+        <div className="px-4 pt-3">
           <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/30 px-3 py-2 focus-within:border-primary/50 transition-colors">
             <Search className="h-4 w-4 text-muted-foreground shrink-0" />
             <input
@@ -51,12 +86,17 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
             />
             {isLoading && (
               <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground shrink-0" aria-hidden="true" />
-                <span role="status" className="sr-only">Searching…</span>
+                <Loader2
+                  className="h-3.5 w-3.5 animate-spin text-muted-foreground shrink-0"
+                  aria-hidden="true"
+                />
+                <span role="status" className="sr-only">
+                  Searching…
+                </span>
               </>
             )}
           </div>
-        </DialogHeader>
+        </div>
 
         <div className="flex border-b border-border/40 px-4 mt-3">
           {(["messages", "channels", "people"] as const).map((t) => (
@@ -65,7 +105,9 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
               onClick={() => setTab(t)}
               className={cn(
                 "px-3 py-2 text-xs font-semibold capitalize border-b-2 transition-colors -mb-px",
-                tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
+                tab === t
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground",
               )}
             >
               {t}
@@ -81,14 +123,20 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
             </div>
           ) : tab === "messages" ? (
             messageError ? (
-              <p className="text-center text-xs text-muted-foreground py-8">Search failed. Please try again.</p>
+              <p className="text-center text-xs text-muted-foreground py-8">
+                Search failed. Please try again.
+              </p>
             ) : messageResults?.results.length === 0 ? (
-              <p className="text-center text-xs text-muted-foreground py-8">No messages found</p>
+              <p className="text-center text-xs text-muted-foreground py-8">
+                No messages found
+              </p>
             ) : (
-              messageResults?.results.map(msg => (
+              messageResults?.results.map((msg) => (
                 <button
                   key={msg.id}
-                  onClick={() => msg.channel?.id && handleSelectChannel(msg.channel.id)}
+                  onClick={() =>
+                    msg.channel?.id && handleSelectChannel(msg.channel.id)
+                  }
                   className="w-full flex items-start gap-3 px-4 py-3 hover:bg-muted/40 text-left transition-colors"
                 >
                   <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
@@ -96,22 +144,35 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5 min-w-0">
-                      <span className="text-dense font-bold text-foreground truncate shrink">{msg.sender?.name}</span>
-                      <span className="text-micro text-muted-foreground truncate shrink min-w-0">in #{msg.channel?.name}</span>
-                      <span className="text-micro text-muted-foreground ml-auto shrink-0 whitespace-nowrap">{formatMessageTime(msg.createdAt)}</span>
+                      <span className="text-dense font-bold text-foreground truncate shrink">
+                        {msg.sender?.name}
+                      </span>
+                      <span className="text-micro text-muted-foreground truncate shrink min-w-0">
+                        in #{msg.channel?.name}
+                      </span>
+                      <span className="text-micro text-muted-foreground ml-auto shrink-0 whitespace-nowrap">
+                        {formatMessageTime(msg.createdAt)}
+                      </span>
                     </div>
-                    <TruncatedText text={msg.content ?? ""} className="text-xs text-muted-foreground" />
+                    <TruncatedText
+                      text={msg.content ?? ""}
+                      className="text-xs text-muted-foreground"
+                    />
                   </div>
                 </button>
               ))
             )
           ) : tab === "channels" ? (
             channelError ? (
-              <p className="text-center text-xs text-muted-foreground py-8">Search failed. Please try again.</p>
+              <p className="text-center text-xs text-muted-foreground py-8">
+                Search failed. Please try again.
+              </p>
             ) : channelResults?.length === 0 ? (
-              <p className="text-center text-xs text-muted-foreground py-8">No channels found</p>
+              <p className="text-center text-xs text-muted-foreground py-8">
+                No channels found
+              </p>
             ) : (
-              channelResults?.map(ch => (
+              channelResults?.map((ch) => (
                 <button
                   key={ch.id}
                   onClick={() => handleSelectChannel(ch.id)}
@@ -121,36 +182,59 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
                     <Hash className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <TruncatedText text={ch.name ?? "Untitled channel"} className="text-label font-semibold text-foreground" />
-                    {ch.description && <TruncatedText text={ch.description} className="text-dense text-muted-foreground" />}
+                    <TruncatedText
+                      text={ch.name ?? "Untitled channel"}
+                      className="text-label font-semibold text-foreground"
+                    />
+                    {ch.description && (
+                      <TruncatedText
+                        text={ch.description}
+                        className="text-dense text-muted-foreground"
+                      />
+                    )}
                   </div>
-                  <span className={cn("text-dense font-medium px-2 py-0.5 rounded-full", ch.isMember ? "bg-status-success-surface text-status-success-ink" : "bg-muted text-muted-foreground")}>
+                  <span
+                    className={cn(
+                      "text-dense font-medium px-2 py-0.5 rounded-full",
+                      ch.isMember
+                        ? "bg-status-success-surface text-status-success-ink"
+                        : "bg-muted text-muted-foreground",
+                    )}
+                  >
                     {ch.isMember ? "Joined" : "Join"}
                   </span>
                 </button>
               ))
             )
+          ) : userError ? (
+            <p className="text-center text-xs text-muted-foreground py-8">
+              Search failed. Please try again.
+            </p>
+          ) : userResults?.length === 0 ? (
+            <p className="text-center text-xs text-muted-foreground py-8">
+              No people found
+            </p>
           ) : (
-            userError ? (
-              <p className="text-center text-xs text-muted-foreground py-8">Search failed. Please try again.</p>
-            ) : userResults?.length === 0 ? (
-              <p className="text-center text-xs text-muted-foreground py-8">No people found</p>
-            ) : (
-              userResults?.map(u => (
-                <div key={u.id} className="flex items-center gap-3 px-4 py-3">
-                  <Avatar className="w-8 border border-border/30">
-                    <AvatarFallback className="text-micro font-bold bg-muted text-muted-foreground">
-                      {u.name?.slice(0, 2).toUpperCase() ?? "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <TruncatedText text={u.name ?? ""} className="text-label font-semibold text-foreground" />
-                    <TruncatedText text={u.email ?? ""} className="text-dense text-muted-foreground" />
-                  </div>
-                  <User className="h-3.5 w-3.5 text-muted-foreground" />
+            userResults?.map((u) => (
+              <div key={u.id} className="flex items-center gap-3 px-4 py-3">
+                <Avatar className="w-8 border border-border/30">
+                  <AvatarFallback className="text-micro font-bold bg-muted text-muted-foreground">
+                    {u.name?.slice(0, 2).toUpperCase() ?? "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <TruncatedText
+                    text={u.name ?? ""}
+                    className="text-label font-semibold text-foreground"
+                  />
+                  <TruncatedText
+                    text={u.email ?? ""}
+                    className="text-dense text-muted-foreground"
+                  />
                 </div>
-              ))
-            )
+                <User className="h-3.5 w-3.5 text-muted-foreground" />
+              </div>
+            ))
           )}
         </div>
       </DialogContent>

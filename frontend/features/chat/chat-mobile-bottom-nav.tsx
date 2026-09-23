@@ -12,12 +12,9 @@ import {
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { getChatMobileBottomNavClassName } from "@/components/layout/mobile/chat-mobile-chrome-layout";
+  getChatMobileBottomNavClassName,
+  getChatMobileBottomNavItemsClassName,
+} from "@/components/layout/mobile/chat-mobile-chrome-layout";
 import { ChatPresenceMenu } from "./chat-presence-menu";
 
 const EXPLORE_LINK_CLASS =
@@ -55,13 +52,9 @@ export function ChatMobileBottomNav({
   const handleNewDM = useCallback(() => {
     dispatchChatEvent("chat:open-new-dm");
   }, []);
-  const handleNewChannel = useCallback(() => {
-    dispatchChatEvent("chat:open-new-channel");
-  }, []);
-
   return (
     <nav className={getChatMobileBottomNavClassName()} aria-label="Chat navigation">
-      <div className="flex h-16 items-center justify-around px-2">
+      <div className={getChatMobileBottomNavItemsClassName()}>
         <AnimatedIconButton
           icon={MenuIcon}
           iconSize={20}
@@ -83,27 +76,16 @@ export function ChatMobileBottomNav({
           Search
         </AnimatedIconButton>
         <ExploreNavLink />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <AnimatedIconButton
-              icon={PlusIcon}
-              iconSize={20}
-              variant="ghost"
-              className="h-auto min-w-11 flex-col gap-0.5 py-1 text-micro text-muted-foreground"
-              aria-label="Create conversation"
-            >
-              Create
-            </AnimatedIconButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="center" side="top" className="w-44">
-            <DropdownMenuItem onSelect={handleNewDM}>
-              New direct message
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={handleNewChannel}>
-              New channel
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <AnimatedIconButton
+          icon={PlusIcon}
+          iconSize={20}
+          variant="ghost"
+          className="h-auto min-w-11 flex-col gap-0.5 py-1 text-micro text-muted-foreground"
+          onClick={handleNewDM}
+          aria-label="New direct message"
+        >
+          New DM
+        </AnimatedIconButton>
         <ChatPresenceMenu compact />
       </div>
     </nav>

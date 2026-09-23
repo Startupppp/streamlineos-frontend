@@ -61,7 +61,7 @@ export function ChannelCompactRail({
     <div
       className={cn(
         "relative z-20 hidden flex-col items-center gap-2 px-1.5 pt-2 pb-2 shrink-0",
-        isCollapsed && "md:flex",
+        isCollapsed && "lg:flex",
       )}
     >
       <div className="flex flex-col items-center gap-0.5">

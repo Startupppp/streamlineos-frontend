@@ -183,15 +183,21 @@ export function InboxToolbar({
             className="hidden max-w-full overflow-x-auto md:flex"
           />
         </div>
-        <Link
-          href="/settings/notifications/my-preferences"
-          aria-label="Notification settings"
-          title="Notification settings"
-          className="ml-auto inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground xl:size-auto xl:gap-1.5 xl:rounded-none xl:text-xs"
+        <Button
+          asChild
+          variant="default"
+          size="sm"
+          className="ml-auto size-9 shrink-0 px-0 xl:h-9 xl:w-auto xl:gap-1.5 xl:px-3"
         >
-          <Settings2 className="h-3.5 w-3.5" aria-hidden />
-          <span className="hidden xl:inline">Notification settings</span>
-        </Link>
+          <Link
+            href="/settings/notifications/my-preferences"
+            aria-label="Notification settings"
+            title="Notification settings"
+          >
+            <Settings2 className="h-3.5 w-3.5" aria-hidden />
+            <span className="hidden xl:inline">Notification settings</span>
+          </Link>
+        </Button>
       </div>
       <div className="flex min-w-0 items-center gap-2">
         <SearchInput

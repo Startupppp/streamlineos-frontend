@@ -5,8 +5,6 @@ import { useSession } from "next-auth/react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { SearchInput } from "@/components/ui/search-input";
@@ -26,6 +24,9 @@ import { resolveImageUrl } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ChatUserVirtualList } from "./chat-user-virtual-list";
 import { getInitials } from "@/lib/format-utils";
+import { ChatDialogHeader } from "./chat-dialog-header";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 
 const DM_LIST_BOX_HEIGHT = 340;
 const DM_LIST_PADDING = 8;
@@ -57,9 +58,10 @@ function DMUserItem({
   const handleClick = useCallback(() => onSelect(user.id), [user.id, onSelect]);
   return (
     <button
+      type="button"
       onClick={handleClick}
       disabled={isPending}
-      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/40 transition-colors"
+      className="flex w-full min-w-0 items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
     >
       <div className="relative shrink-0">
         <Avatar className="h-9 w-9">
@@ -82,12 +84,17 @@ function DMUserItem({
           className="text-dense text-muted-foreground"
         />
       </div>
-      <Badge
-        variant="outline"
-        className="text-micro shrink-0 border-border/40"
-      >
-        {user.role}
-      </Badge>
+      {user.role ? (
+        <>
+          <Badge
+            variant="outline"
+            className="hidden shrink-0 border-border/40 text-micro sm:inline-flex"
+          >
+            {user.role}
+          </Badge>
+          <span className="sr-only sm:hidden">{user.role}</span>
+        </>
+      ) : null}
     </button>
   );
 }
@@ -103,7 +110,13 @@ export function NewDMDialog({
   onCreated: (channelId: number) => void;
   hideTrigger?: boolean;
 }) {
-  const { data: orgUsers, isLoading } = useChatOrgUsers();
+  const {
+    data: orgUsers,
+    error: usersError,
+    isError: isUsersError,
+    isLoading,
+    refetch: refetchUsers,
+  } = useChatOrgUsers();
   const { data: onlineUsers } = useChatOnlineUsers();
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
@@ -119,6 +132,9 @@ export function NewDMDialog({
     (value: string) => setSearch(value),
     [],
   );
+  const handleRetryUsers = useCallback(() => {
+    void refetchUsers();
+  }, [refetchUsers]);
   const handleSelectUser = useCallback(
     async (userId: string) => {
       try {
@@ -178,27 +194,51 @@ export function NewDMDialog({
         </DialogTrigger>
       )}
       <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
-        <DialogHeader className="px-4 pt-4 pb-3">
-          <DialogTitle className="text-base">New Direct Message</DialogTitle>
-        </DialogHeader>
+        <ChatDialogHeader
+          title="New direct message"
+          description="Search for a teammate and start a private conversation."
+        />
         <div className="px-4 pb-3">
-          <div className="min-w-0 bg-muted/30 border-border/30">
-          <SearchInput fill placeholder="Search by name or email..." value={search} onValueChange={handleSearchChange} autoFocus />
-        </div>
+          <SearchInput
+            fill
+            placeholder="Search by name or email..."
+            value={search}
+            onValueChange={handleSearchChange}
+            autoFocus
+          />
         </div>
         <div
           className="border-t border-border/30 p-1"
           style={{ height: DM_LIST_BOX_HEIGHT }}
         >
-          {filteredUsers.length === 0 ? (
-            !isLoading && (
+          {isLoading ? (
+            <div className="space-y-2 p-2" aria-busy="true">
+              <span role="status" className="sr-only">Loading people…</span>
+              {[1, 2, 3, 4, 5].map((row) => (
+                <div key={row} className="flex items-center gap-3 px-2 py-1.5">
+                  <Skeleton className="size-9 shrink-0 rounded-full" />
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <Skeleton className="h-3.5 w-2/5" />
+                    <Skeleton className="h-3 w-3/5" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : isUsersError ? (
+            <ErrorState
+              compact
+              className="h-full"
+              title="Couldn't load people"
+              description={getErrorMessage(usersError)}
+              onRetry={handleRetryUsers}
+            />
+          ) : filteredUsers.length === 0 ? (
               <div className="text-center py-10">
                 <Users className="w-8 text-muted-foreground mx-auto mb-2" />
                 <p className="text-label text-muted-foreground">
                   No users found
                 </p>
               </div>
-            )
           ) : (
             <ChatUserVirtualList
               users={filteredUsers}
