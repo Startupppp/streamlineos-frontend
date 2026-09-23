@@ -11,6 +11,9 @@ export function buildAvailableHint(
   balances: LeaveBalance[],
   joiningDate: string | null,
 ): string | undefined {
+  if (balances.length === 0)
+    return "No leave policy is set up yet, so nothing has accrued — an HR admin can add leave types under Leave settings.";
+
   const perType = balances
     .filter((b) => b.typeName)
     .map((b) => `${b.typeName} ${formatDayCount(Number(b.balance ?? 0))}`)

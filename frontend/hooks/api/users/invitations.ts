@@ -35,6 +35,11 @@ const userSuccessContract = lazyContract(() =>
     (m) => m.userSuccessContract,
   ),
 );
+const invitationJoinLinkContract = lazyContract(() =>
+  import("@/hooks/api/users/extended-users-schema").then(
+    (m) => m.invitationJoinLinkContract,
+  ),
+);
 
 export const useInviteUser = () => {
   const queryClient = useQueryClient();
@@ -165,6 +170,34 @@ export const useResendInvite = () => {
           queryKey: usersAndCommerceQueryKeys.users.stats(),
         });
         invalidatePersonAccountAccess(queryClient);
+      },
+    },
+  );
+};
+
+export interface InvitationJoinLink {
+  joinUrl: string;
+  email: string;
+  expiresAt: string;
+}
+
+export const useReissueInvitationJoinLink = () => {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation<InvitationJoinLink, Error, string>(
+    "settings:organization:manage",
+    {
+      mutationKey: ["reissue", "invite-join-link"],
+      mutationFn: (invitationId) =>
+        apiClient.post<InvitationJoinLink>(
+          `/users/invitations/${invitationId}/join-link`,
+          {},
+          undefined,
+          invitationJoinLinkContract,
+        ),
+      onSuccess: () => {
+        void queryClient.invalidateQueries({
+          queryKey: usersAndCommerceQueryKeys.users.invitations(),
+        });
       },
     },
   );

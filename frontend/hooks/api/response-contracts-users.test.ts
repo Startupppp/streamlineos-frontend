@@ -1,4 +1,8 @@
-import { usersResponseContract } from "@/hooks/api/users/extended-users-schema";
+import {
+  usersResponseContract,
+  userMembershipContract,
+  userPreferencesContract,
+} from "@/hooks/api/users/extended-users-schema";
 
 const KEYSET = { limit: 25, hasMore: false, nextCursor: null };
 
@@ -48,6 +52,55 @@ describe("users list contract — emailVerified boolean projection", () => {
   it("accepts emailVerified: null — allowed by nullable(), though the fixed backend never emits null", () => {
     expect(
       usersResponseContract.safeParse({ data: [{ ...baseUserListItem, emailVerified: null }], pagination: KEYSET }).success,
+    ).toBe(true);
+  });
+});
+
+describe("user membership contract — matches getMembership wire shape", () => {
+  const membershipPayload = {
+    userId: "user-1",
+    orgId: "org-1",
+    businessUnitId: null,
+    branchId: null,
+    departmentId: null,
+    teamId: null,
+    managerUserId: null,
+  };
+
+  it("accepts the live API shape without isPrimary", () => {
+    expect(userMembershipContract.safeParse(membershipPayload).success).toBe(true);
+  });
+
+  it("still accepts an isPrimary field if a future deploy adds it (non-strict)", () => {
+    expect(
+      userMembershipContract.safeParse({ ...membershipPayload, isPrimary: true }).success,
+    ).toBe(true);
+  });
+});
+
+describe("user preferences contract — defaults omit optional format fields", () => {
+  const defaultsPayload = {
+    userId: "user-1",
+    theme: "system",
+    language: "en",
+    timezone: "Asia/Kolkata",
+    dateFormat: "DD/MM/YYYY",
+    timeFormat: "12h",
+    notificationPreferences: {},
+    dashboardPreferences: {},
+  };
+
+  it("accepts the no-row defaults shape without numberFormat/weekStartDay", () => {
+    expect(userPreferencesContract.safeParse(defaultsPayload).success).toBe(true);
+  });
+
+  it("accepts null for numberFormat and weekStartDay when present", () => {
+    expect(
+      userPreferencesContract.safeParse({
+        ...defaultsPayload,
+        numberFormat: null,
+        weekStartDay: null,
+      }).success,
     ).toBe(true);
   });
 });

@@ -17,6 +17,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
+import { AssignRosterEntrySheet } from "./assign-roster-entry-sheet";
 
 interface Props {
   canManage: boolean;
@@ -34,6 +35,7 @@ interface RosterCardProps {
 
 function RosterCard({ roster, canManage }: RosterCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const [assignOpen, setAssignOpen] = useState(false);
   const { data: entries } = useRosterEntries(expanded ? roster.id : 0);
   const publishRoster = usePublishRoster();
 
@@ -55,6 +57,11 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
     setExpanded((v) => !v);
   }
 
+  function handleOpenAssign() {
+    setExpanded(true);
+    setAssignOpen(true);
+  }
+
   function handlePublish() {
     publishRoster.mutate(roster.id, {
       onSuccess: () => toast.success("Roster published"),
@@ -74,9 +81,14 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
             {roster.status}
           </Badge>
           {canManage && roster.status === "DRAFT" && (
-            <Button size="sm" variant="outline" className="text-xs" onClick={handlePublish} disabled={publishRoster.isPending}>
-              Publish
-            </Button>
+            <>
+              <Button size="sm" variant="outline" className="text-xs" onClick={handleOpenAssign}>
+                Assign
+              </Button>
+              <Button size="sm" variant="outline" className="text-xs" onClick={handlePublish} disabled={publishRoster.isPending}>
+                Publish
+              </Button>
+            </>
           )}
           <AnimatedIconButton
             icon={expanded ? ChevronUpIcon : ChevronDownIcon}
@@ -101,7 +113,19 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
           >
             <div className="border-t border-border p-4">
               {!entries?.length ? (
-                <ChartEmptyState message="No entries in this roster" height={120} compact />
+                canManage ? (
+                  <div className="flex flex-col items-center gap-2 py-8 text-center">
+                    <p className="text-sm font-medium text-foreground">Nobody is rostered yet</p>
+                    <p className="max-w-xs text-xs text-muted-foreground">
+                      Add an employee against a day in this week, then publish the roster so they can see it.
+                    </p>
+                    <Button size="sm" className="mt-1 text-xs" onClick={handleOpenAssign}>
+                      Assign an employee
+                    </Button>
+                  </div>
+                ) : (
+                  <ChartEmptyState message="No entries in this roster" height={120} compact />
+                )
               ) : (
                 <div className="space-y-1">
                   {entries.map((entry) => (
@@ -122,6 +146,17 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {canManage && (
+        <AssignRosterEntrySheet
+          open={assignOpen}
+          onOpenChange={setAssignOpen}
+          rosterId={roster.id}
+          rosterName={roster.name}
+          weekStart={roster.weekStart}
+          weekEnd={roster.weekEnd}
+        />
+      )}
     </div>
   );
 }

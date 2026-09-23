@@ -104,7 +104,7 @@ export function MembersPage() {
         toast.success(`${targetName} removed from workspace.`);
         setRemoveTarget(null);
       },
-      onError: (err: unknown) => {
+      onError: (err: Error) => {
         toast.error(getErrorMessage(err));
       },
     });

@@ -52,7 +52,7 @@ import {
   makeSession,
   makeToken,
   sessionDataPayload,
-} from "./__tests__/auth-callbacks-test-helpers";
+} from "./auth-callbacks-test-helpers";
 
 const ORIGINAL_ENV = process.env;
 

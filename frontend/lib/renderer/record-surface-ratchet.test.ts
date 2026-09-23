@@ -186,6 +186,7 @@ const PATTERN = /DataTableColumn<|<table[ >]|useForm[<(]/;
 /** Comments describe removed markup constantly; only code renders any. */
 function executable(source: string): string {
   return source
+    .replace(/\r\n/g, "\n")
     .replace(/\/\*[\s\S]*?\*\//g, " ")
     .split("\n")
     .map((line) => line.replace(/\/\/.*$/, ""))

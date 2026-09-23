@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { format, isPast } from "date-fns";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Link2 as LinkIcon } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
@@ -116,6 +116,9 @@ interface InvitationActionCellProps {
   resendingInvitationId: string | undefined;
   isCancelling: boolean;
   onResend: (invitationId: string, kind: "resend" | "reinvite") => void;
+  onCopyJoinLink: (invitationId: string) => void;
+  isCopyingJoinLink: boolean;
+  copyingJoinLinkInvitationId: string | undefined;
   onCancelRequest: (invitationId: string) => void;
 }
 
@@ -127,6 +130,9 @@ function InvitationActionCell({
   resendingInvitationId,
   isCancelling,
   onResend,
+  onCopyJoinLink,
+  isCopyingJoinLink,
+  copyingJoinLinkInvitationId,
   onCancelRequest,
 }: InvitationActionCellProps) {
   const invitationStatus = getInvitationStatus(invitation);
@@ -152,6 +158,12 @@ function InvitationActionCell({
     () => onCancelRequest(invitation.id),
     [invitation.id, onCancelRequest],
   );
+  const handleCopyJoinLink = useCallback(
+    () => onCopyJoinLink(invitation.id),
+    [invitation.id, onCopyJoinLink],
+  );
+  const isCopyingRow =
+    isCopyingJoinLink && copyingJoinLinkInvitationId === invitation.id;
 
   if (!canResend && !canReinvite && !canCancel) return null;
   return (
@@ -183,6 +195,20 @@ function InvitationActionCell({
           Re-invite
         </LoadingButton>
       )}
+      {canResend && (
+        <LoadingButton
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={handleCopyJoinLink}
+          isPending={isCopyingRow}
+          disabled={isCancelling}
+          aria-label={`Copy join link for ${invitation.email}`}
+          title="Copy a fresh join link. This replaces any link already sent."
+        >
+          <LinkIcon className="h-4 w-4" />
+        </LoadingButton>
+      )}
       {canCancel && (
         <AnimatedIconButton
           icon={XIcon}
@@ -209,6 +235,9 @@ interface InvitationColumnsOptions {
   isCancelling: boolean;
   onRoleChange: (invitationId: string, role: string) => void;
   onResend: (invitationId: string, kind: "resend" | "reinvite") => void;
+  onCopyJoinLink: (invitationId: string) => void;
+  isCopyingJoinLink: boolean;
+  copyingJoinLinkInvitationId: string | undefined;
   onCancelRequest: (invitationId: string) => void;
 }
 
@@ -222,6 +251,9 @@ export function getInvitationColumns({
   isCancelling,
   onRoleChange,
   onResend,
+  onCopyJoinLink,
+  isCopyingJoinLink,
+  copyingJoinLinkInvitationId,
   onCancelRequest,
 }: InvitationColumnsOptions): DataTableColumn<Invitation>[] {
   function renderEmail(invitation: Invitation) {
@@ -294,6 +326,9 @@ export function getInvitationColumns({
         canInvite={canInvite}
         canCancelInvitation={canCancelInvitation}
         isResending={isResending}
+        onCopyJoinLink={onCopyJoinLink}
+        isCopyingJoinLink={isCopyingJoinLink}
+        copyingJoinLinkInvitationId={copyingJoinLinkInvitationId}
         resendingInvitationId={resendingInvitationId}
         isCancelling={isCancelling}
         onResend={onResend}

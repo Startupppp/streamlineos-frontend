@@ -239,7 +239,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
       }
       title={
         <>
-          <span className="sr-only">{employeeName}</span>
+          <span className="sr-only sm:hidden">{employeeName}</span>
           <span className="hidden sm:inline">{employeeName}</span>
         </>
       }

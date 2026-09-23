@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { getValidationFieldErrors } from "@/lib/api-envelope";
 
 import {
   Sheet,
@@ -47,7 +48,13 @@ import {
   useLeaveTypesAdmin,
 } from "@/hooks/api/hr/leaves";
 
-import { policySchema, policyFormValues, type PolicyFormValues, emptyPolicyDefaults } from "@/features/hr/leave-policies/policy-schema";
+import {
+  policySchema,
+  policyFormValues,
+  type PolicyFormValues,
+  emptyPolicyDefaults,
+  blankToUndefined,
+} from "@/features/hr/leave-policies/policy-schema";
 
 interface PolicyFormSheetProps {
   open: boolean;
@@ -96,6 +103,8 @@ export function PolicyFormSheet({
       const payload = {
         ...values,
         leaveTypeId: parseInt(values.leaveTypeId, 10),
+        maxBalance: blankToUndefined(values.maxBalance),
+        carryForwardDays: blankToUndefined(values.carryForwardDays),
       };
       if (editingPolicy) {
         await updateMutation.mutateAsync({ leavePolicyId: editingPolicy.id, ...payload });
@@ -140,6 +149,16 @@ export function PolicyFormSheet({
       await persist(values);
       closeSheet();
     } catch (err) {
+      const fieldErrors = getValidationFieldErrors(err).filter(
+        (issue) => issue.path in emptyPolicyDefaults,
+      );
+      if (fieldErrors.length > 0) {
+        for (const issue of fieldErrors)
+          form.setError(issue.path as keyof PolicyFormValues, {
+            message: issue.message,
+          });
+        return;
+      }
       toast.error(getErrorMessage(err));
     }
   }

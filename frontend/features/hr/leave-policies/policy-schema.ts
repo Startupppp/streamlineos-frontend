@@ -39,6 +39,11 @@ export const emptyPolicyDefaults: PolicyFormValues = {
   effectiveFrom: "",
 };
 
+export function blankToUndefined(value: string | undefined): string | undefined {
+  const trimmed = value?.trim() ?? "";
+  return trimmed === "" ? undefined : trimmed;
+}
+
 export function policyFormValues(policy: LeavePolicy | null): PolicyFormValues {
   if (!policy) return emptyPolicyDefaults;
   const accrualType = accrualTypeSchema.safeParse(policy.accrualType);

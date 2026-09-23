@@ -36,8 +36,8 @@ export interface UserPreferences {
   timezone: string;
   dateFormat: string;
   timeFormat: string;
-  numberFormat: string | null;
-  weekStartDay: string | null;
+  numberFormat?: string | null;
+  weekStartDay?: string | null;
   notificationPreferences: Record<string, boolean>;
   dashboardPreferences: Record<string, unknown>;
   updatedAt?: string;

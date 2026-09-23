@@ -33,7 +33,14 @@ export function useCreateDepartment() {
     mutationKey: ["hr", "departments", "create"],
     mutationFn: (data: CreateDepartmentInput) =>
       apiClient.post<Department>("/hr/departments", data, undefined, departmentItemLazy),
-    onSuccess: () => {
+    onSuccess: (created) => {
+      qc.setQueryData<Department[]>(
+        humanResourcesQueryKeys.hr.departments(),
+        (current) =>
+          current === undefined || current.some((d) => d.id === created.id)
+            ? current
+            : [...current, created],
+      );
       void qc.invalidateQueries({
         queryKey: humanResourcesQueryKeys.hr.departments(),
       });

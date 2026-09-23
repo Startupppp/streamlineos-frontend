@@ -10,6 +10,7 @@ export const requisitionSchema = z.object({
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
   type: z.enum(["FULL_TIME", "PART_TIME", "CONTRACT"]),
   justification: z.string().optional(),
+  headcountId: z.number().int().optional(),
   targetDate: z.string().optional(),
 });
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useSession } from "next-auth/react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -74,6 +75,9 @@ function PortalCard({
   const Icon = config.icon;
   const connected = portal?.isActive ?? false;
 
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "YOUR_ORG_ID";
+
   const handleToggle = useCallback(
     async (active: boolean) => {
       setToggling(true);
@@ -143,7 +147,7 @@ function PortalCard({
         <div className="rounded-md border bg-muted/30 p-3 text-xs space-y-1">
           <p className="font-medium text-foreground">Webhook URL</p>
           <p className="font-mono text-muted-foreground break-all">
-            {`${typeof window !== "undefined" ? window.location.origin : ""}/api/webhooks/${config.id.toLowerCase()}/applications?orgId=YOUR_ORG_ID`}
+            {`${typeof window !== "undefined" ? window.location.origin : ""}/crm/ingress/job-boards/${config.id.toLowerCase()}/${orgId}`}
           </p>
           <p className="text-muted-foreground mt-1">
             Set <code className="bg-muted px-1 rounded">{config.webhookEnvVar}</code> env var to enable signature verification.

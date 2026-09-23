@@ -184,7 +184,13 @@ export function LeaveRequestSheet({
       title="Request leave"
       description="Fill in the details to submit a leave request"
       onSubmit={form.handleSubmit(onSubmit)}
-      submitLabel={approverAvailable ? "Submit leave request" : "No approver available"}
+      submitLabel={
+        leaveTypes.length === 0
+          ? "Set up leave types first"
+          : approverAvailable
+            ? "Submit leave request"
+            : "No approver available"
+      }
       isPending={requestLeaveMutation.isPending}
       submitDisabled={
         (!isValid && isDirty) ||
