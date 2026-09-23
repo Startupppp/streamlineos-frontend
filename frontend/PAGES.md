@@ -214,7 +214,7 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/build/command-center` · **Build** · hooks: `→ features/build`
 - `/build/approvals` · **Build** · hooks: `→ features/build`
 - `/build/members` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/members/page.tsx + error.tsx] — redirect-only page shadowed by the `next.config.ts:132` redirect to `/build/settings/access`, which fires before the filesystem, so the page never executed; the URL still redirects
-- `/build/customers` · **Build** · hooks: `→ features/build`
+- ~~`/build/customers`~~ · **Build** · REMOVED 2026-09-23 · CRM owns customer identity and lifecycle · deep link preserved by `next.config.ts` → `/crm`
 - `/build/client-access` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/client-access/page.tsx + loading.tsx] — redirect-only page shadowed by the `next.config.ts` redirect to `/build/settings/client-access`; the URL still redirects
 - `/build/access` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/access/page.tsx] — redirect-only page shadowed by the `next.config.ts` redirect to `/build/settings/access`; the URL still redirects
 - `/build/settings/access` · **Build** · hooks: `→ features/build` — canonical owner of the Build members and access job
@@ -261,13 +261,13 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 
 ### Per-project views (`/build/[projectId]/*`)
 - `/build/[projectId]` · **Build** · hooks: `→ features/build/project`
-- `/build/[projectId]/ai` · **Build** · hooks: `→ features/build/project`
-- `/build/[projectId]/analytics` · **Build** · hooks: `→ features/build/analytics/project-analytics-page` (`useProjectAnalytics`) · renders `NoPermissionState` without `build:view` (2026-09-20: previously the page had no permission gate of its own — a denied user fell through the disabled query's `data: undefined` straight to "No analytics yet", denial read as emptiness). Route file is now a thin server wrapper delegating to the feature component, matching the `/build/[projectId]/budget` pattern.
+- ~~`/build/[projectId]/ai`~~ · **Build** · REMOVED 2026-09-23 · consolidated into the Command Center · deep link preserved by `next.config.ts` → `/build/command-center?projectId=…`
+- ~~`/build/[projectId]/analytics`~~ · **Build** · REMOVED 2026-09-23 · duplicated the Reports overview metrics · deep link preserved by `next.config.ts` → `/build/[projectId]/reports?tab=overview`. The chart components it shared (`analytics-kpi-strip`, `chart-shell`, `project-charts`, `project-stats`, `estimate-vs-actual-chart`) are retained — `features/build/reports/reports-overview-tab.tsx` renders them.
 - `/build/[projectId]/approvals` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/automations` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/[projectId]/automations/page.tsx + loading.tsx] — redirect-only page shadowed by the `next.config.ts:122` redirect to `/build/:projectId/settings/automations`; the URL still redirects
 - `/build/[projectId]/backlog` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/budget` · **Build** · hooks: `→ features/build/project`
-- `/build/[projectId]/bugs` · **Build** · hooks: `→ features/build/project`
+- ~~`/build/[projectId]/bugs`~~ · **Build** · REMOVED 2026-09-23 · defects are `type=BUG` work items; QA evidence moved to the ticket detail and severity/QA-state filters to the Issues toolbar · deep link preserved by `next.config.ts` → `/build/[projectId]/issues?type=BUG`
 - `/build/[projectId]/change-requests` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/chat` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/client-portal` · **Build** · hooks: `→ features/build/project` · renders `NoPermissionState` without `build:clientvisibility:manage` (2026-09-19: previously showed an empty list, since the disabled query left `data` undefined — denial read as emptiness). Sidebar entry is additionally hidden when the project stores `settings.features.clientPortal === false`; an absent flag counts as enabled, and the backend does not enforce that flag.
@@ -296,10 +296,10 @@ OPEN — scopes with no scoped routes yet: PM workspace exposes only Overview + 
 - `/build/[projectId]/risks` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/settings` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/tickets/[ticketKey]` · **Build** · hooks: `→ features/build/project` — notification/email/search deep links emit `/build/...` (not legacy `/projects/...`); client navigation normalizes any stored `/projects` links via `normalizeBuildDeepLink`; main column uses `min-h-0 flex-1 basis-0 overflow-y-auto` inside an `overflow-hidden` split so long descriptions scroll (parity with inbox preview; `ticket-detail-scroll-chain.test.ts`)
-- `/build/[projectId]/timeline` · **Build** · hooks: `→ features/build/project`
+- ~~`/build/[projectId]/timeline`~~ · **Build** · REMOVED 2026-09-23 · timeline is a view of Issues · deep link preserved by `next.config.ts` → `/build/[projectId]/issues?view=timeline`
 - `/build/[projectId]/triage` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/updates` · **Build** · hooks: `→ features/build/updates` — project status updates; gated `build:updates:view` via `requireModulePermission`
-- `/build/[projectId]/views` · **Build** · hooks: `→ features/build/project`
+- ~~`/build/[projectId]/views`~~ · **Build** · REMOVED 2026-09-23 · saved views are managed from the Issues toolbar · deep link preserved by `next.config.ts` → `/build/[projectId]/issues`
 - `/build/[projectId]/webhooks` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/[projectId]/webhooks/page.tsx + loading.tsx] — redirect-only page shadowed by the `next.config.ts:127` redirect to `/build/:projectId/settings/integrations/webhooks`; the URL still redirects
 - `/build/[projectId]/whiteboard` · **Build** · hooks: `→ features/build/project`
 - `/build/[projectId]/wiki` · **Build** · hooks: `→ features/build/project`

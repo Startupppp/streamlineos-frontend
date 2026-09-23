@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { toast } from "sonner";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
@@ -49,6 +50,8 @@ import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
+import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 const PAGE_SIZE = 20;
 
@@ -125,20 +128,31 @@ export function PmWorkspacesPage() {
   const canDelete = useCan("build:workspaces:delete");
   const canViewMembers = useCan("build:workspaces:members:view");
 
-  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const { cursor, setCursor, setListParams, clearFilters } = useBuildListUrlState();
+  const searchParams = useSearchParams();
+  const urlStatus = searchParams.get("status") ?? "all";
+  const urlQ = searchParams.get("q") ?? "";
+
+  const [searchInput, setSearchInput] = useState(urlQ);
+  const debouncedSearchInput = useDebouncedValue(searchInput, 300);
   const [cursorStack, setCursorStack] = useState<string[]>([]);
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [search, setSearch] = useState("");
+
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<PmWorkspace | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PmWorkspace | null>(null);
   const [membersTarget, setMembersTarget] = useState<PmWorkspace | null>(null);
 
+  useEffect(() => {
+    const current = searchParams.get("q") ?? "";
+    if (debouncedSearchInput === current) return;
+    setListParams({ q: debouncedSearchInput || null });
+  }, [debouncedSearchInput, searchParams, setListParams]);
+
   const { data, isLoading, isError, error, refetch } = usePmWorkspaces({
-    cursor,
+    cursor: cursor ?? undefined,
     limit: PAGE_SIZE,
-    status: statusFilter !== "all" ? statusFilter : undefined,
+    status: urlStatus !== "all" ? urlStatus : undefined,
   });
 
   const createWorkspace = useCreatePmWorkspace();
@@ -146,12 +160,12 @@ export function PmWorkspacesPage() {
   const deleteWorkspace = useDeletePmWorkspace();
 
   const displayed = useMemo(() => {
-    if (!search.trim()) return data?.data ?? [];
-    const q = search.toLowerCase();
+    if (!searchInput.trim()) return data?.data ?? [];
+    const q = searchInput.toLowerCase();
     return (data?.data ?? []).filter(
       (w) => w.name.toLowerCase().includes(q) || w.slug.toLowerCase().includes(q),
     );
-  }, [data, search]);
+  }, [data, searchInput]);
 
   const resolution = usePageState({
     permission: "build:workspaces:view",
@@ -192,25 +206,19 @@ export function PmWorkspacesPage() {
     });
   }
 
-  function resetCursor() {
-    setCursor(undefined);
-    setCursorStack([]);
-  }
-
   function handleSearchChange(value: string) {
-    setSearch(value);
-    resetCursor();
+    setSearchInput(value);
   }
 
   function handleStatusChange(value: string) {
-    setStatusFilter(value);
-    resetCursor();
+    setListParams({ status: value !== "all" ? value : null });
+    setCursorStack([]);
   }
 
   function handleClearFilters() {
-    setStatusFilter("all");
-    setSearch("");
-    resetCursor();
+    setSearchInput("");
+    clearFilters();
+    setCursorStack([]);
   }
 
   function handleNextPage() {
@@ -223,7 +231,7 @@ export function PmWorkspacesPage() {
   function handlePrevPage() {
     const prevCursor = cursorStack[cursorStack.length - 1];
     setCursorStack((prev) => prev.slice(0, -1));
-    setCursor(prevCursor === "" ? undefined : prevCursor);
+    setCursor(prevCursor === "" ? null : prevCursor);
   }
 
   const handleOpenCreate = useCallback(() => {
@@ -316,13 +324,13 @@ export function PmWorkspacesPage() {
     },
   ];
 
-  const isFiltered = statusFilter !== "all" || !!search.trim();
+  const isFiltered = urlStatus !== "all" || !!searchInput.trim();
   const hasPrev = cursorStack.length > 0;
   const hasNext = !!data?.pagination.hasMore;
 
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
-      <Select value={statusFilter} onValueChange={handleStatusChange}>
+      <Select value={urlStatus} onValueChange={handleStatusChange}>
         <SelectTrigger className="w-40">
           <SelectValue />
         </SelectTrigger>
@@ -336,7 +344,7 @@ export function PmWorkspacesPage() {
       </Select>
       <SearchInput
         placeholder="Search workspaces…"
-        value={search}
+        value={searchInput}
         onValueChange={handleSearchChange}
       />
       {isFiltered ? (

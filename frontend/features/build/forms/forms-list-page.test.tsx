@@ -20,7 +20,9 @@ jest.mock("@/hooks/api/access", () => ({
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  usePathname: () => "/build/1/forms",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 jest.mock("next/link", () => ({

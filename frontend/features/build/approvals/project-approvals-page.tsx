@@ -2,6 +2,8 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
+import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
 import { toast } from "sonner";
 import {
   useProjectApprovals,
@@ -48,8 +50,12 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
   const canDecide = useCan("build:approvals:decide");
   const canManage = useCan("build:approvals:manage");
 
-  const [status, setStatus] = useState("all");
-  const [entityType, setEntityType] = useState("all");
+  const searchParams = useSearchParams();
+  const { setListParams } = useBuildListUrlState();
+
+  const status = searchParams.get("approvalStatus") ?? "all";
+  const entityType = searchParams.get("entityType") ?? "all";
+
   const [requestOpen, setRequestOpen] = useState(false);
   const [defaultEntityType, setDefaultEntityType] = useState<ApprovalEntityType | undefined>(undefined);
   const [decideTarget, setDecideTarget] = useState<Approval | null>(null);
@@ -157,10 +163,17 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     });
   }, [deleteTarget, deleteApproval]);
 
+  const handleStatusChange = useCallback((value: string) => {
+    setListParams({ approvalStatus: value === "all" ? null : value });
+  }, [setListParams]);
+
+  const handleEntityTypeChange = useCallback((value: string) => {
+    setListParams({ entityType: value === "all" ? null : value });
+  }, [setListParams]);
+
   const handleClearFilters = useCallback(() => {
-    setStatus("all");
-    setEntityType("all");
-  }, []);
+    setListParams({ approvalStatus: null, entityType: null });
+  }, [setListParams]);
 
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
@@ -215,8 +228,8 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
         <ApprovalsFilterBar
           status={status}
           entityType={entityType}
-          onStatusChange={setStatus}
-          onEntityTypeChange={setEntityType}
+          onStatusChange={handleStatusChange}
+          onEntityTypeChange={handleEntityTypeChange}
         />
       }
       actions={

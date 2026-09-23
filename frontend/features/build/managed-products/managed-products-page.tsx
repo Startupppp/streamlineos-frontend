@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { toast } from "sonner";
@@ -58,6 +59,7 @@ import {
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
+import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
 
 const PAGE_SIZE = 20;
 
@@ -122,21 +124,31 @@ export function ManagedProductsPage({
   const canUpdate = useCan("build:managed-products:update");
   const canDelete = useCan("build:managed-products:delete");
 
-  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const { cursor, setCursor, setListParams, clearFilters } = useBuildListUrlState();
+  const searchParams = useSearchParams();
+  const urlStatus = searchParams.get("status") ?? "all";
+  const urlQ = searchParams.get("q") ?? "";
+
+  const [searchInput, setSearchInput] = useState(urlQ);
+  const debouncedSearchInput = useDebouncedValue(searchInput, 300);
   const [cursorStack, setCursorStack] = useState<string[]>([]);
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebouncedValue(search, 300);
+
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<ManagedProduct | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ManagedProduct | null>(null);
 
+  useEffect(() => {
+    const current = searchParams.get("q") ?? "";
+    if (debouncedSearchInput === current) return;
+    setListParams({ q: debouncedSearchInput || null });
+  }, [debouncedSearchInput, searchParams, setListParams]);
+
   const { data, isLoading, isError, error, refetch } = useManagedProducts({
-    cursor,
+    cursor: cursor ?? undefined,
     limit: PAGE_SIZE,
-    status: statusFilter !== "all" ? statusFilter : undefined,
-    search: debouncedSearch.trim() || undefined,
+    status: urlStatus !== "all" ? urlStatus : undefined,
+    search: urlQ.trim() || undefined,
     ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
   });
 
@@ -186,25 +198,20 @@ export function ManagedProductsPage({
     });
   }
 
-  function resetCursor() {
-    setCursor(undefined);
+  function handleSearchChange(value: string) {
+    setSearchInput(value);
     setCursorStack([]);
   }
 
-  function handleSearchChange(value: string) {
-    setSearch(value);
-    resetCursor();
-  }
-
   function handleStatusChange(value: string) {
-    setStatusFilter(value);
-    resetCursor();
+    setListParams({ status: value !== "all" ? value : null });
+    setCursorStack([]);
   }
 
   function handleClearFilters() {
-    setStatusFilter("all");
-    setSearch("");
-    resetCursor();
+    setSearchInput("");
+    clearFilters();
+    setCursorStack([]);
   }
 
   function handleNextPage() {
@@ -217,7 +224,7 @@ export function ManagedProductsPage({
   function handlePrevPage() {
     const prevCursor = cursorStack[cursorStack.length - 1];
     setCursorStack((prev) => prev.slice(0, -1));
-    setCursor(prevCursor === "" ? undefined : prevCursor);
+    setCursor(prevCursor === "" ? null : prevCursor);
   }
 
   const handleOpenCreate = useCallback(() => {
@@ -320,7 +327,7 @@ export function ManagedProductsPage({
     isEmpty: displayed.length === 0,
   });
 
-  const isFiltered = statusFilter !== "all" || !!search.trim();
+  const isFiltered = urlStatus !== "all" || !!searchInput.trim();
   const hasPrev = cursorStack.length > 0;
   const hasNext = !!data?.pagination.hasMore;
 
@@ -328,10 +335,10 @@ export function ManagedProductsPage({
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput
         placeholder="Search products…"
-        value={search}
+        value={searchInput}
         onValueChange={handleSearchChange}
       />
-      <Select value={statusFilter} onValueChange={handleStatusChange}>
+      <Select value={urlStatus} onValueChange={handleStatusChange}>
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-40")}>
           <SelectValue />
         </SelectTrigger>

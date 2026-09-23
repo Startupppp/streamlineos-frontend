@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { ShieldAlert, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
@@ -10,11 +11,10 @@ import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { getUserDisplayName } from "@/lib/person-display";
-import type { Risk, RiskStatus, RiskProbability, RiskImpact, CreateRiskInput, UpdateRiskInput } from "@/types/projects";
+import type { Risk, RiskProbability, RiskImpact, CreateRiskInput, UpdateRiskInput } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { useCursorPager } from "@/components/ui/table-pagination";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 
@@ -37,6 +37,9 @@ import {
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
+
 const LEVEL_LABEL: Record<string, string> = { low: "Low", medium: "Medium", high: "High" };
 const LEVEL_STYLE: Record<string, string> = {
   low: "text-muted-foreground border-border",
@@ -105,17 +108,27 @@ interface RisksPageProps { projectId: number }
 export function RisksPage({ projectId }: RisksPageProps) {
   const canManage = useCan("build:risks:manage");
 
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [search, setSearch] = useState("");
+  const { cursor, setCursor, setListParams, clearFilters } = useBuildListUrlState();
+  const searchParams = useSearchParams();
+  const urlStatus = searchParams.get("status") ?? "all";
+
+  const [searchInput, setSearchInput] = useState(searchParams.get("q") ?? "");
+  const debouncedSearchInput = useDebouncedValue(searchInput, 300);
+  const [cursorStack, setCursorStack] = useState<string[]>([]);
   const [matrixCell, setMatrixCell] = useState<{ probability: RiskProbability; impact: RiskImpact } | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editRisk, setEditRisk] = useState<Risk | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Risk | null>(null);
 
-  const pager = useCursorPager(statusFilter);
+  useEffect(() => {
+    const current = searchParams.get("q") ?? "";
+    if (debouncedSearchInput === current) return;
+    setListParams({ q: debouncedSearchInput || null });
+  }, [debouncedSearchInput, searchParams, setListParams]);
+
   const { data, isLoading, isError, error, refetch } = useProjectRisks(projectId, {
-    status: statusFilter !== "all" ? statusFilter : undefined,
-    cursor: pager.cursor === undefined ? undefined : Number(pager.cursor),
+    status: urlStatus !== "all" ? urlStatus : undefined,
+    cursor: cursor ? Number(cursor) : undefined,
   });
   const { data: stats, isLoading: isStatsLoading } = useProjectRiskStats(projectId);
 
@@ -142,12 +155,12 @@ export function RisksPage({ projectId }: RisksPageProps) {
     if (matrixCell) {
       items = items.filter((r) => r.probability === matrixCell.probability && r.impact === matrixCell.impact);
     }
-    if (search.trim()) {
-      const q = search.toLowerCase();
+    if (searchInput.trim()) {
+      const q = searchInput.toLowerCase();
       items = items.filter((r) => r.title.toLowerCase().includes(q) || `risk-${r.riskNumber}`.includes(q));
     }
     return items;
-  }, [filteredRisks, matrixCell, search]);
+  }, [filteredRisks, matrixCell, searchInput]);
 
   function handleCreate(input: CreateRiskInput) {
     createRisk.mutate(input, {
@@ -172,19 +185,40 @@ export function RisksPage({ projectId }: RisksPageProps) {
   }
 
   const handleSearchChange = useCallback((value: string) => {
-    setSearch(value);
+    setSearchInput(value);
   }, []);
+
+  const handleStatusChange = useCallback((value: string) => {
+    setListParams({ status: value !== "all" ? value : null });
+    setCursorStack([]);
+  }, [setListParams]);
+
   const handleNewRisk = useCallback(() => setSheetOpen(true), []);
+
   const handleClearFilters = useCallback(() => {
-    setStatusFilter("all");
-    setSearch("");
+    setSearchInput("");
     setMatrixCell(null);
-  }, []);
+    clearFilters();
+    setCursorStack([]);
+  }, [clearFilters]);
+
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
   const handleNextPage = useCallback(() => {
-    pager.goNext(data?.nextCursor == null ? null : String(data.nextCursor));
-  }, [pager, data]);
+    const nextCursor = data?.nextCursor;
+    if (nextCursor == null) return;
+    setCursorStack((prev) => [...prev, cursor ?? ""]);
+    setCursor(String(nextCursor));
+  }, [cursor, data, setCursor]);
+
+  const handlePrevPage = useCallback(() => {
+    const prev = cursorStack[cursorStack.length - 1];
+    setCursorStack((stack) => stack.slice(0, -1));
+    setCursor(prev === "" ? null : prev);
+  }, [cursorStack, setCursor]);
+
   const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) setDeleteTarget(null); }, []);
+
   const handleSheetOpenChange = useCallback((open: boolean) => {
     if (!open) { setSheetOpen(false); setEditRisk(null); }
   }, []);
@@ -260,11 +294,11 @@ export function RisksPage({ projectId }: RisksPageProps) {
     );
   }
 
-  const isFiltered = statusFilter !== "all" || !!search.trim() || !!matrixCell;
+  const isFiltered = urlStatus !== "all" || !!searchInput.trim() || !!matrixCell;
 
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
-      <Select value={statusFilter} onValueChange={setStatusFilter}>
+      <Select value={urlStatus} onValueChange={handleStatusChange}>
         <SelectTrigger className="w-40" aria-label="Filter by status">
           <SelectValue />
         </SelectTrigger>
@@ -278,7 +312,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
       </Select>
       <SearchInput
         placeholder="Search risks…"
-        value={search}
+        value={searchInput}
         onValueChange={handleSearchChange}
       />
       {isFiltered ? (
@@ -337,9 +371,9 @@ export function RisksPage({ projectId }: RisksPageProps) {
                   mode: "cursor",
                   pageSize: GOVERNANCE_PAGE_SIZE,
                   hasMore: data?.hasMore ?? false,
-                  hasPrevious: pager.hasPrevious,
+                  hasPrevious: cursorStack.length > 0,
                   onNext: handleNextPage,
-                  onPrevious: pager.goPrevious,
+                  onPrevious: handlePrevPage,
                 }}
               />
           )}

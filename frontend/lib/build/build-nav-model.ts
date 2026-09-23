@@ -17,7 +17,7 @@ import { buildOrganizationCatalog } from "./nav/build-organization-catalog";
 import { buildWorkspaceCatalog } from "./nav/build-workspace-catalog";
 import { buildManagedProductCatalog } from "./nav/build-managed-product-catalog";
 import { buildProjectCatalog } from "./nav/build-project-catalog";
-import { VIEW_TYPES } from "./view-types";
+import { VIEW_TYPES, isKnownViewParam } from "./view-types";
 
 const WORK_BOARD_VIEWS: ReadonlySet<string> = new Set(VIEW_TYPES);
 
@@ -171,7 +171,7 @@ export function isBuildDestinationActive(
   if (destination.exact) {
     if (pathname !== path) return false;
     if (!destination.boardViews) return true;
-    return view === null || WORK_BOARD_VIEWS.has(view);
+    return view === null || WORK_BOARD_VIEWS.has(view) || isKnownViewParam(view);
   }
   return pathname === path || pathname.startsWith(`${path}/`);
 }

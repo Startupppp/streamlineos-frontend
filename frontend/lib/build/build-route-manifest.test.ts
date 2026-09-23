@@ -29,12 +29,12 @@ const diskRoutes = new Set(
   collectPageFilePaths(APP_BUILD_DIR).map(absolutePathToRoute),
 );
 
-describe("BLD-001 — build route manifest covers all 79 authenticated build pages bidirectionally", () => {
-  it("manifest has 79 entries so the coverage check cannot pass vacuously with an empty or truncated list", () => {
-    expect(BUILD_ROUTE_MANIFEST).toHaveLength(79);
+describe("BLD-001 — build route manifest covers all 73 authenticated build pages bidirectionally", () => {
+  it("manifest has 73 entries so the coverage check cannot pass vacuously with an empty or truncated list", () => {
+    expect(BUILD_ROUTE_MANIFEST).toHaveLength(73);
   });
 
-  it("no longer tracks the twelve routes whose next.config.ts redirect now serves the URL, because a manifest entry without a page is a phantom disposition", () => {
+  it("no longer tracks the eighteen routes whose next.config.ts redirect now serves the URL, because a manifest entry without a page is a phantom disposition", () => {
     const routes = BUILD_ROUTE_MANIFEST.map((entry) => entry.route);
     for (const removed of [
       "/build/access",
@@ -49,6 +49,12 @@ describe("BLD-001 — build route manifest covers all 79 authenticated build pag
       "/build/[projectId]/webhooks",
       "/build/[projectId]/my-tickets",
       "/build/workspaces/[pmWorkspaceId]/my-work",
+      "/build/[projectId]/timeline",
+      "/build/[projectId]/bugs",
+      "/build/[projectId]/analytics",
+      "/build/[projectId]/views",
+      "/build/[projectId]/ai",
+      "/build/customers",
     ]) {
       expect(routes).not.toContain(removed);
     }
@@ -63,9 +69,17 @@ describe("BLD-001 — build route manifest covers all 79 authenticated build pag
       "/build/[projectId]/settings/workflow",
       "/build/[projectId]/settings/automations",
       "/build/[projectId]/settings/integrations/webhooks",
+      "/build/[projectId]/issues",
+      "/build/[projectId]/reports",
+      "/build/command-center",
     ]) {
       expect(routes).toContain(canonical);
     }
+  });
+
+  it("still tracks intake, whose Forms-versus-Triage destination is an unresolved open question", () => {
+    const routes = BUILD_ROUTE_MANIFEST.map((entry) => entry.route);
+    expect(routes).toContain("/build/[projectId]/intake");
   });
 
   it("disk route count matches manifest count so neither direction can silently absorb extra entries", () => {

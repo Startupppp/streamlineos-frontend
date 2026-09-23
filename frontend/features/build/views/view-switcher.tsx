@@ -48,7 +48,7 @@ const VIEW_META: Record<ViewType, ViewMeta> = {
   list: { animatedIcon: LayoutListIcon, label: "List" },
   table: { staticIcon: Table2, label: "Table" },
   calendar: { staticIcon: Calendar, label: "Calendar" },
-  gantt: { animatedIcon: ChartBarIcon, label: "Gantt" },
+  timeline: { animatedIcon: ChartBarIcon, label: "Timeline" },
   workload: { animatedIcon: UsersIcon, label: "Workload" },
 };
 

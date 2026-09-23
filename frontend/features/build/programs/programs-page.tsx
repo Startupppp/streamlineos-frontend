@@ -1,7 +1,10 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
+import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -103,8 +106,21 @@ const STATUS_OPTS = [
 export function ProgramsPage() {
   const canManage = useCan("build:programs:manage");
 
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [search, setSearch] = useState("");
+  const searchParams = useSearchParams();
+  const { setListParams, clearFilters } = useBuildListUrlState();
+
+  const statusFilter = searchParams.get("status") ?? "all";
+  const searchFromUrl = searchParams.get("q") ?? "";
+
+  const [rawSearch, setRawSearch] = useState(searchFromUrl);
+  const debouncedSearch = useDebouncedValue(rawSearch, 300);
+
+  useEffect(() => {
+    const current = searchParams.get("q") ?? "";
+    if (debouncedSearch === current) return;
+    setListParams({ q: debouncedSearch || null });
+  }, [debouncedSearch, searchParams, setListParams]);
+
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<Program | null>(null);
@@ -140,10 +156,10 @@ export function ProgramsPage() {
   );
 
   const displayed = useMemo(() => {
-    if (!search.trim()) return data ?? [];
-    const q = search.toLowerCase();
+    if (!searchFromUrl.trim()) return data ?? [];
+    const q = searchFromUrl.toLowerCase();
     return (data ?? []).filter((p) => p.name.toLowerCase().includes(q));
-  }, [data, search]);
+  }, [data, searchFromUrl]);
 
   const resolution = usePageState({
     permission: "build:programs:view",
@@ -184,13 +200,17 @@ export function ProgramsPage() {
     });
   }
 
+  const handleStatusFilterChange = useCallback((value: string) => {
+    setListParams({ status: value === "all" ? null : value });
+  }, [setListParams]);
+
   function handleSearchChange(value: string) {
-    setSearch(value);
+    setRawSearch(value);
   }
 
   function handleClearFilters() {
-    setStatusFilter("all");
-    setSearch("");
+    setRawSearch("");
+    clearFilters();
   }
 
   const handleOpenCreate = useCallback(() => {
@@ -281,15 +301,15 @@ export function ProgramsPage() {
     },
   ];
 
-  const isFiltered = statusFilter !== "all" || !!search.trim();
+  const isFiltered = statusFilter !== "all" || !!searchFromUrl.trim();
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput
         placeholder="Search programs…"
-        value={search}
+        value={rawSearch}
         onValueChange={handleSearchChange}
       />
-      <Select value={statusFilter} onValueChange={setStatusFilter}>
+      <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
         <SelectTrigger className="w-40">
           <SelectValue />
         </SelectTrigger>

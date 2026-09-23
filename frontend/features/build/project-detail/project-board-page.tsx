@@ -40,6 +40,9 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
 
   const {
     view,
+    filterType,
+    filterSeverity,
+    filterQaState,
     displayOptions,
     setDisplayOptions,
     hideCompleted,
@@ -70,6 +73,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     createDefaultCycleId,
     handleViewChange,
     handleClearSearch,
+    handleQaFilterChange,
     handleClearView,
     handleCreateOpenChange,
     handleOpenSaveView,
@@ -216,6 +220,10 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
           workloadFilters={workloadFilters}
           onWorkloadFilterChange={handleWorkloadFilterChange}
           onClearWorkloadFilters={handleClearWorkloadFilters}
+          filterType={filterType}
+          filterSeverity={filterSeverity}
+          filterQaState={filterQaState}
+          onQaFilterChange={handleQaFilterChange}
         />
       }
     >

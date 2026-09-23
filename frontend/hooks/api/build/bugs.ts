@@ -42,6 +42,30 @@ export function useBugs(projectId?: number, filters?: BugFilters) {
   });
 }
 
+export function useBug(
+  projectId?: number,
+  bugId?: number,
+  options?: { enabled?: boolean },
+) {
+  const canView = useCan("build:bugs:view");
+
+  return useQuery<Bug>({
+    queryKey: buildWorkQueryKeys.projects.bugs.detail(
+      projectId ?? 0,
+      bugId ?? 0,
+    ),
+    queryFn: ({ signal }) =>
+      apiClient.get<Bug>(
+        `/build/${projectId}/bugs/${bugId}`,
+        undefined,
+        signal,
+        bugRowContract,
+      ),
+    enabled: canView && !!projectId && !!bugId && (options?.enabled ?? true),
+    staleTime: 60_000,
+  });
+}
+
 export function useCreateBug() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:bugs:create", {

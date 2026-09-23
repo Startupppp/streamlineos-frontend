@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "generatedAt": "2026-09-22T08:02:37.016Z",
+  "generatedAt": "2026-09-23T02:03:07.401Z",
   "source": "frontend/app",
-  "count": 88,
+  "count": 82,
   "routes": [
     {
       "path": "/accept-invitation",
@@ -21,14 +21,6 @@
       "file": "frontend/app/(authenticated)/build/[projectId]/page.tsx"
     },
     {
-      "path": "/build/{projectId}/ai",
-      "file": "frontend/app/(authenticated)/build/[projectId]/ai/page.tsx"
-    },
-    {
-      "path": "/build/{projectId}/analytics",
-      "file": "frontend/app/(authenticated)/build/[projectId]/analytics/page.tsx"
-    },
-    {
       "path": "/build/{projectId}/approvals",
       "file": "frontend/app/(authenticated)/build/[projectId]/approvals/page.tsx"
     },
@@ -39,10 +31,6 @@
     {
       "path": "/build/{projectId}/budget",
       "file": "frontend/app/(authenticated)/build/[projectId]/budget/page.tsx"
-    },
-    {
-      "path": "/build/{projectId}/bugs",
-      "file": "frontend/app/(authenticated)/build/[projectId]/bugs/page.tsx"
     },
     {
       "path": "/build/{projectId}/change-requests",
@@ -165,20 +153,12 @@
       "file": "frontend/app/(authenticated)/build/[projectId]/tickets/[ticketKey]/page.tsx"
     },
     {
-      "path": "/build/{projectId}/timeline",
-      "file": "frontend/app/(authenticated)/build/[projectId]/timeline/page.tsx"
-    },
-    {
       "path": "/build/{projectId}/triage",
       "file": "frontend/app/(authenticated)/build/[projectId]/triage/page.tsx"
     },
     {
       "path": "/build/{projectId}/updates",
       "file": "frontend/app/(authenticated)/build/[projectId]/updates/page.tsx"
-    },
-    {
-      "path": "/build/{projectId}/views",
-      "file": "frontend/app/(authenticated)/build/[projectId]/views/page.tsx"
     },
     {
       "path": "/build/{projectId}/whiteboard",
@@ -207,10 +187,6 @@
     {
       "path": "/build/command-center",
       "file": "frontend/app/(authenticated)/build/command-center/page.tsx"
-    },
-    {
-      "path": "/build/customers",
-      "file": "frontend/app/(authenticated)/build/customers/page.tsx"
     },
     {
       "path": "/build/goals",

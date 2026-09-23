@@ -184,14 +184,6 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     backendRoute: { method: "get", path: "/build" },
   },
   {
-    prefix: "/build/customers",
-    product: "build",
-    permission: "build:customers:view",
-    reason:
-      "Delivery customers are a Build entity. Navigation resolved this route to crm:leads:view, a key from an unrelated module, so a Build user without CRM was denied a Build surface and a CRM user without Build was let in.",
-    backendRoute: { method: "get", path: "/build/customers" },
-  },
-  {
     prefix: "/support/kb",
     permission: "kb:articles:view",
     reason:
@@ -212,13 +204,6 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     reason:
       "Project-scoped QA. Without a dynamic-segment entry the whole /build/[projectId]/* tree collapsed to the generic build:view the /build nav entry owns, so the granular key the sidebar checks was never enforced on arrival.",
     backendRoute: { method: "get", path: "/build/{projectId}/test-cases" },
-  },
-  {
-    prefix: "/build/[projectId]/bugs",
-    product: "build",
-    permission: "build:bugs:view",
-    reason: "Project-scoped defect tracking carries its own read key, not the generic build:view.",
-    backendRoute: { method: "get", path: "/build/{projectId}/bugs" },
   },
   {
     prefix: "/build/[projectId]/incidents",
@@ -331,28 +316,12 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     backendRoute: { method: "get", path: "/build/{projectId}/tickets" },
   },
   {
-    prefix: "/build/[projectId]/timeline",
-    product: "build",
-    permission: "build:tickets:view",
-    reason:
-      "Timeline page calls useProjectBoardTickets, whose first read is GET /build/{projectId}/tickets requiring build:tickets:view.",
-    backendRoute: { method: "get", path: "/build/{projectId}/tickets" },
-  },
-  {
     prefix: "/build/[projectId]/triage",
     product: "build",
     permission: "build:tickets:view",
     reason:
       "Triage page calls useTickets, whose first read is GET /build/{projectId}/tickets requiring build:tickets:view.",
     backendRoute: { method: "get", path: "/build/{projectId}/tickets" },
-  },
-  {
-    prefix: "/build/[projectId]/ai",
-    product: "build",
-    permission: "build:ai:use",
-    reason:
-      "Project AI settings surface. The projects-ai.controller has a class-level @RequirePermission('build:ai:use') covering all its endpoints. The nav already declares this key.",
-    backendRoute: { method: "post", path: "/ai/projects/{projectId}/summary" },
   },
   {
     prefix: "/build/workspaces/[pmWorkspaceId]/all-work",

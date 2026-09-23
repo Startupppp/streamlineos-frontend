@@ -440,14 +440,23 @@ describe("buildOrganizationNavGroups", () => {
     expect(violations).toHaveLength(0);
   });
 
-  it("gates the customers route on build:customers:view and not the retired crm:leads:view key", () => {
+  it("no longer offers a Build customers destination, because CRM owns customer identity and lifecycle", () => {
     const customersRoute = groups
       .flatMap((group) => group.routes)
       .find((route) => route.href === "/build/customers");
-    expect(customersRoute).toBeDefined();
-    if (!customersRoute) return;
-    const keys = toPermissionKeys(customersRoute.requiredPermission);
-    expect(keys).toContain("build:customers:view");
-    expect(keys).not.toContain("crm:leads:view");
+    expect(customersRoute).toBeUndefined();
+  });
+
+  it("no longer offers a nav destination for any route consolidated into Issues, Reports or the Command Center", () => {
+    const hrefs = groups.flatMap((group) => group.routes).map((route) => route.href);
+    for (const consolidated of [
+      "/build/42/timeline",
+      "/build/42/bugs",
+      "/build/42/analytics",
+      "/build/42/views",
+      "/build/42/ai",
+    ]) {
+      expect(hrefs).not.toContain(consolidated);
+    }
   });
 });

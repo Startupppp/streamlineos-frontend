@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import {
   useMeetings,
@@ -34,6 +34,8 @@ import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { SearchInput } from "@/components/ui/search-input";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getUserDisplayName } from "@/lib/person-display";
+import { useSearchParams } from "next/navigation";
+import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
 
 const TYPE_OPTS = [
   { value: "all", label: "All types" },
@@ -73,14 +75,26 @@ interface MeetingsListPageProps {
 export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
   const canManage = useCan("build:meetings:manage");
 
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [dateFilter, setDateFilter] = useState("all");
-  const [hostId, setHostId] = useState("");
-  const [attendeeId, setAttendeeId] = useState("");
-  const [actionItemFilter, setActionItemFilter] = useState("all");
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebouncedValue(search, 300);
+  const searchParams = useSearchParams();
+  const { setListParams, clearFilters } = useBuildListUrlState();
+
+  const typeFilter = searchParams.get("meetingType") ?? "all";
+  const statusFilter = searchParams.get("meetingStatus") ?? "all";
+  const dateFilter = searchParams.get("dateFilter") ?? "all";
+  const hostId = searchParams.get("hostId") ?? "";
+  const attendeeId = searchParams.get("attendeeId") ?? "";
+  const actionItemFilter = searchParams.get("actionItems") ?? "all";
+  const searchFromUrl = searchParams.get("q") ?? "";
+
+  const [rawSearch, setRawSearch] = useState(searchFromUrl);
+  const debouncedSearch = useDebouncedValue(rawSearch, 300);
+
+  useEffect(() => {
+    const current = searchParams.get("q") ?? "";
+    if (debouncedSearch === current) return;
+    setListParams({ q: debouncedSearch || null });
+  }, [debouncedSearch, searchParams, setListParams]);
+
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<MeetingTemplate | null>(null);
 
@@ -120,14 +134,14 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
 
   const displayed = useMemo(() => {
     const meetings = data ?? [];
-    if (!debouncedSearch.trim()) return meetings;
-    const q = debouncedSearch.toLowerCase();
+    if (!searchFromUrl.trim()) return meetings;
+    const q = searchFromUrl.toLowerCase();
     return meetings.filter(
       (m) =>
         m.title.toLowerCase().includes(q) ||
         `mtg-${m.meetingNumber}`.includes(q),
     );
-  }, [data, debouncedSearch]);
+  }, [data, searchFromUrl]);
 
   const isFiltered =
     typeFilter !== "all" ||
@@ -136,21 +150,41 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
     !!hostId ||
     !!attendeeId ||
     actionItemFilter !== "all" ||
-    !!debouncedSearch.trim();
+    !!searchFromUrl.trim();
 
   const handleSearchChange = useCallback((value: string) => {
-    setSearch(value);
+    setRawSearch(value);
   }, []);
 
+  const handleTypeFilterChange = useCallback((value: string) => {
+    setListParams({ meetingType: value === "all" ? null : value });
+  }, [setListParams]);
+
+  const handleStatusFilterChange = useCallback((value: string) => {
+    setListParams({ meetingStatus: value === "all" ? null : value });
+  }, [setListParams]);
+
+  const handleDateFilterChange = useCallback((value: string) => {
+    setListParams({ dateFilter: value === "all" ? null : value });
+  }, [setListParams]);
+
+  const handleHostIdChange = useCallback((value: string) => {
+    setListParams({ hostId: value || null });
+  }, [setListParams]);
+
+  const handleAttendeeIdChange = useCallback((value: string) => {
+    setListParams({ attendeeId: value || null });
+  }, [setListParams]);
+
+  const handleActionItemFilterChange = useCallback((value: string) => {
+    setListParams({ actionItems: value === "all" ? null : value });
+  }, [setListParams]);
+
   const handleClearFilters = useCallback(() => {
-    setTypeFilter("all");
-    setStatusFilter("all");
-    setDateFilter("all");
-    setHostId("");
-    setAttendeeId("");
-    setActionItemFilter("all");
-    setSearch("");
-  }, []);
+    setRawSearch("");
+    clearFilters();
+    setListParams({ meetingType: null, meetingStatus: null, dateFilter: null, hostId: null, attendeeId: null, actionItems: null });
+  }, [clearFilters, setListParams]);
 
   function handleOpenSheet() {
     setSelectedTemplate(null);
@@ -228,12 +262,12 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput
-        value={search}
+        value={rawSearch}
         onValueChange={handleSearchChange}
         placeholder="Search meetings…"
         className="min-w-[12rem] sm:max-w-xs"
       />
-      <Select value={typeFilter} onValueChange={setTypeFilter}>
+      <Select value={typeFilter} onValueChange={handleTypeFilterChange}>
         <SelectTrigger className="w-36">
           <SelectValue />
         </SelectTrigger>
@@ -243,7 +277,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
           ))}
         </SelectContent>
       </Select>
-      <Select value={statusFilter} onValueChange={setStatusFilter}>
+      <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
         <SelectTrigger className="w-36">
           <SelectValue />
         </SelectTrigger>
@@ -253,7 +287,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
           ))}
         </SelectContent>
       </Select>
-      <Select value={dateFilter} onValueChange={setDateFilter}>
+      <Select value={dateFilter} onValueChange={handleDateFilterChange}>
         <SelectTrigger className="w-32">
           <SelectValue />
         </SelectTrigger>
@@ -263,7 +297,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
           ))}
         </SelectContent>
       </Select>
-      <Select value={actionItemFilter} onValueChange={setActionItemFilter}>
+      <Select value={actionItemFilter} onValueChange={handleActionItemFilterChange}>
         <SelectTrigger className="w-40">
           <SelectValue />
         </SelectTrigger>
@@ -277,7 +311,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
         <Combobox
           options={memberOptions}
           value={hostId}
-          onChange={setHostId}
+          onChange={handleHostIdChange}
           placeholder="Host…"
           searchPlaceholder="Search hosts…"
           emptyText="No members"
@@ -288,7 +322,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
         <Combobox
           options={memberOptions}
           value={attendeeId}
-          onChange={setAttendeeId}
+          onChange={handleAttendeeIdChange}
           placeholder="Attendee…"
           searchPlaceholder="Search attendees…"
           emptyText="No members"

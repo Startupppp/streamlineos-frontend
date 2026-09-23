@@ -48,6 +48,12 @@ Full dependency census in
 | 2026-09-22 | `app/(authenticated)/build/goal/` (renamed) | `/build/goals` | `next.config.ts` redirect |
 | 2026-09-22 | `app/(authenticated)/build/goal/[goalId]/` (renamed) | `/build/goals/[goalId]` | `next.config.ts` redirect |
 | 2026-09-22 | `app/(authenticated)/build/pm-workspaces/` (renamed) | `/build/workspaces` | `next.config.ts` redirect |
+| 2026-09-23 | `app/(authenticated)/build/[projectId]/timeline/` and `features/build/timeline/` | `/build/[projectId]/issues?view=timeline` | `next.config.ts` redirect |
+| 2026-09-23 | `app/(authenticated)/build/[projectId]/bugs/` and `features/build/bugs/{bugs-page,bug-sheet,bug-schema}` | `/build/[projectId]/issues?type=BUG` | `next.config.ts` redirect |
+| 2026-09-23 | `app/(authenticated)/build/[projectId]/analytics/` and `features/build/analytics/project-analytics-page` | `/build/[projectId]/reports?tab=overview` | `next.config.ts` redirect |
+| 2026-09-23 | `app/(authenticated)/build/[projectId]/views/` and `features/build/views/views-page` | `/build/[projectId]/issues` | `next.config.ts` redirect |
+| 2026-09-23 | `app/(authenticated)/build/[projectId]/ai/` and the 12 assistant-only files in `features/build/ai/` | `/build/command-center?projectId=…` | `next.config.ts` redirect |
+| 2026-09-23 | `app/(authenticated)/build/customers/` and `features/build/customers/` | `/crm` | `next.config.ts` redirect |
 
 Six of the nine routes already had a `next.config.ts` redirect **and** a
 redirect-only `page.tsx`. Configuration redirects are checked before the
@@ -66,29 +72,49 @@ the existing `/build/workspaces/[pmWorkspaceId]`, matching the
 Still not executed, and why — each is a kill-list entry whose replacement does
 not exist yet, so removing the page would delete the job rather than move it:
 
-| Route | Replacement it needs first |
-|---|---|
-| `/build/[projectId]/timeline` | `layout=timeline` on `/build/[projectId]/issues` |
-| `/build/[projectId]/bugs` | `type=BUG` filtering on `/build/[projectId]/issues` |
-| `/build/[projectId]/analytics` | `tab=overview` on `/build/[projectId]/reports` |
-| `/build/[projectId]/views` | saved-view management inside Issues plus Settings |
-| `/build/[projectId]/intake` | the Forms-definitions / Triage-submissions split |
-| `/build/[projectId]/ai` | `projectId=` run history on `/build/command-center` |
-| `/build/customers` | the CRM customer linkage `/crm` owns |
+| Route | Replacement it needs first | Status |
+|---|---|---|
+| `/build/[projectId]/timeline` | `timeline` view on `/build/[projectId]/issues` | **EXECUTED 2026-09-23.** `gantt` was renamed to `timeline` throughout the view vocabulary; `?view=gantt` still resolves |
+| `/build/[projectId]/bugs` | `type=BUG` filtering on `/build/[projectId]/issues` | **EXECUTED 2026-09-23.** QA evidence moved to the ticket detail; severity and QA-state filters moved to the Issues toolbar |
+| `/build/[projectId]/analytics` | `tab=overview` on `/build/[projectId]/reports` | **EXECUTED 2026-09-23** |
+| `/build/[projectId]/views` | saved-view management inside Issues | **EXECUTED 2026-09-23.** Apply, pin, rename, delete and create all live in the Issues toolbar's Views menu |
+| `/build/[projectId]/intake` | the Forms-definitions / Triage-submissions split | **NOT EXECUTED.** The destination is [open question 12](./99-open-questions.md) — Forms and Triage produce different deep links, and neither has been chosen |
+| `/build/[projectId]/ai` | `projectId=` run history on `/build/command-center` | **EXECUTED 2026-09-23** |
+| `/build/customers` | the CRM customer linkage `/crm` owns | **EXECUTED 2026-09-23** |
 
-Each keeps its page, its sidebar destination and its route-access gate until the
-target behaviour ships. The route manifest records the intended target for all
-seven, so the disposition is not lost.
+Only `/build/[projectId]/intake` keeps its page, its sidebar destination and its
+route-access gate. It is the one row of the seven whose target is still an open
+question rather than a recorded decision, so removing it would pick an answer by
+implementation. The route manifest still records its intended target.
 
-Re-verified 2026-09-22: `frontend/lib/build/build-route-manifest.ts` holds exactly **79 entries,
-7 of them non-KEEP** — 6 `CONSOLIDATE` and 1 `DELETE` — matching the seven rows above
-one for one, and `app/(authenticated)/build` contains exactly 79 `page.tsx` files.
+Two notes on the executed rows, because both departed from the wording above:
 
-Two replacement descriptions above are broader than the manifest target and should not be read
+- **The timeline deep link is `?view=timeline`, not `?layout=timeline`.** No
+  `layout` parameter ever existed in the code; the shipped vocabulary was
+  `?view=` with a `gantt` value. The value was renamed to `timeline` so the URL
+  matches the product word. `parseViewType` still accepts `gantt`, so saved
+  views and bookmarks predating the rename keep working.
+- **Saved views still persist `layoutType: "gantt"`.** That column is a
+  PostgreSQL enum (`viewLayoutEnum`) and the API's write schema is
+  `z.enum(["board","list","table","calendar","gantt"])`, so `"timeline"` cannot
+  be stored without a backend migration. `toSavedViewLayout` /
+  `fromSavedViewLayout` (`frontend/lib/build/view-types.ts`) map across that
+  boundary, and `view-types.test.ts` pins the round trip.
+
+Re-verified 2026-09-23: `frontend/lib/build/build-route-manifest.ts` holds exactly **73 entries,
+1 of them non-KEEP** — the single `CONSOLIDATE` row for `/build/[projectId]/intake` — and
+`app/(authenticated)/build` contains exactly 73 `page.tsx` files. The route census reports 82
+Build routes, down from 88. `build-route-manifest.test.ts` pins both counts and asserts the
+manifest and the disk tree cover each other in both directions, so neither can drift alone.
+
+One replacement description above is broader than the manifest target and should not be read
 as authority:
 
-- `/build/[projectId]/views` — the manifest target is `/build/[projectId]/issues`. "Plus Settings" is a proposal, not a recorded decision.
 - `/build/[projectId]/intake` — the manifest target is `/build/[projectId]/forms`, with no Triage half. The Forms-definitions / Triage-submissions split is an **open question**, not a decision; see [`99-open-questions.md`](./99-open-questions.md).
+
+The `/build/[projectId]/views` note that used to sit here is resolved: the executed
+target is `/build/[projectId]/issues`, and the "plus Settings" half was never built
+because it was a proposal rather than a recorded decision.
 
 Sequencing, owners and acceptance criteria for these seven are P1-1 in
 [`06-prioritized-backlog.md`](./06-prioritized-backlog.md).

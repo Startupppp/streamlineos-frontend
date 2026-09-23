@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
-import { useCallback, useMemo, useState, useTransition } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useChangeRequests, useDeleteChangeRequest } from "@/hooks/api/build/change-requests";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -33,6 +33,8 @@ import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { CR_STATUSES, CR_STATUS_LABELS } from "./change-request-schema";
+import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 const CR_STATUS_STYLES: Record<string, string> = {
   submitted: "text-muted-foreground border-border",
@@ -85,42 +87,38 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const canManage = useCan("build:changerequests:manage");
 
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
-  const [, startTransition] = useTransition();
+  const { cursor, setCursor, setListParams } = useBuildListUrlState();
 
-  const statusFilter = searchParams.get("status") ?? "all";
+  const urlStatus = searchParams.get("status") ?? "all";
   const impactFilter = searchParams.get("impact") ?? "";
   const requesterIdFilter = searchParams.get("requesterId") ?? "";
   const approverIdFilter = searchParams.get("approverId") ?? "";
   const releaseIdFilter = searchParams.get("releaseId") ?? "";
   const clientVisibleFilter = searchParams.get("clientVisible") ?? "";
-  const qFilter = searchParams.get("q") ?? "";
+  const urlQ = searchParams.get("q") ?? "";
+
+  const [searchInput, setSearchInput] = useState(urlQ);
+  const debouncedSearchInput = useDebouncedValue(searchInput, 300);
+
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editCr, setEditCr] = useState<ChangeRequest | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ChangeRequest | null>(null);
 
-  function updateUrlParam(key: string, value: string | null) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value && value !== "all") {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-    const query = params.toString();
-    startTransition(() => {
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-    });
-  }
+  useEffect(() => {
+    const current = searchParams.get("q") ?? "";
+    if (debouncedSearchInput === current) return;
+    setListParams({ q: debouncedSearchInput || null });
+  }, [debouncedSearchInput, searchParams, setListParams]);
 
   const activeFilters = {
-    ...(statusFilter !== "all" ? { status: statusFilter } : {}),
+    ...(urlStatus !== "all" ? { status: urlStatus } : {}),
     ...(impactFilter ? { impact: impactFilter } : {}),
     ...(requesterIdFilter ? { requesterId: requesterIdFilter } : {}),
     ...(approverIdFilter ? { approverId: approverIdFilter } : {}),
     ...(releaseIdFilter ? { releaseId: Number(releaseIdFilter) } : {}),
     ...(clientVisibleFilter !== "" ? { clientVisible: clientVisibleFilter === "true" } : {}),
-    ...(qFilter ? { q: qFilter } : {}),
+    ...(urlQ ? { q: urlQ } : {}),
+    ...(cursor ? { cursor } : {}),
   };
 
   const { data: crPage, isLoading, isError, error, refetch } = useChangeRequests(
@@ -137,27 +135,28 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const handleNew = useCallback(() => { setEditCr(null); setSheetOpen(true); }, []);
   const handleEdit = useCallback((cr: ChangeRequest) => { setEditCr(cr); setSheetOpen(true); }, []);
   const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) setDeleteTarget(null); }, []);
+
   const handleSearchChange = useCallback((value: string) => {
-    updateUrlParam("q", value || null);
-  }, [searchParams, pathname]);
+    setSearchInput(value);
+  }, []);
 
   function handleStatusChange(value: string) {
-    updateUrlParam("status", value === "all" ? null : value);
+    setListParams({ status: value === "all" ? null : value });
   }
 
   function handleImpactChange(value: string) {
-    updateUrlParam("impact", value || null);
+    setListParams({ impact: value || null, cursor: null });
   }
 
   function handleClientVisibleChange(value: string) {
-    updateUrlParam("clientVisible", value === "all" ? null : value);
+    setListParams({ clientVisible: value === "all" ? null : value, cursor: null });
   }
 
   const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
     deleteCr.mutate(deleteTarget.id, {
       onSuccess: () => { toast.success("Change request deleted"); setDeleteTarget(null); },
-      onError: (error) => toast.error(getErrorMessage(error)),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [deleteTarget, deleteCr]);
 
@@ -168,8 +167,8 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   }, [refetch]);
 
   const filtersActive = !!(
-    qFilter ||
-    statusFilter !== "all" ||
+    searchInput ||
+    urlStatus !== "all" ||
     impactFilter ||
     requesterIdFilter ||
     approverIdFilter ||
@@ -178,18 +177,17 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   );
 
   function handleClearFilters() {
-    updateUrlParam("q", null);
-    updateUrlParam("status", null);
-    updateUrlParam("impact", null);
-    updateUrlParam("requesterId", null);
-    updateUrlParam("approverId", null);
-    updateUrlParam("releaseId", null);
-    updateUrlParam("clientVisible", null);
+    setSearchInput("");
+    setListParams({
+      q: null, status: null, impact: null,
+      requesterId: null, approverId: null,
+      releaseId: null, clientVisible: null,
+    });
   }
 
   function handleLoadMore() {
     if (pagination?.nextCursor) {
-      updateUrlParam("cursor", pagination.nextCursor);
+      setCursor(pagination.nextCursor);
     }
   }
 
@@ -275,10 +273,10 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput
         placeholder="Search..."
-        value={qFilter}
+        value={searchInput}
         onValueChange={handleSearchChange}
       />
-      <Select value={statusFilter} onValueChange={handleStatusChange}>
+      <Select value={urlStatus} onValueChange={handleStatusChange}>
         <SelectTrigger className="w-40">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
