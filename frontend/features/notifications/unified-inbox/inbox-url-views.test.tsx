@@ -134,8 +134,9 @@ jest.mock("./inbox-toolbar", () => {
   const { createElement: ce } = require("react") as typeof import("react");
   const views = [
     { value: "primary", label: "All" },
-    { value: "updates", label: "Updates" },
     { value: "notifications", label: "Notifications" },
+    { value: "mentions", label: "Mentions" },
+    { value: "unread", label: "Unread" },
     { value: "mail", label: "Mail" },
     { value: "approvals", label: "Approvals" },
     { value: "later", label: "Later" },
@@ -261,8 +262,9 @@ describe("parseView — URL param parsing", () => {
 
   it.each([
     "primary",
-    "updates",
     "notifications",
+    "mentions",
+    "unread",
     "mail",
     "approvals",
     "later",
@@ -282,6 +284,9 @@ describe("buildQueryParams — view → backend params mapping", () => {
       priority: "",
       kindOverride: [],
       group: "none",
+      from: "",
+      to: "",
+      module: "",
     };
   }
 
@@ -291,15 +296,21 @@ describe("buildQueryParams — view → backend params mapping", () => {
     expect(params.kinds).toBeUndefined();
   });
 
-  it("updates sends kinds=[notification,broadcast] and triage=active", () => {
-    const params = buildQueryParams(state("updates"));
-    expect(params.kinds).toEqual(["notification", "broadcast"]);
-    expect(params.triage).toBe("active");
-  });
-
   it("notifications sends kinds=[notification,broadcast] with no triage", () => {
     const params = buildQueryParams(state("notifications"));
     expect(params.kinds).toEqual(["notification", "broadcast"]);
+    expect(params.triage).toBeUndefined();
+  });
+
+  it("mentions sends kinds=[notification] with no triage", () => {
+    const params = buildQueryParams(state("mentions"));
+    expect(params.kinds).toEqual(["notification"]);
+    expect(params.triage).toBeUndefined();
+  });
+
+  it("unread sends no kind restriction and no triage", () => {
+    const params = buildQueryParams(state("unread"));
+    expect(params.kinds).toBeUndefined();
     expect(params.triage).toBeUndefined();
   });
 
@@ -366,7 +377,7 @@ describe("buildQueryParams — view → backend params mapping", () => {
 
   it("kindOverride intersects with the view's base kinds", () => {
     const params = buildQueryParams({
-      ...state("updates"),
+      ...state("notifications"),
       kindOverride: ["notification"],
     });
     expect(params.kinds).toEqual(["notification"]);
@@ -391,6 +402,9 @@ describe("parseInboxFilterState — round-trip with filterStateToSearchParams", 
       priority: "HIGH",
       kindOverride: ["notification"],
       group: "kind",
+      from: "2026-01-01",
+      to: "2026-12-31",
+      module: "hr",
     };
     const params = filterStateToSearchParams(original);
     const restored = parseInboxFilterState(params);
@@ -469,17 +483,21 @@ describe("resolvedCapabilities — union of selected kinds", () => {
   });
 });
 
-describe("VIEW_KINDS coverage — all 7 views map the right backend kinds", () => {
+describe("VIEW_KINDS coverage — all 8 views map the right backend kinds", () => {
   it("primary has no kind restriction", () => {
     expect(VIEW_KINDS.primary).toBeUndefined();
   });
 
-  it("updates restricts to notification + broadcast", () => {
-    expect(VIEW_KINDS.updates).toEqual(["notification", "broadcast"]);
-  });
-
   it("notifications restricts to notification + broadcast", () => {
     expect(VIEW_KINDS.notifications).toEqual(["notification", "broadcast"]);
+  });
+
+  it("mentions restricts to notification only", () => {
+    expect(VIEW_KINDS.mentions).toEqual(["notification"]);
+  });
+
+  it("unread has no kind restriction", () => {
+    expect(VIEW_KINDS.unread).toBeUndefined();
   });
 
   it("mail restricts to mail only", () => {

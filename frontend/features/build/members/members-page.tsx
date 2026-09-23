@@ -55,7 +55,7 @@ export function MembersPage() {
   const canManage = useCan("build:members:manage");
 
   const { data, isLoading, isError, error, refetch } =
-    useProjectWorkspaceMembers(
+    useBuildMembers(
       {
         cursor,
         limit: 25,
@@ -74,7 +74,7 @@ export function MembersPage() {
     isEmpty: members.length === 0,
   });
 
-  const removeMember = useRemoveProjectWorkspaceMember();
+  const removeMember = useRemoveBuildMember();
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -104,7 +104,7 @@ export function MembersPage() {
         toast.success(`${targetName} removed from workspace.`);
         setRemoveTarget(null);
       },
-      onError: (err) => {
+      onError: (err: Error) => {
         toast.error(getErrorMessage(err));
       },
     });
@@ -121,7 +121,7 @@ export function MembersPage() {
   });
 
   const renderMobileCard = useCallback(
-    (member: ProjectWorkspaceMember) => {
+    (member: BuildMember) => {
       const displayName = getUserDisplayName(member);
       return (
         <BuildMobileCard

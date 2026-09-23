@@ -3,8 +3,8 @@ import { join } from "node:path";
 import { backendPath } from "@/test-support/backend-checkout";
 
 export const BACKEND_INVENTORY = backendPath("src/modules/inventory");
-const FRONTEND_INVENTORY_HOOKS = join(__dirname, "..");
-const FRONTEND_API_HOOKS = join(__dirname, "..", "..");
+const FRONTEND_INVENTORY_HOOKS = join(__dirname);
+const FRONTEND_API_HOOKS = join(__dirname, "..");
 
 export const MUTATING_VERBS = ["post", "patch", "put", "delete"] as const;
 

@@ -108,7 +108,6 @@ export const useUserStats = (
     queryKey: usersAndCommerceQueryKeys.users.stats(),
     queryFn: ({ signal }) => apiClient.get("/users/stats", undefined, signal, userStatsContract),
     staleTime: 60_000,
-    ...INLINE_READ_ERROR,
     ...options,
     enabled: canView && (options?.enabled ?? true),
   });

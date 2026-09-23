@@ -18,6 +18,9 @@ function makeState(view: InboxFilterState["view"] = "primary"): InboxFilterState
     priority: "",
     kindOverride: [],
     group: "none",
+    from: "",
+    to: "",
+    module: "",
   };
 }
 
@@ -217,6 +220,9 @@ describe("useInboxSavedViews — URL search params are the persistence format", 
       priority: "HIGH",
       kindOverride: ["notification"],
       group: "kind",
+      from: "",
+      to: "",
+      module: "",
     };
     act(() => result.current.saveView("Full state", state));
     const saved = result.current.views[0];

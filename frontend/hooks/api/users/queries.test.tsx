@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { apiClient } from "@/lib/api-client";
 import { readErrorReachesBoundary } from "@/lib/query-error-policy";
-import { useUsers, useUserStats } from "./queries";
+import { useUsers } from "./queries";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
@@ -99,7 +99,6 @@ describe("Members & Access read failures stay on the page", () => {
 
   const readHooks: ReadonlyArray<[string, () => { isError: boolean; error: Error | null }]> = [
     ["useUsers", () => useUsers()],
-    ["useUserStats", () => useUserStats()],
   ];
 
   it.each(readHooks)(

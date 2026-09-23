@@ -47,7 +47,7 @@ import {
   installMintingTransport,
   makeSession,
   makeToken,
-} from "./__tests__/auth-callbacks-test-helpers";
+} from "./auth-callbacks-test-helpers";
 
 const ORIGINAL_ENV = process.env;
 
