@@ -183,9 +183,10 @@ Workspace has no final path, so it is not represented as an ADD route either.
 The generated final-route set contains retained routes, MOVE targets, and ADD
 routes. It excludes REMOVE rows and CONSOLIDATE source routes. The PM Workspace
 removal drops 9 routes (`PG-WS-001` through `PG-WS-009`) and 1 ADD route
-(former `PG-ADD-004`, workspace settings) from any prior final-route count. The
-generated census at `docs/specs/build/generated/routes.snapshot.json` is
-authoritative for the current total.
+(former `PG-ADD-004`, workspace settings), so the current decisions yield
+89 final page routes, down from 99; the generated census at
+`docs/specs/build/generated/routes.snapshot.json` becomes authoritative when an
+approved route decision changes.
 
 ## Explicit Non-Pages
 
