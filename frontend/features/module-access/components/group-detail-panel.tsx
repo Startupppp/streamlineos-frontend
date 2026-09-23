@@ -19,6 +19,10 @@ import {
   type ModuleRoleGroup,
   type DataScope,
 } from "@/hooks/api/module-access";
+import {
+  moduleScopeExplanation,
+  moduleScopeLabel,
+} from "@/features/module-access/module-scope-label";
 import { PageActionPicker } from "@/features/module-access/components/page-action-picker";
 import { MemberAssignmentSheet } from "@/features/module-access/components/member-assignment-sheet";
 
@@ -123,6 +127,7 @@ export function GroupDetailPanel({
   );
 
   const grantedCount = Object.values(draft).filter((s) => s !== "none").length;
+  const scopeLabel = moduleScopeLabel(moduleKey);
 
   return (
     <>
@@ -139,7 +144,7 @@ export function GroupDetailPanel({
                 </Badge>
               )}
               <Badge variant="outline" className="text-xs shrink-0">
-                {grantedCount} permissions
+                {grantedCount} of {catalog.length} {scopeLabel} permissions
               </Badge>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -204,12 +209,18 @@ export function GroupDetailPanel({
                 </div>
                 <div className="flex gap-2">
                   <span className="text-muted-foreground w-28 shrink-0">Members</span>
-                  <span>{group.memberCount}</span>
+                  <span>{group.memberCount} in this group</span>
                 </div>
                 <div className="flex gap-2">
                   <span className="text-muted-foreground w-28 shrink-0">Permissions</span>
                   <span>
-                    {grantedCount} of {catalog.length} granted
+                    {grantedCount} of {catalog.length} {scopeLabel} permissions granted
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-muted-foreground w-28 shrink-0">Scope</span>
+                  <span className="max-w-prose text-muted-foreground">
+                    {moduleScopeExplanation(moduleKey)}
                   </span>
                 </div>
               </div>
