@@ -92,6 +92,10 @@ docs/superpowers/
 # Playwright run artifacts
 /blob-report/
 /playwright/.cache/
+
+# check-contract-parity's generated bundler entry/output (kept out of node_modules on
+# purpose — see scripts/check-contract-parity.mjs)
+/.cache/
 # The e2e suite's own dev-server build dir (playwright.config.ts NEXT_DIST_DIR).
 .next-e2e
 

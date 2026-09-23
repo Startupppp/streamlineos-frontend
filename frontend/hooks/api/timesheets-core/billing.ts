@@ -23,6 +23,9 @@ const billingExportC = lazyContract(() =>
 const billingInvoiceDraftC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-billing-schema").then((m) => m.billingInvoiceDraftResponseContract),
 );
+const billingReleaseDraftC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-billing-schema").then((m) => m.billingReleaseDraftResponseContract),
+);
 
 type UninvoicedQuery = {
   startDate?: string;
@@ -79,6 +82,34 @@ export function useCreateInvoiceDraft() {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.billingUninvoiced() });
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
       toast.success(`Invoice draft created for ${res.entryCount} entries`);
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
+}
+
+/**
+ * Reverses `useCreateInvoiceDraft`: puts entries stuck at `INVOICE_DRAFTED`
+ * back to billable when the draft never became a real invoice — the fix for
+ * a stranded entry `entries.service.ts`'s `voidEntry` otherwise refuses to
+ * touch (it blocks voiding anything already drafted or invoiced).
+ */
+export function useReleaseInvoiceDraft() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("timesheets:billing:invoice", {
+    mutationKey: ["timesheets", "billing", "release-draft"],
+    mutationFn: (data: { timesheetEntryIds: number[] }) =>
+      apiClient.post<{ releasedEntryIds: number[] }>(
+        "/timesheets/billing/release-draft",
+        data,
+        undefined,
+        billingReleaseDraftC,
+      ),
+    onSuccess: (res) => {
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.billingUninvoiced() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
+      toast.success(
+        `${res.releasedEntryIds.length} entr${res.releasedEntryIds.length === 1 ? "y" : "ies"} released back to billable`,
+      );
     },
     onError: (error) => toast.error(getErrorMessage(error)),
   });

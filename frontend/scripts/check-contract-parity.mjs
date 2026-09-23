@@ -21,7 +21,13 @@ import {
 import { runSelfTest } from "./contract-parity/self-test.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const CACHE_DIR = join(ROOT, "node_modules", ".cache", "contract-parity");
+// Deliberately NOT under node_modules: in these git worktrees, frontend/node_modules is a
+// symlink into a sibling worktree's node_modules. esbuild resolves entryPoints through
+// symlinks (realpath) before resolving relative imports, so an entry file whose path runs
+// through that symlink has its relative imports (`../../hooks/...`) resolved against the
+// WRONG worktree's source tree. Keeping the cache dir outside node_modules keeps the entry
+// file's real path inside THIS worktree regardless of the node_modules symlink situation.
+const CACHE_DIR = join(ROOT, ".cache", "contract-parity");
 const SCAN_DIRS = ["hooks", "lib", "app", "features", "components"];
 const BACKEND_DOCUMENT = "openapi.json";
 

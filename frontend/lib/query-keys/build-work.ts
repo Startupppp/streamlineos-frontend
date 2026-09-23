@@ -103,6 +103,29 @@ export const buildWorkQueryKeys = {
           "change-requests",
           changeRequestId,
         ] as const,
+      affectedTickets: (
+        projectId: number,
+        changeRequestId: number,
+        params?: QueryKeyParams,
+      ) =>
+        params === undefined
+          ? ([
+              ...base,
+              "projects",
+              projectId,
+              "change-requests",
+              changeRequestId,
+              "affected-tickets",
+            ] as const)
+          : ([
+              ...base,
+              "projects",
+              projectId,
+              "change-requests",
+              changeRequestId,
+              "affected-tickets",
+              params,
+            ] as const),
     },
     clientPortal: {
       projects: () => [...base, "projects", "portal", "projects"] as const,
