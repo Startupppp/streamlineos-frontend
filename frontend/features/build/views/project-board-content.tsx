@@ -80,6 +80,7 @@ interface ProjectBoardContentProps {
   isError: boolean;
   error: unknown;
   onRetry: () => void;
+  focusedTicketId?: number | null;
 }
 
 export function ProjectBoardContent({
@@ -116,6 +117,7 @@ export function ProjectBoardContent({
   isError,
   error,
   onRetry,
+  focusedTicketId,
 }: ProjectBoardContentProps) {
   const shouldReduceMotion = useReducedMotion();
   const isOnline = useOnlineStatus();
@@ -257,6 +259,7 @@ export function ProjectBoardContent({
                   showEmptyRows={displayOptions.showEmptyRows}
                   projectId={projectId}
                   selection={selection}
+                  focusedTicketId={focusedTicketId}
                 />
               </div>
             </ScrollArea>
