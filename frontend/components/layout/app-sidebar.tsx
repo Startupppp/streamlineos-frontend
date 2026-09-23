@@ -270,6 +270,7 @@ export function AppSidebar({
                       multiGroup ? () => toggleGroup(group.label) : undefined
                     }
                     pendingLeaves={pendingLeaves}
+                    inboxCount={unreadInboxCount}
                     onNavigate={onNavigate}
                     accent={accent}
                   />

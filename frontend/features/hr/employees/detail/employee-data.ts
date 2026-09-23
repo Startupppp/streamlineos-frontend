@@ -18,6 +18,7 @@ const employeeEmploymentSchema = z
     joiningDate: z.string().nullable(),
     probationEndDate: z.string().nullable(),
     confirmationDate: z.string().nullable(),
+    departmentId: z.string().nullable(),
   })
   .strict();
 

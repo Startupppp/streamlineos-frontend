@@ -86,6 +86,7 @@ function renderSection() {
       showLabel
       isGroupCollapsed={false}
       pendingLeaves={0}
+      inboxCount={0}
       accent={accent}
     />,
   );

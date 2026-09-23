@@ -13,6 +13,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import {
   useFocusStrip,
   type AttentionItem,
@@ -68,6 +69,7 @@ interface FocusStripProps {
 
 export function FocusStrip({ access }: FocusStripProps) {
   const { items, isLoading, isError, refetch } = useFocusStrip(access);
+  const isOnline = useOnlineStatus();
 
   function handleRetry() {
     refetch();
@@ -93,7 +95,11 @@ export function FocusStrip({ access }: FocusStripProps) {
         role="alert"
         className="flex items-center gap-2 text-xs text-destructive"
       >
-        <span>Could not load your focus items.</span>
+        <span>
+          {isOnline
+            ? "Could not load your focus items."
+            : "You're offline — your focus items may be out of date."}
+        </span>
         <button
           type="button"
           onClick={handleRetry}

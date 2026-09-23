@@ -30,7 +30,7 @@ export interface NavRoute {
   label: string;
   icon: ComponentType<{ className?: string }>;
   href: string;
-  badge?: "leaves";
+  badge?: "leaves" | "inbox";
   requiredPermission?: PermissionRequirement;
   children?: NavRoute[];
   module?: ProductKey;

@@ -48,6 +48,7 @@ export type BuildApprovalInboxItem = InboxItemBase & {
   id: number;
   status: string;
   approvalKind: string;
+  priority: string;
   projectId: number | null;
   ticketId: number | null;
   dueAt: string | null;

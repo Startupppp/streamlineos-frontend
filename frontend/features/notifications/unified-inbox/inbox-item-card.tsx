@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { NotificationCard } from "@/features/notifications/notification-card";
 import { formatRelativeTime } from "@/lib/format-relative-time";
+import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
 import { approvalKindLabel, taskKindLabel } from "./inbox-sources";
 import type {
   UnifiedInboxItem,
@@ -164,6 +165,13 @@ function MailItemCard({ item, onClick }: MailItemCardProps) {
   );
 }
 
+function approvalPriorityTone(priority: string): StatusTone | null {
+  if (priority === "LOW" || priority === "NORMAL") return null;
+  if (priority === "HIGH") return "warning";
+  if (priority === "CRITICAL") return "danger";
+  return "warning";
+}
+
 interface ApprovalItemCardProps {
   item: BuildApprovalInboxItem;
   onClick: (item: BuildApprovalInboxItem) => void;
@@ -172,6 +180,8 @@ interface ApprovalItemCardProps {
 function ApprovalItemCard({ item, onClick }: ApprovalItemCardProps) {
   const handleClick = useCallback(() => onClick(item), [item, onClick]);
   const isPending = item.status === "pending";
+  const priorityTone = approvalPriorityTone(item.priority);
+  const priorityToneClasses = priorityTone !== null ? statusToneClasses(priorityTone) : null;
   return (
     <button
       type="button"
@@ -202,6 +212,18 @@ function ApprovalItemCard({ item, onClick }: ApprovalItemCardProps) {
             <Badge variant="secondary" className="h-4 px-1.5 py-0 text-micro">
               {approvalKindLabel(item.approvalKind)}
             </Badge>
+            {priorityToneClasses !== null && (
+              <Badge
+                variant="outline"
+                className={cn(
+                  "h-4 px-1.5 py-0 text-micro",
+                  priorityToneClasses.ink,
+                  priorityToneClasses.rule,
+                )}
+              >
+                {item.priority}
+              </Badge>
+            )}
             {item.dueAt && (
               <span className="text-dense text-muted-foreground tabular-nums">
                 Due {formatRelativeTime(item.dueAt)}

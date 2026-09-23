@@ -44,6 +44,12 @@ const mockPersonal: {
   refetch: () => void;
 } = { data: undefined, isLoading: false, isError: false, refetch: jest.fn() };
 
+const mockOnline: { value: boolean } = { value: true };
+
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => mockOnline.value,
+}));
+
 jest.mock("@/hooks/api/inbox", () => ({ useUnifiedInboxCount: () => mockInboxCount }));
 jest.mock("@/hooks/api/dashboard", () => ({
   usePendingApprovals: () => mockApprovals,
@@ -68,6 +74,7 @@ const emptyData = {
 };
 
 beforeEach(() => {
+  mockOnline.value = true;
   mockInboxCount.data = undefined;
   mockInboxCount.isLoading = false;
   mockInboxCount.isError = false;
@@ -265,6 +272,29 @@ describe("FocusStrip — error state", () => {
     mockInboxCount.isError = true;
     render(<FocusStrip access={baseAccess} />);
     expect(screen.queryByText(/all caught up/i)).not.toBeInTheDocument();
+  });
+
+  it("names being offline as the reason, rather than blaming the server", () => {
+    mockInboxCount.isError = true;
+    mockOnline.value = false;
+    render(<FocusStrip access={baseAccess} />);
+    expect(screen.getByText(/offline/i)).toBeInTheDocument();
+    expect(screen.queryByText(/could not load/i)).not.toBeInTheDocument();
+  });
+
+  it("CONTROL: blames the server when the failure happens while online", () => {
+    mockInboxCount.isError = true;
+    mockOnline.value = true;
+    render(<FocusStrip access={baseAccess} />);
+    expect(screen.getByText(/could not load/i)).toBeInTheDocument();
+    expect(screen.queryByText(/offline/i)).not.toBeInTheDocument();
+  });
+
+  it("still offers retry while offline, because reconnecting is the fix", () => {
+    mockInboxCount.isError = true;
+    mockOnline.value = false;
+    render(<FocusStrip access={baseAccess} />);
+    expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
   });
 });
 

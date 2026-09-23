@@ -56,6 +56,7 @@ export const unifiedInboxContract = z.object({
         id: z.number().int(),
         status: z.string(),
         approvalKind: z.string(),
+        priority: z.string(),
         projectId: z.number().int().nullable(),
         ticketId: z.number().int().nullable(),
         dueAt: z.string().nullable(),

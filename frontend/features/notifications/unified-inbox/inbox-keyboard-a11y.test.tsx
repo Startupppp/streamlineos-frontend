@@ -129,6 +129,7 @@ function makeApprovalItem(id: number): BuildApprovalInboxItem {
     subject: `Approval subject ${id}`,
     status: "pending",
     approvalKind: "build",
+    priority: "NORMAL",
     projectId: 1,
     ticketId: 5,
     dueAt: null,

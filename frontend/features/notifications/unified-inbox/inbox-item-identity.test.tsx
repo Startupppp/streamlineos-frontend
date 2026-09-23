@@ -204,6 +204,7 @@ function makeApprovalItem(approvalKind: string): BuildApprovalInboxItem {
     id: 1,
     status: "pending",
     approvalKind,
+    priority: "NORMAL",
     projectId: null,
     ticketId: null,
     dueAt: null,
