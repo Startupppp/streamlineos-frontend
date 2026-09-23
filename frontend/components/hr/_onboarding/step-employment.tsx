@@ -17,13 +17,17 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DepartmentCombobox } from "@/components/hr/department-combobox";
+import Link from "next/link";
 import { useCan } from "@/hooks/api/access";
+import { useOrgJobRoles } from "@/hooks/api/hr/hr-org";
 import { useSeedDefaultRoles } from "@/hooks/api/roles";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
+
+const JOB_ROLE_LIST_ID = "hr-onboarding-job-roles";
 
 interface Role { slug: string; name: string }
 
@@ -40,6 +44,9 @@ export function StepEmployment({
 }: StepEmploymentProps) {
   const canCreateDept = useCan("hr:employees:manage");
   const canManageRbac = useCan("settings:rbac:manage");
+  const { data: jobRoles } = useOrgJobRoles();
+  const definedRoles = (jobRoles ?? []).filter((role) => role.isActive);
+  const hasJobArchitecture = definedRoles.length > 0;
   const seedRoles = useSeedDefaultRoles();
   const onlyAdminAvailable =
     assignableRoles.length > 0 &&
@@ -89,8 +96,36 @@ export function StepEmployment({
           <FormItem>
             <FormLabel>Designation <span className="text-destructive">*</span></FormLabel>
             <FormControl>
-              <Input placeholder="e.g., Senior Engineer" {...field} />
+              <Input
+                placeholder="e.g., Senior Engineer"
+                list={hasJobArchitecture ? JOB_ROLE_LIST_ID : undefined}
+                {...field}
+              />
             </FormControl>
+            {hasJobArchitecture ? (
+              <datalist id={JOB_ROLE_LIST_ID}>
+                {definedRoles.map((role) => (
+                  <option key={role.id} value={role.name} />
+                ))}
+              </datalist>
+            ) : null}
+            <FormDescription>
+              {hasJobArchitecture ? (
+                <>Matching a job role from your architecture keeps reporting consistent.</>
+              ) : (
+                <>
+                  No job roles are defined yet, so this is recorded as a
+                  provisional title on the employment record only.{" "}
+                  <Link
+                    href="/hr/org"
+                    className="text-primary underline underline-offset-2"
+                  >
+                    Set up job architecture
+                  </Link>{" "}
+                  to make designations selectable.
+                </>
+              )}
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}

@@ -12,8 +12,6 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useHrDepartments, useCreateDepartment } from "@/hooks/api/hr";
-import { useQueryClient } from "@tanstack/react-query";
-import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -70,14 +68,23 @@ export function DepartmentCombobox({
 }: DepartmentComboboxProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [justCreated, setJustCreated] = useState<
+    ReadonlyArray<{ id: string; name: string }>
+  >([]);
   const inputRef = useRef<HTMLInputElement>(null);
-  const qc = useQueryClient();
 
   const { data: loadedDepartments = [] } = useHrDepartments({
     enabled: providedDepartments === undefined,
   });
-  const departments = providedDepartments ?? loadedDepartments;
   const createDepartment = useCreateDepartment();
+
+  const departments = useMemo(() => {
+    const known = providedDepartments ?? loadedDepartments;
+    const missing = justCreated.filter(
+      (candidate) => !known.some((d) => d.id === candidate.id),
+    );
+    return missing.length === 0 ? known : [...known, ...missing];
+  }, [providedDepartments, loadedDepartments, justCreated]);
 
   const selectedDept = useMemo(
     () => departments.find((d) => d.id === value),
@@ -139,33 +146,23 @@ export function DepartmentCombobox({
     createDepartment.mutate(
       { name },
       {
-        onSuccess: async () => {
-          await qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.departments() });
-          const list = await qc.fetchQuery({
-            queryKey: humanResourcesQueryKeys.hr.departments(),
-            queryFn: async () => {
-              const result = await qc.getQueryData<
-                { id: string; name: string }[]
-              >(humanResourcesQueryKeys.hr.departments());
-              return result ?? [];
-            },
-          });
-          const found = list?.find(
-            (d: { id: string; name: string }) => d.name === name,
+        onSuccess: (created) => {
+          setJustCreated((current) =>
+            current.some((d) => d.id === created.id)
+              ? current
+              : [...current, created],
           );
-          if (found) {
-            onValueChange(found.id);
-          }
+          onValueChange(created.id);
           setOpen(false);
           setSearch("");
-          toast.success(`Department "${name}" added`);
+          toast.success(`Department "${created.name}" added`);
         },
         onError: (err) => {
           toast.error(getErrorMessage(err));
         },
       },
     );
-  }, [search, createDepartment, qc, onValueChange]);
+  }, [search, createDepartment, onValueChange]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -225,7 +222,11 @@ export function DepartmentCombobox({
             )}
             {filtered.length === 0 && !canAdd && (
               <p className="py-6 text-center text-sm text-muted-foreground">
-                No department found. Type to search or add a new one.
+                {departments.length === 0
+                  ? allowCreate
+                    ? "No departments yet — type a name above to create one."
+                    : "No departments yet. Ask an HR admin to add one."
+                  : "No department matches that search."}
               </p>
             )}
           </div>

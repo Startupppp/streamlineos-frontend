@@ -43,6 +43,28 @@ import { ComplianceRequirementSheet } from "./compliance-requirement-sheet";
 import { WorkAuthSheet } from "./work-auth-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
+const COUNTRY_PACKS: Record<string, { label: string; summary: string }> = {
+  IN: {
+    label: "India",
+    summary:
+      "Adds the PF, ESI, Professional Tax and TDS filing calendar plus India's public holidays.",
+  },
+  GENERIC: {
+    label: "Generic",
+    summary:
+      "Adds a starter set of filing and posting requirements you can rename to match your jurisdiction.",
+  },
+};
+
+function packFor(country: string): { label: string; summary: string } {
+  return (
+    COUNTRY_PACKS[country] ?? {
+      label: country,
+      summary: "Adds default holidays and compliance requirements.",
+    }
+  );
+}
+
 function WorkAuthStatusBadge({ status }: { status: WorkAuthorization["status"] }) {
   if (status === "expired") return <Badge className="bg-status-danger-surface text-status-danger-ink border-status-danger-rule">Expired</Badge>;
   if (status === "expiring") return <Badge className="bg-status-warning-surface text-status-warning-ink border-status-warning-rule">Expiring</Badge>;
@@ -121,6 +143,10 @@ export function CompliancePageContent() {
     seedPack.mutate({ country: seedCountry }, { onSuccess: () => setSeedDialogOpen(false) });
   }
 
+  const handleOpenSeedDialog = useCallback(() => setSeedDialogOpen(true), []);
+
+  const selectedPack = packFor(seedCountry);
+
   return (
     <PageWrapper
       title="Compliance"
@@ -170,11 +196,11 @@ export function CompliancePageContent() {
                 variant="outline"
                 size="sm"
                 isPending={seedPack.isPending}
-                onClick={() => setSeedDialogOpen(true)}
+                onClick={handleOpenSeedDialog}
                 className="text-xs gap-1.5"
               >
                 <GlobeIcon size={12} />
-                Seed country pack
+                Set up {selectedPack.label} compliance
               </LoadingButton>
             </div>
           </div>
@@ -191,14 +217,34 @@ export function CompliancePageContent() {
           ) : (reqData?.data ?? []).length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
               <StateIllustration preset="security" className="h-28 w-28" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-foreground">No compliance requirements</p>
-                <p className="text-xs text-muted-foreground">Add a requirement manually or seed a country compliance pack.</p>
+              <div className="max-w-sm space-y-1">
+                <p className="text-sm font-medium text-foreground">
+                  Nothing is being tracked yet
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {selectedPack.summary} Start from it, then edit or add your own.
+                </p>
               </div>
-              <Button size="sm" onClick={handleOpenNewReq} className="mt-1 gap-1.5 h-8">
-                <PlusIcon size={14} />
-                Add requirement
-              </Button>
+              <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
+                <LoadingButton
+                  size="sm"
+                  isPending={seedPack.isPending}
+                  onClick={handleOpenSeedDialog}
+                  className="h-8 gap-1.5"
+                >
+                  <GlobeIcon size={14} />
+                  Set up {selectedPack.label} compliance
+                </LoadingButton>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenNewReq}
+                  className="h-8 gap-1.5"
+                >
+                  <PlusIcon size={14} />
+                  Add requirement
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="space-y-2">
@@ -326,17 +372,18 @@ export function CompliancePageContent() {
       <AlertDialog open={seedDialogOpen} onOpenChange={setSeedDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Seed {seedCountry} country pack?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Set up {selectedPack.label} compliance?
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This will add default holidays and compliance requirements for {seedCountry}. Existing records will not be duplicated.
+              {selectedPack.summary} Anything you already track is left alone, and
+              every item stays editable afterwards.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleSeedPack}
-            >
-              Seed
+            <AlertDialogAction onClick={handleSeedPack}>
+              Set up {selectedPack.label} compliance
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
