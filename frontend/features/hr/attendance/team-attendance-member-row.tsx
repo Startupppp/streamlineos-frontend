@@ -4,7 +4,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Wifi, WifiOff, Coffee, LogOut } from "lucide-react";
+import { Wifi, CircleDashed, Coffee, LogOut } from "lucide-react";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 import type { TeamAttendanceEntry } from "@/types/hr";
@@ -30,9 +30,9 @@ export const STATUS_META: Record<
     Icon: LogOut,
   },
   OFFLINE: {
-    label: "Offline",
+    label: "Not checked in",
     tone: "bg-muted text-muted-foreground border-transparent",
-    Icon: WifiOff,
+    Icon: CircleDashed,
   },
 };
 
