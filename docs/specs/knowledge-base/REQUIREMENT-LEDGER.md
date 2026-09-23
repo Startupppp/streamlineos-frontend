@@ -452,6 +452,8 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [ ] Tenant quotas: requests, tokens, concurrent streams, indexed bytes, research jobs
 - [ ] Remove confidence percentages, uncited prose, hidden auto-selected sources, drafts in browser storage
 
+**Coverage gap found during the S01 lane work.** `kb-ask-tenant-isolation.spec.ts` and `kb-ask-citation-restriction.spec.ts` exercise only the **article** isolation paths (`kb_articles`, `kb_article_restrictions`). They never reach `auth.visiblePagePredicate`, because that is consulted only when **page** citations are present — and no test in either spec produces one. So the Ask cross-tenant guards currently prove nothing about page citations, which are the `kb_pages`-backed half of the product and a P0 leakage surface. Add page-citation cases to both specs as part of this slice; do not assume the article cases cover them.
+
 **Evidence:** _pending_
 
 ---
