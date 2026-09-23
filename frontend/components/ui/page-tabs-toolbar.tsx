@@ -22,6 +22,8 @@ interface PageTabsToolbarProps {
   actions?: ReactNode;
   tabsDensity?: PageTabsDensity;
   collapseBelow?: PageTabsCollapseBelow;
+  /** Keep a single simple filter visible instead of collapsing it into a menu. */
+  filtersAlwaysVisible?: boolean;
   className?: string;
 }
 
@@ -37,6 +39,7 @@ export function PageTabsToolbar({
   actions,
   tabsDensity = "labeled",
   collapseBelow = "md",
+  filtersAlwaysVisible = false,
   className,
 }: PageTabsToolbarProps) {
   const hasFilters = filters !== undefined && filters !== null;
@@ -106,38 +109,46 @@ export function PageTabsToolbar({
           <>
             <div
               className={cn(
-                "hidden min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0",
-                atXl ? "xl:flex" : atLg ? "lg:flex" : "md:flex",
+                "min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0",
+                filtersAlwaysVisible
+                  ? "flex"
+                  : atXl
+                    ? "hidden xl:flex"
+                    : atLg
+                      ? "hidden lg:flex"
+                      : "hidden md:flex",
               )}
             >
               {resolveSlot(filters)}
             </div>
-            <ResponsivePopover>
-              <ResponsivePopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    "h-9 shrink-0 gap-1.5 px-2.5",
-                    atXl ? "xl:hidden" : atLg ? "lg:hidden" : "md:hidden",
-                  )}
-                  aria-label="Filters"
+            {!filtersAlwaysVisible && (
+              <ResponsivePopover>
+                <ResponsivePopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-9 shrink-0 gap-1.5 px-2.5",
+                      atXl ? "xl:hidden" : atLg ? "lg:hidden" : "md:hidden",
+                    )}
+                    aria-label="Filters"
+                  >
+                    <ListFilter className="h-4 w-4" />
+                    <span className="text-xs">Filters</span>
+                  </Button>
+                </ResponsivePopoverTrigger>
+                <ResponsivePopoverContent
+                  title="Filters"
+                  align="end"
+                  className="w-[min(18rem,calc(100vw-2rem))] space-y-2 p-3"
                 >
-                  <ListFilter className="h-4 w-4" />
-                  <span className="text-xs">Filters</span>
-                </Button>
-              </ResponsivePopoverTrigger>
-              <ResponsivePopoverContent
-                title="Filters"
-                align="end"
-                className="w-[min(18rem,calc(100vw-2rem))] space-y-2 p-3"
-              >
-                <div className="flex flex-col gap-2">
-                  {resolveSlot(filters)}
-                </div>
-              </ResponsivePopoverContent>
-            </ResponsivePopover>
+                  <div className="flex flex-col gap-2">
+                    {resolveSlot(filters)}
+                  </div>
+                </ResponsivePopoverContent>
+              </ResponsivePopover>
+            )}
           </>
         ) : null}
 

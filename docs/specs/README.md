@@ -23,6 +23,7 @@ candidate PRDs were removed; Git history remains their archive.
 
 ## Documents / Knowledge / Wiki
 
+- [Knowledge Base product, page, competitor, and million-user scale plan](knowledge-base/README.md)
 - [Documents module completion program](documents-module/README.md)
 - [DOC-00 product decisions](documents-module/00-product-decisions-prd.md)
 

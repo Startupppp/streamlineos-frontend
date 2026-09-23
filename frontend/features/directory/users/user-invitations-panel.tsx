@@ -330,6 +330,7 @@ export function UserInvitationsPanel() {
         filters={
           <PageTabsToolbar
             collapseBelow="lg"
+            filtersAlwaysVisible
             tabs={<PeopleSectionTabs />}
             search={
               <SearchInput
