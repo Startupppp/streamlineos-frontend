@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/command";
 import { useKbPagesSearch } from "@/hooks/api/kb";
 import type { KbPageSearchResult } from "@/hooks/api/kb/page-types";
-import { pageHref } from "@/lib/knowledge-routes";
+import { pageHref, KB_SEARCH } from "@/lib/knowledge-routes";
 import { KbFileTextIcon, KbLoader2Icon } from "@/features/wiki/lib/kb-icons";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { SearchSnippetText } from "@/features/wiki/lib/search-snippet-text";
@@ -96,9 +96,16 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
               </CommandItem>
             ))}
             {page?.hasMore && (
-              <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                Showing the top {page.limit} matches — keep typing to narrow the search.
-              </div>
+              <CommandItem
+                value="__view-all-results__"
+                onSelect={() => {
+                  router.push(`${KB_SEARCH}?q=${encodeURIComponent(debouncedQ)}`);
+                  handleOpenChange(false);
+                }}
+                className="justify-center text-xs text-muted-foreground"
+              >
+                View all results for &ldquo;{debouncedQ}&rdquo;
+              </CommandItem>
             )}
           </CommandGroup>
         )}

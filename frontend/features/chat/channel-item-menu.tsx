@@ -36,9 +36,12 @@ import {
   useUnfavoriteChannel,
   useUnmuteChannel,
 } from "@/hooks/api/chat-personal-b";
-import type { ChatNotificationPreference } from "@/types/chat";
 import { AddChannelMembersDialog } from "./add-channel-members-dialog";
 import type { Channel } from "./chat-types";
+import {
+  CHAT_NOTIFICATION_OPTIONS,
+  isChatNotificationPreference,
+} from "./chat-notification-preferences";
 
 const MUTE_DURATIONS: { value: "15m" | "1h" | "8h" | "24h" | "forever"; label: string }[] = [
   { value: "15m", label: "For 15 minutes" },
@@ -47,17 +50,6 @@ const MUTE_DURATIONS: { value: "15m" | "1h" | "8h" | "24h" | "forever"; label: s
   { value: "24h", label: "For 24 hours" },
   { value: "forever", label: "Until turned back on" },
 ];
-
-const NOTIFICATION_OPTIONS: { value: ChatNotificationPreference; label: string }[] = [
-  { value: "DEFAULT", label: "Use Default" },
-  { value: "ALL", label: "All Messages" },
-  { value: "MENTIONS", label: "Mentions Only" },
-  { value: "NOTHING", label: "Nothing" },
-];
-
-function isNotificationPreference(value: string): value is ChatNotificationPreference {
-  return NOTIFICATION_OPTIONS.some((option) => option.value === value);
-}
 
 type MuteDuration = (typeof MUTE_DURATIONS)[number]["value"];
 
@@ -164,7 +156,7 @@ export function ChannelItemMenu({
   const handleNotificationPreferenceChange = useCallback(
     async (value: string) => {
       try {
-        if (!isNotificationPreference(value)) return;
+        if (!isChatNotificationPreference(value)) return;
         await setNotificationPreference.mutateAsync({
           channelId: channel.id,
           preference: value,
@@ -278,7 +270,7 @@ export function ChannelItemMenu({
                 value={notificationPreference}
                 onValueChange={handleNotificationPreferenceChange}
               >
-                {NOTIFICATION_OPTIONS.map((option) => (
+                {CHAT_NOTIFICATION_OPTIONS.map((option) => (
                   <DropdownMenuRadioItem key={option.value} value={option.value}>
                     {option.label}
                   </DropdownMenuRadioItem>

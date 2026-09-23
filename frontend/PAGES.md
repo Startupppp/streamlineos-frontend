@@ -70,7 +70,6 @@
 - `/chat` · **Communications** · hooks: `→ feature/chat` — OPEN: the denied state is not browser-verified. `/me/access` is fetched server-side and dehydrated, so no browser response can deny an owner session; it needs a fixture member without `chat:*`. Component coverage: `features/chat/__tests__/channel-sidebar-denied.test.tsx`.
 - `/chat/channels` · **Communications** · hooks: `→ feature/chat` — OPEN: responsive not visually verified at 375/768/1280; the breakpoint classes exist in source but nobody rendered the page at those widths.
 - `/chat/invite/[inviteToken]` · **Communications** · hooks: `useJoinViaInviteLink` — revoked, expired, exhausted and archived-channel all return a byte-identical 404 body, so the route is not an existence oracle. Admission is transactional and idempotent.
-- `/chat/settings` · **Communications** · hooks: `useChatOrgSettings`, `useUpdateChatOrgSettings` — read gated `chat:channels:read`, save gated `chat:org-settings:manage`, route gated by `enforceRouteAccess`.
 
 ---
 

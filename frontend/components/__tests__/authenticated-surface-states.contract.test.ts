@@ -29,11 +29,6 @@ const BASELINE = {
  * zero rows, so an EmptyState here would be decoration that never appears.
  * Adding a route to this list is the same weight as lowering a number.
  *
- * `/chat/settings` joined on 2026-09-10. It did not lose an empty state — it is
- * a NEW surface from 1ae37cedf, which turned the page into a real form. It reads
- * one settings object through `useChatOrgSettings` and already renders loading
- * and read-error states; there is no collection behind it to come back empty.
- *
  * `/inventory/operations` left on 2026-09-12: it renders an `EmptyState` of its
  * own now, so pinning it would excuse the next surface added at that route.
  * `/inventory/reports` did not take its place — the reports hub can render zero
@@ -42,7 +37,6 @@ const BASELINE = {
  */
 const EMPTY_STATE_NOT_APPLICABLE = [
   "/build/managed-products/[managedProductId]/insights",
-  "/chat/settings",
   "/crm/import",
   "/hr/recruitment/sla",
   "/inventory/products/new",

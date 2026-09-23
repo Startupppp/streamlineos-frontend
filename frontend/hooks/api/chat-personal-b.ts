@@ -44,8 +44,11 @@ export function useArchiveChannel() {
     mutationKey: ["chat", "channels", "archive"],
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/archive`, undefined, undefined, chatOkContract),
-    onSuccess: () => {
+    onSuccess: (_data, channelId) => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({
+        queryKey: collaborationQueryKeys.chat.channel(channelId),
+      });
       queryClient.invalidateQueries({
         queryKey: collaborationQueryKeys.chat.archivedChannels(),
       });
@@ -151,8 +154,11 @@ export function useMuteChannel() {
         undefined,
         chatMuteResponseContract,
       ),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({
+        queryKey: collaborationQueryKeys.chat.channel(variables.channelId),
+      });
     },
   });
 }
@@ -163,8 +169,11 @@ export function useUnmuteChannel() {
     mutationKey: ["chat", "channels", "unmute"],
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unmute`, undefined, undefined, chatOkContract),
-    onSuccess: () => {
+    onSuccess: (_data, channelId) => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({
+        queryKey: collaborationQueryKeys.chat.channel(channelId),
+      });
     },
   });
 }
@@ -274,8 +283,11 @@ export function useSetNotificationPreference() {
         undefined,
         chatNotifPrefResponseContract,
       ),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({
+        queryKey: collaborationQueryKeys.chat.channel(variables.channelId),
+      });
     },
   });
 }

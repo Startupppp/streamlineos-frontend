@@ -3,18 +3,15 @@
 import { useState, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable } from "@/components/ui/data-table";
-import type { DataTableColumn } from "@/components/ui/data-table.types";
-import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
-import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
+import type { DataTableColumn, DataTableSortState } from "@/components/ui/data-table.types";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -22,48 +19,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
+import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import { useCan } from "@/hooks/api/access";
-import {
-  useKbPageReviews,
-  useApprovePageReview,
-  useRejectPageReview,
-  useBulkDecidePageReviews,
-} from "@/hooks/api/kb/page-reviews";
+import { useKbPageReviews } from "@/hooks/api/kb/page-reviews";
 import type {
   KbPageReview,
   KbReviewStatus,
   KbReviewStatusFilter,
   KbReviewType,
+  BulkDecideResultItem,
 } from "@/hooks/api/kb/page-reviews";
 import { pageHref } from "@/lib/knowledge-routes";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
-  KbClipboardCheckIcon,
+  KbAlertCircleIcon,
   KbCheckCircleIcon,
   KbXCircleIcon,
-  KbAlertCircleIcon,
 } from "@/features/wiki/lib/kb-icons";
 import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
+import { ApproveDialog, RejectDialog } from "./reviews-decision-dialogs";
+import { BulkDecideDialog } from "./reviews-bulk-decide-dialog";
+import {
+  BulkDecideResultsDialog,
+  type BulkFailureWithTitle,
+} from "./reviews-bulk-results-dialog";
 
-const STATUS_FILTER_VALUES = [
-  "all",
-  "pending",
-  "approved",
-  "rejected",
-  "overdue",
-] as const;
+const STATUS_FILTER_VALUES = ["all", "pending", "approved", "rejected", "overdue"] as const;
 const TYPE_FILTER_VALUES = ["all", "approval", "freshness"] as const;
+const SORT_DIR_VALUES = ["asc", "desc"] as const;
 const DEFAULT_LIMIT = 50;
+
+type BulkState =
+  | { kind: "idle" }
+  | { kind: "deciding"; ids: number[] }
+  | { kind: "results"; succeeded: number; failures: BulkFailureWithTitle[] };
 
 function ReviewsSkeleton() {
   return (
@@ -117,286 +107,36 @@ function StatusBadge({
 function TypeBadge({ type }: { type: KbReviewType }) {
   if (type === "approval") {
     return (
-      <Badge
-        className="bg-primary/10 text-foreground border-primary/20 text-dense"
-        variant="outline"
-      >
+      <Badge className="bg-primary/10 text-foreground border-primary/20 text-dense" variant="outline">
         Approval
       </Badge>
     );
   }
   return (
-    <Badge
-      className="bg-status-info-surface text-status-info-ink border-status-info-rule text-dense"
-      variant="outline"
-    >
+    <Badge className="bg-status-info-surface text-status-info-ink border-status-info-rule text-dense" variant="outline">
       Freshness
     </Badge>
   );
 }
 
-type ApproveDialogProps = {
-  review: KbPageReview;
-  onClose: () => void;
-};
-
-function ApproveDialog({ review, onClose }: ApproveDialogProps) {
-  const [note, setNote] = useState("");
-  const approve = useApprovePageReview();
-
-  function handleNoteChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setNote(e.target.value);
-  }
-
-  function handleApprove() {
-    approve.mutate(
-      { reviewId: review.id, note: note.trim() || undefined },
-      {
-        onSuccess: () => {
-          toast.success("Review approved");
-          onClose();
-        },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }
-
+function ReviewMobileCard(review: KbPageReview) {
   return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Approve review</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3 px-0 py-2">
-          <TruncatedText
-            text={review.pageTitle ?? ""}
-            lines={2}
-            className="text-sm text-muted-foreground"
-          />
-          <div className="space-y-1.5">
-            <Label className="text-xs">Note (optional)</Label>
-            <Textarea
-              value={note}
-              onChange={handleNoteChange}
-              placeholder="Add a note…"
-              className="text-sm resize-none"
-              rows={3}
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleApprove}
-            disabled={approve.isPending}
-            className="bg-status-success-fill hover:bg-status-success-fill-hover text-white"
-          >
-            Approve
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-type RejectDialogProps = {
-  review: KbPageReview;
-  onClose: () => void;
-};
-
-function RejectDialog({ review, onClose }: RejectDialogProps) {
-  const [note, setNote] = useState("");
-  const reject = useRejectPageReview();
-
-  function handleNoteChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setNote(e.target.value);
-  }
-
-  function handleReject() {
-    if (!note.trim()) return;
-    reject.mutate(
-      { reviewId: review.id, note: note.trim() },
-      {
-        onSuccess: () => {
-          toast.success("Review rejected");
-          onClose();
-        },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }
-
-  return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Reject review</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3 px-0 py-2">
-          <TruncatedText
-            text={review.pageTitle ?? ""}
-            lines={2}
-            className="text-sm text-muted-foreground"
-          />
-          <div className="space-y-1.5">
-            <Label className="text-xs">
-              Reason <span className="text-destructive">*</span>
-            </Label>
-            <Textarea
-              value={note}
-              onChange={handleNoteChange}
-              placeholder="Explain why this review is rejected…"
-              className="text-sm resize-none"
-              rows={3}
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            variant="destructive"
-            onClick={handleReject}
-            disabled={reject.isPending || !note.trim()}
-          >
-            Reject
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-type BulkDecideDialogProps = {
-  selectedIds: number[];
-  onClose: () => void;
-};
-
-function BulkDecideDialog({ selectedIds, onClose }: BulkDecideDialogProps) {
-  const [decision, setDecision] = useState<"approved" | "rejected">("approved");
-  const [note, setNote] = useState("");
-  const bulkDecide = useBulkDecidePageReviews();
-
-  function handleDecisionChange(val: string) {
-    if (val === "approved" || val === "rejected") setDecision(val);
-  }
-
-  function handleNoteChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setNote(e.target.value);
-  }
-
-  function handleSubmit() {
-    if (decision === "rejected" && !note.trim()) return;
-    const input =
-      decision === "approved"
-        ? {
-            ids: selectedIds,
-            decision: "approved" as const,
-            note: note.trim() || undefined,
-          }
-        : {
-            ids: selectedIds,
-            decision: "rejected" as const,
-            note: note.trim(),
-          };
-
-    bulkDecide.mutate(input, {
-      onSuccess: (result) => {
-        const succeeded = result.results.filter(
-          (r) => r.outcome === "succeeded",
-        ).length;
-        const conflict = result.results.filter(
-          (r) => r.outcome === "conflict",
-        ).length;
-        const notFound = result.results.filter(
-          (r) => r.outcome === "notFound",
-        ).length;
-        const denied = result.results.filter(
-          (r) => r.outcome === "denied",
-        ).length;
-        if (succeeded === result.results.length) {
-          toast.success(
-            `${succeeded} review${succeeded !== 1 ? "s" : ""} ${decision}`,
-          );
-        } else {
-          const parts: string[] = [`${succeeded} succeeded`];
-          if (conflict) parts.push(`${conflict} already decided`);
-          if (notFound) parts.push(`${notFound} not found`);
-          if (denied) parts.push(`${denied} denied`);
-          toast.warning(`Partial success: ${parts.join(", ")}`);
-        }
-        onClose();
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  }
-
-  return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
-          <DialogTitle>
-            Bulk decide {selectedIds.length} review
-            {selectedIds.length !== 1 ? "s" : ""}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3 px-0 py-2">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Decision</Label>
-            <Select value={decision} onValueChange={handleDecisionChange}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="approved">Approve</SelectItem>
-                <SelectItem value="rejected">Reject</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">
-              Note
-              {decision === "rejected" ? (
-                <span className="text-destructive"> *</span>
-              ) : (
-                " (optional)"
-              )}
-            </Label>
-            <Textarea
-              value={note}
-              onChange={handleNoteChange}
-              placeholder={
-                decision === "rejected"
-                  ? "Explain the rejection…"
-                  : "Add a note…"
-              }
-              className="text-sm resize-none"
-              rows={3}
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            variant={decision === "rejected" ? "destructive" : "default"}
-            onClick={handleSubmit}
-            disabled={
-              bulkDecide.isPending || (decision === "rejected" && !note.trim())
-            }
-          >
-            {decision === "approved" ? "Approve all" : "Reject all"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <div className="flex flex-col gap-1.5 px-3 py-2.5">
+      <Link
+        href={pageHref(review.pageId)}
+        className="font-medium text-foreground line-clamp-1 hover:text-accent transition-colors"
+      >
+        {review.pageTitle ?? "Untitled"}
+      </Link>
+      <div className="flex items-center gap-2 flex-wrap">
+        <StatusBadge status={review.status} isOverdue={review.isOverdue} />
+        <TypeBadge type={review.type} />
+      </div>
+      <span className="text-sm text-muted-foreground">
+        {review.reviewerName ?? "No reviewer"}
+        {review.dueAt ? ` · Due ${kbFormatDate(review.dueAt)}` : ""}
+      </span>
+    </div>
   );
 }
 
@@ -404,22 +144,21 @@ export default function ReviewsPage() {
   const searchParams = useSearchParams();
   const { update: updateFilters } = useUrlFilters({ pageParam: "cursor" });
 
-  const rawStatus = searchParams.get("status");
-  const rawType = searchParams.get("type");
+  const statusFilter = parseEnum(searchParams.get("status"), STATUS_FILTER_VALUES, "all");
+  const typeFilter = parseEnum(searchParams.get("type"), TYPE_FILTER_VALUES, "all");
+  const sortDir = parseEnum(searchParams.get("sortDir"), SORT_DIR_VALUES, "asc") as "asc" | "desc";
 
-  const statusFilter = parseEnum(rawStatus, STATUS_FILTER_VALUES, "all");
-  const typeFilter = parseEnum(rawType, TYPE_FILTER_VALUES, "all");
+  const hasFilters = statusFilter !== "all" || typeFilter !== "all" || sortDir !== "asc";
 
   const cursorState = useCursorPagination();
+  const canManage = useCan("kb:reviews:manage");
 
   const params = {
     cursor: cursorState.cursor,
     limit: DEFAULT_LIMIT,
-    status:
-      statusFilter === "all"
-        ? undefined
-        : (statusFilter as KbReviewStatusFilter),
+    status: statusFilter === "all" ? undefined : (statusFilter as KbReviewStatusFilter),
     type: typeFilter === "all" ? undefined : (typeFilter as KbReviewType),
+    sortDir,
   };
 
   const { data, isLoading, isError, error, refetch } = useKbPageReviews(params);
@@ -432,12 +171,13 @@ export default function ReviewsPage() {
     isEmpty: !isLoading && !isError && (data?.data.length ?? 0) === 0,
   });
 
-  const canManage = useCan("kb:reviews:manage");
-
   const [approveTarget, setApproveTarget] = useState<KbPageReview | null>(null);
   const [rejectTarget, setRejectTarget] = useState<KbPageReview | null>(null);
-  const [bulkDecideOpen, setBulkDecideOpen] = useState(false);
+  const [bulkState, setBulkState] = useState<BulkState>({ kind: "idle" });
   const [selected, setSelected] = useState<Set<string | number>>(new Set());
+
+  const reviews = useMemo(() => data?.data ?? [], [data]);
+  const pagination = data?.pagination;
 
   const handleStatusChange = useCallback(
     (val: string) => {
@@ -455,39 +195,71 @@ export default function ReviewsPage() {
     [updateFilters, cursorState],
   );
 
+  const handleSortChange = useCallback(
+    (_field: string, direction: "asc" | "desc") => {
+      updateFilters({ sortDir: direction === "asc" ? null : "desc" });
+      cursorState.reset();
+    },
+    [updateFilters, cursorState],
+  );
+
+  function handleClearFilters() {
+    updateFilters({ status: null, type: null, sortDir: null });
+    cursorState.reset();
+  }
+
   const handleCloseApprove = useCallback(() => setApproveTarget(null), []);
   const handleCloseReject = useCallback(() => setRejectTarget(null), []);
-  const handleCloseBulk = useCallback(() => {
-    setBulkDecideOpen(false);
-    setSelected(new Set());
-  }, []);
 
-  function makeApproveHandler(review: KbPageReview) {
-    return function handleApprove() {
-      setApproveTarget(review);
-    };
+  function handleOpenBulkDecide() {
+    setBulkState({ kind: "deciding", ids: Array.from(selected).map(Number) });
   }
 
-  function makeRejectHandler(review: KbPageReview) {
-    return function handleReject() {
-      setRejectTarget(review);
-    };
-  }
+  const handleBulkCancel = useCallback(() => setBulkState({ kind: "idle" }), []);
+
+  const handleBulkComplete = useCallback(
+    (failures: BulkDecideResultItem[]) => {
+      setSelected(new Set());
+      if (failures.length === 0) {
+        setBulkState({ kind: "idle" });
+        return;
+      }
+      const failuresWithTitle: BulkFailureWithTitle[] = failures.map((f) => ({
+        ...f,
+        pageTitle: reviews.find((r) => r.id === f.id)?.pageTitle ?? "Unknown page",
+      }));
+      setBulkState({
+        kind: "results",
+        succeeded: (bulkState.kind === "deciding" ? bulkState.ids.length : 0) - failures.length,
+        failures: failuresWithTitle,
+      });
+    },
+    [reviews, bulkState],
+  );
+
+  const handleResultsDismiss = useCallback(() => setBulkState({ kind: "idle" }), []);
+
+  const handleResultsRetry = useCallback(
+    (ids: number[]) => {
+      setBulkState({ kind: "deciding", ids });
+    },
+    [],
+  );
 
   function handleGoNext() {
-    cursorState.goNext(data?.pagination.nextCursor);
+    cursorState.goNext(pagination?.nextCursor);
   }
 
   function handleGoPrevious() {
     cursorState.goPrevious();
   }
 
-  function handleOpenBulkDecide() {
-    setBulkDecideOpen(true);
-  }
-
-  const reviews = data?.data ?? [];
-  const pagination = data?.pagination;
+  const sortState: DataTableSortState = {
+    fields: ["dueAt"] as const,
+    field: "dueAt",
+    direction: sortDir,
+    onChange: handleSortChange,
+  };
 
   const columns = useMemo<DataTableColumn<KbPageReview>[]>(
     () => [
@@ -529,14 +301,14 @@ export default function ReviewsPage() {
         ),
       },
       {
-        key: "dueDate",
+        key: "dueAt",
         header: "Due date",
         headerClassName: "hidden lg:table-cell",
         className: "hidden lg:table-cell",
         cell: (review) => (
           <span
             className={cn(
-              "text-sm tabular-nums",
+              "text-sm tabular-nums font-mono",
               review.isOverdue
                 ? "text-status-danger-ink font-medium"
                 : "text-muted-foreground",
@@ -565,18 +337,20 @@ export default function ReviewsPage() {
           return (
             <div className="flex items-center gap-1.5">
               <Button
+                type="button"
                 size="sm"
                 variant="outline"
                 className="text-xs text-status-success-ink border-status-success-rule hover:bg-status-success-surface"
-                onClick={makeApproveHandler(review)}
+                onClick={() => setApproveTarget(review)}
               >
                 Approve
               </Button>
               <Button
+                type="button"
                 size="sm"
                 variant="outline"
                 className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
-                onClick={makeRejectHandler(review)}
+                onClick={() => setRejectTarget(review)}
               >
                 Reject
               </Button>
@@ -586,6 +360,24 @@ export default function ReviewsPage() {
       },
     ],
     [canManage],
+  );
+
+  const emptyNode = hasFilters ? (
+    <EmptyState
+      illustrationPreset="default"
+      title="No reviews under these filters."
+      filtersActive
+      filteredTitle="No reviews match your filters."
+      onClearFilters={handleClearFilters}
+      compact
+    />
+  ) : (
+    <EmptyState
+      illustrationPreset="default"
+      title="No pages under review."
+      description="Assign reviews to keep your knowledge base current."
+      compact
+    />
   );
 
   const filters = (
@@ -613,7 +405,7 @@ export default function ReviewsPage() {
         </SelectContent>
       </Select>
       {canManage && selected.size > 0 && (
-        <Button size="sm" variant="outline" onClick={handleOpenBulkDecide}>
+        <Button type="button" size="sm" variant="outline" onClick={handleOpenBulkDecide}>
           Decide {selected.size} selected
         </Button>
       )}
@@ -628,23 +420,26 @@ export default function ReviewsPage() {
       {rejectTarget && (
         <RejectDialog review={rejectTarget} onClose={handleCloseReject} />
       )}
-      {bulkDecideOpen && (
+      {bulkState.kind === "deciding" && (
         <BulkDecideDialog
-          selectedIds={Array.from(selected).map(Number)}
-          onClose={handleCloseBulk}
+          ids={bulkState.ids}
+          onCancel={handleBulkCancel}
+          onComplete={handleBulkComplete}
+        />
+      )}
+      {bulkState.kind === "results" && (
+        <BulkDecideResultsDialog
+          succeeded={bulkState.succeeded}
+          failures={bulkState.failures}
+          onRetry={handleResultsRetry}
+          onDismiss={handleResultsDismiss}
         />
       )}
       <PageWrapper title="Reviews" filters={filters}>
         <PageState
           resolution={pageState}
           loading={<ReviewsSkeleton />}
-          empty={
-            <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-              {statusFilter !== "all" || typeFilter !== "all"
-                ? "No reviews match the current filters."
-                : "No pages are currently under review."}
-            </div>
-          }
+          empty={emptyNode}
           onRetry={refetch}
           className="flex-1 min-h-0"
         >
@@ -658,10 +453,13 @@ export default function ReviewsPage() {
               onChange: setSelected,
               getRowLabel: (r) => r.pageTitle ?? "Review",
             }}
+            sortState={sortState}
+            mobileCard={ReviewMobileCard}
             className="flex-1 min-h-0"
             pagination={{
               mode: "cursor",
               pageSize: DEFAULT_LIMIT,
+              pageNumber: cursorState.pageNumber,
               hasMore: pagination?.hasMore ?? false,
               hasPrevious: cursorState.hasPrevious,
               onNext: handleGoNext,

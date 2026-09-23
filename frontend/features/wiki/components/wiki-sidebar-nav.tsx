@@ -38,6 +38,7 @@ import {
   KB_IMPORT,
   KB_PRIVATE,
   KB_REVIEWS,
+  KB_SEARCH,
   KB_SHARED,
   KB_SPACES,
   KB_TEMPLATES,
@@ -77,6 +78,7 @@ function buildAskKbItem(): WikiNavItem {
 function buildPrimaryItems(): WikiNavItem[] {
   return [
     { label: "Wiki", href: KNOWLEDGE_BASE, icon: KbBookOpenTextIcon, exact: true },
+    { label: "Search", href: KB_SEARCH, icon: KbSearchIcon },
   ];
 }
 

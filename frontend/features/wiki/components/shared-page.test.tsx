@@ -135,6 +135,34 @@ describe("SharedPage — flash fix and server-side filtering", () => {
     expect(screen.getByTestId("loading-skeleton")).toBeInTheDocument();
   });
 
+  it("renders a shared page the signed-in user authored, proving the list no longer filters by client-side authorship", () => {
+    useKbPageCollection.mockReturnValue({
+      data: {
+        data: [
+          makeSharedItem({
+            id: 4242,
+            title: "Drafted by me, shared back to me",
+            createdById: "user-me",
+            createdByMembershipId: 1,
+          }),
+        ],
+        pagination: { limit: 50, hasMore: false, nextCursor: null },
+        facets: null,
+      },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    render(<SharedPage />);
+
+    expect(
+      screen.getByText("Drafted by me, shared back to me"),
+    ).toBeInTheDocument();
+  });
+
   it("an org-visible page from another user does NOT appear — the server owns the sharedWithMe=1 filter", () => {
     useKbPageCollection.mockReturnValue({
       data: {

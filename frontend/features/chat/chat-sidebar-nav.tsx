@@ -2,19 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGridIcon, MessageCircleIcon, SettingsIcon } from "@animateicons/react/lucide";
+import { LayoutGridIcon, MessageCircleIcon } from "@animateicons/react/lucide";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import {
   SidebarAnimatedNavIcon,
   useAnimatedNavIconHover,
 } from "@/components/layout/sidebar/sidebar-animated-nav";
-import { useCan } from "@/hooks/api/access";
 
 export const CHAT_NAV_ITEMS = [
   { href: "/chat", label: "Discuss", icon: MessageCircleIcon },
   { href: "/chat/channels", label: "Channels", icon: LayoutGridIcon },
-  { href: "/chat/settings", label: "Settings", icon: SettingsIcon },
 ] as const;
 
 type ChatNavItem = (typeof CHAT_NAV_ITEMS)[number];
@@ -25,9 +23,6 @@ export function isChatNavItemActive(pathname: string, item: ChatNavItem): boolea
   }
   if (item.href === "/chat/channels") {
     return pathname.startsWith("/chat/channels");
-  }
-  if (item.href === "/chat/settings") {
-    return pathname.startsWith("/chat/settings");
   }
   return false;
 }
@@ -102,10 +97,6 @@ interface ChatSidebarNavProps {
 
 export function ChatSidebarNav({ isCollapsed = false }: ChatSidebarNavProps) {
   const pathname = usePathname();
-  const canManageSettings = useCan("chat:org-settings:manage");
-  const items = CHAT_NAV_ITEMS.filter(
-    (item) => item.href !== "/chat/settings" || canManageSettings,
-  );
 
   return (
     <nav
@@ -115,7 +106,7 @@ export function ChatSidebarNav({ isCollapsed = false }: ChatSidebarNavProps) {
         isCollapsed ? "flex-wrap justify-center px-1 py-2" : "px-3 py-2",
       )}
     >
-      {items.map((item) => (
+      {CHAT_NAV_ITEMS.map((item) => (
         <ChatNavLink
           key={item.href}
           item={item}

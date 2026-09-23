@@ -50,16 +50,16 @@ These were resolved at open and constrain every slice. Re-verify before trusting
 | # | Slice | Phase | Priority | Status |
 |---:|---|---|---|---|
 | S01 | `KnowledgeAuthorization` + `kb_page_grants` schema | 1 | P0 | IN PROGRESS |
-| S02 | My pages — server-side ownership | 1 | P0 | NOT STARTED |
-| S03 | Shared with me — explicit grants | 1 | P0 | NOT STARTED |
-| S04 | `KnowledgeCollection` + canonical `GET /kb/pages` + cursor codec | 2 | P0 | NOT STARTED |
+| S02 | My pages — server-side ownership | 1 | P0 | IN PROGRESS — backend landed |
+| S03 | Shared with me — explicit grants | 1 | P0 | IN PROGRESS — backend landed |
+| S04 | `KnowledgeCollection` + canonical `GET /kb/pages` + cursor codec | 2 | P0 | IN PROGRESS |
 | S05 | Full Search — `/knowledge/wiki/search` | 2 | P0 | NOT STARTED |
 | S06 | Wiki Home rebuilt on list projection | 2 | P0 | NOT STARTED |
 | S07 | Spaces list + detail, server counts, archive/restore, lazy tree | 2/3 | P0 | NOT STARTED |
 | S08 | Page document — trust header, action model, offline/conflict | 3 | P0 | NOT STARTED |
 | S09 | History — diff + append-only restore | 3 | P0 | NOT STARTED |
-| S10 | Reviews — derived overdue, URL filters, bulk decide | 4 | P0/P1 | NOT STARTED |
-| S11 | Trash — cursor, bulk restore/purge, resumable purge ledger | 3 | P0 | NOT STARTED |
+| S10 | Reviews — derived overdue, URL filters, bulk decide | 4 | P0/P1 | IN PROGRESS |
+| S11 | Trash — cursor, bulk restore/purge, resumable purge ledger | 3 | P0 | IN PROGRESS |
 | S12 | Templates — URL state, preview, saved-template lifecycle | 3 | P1 | NOT STARTED |
 | S13 | Import & Export — validation, dry-run, resumable jobs | 3 | P0 | NOT STARTED |
 | S14 | Analytics — permission-safe, minimum cohort, drill-down | 4 | P1 | NOT STARTED |
@@ -72,6 +72,115 @@ These were resolved at open and constrain every slice. Re-verify before trusting
 | S21 | `kb_articles` cutover + destructive contraction | 6 | P1 | NOT STARTED |
 | S22 | Async scale — queue lanes, admission, SLOs, DR drills | 5 | P0/P1 | NOT STARTED |
 | S23 | Observability — dashboards, alerts, cost budgets, runbooks | 0/5 | P0 | NOT STARTED |
+
+## Second pass — 2026-09-23
+
+Both repos are on `main`. **A concurrent session is committing this work as it lands**, so `main` moves under you and `git show main:<file>` is not a pre-session baseline. The pre-session commit is `4d1ab519a`.
+
+### Migration numbering repaired
+
+`1165_kb_page_grants` collided with another session's `1165_build_automation_run_history`; `check:migration-discipline` reported `[dup-prefix]`. Renamed to **`1168_kb_page_grants`** — file, rollback and the journal `tag` together, because the runner resolves the file as `migrations/${tag}.sql`. Safe: the migration is unapplied, and `drizzle.__drizzle_migrations` has no tag column anyway.
+
+Two further defects in that same migration, found while renaming and now fixed:
+
+1. `fk_kb_page_grants_org_granted_by_membership` carried a **bare** `ON DELETE SET NULL` on a composite key. On a composite FK the bare form nulls *every* column including `org_id`, which is `NOT NULL`, so the parent `DELETE` aborts on the child table. Now `ON DELETE SET NULL ("granted_by_membership_id")`.
+2. The precondition `RAISE EXCEPTION` strings still said `1165`.
+
+**Still red and not ours:** three `[no-journal]` violations — `1165_build_automation_run_history`, `1166_build_incident_postmortem_fields`, `1167_invoices_deal_id`. Each exists on disk with no `_journal.json` entry, so `db:migrate` will never apply it **while printing success** (BE-58). The first is commit `9c17a75fe` ("feat(build)"). Flagged, not fixed: journalling another session's in-flight migration means guessing its intended ordering.
+
+### New migration
+
+`1169_kb_page_collection_indexes` (idx 1049) — keyset indexes for the collection sorts, the spec-required `(org_id, space_id)` live-page index, and the trash keyset index. Rollback authored. **Unapplied — still blocked on the IAM credential.** No `CREATE INDEX CONCURRENTLY`: the discipline gate baselines `concurrently=0` and any new use fails it.
+
+### S04 — `KnowledgeCollection`
+
+`core/collection/{knowledge-collection.types,kb-page-collection-cursor,kb-page-text-query,knowledge-collection.service}.ts` and `core/kb-page-collection.controller.ts` serving `GET /kb/pages` under `kb:pages:view`. Query and response schemas were added to the **existing** `core/dto/kb.schemas.ts` and `core/dto/kb-core-response.schemas.ts` rather than to new dto files.
+
+**The cursor reuses the repo's existing convention rather than inventing a second one** — `encodeTupleCursor`/`decodeTupleCursor`, `keysetBeforeMicros`/`keysetAfterValue`, `PAGE_SIZE_CAP`. Three decisions the docs left open:
+
+- The spec asks for a *signed* cursor. This repo deliberately decided cursors are unsigned, because they carry position and nothing else — no tenant, no permission, no filter state — so a forged one cannot express anything the server would not otherwise serve. That decision is kept. The spec's "versioned … access/filter revision" requirement is met instead by a **scope tag**: a 12-hex hash of the normalized filters *and* the permission fingerprint, carried as the cursor's first tuple element. A cursor minted under different filters or a different access revision decodes to `null`, which means page one — this repo's documented answer for a stale cursor.
+- The sort value carries a sentinel prefix. Without it, a page whose `title` is the empty string (the column default) mints a cursor with a zero-length tuple part, which `decodeTupleCursor` rejects — and the reader loops on page one forever.
+- Timestamp sorts use `microsecondCursorValue` + `keysetBeforeMicros`, never `toISOString()`. A millisecond-truncated boundary names an instant up to 999µs *earlier* than the row it points at, and every row in that gap silently vanishes from the middle of the walk. Nine lists in this repo shipped with that defect.
+
+`owner=me` and `sharedWithMe=1` are server-side scopes on this one endpoint. **"Shared with me" means an explicit live grant naming your membership or one of your role slugs, minus anything you own or created.** Organization-visible pages are not shared with you.
+
+Evidence: `npx jest src/modules/kb/core/collection/` → **29 passed, 2 suites**. `npx jest src/modules/kb/core/ src/modules/kb/wiki/kb-pages` → **116 passed, 14 suites**.
+
+### Shallow wrappers removed
+
+Three `KnowledgeAuthorizationService` methods whose entire body was a call to one other function were deleted rather than kept: `permissionFingerprint` (**zero** callers), `buildVisiblePageScope` and `sharedWithMeScope` (one caller each, both added the same day). Callers now resolve standing **once** and call the pure builders in `knowledge-page-scope.ts`.
+
+That also repairs part of the read-cost regression logged further down: the collection endpoint would otherwise have resolved actor standing three times in one request. Pinned by a test asserting `resolveStanding` is called exactly once.
+
+`kbPageMatchesTsQuery` went the same way. `kbPagePrefixTsQuery` survives, and `kb-pages.service.ts` `search()` now calls it, so the tokenizer exists once instead of twice.
+
+### Violation introduced by this pass, repaired
+
+`kb-page-tree.service.ts` went **490 → 694 lines** when the trash slice landed, crossing BE-09's 500-line cap. Split into `kb-page-tree.service.ts` (350) + `kb-page-trash.service.ts` (357) + `kb-page-subtree.util.ts` (25), the last holding the `collectSubtreeIds` walk both halves needed — extracted rather than duplicated, and rather than making one service inject the other just to reach it. `cron-kb.service.ts` was a real caller of `purgeExpired` and was updated; no delegating stub was left behind.
+
+Verified as a pure relocation: `check:route-classification` still `UNDECLARED: 0`, and `kb-page-trash.spec.ts` + `kb-list-truncation.spec.ts` → **23 passed**. `kb-page-tree.service.ts` is gone from the over-500 list.
+
+`check:over-300` remains red at 40 over its baseline of 413 — it was already 39 over before this split, and splitting one over-500 file into two ~350-line halves necessarily adds one over-300 entry. That is the correct trade (500 is a cap, 300 is a ratchet) but the ratchet is still red and is not solely ours.
+
+### `kb-pages.service.ts` grew without anyone adding logic
+
+501 → 566 lines. `git diff -w` shows the growth is **line-wrapping only** — the concurrent session is reformatting source to ~80 columns, which splits signatures across lines. It was already over the 500 cap at session start, so the violation is pre-existing; the reformat merely widened it. Do not attribute it to KB work, and do not "fix" it by re-joining lines the other session deliberately wrapped.
+
+### Session interruption — three lanes stopped mid-flight
+
+The Claude Code process exited while three lanes were running. What actually survived, established by reading disk rather than by trusting any report:
+
+| Lane | State on disk |
+|---|---|
+| Tree/trash split | **Complete.** 350 + 357 + 25 lines, routes `UNDECLARED: 0`, 23 tests pass. Verified before the interruption. |
+| Reviews (S10) | **Backend complete, frontend never started.** `expired` is gone from schema, dto and service; `isOverdue` is derived at read time; `POST /kb/page-reviews/bulk-decide` exists. No frontend file was touched. |
+| Full Search (S05) | **Nothing.** No backend or frontend file was created. Restarted from zero. |
+
+A lane that stops without reporting is not a lane that failed — check the tree before re-running anything, or you will redo landed work or clobber it.
+
+### S10 Reviews — what landed, and the two test gaps that mattered
+
+Overdue is now derived (`status = 'pending' AND due_at < now()`), never persisted. The persisted `expired` status is gone. Bulk decide takes ≤ 100 ids and returns per-id `succeeded` / `denied` / `conflict` / `notFound`.
+
+The lane's spec passed 13/13 but had two holes that let real breakage through:
+
+1. **Every `bulkDecide` test asserted a failure outcome** — `notFound`, `notFound`, `conflict`. Nothing proved a decision ever succeeded, so the suite would have passed against a `bulkDecide` that decided nothing at all. Added a success case and a mixed partial-success case (`succeeded` / `conflict` / `notFound` in one call).
+2. **The "hidden page's review is excluded" test was vacuous** — its db mock returned no rows regardless of the predicate, so the empty result proved nothing. Added the positive control: same harness, rows present, permissive predicate, review returned.
+
+Also added: a hidden review and a missing review must produce **identical** bulk results, so the response cannot confirm that a hidden review exists.
+
+Evidence: `npx jest src/modules/kb/wiki/kb-page-reviews-derived-overdue.spec.ts` → **17 passed**.
+
+**Regression the lane left behind, found by running the whole wiki suite rather than only the lane's own spec.** Converging the two list endpoints removed `KbPageReviewsQueryService.listDue`, but `kb-ar06-acceptance.spec.ts` still called it — `TypeError: svc.listDue is not a function`. The convergence itself is right: `GET /kb/page-reviews/due` survives as a route and now delegates to `list(u, { ...query, status: "overdue" })`, so there is one list method and one cursor convention instead of two.
+
+The spec was repointed, not deleted — it pins acceptance criterion AR-06. Its old assertions (`Array.isArray(result)`, `limit` called with 50) described the retired plain-array shape; it now asserts the cursor-page shape and the `limit + 1` sentinel, and a second case proves 51 rows in yields 50 out with `hasMore: true` and a minted `nextCursor`. Two stale names referring to `listDue` were renamed so the file does not describe a method that no longer exists.
+
+`npx jest src/modules/kb/wiki/` → **50 suites, 403 tests, all passing.**
+
+**The lesson for every remaining lane:** a lane that runs only its own new spec will not see what it broke. Run the enclosing suite before believing a lane's report.
+
+### New migration 1170
+
+`1170_kb_page_reviews_derive_overdue` (idx 1050) — collapses any `status = 'expired'` row into `'pending'` and adds `chk_kb_page_reviews_status` (`NOT VALID` then `VALIDATE`, so it does not hold a long lock). `kb_page_reviews.status` had **no** CHECK constraint at all; it was a bare `text` column, so nothing at the database level stopped `expired` coming back. Marked `-- @data-loss`: the rollback drops the constraint but cannot resurrect the collapsed rows, which is intentional.
+
+### Gate status at this checkpoint
+
+| Gate | Result |
+|---|---|
+| `pnpm typecheck` | 1 error, `notifications/approval-cursor.spec-fixtures.ts`; **zero in `modules/kb`** |
+| `pnpm typecheck:test` | 2 errors, both `notifications/`; **zero in `modules/kb`** |
+| `check:route-classification` | ALL ROUTES CLASSIFIED, `UNDECLARED: 0` |
+| `check:migration-rollback` | PASS |
+| `check:migration-discipline` | 3 `[no-journal]`, all another session's Build/invoices migrations |
+| `check:query-projections` | PASS, 0 violations |
+| `check:list-projections` | PASS, 22 endpoints, 0 violations |
+| `check:cycles` | PASS, no circular dependency |
+| `check:unbounded-reads` | 2 regressions, in `hr/` and `timesheets/`, neither ours |
+| `check:file-sizes` / `check:over-300` | **RED** — see above |
+| `check:composite-fk-set-null` | cannot run: reads `pg_constraint`, needs the IAM credential |
+| `openapi:generate` | broken mid-flight by a bad relative import in `kb-page-reviews.schemas.ts`; regenerate once reviews lands |
+
+The `notifications/` type errors are another session's: those files are byte-identical to what that session committed, and the cause is a required `eventKeys` field added to a query type without its own spec fixtures being updated.
 
 ## Cross-cutting invariants
 

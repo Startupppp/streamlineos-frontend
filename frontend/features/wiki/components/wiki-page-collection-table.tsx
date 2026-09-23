@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { LayoutList, LayoutGrid } from "lucide-react";
 import { useKbPageCollection } from "@/hooks/api/kb/page-collection";
@@ -153,8 +153,8 @@ export function WikiPageCollectionTable({
   const { data, isLoading, isError, error, refetch } =
     useKbPageCollection(queryParams);
 
-  const hadDataRef = useRef(false);
-  if (data && data.data.length > 0) hadDataRef.current = true;
+  const [hadData, setHadData] = useState(false);
+  if (!hadData && data && data.data.length > 0) setHadData(true);
 
   const filtersActive =
     debouncedSearch !== "" ||
@@ -164,10 +164,7 @@ export function WikiPageCollectionTable({
 
   const isEmpty = data !== undefined && data.data.length === 0;
   const accessLost =
-    hadDataRef.current &&
-    isEmpty &&
-    !filtersActive &&
-    accessLostTitle !== undefined;
+    hadData && isEmpty && !filtersActive && accessLostTitle !== undefined;
 
   const pageState = usePageState({
     permission: "kb:pages:view",
@@ -233,7 +230,7 @@ export function WikiPageCollectionTable({
       title={emptyTitle}
       description={emptyDescription}
       filtersActive={filtersActive}
-      filteredTitle="No pages match your filters."
+      filteredTitle="No results match your filters."
       onClearFilters={handleClearFilters}
     />
   );
@@ -243,7 +240,7 @@ export function WikiPageCollectionTable({
       <div className="flex flex-wrap items-center gap-2">
         <SearchInput
           value={rawSearch}
-          onChange={handleSearchChange}
+          onValueChange={handleSearchChange}
           placeholder="Search pages…"
           className="h-9 w-48 shrink-0"
         />

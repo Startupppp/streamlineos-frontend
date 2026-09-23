@@ -7,8 +7,6 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Archive,
   ArchiveRestore,
-  BellOff,
-  BellRing,
   Bookmark,
   Pencil,
 } from "lucide-react";
@@ -25,14 +23,13 @@ import {
   useUnpinMessage,
   useArchiveChannel,
   useUnarchiveChannel,
-  useMuteChannel,
-  useUnmuteChannel,
 } from "@/hooks/api";
 import { resolveImageUrl } from "@/lib/utils";
 import { ChannelInfoPanelProfile } from "./channel-info-panel-profile";
 import { ChannelMembersSection } from "./channel-members-section";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getInitials } from "@/lib/format-utils";
+import { ConversationNotificationSettings } from "./conversation-notification-settings";
 
 const CloseButton = React.forwardRef<
   HTMLButtonElement,
@@ -58,14 +55,6 @@ const UnpinButton = React.forwardRef<
   );
 });
 
-const MUTE_OPTIONS = [
-  { label: "15 minutes", value: "15m" },
-  { label: "1 hour", value: "1h" },
-  { label: "8 hours", value: "8h" },
-  { label: "24 hours", value: "24h" },
-  { label: "Forever", value: "forever" },
-] as const;
-
 export function ChannelInfoPanel({
   channelId,
   currentUserId,
@@ -85,8 +74,6 @@ export function ChannelInfoPanel({
   const unpinMessage = useUnpinMessage();
   const archiveChannel = useArchiveChannel();
   const unarchiveChannel = useUnarchiveChannel();
-  const muteChannel = useMuteChannel();
-  const unmuteChannel = useUnmuteChannel();
 
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
@@ -118,12 +105,6 @@ export function ChannelInfoPanel({
   function unpinMessageHandler(messageId: number): () => void {
     return function handleUnpinMessage(): void {
       unpinMessage.mutate({ channelId, messageId });
-    };
-  }
-
-  function muteChannelHandler(duration: string): () => void {
-    return function handleMuteChannel(): void {
-      muteChannel.mutate({ channelId, duration });
     };
   }
 
@@ -220,61 +201,13 @@ export function ChannelInfoPanel({
             onClose={onClose}
           />
 
-          {channel?.type !== "DIRECT" &&
-            (() => {
-              const mutedUntil = myMember?.mutedUntil;
-              const isMuted =
-                mutedUntil !== null &&
-                mutedUntil !== undefined &&
-                new Date(mutedUntil) > new Date();
-              return (
-                <div className="mt-4 pt-4 border-t border-border/30">
-                  <h5 className="text-dense font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5">
-                    {isMuted ? (
-                      <BellOff className="h-3 w-3" />
-                    ) : (
-                      <BellRing className="h-3 w-3" />
-                    )}
-                    Notifications
-                  </h5>
-                  {isMuted ? (
-                    <div className="flex flex-col gap-2">
-                      <p className="text-xs text-muted-foreground px-1">
-                        Muted until{" "}
-                        {mutedUntil &&
-                        new Date(mutedUntil).getFullYear() >= 2099
-                          ? "forever"
-                          : mutedUntil
-                            ? new Date(mutedUntil).toLocaleString()
-                            : ""}
-                      </p>
-                      <LoadingButton
-                        variant="outline"
-                        size="sm"
-                        className="w-full h-8 text-xs"
-                        onClick={() => unmuteChannel.mutate(channelId)}
-                        isPending={unmuteChannel.isPending}
-                      >
-                        Unmute
-                      </LoadingButton>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {MUTE_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.value}
-                          onClick={muteChannelHandler(opt.value)}
-                          disabled={muteChannel.isPending}
-                          className="inline-flex h-8 items-center justify-center px-2 rounded-lg border border-border/50 text-dense font-medium hover:bg-muted/40 transition-colors disabled:opacity-50"
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
+          {channel && myMember && (
+            <ConversationNotificationSettings
+              channelId={channelId}
+              mutedUntil={myMember.mutedUntil}
+              preference={myMember.notificationPreference}
+            />
+          )}
 
           {channel?.createdAt && (
             <div className="mt-6 pt-4 border-t border-border/30">

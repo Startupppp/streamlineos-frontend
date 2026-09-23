@@ -49,7 +49,6 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         label: "Chat",
         href: "/chat",
         icon: MessageSquareText,
-        inactivePrefixes: ["/chat/settings"],
       },
     ],
   },
