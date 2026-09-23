@@ -7,19 +7,15 @@ export interface BuildHeaderAction {
   onSelect?: () => void;
   href?: string;
   variant?: "default" | "outline" | "ghost";
-  /** At most one. Rendered last on desktop and kept visible on mobile. */
   primary?: boolean;
   disabled?: boolean;
-  /** Shows the shared pending spinner on this control alone (FE-80). */
   isPending?: boolean;
   loadingLabel?: string;
 }
 
 export const BUILD_HEADER_OVERFLOW_LABEL = "More actions";
 
-/** FE-101: three visible actions at most, exactly one of them primary. */
 export const BUILD_HEADER_DESKTOP_VISIBLE = 3;
-/** One row below `sm`, so two equal columns at most. */
 export const BUILD_HEADER_MOBILE_VISIBLE = 2;
 
 export interface BuildHeaderActionsPlan {
@@ -28,6 +24,7 @@ export interface BuildHeaderActionsPlan {
   desktopOverflow: BuildHeaderAction[];
   mobileInline: BuildHeaderAction[];
   mobileOverflow: BuildHeaderAction[];
+  mobileColumns: string;
 }
 
 export function planBuildHeaderActions(
@@ -56,11 +53,19 @@ export function planBuildHeaderActions(
       ? secondary
       : secondary.slice(1);
 
+  const mobileColumns =
+    mobileOverflow.length > 0
+      ? "grid-cols-[1fr_auto]"
+      : mobileInline.length >= BUILD_HEADER_MOBILE_VISIBLE
+        ? "grid-cols-2"
+        : "grid-cols-1";
+
   return {
     isEmpty: actions.length === 0,
     desktopInline,
     desktopOverflow,
     mobileInline,
     mobileOverflow,
+    mobileColumns,
   };
 }

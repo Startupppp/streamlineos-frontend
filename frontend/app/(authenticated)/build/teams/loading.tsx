@@ -20,7 +20,7 @@ export default function TeamsLoading() {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          <DataTableSkeleton rows={12} headers={HEADERS} className={PM_FILL_PANEL} />
+          <DataTableSkeleton mobileCards rows={12} headers={HEADERS} className={PM_FILL_PANEL} />
         </PmSection>
       </PmPageShell>
     </PageWrapper>

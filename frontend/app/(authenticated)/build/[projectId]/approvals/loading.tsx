@@ -22,7 +22,7 @@ export default function ProjectApprovalsLoading() {
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           <PmPanel className="p-2">
-            <DataTableSkeleton rows={12} headers={HEADERS} className="flex-1 min-h-0" />
+            <DataTableSkeleton mobileCards rows={12} headers={HEADERS} className="flex-1 min-h-0" />
           </PmPanel>
         </PmSection>
       </PmPageShell>

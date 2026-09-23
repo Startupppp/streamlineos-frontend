@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { formatDistanceToNow } from "date-fns";
-import { Badge } from "@/components/ui/badge";
-import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyInboxIllustration } from "@/components/illustrations";
@@ -12,118 +10,22 @@ import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 import { useFeedbucketSubmissions } from "@/hooks/api/feedbucket";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
-import { resolveImageUrl } from "@/lib/utils";
-import type {
-  PaginatedFeedbucketSubmissions,
-  FeedbucketSubmissionType,
-  FeedbucketSubmissionStatus,
-} from "@/types/feedbucket";
-
-type SubmissionRow = PaginatedFeedbucketSubmissions["data"][number];
-
-const TYPE_LABELS: Record<FeedbucketSubmissionType, string> = {
-  bug: "Bug",
-  idea: "Idea",
-  feature: "Feature",
-  question: "Question",
-  praise: "Praise",
-  other: "Other",
-};
-
-const TYPE_VARIANTS: Record<
-  FeedbucketSubmissionType,
-  "default" | "secondary" | "outline" | "destructive"
-> = {
-  bug: "destructive",
-  idea: "default",
-  feature: "secondary",
-  question: "secondary",
-  praise: "default",
-  other: "outline",
-};
-
-const STATUS_VARIANTS: Record<
-  FeedbucketSubmissionStatus,
-  "default" | "secondary" | "outline"
-> = {
-  open: "default",
-  in_progress: "secondary",
-  resolved: "outline",
-  archived: "outline",
-};
-
-const STATUS_LABELS: Record<FeedbucketSubmissionStatus, string> = {
-  open: "Open",
-  in_progress: "In Progress",
-  resolved: "Resolved",
-  archived: "Archived",
-};
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import {
+  type SubmissionRow,
+  FILTER_DEFINITIONS,
+  FEEDBACK_SKELETON_HEADERS,
+  FEEDBACK_COLUMNS,
+  TYPE_OPTIONS,
+  STATUS_OPTIONS_VALUES,
+  TYPE_FILTER_OPTIONS,
+  STATUS_FILTER_OPTIONS,
+  ProductFeedbackMobileCard,
+} from "./product-feedback-columns";
 
 const PAGE_SIZE = 25;
-
-function formatAge(value: string | null | undefined): string {
-  if (!value) return "—";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-  return formatDistanceToNow(date, { addSuffix: true });
-}
-
-const FEEDBACK_COLUMNS: DataTableColumn<SubmissionRow>[] = [
-  {
-    key: "screenshot",
-    header: "",
-    cell: (row) =>
-      row.screenshotUrl ? (
-        <img
-          src={resolveImageUrl(row.screenshotUrl) ?? row.screenshotUrl}
-          alt="Screenshot"
-          loading="lazy"
-          decoding="async"
-          className="h-10 w-14 rounded border border-border object-cover flex-shrink-0"
-        />
-      ) : (
-        <div className="h-10 w-14 rounded border border-border bg-muted flex-shrink-0" />
-      ),
-    className: "w-[72px] pr-0",
-  },
-  {
-    key: "type",
-    header: "Type",
-    cell: (row) => (
-      <Badge variant={TYPE_VARIANTS[row.type]} className="text-xs">
-        {TYPE_LABELS[row.type]}
-      </Badge>
-    ),
-    className: "w-[90px]",
-  },
-  {
-    key: "message",
-    header: "Message",
-    cell: (row) => (
-      <span className="max-w-xs text-sm text-foreground line-clamp-2">{row.message}</span>
-    ),
-  },
-  {
-    key: "status",
-    header: "Status",
-    cell: (row) => (
-      <Badge variant={STATUS_VARIANTS[row.status]} className="text-xs">
-        {STATUS_LABELS[row.status]}
-      </Badge>
-    ),
-    className: "w-[110px] hidden sm:table-cell",
-  },
-  {
-    key: "age",
-    header: "Age",
-    cell: (row) => (
-      <span className="text-xs text-muted-foreground whitespace-nowrap">
-        {formatAge(row.createdAt)}
-      </span>
-    ),
-    className: "hidden sm:table-cell w-[120px] text-right",
-  },
-];
 
 interface ProductFeedbackPageProps {
   managedProductId: number;
@@ -131,13 +33,41 @@ interface ProductFeedbackPageProps {
 
 export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPageProps) {
   const router = useRouter();
-  const [page, setPage] = useState(1);
+  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
 
-  const { data, isLoading, isError, error, refetch } = useFeedbucketSubmissions({
-    managedProductId,
-    page,
-    limit: PAGE_SIZE,
-  });
+  const typeValue = listFilters.value("type");
+  const statusValue = listFilters.value("status");
+
+  const typedType = useMemo(
+    () => TYPE_OPTIONS.find((v) => v === typeValue),
+    [typeValue],
+  );
+
+  const typedStatus = useMemo(
+    () => STATUS_OPTIONS_VALUES.find((v) => v === statusValue),
+    [statusValue],
+  );
+
+  const [appliedFilterKey, setAppliedFilterKey] = useState(listFilters.resetKey);
+  const [page, setPage] = useState(1);
+  if (appliedFilterKey !== listFilters.resetKey) {
+    setAppliedFilterKey(listFilters.resetKey);
+    setPage(1);
+  }
+
+  const queryParams = useMemo(
+    () => ({
+      managedProductId,
+      page,
+      limit: PAGE_SIZE,
+      ...(listFilters.debouncedSearch.trim() ? { search: listFilters.debouncedSearch.trim() } : {}),
+      ...(typedType ? { type: typedType } : {}),
+      ...(typedStatus ? { status: typedStatus } : {}),
+    }),
+    [managedProductId, page, listFilters.debouncedSearch, typedType, typedStatus],
+  );
+
+  const { data, isLoading, isError, error, refetch } = useFeedbucketSubmissions(queryParams);
 
   const resolution = usePageState({
     permission: "feedbucket:submissions:view",
@@ -146,40 +76,92 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
     error,
   });
 
-  function resolveSubmissionHref(row: SubmissionRow): string | null {
+  const handleTypeChange = useCallback(
+    (value: string) => listFilters.setValue("type", value),
+    [listFilters],
+  );
+
+  const handleStatusChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
+
+  const handlePageChange = useCallback((next: number) => {
+    setPage(next);
+  }, []);
+
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  const resolveSubmissionHref = useCallback((row: SubmissionRow): string | null => {
     const projectId = row.widget?.projectId;
     if (projectId === null || projectId === undefined) return null;
     return `/build/${projectId}/feedbucket/${row.id}`;
-  }
+  }, []);
 
-  function handleRowClick(row: SubmissionRow) {
+  const handleRowClick = useCallback((row: SubmissionRow) => {
     const href = resolveSubmissionHref(row);
     if (href === null) return;
     router.push(href);
-  }
+  }, [resolveSubmissionHref, router]);
 
-  function resolveRowClassName(row: SubmissionRow): string {
+  const resolveRowClassName = useCallback((row: SubmissionRow): string => {
     return resolveSubmissionHref(row) === null ? "" : "cursor-pointer";
-  }
+  }, [resolveSubmissionHref]);
 
-  function handleRetry() {
-    void refetch();
-  }
-
-  function handlePageChange(next: number) {
-    setPage(next);
-  }
+  const renderMobileCard = useCallback(
+    (row: SubmissionRow) => <ProductFeedbackMobileCard row={row} />,
+    [],
+  );
 
   return (
     <PageWrapper
       title="Feedback"
       subtitle="Submissions collected from widgets linked to this product"
+      filters={
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search feedback…",
+            label: "Search feedback",
+          }}
+          filters={[
+            {
+              id: "type",
+              label: "Type",
+              active: listFilters.isActive("type"),
+              control: (
+                <BuildFilterSelect
+                  label="Type"
+                  value={typeValue}
+                  onValueChange={handleTypeChange}
+                  options={TYPE_FILTER_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "status",
+              label: "Status",
+              active: listFilters.isActive("status"),
+              control: (
+                <BuildFilterSelect
+                  label="Status"
+                  value={statusValue}
+                  onValueChange={handleStatusChange}
+                  options={STATUS_FILTER_OPTIONS}
+                />
+              ),
+            },
+          ]}
+          onClearAll={listFilters.clearAll}
+        />
+      }
     >
       <PmPageShell>
         <PmSection index={0} className="flex flex-1 min-h-0 flex-col">
           <PageState
             resolution={resolution}
-            loading={<DataTableSkeleton rows={10} columns={5} />}
+            loading={<DataTableSkeleton rows={10} headers={FEEDBACK_SKELETON_HEADERS} />}
             onRetry={handleRetry}
             className={PM_FILL_PANEL}
           >
@@ -188,6 +170,7 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
               columns={FEEDBACK_COLUMNS}
               getRowKey={(row) => row.id}
               onRowClick={handleRowClick}
+              mobileCard={renderMobileCard}
               pagination={{
                 mode: "server",
                 page,

@@ -102,7 +102,6 @@ export type ImportFormat = z.infer<typeof importFormatSchema>;
 export type ImportMode = z.infer<typeof importModeSchema>;
 export type ImportIssueKind = z.infer<typeof importIssueKindSchema>;
 export type ImportRowIssue = z.infer<typeof importRowIssueSchema>;
-export type ImportPreviewRow = z.infer<typeof importPreviewRowSchema>;
 export type TicketImportPreview = z.infer<typeof importPreviewSchema>;
 export type ImportRowResult = z.infer<typeof importRowResultSchema>;
 export type TicketImportReport = z.infer<typeof importReportSchema>;

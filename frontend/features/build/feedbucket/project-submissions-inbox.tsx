@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, useCallback, useMemo, useState, useTransition, type MouseEvent } from "react";
+import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -84,7 +85,8 @@ function formatSubmissionAge(value: string | null | undefined): string {
 const SUBMISSION_COLUMNS: DataTableColumn<SubmissionRow>[] = [
   {
     key: "screenshot",
-    header: "",
+    header: "Screenshot",
+    headerClassName: "sr-only",
     cell: (row) =>
       row.screenshotUrl ? (
         <img
@@ -302,7 +304,8 @@ export function ProjectSubmissionsInbox({
       ...SUBMISSION_COLUMNS,
       {
         key: "actions",
-        header: "",
+        header: "Actions",
+        headerClassName: "sr-only",
         cell: (row) => (
           <DeleteSubmissionButton submissionId={row.id} onRequestDelete={handleRequestDelete} />
         ),
@@ -310,6 +313,32 @@ export function ProjectSubmissionsInbox({
       },
     ];
   }, [canDelete, handleRequestDelete]);
+
+  const renderSubmissionCard = useCallback(
+    (row: SubmissionRow) => (
+      <BuildMobileCard
+        eyebrow={
+          <Badge variant={TYPE_VARIANTS[row.type]}>{TYPE_LABELS[row.type]}</Badge>
+        }
+        title={<TruncatedText text={row.message} lines={2} />}
+        status={
+          <Badge variant={STATUS_VARIANTS[row.status]}>
+            {STATUS_LABELS[row.status]}
+          </Badge>
+        }
+        meta={[{ label: "Age", value: formatSubmissionAge(row.createdAt) }]}
+        actions={
+          canDelete ? (
+            <DeleteSubmissionButton
+              submissionId={row.id}
+              onRequestDelete={handleRequestDelete}
+            />
+          ) : null
+        }
+      />
+    ),
+    [canDelete, handleRequestDelete],
+  );
 
   if (isLoading) {
     return (
@@ -410,6 +439,7 @@ export function ProjectSubmissionsInbox({
         columns={columns}
         getRowKey={(row) => row.id}
         onRowClick={handleRowClick}
+        mobileCard={renderSubmissionCard}
         pagination={{
           mode: "server",
           page,

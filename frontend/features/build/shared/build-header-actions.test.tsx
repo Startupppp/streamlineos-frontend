@@ -36,12 +36,28 @@ describe("BuildHeaderActions", () => {
         ]}
       />,
     );
-    const inline = mobileRow(container);
-    expect(inline).toHaveLength(2);
-    for (const node of inline) {
-      expect(node.className).toContain("flex-1");
-      expect(node.className).not.toContain("w-full");
-    }
+    const root = container.querySelector<HTMLElement>(
+      "[data-slot=build-header-actions]",
+    );
+    expect(root?.className).toContain("grid-cols-2");
+    expect(root?.className).not.toContain("flex-col");
+    expect(mobileRow(container)).toHaveLength(2);
+  });
+
+  it("leaves the primary a growing column beside a fixed overflow", () => {
+    const { container } = render(
+      <BuildHeaderActions
+        actions={[
+          { id: "import", label: "Import" },
+          { id: "archive", label: "Archive" },
+          { id: "create", label: "New project", primary: true },
+        ]}
+      />,
+    );
+    const root = container.querySelector<HTMLElement>(
+      "[data-slot=build-header-actions]",
+    );
+    expect(root?.className).toContain("grid-cols-[1fr_auto]");
   });
 
   it("keeps the primary beside an overflow once a third action appears", async () => {

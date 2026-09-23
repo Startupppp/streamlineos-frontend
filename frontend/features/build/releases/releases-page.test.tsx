@@ -78,7 +78,6 @@ jest.mock("./releases-page-parts", () => ({
     released: { label: "Released", className: "" },
     archived: { label: "Archived", className: "" },
   },
-  statusSort: jest.fn(),
   NewReleaseButton: ({ onClick }: { onClick: () => void }) => (
     <button onClick={onClick} data-testid="new-release-btn">New Release</button>
   ),
@@ -93,6 +92,21 @@ jest.mock("./release-form-sheet", () => ({
 
 import { useReleases, useDeleteRelease } from "@/hooks/api/build/releases";
 import { useCan, useAccess } from "@/hooks/api/access";
+
+const mockReplace = jest.fn();
+let mockSearchParams = new URLSearchParams();
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockReplace, push: jest.fn(), refresh: jest.fn() }),
+  usePathname: () => "/build",
+  useSearchParams: () => mockSearchParams,
+}));
+
+beforeEach(() => {
+  mockReplace.mockClear();
+  mockSearchParams = new URLSearchParams();
+});
+
 
 const mockUseReleases = useReleases as jest.Mock;
 const mockUseDeleteRelease = useDeleteRelease as jest.Mock;

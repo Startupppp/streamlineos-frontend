@@ -14,6 +14,16 @@ import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallba
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
+import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
+
+const BACKLOG_TABLE_HEADERS = [
+  "ID",
+  "Title",
+  "Status",
+  "Priority",
+  "Assignee",
+  "Created",
+] as const;
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -267,10 +277,39 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     [data?.key],
   );
 
+  const renderMobileCard = useCallback(
+    (ticket: Ticket) => (
+      <BuildMobileCard
+        eyebrow={
+          <span className="flex items-center gap-1.5">
+            <TicketTypeIcon type={ticket.type} />
+            {formatTicketKey(data?.key, ticket.ticketNumber)}
+          </span>
+        }
+        title={ticket.title ?? "—"}
+        status={<StatusBadge status={ticket.status} />}
+        person={{ user: ticket.assignee, role: "Assignee" }}
+        meta={[
+          {
+            label: "Priority",
+            value: <PriorityBadge priority={ticket.priority} showLabel />,
+          },
+          {
+            label: "Created",
+            value: ticket.createdAt
+              ? format(new Date(ticket.createdAt), "MMM d")
+              : "—",
+          },
+        ]}
+      />
+    ),
+    [data?.key],
+  );
+
   if (isLoading) {
     return (
       <PageWrapper title="Backlog" subtitle="Loading...">
-        <DataTableSkeleton rows={12} columns={7} className="flex-1 min-h-0" />
+        <DataTableSkeleton mobileCards rows={12} headers={BACKLOG_TABLE_HEADERS} className="flex-1 min-h-0" />
       </PageWrapper>
     );
   }
@@ -329,7 +368,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
         */}
         <PageState
           resolution={resolution}
-          loading={<DataTableSkeleton rows={12} columns={7} className="flex-1 min-h-0" />}
+          loading={<DataTableSkeleton mobileCards rows={12} headers={BACKLOG_TABLE_HEADERS} className="flex-1 min-h-0" />}
           empty={
             <EmptyState
               className="flex-1"
@@ -355,6 +394,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
                 getRowLabel: (ticket) => ticket.title ?? "",
               } : undefined}
               minWidth="640px"
+              mobileCard={renderMobileCard}
               className="border-0 rounded-none flex-1 min-h-0"
             />
           </PmPanel>

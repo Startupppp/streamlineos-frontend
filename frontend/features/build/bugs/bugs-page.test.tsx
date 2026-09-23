@@ -76,6 +76,21 @@ jest.mock("./bug-sheet", () => ({
 
 import { BugsPage } from "./bugs-page";
 
+const mockReplace = jest.fn();
+let mockSearchParams = new URLSearchParams();
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockReplace, push: jest.fn(), refresh: jest.fn() }),
+  usePathname: () => "/build",
+  useSearchParams: () => mockSearchParams,
+}));
+
+beforeEach(() => {
+  mockReplace.mockClear();
+  mockSearchParams = new URLSearchParams();
+});
+
+
 const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:bugs:view": "all" }, modules: {} },
   isLoading: false,

@@ -115,11 +115,6 @@ function OverflowMenu({
   );
 }
 
-/**
- * The one header-action row every Build page uses. Below `sm` it stays a single
- * row — one action fills it, two split it evenly, and anything more keeps the
- * primary beside an overflow menu — so actions never claim a band per button.
- */
 export function BuildHeaderActions({
   actions,
   className,
@@ -131,7 +126,9 @@ export function BuildHeaderActions({
     <div
       data-slot="build-header-actions"
       className={cn(
-        "flex w-full min-w-0 items-center gap-2 sm:w-auto sm:justify-end",
+        "grid w-full min-w-0 items-center gap-2",
+        plan.mobileColumns,
+        "sm:flex sm:w-auto sm:items-center sm:justify-end",
         className,
       )}
     >
@@ -139,10 +136,7 @@ export function BuildHeaderActions({
         <HeaderActionButton
           key={action.id}
           action={action}
-          className={cn(
-            "min-w-0 flex-1 basis-0 sm:hidden",
-            plan.mobileInline.length === 1 && "w-full",
-          )}
+          className="w-full min-w-0 sm:hidden"
         />
       ))}
       {plan.mobileOverflow.length > 0 ? (

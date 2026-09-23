@@ -18,7 +18,7 @@ export default function ReleasesLoading() {
           <StatCardGridSkeleton cols={4} />
         </PmSection>
         <PmSection index={1}>
-          <DataTableSkeleton rows={12} headers={HEADERS} className="flex-1 min-h-0" />
+          <DataTableSkeleton mobileCards rows={12} headers={HEADERS} className="flex-1 min-h-0" />
         </PmSection>
       </PmPageShell>
     </PageWrapper>

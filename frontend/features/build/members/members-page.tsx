@@ -178,7 +178,7 @@ export function MembersPage() {
             <PageState
               resolution={pageState}
               loading={
-                <DataTableSkeleton
+                <DataTableSkeleton mobileCards
                   rows={12}
                   headers={MEMBER_TABLE_HEADERS}
                   className="flex-1"

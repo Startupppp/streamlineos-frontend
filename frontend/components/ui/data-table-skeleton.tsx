@@ -24,9 +24,15 @@ import {
 type DataTableSkeletonProps = {
   rows?: number;
   className?: string;
+  mobileCards?: boolean;
 } & ({ headers: readonly string[]; columns?: never } | { headers?: never; columns?: number });
 
-export function DataTableSkeleton({ rows = 12, className, ...shape }: DataTableSkeletonProps) {
+export function DataTableSkeleton({
+  rows = 12,
+  className,
+  mobileCards = false,
+  ...shape
+}: DataTableSkeletonProps) {
   const isOnline = useOnlineStatus();
   const headers = shape.headers ?? null;
   const columns = headers ? headers.length : (shape.columns ?? 4);
@@ -45,7 +51,24 @@ export function DataTableSkeleton({ rows = 12, className, ...shape }: DataTableS
           {PAUSED_MESSAGE}
         </p>
       )}
-      <Table>
+      {mobileCards ? (
+        <div className="flex flex-col gap-2 p-2 sm:hidden">
+          {Array.from({ length: 6 }).map((_, cardIdx) => (
+            <div
+              key={cardIdx}
+              className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3"
+            >
+              <Skeleton className="h-3.5 w-3/4" />
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-5 rounded-full" />
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="ml-auto h-3 w-12" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      <Table containerClassName={mobileCards ? "hidden sm:block" : undefined}>
         <TableHeader className="bg-muted/50 border-b border-border">
           <TableRow className="hover:bg-transparent">
             {Array.from({ length: columns }).map((_, colIdx) => (

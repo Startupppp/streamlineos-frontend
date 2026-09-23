@@ -15,7 +15,7 @@ export default async function BuildSettingsAccessRoute() {
   return (
     <>
       <Suspense
-        fallback={<DataTableSkeleton rows={10} headers={ACCESS_HEADERS} className="m-6" />}
+        fallback={<DataTableSkeleton mobileCards rows={10} headers={ACCESS_HEADERS} className="m-6" />}
       >
         <MembersPage />
       </Suspense>

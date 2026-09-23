@@ -11,7 +11,6 @@ import {
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
-/** Sentinel option value meaning "no filter"; never written to the URL. */
 export const BUILD_FILTER_ALL = "all";
 export const BUILD_SEARCH_DEBOUNCE_MS = 300;
 export const BUILD_LIST_SEARCH_PARAM = "q";
@@ -20,9 +19,7 @@ const PAGE_PARAM = "page";
 
 export interface BuildListFilterDefinition {
   param: string;
-  /** Sentinel for "no filter". Defaults to `BUILD_FILTER_ALL`. */
   all?: string;
-  /** Accepted values. A URL value outside the list is ignored. */
   options?: readonly string[];
 }
 
@@ -30,7 +27,6 @@ export interface UseBuildListFiltersOptions {
   filters?: readonly BuildListFilterDefinition[];
   searchParam?: string;
   debounceMs?: number;
-  /** Set false for a surface with no free-text search. */
   withSearch?: boolean;
 }
 
@@ -44,19 +40,10 @@ export interface BuildListFiltersState {
   clearAll: () => void;
   activeCount: number;
   isFiltered: boolean;
-  /** Feed to `useCursorPager` so the cursor stack rewinds when the query changes. */
   resetKey: string;
   isPending: boolean;
 }
 
-/**
- * URL-backed filter state for a Build list page (FE-86/FE-87).
- *
- * Search is held locally so typing stays responsive, and only its debounced
- * value reaches the URL and the query. Choosing a sentinel deletes the param
- * rather than writing `all`, and any filter change drops the cursor and page
- * params, so a stale keyset window can never outlive the query that minted it.
- */
 export function useBuildListFilters(
   options: UseBuildListFiltersOptions = {},
 ): BuildListFiltersState {
@@ -125,12 +112,6 @@ export function useBuildListFilters(
   const debouncedSearch = useDebouncedValue(search, debounceMs);
   const writtenSearch = useRef<string | null>(null);
 
-  /**
-   * `useRouter` may hand back a fresh object each render, which would re-run
-   * this effect for ever against a URL that has not caught up yet. The guard
-   * records what was written and releases the moment the URL agrees, so one
-   * debounced value produces exactly one navigation.
-   */
   useEffect(() => {
     if (!withSearch) return;
     if (debouncedSearch === urlSearch) {

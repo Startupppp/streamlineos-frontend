@@ -3,14 +3,12 @@
 import { useCallback, useMemo, useState } from "react";
 import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/build/roadmap";
 import type { RoadmapItem, RoadmapStatus } from "@/types/projects";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -19,6 +17,8 @@ import { cn } from "@/lib/utils";
 import { ROADMAP_COLUMNS } from "@/features/build/roadmap/roadmap-constants";
 import { RoadmapItemCard } from "@/features/build/roadmap/roadmap-item-card";
 import { RoadmapItemSheet } from "@/features/build/roadmap/roadmap-item-sheet";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import {
   PmPageShell,
   PmSection,
@@ -26,7 +26,6 @@ import {
   PmStaggerList,
   PM_FILL_PANEL,
   PM_PANEL,
-  PM_TOOLBAR,
 } from "@/components/pm-chrome";
 
 interface ProductRoadmapPageProps {
@@ -48,19 +47,16 @@ function RoadmapSkeleton() {
 }
 
 export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps) {
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebouncedValue(search, 300);
-  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
-  const [cursorIdx, setCursorIdx] = useState(0);
-  const currentCursor = cursorHistory[cursorIdx];
+  const listFilters = useBuildListFilters({ filters: [] });
+  const pager = useCursorPager(listFilters.resetKey);
 
   const filters = useMemo(
     () => ({
       managedProductId,
-      ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
-      cursor: currentCursor,
+      ...(listFilters.debouncedSearch.trim() ? { search: listFilters.debouncedSearch.trim() } : {}),
+      cursor: pager.cursor,
     }),
-    [managedProductId, debouncedSearch, currentCursor],
+    [managedProductId, listFilters.debouncedSearch, pager.cursor],
   );
 
   const { data, isLoading, isError, error, refetch } = useRoadmapItems(filters);
@@ -81,49 +77,37 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
     isLoading,
     isError,
     error,
-    isEmpty: (data?.data ?? []).length === 0 && cursorIdx === 0,
+    isEmpty: (data?.data ?? []).length === 0 && !pager.hasPrevious,
   });
-
-  function handleSearchChange(value: string) {
-    setSearch(value);
-    setCursorHistory([undefined]);
-    setCursorIdx(0);
-  }
 
   const handleEditItem = useCallback((item: RoadmapItem) => { setEditTarget(item); }, []);
   const handleDeleteItem = useCallback((item: RoadmapItem) => { setDeleteTarget(item); }, []);
 
-  function handleDelete() {
+  const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
     deleteItem.mutate(deleteTarget.id, {
       onSuccess: () => { toast.success("Roadmap item deleted"); setDeleteTarget(null); },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }
+  }, [deleteTarget, deleteItem]);
 
-  function handleNext() {
-    const nc = data?.pagination.nextCursor;
-    if (!nc) return;
-    setCursorHistory((prev) => [...prev.slice(0, cursorIdx + 1), nc]);
-    setCursorIdx((prev) => prev + 1);
-  }
+  const handleNext = useCallback(() => {
+    pager.goNext(data?.pagination.nextCursor);
+  }, [pager, data?.pagination.nextCursor]);
 
-  function handlePrev() {
-    if (cursorIdx === 0) return;
-    setCursorIdx((prev) => prev - 1);
-  }
+  const handlePrev = useCallback(() => {
+    pager.goPrevious();
+  }, [pager]);
 
-  function handleRetry() { void refetch(); }
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleOpenCreate = useCallback(() => { setCreateOpen(true); }, []);
+  const handleCloseCreate = useCallback(() => { setCreateOpen(false); }, []);
+  const handleCloseEdit = useCallback(() => { setEditTarget(null); }, []);
 
-  function handleOpenCreate() { setCreateOpen(true); }
-  function handleCloseCreate() { setCreateOpen(false); }
-  function handleCloseEdit() { setEditTarget(null); }
-
-  function handleDeleteOpenChange(open: boolean) {
+  const handleDeleteOpenChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
-  }
+  }, []);
 
-  const hasPrev = cursorIdx > 0;
   const hasNext = data?.pagination.hasMore ?? false;
 
   return (
@@ -136,9 +120,16 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
         ) : undefined
       }
       filters={
-        <div className={PM_TOOLBAR}>
-          <SearchInput placeholder="Search roadmap..." value={search} onValueChange={handleSearchChange} />
-        </div>
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search roadmap…",
+            label: "Search roadmap",
+          }}
+          filters={[]}
+          onClearAll={listFilters.clearAll}
+        />
       }
     >
       <PmPageShell>
@@ -149,7 +140,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
             empty={
               <EmptyState
                 className={PM_FILL_PANEL}
-                illustration={<EmptyProjectsIllustration />}
+                illustrationPreset="projects"
                 title="No roadmap items yet"
                 description="Add items to plan what this product is working toward."
                 action={{ label: "Add roadmap item", onClick: handleOpenCreate }}
@@ -180,12 +171,14 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
                   </PmPanel>
                 ))}
               </div>
-              {(hasPrev || hasNext) ? (
-                <div className="flex items-center justify-center gap-2 border-t pt-2">
-                  <Button variant="ghost" size="sm" onClick={handlePrev} disabled={!hasPrev}>Previous</Button>
-                  <Button variant="ghost" size="sm" onClick={handleNext} disabled={!hasNext}>Next</Button>
-                </div>
-              ) : null}
+              <TablePagination
+                mode="cursor"
+                rowCount={(data?.data ?? []).length}
+                hasMore={hasNext}
+                hasPrevious={pager.hasPrevious}
+                onNext={handleNext}
+                onPrevious={handlePrev}
+              />
             </div>
           </PageState>
         </PmSection>

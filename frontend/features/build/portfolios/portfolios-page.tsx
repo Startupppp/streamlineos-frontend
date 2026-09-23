@@ -261,7 +261,7 @@ export function PortfoliosPage() {
           <PageState
             resolution={resolution}
             loading={
-              <DataTableSkeleton
+              <DataTableSkeleton mobileCards
                 rows={12}
                 headers={PORTFOLIO_TABLE_HEADERS}
                 className="flex-1"

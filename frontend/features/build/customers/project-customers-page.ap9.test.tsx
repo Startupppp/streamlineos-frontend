@@ -93,7 +93,6 @@ jest.mock("./use-customer-display-prefs", () => ({
 
 jest.mock("./customer-filter-popover", () => ({
   CustomerFilterPopover: () => null,
-  ActiveCustomerFilterChips: () => null,
   SIZE_OPTIONS: [],
 }));
 

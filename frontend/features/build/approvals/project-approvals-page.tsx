@@ -271,7 +271,6 @@ export function ProjectApprovalsPage({
   const columns = useApprovalsColumns({
     canDecide,
     canManage,
-    currentUserId,
     memberName,
     setDecideTarget,
     setDelegateTarget,
@@ -341,7 +340,7 @@ export function ProjectApprovalsPage({
           <PageState
             resolution={pageState}
             loading={
-              <DataTableSkeleton
+              <DataTableSkeleton mobileCards
                 rows={12}
                 headers={APPROVALS_TABLE_HEADERS}
                 className="flex-1"

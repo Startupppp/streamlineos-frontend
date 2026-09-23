@@ -102,11 +102,6 @@ jest.mock("@/features/build/goals/goal-form-sheet", () => ({
   GoalFormSheet: () => null,
 }));
 
-jest.mock("@/features/build/goals/goal-filters-popover", () => ({
-  GoalLevelStatusFilters: () => null,
-  GoalFiltersPopover: () => null,
-}));
-
 jest.mock("@/features/build/goals/constants", () => ({
   STATUS_CONFIG: {},
   LEVEL_LABEL: { company: "Company", team: "Team", individual: "Individual" },

@@ -3,13 +3,11 @@
 import type { ReactNode } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getUserDisplayName, getUserInitials, type NamedUser } from "@/lib/person-display";
-import { cn } from "@/lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
 
 export interface BuildMobileCardPerson {
-  /** Whose record this is — owner, lead or assignee. Named, never an id. */
   user: NamedUser | null | undefined;
   avatarUrl?: string | null;
-  /** "Owner", "Lead", "Assignee". Read out before the name. */
   role: string;
 }
 
@@ -19,12 +17,10 @@ export interface BuildMobileCardMeta {
 }
 
 interface BuildMobileCardProps {
-  /** Ticket key, code or category shown above the title. */
   eyebrow?: ReactNode;
   title: ReactNode;
   status?: ReactNode;
   person?: BuildMobileCardPerson;
-  /** Two high-value fields at most — date, progress, priority, count, scope. */
   meta?: readonly BuildMobileCardMeta[];
   actions?: ReactNode;
   footer?: ReactNode;
@@ -37,7 +33,7 @@ function CardPerson({ person }: { person: BuildMobileCardPerson }) {
     <span className="flex min-w-0 items-center gap-1.5">
       <Avatar className="h-5 w-5 shrink-0">
         {person.avatarUrl ? (
-          <AvatarImage src={person.avatarUrl} alt="" />
+          <AvatarImage src={resolveImageUrl(person.avatarUrl)} alt="" />
         ) : null}
         <AvatarFallback className="text-dense">
           {getUserInitials(person.user)}
@@ -62,12 +58,6 @@ function CardMeta({ item }: { item: BuildMobileCardMeta }) {
   );
 }
 
-/**
- * The body of a `DataTable` `mobileCard`. The wrapper card — border, radius,
- * padding, press and focus states — belongs to `DataTable`, so this only owns
- * the information hierarchy every Build list shares below `sm`: identity,
- * status, the person accountable, and up to two more fields.
- */
 export function BuildMobileCard({
   eyebrow,
   title,

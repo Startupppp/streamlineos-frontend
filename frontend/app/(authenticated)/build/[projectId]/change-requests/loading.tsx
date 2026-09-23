@@ -20,7 +20,7 @@ export default function ChangeRequestsLoading() {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          <DataTableSkeleton rows={12} headers={HEADERS} className="flex-1 min-h-0" />
+          <DataTableSkeleton mobileCards rows={12} headers={HEADERS} className="flex-1 min-h-0" />
         </PmSection>
       </PmPageShell>
     </PageWrapper>

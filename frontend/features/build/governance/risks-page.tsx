@@ -353,7 +353,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
           <PageState
             resolution={pageState}
             loading={
-              <DataTableSkeleton
+              <DataTableSkeleton mobileCards
                 rows={12}
                 headers={RISK_TABLE_HEADERS}
                 className="flex-1"

@@ -345,7 +345,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
       <PageState
         resolution={pageState}
         loading={
-          <DataTableSkeleton
+          <DataTableSkeleton mobileCards
             rows={12}
             headers={TEST_RUN_TABLE_HEADERS}
             className="flex-1"

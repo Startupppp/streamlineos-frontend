@@ -391,7 +391,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
           <PageState
             resolution={pageState}
             loading={
-              <DataTableSkeleton
+              <DataTableSkeleton mobileCards
                 rows={12}
                 headers={MEETINGS_TABLE_HEADERS}
                 className="flex-1"

@@ -177,6 +177,14 @@ jest.mock("@/lib/text-overflow", () => ({
 
 import { RisksPage } from "./risks-page";
 
+const mockReplace = jest.fn();
+const mockSearchParams = new URLSearchParams();
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockReplace, push: jest.fn(), refresh: jest.fn() }),
+  usePathname: () => "/build",
+  useSearchParams: () => mockSearchParams,
+}));
+
 const ACCESS_GRANTED_RISKS = {
   data: { isOrgOwner: false, scopes: { "build:risks:view": "all" }, modules: {} },
   isLoading: false,

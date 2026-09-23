@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import Link from "next/link";
 import { Clock, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import { useApprovalInbox, useDecideApproval } from "@/hooks/api/build";
@@ -12,13 +11,8 @@ import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ApprovalStatusBadge, entityTypeLabel } from "./approval-status-badge";
 import { DecideDialog } from "./decide-dialog";
-import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import {
@@ -28,89 +22,24 @@ import {
 import { STATUS_OPTIONS } from "./approvals-constants";
 import type {
   ApprovalInboxItem,
-  ApprovalStatus,
   DecideApprovalInput,
 } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { cn } from "@/lib/utils";
 import {
   PmPageShell,
   PmSection,
   PM_FILL_PANEL,
 } from "@/components/pm-chrome";
-import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
-import { TruncatedText } from "@/components/ui/truncated-text";
-
-const INBOX_TABLE_HEADERS = [
-  "Project",
-  "Type",
-  "Title",
-  "Requested By",
-  "Due",
-  "Status",
-  "Actions",
-] as const;
+import {
+  INBOX_TABLE_HEADERS,
+  type DecideTarget,
+  buildApprovalsInboxColumns,
+  ApprovalsInboxMobileCard,
+} from "./approvals-inbox-columns";
 
 const FILTER_DEFINITIONS = [
   { param: "status", options: STATUS_OPTIONS.map((o) => o.value) },
 ] as const;
-
-const APPROVAL_STATUS_VALUES: ApprovalStatus[] = [
-  "requested",
-  "pending",
-  "approved",
-  "rejected",
-  "changes_requested",
-  "escalated",
-  "cancelled",
-];
-
-interface DecideTarget {
-  approvalId: number;
-  projectId: number;
-  title: string;
-}
-
-function ProjectLinkCell({ row }: { row: ApprovalInboxItem }) {
-  const handleClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
-  return (
-    <Link
-      href={`/build/${row.projectId}`}
-      className="max-w-[6rem] text-dense font-medium text-primary hover:underline min-w-0"
-      onClick={handleClick}
-    >
-      <TruncatedText text={row.projectKey ?? "—"} />
-    </Link>
-  );
-}
-
-function DecideButtonCell({
-  row,
-  onDecide,
-}: {
-  row: ApprovalInboxItem;
-  onDecide: (item: ApprovalInboxItem) => void;
-}) {
-  const handleClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      onDecide(row);
-    },
-    [row, onDecide],
-  );
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      className="h-6 px-2 text-dense"
-      onClick={handleClick}
-    >
-      Decide
-    </Button>
-  );
-}
 
 export function ApprovalsInboxPage() {
   const canDecide = useCan("build:approvals:decide");
@@ -210,110 +139,15 @@ export function ApprovalsInboxPage() {
     [listFilters],
   );
 
-  const columns = useMemo<DataTableColumn<ApprovalInboxItem>[]>(
-    () => [
-      {
-        key: "project",
-        header: "Project",
-        cell: (row) => <ProjectLinkCell row={row} />,
-      },
-      {
-        key: "entityType",
-        header: "Type",
-        cell: (row) => (
-          <Badge variant="outline" className="px-1.5 py-0.5 text-micro">
-            {entityTypeLabel(row.entityType)}
-          </Badge>
-        ),
-      },
-      {
-        key: "title",
-        header: "Title",
-        className: TABLE_TITLE_CELL,
-        cell: (row) => (
-          <TruncatedText
-            text={row.title}
-            className="font-medium text-foreground"
-          />
-        ),
-      },
-      {
-        key: "requester",
-        header: "Requested By",
-        cell: (row) => {
-          const name = memberName(row.requestedById);
-          return (
-            <TruncatedText
-              text={name}
-              className="max-w-[8rem] text-muted-foreground"
-            />
-          );
-        },
-      },
-      {
-        key: "dueAt",
-        header: "Due",
-        cell: (row) => {
-          if (!row.dueAt)
-            return <span className="text-muted-foreground">—</span>;
-          const isOverdue = new Date(row.dueAt) < new Date();
-          return (
-            <span
-              className={cn(
-                "tabular-nums",
-                isOverdue
-                  ? "font-medium text-status-danger-ink"
-                  : "text-muted-foreground",
-              )}
-            >
-              {row.dueAt.slice(0, 10)}
-            </span>
-          );
-        },
-      },
-      {
-        key: "status",
-        header: "Status",
-        cell: (row) => {
-          const s =
-            APPROVAL_STATUS_VALUES.find((v) => v === row.status) ?? "pending";
-          return <ApprovalStatusBadge status={s} />;
-        },
-      },
-      {
-        key: "actions",
-        header: "Actions",
-        headerClassName: "sr-only",
-        cell: (row) =>
-          canDecide ? (
-            <DecideButtonCell row={row} onDecide={handleDecideClick} />
-          ) : null,
-        className: "w-20",
-      },
-    ],
+  const columns = useMemo(
+    () => buildApprovalsInboxColumns({ canDecide, memberName, onDecide: handleDecideClick }),
     [canDecide, memberName, handleDecideClick],
   );
 
   const renderMobileCard = useCallback(
-    (row: ApprovalInboxItem) => {
-      const narrowStatus =
-        APPROVAL_STATUS_VALUES.find((v) => v === row.status) ?? "pending";
-      return (
-        <BuildMobileCard
-          eyebrow={row.projectKey ?? undefined}
-          title={row.title}
-          status={<ApprovalStatusBadge status={narrowStatus} />}
-          person={{ user: ownerOf(row.requestedById), role: "Requested by" }}
-          meta={[
-            { label: "Type", value: entityTypeLabel(row.entityType) },
-            {
-              label: "Due",
-              value: row.dueAt ? row.dueAt.slice(0, 10) : "—",
-            },
-          ]}
-        />
-      );
-    },
+    (row: ApprovalInboxItem) => (
+      <ApprovalsInboxMobileCard row={row} ownerOf={ownerOf} />
+    ),
     [ownerOf],
   );
 
@@ -377,7 +211,7 @@ export function ApprovalsInboxPage() {
           <PageState
             resolution={pageState}
             loading={
-              <DataTableSkeleton
+              <DataTableSkeleton mobileCards
                 rows={12}
                 headers={INBOX_TABLE_HEADERS}
                 className="flex-1"

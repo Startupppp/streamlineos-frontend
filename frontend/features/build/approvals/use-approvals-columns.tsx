@@ -23,7 +23,6 @@ const APPROVAL_STATUS_VALUES: ApprovalStatus[] = [
 interface UseApprovalsColumnsParams {
   canDecide: boolean;
   canManage: boolean;
-  currentUserId: string | undefined;
   memberName: (userId: string | null) => string;
   setDecideTarget: (row: Approval) => void;
   setDelegateTarget: (row: Approval) => void;
@@ -93,7 +92,6 @@ function ApprovalsActionsCell({
 export function useApprovalsColumns({
   canDecide,
   canManage,
-  currentUserId: _currentUserId,
   memberName,
   setDecideTarget,
   setDelegateTarget,

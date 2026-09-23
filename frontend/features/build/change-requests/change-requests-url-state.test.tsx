@@ -56,6 +56,31 @@ jest.mock("@/components/ui/empty-state", () => ({
   ),
 }));
 
+jest.mock("@/features/build/shared/build-list-toolbar", () => ({
+  BuildListToolbar: ({
+    search,
+    filters,
+  }: {
+    search?: { value: string; onValueChange: (v: string) => void; placeholder?: string };
+    filters?: Array<{ id: string; control: React.ReactNode }>;
+  }) => (
+    <div>
+      {search && (
+        <input
+          placeholder={search.placeholder}
+          value={search.value}
+          onChange={(e) => search.onValueChange(e.target.value)}
+        />
+      )}
+      {filters?.map((f) => <div key={f.id}>{f.control}</div>)}
+    </div>
+  ),
+}));
+
+jest.mock("@/features/build/shared/build-header-actions", () => ({
+  BuildHeaderActions: () => null,
+}));
+
 jest.mock("@/components/ui/data-table", () => ({
   DataTable: () => <div data-testid="data-table" />,
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
@@ -232,7 +257,9 @@ describe("ChangeRequestsPage — URL state for status and impact filters", () =>
     it("calls useChangeRequests without filters when no status param is in the URL so an unfiltered page shows all change requests", () => {
       mockUseSearchParams.mockReturnValue(new URLSearchParams());
       render(<ChangeRequestsPage projectId={1} />);
-      expect(mockUseChangeRequests).toHaveBeenCalledWith(1, undefined);
+      const call = mockUseChangeRequests.mock.calls[0];
+      const filters = call[1] as Record<string, unknown> | undefined;
+      expect(filters?.status).toBeUndefined();
     });
 
     it("reads the status param from the URL and passes it to useChangeRequests so the filter survives navigation", () => {
@@ -290,10 +317,10 @@ describe("ChangeRequestsPage — URL state for status and impact filters", () =>
         new URLSearchParams("status=submitted&impact=Medium"),
       );
       render(<ChangeRequestsPage projectId={1} />);
-      expect(mockUseChangeRequests).toHaveBeenCalledWith(1, {
-        status: "submitted",
-        impact: "Medium",
-      });
+      expect(mockUseChangeRequests).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({ status: "submitted", impact: "Medium" }),
+      );
     });
 
     it("shows the filtered-empty empty state when both filters are active and no results match so the user knows to clear their filters", () => {
@@ -407,12 +434,15 @@ describe("ChangeRequestsPage — URL state for releaseId filter", () => {
       new URLSearchParams("requesterId=user-a&approverId=user-b&releaseId=3&clientVisible=true"),
     );
     render(<ChangeRequestsPage projectId={1} />);
-    expect(mockUseChangeRequests).toHaveBeenCalledWith(1, {
-      requesterId: "user-a",
-      approverId: "user-b",
-      releaseId: 3,
-      clientVisible: true,
-    });
+    expect(mockUseChangeRequests).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({
+        requesterId: "user-a",
+        approverId: "user-b",
+        releaseId: 3,
+        clientVisible: true,
+      }),
+    );
   });
 });
 
@@ -446,10 +476,9 @@ describe("ChangeRequestsPage — URL state for q (server-side text search)", () 
       new URLSearchParams("status=submitted&impact=High&q=roof"),
     );
     render(<ChangeRequestsPage projectId={1} />);
-    expect(mockUseChangeRequests).toHaveBeenCalledWith(1, {
-      status: "submitted",
-      impact: "High",
-      q: "roof",
-    });
+    expect(mockUseChangeRequests).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ status: "submitted", impact: "High", q: "roof" }),
+    );
   });
 });

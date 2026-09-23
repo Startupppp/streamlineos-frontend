@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { BuildMobileCard } from "./build-mobile-card";
 
@@ -167,9 +167,38 @@ describe("Build list empty states", () => {
     render(
       <EmptyState
         title="No portfolios yet"
-        access={{ denied: true, permission: "build:portfolios:view" }}
+        access={{
+          permission: "build:portfolios:view",
+          allowed: false,
+          denied: true,
+          pending: false,
+        }}
       />,
     );
     expect(screen.queryByText("No portfolios yet")).toBeNull();
+  });
+});
+
+describe("Build list loading skeleton", () => {
+  it("mirrors the mobile cards instead of a table the page will not paint", () => {
+    const { container } = render(
+      <DataTableSkeleton mobileCards rows={3} headers={["Name", "Status", "Owner"]} />,
+    );
+    const cards = container.querySelector('[class~="sm:hidden"]');
+    expect(cards).not.toBeNull();
+    expect(container.querySelector('[class~="sm:block"]')).not.toBeNull();
+  });
+
+  it("names the real columns instead of numbered placeholders", () => {
+    render(<DataTableSkeleton headers={["Name", "Status", "Owner"]} />);
+    for (const header of ["Name", "Status", "Owner"]) {
+      expect(screen.getByRole("columnheader", { name: header })).toBeInTheDocument();
+    }
+    expect(screen.queryByText("Column 1")).toBeNull();
+  });
+
+  it("falls back to numbered placeholders only when a caller passes a count", () => {
+    render(<DataTableSkeleton columns={2} />);
+    expect(screen.getByText("Column 1")).toBeInTheDocument();
   });
 });

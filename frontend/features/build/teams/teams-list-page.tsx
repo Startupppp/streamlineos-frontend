@@ -213,7 +213,7 @@ export function TeamsListPage({ pmWorkspaceId }: TeamsListPageProps = {}) {
           <PageState
             resolution={resolution}
             loading={
-              <DataTableSkeleton
+              <DataTableSkeleton mobileCards
                 rows={12}
                 headers={TEAM_TABLE_HEADERS}
                 className="flex-1"

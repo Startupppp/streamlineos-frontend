@@ -256,7 +256,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
           <PageState
             resolution={pageState}
             loading={
-              <DataTableSkeleton rows={12} headers={BUGS_TABLE_HEADERS} className="flex-1" />
+              <DataTableSkeleton mobileCards rows={12} headers={BUGS_TABLE_HEADERS} className="flex-1" />
             }
             empty={
               <EmptyState

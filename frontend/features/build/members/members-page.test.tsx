@@ -48,7 +48,6 @@ jest.mock("./display-props", () => ({
 
 jest.mock("./members-toolbar", () => ({
   DisplayPropsToggle: () => null,
-  AddMemberButton: () => null,
 }));
 
 jest.mock("./add-member-dialog", () => ({

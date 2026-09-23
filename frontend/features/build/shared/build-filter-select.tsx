@@ -13,7 +13,6 @@ import {
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { cn } from "@/lib/utils";
 
-/** One trigger width for every Build list filter: fills its slot, capped on desktop. */
 export const BUILD_FILTER_TRIGGER_CLASS = cn(
   FILTER_SELECT_TRIGGER,
   "w-full min-w-0 md:w-40",
@@ -25,7 +24,6 @@ export interface BuildFilterOption {
 }
 
 interface BuildFilterSelectProps {
-  /** Accessible name and drawer label. */
   label: string;
   value: string;
   onValueChange: (value: string) => void;
@@ -34,11 +32,6 @@ interface BuildFilterSelectProps {
   className?: string;
 }
 
-/**
- * The one select a Build list filter uses. Sizing comes from the shared field
- * control, chrome from `FILTER_SELECT_TRIGGER`, and the popup is pinned to at
- * least the trigger width so a long option can never render clipped.
- */
 export function BuildFilterSelect({
   label,
   value,

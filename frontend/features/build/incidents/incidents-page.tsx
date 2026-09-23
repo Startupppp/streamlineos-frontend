@@ -254,7 +254,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
           <PageState
             resolution={pageState}
             loading={
-              <DataTableSkeleton
+              <DataTableSkeleton mobileCards
                 rows={12}
                 headers={INCIDENTS_TABLE_HEADERS}
                 className="flex-1"

@@ -271,7 +271,7 @@ export function ManagedProductsPage({
           <PageState
             resolution={resolution}
             loading={
-              <DataTableSkeleton
+              <DataTableSkeleton mobileCards
                 rows={12}
                 headers={MANAGED_PRODUCT_TABLE_HEADERS}
                 className="flex-1"

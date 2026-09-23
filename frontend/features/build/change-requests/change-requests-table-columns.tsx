@@ -15,7 +15,7 @@ import {
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import type { ChangeRequest } from "@/types/projects";
+import type { ChangeRequest, ChangeRequestStatus } from "@/types/projects";
 import { CR_STATUS_LABELS } from "./change-request-schema";
 import type { OrgMember } from "@/hooks/api/organization";
 
@@ -41,13 +41,13 @@ const CR_STATUS_STYLES: Record<string, string> = {
   completed: "text-status-success-ink border-status-success-rule",
 };
 
-export function CrStatusBadge({ status }: { status: string }) {
+export function CrStatusBadge({ status }: { status: ChangeRequestStatus }) {
   return (
     <Badge
       variant="outline"
       className={`text-micro ${CR_STATUS_STYLES[status] ?? "text-muted-foreground border-border"}`}
     >
-      {CR_STATUS_LABELS[status as keyof typeof CR_STATUS_LABELS] ?? status}
+      {CR_STATUS_LABELS[status] ?? status}
     </Badge>
   );
 }

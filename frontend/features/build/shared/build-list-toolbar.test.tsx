@@ -78,9 +78,28 @@ describe("BuildListToolbar", () => {
       <BuildListToolbar search={search} filters={[statusFilter()]} />,
     );
     expect(screen.queryByRole("button", { name: /^Filters/ })).toBeNull();
+    const root = container.querySelector("[data-slot=build-list-toolbar]");
+    expect(root?.className).toContain("grid-cols-2");
     const slot = container.querySelector("[data-filter-id=status]");
-    expect(slot?.className).toContain("max-md:flex-1");
+    expect(slot?.className).toContain("max-md:w-full");
     expect(slot?.className).not.toContain("max-md:hidden");
+  });
+
+  it("gives a lone filter the whole mobile row", () => {
+    const { container } = render(<BuildListToolbar filters={[statusFilter()]} />);
+    const root = container.querySelector("[data-slot=build-list-toolbar]");
+    expect(root?.className).toContain("grid-cols-1");
+  });
+
+  it("keeps the collapsed row at two columns", () => {
+    const { container } = render(
+      <BuildListToolbar
+        search={search}
+        filters={[statusFilter(), severityFilter()]}
+      />,
+    );
+    const root = container.querySelector("[data-slot=build-list-toolbar]");
+    expect(root?.className).toContain("grid-cols-2");
   });
 
   it("collapses a third control into the mobile filters drawer", () => {

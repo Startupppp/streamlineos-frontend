@@ -131,7 +131,7 @@ export function ProjectCustomersPage() {
           <PageState
             resolution={pageState}
             loading={
-              <DataTableSkeleton
+              <DataTableSkeleton mobileCards
                 rows={12}
                 headers={CUSTOMER_TABLE_HEADERS}
                 className="flex-1"

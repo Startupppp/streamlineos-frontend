@@ -1,32 +1,32 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
-/**
- * The layout half of the Build list contract, measured where it is decided.
- *
- * jsdom performs no layout, so every claim here — no horizontal page scroll,
- * how many bands precede content, whether a control is really 36px tall,
- * whether the bottom nav would cover the last row — is unassertable in the unit
- * suite. The gallery route mounts the shared components themselves with fixture
- * rows, so this measures the same code the Build pages render and needs no
- * backend to do it.
- */
 const GALLERY = "/design-system/build-list";
+const EVIDENCE_DIR = "test-results/build-list-evidence";
 
 const VIEWPORTS = [
-  { name: "mobile", width: 375, height: 812 },
-  { name: "tablet", width: 768, height: 1024 },
-  { name: "desktop", width: 1280, height: 800 },
+  { name: "375x812", width: 375, height: 812 },
+  { name: "768x1024", width: 768, height: 1024 },
+  { name: "1280x800", width: 1280, height: 800 },
+] as const;
+
+const CASES = [
+  "one-action-one-filter",
+  "two-actions-two-filters",
+  "four-actions-three-filters",
+  "loading",
+  "empty-true",
+  "empty-filtered",
+  "error",
 ] as const;
 
 function frame(page: Page, caseId: string): Locator {
   return page.locator(`[data-case-frame="${caseId}"]`);
 }
 
-async function noHorizontalOverflow(locator: Locator): Promise<void> {
-  const overflow = await locator.evaluate(
+async function horizontalOverflowOf(locator: Locator): Promise<number> {
+  return locator.evaluate(
     (node: HTMLElement) => node.scrollWidth - node.clientWidth,
   );
-  expect(overflow).toBeLessThanOrEqual(1);
 }
 
 async function topOf(locator: Locator): Promise<number> {
@@ -51,24 +51,26 @@ test.describe("Build list responsive contract", () => {
         expect(overflow).toBeLessThanOrEqual(1);
       });
 
-      test("no list surface overflows its own width", async ({ page }) => {
-        for (const caseId of [
-          "one-action-one-filter",
-          "two-actions-two-filters",
-          "four-actions-three-filters",
-          "loading",
-          "empty-true",
-          "empty-filtered",
-          "error",
-        ]) {
-          await noHorizontalOverflow(frame(page, caseId));
+      test("no list surface overflows its own width", async ({ page }, testInfo) => {
+        const overflows: Record<string, number> = {};
+        for (const caseId of CASES) {
+          const scope = frame(page, caseId);
+          overflows[caseId] = await horizontalOverflowOf(scope);
+          const shot = `${EVIDENCE_DIR}/${caseId}__${viewport.name}.png`;
+          await scope.screenshot({ path: shot });
+          await testInfo.attach(`${caseId}__${viewport.name}`, {
+            path: shot,
+            contentType: "image/png",
+          });
         }
+        const spilling = Object.entries(overflows).filter(([, px]) => px > 1);
+        expect(spilling).toEqual([]);
       });
 
       test("every field control stands at the shared 36px height", async ({ page }) => {
         const scope = frame(page, "four-actions-three-filters");
         const controls = scope.locator(
-          "[data-slot=search-input] input, [data-slot=select-trigger]",
+          "[data-slot=search-input] input:visible, [data-slot=select-trigger]:visible",
         );
         const count = await controls.count();
         expect(count).toBeGreaterThan(0);
@@ -80,7 +82,7 @@ test.describe("Build list responsive contract", () => {
       });
 
       test("search is painted left of and above every other filter", async ({ page }) => {
-        const scope = frame(page, "two-actions-two-filters");
+        const scope = frame(page, "one-action-one-filter");
         const search = scope.locator("[data-slot=search-input]");
         const status = scope.locator("[data-filter-id=status]");
         const searchBox = await search.boundingBox();
@@ -177,7 +179,7 @@ test.describe("Build list responsive contract", () => {
     });
 
     test("a select popup is never narrower than the trigger that opened it", async ({ page }) => {
-      const scope = frame(page, "two-actions-two-filters");
+      const scope = frame(page, "one-action-one-filter");
       const trigger = scope.getByLabel("Status");
       const triggerBox = await trigger.boundingBox();
       await trigger.click();
@@ -232,23 +234,25 @@ test.describe("Build list responsive contract", () => {
     });
 
     test("a filtered empty offers Clear filters, a true empty offers Create", async ({ page }) => {
-      await expect(
-        frame(page, "empty-filtered").getByRole("button", { name: "Clear filters" }),
-      ).toBeVisible();
-      await expect(
-        frame(page, "empty-filtered").getByRole("button", { name: "New project" }),
-      ).toHaveCount(0);
-      await expect(
-        frame(page, "empty-true").getByRole("button", { name: "New project" }),
-      ).toBeVisible();
+      const filtered = frame(page, "empty-filtered").getByRole("status");
+      await expect(filtered.getByRole("button", { name: "Clear filters" })).toBeVisible();
+      await expect(filtered.getByRole("button", { name: "New project" })).toHaveCount(0);
+      await expect(filtered.getByText(/No results match your filters/)).toBeVisible();
+
+      const trueEmpty = frame(page, "empty-true").getByRole("status");
+      await expect(trueEmpty.getByRole("button", { name: "New project" })).toBeVisible();
+      await expect(trueEmpty.getByRole("button", { name: "Clear filters" })).toHaveCount(0);
+      await expect(trueEmpty.getByText("No projects yet")).toBeVisible();
     });
 
-    test("the loading skeleton announces the real column names", async ({ page }) => {
+    test("the loading skeleton is card-shaped, never a table the page will not paint", async ({
+      page,
+    }) => {
       const scope = frame(page, "loading");
-      for (const header of ["Key", "Name", "Status", "Owner", "Progress", "Target"]) {
-        await expect(scope.getByRole("columnheader", { name: header })).toBeAttached();
-      }
+      await expect(scope.locator("table")).toBeHidden();
       await expect(scope.getByText("Column 1")).toHaveCount(0);
+      const cards = scope.locator("[class*='sm:hidden'] > div");
+      expect(await cards.count()).toBeGreaterThan(0);
     });
   });
 
@@ -269,6 +273,14 @@ test.describe("Build list responsive contract", () => {
     test("the desktop table replaces the mobile cards", async ({ page }) => {
       const scope = frame(page, "two-actions-two-filters");
       await expect(scope.locator("table").first()).toBeVisible();
+    });
+
+    test("the loading skeleton announces the real column names", async ({ page }) => {
+      const scope = frame(page, "loading");
+      for (const header of ["Key", "Name", "Status", "Owner", "Progress", "Target"]) {
+        await expect(scope.getByRole("columnheader", { name: header })).toBeVisible();
+      }
+      await expect(scope.getByText("Column 1")).toHaveCount(0);
     });
   });
 

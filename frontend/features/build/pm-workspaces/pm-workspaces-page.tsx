@@ -271,7 +271,7 @@ export function PmWorkspacesPage() {
           <PageState
             resolution={resolution}
             loading={
-              <DataTableSkeleton
+              <DataTableSkeleton mobileCards
                 rows={12}
                 headers={PM_WORKSPACE_TABLE_HEADERS}
                 className="flex-1"

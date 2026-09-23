@@ -192,7 +192,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
           <PageState
             resolution={pageState}
             loading={
-              <DataTableSkeleton
+              <DataTableSkeleton mobileCards
                 rows={8}
                 headers={RELEASES_TABLE_HEADERS}
                 className="flex-1"

@@ -190,7 +190,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
       <PageState
         resolution={pageState}
         loading={
-          <DataTableSkeleton
+          <DataTableSkeleton mobileCards
             rows={12}
             headers={TEST_CASE_TABLE_HEADERS}
             className="flex-1"

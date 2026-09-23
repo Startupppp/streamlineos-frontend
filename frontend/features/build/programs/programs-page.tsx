@@ -267,7 +267,7 @@ export function ProgramsPage() {
           <PageState
             resolution={resolution}
             loading={
-              <DataTableSkeleton
+              <DataTableSkeleton mobileCards
                 rows={12}
                 headers={PROGRAM_TABLE_HEADERS}
                 className="flex-1"

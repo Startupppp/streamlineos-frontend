@@ -195,7 +195,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
         loading={
           <PmPageShell>
             <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-              <DataTableSkeleton rows={12} headers={FORMS_TABLE_HEADERS} className="flex-1" />
+              <DataTableSkeleton mobileCards rows={12} headers={FORMS_TABLE_HEADERS} className="flex-1" />
             </PmSection>
           </PmPageShell>
         }

@@ -270,7 +270,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
           <PageState
             resolution={pageState}
             loading={
-              <DataTableSkeleton
+              <DataTableSkeleton mobileCards
                 rows={12}
                 headers={DECISION_TABLE_HEADERS}
                 className="flex-1"

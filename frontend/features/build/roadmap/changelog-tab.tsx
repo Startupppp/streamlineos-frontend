@@ -2,10 +2,9 @@
 
 import { useState, useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyTicketIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Button } from "@/components/ui/button";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import {
   useChangelog,
@@ -42,11 +41,9 @@ function ChangelogListSkeleton() {
 }
 
 export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabProps) {
-  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
-  const [cursorIdx, setCursorIdx] = useState(0);
-  const currentCursor = cursorHistory[cursorIdx];
+  const pager = useCursorPager();
 
-  const { data, isLoading, isError, error, refetch } = useChangelog({ cursor: currentCursor });
+  const { data, isLoading, isError, error, refetch } = useChangelog({ cursor: pager.cursor });
   const update = useUpdateChangelogEntry();
   const deleteEntry = useDeleteChangelogEntry();
   const canManage = useCan("build:roadmap:manage");
@@ -54,7 +51,7 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
   const [editTarget, setEditTarget] = useState<ChangelogEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ChangelogEntry | null>(null);
 
-  const isEmpty = (data?.data ?? []).length === 0 && cursorIdx === 0;
+  const isEmpty = (data?.data ?? []).length === 0 && !pager.hasPrevious;
 
   const resolution = usePageState({
     permission: "build:roadmap:view",
@@ -122,19 +119,14 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
     });
   }
 
-  function handleNext() {
-    const nc = data?.pagination.nextCursor;
-    if (!nc) return;
-    setCursorHistory((prev) => [...prev.slice(0, cursorIdx + 1), nc]);
-    setCursorIdx((prev) => prev + 1);
-  }
+  const handleNext = useCallback(() => {
+    pager.goNext(data?.pagination.nextCursor);
+  }, [pager, data?.pagination.nextCursor]);
 
-  function handlePrev() {
-    if (cursorIdx === 0) return;
-    setCursorIdx((prev) => prev - 1);
-  }
+  const handlePrev = useCallback(() => {
+    pager.goPrevious();
+  }, [pager]);
 
-  const hasPrev = cursorIdx > 0;
   const hasNext = data?.pagination.hasMore ?? false;
 
   return (
@@ -146,7 +138,7 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
           empty={
             <EmptyState
               className={PM_FILL_PANEL}
-              illustration={<EmptyTicketIllustration />}
+              illustrationPreset="ticket"
               title="No changelog entries yet"
               description="Announce shipped features, improvements and fixes to your users."
               action={{ label: "Add entry", onClick: handleOpenSheet }}
@@ -169,16 +161,14 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
                 />
               ))}
             </PmStaggerList>
-            {(hasPrev || hasNext) ? (
-              <div className="flex items-center justify-center gap-2 border-t pt-2">
-                <Button variant="ghost" size="sm" onClick={handlePrev} disabled={!hasPrev}>
-                  Previous
-                </Button>
-                <Button variant="ghost" size="sm" onClick={handleNext} disabled={!hasNext}>
-                  Next
-                </Button>
-              </div>
-            ) : null}
+            <TablePagination
+              mode="cursor"
+              rowCount={(data?.data ?? []).length}
+              hasMore={hasNext}
+              hasPrevious={pager.hasPrevious}
+              onNext={handleNext}
+              onPrevious={handlePrev}
+            />
           </>
         </PageState>
       </div>

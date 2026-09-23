@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,12 +26,9 @@ import {
   type BuildToolbarSearch,
 } from "./build-list-toolbar-layout";
 
-export type { BuildToolbarFilter, BuildToolbarSearch };
-
 interface BuildListToolbarProps {
   search?: BuildToolbarSearch;
   filters?: readonly BuildToolbarFilter[];
-  /** View, display and export controls. Right-aligned on desktop, drawer on mobile. */
   trailing?: ReactNode;
   trailingLabel?: string;
   onClearAll?: () => void;
@@ -52,7 +49,7 @@ function ToolbarFilterSlot({
       data-filter-id={filter.id}
       className={cn(
         "min-w-0 md:w-auto md:shrink-0 md:flex-none md:basis-auto",
-        collapsed ? "max-md:hidden" : "max-md:min-w-0 max-md:flex-1 max-md:basis-0",
+        collapsed ? "max-md:hidden" : "max-md:w-full",
       )}
     >
       {filter.control}
@@ -79,7 +76,16 @@ export function BuildListToolbar({
   className,
 }: BuildListToolbarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerBodyRef = useRef<HTMLDivElement>(null);
   const layout = buildToolbarLayout({ search, filters, trailing: Boolean(trailing) });
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const frame = window.requestAnimationFrame(() => {
+      drawerBodyRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [drawerOpen]);
 
   const handleClearAll = useCallback(() => {
     onClearAll?.();
@@ -91,7 +97,7 @@ export function BuildListToolbar({
   return (
     <div
       data-slot="build-list-toolbar"
-      className={cn(BUILD_TOOLBAR_ROOT_CLASS, className)}
+      className={cn(BUILD_TOOLBAR_ROOT_CLASS, layout.mobileColumns, className)}
     >
       {search ? (
         <SearchInput
@@ -100,7 +106,7 @@ export function BuildListToolbar({
           onValueChange={search.onValueChange}
           placeholder={search.placeholder}
           aria-label={search.label ?? search.placeholder}
-          className="min-w-0 flex-1 basis-0 md:min-w-[12rem] md:max-w-xs md:basis-[12rem] lg:max-w-sm"
+          className="min-w-0 md:min-w-[12rem] md:max-w-xs md:flex-1 md:basis-[12rem] lg:max-w-sm"
         />
       ) : null}
 
@@ -118,7 +124,7 @@ export function BuildListToolbar({
             <Button
               type="button"
               variant="outline"
-              className="min-w-0 flex-1 basis-0 justify-center gap-1.5 md:hidden"
+              className="w-full min-w-0 justify-center gap-1.5 md:hidden"
             >
               <SlidersHorizontal className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span className="truncate">{BUILD_TOOLBAR_FILTERS_LABEL}</span>
@@ -136,7 +142,11 @@ export function BuildListToolbar({
                 {BUILD_TOOLBAR_DRAWER_DESCRIPTION}
               </DrawerDescription>
             </DrawerHeader>
-            <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
+            <div
+              ref={drawerBodyRef}
+              tabIndex={-1}
+              className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 outline-none"
+            >
               {layout.filters
                 .filter((entry) => entry.collapsed)
                 .map((entry) => (

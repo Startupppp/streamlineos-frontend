@@ -51,6 +51,9 @@ const FILTER_DEFINITIONS = [
   { param: "status", options: CR_STATUSES },
   { param: "clientVisible", options: ["true", "false"] as const },
   { param: "impact" },
+  { param: "requesterId" },
+  { param: "approverId" },
+  { param: "releaseId" },
 ] as const;
 
 const PAGE_SIZE = 25;
@@ -73,6 +76,9 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const statusValue = listFilters.value("status");
   const clientVisibleValue = listFilters.value("clientVisible");
   const impactValue = listFilters.value("impact");
+  const requesterIdValue = listFilters.value("requesterId");
+  const approverIdValue = listFilters.value("approverId");
+  const releaseIdValue = listFilters.value("releaseId");
 
   const { data: crPage, isLoading, isError, error, refetch } = useChangeRequests(projectId, {
     status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
@@ -81,6 +87,12 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
         ? clientVisibleValue === "true"
         : undefined,
     impact: impactValue !== BUILD_FILTER_ALL && impactValue ? impactValue : undefined,
+    requesterId: requesterIdValue !== BUILD_FILTER_ALL ? requesterIdValue : undefined,
+    approverId: approverIdValue !== BUILD_FILTER_ALL ? approverIdValue : undefined,
+    releaseId:
+      releaseIdValue !== BUILD_FILTER_ALL && releaseIdValue
+        ? Number(releaseIdValue)
+        : undefined,
     q: listFilters.debouncedSearch || undefined,
     cursor: cursor ?? undefined,
     limit: PAGE_SIZE,
@@ -93,7 +105,13 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const crs = crPage?.data ?? [];
   const pagination = crPage?.pagination;
 
-  const pageState = usePageState({ permission: "build:changerequests:view", isLoading, isError, error });
+  const pageState = usePageState({
+    permission: "build:changerequests:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !isLoading && crs.length === 0,
+  });
 
   const handleNew = useCallback(() => {
     setEditCr(null);
@@ -245,7 +263,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
           <PageState
             resolution={pageState}
             loading={
-              <DataTableSkeleton
+              <DataTableSkeleton mobileCards
                 rows={12}
                 headers={CHANGE_REQUESTS_TABLE_HEADERS}
                 className="flex-1"

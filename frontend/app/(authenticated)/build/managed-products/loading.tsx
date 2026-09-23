@@ -20,7 +20,7 @@ export default function ManagedProductsLoading() {
       actions={<Skeleton className="h-9 w-32 rounded-md" />}
     >
       <PmPageShell>
-        <DataTableSkeleton rows={12} headers={HEADERS} className="flex-1 min-h-0" />
+        <DataTableSkeleton mobileCards rows={12} headers={HEADERS} className="flex-1 min-h-0" />
       </PmPageShell>
     </PageWrapper>
   );

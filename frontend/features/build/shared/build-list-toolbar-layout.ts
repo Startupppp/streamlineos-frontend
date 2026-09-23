@@ -2,10 +2,8 @@ import type { ReactNode } from "react";
 
 export interface BuildToolbarFilter {
   id: string;
-  /** Accessible name; also the visible label inside the mobile filters drawer. */
   label: string;
   control: ReactNode;
-  /** Contributes to the mobile "Filters" badge and enables "Clear all". */
   active?: boolean;
 }
 
@@ -22,18 +20,11 @@ export const BUILD_TOOLBAR_DRAWER_DESCRIPTION =
   "Narrow this list. Changes apply immediately; close the sheet to return to the results.";
 
 export const BUILD_TOOLBAR_ROOT_CLASS =
-  "flex w-full min-w-0 items-center gap-2 md:flex-nowrap md:overflow-x-auto md:overscroll-x-contain md:scrollbar-hide md:touch-pan-x";
+  "grid w-full min-w-0 items-center gap-2 md:flex md:flex-nowrap md:overflow-x-auto md:overscroll-x-contain md:scrollbar-hide md:touch-pan-x";
 
 export const BUILD_TOOLBAR_TRAILING_CLASS =
-  "flex shrink-0 items-center gap-2 md:ml-auto";
+  "flex min-w-0 items-center gap-2 md:ml-auto md:shrink-0";
 
-/**
- * Below `md` a toolbar gets two equal slots at most, so more than two controls
- * collapse everything after the first into a drawer. The first slot is search
- * when there is one, because a list is searched far more often than it is
- * faceted; without search it is the most general filter the page declared
- * first.
- */
 export const BUILD_TOOLBAR_MOBILE_SLOTS = 2;
 
 export interface BuildToolbarLayoutEntry {
@@ -47,6 +38,23 @@ export interface BuildToolbarLayout {
   collapsedActiveCount: number;
   activeCount: number;
   anyActive: boolean;
+  mobileColumns: string;
+}
+
+function mobileColumnsFor({
+  collapse,
+  inlineControls,
+  trailing,
+}: {
+  collapse: boolean;
+  inlineControls: number;
+  trailing: boolean;
+}): string {
+  if (collapse) return "grid-cols-2";
+  if (trailing && inlineControls > 0) return "grid-cols-[1fr_auto]";
+  return inlineControls >= BUILD_TOOLBAR_MOBILE_SLOTS
+    ? "grid-cols-2"
+    : "grid-cols-1";
 }
 
 export function buildToolbarLayout({
@@ -62,11 +70,11 @@ export function buildToolbarLayout({
   const hasSearch = search !== undefined;
   const slotCount = (hasSearch ? 1 : 0) + list.length + (trailing ? 1 : 0);
   const collapse = slotCount > BUILD_TOOLBAR_MOBILE_SLOTS;
-  const inlineCount = collapse ? (hasSearch ? 0 : 1) : list.length;
+  const inlineFilterCount = collapse ? (hasSearch ? 0 : 1) : list.length;
 
   const entries = list.map((filter, index) => ({
     filter,
-    collapsed: collapse && index >= inlineCount,
+    collapsed: collapse && index >= inlineFilterCount,
   }));
 
   const activeCount = list.filter((filter) => filter.active).length;
@@ -80,5 +88,10 @@ export function buildToolbarLayout({
     collapsedActiveCount,
     activeCount,
     anyActive: activeCount > 0 || Boolean(search?.value),
+    mobileColumns: mobileColumnsFor({
+      collapse,
+      inlineControls: (hasSearch ? 1 : 0) + inlineFilterCount,
+      trailing,
+    }),
   };
 }

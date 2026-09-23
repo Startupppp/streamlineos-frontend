@@ -74,8 +74,18 @@ jest.mock("@/components/ui/empty-state", () => ({
   ),
 }));
 
+jest.mock("@/features/build/shared/build-list-toolbar", () => ({
+  BuildListToolbar: () => null,
+}));
+
+jest.mock("@/features/build/shared/build-header-actions", () => ({
+  BuildHeaderActions: () => null,
+}));
+
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: () => <div data-testid="data-table" />,
+  DataTable: ({ pagination }: { pagination?: { hasMore?: boolean } }) => (
+    <div data-testid="data-table" data-has-more={String(Boolean(pagination?.hasMore))} />
+  ),
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 
@@ -280,7 +290,7 @@ describe("ChangeRequestsPage — cursor page consumption", () => {
     expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
   });
 
-  it("shows a load-more button when the server reports hasMore so the user can fetch the next page", () => {
+  it("passes hasMore=true to DataTable pagination when the server reports more pages so the user can navigate forward", () => {
     mockUseChangeRequests.mockReturnValue(
       baseQueryResult({
         data: {
@@ -290,10 +300,10 @@ describe("ChangeRequestsPage — cursor page consumption", () => {
       }),
     );
     render(<ChangeRequestsPage projectId={1} />);
-    expect(screen.getByRole("button", { name: /load more/i })).toBeInTheDocument();
+    expect(screen.getByTestId("data-table")).toHaveAttribute("data-has-more", "true");
   });
 
-  it("does not show a load-more button when the page is complete so the user knows they have seen all records", () => {
+  it("passes hasMore=false to DataTable pagination when the page is complete so forward navigation is disabled", () => {
     mockUseChangeRequests.mockReturnValue(
       baseQueryResult({
         data: {
@@ -303,6 +313,6 @@ describe("ChangeRequestsPage — cursor page consumption", () => {
       }),
     );
     render(<ChangeRequestsPage projectId={1} />);
-    expect(screen.queryByRole("button", { name: /load more/i })).not.toBeInTheDocument();
+    expect(screen.getByTestId("data-table")).toHaveAttribute("data-has-more", "false");
   });
 });
