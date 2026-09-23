@@ -27,7 +27,7 @@ Coordinator-owned. Workers never edit this file.
 | **B — P0 #7 QA Bug lifecycle** | production execution | backend main | **DATABASE_EXPAND_COMPLETE** | expand/backfill | 14/14 SQL verifier checks | Application cutover before freeze/drop | Production contains zero legacy bug rows |
 | **C — P0 #8 composite FK SET NULL** | production execution | backend main | ✅ **DONE** | migrations 1143/1144 | 814 catalog keys inspected; 0 unsafe | none | Live catalog and migration-text gates pass |
 | **D — Migration chain** | production execution | backend main | ✅ **DONE** | journal head 1144 | static and live watermark checks pass | none | 905/905 ledger; 1141–1144 postconditions verified |
-| **E — Authorization census** | (read-only) | (none) | ✅ **DONE** | none | 29/29 self-tests; report check green | (none) | VULNERABLE = 0, CLOSED = 34, VERIFIED = 176, NEEDS-REVIEW = 111; no regression |
+| **E — Authorization census** | (read-only) | (none) | **DONE** | none | self-tests and report check green | (none) | VULNERABLE = 0, CLOSED = 34, VERIFIED = 175, NEEDS-REVIEW = 113; no regression |
 | **F — UX hardening** | production verification | main | ✅ **DONE** | 6 files plus browser evidence | 41/41 plus authenticated smoke pass | none | Component matrix and production Build QA Sandbox pass; see `CODEX-BROWSER-QA-RESULTS.md` |
 | **G — Documentation reconciliation** | coordinator | main | ✅ **DONE** | this file plus reconciled ledgers | route, typecheck, authz and migration-chain checks pass | none | Historical rows preserved; current status is authoritative from 2026-09-22 reconciliation |
 
@@ -171,7 +171,7 @@ Coordinator-owned. Workers never edit this file.
 
 ## Workstream D — Migration chain investigation
 
-**Status: ✅ READY_FOR_REVIEW** (2026-09-22, completed by agent)
+**Status: DONE** (coordinator-reviewed 2026-09-23)
 
 **Findings:**
 
@@ -223,20 +223,20 @@ Coordinator-owned. Workers never edit this file.
 
 ## Workstream E — Authorization census review
 
-**Status: ✅ READY_FOR_REVIEW** (2026-09-22, completed by agent)
+**Status: DONE** (coordinator-reviewed 2026-09-23)
 
 **Findings:**
 
 ### Census counts verified — no regression
 ```
-Controller files:    47
-HTTP handlers:       321
+Controller files:    48
+HTTP handlers:       322
 
 VULNERABLE:          0 ✅ (no regression)
 CLOSED:              34
-VERIFIED:            176
-NEEDS-REVIEW:        111
-TOTAL:               321
+VERIFIED:            175
+NEEDS-REVIEW:        113
+TOTAL:               322
 ```
 
 ### Generator reproducibility — confirmed
@@ -251,7 +251,7 @@ TOTAL:               321
 | 6 | Unbound org scoping | orgId forwarded to service but binding not statically confirmable |
 | 3 | Unbound parent scoping | Parent param forwarded but binding not statically confirmable |
 
-Design constraint: handlers with ≥2 route params require hand-read REVIEWED entry to reach VERIFIED. All 111 are properly classified as "uncertified, not automatically vulnerable."
+Design constraint: handlers with ≥2 route params require hand-read REVIEWED entry to reach VERIFIED. Current NEEDS-REVIEW entries are properly classified as "uncertified, not automatically vulnerable."
 
 ### VERIFIED entries — sample confirmed
 10 representative entries spot-checked: all show `orgScoping: BOUND`, `guardChainOk: true`, `@RequirePermission(...)` decoration. Guard chain integrity confirmed.
@@ -268,7 +268,7 @@ All 34 CLOSED entries represent previously-raised findings now fixed. Sample anc
 
 ## Workstream F — UX and reliability hardening
 
-**Status: ✅ READY_FOR_REVIEW** (2026-09-22, completed by agent)
+**Status: DONE** (coordinator-reviewed 2026-09-23)
 **Commit:** `cd67e467b`
 **Changed files:** 6 (use-keyboard-shortcuts.ts + tests, cycles/intake/form pages, gate fix)
 **Tests:** 41 total pass
@@ -326,7 +326,7 @@ All 34 CLOSED entries represent previously-raised findings now fixed. Sample anc
 - Correct stale entries:
   - Issues explorer incorrectly marked IN_PROGRESS (actually DONE)
   - Integration branch status and workflow
-  - Old "2 VULNERABLE + 14 NEEDS-REVIEW" claim (replace with 0 VULNERABLE + 321 total)
+  - Old "2 VULNERABLE + 14 NEEDS-REVIEW" claim (replaced with 0 VULNERABLE + 322 total)
   - Current census totals
   - Current root/backend commit divergence
   - Migration blockers
@@ -343,9 +343,9 @@ Phase 1 is DONE when:
 - [x] **Workstream A: P0 #6 Sprint/Cycle** — BLOCKED with exact staging database requirement documented
 - [x] **Workstream B: P0 #7 QA Bug** — BLOCKED with exact staging database requirement documented
 - [x] **Workstream C: P0 #8 SET NULL verification** — BLOCKED with exact staging database requirement documented
-- [x] **Workstream D: Migration chain** — READY_FOR_REVIEW; 1141/1142 safe, 1090/0619 safe, journal verified
-- [x] **Workstream E: Authorization census** — READY_FOR_REVIEW; VULNERABLE = 0 confirmed, 321 handlers verified
-- [x] **Workstream F: UX hardening** — READY_FOR_REVIEW; 3 defects fixed (N-05, FE-49, gate fix), 4 pre-fixed confirmed, FE-123 deferred
+- [x] **Workstream D: Migration chain** — DONE; 1141/1142 safe, 1090/0619 safe, journal verified
+- [x] **Workstream E: Authorization census** — DONE; VULNERABLE = 0 confirmed, 322 handlers classified
+- [x] **Workstream F: UX hardening** — DONE; merged commit `cd67e467b`, focused tests pass, FE-123 handled by the later browser-verification programme
 - [x] **Workstream G: Documentation** — Reconciled; stale completion states and superseded counts are explicitly corrected below
 - [x] **Frontend typecheck** — PASS (verified 2026-09-22)
 - [x] **Backend typecheck** — PASS (verified 2026-09-22)
@@ -366,7 +366,7 @@ Phase 1 is DONE when:
 ### Completed locally
 
 **Workstream D — Migration chain investigation**
-- Status: ✅ READY_FOR_REVIEW
+- Status: DONE — coordinator-reviewed 2026-09-23
 - Finding: Migrations 1141 and 1142 are safe and complete
   - 1141: `pmWorkspaceId` nullable, schema drift noted (DB NOT NULL, contract nullable until applied)
   - 1142: SET NULL column list fixed, `confdelsetcols` unverifiable without database
@@ -375,16 +375,16 @@ Phase 1 is DONE when:
  - Complete locally; database proof remains a separate staging operation.
 
 **Workstream E — Authorization census**
-- Status: ✅ READY_FOR_REVIEW
+- Status: DONE — coordinator-reviewed 2026-09-23
 - Finding: Baseline confirmed unchanged
   - VULNERABLE = 0 (no regression)
-  - CLOSED = 34, VERIFIED = 176, NEEDS-REVIEW = 111, total = 321
+  - CLOSED = 34, VERIFIED = 175, NEEDS-REVIEW = 113, total = 322
   - Generator reproducible; 29/29 self-tests pass
   - NEEDS-REVIEW properly classified (102 nested routes, 6 unbound org, 3 unbound parent)
  - Complete locally; no VULNERABLE findings remain.
 
 **Workstream F — UX hardening**
-- Status: ✅ READY_FOR_REVIEW
+- Status: DONE — coordinator-reviewed 2026-09-23
 - Commit: `cd67e467b` (6 files changed, 41/41 tests pass)
 - Fixes applied:
   - N-05: `c` shortcut now fires on org-level Build routes
