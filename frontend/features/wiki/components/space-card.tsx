@@ -10,7 +10,10 @@ import {
   KbPencilIcon,
   KbTrash2Icon,
 } from "@/features/wiki/lib/kb-icons";
-import type { KbSpace, KbAudience } from "@/types/kb";
+import type { KbAudience } from "@/types/kb";
+import type { KbSpaceListItem } from "@/hooks/api/kb/spaces";
+
+export type { KbSpaceListItem as SpaceCardItem };
 
 const AUDIENCE_LABELS: Record<KbAudience, string> = {
   internal: "Internal",
@@ -35,11 +38,11 @@ export function SpaceCardSkeleton() {
 }
 
 interface SpaceCardProps {
-  space: KbSpace;
+  space: KbSpaceListItem;
   canManage: boolean;
   pageCount: number;
-  onEdit: (space: KbSpace) => void;
-  onDelete: (space: KbSpace) => void;
+  onEdit: (space: KbSpaceListItem) => void;
+  onDelete: (space: KbSpaceListItem) => void;
 }
 
 export function SpaceCard({

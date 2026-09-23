@@ -1,14 +1,12 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useCallback, useMemo } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { LayoutList, LayoutGrid } from "lucide-react";
 import { useKbPageCollection } from "@/hooks/api/kb/page-collection";
-import type {
-  KbPageCollectionItem,
-  KbPageCollectionParams,
-} from "@/hooks/api/kb/page-collection";
-import { useKbSpaces } from "@/hooks/api/kb";
+import type { KbPageCollectionItem } from "@/hooks/api/kb/page-collection";
+import { useKbSpaces, useCreateKbPage } from "@/hooks/api/kb";
+import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { DataTable } from "@/components/ui/data-table";
@@ -23,17 +21,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SearchInput } from "@/components/ui/search-input";
 import { useCursorPager } from "@/components/ui/table-pagination";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
-import { pageHref } from "@/lib/knowledge-routes";
+import { pageHref, projectPageHref, KB_TEMPLATES } from "@/lib/knowledge-routes";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
-import {
-  WikiPageCard,
-  WIKI_PAGE_CARD_GRID_CLASS,
-} from "@/features/wiki/components/wiki-page-card";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { TrustBadge, StatusBadge } from "./kb-collection-badges";
+import { WikiPageCard, WIKI_PAGE_CARD_GRID_CLASS } from "./wiki-page-card";
+import { StatusBadge, TrustBadge } from "./kb-collection-badges";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { toast } from "sonner";
+
+const SORT_VALUES = ["updated_desc", "created_desc", "title_asc"] as const;
+const VIEW_VALUES = ["list", "card"] as const;
+type SortValue = (typeof SORT_VALUES)[number];
 
 const SORT_OPTIONS = [
   { value: "updated_desc", label: "Last updated" },
@@ -50,123 +49,96 @@ const STATUS_OPTIONS = [
 
 const PAGE_LIMIT = 50;
 
-type SortValue = "updated_desc" | "created_desc" | "title_asc";
-const SORT_VALUES = ["updated_desc", "created_desc", "title_asc"] as const;
-const VIEW_VALUES = ["list", "card"] as const;
-
-const BASE_COLUMNS: DataTableColumn<KbPageCollectionItem>[] = [
-  {
-    key: "title",
-    header: "Title",
-    cell: (row) => (
-      <a
-        href={pageHref(row.id)}
-        className="font-medium text-foreground hover:underline"
-      >
-        {row.title}
-      </a>
-    ),
-  },
-  {
-    key: "status",
-    header: "Status",
-    cell: (row) => <StatusBadge status={row.status} />,
-  },
-  {
-    key: "trustState",
-    header: "Trust",
-    cell: (row) => <TrustBadge trustState={row.trustState} />,
-  },
-  {
-    key: "updatedAt",
-    header: "Updated",
-    cell: (row) => (
-      <span className="tabular-nums text-muted-foreground text-sm">
-        {kbTimeAgo(row.updatedAt)}
-      </span>
-    ),
-  },
-];
-
-export interface WikiPageCollectionTableProps {
-  fixedParams: Pick<KbPageCollectionParams, "owner" | "sharedWithMe" | "spaceId">;
-  additionalColumns?: DataTableColumn<KbPageCollectionItem>[];
-  emptyTitle: string;
-  emptyDescription?: string;
-  accessLostTitle?: string;
-  accessLostDescription?: string;
+function buildColumns(
+  resolveHref: (id: number) => string,
+): DataTableColumn<KbPageCollectionItem>[] {
+  return [
+    {
+      key: "title",
+      header: "Title",
+      cell: (row) => (
+        <a
+          href={resolveHref(row.id)}
+          className="font-medium text-foreground hover:underline"
+        >
+          {row.title || "Untitled"}
+        </a>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (row) => <StatusBadge status={row.status} />,
+    },
+    {
+      key: "trustState",
+      header: "Trust",
+      cell: (row) => <TrustBadge trustState={row.trustState} />,
+    },
+    {
+      key: "updatedAt",
+      header: "Updated",
+      cell: (row) => (
+        <span className="tabular-nums text-muted-foreground text-sm">
+          {kbTimeAgo(row.updatedAt)}
+        </span>
+      ),
+    },
+  ];
 }
 
-function MobilePageCard(row: KbPageCollectionItem) {
-  return (
-    <WikiPageCard
-      href={pageHref(row.id)}
-      title={row.title}
-      icon={row.icon}
-      coverImage={row.coverImage}
-      subtitle={kbTimeAgo(row.updatedAt)}
-    >
-      <StatusBadge status={row.status} />
-    </WikiPageCard>
-  );
+export interface WikiHomeAllPagesProps {
+  projectId?: number;
 }
 
-export function WikiPageCollectionTable({
-  fixedParams,
-  additionalColumns = [],
-  emptyTitle,
-  emptyDescription,
-  accessLostTitle,
-  accessLostDescription,
-}: WikiPageCollectionTableProps) {
+export function WikiHomeAllPages({ projectId }: WikiHomeAllPagesProps) {
+  const isProjectScoped = projectId !== undefined && projectId > 0;
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { update } = useUrlFilters();
 
-  const rawSearch = searchParams.get("q") ?? "";
+  const resolveHref = useCallback(
+    (pageId: number) =>
+      isProjectScoped ? projectPageHref(projectId!, pageId) : pageHref(pageId),
+    [isProjectScoped, projectId],
+  );
+
+  const columns = useMemo(() => buildColumns(resolveHref), [resolveHref]);
+
+  const status = searchParams.get("status") ?? "";
+  const spaceParam = searchParams.get("space") ?? "";
+  const spaceId = spaceParam !== "" ? Number(spaceParam) : undefined;
+  const ownerParam = searchParams.get("owner") ?? "";
   const sort = parseEnum(
     searchParams.get("sort"),
     SORT_VALUES,
     "updated_desc",
   ) as SortValue;
-  const status = searchParams.get("status") ?? "";
-  const spaceParam = searchParams.get("space") ?? "";
-  const urlSpaceId = spaceParam !== "" ? Number(spaceParam) : undefined;
-  const spaceId = fixedParams.spaceId ?? urlSpaceId;
   const view = parseEnum(searchParams.get("view"), VIEW_VALUES, "list");
 
-  const debouncedSearch = useDebouncedValue(rawSearch, 300);
+  const filtersActive =
+    status !== "" || spaceParam !== "" || ownerParam !== "" || sort !== "updated_desc";
+
+  const filterKey = `${status}|${spaceParam}|${ownerParam}|${sort}`;
+  const pager = useCursorPager(filterKey);
 
   const { data: spacesPage } = useKbSpaces();
   const spaces = spacesPage?.data;
+  const createPage = useCreateKbPage();
+  const canCreate = useCan("kb:pages:create");
 
-  const filterKey = `${debouncedSearch}|${sort}|${status}|${spaceParam}`;
-  const pager = useCursorPager(filterKey);
-
-  const queryParams: KbPageCollectionParams = {
-    ...fixedParams,
-    q: debouncedSearch || undefined,
+  const { data, isLoading, isError, error, refetch } = useKbPageCollection({
     sort,
     status: status || undefined,
     spaceId,
+    projectId: isProjectScoped ? projectId : undefined,
+    owner: ownerParam === "me" ? "me" : undefined,
     cursor: pager.cursor,
     limit: PAGE_LIMIT,
-  };
+  });
 
-  const { data, isLoading, isError, error, refetch } =
-    useKbPageCollection(queryParams);
-
-  const [hadData, setHadData] = useState(false);
-  if (!hadData && data && data.data.length > 0) setHadData(true);
-
-  const filtersActive =
-    debouncedSearch !== "" ||
-    status !== "" ||
-    spaceParam !== "" ||
-    sort !== "updated_desc";
-
-  const isEmpty = data !== undefined && data.data.length === 0;
-  const accessLost =
-    hadData && isEmpty && !filtersActive && accessLostTitle !== undefined;
+  const rows = data?.data ?? [];
+  const isEmpty = data !== undefined && rows.length === 0;
 
   const pageState = usePageState({
     permission: "kb:pages:view",
@@ -176,24 +148,20 @@ export function WikiPageCollectionTable({
     isEmpty,
   });
 
-  function handleClearFilters() {
-    update({ q: null, status: null, sort: null, space: null });
-  }
-
-  function handleSearchChange(value: string) {
-    update({ q: value || null });
-  }
-
-  function handleSortChange(value: string) {
-    update({ sort: value });
-  }
-
   function handleStatusChange(value: string) {
     update({ status: value === "all" ? null : value });
   }
 
   function handleSpaceChange(value: string) {
     update({ space: value === "all" ? null : value });
+  }
+
+  function handleOwnerChange(value: string) {
+    update({ owner: value === "all" ? null : value });
+  }
+
+  function handleSortChange(value: string) {
+    update({ sort: value });
   }
 
   function handleViewList() {
@@ -216,36 +184,55 @@ export function WikiPageCollectionTable({
     void refetch();
   }, [refetch]);
 
-  const columns = [...BASE_COLUMNS, ...additionalColumns];
-  const rows = data?.data ?? [];
+  const handleClearFilters = useCallback(() => {
+    update({ status: null, space: null, owner: null, sort: null });
+  }, [update]);
 
-  const emptyNode = accessLost ? (
+  function handleNewPage() {
+    createPage.mutate(
+      { projectId: isProjectScoped ? projectId : undefined },
+      {
+        onSuccess: (page) => router.push(resolveHref(page.id)),
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    );
+  }
+
+  function AllPagesCard(row: KbPageCollectionItem) {
+    return (
+      <WikiPageCard
+        href={resolveHref(row.id)}
+        title={row.title}
+        icon={row.icon}
+        coverImage={row.coverImage}
+        subtitle={kbTimeAgo(row.updatedAt)}
+      >
+        <StatusBadge status={row.status} />
+      </WikiPageCard>
+    );
+  }
+
+  const emptyNode = filtersActive ? (
     <EmptyState
       illustrationPreset="default"
-      title={accessLostTitle ?? emptyTitle}
-      description={accessLostDescription}
-      action={{ label: "Refresh", onClick: handleRetry }}
+      title="All pages"
+      filtersActive
+      filteredTitle="No pages match your filters."
+      onClearFilters={handleClearFilters}
     />
   ) : (
     <EmptyState
       illustrationPreset="default"
-      title={emptyTitle}
-      description={emptyDescription}
-      filtersActive={filtersActive}
-      filteredTitle="No results match your filters."
-      onClearFilters={handleClearFilters}
+      title="Your wiki starts here"
+      description="Create your first page to build a shared knowledge base for your team."
+      action={canCreate ? { label: "Create a page", onClick: handleNewPage } : undefined}
+      secondaryAction={{ label: "Browse templates", href: KB_TEMPLATES }}
     />
   );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <SearchInput
-          value={rawSearch}
-          onValueChange={handleSearchChange}
-          placeholder="Search pages…"
-          className="h-9 w-48 shrink-0"
-        />
         <Select value={status || "all"} onValueChange={handleStatusChange}>
           <SelectTrigger className="h-9 w-36 shrink-0">
             <SelectValue placeholder="Status" />
@@ -259,7 +246,8 @@ export function WikiPageCollectionTable({
             ))}
           </SelectContent>
         </Select>
-        {!fixedParams.spaceId && spaces && spaces.length > 0 && (
+
+        {spaces && spaces.length > 0 && (
           <Select value={spaceParam || "all"} onValueChange={handleSpaceChange}>
             <SelectTrigger className="h-9 w-40 shrink-0">
               <SelectValue placeholder="Space" />
@@ -274,6 +262,17 @@ export function WikiPageCollectionTable({
             </SelectContent>
           </Select>
         )}
+
+        <Select value={ownerParam || "all"} onValueChange={handleOwnerChange}>
+          <SelectTrigger className="h-9 w-36 shrink-0">
+            <SelectValue placeholder="Owner" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All owners</SelectItem>
+            <SelectItem value="me">My pages</SelectItem>
+          </SelectContent>
+        </Select>
+
         <Select value={sort} onValueChange={handleSortChange}>
           <SelectTrigger className="h-9 w-40 shrink-0">
             <SelectValue placeholder="Sort" />
@@ -286,6 +285,7 @@ export function WikiPageCollectionTable({
             ))}
           </SelectContent>
         </Select>
+
         <div className="ml-auto flex items-center gap-1">
           <Button
             type="button"
@@ -293,6 +293,7 @@ export function WikiPageCollectionTable({
             size="icon"
             className="h-9 w-9"
             aria-label="List view"
+            aria-pressed={view === "list"}
             onClick={handleViewList}
           >
             <LayoutList className="h-4 w-4" />
@@ -303,12 +304,14 @@ export function WikiPageCollectionTable({
             size="icon"
             className="h-9 w-9"
             aria-label="Card view"
+            aria-pressed={view === "card"}
             onClick={handleViewCard}
           >
             <LayoutGrid className="h-4 w-4" />
           </Button>
         </div>
       </div>
+
       <PageState
         resolution={pageState}
         loading={<DataTableSkeleton columns={columns.length} />}
@@ -321,7 +324,7 @@ export function WikiPageCollectionTable({
           ) : (
             <div className={WIKI_PAGE_CARD_GRID_CLASS}>
               {rows.map((row) => (
-                <MobilePageCard key={row.id} {...row} />
+                <AllPagesCard key={row.id} {...row} />
               ))}
             </div>
           )
@@ -331,7 +334,7 @@ export function WikiPageCollectionTable({
             columns={columns}
             getRowKey={(row) => row.id}
             emptyState={emptyNode}
-            mobileCard={MobilePageCard}
+            mobileCard={AllPagesCard}
             pagination={{
               mode: "cursor",
               pageSize: PAGE_LIMIT,

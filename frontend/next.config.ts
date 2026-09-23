@@ -282,6 +282,11 @@ const nextConfig: NextConfig = {
       destination: "/settings/notifications/my-preferences",
       permanent: false,
     },
+    {
+      source: "/ask",
+      destination: "/knowledge/chat",
+      permanent: false,
+    },
   ],
   images: {
     formats: ["image/webp"],

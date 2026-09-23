@@ -104,3 +104,17 @@ describe("compatibility redirects for the retired communication routes", () => {
     );
   });
 });
+
+describe("compatibility redirect for the retired /ask surface (S20)", () => {
+  it("next.config.ts redirects /ask to /knowledge/chat", () => {
+    expect(destinationFor("/ask")).toBe("/knowledge/chat");
+  });
+
+  it("/ask is not a universal route — the redirect in next.config.ts is the only thing serving it", () => {
+    expect(isUniversalRoute("/ask")).toBe(false);
+  });
+
+  it("/knowledge/chat is a reachable universal route in the access registry", () => {
+    expect(resolveRouteAccess("/knowledge/chat").kind).toBe("universal");
+  });
+});

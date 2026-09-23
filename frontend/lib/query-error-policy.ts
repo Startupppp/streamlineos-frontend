@@ -13,6 +13,14 @@ export function readErrorReachesBoundary(
   return true;
 }
 
+export function projectReadErrorReachesBoundary(
+  error: unknown,
+  query: { readonly state: { readonly data: unknown } },
+): boolean {
+  if (isApiError(error) && error.status === 404) return false;
+  return readErrorReachesBoundary(error, query);
+}
+
 export const INLINE_READ_ERROR = { throwOnError: false } as const;
 
 export async function optionalSignalRead<T>(

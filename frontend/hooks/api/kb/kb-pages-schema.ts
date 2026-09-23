@@ -48,6 +48,7 @@ export const kbPageListContract = z.array(kbPageListItemContract);
 export const kbPageWithAncestorsContract = kbPageBaseContract.extend({
   ancestors: z.array(z.object({ id: z.number().int(), title: z.string() })),
   isFavorite: z.boolean(),
+  canEdit: z.boolean().optional(),
 });
 
 export const kbPageTreeItemContract = z.object({

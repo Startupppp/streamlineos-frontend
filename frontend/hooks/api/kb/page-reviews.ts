@@ -61,6 +61,10 @@ export type BulkDecideResultItem = {
 export type KbPageReviewsParams = {
   status?: KbReviewStatusFilter;
   type?: KbReviewType;
+  reviewer?: string;
+  dueFrom?: string;
+  dueTo?: string;
+  spaceId?: number;
   cursor?: string;
   limit?: number;
   sortDir?: "asc" | "desc";

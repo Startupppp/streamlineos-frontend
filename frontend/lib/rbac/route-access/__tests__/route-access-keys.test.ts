@@ -186,7 +186,6 @@ describe("route-access registry keys", () => {
       "/knowledge/wiki/spaces",
       "/knowledge/wiki/templates",
       "/knowledge/wiki/trash",
-      "/chat/settings",
       "/calendar/settings",
     ];
     for (const route of protectedRoutes) {

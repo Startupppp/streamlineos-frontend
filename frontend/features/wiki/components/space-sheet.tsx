@@ -26,11 +26,19 @@ import {
 } from "@/components/ui/form";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateKbSpace, useUpdateKbSpace } from "@/hooks/api/kb/spaces";
-import type { KbSpace, KbAudience } from "@/types/kb";
+import type { KbAudience } from "@/types/kb";
+
+interface SpaceEditData {
+  id: number;
+  name: string;
+  description: string | null | undefined;
+  icon: string | null | undefined;
+  audience: string | null | undefined;
+}
 
 interface SpaceSheetProps {
   open: boolean;
-  editingSpace: KbSpace | null;
+  editingSpace: SpaceEditData | null;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
