@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { invoiceLineDetailContract } from "@/hooks/api/invoices/project-invoice-line-detail-schema";
 
 export const uninvoicedEntryContract = z.object({
   id: z.number().int(),
@@ -9,6 +10,7 @@ export const uninvoicedEntryContract = z.object({
   billRate: z.string().nullable(),
   currency: z.string().nullable(),
   description: z.string().nullable(),
+  invoiceLineDetail: invoiceLineDetailContract.nullable(),
 });
 
 export const uninvoicedEntriesResponseContract = z.object({

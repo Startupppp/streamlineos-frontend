@@ -17,7 +17,12 @@ import type {
 } from "@/types/projects";
 import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import type { RoadmapPrioritization, RoadmapSignals } from "@/hooks/api/build/roadmap-schema";
+import type {
+  CrmAccountTier,
+  RoadmapPrioritization,
+  RoadmapSignals,
+  RoadmapTierWeighting,
+} from "@/hooks/api/build/roadmap-schema";
 
 const roadmapPageContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapPageContract),
@@ -53,7 +58,7 @@ const roadmapSignalsContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapSignalsContract),
 );
 
-export type { RoadmapPrioritization, RoadmapSignals };
+export type { CrmAccountTier, RoadmapPrioritization, RoadmapSignals, RoadmapTierWeighting };
 
 export type {
   ChangelogType,
@@ -120,6 +125,7 @@ export interface ScoredRoadmapItem extends RoadmapItem {
   confidence: number | null;
   effort: number | null;
   prioritization: RoadmapPrioritization;
+  tierWeighting: RoadmapTierWeighting;
 }
 
 interface FeedbackPostFilters {
@@ -135,6 +141,7 @@ interface UpdateFeedbackPostInput {
   description?: string | null;
   status?: FeedbackStatus;
   category?: string | null;
+  crmOrganizationId?: number | null;
   linkedRoadmapItemId?: number | null;
 }
 

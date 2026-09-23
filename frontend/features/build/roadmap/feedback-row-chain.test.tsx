@@ -16,6 +16,12 @@ jest.mock("@/hooks/api/build/roadmap", () => ({
   useUpdateFeedbackPost: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
+jest.mock("@/hooks/api/crm", () => ({
+  useCrmOrganizationsForPicker: jest.fn(() => ({
+    data: { organizations: [{ id: 9, name: "Acme" }] },
+  })),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
 }));
@@ -130,6 +136,8 @@ function makePost(overrides: Partial<FeedbackPost> = {}): FeedbackPost {
     votes: 0,
     submittedByName: null,
     submittedByEmail: null,
+    crmContactId: null,
+    crmOrganizationId: null,
     linkedRoadmapItemId: null,
     duplicateOfId: null,
     mergedAt: null,

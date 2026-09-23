@@ -120,6 +120,65 @@ describe("generating an invoice from approved time", () => {
     ).toBeNull();
   });
 
+  it("names the summary mode on the step that generates the invoice, so raw customer-visible notes are never a surprise", async () => {
+    const user = userEvent.setup();
+    entries = entries.map((entry) => ({
+      ...entry,
+      invoiceLineDetail: "summary",
+    }));
+    renderSheet();
+
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(screen.getByTestId("invoice-line-detail-mode")).toHaveTextContent(
+      "Summary lines",
+    );
+  });
+
+  it("names the raw mode when every selected project opted into it, which is the positive half the summary assertion needs", async () => {
+    const user = userEvent.setup();
+    entries = entries.map((entry) => ({ ...entry, invoiceLineDetail: "raw" }));
+    renderSheet();
+
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(screen.getByTestId("invoice-line-detail-mode")).toHaveTextContent(
+      "Verbatim timesheet notes",
+    );
+  });
+
+  it("names the safe mode when the selection spans a raw project and a summary one, matching what the server will actually write", async () => {
+    const user = userEvent.setup();
+    entries = [
+      { ...entries[0], projectId: 10, invoiceLineDetail: "raw" },
+      { ...entries[1], projectId: 11, invoiceLineDetail: "summary" },
+    ];
+    renderSheet();
+
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(screen.getByTestId("invoice-line-detail-mode")).toHaveTextContent(
+      "Summary lines",
+    );
+  });
+
+  it("falls back to the safe mode for time with no project, which carries no setting at all", async () => {
+    const user = userEvent.setup();
+    entries = entries.map((entry) => ({
+      ...entry,
+      projectId: null,
+      projectName: null,
+      invoiceLineDetail: null,
+    }));
+    renderSheet();
+
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(screen.getByTestId("invoice-line-detail-mode")).toHaveTextContent(
+      "Summary lines",
+    );
+  });
+
   it("refuses to continue when the freelancer clears the whole selection", async () => {
     const user = userEvent.setup();
     renderSheet();

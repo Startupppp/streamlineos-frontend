@@ -3,6 +3,13 @@ import { z } from "zod";
 export const RICE_INPUT_NAMES = ["reach", "impact", "confidence", "effort"] as const;
 export const RICE_SCORE_UNAVAILABLE_REASONS = ["missing_inputs", "non_positive_effort"] as const;
 export const ROADMAP_DELIVERY_SOURCES = ["epic_ticket", "project", "none"] as const;
+export const CRM_ACCOUNT_TIERS = ["free", "pro", "enterprise"] as const;
+export const ROADMAP_TIER_UNWEIGHTED_REASONS = [
+  "no_linked_feedback",
+  "no_linked_account",
+  "account_tier_unset",
+  "score_unavailable",
+] as const;
 
 export const roadmapPrioritizationContract = z.object({
   method: z.literal("rice"),
@@ -12,9 +19,20 @@ export const roadmapPrioritizationContract = z.object({
   unavailableReason: z.enum(RICE_SCORE_UNAVAILABLE_REASONS).nullable(),
 });
 
+export const roadmapTierWeightingContract = z.object({
+  tierWeighted: z.boolean(),
+  tier: z.enum(CRM_ACCOUNT_TIERS).nullable(),
+  weight: z.number().nullable(),
+  weightedScore: z.number().nullable(),
+  unweightedReason: z.enum(ROADMAP_TIER_UNWEIGHTED_REASONS).nullable(),
+  linkedFeedbackCount: z.number().int(),
+  linkedAccountCount: z.number().int(),
+});
+
 export const roadmapSignalsContract = z.object({
   itemId: z.number().int(),
   prioritization: roadmapPrioritizationContract,
+  tierWeighting: roadmapTierWeightingContract,
   demand: z.object({
     votes: z.number().int(),
     linkedFeedbackCount: z.number().int(),
@@ -32,6 +50,8 @@ export const roadmapSignalsContract = z.object({
 });
 
 export type RoadmapPrioritization = z.infer<typeof roadmapPrioritizationContract>;
+export type RoadmapTierWeighting = z.infer<typeof roadmapTierWeightingContract>;
+export type CrmAccountTier = (typeof CRM_ACCOUNT_TIERS)[number];
 export type RoadmapSignals = z.infer<typeof roadmapSignalsContract>;
 
 export const roadmapItemContract = z.object({
@@ -56,6 +76,7 @@ export const roadmapItemContract = z.object({
   updatedAt: z.string(),
   deletedAt: z.string().nullable(),
   prioritization: roadmapPrioritizationContract,
+  tierWeighting: roadmapTierWeightingContract,
 });
 
 export const roadmapPageContract = z.object({

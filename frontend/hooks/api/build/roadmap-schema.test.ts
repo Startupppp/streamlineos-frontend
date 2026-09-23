@@ -20,6 +20,16 @@ const UNSCORED_PRIORITIZATION = {
   unavailableReason: "missing_inputs",
 };
 
+const UNWEIGHTED_TIER = {
+  tierWeighted: false,
+  tier: null,
+  weight: null,
+  weightedScore: null,
+  unweightedReason: "no_linked_feedback",
+  linkedFeedbackCount: 0,
+  linkedAccountCount: 0,
+};
+
 function baseRoadmapItem(status: string) {
   return {
     id: 1,
@@ -43,6 +53,7 @@ function baseRoadmapItem(status: string) {
     updatedAt: "2026-09-16T00:00:00.000Z",
     deletedAt: null,
     prioritization: UNSCORED_PRIORITIZATION,
+    tierWeighting: UNWEIGHTED_TIER,
   };
 }
 
@@ -155,6 +166,7 @@ it("parses GET /build/roadmap/:itemId/signals field for field, including a null 
   const parsed = roadmapSignalsContract.parse({
     itemId: 7,
     prioritization: UNSCORED_PRIORITIZATION,
+    tierWeighting: UNWEIGHTED_TIER,
     demand: { votes: 12, linkedFeedbackCount: 3, openLinkedFeedbackCount: 2 },
     delivery: {
       projectId: 4,
@@ -187,6 +199,61 @@ it("rejects a delivery source the backend never emits", () => {
       },
     }),
   ).toThrow(ZodError);
+});
+
+it("rejects a roadmap row that omits tierWeighting, so an unweighted score cannot pass as a weighted one", () => {
+  const raw: Record<string, unknown> = baseRoadmapItem("planned");
+  delete raw.tierWeighting;
+  expect(() => roadmapItemContract.parse(raw)).toThrow(ZodError);
+});
+
+it("keeps the weighted score and the tier that produced it on a parsed row", () => {
+  const weighted = {
+    ...baseRoadmapItem("planned"),
+    reach: 1000,
+    impact: 3,
+    confidence: 80,
+    effort: 4,
+    prioritization: {
+      method: "rice",
+      score: 600,
+      isComplete: true,
+      missingInputs: [],
+      unavailableReason: null,
+    },
+    tierWeighting: {
+      tierWeighted: true,
+      tier: "enterprise",
+      weight: 4,
+      weightedScore: 2400,
+      unweightedReason: null,
+      linkedFeedbackCount: 3,
+      linkedAccountCount: 2,
+    },
+  };
+  const parsed = roadmapItemContract.parse(weighted);
+  expect(parsed.tierWeighting.weightedScore).toBe(2400);
+  expect(parsed.tierWeighting.tier).toBe("enterprise");
+});
+
+it("accepts every reason the backend can give for leaving a score unweighted", () => {
+  for (const reason of [
+    "no_linked_feedback",
+    "no_linked_account",
+    "account_tier_unset",
+    "score_unavailable",
+  ]) {
+    const raw = { ...baseRoadmapItem("planned"), tierWeighting: { ...UNWEIGHTED_TIER, unweightedReason: reason } };
+    expect(() => roadmapItemContract.parse(raw)).not.toThrow();
+  }
+});
+
+it("rejects a tier the backend never emits, so an unpriced label cannot reach the badge", () => {
+  const raw = {
+    ...baseRoadmapItem("planned"),
+    tierWeighting: { ...UNWEIGHTED_TIER, tier: "platinum" },
+  };
+  expect(() => roadmapItemContract.parse(raw)).toThrow(ZodError);
 });
 
 it("accepts every feedback_status value the feedback_posts pgEnum actually holds", () => {

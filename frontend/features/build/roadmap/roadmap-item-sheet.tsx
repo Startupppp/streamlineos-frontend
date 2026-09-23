@@ -207,7 +207,11 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
                   </FormItem>
                 )}
               />
-              <RoadmapRiceFormFields control={form.control} prioritization={item?.prioritization} />
+              <RoadmapRiceFormFields
+                control={form.control}
+                prioritization={item?.prioritization}
+                tierWeighting={item?.tierWeighting}
+              />
               {isEdit ? <RoadmapDeliveryProgress roadmapItemId={item.id} /> : null}
               <FormField
                 control={form.control}

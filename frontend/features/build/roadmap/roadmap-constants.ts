@@ -1,4 +1,5 @@
 import type { RoadmapStatus, FeedbackStatus, ChangelogType } from "@/types/projects";
+import type { CrmAccountTier } from "@/hooks/api/build/roadmap-schema";
 
 export const ROADMAP_COLUMNS: { status: RoadmapStatus; label: string }[] = [
   { status: "planned", label: "Planned" },
@@ -68,4 +69,19 @@ export const ROADMAP_DELIVERY_SOURCE_LABEL: Record<string, string> = {
   epic_ticket: "Epic",
   project: "Project",
   none: "Not linked to delivery work",
+};
+
+export const CRM_ACCOUNT_TIER_LABEL: Record<CrmAccountTier, string> = {
+  free: "Free",
+  pro: "Pro",
+  enterprise: "Enterprise",
+};
+
+export const ROADMAP_TIER_UNWEIGHTED_LABEL: Record<string, string> = {
+  no_linked_feedback: "No customer feedback is linked, so the score is unweighted RICE.",
+  no_linked_account:
+    "The linked feedback names no account, so the score is unweighted RICE.",
+  account_tier_unset:
+    "The linked accounts have no tier set, so the score is unweighted RICE.",
+  score_unavailable: "There is no RICE score to weight yet.",
 };

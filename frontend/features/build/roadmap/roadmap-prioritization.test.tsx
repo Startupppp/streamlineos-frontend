@@ -26,6 +26,15 @@ function signals(overrides: Partial<RoadmapSignals["delivery"]> = {}): RoadmapSi
   return {
     itemId: 7,
     prioritization: prioritization(),
+    tierWeighting: {
+      tierWeighted: false,
+      tier: null,
+      weight: null,
+      weightedScore: null,
+      unweightedReason: "score_unavailable",
+      linkedFeedbackCount: 3,
+      linkedAccountCount: 0,
+    },
     demand: { votes: 12, linkedFeedbackCount: 3, openLinkedFeedbackCount: 2 },
     delivery: {
       projectId: 4,

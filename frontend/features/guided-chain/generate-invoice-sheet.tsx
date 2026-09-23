@@ -16,6 +16,7 @@ import {
   useUninvoicedEntries,
 } from "@/hooks/api/timesheets/billing-invoice";
 import type { InvoiceFromTimesheetsResult } from "@/hooks/api/timesheets/billing-invoice-schema";
+import { safestInvoiceLineDetail } from "@/hooks/api/invoices/project-invoice-line-detail-schema";
 import {
   GENERATE_INVOICE_DEFAULTS,
   generateInvoiceSchema,
@@ -86,6 +87,9 @@ export function GenerateInvoiceSheet({
   ];
   const projectName =
     projectNames.length === 1 ? projectNames[0] : `${projectNames.length} projects`;
+  const lineDetail = safestInvoiceLineDetail(
+    selectedEntries.map((entry) => entry.invoiceLineDetail),
+  );
 
   const handleToggle = useCallback(
     (entryId: number) => {
@@ -209,6 +213,7 @@ export function GenerateInvoiceSheet({
               subtotal={subtotal}
               currency={currency}
               projectName={projectName}
+              lineDetail={lineDetail}
             />
           </form>
         </Form>

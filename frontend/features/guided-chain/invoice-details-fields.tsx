@@ -21,6 +21,11 @@ import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { WizardSectionHeading } from "@/components/wizard-shell";
 import { formatCurrencyForBilling } from "@/lib/format-utils";
 import {
+  INVOICE_LINE_DETAIL_DESCRIPTIONS,
+  INVOICE_LINE_DETAIL_LABELS,
+  type InvoiceLineDetail,
+} from "@/hooks/api/invoices/project-invoice-line-detail-schema";
+import {
   GST_RATE_CHOICES,
   type GenerateInvoiceFormValues,
 } from "./generate-invoice-schema";
@@ -32,6 +37,7 @@ interface InvoiceDetailsFieldsProps {
   subtotal: number;
   currency: string;
   projectName: string;
+  lineDetail: InvoiceLineDetail;
 }
 
 export function InvoiceDetailsFields({
@@ -41,6 +47,7 @@ export function InvoiceDetailsFields({
   subtotal,
   currency,
   projectName,
+  lineDetail,
 }: InvoiceDetailsFieldsProps) {
   return (
     <div className="flex flex-col gap-4">
@@ -62,7 +69,19 @@ export function InvoiceDetailsFields({
         <dd className="text-right font-mono tabular-nums text-xs font-semibold text-foreground">
           {formatCurrencyForBilling(subtotal, currency)}
         </dd>
+        <dt className="text-xs text-muted-foreground">Line detail</dt>
+        <dd
+          className="truncate text-right text-xs font-medium text-foreground"
+          data-testid="invoice-line-detail-mode"
+        >
+          {INVOICE_LINE_DETAIL_LABELS[lineDetail]}
+        </dd>
       </dl>
+
+      <p className="text-xs text-muted-foreground">
+        {INVOICE_LINE_DETAIL_DESCRIPTIONS[lineDetail]} Change it in the
+        project&rsquo;s settings.
+      </p>
 
       <WizardSectionHeading>Invoice</WizardSectionHeading>
       <div className="grid grid-cols-2 gap-3">

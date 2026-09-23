@@ -16,17 +16,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { RoadmapPrioritization } from "@/hooks/api/build/roadmap";
+import type { RoadmapPrioritization, RoadmapTierWeighting } from "@/hooks/api/build/roadmap";
 import type { RoadmapItemFormValues } from "./roadmap-schema";
-import { RICE_IMPACT_OPTIONS } from "./roadmap-constants";
+import { RICE_IMPACT_OPTIONS, ROADMAP_TIER_UNWEIGHTED_LABEL } from "./roadmap-constants";
 import { RoadmapPriorityScore } from "./roadmap-priority-score";
 
 interface RoadmapRiceFormFieldsProps {
   control: Control<RoadmapItemFormValues>;
   prioritization?: RoadmapPrioritization;
+  tierWeighting?: RoadmapTierWeighting;
 }
 
-export function RoadmapRiceFormFields({ control, prioritization }: RoadmapRiceFormFieldsProps) {
+export function RoadmapRiceFormFields({
+  control,
+  prioritization,
+  tierWeighting,
+}: RoadmapRiceFormFieldsProps) {
+  const unweightedReason = tierWeighting?.unweightedReason ?? null;
+
   return (
     <div className="space-y-3 rounded-lg border border-border bg-muted/30 px-3 py-3">
       <div className="flex items-center justify-between gap-2">
@@ -36,8 +43,20 @@ export function RoadmapRiceFormFields({ control, prioritization }: RoadmapRiceFo
             Reach × Impact × Confidence ÷ Effort. Leave any field blank to keep this item unscored.
           </p>
         </div>
-        <RoadmapPriorityScore prioritization={prioritization} />
+        <RoadmapPriorityScore prioritization={prioritization} tierWeighting={tierWeighting} />
       </div>
+      {unweightedReason === null ? null : (
+        <p className="text-xs text-muted-foreground">
+          {ROADMAP_TIER_UNWEIGHTED_LABEL[unweightedReason]}
+        </p>
+      )}
+      {tierWeighting?.tierWeighted === true ? (
+        <p className="text-xs tabular-nums text-muted-foreground">
+          Weighted ×{tierWeighting.weight} by the highest tier across{" "}
+          {tierWeighting.linkedAccountCount} linked account
+          {tierWeighting.linkedAccountCount === 1 ? "" : "s"}.
+        </p>
+      ) : null}
       <div className="grid grid-cols-2 gap-3">
         <FormField
           control={control}

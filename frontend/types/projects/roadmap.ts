@@ -30,6 +30,8 @@ export interface FeedbackPost {
   votes: number;
   submittedByName: string | null;
   submittedByEmail: string | null;
+  crmContactId: number | null;
+  crmOrganizationId: number | null;
   linkedRoadmapItemId: number | null;
   duplicateOfId: number | null;
   mergedAt: string | null;

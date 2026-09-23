@@ -2,6 +2,24 @@
 
 Recorded 2026-09-23, branch `claude/build-product-workflows` (both repos).
 
+## Decided 2026-09-23 — four blockers closed by the product owner
+
+| Blocker | Decision | Migration |
+|---|---|---|
+| lane 2 B1 — duplicate filter | **Dropped, permanently.** Not built. `feedbucket-list-filters.spec.ts:106-111`, which asserts a `duplicate` param 400s, stays green as the record of that choice. Delivered filters are owner, linked, date and cursor. | none |
+| lane 4 B1/B5 — CRM tier | **Explicit, human-entered tier on the account.** `free \| pro \| enterprise`, published on the CRM organization contract; roadmap score is weighted by the highest tier among the accounts of linked feedback. Deal revenue, the fuzzy-name rollup and `crm_companies.revenue` were all rejected as unverified and remain unused. | `1160_crm_account_tier` |
+| lane 3 B5 — client financial visibility | **Per-project setting**, `summary \| raw`, defaulting to `summary`. A worker's raw timesheet note no longer reaches the client portal unless a project opts in. | `1161_build_project_invoice_line_detail` |
+| lane 2 B2 — retention | **Media purged 30 days after soft delete.** The submission row is retained for audit; a bounded, resumable sweep deletes the stored objects and stamps `media_purged_at`. | `1162_feedbucket_media_retention` |
+
+All three migrations were hand-authored, journalled, given rollbacks, dry-run,
+applied to production one tag at a time, and verified against the live catalog
+(14 checks, all passing). The production ledger was already at head beforehand —
+915/915 applied, 0 pending — so nothing else was replayed.
+
+**Still open:** billing/plan gating of bulk actions (lane 2 B5), intake and Change
+Request cardinality (lane 3 B6), public roadmap score visibility (lane 4 B7), and
+the pre-existing defects listed below.
+
 Nineteen blockers across three lanes. Each is a **product or schema decision**, not
 unfinished code. Per-lane detail, with file:line evidence and options, lives in:
 

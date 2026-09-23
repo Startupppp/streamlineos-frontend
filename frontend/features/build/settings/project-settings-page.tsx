@@ -30,6 +30,7 @@ import { CustomFieldsSettings } from "@/features/build/settings/custom-fields-se
 import { LabelsSettings } from "@/features/build/settings/labels-settings";
 import { StatusesSettings } from "@/features/build/settings/statuses-settings";
 import { TeamRosterSection } from "@/features/build/settings/team-roster-section";
+import { InvoiceLineDetailSection } from "@/features/build/settings/invoice-line-detail-section";
 import {
   PmPageShell,
   PmPanel,
@@ -323,6 +324,23 @@ export function ProjectSettingsPage({ params }: PageProps) {
                         </p>
                       </div>
                       <ProjectMemberRolesSection projectId={projectId} />
+                    </PmPanel>
+                    <PmPanel className="p-4" solid>
+                      <div className="mb-3 border-b border-border pb-3">
+                        <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
+                          Billing
+                        </h3>
+                        <p
+                          className={cn(
+                            "mt-0.5 text-xs text-muted-foreground",
+                            TEXT_BODY,
+                          )}
+                        >
+                          What an invoice generated from this project&rsquo;s
+                          approved time says on each line.
+                        </p>
+                      </div>
+                      <InvoiceLineDetailSection projectId={projectId} />
                     </PmPanel>
                   </div>
                 ) : null}

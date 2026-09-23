@@ -53,6 +53,8 @@ export const buildWorkQueryKeys = {
       [...base, "projects", projectId, "tickets", ticketId, "custom-field-values"] as const,
     automations: (projectId: number) =>
       [...base, "projects", projectId, "automations"] as const,
+    invoiceLineDetail: (projectId: number) =>
+      [...base, "projects", projectId, "invoice-line-detail"] as const,
     intake: (projectId: number, params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "projects", "intake", projectId] as const)
