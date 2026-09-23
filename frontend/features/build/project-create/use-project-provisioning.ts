@@ -9,7 +9,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type { WizardDraft } from "./use-project-create";
 
 export interface ProjectCreateScope {
-  pmWorkspaceId?: string;
   managedProductId?: number;
 }
 
@@ -68,7 +67,6 @@ export function useProjectProvisioning(
           projectType: draft.projectType || undefined,
           workflow: draft.workflow || undefined,
           features: draft.features,
-          ...(scope?.pmWorkspaceId ? { pmWorkspaceId: scope.pmWorkspaceId } : {}),
           ...(scope?.managedProductId !== undefined
             ? { managedProductId: scope.managedProductId }
             : {}),

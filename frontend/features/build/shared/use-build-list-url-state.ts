@@ -103,7 +103,6 @@ export interface BuildListUrlStateOptions {
   defaultSortDirection?: BuildListSortDirection;
   defaultGrouping?: BuildListGrouping;
   scope?: AllWorkFilters["scope"];
-  pmWorkspaceId?: string;
 }
 
 export interface BuildListUrlState {
@@ -156,7 +155,6 @@ export function useBuildListUrlState(
     defaultSortDirection = "desc",
     defaultGrouping = "none",
     scope,
-    pmWorkspaceId,
   } = options;
 
   const router = useRouter();
@@ -248,13 +246,11 @@ export function useBuildListUrlState(
 
     if (cursor) next.cursor = cursor;
     if (scope) next.scope = scope;
-    if (pmWorkspaceId) next.pmWorkspaceId = pmWorkspaceId;
 
     return next;
   }, [
     cursor,
     limit,
-    pmWorkspaceId,
     scope,
     searchParams,
     sortDirection,

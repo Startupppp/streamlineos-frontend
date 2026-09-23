@@ -25,7 +25,6 @@ const projectListItemSchema = z.object({
   startDate: z.string().nullable(),
   endDate: z.string().nullable(),
   managedProductId: z.number().nullable(),
-  pmWorkspaceId: z.string().optional(),
   manager: z.object({ id: z.string(), firstName: z.string().nullable(), lastName: z.string().nullable(), image: z.string().nullable() }).nullable(),
   progress: z.object({ total: z.number(), done: z.number(), percentage: z.number() }),
   health: z.enum(['on_track', 'at_risk', 'off_track']),
@@ -53,7 +52,6 @@ const projectRowSchema = z.object({
   priority: z.string().nullable(),
   dealId: z.number().nullable(),
   managedProductId: z.number().nullable(),
-  pmWorkspaceId: z.string(),
   budget: z.string().nullable(),
   budgetMinor: z.number().nullable(),
   budgetCurrency: z.string().nullable(),
@@ -287,7 +285,7 @@ const projectAutomationRowSchema = z.object({
   updatedAt: z.string(),
 });
 
-const workspaceMemberItemSchema = z.object({
+const buildMemberItemSchema = z.object({
   id: z.string(),
   role: z.enum(['member', 'admin']),
   addedAt: z.string(),
@@ -299,17 +297,16 @@ const workspaceMemberItemSchema = z.object({
   teams: z.array(z.string()),
 });
 
-const workspaceMemberPageSchema = z.object({
-  data: z.array(workspaceMemberItemSchema),
+const buildMemberPageSchema = z.object({
+  data: z.array(buildMemberItemSchema),
   pagination: z.object({ limit: z.number(), hasMore: z.boolean(), nextCursor: z.string().nullable() }),
 });
 
-const workspaceMemberRowSchema = z.object({
+const buildMemberRowSchema = z.object({
   id: z.number(),
   orgId: z.string(),
   membershipId: z.number(),
   role: z.string(),
-  pmWorkspaceId: z.string(),
   addedAt: z.string(),
 });
 
@@ -337,6 +334,6 @@ export const webhookDeliveryListContract = z.array(webhookDeliverySchema);
 export const webhookTestResultContract = webhookTestResultSchema;
 export const projectAutomationListContract = z.array(projectAutomationListItemSchema);
 export const projectAutomationRowContract = projectAutomationRowSchema;
-export const workspaceMemberPageContract = workspaceMemberPageSchema;
-export const workspaceMemberRowContract = workspaceMemberRowSchema;
+export const buildMemberPageContract = buildMemberPageSchema;
+export const buildMemberRowContract = buildMemberRowSchema;
 export const successContract = z.object({ success: z.literal(true) });

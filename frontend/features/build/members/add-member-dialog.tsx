@@ -19,7 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { MemberPicker } from "@/components/members/member-picker";
-import { useAddProjectWorkspaceMember } from "@/hooks/api/build/workspace-members";
+import { useAddBuildMember } from "@/hooks/api/build/build-members";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
@@ -32,7 +32,7 @@ export function AddMemberDialog({ open, onOpenChange }: AddMemberDialogProps) {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<"member" | "admin">("member");
 
-  const addMember = useAddProjectWorkspaceMember();
+  const addMember = useAddBuildMember();
 
   function handleUserChange(userId: string | null) {
     setSelectedUserId(userId);

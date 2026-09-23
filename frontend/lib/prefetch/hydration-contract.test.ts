@@ -225,7 +225,7 @@ describe("build project prefetch feeds useProject's cache", () => {
     (getServerAuth as jest.Mock).mockResolvedValue({ orgId: ORG, user: { id: USER } });
   });
 
-  const PROJECT = { id: 314, name: "Apollo", key: "APL", pmWorkspaceId: null };
+  const PROJECT = { id: 314, name: "Apollo", key: "APL" };
 
   it("dehydrates the project under the exact key useProject reads", async () => {
     (serverGet as jest.Mock).mockResolvedValue(PROJECT);

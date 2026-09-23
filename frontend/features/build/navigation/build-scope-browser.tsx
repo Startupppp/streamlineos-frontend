@@ -175,18 +175,13 @@ export function BuildScopeBrowser({
   );
 
   const searchResults = useMemo(
-    () => [...directory.workspaces, ...directory.products, ...directory.projects],
-    [directory.workspaces, directory.products, directory.projects],
+    () => [...directory.products, ...directory.projects],
+    [directory.products, directory.projects],
   );
 
-  const hasQuarantinedItems =
-    directory.quarantinedProducts.length > 0 ||
-    directory.quarantinedProjects.length > 0;
+  const hasQuarantinedItems = directory.quarantinedProjects.length > 0;
 
-  const hasBrowseContent =
-    directory.workspaces.length > 0 ||
-    rootProducts.length > 0 ||
-    rootProjects.length > 0;
+  const hasBrowseContent = rootProducts.length > 0 || rootProjects.length > 0;
 
   function renderRow(entry: BuildScopeDirectoryEntry, depth: number) {
     const expandable = !isSearching && childrenOf(entry.key).length > 0;
@@ -299,7 +294,7 @@ export function BuildScopeBrowser({
         <SearchInput
           value={search}
           onValueChange={setSearch}
-          placeholder="Search projects, products, workspaces…"
+          placeholder="Search projects and products"
           autoFocus
         />
         <div className="mt-1.5 flex items-center justify-between">
@@ -370,7 +365,7 @@ export function BuildScopeBrowser({
                   isPending={directory.isFetchingMoreHierarchy}
                   onClick={handleFetchMoreHierarchy}
                 >
-                  Load more workspaces / products
+                  Load more products
                 </LoadingButton>
               </div>
             ) : null}
@@ -411,7 +406,6 @@ export function BuildScopeBrowser({
             <SectionLabel>Browse</SectionLabel>
             <div role="tree" aria-label="Build scopes" ref={treeRef}>
               {renderBrowseRef(ORGANIZATION_SCOPE_REF)}
-              {directory.workspaces.map(renderRootRow)}
               {rootProducts.map(renderRootRow)}
               {rootProjects.map(renderRootRow)}
             </div>
@@ -425,7 +419,7 @@ export function BuildScopeBrowser({
                   isPending={directory.isFetchingMoreHierarchy}
                   onClick={handleFetchMoreHierarchy}
                 >
-                  Load more workspaces / products
+                  Load more products
                 </LoadingButton>
               </div>
             ) : null}
@@ -457,7 +451,6 @@ export function BuildScopeBrowser({
                 <Separator className="my-1" />
                 <SectionLabel>Hierarchy issues</SectionLabel>
                 <div role="tree" aria-label="Hierarchy issue scopes">
-                  {directory.quarantinedProducts.map(renderRootRow)}
                   {directory.quarantinedProjects.map(renderRootRow)}
                 </div>
               </>

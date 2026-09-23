@@ -75,20 +75,17 @@ function toDueBucketMap(
 interface UseMyWorkDataOptions {
   activeTab: WorkTab;
   activeView: string;
-  pmWorkspaceId?: string;
 }
 
 export function useMyWorkData({
   activeTab,
   activeView,
-  pmWorkspaceId,
 }: UseMyWorkDataOptions) {
   const searchParams = useSearchParams();
   const defaults = tabToDefaultSort(activeTab);
 
   const urlState = useBuildListUrlState({
     limit: 50,
-    pmWorkspaceId,
     defaultSortField: defaults.field,
     defaultSortDirection: defaults.dir,
   });

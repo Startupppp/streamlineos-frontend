@@ -97,9 +97,11 @@ Passing types, mocks, or unit tests alone does not close a customer journey.
 
 ## Product Contracts
 
-- Organization, PM Workspace, Managed Product, Project, and Work Item are
-  distinct scopes. Workspace and managed-product links are optional so the
-  product remains usable by a freelancer.
+- Organization, Managed Product, Project, and Work Item are distinct scopes.
+  PM Workspace is removed (BLD-00 D01) — Organization owns Products, Projects,
+  Teams, Programs, and Portfolios directly. Managed-product links are optional
+  so the product remains usable by a freelancer; a project without a product
+  is an organization-level project.
 - Product management and project delivery share Build but never merge their
   records or page responsibilities.
 - Project work opens on Overview or Issues intentionally; query parameters

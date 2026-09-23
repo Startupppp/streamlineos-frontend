@@ -15,10 +15,10 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
-  useProjectWorkspaceMembers,
-  useRemoveProjectWorkspaceMember,
-} from "@/hooks/api/build/workspace-members";
-import type { ProjectWorkspaceMember } from "@/hooks/api/build/workspace-members";
+  useBuildMembers,
+  useRemoveBuildMember,
+} from "@/hooks/api/build/build-members";
+import type { BuildMember } from "@/hooks/api/build/build-members";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -44,7 +44,7 @@ export function MembersPage() {
   const debouncedSearch = useDebouncedValue(search, 300);
   const [displayProps, setDisplayProps] = useState<DisplayProps>(loadDisplayProps);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [removeTarget, setRemoveTarget] = useState<ProjectWorkspaceMember | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<BuildMember | null>(null);
 
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [cursorStack, setCursorStack] = useState<string[]>([]);
@@ -101,14 +101,14 @@ export function MembersPage() {
   const canView = useCan("build:members:view");
   const canManage = useCan("build:members:manage");
 
-  const { data, isLoading, isError, error, refetch } = useProjectWorkspaceMembers(
+  const { data, isLoading, isError, error, refetch } = useBuildMembers(
     { cursor, limit: 25, search: q || undefined },
     { placeholderData: keepPreviousData, enabled: canView },
   );
 
   const pageState = usePageState({ permission: "build:members:view", isLoading, isError, error });
 
-  const removeMember = useRemoveProjectWorkspaceMember();
+  const removeMember = useRemoveBuildMember();
 
   const handleRetry = useCallback(() => {
     void refetch().catch(() => {
@@ -116,7 +116,7 @@ export function MembersPage() {
     });
   }, [refetch, error]);
 
-  const handleRemoveRequest = useCallback((member: ProjectWorkspaceMember) => {
+  const handleRemoveRequest = useCallback((member: BuildMember) => {
     setRemoveTarget(member);
   }, []);
 

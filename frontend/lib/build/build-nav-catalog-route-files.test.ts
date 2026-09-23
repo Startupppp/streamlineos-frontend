@@ -8,12 +8,7 @@ import {
 import { resolveBuildScope } from "./build-scope";
 import type { BuildNavDestination } from "./nav/build-nav-destination";
 
-const SCOPE_PATHS = [
-  "/build",
-  "/build/workspaces/ws-1",
-  "/build/managed-products/7",
-  "/build/42",
-];
+const SCOPE_PATHS = ["/build", "/build/managed-products/7", "/build/42"];
 
 function everyCatalogDestination(): BuildNavDestination[] {
   const all: BuildNavDestination[] = [...BUILD_MY_WORK_DESTINATIONS, BUILD_BROWSE_ALL_DESTINATION];
@@ -38,9 +33,6 @@ function mapHrefPathToAppDir(path: string): string {
     index = 1;
   } else if (segments[0] === "managed-products" && segments[1] !== undefined) {
     mapped.push("managed-products", "[managedProductId]");
-    index = 2;
-  } else if (segments[0] === "workspaces" && segments[1] !== undefined) {
-    mapped.push("workspaces", "[pmWorkspaceId]");
     index = 2;
   }
   for (; index < segments.length; index++) mapped.push(segments[index]);

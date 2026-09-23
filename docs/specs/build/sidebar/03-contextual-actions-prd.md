@@ -34,12 +34,12 @@ The user can change any preselected value before submit.
 
 | Active scope | Issue | Project | Product |
 |---|---|---|---|
-| Organization | Hidden unless a project is chosen first | Workspace and product are optional explicit choices; `No workspace` is valid | Workspace is optional; never invent a default |
-| PM workspace | Hidden unless a project is chosen first | Preselects that workspace; product optional | Preselects that workspace |
-| Managed product | Hidden unless a linked project is chosen first | Preselects the product and its workspace when present | Hidden |
-| Project | Preselects that project | Preselects the project's workspace and product when present | Hidden |
+| Organization | Hidden unless a project is chosen first | Product is an optional explicit choice; `No product` is valid | Never invent a default |
+| Managed product | Hidden unless a linked project is chosen first | Preselects the product | Hidden |
+| Project | Preselects that project | Preselects the project's product when present | Hidden |
 
-Ambiguous organization context never invents a default workspace or product.
+Ambiguous organization context never invents a default product. PM Workspace
+is removed (BLD-00 D01); there is no workspace row and no workspace default.
 
 ### Inbox Badge
 

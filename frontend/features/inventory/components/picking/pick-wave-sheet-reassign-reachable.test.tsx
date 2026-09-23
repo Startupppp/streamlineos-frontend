@@ -84,8 +84,8 @@ jest.mock("@/hooks/api/organization", () => ({
 jest.mock("@/hooks/api/build/projects", () => ({
   useProjectMembers: () => ({ data: [] }),
 }));
-jest.mock("@/hooks/api/build/workspace-members", () => ({
-  useProjectWorkspaceMembers: () => ({ data: undefined }),
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: () => ({ data: undefined }),
 }));
 jest.mock("@/hooks/api/module-access", () => ({
   useModuleMemberCandidates: () => ({ data: undefined }),

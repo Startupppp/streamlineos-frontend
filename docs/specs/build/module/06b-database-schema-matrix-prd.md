@@ -33,17 +33,15 @@ tests, foreign keys, and real data first.
 | `index.ts` | sanctioned Build schema barrel | Exports each runtime-managed table once; no raw-SQL holding-table leakage or cycle |
 | `tasks.ts` | task/ticket sub-barrel | Re-export only sanctioned ticket owners; no second symbol path or cycle |
 | `relations.ts` | Drizzle relation graph | Every relation matches FK/nullability/delete behavior; no relation that broad-loads by default |
-| `core.ts` | projects, statuses, duplicate Sprint/Cycle, modules, templates and core relations | Make `pmWorkspaceId` nullable per BLD-00 D01; split-by-responsibility plan if safely possible; canonical iteration migration; tenant-leading indexes; status stable identity; project dates/lifecycle constraints |
+| `core.ts` | projects, statuses, duplicate Sprint/Cycle, modules, templates and core relations | **Done** — `pmWorkspaceId` and its FK are dropped per BLD-00 D01 (migration `1159_build_remove_pm_workspaces`), not made nullable; split-by-responsibility plan if safely possible; canonical iteration migration; tenant-leading indexes; status stable identity; project dates/lifecycle constraints |
 | `ticket-core.ts` | canonical ticket/work relation fields | Project membership required or explicitly justified; same-project FKs for sprint/cycle/module/parent; migrate `customerId` from legacy `clients` to tenant-composite CRM/Party; numeric/date checks; filtered sort indexes; soft delete |
 | `ticket-collaboration.ts` | comments, assignees/watchers, labels, relations/checklists as defined | Unique memberships/reactions; bounded history indexes; tenant/project compatibility; sanitization/retention |
 | `ticket-releases.ts` | ticket-to-release/milestone delivery links | Tenant/project/release compatibility; unique active links; release/date query indexes |
 | `ticket-integrations.ts` | external repository/provider ticket links | Integration connection ownership; tenant-safe external identity; dedupe; provider-delete behavior; no token columns |
 | `ticket-counters.ts` | per-project human ticket numbering | Atomic allocation, tenant/project uniqueness, retry/concurrency behavior, no gaps claim unless guaranteed |
 | `members.ts` | Build/project membership and role relations | Organization membership FK; last-owner/access-source rules; unique active membership; actor-search indexes |
-| `teams.ts` | Build teams and team assignments | Directory identity references; workspace/project link uniqueness; lifecycle/archive indexes |
-| `pm-workspaces.ts` | PM Workspace identity and lifecycle | Optional hierarchy; owner/move/archive constraints; org/status/name indexes |
-| `pm-workspace-memberships.ts` | workspace membership/access | Tenant-safe actor FK; role/source/expiry uniqueness; access review indexes |
-| `managed-products.ts` | product identity, lifecycle, product/project/workspace links as defined | Product/project separation; workspace optionality; key/name uniqueness; owner/lifecycle/search indexes |
+| `teams.ts` | Build teams, team assignments, and the `build_members` org-level Build member roster (renamed from `project_workspace_members`; PM Workspace relationship dropped) | Directory identity references; project link uniqueness; lifecycle/archive indexes |
+| `managed-products.ts` | product identity, lifecycle, product/project links as defined | Product/project separation; key/name uniqueness; owner/lifecycle/search indexes |
 | `managed-product-memberships.ts` | product membership/access | Actor/source/role/expiry; tenant product FK; access-version invalidation writers |
 | `roadmap.ts` | product outcome/roadmap records and links | Product canonical ownership; hierarchy/dependency cycle; rank/date/status indexes; publication fields |
 | `goals.ts` | Build-related goal links or records | Reconcile with Goals module ownership; hierarchy cycle; metric precision; scope/link uniqueness |
@@ -106,9 +104,12 @@ deliveries, incident timelines, drafts, and ticket history require:
 
 ## Completion Checks
 
-- [x] **BLD-06B-006** all 36 current Build schema files appear exactly once in
-  this matrix. **Closed — set equality measured 2026-09-21.**
-  `backend/src/db/schema/build/*.ts` holds 36 files; this matrix names 36
+- [x] **BLD-06B-006** all current Build schema files appear exactly once in
+  this matrix. **Closed — set equality measured 2026-09-21, re-measured
+  2026-09-23 after PM Workspace removal.** `backend/src/db/schema/build/*.ts`
+  held 36 files on 2026-09-21; `pm-workspaces.ts` and
+  `pm-workspace-memberships.ts` are now deleted (migration
+  `1159_build_remove_pm_workspaces`), leaving 34. This matrix names 34
   distinct `.ts` filenames. `comm` over both sorted sets returns empty in both
   directions (no file missing from the matrix, no matrix row naming an absent
   file), and no filename heads more than one table row.

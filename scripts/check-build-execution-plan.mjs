@@ -61,7 +61,7 @@ const validate = () => {
   );
   requireText(
     sidebarDirectory,
-    "A project may be\nstandalone with no PM workspace.",
+    "A project may be\nstandalone with no managed product",
     "docs/specs/build/sidebar/02-scope-directory-prd.md",
     failures,
   );
@@ -72,7 +72,7 @@ const validate = () => {
   for (const decision of [
     "KEEP_ROUTE_MOVE_CONFIG",
     "/build/{projectId}/forms` definitions + `/build/{projectId}/triage",
-    "99 final page routes",
+    "89 final page routes",
   ]) {
     requireText(
       routeManifest,

@@ -29,14 +29,13 @@ describe("resolveBuildScope", () => {
     expect(product.projectId).toBeNull();
   });
 
-  it("keeps a PM workspace path in the workspace scope", () => {
-    const workspace = resolveBuildScope("/build/workspaces/ws-1/all-work");
-    expect(workspace.type).toBe("workspace");
-    expect(workspace.pmWorkspaceId).toBe("ws-1");
-    expect(workspace.basePath).toBe("/build/workspaces/ws-1");
+  it("falls back to the organization scope for a /build/workspaces/<id> path because PM Workspace no longer resolves to a scope", () => {
+    const fallback = resolveBuildScope("/build/workspaces/ws-1/all-work");
+    expect(fallback.type).toBe("organization");
+    expect(fallback).toEqual(resolveBuildScope("/build"));
   });
 
-  it("does not mistake a workspace slug for a project id", () => {
+  it("does not mistake the workspaces segment for a project id", () => {
     expect(resolveBuildScope("/build/workspaces/ws-1").projectId).toBeNull();
   });
 });
@@ -52,12 +51,6 @@ describe("buildScopeOverviewHref", () => {
     expect(
       buildScopeOverviewHref(resolveBuildScope("/build/managed-products/7")),
     ).toBe("/build/managed-products/7");
-  });
-
-  it("sends a workspace scope to its overview page, not its Projects list", () => {
-    expect(
-      buildScopeOverviewHref(resolveBuildScope("/build/workspaces/ws-1/teams")),
-    ).toBe("/build/workspaces/ws-1/overview");
   });
 });
 

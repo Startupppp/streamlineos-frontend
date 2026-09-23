@@ -34,10 +34,35 @@ Build is the execution system connecting product intent, project delivery, custo
 The product wins through five properties:
 
 1. One canonical work item and one canonical iteration model.
-2. Scope-aware navigation across organization, workspace, product, and project.
+2. Scope-aware navigation across organization, product, and project.
 3. Fast keyboard-first daily execution with durable, shareable views.
 4. Native links to CRM customers/deals, HR people/capacity, Timesheets cost, Files, Calendar, Chat, and Knowledge.
 5. Trustworthy permissions, audit history, offline recovery, and bounded performance.
+
+## Organization hierarchy
+
+PM Workspace is removed. **EXECUTED 2026-09-22** — see [`99-kill-list.md`](./99-kill-list.md).
+
+```text
+Organization
+├── Products
+├── Projects
+├── Teams
+├── Programs
+├── Portfolios
+└── Goals, roadmaps, reports and work
+```
+
+- **Organization:** tenant, billing, global membership and enabled modules.
+- **Product:** product strategy and product-related projects.
+- **Project:** delivery and work items.
+- **Team:** people and capacity.
+- **Program:** coordinated delivery.
+- **Portfolio:** investment oversight.
+- **CRM client:** customer identity.
+- **Portal grant:** external customer access.
+
+A child company is a separate Organization. The Organization is selected globally. A project without a product is an organization-level project.
 
 ## Personas
 
@@ -47,7 +72,7 @@ The product wins through five properties:
 | Project/program manager | Coordinate scope, schedule, risk, capacity, and stakeholders | Risks surface early and status reporting is generated from current evidence |
 | Team lead | Plan and unblock a delivery team | Workload and flow are visible without spreadsheet reconciliation |
 | Contributor | Find, update, and discuss assigned work quickly | Common actions stay under two interactions and survive weak connectivity |
-| Freelancer | Manage projects, clients, time, files, and approvals without enterprise setup | A project works without a workspace hierarchy |
+| Freelancer | Manage projects, clients, time, files, and approvals without enterprise setup | A project works standalone, without a product |
 | Client/external collaborator | Review approved progress and make bounded requests | No internal field or unrelated project can leak |
 
 ## Verified production findings
@@ -68,7 +93,7 @@ The product wins through five properties:
 - **Delete duplicate hubs.** Analytics folds into Reports; Drafts into Inbox; project My Tickets into My Work; Timeline and saved-view administration into Issues; AI runs into Command Center.
 - **Move configuration into scoped Settings.** Workflow, automations, webhooks, client publication policy, fields, views, and retention are settings; operational queues remain outside Settings.
 - **Keep specialist operational pages only when their user job and data shape differ.** QA execution, incidents, risks, decisions, approvals, meetings, files, wiki, and whiteboard qualify.
-- **Workspace is optional.** A freelancer can create a standalone project. Current `projects.pmWorkspaceId` contradicts this in `backend/src/db/schema/build/core.ts` and must be migrated.
+- **PM Workspace is removed.** Products and Projects sit directly under the organization; a project without a product is an organization-level project. Migration `1159_build_remove_pm_workspaces` dropped `build.pm_workspaces`, `build.pm_workspace_memberships`, and every `pm_workspace_id` column.
 - **Library belongs to Knowledge, not Build.** The visible Library group is defined in `frontend/features/wiki/components/wiki-sidebar-nav.tsx`; Build Wiki pages are scoped projections/links into the Knowledge module. Organization APIs own library search/tree/templates, while project APIs own record links and project-filtered projections. Build must not duplicate Knowledge storage or permissions.
 
 ## Success metrics

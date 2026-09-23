@@ -181,7 +181,7 @@ describe("useReconciledBuildScopes — BSN-02-022 rename and move write-back", (
   it("refreshes a moved scope's parent path from the server instead of trusting storage", () => {
     const onPrune = jest.fn();
     setResolved([
-      resolvedRef({ parentKey: "workspace:ws-9", parentPath: "Acme / Growth" }),
+      resolvedRef({ parentKey: "product:9", parentPath: "Acme / Growth" }),
     ]);
 
     renderHook(() => useReconciledBuildScopes([storedRef()], onPrune));

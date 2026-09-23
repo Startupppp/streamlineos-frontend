@@ -23,9 +23,11 @@ Only the coordinator changes these boxes or old PRD acceptance boxes.
 
 `BLD-X-DEC-001` records these corrections before code fan-out:
 
-1. PM Workspace linkage remains optional. Standalone projects are first-class
-   and appear in the organization view; a null workspace is not invalid data.
-   The contrary sentence in BSN-02 is superseded.
+1. **Superseded 2026-09-23 by BLD-00 D01: PM Workspace is removed, not made
+   optional.** Standalone projects are first-class and appear in the
+   organization view directly; a project without a managed product is an
+   organization-level project, not an orphan. `BLD-X-BE-WORKSPACE-001` below
+   is dead — its target module is deleted.
 2. `BLD-01M-*` remains the stable acceptance namespace for the BLD-01A
    manifest. Renaming it would break evidence links.
 3. `/build/settings/integrations` is `KEEP_WITH_EXPANDED_ANATOMY`, not a move.
@@ -82,8 +84,8 @@ without waiting for all snapshot or shared-seam packets.
 | Packet | Single outcome | Primary ownership root | Acceptance backlinks |
 |---|---|---|---|
 | `BLD-X-BE-PROJECT-DIR-001` | Project directory search/filter/sort/cursor/count use one tenant-scoped predicate and projection | `backend/src/modules/build/core/projects-query*`, `projects-search*`, direct DTO/specs | BLD-02C Projects; BLD-03 collection rules; BLD-06 query/cache |
-| `BLD-X-BE-PROJECT-WRITE-001` | Create/update/archive/restore preserves optional workspace and product links transactionally | `backend/src/modules/build/core/projects-write*`, `projects-provision*`, direct DTO/specs | D01; BLD-02A-011..017; BLD-05 project forms |
-| `BLD-X-BE-WORKSPACE-001` | Workspace list/detail/membership endpoints are scoped, bounded, and conflict-safe | `backend/src/modules/build/pm-workspaces/**` | BSN-01/02; BLD-02D workspace rows; BLD-06A workspace row |
+| `BLD-X-BE-PROJECT-WRITE-001` | Create/update/archive/restore preserves optional product links transactionally | `backend/src/modules/build/core/projects-write*`, `projects-provision*`, direct DTO/specs | D01; BLD-05 project forms |
+| ~~`BLD-X-BE-WORKSPACE-001`~~ | **DEAD — PM Workspace removed (BLD-00 D01).** `backend/src/modules/build/pm-workspaces/**` no longer exists; do not dispatch this packet | — | — |
 | `BLD-X-BE-PRODUCT-001` | Managed-product list/detail/membership endpoints are scoped, bounded, and conflict-safe | `backend/src/modules/build/managed-products/**` | BSN-01/02; BLD-02D product rows; BLD-06A product row |
 | `BLD-X-BE-TEAM-001` | Team/member/project endpoints use workspace-aware scope and stable pagination | `backend/src/modules/build/teams/**` | BLD-02C Teams; BLD-03; BLD-06A team rows |
 | `BLD-X-BE-SCOPE-DIR-001` | Scope directory search/resolve/star/recent returns authorized hierarchy without first-page filtering | `backend/src/modules/build/scope-directory/**` | BSN-02; BLD-06A scope-directory row |

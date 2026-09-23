@@ -67,7 +67,7 @@ function resolveListMembers(
 
 export function getWorkspaceUsersFromCache(queryClient: QueryClient): WorkspaceUser[] {
   const workspaceEntries = queryClient.getQueriesData<{ data: WorkspaceUser[] }>({
-    queryKey: buildWorkQueryKeys.projects.workspaceMembers.all,
+    queryKey: buildWorkQueryKeys.projects.buildMembers.all,
   });
   const fromWorkspace = workspaceEntries.flatMap(([, data]) => data?.data ?? []);
 

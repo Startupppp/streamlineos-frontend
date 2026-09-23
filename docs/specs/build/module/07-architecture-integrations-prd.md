@@ -27,8 +27,9 @@ Files, Knowledge, Timesheets, Accounting, Chat, Mail, Notifications, or Goals.
 - QA bugs and ticket type `BUG` can create dual work-item lifecycles.
 - generic project Intake overlaps configurable Forms plus Triage, while
   Analytics overlaps the Agile Reports surface.
-- the workspace directory is `/build/pm-workspaces` while scoped routes use
-  `/build/workspaces/{pmWorkspaceId}`.
+- **Resolved 2026-09-23:** PM Workspace is removed entirely (BLD-00 D01), not
+  reconciled to one directory path. Organization owns Products, Projects,
+  Teams, Programs, and Portfolios directly.
 - Build integrations currently place Git configuration and agent credentials
   on the same module settings page despite different lifecycle and security
   ownership.
@@ -57,7 +58,7 @@ Files, Knowledge, Timesheets, Accounting, Chat, Mail, Notifications, or Goals.
 Normative BLD-00 contract:
 
 - one canonical `Cycle` domain record and `/cycles` route;
-- workspace/project terminology preference displays `Cycle`, `Sprint`, or
+- project terminology preference displays `Cycle`, `Sprint`, or
   another approved label without changing API/storage identity;
 - one ticket relation, one permission family, one filter, one analytics owner;
 - cadence, completion, carry-over, velocity, and events use the same record.
@@ -90,7 +91,7 @@ Normative BLD-00 contract:
 
 - product roadmap owns outcome, customer evidence, release intent, and product
   prioritization;
-- organization/workspace roadmap is a roll-up of product roadmap records;
+- organization roadmap is a roll-up of product roadmap records;
 - project timeline, milestones, releases, and issues own execution dates;
 - no project record is silently promoted to a product outcome.
 
@@ -221,9 +222,9 @@ Build module settings own:
 - access and client grants;
 - workflow, fields, templates, automations, integrations, and retention.
 
-Project settings own project-specific values. Workspace and product settings
-own their scope-specific values. Operational queues and records remain on
-operational pages.
+Project settings own project-specific values. Product settings own their
+scope-specific values. There is no Workspace settings scope. Operational
+queues and records remain on operational pages.
 
 - [ ] **BLD-07-019** every setting has one scope, storage owner, API, cache key,
   permission, and UI route.
