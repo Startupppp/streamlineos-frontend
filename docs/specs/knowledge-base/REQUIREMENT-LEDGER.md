@@ -593,6 +593,32 @@ Consequences to close in **S04** (query budgets) and **S22**:
 
 The mocked statement-count guards no longer measure the real cost, because the work moved behind a seam the specs stub out. That is a genuine loss of coverage, not a win.
 
+## S01 final verification — 2026-09-23
+
+| Gate | Result |
+|---|---|
+| `pnpm typecheck` (source) | **0 errors** |
+| `pnpm typecheck:test` | **0 errors** (was 21 pre-existing at open; the careers/hr ones were fixed by another session, not by this work) |
+| `npx jest src/modules/kb/ src/modules/access/` | **1670 passed, 7 failed, 3 suites red** — identical to the pre-existing baseline |
+| `npx jest test/security/bola/bola-rag-object-scope.spec.ts` | **18 passed** |
+
+The 7 remaining failures are the same 3 suites documented as pre-existing below. No new failure was introduced by the migration.
+
+**Regression caught and fixed during final verification.** The comment-permission spec briefly went 5 → 6 failures: `denies the author once the page is no longer visible to them` had been **passing**, and a blanket always-resolve auth mock turned a genuine denial into a pass-through. The harness now derives the auth mock from its own `visible` flag, so the denial is exercised again. This is the hazard of repairing an arity break with a uniform mock — it silently disarms exactly the tests that assert denial. Any future seam change must re-check deny-path specs individually.
+
+## Defects found in the security sweep that belong to OTHER work
+
+`npx jest test/security/` has 21 red suites. None are caused by this migration — both root causes are in files byte-identical to `main`:
+
+1. **`careers.controller.ts → uploadResume` is an UNDECLARED route.** `route-classification-report.mjs` reports `UNDECLARED: 1`, which makes `bola-route-surface.spec.ts` fail because its subprocess exits non-zero. Per **BE-30** an exposure-less route *denies at boot*, so this is a live defect, not just a failing test. Needs `@Public` / `@Universal` / `@RequirePermission` / `@AuthorizedInService`.
+2. **`notifications/notification-retention.service.ts` uses `sql.raw` without being in the reviewed allowlist**, failing the closed-set assertion in `injection-surfaces.spec.ts`. Either justify and add it to the allowlist or remove the dynamic identifier.
+
+Both belong to another session's in-flight work. Flagged, not fixed, to avoid colliding with it.
+
+## Shared-tree event
+
+Midway through this work another session **committed these changes and moved the backend repo back to `main`** (`fe3d30809`, `a95777249`, `859b088b5`, merge `9bbe2a2a9`). Nothing was lost — every artifact is present in `HEAD` and 1165 is journalled — but the `feat/knowledge-base` isolation no longer holds for the backend repo. Confirm which branch you are on before further work.
+
 ## Pre-existing failures on this branch — established, not assumed
 
 `npx jest src/modules/kb/` → **1004 passed, 7 failed, 132 suites** (3 suites red).

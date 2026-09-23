@@ -390,6 +390,19 @@ describe("buildQueryParams — view → backend params mapping", () => {
     });
     expect(params.kinds).toEqual(["notification", "mail"]);
   });
+
+  it("mentions narrows notifications by event key before pagination", () => {
+    const params = buildQueryParams(state("mentions"));
+    expect(params.eventKeys).toEqual(expect.arrayContaining([
+      "build.comment.mention",
+      "chat.message.mention",
+    ]));
+  });
+
+  it("module flows through to the unified inbox query", () => {
+    const params = buildQueryParams({ ...state("primary"), module: "crm" });
+    expect(params.module).toBe("crm");
+  });
 });
 
 describe("parseInboxFilterState — round-trip with filterStateToSearchParams", () => {

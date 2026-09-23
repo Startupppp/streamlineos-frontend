@@ -115,3 +115,21 @@ export const kbPageVersionListContract = z.object({
 });
 
 export const kbPageVersionContract = kbPageVersionItemContract;
+
+export const kbTrashPageListContract = z.object({
+  data: z.array(kbPageListItemContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const kbBulkPageResultContract = z.object({
+  results: z.array(
+    z.object({
+      pageId: z.number().int(),
+      result: z.enum(["succeeded", "denied", "conflict", "notFound"]),
+    }),
+  ),
+});

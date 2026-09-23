@@ -24,6 +24,8 @@ export interface UnifiedInboxParams {
   q?: string;
   category?: string;
   priority?: string;
+  eventKeys?: string[];
+  module?: string;
   triage?: "active" | "later" | "done";
 }
 
@@ -81,6 +83,10 @@ export function useUnifiedInbox(
   const q = params?.q?.trim() || undefined;
   const category = params?.category || undefined;
   const priority = params?.priority || undefined;
+  const eventKeys = params?.eventKeys?.length
+    ? [...params.eventKeys].sort()
+    : undefined;
+  const module = params?.module || undefined;
   const triage = params?.triage;
 
   return useInfiniteQuery<UnifiedInboxResponse, Error>({
@@ -92,6 +98,8 @@ export function useUnifiedInbox(
       q,
       category,
       priority,
+      eventKeys,
+      module,
       triage,
       infinite: true,
     }),
@@ -104,6 +112,8 @@ export function useUnifiedInbox(
       if (q) query["q"] = q;
       if (category) query["category"] = category;
       if (priority) query["priority"] = priority;
+      if (eventKeys) query["eventKeys"] = eventKeys.join(",");
+      if (module) query["module"] = module;
       if (triage) query["triage"] = triage;
       return apiClient.get<UnifiedInboxResponse>("/me/inbox/unified", query, signal, unifiedInboxContract);
     },

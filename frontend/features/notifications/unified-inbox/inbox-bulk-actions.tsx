@@ -5,8 +5,7 @@ import { Archive, CheckCheck, Clock, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import type { UnifiedInboxItem, InboxKind } from "@/types/inbox";
-import { resolvedCapabilities } from "./inbox-kind-capabilities";
+import type { UnifiedInboxItem } from "@/types/inbox";
 import type { InboxActions } from "./use-inbox-actions";
 
 export interface BulkActionsBarProps {
@@ -27,17 +26,14 @@ function getNotificationIds(
     .map((item) => item.id as number);
 }
 
-function getSelectedKinds(
-  items: UnifiedInboxItem[],
-  selectedKeys: Set<string>,
-): InboxKind[] {
-  return [
-    ...new Set(
-      items
-        .filter((item) => selectedKeys.has(item.dedupKey))
-        .map((item) => item.kind),
-    ),
-  ];
+function actionLabel(
+  label: string,
+  eligibleCount: number,
+  selectedCount: number,
+): string {
+  return eligibleCount === selectedCount
+    ? label
+    : `${label} (${String(eligibleCount)} notifications)`;
 }
 
 export function BulkActionsBar({
@@ -48,9 +44,8 @@ export function BulkActionsBar({
 }: BulkActionsBarProps) {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
-  const kinds = getSelectedKinds(items, selectedKeys);
-  const caps = resolvedCapabilities(kinds);
   const notifIds = getNotificationIds(items, selectedKeys);
+  const hasNotificationActions = notifIds.length > 0;
 
   const handleMarkRead = useCallback(() => {
     for (const id of notifIds) actions.handleMarkRead(id);
@@ -109,7 +104,7 @@ export function BulkActionsBar({
       <span className="text-sm font-medium text-foreground shrink-0">
         {selectedKeys.size} selected
       </span>
-      {caps.canMarkRead && (
+      {hasNotificationActions && (
         <Button
           type="button"
           variant="outline"
@@ -117,10 +112,10 @@ export function BulkActionsBar({
           onClick={handleMarkRead}
         >
           <CheckCheck className="h-3.5 w-3.5 mr-1.5" aria-hidden />
-          Mark read
+          {actionLabel("Mark read", notifIds.length, selectedKeys.size)}
         </Button>
       )}
-      {caps.canArchive && (
+      {hasNotificationActions && (
         <Button
           type="button"
           variant="outline"
@@ -128,10 +123,10 @@ export function BulkActionsBar({
           onClick={handleArchive}
         >
           <Archive className="h-3.5 w-3.5 mr-1.5" aria-hidden />
-          Archive
+          {actionLabel("Archive", notifIds.length, selectedKeys.size)}
         </Button>
       )}
-      {caps.canSnooze && (
+      {hasNotificationActions && (
         <Button
           type="button"
           variant="outline"
@@ -139,10 +134,10 @@ export function BulkActionsBar({
           onClick={handleSnooze}
         >
           <Clock className="h-3.5 w-3.5 mr-1.5" aria-hidden />
-          Snooze 1h
+          {actionLabel("Snooze 1h", notifIds.length, selectedKeys.size)}
         </Button>
       )}
-      {caps.canDelete && (
+      {hasNotificationActions && (
         <>
           <Button
             type="button"
@@ -151,7 +146,7 @@ export function BulkActionsBar({
             onClick={handleOpenDeleteConfirm}
           >
             <Trash2 className="h-3.5 w-3.5 mr-1.5" aria-hidden />
-            Delete
+            {actionLabel("Delete", notifIds.length, selectedKeys.size)}
           </Button>
           <ConfirmDialog
             open={confirmDeleteOpen}

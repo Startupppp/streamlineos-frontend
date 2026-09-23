@@ -332,7 +332,7 @@ export function useInterviewQuestions(filters?: {
 
 export function useCreateInterviewQuestion() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "interview-questions", "create"],
     mutationFn: (data: CreateQuestionInput) =>
       apiClient.post<InterviewQuestion>("/hr/interview-questions", data, undefined, interviewQuestionContract),
@@ -343,7 +343,7 @@ export function useCreateInterviewQuestion() {
 
 export function useUpdateInterviewQuestion(questionId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "interview-questions", "update", questionId],
     mutationFn: (data: Partial<CreateQuestionInput> & { isActive?: boolean }) =>
       apiClient.patch<{ success: boolean }>(`/hr/interview-questions/${questionId}`, data, undefined, interviewSuccessContract),
@@ -354,7 +354,7 @@ export function useUpdateInterviewQuestion(questionId: number) {
 
 export function useDeleteInterviewQuestion(questionId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "interview-questions", "delete", questionId],
     mutationFn: () =>
       apiClient.delete<void>(`/hr/interview-questions/${questionId}`, undefined, undefined, noContentC),

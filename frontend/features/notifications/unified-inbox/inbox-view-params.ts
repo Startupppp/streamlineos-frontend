@@ -142,6 +142,8 @@ export interface InboxQueryParams {
   unreadOnly?: boolean;
   category?: string;
   priority?: string;
+  eventKeys?: string[];
+  module?: string;
   triage?: "active" | "later" | "done";
 }
 
@@ -161,6 +163,8 @@ export function buildQueryParams(state: InboxFilterState): InboxQueryParams {
   if (state.unreadOnly) params.unreadOnly = true;
   if (state.category) params.category = state.category;
   if (state.priority) params.priority = state.priority;
+  if (state.view === "mentions") params.eventKeys = [...MENTION_EVENT_KEYS];
+  if (state.module) params.module = state.module;
   return params;
 }
 

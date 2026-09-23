@@ -19,7 +19,7 @@ const updateReferralStatusC = lazyContract(() =>
 );
 
 export function useAllReferrals() {
-  const canEmployees = useCan("hr:employees:view");
+  const canEmployees = useCan("hr:requisitions:view");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.referrals(),
     queryFn: ({ signal }) => apiClient.get<CandidateReferral[]>("/hr/recruitment/referrals", undefined, signal, allReferralsListC),
@@ -30,7 +30,7 @@ export function useAllReferrals() {
 
 export function useSubmitReferral() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:view", {
+  return useAuthorizedMutation("hr:requisitions:view", {
     mutationKey: ["hr", "recruitment", "referrals", "submit"],
     mutationFn: (data: CreateReferralInput) =>
       apiClient.post<CandidateReferral>("/hr/recruitment/referrals", data, undefined, submitReferralC),
@@ -42,7 +42,7 @@ export function useSubmitReferral() {
 
 export function useUpdateReferralStatus() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "referrals", "update-status"],
     mutationFn: ({ referralId, ...data }: { referralId: number; status?: string; bonusAmount?: number; bonusEligible?: boolean; notes?: string }) =>
       apiClient.patch<CandidateReferral>(`/hr/recruitment/referrals/${referralId}`, data, undefined, updateReferralStatusC),

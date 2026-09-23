@@ -74,6 +74,14 @@ const kbPageSoftDeleteContract = lazyContract(() =>
   ),
 );
 
+const kbTrashPageListContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbTrashPageListContract),
+);
+
+const kbBulkPageResultContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbBulkPageResultContract),
+);
+
 const kbPageEmptyTrashContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-pages-schema").then(
     (m) => m.kbPageEmptyTrashContract,
@@ -154,19 +162,72 @@ export function useKbPagesFavorites() {
   });
 }
 
-export function useKbPagesTrash() {
+export type TrashPageParams = {
+  cursor?: string;
+  limit?: number;
+  q?: string;
+  spaceId?: number;
+  deletedByMembershipId?: number;
+};
+
+export type KbTrashCursorPage = {
+  data: KbPageListItem[];
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
+};
+
+export function useKbPagesTrash(params?: TrashPageParams) {
   const canView = useCan("kb:pages:view");
   return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash(),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrashList(params),
     queryFn: ({ signal }) =>
-      apiClient.get<KbPageListItem[]>(
+      apiClient.get<KbTrashCursorPage>(
         "/kb/pages/trash",
-        undefined,
+        params as Record<string, unknown> | undefined,
         signal,
-        kbPageListContract,
+        kbTrashPageListContract,
       ),
     staleTime: 30_000,
     enabled: canView,
+  });
+}
+
+export type BulkPageResult = {
+  results: Array<{ pageId: number; result: "succeeded" | "denied" | "conflict" | "notFound" }>;
+};
+
+export function useKbBulkRestorePages() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:pages:update", {
+    mutationKey: ["kb", "pages", "trash", "bulk-restore"],
+    mutationFn: (pageIds: number[]) =>
+      apiClient.post<BulkPageResult>(
+        "/kb/pages/trash/restore",
+        { pageIds },
+        undefined,
+        kbBulkPageResultContract,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.kbPages() });
+    },
+  });
+}
+
+export function useKbBulkPurgePages() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:pages:purge", {
+    mutationKey: ["kb", "pages", "trash", "bulk-purge"],
+    mutationFn: (pageIds: number[]) =>
+      apiClient.delete<BulkPageResult>(
+        "/kb/pages/trash/purge",
+        { pageIds },
+        undefined,
+        kbBulkPageResultContract,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash() });
+    },
   });
 }
 
