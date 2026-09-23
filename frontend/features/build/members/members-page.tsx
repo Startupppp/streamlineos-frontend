@@ -3,10 +3,9 @@
 import {
   useState,
   useCallback,
-  useTransition,
   useEffect,
 } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { keepPreviousData } from "@tanstack/react-query";
 import { SearchInput } from "@/components/ui/search-input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -31,52 +30,41 @@ import { type DisplayProps, loadDisplayProps, saveDisplayProps } from "./display
 import { DisplayPropsToggle, AddMemberButton } from "./members-toolbar";
 import { AddMemberDialog } from "./add-member-dialog";
 import { useMembersColumns } from "./use-members-columns";
+import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
 
 export function MembersPage() {
-  const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const { cursor, setCursor, setListParams } = useBuildListUrlState();
 
-  const q = searchParams.get("search") ?? "";
+  const urlQ = searchParams.get("q") ?? "";
 
-  const [search, setSearch] = useState(q);
+  const [search, setSearch] = useState(urlQ);
   const debouncedSearch = useDebouncedValue(search, 300);
   const [displayProps, setDisplayProps] = useState<DisplayProps>(loadDisplayProps);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<BuildMember | null>(null);
-
-  const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [cursorStack, setCursorStack] = useState<string[]>([]);
 
   const removeConfirmOpen = removeTarget !== null;
 
-  const pushParams = useCallback(
-    (updates: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      for (const [k, v] of Object.entries(updates)) {
-        if (v === null || v === "") params.delete(k);
-        else params.set(k, v);
-      }
-      startTransition(() => {
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-      });
-    },
-    [searchParams, router, pathname],
-  );
-
   useEffect(() => {
-    if (debouncedSearch === (q || "")) return;
-    pushParams({ search: debouncedSearch || null });
-    setCursor(undefined);
-    setCursorStack([]);
-  }, [debouncedSearch, q, pushParams]);
+    const current = searchParams.get("q") ?? "";
+    if (debouncedSearch === current) return;
+    setListParams({ q: debouncedSearch || null });
+  }, [debouncedSearch, searchParams, setListParams]);
 
-  const handleSearchChange = useCallback((value: string) => setSearch(value), []);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    setCursorStack([]);
+  }, []);
 
   const filtersActive = search.trim() !== "";
 
-  const handleClearFilters = useCallback(() => setSearch(""), []);
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setListParams({ q: null });
+    setCursorStack([]);
+  }, [setListParams]);
 
   const handleOpenAddDialog = useCallback(() => setAddDialogOpen(true), []);
 
@@ -95,14 +83,14 @@ export function MembersPage() {
   function handlePrevPage() {
     const prevCursor = cursorStack[cursorStack.length - 1];
     setCursorStack((prev) => prev.slice(0, -1));
-    setCursor(prevCursor === "" ? undefined : prevCursor);
+    setCursor(prevCursor === "" ? null : prevCursor);
   }
 
   const canView = useCan("build:members:view");
   const canManage = useCan("build:members:manage");
 
   const { data, isLoading, isError, error, refetch } = useBuildMembers(
-    { cursor, limit: 25, search: q || undefined },
+    { cursor: cursor ?? undefined, limit: 25, search: urlQ || undefined },
     { placeholderData: keepPreviousData, enabled: canView },
   );
 

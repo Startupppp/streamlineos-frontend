@@ -37,7 +37,7 @@ const LAYOUT_META: Record<string, { icon: React.ReactNode; label: string; color:
   list: { icon: <List className="h-4 w-4" />, label: "List", color: "text-status-info-ink bg-status-info-surface" },
   table: { icon: <LayoutGrid className="h-4 w-4" />, label: "Table", color: "text-status-success-ink bg-status-success-surface" },
   calendar: { icon: <Calendar className="h-4 w-4" />, label: "Calendar", color: "text-status-warning-ink bg-status-warning-surface" },
-  gantt: { icon: <GitBranch className="h-4 w-4" />, label: "Gantt", color: "text-status-danger-ink bg-status-danger-surface" },
+  gantt: { icon: <GitBranch className="h-4 w-4" />, label: "Timeline", color: "text-status-danger-ink bg-status-danger-surface" },
 };
 
 interface ViewCardProps {

@@ -40,6 +40,7 @@ export interface ListViewProps {
   showEmptyRows?: boolean;
   showEmptyColumns?: boolean;
   selection?: ListSelection;
+  focusedTicketId?: number | null;
 }
 
 export interface ListViewItemProps {
@@ -53,6 +54,7 @@ export interface ListViewItemProps {
   isDragging?: boolean;
   isSelected?: boolean;
   onSelect?: (id: string | number, checked: boolean) => void;
+  isKeyboardFocused?: boolean;
 }
 
 export interface InlineGroupCreateProps {
@@ -80,6 +82,7 @@ export interface NestedGroupProps {
   displayOptions?: DisplayOptions;
   onTicketClick: (id: number) => void;
   selection?: ListSelection;
+  focusedTicketId?: number | null;
 }
 
 export interface DroppableGroupProps {
@@ -92,6 +95,7 @@ export interface DroppableGroupProps {
   onTicketClick: (id: number) => void;
   shouldReduceMotion: boolean | null;
   selection?: ListSelection;
+  focusedTicketId?: number | null;
 }
 
 export function useItemSelectHandler(selection: ListSelection | undefined) {

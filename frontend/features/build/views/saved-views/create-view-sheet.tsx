@@ -38,7 +38,7 @@ const LAYOUT_META: Record<string, { icon: React.ReactNode; label: string }> = {
   list: { icon: <List className="h-4 w-4" />, label: "List" },
   table: { icon: <LayoutGrid className="h-4 w-4" />, label: "Table" },
   calendar: { icon: <Calendar className="h-4 w-4" />, label: "Calendar" },
-  gantt: { icon: <GitBranch className="h-4 w-4" />, label: "Gantt" },
+  gantt: { icon: <GitBranch className="h-4 w-4" />, label: "Timeline" },
 };
 
 interface CreateViewSheetProps {

@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { toast } from "sonner";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
@@ -35,6 +36,8 @@ import {
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
+import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 function NewTeamButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -84,18 +87,29 @@ export function TeamsListPage() {
   const canCreate = useCan("build:teams:create");
   const canManage = useCan("build:teams:manage");
 
-  const [search, setSearch] = useState("");
-  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const { cursor, setCursor, setListParams, clearFilters } = useBuildListUrlState();
+  const searchParams = useSearchParams();
+  const urlQ = searchParams.get("q") ?? "";
+
+  const [searchInput, setSearchInput] = useState(urlQ);
+  const debouncedSearchInput = useDebouncedValue(searchInput, 300);
   const [cursorStack, setCursorStack] = useState<string[]>([]);
+
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<ProjectTeam | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProjectTeam | null>(null);
 
+  useEffect(() => {
+    const current = searchParams.get("q") ?? "";
+    if (debouncedSearchInput === current) return;
+    setListParams({ q: debouncedSearchInput || null });
+  }, [debouncedSearchInput, searchParams, setListParams]);
+
   const { data, isLoading, isError, error, refetch } = useProjectTeams({
-    cursor,
+    cursor: cursor ?? undefined,
     pageSize: 50,
-    search: search.trim() || undefined,
+    search: urlQ.trim() || undefined,
   });
 
   const createTeam = useCreateProjectTeam();
@@ -143,19 +157,15 @@ export function TeamsListPage() {
     });
   }
 
-  function resetCursor() {
-    setCursor(undefined);
+  function handleSearchChange(value: string) {
+    setSearchInput(value);
     setCursorStack([]);
   }
 
-  function handleSearchChange(value: string) {
-    setSearch(value);
-    resetCursor();
-  }
-
   function handleClearSearch() {
-    setSearch("");
-    resetCursor();
+    setSearchInput("");
+    clearFilters();
+    setCursorStack([]);
   }
 
   function handleNextPage() {
@@ -168,7 +178,7 @@ export function TeamsListPage() {
   function handlePrevPage() {
     const prevCursor = cursorStack[cursorStack.length - 1];
     setCursorStack((prev) => prev.slice(0, -1));
-    setCursor(prevCursor === "" ? undefined : prevCursor);
+    setCursor(prevCursor === "" ? null : prevCursor);
   }
 
   const handleOpenCreate = useCallback(() => {
@@ -265,7 +275,7 @@ export function TeamsListPage() {
     },
   ];
 
-  const isFiltered = !!search.trim();
+  const isFiltered = !!searchInput.trim();
   const hasPrev = cursorStack.length > 0;
   const hasNext = !!data?.pagination.hasMore;
 
@@ -273,7 +283,7 @@ export function TeamsListPage() {
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput className="min-w-0"
         placeholder="Search teams…"
-        value={search}
+        value={searchInput}
         onValueChange={handleSearchChange}
       />
       {isFiltered ? (

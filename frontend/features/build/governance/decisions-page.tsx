@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -9,10 +10,9 @@ import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { getUserDisplayName } from "@/lib/person-display";
-import type { Decision, DecisionStatus, CreateDecisionInput, UpdateDecisionInput } from "@/types/projects";
+import type { Decision, CreateDecisionInput, UpdateDecisionInput } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { useCursorPager } from "@/components/ui/table-pagination";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 
@@ -32,6 +32,9 @@ import {
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
+
 const DEC_STATUS_LABEL: Record<string, string> = {
   proposed: "Proposed", accepted: "Accepted", superseded: "Superseded", revisit: "Revisit",
 };
@@ -92,16 +95,26 @@ interface DecisionsPageProps { projectId: number }
 export function DecisionsPage({ projectId }: DecisionsPageProps) {
   const canManage = useCan("build:decisions:manage");
 
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [search, setSearch] = useState("");
+  const { cursor, setCursor, setListParams, clearFilters } = useBuildListUrlState();
+  const searchParams = useSearchParams();
+  const urlStatus = searchParams.get("status") ?? "all";
+
+  const [searchInput, setSearchInput] = useState(searchParams.get("q") ?? "");
+  const debouncedSearchInput = useDebouncedValue(searchInput, 300);
+  const [cursorStack, setCursorStack] = useState<string[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editDecision, setEditDecision] = useState<Decision | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Decision | null>(null);
 
-  const pager = useCursorPager(statusFilter);
+  useEffect(() => {
+    const current = searchParams.get("q") ?? "";
+    if (debouncedSearchInput === current) return;
+    setListParams({ q: debouncedSearchInput || null });
+  }, [debouncedSearchInput, searchParams, setListParams]);
+
   const { data, isLoading, isError, error, refetch } = useProjectDecisions(projectId, {
-    status: statusFilter !== "all" ? statusFilter : undefined,
-    cursor: pager.cursor === undefined ? undefined : Number(pager.cursor),
+    status: urlStatus !== "all" ? urlStatus : undefined,
+    cursor: cursor ? Number(cursor) : undefined,
   });
   const { data: members = [] } = useProjectMembers(projectId);
   const pageState = usePageState({ permission: "build:decisions:view", isLoading, isError, error });
@@ -119,12 +132,12 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
   const allDecisions = useMemo(() => data?.data ?? [], [data]);
 
   const displayed = useMemo(() => {
-    if (!search.trim()) return allDecisions;
-    const q = search.toLowerCase();
+    if (!searchInput.trim()) return allDecisions;
+    const q = searchInput.toLowerCase();
     return allDecisions.filter(
       (d) => d.title.toLowerCase().includes(q) || `dec-${d.decisionNumber}`.includes(q),
     );
-  }, [allDecisions, search]);
+  }, [allDecisions, searchInput]);
 
   function handleCreate(input: CreateDecisionInput) {
     createDecision.mutate(input, {
@@ -149,20 +162,36 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
   }
 
   const handleSearchChange = useCallback((value: string) => {
-    setSearch(value);
+    setSearchInput(value);
   }, []);
+
+  const handleStatusChange = useCallback((value: string) => {
+    setListParams({ status: value !== "all" ? value : null });
+    setCursorStack([]);
+  }, [setListParams]);
 
   const handleNewDecision = useCallback(() => setSheetOpen(true), []);
 
   const handleClearFilters = useCallback(() => {
-    setStatusFilter("all");
-    setSearch("");
-  }, []);
+    setSearchInput("");
+    clearFilters();
+    setCursorStack([]);
+  }, [clearFilters]);
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
   const handleNextPage = useCallback(() => {
-    pager.goNext(data?.nextCursor == null ? null : String(data.nextCursor));
-  }, [pager, data]);
+    const nextCursor = data?.nextCursor;
+    if (nextCursor == null) return;
+    setCursorStack((prev) => [...prev, cursor ?? ""]);
+    setCursor(String(nextCursor));
+  }, [cursor, data, setCursor]);
+
+  const handlePrevPage = useCallback(() => {
+    const prev = cursorStack[cursorStack.length - 1];
+    setCursorStack((stack) => stack.slice(0, -1));
+    setCursor(prev === "" ? null : prev);
+  }, [cursorStack, setCursor]);
 
   const handleAlertOpenChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
@@ -230,7 +259,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     );
   }
 
-  const isFiltered = statusFilter !== "all" || !!search.trim();
+  const isFiltered = urlStatus !== "all" || !!searchInput.trim();
 
   return (
     <PageWrapper
@@ -239,7 +268,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
       actions={canManage ? <NewDecisionButton onClick={handleNewDecision} /> : undefined}
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={urlStatus} onValueChange={handleStatusChange}>
             <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>
@@ -253,7 +282,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
           </Select>
           <SearchInput
             placeholder="Search decisions..."
-            value={search}
+            value={searchInput}
             onValueChange={handleSearchChange}
           />
           {isFiltered ? (
@@ -289,9 +318,9 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
                 mode: "cursor",
                 pageSize: GOVERNANCE_PAGE_SIZE,
                 hasMore: data?.hasMore ?? false,
-                hasPrevious: pager.hasPrevious,
+                hasPrevious: cursorStack.length > 0,
                 onNext: handleNextPage,
-                onPrevious: pager.goPrevious,
+                onPrevious: handlePrevPage,
               }}
             />
           )}

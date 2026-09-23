@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -17,6 +17,8 @@ import { useCan } from "@/hooks/api/access";
 import { useForms, useCreateForm } from "@/hooks/api/build";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
   PmPageShell,
   PmSection,
@@ -57,9 +59,21 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
   const router = useRouter();
   const canManage = useCan("build:forms:manage");
 
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [search, setSearch] = useState("");
+  const searchParams = useSearchParams();
+  const { setListParams, clearFilters } = useBuildListUrlState();
+
+  const typeFilter = searchParams.get("formType") ?? "all";
+  const activeFilter = searchParams.get("active") ?? "all";
+  const searchFromUrl = searchParams.get("q") ?? "";
+
+  const [rawSearch, setRawSearch] = useState(searchFromUrl);
+  const debouncedSearch = useDebouncedValue(rawSearch, 300);
+
+  useEffect(() => {
+    const current = searchParams.get("q") ?? "";
+    if (debouncedSearch === current) return;
+    setListParams({ q: debouncedSearch || null });
+  }, [debouncedSearch, searchParams, setListParams]);
 
   const isActiveParam =
     activeFilter === "active" ? true : activeFilter === "inactive" ? false : undefined;
@@ -95,24 +109,32 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
     );
   }
 
-  function handleSearchChange(value: string) {
-    setSearch(value);
-  }
+  const handleSearchChange = useCallback((value: string) => {
+    setRawSearch(value);
+  }, []);
 
-  function handleClearFilters() {
-    setTypeFilter("all");
-    setActiveFilter("all");
-    setSearch("");
-  }
+  const handleTypeFilterChange = useCallback((value: string) => {
+    setListParams({ formType: value === "all" ? null : value });
+  }, [setListParams]);
+
+  const handleActiveFilterChange = useCallback((value: string) => {
+    setListParams({ active: value === "all" ? null : value });
+  }, [setListParams]);
+
+  const handleClearFilters = useCallback(() => {
+    setRawSearch("");
+    clearFilters();
+    setListParams({ formType: null, active: null });
+  }, [clearFilters, setListParams]);
 
   function handleRetry() {
     void refetch();
   }
 
   const filtered = (data ?? []).filter(
-    (f) => !search.trim() || f.name.toLowerCase().includes(search.toLowerCase()),
+    (f) => !searchFromUrl.trim() || f.name.toLowerCase().includes(searchFromUrl.toLowerCase()),
   );
-  const isFiltered = typeFilter !== "all" || activeFilter !== "all" || !!search.trim();
+  const isFiltered = typeFilter !== "all" || activeFilter !== "all" || !!searchFromUrl.trim();
 
   const columns: DataTableColumn<ProjectForm>[] = [
     {
@@ -181,11 +203,11 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput
-        value={search}
+        value={rawSearch}
         onValueChange={handleSearchChange}
         placeholder="Search…"
       />
-      <Select value={typeFilter} onValueChange={setTypeFilter}>
+      <Select value={typeFilter} onValueChange={handleTypeFilterChange}>
         <SelectTrigger className="w-40">
           <SelectValue />
         </SelectTrigger>
@@ -197,7 +219,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
           ))}
         </SelectContent>
       </Select>
-      <Select value={activeFilter} onValueChange={setActiveFilter}>
+      <Select value={activeFilter} onValueChange={handleActiveFilterChange}>
         <SelectTrigger className="w-32">
           <SelectValue />
         </SelectTrigger>

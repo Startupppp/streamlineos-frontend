@@ -2,7 +2,7 @@
 
 import { ReportingRouteErrorBoundary } from "@/lib/observability/reporting-route-error-boundary";
 
-export default function TimelineError({
+export default function IssuesError({
   error,
   reset,
 }: {

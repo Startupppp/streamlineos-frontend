@@ -33,6 +33,7 @@ export const ListViewItem = memo(function ListViewItem({
   isDragging,
   isSelected,
   onSelect,
+  isKeyboardFocused,
 }: ListViewItemProps) {
   const handleClick = useCallback(() => onClick(ticket.id), [onClick, ticket.id]);
   const handleSelectChange = useCallback(
@@ -62,9 +63,13 @@ export const ListViewItem = memo(function ListViewItem({
 
   return (
     <motion.div
+      data-keyboard-focused={isKeyboardFocused ? "true" : undefined}
+      aria-current={isKeyboardFocused ? "true" : undefined}
       className={cn(
         "group flex items-center border-b border-border/50 bg-card transition-colors hover:bg-primary/[0.04] last:border-b-0",
         isDragging && "shadow-lg ring-1 ring-primary/20 bg-primary/5 rounded-md",
+        isKeyboardFocused &&
+          "bg-primary/[0.06] ring-1 ring-inset ring-primary/40",
       )}
       initial={shouldReduceMotion ? false : { opacity: 0, x: -4 }}
       animate={{ opacity: 1, x: 0 }}

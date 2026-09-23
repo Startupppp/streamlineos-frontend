@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Siren, Plus } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
@@ -17,6 +17,9 @@ import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { useSearchParams } from "next/navigation";
+import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -99,9 +102,22 @@ interface IncidentsPageProps { projectId: number }
 export function IncidentsPage({ projectId }: IncidentsPageProps) {
   const canManage = useCan("build:incidents:manage");
 
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [severityFilter, setSeverityFilter] = useState("all");
+  const searchParams = useSearchParams();
+  const { setListParams, clearFilters } = useBuildListUrlState();
+
+  const statusFilter = searchParams.get("status") ?? "all";
+  const severityFilter = searchParams.get("severity") ?? "all";
+  const searchFromUrl = searchParams.get("q") ?? "";
+
+  const [rawSearch, setRawSearch] = useState(searchFromUrl);
+  const debouncedSearch = useDebouncedValue(rawSearch, 300);
+
+  useEffect(() => {
+    const current = searchParams.get("q") ?? "";
+    if (debouncedSearch === current) return;
+    setListParams({ q: debouncedSearch || null });
+  }, [debouncedSearch, searchParams, setListParams]);
+
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editIncident, setEditIncident] = useState<Incident | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Incident | null>(null);
@@ -119,8 +135,8 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
 
   const all = useMemo(() => incidents ?? [], [incidents]);
   const filtered = useMemo(
-    () => search ? all.filter((i) => i.title.toLowerCase().includes(search.toLowerCase()) || `INC-${i.incidentNumber}`.toLowerCase().includes(search.toLowerCase())) : all,
-    [all, search],
+    () => searchFromUrl ? all.filter((i) => i.title.toLowerCase().includes(searchFromUrl.toLowerCase()) || `INC-${i.incidentNumber}`.toLowerCase().includes(searchFromUrl.toLowerCase())) : all,
+    [all, searchFromUrl],
   );
 
   const openCount = all.filter((i) => i.status !== "resolved" && i.status !== "closed").length;
@@ -132,16 +148,16 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
   }, [refetch]);
 
   const handleSearchChange = useCallback((value: string) => {
-    setSearch(value);
+    setRawSearch(value);
   }, []);
 
-  const filtersActive = !!(search || statusFilter !== "all" || severityFilter !== "all");
+  const filtersActive = !!(searchFromUrl || statusFilter !== "all" || severityFilter !== "all");
 
   const handleClearFilters = useCallback(() => {
-    setSearch("");
-    setStatusFilter("all");
-    setSeverityFilter("all");
-  }, []);
+    setRawSearch("");
+    clearFilters();
+    setListParams({ severity: null });
+  }, [clearFilters, setListParams]);
 
   const handleEdit = useCallback((inc: Incident) => { setEditIncident(inc); setSheetOpen(true); }, []);
   const handleNew = useCallback(() => { setEditIncident(null); setSheetOpen(true); }, []);
@@ -262,14 +278,22 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
     );
   }
 
+  const handleStatusChange = useCallback((value: string) => {
+    setListParams({ status: value === "all" ? null : value });
+  }, [setListParams]);
+
+  const handleSeverityChange = useCallback((value: string) => {
+    setListParams({ severity: value === "all" ? null : value });
+  }, [setListParams]);
+
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput
         placeholder="Search incidents..."
-        value={search}
+        value={rawSearch}
         onValueChange={handleSearchChange}
       />
-      <Select value={statusFilter} onValueChange={setStatusFilter}>
+      <Select value={statusFilter} onValueChange={handleStatusChange}>
         <SelectTrigger className="w-36">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
@@ -282,7 +306,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
           ))}
         </SelectContent>
       </Select>
-      <Select value={severityFilter} onValueChange={setSeverityFilter}>
+      <Select value={severityFilter} onValueChange={handleSeverityChange}>
         <SelectTrigger className="w-28">
           <SelectValue placeholder="Severity" />
         </SelectTrigger>

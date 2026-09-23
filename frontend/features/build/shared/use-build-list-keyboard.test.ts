@@ -1,5 +1,5 @@
 import { renderHook, act, fireEvent } from "@testing-library/react";
-import { useMyWorkKeyboard } from "./use-my-work-keyboard";
+import { useBuildListKeyboard } from "./use-build-list-keyboard";
 
 const mockOpen = jest.fn();
 const mockClear = jest.fn();
@@ -10,7 +10,7 @@ beforeEach(() => {
 
 function setup(itemCount = 5) {
   return renderHook(() =>
-    useMyWorkKeyboard({
+    useBuildListKeyboard({
       itemCount,
       onOpen: mockOpen,
       onClearSelection: mockClear,
@@ -18,7 +18,7 @@ function setup(itemCount = 5) {
   );
 }
 
-describe("useMyWorkKeyboard — j/k navigation moves focus on the list", () => {
+describe("useBuildListKeyboard — j/k navigation moves focus on the list", () => {
   it("j key moves focused index from null to 0 when no item is focused", () => {
     const { result } = setup();
     expect(result.current.focusedIndex).toBeNull();
@@ -89,7 +89,7 @@ describe("useMyWorkKeyboard — j/k navigation moves focus on the list", () => {
   });
 });
 
-describe("useMyWorkKeyboard — Enter opens, Escape clears", () => {
+describe("useBuildListKeyboard — Enter opens, Escape clears", () => {
   it("Enter calls onOpen with the focused index when an item is focused", () => {
     const { result } = setup();
 
@@ -131,7 +131,7 @@ describe("useMyWorkKeyboard — Enter opens, Escape clears", () => {
   });
 });
 
-describe("useMyWorkKeyboard — keys are inert inside form inputs", () => {
+describe("useBuildListKeyboard — keys are inert inside form inputs", () => {
   it("j key does not move focus when the active element is an input so the user can type freely", () => {
     const { result } = setup();
 
@@ -173,7 +173,7 @@ describe("useMyWorkKeyboard — keys are inert inside form inputs", () => {
   });
 });
 
-describe("useMyWorkKeyboard — modifier keys suppress shortcuts", () => {
+describe("useBuildListKeyboard — modifier keys suppress shortcuts", () => {
   it("j with metaKey held does not move focus", () => {
     const { result } = setup();
 

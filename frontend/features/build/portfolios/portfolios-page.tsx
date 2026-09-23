@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { toast } from "sonner";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
@@ -52,6 +53,8 @@ import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
+import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 function NewPortfolioButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -111,10 +114,15 @@ const STATUS_OPTS = [
 export function PortfoliosPage() {
   const canManage = useCan("build:portfolios:manage");
 
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [search, setSearch] = useState("");
-  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const { cursor, setCursor, setListParams, clearFilters } = useBuildListUrlState();
+  const searchParams = useSearchParams();
+  const urlStatus = searchParams.get("status") ?? "all";
+  const urlQ = searchParams.get("q") ?? "";
+
+  const [searchInput, setSearchInput] = useState(urlQ);
+  const debouncedSearchInput = useDebouncedValue(searchInput, 300);
   const [cursorStack, setCursorStack] = useState<string[]>([]);
+
   const {
     open: createOpen,
     onOpenChange: setCreateOpen,
@@ -123,10 +131,16 @@ export function PortfoliosPage() {
   const [editTarget, setEditTarget] = useState<Portfolio | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Portfolio | null>(null);
 
+  useEffect(() => {
+    const current = searchParams.get("q") ?? "";
+    if (debouncedSearchInput === current) return;
+    setListParams({ q: debouncedSearchInput || null });
+  }, [debouncedSearchInput, searchParams, setListParams]);
+
   const { data, isLoading, isError, error, refetch } = usePortfolios({
-    cursor,
+    cursor: cursor ?? undefined,
     limit: 20,
-    status: statusFilter !== "all" ? statusFilter : undefined,
+    status: urlStatus !== "all" ? urlStatus : undefined,
   });
   const { data: membersRes } = useOrgMembers(1, 100);
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
@@ -143,10 +157,10 @@ export function PortfoliosPage() {
 
   const rows = data?.data ?? [];
   const displayed = useMemo(() => {
-    if (!search.trim()) return rows;
-    const q = search.toLowerCase();
+    if (!searchInput.trim()) return rows;
+    const q = searchInput.toLowerCase();
     return rows.filter((p) => p.name.toLowerCase().includes(q));
-  }, [rows, search]);
+  }, [rows, searchInput]);
 
   const resolution = usePageState({
     permission: "build:portfolios:view",
@@ -187,25 +201,19 @@ export function PortfoliosPage() {
     });
   }
 
-  function resetCursor() {
-    setCursor(undefined);
-    setCursorStack([]);
-  }
-
   function handleSearchChange(value: string) {
-    setSearch(value);
-    resetCursor();
-  }
-
-  function handleClearFilters() {
-    setStatusFilter("all");
-    setSearch("");
-    resetCursor();
+    setSearchInput(value);
   }
 
   function handleStatusChange(value: string) {
-    setStatusFilter(value);
-    resetCursor();
+    setListParams({ status: value !== "all" ? value : null });
+    setCursorStack([]);
+  }
+
+  function handleClearFilters() {
+    setSearchInput("");
+    clearFilters();
+    setCursorStack([]);
   }
 
   function handleNextPage() {
@@ -218,7 +226,7 @@ export function PortfoliosPage() {
   function handlePrevPage() {
     const prevCursor = cursorStack[cursorStack.length - 1];
     setCursorStack((prev) => prev.slice(0, -1));
-    setCursor(prevCursor === "" ? undefined : prevCursor);
+    setCursor(prevCursor === "" ? null : prevCursor);
   }
 
   const handleOpenCreate = useCallback(() => {
@@ -333,13 +341,13 @@ export function PortfoliosPage() {
     },
   ];
 
-  const isFiltered = statusFilter !== "all" || !!search.trim();
+  const isFiltered = urlStatus !== "all" || !!searchInput.trim();
   const hasPrev = cursorStack.length > 0;
   const hasNext = !!data?.pagination.hasMore;
 
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
-      <Select value={statusFilter} onValueChange={handleStatusChange}>
+      <Select value={urlStatus} onValueChange={handleStatusChange}>
         <SelectTrigger className="w-40">
           <SelectValue />
         </SelectTrigger>
@@ -353,7 +361,7 @@ export function PortfoliosPage() {
       </Select>
       <SearchInput
         placeholder="Search portfolios…"
-        value={search}
+        value={searchInput}
         onValueChange={handleSearchChange}
       />
       {isFiltered ? (

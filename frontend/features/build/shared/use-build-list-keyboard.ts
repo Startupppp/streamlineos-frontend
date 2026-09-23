@@ -13,31 +13,38 @@ function isInputTarget(target: EventTarget | null): boolean {
   );
 }
 
-export interface UseMyWorkKeyboardOptions {
+export interface UseBuildListKeyboardOptions {
   itemCount: number;
   onOpen: (index: number) => void;
   onClearSelection: () => void;
   searchInputRef?: React.RefObject<HTMLInputElement | null>;
+  enabled?: boolean;
 }
 
-export interface UseMyWorkKeyboardReturn {
+export interface UseBuildListKeyboardReturn {
   focusedIndex: number | null;
   setFocusedIndex: (index: number | null) => void;
 }
 
-export function useMyWorkKeyboard({
+export function useBuildListKeyboard({
   itemCount,
   onOpen,
   onClearSelection,
   searchInputRef,
-}: UseMyWorkKeyboardOptions): UseMyWorkKeyboardReturn {
+  enabled = true,
+}: UseBuildListKeyboardOptions): UseBuildListKeyboardReturn {
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
   const onOpenRef = useRef(onOpen);
-  onOpenRef.current = onOpen;
-
   const onClearRef = useRef(onClearSelection);
-  onClearRef.current = onClearSelection;
+
+  useEffect(() => {
+    onOpenRef.current = onOpen;
+  }, [onOpen]);
+
+  useEffect(() => {
+    onClearRef.current = onClearSelection;
+  }, [onClearSelection]);
 
   useEffect(() => {
     if (focusedIndex !== null && focusedIndex >= itemCount) {
@@ -46,6 +53,8 @@ export function useMyWorkKeyboard({
   }, [itemCount, focusedIndex]);
 
   useEffect(() => {
+    if (!enabled) return;
+
     function handleKeyDown(e: KeyboardEvent) {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (isInputTarget(e.target)) return;
@@ -95,7 +104,7 @@ export function useMyWorkKeyboard({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [focusedIndex, itemCount, searchInputRef]);
+  }, [enabled, focusedIndex, itemCount, searchInputRef]);
 
   const setFocusedIndexStable = useCallback(
     (index: number | null) => setFocusedIndex(index),

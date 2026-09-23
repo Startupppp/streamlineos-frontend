@@ -11,6 +11,8 @@ import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
 import { DisplayOptionsPanel } from "@/features/build/views/display-options-panel";
 import { ViewSwitcher, type ViewType } from "@/features/build/views/view-switcher";
 import { WorkloadFilterBar } from "@/features/build/views/workload-filter-bar";
+import { BugQaFilters } from "@/features/build/views/bug-qa-filters";
+import { SavedViewsMenu } from "@/features/build/views/saved-views-menu";
 import type { FilterState as WorkloadFilterState } from "@/features/build/views/workload-types";
 import type { DisplayOptions } from "@/features/build/shared/types";
 import { useCan } from "@/hooks/api/access";
@@ -77,6 +79,10 @@ interface ProjectViewsToolbarProps {
     value: WorkloadFilterState[K],
   ) => void;
   onClearWorkloadFilters: () => void;
+  filterType: string;
+  filterSeverity: string;
+  filterQaState: string;
+  onQaFilterChange: (key: "severity" | "qaState", value: string) => void;
 }
 
 export function ProjectViewsToolbar({
@@ -98,6 +104,10 @@ export function ProjectViewsToolbar({
   workloadFilters,
   onWorkloadFilterChange,
   onClearWorkloadFilters,
+  filterType,
+  filterSeverity,
+  filterQaState,
+  onQaFilterChange,
 }: ProjectViewsToolbarProps) {
   const canManageViews = useCan("build:workspace:manage");
   const handleSaveViewClick = useCallback(() => {
@@ -109,6 +119,8 @@ export function ProjectViewsToolbar({
       <ViewSwitcher activeView={view} onViewChange={onViewChange} />
 
       <div className="flex items-center gap-0.5 sm:gap-1">
+        <SavedViewsMenu projectId={projectId} />
+
         <DisplayOptionsPanel
           viewType={view}
           options={displayOptions}
@@ -123,6 +135,14 @@ export function ProjectViewsToolbar({
           />
         ) : null}
       </div>
+
+      {filterType === "BUG" ? (
+        <BugQaFilters
+          severity={filterSeverity}
+          qaState={filterQaState}
+          onChange={onQaFilterChange}
+        />
+      ) : null}
 
       {activeViewName && onClearView ? (
         <Badge

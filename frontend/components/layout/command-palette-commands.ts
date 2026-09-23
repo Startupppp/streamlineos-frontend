@@ -104,7 +104,7 @@ export function useCommandRegistry({
         isAvailable: projectId !== null,
         execute: () => {
           if (projectId !== null)
-            handleSelect(`/build/${projectId}/analytics`);
+            handleSelect(`/build/${projectId}/reports?tab=overview`);
         },
       },
       {
