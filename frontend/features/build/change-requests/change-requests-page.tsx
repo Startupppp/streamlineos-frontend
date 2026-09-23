@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
-import { useCallback, useMemo, useState, useTransition } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
+import { Plus } from "lucide-react";
 import { useChangeRequests, useDeleteChangeRequest } from "@/hooks/api/build/change-requests";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -10,123 +10,82 @@ import type { ChangeRequest } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { SearchInput } from "@/components/ui/search-input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { SearchInput } from "@/components/ui/search-input";
 import { toast } from "sonner";
-import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { ChangeRequestSheet } from "./change-request-sheet";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import {
   PmPageShell,
   PmSection,
   PM_FILL_PANEL,
 } from "@/components/pm-chrome";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
-import { TruncatedText } from "@/components/ui/truncated-text";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import { ChangeRequestSheet } from "./change-request-sheet";
 import { CR_STATUSES, CR_STATUS_LABELS } from "./change-request-schema";
+import {
+  CHANGE_REQUESTS_TABLE_HEADERS,
+  ChangeRequestMobileCard,
+  buildChangeRequestsColumns,
+} from "./change-requests-table-columns";
 
-const CR_STATUS_STYLES: Record<string, string> = {
-  submitted: "text-muted-foreground border-border",
-  under_review: "text-status-info-ink border-status-info-rule",
-  estimated: "text-status-warning-ink border-status-warning-rule",
-  awaiting_approval: "text-status-warning-ink border-status-warning-rule",
-  approved: "text-status-success-ink border-status-success-rule",
-  rejected: "text-status-danger-ink border-status-danger-rule",
-  in_progress: "text-status-info-ink border-status-info-rule",
-  completed: "text-status-success-ink border-status-success-rule",
-};
+const STATUS_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All statuses" },
+  ...CR_STATUSES.map((s) => ({ value: s, label: CR_STATUS_LABELS[s] })),
+];
 
-function NewCrButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button size="sm" className="gap-1 text-dense" onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} />
-      New Change Request
-    </Button>
-  );
+const CLIENT_VISIBLE_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All visibility" },
+  { value: "true", label: "Client visible" },
+  { value: "false", label: "Internal only" },
+];
+
+const FILTER_DEFINITIONS = [
+  { param: "status", options: CR_STATUSES },
+  { param: "clientVisible", options: ["true", "false"] as const },
+  { param: "impact" },
+] as const;
+
+const PAGE_SIZE = 25;
+
+interface ChangeRequestsPageProps {
+  projectId: number;
 }
-
-function CrRowActions({
-  onEdit,
-  onDelete,
-}: {
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Change request actions" {...hoverHandlers}>
-          <EllipsisIcon ref={iconRef} size={14} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onSelect={onEdit}>Edit</DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" onSelect={onDelete}>Delete</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-interface ChangeRequestsPageProps { projectId: number }
 
 export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const canCreate = useCan("build:changerequests:create");
   const canManage = useCan("build:changerequests:manage");
 
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
-  const [, startTransition] = useTransition();
+  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
+  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(listFilters.resetKey);
 
-  const statusFilter = searchParams.get("status") ?? "all";
-  const impactFilter = searchParams.get("impact") ?? "";
-  const requesterIdFilter = searchParams.get("requesterId") ?? "";
-  const approverIdFilter = searchParams.get("approverId") ?? "";
-  const releaseIdFilter = searchParams.get("releaseId") ?? "";
-  const clientVisibleFilter = searchParams.get("clientVisible") ?? "";
-  const qFilter = searchParams.get("q") ?? "";
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editCr, setEditCr] = useState<ChangeRequest | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ChangeRequest | null>(null);
 
-  function updateUrlParam(key: string, value: string | null) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value && value !== "all") {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-    const query = params.toString();
-    startTransition(() => {
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-    });
-  }
+  const statusValue = listFilters.value("status");
+  const clientVisibleValue = listFilters.value("clientVisible");
+  const impactValue = listFilters.value("impact");
 
-  const activeFilters = {
-    ...(statusFilter !== "all" ? { status: statusFilter } : {}),
-    ...(impactFilter ? { impact: impactFilter } : {}),
-    ...(requesterIdFilter ? { requesterId: requesterIdFilter } : {}),
-    ...(approverIdFilter ? { approverId: approverIdFilter } : {}),
-    ...(releaseIdFilter ? { releaseId: Number(releaseIdFilter) } : {}),
-    ...(clientVisibleFilter !== "" ? { clientVisible: clientVisibleFilter === "true" } : {}),
-    ...(qFilter ? { q: qFilter } : {}),
-  };
+  const { data: crPage, isLoading, isError, error, refetch } = useChangeRequests(projectId, {
+    status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
+    clientVisible:
+      clientVisibleValue !== BUILD_FILTER_ALL
+        ? clientVisibleValue === "true"
+        : undefined,
+    impact: impactValue !== BUILD_FILTER_ALL && impactValue ? impactValue : undefined,
+    q: listFilters.debouncedSearch || undefined,
+    cursor: cursor ?? undefined,
+    limit: PAGE_SIZE,
+  });
 
-  const { data: crPage, isLoading, isError, error, refetch } = useChangeRequests(
-    projectId,
-    Object.keys(activeFilters).length > 0 ? activeFilters : undefined,
-  );
   const { data: membersData } = useOrgMembers(1, 100);
   const deleteCr = useDeleteChangeRequest(projectId);
   const members = useMemo(() => membersData?.data ?? [], [membersData]);
@@ -134,230 +93,194 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const crs = crPage?.data ?? [];
   const pagination = crPage?.pagination;
 
-  const handleNew = useCallback(() => { setEditCr(null); setSheetOpen(true); }, []);
-  const handleEdit = useCallback((cr: ChangeRequest) => { setEditCr(cr); setSheetOpen(true); }, []);
-  const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) setDeleteTarget(null); }, []);
-  const handleSearchChange = useCallback((value: string) => {
-    updateUrlParam("q", value || null);
-  }, [searchParams, pathname]);
+  const pageState = usePageState({ permission: "build:changerequests:view", isLoading, isError, error });
 
-  function handleStatusChange(value: string) {
-    updateUrlParam("status", value === "all" ? null : value);
-  }
+  const handleNew = useCallback(() => {
+    setEditCr(null);
+    setSheetOpen(true);
+  }, []);
 
-  function handleImpactChange(value: string) {
-    updateUrlParam("impact", value || null);
-  }
+  const handleEdit = useCallback((cr: ChangeRequest) => {
+    setEditCr(cr);
+    setSheetOpen(true);
+  }, []);
 
-  function handleClientVisibleChange(value: string) {
-    updateUrlParam("clientVisible", value === "all" ? null : value);
-  }
+  const handleAlertOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
 
   const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
     deleteCr.mutate(deleteTarget.id, {
-      onSuccess: () => { toast.success("Change request deleted"); setDeleteTarget(null); },
-      onError: (error) => toast.error(getErrorMessage(error)),
+      onSuccess: () => {
+        toast.success("Change request deleted");
+        setDeleteTarget(null);
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [deleteTarget, deleteCr]);
-
-  const pageState = usePageState({ permission: "build:changerequests:view", isLoading, isError, error });
 
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
-  const filtersActive = !!(
-    qFilter ||
-    statusFilter !== "all" ||
-    impactFilter ||
-    requesterIdFilter ||
-    approverIdFilter ||
-    releaseIdFilter ||
-    clientVisibleFilter !== ""
+  const handleStatusChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
   );
 
-  function handleClearFilters() {
-    updateUrlParam("q", null);
-    updateUrlParam("status", null);
-    updateUrlParam("impact", null);
-    updateUrlParam("requesterId", null);
-    updateUrlParam("approverId", null);
-    updateUrlParam("releaseId", null);
-    updateUrlParam("clientVisible", null);
-  }
-
-  function handleLoadMore() {
-    if (pagination?.nextCursor) {
-      updateUrlParam("cursor", pagination.nextCursor);
-    }
-  }
-
-  const columns = useMemo<DataTableColumn<ChangeRequest>[]>(() => [
-    {
-      key: "crNumber",
-      header: "ID",
-      cell: (row) => <span className="text-dense font-mono text-muted-foreground">CR-{row.crNumber}</span>,
-      className: "w-[72px]",
-    },
-    {
-      key: "title",
-      header: "Title",
-      className: TABLE_TITLE_CELL,
-      cell: (row) => (
-        <TruncatedText text={row.title} className="text-dense font-medium" />
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (row) => (
-        <Badge variant="outline" className={`text-micro ${CR_STATUS_STYLES[row.status]}`}>
-          {CR_STATUS_LABELS[row.status]}
-        </Badge>
-      ),
-      className: "w-[140px]",
-    },
-    {
-      key: "estimateMinutes",
-      header: "Est. (hrs)",
-      cell: (row) => (
-        <span className="text-dense text-muted-foreground">
-          {row.estimateMinutes != null ? (row.estimateMinutes / 60).toFixed(1) : "—"}
-        </span>
-      ),
-      className: "w-[80px]",
-    },
-    {
-      key: "budgetImpactCents",
-      header: "Budget",
-      cell: (row) => (
-        <span className="text-dense text-muted-foreground">
-          {row.budgetImpactCents != null ? `₹${(row.budgetImpactCents / 100).toLocaleString("en-IN")}` : "—"}
-        </span>
-      ),
-      className: "w-[100px]",
-    },
-    {
-      key: "timelineImpactDays",
-      header: "Timeline",
-      cell: (row) => (
-        <span className="text-dense text-muted-foreground">
-          {row.timelineImpactDays != null ? `${row.timelineImpactDays}d` : "—"}
-        </span>
-      ),
-      className: "w-[80px]",
-    },
-    {
-      key: "requestedById",
-      header: "Requester",
-      cell: (row) => {
-        const m = members.find((m) => m.userId === row.requestedById);
-        return <span className="text-dense text-muted-foreground">{m ? (m.name ?? m.email) : "—"}</span>;
-      },
-      className: "w-[120px]",
-    },
-    {
-      key: "actions",
-      header: "",
-      cell: (row) =>
-        canManage ? (
-          <CrRowActions
-            onEdit={() => handleEdit(row)}
-            onDelete={() => setDeleteTarget(row)}
-          />
-        ) : null,
-      className: "w-[40px]",
-    },
-  ], [canManage, handleEdit, members]);
-
-  const filtersBar = (
-    <div className={FILTER_TOOLBAR_ROW}>
-      <SearchInput
-        placeholder="Search..."
-        value={qFilter}
-        onValueChange={handleSearchChange}
-      />
-      <Select value={statusFilter} onValueChange={handleStatusChange}>
-        <SelectTrigger className="w-40">
-          <SelectValue placeholder="Status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All statuses</SelectItem>
-          {CR_STATUSES.map((s) => (
-            <SelectItem key={s} value={s}>
-              {CR_STATUS_LABELS[s]}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select
-        value={clientVisibleFilter === "" ? "all" : clientVisibleFilter}
-        onValueChange={handleClientVisibleChange}
-      >
-        <SelectTrigger className="w-40">
-          <SelectValue placeholder="Visibility" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All visibility</SelectItem>
-          <SelectItem value="true">Client visible</SelectItem>
-          <SelectItem value="false">Internal only</SelectItem>
-        </SelectContent>
-      </Select>
-      <SearchInput
-        placeholder="Filter by impact..."
-        value={impactFilter}
-        onValueChange={handleImpactChange}
-      />
-    </div>
+  const handleClientVisibleChange = useCallback(
+    (value: string) => listFilters.setValue("clientVisible", value),
+    [listFilters],
   );
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") return (
-    <PageWrapper title="Change Requests" subtitle="Track and manage change requests">
-      <PmPageShell>
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry}>{null}</PageState>
-      </PmPageShell>
-    </PageWrapper>
+  const handleImpactChange = useCallback(
+    (value: string) => listFilters.setValue("impact", value || BUILD_FILTER_ALL),
+    [listFilters],
+  );
+
+  const handleNextPage = useCallback(() => {
+    goNext(pagination?.nextCursor);
+  }, [pagination, goNext]);
+
+  const columns = useMemo(
+    () =>
+      buildChangeRequestsColumns({
+        canManage,
+        members,
+        onEdit: handleEdit,
+        onDelete: setDeleteTarget,
+      }),
+    [canManage, members, handleEdit],
+  );
+
+  const renderMobileCard = useCallback(
+    (row: ChangeRequest) => (
+      <ChangeRequestMobileCard
+        cr={row}
+        canManage={canManage}
+        members={members}
+        onEdit={handleEdit}
+        onDelete={setDeleteTarget}
+      />
+    ),
+    [canManage, members, handleEdit],
   );
 
   return (
     <PageWrapper
       title="Change Requests"
       subtitle="Track and manage change requests"
-      filters={filtersBar}
-      actions={canCreate ? <NewCrButton onClick={handleNew} /> : undefined}
+      filters={
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search change requests…",
+            label: "Search change requests",
+          }}
+          filters={[
+            {
+              id: "status",
+              label: "Status",
+              active: listFilters.isActive("status"),
+              control: (
+                <BuildFilterSelect
+                  label="Status"
+                  value={statusValue}
+                  onValueChange={handleStatusChange}
+                  options={STATUS_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "clientVisible",
+              label: "Visibility",
+              active: listFilters.isActive("clientVisible"),
+              control: (
+                <BuildFilterSelect
+                  label="Visibility"
+                  value={clientVisibleValue}
+                  onValueChange={handleClientVisibleChange}
+                  options={CLIENT_VISIBLE_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "impact",
+              label: "Impact",
+              active: listFilters.isActive("impact"),
+              control: (
+                <SearchInput
+                  placeholder="Filter by impact…"
+                  value={impactValue !== BUILD_FILTER_ALL ? impactValue : ""}
+                  onValueChange={handleImpactChange}
+                />
+              ),
+            },
+          ]}
+          onClearAll={listFilters.clearAll}
+        />
+      }
+      actions={
+        <BuildHeaderActions
+          actions={
+            canCreate
+              ? [
+                  {
+                    id: "new-cr",
+                    label: "New Change Request",
+                    icon: Plus,
+                    primary: true,
+                    onSelect: handleNew,
+                  },
+                ]
+              : []
+          }
+        />
+      }
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          {pageState.kind === "loading" ? (
-            <DataTableSkeleton rows={12} columns={7} className="flex-1" />
-          ) : crs.length === 0 ? (
-            <EmptyState
-              className={PM_FILL_PANEL}
-              illustrationPreset="ticket"
-              title="No change requests"
-              description={filtersActive ? undefined : "Create a change request to get started."}
-              filtersActive={filtersActive}
-              onClearFilters={handleClearFilters}
-              action={canCreate && !filtersActive ? { label: "New Change Request", onClick: handleNew } : undefined}
-            />
-          ) : (
-            <>
-              <DataTable<ChangeRequest>
-                data={crs}
-                columns={columns}
-                getRowKey={(row) => row.id}
-                className={PM_FILL_PANEL}
+          <PageState
+            resolution={pageState}
+            loading={
+              <DataTableSkeleton
+                rows={12}
+                headers={CHANGE_REQUESTS_TABLE_HEADERS}
+                className="flex-1"
               />
-              {pagination?.hasMore && (
-                <div className="flex justify-center py-2">
-                  <Button variant="ghost" size="sm" className="text-dense" onClick={handleLoadMore}>
-                    Load more
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
+            }
+            empty={
+              <EmptyState
+                className={PM_FILL_PANEL}
+                illustrationPreset="ticket"
+                title="No change requests"
+                description="Create a change request to get started."
+                filtersActive={listFilters.isFiltered}
+                onClearFilters={listFilters.clearAll}
+                action={canCreate ? { label: "New Change Request", onClick: handleNew } : undefined}
+              />
+            }
+            onRetry={handleRetry}
+            className={PM_FILL_PANEL}
+          >
+            <DataTable<ChangeRequest>
+              data={crs}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              className={PM_FILL_PANEL}
+              mobileCard={renderMobileCard}
+              pagination={{
+                mode: "cursor",
+                pageSize: PAGE_SIZE,
+                hasMore: Boolean(pagination?.hasMore),
+                hasPrevious,
+                onNext: handleNextPage,
+                onPrevious: goPrevious,
+              }}
+            />
+          </PageState>
         </PmSection>
       </PmPageShell>
 

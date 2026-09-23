@@ -69,8 +69,7 @@ export interface SidebarSelectFieldsProps {
 }
 
 const FIELD_GRID = "grid grid-cols-1 gap-3 @[18rem]:grid-cols-2";
-const CONTROL_CLASS =
-  "w-full min-h-10 touch-manipulation @[18rem]:min-h-9 md:min-h-9";
+const CONTROL_CLASS = "w-full touch-manipulation";
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (

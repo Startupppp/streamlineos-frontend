@@ -282,14 +282,14 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
                 <AllWorkViewsMenu activeView={view} hasActiveFilters={hasActiveFilters} />
                 <Select value={grouping} onValueChange={handleGroupChange}>
                   <SelectTrigger
-                    className="w-[120px] shrink-0 text-xs font-normal *:data-[slot=select-value]:font-normal"
+                    className="w-[120px] shrink-0 font-normal *:data-[slot=select-value]:font-normal"
                     aria-label="Group tickets by"
                   >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {GROUP_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value} className="text-xs">
+                      <SelectItem key={o.value} value={o.value}>
                         {o.label}
                       </SelectItem>
                     ))}

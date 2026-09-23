@@ -23,6 +23,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Card, CardContent } from "@/components/ui/card";
 import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
+import { PmPageShell, PmSection } from "@/components/pm-chrome";
 
 const ALLOWED_TYPES = [
   "application/pdf",
@@ -114,7 +115,7 @@ function FileCard({
           <FileText className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{file.fileName}</p>
-            <p className="text-[11px] text-muted-foreground tabular-nums mt-0.5">
+            <p className="text-micro text-muted-foreground tabular-nums mt-0.5">
               {formatFileSize(file.sizeBytes)} · {date}
             </p>
           </div>
@@ -247,10 +248,11 @@ export function FilesPage({ projectId }: FilesPageProps) {
         ) : undefined
       }
     >
-      <div className="flex flex-col gap-4 pb-6">
+      <PmPageShell>
+        <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
         {data.length === 0 ? (
           <EmptyState
-            className="flex-1 min-h-[40vh]"
+            className="flex-1 min-h-0"
             illustrationPreset="activity"
             title="No files yet"
             description="Upload files to share documents, images, and resources with your project team."
@@ -284,7 +286,8 @@ export function FilesPage({ projectId }: FilesPageProps) {
             ) : null}
           </>
         )}
-      </div>
+        </PmSection>
+      </PmPageShell>
     </PageWrapper>
   );
 }

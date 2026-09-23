@@ -4,6 +4,8 @@ import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { PmPageShell, PmSection } from "@/components/pm-chrome";
 
+const HEADERS = ["Name", "Status", "Release date", "Tickets", "Actions"] as const;
+
 export default function ReleasesLoading() {
   return (
     <PageWrapper
@@ -16,7 +18,7 @@ export default function ReleasesLoading() {
           <StatCardGridSkeleton cols={4} />
         </PmSection>
         <PmSection index={1}>
-          <DataTableSkeleton rows={12} columns={5} />
+          <DataTableSkeleton rows={12} headers={HEADERS} className="flex-1 min-h-0" />
         </PmSection>
       </PmPageShell>
     </PageWrapper>

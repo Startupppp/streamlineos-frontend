@@ -1,50 +1,59 @@
 "use client";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { STATUS_OPTIONS, ENTITY_OPTIONS } from "./approvals-constants";
 
 interface ApprovalsFilterBarProps {
-  status: string;
-  entityType: string;
+  statusValue: string;
+  entityTypeValue: string;
+  isStatusActive: boolean;
+  isEntityTypeActive: boolean;
   onStatusChange: (value: string) => void;
   onEntityTypeChange: (value: string) => void;
+  onClearAll: () => void;
 }
 
 export function ApprovalsFilterBar({
-  status,
-  entityType,
+  statusValue,
+  entityTypeValue,
+  isStatusActive,
+  isEntityTypeActive,
   onStatusChange,
   onEntityTypeChange,
+  onClearAll,
 }: ApprovalsFilterBarProps) {
   return (
-    <div className={FILTER_TOOLBAR_ROW}>
-      <Select value={status} onValueChange={onStatusChange}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {STATUS_OPTIONS.map((o) => (
-            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select value={entityType} onValueChange={onEntityTypeChange}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {ENTITY_OPTIONS.map((o) => (
-            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <BuildListToolbar
+      filters={[
+        {
+          id: "status",
+          label: "Status",
+          active: isStatusActive,
+          control: (
+            <BuildFilterSelect
+              label="Status"
+              value={statusValue}
+              onValueChange={onStatusChange}
+              options={STATUS_OPTIONS}
+            />
+          ),
+        },
+        {
+          id: "entityType",
+          label: "Type",
+          active: isEntityTypeActive,
+          control: (
+            <BuildFilterSelect
+              label="Type"
+              value={entityTypeValue}
+              onValueChange={onEntityTypeChange}
+              options={ENTITY_OPTIONS}
+            />
+          ),
+        },
+      ]}
+      onClearAll={onClearAll}
+    />
   );
 }

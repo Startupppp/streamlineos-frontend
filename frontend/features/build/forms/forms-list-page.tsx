@@ -1,18 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, type DataTableColumn, DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
-
-import { Badge } from "@/components/ui/badge";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { SearchInput } from "@/components/ui/search-input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCan } from "@/hooks/api/access";
 import { useForms, useCreateForm } from "@/hooks/api/build";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -22,32 +17,36 @@ import {
   PmSection,
   PM_FILL_PANEL,
 } from "@/components/pm-chrome";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { FORM_TYPE_LABELS, FORM_TYPES } from "./field-type-meta";
 import type { ProjectForm } from "@/types/projects/forms";
+import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import {
+  FORMS_TABLE_HEADERS,
+  FormMobileCard,
+  buildFormsColumns,
+} from "./forms-table-columns";
 
 const TYPE_OPTIONS = [
-  { value: "all", label: "All types" },
+  { value: BUILD_FILTER_ALL, label: "All types" },
   ...FORM_TYPES.map((t) => ({ value: t, label: FORM_TYPE_LABELS[t] })),
 ];
 
 const ACTIVE_OPTIONS = [
-  { value: "all", label: "All forms" },
+  { value: BUILD_FILTER_ALL, label: "All forms" },
   { value: "active", label: "Active" },
   { value: "inactive", label: "Inactive" },
 ];
 
-function FormsListPageSkeleton() {
-  return (
-    <PmPageShell>
-      <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-        <DataTableSkeleton rows={12} columns={6} className="flex-1" />
-      </PmSection>
-    </PmPageShell>
-  );
-}
+const FILTER_DEFINITIONS = [
+  { param: "type", options: FORM_TYPES },
+  { param: "status", options: ["active", "inactive"] as const },
+] as const;
 
 interface FormsListPageProps {
   projectId: number;
@@ -57,14 +56,14 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
   const router = useRouter();
   const canManage = useCan("build:forms:manage");
 
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [search, setSearch] = useState("");
+  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
+
+  const typeValue = listFilters.value("type");
+  const statusValue = listFilters.value("status");
 
   const isActiveParam =
-    activeFilter === "active" ? true : activeFilter === "inactive" ? false : undefined;
-
-  const formTypeValue = FORM_TYPES.find((t) => t === typeFilter);
+    statusValue === "active" ? true : statusValue === "inactive" ? false : undefined;
+  const formTypeValue = FORM_TYPES.find((t) => t === typeValue);
 
   const { data, isLoading, isError, error, refetch } = useForms(projectId, {
     type: formTypeValue,
@@ -82,7 +81,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
 
   const isReady = pageState.kind === "ready";
 
-  function handleNewForm() {
+  const handleNewForm = useCallback(() => {
     createForm.mutate(
       { name: "Untitled Form", fields: [], actions: [], isActive: false },
       {
@@ -93,149 +92,115 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }
+  }, [createForm, projectId, router]);
 
-  function handleSearchChange(value: string) {
-    setSearch(value);
-  }
-
-  function handleClearFilters() {
-    setTypeFilter("all");
-    setActiveFilter("all");
-    setSearch("");
-  }
-
-  function handleRetry() {
+  const handleRetry = useCallback(() => {
     void refetch();
-  }
+  }, [refetch]);
 
-  const filtered = (data ?? []).filter(
-    (f) => !search.trim() || f.name.toLowerCase().includes(search.toLowerCase()),
+  const handleTypeChange = useCallback(
+    (value: string) => listFilters.setValue("type", value),
+    [listFilters],
   );
-  const isFiltered = typeFilter !== "all" || activeFilter !== "all" || !!search.trim();
 
-  const columns: DataTableColumn<ProjectForm>[] = [
-    {
-      key: "formNumber",
-      header: "Form ID",
-      cell: (row) => (
-        <Link
-          href={`/build/${projectId}/forms/${row.id}`}
-          className="font-mono text-xs font-semibold text-primary hover:underline"
-        >
-          FORM-{row.formNumber}
-        </Link>
-      ),
-      className: "w-24",
-    },
-    {
-      key: "name",
-      header: "Name",
-      className: TABLE_TITLE_CELL,
-      cell: (row) => (
-        <Link
-          href={`/build/${projectId}/forms/${row.id}`}
-          className="text-sm font-medium hover:underline min-w-0 block"
-        >
-          <TruncatedText text={row.name} />
-        </Link>
-      ),
-    },
-    {
-      key: "type",
-      header: "Type",
-      cell: (row) => (
-        <Badge variant="outline" className="text-micro px-1.5">
-          {FORM_TYPE_LABELS[row.type]}
-        </Badge>
-      ),
-    },
-    {
-      key: "isActive",
-      header: "Status",
-      cell: (row) => (
-        <Badge variant={row.isActive ? "default" : "secondary"} className="text-micro px-1.5">
-          {row.isActive ? "Active" : "Inactive"}
-        </Badge>
-      ),
-    },
-    {
-      key: "fields",
-      header: "Fields",
-      cell: (row) => <span className="text-muted-foreground text-sm tabular-nums">{row.fields.length}</span>,
-      className: "w-16",
-    },
-    {
-      key: "isPublic",
-      header: "",
-      className: "w-20",
-      cell: (row) =>
-        row.isPublic ? (
-          <Badge variant="outline" className="text-micro px-1.5 text-primary border-primary/30">
-            Public
-          </Badge>
-        ) : null,
-    },
-  ];
+  const handleStatusChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
 
-  const filtersBar = (
-    <div className={FILTER_TOOLBAR_ROW}>
-      <SearchInput
-        value={search}
-        onValueChange={handleSearchChange}
-        placeholder="Search…"
-      />
-      <Select value={typeFilter} onValueChange={setTypeFilter}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {TYPE_OPTIONS.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select value={activeFilter} onValueChange={setActiveFilter}>
-        <SelectTrigger className="w-32">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {ACTIVE_OPTIONS.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+  const search = listFilters.debouncedSearch.trim().toLowerCase();
+  const filtered = useMemo(
+    () =>
+      (data ?? []).filter(
+        (f) => !search || f.name.toLowerCase().includes(search),
+      ),
+    [data, search],
+  );
+
+  const columns = useMemo(
+    () => buildFormsColumns({ projectId }),
+    [projectId],
+  );
+
+  const renderMobileCard = useCallback(
+    (row: ProjectForm) => <FormMobileCard form={row} />,
+    [],
+  );
+
+  const toolbar = (
+    <BuildListToolbar
+      search={{
+        value: listFilters.search,
+        onValueChange: listFilters.setSearch,
+        placeholder: "Search forms…",
+        label: "Search forms",
+      }}
+      filters={[
+        {
+          id: "type",
+          label: "Type",
+          active: listFilters.isActive("type"),
+          control: (
+            <BuildFilterSelect
+              label="Type"
+              value={typeValue}
+              onValueChange={handleTypeChange}
+              options={TYPE_OPTIONS}
+            />
+          ),
+        },
+        {
+          id: "status",
+          label: "Status",
+          active: listFilters.isActive("status"),
+          control: (
+            <BuildFilterSelect
+              label="Status"
+              value={statusValue}
+              onValueChange={handleStatusChange}
+              options={ACTIVE_OPTIONS}
+            />
+          ),
+        },
+      ]}
+      onClearAll={listFilters.clearAll}
+    />
   );
 
   return (
     <PageWrapper
       title="Forms"
       subtitle="Build and manage data collection forms for your project"
-      filters={isReady ? filtersBar : undefined}
+      filters={isReady ? toolbar : undefined}
       actions={
         isReady && canManage ? (
-          <LoadingButton
-            size="sm"
-            className="text-xs"
-            onClick={handleNewForm}
-            isPending={createForm.isPending}
-            loadingText="Creating…"
-          >
-            New Form
-          </LoadingButton>
+          <BuildHeaderActions
+            actions={[
+              {
+                id: "new-form",
+                label: "New form",
+                icon: Plus,
+                primary: true,
+                isPending: createForm.isPending,
+                loadingLabel: "Creating…",
+                onSelect: handleNewForm,
+              },
+            ]}
+          />
         ) : undefined
       }
     >
       <PageState
         resolution={pageState}
-        loading={<FormsListPageSkeleton />}
+        loading={
+          <PmPageShell>
+            <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+              <DataTableSkeleton rows={12} headers={FORMS_TABLE_HEADERS} className="flex-1" />
+            </PmSection>
+          </PmPageShell>
+        }
         onRetry={handleRetry}
-        className="flex-1"
+        className="flex min-h-0 flex-1 flex-col"
       >
         <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
@@ -244,10 +209,18 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
                 className={PM_FILL_PANEL}
                 illustrationPreset="documents"
                 title="No forms yet"
-                description={isFiltered ? undefined : "Create a form to collect structured data from your team or clients."}
-                filtersActive={isFiltered}
-                onClearFilters={handleClearFilters}
-                action={canManage && !isFiltered ? { label: "New Form", onClick: handleNewForm } : undefined}
+                description={
+                  listFilters.isFiltered
+                    ? undefined
+                    : "Create a form to collect structured data from your team or clients."
+                }
+                filtersActive={listFilters.isFiltered}
+                onClearFilters={listFilters.clearAll}
+                action={
+                  canManage && !listFilters.isFiltered
+                    ? { label: "New Form", onClick: handleNewForm }
+                    : undefined
+                }
               />
             ) : (
               <DataTable
@@ -256,6 +229,8 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
                 getRowKey={(row) => row.id}
                 minWidth="680px"
                 className={PM_FILL_PANEL}
+                mobileCard={renderMobileCard}
+                pagination={{ pageSize: 25 }}
               />
             )}
           </PmSection>

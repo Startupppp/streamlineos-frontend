@@ -1,10 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useMemo, useState } from "react";
-import Link from "next/link";
-import { Siren, Plus } from "lucide-react";
-import { EllipsisIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { Plus, Siren } from "lucide-react";
 import { toast } from "sonner";
 import { useIncidents, useDeleteIncident } from "@/hooks/api/build/incidents";
 import { useCan } from "@/hooks/api/access";
@@ -14,302 +11,228 @@ import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { SearchInput } from "@/components/ui/search-input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { IncidentSheet } from "./incident-sheet";
 import { getSlaState } from "./sla";
-import type { Incident, IncidentSeverity, IncidentStatus } from "@/types/projects";
+import type { Incident } from "@/types/projects";
 import {
   PmPageShell,
   PmSection,
   PM_FILL_PANEL,
 } from "@/components/pm-chrome";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import {
+  INCIDENTS_TABLE_HEADERS,
+  IncidentMobileCard,
+  buildIncidentsColumns,
+} from "./incidents-table-columns";
 
-/**
- * Two ladders, and both lost their orange rung: `high` and `investigating` were
- * orange before the migration, and with no orange status they collapsed onto
- * the amber below them. Everything else here means its status and keeps it.
- */
-const SEVERITY_STYLES: Record<string, string> = {
-  critical: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
-  high: "text-category-orange-ink border-category-orange-rule",
-  medium: "text-status-warning-ink border-status-warning-rule",
-  low: "text-muted-foreground border-border",
-};
+const SEVERITY_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All severities" },
+  { value: "critical", label: "Critical" },
+  { value: "high", label: "High" },
+  { value: "medium", label: "Medium" },
+  { value: "low", label: "Low" },
+];
 
-const STATUS_STYLES: Record<string, string> = {
-  detected: "text-status-danger-ink border-status-danger-rule",
-  investigating: "text-category-orange-ink border-category-orange-rule",
-  mitigating: "text-status-warning-ink border-status-warning-rule",
-  resolved: "text-status-success-ink border-status-success-rule",
-  postmortem: "text-status-info-ink border-status-info-rule",
-  closed: "text-muted-foreground border-border",
-};
+const STATUS_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All statuses" },
+  { value: "detected", label: "Detected" },
+  { value: "investigating", label: "Investigating" },
+  { value: "mitigating", label: "Mitigating" },
+  { value: "resolved", label: "Resolved" },
+  { value: "postmortem", label: "Post-mortem" },
+  { value: "closed", label: "Closed" },
+];
 
-const STATUS_LABELS: Record<string, string> = {
-  detected: "Detected", investigating: "Investigating", mitigating: "Mitigating",
-  resolved: "Resolved", postmortem: "Post-mortem", closed: "Closed",
-};
+const FILTER_DEFINITIONS = [
+  { param: "status", options: ["detected", "investigating", "mitigating", "resolved", "postmortem", "closed"] as const },
+  { param: "severity", options: ["critical", "high", "medium", "low"] as const },
+] as const;
 
-const SEVERITIES: IncidentSeverity[] = ["critical", "high", "medium", "low"];
-const STATUSES: IncidentStatus[] = ["detected", "investigating", "mitigating", "resolved", "postmortem", "closed"];
 const INCIDENTS_LIST_CAP = 100;
 
-function IncidentRowActions({
-  incident,
-  onEdit,
-  onDelete,
-}: {
-  incident: Incident;
-  onEdit: (i: Incident) => void;
-  onDelete: (i: Incident) => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const handleEdit = useCallback(() => onEdit(incident), [incident, onEdit]);
-  const handleDelete = useCallback(() => onDelete(incident), [incident, onDelete]);
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Incident actions" {...hoverHandlers}>
-          <EllipsisIcon ref={iconRef} size={14} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" onSelect={handleDelete}>Delete</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+interface IncidentsPageProps {
+  projectId: number;
 }
-
-interface IncidentsPageProps { projectId: number }
 
 export function IncidentsPage({ projectId }: IncidentsPageProps) {
   const canManage = useCan("build:incidents:manage");
 
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [severityFilter, setSeverityFilter] = useState("all");
+  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
+
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editIncident, setEditIncident] = useState<Incident | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Incident | null>(null);
 
-  const filters = {
-    status: statusFilter !== "all" ? statusFilter : undefined,
-    severity: severityFilter !== "all" ? severityFilter : undefined,
-  };
+  const statusValue = listFilters.value("status");
+  const severityValue = listFilters.value("severity");
 
-  const { data: incidents, isLoading, isError, error, refetch } = useIncidents(projectId, filters);
+  const { data: incidents, isLoading, isError, error, refetch } = useIncidents(projectId, {
+    status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
+    severity: severityValue !== BUILD_FILTER_ALL ? severityValue : undefined,
+  });
+
   const { data: membersData } = useOrgMembers(1, 100);
   const deleteIncident = useDeleteIncident();
   const pageState = usePageState({ permission: "build:incidents:view", isLoading, isError, error });
   const members = useMemo(() => membersData?.data ?? [], [membersData]);
 
   const all = useMemo(() => incidents ?? [], [incidents]);
-  const filtered = useMemo(
-    () => search ? all.filter((i) => i.title.toLowerCase().includes(search.toLowerCase()) || `INC-${i.incidentNumber}`.toLowerCase().includes(search.toLowerCase())) : all,
-    [all, search],
-  );
+
+  const displayed = useMemo(() => {
+    const q = listFilters.debouncedSearch.trim().toLowerCase();
+    if (!q) return all;
+    return all.filter(
+      (i) =>
+        i.title.toLowerCase().includes(q) ||
+        `inc-${i.incidentNumber}`.includes(q),
+    );
+  }, [all, listFilters.debouncedSearch]);
 
   const openCount = all.filter((i) => i.status !== "resolved" && i.status !== "closed").length;
-  const slaBreachedCount = all.filter((i) => { const s = getSlaState(i); return s.responseBreached || s.resolutionBreached; }).length;
-  const resolvedCount = all.filter((i) => i.status === "resolved" || i.status === "closed").length;
+  const slaBreachedCount = all.filter((i) => {
+    const s = getSlaState(i);
+    return s.responseBreached || s.resolutionBreached;
+  }).length;
+  const resolvedCount = all.filter(
+    (i) => i.status === "resolved" || i.status === "closed",
+  ).length;
 
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
-  const handleSearchChange = useCallback((value: string) => {
-    setSearch(value);
+  const handleEdit = useCallback((inc: Incident) => {
+    setEditIncident(inc);
+    setSheetOpen(true);
   }, []);
 
-  const filtersActive = !!(search || statusFilter !== "all" || severityFilter !== "all");
-
-  const handleClearFilters = useCallback(() => {
-    setSearch("");
-    setStatusFilter("all");
-    setSeverityFilter("all");
+  const handleNew = useCallback(() => {
+    setEditIncident(null);
+    setSheetOpen(true);
   }, []);
 
-  const handleEdit = useCallback((inc: Incident) => { setEditIncident(inc); setSheetOpen(true); }, []);
-  const handleNew = useCallback(() => { setEditIncident(null); setSheetOpen(true); }, []);
-  const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) setDeleteTarget(null); }, []);
+  const handleAlertOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
+
   const handleDeleteConfirm = useCallback(() => {
     if (!deleteTarget) return;
     deleteIncident.mutate(
       { projectId, incidentId: deleteTarget.id },
       {
-        onSuccess: () => { toast.success("Incident deleted"); setDeleteTarget(null); },
-        onError: (error) => toast.error(getErrorMessage(error)),
+        onSuccess: () => {
+          toast.success("Incident deleted");
+          setDeleteTarget(null);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }, [deleteTarget, deleteIncident, projectId]);
 
-  const columns = useMemo<DataTableColumn<Incident>[]>(() => [
-    {
-      key: "incidentNumber",
-      header: "ID",
-      cell: (row) => (
-        <Link href={`/build/${projectId}/incidents/${row.id}`} className="text-dense font-mono text-primary hover:underline">
-          INC-{row.incidentNumber}
-        </Link>
-      ),
-      className: "w-[80px]",
-    },
-    {
-      key: "title",
-      header: "Title",
-      className: TABLE_TITLE_CELL,
-      cell: (row) => (
-        <TruncatedText text={row.title} className="text-dense font-medium" />
-      ),
-    },
-    {
-      key: "severity",
-      header: "Severity",
-      cell: (row) => (
-        <Badge variant="outline" className={`text-micro capitalize ${SEVERITY_STYLES[row.severity]}`}>
-          {row.severity}
-        </Badge>
-      ),
-      className: "w-[90px]",
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (row) => (
-        <Badge variant="outline" className={`text-micro ${STATUS_STYLES[row.status]}`}>
-          {STATUS_LABELS[row.status]}
-        </Badge>
-      ),
-      className: "w-[110px]",
-    },
-    {
-      key: "sla",
-      header: "SLA",
-      cell: (row) => {
-        const state = getSlaState(row);
-        if (state.label === "Met")
-          return <Badge variant="outline" className="text-micro text-muted-foreground border-border">Met</Badge>;
-        if (state.responseBreached || state.resolutionBreached)
-          return <Badge variant="outline" className="text-micro text-status-danger-ink border-status-danger-rule bg-status-danger-surface">Breached</Badge>;
-        return <Badge variant="outline" className="text-micro text-status-success-ink border-status-success-rule">On track</Badge>;
-      },
-      className: "w-[90px]",
-    },
-    {
-      key: "owner",
-      header: "Owner",
-      cell: (row) => {
-        const member = members.find((m) => m.userId === row.ownerId);
-        return <span className="text-dense text-muted-foreground">{member ? (member.name ?? member.email) : "—"}</span>;
-      },
-      className: "w-[120px]",
-    },
-    {
-      key: "detectedAt",
-      header: "Detected",
-      cell: (row) => (
-        <span className="text-dense text-muted-foreground">
-          {row.detectedAt ? new Date(row.detectedAt).toLocaleDateString() : "—"}
-        </span>
-      ),
-      className: "w-[100px]",
-    },
-    {
-      key: "actions",
-      header: "",
-      cell: (row) => canManage ? (
-        <IncidentRowActions incident={row} onEdit={handleEdit} onDelete={setDeleteTarget} />
-      ) : null,
-      className: "w-[40px]",
-    },
-  ], [canManage, projectId, handleEdit, members]);
+  const handleStatusChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
-    return (
-      <PageWrapper title="Incidents" subtitle="Track incidents and SLA compliance">
-        <PmPageShell>
-          <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
-            {null}
-          </PageState>
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
+  const handleSeverityChange = useCallback(
+    (value: string) => listFilters.setValue("severity", value),
+    [listFilters],
+  );
 
-  if (!isLoading && pageState.kind === "loading") {
-    return (
-      <PageWrapper title="Incidents" subtitle="Track incidents and SLA compliance">
-        <PmPageShell>
-          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            <DataTableSkeleton rows={12} columns={7} className="flex-1" />
-          </PmSection>
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
+  const columns = useMemo(
+    () =>
+      buildIncidentsColumns({
+        canManage,
+        members,
+        projectId,
+        onEdit: handleEdit,
+        onDelete: setDeleteTarget,
+      }),
+    [canManage, members, projectId, handleEdit],
+  );
 
-  const filtersBar = (
-    <div className={FILTER_TOOLBAR_ROW}>
-      <SearchInput
-        placeholder="Search incidents..."
-        value={search}
-        onValueChange={handleSearchChange}
+  const renderMobileCard = useCallback(
+    (row: Incident) => (
+      <IncidentMobileCard
+        incident={row}
+        canManage={canManage}
+        members={members}
+        onEdit={handleEdit}
+        onDelete={setDeleteTarget}
       />
-      <Select value={statusFilter} onValueChange={setStatusFilter}>
-        <SelectTrigger className="w-36">
-          <SelectValue placeholder="Status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All statuses</SelectItem>
-          {STATUSES.map((s) => (
-            <SelectItem key={s} value={s}>
-              {STATUS_LABELS[s]}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select value={severityFilter} onValueChange={setSeverityFilter}>
-        <SelectTrigger className="w-28">
-          <SelectValue placeholder="Severity" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All severities</SelectItem>
-          {SEVERITIES.map((s) => (
-            <SelectItem key={s} value={s} className="capitalize">
-              {s}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    ),
+    [canManage, members, handleEdit],
   );
 
   return (
     <PageWrapper
       title="Incidents"
       subtitle="Track incidents and SLA compliance"
-      filters={filtersBar}
+      filters={
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search incidents…",
+            label: "Search incidents",
+          }}
+          filters={[
+            {
+              id: "status",
+              label: "Status",
+              active: listFilters.isActive("status"),
+              control: (
+                <BuildFilterSelect
+                  label="Status"
+                  value={statusValue}
+                  onValueChange={handleStatusChange}
+                  options={STATUS_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "severity",
+              label: "Severity",
+              active: listFilters.isActive("severity"),
+              control: (
+                <BuildFilterSelect
+                  label="Severity"
+                  value={severityValue}
+                  onValueChange={handleSeverityChange}
+                  options={SEVERITY_OPTIONS}
+                />
+              ),
+            },
+          ]}
+          onClearAll={listFilters.clearAll}
+        />
+      }
       actions={
-        canManage ? (
-          <Button size="sm" className="text-dense" onClick={handleNew}>
-            <Plus className="h-3.5 w-3.5 mr-1" />
-            New Incident
-          </Button>
-        ) : undefined
+        <BuildHeaderActions
+          actions={
+            canManage
+              ? [
+                  {
+                    id: "new-incident",
+                    label: "New Incident",
+                    icon: Plus,
+                    primary: true,
+                    onSelect: handleNew,
+                  },
+                ]
+              : []
+          }
+        />
       }
     >
       <PmPageShell>
@@ -324,31 +247,42 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
           {!isLoading && !isError && all.length >= INCIDENTS_LIST_CAP ? (
             <p className="mb-2 shrink-0 text-micro text-muted-foreground">
-              Showing the most recent {INCIDENTS_LIST_CAP} incidents. Narrow the status or severity filter to see more.
+              Showing the most recent {INCIDENTS_LIST_CAP} incidents. Narrow the status or
+              severity filter to see more.
             </p>
           ) : null}
-          {isLoading ? (
-            <DataTableSkeleton rows={12} columns={7} className="flex-1" />
-          ) : isError ? (
-            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
-          ) : filtered.length === 0 ? (
-            <EmptyState
-              className={PM_FILL_PANEL}
-              illustrationPreset="ticket"
-              title="No incidents found"
-              description={filtersActive ? undefined : "Create an incident to start tracking."}
-              filtersActive={filtersActive}
-              onClearFilters={handleClearFilters}
-              action={canManage && !filtersActive ? { label: "New Incident", onClick: handleNew } : undefined}
-            />
-          ) : (
+          <PageState
+            resolution={pageState}
+            loading={
+              <DataTableSkeleton
+                rows={12}
+                headers={INCIDENTS_TABLE_HEADERS}
+                className="flex-1"
+              />
+            }
+            empty={
+              <EmptyState
+                className={PM_FILL_PANEL}
+                illustrationPreset="ticket"
+                title="No incidents found"
+                description="Create an incident to start tracking."
+                filtersActive={listFilters.isFiltered}
+                onClearFilters={listFilters.clearAll}
+                action={canManage ? { label: "New Incident", onClick: handleNew } : undefined}
+              />
+            }
+            onRetry={handleRetry}
+            className={PM_FILL_PANEL}
+          >
             <DataTable<Incident>
-              data={filtered}
+              data={displayed}
               columns={columns}
               getRowKey={(row) => row.id}
               className={PM_FILL_PANEL}
+              mobileCard={renderMobileCard}
+              pagination={{ pageSize: 25 }}
             />
-          )}
+          </PageState>
         </PmSection>
       </PmPageShell>
 

@@ -71,7 +71,7 @@ export function MeetingRecurrenceFields() {
               <FormItem>
                 <FormLabel className="text-xs">End date (optional)</FormLabel>
                 <FormControl>
-                  <Input {...field} type="date" className="text-xs" />
+                  <Input {...field} type="date" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

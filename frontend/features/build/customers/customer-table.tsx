@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import { Globe, Users, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -8,6 +8,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { PmPanel } from "@/components/pm-chrome";
 import { TABLE_TITLE_CELL, TEXT_FLEX_CHILD } from "@/lib/text-overflow";
+import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import type { CustomerDisplayPrefs } from "./use-customer-display-prefs";
 
 interface CustomerOrg {
@@ -230,7 +231,8 @@ export const CustomerTable = React.memo(function CustomerTable({
 
     cols.push({
       key: "website",
-      header: "",
+      header: "Actions",
+      headerClassName: "sr-only",
       className: "w-[36px] pr-2",
       cell: (c) =>
         c.website ? (
@@ -252,6 +254,46 @@ export const CustomerTable = React.memo(function CustomerTable({
     return cols;
   }, [prefs]);
 
+  const renderMobileCard = useCallback(
+    (c: CustomerOrg) => {
+      const { label, className: statusClassName } = healthScoreToStatus(
+        c.healthScore ?? null,
+      );
+      return (
+        <BuildMobileCard
+          title={c.name}
+          status={
+            <Badge
+              variant="outline"
+              className={cn(
+                "h-5 rounded-full border px-1.5 text-micro font-medium",
+                statusClassName,
+              )}
+            >
+              {label}
+            </Badge>
+          }
+          person={{ user: null, role: "Owner" }}
+          meta={[
+            {
+              label: "Requests",
+              value: (
+                <span className="font-mono tabular-nums">
+                  {c.openRequestCount ?? 0}
+                </span>
+              ),
+            },
+            {
+              label: "Revenue",
+              value: <span className="font-mono tabular-nums">—</span>,
+            },
+          ]}
+        />
+      );
+    },
+    [],
+  );
+
   return (
     <PmPanel className="flex min-h-0 flex-1 flex-col">
       <DataTable
@@ -263,6 +305,7 @@ export const CustomerTable = React.memo(function CustomerTable({
         className="min-h-0 flex-1 rounded-none border-0 bg-transparent shadow-none"
         emptyState={emptyState}
         minWidth="480px"
+        mobileCard={renderMobileCard}
         pagination={{
           mode: "cursor",
           pageSize,

@@ -79,7 +79,7 @@ export function InboxFilterBar({
         onValueChange={handleValueChange}
         placeholder="Search notifications…"
         fill
-        inputClassName="h-8 text-xs"
+        inputClassName="h-9"
       />
       <Select value={type ?? ALL_TYPES_SENTINEL} onValueChange={handleTypeSelectChange}>
         <SelectTrigger className="w-36 shrink-0" aria-label="Filter by category">

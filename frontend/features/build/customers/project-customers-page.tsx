@@ -1,77 +1,65 @@
 "use client";
 
-import { useCallback, useTransition, useState, useEffect } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { SearchInput } from "@/components/ui/search-input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { useProjectCustomers } from "@/hooks/api/build/customers";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
-import { useMotionVariants } from "@/lib/motion-variants";
-import { EmptyCompaniesIllustration } from "@/components/illustrations";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import { useCustomerDisplayPrefs } from "./use-customer-display-prefs";
 import { CustomerDisplayPrefsPopover } from "./customer-display-prefs-popover";
 import {
   CustomerFilterPopover,
-  ActiveCustomerFilterChips,
   SIZE_OPTIONS,
   type CustomerFilters,
 } from "./customer-filter-popover";
 import { CustomerTable } from "./customer-table";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 
 const PAGE_SIZE = 20;
 
+const CUSTOMER_TABLE_HEADERS = [
+  "Name",
+  "Requests",
+  "Annual revenue",
+  "Size",
+  "Owner",
+  "Status",
+  "Tier",
+  "Domain",
+  "Data source",
+  "Actions",
+] as const;
+
 export function ProjectCustomersPage() {
-  const { staggerContainer, fadeUp } = useMotionVariants();
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
-  const [, startTransition] = useTransition();
-
-  const [search, setSearch] = useState(searchParams.get("q") ?? "");
-  const [cursor, setCursor] = useState<string | undefined>(undefined);
-  const [cursorStack, setCursorStack] = useState<string[]>([]);
-
-  const [filters, setFilters] = useState<CustomerFilters>({
-    industry: searchParams.get("industry") ?? undefined,
-    size: SIZE_OPTIONS.find(
-      (candidate) => candidate === searchParams.get("size"),
-    ),
-  });
-
-  const debouncedSearch = useDebouncedValue(search, 300);
   const { prefs, toggle } = useCustomerDisplayPrefs();
 
-  const updateParams = useCallback(
-    (updates: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value === "") params.delete(key);
-        else params.set(key, value);
-      }
-      startTransition(() => {
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-      });
-    },
-    [searchParams, router, pathname],
+  const listFilters = useBuildListFilters({
+    filters: [
+      { param: "industry" },
+      { param: "size", options: SIZE_OPTIONS },
+    ],
+  });
+
+  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+    listFilters.resetKey,
   );
 
-  useEffect(() => {
-    const current = searchParams.get("q") ?? "";
-    if (debouncedSearch === current) return;
-    updateParams({ q: debouncedSearch || null });
-    setCursor(undefined);
-    setCursorStack([]);
-  }, [debouncedSearch, searchParams, updateParams]);
+  const industryValue = listFilters.value("industry");
+  const sizeValue = listFilters.value("size");
+
+  const currentFilters: CustomerFilters = {
+    industry: industryValue !== "all" && industryValue !== "" ? industryValue : undefined,
+    size: SIZE_OPTIONS.find((s) => s === sizeValue),
+  };
 
   const { data, isLoading, isError, error, refetch } = useProjectCustomers({
-    search: debouncedSearch.trim() || undefined,
-    industry: filters.industry,
+    search: listFilters.debouncedSearch.trim() || undefined,
+    industry: currentFilters.industry,
     cursor,
     limit: PAGE_SIZE,
   });
@@ -81,141 +69,103 @@ export function ProjectCustomersPage() {
     isLoading,
     isError,
     error,
+    isEmpty: (data?.data ?? []).length === 0,
   });
-
-  const handleSearchChange = useCallback((value: string) => {
-    setSearch(value);
-  }, []);
 
   const handleFiltersChange = useCallback(
     (next: CustomerFilters) => {
-      setFilters(next);
-      updateParams({
-        industry: next.industry ?? null,
-        size: next.size ?? null,
-      });
-      setCursor(undefined);
-      setCursorStack([]);
+      listFilters.setValue("industry", next.industry ?? "");
+      listFilters.setValue("size", next.size ?? "");
     },
-    [updateParams],
+    [listFilters],
   );
 
-  const handleFilterRemove = useCallback(
-    (key: keyof CustomerFilters) => {
-      handleFiltersChange({ ...filters, [key]: undefined });
-    },
-    [filters, handleFiltersChange],
-  );
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const handleNextPage = useCallback(() => {
-    const nextCursor = data?.pagination.nextCursor;
-    if (!nextCursor) return;
-    setCursorStack((prev) => [...prev, cursor ?? ""]);
-    setCursor(nextCursor);
-  }, [data?.pagination.nextCursor, cursor]);
-
-  const handlePrevPage = useCallback(() => {
-    const prevCursor = cursorStack[cursorStack.length - 1];
-    setCursorStack((prev) => prev.slice(0, -1));
-    setCursor(prevCursor === "" ? undefined : prevCursor);
-  }, [cursorStack]);
-
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
-
-  const customersFiltersActive = !!(
-    debouncedSearch ||
-    filters.industry ||
-    filters.size
-  );
-
-  const handleClearCustomerFilters = useCallback(() => {
-    setSearch("");
-    setFilters({});
-    updateParams({ q: null, industry: null, size: null });
-    setCursor(undefined);
-    setCursorStack([]);
-  }, [updateParams]);
+    goNext(data?.pagination.nextCursor);
+  }, [data, goNext]);
 
   const customers = data?.data ?? [];
-  const filteredCustomers = filters.size
-    ? customers.filter((c) => c.size === filters.size)
+  const filteredCustomers = currentFilters.size
+    ? customers.filter((c) => c.size === currentFilters.size)
     : customers;
 
-  const hasPrev = cursorStack.length > 0;
-  const hasNext = !!data?.pagination.hasMore;
+  const hasNext = Boolean(data?.pagination.hasMore);
 
   return (
     <PageWrapper
       title="Customers"
       subtitle="CRM companies linked to this workspace"
-      noInternalScroll
       filters={
-        <div className={FILTER_TOOLBAR_ROW}>
-          <SearchInput
-            placeholder="Search customers..."
-            value={search}
-            onValueChange={handleSearchChange}
-          />
-          <CustomerFilterPopover
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-          />
-          <ActiveCustomerFilterChips
-            filters={filters}
-            onRemove={handleFilterRemove}
-          />
-          <div className="ml-auto shrink-0">
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search customers…",
+            label: "Search customers",
+          }}
+          filters={[
+            {
+              id: "filters",
+              label: "Filters",
+              control: (
+                <CustomerFilterPopover
+                  filters={currentFilters}
+                  onFiltersChange={handleFiltersChange}
+                />
+              ),
+              active:
+                Boolean(currentFilters.industry) || Boolean(currentFilters.size),
+            },
+          ]}
+          trailing={
             <CustomerDisplayPrefsPopover prefs={prefs} onToggle={toggle} />
-          </div>
-        </div>
+          }
+          onClearAll={listFilters.clearAll}
+        />
       }
     >
-      <PageState
-        resolution={pageState}
-        loading={<DataTableSkeleton rows={12} columns={5} className="flex-1" />}
-        onRetry={handleRetry}
-        className="flex min-h-0 flex-1 flex-col"
-      >
-        <motion.div
-          className="flex min-h-0 flex-1 flex-col gap-3"
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-        >
-          <motion.div
-            variants={fadeUp}
-            className="flex min-h-0 flex-1 flex-col"
+      <PmPageShell>
+        <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+          <PageState
+            resolution={pageState}
+            loading={
+              <DataTableSkeleton
+                rows={12}
+                headers={CUSTOMER_TABLE_HEADERS}
+                className="flex-1"
+              />
+            }
+            empty={
+              <EmptyState
+                className={PM_FILL_PANEL}
+                illustrationPreset="companies"
+                title="No customers found"
+                description={
+                  listFilters.isFiltered
+                    ? undefined
+                    : "Companies from your CRM will appear here."
+                }
+                filtersActive={listFilters.isFiltered}
+                onClearFilters={listFilters.clearAll}
+              />
+            }
+            onRetry={handleRetry}
+            className={PM_FILL_PANEL}
           >
             <CustomerTable
               prefs={prefs}
-              hasPrev={hasPrev}
+              hasPrev={hasPrevious}
               hasNext={hasNext}
               pageSize={PAGE_SIZE}
-              onPrevPage={handlePrevPage}
+              onPrevPage={goPrevious}
               onNextPage={handleNextPage}
               customers={filteredCustomers}
-              emptyState={
-                <EmptyState
-                  illustration={
-                    <EmptyCompaniesIllustration className="h-full w-full" />
-                  }
-                  title="No customers found"
-                  description={
-                    customersFiltersActive
-                      ? undefined
-                      : "Companies from your CRM will appear here."
-                  }
-                  filtersActive={customersFiltersActive}
-                  onClearFilters={handleClearCustomerFilters}
-                  className="border-0 bg-transparent min-h-[40dvh]"
-                />
-              }
             />
-          </motion.div>
-        </motion.div>
-      </PageState>
+          </PageState>
+        </PmSection>
+      </PmPageShell>
     </PageWrapper>
   );
 }

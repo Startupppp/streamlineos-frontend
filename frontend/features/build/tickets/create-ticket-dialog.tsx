@@ -358,13 +358,13 @@ function CreateTicketDialogContent({
               >
                 <SelectTrigger
                   aria-label="Select project"
-                  className="w-auto max-w-[220px] gap-1.5 border-border bg-card px-2 text-xs font-medium shadow-sm disabled:opacity-100"
+                  className="w-auto max-w-[220px] gap-1.5 border-border bg-card px-2 font-medium shadow-sm disabled:opacity-100"
                 >
                   <SelectValue placeholder={projectTriggerLabel} />
                 </SelectTrigger>
                 <SelectContent>
                   {projects.map((p) => (
-                    <SelectItem key={p.id} value={String(p.id)} className="text-xs">
+                    <SelectItem key={p.id} value={String(p.id)}>
                       <span className="mr-1.5 font-mono text-micro text-muted-foreground">
                         {p.key}
                       </span>

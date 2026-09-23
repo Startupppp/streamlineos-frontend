@@ -294,7 +294,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                     </SelectTrigger>
                     <SelectContent>
                       {COLUMN_OPTIONS.map((o) => (
-                        <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -307,7 +307,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                     </SelectTrigger>
                     <SelectContent>
                       {ROW_OPTIONS.map((o) => (
-                        <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -324,7 +324,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                     </SelectTrigger>
                     <SelectContent>
                       {GROUP_OPTIONS.map((o) => (
-                        <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -337,7 +337,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                     </SelectTrigger>
                     <SelectContent>
                       {ROW_OPTIONS.map((o) => (
-                        <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -358,7 +358,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                 </SelectTrigger>
                 <SelectContent>
                   {ORDER_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -381,7 +381,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
             </SelectTrigger>
             <SelectContent>
               {COMPLETED_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>

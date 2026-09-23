@@ -101,7 +101,7 @@ export function AddMemberDialog({ open, onOpenChange }: AddMemberDialogProps) {
               Role
             </label>
             <Select value={selectedRole} onValueChange={handleRoleChange}>
-              <SelectTrigger id="add-member-role" className="h-9 text-xs">
+              <SelectTrigger id="add-member-role" className="h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="min-w-[var(--radix-select-trigger-width)]">

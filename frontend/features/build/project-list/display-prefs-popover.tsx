@@ -153,7 +153,7 @@ export function DisplayPrefsPopover({
           </SelectTrigger>
           <SelectContent>
             {GROUP_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value} className="text-xs">
+              <SelectItem key={o.value} value={o.value}>
                 {o.label}
               </SelectItem>
             ))}
@@ -168,7 +168,7 @@ export function DisplayPrefsPopover({
             </SelectTrigger>
             <SelectContent>
               {ORDER_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value} className="text-xs">
+                <SelectItem key={o.value} value={o.value}>
                   {o.label}
                 </SelectItem>
               ))}
@@ -179,8 +179,8 @@ export function DisplayPrefsPopover({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="asc" className="text-xs">Asc</SelectItem>
-              <SelectItem value="desc" className="text-xs">Desc</SelectItem>
+              <SelectItem value="asc">Asc</SelectItem>
+              <SelectItem value="desc">Desc</SelectItem>
             </SelectContent>
           </Select>
         </div>

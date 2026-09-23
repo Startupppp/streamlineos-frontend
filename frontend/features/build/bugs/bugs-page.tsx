@@ -1,167 +1,131 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { Plus } from "lucide-react";
 import { useBugs, useDeleteBug } from "@/hooks/api/build/bugs";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { useProjectMembers } from "@/hooks/api/build";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getUserDisplayName } from "@/lib/person-display";
-import type { Bug, BugSeverity, BugStatus } from "@/types/projects";
+import type { Bug } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { SearchInput } from "@/components/ui/search-input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { cn } from "@/lib/utils";
 import {
   PmPageShell,
   PmSection,
   PM_FILL_PANEL,
 } from "@/components/pm-chrome";
-import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
-import { TruncatedText } from "@/components/ui/truncated-text";
+import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
 import { BugSheet } from "./bug-sheet";
+import {
+  BUGS_TABLE_HEADERS,
+  BugMobileCard,
+  buildBugsColumns,
+} from "./bugs-table-columns";
 
-const BUG_STATUSES: readonly BugStatus[] = [
+const BUG_STATUSES = [
   "new", "triaged", "assigned", "in_progress", "fixed",
   "ready_for_qa", "verified", "reopened", "closed",
+] as const;
+
+const BUG_STATUS_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All statuses" },
+  { value: "new", label: "New" },
+  { value: "triaged", label: "Triaged" },
+  { value: "assigned", label: "Assigned" },
+  { value: "in_progress", label: "In Progress" },
+  { value: "fixed", label: "Fixed" },
+  { value: "ready_for_qa", label: "Ready for QA" },
+  { value: "verified", label: "Verified" },
+  { value: "reopened", label: "Reopened" },
+  { value: "closed", label: "Closed" },
 ];
-const BUG_SEVERITIES: readonly BugSeverity[] = ["blocker", "critical", "major", "minor", "trivial"];
 
-const SEVERITY_STYLES: Record<string, string> = {
-  blocker: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
-  critical: "text-status-danger-ink border-status-danger-rule",
-  major: "text-status-warning-ink border-status-warning-rule",
-  minor: "text-muted-foreground border-border",
-  trivial: "text-muted-foreground border-border",
-};
+const BUG_SEVERITY_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All severities" },
+  { value: "blocker", label: "Blocker" },
+  { value: "critical", label: "Critical" },
+  { value: "major", label: "Major" },
+  { value: "minor", label: "Minor" },
+  { value: "trivial", label: "Trivial" },
+];
 
-const STATUS_STYLES: Record<string, string> = {
-  new: "text-muted-foreground border-border",
-  triaged: "text-status-info-ink border-status-info-rule",
-  assigned: "text-status-info-ink border-status-info-rule",
-  in_progress: "text-status-warning-ink border-status-warning-rule",
-  fixed: "text-status-success-ink border-status-success-rule",
-  ready_for_qa: "text-status-info-ink border-status-info-rule",
-  verified: "text-status-success-ink border-status-success-rule",
-  // Orange before the migration, and the only thing separating a bug that is
-  // being worked from one that came back. The rest of this table means its
-  // status and keeps it.
-  reopened: "text-category-orange-ink border-category-orange-rule",
-  closed: "text-muted-foreground border-border",
-};
+const FILTER_DEFINITIONS = [
+  { param: "status", options: BUG_STATUSES },
+  { param: "severity", options: ["blocker", "critical", "major", "minor", "trivial"] as const },
+  { param: "assignee" },
+] as const;
 
-const STATUS_LABELS: Record<string, string> = {
-  new: "New", triaged: "Triaged", assigned: "Assigned", in_progress: "In Progress",
-  fixed: "Fixed", ready_for_qa: "Ready for QA", verified: "Verified",
-  reopened: "Reopened", closed: "Closed",
-};
-
-const PRIORITY_STYLES: Record<string, string> = {
-  LOW: "text-muted-foreground border-border",
-  MEDIUM: "text-status-warning-ink border-status-warning-rule",
-  HIGH: "text-status-danger-ink border-status-danger-rule",
-  URGENT: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
-};
-
-function ReportBugButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button size="sm" className="gap-1 text-dense" onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} />
-      Report Bug
-    </Button>
-  );
+interface BugsPageProps {
+  projectId: number;
 }
-
-function BugActions({
-  canUpdate,
-  canDelete,
-  onEdit,
-  onDelete,
-}: {
-  canUpdate: boolean;
-  canDelete: boolean;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  if (!canUpdate && !canDelete) return null;
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Bug actions" {...hoverHandlers}>
-          <EllipsisIcon ref={iconRef} size={14} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {canUpdate ? <DropdownMenuItem onSelect={onEdit}>Edit</DropdownMenuItem> : null}
-        {canDelete ? (
-          <DropdownMenuItem variant="destructive" onSelect={onDelete}>
-            Delete
-          </DropdownMenuItem>
-        ) : null}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-interface BugsPageProps { projectId: number }
 
 export function BugsPage({ projectId }: BugsPageProps) {
   const canCreate = useCan("build:bugs:create");
   const canUpdate = useCan("build:bugs:update");
   const canDelete = useCan("build:bugs:delete");
 
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebouncedValue(search, 300);
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [severityFilter, setSeverityFilter] = useState("all");
-  const [assigneeFilter, setAssigneeFilter] = useState("all");
+  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
+
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editBug, setEditBug] = useState<Bug | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Bug | null>(null);
 
-  const filters = {
-    status: statusFilter !== "all" ? statusFilter : undefined,
-    severity: severityFilter !== "all" ? severityFilter : undefined,
-    assigneeId: assigneeFilter !== "all" ? assigneeFilter : undefined,
-    q: debouncedSearch || undefined,
-  };
+  const statusValue = listFilters.value("status");
+  const severityValue = listFilters.value("severity");
+  const assigneeValue = listFilters.value("assignee");
 
-  const { data: bugs, isLoading, isError, error, refetch } = useBugs(projectId, filters);
+  const { data: bugs, isLoading, isError, error, refetch } = useBugs(projectId, {
+    status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
+    severity: severityValue !== BUILD_FILTER_ALL ? severityValue : undefined,
+    assigneeId: assigneeValue !== BUILD_FILTER_ALL ? assigneeValue : undefined,
+    q: listFilters.debouncedSearch || undefined,
+  });
+
   const { data: members = [] } = useProjectMembers(projectId);
+
+  const assigneeOptions = useMemo(
+    () => [
+      { value: BUILD_FILTER_ALL, label: "All assignees" },
+      ...members.map((m) => ({ value: m.id, label: getUserDisplayName(m) })),
+    ],
+    [members],
+  );
+
   const deleteBug = useDeleteBug();
   const pageState = usePageState({ permission: "build:bugs:view", isLoading, isError, error });
 
-  const handleSearchChange = useCallback((value: string) => {
-    setSearch(value);
+  const handleEdit = useCallback((bug: Bug) => {
+    setEditBug(bug);
+    setSheetOpen(true);
   }, []);
 
-  const handleEdit = useCallback((bug: Bug) => { setEditBug(bug); setSheetOpen(true); }, []);
-  const handleNewBug = useCallback(() => { setEditBug(null); setSheetOpen(true); }, []);
+  const handleNewBug = useCallback(() => {
+    setEditBug(null);
+    setSheetOpen(true);
+  }, []);
 
   const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
     deleteBug.mutate(
       { projectId, bugId: deleteTarget.id },
       {
-        onSuccess: () => { toast.success("Bug deleted"); setDeleteTarget(null); },
-        onError: (error) => toast.error(getErrorMessage(error)),
+        onSuccess: () => {
+          toast.success("Bug deleted");
+          setDeleteTarget(null);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }, [deleteTarget, deleteBug, projectId]);
@@ -170,195 +134,153 @@ export function BugsPage({ projectId }: BugsPageProps) {
     void refetch();
   }, [refetch]);
 
-  const filtersActive = !!(debouncedSearch || statusFilter !== "all" || severityFilter !== "all" || assigneeFilter !== "all");
-
-  const handleClearFilters = useCallback(() => {
-    setSearch("");
-    setStatusFilter("all");
-    setSeverityFilter("all");
-    setAssigneeFilter("all");
-  }, []);
-
   const handleDeleteDialogChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
   }, []);
 
-  const columns = useMemo<DataTableColumn<Bug>[]>(() => [
-    {
-      key: "ticketNumber",
-      header: "ID",
-      cell: (row) => <span className="font-mono text-dense text-muted-foreground">BUG-{row.ticketNumber}</span>,
-      className: "w-[72px]",
-    },
-    {
-      key: "title",
-      header: "Title",
-      className: TABLE_TITLE_CELL,
-      cell: (row) => (
-        <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
-          <TruncatedText text={row.title} className="text-dense font-medium" />
-          {(row.reopenCount ?? 0) > 0 ? (
-            <Badge variant="outline" className="shrink-0 text-micro text-status-warning-ink border-status-warning-rule">
-              ×{row.reopenCount}
-            </Badge>
-          ) : null}
-        </div>
-      ),
-    },
-    {
-      key: "severity",
-      header: "Severity",
-      cell: (row) => (
-        <Badge variant="outline" className={cn("text-micro capitalize", SEVERITY_STYLES[row.severity ?? ""] ?? "text-muted-foreground border-border")}>
-          {row.severity ?? "—"}
-        </Badge>
-      ),
-      className: "w-[90px]",
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (row) => (
-        <Badge variant="outline" className={cn("text-micro", STATUS_STYLES[row.qaState ?? ""] ?? "text-muted-foreground border-border")}>
-          {STATUS_LABELS[row.qaState ?? ""] ?? row.status}
-        </Badge>
-      ),
-      className: "w-[110px]",
-    },
-    {
-      key: "priority",
-      header: "Priority",
-      cell: (row) => (
-        <Badge variant="outline" className={cn("text-micro capitalize", PRIORITY_STYLES[row.priority] ?? "text-muted-foreground border-border")}>
-          {row.priority.toLowerCase()}
-        </Badge>
-      ),
-      className: "w-[80px]",
-    },
-    {
-      key: "assignee",
-      header: "Assignee",
-      cell: (row) => {
-        const label = "—";
-        return (
-          <TruncatedText text={label} className="max-w-[7rem] text-dense text-muted-foreground" />
-        );
-      },
-      className: "w-[120px]",
-    },
-    {
-      key: "actions",
-      header: "",
-      cell: (row) => (
-        <BugActions
-          canUpdate={canUpdate}
-          canDelete={canDelete}
-          onEdit={() => handleEdit(row)}
-          onDelete={() => setDeleteTarget(row)}
-        />
-      ),
-      className: "w-[40px]",
-    },
-  ], [canUpdate, canDelete, handleEdit, members]);
+  const handleStatusChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
-    return (
-      <PageWrapper title="Bugs" subtitle="Track and triage project bugs">
-        <PmPageShell>
-          <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
-            {null}
-          </PageState>
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
+  const handleSeverityChange = useCallback(
+    (value: string) => listFilters.setValue("severity", value),
+    [listFilters],
+  );
 
-  if (!isLoading && pageState.kind === "loading") {
-    return (
-      <PageWrapper title="Bugs" subtitle="Track and triage project bugs">
-        <PmPageShell>
-          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            <DataTableSkeleton rows={12} columns={6} className="flex-1" />
-          </PmSection>
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
+  const handleAssigneeChange = useCallback(
+    (value: string) => listFilters.setValue("assignee", value),
+    [listFilters],
+  );
 
-  const filtersBar = (
-    <div className={FILTER_TOOLBAR_ROW}>
-      <SearchInput
-        placeholder="Search bugs..."
-        value={search}
-        onValueChange={handleSearchChange}
+  const columns = useMemo(
+    () =>
+      buildBugsColumns({
+        canUpdate,
+        canDelete,
+        onEdit: handleEdit,
+        onDelete: setDeleteTarget,
+      }),
+    [canUpdate, canDelete, handleEdit],
+  );
+
+  const renderMobileCard = useCallback(
+    (row: Bug) => (
+      <BugMobileCard
+        bug={row}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
+        onEdit={handleEdit}
+        onDelete={setDeleteTarget}
       />
-      <Select value={statusFilter} onValueChange={setStatusFilter}>
-        <SelectTrigger className={cn("h-9 w-32", FILTER_SELECT_TRIGGER)}>
-          <SelectValue placeholder="Status" />
-        </SelectTrigger>
-        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-          <SelectItem value="all">All statuses</SelectItem>
-          {BUG_STATUSES.map((s) => (
-            <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select value={severityFilter} onValueChange={setSeverityFilter}>
-        <SelectTrigger className={cn("h-9 w-28", FILTER_SELECT_TRIGGER)}>
-          <SelectValue placeholder="Severity" />
-        </SelectTrigger>
-        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-          <SelectItem value="all">All severities</SelectItem>
-          {BUG_SEVERITIES.map((s) => (
-            <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-        <SelectTrigger className={cn("h-9 w-32", FILTER_SELECT_TRIGGER)}>
-          <SelectValue placeholder="Assignee" />
-        </SelectTrigger>
-        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-          <SelectItem value="all">All assignees</SelectItem>
-          {members.map((m) => (
-            <SelectItem key={m.id} value={m.id}>{getUserDisplayName(m)}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    ),
+    [canUpdate, canDelete, handleEdit],
   );
 
   return (
     <PageWrapper
       title="Bugs"
       subtitle="Track and triage project bugs"
-      filters={filtersBar}
-      actions={canCreate ? <ReportBugButton onClick={handleNewBug} /> : undefined}
+      filters={
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search bugs…",
+            label: "Search bugs",
+          }}
+          filters={[
+            {
+              id: "status",
+              label: "Status",
+              active: listFilters.isActive("status"),
+              control: (
+                <BuildFilterSelect
+                  label="Status"
+                  value={statusValue}
+                  onValueChange={handleStatusChange}
+                  options={BUG_STATUS_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "severity",
+              label: "Severity",
+              active: listFilters.isActive("severity"),
+              control: (
+                <BuildFilterSelect
+                  label="Severity"
+                  value={severityValue}
+                  onValueChange={handleSeverityChange}
+                  options={BUG_SEVERITY_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "assignee",
+              label: "Assignee",
+              active: listFilters.isActive("assignee"),
+              control: (
+                <BuildFilterSelect
+                  label="Assignee"
+                  value={assigneeValue}
+                  onValueChange={handleAssigneeChange}
+                  options={assigneeOptions}
+                />
+              ),
+            },
+          ]}
+          onClearAll={listFilters.clearAll}
+        />
+      }
+      actions={
+        <BuildHeaderActions
+          actions={
+            canCreate
+              ? [
+                  {
+                    id: "report-bug",
+                    label: "Report Bug",
+                    icon: Plus,
+                    primary: true,
+                    onSelect: handleNewBug,
+                  },
+                ]
+              : []
+          }
+        />
+      }
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          {isLoading ? (
-            <DataTableSkeleton rows={12} columns={6} className="flex-1" />
-          ) : isError ? (
-            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
-          ) : (bugs ?? []).length === 0 ? (
-            <EmptyState
-              className={PM_FILL_PANEL}
-              illustrationPreset="ticket"
-              title="No bugs found"
-              description={filtersActive ? undefined : "Report a bug to get started."}
-              filtersActive={filtersActive}
-              onClearFilters={handleClearFilters}
-              action={canCreate && !filtersActive ? { label: "Report Bug", onClick: handleNewBug } : undefined}
-            />
-          ) : (
+          <PageState
+            resolution={pageState}
+            loading={
+              <DataTableSkeleton rows={12} headers={BUGS_TABLE_HEADERS} className="flex-1" />
+            }
+            empty={
+              <EmptyState
+                className={PM_FILL_PANEL}
+                illustrationPreset="ticket"
+                title="No bugs found"
+                description="Report a bug to get started."
+                filtersActive={listFilters.isFiltered}
+                onClearFilters={listFilters.clearAll}
+                action={canCreate ? { label: "Report Bug", onClick: handleNewBug } : undefined}
+              />
+            }
+            onRetry={handleRetry}
+            className={PM_FILL_PANEL}
+          >
             <DataTable<Bug>
               data={bugs ?? []}
               columns={columns}
               getRowKey={(row) => row.id}
               className={PM_FILL_PANEL}
+              mobileCard={renderMobileCard}
+              pagination={{ pageSize: 25 }}
             />
-          )}
+          </PageState>
         </PmSection>
       </PmPageShell>
 

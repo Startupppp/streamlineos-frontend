@@ -4,6 +4,8 @@ import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { PmPageShell, PmSection } from "@/components/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
+const HEADERS = ["ID", "Title", "Severity", "Status", "Priority", "Assignee", "Actions"] as const;
+
 export default function BugsLoading() {
   return (
     <PageWrapper
@@ -21,7 +23,7 @@ export default function BugsLoading() {
     >
       <PmPageShell>
         <PmSection index={0}>
-          <DataTableSkeleton rows={12} columns={7} />
+          <DataTableSkeleton rows={12} headers={HEADERS} className="flex-1 min-h-0" />
         </PmSection>
       </PmPageShell>
     </PageWrapper>

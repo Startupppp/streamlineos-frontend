@@ -156,10 +156,10 @@ export function UpdatesPage({ projectId }: UpdatesPageProps) {
       subtitle="Project status updates and announcements"
       actions={canManage ? <NewUpdateButton onClick={handleOpenDialog} /> : undefined}
     >
-      <div className="flex flex-col gap-4 pb-6">
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
         {data.length === 0 ? (
           <EmptyState
-            className="flex-1 min-h-[40vh]"
+            className="flex-1 min-h-0"
             illustrationPreset="activity"
             title="No updates yet"
             description="Post project updates to keep your team informed on progress, blockers, and milestones."

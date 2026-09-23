@@ -94,7 +94,7 @@ export const InlineAssignee = memo(function InlineAssignee({
           align="end"
         >
           <Command>
-            <CommandInput placeholder="Search members..." className="text-xs" />
+            <CommandInput placeholder="Search members..." />
             <CommandList className="max-h-48">
               <CommandEmpty className="py-2 text-center text-xs text-muted-foreground">
                 No members found.

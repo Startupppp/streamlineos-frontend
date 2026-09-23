@@ -19,6 +19,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
   COMPACT_SEARCH_POPOVER_CONTENT_CLASS,
+  FIELD_CONTROL_CLASS,
   FIELD_SEARCH_POPOVER_CONTENT_CLASS,
 } from "@/components/ui/field-control";
 import { TicketParentLink } from "./ticket-parent-link";
@@ -33,8 +34,10 @@ interface TicketParentControlProps {
   variant?: TicketParentControlVariant;
 }
 
-const FIELD_CONTROL_CLASS =
-  "flex h-9 w-full touch-manipulation items-center gap-1.5 rounded-md border border-input bg-background px-3 text-xs text-left transition-colors hover:bg-accent";
+const PARENT_TRIGGER_CLASS = cn(
+  FIELD_CONTROL_CLASS,
+  "flex w-full touch-manipulation items-center gap-1.5 text-left hover:bg-accent",
+);
 
 export function TicketParentControl({
   ticket,
@@ -186,7 +189,7 @@ export function TicketParentControl({
           <>
             <div
               className={cn(
-                FIELD_CONTROL_CLASS,
+                PARENT_TRIGGER_CLASS,
                 "min-w-0 flex-1 justify-between gap-1 pr-1.5",
               )}
             >
@@ -201,7 +204,7 @@ export function TicketParentControl({
                 <ResponsivePopoverTrigger asChild>
                   <button
                     type="button"
-                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    className="inline-flex w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     disabled={updateTicket.isPending}
                     aria-label="Change parent"
                   >
@@ -217,7 +220,7 @@ export function TicketParentControl({
               size="icon"
               icon={XIcon}
               iconSize={14}
-              className="h-10 w-10 shrink-0 touch-manipulation text-muted-foreground hover:text-destructive @[18rem]:h-8 @[18rem]:w-8 md:h-8 md:w-8"
+              className="h-9 w-9 shrink-0 touch-manipulation text-muted-foreground hover:text-destructive"
               onClick={handleRemove}
               disabled={updateTicket.isPending}
               aria-label="Remove parent"
@@ -228,7 +231,7 @@ export function TicketParentControl({
             <ResponsivePopoverTrigger asChild>
               <button
                 type="button"
-                className={cn(FIELD_CONTROL_CLASS, "text-muted-foreground")}
+                className={cn(PARENT_TRIGGER_CLASS, "text-muted-foreground")}
                 disabled={updateTicket.isPending}
               >
                 <CornerLeftUp className="h-3.5 w-3.5 shrink-0" />

@@ -354,7 +354,7 @@ export function ProjectSubmissionsInbox({
     <>
       <div className="flex items-center gap-2 px-3 py-2 border-b border-border flex-wrap">
         <Select value={statusFilter ?? "all"} onValueChange={handleStatusChange}>
-          <SelectTrigger className="h-7 w-[130px] text-xs">
+          <SelectTrigger className="w-[130px]">
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -366,7 +366,7 @@ export function ProjectSubmissionsInbox({
         </Select>
 
         <Select value={typeFilter ?? "all"} onValueChange={handleTypeChange}>
-          <SelectTrigger className="h-7 w-[120px] text-xs">
+          <SelectTrigger className="w-[120px]">
             <SelectValue placeholder="All types" />
           </SelectTrigger>
           <SelectContent>
@@ -378,7 +378,7 @@ export function ProjectSubmissionsInbox({
         </Select>
 
         <Select value={linkedFilter ?? "all"} onValueChange={handleLinkedChange}>
-          <SelectTrigger className="h-7 w-[130px] text-xs">
+          <SelectTrigger className="w-[130px]">
             <SelectValue placeholder="All submissions" />
           </SelectTrigger>
           <SelectContent>
@@ -393,7 +393,7 @@ export function ProjectSubmissionsInbox({
           aria-label="From date"
           value={fromFilter ?? ""}
           onChange={(e) => handleFromChange(e.target.value ? `${e.target.value}T00:00:00Z` : "")}
-          className="h-7 w-[140px] text-xs"
+          className="w-[140px]"
         />
 
         <Input
@@ -401,7 +401,7 @@ export function ProjectSubmissionsInbox({
           aria-label="To date"
           value={toFilter ? toFilter.slice(0, 10) : ""}
           onChange={(e) => handleToChange(e.target.value ? `${e.target.value}T00:00:00Z` : "")}
-          className="h-7 w-[140px] text-xs"
+          className="w-[140px]"
         />
       </div>
 

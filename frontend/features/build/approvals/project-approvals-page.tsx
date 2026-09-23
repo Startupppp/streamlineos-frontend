@@ -24,9 +24,17 @@ import { RequestApprovalSheet } from "./request-approval-sheet";
 import { RequestApprovalMenuButton } from "./approvals-toolbar";
 import { ApprovalsFilterBar } from "./approvals-filter-bar";
 import { useApprovalsColumns } from "./use-approvals-columns";
+import { ApprovalStatusBadge, entityTypeLabel } from "./approval-status-badge";
+import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
+import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import { STATUS_OPTIONS, ENTITY_OPTIONS } from "./approvals-constants";
 import type {
   Approval,
   ApprovalEntityType,
+  ApprovalStatus,
   CreateApprovalInput,
   DecideApprovalInput,
 } from "@/types/projects";
@@ -37,30 +45,69 @@ import {
   PM_FILL_PANEL,
 } from "@/components/pm-chrome";
 
+const APPROVALS_TABLE_HEADERS = [
+  "Type",
+  "Title",
+  "Approver",
+  "Level",
+  "Due",
+  "Status",
+  "Actions",
+] as const;
+
+const APPROVAL_STATUS_VALUES: ApprovalStatus[] = [
+  "requested",
+  "pending",
+  "approved",
+  "rejected",
+  "changes_requested",
+  "escalated",
+  "cancelled",
+];
+
+const FILTER_DEFINITIONS = [
+  { param: "status", options: STATUS_OPTIONS.map((o) => o.value) },
+  { param: "entityType", options: ENTITY_OPTIONS.map((o) => o.value) },
+] as const;
+
 interface ProjectApprovalsPageProps {
   projectId: number;
 }
 
-export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
+export function ProjectApprovalsPage({
+  projectId,
+}: ProjectApprovalsPageProps) {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
   const canRequest = useCan("build:approvals:request");
   const canDecide = useCan("build:approvals:decide");
   const canManage = useCan("build:approvals:manage");
 
-  const [status, setStatus] = useState("all");
-  const [entityType, setEntityType] = useState("all");
+  const listFilters = useBuildListFilters({
+    filters: FILTER_DEFINITIONS,
+    withSearch: false,
+  });
+
   const [requestOpen, setRequestOpen] = useState(false);
-  const [defaultEntityType, setDefaultEntityType] = useState<ApprovalEntityType | undefined>(undefined);
+  const [defaultEntityType, setDefaultEntityType] = useState<
+    ApprovalEntityType | undefined
+  >(undefined);
   const [decideTarget, setDecideTarget] = useState<Approval | null>(null);
   const [delegateTarget, setDelegateTarget] = useState<Approval | null>(null);
   const [cancelTarget, setCancelTarget] = useState<Approval | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Approval | null>(null);
 
-  const { data, isLoading, isError, error, refetch } = useProjectApprovals(projectId, {
-    status: status === "all" ? undefined : status,
-    entityType: entityType === "all" ? undefined : entityType,
-  });
+  const statusValue = listFilters.value("status");
+  const entityTypeValue = listFilters.value("entityType");
+
+  const { data, isLoading, isError, error, refetch } = useProjectApprovals(
+    projectId,
+    {
+      status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
+      entityType:
+        entityTypeValue !== BUILD_FILTER_ALL ? entityTypeValue : undefined,
+    },
+  );
   const { data: membersRes } = useOrgMembers(1, 100);
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
 
@@ -69,68 +116,104 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
   const updateApproval = useUpdateApproval(projectId);
   const deleteApproval = useDeleteApproval(projectId);
 
-  const memberName = useCallback((userId: string | null): string => {
-    if (!userId) return "—";
-    const m = members.find((x) => x.userId === userId);
-    return m?.name ?? m?.email ?? "Unknown";
-  }, [members]);
+  const memberName = useCallback(
+    (userId: string | null): string => {
+      if (!userId) return "—";
+      const m = members.find((x) => x.userId === userId);
+      return m?.name ?? m?.email ?? "Unknown";
+    },
+    [members],
+  );
 
-  const handleOpenRequest = useCallback((preset?: ApprovalEntityType) => {
-    setDefaultEntityType(preset);
-    setRequestOpen(true);
-  }, []);
+  const ownerOf = useCallback(
+    (userId: string | null) => {
+      if (!userId) return null;
+      const m = members.find((x) => x.userId === userId);
+      return m ? { name: m.name ?? undefined, email: m.email } : null;
+    },
+    [members],
+  );
 
-  const handleRequestTask = useCallback(() => handleOpenRequest("task"), [handleOpenRequest]);
-  const handleRequestRelease = useCallback(() => handleOpenRequest("release"), [handleOpenRequest]);
-  const handleRequestMilestone = useCallback(() => handleOpenRequest("milestone"), [handleOpenRequest]);
+  const handleOpenRequest = useCallback(
+    (preset?: ApprovalEntityType) => {
+      setDefaultEntityType(preset);
+      setRequestOpen(true);
+    },
+    [],
+  );
 
-  const handleCreate = useCallback((input: CreateApprovalInput) => {
-    createApproval.mutate(input, {
-      onSuccess: () => {
-        toast.success("Approval requested");
-        setRequestOpen(false);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [createApproval]);
+  const handleRequestTask = useCallback(
+    () => handleOpenRequest("task"),
+    [handleOpenRequest],
+  );
+  const handleRequestRelease = useCallback(
+    () => handleOpenRequest("release"),
+    [handleOpenRequest],
+  );
+  const handleRequestMilestone = useCallback(
+    () => handleOpenRequest("milestone"),
+    [handleOpenRequest],
+  );
 
-  const handleDecide = useCallback((input: DecideApprovalInput) => {
-    if (!decideTarget) return;
-    decideApproval.mutate(
-      { approvalId: decideTarget.id, ...input },
-      {
+  const handleCreate = useCallback(
+    (input: CreateApprovalInput) => {
+      createApproval.mutate(input, {
         onSuccess: () => {
-          toast.success("Decision submitted");
-          setDecideTarget(null);
+          toast.success("Approval requested");
+          setRequestOpen(false);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }, [decideTarget, decideApproval]);
+      });
+    },
+    [createApproval],
+  );
 
-  const handleDelegate = useCallback((approverId: string) => {
-    if (!delegateTarget) return;
-    updateApproval.mutate(
-      { approvalId: delegateTarget.id, approverId },
-      {
-        onSuccess: () => {
-          toast.success("Approval delegated");
-          setDelegateTarget(null);
+  const handleDecide = useCallback(
+    (input: DecideApprovalInput) => {
+      if (!decideTarget) return;
+      decideApproval.mutate(
+        { approvalId: decideTarget.id, ...input },
+        {
+          onSuccess: () => {
+            toast.success("Decision submitted");
+            setDecideTarget(null);
+          },
+          onError: (e) => toast.error(getErrorMessage(e)),
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }, [delegateTarget, updateApproval]);
+      );
+    },
+    [decideTarget, decideApproval],
+  );
 
-  const handleEscalate = useCallback((row: Approval) => {
-    updateApproval.mutate(
-      { approvalId: row.id, status: "escalated" },
-      {
-        onSuccess: () => toast.success("Approval escalated"),
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }, [updateApproval]);
+  const handleDelegate = useCallback(
+    (approverId: string) => {
+      if (!delegateTarget) return;
+      updateApproval.mutate(
+        { approvalId: delegateTarget.id, approverId },
+        {
+          onSuccess: () => {
+            toast.success("Approval delegated");
+            setDelegateTarget(null);
+          },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+    },
+    [delegateTarget, updateApproval],
+  );
+
+  const handleEscalate = useCallback(
+    (row: Approval) => {
+      updateApproval.mutate(
+        { approvalId: row.id, status: "escalated" },
+        {
+          onSuccess: () => toast.success("Approval escalated"),
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+    },
+    [updateApproval],
+  );
 
   const handleCancelConfirm = useCallback(() => {
     if (!cancelTarget) return;
@@ -157,11 +240,6 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     });
   }, [deleteTarget, deleteApproval]);
 
-  const handleClearFilters = useCallback(() => {
-    setStatus("all");
-    setEntityType("all");
-  }, []);
-
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   const handleDecideDialogChange = useCallback((open: boolean) => {
@@ -180,6 +258,16 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     if (!open) setDeleteTarget(null);
   }, []);
 
+  const handleStatusChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
+
+  const handleEntityTypeChange = useCallback(
+    (value: string) => listFilters.setValue("entityType", value),
+    [listFilters],
+  );
+
   const columns = useApprovalsColumns({
     canDecide,
     canManage,
@@ -192,20 +280,36 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     setDeleteTarget,
   });
 
-  const pageState = usePageState({ permission: "build:approvals:view", isLoading, isError, error });
+  const renderMobileCard = useCallback(
+    (row: Approval) => {
+      const narrowStatus =
+        APPROVAL_STATUS_VALUES.find((v) => v === row.status) ?? "pending";
+      return (
+        <BuildMobileCard
+          title={row.title}
+          status={<ApprovalStatusBadge status={narrowStatus} />}
+          person={{ user: ownerOf(row.requestedById), role: "Approver" }}
+          meta={[
+            { label: "Type", value: entityTypeLabel(row.entityType) },
+            {
+              label: "Due",
+              value: row.dueAt ? row.dueAt.slice(0, 10) : "—",
+            },
+          ]}
+        />
+      );
+    },
+    [ownerOf],
+  );
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
-    return (
-      <PageWrapper title="Approvals" subtitle="Review and manage approval requests for this project">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
-          {null}
-        </PageState>
-      </PageWrapper>
-    );
-  }
+  const pageState = usePageState({
+    permission: "build:approvals:view",
+    isLoading,
+    isError,
+    error,
+  });
 
   const items = data ?? [];
-  const isFiltered = status !== "all" || entityType !== "all";
 
   return (
     <PageWrapper
@@ -213,10 +317,13 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
       subtitle="Review and manage approval requests for this project"
       filters={
         <ApprovalsFilterBar
-          status={status}
-          entityType={entityType}
-          onStatusChange={setStatus}
-          onEntityTypeChange={setEntityType}
+          statusValue={statusValue}
+          entityTypeValue={entityTypeValue}
+          isStatusActive={listFilters.isActive("status")}
+          isEntityTypeActive={listFilters.isActive("entityType")}
+          onStatusChange={handleStatusChange}
+          onEntityTypeChange={handleEntityTypeChange}
+          onClearAll={listFilters.clearAll}
         />
       }
       actions={
@@ -231,27 +338,38 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          {isLoading || pageState.kind === "loading" ? (
-            <DataTableSkeleton rows={12} columns={7} className="flex-1" />
-          ) : items.length === 0 ? (
-            <EmptyState
-              className={PM_FILL_PANEL}
-              illustrationPreset="approval"
-              title="No approvals yet"
-              description={isFiltered ? undefined : "Use approvals to get sign-off on tasks, milestones, and releases before they ship."}
-              filtersActive={isFiltered}
-              onClearFilters={handleClearFilters}
-            />
-          ) : (
+          <PageState
+            resolution={pageState}
+            loading={
+              <DataTableSkeleton
+                rows={12}
+                headers={APPROVALS_TABLE_HEADERS}
+                className="flex-1"
+              />
+            }
+            empty={
+              <EmptyState
+                className={PM_FILL_PANEL}
+                illustrationPreset="approval"
+                title="No approvals yet"
+                description="Use approvals to get sign-off on tasks, milestones, and releases before they ship."
+                filtersActive={listFilters.isFiltered}
+                onClearFilters={listFilters.clearAll}
+              />
+            }
+            onRetry={handleRetry}
+            className={PM_FILL_PANEL}
+          >
             <DataTable
               data={items}
               columns={columns}
               getRowKey={(row) => row.id}
               pagination={{ pageSize: 25 }}
               minWidth="720px"
+              mobileCard={renderMobileCard}
               className={PM_FILL_PANEL}
             />
-          )}
+          </PageState>
         </PmSection>
       </PmPageShell>
 
@@ -283,9 +401,11 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
         open={!!cancelTarget}
         onOpenChange={handleCancelDialogChange}
         title="Cancel this approval?"
-        description={cancelTarget?.title
-          ? `"${cancelTarget.title}" will be marked cancelled and removed from the approver's inbox.`
-          : "The request will be marked cancelled and removed from the approver's inbox."}
+        description={
+          cancelTarget?.title
+            ? `"${cancelTarget.title}" will be marked cancelled and removed from the approver's inbox.`
+            : "The request will be marked cancelled and removed from the approver's inbox."
+        }
         confirmLabel="Cancel approval"
         cancelLabel="Keep"
         onConfirm={handleCancelConfirm}
@@ -294,9 +414,11 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
         open={!!deleteTarget}
         onOpenChange={handleDeleteDialogChange}
         title="Delete this approval?"
-        description={deleteTarget?.title
-          ? `"${deleteTarget.title}" will be permanently deleted.`
-          : "This action cannot be undone."}
+        description={
+          deleteTarget?.title
+            ? `"${deleteTarget.title}" will be permanently deleted.`
+            : "This action cannot be undone."
+        }
         confirmLabel="Delete"
         destructive
         onConfirm={handleDeleteConfirm}
