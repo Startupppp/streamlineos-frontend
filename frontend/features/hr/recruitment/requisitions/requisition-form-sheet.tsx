@@ -1,5 +1,6 @@
 "use client";
 
+import { useHeadcountRequests } from "@/hooks/api/hr/headcount";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -46,6 +47,8 @@ interface RequisitionFormSheetProps {
 
 export function RequisitionFormSheet({ open, onClose }: RequisitionFormSheetProps) {
   const createRequisition = useCreateJobRequisition();
+  const { data: headcounts } = useHeadcountRequests();
+  const approvedHeadcounts = headcounts?.filter(h => h.status === "APPROVED") || [];
   const submitRequisition = useSubmitRequisition();
 
   const form = useForm<RequisitionFormValues>({
@@ -61,6 +64,7 @@ export function RequisitionFormSheet({ open, onClose }: RequisitionFormSheetProp
       type: "FULL_TIME",
       justification: "",
       targetDate: "",
+      headcountId: undefined,
     },
   });
 
@@ -71,12 +75,13 @@ export function RequisitionFormSheet({ open, onClose }: RequisitionFormSheetProp
         department: values.department || undefined,
         location: values.location || undefined,
         headcount: values.headcount,
-        budgetMin: values.budgetMin || undefined,
-        budgetMax: values.budgetMax || undefined,
+        budgetMin: values.budgetMin ? Number(values.budgetMin) : undefined,
+        budgetMax: values.budgetMax ? Number(values.budgetMax) : undefined,
         priority: values.priority,
         type: values.type,
         justification: values.justification || undefined,
         targetDate: values.targetDate || undefined,
+        headcountId: values.headcountId,
       },
       {
         onSuccess: () => {
@@ -96,12 +101,13 @@ export function RequisitionFormSheet({ open, onClose }: RequisitionFormSheetProp
         department: values.department || undefined,
         location: values.location || undefined,
         headcount: values.headcount,
-        budgetMin: values.budgetMin || undefined,
-        budgetMax: values.budgetMax || undefined,
+        budgetMin: values.budgetMin ? Number(values.budgetMin) : undefined,
+        budgetMax: values.budgetMax ? Number(values.budgetMax) : undefined,
         priority: values.priority,
         type: values.type,
         justification: values.justification || undefined,
         targetDate: values.targetDate || undefined,
+        headcountId: values.headcountId,
       },
       {
         onSuccess: (created) => {
@@ -133,6 +139,31 @@ export function RequisitionFormSheet({ open, onClose }: RequisitionFormSheetProp
 
         <Form {...form}>
           <SheetBody className="px-6 py-5 space-y-4">
+            <FormField
+              control={form.control}
+              name="headcountId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Link to Headcount Request (Optional)</FormLabel>
+                  <Select onValueChange={(v) => field.onChange(v ? parseInt(v) : undefined)} value={field.value?.toString() || ""}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select an approved headcount..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {approvedHeadcounts.map((hc) => (
+                        <SelectItem key={hc.id} value={hc.id.toString()}>
+                          {hc.requestedRole} ({hc.targetDate ? hc.targetDate : "No date"})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="title"
