@@ -1,5 +1,39 @@
 import { z } from "zod";
 
+export const RICE_INPUT_NAMES = ["reach", "impact", "confidence", "effort"] as const;
+export const RICE_SCORE_UNAVAILABLE_REASONS = ["missing_inputs", "non_positive_effort"] as const;
+export const ROADMAP_DELIVERY_SOURCES = ["epic_ticket", "project", "none"] as const;
+
+export const roadmapPrioritizationContract = z.object({
+  method: z.literal("rice"),
+  score: z.number().nullable(),
+  isComplete: z.boolean(),
+  missingInputs: z.array(z.enum(RICE_INPUT_NAMES)),
+  unavailableReason: z.enum(RICE_SCORE_UNAVAILABLE_REASONS).nullable(),
+});
+
+export const roadmapSignalsContract = z.object({
+  itemId: z.number().int(),
+  prioritization: roadmapPrioritizationContract,
+  demand: z.object({
+    votes: z.number().int(),
+    linkedFeedbackCount: z.number().int(),
+    openLinkedFeedbackCount: z.number().int(),
+  }),
+  delivery: z.object({
+    projectId: z.number().int().nullable(),
+    epicTicketId: z.number().int().nullable(),
+    source: z.enum(ROADMAP_DELIVERY_SOURCES),
+    linkedTicketCount: z.number().int(),
+    countedTicketCount: z.number().int(),
+    completedTicketCount: z.number().int(),
+    progressPercent: z.number().int().nullable(),
+  }),
+});
+
+export type RoadmapPrioritization = z.infer<typeof roadmapPrioritizationContract>;
+export type RoadmapSignals = z.infer<typeof roadmapSignalsContract>;
+
 export const roadmapItemContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -21,6 +55,7 @@ export const roadmapItemContract = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   deletedAt: z.string().nullable(),
+  prioritization: roadmapPrioritizationContract,
 });
 
 export const roadmapPageContract = z.object({

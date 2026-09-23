@@ -64,6 +64,7 @@ export function NestedGroup({
   displayOptions,
   onTicketClick,
   selection,
+  focusedTicketId,
 }: NestedGroupProps) {
   const status = getGroupStatus(groupBy, groupKey, items);
   return (
@@ -90,6 +91,7 @@ export function NestedGroup({
           displayOptions={displayOptions}
           onTicketClick={onTicketClick}
           selection={selection}
+          focusedTicketId={focusedTicketId}
         />
       </AccordionContent>
     </AccordionItem>
@@ -106,6 +108,7 @@ export function DroppableGroup({
   onTicketClick,
   shouldReduceMotion,
   selection,
+  focusedTicketId,
 }: DroppableGroupProps) {
   const { visibleCount, hiddenCount, showMore } = useGroupRenderLimit(
     items.length,
@@ -154,6 +157,7 @@ export function DroppableGroup({
                     isDragging={dragSnapshot.isDragging}
                     isSelected={selection?.selected.has(ticket.id)}
                     onSelect={selection ? handleItemSelect : undefined}
+                    isKeyboardFocused={focusedTicketId === ticket.id}
                   />
                 </div>
               )}

@@ -9,6 +9,12 @@ const mockUseCan = jest.fn();
 const mockUseProjectRisks = jest.fn();
 const mockUseProjectRiskStats = jest.fn();
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  usePathname: () => "/build/1/risks",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 function riskPage<T>(rows: T[]) {
   return { data: rows, hasMore: false, nextCursor: null };
 }

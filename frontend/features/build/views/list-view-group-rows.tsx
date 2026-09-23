@@ -60,6 +60,7 @@ export interface GroupRowsProps {
   displayOptions: ListViewItemProps["displayOptions"];
   onTicketClick: ListViewItemProps["onClick"];
   selection?: ListSelection;
+  focusedTicketId?: number | null;
 }
 
 export function GroupRows({
@@ -70,6 +71,7 @@ export function GroupRows({
   displayOptions,
   onTicketClick,
   selection,
+  focusedTicketId,
 }: GroupRowsProps) {
   const { visibleCount, hiddenCount, showMore } = useGroupRenderLimit(
     items.length,
@@ -91,6 +93,7 @@ export function GroupRows({
             displayOptions={displayOptions}
             isSelected={selection?.selected.has(ticket.id)}
             onSelect={selection ? handleItemSelect : undefined}
+            isKeyboardFocused={focusedTicketId === ticket.id}
           />
         ))}
       </div>

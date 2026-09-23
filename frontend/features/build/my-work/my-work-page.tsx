@@ -23,7 +23,7 @@ import { MY_WORK_VIEWS } from "./my-work-view";
 import { MyWorkContent } from "./my-work-content";
 import { MyWorkSortControl } from "./my-work-sort-control";
 import { useMyWorkBulk } from "./use-my-work-bulk";
-import { useMyWorkKeyboard } from "./use-my-work-keyboard";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import {
   useMyWorkData,
   parseWorkTab,
@@ -90,7 +90,7 @@ export function MyWorkPage() {
 
   const bulk = useMyWorkBulk(activeData?.data ?? [], sortField, sortDirection);
 
-  useMyWorkKeyboard({
+  useBuildListKeyboard({
     itemCount: kanbanTickets.length,
     onOpen: (index) => {
       const ticket = kanbanTickets[index];

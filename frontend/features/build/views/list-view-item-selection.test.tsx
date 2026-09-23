@@ -7,8 +7,17 @@ jest.mock("framer-motion", () => ({
     div: ({
       children,
       className,
-    }: React.HTMLAttributes<HTMLDivElement>) => (
-      <div className={className}>{children}</div>
+      initial: _initial,
+      animate: _animate,
+      exit: _exit,
+      transition: _transition,
+      variants: _variants,
+      whileHover: _whileHover,
+      ...rest
+    }: React.HTMLAttributes<HTMLDivElement> & Record<string, unknown>) => (
+      <div className={className} {...rest}>
+        {children}
+      </div>
     ),
   },
   useReducedMotion: () => false,
@@ -177,5 +186,49 @@ describe("ListViewItem — checkbox interaction", () => {
     );
     await user.click(screen.getByRole("checkbox"));
     expect(onSelect).toHaveBeenCalledWith(42, false);
+  });
+});
+
+describe("ListViewItem — keyboard focus is visible and announced", () => {
+  it("marks the focused row as current so assistive tech announces the position", () => {
+    const { container } = render(
+      <ListViewItem ticket={TICKET} onClick={jest.fn()} isKeyboardFocused />,
+    );
+
+    expect(container.querySelector("[aria-current]")).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
+  });
+
+  it("gives the focused row a ring, so keyboard focus is not invisible", () => {
+    const { container } = render(
+      <ListViewItem ticket={TICKET} onClick={jest.fn()} isKeyboardFocused />,
+    );
+
+    const row = container.querySelector('[data-keyboard-focused="true"]');
+    expect(row).toBeTruthy();
+    expect(row?.className).toContain("ring-primary/40");
+  });
+
+  it("leaves an unfocused row unmarked, so not every row reads as current", () => {
+    const { container } = render(
+      <ListViewItem
+        ticket={TICKET}
+        onClick={jest.fn()}
+        isKeyboardFocused={false}
+      />,
+    );
+
+    expect(container.querySelector("[aria-current]")).toBeNull();
+    expect(container.querySelector("[data-keyboard-focused]")).toBeNull();
+  });
+
+  it("stays unmarked when no focus is passed, so existing callers are unaffected", () => {
+    const { container } = render(
+      <ListViewItem ticket={TICKET} onClick={jest.fn()} />,
+    );
+
+    expect(container.querySelector("[aria-current]")).toBeNull();
   });
 });

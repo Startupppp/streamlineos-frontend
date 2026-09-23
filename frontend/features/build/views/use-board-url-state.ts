@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useProject } from "@/hooks/api";
 import { useViews, useProjectBoardTickets } from "@/hooks/api/build";
+import { useBugs } from "@/hooks/api/build/bugs";
 import { useBoardSavedViews } from "./use-board-saved-views";
 import {
   applyDisplayOptionParams,
@@ -13,6 +14,7 @@ import {
 } from "./use-display-options";
 import type { DisplayOptions } from "@/features/build/shared/types";
 import { parseViewType, type ViewType } from "./view-switcher";
+import { fromSavedViewLayout } from "@/lib/build/view-types";
 import {
   INITIAL_FILTERS,
   type FilterState as WorkloadFilterState,
@@ -65,6 +67,8 @@ export function useBoardUrlState(
   const filterLabels = searchParams.get("labels") ?? "";
   const filterCycle = searchParams.get("cycle") ?? "";
   const filterModule = searchParams.get("module") ?? "";
+  const filterSeverity = searchParams.get("severity") ?? "";
+  const filterQaState = searchParams.get("qaState") ?? "";
   const createParamOpen = searchParams.get("create") === "1";
   const createCycleParam = searchParams.get("cycleId");
   const createDefaultCycleId =
@@ -156,7 +160,8 @@ export function useBoardUrlState(
         else next.delete(k);
       }
     }
-    if (savedView.layoutType) next.set("view", savedView.layoutType);
+    if (savedView.layoutType)
+      next.set("view", fromSavedViewLayout(savedView.layoutType));
     if (
       savedView.displayOptions &&
       Object.keys(savedView.displayOptions).length > 0
@@ -180,12 +185,31 @@ export function useBoardUrlState(
   const statuses =
     data && "statuses" in data ? (data.statuses as ProjectStatus[]) : undefined;
 
+  const qaFilterActive =
+    filterType === "BUG" && !!(filterSeverity || filterQaState);
+
+  const { data: qaMatches, isLoading: qaMatchesLoading } = useBugs(
+    qaFilterActive ? projectId : undefined,
+    {
+      severity: filterSeverity || undefined,
+      status: filterQaState || undefined,
+    },
+  );
+
+  const qaMatchIds = useMemo(() => {
+    if (!qaFilterActive || !qaMatches) return null;
+    return new Set(qaMatches.map((bug) => bug.id));
+  }, [qaFilterActive, qaMatches]);
+
   const filteredTickets = useMemo(() => {
     let tickets = filterHiddenCompletedTickets(
       allTickets,
       hideCompleted,
       statuses,
     );
+    if (qaMatchIds) {
+      tickets = tickets.filter((ticket) => qaMatchIds.has(Number(ticket.id)));
+    }
     if (displayOptions.completedIssues !== "all") {
       if (displayOptions.completedIssues === "none") {
         tickets = filterHiddenCompletedTickets(tickets, true, statuses);
@@ -207,7 +231,13 @@ export function useBoardUrlState(
       }
     }
     return tickets;
-  }, [allTickets, hideCompleted, displayOptions.completedIssues, statuses]);
+  }, [
+    allTickets,
+    hideCompleted,
+    displayOptions.completedIssues,
+    statuses,
+    qaMatchIds,
+  ]);
 
   const members: BoardMember[] = useMemo(() => {
     if (!data?.members) return [];
@@ -245,10 +275,15 @@ export function useBoardUrlState(
     filterAssigneeId ||
     filterLabels ||
     filterCycle ||
-    filterModule
+    filterModule ||
+    filterSeverity ||
+    filterQaState
   );
   const showEmptyFilterState =
-    !ticketsLoading && hasActiveFilters && filteredTickets.length === 0;
+    !ticketsLoading &&
+    !qaMatchesLoading &&
+    hasActiveFilters &&
+    filteredTickets.length === 0;
 
   const handleClearView = useCallback(() => {
     const next = new URLSearchParams(searchParams.toString());
@@ -267,6 +302,8 @@ export function useBoardUrlState(
     if (filterLabels) filters.labels = filterLabels;
     if (filterCycle) filters.cycle = filterCycle;
     if (filterModule) filters.module = filterModule;
+    if (filterSeverity) filters.severity = filterSeverity;
+    if (filterQaState) filters.qaState = filterQaState;
     return filters;
   }, [
     q,
@@ -277,6 +314,8 @@ export function useBoardUrlState(
     filterLabels,
     filterCycle,
     filterModule,
+    filterSeverity,
+    filterQaState,
   ]);
 
   const {
@@ -371,8 +410,20 @@ export function useBoardUrlState(
     next.delete("labels");
     next.delete("cycle");
     next.delete("module");
+    next.delete("severity");
+    next.delete("qaState");
     router.replace(`?${next.toString()}`, { scroll: false });
   }, [router, searchParams]);
+
+  const handleQaFilterChange = useCallback(
+    (key: "severity" | "qaState", value: string) => {
+      const next = currentSearchParams(searchParams);
+      if (value) next.set(key, value);
+      else next.delete(key);
+      router.replace(`?${next.toString()}`, { scroll: false });
+    },
+    [router, searchParams],
+  );
 
   const handleCreateOpenChange = useCallback(
     (open: boolean) => {
@@ -401,6 +452,8 @@ export function useBoardUrlState(
     filterLabels,
     filterCycle,
     filterModule,
+    filterSeverity,
+    filterQaState,
     selectedTicketId,
     highlightCommentId,
     viewId,
@@ -435,6 +488,7 @@ export function useBoardUrlState(
     hasActiveFilters,
     handleViewChange,
     handleClearSearch,
+    handleQaFilterChange,
     handleClearView,
     handleCreateOpenChange,
     handleOpenSaveView,

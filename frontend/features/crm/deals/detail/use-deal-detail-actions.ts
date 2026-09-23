@@ -2,10 +2,13 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import {
   useDealMeetings,
   useCreateDealMeeting,
@@ -30,6 +33,15 @@ interface MeetingSubmission {
 
 interface ProjectSubmission {
   name: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+interface CreateProjectFromDealPayload {
+  dealId: number;
+  name: string;
+  description?: string;
   startDate?: string;
   endDate?: string;
 }
@@ -44,7 +56,31 @@ export function useDealDetailActions(dealId: number) {
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [meetingDialogOpen, setMeetingDialogOpen] = useState(false);
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
-  const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const queryClient = useQueryClient();
+
+  const createProjectFromDeal = useAuthorizedMutation<
+    { id: number },
+    Error,
+    CreateProjectFromDealPayload
+  >("build:create", {
+    mutationKey: ["projects", "create-from-deal"],
+    mutationFn: (payload) =>
+      apiClient.post<{ id: number }>(
+        "/build/from-deal",
+        payload,
+        undefined,
+        buildFromDealContract,
+      ),
+    onSuccess: (created) => {
+      void queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.all,
+      });
+      toast.success("Project created successfully");
+      setCreateProjectOpen(false);
+      router.push(`/build/${String(created.id)}`);
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
 
   const {
     data: meetings,
@@ -128,34 +164,22 @@ export function useDealDetailActions(dealId: number) {
   );
 
   const handleCreateProject = useCallback(
-    async (data: ProjectSubmission) => {
-      if (!data.name.trim()) {
+    (data: ProjectSubmission) => {
+      const name = data.name.trim();
+      if (!name) {
         toast.error("Project name is required");
         return;
       }
-      setIsCreatingProject(true);
-      try {
-        const newProject = await apiClient.post<{ id: number }>(
-          "/build/from-deal",
-          {
-            dealId,
-            name: data.name.trim(),
-            startDate: data.startDate,
-            endDate: data.endDate,
-          },
-          undefined,
-          buildFromDealContract,
-        );
-        toast.success("Project created successfully");
-        setCreateProjectOpen(false);
-        router.push(`/build/${newProject.id}`);
-      } catch {
-        toast.error("Failed to create project");
-      } finally {
-        setIsCreatingProject(false);
-      }
+      const description = data.description?.trim();
+      createProjectFromDeal.mutate({
+        dealId,
+        name,
+        ...(description ? { description } : {}),
+        ...(data.startDate ? { startDate: data.startDate } : {}),
+        ...(data.endDate ? { endDate: data.endDate } : {}),
+      });
     },
-    [dealId, router],
+    [createProjectFromDeal, dealId],
   );
 
   const handleOpenMeetingDialog = useCallback(() => setMeetingDialogOpen(true), []);
@@ -181,6 +205,6 @@ export function useDealDetailActions(dealId: number) {
     setCreateProjectOpen,
     handleOpenCreateProject,
     handleCreateProject,
-    isCreatingProject,
+    isCreatingProject: createProjectFromDeal.isPending,
   };
 }

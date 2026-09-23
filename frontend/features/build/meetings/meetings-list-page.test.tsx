@@ -2,6 +2,12 @@ import { render, screen } from "@testing-library/react";
 import { MeetingsListPage } from "./meetings-list-page";
 import { ApiError } from "@/lib/api-envelope";
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  usePathname: () => "/build/1/meetings",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 jest.mock("@/hooks/api/build", () => ({
   useMeetings: jest.fn(),
   useCreateMeeting: jest.fn(),

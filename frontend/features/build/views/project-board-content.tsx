@@ -14,7 +14,7 @@ import { WorkloadView } from "./workload-view";
 import { BulkActionBar } from "@/features/build/backlog/bulk-action-bar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { SearchX } from "lucide-react";
+import { SearchX, WifiOff } from "lucide-react";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
 import type { ViewType } from "./view-switcher";
 
@@ -29,6 +29,7 @@ import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import type { ProjectStatus, BoardMember } from "./use-board-url-state";
 import { useCan } from "@/hooks/api/access";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 
@@ -79,6 +80,7 @@ interface ProjectBoardContentProps {
   isError: boolean;
   error: unknown;
   onRetry: () => void;
+  focusedTicketId?: number | null;
 }
 
 export function ProjectBoardContent({
@@ -115,8 +117,10 @@ export function ProjectBoardContent({
   isError,
   error,
   onRetry,
+  focusedTicketId,
 }: ProjectBoardContentProps) {
   const shouldReduceMotion = useReducedMotion();
+  const isOnline = useOnlineStatus();
   const canUpdate = useCan("build:tickets:update");
   const resolution = usePageState({
     permission: "build:tickets:view",
@@ -129,6 +133,29 @@ export function ProjectBoardContent({
   const selection = useMemo(
     () => canUpdate ? { selected: selectedIds, onChange: onSelectionChange } : undefined,
     [canUpdate, selectedIds, onSelectionChange],
+  );
+
+  const offlineEmptyState = (
+    <div className="relative flex h-full flex-1 flex-col items-center justify-center py-12">
+      <div
+        className={cn(
+          PM_PANEL,
+          "relative flex w-full max-w-sm flex-col items-center gap-3 px-6 py-8 text-center",
+        )}
+      >
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-primary/[0.06] shadow-sm">
+          <WifiOff className="h-5 w-5 text-muted-foreground" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-foreground">
+            You&apos;re offline
+          </p>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Results may not be up to date. Reconnect to see the latest tickets.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 
   const filteredEmptyState = (
@@ -232,6 +259,7 @@ export function ProjectBoardContent({
                   showEmptyRows={displayOptions.showEmptyRows}
                   projectId={projectId}
                   selection={selection}
+                  focusedTicketId={focusedTicketId}
                 />
               </div>
             </ScrollArea>
@@ -298,10 +326,10 @@ export function ProjectBoardContent({
             />
           </motion.div>
         );
-      case "gantt":
+      case "timeline":
         return (
           <motion.div
-            key="gantt"
+            key="timeline"
             className="flex min-h-0 flex-1 flex-col overflow-hidden pb-2 pt-0"
             variants={viewVariants}
             initial="initial"
@@ -349,7 +377,7 @@ export function ProjectBoardContent({
       <PageState
         resolution={resolution}
         loading={<KanbanBoardSkeleton />}
-        empty={filteredEmptyState}
+        empty={isOnline ? filteredEmptyState : offlineEmptyState}
         onRetry={onRetry}
         className="flex-1"
       >

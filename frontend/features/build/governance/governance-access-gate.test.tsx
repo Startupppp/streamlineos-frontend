@@ -6,6 +6,12 @@ const mockUseCan = jest.fn();
 const mockUseProjectRisks = jest.fn();
 const mockUseProjectDecisions = jest.fn();
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  usePathname: () => "/build/1/risks",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useAccess: () => mockUseAccess(),
   useCan: () => mockUseCan(),
