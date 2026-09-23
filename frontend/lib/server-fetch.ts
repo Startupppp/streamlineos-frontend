@@ -8,7 +8,10 @@ import {
   type ResponseContract,
 } from "@/lib/api-envelope";
 import { getServerAuth } from "@/lib/get-server-auth";
-import { withCorrelation } from "@/lib/observability/with-correlation";
+import {
+  CORRELATION_HEADER,
+  withCorrelation,
+} from "@/lib/observability/with-correlation";
 
 const TIMEOUT_MS = 8_000;
 
@@ -19,6 +22,7 @@ async function requestWithToken<T>(
   contract?: ResponseContract<T>,
 ): Promise<T> {
   const headers = withCorrelation(new Headers(init.headers));
+  const correlationId = headers.get(CORRELATION_HEADER) ?? undefined;
   headers.set("Authorization", `Bearer ${token}`);
   if (init.body !== undefined && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
@@ -38,10 +42,14 @@ async function requestWithToken<T>(
       "The service is taking too long to respond. Please try again.",
       503,
       "BACKEND_UNREACHABLE",
-      { path, cause: error instanceof Error ? error.message : String(error) },
+      {
+        path,
+        correlationId,
+        cause: error instanceof Error ? error.message : String(error),
+      },
     );
   }
-  return parseApiResponse<T>(res, contract, path);
+  return parseApiResponse<T>(res, contract, path, correlationId);
 }
 
 const serverFetch = cache(

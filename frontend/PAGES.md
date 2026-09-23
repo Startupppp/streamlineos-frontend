@@ -382,7 +382,7 @@ Responsive browser acceptance remains unverified. Evidence:
 
 ### Employees
 - [ ] `/hr/employees` · **HR** · hooks: `requirePermission("hr:employees:view")`, `→ features/hr/employees` · §8: L ? C ? E ? D ? F ? P ? Perm ✓ States ?
-- [ ] `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees` · §8: E ? D ? Perm ? States ?
+- [ ] `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees` · §8: E ? D ? Perm ? States ✓ (HRMS audit H-01: a non-404 read failure renders in place with a support code, not `error.tsx`)
 - [ ] `/hr/employees/find-expert` · **HR** · hooks: `→ features/hr/employees` · §8: F ? States ?
 - [ ] `/hr/employees/skills-matrix` · **HR** · hooks: `→ features/hr/employees` · §8: L ? F ? States ?
 
@@ -507,7 +507,7 @@ Responsive browser acceptance remains unverified. Evidence:
 - [ ] `/hr/delegations` · **HR** · hooks: `→ features/hr/delegations` · §8: L ? C ? D ? Perm ? States ?
 
 ### HR Analytics, Helpdesk, Cases
-- [ ] `/hr/analytics` · **HR** · hooks: `→ features/hr/analytics` · §8: F ? States ?
+- [ ] `/hr/analytics` · **HR** · hooks: `→ features/hr/analytics` · §8: F ? States ✓ (HRMS audit H-02: reads are `INLINE_READ_ERROR`, so the page's own retry and no-people empty state are reachable)
 - [ ] `/hr/helpdesk` · **HR** · hooks: `→ features/hr/helpdesk` · §8: L ? F ? P ? States ?
 - [ ] `/hr/cases` · **HR** · hooks: `→ features/hr/cases` · §8: L ? C ? F ? P ? Perm ? States ?
 - [ ] `/hr/service-delivery` · **HR** · hooks: `→ features/hr/service-delivery` · §8: States ?

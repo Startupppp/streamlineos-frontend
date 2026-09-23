@@ -9,6 +9,7 @@ import { useRecruitmentStats } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { getCorrelationId } from "@/lib/api-envelope";
 import {
   CONTENT_FILL_PANEL,
   FILTER_SELECT_TRIGGER,
@@ -175,7 +176,13 @@ export function AnalyticsPageClient() {
     return 1;
   }, [dateRange]);
 
-  const { data, isLoading: isAnalyticsLoading, isError, refetch } = useHrAnalytics();
+  const {
+    data,
+    isLoading: isAnalyticsLoading,
+    isError,
+    error,
+    refetch,
+  } = useHrAnalytics();
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const { data: recruitmentStats, isLoading: isRecruitmentLoading } =
     useRecruitmentStats();
@@ -195,15 +202,37 @@ export function AnalyticsPageClient() {
   }, []);
 
   if (isError) {
+    const supportCode = getCorrelationId(error);
     return (
       <PageWrapper
         title="HR Analytics"
         subtitle="Workforce insights and operational metrics">
         <EmptyState
           illustrationPreset="alert"
-          title="Failed to load analytics"
-          description="Something went wrong. Please try again."
+          title="Analytics didn't load"
+          description={
+            supportCode
+              ? `We couldn't reach the analytics service. Try again — if it keeps happening, quote ${supportCode} to support.`
+              : "We couldn't reach the analytics service. Try again in a moment."
+          }
           action={{ label: "Retry", onClick: handleRetry }}
+          className={CONTENT_FILL_PANEL}
+        />
+      </PageWrapper>
+    );
+  }
+
+  if (!isAnalyticsLoading && data !== undefined && data.headcount.total === 0) {
+    return (
+      <PageWrapper
+        title="HR Analytics"
+        subtitle="Workforce insights and operational metrics">
+        <EmptyState
+          illustrationPreset="team"
+          title="No people to report on yet"
+          description="Analytics fill in as you add employees — headcount, attendance, leave and attrition all read from your people records."
+          action={{ label: "Add your first employee", href: "/hr/onboarding" }}
+          secondaryAction={{ label: "View people", href: "/hr/employees" }}
           className={CONTENT_FILL_PANEL}
         />
       </PageWrapper>
