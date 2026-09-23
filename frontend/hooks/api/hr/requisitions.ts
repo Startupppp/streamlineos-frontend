@@ -33,8 +33,8 @@ export interface JobRequisition {
   department?: string | null;
   location?: string | null;
   headcount: number;
-  budgetMin?: string;
-  budgetMax?: string;
+  budgetMin?: string | null;
+  budgetMax?: string | null;
   hiringManagerId?: string | null;
   priority: string;
   type: string;
@@ -45,6 +45,7 @@ export interface JobRequisition {
   rejectionReason?: string | null;
   justification?: string | null;
   targetDate?: string | null;
+  headcountId?: number | null;
   linkedJobId?: number | null;
   createdAt: string;
 }
@@ -59,11 +60,26 @@ export function useJobRequisitions(status?: string) {
   });
 }
 
+export interface CreateJobRequisitionInput {
+  title: string;
+  department?: string | null;
+  location?: string | null;
+  headcount: number;
+  budgetMin?: number;
+  budgetMax?: number;
+  priority: string;
+  type: string;
+  justification?: string | null;
+  targetDate?: string | null;
+  headcountId?: number | null;
+  hiringManagerId?: string | null;
+}
+
 export function useCreateJobRequisition() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "requisitions", "create"],
-    mutationFn: (data: Omit<JobRequisition, "id" | "orgId" | "requestedBy" | "status" | "createdAt">) =>
+    mutationFn: (data: CreateJobRequisitionInput) =>
       apiClient.post<JobRequisition>("/hr/recruitment/requisitions", data, undefined, createRequisitionC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.requisitions() }),
   });
