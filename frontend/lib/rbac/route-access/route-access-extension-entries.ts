@@ -152,30 +152,6 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
       "Organisation-wide chat configuration is administrative. Only org owners and admins hold chat:org-settings:manage; it is org-only and cannot be delegated.",
   },
   {
-    prefix: "/build/workspaces/[pmWorkspaceId]",
-    product: "build",
-    permission: "build:view",
-    reason:
-      "A workspace body is the project list filtered to that workspace, so it carries the project read key. The organization Workspaces index at /build/workspaces owns build:workspaces:view, and without this entry the renamed index would extend that stricter key over every workspace a build:view caller reaches from the scope switcher, which gates on build:view alone.",
-    backendRoute: { method: "get", path: "/build" },
-  },
-  {
-    prefix: "/build/workspaces/[pmWorkspaceId]/products",
-    product: "build",
-    permission: "build:managed-products:view",
-    reason:
-      "Workspace-scoped product list. Without a dynamic-segment entry the whole /build/workspaces/* tree collapses to the generic build:view, so a caller holding build:view but not build:managed-products:view would be hidden the sidebar link and still reach the URL.",
-    backendRoute: { method: "get", path: "/build/managed-products" },
-  },
-  {
-    prefix: "/build/workspaces/[pmWorkspaceId]/teams",
-    product: "build",
-    permission: "build:teams:view",
-    reason:
-      "Workspace-scoped team list carries the team read key, not the generic build:view the /build nav entry owns.",
-    backendRoute: { method: "get", path: "/build/teams" },
-  },
-  {
     prefix: "/build/managed-products/[managedProductId]/projects",
     product: "build",
     permission: "build:view",
@@ -355,14 +331,6 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     backendRoute: { method: "post", path: "/ai/projects/{projectId}/summary" },
   },
   {
-    prefix: "/build/workspaces/[pmWorkspaceId]/all-work",
-    product: "build",
-    permission: "build:tickets:view",
-    reason:
-      "Workspace all-work aggregates tickets across projects. First read is GET /build/all-work, which carries @RequirePermission('build:tickets:view'). The workspace-work nav destination already declares this key.",
-    backendRoute: { method: "get", path: "/build/all-work" },
-  },
-  {
     prefix: "/build/[projectId]/issues",
     product: "build",
     permission: "build:tickets:view",
@@ -377,30 +345,6 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     reason:
       "Project workload renders the project ticket dataset. First read is GET /build/{projectId}/tickets, which requires build:tickets:view.",
     backendRoute: { method: "get", path: "/build/{projectId}/tickets" },
-  },
-  {
-    prefix: "/build/workspaces/[pmWorkspaceId]/overview",
-    product: "build",
-    permission: "build:workspaces:view",
-    reason:
-      "PM Workspace overview. Without this entry the route inherits the workspace base path nav resolution which returns the generic build:view, letting in callers who hold build:view but not build:workspaces:view. First read is GET /build/workspaces/{pmWorkspaceId}, which carries build:workspaces:view.",
-    backendRoute: { method: "get", path: "/build/workspaces/{pmWorkspaceId}" },
-  },
-  {
-    prefix: "/build/workspaces/[pmWorkspaceId]/roadmap",
-    product: "build",
-    permission: "build:roadmap:view",
-    reason:
-      "Workspace-scoped roadmap. Without this entry the route falls back to the generic build:view the main /build nav entry owns, allowing callers who hold build:view but not build:roadmap:view to reach the roadmap board. First read is GET /build/roadmap, which carries build:roadmap:view.",
-    backendRoute: { method: "get", path: "/build/roadmap" },
-  },
-  {
-    prefix: "/build/workspaces/[pmWorkspaceId]/goals",
-    product: "build",
-    permission: "build:goals:view",
-    reason:
-      "Workspace-scoped goals and OKRs. Without this entry the route falls back to the generic build:view, allowing callers who hold build:view but not build:goals:view to reach the goals board. First read is GET /goals, which carries build:goals:view.",
-    backendRoute: { method: "get", path: "/goals" },
   },
   {
     prefix: "/build/managed-products/[managedProductId]/roadmap",

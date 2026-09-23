@@ -39,7 +39,6 @@ import {
 import { fadeUp, fadeUpReduced } from "@/lib/motion-presets";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { getErrorMessage } from "@/lib/get-error-message";
 import type { ProjectListItem } from "@/types/projects/projects";
 import type {
   ProjectOrderBy,
@@ -218,12 +217,10 @@ function NewProjectTrigger({
 }
 
 interface ProjectsPageProps {
-  pmWorkspaceId?: string;
   managedProductId?: number;
 }
 
 export function ProjectsPage({
-  pmWorkspaceId,
   managedProductId,
 }: ProjectsPageProps) {
   const router = useRouter();
@@ -345,7 +342,6 @@ export function ProjectsPage({
     limit: viewMode === "grid" ? 12 : 25,
     search: debouncedSearch || undefined,
     status: activeFilters.status,
-    ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
     ...(managedProductId !== undefined ? { managedProductId } : {}),
   });
 

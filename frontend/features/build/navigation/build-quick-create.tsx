@@ -67,14 +67,11 @@ export function BuildQuickCreate({
 
   const createScope = useMemo<ProjectCreateScope>(
     () => ({
-      ...(scope.pmWorkspaceId !== null
-        ? { pmWorkspaceId: scope.pmWorkspaceId }
-        : {}),
       ...(scope.managedProductId !== null
         ? { managedProductId: scope.managedProductId }
         : {}),
     }),
-    [scope.pmWorkspaceId, scope.managedProductId],
+    [scope.managedProductId],
   );
 
   const handleAction = useCallback(
@@ -97,13 +94,7 @@ export function BuildQuickCreate({
 
   const handleCreateProduct = useCallback(
     (input: CreateManagedProductInput) => {
-      const payload: CreateManagedProductInput = {
-        ...input,
-        ...(scope.pmWorkspaceId !== null
-          ? { pmWorkspaceId: scope.pmWorkspaceId }
-          : {}),
-      };
-      createProduct.mutate(payload, {
+      createProduct.mutate(input, {
         onSuccess: () => {
           toast.success("Product created");
           setProductOpen(false);
@@ -111,7 +102,7 @@ export function BuildQuickCreate({
         onError: (error) => toast.error(getErrorMessage(error)),
       });
     },
-    [createProduct, scope.pmWorkspaceId],
+    [createProduct],
   );
 
   function renderAction(action: BuildCreateAction) {

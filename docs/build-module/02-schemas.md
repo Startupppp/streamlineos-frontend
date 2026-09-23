@@ -13,34 +13,31 @@ Database migrations remain authoritative for storage. Zod schemas are authoritat
 
 ## Scope hierarchy
 
+PM Workspace is removed. Migration `1159_build_remove_pm_workspaces` dropped `build.pm_workspaces`, `build.pm_workspace_memberships`, and every `pm_workspace_id` column (`build.projects`, `build.managed_products`, `build.project_teams`, `build.project_workspace_members`, `public.project_client_grants`). The rollback at `migrations/rollback/1159_build_remove_pm_workspaces.down.sql` restores shape only — the rows are gone.
+
 ```text
 Organization
-├── optional PM Workspace
-│   ├── Managed Product
-│   ├── Team
-│   └── Project
-├── standalone Managed Product
-├── standalone Team
-└── standalone Project
-    ├── Work Items
-    ├── Cycles
-    ├── Releases
-    └── Project-owned governance/configuration
+├── Products
+├── Projects
+├── Teams
+├── Programs
+├── Portfolios
+└── Goals, roadmaps, reports and work
 ```
 
-`orgId` is mandatory on every tenant-owned table and participates in foreign keys or verified lookup predicates. `pmWorkspaceId` and `managedProductId` are optional project groupings.
+`orgId` is mandatory on every tenant-owned table and participates in foreign keys or verified lookup predicates. `managedProductId` is an optional project grouping; a project without a product is an organization-level project.
 
 ## Canonical entities
 
 | Entity | Required identity and fields | Key relations | Lifecycle |
 |---|---|---|---|
-| Project | `id`, `orgId`, `key`, `name`, `status`, dates | optional workspace/product/deal; manager/client memberships | soft delete |
+| Project | `id`, `orgId`, `key`, `name`, `status`, dates | optional product/deal; manager/client memberships | soft delete |
 | WorkItem | `id`, `orgId`, `projectId`, number/key, type, title, status, priority, rank, reporter | parent, assignees, cycle, module, release, labels, relations | soft delete + version |
 | Cycle | `id`, `orgId`, `projectId`, name, start/end, status | work items | archive/complete; no Sprint table after migration |
-| ManagedProduct | `id`, `orgId`, optional workspace, name, status | projects, feedback, goals | soft delete |
-| PmWorkspace | `pmWorkspaceId`, `orgId`, name | products, projects, teams, memberships | soft delete |
+| ManagedProduct | `id`, `orgId`, name, status | projects, feedback, goals | soft delete |
 | Portfolio/Program | `id`, `orgId`, name, status | projects or portfolios through mapping tables | soft delete |
-| Team | `id`, `orgId`, optional workspace, name | membership actors and projects | soft delete |
+| Team | `id`, `orgId`, name | membership actors and projects | soft delete |
+| BuildMember | `id`, `orgId`, `membershipId`, `role`, `addedAt` | organization membership | roster row; no workspace relationship |
 | Goal | `id`, `orgId`, scope discriminator, title, status, target | products/projects/work items | archive |
 | Form | `id`, `orgId`, `projectId`, version, publication state, schema | immutable submission snapshots | archive |
 | IntakeSubmission | provenance, form/version, status, assignee, mapped fields | optional accepted work item | retain/audit |
@@ -78,7 +75,7 @@ Organization
 
 ## Migration order
 
-1. Add nullable `projects.pm_workspace_id`, backfill nothing, and update composite foreign keys.
+1. **Done.** `1159_build_remove_pm_workspaces` dropped `build.pm_workspaces`, `build.pm_workspace_memberships`, every `pm_workspace_id` column, and renamed `build.project_workspace_members` to `build.build_members`.
 2. Reconcile Sprint/Cycle records into one Cycle identity; migrate ticket references, permissions, events, saved views, reports, and URLs.
 3. Migrate independent QA bugs to canonical `WorkItem.type=BUG`, preserving evidence links and activity.
 4. Version saved-view filters and rewrite removed route/layout references.
@@ -99,7 +96,7 @@ Organization
 ## Acceptance criteria
 
 - [ ] Every tenant-owned relation is protected by `orgId` in schema and query predicates.
-- [ ] Standalone projects work with `pmWorkspaceId = null`.
+- [x] Standalone projects work with no product: `managedProductId = null` makes the project organization-level. PM Workspace and `pmWorkspaceId` no longer exist.
 - [ ] Cycle and BUG have one canonical identity each.
 - [ ] Every list has a measured composite index matching filters and cursor order.
 - [ ] Client and server validation constraints have automated parity evidence.

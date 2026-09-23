@@ -6,7 +6,6 @@ const mutationGrantPayload = {
   portalMembershipId: "mem-001",
   partyContactId: "contact-001",
   projectId: 7,
-  pmWorkspaceId: null,
   canViewMilestones: true,
   canViewTasks: false,
   canViewAttachments: false,

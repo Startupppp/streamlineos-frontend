@@ -11,24 +11,36 @@ documents. They are normative unless the user explicitly changes one. Older
 design text and completed evidence must be reconciled to these contracts before
 implementation can close.
 
-## D01 — Workspace Is Optional
+## D01 — PM Workspace Is Removed
 
-- A freelancer or small team can create a standalone project with
-  `pmWorkspaceId = null`.
-- Current storage contradicts this: `projects.pmWorkspaceId` is `NOT NULL` and
-  the frontend project contract requires a string. Schema, APIs, create forms,
-  and response contracts must become nullable; no hidden default workspace may
-  be invented to satisfy the old column.
-- An organization may use workspaces to group access and work, but the product
-  does not invent a hidden default workspace to satisfy the hierarchy.
-- Workspace-scoped create preselects its workspace. Organization-scoped create
-  offers `No workspace` plus backend-paged accessible workspaces.
-- Moving into or out of a workspace revalidates memberships, product links,
-  client grants, saved views, and defaults.
-- Managed Product linkage is also optional and never substitutes for Project.
+- **Decided, not optional.** There is no PM Workspace layer between
+  Organization and Products/Projects/Teams/Programs/Portfolios. Organization
+  owns all of them directly.
+- A project without a product is an organization-level project. No hidden
+  default workspace is invented to satisfy a hierarchy that no longer exists.
+- Migration `1159_build_remove_pm_workspaces` dropped `build.pm_workspaces`,
+  `build.pm_workspace_memberships`, and every `pm_workspace_id` column
+  (`build.projects`, `build.managed_products`, `build.project_teams`,
+  `build.project_workspace_members`, `public.project_client_grants`). The
+  rollback restores shape only — the rows are gone.
+- `build.project_workspace_members` is renamed to `build.build_members`: the
+  org-level Build member roster job survives (`org_id`, membership identity,
+  Build role, `added_at`); its PM Workspace relationship does not.
+- All 9 `/build/workspaces*` endpoints, the 6 `build:workspaces:*` permission
+  keys (`view`, `create`, `update`, `delete`, `members:view`,
+  `members:manage`), and every `/build/workspaces*` route are deleted.
+  `build:members:view` and `build:members:manage` remain, unrelated to the
+  removal.
+- Deep links redirect via `next.config.ts`: `/build/workspaces` and
+  `/build/workspaces/{id}` → `/build`; `/{id}/overview` →
+  `/build/command-center`; `/{id}/all-work` → `/build/all-work`;
+  `/{id}/goals` → `/build/goals`; `/{id}/products` → `/build/managed-products`;
+  `/{id}/roadmap` → `/build/roadmap`; `/{id}/teams` → `/build/teams`;
+  `/build/pm-workspaces` → `/build`.
+- Managed Product linkage is optional and never substitutes for Project.
 
-- [ ] **BLD-00-D01-A** sidebar design, quick create, schema nullability, create
-  forms, APIs, scope resolver, and tests agree that workspace is optional.
+- [x] **BLD-00-D01-A** sidebar design, quick create, schema, create forms,
+  APIs, scope resolver, and tests agree PM Workspace does not exist.
 
 ## D02 — Drafts Stay Discoverable but Lose a Standalone Page
 
@@ -44,7 +56,7 @@ implementation can close.
 ## D03 — One Canonical Iteration
 
 - The canonical domain and URL are `Cycle` and `/cycles`.
-- Workspace/project settings may display `Cycle`, `Sprint`, or another approved
+- Project settings may display `Cycle`, `Sprint`, or another approved
   label without changing route, API, permission, cache, schema, event, filter,
   or analytics identity.
 - Canonical permission keys are `build:cycles:view` and
@@ -75,8 +87,6 @@ implementation can close.
 ## D05 — Settings Paths Follow Scope Ownership
 
 - Organization Build settings: `/build/settings/*`.
-- Workspace settings:
-  `/build/workspaces/{pmWorkspaceId}/settings/*`.
 - Managed Product settings:
   `/build/managed-products/{managedProductId}/settings/*`.
 - Project settings: `/build/{projectId}/settings/*`.
@@ -91,14 +101,13 @@ implementation can close.
 ## D06 — Canonical Collection Names and Scope Roots
 
 - Organization collections use plural nouns:
-  `/build/goals`, `/build/workspaces`, `/build/managed-products`,
-  `/build/portfolios`, `/build/programs`, `/build/teams`.
-- Workspace root `/build/workspaces/{pmWorkspaceId}` owns Projects; `/overview`
-  owns workspace summary.
+  `/build/goals`, `/build/managed-products`, `/build/portfolios`,
+  `/build/programs`, `/build/teams`.
 - Managed Product root owns product Overview.
 - Project root owns Project Overview; `/issues` owns all issue layouts.
-- Current singular `/build/goal` and directory `/build/pm-workspaces` are moved
-  and deleted after caller migration.
+- Current singular `/build/goal` is moved and deleted after caller migration.
+  `/build/pm-workspaces` and the whole PM Workspace route tree are deleted
+  outright — see D01 — with deep links redirected, not moved to a new path.
 - The project collaborative canvas remains singular `/whiteboard` because the
   product currently owns one board per project. If multiple boards are later
   supported, that is a new data migration and route decision.

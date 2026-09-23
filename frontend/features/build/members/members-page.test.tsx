@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 const mockUseAccess = jest.fn();
 const mockUseCan = jest.fn();
-const mockUseProjectWorkspaceMembers = jest.fn();
+const mockUseBuildMembers = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn() }),
@@ -20,9 +20,9 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-jest.mock("@/hooks/api/build/workspace-members", () => ({
-  useProjectWorkspaceMembers: () => mockUseProjectWorkspaceMembers(),
-  useRemoveProjectWorkspaceMember: () => ({ mutate: jest.fn(), isPending: false }),
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: () => mockUseBuildMembers(),
+  useRemoveBuildMember: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
 jest.mock("@tanstack/react-query", () => ({
@@ -131,7 +131,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseCan.mockReturnValue(true);
-  mockUseProjectWorkspaceMembers.mockReturnValue({
+  mockUseBuildMembers.mockReturnValue({
     data: { data: [], pagination: { hasMore: false, nextCursor: null } },
     isLoading: false,
     isError: false,
@@ -144,7 +144,7 @@ describe("MembersPage — access is three-valued, not a boolean", () => {
   it("does not show an access-denied message while the access snapshot is still in flight", () => {
     mockUseAccess.mockReturnValue(ACCESS_LOADING);
     mockUseCan.mockReturnValue(false);
-    mockUseProjectWorkspaceMembers.mockReturnValue(idleMembers());
+    mockUseBuildMembers.mockReturnValue(idleMembers());
 
     render(<MembersPage />);
 
@@ -155,7 +155,7 @@ describe("MembersPage — access is three-valued, not a boolean", () => {
   it("shows NoPermissionState when build:members:view resolves to denied, not an access-restricted EmptyState", () => {
     mockUseAccess.mockReturnValue(ACCESS_DENIED);
     mockUseCan.mockReturnValue(false);
-    mockUseProjectWorkspaceMembers.mockReturnValue(idleMembers());
+    mockUseBuildMembers.mockReturnValue(idleMembers());
 
     render(<MembersPage />);
 

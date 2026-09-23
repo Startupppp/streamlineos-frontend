@@ -3,14 +3,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import type { ReactNode } from "react";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import { usePmWorkspaces, useUpdatePmWorkspace } from "@/hooks/api/build/pm-workspaces";
 import { useManagedProducts, useUpdateManagedProduct } from "@/hooks/api/build/managed-products";
 import { useAgentPulse } from "@/hooks/api/build/agent-pulse";
 import type { BuildScope } from "@/lib/build/build-scope";
 
 const ORG_SCOPE: BuildScope = {
   type: "organization",
-  pmWorkspaceId: null,
   managedProductId: null,
   projectId: null,
   basePath: "/build",
@@ -22,8 +20,6 @@ jest.mock("@/hooks/api/access", () => ({
     data: {
       isOrgOwner: false,
       scopes: {
-        "build:workspaces:update": "all",
-        "build:workspaces:delete": "all",
         "build:managed-products:update": "all",
         "build:approvals:view": "all",
       },
@@ -44,14 +40,6 @@ jest.mock("@/lib/api-client", () => ({
 
 jest.mock("@/lib/api-envelope", () => ({
   lazyContract: (fn: () => unknown) => fn,
-}));
-
-jest.mock("@/hooks/api/build/pm-workspaces-schema", () => ({
-  pmWorkspacePageContract: null,
-  pmWorkspaceRowContract: null,
-  pmWorkspaceMemberPageContract: null,
-  pmWorkspaceMemberRowContract: null,
-  pmWorkspacesSuccessContract: null,
 }));
 
 jest.mock("@/hooks/api/build/managed-products-schema", () => ({
@@ -88,40 +76,22 @@ function wrap(client: QueryClient) {
 }
 
 describe("BSN-04-031 — all response-shaping inputs appear in cache keys", () => {
-  it("pm-workspace list key with limit differs from key with no params", () => {
-    const withLimit = buildWorkQueryKeys.projects.pmWorkspaces.list({ limit: "100" });
-    const noParams = buildWorkQueryKeys.projects.pmWorkspaces.list();
-    expect(JSON.stringify(withLimit)).not.toEqual(JSON.stringify(noParams));
-  });
-
-  it("pm-workspace list key with search differs from key without search", () => {
-    const withSearch = buildWorkQueryKeys.projects.pmWorkspaces.list({ search: "Acme" });
-    const noSearch = buildWorkQueryKeys.projects.pmWorkspaces.list();
+  it("managed-products list key with search differs from key without search", () => {
+    const withSearch = buildWorkQueryKeys.projects.managedProducts.list({ search: "Acme" });
+    const noSearch = buildWorkQueryKeys.projects.managedProducts.list();
     expect(JSON.stringify(withSearch)).not.toEqual(JSON.stringify(noSearch));
   });
 
-  it("pm-workspace list key with status differs from key without status", () => {
-    const withStatus = buildWorkQueryKeys.projects.pmWorkspaces.list({ status: "archived" });
-    const noStatus = buildWorkQueryKeys.projects.pmWorkspaces.list();
-    expect(JSON.stringify(withStatus)).not.toEqual(JSON.stringify(noStatus));
-  });
-
-  it("managed-products list key with pmWorkspaceId differs from key without", () => {
-    const withWs = buildWorkQueryKeys.projects.managedProducts.list({ pmWorkspaceId: "ws-1" });
-    const noWs = buildWorkQueryKeys.projects.managedProducts.list();
-    expect(JSON.stringify(withWs)).not.toEqual(JSON.stringify(noWs));
-  });
-
   it("scope-directory resolve key sorts input so callers with different orderings share one cache entry", () => {
-    const ab = buildWorkQueryKeys.projects.scopeDirectory.resolve(["project:1", "workspace:2"]);
-    const ba = buildWorkQueryKeys.projects.scopeDirectory.resolve(["workspace:2", "project:1"]);
+    const ab = buildWorkQueryKeys.projects.scopeDirectory.resolve(["project:1", "product:2"]);
+    const ba = buildWorkQueryKeys.projects.scopeDirectory.resolve(["product:2", "project:1"]);
     expect(JSON.stringify(ab)).toEqual(JSON.stringify(ba));
   });
 
   it("agent-pulse keys differ per Build scope so one scope's top signal is never served to another", () => {
     const project = buildWorkQueryKeys.projects.agentPulse("project:42");
-    const workspace = buildWorkQueryKeys.projects.agentPulse("workspace:ws-1");
-    expect(JSON.stringify(project)).not.toEqual(JSON.stringify(workspace));
+    const product = buildWorkQueryKeys.projects.agentPulse("product:5");
+    expect(JSON.stringify(project)).not.toEqual(JSON.stringify(product));
   });
 
   it("agent-pulse key is stable for one scope so repeated renders share a cache entry", () => {
@@ -141,14 +111,6 @@ describe("BSN-04-032 — queryFns pass the AbortSignal to apiClient", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     getApiClient().get.mockResolvedValue(null);
-  });
-
-  it("usePmWorkspaces delivers the React Query abort signal as the third argument to apiClient.get", async () => {
-    const client = makeClient();
-    renderHook(() => usePmWorkspaces({ limit: 10 }), { wrapper: wrap(client) });
-    await waitFor(() => expect(getApiClient().get).toHaveBeenCalled());
-    const thirdArg: unknown = getApiClient().get.mock.calls[0]?.[2];
-    expect(thirdArg).toBeInstanceOf(AbortSignal);
   });
 
   it("useManagedProducts delivers the React Query abort signal as the third argument to apiClient.get", async () => {
@@ -171,65 +133,6 @@ describe("BSN-04-032 — queryFns pass the AbortSignal to apiClient", () => {
 describe("BSN-04-033 — post-commit patch scope for rename mutations", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    getApiClient().patch.mockResolvedValue({ pmWorkspaceId: "ws-1", name: "Renamed" });
-  });
-
-  it("useUpdatePmWorkspace patches the renamed row into every loaded list page instead of refetching them", async () => {
-    const client = makeClient();
-    const listKey = buildWorkQueryKeys.projects.pmWorkspaces.list({ search: "acme" });
-    client.setQueryData(listKey, {
-      data: [
-        { pmWorkspaceId: "ws-1", name: "Old name" },
-        { pmWorkspaceId: "ws-2", name: "Untouched" },
-      ],
-      hasMore: false,
-      nextCursor: null,
-    });
-    const invalidateSpy = jest.spyOn(client, "invalidateQueries");
-    const { result } = renderHook(() => useUpdatePmWorkspace(), { wrapper: wrap(client) });
-
-    await act(async () => {
-      await result.current.mutateAsync({ pmWorkspaceId: "ws-1", name: "Renamed" });
-    });
-
-    const patched = client.getQueryData(listKey) as {
-      data: { pmWorkspaceId: string; name: string }[];
-    };
-    expect(patched.data[0]?.name).toBe("Renamed");
-    expect(patched.data[1]?.name).toBe("Untouched");
-    expect(invalidateSpy).not.toHaveBeenCalled();
-  });
-
-  it("useUpdatePmWorkspace writes the response straight into the detail entry rather than triggering a refetch", async () => {
-    getApiClient().patch.mockResolvedValue({ pmWorkspaceId: "ws-7", name: "New name" });
-    const client = makeClient();
-    const { result } = renderHook(() => useUpdatePmWorkspace(), { wrapper: wrap(client) });
-
-    await act(async () => {
-      await result.current.mutateAsync({ pmWorkspaceId: "ws-7", name: "New name" });
-    });
-
-    expect(
-      client.getQueryData(buildWorkQueryKeys.projects.pmWorkspaces.detail("ws-7")),
-    ).toEqual({ pmWorkspaceId: "ws-7", name: "New name" });
-  });
-
-  it("useUpdatePmWorkspace leaves a list page that does not hold the renamed row untouched", async () => {
-    const client = makeClient();
-    const otherKey = buildWorkQueryKeys.projects.pmWorkspaces.list({ search: "zzz" });
-    const original = {
-      data: [{ pmWorkspaceId: "ws-9", name: "Elsewhere" }],
-      hasMore: false,
-      nextCursor: null,
-    };
-    client.setQueryData(otherKey, original);
-    const { result } = renderHook(() => useUpdatePmWorkspace(), { wrapper: wrap(client) });
-
-    await act(async () => {
-      await result.current.mutateAsync({ pmWorkspaceId: "ws-1", name: "Renamed" });
-    });
-
-    expect(client.getQueryData(otherKey)).toBe(original);
   });
 
   it("useUpdateManagedProduct patches the renamed product into loaded list pages instead of refetching every filter variant", async () => {

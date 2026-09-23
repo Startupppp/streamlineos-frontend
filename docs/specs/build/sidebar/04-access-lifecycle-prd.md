@@ -35,8 +35,9 @@ recents, pins, create defaults, or Overview contracts.
 - Every navigation destination uses the exact backend permission required by
   its first protected read.
 - Every write uses its exact write permission and scope membership.
-- PM workspace, managed product, project, tenant, and record boundaries are
-  enforced in backend data access.
+- Managed product, project, tenant, and record boundaries are enforced in
+  backend data access. There is no PM Workspace boundary — that scope is
+  removed (BLD-00 D01).
 - Module and capability checks supplement permissions; they do not replace
   them.
 - Client portal reads remain grant-scoped through portal identity.
@@ -48,9 +49,8 @@ recents, pins, create defaults, or Overview contracts.
 - Stay, save where supported, and discard-and-switch are explicit outcomes.
 - Fallback order for an inaccessible current scope:
   1. accessible managed product parent, when the lost scope was a linked project
-  2. accessible PM workspace parent
-  3. Organization **All of Build** when the actor retains any Build access
-  4. the no-accessible-scope empty state when the actor has zero Build scopes
+  2. Organization **All of Build** when the actor retains any Build access
+  3. the no-accessible-scope empty state when the actor has zero Build scopes
 - Organization is the hierarchy root. There is no parent above it. Losing all
   Build access is the empty-state path, not a parent fallback.
 - Moved or renamed scopes refresh breadcrumbs, selector rows, stars, recents,
@@ -379,7 +379,7 @@ inert, which is what was added:
 
 - Complete permission and route matrix with separate Feedback rows.
 - Completed Unsaved-Work Surface Inventory and journey evidence.
-- Fallback results for project, product, workspace, and zero-scope loss.
+- Fallback results for project, product, and zero-scope loss.
 - Cache writer and invalidation matrix.
 - Cross-tenant, contractor, and portal negative-test outputs.
 - Exact commands, pass counts, and residual limitations.

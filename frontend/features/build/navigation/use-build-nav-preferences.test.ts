@@ -24,14 +24,14 @@ function wrapWith(scope: string) {
 
 function makeScopeRef(overrides: Partial<BuildScopeRef> = {}): BuildScopeRef {
   return {
-    key: "ws-1",
-    type: "workspace",
-    id: "ws-id-1",
-    name: "Workspace One",
+    key: "product-1",
+    type: "product",
+    id: "product-id-1",
+    name: "Product One",
     parentPath: null,
     parentKey: null,
     projectKey: null,
-    href: "/build/workspaces/ws-id-1",
+    href: "/build/managed-products/product-id-1",
     ...overrides,
   };
 }

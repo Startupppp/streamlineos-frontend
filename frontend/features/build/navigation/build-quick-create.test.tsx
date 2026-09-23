@@ -63,23 +63,13 @@ jest.mock("@/components/layout/sidebar/sidebar-animated-nav", () => ({
 
 const ORG_SCOPE: BuildScope = {
   type: "organization",
-  pmWorkspaceId: null,
   managedProductId: null,
   projectId: null,
   basePath: "/build",
 };
 
-const WORKSPACE_SCOPE: BuildScope = {
-  type: "workspace",
-  pmWorkspaceId: "ws-1",
-  managedProductId: null,
-  projectId: null,
-  basePath: "/build/workspaces/ws-1",
-};
-
 const PRODUCT_SCOPE: BuildScope = {
   type: "product",
-  pmWorkspaceId: "ws-1",
   managedProductId: 7,
   projectId: null,
   basePath: "/build/managed-products/7",
@@ -87,15 +77,13 @@ const PRODUCT_SCOPE: BuildScope = {
 
 const PROJECT_SCOPE: BuildScope = {
   type: "project",
-  pmWorkspaceId: "ws-1",
   managedProductId: null,
   projectId: 42,
   basePath: "/build/42",
 };
 
-const PROJECT_SCOPE_NO_WS: BuildScope = {
+const PROJECT_SCOPE_OTHER: BuildScope = {
   type: "project",
-  pmWorkspaceId: null,
   managedProductId: null,
   projectId: 99,
   basePath: "/build/99",
@@ -158,13 +146,6 @@ describe("action visibility — matrix hidden cells", () => {
     expect(screen.getByText("Product")).toBeInTheDocument();
   });
 
-  it("Issue is absent at PM workspace scope where no project context exists", async () => {
-    const user = userEvent.setup();
-    renderQuickCreate(WORKSPACE_SCOPE, [PROJECT_ACTION, PRODUCT_ACTION]);
-    await user.click(screen.getByRole("button", { name: "Create" }));
-    expect(screen.queryByText("Issue")).not.toBeInTheDocument();
-  });
-
   it("Issue is absent at managed-product scope where no project context exists", async () => {
     const user = userEvent.setup();
     renderQuickCreate(PRODUCT_SCOPE, [PROJECT_ACTION]);
@@ -173,7 +154,7 @@ describe("action visibility — matrix hidden cells", () => {
     expect(screen.getByText("Project")).toBeInTheDocument();
   });
 
-  it("Product is absent at managed-product scope", async () => {
+  it("Product is absent at managed-product scope, because a product cannot nest under another product now that PM Workspace is gone", async () => {
     const user = userEvent.setup();
     renderQuickCreate(PRODUCT_SCOPE, [PROJECT_ACTION]);
     await user.click(screen.getByRole("button", { name: "Create" }));
@@ -200,14 +181,6 @@ describe("action visibility — matrix present cells", () => {
   it("Project and Product appear at organization scope", async () => {
     const user = userEvent.setup();
     renderQuickCreate(ORG_SCOPE, [PROJECT_ACTION, PRODUCT_ACTION]);
-    await user.click(screen.getByRole("button", { name: "Create" }));
-    expect(screen.getByText("Project")).toBeInTheDocument();
-    expect(screen.getByText("Product")).toBeInTheDocument();
-  });
-
-  it("Project and Product appear at workspace scope", async () => {
-    const user = userEvent.setup();
-    renderQuickCreate(WORKSPACE_SCOPE, [PROJECT_ACTION, PRODUCT_ACTION]);
     await user.click(screen.getByRole("button", { name: "Create" }));
     expect(screen.getByText("Project")).toBeInTheDocument();
     expect(screen.getByText("Product")).toBeInTheDocument();
@@ -241,9 +214,9 @@ describe("BSN-03-011 — Issue preselects the active project", () => {
     expect(mockOpenCreateTicket).toHaveBeenCalledWith(42);
   });
 
-  it("passes projectId=99 for a project scope with no workspace in its URL", async () => {
+  it("passes projectId=99 for a different project scope, proving the id is read from the scope and not hardcoded", async () => {
     const user = userEvent.setup();
-    renderQuickCreate(PROJECT_SCOPE_NO_WS, [ISSUE_ACTION]);
+    renderQuickCreate(PROJECT_SCOPE_OTHER, [ISSUE_ACTION]);
     await user.click(screen.getByRole("button", { name: "Create" }));
     await user.click(screen.getByText("Issue"));
     expect(mockOpenCreateTicket).toHaveBeenCalledWith(99);
@@ -251,7 +224,7 @@ describe("BSN-03-011 — Issue preselects the active project", () => {
 });
 
 describe("Project dialog — scope preselection per matrix cell", () => {
-  it("passes an empty scope to the project dialog at organization scope (explicit workspace required)", async () => {
+  it("passes an empty scope to the project dialog at organization scope", async () => {
     const user = userEvent.setup();
     renderQuickCreate(ORG_SCOPE, [PROJECT_ACTION, PRODUCT_ACTION]);
     await user.click(screen.getByRole("button", { name: "Create" }));
@@ -260,41 +233,25 @@ describe("Project dialog — scope preselection per matrix cell", () => {
     expect(lastProjectDialogProps().scope).toEqual({});
   });
 
-  it("preselects pmWorkspaceId in the project dialog at PM workspace scope", async () => {
-    const user = userEvent.setup();
-    renderQuickCreate(WORKSPACE_SCOPE, [PROJECT_ACTION, PRODUCT_ACTION]);
-    await user.click(screen.getByRole("button", { name: "Create" }));
-    await user.click(screen.getByText("Project"));
-    expect(lastProjectDialogProps().scope).toEqual({ pmWorkspaceId: "ws-1" });
-  });
-
-  it("preselects both pmWorkspaceId and managedProductId in the project dialog at product scope", async () => {
+  it("preselects managedProductId in the project dialog at product scope, with no PM Workspace id key since PM Workspace no longer exists", async () => {
     const user = userEvent.setup();
     renderQuickCreate(PRODUCT_SCOPE, [PROJECT_ACTION]);
     await user.click(screen.getByRole("button", { name: "Create" }));
     await user.click(screen.getByText("Project"));
-    expect(lastProjectDialogProps().scope).toEqual({ pmWorkspaceId: "ws-1", managedProductId: 7 });
+    expect(lastProjectDialogProps().scope).toEqual({ managedProductId: 7 });
   });
 
-  it("preselects pmWorkspaceId in the project dialog at project scope when workspace is in the URL", async () => {
+  it("passes an empty scope at project scope, because a project scope carries no managedProductId of its own", async () => {
     const user = userEvent.setup();
     renderQuickCreate(PROJECT_SCOPE, [ISSUE_ACTION, PROJECT_ACTION]);
-    await user.click(screen.getByRole("button", { name: "Create" }));
-    await user.click(screen.getByText("Project"));
-    expect(lastProjectDialogProps().scope).toEqual({ pmWorkspaceId: "ws-1" });
-  });
-
-  it("passes an empty scope at project scope when the project was not navigated via a workspace URL", async () => {
-    const user = userEvent.setup();
-    renderQuickCreate(PROJECT_SCOPE_NO_WS, [ISSUE_ACTION, PROJECT_ACTION]);
     await user.click(screen.getByRole("button", { name: "Create" }));
     await user.click(screen.getByText("Project"));
     expect(lastProjectDialogProps().scope).toEqual({});
   });
 });
 
-describe("Product creation — workspace preselection per matrix cell", () => {
-  it("submits with no pmWorkspaceId when at organization scope", async () => {
+describe("Product creation — no scope preselection now that a product cannot be nested", () => {
+  it("submits with exactly the submitted form fields at organization scope", async () => {
     const user = userEvent.setup();
     renderQuickCreate(ORG_SCOPE, [PROJECT_ACTION, PRODUCT_ACTION]);
     await user.click(screen.getByRole("button", { name: "Create" }));
@@ -303,64 +260,27 @@ describe("Product creation — workspace preselection per matrix cell", () => {
       lastProductSheetProps().onSubmitCreate({ name: "P", key: "P" });
     });
     expect(mockCreateProductMutate).toHaveBeenCalledTimes(1);
-    expect(mockCreateProductMutate.mock.calls[0][0]).not.toHaveProperty("pmWorkspaceId");
-  });
-
-  it("submits with pmWorkspaceId when at workspace scope", async () => {
-    const user = userEvent.setup();
-    renderQuickCreate(WORKSPACE_SCOPE, [PROJECT_ACTION, PRODUCT_ACTION]);
-    await user.click(screen.getByRole("button", { name: "Create" }));
-    await user.click(screen.getByText("Product"));
-    act(() => {
-      lastProductSheetProps().onSubmitCreate({ name: "P", key: "P" });
-    });
-    expect(mockCreateProductMutate).toHaveBeenCalledWith(
-      expect.objectContaining({ pmWorkspaceId: "ws-1" }),
-      expect.any(Object),
-    );
+    expect(mockCreateProductMutate.mock.calls[0][0]).toEqual({ name: "P", key: "P" });
   });
 });
 
 describe("BSN-03-015 — no stale scope defaults after rapid scope switching", () => {
-  it("project dialog scope reflects the new workspace after scope prop changes while dialog is open", async () => {
+  it("project dialog scope reflects the new managedProductId after scope prop changes while dialog is open", async () => {
     const user = userEvent.setup();
-    const { rerender } = renderQuickCreate(WORKSPACE_SCOPE, [PROJECT_ACTION, PRODUCT_ACTION]);
+    const { rerender } = renderQuickCreate(PRODUCT_SCOPE, [PROJECT_ACTION, PRODUCT_ACTION]);
     await user.click(screen.getByRole("button", { name: "Create" }));
     await user.click(screen.getByText("Project"));
-    expect(lastProjectDialogProps().scope).toEqual({ pmWorkspaceId: "ws-1" });
+    expect(lastProjectDialogProps().scope).toEqual({ managedProductId: 7 });
 
     rerender(
       <BuildQuickCreate
-        scope={{ ...WORKSPACE_SCOPE, pmWorkspaceId: "ws-2" }}
+        scope={{ ...PRODUCT_SCOPE, managedProductId: 8 }}
         actions={[PROJECT_ACTION, PRODUCT_ACTION]}
         isCollapsed={false}
       />,
     );
 
-    expect(lastProjectDialogProps().scope).toEqual({ pmWorkspaceId: "ws-2" });
-  });
-
-  it("product submission uses ws-2 after scope switches from ws-1 to ws-2 while the sheet is open", async () => {
-    const user = userEvent.setup();
-    const { rerender } = renderQuickCreate(WORKSPACE_SCOPE, [PROJECT_ACTION, PRODUCT_ACTION]);
-    await user.click(screen.getByRole("button", { name: "Create" }));
-    await user.click(screen.getByText("Product"));
-
-    rerender(
-      <BuildQuickCreate
-        scope={{ ...WORKSPACE_SCOPE, pmWorkspaceId: "ws-2" }}
-        actions={[PROJECT_ACTION, PRODUCT_ACTION]}
-        isCollapsed={false}
-      />,
-    );
-
-    act(() => {
-      lastProductSheetProps().onSubmitCreate({ name: "P", key: "P" });
-    });
-    expect(mockCreateProductMutate).toHaveBeenCalledWith(
-      expect.objectContaining({ pmWorkspaceId: "ws-2" }),
-      expect.any(Object),
-    );
+    expect(lastProjectDialogProps().scope).toEqual({ managedProductId: 8 });
   });
 });
 
@@ -393,9 +313,9 @@ describe("invalid-target combination — upstream guard bypass", () => {
     expect(mockOpenCreateTicket).toHaveBeenCalledWith(null);
   });
 
-  it("calls openCreateTicket with null when Issue action is present at workspace scope where no projectId exists", async () => {
+  it("calls openCreateTicket with null when Issue action is present at managed-product scope where no projectId exists", async () => {
     const user = userEvent.setup();
-    renderQuickCreate(WORKSPACE_SCOPE, [ISSUE_ACTION, PROJECT_ACTION]);
+    renderQuickCreate(PRODUCT_SCOPE, [ISSUE_ACTION, PROJECT_ACTION]);
     await user.click(screen.getByRole("button", { name: "Create" }));
     await user.click(screen.getByText("Issue"));
     expect(mockOpenCreateTicket).toHaveBeenCalledWith(null);

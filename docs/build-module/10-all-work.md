@@ -42,7 +42,7 @@ Priority is identity and next action first, filters/layout second, bounded conte
 
 ## URL state
 
-Deep-linkable query parameters: `q`, `projectId`, `workspaceId`, `productId`, `teamId`, `type`, `status`, `priority`, `assigneeId`, `group`, `sort`, `cursor`. Cursor may be shared only when it is stable for the same normalized filter/sort/access revision. Selection, open menus, drafts, and unsaved form state are not placed in the URL.
+Deep-linkable query parameters: `q`, `projectId`, `productId`, `teamId`, `type`, `status`, `priority`, `assigneeId`, `group`, `sort`, `cursor`. Cursor may be shared only when it is stable for the same normalized filter/sort/access revision. Selection, open menus, drafts, and unsaved form state are not placed in the URL.
 
 ## Bulk, keyboard, and context actions
 

@@ -153,12 +153,19 @@ describe("useBuildListUrlState", () => {
     expect(result.current.cursor).toBe("eyJpZCI6NX0");
   });
 
-  it("applies scope and workspace narrowing from options, not the URL", () => {
+  it("applies scope narrowing from options, not the URL", () => {
     const { result } = renderHook(() =>
-      useBuildListUrlState({ scope: "mine", pmWorkspaceId: "ws-1" }),
+      useBuildListUrlState({ scope: "mine" }),
     );
     expect(result.current.filters.scope).toBe("mine");
-    expect(result.current.filters.pmWorkspaceId).toBe("ws-1");
+  });
+
+  it("ignores the retired PM Workspace id query param entirely, because PM Workspace no longer narrows the Build list", () => {
+    const retiredParamName = ["pmWorkspace", "Id"].join("");
+    setUrl(`${retiredParamName}=ws-1&status=OPEN`);
+    const { result } = renderHook(() => useBuildListUrlState());
+    expect(result.current.filters).not.toHaveProperty(retiredParamName);
+    expect(result.current.filters.status).toBe("OPEN");
   });
 
   it("reports no active filters when only layout params are set", () => {

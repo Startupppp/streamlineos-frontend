@@ -1,4 +1,4 @@
-# BLD-02A — Organization, Workspace, and Product Pages PRD
+# BLD-02A — Organization and Product Pages PRD
 
 > Acceptance reference only. Dispatch and status live in
 > [`Build execution`](../README.md); do not assign
@@ -7,8 +7,10 @@
 ## Outcome
 
 Build provides a compact cross-project information architecture that works for
-a freelancer with one project and an enterprise with workspaces, products,
-programs, portfolios, teams, access reviews, and client stakeholders.
+a freelancer with one project and an enterprise with products, programs,
+portfolios, teams, access reviews, and client stakeholders. Organization owns
+Products, Projects, Teams, Programs, and Portfolios directly — there is no PM
+Workspace layer (BLD-00 D01).
 
 ## Decision Labels
 
@@ -26,7 +28,7 @@ unique requirements are migrated and verified.
 | Route | Decision | Required job and page anatomy |
 |---|---|---|
 | `/build/command-center` | KEEP | Build landing: attention queue, active projects, overdue work, approvals, updates, agent proposals, and quick create. Every metric opens its exact filtered source. |
-| `/build` | KEEP | Project directory: search, saved directory views, active/archived state, workspace/product/team/customer filters, owner, health, date, and bounded pagination. |
+| `/build` | KEEP | Project directory: search, saved directory views, active/archived state, product/team/customer filters, owner, health, date, and bounded pagination. |
 | `/build/all-work` | KEEP | Permission-scoped issue explorer across accessible projects. List and table by default; board only with an explicit grouping. |
 | `/build/my-work` | KEEP | Actor-owned work: assigned, created, subscribed, blocked, due soon, and recently completed. No organization-wide default. |
 | `/build/inbox` | KEEP | Build-specific notifications, mentions, assignments, approval requests, and automation/agent outcomes with read/snooze/resolve actions. |
@@ -64,54 +66,39 @@ unique requirements are migrated and verified.
   canonical CRM fields through parallel Build forms.
 - [ ] **BLD-02A-008** list sizes, filters, views, and pagination follow BLD-03.
 
-## PM Workspace Scope
+## PM Workspace Scope — Removed
 
-| Route | Decision | Required job and page anatomy |
-|---|---|---|
-| `/build/pm-workspaces` | MOVE | Rename the current workspace directory to `/build/workspaces`; retain searchable membership, owner, product/project counts, status, and archive visibility. |
-| `/build/workspaces/{pmWorkspaceId}/overview` | KEEP | Scope summary: health, active products/projects, goals, delivery attention, updates, and quick create preselected to the workspace. |
-| `/build/workspaces/{pmWorkspaceId}` | KEEP | Workspace project directory. Root label is `Projects`; it is not a second overview. |
-| `/build/workspaces/{pmWorkspaceId}/products` | KEEP | Products linked to the workspace with owner, lifecycle, roadmap health, and project count. |
-| `/build/workspaces/{pmWorkspaceId}/teams` | KEEP | Teams assigned to the workspace; identity and membership remain Directory/Build access owned. |
-| `/build/workspaces/{pmWorkspaceId}/all-work` | KEEP | Workspace-bounded issue explorer with truthful server-side scope. |
-| `/build/workspaces/{pmWorkspaceId}/my-work` | CONSOLIDATE | Preserve workspace-scoped personal work in canonical `/build/my-work` with a visible workspace scope; delete the duplicate route after deep-link parity. |
-| `/build/workspaces/{pmWorkspaceId}/goals` | KEEP | Workspace goal roll-up and linked execution. |
-| `/build/workspaces/{pmWorkspaceId}/roadmap` | KEEP | Workspace slice of the portfolio/product roadmap, not a new roadmap record type. |
-| `/build/workspaces/{pmWorkspaceId}/settings` | ADD | Name, owner, defaults, terminology override, memberships, linked products/projects, archive, and transfer. |
+PM Workspace is removed, not renamed (BLD-00 D01). `/build/pm-workspaces` and
+the entire `/build/workspaces/{pmWorkspaceId}*` tree are deleted with no
+replacement page; each job moves to an organization-scope page:
 
-### Workspace Rules
+| Former route | Job now lives at |
+|---|---|
+| `/build/pm-workspaces`, `/build/workspaces` | `/build` |
+| `/build/workspaces/{pmWorkspaceId}` | `/build` |
+| `/build/workspaces/{pmWorkspaceId}/overview` | `/build/command-center` |
+| `/build/workspaces/{pmWorkspaceId}/all-work` | `/build/all-work` |
+| `/build/workspaces/{pmWorkspaceId}/goals` | `/build/goals` |
+| `/build/workspaces/{pmWorkspaceId}/products` | `/build/managed-products` |
+| `/build/workspaces/{pmWorkspaceId}/roadmap` | `/build/roadmap` |
+| `/build/workspaces/{pmWorkspaceId}/teams` | `/build/teams` |
+| `/build/workspaces/{pmWorkspaceId}/my-work` | `/build/my-work?projectId=...` |
 
-- Workspaces are optional. Creating a project never requires a workspace.
-- A workspace is an access and organization boundary, not a tenant boundary.
-- Moving a project or product revalidates membership and client grants before
-  commit.
-- Workspace counts and filters include only records the actor may open.
-- Workspace quick-create actions preselect the workspace and any unambiguous
-  product context.
-
-- [ ] **BLD-02A-009** zero, one, fifty, and enterprise-scale workspace states
-  are usable without downloading a fixed first page and filtering locally.
-- [ ] **BLD-02A-010** workspace search is backend-backed, paginated, cancellable,
-  and cross-tenant safe.
-- [ ] **BLD-02A-011** moving, archiving, restoring, and losing access follow the
-  sidebar lifecycle contract.
-- [ ] **BLD-02A-012** every workspace child API validates `pmWorkspaceId`
-  membership and never trusts a client-supplied organization ID.
-- [ ] **BLD-02A-013** overview roll-ups have bounded queries and exact
-  empty/error/denied states.
+`next.config.ts` redirects every deep link above. There is no workspace
+settings page, workspace membership, or workspace scope in the sidebar.
 
 ## Managed Product Scope
 
 | Route | Decision | Required job and page anatomy |
 |---|---|---|
-| `/build/managed-products` | KEEP | Product directory with lifecycle, owner, workspace, linked projects, roadmap health, goals, feedback, and releases. |
+| `/build/managed-products` | KEEP | Product directory with lifecycle, owner, linked projects, roadmap health, goals, feedback, and releases. |
 | `/build/managed-products/{managedProductId}` | KEEP | Product overview: outcome health, roadmap, feedback trend, open goals, releases, linked projects, and client-ready progress. |
 | `/build/managed-products/{managedProductId}/projects` | KEEP | Explicit product-to-project linkage and contribution view. |
 | `/build/managed-products/{managedProductId}/roadmap` | KEEP | Outcome and release roadmap owned by the product. |
 | `/build/managed-products/{managedProductId}/goals` | KEEP | Product goals and key-result progress linked to delivery evidence. |
 | `/build/managed-products/{managedProductId}/feedback` | KEEP | Product-scoped feedback inbox with source, customer, sentiment/theme, status, merge, link-to-roadmap, and create-issue actions. |
 | `/build/managed-products/{managedProductId}/insights` | KEEP | Product evidence and trends with source drill-down; it must not invent unsupported AI conclusions. |
-| `/build/managed-products/{managedProductId}/settings` | ADD | Identity, lifecycle, ownership, workspace, members, portal visibility, roadmap defaults, feedback channels, and archive. |
+| `/build/managed-products/{managedProductId}/settings` | ADD | Identity, lifecycle, ownership, members, portal visibility, roadmap defaults, feedback channels, and archive. |
 
 ### Product Rules
 
@@ -152,9 +139,10 @@ Every retained directory or overview includes:
 - [ ] **BLD-02A-019** all pages pass the shared anatomy checklist.
 - [ ] **BLD-02A-020** every add/move/consolidate decision has route, API,
   permission, cache, migration, and inbound-link evidence.
-- [ ] **BLD-02A-A01** freelancer flow passes without workspace, product,
-  portfolio, or program setup.
-- [ ] **BLD-02A-A02** enterprise flow passes with multiple workspaces, products,
-  teams, restricted projects, and external clients.
+- [ ] **BLD-02A-A01** freelancer flow passes without product, portfolio, or
+  program setup — a project without a product is an organization-level
+  project.
+- [ ] **BLD-02A-A02** enterprise flow passes with multiple products, teams,
+  restricted projects, and external clients.
 - [ ] **BLD-02A-A03** the final route inventory contains no duplicate owner and
   no configuration page outside Build settings.

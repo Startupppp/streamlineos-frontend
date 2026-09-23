@@ -14,20 +14,16 @@ export interface BuildScopeFallbackInput {
 }
 
 export interface BuildScopeParent {
-  type: "product" | "workspace";
+  type: "product";
   id: string;
 }
 
 function parentHref(parent: BuildScopeParent): string {
-  return parent.type === "product"
-    ? `${BUILD_ROOT_PATH}/managed-products/${parent.id}`
-    : `${BUILD_ROOT_PATH}/workspaces/${parent.id}`;
+  return `${BUILD_ROOT_PATH}/managed-products/${parent.id}`;
 }
 
-function parentLabel(parent: BuildScopeParent): string {
-  return parent.type === "product"
-    ? "Go to the parent product"
-    : "Go to the parent workspace";
+function parentLabel(_parent: BuildScopeParent): string {
+  return "Go to the parent product";
 }
 
 export function resolveBuildScopeFallback({

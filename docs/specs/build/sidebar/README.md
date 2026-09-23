@@ -15,9 +15,10 @@ claim or tick them directly.
 
 ## Scope
 
-This tracker covers completion of the unified Build sidebar across organization,
-PM workspace, managed product, and project scopes. It does not certify the rest
-of the Build product.
+This tracker covers completion of the unified Build sidebar across
+organization, managed product, and project scopes. PM Workspace is removed
+(BLD-00 D01) and is not a scope. It does not certify the rest of the Build
+product.
 
 ## Verified Baseline
 

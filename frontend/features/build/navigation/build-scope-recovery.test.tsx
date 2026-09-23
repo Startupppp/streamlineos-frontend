@@ -75,13 +75,13 @@ describe("BSN-04-A06 — no-access fallback renders nothing so no misleading rec
   it("renders a recovery link in collapsed mode when fallback kind is recover — confirms both render paths are covered", () => {
     render(
       <BuildScopeRecovery
-        fallback={{ kind: "recover", href: "/build/workspaces/ws-1", label: "Go to the parent workspace" }}
+        fallback={{ kind: "recover", href: "/build/managed-products/7", label: "Go to the parent product" }}
         isCollapsed={true}
       />,
     );
     const link = screen.getByRole("link");
     expect(link).toBeInTheDocument();
-    expect(link.getAttribute("href")).toBe("/build/workspaces/ws-1");
+    expect(link.getAttribute("href")).toBe("/build/managed-products/7");
   });
 });
 

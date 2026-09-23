@@ -28,7 +28,7 @@
 
 ### Build shell
 
-1. Scope selector: Organization → Workspace → Managed Product → Project
+1. Scope selector: Organization (All of Build) → Managed Product → Project. Products and Projects sit directly below the organization scope; no workspace row. Search placeholder is "Search projects and products."
 2. My Work: Inbox, My work
 3. Scope primary destinations
 4. Create menu
@@ -42,7 +42,6 @@
 | Scope | Ordered destinations |
 |---|---|
 | Organization | Home, Projects, Products, Portfolios, Programs, Teams |
-| Workspace | Overview, Projects, Products, Teams, Roadmap, Goals |
 | Managed Product | Overview, Feedback, Insights, Roadmap, Goals, Projects |
 | Project | Overview, Issues, Backlog, Cycles, Roadmap/Timeline layout, Releases, Updates, Files, Client portal |
 
@@ -63,10 +62,8 @@
 
 - `/build/drafts` → `/build/inbox?view=drafts`.
 - `/build/goal*` → `/build/goals*`. **EXECUTED 2026-09-22.**
-- `/build/pm-workspaces` → `/build/workspaces`. **EXECUTED 2026-09-22.**
 - `/build/members` and `/build/access` → `/build/settings/access`.
 - `/build/client-access` → `/build/settings/client-access`.
-- Workspace My Work → `/build/my-work?pmWorkspaceId=...`.
 - Project My Tickets → `/build/my-work?projectId=...`.
 - Project Timeline and Views → `/build/{projectId}/issues?layout=timeline` and saved-view controls.
 - Project Analytics → Reports Overview.
@@ -80,6 +77,7 @@
 - `/build/{projectId}/sprints`; canonical route is `/cycles`.
 - Duplicate Activity, Governance, project Calendar, time tracking, customer, or agent hubs.
 - Any route that only renders another page and has no intentional redirect contract.
+- PM Workspace, in full. **EXECUTED.** `/build/workspaces`, `/build/workspaces/[pmWorkspaceId]` and its nested `overview`, `all-work`, `goals`, `products`, `roadmap`, `teams` are deleted with no replacement page — the concept is gone, not moved. `next.config.ts` preserves every deep link as a redirect: `/build/workspaces` → `/build`; `/build/workspaces/:id` → `/build`; `/build/workspaces/:id/overview` → `/build/command-center`; `/build/workspaces/:id/all-work` → `/build/all-work`; `/build/workspaces/:id/goals` → `/build/goals`; `/build/workspaces/:id/products` → `/build/managed-products`; `/build/workspaces/:id/roadmap` → `/build/roadmap`; `/build/workspaces/:id/teams` → `/build/teams`; `/build/pm-workspaces` → `/build`.
 
 ## Library and Wiki scoping
 
@@ -100,7 +98,7 @@
 
 ## Complete existing-page inventory
 
-This census is the 2026-09-21 baseline: all 92 physical Build-owned page routes found in the repository at that date — 83 authenticated `/build/**` pages plus nine authenticated portal, external portal, and public collaboration pages. Rows marked **EXECUTED** have since been removed or renamed on disk and no longer describe a live route; the live tree is 79 `/build/**` pages, enumerated in `frontend/lib/build/build-route-manifest.ts`. Each linked page spec contains the full interaction, state, permission, component, API, gap, and acceptance contract.
+This census is the 2026-09-21 baseline: all 92 physical Build-owned page routes found in the repository at that date — 83 authenticated `/build/**` pages plus nine authenticated portal, external portal, and public collaboration pages. Rows marked **EXECUTED** have since been removed or renamed on disk and no longer describe a live route; the PM Workspace removal further deletes the eight `/build/workspaces*` rows below with no renamed replacement. The canonical live count is `frontend/lib/build/build-route-manifest.ts`, not this baseline. Each linked page spec contains the full interaction, state, permission, component, API, gap, and acceptance contract.
 
 | Route | Purpose | Primary persona | Decision | Rationale |
 |---|---|---|---|---|
@@ -172,7 +170,7 @@ This census is the 2026-09-21 baseline: all 92 physical Build-owned page routes 
 | `/build/managed-products/[managedProductId]/roadmap` | Connect outcomes and releases to planned product work. | Product manager. | [KEEP](./10-managed-products-product-roadmap.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/members` | Administer Build access at organization scope. | Organization administrator. | [MOVE — EXECUTED 2026-09-22](./10-members.md) | Job lives at `/build/settings/access`. Page deleted; the `next.config.ts` redirect preserves the deep link. |
 | `/build/my-work` | Unify work assigned to, reported by, or watched by the current actor. | Contributor. | [KEEP](./10-my-work.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
-| `/build/pm-workspaces` | Optionally group projects, products, and teams. | Program administrator. | [MOVE — EXECUTED 2026-09-22](./10-workspaces.md) | Job lives at `/build/workspaces`, the index above `/build/workspaces/[pmWorkspaceId]`. Directory renamed; the `next.config.ts` redirect preserves the deep link. |
+| `/build/pm-workspaces` | Optionally group projects, products, and teams. | Program administrator. | [DELETE — EXECUTED](./99-kill-list.md) | PM Workspace is removed, not renamed. The route and the concept it named are both gone; the `next.config.ts` redirect sends the deep link to `/build`. |
 | `/build/portfolios` | Group investments across projects and programs. | Portfolio manager. | [KEEP](./10-portfolios.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/portfolios/[portfolioId]` | Group investments across projects and programs. | Portfolio manager. | [KEEP](./10-portfolios-portfolio.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/programs` | Coordinate related projects toward one delivery outcome. | Program manager. | [KEEP](./10-programs.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
@@ -181,14 +179,14 @@ This census is the 2026-09-21 baseline: all 92 physical Build-owned page routes 
 | `/build/teams` | Define delivery teams and their project relationships. | Team lead. | [KEEP](./10-teams.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/teams/[teamId]` | Define delivery teams and their project relationships. | Team lead. | [KEEP](./10-teams-team.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/templates` | Create repeatable project and work structures. | Project manager. | [KEEP](./10-templates.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
-| `/build/workspaces/[pmWorkspaceId]` | Browse and manage projects in the active scope. | Project manager. | [KEEP](./10-workspaces-workspace.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
-| `/build/workspaces/[pmWorkspaceId]/all-work` | Search and operate across every authorized work item. | Project manager. | [KEEP](./10-workspaces-workspace-all-work.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
-| `/build/workspaces/[pmWorkspaceId]/goals` | Define measurable outcomes and connect delivery evidence. | Product manager. | [KEEP](./10-workspaces-workspace-goals.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
-| `/build/workspaces/[pmWorkspaceId]/my-work` | Unify work assigned to, reported by, or watched by the current actor. | Contributor. | [CONSOLIDATE — EXECUTED 2026-09-22](./10-workspaces-workspace-my-work.md) | Job lives at `/build/my-work?pmWorkspaceId=...`. Page deleted; the redirect moved into `next.config.ts`. |
-| `/build/workspaces/[pmWorkspaceId]/overview` | Summarize health and next actions for the active scope. | Project or product manager. | [KEEP](./10-workspaces-workspace-overview.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
-| `/build/workspaces/[pmWorkspaceId]/products` | Summarize health and next actions for the active scope. | Project or product manager. | [KEEP](./10-workspaces-workspace-products.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
-| `/build/workspaces/[pmWorkspaceId]/roadmap` | Connect outcomes and releases to planned product work. | Product manager. | [KEEP](./10-workspaces-workspace-roadmap.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
-| `/build/workspaces/[pmWorkspaceId]/teams` | Define delivery teams and their project relationships. | Team lead. | [KEEP](./10-workspaces-workspace-teams.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
+| `/build/workspaces/[pmWorkspaceId]` | Browse and manage projects in the active scope. | Project manager. | [DELETE — EXECUTED](./99-kill-list.md) | PM Workspace is removed. Job lives at `/build`; the `next.config.ts` redirect sends the deep link to `/build`. |
+| `/build/workspaces/[pmWorkspaceId]/all-work` | Search and operate across every authorized work item. | Project manager. | [DELETE — EXECUTED](./99-kill-list.md) | PM Workspace is removed. Job lives at `/build/all-work`; the `next.config.ts` redirect sends the deep link to `/build/all-work`. |
+| `/build/workspaces/[pmWorkspaceId]/goals` | Define measurable outcomes and connect delivery evidence. | Product manager. | [DELETE — EXECUTED](./99-kill-list.md) | PM Workspace is removed. Job lives at `/build/goals`; the `next.config.ts` redirect sends the deep link to `/build/goals`. |
+| `/build/workspaces/[pmWorkspaceId]/my-work` | Unify work assigned to, reported by, or watched by the current actor. | Contributor. | [DELETE — EXECUTED 2026-09-22](./99-kill-list.md) | Job lives at `/build/my-work?projectId=...`. Page deleted; the redirect moved into `next.config.ts` and now targets `/build` per the full PM Workspace removal. |
+| `/build/workspaces/[pmWorkspaceId]/overview` | Summarize health and next actions for the active scope. | Project or product manager. | [DELETE — EXECUTED](./99-kill-list.md) | PM Workspace is removed. Job lives at `/build/command-center`; the `next.config.ts` redirect sends the deep link to `/build/command-center`. |
+| `/build/workspaces/[pmWorkspaceId]/products` | Summarize health and next actions for the active scope. | Project or product manager. | [DELETE — EXECUTED](./99-kill-list.md) | PM Workspace is removed. Job lives at `/build/managed-products`; the `next.config.ts` redirect sends the deep link to `/build/managed-products`. |
+| `/build/workspaces/[pmWorkspaceId]/roadmap` | Connect outcomes and releases to planned product work. | Product manager. | [DELETE — EXECUTED](./99-kill-list.md) | PM Workspace is removed. Job lives at `/build/roadmap`; the `next.config.ts` redirect sends the deep link to `/build/roadmap`. |
+| `/build/workspaces/[pmWorkspaceId]/teams` | Define delivery teams and their project relationships. | Team lead. | [DELETE — EXECUTED](./99-kill-list.md) | PM Workspace is removed. Job lives at `/build/teams`; the `next.config.ts` redirect sends the deep link to `/build/teams`. |
 | `/client-portal` | List only projects explicitly shared with the current portal identity. | External client | [KEEP](./10-external-client-portal.md) | Keep as the canonical external portal home. |
 | `/client-portal/[projectId]` | Review the bounded project projection and submit a change request. | External client | [KEEP](./10-external-client-portal-project.md) | Keep as the canonical external project view. |
 | `/forms/[formToken]` | Render a published Build form and create one validated submission. | External requester | [KEEP](./10-public-form.md) | Keep as the canonical public form; forms own intake definitions and submissions. |

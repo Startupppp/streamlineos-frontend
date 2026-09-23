@@ -13,9 +13,11 @@ parent box.
 ## Outcome
 
 Every Build scope opens a real Overview and exposes only destinations whose data
-can be correctly filtered to that scope. Organization, PM workspace, managed
-product, and project navigation must feel intentional rather than like aliases
-of organization or project pages.
+can be correctly filtered to that scope. Organization, managed product, and
+project navigation must feel intentional rather than like aliases of
+organization or project pages. **PM Workspace is removed (BLD-00 D01,
+executed).** Organization owns Products, Projects, Teams, Programs, and
+Portfolios directly; there is no workspace scope in the selector.
 
 ## Dependencies
 
@@ -35,11 +37,11 @@ Primary destinations remain Overview, Projects, Products, Portfolios, Programs,
 and Teams. Organization-wide administration remains in More tools or Build
 settings.
 
-### PM Workspace
+### PM Workspace — Removed
 
-Primary destinations are Overview, Projects, Products, Roadmap, Goals, and
-Teams. Every collection is filtered by `pmWorkspaceId` on the backend and
-membership is enforced at the data layer.
+PM Workspace is not a scope. There is no workspace selector level, no
+`pmWorkspaceId` filter, and no workspace membership gate. Products and
+Projects sit directly under Organization.
 
 ### Managed Product
 
@@ -60,12 +62,9 @@ permission key; BSN-03 adds the enabled-state gate.
 Each Overview is complete only when all listed fields render with explicit
 loading, empty, error, denied, and populated states:
 
-- **Organization Overview** — active workspaces count, active projects count,
+- **Organization Overview** — active projects count, active products count,
   open issues assigned to the actor, portfolio or program health summary when
   authorized, and one authorized create action.
-- **PM Workspace Overview** — workspace name, membership summary, project count,
-  product count, open assigned work in that workspace, and one authorized create
-  action.
 - **Managed Product Overview** — product name and key, linked project count,
   roadmap summary or empty, open goals count or empty, and linked-project list
   bounded to the first page.
@@ -75,13 +74,8 @@ loading, empty, error, denied, and populated states:
 
 ### Hierarchy Ownership
 
-- A project may have a null PM workspace; this is a valid standalone project,
+- A project without a managed product is a valid organization-level project,
   not an orphan.
-- When a managed product has a PM workspace, a linked project uses that same
-  workspace.
-- Invalid non-null workspace references and incompatible cross-workspace
-  product links are blocked at write time and repaired or reported by a
-  one-time audit before directory nesting ships.
 - Portfolios, programs, and teams remain organization rollups, not selector
   parents.
 
@@ -105,14 +99,10 @@ duplicated as TODO checkboxes.
 BSN-01-011, BSN-01-013, BSN-01-014, BSN-01-015 and BSN-01-016 CLOSED in the
 fourth pass — see the Evidence Log.
 
-- [ ] **BSN-01-018** Audit existing rows for invalid non-null workspace
-  references and incompatible cross-workspace product links; repair or
-  quarantine before shipping nesting consumers. Null workspace projects remain
-  valid standalone records.
-  **Requires a database.** None exists on this machine, and the audit is a query
-  over real rows — it cannot be satisfied by a mocked test. The client-side
-  quarantine path for invalid hierarchy rows is already implemented and tested,
-  so a bad row is contained in the UI; that is containment, not the audit.
+- [x] **BSN-01-018** VOID, not done — PM Workspace is removed (BLD-00 D01), so
+  there is no workspace reference or cross-workspace product link left to
+  audit. Migration `1159_build_remove_pm_workspaces` dropped the column this
+  item would have audited.
 
 ### Routes and Pages
 
@@ -310,25 +300,24 @@ Closed in the fourth pass (2026-09-19):
 
 ## Acceptance Checklist
 
-- [ ] **BSN-01-A01** Selecting each of the four scope types lands on an Overview
-  that renders every required Overview Contract field.
-- [ ] **BSN-01-A02** Workspace pages never show data from another workspace.
+- [ ] **BSN-01-A01** Selecting each of the three scope types (organization,
+  managed product, project) lands on an Overview that renders every required
+  Overview Contract field.
+- [x] **BSN-01-A02** VOID — PM Workspace is removed; there is no workspace
+  scope to isolate.
 - [ ] **BSN-01-A03** Product pages never show unlinked product data or projects.
 - [ ] **BSN-01-A04** Project Issues, Updates, Files, and Client portal are
   distinct destinations with correct active states.
 - [ ] **BSN-01-A05** Standalone and product-linked projects both navigate
   correctly.
-- [ ] **BSN-01-A08** Create and update accept standalone projects, reject
-  invalid workspace references and incompatible cross-workspace product links,
-  and the hierarchy audit reports zero unresolved invalid rows or a named
-  quarantine list.
+- [ ] **BSN-01-A08** Create and update accept standalone (organization-level)
+  projects.
 
 ## Evidence Required to Close
 
 - Frontend and backend revision pair.
 - Route and API matrix with source anchors.
-- Overview field checklist with browser evidence for all four scopes.
-- Orphan/cross-workspace audit result.
+- Overview field checklist with browser evidence for all three scopes.
 - Exact focused test commands and pass counts.
 - Cross-tenant and non-member negative-test results.
 - Residual limitations or `none`.

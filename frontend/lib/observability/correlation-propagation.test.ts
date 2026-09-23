@@ -167,7 +167,7 @@ describe("no API-bound fetch in these files is left without correlation context"
     "features/landing/contact-form.tsx",
     "hooks/api/sign/public.ts",
     "app/(public)/wiki/[shareToken]/page.tsx",
-    "app/(authenticated)/build/workspaces/[pmWorkspaceId]/layout.tsx",
+    "app/(authenticated)/build/[projectId]/layout.tsx",
   ];
 
   /** The one same-origin call in the list: NextAuth's own session route. */
