@@ -1,5 +1,5 @@
 import { renderHook, act } from "@testing-library/react";
-import { createElement, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import {
   OrgStorageScopeProvider,
   orgScopedStorageKey,
@@ -22,8 +22,9 @@ function makeState(view: InboxFilterState["view"] = "primary"): InboxFilterState
 }
 
 function wrapWithScope(scope: string) {
-  return ({ children }: { children: ReactNode }) =>
-    createElement(OrgStorageScopeProvider, { scope }, children);
+  return function ScopeWrapper({ children }: { children: ReactNode }) {
+    return <OrgStorageScopeProvider scope={scope}>{children}</OrgStorageScopeProvider>;
+  };
 }
 
 beforeEach(() => {
