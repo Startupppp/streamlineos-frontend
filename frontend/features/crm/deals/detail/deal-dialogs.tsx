@@ -136,32 +136,37 @@ interface CreateProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultName: string;
-  onSubmit: (data: { name: string; startDate?: string; endDate?: string }) => void;
+  defaultDescription?: string;
+  defaultEndDate?: string;
+  onSubmit: (data: { name: string; description?: string; startDate?: string; endDate?: string }) => void;
   isPending: boolean;
 }
 
-export function CreateProjectDialog({ open, onOpenChange, defaultName, onSubmit, isPending }: CreateProjectDialogProps) {
+export function CreateProjectDialog({ open, onOpenChange, defaultName, defaultDescription, defaultEndDate, onSubmit, isPending }: CreateProjectDialogProps) {
   const [name, setName] = useState(defaultName);
+  const [description, setDescription] = useState(defaultDescription ?? "");
   const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [endDate, setEndDate] = useState(defaultEndDate ?? "");
   const startBounds = planningStartPickerProps();
   const endBounds = planningEndPickerProps({ startDate, mode: "after" });
 
   const handleSubmit = useCallback(() => {
     onSubmit({
       name,
+      description: description || undefined,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
     });
-  }, [name, startDate, endDate, onSubmit]);
+  }, [name, description, startDate, endDate, onSubmit]);
 
   const handleOpenChange = useCallback((open: boolean) => {
-    if (!open) { setName(defaultName); setStartDate(""); setEndDate(""); }
+    if (!open) { setName(defaultName); setDescription(defaultDescription ?? ""); setStartDate(""); setEndDate(defaultEndDate ?? ""); }
     onOpenChange(open);
-  }, [onOpenChange, defaultName]);
+  }, [onOpenChange, defaultName, defaultDescription, defaultEndDate]);
 
   const handleCancel = useCallback(() => handleOpenChange(false), [handleOpenChange]);
   const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
+  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value), []);
   const handleStartDateChange = useCallback((value: string) => {
     setStartDate(value);
     setEndDate((prev) => clearEndIfInvalid(value, prev, "after"));
@@ -180,6 +185,15 @@ export function CreateProjectDialog({ open, onOpenChange, defaultName, onSubmit,
           <div className="space-y-1.5">
             <Label>Project Name *</Label>
             <Input placeholder="e.g. Website Redesign" value={name} onChange={handleNameChange} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Description</Label>
+            <Textarea
+              rows={3}
+              placeholder="Carried over from the deal"
+              value={description}
+              onChange={handleDescriptionChange}
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">

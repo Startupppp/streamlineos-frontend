@@ -8,4 +8,5 @@ export {
 export {
   useFeedbucketSubmissions,
   useDeleteFeedbucketSubmission,
+  useBulkMutateFeedbucketSubmissions,
 } from "./use-feedbucket-submissions";

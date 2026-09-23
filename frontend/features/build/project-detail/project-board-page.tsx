@@ -10,6 +10,7 @@ import { ProjectBoardContent } from "@/features/build/views/project-board-conten
 import { ProjectViewsToolbar } from "@/features/build/views/project-views-toolbar";
 import { CreateTicketDialog } from "@/features/build/tickets/create-ticket-dialog";
 import { ProjectAiMenu } from "@/features/build/ai/project-ai-menu";
+import { TicketImportExportDialog } from "@/features/build/import-export/components/ticket-import-export-dialog";
 import { SaveViewDialog } from "@/features/build/views/save-view-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
@@ -188,6 +189,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
       actions={
         <div className="flex items-center gap-2">
           <ProjectAiMenu projectId={projectId} />
+          <TicketImportExportDialog projectId={projectId} />
           <CreateTicketDialog
             projectId={projectId}
             defaultCycleId={createDefaultCycleId}
