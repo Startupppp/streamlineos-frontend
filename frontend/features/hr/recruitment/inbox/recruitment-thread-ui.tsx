@@ -223,7 +223,7 @@ export function ThreadPane({ thread }: { thread: MessageThread }) {
   }
 
   const state = usePageState({
-    permission: "hr:employees:view",
+    permission: "hr:requisitions:view",
     isLoading: messagesQuery.isLoading,
     isError: messagesQuery.isError,
     error: messagesQuery.error,

@@ -78,7 +78,7 @@ export function MessagesTab({
   }
 
   const state = usePageState({
-    permission: "hr:employees:view",
+    permission: "hr:requisitions:view",
     isLoading: messagesQuery.isLoading,
     isError: messagesQuery.isError,
     error: messagesQuery.error,
