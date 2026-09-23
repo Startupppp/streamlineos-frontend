@@ -1,3 +1,8 @@
+> **HISTORICAL — point-in-time record, 2026-09-22**
+> The environment facts inside this document (migration application state, production database details, rollback position) are point-in-time and no longer current. For current release status see [RELEASE-STATUS.md](./RELEASE-STATUS.md).
+
+---
+
 # Build module — Phase 2 status: 1141 / 1142 on production RDS
 
 Opened 2026-09-22. Records the production application of migrations `1141` and `1142`, the preflight that should have preceded it, and the rollback position now.

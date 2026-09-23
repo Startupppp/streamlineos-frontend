@@ -1,3 +1,8 @@
+> **HISTORICAL — point-in-time record, 2026-09-22**
+> The environment facts inside this document (commit SHAs, branch state, test counts, gate results) are point-in-time and no longer current. For current release status see [RELEASE-STATUS.md](./RELEASE-STATUS.md).
+
+---
+
 # Phase 3 — Daily Workflow Consolidation — Status Ledger
 
 Coordinator-owned. Workers never edit this file.

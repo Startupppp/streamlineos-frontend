@@ -131,7 +131,7 @@ jest.mock("./inbox-virtual-list", () => ({
 }));
 
 jest.mock("./inbox-toolbar", () => {
-  const { createElement: ce } = require("react") as typeof import("react");
+  const { createElement: ce } = jest.requireActual<typeof import("react")>("react");
   const views = [
     { value: "primary", label: "All" },
     { value: "notifications", label: "Notifications" },

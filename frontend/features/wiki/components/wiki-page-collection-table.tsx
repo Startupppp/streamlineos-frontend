@@ -243,7 +243,7 @@ export function WikiPageCollectionTable({
       <div className="flex flex-wrap items-center gap-2">
         <SearchInput
           value={rawSearch}
-          onChange={handleSearchChange}
+          onValueChange={handleSearchChange}
           placeholder="Search pages…"
           className="h-9 w-48 shrink-0"
         />

@@ -1,3 +1,8 @@
+> **HISTORICAL — point-in-time record, 2026-09-22**
+> The environment facts inside this document (commit SHAs, route/page counts, branch state, `main` SHA) are point-in-time and no longer current. For current release status see [RELEASE-STATUS.md](./RELEASE-STATUS.md).
+
+---
+
 # Dead Build Surface Removal — Status Ledger
 
 **Branch:** `build/remove-dead-build-surface`

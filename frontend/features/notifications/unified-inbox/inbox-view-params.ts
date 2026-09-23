@@ -131,8 +131,8 @@ export function parseInboxFilterState(
   const group = parseGrouping(params.get("group"));
   const from = params.get("from") ?? "";
   const to = params.get("to") ?? "";
-  const module = params.get("module") ?? "";
-  return { view, q, unreadOnly, category, priority, kindOverride, group, from, to, module };
+  const moduleParam = params.get("module") ?? "";
+  return { view, q, unreadOnly, category, priority, kindOverride, group, from, to, module: moduleParam };
 }
 
 export interface InboxQueryParams {

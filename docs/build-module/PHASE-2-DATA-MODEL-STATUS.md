@@ -1,3 +1,8 @@
+> **HISTORICAL — point-in-time record, 2026-09-22**
+> The environment facts inside this document (branch states, workstream statuses, blocker states, database probe results) are point-in-time and no longer current. For current release status see [RELEASE-STATUS.md](./RELEASE-STATUS.md).
+
+---
+
 # Phase 2 Build Canonical Data Model — Status Ledger
 
 Coordinator-owned. Workers never edit this file. Phase 1 ledgers are not modified by Phase 2.

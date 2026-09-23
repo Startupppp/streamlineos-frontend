@@ -1,5 +1,4 @@
 export type BugSeverity = "blocker" | "critical" | "major" | "minor" | "trivial";
-export type BugPriority = "low" | "medium" | "high" | "urgent";
 export type BugStatus =
   | "new"
   | "triaged"
@@ -42,22 +41,3 @@ export interface Bug {
   createdByUserId: string | null;
 }
 
-export interface CreateBugInput {
-  title: string;
-  description?: string;
-  severity?: BugSeverity;
-  priority?: BugPriority;
-  status?: BugStatus;
-  stepsToReproduce?: string;
-  expectedResult?: string;
-  actualResult?: string;
-  environment?: string;
-  browserDevice?: string;
-  affectedReleaseId?: number;
-  fixedReleaseId?: number;
-  assigneeId?: string;
-  qaOwnerId?: string;
-  linkedTestCaseId?: number;
-}
-
-export type UpdateBugInput = Partial<CreateBugInput>;
