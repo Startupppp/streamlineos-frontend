@@ -5,6 +5,7 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import type { Invoice, InvoiceStats, InvoiceStatus, PatchableInvoiceStatus, Payment, PaymentMethod } from "@/types/invoice";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
@@ -167,6 +168,11 @@ export const useVoidInvoice = () => {
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.detail(id) });
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.stats() });
       void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
+      // A void now also releases the timesheet entries this invoice billed
+      // (invoices-lifecycle.service.ts) back to UNINVOICED, so the billing
+      // queue's cached "uninvoiced" view is stale the moment this commits.
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.billingUninvoiced() });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
     },
   });
 };
