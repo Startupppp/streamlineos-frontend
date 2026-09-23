@@ -49,6 +49,7 @@ import {
   type ChangeRequestFormValues,
   CHANGE_REQUEST_FORM_DEFAULTS,
 } from "./change-request-schema";
+import { ChangeRequestAffectedTickets } from "./change-request-affected-tickets";
 
 type FormValues = ChangeRequestFormValues;
 
@@ -281,6 +282,7 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                         </FormItem>
                       )}
                     />
+                    <ChangeRequestAffectedTickets projectId={projectId} changeRequestId={editCr.id} />
                   </>
                 )}
               </div>
