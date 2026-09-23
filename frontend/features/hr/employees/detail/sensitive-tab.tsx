@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Shield, Lock } from "lucide-react";
+import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -40,9 +41,10 @@ interface MaskedFieldProps {
   editMode: boolean;
   fieldName: keyof SensitiveFormValues;
   control: Control<SensitiveFormValues>;
+  hint?: string;
 }
 
-function MaskedField({ label, value, editMode, fieldName, control }: MaskedFieldProps) {
+function MaskedField({ label, value, editMode, fieldName, control, hint }: MaskedFieldProps) {
   const [revealed, setRevealed] = useState(false);
   const handleToggle = () => setRevealed((prev) => !prev);
 
@@ -90,6 +92,9 @@ function MaskedField({ label, value, editMode, fieldName, control }: MaskedField
               </div>
             )}
           </FormControl>
+          {hint ? (
+            <p className="text-xs leading-relaxed text-muted-foreground">{hint}</p>
+          ) : null}
           <FormMessage />
         </FormItem>
       )}
@@ -163,17 +168,33 @@ export function EmployeeSensitiveTab({ userId }: Props) {
 
   const displayValues = sensitiveToForm(sensitive);
 
-  const fields: Array<{ label: string; key: keyof SensitiveFormValues }> = [
+  const fields: Array<{ label: string; key: keyof SensitiveFormValues; hint?: string }> = [
     { label: "Salary Amount", key: "salaryAmount" },
     { label: "Salary Currency", key: "salaryCurrency" },
     { label: "Salary Frequency", key: "salaryFrequency" },
     { label: "Bank Account Number", key: "bankAccountNumber" },
     { label: "Bank Name", key: "bankName" },
-    { label: "IFSC / Routing Code", key: "ifscCode" },
-    { label: "PF / UAN (12 digits)", key: "pfUanNumber" },
-    { label: "ESI IP Number", key: "esiIpNumber" },
+    {
+      label: "IFSC / Routing Code",
+      key: "ifscCode",
+      hint: "11 characters, printed on the employee's cheque book and bank passbook.",
+    },
+    {
+      label: "PF / UAN (12 digits)",
+      key: "pfUanNumber",
+      hint: "The Universal Account Number from EPFO, on the employee's payslip or EPFO passbook. It follows them between employers — issue a new one only if they have never been enrolled.",
+    },
+    {
+      label: "ESI IP Number",
+      key: "esiIpNumber",
+      hint: "The 10-digit Insured Person number from ESIC. Required only where ESI applies — broadly, employees earning up to ₹21,000 a month at a covered establishment.",
+    },
     { label: "Tax ID", key: "taxId" },
-    { label: "PAN Number", key: "panNumber" },
+    {
+      label: "PAN Number",
+      key: "panNumber",
+      hint: "10 characters, needed for TDS and Form 16.",
+    },
     { label: "Passport Number", key: "passportNumber" },
     { label: "National ID (Aadhaar / SSN)", key: "nationalId" },
   ];
@@ -190,7 +211,10 @@ export function EmployeeSensitiveTab({ userId }: Props) {
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Sensitive Information</p>
-                  <p className="text-dense text-muted-foreground">Encrypted at rest — access is audited</p>
+                  <p className="text-dense text-muted-foreground">
+                    Encrypted at rest. Opening this tab has already been recorded
+                    against your account, with your IP address and the time.
+                  </p>
                 </div>
               </div>
               {canManage && (
@@ -207,7 +231,7 @@ export function EmployeeSensitiveTab({ userId }: Props) {
               )}
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              {fields.map(({ label, key }) => (
+              {fields.map(({ label, key, hint }) => (
                 <MaskedField
                   key={key}
                   label={label}
@@ -215,9 +239,20 @@ export function EmployeeSensitiveTab({ userId }: Props) {
                   editMode={editMode}
                   fieldName={key}
                   control={form.control}
+                  hint={hint}
                 />
               ))}
             </div>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              PF, ESI and TDS obligations depend on where this employee works.{" "}
+              <Link
+                href="/hr/compliance"
+                className="font-medium text-primary underline underline-offset-2"
+              >
+                Review statutory requirements
+              </Link>{" "}
+              to see what applies before you rely on these fields.
+            </p>
           </CardContent>
         </Card>
       </form>

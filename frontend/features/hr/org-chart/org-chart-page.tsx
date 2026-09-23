@@ -7,7 +7,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@animateicons/react/lucide";
-import { Building2, Network } from "lucide-react";
+import { AlertCircle, Building2, Network } from "lucide-react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { ErrorState } from "@/components/shared";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -25,6 +25,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
 import type { OrgChartNode } from "./types";
+import { splitOrgChartRoots, unassignedRootsHeading } from "./org-chart-roots";
 import { useHrOrgChart } from "./use-org-chart";
 
 const PAGE_SIZE = 20;
@@ -258,6 +259,11 @@ function OrgChartCollection({ search }: { search?: string }) {
     );
   }
 
+  const { managers, unassigned } = search
+    ? { managers: query.data.data, unassigned: [] as OrgChartNode[] }
+    : splitOrgChartRoots(query.data.data);
+  const unassignedHeading = unassignedRootsHeading(managers.length > 0);
+
   return (
     <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
       <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-auto p-3">
@@ -265,13 +271,35 @@ function OrgChartCollection({ search }: { search?: string }) {
           <Network className="h-4 w-4" aria-hidden="true" />
           {search
             ? "Search results; expand a person to load their direct reports."
-            : "Roots in your access scope; expand a person to load one branch at a time."}
+            : "People you can see who report to nobody above them. Expand a person to load one branch at a time."}
         </div>
-        <ul className="min-w-max space-y-2">
-          {query.data.data.map((employee) => (
-            <OrgChartBranch key={employee.id} employee={employee} lineage={[]} />
-          ))}
-        </ul>
+        {managers.length > 0 ? (
+          <ul className="min-w-max space-y-2">
+            {managers.map((employee) => (
+              <OrgChartBranch key={employee.id} employee={employee} lineage={[]} />
+            ))}
+          </ul>
+        ) : null}
+        {unassigned.length > 0 ? (
+          <section className="min-w-max space-y-2 rounded-lg border border-dashed border-border bg-muted/30 p-3">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <div className="space-y-1">
+                <h2 className="text-sm font-semibold text-foreground">
+                  {unassignedHeading.title}
+                </h2>
+                <p className="max-w-prose text-xs leading-relaxed text-muted-foreground">
+                  {unassignedHeading.description}
+                </p>
+              </div>
+            </div>
+            <ul className="space-y-2">
+              {unassigned.map((employee) => (
+                <OrgChartBranch key={employee.id} employee={employee} lineage={[]} />
+              ))}
+            </ul>
+          </section>
+        ) : null}
         <PageButtons
           page={cursors.length}
           hasNext={query.data.pageInfo.hasMore}
