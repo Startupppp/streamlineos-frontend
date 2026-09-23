@@ -6,6 +6,7 @@ import {
   Bell,
   Mail,
   ClipboardList,
+  ListChecks,
   CalendarClock,
   ChevronRight,
   AlertTriangle,
@@ -38,6 +39,7 @@ const ITEM_ICONS: Record<string, IconComponent> = {
   meetings: CalendarClock,
   notifications: Bell,
   mail: Mail,
+  tasks: ListChecks,
 };
 
 interface FocusStripItemProps {

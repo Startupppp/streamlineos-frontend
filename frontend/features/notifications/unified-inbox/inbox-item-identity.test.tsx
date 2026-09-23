@@ -228,6 +228,7 @@ describe("ApprovalItemCard — D2 source labels show the approval kind", () => {
         onBroadcastClick={noop}
         onMailClick={noop}
         onApprovalClick={noop}
+        onModuleTaskClick={noop}
       />,
     );
     expect(screen.getByText("Build")).toBeInTheDocument();
@@ -241,6 +242,7 @@ describe("ApprovalItemCard — D2 source labels show the approval kind", () => {
         onBroadcastClick={noop}
         onMailClick={noop}
         onApprovalClick={noop}
+        onModuleTaskClick={noop}
       />,
     );
     expect(screen.getByText("Leave")).toBeInTheDocument();
@@ -254,6 +256,7 @@ describe("ApprovalItemCard — D2 source labels show the approval kind", () => {
         onBroadcastClick={noop}
         onMailClick={noop}
         onApprovalClick={noop}
+        onModuleTaskClick={noop}
       />,
     );
     expect(screen.getByText("Work from home")).toBeInTheDocument();
@@ -267,6 +270,7 @@ describe("ApprovalItemCard — D2 source labels show the approval kind", () => {
         onBroadcastClick={noop}
         onMailClick={noop}
         onApprovalClick={noop}
+        onModuleTaskClick={noop}
       />,
     );
     expect(screen.getByText("HR workflow")).toBeInTheDocument();
@@ -280,6 +284,7 @@ describe("ApprovalItemCard — D2 source labels show the approval kind", () => {
         onBroadcastClick={noop}
         onMailClick={noop}
         onApprovalClick={noop}
+        onModuleTaskClick={noop}
       />,
     );
     expect(screen.getByText("Timesheet")).toBeInTheDocument();
@@ -293,6 +298,7 @@ describe("ApprovalItemCard — D2 source labels show the approval kind", () => {
         onBroadcastClick={noop}
         onMailClick={noop}
         onApprovalClick={noop}
+        onModuleTaskClick={noop}
       />,
     );
     expect(screen.getByText("future_kind_from_new_backend_adapter")).toBeInTheDocument();

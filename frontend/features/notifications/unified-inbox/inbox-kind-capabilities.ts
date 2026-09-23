@@ -32,6 +32,12 @@ export const KIND_CAPABILITIES: Record<InboxKind, KindCapabilities> = {
     canSnooze: false,
     canDelete: false,
   },
+  module_task: {
+    canMarkRead: false,
+    canArchive: false,
+    canSnooze: false,
+    canDelete: false,
+  },
 };
 
 export function resolvedCapabilities(kinds: InboxKind[]): KindCapabilities {

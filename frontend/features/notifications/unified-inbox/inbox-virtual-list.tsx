@@ -24,6 +24,7 @@ interface InboxVirtualRowData {
   onBroadcastClick: InboxItemCardProps["onBroadcastClick"];
   onMailClick: InboxItemCardProps["onMailClick"];
   onApprovalClick: InboxItemCardProps["onApprovalClick"];
+  onModuleTaskClick: InboxItemCardProps["onModuleTaskClick"];
   onArchive: InboxItemCardProps["onArchive"];
   onDelete: InboxItemCardProps["onDelete"];
   onApprove: InboxItemCardProps["onApprove"];
@@ -60,6 +61,7 @@ function InboxVirtualRow({
   onBroadcastClick,
   onMailClick,
   onApprovalClick,
+  onModuleTaskClick,
   onArchive,
   onDelete,
   onApprove,
@@ -121,6 +123,7 @@ function InboxVirtualRow({
           onBroadcastClick={onBroadcastClick}
           onMailClick={onMailClick}
           onApprovalClick={onApprovalClick}
+          onModuleTaskClick={onModuleTaskClick}
           onArchive={onArchive}
           onDelete={onDelete}
           onApprove={onApprove}
@@ -146,6 +149,7 @@ export interface InboxVirtualListProps {
   onBroadcastClick: InboxItemCardProps["onBroadcastClick"];
   onMailClick: InboxItemCardProps["onMailClick"];
   onApprovalClick: InboxItemCardProps["onApprovalClick"];
+  onModuleTaskClick: InboxItemCardProps["onModuleTaskClick"];
   onArchive: InboxItemCardProps["onArchive"];
   onDelete: InboxItemCardProps["onDelete"];
   onApprove: InboxItemCardProps["onApprove"];
@@ -168,6 +172,7 @@ export const InboxVirtualList = memo(function InboxVirtualList({
   onBroadcastClick,
   onMailClick,
   onApprovalClick,
+  onModuleTaskClick,
   onArchive,
   onDelete,
   onApprove,
@@ -203,6 +208,7 @@ export const InboxVirtualList = memo(function InboxVirtualList({
       onBroadcastClick,
       onMailClick,
       onApprovalClick,
+      onModuleTaskClick,
       onArchive,
       onDelete,
       onApprove,
@@ -224,6 +230,7 @@ export const InboxVirtualList = memo(function InboxVirtualList({
       onBroadcastClick,
       onMailClick,
       onApprovalClick,
+      onModuleTaskClick,
       onArchive,
       onDelete,
       onApprove,

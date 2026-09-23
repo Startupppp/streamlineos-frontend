@@ -108,6 +108,20 @@ export function useFocusStrip(access: DashboardAccess): {
       });
     }
 
+    const taskCount = inboxData?.task ?? 0;
+    if (taskCount > 0) {
+      result.push({
+        id: "tasks",
+        label:
+          taskCount === 1
+            ? "1 task assigned to you"
+            : `${taskCount} tasks assigned to you`,
+        count: taskCount,
+        href: "/inbox?kinds=module_task",
+        priority: "warning",
+      });
+    }
+
     const notifCount = inboxData?.notification ?? 0;
     if (notifCount > 0) {
       result.push({

@@ -10,6 +10,7 @@ let mockUnifiedCount = {
   notification: 0,
   mail: 0,
   approval: 0,
+  task: 0,
   total: 0,
   mailExact: true,
 };
@@ -121,6 +122,7 @@ describe("NotificationBell — unified count badge", () => {
       notification: 0,
       mail: 0,
       approval: 0,
+      task: 0,
       total: 0,
       mailExact: true,
     };
@@ -130,37 +132,37 @@ describe("NotificationBell — unified count badge", () => {
   });
 
   it("shows no badge when total is zero", () => {
-    mockUnifiedCount = { notification: 0, mail: 0, approval: 0, total: 0, mailExact: true };
+    mockUnifiedCount = { notification: 0, mail: 0, approval: 0, task: 0, total: 0, mailExact: true };
     render(<NotificationBell />);
     expect(screen.queryByText(/^\d/)).not.toBeInTheDocument();
   });
 
   it("shows the badge when notification-only count is non-zero", () => {
-    mockUnifiedCount = { notification: 3, mail: 0, approval: 0, total: 3, mailExact: true };
+    mockUnifiedCount = { notification: 3, mail: 0, approval: 0, task: 0, total: 3, mailExact: true };
     render(<NotificationBell />);
     expect(screen.getByText("3")).toBeInTheDocument();
   });
 
   it("shows the badge when mail-only count is non-zero", () => {
-    mockUnifiedCount = { notification: 0, mail: 5, approval: 0, total: 5, mailExact: false };
+    mockUnifiedCount = { notification: 0, mail: 5, approval: 0, task: 0, total: 5, mailExact: false };
     render(<NotificationBell />);
     expect(screen.getByText("5")).toBeInTheDocument();
   });
 
   it("shows the badge when approval-only count is non-zero", () => {
-    mockUnifiedCount = { notification: 0, mail: 0, approval: 2, total: 2, mailExact: true };
+    mockUnifiedCount = { notification: 0, mail: 0, approval: 2, task: 0, total: 2, mailExact: true };
     render(<NotificationBell />);
     expect(screen.getByText("2")).toBeInTheDocument();
   });
 
   it("sums notification + mail + approval into the total and displays that on the badge", () => {
-    mockUnifiedCount = { notification: 1, mail: 2, approval: 3, total: 6, mailExact: true };
+    mockUnifiedCount = { notification: 1, mail: 2, approval: 3, task: 0, total: 6, mailExact: true };
     render(<NotificationBell />);
     expect(screen.getByText("6")).toBeInTheDocument();
   });
 
   it("live region reflects the unified total, not a single source", () => {
-    mockUnifiedCount = { notification: 1, mail: 2, approval: 3, total: 6, mailExact: true };
+    mockUnifiedCount = { notification: 1, mail: 2, approval: 3, task: 0, total: 6, mailExact: true };
     render(<NotificationBell />);
     const region = screen.getByRole("status");
     expect(region).toHaveTextContent("6 unread items in inbox");
@@ -173,10 +175,22 @@ describe("NotificationBell — unified count badge", () => {
   });
 
   it("a source the actor cannot access contributes 0 and does not inflate the badge", () => {
-    mockUnifiedCount = { notification: 2, mail: 0, approval: 0, total: 2, mailExact: true };
+    mockUnifiedCount = { notification: 2, mail: 0, approval: 0, task: 0, total: 2, mailExact: true };
     render(<NotificationBell />);
     expect(screen.getByText("2")).toBeInTheDocument();
     expect(screen.queryByText("3")).not.toBeInTheDocument();
+  });
+
+  it("shows the badge when task-only count is non-zero, flowing through total", () => {
+    mockUnifiedCount = { notification: 0, mail: 0, approval: 0, task: 3, total: 3, mailExact: true };
+    render(<NotificationBell />);
+    expect(screen.getByText("3")).toBeInTheDocument();
+  });
+
+  it("negative: task count alone does not show if total remains zero", () => {
+    mockUnifiedCount = { notification: 0, mail: 0, approval: 0, task: 0, total: 0, mailExact: true };
+    render(<NotificationBell />);
+    expect(screen.queryByText(/^\d/)).not.toBeInTheDocument();
   });
 });
 

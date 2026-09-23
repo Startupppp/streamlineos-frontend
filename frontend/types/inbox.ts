@@ -53,14 +53,25 @@ export type BuildApprovalInboxItem = InboxItemBase & {
   dueAt: string | null;
 };
 
+export type ModuleTaskInboxItem = InboxItemBase & {
+  kind: "module_task";
+  id: string;
+  taskKind: string;
+  status: string;
+  priority: string;
+  dueAt: string | null;
+  body: string;
+};
+
 export type UnifiedInboxItem =
   | NotificationInboxItem
   | BroadcastInboxItem
   | MailInboxItem
-  | BuildApprovalInboxItem;
+  | BuildApprovalInboxItem
+  | ModuleTaskInboxItem;
 
 export type InboxSourceStatus = {
-  kind: "notification" | "broadcast" | "mail" | "build_approval";
+  kind: "notification" | "broadcast" | "mail" | "build_approval" | "module_task";
   included: boolean;
   reason: string | null;
   available: boolean;
@@ -81,6 +92,7 @@ export type UnifiedInboxCount = {
   notification: number;
   mail: number;
   approval: number;
+  task: number;
   total: number;
   mailExact: boolean;
 };

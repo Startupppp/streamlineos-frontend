@@ -60,13 +60,23 @@ export const unifiedInboxContract = z.object({
         ticketId: z.number().int().nullable(),
         dueAt: z.string().nullable(),
       }),
+      z.object({
+        ...inboxItemBase,
+        kind: z.literal("module_task"),
+        id: z.string(),
+        taskKind: z.string(),
+        status: z.string(),
+        priority: z.string(),
+        dueAt: z.string().nullable(),
+        body: z.string(),
+      }),
     ]),
   ),
   hasMore: z.boolean(),
   nextCursor: z.string().nullable(),
   sources: z.array(
     z.object({
-      kind: z.enum(["notification", "broadcast", "mail", "build_approval"]),
+      kind: z.enum(["notification", "broadcast", "mail", "build_approval", "module_task"]),
       included: z.boolean(),
       reason: z.string().nullable(),
       available: z.boolean(),
@@ -80,6 +90,7 @@ export const unifiedInboxCountContract = z.object({
   notification: z.number().int(),
   mail: z.number().int(),
   approval: z.number().int(),
+  task: z.number().int(),
   total: z.number().int(),
   mailExact: z.boolean(),
 });

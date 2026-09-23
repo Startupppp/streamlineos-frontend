@@ -31,6 +31,7 @@ const ALL_KINDS: InboxKind[] = [
   "broadcast",
   "mail",
   "build_approval",
+  "module_task",
 ];
 
 const VALID_KIND_SET: ReadonlySet<string> = new Set<InboxKind>(ALL_KINDS);

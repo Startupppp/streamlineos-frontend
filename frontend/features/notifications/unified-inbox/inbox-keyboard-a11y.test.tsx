@@ -152,6 +152,7 @@ const baseVirtualListProps: Omit<InboxVirtualListProps, "items"> = {
   onBroadcastClick: noopItem,
   onMailClick: noopItem,
   onApprovalClick: noopItem,
+  onModuleTaskClick: noopItem,
   onArchive: noop,
   onDelete: noop,
   onApprove: noop,
@@ -175,6 +176,7 @@ describe("every inbox row variant is keyboard reachable and activatable", () => 
           onBroadcastClick={jest.fn()}
           onMailClick={jest.fn()}
           onApprovalClick={jest.fn()}
+          onModuleTaskClick={jest.fn()}
         />
       </TooltipProvider>,
     );
@@ -202,6 +204,7 @@ describe("every inbox row variant is keyboard reachable and activatable", () => 
           onBroadcastClick={onBroadcastClick}
           onMailClick={jest.fn()}
           onApprovalClick={jest.fn()}
+          onModuleTaskClick={jest.fn()}
         />
       </TooltipProvider>,
     );
@@ -229,6 +232,7 @@ describe("every inbox row variant is keyboard reachable and activatable", () => 
           onBroadcastClick={jest.fn()}
           onMailClick={onMailClick}
           onApprovalClick={jest.fn()}
+          onModuleTaskClick={jest.fn()}
         />
       </TooltipProvider>,
     );
@@ -258,6 +262,7 @@ describe("every inbox row variant is keyboard reachable and activatable", () => 
           onBroadcastClick={jest.fn()}
           onMailClick={jest.fn()}
           onApprovalClick={onApprovalClick}
+          onModuleTaskClick={jest.fn()}
         />
       </TooltipProvider>,
     );

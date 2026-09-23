@@ -1,19 +1,20 @@
 "use client";
 
 import { memo, useCallback } from "react";
-import { Mail, CheckCircle, Clock, Paperclip } from "lucide-react";
+import { Mail, CheckCircle, Clock, Paperclip, ClipboardList } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { NotificationCard } from "@/features/notifications/notification-card";
 import { formatRelativeTime } from "@/lib/format-relative-time";
-import { approvalKindLabel } from "./inbox-sources";
+import { approvalKindLabel, taskKindLabel } from "./inbox-sources";
 import type {
   UnifiedInboxItem,
   NotificationInboxItem,
   BroadcastInboxItem,
   MailInboxItem,
   BuildApprovalInboxItem,
+  ModuleTaskInboxItem,
 } from "@/types/inbox";
 
 function assertNever(x: never): never {
@@ -213,12 +214,61 @@ function ApprovalItemCard({ item, onClick }: ApprovalItemCardProps) {
   );
 }
 
+interface ModuleTaskItemCardProps {
+  item: ModuleTaskInboxItem;
+  onClick: (item: ModuleTaskInboxItem) => void;
+}
+
+function ModuleTaskItemCard({ item, onClick }: ModuleTaskItemCardProps) {
+  const handleClick = useCallback(() => onClick(item), [item, onClick]);
+  return (
+    <button
+      type="button"
+      className="w-full text-left rounded-xl border border-border/70 bg-card p-3 transition-colors hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      onClick={handleClick}
+      aria-label={`Task: ${item.subject}`}
+    >
+      <div className="flex items-start gap-2 min-w-0">
+        <ClipboardList className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" aria-hidden />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline justify-between gap-2 min-w-0">
+            <TruncatedText
+              text={item.subject}
+              className="text-label font-medium text-foreground min-w-0"
+            />
+            <span className="text-dense tabular-nums text-muted-foreground shrink-0">
+              {formatRelativeTime(item.timestamp)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <Badge variant="secondary" className="h-4 px-1.5 py-0 text-micro">
+              {taskKindLabel(item.taskKind)}
+            </Badge>
+            <Badge variant="outline" className="h-4 px-1.5 py-0 text-micro">
+              {item.status}
+            </Badge>
+            <Badge variant="outline" className="h-4 px-1.5 py-0 text-micro">
+              {item.priority}
+            </Badge>
+            {item.dueAt !== null && (
+              <span className="text-dense text-muted-foreground tabular-nums">
+                Due {formatRelativeTime(item.dueAt)}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </button>
+  );
+}
+
 export interface InboxItemCardProps {
   item: UnifiedInboxItem;
   onNotificationClick: (item: NotificationInboxItem) => void;
   onBroadcastClick: (item: BroadcastInboxItem) => void;
   onMailClick: (item: MailInboxItem) => void;
   onApprovalClick: (item: BuildApprovalInboxItem) => void;
+  onModuleTaskClick: (item: ModuleTaskInboxItem) => void;
   onArchive?: (id: number) => void;
   onDelete?: (id: number) => void;
   onApprove?: (id: number) => void;
@@ -235,6 +285,7 @@ export const InboxItemCard = memo(function InboxItemCard({
   onBroadcastClick,
   onMailClick,
   onApprovalClick,
+  onModuleTaskClick,
   onArchive,
   onDelete,
   onApprove,
@@ -266,6 +317,8 @@ export const InboxItemCard = memo(function InboxItemCard({
       return <MailItemCard item={item} onClick={onMailClick} />;
     case "build_approval":
       return <ApprovalItemCard item={item} onClick={onApprovalClick} />;
+    case "module_task":
+      return <ModuleTaskItemCard item={item} onClick={onModuleTaskClick} />;
     default:
       return assertNever(item);
   }

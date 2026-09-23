@@ -95,6 +95,7 @@ const VALID_KINDS: ReadonlySet<string> = new Set<InboxKind>([
   "broadcast",
   "mail",
   "build_approval",
+  "module_task",
 ]);
 
 export interface InboxFilterState {

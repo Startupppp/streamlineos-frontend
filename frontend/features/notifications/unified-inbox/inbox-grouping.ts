@@ -35,6 +35,7 @@ const KIND_LABELS: Record<string, string> = {
   broadcast: "Broadcasts",
   mail: "Mail",
   build_approval: "Approvals",
+  module_task: "Tasks",
 };
 
 function formatModuleLabel(mod: string): string {

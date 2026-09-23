@@ -48,6 +48,7 @@ const baseProps: Omit<InboxVirtualListProps, "items"> = {
   onBroadcastClick: noopItem,
   onMailClick: noopItem,
   onApprovalClick: noopItem,
+  onModuleTaskClick: noopItem,
   onArchive: noop,
   onDelete: noop,
   onApprove: noop,

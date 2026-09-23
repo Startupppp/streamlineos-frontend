@@ -62,7 +62,7 @@ const baseAccess: DashboardAccess = {
 };
 
 const emptyData = {
-  inboxCount: { notification: 0, mail: 0, approval: 0, total: 0, mailExact: true },
+  inboxCount: { notification: 0, mail: 0, approval: 0, task: 0, total: 0, mailExact: true },
   approvals: { pendingLeaves: 0, pendingResignations: 0, total: 0 },
   personal: { myTasks: [], timesheetStatus: null, upcomingEvents: [], degraded: [] },
 };
@@ -115,7 +115,7 @@ describe("FocusStrip — actionable items", () => {
   });
 
   it("shows unread notifications with a link to the inbox", () => {
-    mockInboxCount.data = { notification: 5, mail: 0, approval: 0, total: 5, mailExact: true };
+    mockInboxCount.data = { notification: 5, mail: 0, approval: 0, task: 0, total: 5, mailExact: true };
     mockApprovals.data = emptyData.approvals;
     mockPersonal.data = emptyData.personal;
     render(<FocusStrip access={baseAccess} />);
@@ -124,12 +124,30 @@ describe("FocusStrip — actionable items", () => {
   });
 
   it("shows unread mail with a link to the mail inbox", () => {
-    mockInboxCount.data = { notification: 0, mail: 2, approval: 0, total: 2, mailExact: true };
+    mockInboxCount.data = { notification: 0, mail: 2, approval: 0, task: 0, total: 2, mailExact: true };
     mockApprovals.data = emptyData.approvals;
     mockPersonal.data = emptyData.personal;
     render(<FocusStrip access={baseAccess} />);
     const link = screen.getByRole("link", { name: /2 unread messages/i });
     expect(link).toHaveAttribute("href", "/inbox?view=mail");
+  });
+
+  it("shows assigned module tasks with a link that filters the inbox to them", () => {
+    mockInboxCount.data = { notification: 0, mail: 0, approval: 0, task: 3, total: 3, mailExact: true };
+    mockApprovals.data = emptyData.approvals;
+    mockPersonal.data = emptyData.personal;
+    render(<FocusStrip access={baseAccess} />);
+    const link = screen.getByRole("link", { name: /3 tasks assigned to you/i });
+    expect(link).toHaveAttribute("href", "/inbox?kinds=module_task");
+  });
+
+  it("CONTROL: renders no task chip when the task count is zero", () => {
+    mockInboxCount.data = { notification: 5, mail: 0, approval: 0, task: 0, total: 5, mailExact: true };
+    mockApprovals.data = emptyData.approvals;
+    mockPersonal.data = emptyData.personal;
+    render(<FocusStrip access={baseAccess} />);
+    expect(screen.queryByRole("link", { name: /assigned to you/i })).toBeNull();
+    expect(screen.getByRole("link", { name: /5 notifications/i })).toBeInTheDocument();
   });
 
   it("shows timesheet exception when hours logged but not submitted", () => {
@@ -191,7 +209,7 @@ describe("FocusStrip — permission gates (positive and negative)", () => {
   });
 
   it("each attention source produces exactly one item — not multiple cards for the same count", () => {
-    mockInboxCount.data = { notification: 3, mail: 2, approval: 0, total: 5, mailExact: true };
+    mockInboxCount.data = { notification: 3, mail: 2, approval: 0, task: 0, total: 5, mailExact: true };
     mockApprovals.data = { pendingLeaves: 1, pendingResignations: 0, total: 1 };
     mockPersonal.data = emptyData.personal;
     render(<FocusStrip access={baseAccess} />);
@@ -203,7 +221,7 @@ describe("FocusStrip — permission gates (positive and negative)", () => {
 
 describe("useFocusStrip — item ordering", () => {
   it("critical items appear before info items in the list", () => {
-    mockInboxCount.data = { notification: 5, mail: 0, approval: 0, total: 5, mailExact: true };
+    mockInboxCount.data = { notification: 5, mail: 0, approval: 0, task: 0, total: 5, mailExact: true };
     mockApprovals.data = { pendingLeaves: 2, pendingResignations: 0, total: 2 };
     mockPersonal.data = emptyData.personal;
     const { result } = renderHook(() => useFocusStrip(baseAccess));
