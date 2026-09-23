@@ -1,6 +1,7 @@
 "use client";
 
 import type { ChangeEvent } from "react";
+import Link from "next/link";
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { onboardEmployeeInputSchema } from "../../../lib/validation/hr";
@@ -159,6 +160,16 @@ export function StepBanking({ form }: StepBankingProps) {
           )}
         />
       </div>
+      <p className="text-xs leading-relaxed text-muted-foreground">
+        Not sure whether PF or ESI applies to this hire?{" "}
+        <Link
+          href="/hr/compliance"
+          className="font-medium text-primary underline underline-offset-2"
+        >
+          Review statutory requirements
+        </Link>{" "}
+        — both can be left blank now and filled in later.
+      </p>
     </>
   );
 }

@@ -14,6 +14,10 @@ import {
 import { cn } from "@/lib/utils";
 import { useHrHubSnapshot } from "@/hooks/api/hr/hub";
 import { EMPTY_HR_HUB_ACCESS } from "@/hooks/api/hr/hub-types";
+import {
+  HrStartHereChecklist,
+  useHrSetupSignals,
+} from "@/features/hr/setup";
 import { HrHubQueues } from "./hr-hub-queues";
 import { HrHubMetrics } from "./hr-hub-metrics";
 import { HrHubRecruitment } from "./hr-hub-recruitment";
@@ -43,6 +47,7 @@ const ALL_QUICK_ACTIONS = [
 
 export function HrHubPage() {
   const hub = useHrHubSnapshot();
+  const setupSignals = useHrSetupSignals();
   const access = hub.data?.capabilities ?? EMPTY_HR_HUB_ACCESS;
   const handleRetry = () => {
     void hub.refetch();
@@ -108,6 +113,8 @@ export function HrHubPage() {
               </div>
             </HrHero>
           ) : null}
+
+          <HrStartHereChecklist signals={setupSignals} />
 
           {hub.isError ? (
             <div
