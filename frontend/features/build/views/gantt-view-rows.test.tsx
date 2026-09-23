@@ -21,7 +21,7 @@ jest.mock("@/hooks/api/build/milestones", () => ({
   useProjectMilestones: () => ({ data: [] }),
 }));
 
-const ROW_HEIGHT = 36;
+const ROW_HEIGHT = 40;
 const HEADER_HEIGHT = 40;
 const TOTAL = 500;
 

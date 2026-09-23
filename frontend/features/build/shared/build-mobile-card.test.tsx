@@ -160,7 +160,7 @@ describe("Build list empty states", () => {
     expect(root.className).toContain("flex-1");
     expect(root.className).toContain("h-full");
     expect(root.querySelector("img")).not.toBeNull();
-    expect(container.querySelector(".h-40.w-40")).not.toBeNull();
+    expect(container.querySelector(".size-48")).not.toBeNull();
   });
 
   it("states a refusal rather than emptiness when the read was denied", () => {
