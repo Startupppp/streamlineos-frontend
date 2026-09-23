@@ -4,12 +4,35 @@ Branch `claude/remove-build-workspaces` in **both** repos (root and `backend/`).
 No browser verification was performed by the authoring session. Everything below is
 unverified in a browser and is what needs checking.
 
-## Boot
+## Boot — run the BRANCH, not `D:\projects\personal\Streamlineos`
+
+Migration 1159 is already applied to the production database. Any checkout that
+predates the removal now talks to a schema it does not know, so a stale dev server
+fails in a way that looks like a defect in this work and is not.
+
+The observed symptom, for recognition: `/build/5` returns 200 and the client throws
+`ApiContractError` with `{"path":"pmWorkspaceId","message":"Invalid input: expected
+string, received undefined"}`, then the route falls back to client rendering. That is
+a pre-removal `build-project-schema.ts` still declaring `pmWorkspaceId: z.string()`
+against a backend that correctly no longer sends it. Restarting the same checkout does
+not fix it; running the branch does.
+
+Confirm before booting, from whichever directory you are about to run:
+
+```
+git log --oneline -1
+git merge-base --is-ancestor 878a4ef46 HEAD && echo OK || echo "STALE - do not test here"
+```
+
+Then boot both from the branch working tree:
 
 ```
 pnpm -C backend start:dev      # http://localhost:1500
-pnpm -C frontend dev           # http://localhost:3000
+pnpm -C frontend dev           # http://localhost:1000
 ```
+
+Both servers must come from the same revision. An old web against a new API produces
+exactly the contract violation above; a new web against an old API produces its mirror.
 
 `backend/.env` points at the production RDS cluster and `NODE_ENV=production`.
 Check `NEXT_PUBLIC_API_URL` / `API_INTERNAL_URL` in `frontend/.env*` before trusting
@@ -32,22 +55,22 @@ Each must land on the destination with no 404 and no flash of a workspace shell.
 
 | Visit | Must land on |
 | --- | --- |
-| `http://localhost:3000/build/workspaces` | `/build` |
-| `http://localhost:3000/build/workspaces/any-id` | `/build` |
-| `http://localhost:3000/build/workspaces/any-id/overview` | `/build/command-center` |
-| `http://localhost:3000/build/workspaces/any-id/all-work` | `/build/all-work` |
-| `http://localhost:3000/build/workspaces/any-id/goals` | `/build/goals` |
-| `http://localhost:3000/build/workspaces/any-id/products` | `/build/managed-products` |
-| `http://localhost:3000/build/workspaces/any-id/roadmap` | `/build/roadmap` |
-| `http://localhost:3000/build/workspaces/any-id/teams` | `/build/teams` |
-| `http://localhost:3000/build/workspaces/any-id/my-work` | `/build/my-work` |
-| `http://localhost:3000/build/pm-workspaces` | `/build` |
+| `http://localhost:1000/build/workspaces` | `/build` |
+| `http://localhost:1000/build/workspaces/any-id` | `/build` |
+| `http://localhost:1000/build/workspaces/any-id/overview` | `/build/command-center` |
+| `http://localhost:1000/build/workspaces/any-id/all-work` | `/build/all-work` |
+| `http://localhost:1000/build/workspaces/any-id/goals` | `/build/goals` |
+| `http://localhost:1000/build/workspaces/any-id/products` | `/build/managed-products` |
+| `http://localhost:1000/build/workspaces/any-id/roadmap` | `/build/roadmap` |
+| `http://localhost:1000/build/workspaces/any-id/teams` | `/build/teams` |
+| `http://localhost:1000/build/workspaces/any-id/my-work` | `/build/my-work` |
+| `http://localhost:1000/build/pm-workspaces` | `/build` |
 
 Ordering matters: the nested sources are declared before `/build/workspaces/:pmWorkspaceId`,
 which is declared before `/build/workspaces`. If a nested link lands on `/build` instead of
 its own destination, the ordering regressed.
 
-## Scope switcher — `http://localhost:3000/build`
+## Scope switcher — `http://localhost:1000/build`
 
 Open the Build scope selector in the sidebar.
 
@@ -69,18 +92,18 @@ Open the Build scope selector in the sidebar.
 
 Each of these must submit successfully with no workspace selector present:
 
-- `http://localhost:3000/build` → create a Project
-- `http://localhost:3000/build/managed-products` → create a Managed Product
-- `http://localhost:3000/build/teams` → create a Team
-- `http://localhost:3000/build/goals` → create a Goal
-- `http://localhost:3000/build/roadmap` → create a Roadmap item
+- `http://localhost:1000/build` → create a Project
+- `http://localhost:1000/build/managed-products` → create a Managed Product
+- `http://localhost:1000/build/teams` → create a Team
+- `http://localhost:1000/build/goals` → create a Goal
+- `http://localhost:1000/build/roadmap` → create a Roadmap item
 
 A 400 with `Unrecognized key: "pmWorkspaceId"` means a client is still sending the field;
 the backend schemas are `.strict()`.
 
 ## Build members — the renamed roster
 
-`http://localhost:3000/build/settings/access` (note `/build/members` is itself a redirect here).
+`http://localhost:1000/build/settings/access` (note `/build/members` is itself a redirect here).
 
 - The roster lists members, paginates, and search works.
 - Add a member, then remove them. Both must succeed.
@@ -90,7 +113,7 @@ the backend schemas are `.strict()`.
   "Only Build members can be added to a team. Add this person on the Build members page first."
 
 This is the surface most at risk: the table was renamed `project_workspace_members`
-→ `build_members` and the service/controller/DDTOs renamed with it.
+→ `build_members` and the service, controller and DTOs renamed with it.
 
 ## List filters
 
@@ -100,7 +123,7 @@ carrying `?pmWorkspaceId=x` is simply ignored rather than producing an empty lis
 
 ## Agent pulse / reports / workload
 
-`http://localhost:3000/build/command-center` — agent pulse must render. It lost four
+`http://localhost:1000/build/command-center` — agent pulse must render. It lost four
 workspace-scoped query branches; the project-scoped and org-scoped paths were left alone.
 
 ## What is NOT covered here
