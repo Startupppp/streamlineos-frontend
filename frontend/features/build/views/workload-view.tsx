@@ -289,7 +289,7 @@ export const WorkloadView = memo(function WorkloadView({
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card">
         <div className="min-h-0 flex-1 overflow-auto">
           <div className="flex min-h-full min-w-max flex-col">
-            <div className="sticky top-0 z-10 flex shrink-0 border-b bg-muted/50">
+            <div className="sticky top-0 z-10 flex shrink-0 border-b bg-secondary">
               <div className="w-52 shrink-0 px-4 py-2.5 text-micro font-bold text-muted-foreground uppercase tracking-wider">
                 Member
               </div>

@@ -286,6 +286,69 @@ describe("BSN-02-024 — scope isolation by org AND actor", () => {
     expect(starsUser2.current.isStarred(ref.key)).toBe(false);
     expect(recentsUser2.current.recents).toHaveLength(0);
   });
+
+  test("retired workspace and fixed organization entries in browser storage are discarded before they can render", () => {
+    const scope = "authenticated:org-retired-workspace:user-1";
+    const storageKey = `${scope}::build-scope-recents`;
+    const valid = makeScopeRef();
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify([
+        {
+          key: "workspace:legacy",
+          type: "workspace",
+          id: "legacy",
+          name: ["Default", "Workspace"].join(" "),
+          parentPath: "Organization",
+          parentKey: null,
+          projectKey: null,
+          href: "/build/workspaces/legacy",
+        },
+        {
+          key: "organization",
+          type: "organization",
+          id: "organization",
+          name: "All of Build",
+          parentPath: null,
+          parentKey: null,
+          projectKey: null,
+          href: "/build/command-center",
+        },
+        valid,
+      ]),
+    );
+
+    const { result } = renderHook(() => useBuildScopeRecents(), {
+      wrapper: wrapWith(scope),
+    });
+
+    expect(result.current.recents).toEqual([valid]);
+  });
+
+  test("the fixed organization scope cannot be saved as a recent or star", () => {
+    const organization = makeScopeRef({
+      key: "organization",
+      type: "organization",
+      id: "organization",
+      name: "All of Build",
+      href: "/build/command-center",
+    });
+    const scope = "authenticated:org-fixed-root:user-1";
+    const { result: recents } = renderHook(() => useBuildScopeRecents(), {
+      wrapper: wrapWith(scope),
+    });
+    const { result: stars } = renderHook(() => useBuildScopeStars(), {
+      wrapper: wrapWith(scope),
+    });
+
+    act(() => {
+      recents.current.recordScope(organization);
+      stars.current.toggleStar(organization);
+    });
+
+    expect(recents.current.recents).toEqual([]);
+    expect(stars.current.starred).toEqual([]);
+  });
 });
 
 describe("BSN-03-032 — pin ceiling counts only authorized pins", () => {

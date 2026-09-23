@@ -85,8 +85,8 @@
   --popover-foreground: #0b1220;
   --muted: #f1f5f9; /* slate-100 â€” muted surfaces */
   --muted-foreground: #556377; /* slate-500/600 midpoint - 5.58:1 on --muted, 5.84:1 on --background, 6.11:1 on --card (WCAG AA normal text); slate-500 #64748b measured 4.34:1 on --muted */
-  --border: #e2e8f0; /* slate-200 */
-  --input: #e2e8f0;
+  --border: #cbd5e1; /* slate-300: visible but still quiet on white and slate-50 */
+  --input: #cbd5e1;
   --ring: #3b82f6; /* blue-500 focus ring - 3.52:1 on --background, meets WCAG 2.2 SC 1.4.11 (3:1); slate-400 was 2.45:1 */
 
   /* â”€â”€â”€ CTA & Action (Ink-style â€” Linear/Stripe feel) â”€â”€â”€ */
@@ -94,9 +94,9 @@
   --primary-foreground: #ffffff;
 
   /* â”€â”€â”€ Accent (neutral hover wash â€” used by shadcn dropdown/menu/command item hover) â”€â”€â”€ */
-  --accent: #f1f5f9; /* slate-100 â€” subtle neutral; NOT brand blue */
+  --accent: color-mix(in srgb, var(--primary) 10%, var(--muted)); /* selected and active surfaces follow the chosen palette */
   --accent-foreground: #0f172a; /* slate-900 â€” readable on neutral wash */
-  --secondary: #f1f5f9; /* slate-100 â€” secondary buttons */
+  --secondary: color-mix(in srgb, var(--foreground) 6%, var(--muted)); /* neutral table and calendar headers */
   --secondary-foreground: #0b1220;
 
   /* â”€â”€â”€ Status / Semantic â”€â”€â”€ */
@@ -133,7 +133,7 @@
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: color-mix(in srgb, var(--sidebar-primary) 8%, transparent);
   --sidebar-accent-foreground: #0b1220;
-  --sidebar-border: #e2e8f0;
+  --sidebar-border: #cbd5e1;
   --sidebar-ring: #3b82f6; /* blue-500 - 3.68:1 on the white sidebar; blue-400 was 2.54:1 */
 
   /* â”€â”€â”€ Cinematic dark canvas (only used on auth right-panel and rare dark sections) â”€â”€â”€ */
@@ -167,9 +167,7 @@
   /* â”€â”€â”€ CTA & Action â€” invert ink to white for dark â”€â”€â”€ */
   --primary: #f4f4f5;
   --primary-foreground: #0a0a0b;
-  --secondary: #202023;
   --secondary-foreground: #f4f4f5;
-  --accent: #202023; /* dark surface wash â€” neutral for dark mode hover */
   --accent-foreground: #f4f4f5;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;

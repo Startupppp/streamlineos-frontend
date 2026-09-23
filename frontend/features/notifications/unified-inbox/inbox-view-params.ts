@@ -1,12 +1,13 @@
-import { Archive, Bell, CheckCircle, Clock, Inbox, Mail } from "lucide-react";
+import { Archive, Bell, CheckCircle, Clock, Inbox, Mail, AtSign, Eye } from "lucide-react";
 import type { ViewOption } from "@/components/ui/view-toggle";
 import type { InboxKind } from "@/types/inbox";
 import { parseGrouping, type InboxGrouping } from "./inbox-grouping";
 
 export type InboxView =
   | "primary"
-  | "updates"
   | "notifications"
+  | "mentions"
+  | "unread"
   | "mail"
   | "approvals"
   | "later"
@@ -14,8 +15,9 @@ export type InboxView =
 
 const ALL_VIEW_VALUES: InboxView[] = [
   "primary",
-  "updates",
   "notifications",
+  "mentions",
+  "unread",
   "mail",
   "approvals",
   "later",
@@ -36,8 +38,9 @@ export function parseView(raw: string | null): InboxView {
 
 export const VIEWS: ViewOption<InboxView>[] = [
   { value: "primary", label: "All", icon: Inbox },
-  { value: "updates", label: "Updates", icon: Bell },
   { value: "notifications", label: "Notifications", icon: Bell },
+  { value: "mentions", label: "Mentions", icon: AtSign },
+  { value: "unread", label: "Unread", icon: Eye },
   { value: "mail", label: "Mail", icon: Mail },
   { value: "approvals", label: "Approvals", icon: CheckCircle },
   { value: "later", label: "Later", icon: Clock },
@@ -46,8 +49,9 @@ export const VIEWS: ViewOption<InboxView>[] = [
 
 export const VIEW_KINDS: Record<InboxView, InboxKind[] | undefined> = {
   primary: undefined,
-  updates: ["notification", "broadcast"],
   notifications: ["notification", "broadcast"],
+  mentions: ["notification"],
+  unread: undefined,
   mail: ["mail"],
   approvals: ["build_approval"],
   later: undefined,
@@ -59,8 +63,9 @@ export const VIEW_TRIAGE: Record<
   "active" | "later" | "done" | undefined
 > = {
   primary: "active",
-  updates: "active",
   notifications: undefined,
+  mentions: undefined,
+  unread: undefined,
   mail: undefined,
   approvals: undefined,
   later: "later",
@@ -69,13 +74,21 @@ export const VIEW_TRIAGE: Record<
 
 export const VIEW_DEFAULT_UNREAD_ONLY: Record<InboxView, boolean> = {
   primary: false,
-  updates: false,
   notifications: false,
+  mentions: false,
+  unread: true,
   mail: true,
   approvals: false,
   later: false,
   done: false,
 };
+
+export const MENTION_EVENT_KEYS: ReadonlySet<string> = new Set([
+  "build.comment.mention",
+  "chat.message.mention",
+  "knowledge.article.mentioned",
+  "support.ticket.mention",
+]);
 
 const VALID_KINDS: ReadonlySet<string> = new Set<InboxKind>([
   "notification",
@@ -92,6 +105,9 @@ export interface InboxFilterState {
   priority: string;
   kindOverride: InboxKind[];
   group: InboxGrouping;
+  from: string;
+  to: string;
+  module: string;
 }
 
 export { type InboxGrouping };
@@ -113,7 +129,10 @@ export function parseInboxFilterState(
     ? kindsRaw.split(",").filter((k): k is InboxKind => VALID_KINDS.has(k))
     : [];
   const group = parseGrouping(params.get("group"));
-  return { view, q, unreadOnly, category, priority, kindOverride, group };
+  const from = params.get("from") ?? "";
+  const to = params.get("to") ?? "";
+  const module = params.get("module") ?? "";
+  return { view, q, unreadOnly, category, priority, kindOverride, group, from, to, module };
 }
 
 export interface InboxQueryParams {
@@ -159,5 +178,8 @@ export function filterStateToSearchParams(
   if (state.kindOverride.length > 0)
     p.set("kinds", state.kindOverride.join(","));
   if (state.group !== "none") p.set("group", state.group);
+  if (state.from) p.set("from", state.from);
+  if (state.to) p.set("to", state.to);
+  if (state.module) p.set("module", state.module);
   return p;
 }

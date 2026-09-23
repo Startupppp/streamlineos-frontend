@@ -6,6 +6,7 @@ import type {
   BuildApprovalInboxItem,
 } from "@/types/inbox";
 import { InboxShell } from "./inbox-shell";
+import { mailDeepLinkParams } from "./inbox-mail-link";
 
 const pushMock = jest.fn<void, [string]>();
 
@@ -270,5 +271,108 @@ describe("inbox deep-link encoding — mail ids are provider-supplied strings, n
     expect(pushMock).toHaveBeenCalledWith(
       "/build/1/tickets/STRE-29?comment=8",
     );
+  });
+});
+
+describe("mailDeepLinkParams — shared pure function for mail navigation", () => {
+  it("returns messageId params when threadId is null", () => {
+    const item = makeMailItem("msg-42", 7);
+    const params = mailDeepLinkParams(item);
+    expect(params).toEqual({ messageId: "msg-42", accountId: "7" });
+  });
+
+  it("returns threadId params when threadId is present, not messageId", () => {
+    const item: MailInboxItem = { ...makeMailItem("msg-42", 7), threadId: "thread-99" };
+    const params = mailDeepLinkParams(item);
+    expect(params).toEqual({ threadId: "thread-99", accountId: "7" });
+    expect(params).not.toHaveProperty("messageId");
+  });
+
+  it("positive: single-message mail (threadId null) still navigates to /mail route via shell", async () => {
+    const props = await mountInbox();
+    act(() => props.onMailClick(makeMailItem("solo-msg", 3)));
+    const pushed = pushMock.mock.calls[0][0];
+    expect(new URL(pushed, "http://localhost").pathname).toBe("/mail");
+  });
+
+  it("positive: threaded mail navigates to /mail with threadId param, not messageId", async () => {
+    const props = await mountInbox();
+    const threadedItem: MailInboxItem = { ...makeMailItem("msg-in-thread", 5), threadId: "thread-abc" };
+    act(() => props.onMailClick(threadedItem));
+    const pushed = pushMock.mock.calls[0][0];
+    const url = new URL(pushed, "http://localhost");
+    expect(url.searchParams.get("threadId")).toBe("thread-abc");
+    expect(url.searchParams.get("messageId")).toBeNull();
+  });
+});
+
+describe("approval deep-link routing — D1 correctness per sourceModule and deepLink", () => {
+  function makeHrLeaveItem(deepLink: string | null): BuildApprovalInboxItem {
+    return {
+      kind: "build_approval",
+      id: 20,
+      status: "pending",
+      approvalKind: "leave",
+      projectId: null,
+      ticketId: null,
+      dueAt: null,
+      sourceModule: "hr",
+      actor: null,
+      subject: "Leave approval",
+      timestamp: new Date().toISOString(),
+      isRead: false,
+      deepLink,
+      dedupKey: "approval:20",
+    };
+  }
+
+  function makeBuildApprovalWithDeepLink(deepLink: string): BuildApprovalInboxItem {
+    return {
+      kind: "build_approval",
+      id: 30,
+      status: "pending",
+      approvalKind: "build",
+      projectId: 5,
+      ticketId: null,
+      dueAt: null,
+      sourceModule: "build",
+      actor: null,
+      subject: "Build approval",
+      timestamp: new Date().toISOString(),
+      isRead: false,
+      deepLink,
+      dedupKey: "approval:30",
+    };
+  }
+
+  it("build approval with a deepLink navigates to that deepLink, not /build/approvals", async () => {
+    const props = await mountInbox();
+    act(() => props.onApprovalClick(makeBuildApprovalWithDeepLink("/build/5/approvals/30")));
+    expect(pushMock).toHaveBeenCalledWith("/build/5/approvals/30");
+    expect(pushMock).not.toHaveBeenCalledWith(expect.stringContaining("/build/approvals?"));
+  });
+
+  it("positive: build approval without deepLink still falls back to /build/approvals", async () => {
+    const props = await mountInbox();
+    act(() => props.onApprovalClick(makeApprovalItem(null)));
+    expect(pushMock).toHaveBeenCalledWith("/build/approvals");
+  });
+
+  it("HR leave item with null deepLink does NOT navigate to /build/... route", async () => {
+    const props = await mountInbox();
+    act(() => props.onApprovalClick(makeHrLeaveItem(null)));
+    expect(pushMock).not.toHaveBeenCalledWith(expect.stringContaining("/build/"));
+  });
+
+  it("positive: HR leave item with null deepLink navigates to /inbox?view=approvals", async () => {
+    const props = await mountInbox();
+    act(() => props.onApprovalClick(makeHrLeaveItem(null)));
+    expect(pushMock).toHaveBeenCalledWith("/inbox?view=approvals");
+  });
+
+  it("HR leave item with deepLink navigates to that deepLink", async () => {
+    const props = await mountInbox();
+    act(() => props.onApprovalClick(makeHrLeaveItem("/hr/leaves/42")));
+    expect(pushMock).toHaveBeenCalledWith("/hr/leaves/42");
   });
 });

@@ -23,7 +23,7 @@ export function DataTableHeader<T>({
   rowIndex,
 }: DataTableHeaderProps<T>) {
   return (
-    <TableHeader className="sticky top-0 z-10 bg-muted/50 border-b border-border">
+    <TableHeader className="sticky top-0 z-10 border-b-2 border-border bg-muted">
       {table.getHeaderGroups().map((hg) => (
         <TableRow
           key={hg.id}
