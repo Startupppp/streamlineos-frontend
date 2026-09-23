@@ -122,7 +122,8 @@ export function WikiHomeAllPages({ projectId }: WikiHomeAllPagesProps) {
   const filterKey = `${status}|${spaceParam}|${ownerParam}|${sort}`;
   const pager = useCursorPager(filterKey);
 
-  const { data: spaces } = useKbSpaces();
+  const { data: spacesPage } = useKbSpaces();
+  const spaces = spacesPage?.data;
   const createPage = useCreateKbPage();
   const canCreate = useCan("kb:pages:create");
 

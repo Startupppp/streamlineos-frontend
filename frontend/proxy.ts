@@ -110,7 +110,6 @@ const PROTECTED_ROUTES = [
   "/surveys",
   "/accounting",
   "/ai",
-  "/ask",
   "/inventory",
   "/mail",
   "/payroll",

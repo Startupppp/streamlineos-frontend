@@ -10,7 +10,7 @@ export const kbSpaceListItemContract = z.object({
   isPublicHelpCenter: z.boolean(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  archivedAt: z.string().nullable().optional(),
+  archivedAt: z.string().nullable(),
   articleCount: z.number().int(),
   pageCount: z.number().int(),
   memberCount: z.number().int(),

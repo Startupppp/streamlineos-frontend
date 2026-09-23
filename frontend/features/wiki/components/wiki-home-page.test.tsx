@@ -222,7 +222,7 @@ describe("WikiHomePage — first-run and filtered-empty states", () => {
 
     expect(screen.getByText("Your wiki starts here")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /new page/i }),
+      screen.getByRole("button", { name: /create a page/i }),
     ).toBeInTheDocument();
   });
 

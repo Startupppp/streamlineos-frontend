@@ -89,7 +89,7 @@ const BASE_COLUMNS: DataTableColumn<KbPageCollectionItem>[] = [
 ];
 
 export interface WikiPageCollectionTableProps {
-  fixedParams: Pick<KbPageCollectionParams, "owner" | "sharedWithMe">;
+  fixedParams: Pick<KbPageCollectionParams, "owner" | "sharedWithMe" | "spaceId">;
   additionalColumns?: DataTableColumn<KbPageCollectionItem>[];
   emptyTitle: string;
   emptyDescription?: string;
@@ -130,7 +130,8 @@ export function WikiPageCollectionTable({
   ) as SortValue;
   const status = searchParams.get("status") ?? "";
   const spaceParam = searchParams.get("space") ?? "";
-  const spaceId = spaceParam !== "" ? Number(spaceParam) : undefined;
+  const urlSpaceId = spaceParam !== "" ? Number(spaceParam) : undefined;
+  const spaceId = fixedParams.spaceId ?? urlSpaceId;
   const view = parseEnum(searchParams.get("view"), VIEW_VALUES, "list");
 
   const debouncedSearch = useDebouncedValue(rawSearch, 300);
@@ -258,7 +259,7 @@ export function WikiPageCollectionTable({
             ))}
           </SelectContent>
         </Select>
-        {spaces && spaces.length > 0 && (
+        {!fixedParams.spaceId && spaces && spaces.length > 0 && (
           <Select value={spaceParam || "all"} onValueChange={handleSpaceChange}>
             <SelectTrigger className="h-9 w-40 shrink-0">
               <SelectValue placeholder="Space" />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
@@ -29,7 +30,6 @@ import {
   useRestoreKbSpace,
 } from "@/hooks/api/kb/spaces";
 import type { KbSpaceListItem } from "@/hooks/api/kb/spaces";
-import type { KbSpace } from "@/types/kb";
 import {
   KbLayoutGridIcon,
   KbPlusIcon,
@@ -55,16 +55,20 @@ function SpacesGrid({ children }: { children: React.ReactNode }) {
 
 export default function SpacesPage() {
   const canManage = useCan("kb:spaces:manage");
+  const searchParams = useSearchParams();
+  const { update: updateFilters } = useUrlFilters();
 
-  const { filters, update: updateFilters } = useUrlFilters({
-    q: "",
-    audience: "all" as AudienceFilter,
-    status: "active" as ArchivedFilter,
-  });
-
-  const audienceFilter = parseEnum(AUDIENCE_FILTER_VALUES, filters.audience, "all");
-  const archivedFilter = parseEnum(ARCHIVED_FILTER_VALUES, filters.status, "active");
-  const rawSearch = typeof filters.q === "string" ? filters.q : "";
+  const rawSearch = searchParams.get("q") ?? "";
+  const audienceFilter: AudienceFilter = parseEnum(
+    searchParams.get("audience"),
+    AUDIENCE_FILTER_VALUES,
+    "all",
+  );
+  const archivedFilter: ArchivedFilter = parseEnum(
+    searchParams.get("status"),
+    ARCHIVED_FILTER_VALUES,
+    "active",
+  );
   const debouncedSearch = useDebouncedValue(rawSearch, 300);
 
   const cursorState = useCursorPagination();
@@ -72,9 +76,7 @@ export default function SpacesPage() {
   const queryParams = {
     q: debouncedSearch || undefined,
     audience:
-      audienceFilter === "all"
-        ? undefined
-        : (audienceFilter as "internal" | "public" | "mixed"),
+      audienceFilter === "all" ? undefined : audienceFilter,
     archived:
       archivedFilter === "all"
         ? undefined
@@ -102,25 +104,29 @@ export default function SpacesPage() {
   const restoreSpace = useRestoreKbSpace();
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editingSpace, setEditingSpace] = useState<KbSpace | null>(null);
-  const [archiveTarget, setArchiveTarget] = useState<KbSpace | null>(null);
-  const [restoreTarget, setRestoreTarget] = useState<KbSpace | null>(null);
+  const [editingSpace, setEditingSpace] = useState<KbSpaceListItem | null>(
+    null,
+  );
+  const [archiveTarget, setArchiveTarget] =
+    useState<KbSpaceListItem | null>(null);
+  const [restoreTarget, setRestoreTarget] =
+    useState<KbSpaceListItem | null>(null);
 
   const handleCreate = useCallback(() => {
     setEditingSpace(null);
     setSheetOpen(true);
   }, []);
 
-  const handleEdit = useCallback((space: KbSpace) => {
+  const handleEdit = useCallback((space: KbSpaceListItem) => {
     setEditingSpace(space);
     setSheetOpen(true);
   }, []);
 
-  const handleArchive = useCallback((space: KbSpace) => {
+  const handleArchive = useCallback((space: KbSpaceListItem) => {
     setArchiveTarget(space);
   }, []);
 
-  const handleRestore = useCallback((space: KbSpace) => {
+  const handleRestore = useCallback((space: KbSpaceListItem) => {
     setRestoreTarget(space);
   }, []);
 
@@ -157,22 +163,22 @@ export default function SpacesPage() {
   }
 
   function handleAudienceChange(value: string) {
-    updateFilters({ audience: value as AudienceFilter });
+    updateFilters({ audience: value === "all" ? null : value });
     cursorState.reset();
   }
 
   function handleStatusChange(value: string) {
-    updateFilters({ status: value as ArchivedFilter });
+    updateFilters({ status: value === "active" ? null : value });
     cursorState.reset();
   }
 
   function handleSearchChange(value: string) {
-    updateFilters({ q: value });
+    updateFilters({ q: value || null });
     cursorState.reset();
   }
 
   function handleClearFilters() {
-    updateFilters({ q: "", audience: "all", status: "active" });
+    updateFilters({ q: null, audience: null, status: null });
     cursorState.reset();
   }
 
@@ -183,12 +189,32 @@ export default function SpacesPage() {
   const hasActiveFilters =
     rawSearch !== "" || audienceFilter !== "all" || archivedFilter !== "active";
 
-  const subtitle = "Organize your wiki pages into spaces";
+  const emptyNode = hasActiveFilters ? (
+    <EmptyState
+      illustration={<KbLayoutGridIcon className="w-8 text-muted-foreground" />}
+      title="No spaces match your filters"
+      description="Try adjusting your search or filters."
+      action={{ label: "Clear filters", onClick: handleClearFilters }}
+      className={CONTENT_FILL_PANEL}
+    />
+  ) : (
+    <EmptyState
+      illustration={<KbLayoutGridIcon className="w-8 text-muted-foreground" />}
+      title="No spaces yet"
+      description="Create a space to organize your wiki pages."
+      action={
+        canManage
+          ? { label: "Create space", onClick: handleCreate }
+          : undefined
+      }
+      className={CONTENT_FILL_PANEL}
+    />
+  );
 
   return (
     <PageWrapper
       title="Spaces"
-      subtitle={subtitle}
+      subtitle="Organize your wiki pages into spaces"
       actions={
         canManage ? (
           <Button size="sm" onClick={handleCreate}>
@@ -202,7 +228,7 @@ export default function SpacesPage() {
         <div className="flex flex-wrap items-center gap-2">
           <SearchInput
             value={rawSearch}
-            onChange={handleSearchChange}
+            onValueChange={handleSearchChange}
             placeholder="Search spaces…"
             className="h-9 w-48"
           />
@@ -229,67 +255,42 @@ export default function SpacesPage() {
           </Select>
         </div>
 
-        <PageState resolution={pageState}>
-          {{
-            loading: (
-              <SpacesGrid>
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <SpaceCardSkeleton key={i} />
-                ))}
-              </SpacesGrid>
-            ),
-            empty: hasActiveFilters ? (
-              <EmptyState
-                illustration={<KbLayoutGridIcon className="w-8 text-muted-foreground" />}
-                title="No spaces match your filters"
-                description="Try adjusting your search or filters."
-                action={{ label: "Clear filters", onClick: handleClearFilters }}
-                className={CONTENT_FILL_PANEL}
-              />
-            ) : (
-              <EmptyState
-                illustration={<KbLayoutGridIcon className="w-8 text-muted-foreground" />}
-                title="No spaces yet"
-                description="Create a space to organize your wiki pages."
-                action={
-                  canManage
-                    ? { label: "Create space", onClick: handleCreate }
-                    : undefined
-                }
-                className={CONTENT_FILL_PANEL}
-              />
-            ),
-            ready: (
-              <div className="flex flex-col gap-4">
-                <SpacesGrid>
-                  {spaces.map((space: KbSpaceListItem) => (
-                    <SpaceCard
-                      key={space.id}
-                      space={space}
-                      canManage={canManage}
-                      pageCount={space.pageCount}
-                      onEdit={handleEdit}
-                      onDelete={
-                        space.archivedAt
-                          ? handleRestore
-                          : handleArchive
-                      }
-                    />
-                  ))}
-                </SpacesGrid>
-                {pagination && (
-                  <TablePagination
-                    kind="cursor"
-                    pageNumber={cursorState.pageNumber}
-                    hasPrevious={cursorState.hasPrevious}
-                    hasMore={pagination.hasMore}
-                    onNext={handleGoNext}
-                    onPrevious={cursorState.goPrevious}
-                  />
-                )}
-              </div>
-            ),
-          }}
+        <PageState
+          resolution={pageState}
+          loading={
+            <SpacesGrid>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <SpaceCardSkeleton key={i} />
+              ))}
+            </SpacesGrid>
+          }
+          empty={emptyNode}
+        >
+          <div className="flex flex-col gap-4">
+            <SpacesGrid>
+              {spaces.map((space: KbSpaceListItem) => (
+                <SpaceCard
+                  key={space.id}
+                  space={space}
+                  canManage={canManage}
+                  pageCount={space.pageCount}
+                  onEdit={handleEdit}
+                  onDelete={space.archivedAt ? handleRestore : handleArchive}
+                />
+              ))}
+            </SpacesGrid>
+            {pagination &&
+              (pagination.hasMore || cursorState.hasPrevious) && (
+                <TablePagination
+                  mode="cursor"
+                  rowCount={spaces.length}
+                  hasPrevious={cursorState.hasPrevious}
+                  hasMore={pagination.hasMore}
+                  onNext={handleGoNext}
+                  onPrevious={cursorState.goPrevious}
+                />
+              )}
+          </div>
         </PageState>
       </div>
 

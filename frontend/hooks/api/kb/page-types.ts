@@ -42,6 +42,7 @@ export type KbPageListItem = Omit<KbPage, "content" | "contentText">;
 export type KbPageDetail = KbPage & {
   ancestors: Array<{ id: number; title: string }>;
   isFavorite: boolean;
+  canEdit?: boolean;
 };
 
 export type KbPageTreeNode = {

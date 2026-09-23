@@ -31,6 +31,7 @@ import { PageCoverPickerDialog } from "./page-cover-picker";
 import PageIconPicker from "./page-icon-picker";
 import PageDocumentHeader from "./page-document-header";
 import PageRightPanel from "./page-right-panel";
+import { PageDocumentTrustHeader } from "./page-document-trust-header";
 import {
   normalizePlateValue,
   getPlainText,
@@ -249,7 +250,7 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
     return <KbPageNotFound error={error} onRetry={refetch} />;
   }
 
-  const isEditable = !page.isLocked || canManage;
+  const isEditable = page.canEdit !== false && (!page.isLocked || canManage);
   const wordCount = (page.contentText ?? "")
     .split(/\s+/)
     .filter(Boolean).length;
@@ -334,6 +335,15 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
                 onDiscardMine={handleDiscardMine}
               />
             )}
+
+            <PageDocumentTrustHeader
+              status={page.status}
+              trustState={page.trustState}
+              visibility={page.visibility}
+              nextReviewAt={page.nextReviewAt}
+              updatedAt={page.updatedAt}
+              lastEditedById={page.lastEditedById}
+            />
 
             {page.isLocked && !canManage && (
               <div className="mb-4 flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">

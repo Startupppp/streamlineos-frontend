@@ -8,6 +8,8 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { useKbSpace } from "@/hooks/api/kb/spaces";
 import { KB_SPACES } from "@/lib/knowledge-routes";
 import { KbLayoutGridIcon } from "@/features/wiki/lib/kb-icons";
+import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { WikiPageCollectionTable } from "./wiki-page-collection-table";
 import type { KbAudience } from "@/types/kb";
 
@@ -39,7 +41,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
     isEmpty: !isLoading && !isError && !space,
   });
 
-  const audience = (space?.audience ?? "internal") as KbAudience;
+  const audience: KbAudience = space?.audience ?? "internal";
 
   return (
     <PageWrapper
@@ -47,54 +49,54 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
       subtitle={space?.description ?? undefined}
       backHref={KB_SPACES}
     >
-      <PageState resolution={pageState}>
-        {{
-          loading: (
-            <div className="space-y-4">
-              <Skeleton className="h-24 w-full rounded-xl" />
-              <Skeleton className="h-64 w-full rounded-xl" />
-            </div>
-          ),
-          empty: (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
-              <KbLayoutGridIcon className="w-8" />
-              <span className="text-sm">Space not found</span>
-            </div>
-          ),
-          ready: (
-            <div className="flex min-h-0 flex-1 flex-col gap-4">
-              <div className="bg-card border border-border rounded-xl p-4 flex items-start gap-4">
-                <span className="text-3xl shrink-0">
-                  {space?.icon ?? "📚"}
+      <PageState
+        resolution={pageState}
+        loading={
+          <div className="space-y-4">
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-64 w-full rounded-xl" />
+          </div>
+        }
+        empty={
+          <EmptyState
+            illustration={
+              <KbLayoutGridIcon className="w-8 text-muted-foreground" />
+            }
+            title="Space not found"
+            description="This space may have been deleted or you may not have access."
+            className={CONTENT_FILL_PANEL}
+          />
+        }
+      >
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
+          <div className="bg-card border border-border rounded-xl p-4 flex items-start gap-4">
+            <span className="text-3xl shrink-0">{space?.icon ?? "📚"}</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-base font-semibold text-foreground">
+                  {space?.name}
                 </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-base font-semibold text-foreground">
-                      {space?.name}
-                    </span>
-                    <Badge
-                      variant="outline"
-                      className={`text-micro h-4 px-1.5 ${AUDIENCE_BADGE_CLASS[audience]}`}
-                    >
-                      {AUDIENCE_LABELS[audience]}
-                    </Badge>
-                  </div>
-                  {space?.description && (
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {space.description}
-                    </p>
-                  )}
-                </div>
+                <Badge
+                  variant="outline"
+                  className={`text-micro h-4 px-1.5 ${AUDIENCE_BADGE_CLASS[audience]}`}
+                >
+                  {AUDIENCE_LABELS[audience]}
+                </Badge>
               </div>
-
-              <WikiPageCollectionTable
-                fixedParams={{ spaceId }}
-                emptyTitle="No pages in this space yet"
-                emptyDescription="Move or create pages inside this space to see them here."
-              />
+              {space?.description && (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {space.description}
+                </p>
+              )}
             </div>
-          ),
-        }}
+          </div>
+
+          <WikiPageCollectionTable
+            fixedParams={{ spaceId }}
+            emptyTitle="No pages in this space yet"
+            emptyDescription="Move or create pages inside this space to see them here."
+          />
+        </div>
       </PageState>
     </PageWrapper>
   );

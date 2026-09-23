@@ -50,7 +50,7 @@ export function useKbSpaces(params?: KbSpacesListParams) {
   if (params?.limit !== undefined) queryParams.limit = params.limit;
 
   return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.spaces(),
+    queryKey: [...knowledgeAndSurveysQueryKeys.kb.spaces(), params],
     queryFn: ({ signal }) =>
       apiClient.get<KbSpaceListPage>("/kb/spaces", queryParams, signal, kbSpaceListPageContract),
     staleTime: 60_000,

@@ -16,16 +16,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useKbPage, useKbPageVersions, useKbPageVersion, useRestoreKbPageVersion } from "@/hooks/api/kb";
 import type { KbPageVersion } from "@/hooks/api/kb/page-types";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -301,25 +292,15 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
         </div>
       </PageWrapper>
 
-      <AlertDialog open={restoreAlertOpen} onOpenChange={handleRestoreAlertOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Restore version {selectedVersionNumber}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              The current content will be saved as a new version before restoring.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmRestore}
-              disabled={restoreVersion.isPending}
-            >
-              Restore
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={restoreAlertOpen}
+        onOpenChange={handleRestoreAlertOpenChange}
+        title={`Restore version ${selectedVersionNumber}?`}
+        description="The current content will be saved as a new version before restoring."
+        confirmLabel="Restore"
+        isPending={restoreVersion.isPending}
+        onConfirm={handleConfirmRestore}
+      />
     </>
   );
 }

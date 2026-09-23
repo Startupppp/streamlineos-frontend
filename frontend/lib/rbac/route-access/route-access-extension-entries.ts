@@ -33,13 +33,6 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     backendRoute: { method: "get", path: "/ai/executive-brief" },
   },
   {
-    prefix: "/ask",
-    permission: "kb:pages:view",
-    reason:
-      "Matches the backend gate on the KB ask endpoints. Knowledge Base reading is a member default, so this denies nobody who keeps platform core.",
-    backendRoute: { method: "post", path: "/kb/ask" },
-  },
-  {
     prefix: "/blog/access",
     permission: "blog:access:view",
     reason:
