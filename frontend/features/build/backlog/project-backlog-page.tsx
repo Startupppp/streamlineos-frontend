@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useCallback, useState, useEffect } from "react";
-import { useProject, useSprints } from "@/hooks/api";
+import { useProject, useCycles } from "@/hooks/api";
 import { useBulkUpdateTickets, useProjectBoardTickets } from "@/hooks/api/build";
 import type { BulkUpdateTicketsInput } from "@/hooks/api/build";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
@@ -10,9 +10,20 @@ import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
 import { buildTicketDetailUrl } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallback";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
+import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
+
+const BACKLOG_TABLE_HEADERS = [
+  "ID",
+  "Title",
+  "Status",
+  "Priority",
+  "Assignee",
+  "Created",
+] as const;
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -39,7 +50,6 @@ const BACKLOG_FILTER_PARAMS = [
   "labels",
   "cycle",
   "projectIds",
-  "sprintId",
   "dueDateFrom",
   "dueDateTo",
   "page",
@@ -69,7 +79,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
   const isLoading = projectLoading || ticketsLoading;
   const handleRetryProject = useCallback(() => void refetchProject(), [refetchProject]);
   const handleRetryTickets = useCallback(() => void refetchTickets(), [refetchTickets]);
-  const { data: sprints } = useSprints(projectId);
+  const { data: cycles } = useCycles(projectId);
   const bulkUpdate = useBulkUpdateTickets(projectId);
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -141,7 +151,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
   }, [selectedTicketId, data, tickets, projectId, router]);
 
   const handleBulkUpdate = useCallback(
-    (update: Partial<Pick<BulkUpdateTicketsInput, "assigneeId" | "status" | "sprintId" | "priority" | "parentTicketId">>) => {
+    (update: Partial<Pick<BulkUpdateTicketsInput, "assigneeId" | "status" | "cycleId" | "priority" | "parentTicketId">>) => {
       if (selectedIds.size === 0) { toast.error("No tickets selected"); return; }
       bulkUpdate.mutate(
         { ticketIds: [...selectedIds].map(Number), ...update },
@@ -167,8 +177,8 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     [handleBulkUpdate],
   );
   const handleBulkAssignee = useCallback((v: string) => handleBulkUpdate({ assigneeId: v }), [handleBulkUpdate]);
-  const handleBulkSprint = useCallback(
-    (v: string) => handleBulkUpdate({ sprintId: v === "backlog" ? null : Number(v) }),
+  const handleBulkCycle = useCallback(
+    (v: string) => handleBulkUpdate({ cycleId: v === "backlog" ? null : Number(v) }),
     [handleBulkUpdate],
   );
   const handleBulkParent = useCallback(
@@ -192,6 +202,14 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     (ticket: Ticket) => handleTicketSelect(ticket.id),
     [handleTicketSelect],
   );
+
+  const resolution = usePageState({
+    permission: "build:tickets:view",
+    isLoading,
+    isError: ticketsError,
+    error: ticketsErrorValue,
+    isEmpty: filteredTickets.length === 0,
+  });
 
   const columns = useMemo<DataTableColumn<Ticket>[]>(
     () => [
@@ -259,10 +277,39 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     [data?.key],
   );
 
+  const renderMobileCard = useCallback(
+    (ticket: Ticket) => (
+      <BuildMobileCard
+        eyebrow={
+          <span className="flex items-center gap-1.5">
+            <TicketTypeIcon type={ticket.type} />
+            {formatTicketKey(data?.key, ticket.ticketNumber)}
+          </span>
+        }
+        title={ticket.title ?? "—"}
+        status={<StatusBadge status={ticket.status} />}
+        person={{ user: ticket.assignee, role: "Assignee" }}
+        meta={[
+          {
+            label: "Priority",
+            value: <PriorityBadge priority={ticket.priority} showLabel />,
+          },
+          {
+            label: "Created",
+            value: ticket.createdAt
+              ? format(new Date(ticket.createdAt), "MMM d")
+              : "—",
+          },
+        ]}
+      />
+    ),
+    [data?.key],
+  );
+
   if (isLoading) {
     return (
       <PageWrapper title="Backlog" subtitle="Loading...">
-        <DataTableSkeleton rows={12} columns={7} className="flex-1 min-h-0" />
+        <DataTableSkeleton mobileCards rows={12} headers={BACKLOG_TABLE_HEADERS} className="flex-1 min-h-0" />
       </PageWrapper>
     );
   }
@@ -291,7 +338,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
           <TicketFilterBar
             className="w-full"
             members={members}
-            showSprintFilter={false}
+            statuses={data?.statuses}
           />
         </div>
       }
@@ -301,13 +348,14 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
           <BulkActionBar
             selectedCount={selectedIds.size}
             members={members}
-            sprints={sprints ?? []}
+            cycles={cycles ?? []}
+            statuses={data?.statuses}
             projectId={projectId}
             excludeIds={selectedIds}
             onBulkStatus={handleBulkStatus}
             onBulkPriority={handleBulkPriority}
             onBulkAssignee={handleBulkAssignee}
-            onBulkSprint={handleBulkSprint}
+            onBulkCycle={handleBulkCycle}
             onBulkParent={handleBulkParent}
             onClear={handleClearSelection}
           />
@@ -318,41 +366,39 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
           used to render "No tickets yet" over a project with thousands and
           people created duplicates.
         */}
-        {ticketsError ? (
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load this project's tickets"
-            description={getErrorMessage(ticketsErrorValue)}
-            onRetry={handleRetryTickets}
-          />
-        ) : (
-        <PmPanel className="min-w-0 flex-1 min-h-0 flex flex-col">
-          <DataTable
-            data={filteredTickets}
-            columns={columns}
-            getRowKey={(ticket) => ticket.id}
-            onRowClick={handleRowClick}
-            selection={canUpdate ? {
-              selected: selectedIds,
-              onChange: handleSelectionChange,
-              getRowLabel: (ticket) => ticket.title ?? "",
-            } : undefined}
-            minWidth="640px"
-            className="border-0 rounded-none flex-1 min-h-0"
-            emptyState={
-              <EmptyState
-                illustrationPreset="projects"
-                title="No tickets yet"
-                description={filtersActive ? undefined : "Create a ticket to get started."}
-                filtersActive={filtersActive}
-                onClearFilters={handleClearFilters}
-                compact
-                className="min-h-[200px] border-0 bg-transparent"
-              />
-            }
-          />
-        </PmPanel>
-        )}
+        <PageState
+          resolution={resolution}
+          loading={<DataTableSkeleton mobileCards rows={12} headers={BACKLOG_TABLE_HEADERS} className="flex-1 min-h-0" />}
+          empty={
+            <EmptyState
+              className="flex-1"
+              illustrationPreset="projects"
+              title="No tickets yet"
+              description={filtersActive ? undefined : "Create a ticket to get started."}
+              filtersActive={filtersActive}
+              onClearFilters={handleClearFilters}
+            />
+          }
+          onRetry={handleRetryTickets}
+          className="flex-1 min-h-0"
+        >
+          <PmPanel className="min-w-0 flex-1 min-h-0 flex flex-col">
+            <DataTable
+              data={filteredTickets}
+              columns={columns}
+              getRowKey={(ticket) => ticket.id}
+              onRowClick={handleRowClick}
+              selection={canUpdate ? {
+                selected: selectedIds,
+                onChange: handleSelectionChange,
+                getRowLabel: (ticket) => ticket.title ?? "",
+              } : undefined}
+              minWidth="640px"
+              mobileCard={renderMobileCard}
+              className="border-0 rounded-none flex-1 min-h-0"
+            />
+          </PmPanel>
+        </PageState>
       </PmPageShell>
     </PageWrapper>
   );

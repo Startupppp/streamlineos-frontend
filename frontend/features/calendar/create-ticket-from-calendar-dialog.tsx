@@ -122,7 +122,8 @@ export function CreateTicketFromCalendarDialog({
         toast.success("Ticket created", {
           action: {
             label: "View ticket",
-            onClick: () => router.push(`/build/${targetProjectId}?ticket=${ticket.id}`),
+            onClick: () =>
+              router.push(`/build/${targetProjectId}/issues?ticket=${ticket.id}`),
           },
         });
         handleOpenChange(false);
@@ -159,7 +160,7 @@ export function CreateTicketFromCalendarDialog({
                       <div className="flex flex-col items-start gap-1 py-2 text-xs text-muted-foreground">
                         <span>No projects found.</span>
                         <Link
-                          href="/build/all"
+                          href="/build"
                           className="text-primary underline-offset-2 hover:underline"
                         >
                           <FolderOpenIcon size={12} className="inline mr-1" />

@@ -1,32 +1,24 @@
 "use client";
 
-import {
-  useState,
-  useCallback,
-  useEffect,
-  useRef,
-  useMemo,
-  type ChangeEvent,
-} from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useProject } from "@/hooks/api";
+import { useViews, useProjectBoardTickets } from "@/hooks/api/build";
+import { useBugs } from "@/hooks/api/build/bugs";
+import { useBoardSavedViews } from "./use-board-saved-views";
 import {
-  useViews,
-  useCreateView,
-  useProjectBoardTickets,
-} from "@/hooks/api/build";
-import {
+  applyDisplayOptionParams,
   hydrateDisplayOptions,
   useDisplayOptions,
+  writeDisplayOptionParams,
 } from "./use-display-options";
+import type { DisplayOptions } from "@/features/build/shared/types";
 import { parseViewType, type ViewType } from "./view-switcher";
-import { type SaveViewMeta } from "./save-view-dialog";
+import { fromSavedViewLayout } from "@/lib/build/view-types";
 import {
   INITIAL_FILTERS,
   type FilterState as WorkloadFilterState,
 } from "./workload-types";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import type { KanbanTicket } from "@/features/build/shared/types";
 import { mapBoardTicketToKanban } from "@/features/build/my-tickets/map-board-ticket";
 import {
@@ -53,11 +45,15 @@ export type BoardMember = {
   image: string | null;
 };
 
-export function useBoardUrlState(projectId: number) {
+export function useBoardUrlState(
+  projectId: number,
+  defaultView: ViewType = "board",
+) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
 
-  const view: ViewType = parseViewType(searchParams.get("view"));
+  const view: ViewType = parseViewType(searchParams.get("view") ?? defaultView);
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
   const commentParam = searchParams.get("comment");
@@ -70,8 +66,9 @@ export function useBoardUrlState(projectId: number) {
   const filterAssigneeId = searchParams.get("assigneeId") ?? "";
   const filterLabels = searchParams.get("labels") ?? "";
   const filterCycle = searchParams.get("cycle") ?? "";
-  const filterSprint = searchParams.get("sprint") ?? "";
   const filterModule = searchParams.get("module") ?? "";
+  const filterSeverity = searchParams.get("severity") ?? "";
+  const filterQaState = searchParams.get("qaState") ?? "";
   const createParamOpen = searchParams.get("create") === "1";
   const createCycleParam = searchParams.get("cycleId");
   const createDefaultCycleId =
@@ -92,7 +89,6 @@ export function useBoardUrlState(projectId: number) {
       assigneeId: filterAssigneeId || undefined,
       labels: filterLabels || undefined,
       cycle: filterCycle || undefined,
-      sprint: filterSprint || undefined,
       module: filterModule || undefined,
     }),
     [
@@ -103,7 +99,6 @@ export function useBoardUrlState(projectId: number) {
       filterAssigneeId,
       filterLabels,
       filterCycle,
-      filterSprint,
       filterModule,
     ],
   );
@@ -118,16 +113,34 @@ export function useBoardUrlState(projectId: number) {
     isError: ticketsError,
     error: ticketsErrorValue,
     refetch: refetchTickets,
+    isTruncated,
+    fetchNextPage: fetchMoreTickets,
+    isFetchingNextPage: isFetchingMoreTickets,
   } = useProjectBoardTickets(projectId, boardFilters);
   const { data } = useProject(projectId);
   const { data: views } = useViews(projectId);
-  const createView = useCreateView();
   const appliedViewIdRef = useRef<string | null>(null);
 
-  const [displayOptions, setDisplayOptions] = useDisplayOptions(projectId);
+  const [storedDisplayOptions, setStoredDisplayOptions] =
+    useDisplayOptions(projectId);
+
+  const displayOptions = useMemo(
+    () => applyDisplayOptionParams(storedDisplayOptions, searchParams),
+    [storedDisplayOptions, searchParams],
+  );
+
+  const setDisplayOptions = useCallback(
+    (next: DisplayOptions) => {
+      setStoredDisplayOptions(next);
+      const params = writeDisplayOptionParams(
+        currentSearchParams(searchParams),
+        next,
+      );
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [setStoredDisplayOptions, searchParams, router],
+  );
   const [hideCompleted, setHideCompleted] = useState(true);
-  const [saveViewOpen, setSaveViewOpen] = useState(false);
-  const [saveViewName, setSaveViewName] = useState("");
   const [workloadFilters, setWorkloadFilters] =
     useState<WorkloadFilterState>(INITIAL_FILTERS);
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(
@@ -147,15 +160,18 @@ export function useBoardUrlState(projectId: number) {
         else next.delete(k);
       }
     }
-    if (savedView.layoutType) next.set("view", savedView.layoutType);
+    if (savedView.layoutType)
+      next.set("view", fromSavedViewLayout(savedView.layoutType));
     if (
       savedView.displayOptions &&
       Object.keys(savedView.displayOptions).length > 0
     ) {
-      setDisplayOptions(hydrateDisplayOptions(savedView.displayOptions));
+      const hydrated = hydrateDisplayOptions(savedView.displayOptions);
+      setStoredDisplayOptions(hydrated);
+      writeDisplayOptionParams(next, hydrated);
     }
     router.replace(`?${next.toString()}`, { scroll: false });
-  }, [viewId, views, searchParams, router, setDisplayOptions]);
+  }, [viewId, views, searchParams, router, setStoredDisplayOptions]);
 
   const activeView = viewId
     ? views?.find((v) => v.id.toString() === viewId)
@@ -169,12 +185,31 @@ export function useBoardUrlState(projectId: number) {
   const statuses =
     data && "statuses" in data ? (data.statuses as ProjectStatus[]) : undefined;
 
+  const qaFilterActive =
+    filterType === "BUG" && !!(filterSeverity || filterQaState);
+
+  const { data: qaMatches, isLoading: qaMatchesLoading } = useBugs(
+    qaFilterActive ? projectId : undefined,
+    {
+      severity: filterSeverity || undefined,
+      status: filterQaState || undefined,
+    },
+  );
+
+  const qaMatchIds = useMemo(() => {
+    if (!qaFilterActive || !qaMatches) return null;
+    return new Set(qaMatches.map((bug) => bug.id));
+  }, [qaFilterActive, qaMatches]);
+
   const filteredTickets = useMemo(() => {
     let tickets = filterHiddenCompletedTickets(
       allTickets,
       hideCompleted,
       statuses,
     );
+    if (qaMatchIds) {
+      tickets = tickets.filter((ticket) => qaMatchIds.has(Number(ticket.id)));
+    }
     if (displayOptions.completedIssues !== "all") {
       if (displayOptions.completedIssues === "none") {
         tickets = filterHiddenCompletedTickets(tickets, true, statuses);
@@ -196,7 +231,13 @@ export function useBoardUrlState(projectId: number) {
       }
     }
     return tickets;
-  }, [allTickets, hideCompleted, displayOptions.completedIssues, statuses]);
+  }, [
+    allTickets,
+    hideCompleted,
+    displayOptions.completedIssues,
+    statuses,
+    qaMatchIds,
+  ]);
 
   const members: BoardMember[] = useMemo(() => {
     if (!data?.members) return [];
@@ -234,11 +275,15 @@ export function useBoardUrlState(projectId: number) {
     filterAssigneeId ||
     filterLabels ||
     filterCycle ||
-    filterSprint ||
-    filterModule
+    filterModule ||
+    filterSeverity ||
+    filterQaState
   );
   const showEmptyFilterState =
-    !ticketsLoading && hasActiveFilters && filteredTickets.length === 0;
+    !ticketsLoading &&
+    !qaMatchesLoading &&
+    hasActiveFilters &&
+    filteredTickets.length === 0;
 
   const handleClearView = useCallback(() => {
     const next = new URLSearchParams(searchParams.toString());
@@ -247,81 +292,71 @@ export function useBoardUrlState(projectId: number) {
     router.replace(`?${next.toString()}`, { scroll: false });
   }, [router, searchParams]);
 
-  const handleSaveView = useCallback(
-    (meta?: SaveViewMeta) => {
-      const name = saveViewName.trim();
-      if (!name) return;
-      const filters: Record<string, string> = {};
-      if (q) filters.q = q;
-      if (filterStatus) filters.status = filterStatus;
-      if (filterPriority) filters.priority = filterPriority;
-      if (filterType) filters.type = filterType;
-      if (filterAssigneeId) filters.assigneeId = filterAssigneeId;
-      if (filterLabels) filters.labels = filterLabels;
-      if (filterCycle) filters.cycle = filterCycle;
-      createView.mutate(
-        {
-          projectId,
-          name,
-          filters,
-          layoutType: view === "workload" ? "board" : view,
-          ...(meta
-            ? {
-                visibility: meta.visibility,
-                displayOptions: meta.displayOptions,
-              }
-            : {}),
-        },
-        {
-          onSuccess: (created) => {
-            toast.success("View saved");
-            setSaveViewOpen(false);
-            setSaveViewName("");
-            if (
-              created &&
-              typeof created === "object" &&
-              "id" in created &&
-              typeof created.id === "number"
-            ) {
-              const next = currentSearchParams(searchParams);
-              next.set("viewId", String(created.id));
-              router.replace(`?${next.toString()}`, { scroll: false });
-            }
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [
-      saveViewName,
-      q,
-      filterStatus,
-      filterPriority,
-      filterType,
-      filterAssigneeId,
-      filterLabels,
-      filterCycle,
-      view,
-      projectId,
-      createView,
-      searchParams,
-      router,
-    ],
-  );
+  const activeFilters = useMemo(() => {
+    const filters: Record<string, string> = {};
+    if (q) filters.q = q;
+    if (filterStatus) filters.status = filterStatus;
+    if (filterPriority) filters.priority = filterPriority;
+    if (filterType) filters.type = filterType;
+    if (filterAssigneeId) filters.assigneeId = filterAssigneeId;
+    if (filterLabels) filters.labels = filterLabels;
+    if (filterCycle) filters.cycle = filterCycle;
+    if (filterModule) filters.module = filterModule;
+    if (filterSeverity) filters.severity = filterSeverity;
+    if (filterQaState) filters.qaState = filterQaState;
+    return filters;
+  }, [
+    q,
+    filterStatus,
+    filterPriority,
+    filterType,
+    filterAssigneeId,
+    filterLabels,
+    filterCycle,
+    filterModule,
+    filterSeverity,
+    filterQaState,
+  ]);
+
+  const {
+    createView,
+    updateView,
+    saveViewOpen,
+    setSaveViewOpen,
+    saveViewName,
+    handleSaveView,
+    handleUpdateActiveView,
+    handleSaveViewNameChange,
+    handleOpenSaveView,
+  } = useBoardSavedViews({
+    projectId,
+    view,
+    activeView,
+    filters: activeFilters,
+    displayOptions,
+  });
 
   const handleViewChange = useCallback(
     (v: ViewType) => {
+      if (v === "workload") {
+        const p = currentSearchParams(searchParams);
+        p.delete("view");
+        const qs = p.toString();
+        router.push(`/build/${projectId}/workload${qs ? `?${qs}` : ""}`);
+        setSelectedIds(new Set());
+        return;
+      }
       const p = currentSearchParams(searchParams);
       p.set("view", v);
+      if (pathname === `/build/${projectId}/workload`) {
+        router.push(`/build/${projectId}/issues?${p.toString()}`);
+        setSelectedIds(new Set());
+        return;
+      }
       router.replace(`?${p.toString()}`, { scroll: false });
       setSelectedIds(new Set());
     },
-    [router, searchParams],
-  );
-
-  const handleSaveViewNameChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => setSaveViewName(e.target.value),
-    [],
+    [router, searchParams, projectId, pathname],
   );
 
   const handleWorkloadFilterChange = useCallback(
@@ -374,15 +409,21 @@ export function useBoardUrlState(projectId: number) {
     next.delete("assigneeId");
     next.delete("labels");
     next.delete("cycle");
-    next.delete("sprint");
     next.delete("module");
+    next.delete("severity");
+    next.delete("qaState");
     router.replace(`?${next.toString()}`, { scroll: false });
   }, [router, searchParams]);
 
-  const handleOpenSaveView = useCallback(() => {
-    setSaveViewName("");
-    setSaveViewOpen(true);
-  }, []);
+  const handleQaFilterChange = useCallback(
+    (key: "severity" | "qaState", value: string) => {
+      const next = currentSearchParams(searchParams);
+      if (value) next.set(key, value);
+      else next.delete(key);
+      router.replace(`?${next.toString()}`, { scroll: false });
+    },
+    [router, searchParams],
+  );
 
   const handleCreateOpenChange = useCallback(
     (open: boolean) => {
@@ -410,8 +451,9 @@ export function useBoardUrlState(projectId: number) {
     filterAssigneeId,
     filterLabels,
     filterCycle,
-    filterSprint,
     filterModule,
+    filterSeverity,
+    filterQaState,
     selectedTicketId,
     highlightCommentId,
     viewId,
@@ -427,11 +469,15 @@ export function useBoardUrlState(projectId: number) {
     setSaveViewOpen,
     saveViewName,
     createView,
+    updateView,
     selectedIds,
     ticketsLoading,
     ticketsError,
     ticketsErrorValue,
     refetchTickets,
+    isTruncated,
+    fetchMoreTickets,
+    isFetchingMoreTickets,
     allTickets,
     filteredTickets,
     statuses,
@@ -442,11 +488,13 @@ export function useBoardUrlState(projectId: number) {
     hasActiveFilters,
     handleViewChange,
     handleClearSearch,
+    handleQaFilterChange,
     handleClearView,
     handleCreateOpenChange,
     handleOpenSaveView,
     handleSaveViewNameChange,
     handleSaveView,
+    handleUpdateActiveView,
     handleWorkloadFilterChange,
     handleClearWorkloadFilters,
     handleTicketSelect,

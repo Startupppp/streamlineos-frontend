@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { PageActionPicker } from "./page-action-picker";
+import { SCOPE_OPTIONS } from "./page-action-picker-parts";
 
 const CATALOG = [
   {
@@ -10,6 +11,13 @@ const CATALOG = [
     scopable: true,
   },
 ];
+
+describe("SCOPE_OPTIONS — grantable scope choices", () => {
+  it("offers no team choice in the scope selector, because the query layer cannot honour a team scope without materialised org-unit membership", () => {
+    const offeredScopes = SCOPE_OPTIONS.map((o) => o.value);
+    expect(offeredScopes).not.toContain("team");
+  });
+});
 
 describe("PageActionPicker read-only state", () => {
   it("replaces mutation widgets with a readable permission summary", () => {

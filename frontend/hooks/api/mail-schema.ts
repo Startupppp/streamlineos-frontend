@@ -138,8 +138,8 @@ export const mailAiDraftContract = z.object({
     .optional(),
 });
 
-/** `mailSendResultSchema` */
-export const mailSendResultContract = z.object({ messageId: z.string() });
+/** `mailSentSchema` */
+export const mailSendResultContract = z.object({ sent: z.literal(true) });
 
 /** `mailActionSuccessSchema` */
 export const mailActionSuccessContract = z.object({ success: z.literal(true) });

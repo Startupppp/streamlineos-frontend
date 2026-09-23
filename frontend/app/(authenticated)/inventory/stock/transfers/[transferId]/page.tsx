@@ -11,7 +11,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -140,11 +141,18 @@ export default function TransferDetailPage({
   const transferId = Number(transferIdStr);
   const [receiveOpen, setReceiveOpen] = useState(false);
 
-  const { data: transferData, isLoading, isError, refetch } = useTransfer(transferId);
+  const { data: transferData, isLoading, isError, error: transferError, refetch } = useTransfer(transferId);
   const completeMutation = useCompleteTransfer();
   const dispatchMutation = useDispatchTransfer();
   const reserveMutation = useReserveTransfer();
   const cancelMutation = useCancelTransfer();
+
+  const pageState = usePageState({
+    permission: "inventory:stock:read",
+    isLoading,
+    isError,
+    error: transferError,
+  });
 
   const transfer = transferData ?? undefined;
 
@@ -205,6 +213,19 @@ export default function TransferDetailPage({
     reserveMutation.isPending ||
     dispatchMutation.isPending ||
     cancelMutation.isPending;
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper
+        title="Transfer"
+        backHref="/inventory/stock/transfers"
+        backLabel="Back to Transfers"
+      >
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
 
   const pageTitle = isLoading
     ? "Transfer"
@@ -295,16 +316,7 @@ export default function TransferDetailPage({
       backLabel="Back to Transfers"
       actions={pageActions}
     >
-      {isLoading ? null : isError ? (
-        <div className="flex flex-1 min-h-0 flex-col gap-4">
-          <ErrorState
-            title="Failed to load transfer"
-            description="An error occurred while fetching this transfer. Please try again."
-            onRetry={handleRetry}
-            className="flex-1"
-          />
-        </div>
-      ) : !transfer ? (
+      {isLoading ? null : !transfer ? (
         <div className="flex flex-1 min-h-0 flex-col gap-4">
           <InventoryEmptyState
             illustration={<EmptyTransferIllustration />}

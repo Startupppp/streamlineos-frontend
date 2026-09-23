@@ -8,12 +8,12 @@ import {
   DataTableSkeleton,
   type DataTableColumn,
 } from "@/components/ui/data-table";
-import { ErrorState, Gated } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 import { cn } from "@/lib/utils";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import type {
   PickExceptionOwnership,
@@ -25,11 +25,11 @@ import {
 } from "@/hooks/api/inventory/pick-exceptions";
 import {
   PICK_EXCEPTION_BADGE,
-  PICK_EXCEPTION_BLOCKING_BADGE,
   PICK_EXCEPTION_LABEL,
-  PICK_EXCEPTION_RESOLUTION_LABEL,
   PICK_EXCEPTION_STATUS_BADGE,
   PICK_EXCEPTION_STATUS_LABEL,
+  PICK_EXCEPTION_BLOCKING_BADGE,
+  PICK_EXCEPTION_RESOLUTION_LABEL,
 } from "@/features/inventory/lib/inventory-status";
 import { ResolveExceptionDialog } from "./resolve-exception-dialog";
 import { ExceptionOwnerCell } from "./exception-owner-cell";
@@ -39,15 +39,7 @@ interface PickExceptionQueueProps {
   ownership: PickExceptionOwnership;
 }
 
-/**
- * B5, item 5 — the supervisor queue.
- *
- * The column that earns its place is "Holding": a list of exceptions is a report,
- * but a list that says which of them is keeping a picker standing still is a
- * queue somebody works top to bottom. It comes from the server, computed from the
- * same expression the wave uses to decide whether it is finished, so the two can
- * never disagree about which row is the blocker.
- */
+
 export function PickExceptionQueue({ status, ownership }: PickExceptionQueueProps) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -58,6 +50,13 @@ export function PickExceptionQueue({ status, ownership }: PickExceptionQueueProp
   function handleRetry(): void {
     void exceptions.refetch();
   }
+
+  const state = usePageState({
+    permission: "inventory:picking:review",
+    isLoading: exceptions.isLoading,
+    isError: exceptions.isError,
+    error: exceptions.error,
+  });
 
   function handleReviewOpenChange(open: boolean): void {
     if (!open) setReviewing(null);
@@ -174,24 +173,15 @@ export function PickExceptionQueue({ status, ownership }: PickExceptionQueueProp
 
   return (
     <>
-      <Gated
-        permission="inventory:picking:review"
-        isLoading={exceptions.isLoading}
-        isError={exceptions.isError}
+      <PageState
+        resolution={state}
+        onRetry={handleRetry}
         className="flex-1"
         loading={
           <DataTableSkeleton
             rows={10}
             columns={columns.length}
             className="flex-1 min-h-0"
-          />
-        }
-        error={
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load the exception queue"
-            description={getErrorMessage(exceptions.error)}
-            onRetry={handleRetry}
           />
         }
       >
@@ -249,12 +239,12 @@ export function PickExceptionQueue({ status, ownership }: PickExceptionQueueProp
             pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
           }}
         />
-      </Gated>
+      </PageState>
 
       <ResolveExceptionDialog
+        exception={reviewing}
         open={reviewing !== null}
         onOpenChange={handleReviewOpenChange}
-        exception={reviewing}
       />
     </>
   );
@@ -265,11 +255,7 @@ interface ReviewButtonProps {
   onReview: (exception: PickExceptionSummary) => void;
 }
 
-/**
- * Extracted rather than inlined because a `DataTable` cell callback is not a
- * component: hooks cannot run in one, and a closure over the row is the only way
- * a named handler can reach it.
- */
+
 function ReviewButton({ exception, onReview }: ReviewButtonProps) {
   function handleClick(): void {
     onReview(exception);

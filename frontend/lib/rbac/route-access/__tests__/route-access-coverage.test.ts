@@ -1,6 +1,10 @@
 import { collectAppRoutes } from "../app-routes";
 import { resolveRouteAccess, describeRouteAccess } from "../route-access";
-import { ROUTE_ACCESS_EXTENSIONS, matchRouteAccessExtension } from "../route-access-extensions";
+import { ROUTE_ACCESS_EXTENSIONS } from "../route-access-extension-entries";
+import {
+  matchRouteAccessExtension,
+  routeAccessExtensionCovers,
+} from "../route-access-extensions";
 import { UNIVERSAL_ROUTES, isUniversalRoute } from "../universal-routes";
 
 describe("every authenticated route resolves through the registry", () => {
@@ -33,12 +37,27 @@ describe("every authenticated route resolves through the registry", () => {
 
   it("every route-access extension prefix matches at least one real authenticated page — catches phantom extensions", () => {
     const phantoms = ROUTE_ACCESS_EXTENSIONS.filter(
-      (ext) =>
-        !routes.some(
-          (r) =>
-            r.path === ext.prefix || r.path.startsWith(`${ext.prefix}/`),
-        ),
+      (ext) => !routes.some((r) => routeAccessExtensionCovers(ext, r.path)),
     ).map((ext) => ext.prefix);
+    expect(phantoms).toEqual([]);
+  });
+
+  const servedPaths = ["(authenticated)", "(auth)", "(portal)", "(public)"].flatMap(
+    (group) => collectAppRoutes(group).map((r) => r.path),
+  );
+
+  it("serves a universal route declared outside the authenticated group, so the sweep below cannot call it phantom", () => {
+    expect(servedPaths).toContain("/access-suspended");
+  });
+
+  it("every universal route reaches a real page — catches phantom roots like a declared /home with nothing behind it", () => {
+    const phantoms = UNIVERSAL_ROUTES.filter((route) =>
+      route.subtree
+        ? !servedPaths.some(
+            (path) => path === route.path || path.startsWith(`${route.path}/`),
+          )
+        : !servedPaths.includes(route.path),
+    ).map((route) => route.path);
     expect(phantoms).toEqual([]);
   });
 
@@ -69,9 +88,8 @@ describe("§8 platform-core surfaces are universally accessible to every active 
     expect(resolveRouteAccess("/chat/channels").kind).toBe("universal");
   });
 
-  it("notifications inbox is universal", () => {
-    expect(isUniversalRoute("/notifications")).toBe(true);
-    expect(resolveRouteAccess("/notifications").kind).toBe("universal");
+  it("retired /notifications root is no longer a declared app route — next.config.ts redirects it to /inbox", () => {
+    expect(isUniversalRoute("/notifications")).toBe(false);
   });
 
   it("unified inbox is universal", () => {
@@ -109,7 +127,7 @@ describe("§8 platform-core surfaces are universally accessible to every active 
     expect(resolveRouteAccess("/hr/announcements").kind).toBe("universal");
   });
 
-  it("employee referrals and job openings are universal via /me self-service", () => {
+  it("a member's own assigned interviews and hiring feedback are universal via /me self-service", () => {
     expect(isUniversalRoute("/me/recruitment")).toBe(true);
     expect(resolveRouteAccess("/me/recruitment").kind).toBe("universal");
   });
@@ -120,8 +138,8 @@ describe("§8 platform-core surfaces are universally accessible to every active 
   });
 
   it("knowledge-base reading is universal via /knowledge/wiki pages", () => {
-    expect(isUniversalRoute("/knowledge/wiki/pages/1")).toBe(true);
-    expect(resolveRouteAccess("/knowledge/wiki/pages/1").kind).toBe("universal");
+    expect(isUniversalRoute("/knowledge/wiki/doc/1")).toBe(true);
+    expect(resolveRouteAccess("/knowledge/wiki/doc/1").kind).toBe("universal");
   });
 
   it("knowledge AI chat is universal", () => {
@@ -129,19 +147,19 @@ describe("§8 platform-core surfaces are universally accessible to every active 
     expect(resolveRouteAccess("/knowledge/chat").kind).toBe("universal");
   });
 
-  it("personal notification preferences are universal", () => {
-    expect(isUniversalRoute("/notifications/preferences")).toBe(true);
-    expect(resolveRouteAccess("/notifications/preferences").kind).toBe("universal");
+  it("personal notification preferences are universal — canonical route is under /settings/notifications/my-preferences", () => {
+    expect(isUniversalRoute("/settings/notifications/my-preferences")).toBe(true);
+    expect(resolveRouteAccess("/settings/notifications/my-preferences").kind).toBe("universal");
   });
 
-  it("notification administration is NOT universal — gated on providers permission", () => {
-    expect(isUniversalRoute("/notifications/providers")).toBe(false);
-    expect(resolveRouteAccess("/notifications/providers").kind).toBe("permission");
+  it("notification administration is NOT universal — gated on providers permission under /settings/notifications/*", () => {
+    expect(isUniversalRoute("/settings/notifications/providers")).toBe(false);
+    expect(resolveRouteAccess("/settings/notifications/providers").kind).toBe("permission");
   });
 
-  it("KB administration is NOT universal — gated on settings permission", () => {
-    expect(isUniversalRoute("/knowledge/wiki/settings")).toBe(false);
-    expect(resolveRouteAccess("/knowledge/wiki/settings").kind).toBe("permission");
+  it("KB administration is NOT universal — gated on import permission", () => {
+    expect(isUniversalRoute("/knowledge/wiki/import")).toBe(false);
+    expect(resolveRouteAccess("/knowledge/wiki/import").kind).toBe("permission");
   });
 });
 

@@ -6,9 +6,19 @@ jest.mock("@/hooks/api/build/roadmap", () => ({
   useRoadmapItems: jest.fn(),
   useDeleteRoadmapItem: jest.fn(() => ({ mutate: jest.fn() })),
 }));
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: jest.fn(() => ({ kind: "ready" })),
+}));
+
+jest.mock("@/components/shared/page-state", () => ({
+  PageState: ({ children }: { children: React.ReactNode; resolution?: unknown; loading?: unknown; empty?: unknown; onRetry?: unknown; className?: string }) => (
+    <div>{children}</div>
+  ),
+}));
 jest.mock("@/components/ui/button", () => ({
-  Button: ({ children, onClick, disabled }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean }) => (
-    <button type="button" onClick={onClick} disabled={disabled}>{children}</button>
+  Button: ({ children, onClick, disabled, ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+    <button type="button" onClick={onClick} disabled={disabled} {...rest}>{children}</button>
   ),
 }));
 jest.mock("@/components/ui/empty-state", () => ({ EmptyState: () => null }));
@@ -55,17 +65,17 @@ describe("RoadmapTab S04 cursor history", () => {
   it("walks from the first page to the last page and back without inventing a cursor", async () => {
     render(<RoadmapTab search="" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
     expect(mockUseRoadmapItems.mock.calls.at(-1)?.[0]).toEqual({ cursor: "cursor-2" });
-    expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
 
-    fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+    fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
     expect(mockUseRoadmapItems.mock.calls.at(-1)?.[0]).toEqual({ cursor: undefined });
   });
 
   it("resets cursor history when the list filter changes", async () => {
     const view = render(<RoadmapTab search="" />);
-    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
 
     await act(async () => {
       view.rerender(<RoadmapTab search="second" />);
@@ -74,6 +84,6 @@ describe("RoadmapTab S04 cursor history", () => {
     await waitFor(() => {
       expect(mockUseRoadmapItems.mock.calls.at(-1)?.[0]).toEqual({ search: "second", cursor: undefined });
     });
-    expect(screen.getByRole("button", { name: "Previous" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Previous page" })).toBeDisabled();
   });
 });

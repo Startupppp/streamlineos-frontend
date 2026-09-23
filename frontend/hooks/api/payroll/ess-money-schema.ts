@@ -30,16 +30,25 @@ export const essSalaryComponentContract = z.object({
   percent: z.string().nullable(),
 });
 
-export const essSalaryStructureContract = z.object({
-  profile: z.object({
-    annualCtc: z.string(),
-    workerType: z.string(),
-    taxRegime: z.enum(["OLD", "NEW"]).nullable(),
-    costCenter: z.string().nullable(),
-    effectiveFrom: z.string(),
+export const essSalaryStructureContract = z.union([
+  z.object({
+    setupRequired: z.literal(false).or(z.undefined()),
+    profile: z.object({
+      annualCtc: z.string(),
+      workerType: z.string(),
+      taxRegime: z.enum(["OLD", "NEW"]).nullable(),
+      costCenter: z.string().nullable(),
+      effectiveFrom: z.string(),
+    }),
+    components: z.array(essSalaryComponentContract),
   }),
-  components: z.array(essSalaryComponentContract),
-});
+  z.object({
+    setupRequired: z.literal(true),
+    profile: z.null(),
+    components: z.array(essSalaryComponentContract),
+    message: z.string().optional(),
+  }),
+]);
 
 export const essReimbursementStatusContract = z.enum([
   "PENDING",
@@ -59,11 +68,15 @@ export const essReimbursementContract = z.object({
   createdAt: z.string(),
 });
 
-/**
- * A bare array. The route takes `page` and `limit` and returns no `total`, no
- * `hasMore` and no cursor, so the page count is not recoverable from the body.
- */
-export const essReimbursementsContract = z.array(essReimbursementContract);
+export const essReimbursementsContract = z.object({
+  items: z.array(essReimbursementContract),
+  total: z.number().int(),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  totalPages: z.number().int(),
+});
+
+export type EssReimbursementsPage = z.infer<typeof essReimbursementsContract>;
 
 export const essLoanStatusContract = z.enum([
   "PENDING",

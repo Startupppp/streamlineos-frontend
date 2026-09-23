@@ -5,6 +5,7 @@ import { ReportVariance } from "./report-variance";
 import { ReportBankPayout } from "./report-bank-payout";
 import { ReportDeptCost } from "./report-dept-cost";
 import { ReportCostCenter } from "./report-cost-center";
+import { CalendarManager } from "./calendar-manager";
 import { ApiError } from "@/lib/api-envelope";
 
 /**
@@ -34,7 +35,16 @@ jest.mock("@/hooks/api/payroll/reports", () => ({
   usePayrollCostCenter: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/payroll/calendar", () => ({
+  usePayrollCalendar: jest.fn(),
+  useGenerateCalendarMonth: () => ({ mutate: jest.fn(), isPending: false }),
+  useCreateCalendarEvent: () => ({ mutate: jest.fn(), isPending: false }),
+  useUpdateCalendarEvent: () => ({ mutate: jest.fn(), isPending: false }),
+  useDeleteCalendarEvent: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+
 const reports = jest.requireMock("@/hooks/api/payroll/reports") as Record<string, jest.Mock>;
+const calendar = jest.requireMock("@/hooks/api/payroll/calendar") as Record<string, jest.Mock>;
 
 const refetch = jest.fn();
 
@@ -112,5 +122,25 @@ describe("payroll reports distinguish a failure from an empty period", () => {
 
     screen.getByRole("button", { name: /try again/i }).click();
     expect(refetch).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("the payroll calendar distinguishes a failed month from an empty one", () => {
+  it("does not tell the operator to generate a calendar after a 500", () => {
+    calendar.usePayrollCalendar.mockReturnValue(failed());
+    render(<CalendarManager month="2026-01" />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(/couldn't load calendar events/i);
+    expect(screen.queryByText(/no calendar events/i)).toBeNull();
+    screen.getByRole("button", { name: /try again/i }).click();
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("still shows the generate prompt when the month really has no events", () => {
+    calendar.usePayrollCalendar.mockReturnValue(empty([]));
+    render(<CalendarManager month="2026-01" />);
+
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByText(/no calendar events/i)).toBeInTheDocument();
   });
 });

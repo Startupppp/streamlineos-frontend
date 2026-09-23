@@ -6,30 +6,43 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
-import { NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   useBankAccounts,
   useImportBankStatement,
   useSaveCsvMapping,
 } from "@/hooks/api/accounting/banking";
-import type { CsvColumnMapping, StatementImportResult } from "@/types/accounting-banking";
+import type {
+  CsvColumnMapping,
+  StatementImportResult,
+} from "@/types/accounting/accounting-banking";
 import { ColumnMappingFields } from "./column-mapping-fields";
 import { ImportResultPanel } from "./import-result-panel";
 import { textOrUndefined } from "../lib/form-values";
-import { statementImportSchema, type StatementImportFormValues } from "./statement-import-schema";
+import {
+  statementImportSchema,
+  type StatementImportFormValues,
+} from "./statement-import-schema";
 
 const MAX_FILE_BYTES = 8_000_000;
 
 export function StatementImportPage() {
-  const canRead = useCan("accounting:banking:read");
-  const canImport = useCan("accounting:banking:import");
   const canManage = useCan("accounting:banking:manage");
 
   const [fileContent, setFileContent] = useState("");
@@ -37,6 +50,17 @@ export function StatementImportPage() {
   const [result, setResult] = useState<StatementImportResult | null>(null);
 
   const accountsQuery = useBankAccounts({ page: 1, pageSize: 100 });
+
+  const pageState = usePageState({
+    permission: "accounting:banking:import",
+    isLoading: accountsQuery.isLoading,
+    isError: accountsQuery.isError,
+    error: accountsQuery.error,
+    isEmpty:
+      !accountsQuery.isLoading &&
+      !accountsQuery.isError &&
+      (accountsQuery.data?.items ?? []).filter((a) => a.isActive).length === 0,
+  });
   const importStatement = useImportBankStatement();
   const saveCsvMapping = useSaveCsvMapping();
 
@@ -75,11 +99,15 @@ export function StatementImportPage() {
     },
   });
 
-  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>): Promise<void> {
+  async function handleFileChange(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ): Promise<void> {
     const file = event.target.files?.[0];
     if (!file) return;
     if (file.size > MAX_FILE_BYTES) {
-      toast.error("That file is too large. Split the statement into smaller periods.");
+      toast.error(
+        "That file is too large. Split the statement into smaller periods.",
+      );
       return;
     }
     const text = await file.text();
@@ -144,21 +172,30 @@ export function StatementImportPage() {
     form.reset();
   }
 
-  if (!canRead) {
+  if (pageState.kind !== "ready" && pageState.kind !== "loading")
     return (
-      <PageWrapper title="Bring in a statement" backHref="/accounting/banking" backLabel="Back to banking">
-        <NoPermissionState permission="accounting:banking:read" />
+      <PageWrapper
+        title="Bring in a statement"
+        backHref="/accounting/banking"
+        backLabel="Back to banking"
+      >
+        <PageState
+          resolution={pageState}
+          loading={null}
+          empty={
+            <EmptyState
+              title="No active bank accounts"
+              description="Add and activate a bank account before importing statements."
+              action={{ label: "Set up banking", href: "/accounting/banking" }}
+              className="flex-1"
+            />
+          }
+          className="flex-1"
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
-
-  if (!canImport) {
-    return (
-      <PageWrapper title="Bring in a statement" backHref="/accounting/banking" backLabel="Back to banking">
-        <NoPermissionState permission="accounting:banking:import" />
-      </PageWrapper>
-    );
-  }
 
   return (
     <PageWrapper
@@ -169,13 +206,21 @@ export function StatementImportPage() {
     >
       <div className="mx-auto w-full max-w-3xl">
         {result ? (
-          <ImportResultPanel result={result} onImportAnother={handleImportAnother} />
+          <ImportResultPanel
+            result={result}
+            onImportAnother={handleImportAnother}
+          />
         ) : (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-4"
+            >
               <Card>
                 <CardHeader className="px-4 py-3">
-                  <CardTitle className="text-sm font-semibold">The file and the period</CardTitle>
+                  <CardTitle className="text-sm font-semibold">
+                    The file and the period
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 p-4 pt-0">
                   <FormField
@@ -209,7 +254,9 @@ export function StatementImportPage() {
                       />
                     </FormControl>
                     {fileName ? (
-                      <p className="text-label text-muted-foreground">Reading {fileName}</p>
+                      <p className="text-label text-muted-foreground">
+                        Reading {fileName}
+                      </p>
                     ) : null}
                   </FormItem>
 
@@ -221,7 +268,10 @@ export function StatementImportPage() {
                         <FormItem>
                           <FormLabel>Period from</FormLabel>
                           <FormControl>
-                            <DatePicker value={field.value} onChange={field.onChange} />
+                            <DatePicker
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -234,7 +284,10 @@ export function StatementImportPage() {
                         <FormItem>
                           <FormLabel>Period to</FormLabel>
                           <FormControl>
-                            <DatePicker value={field.value} onChange={field.onChange} />
+                            <DatePicker
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -250,7 +303,11 @@ export function StatementImportPage() {
                         <FormItem>
                           <FormLabel>Balance the statement opens at</FormLabel>
                           <FormControl>
-                            <Input {...field} inputMode="decimal" className="tabular-nums" />
+                            <Input
+                              {...field}
+                              inputMode="decimal"
+                              className="tabular-nums"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -263,7 +320,11 @@ export function StatementImportPage() {
                         <FormItem>
                           <FormLabel>Balance the statement closes at</FormLabel>
                           <FormControl>
-                            <Input {...field} inputMode="decimal" className="tabular-nums" />
+                            <Input
+                              {...field}
+                              inputMode="decimal"
+                              className="tabular-nums"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -285,7 +346,10 @@ export function StatementImportPage() {
               </Card>
 
               <div className="flex justify-end">
-                <LoadingButton type="submit" isPending={importStatement.isPending}>
+                <LoadingButton
+                  type="submit"
+                  isPending={importStatement.isPending}
+                >
                   Bring it in
                 </LoadingButton>
               </div>

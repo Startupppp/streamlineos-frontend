@@ -4,8 +4,10 @@ import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { useEssSalaryStructure } from "@/hooks/api/payroll/ess";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { formatShortDate } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
@@ -36,7 +38,11 @@ function SalaryStructureSkeleton() {
 }
 
 export function EssSalarySection() {
-  const { data, isLoading, isError } = useEssSalaryStructure();
+  const { data, isLoading, isError, error, refetch } = useEssSalaryStructure();
+
+  function handleRetry() {
+    void refetch();
+  }
 
   if (isLoading) {
     return (
@@ -46,13 +52,26 @@ export function EssSalarySection() {
     );
   }
 
-  if (isError || !data) {
+  if (isError) {
+    return (
+      <section id="salary" className="flex min-h-0 w-full flex-1 flex-col">
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load your salary structure"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      </section>
+    );
+  }
+
+  if (!data || (data.setupRequired === true)) {
     return (
       <section id="salary" className="flex min-h-0 w-full flex-1 flex-col">
         <EmptyState
           illustrationPreset="payroll"
-          title="Salary structure unavailable"
-          description="Your salary structure is not visible yet or has not been configured."
+          title="Salary structure not set up"
+          description={data?.message ?? "Your salary structure has not been configured yet. Please contact your HR department."}
           className={PAGE_BODY_EMPTY_CLASS}
         />
       </section>

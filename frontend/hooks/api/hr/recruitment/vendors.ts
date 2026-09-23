@@ -170,7 +170,7 @@ export interface UpdateSubmissionInput {
 }
 
 export function useRecruitmentVendors() {
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:requisitions:view", {
     queryKey: humanResourcesQueryKeys.hr.recruitmentVendors(),
     queryFn: ({ signal }) =>
       apiClient.get<RecruitmentVendor[]>("/hr/recruitment/vendors", undefined, signal, vendorListC),
@@ -180,7 +180,7 @@ export function useRecruitmentVendors() {
 
 export function useCreateVendor() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "vendors", "create"],
     mutationFn: (data: CreateVendorInput) =>
       apiClient.post<RecruitmentVendorRow>("/hr/recruitment/vendors", data, undefined, vendorRowC),
@@ -192,7 +192,7 @@ export function useCreateVendor() {
 
 export function useUpdateVendor(vendorId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "vendors", "update", vendorId],
     mutationFn: (data: UpdateVendorInput) =>
       apiClient.patch<RecruitmentVendorRow>(
@@ -209,7 +209,7 @@ export function useUpdateVendor(vendorId: number) {
 
 export function useDeleteVendor() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "vendors", "delete"],
     mutationFn: (vendorId: number) =>
       apiClient.delete<void>(
@@ -225,7 +225,7 @@ export function useDeleteVendor() {
 }
 
 export function useVendorSubmissions(vendorId: number) {
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:requisitions:view", {
     queryKey: humanResourcesQueryKeys.hr.vendorSubmissions(vendorId),
     queryFn: ({ signal }) =>
       apiClient.get<VendorSubmission[]>(
@@ -241,7 +241,7 @@ export function useVendorSubmissions(vendorId: number) {
 
 export function useCreateVendorSubmission(vendorId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "vendor-submissions", "create", vendorId],
     mutationFn: (data: CreateSubmissionInput) =>
       apiClient.post<VendorSubmissionRow>(
@@ -259,7 +259,7 @@ export function useCreateVendorSubmission(vendorId: number) {
 
 export function useUpdateVendorSubmission(vendorId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "vendor-submissions", "update", vendorId],
     mutationFn: ({ submissionId, ...data }: UpdateSubmissionInput & { submissionId: number }) =>
       apiClient.patch<VendorSubmissionRow>(
@@ -276,7 +276,7 @@ export function useUpdateVendorSubmission(vendorId: number) {
 }
 
 export function useGenerateVendorPortalLink(vendorId: number) {
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "vendors", "portal-link", vendorId],
     mutationFn: () =>
       apiClient.post<VendorPortalLink>(

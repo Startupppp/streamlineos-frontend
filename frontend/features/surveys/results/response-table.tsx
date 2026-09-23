@@ -7,12 +7,16 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useSurveyResponses, useExportResponses, type SurveyResponseSession } from "@/hooks/api/surveys/analytics";
 import { ResponseDetailSheet } from "./response-detail-sheet";
 
 export function ResponseTable({ surveyId }: { surveyId: number }) {
-  const { data: responses, isLoading, isError, error, refetch } = useSurveyResponses(surveyId, { pageSize: 100 });
+  const responsesQuery = useSurveyResponses(surveyId, { pageSize: 100 });
+  const { data: responses, isError, error, refetch } = responsesQuery;
+  const isLoading = responsesQuery.isLoading || responsesQuery.access.pending;
   const exportResponses = useExportResponses(surveyId);
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
 
@@ -41,8 +45,23 @@ export function ResponseTable({ surveyId }: { surveyId: number }) {
     }
   }
 
+  function handleRetry() {
+    void refetch();
+  }
+
+  function handleRowClick(row: SurveyResponseSession) {
+    setSelectedSessionId(row.id);
+  }
+
+  function handleDetailOpenChange(open: boolean) {
+    if (!open) setSelectedSessionId(null);
+  }
+
+  if (responsesQuery.access.denied)
+    return <NoPermissionState permission="surveys:responses:view" compact />;
+
   if (isError)
-    return <ErrorState title="Couldn't load responses" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
+    return <ErrorState title="Couldn't load responses" description={getErrorMessage(error)} onRetry={handleRetry} />;
 
   return (
     <div className="flex flex-col gap-3">
@@ -56,13 +75,20 @@ export function ResponseTable({ surveyId }: { surveyId: number }) {
         columns={columns}
         getRowKey={(row) => row.id}
         isLoading={isLoading}
-        onRowClick={(row) => setSelectedSessionId(row.id)}
+        onRowClick={handleRowClick}
+        emptyState={
+          <EmptyState
+            compact
+            title="No responses yet"
+            description="Responses appear here as people complete this survey."
+          />
+        }
       />
       <ResponseDetailSheet
         surveyId={surveyId}
         sessionId={selectedSessionId}
         open={selectedSessionId !== null}
-        onOpenChange={(open) => !open && setSelectedSessionId(null)}
+        onOpenChange={handleDetailOpenChange}
       />
     </div>
   );

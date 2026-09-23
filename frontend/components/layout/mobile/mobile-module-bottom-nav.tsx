@@ -13,7 +13,12 @@ import {
   shouldShowMobileModuleBottomNav,
 } from "./mobile-module-nav-items";
 import type { NavRoute } from "../sidebar/sidebar-nav-items";
-import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -33,7 +38,7 @@ function ModuleNavLink({
     <Link
       href={route.href}
       className={cn(
-        "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 text-center transition-colors",
+        "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 text-center transition-colors motion-reduce:transition-none",
         isActive
           ? "text-primary"
           : "text-muted-foreground hover:text-foreground",
@@ -68,7 +73,7 @@ function MoreTab({
       onClick={onOpen}
       {...hoverHandlers}
       className={cn(
-        "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 text-center transition-colors",
+        "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 text-center transition-colors motion-reduce:transition-none",
         isActive
           ? "text-primary"
           : "text-muted-foreground hover:text-foreground",
@@ -113,7 +118,7 @@ function OverflowNavLink({
       onFocus={handleIntent}
       onClick={onNavigate}
       className={cn(
-        "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+        "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors motion-reduce:transition-none",
         isActive
           ? "bg-primary/10 text-primary"
           : "text-foreground hover:bg-muted",
@@ -148,8 +153,12 @@ function MoreDrawer({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} modal>
-      <DrawerContent className="gap-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <DrawerContent className="gap-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] motion-reduce:transition-none">
         <DrawerTitle className="sr-only">More navigation options</DrawerTitle>
+        <DrawerDescription className="sr-only">
+          The sections of this module that did not fit in the bottom bar.
+          Choosing one navigates there and closes this sheet.
+        </DrawerDescription>
         <div className="flex flex-col gap-0.5 px-2 py-2">
           {groups.map((group) => (
             <div key={group.label}>

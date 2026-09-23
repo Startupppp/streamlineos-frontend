@@ -1,18 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { RequireModule } from "@/components/auth/require-module";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyReportIllustration } from "@/components/illustrations";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useSurveys, type SurveyMode, type SurveyStatus } from "@/hooks/api/surveys/forms";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { SurveyCard } from "./survey-card";
 import { SurveyListFilters } from "./survey-list-filters";
+import { SurveyListSkeleton } from "./survey-list-skeleton";
 
 export function SurveysPage() {
   const [search, setSearch] = useState("");
@@ -20,14 +21,34 @@ export function SurveysPage() {
   const [mode, setMode] = useState<SurveyMode | "all">("all");
   const debouncedSearch = useDebouncedValue(search, 300);
 
-  const { data: surveys, isLoading, isError, refetch } = useSurveys({
+  const surveysQuery = useSurveys({
     search: debouncedSearch || undefined,
     status: status === "all" ? undefined : status,
     mode: mode === "all" ? undefined : mode,
     pageSize: 100,
   });
+  const { data: surveys, isLoading, isError, error, refetch } = surveysQuery;
 
-  const hasAnySurveys = (surveys?.length ?? 0) > 0 || Boolean(debouncedSearch) || status !== "all" || mode !== "all";
+  const filtersActive = Boolean(debouncedSearch) || status !== "all" || mode !== "all";
+  const rows = surveys ?? [];
+  const hasAnySurveys = rows.length > 0 || filtersActive;
+
+  const pageState = usePageState({
+    isLoading,
+    isError,
+    error,
+    isEmpty: rows.length === 0,
+  });
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setStatus("all");
+    setMode("all");
+  }, []);
 
   return (
     <DashboardGate permission="surveys:view">
@@ -41,7 +62,7 @@ export function SurveysPage() {
                 href="/surveys/new"
                 className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
               >
-                New Survey
+                Create survey
               </Link>
             ) : undefined
           }
@@ -59,29 +80,31 @@ export function SurveysPage() {
           }
         >
           <div className="flex flex-1 min-h-0 flex-col">
-            {isLoading ? (
+            <PageState
+              resolution={pageState}
+              loading={<SurveyListSkeleton />}
+              onRetry={handleRetry}
+              className="flex-1"
+              empty={
+                <EmptyState
+                  illustration={<EmptyReportIllustration className="h-28 w-28" />}
+                  title="No surveys yet"
+                  description="Create a survey, assessment, live session, or lead qualification form to get started."
+                  action={{ label: "Create survey", href: "/surveys/new" }}
+                  filtersActive={filtersActive}
+                  filteredTitle="No surveys match your filters"
+                  onClearFilters={handleClearFilters}
+                  access={surveysQuery.access}
+                  className="flex-1"
+                />
+              }
+            >
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <Skeleton key={i} className="h-24 rounded-xl" />
-                ))}
-              </div>
-            ) : isError ? (
-              <ErrorState description="Failed to load surveys." onRetry={refetch} />
-            ) : surveys && surveys.length > 0 ? (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {surveys.map((survey) => (
+                {rows.map((survey) => (
                   <SurveyCard key={survey.id} survey={survey} />
                 ))}
               </div>
-            ) : (
-              <EmptyState
-                illustration={<EmptyReportIllustration className="h-28 w-28" />}
-                title="No Survey Found"
-                description="Create a survey, assessment, live session, or lead qualification form to get started."
-                action={{ label: "New Survey", href: "/surveys/new" }}
-                className="flex-1"
-              />
-            )}
+            </PageState>
           </div>
         </PageWrapper>
       </RequireModule>

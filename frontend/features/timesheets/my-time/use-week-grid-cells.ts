@@ -8,6 +8,18 @@ import type {
 import type { TimesheetEntry } from "@/features/timesheets";
 import { isCellLocked, type GridRow } from "./week-grid-rows";
 
+export const GRID_MAX_HOURS_PER_DAY = 24;
+const INVALID_HOURS_MESSAGE = `Hours must be between 0 and ${GRID_MAX_HOURS_PER_DAY}.`;
+
+function parseHoursInput(value: string): number | null {
+  const trimmed = value.trim();
+  if (trimmed === "") return 0;
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed)) return null;
+  if (parsed < 0 || parsed > GRID_MAX_HOURS_PER_DAY) return null;
+  return parsed;
+}
+
 const NAV_KEYS = [
   "Enter",
   "ArrowUp",
@@ -47,15 +59,11 @@ export function useWeekGridCells({
   const [editingValue, setEditingValue] = useState("");
   const cellRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  /**
-   * What the grid announces when a cell writes.
-   *
-   * Every edit here is a silent background mutation — the number just stays
-   * where you typed it — so a screen reader user had no signal that anything
-   * had been saved, or that it had failed. Errors already toast; this covers
-   * the success and in-flight halves.
-   */
+  const [cellError, setCellError] = useState<string | null>(null);
+  const lastCommitted = useRef<{ cellKey: string; value: string } | null>(null);
+
   const saveStatus = useMemo(() => {
+    if (cellError) return cellError;
     const pending =
       createEntry.isPending || updateEntry.isPending || voidEntry.isPending;
     if (pending) return "Saving hours…";
@@ -64,18 +72,24 @@ export function useWeekGridCells({
     if (createEntry.isSuccess || updateEntry.isSuccess || voidEntry.isSuccess)
       return "Hours saved.";
     return "";
-  }, [createEntry, updateEntry, voidEntry]);
+  }, [cellError, createEntry, updateEntry, voidEntry]);
 
   const commitCell = useCallback(
-    (rowKey: string, date: string, value: string, row: GridRow) => {
-      const hours = parseFloat(value) || 0;
+    (rowKey: string, date: string, value: string, row: GridRow): boolean => {
       const existing = entryMap.get(`${rowKey}-${date}`);
-      // A locked cell is read-only rather than disabled now, so it can be
-      // focused and left; nothing it reports may reach a mutation.
       if (isCellLocked(existing)) {
         setEditingCell(null);
-        return;
+        setCellError(null);
+        return true;
       }
+
+      const hours = parseHoursInput(value);
+      if (hours === null) {
+        setCellError(INVALID_HOURS_MESSAGE);
+        return false;
+      }
+      setCellError(null);
+
       if (hours > 0 && !existing) {
         createEntry.mutate({
           date,
@@ -90,6 +104,7 @@ export function useWeekGridCells({
         voidEntry.mutate({ entryId: existing.id, reason: "Cleared via grid" });
       }
       setEditingCell(null);
+      return true;
     },
     [entryMap, createEntry, updateEntry, voidEntry],
   );
@@ -97,6 +112,8 @@ export function useWeekGridCells({
   const handleCellFocus = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
     setEditingCell(e.currentTarget.dataset.cellKey ?? "");
     setEditingValue(e.currentTarget.dataset.hours ?? "");
+    setCellError(null);
+    lastCommitted.current = null;
   }, []);
 
   const handleCellChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,6 +122,9 @@ export function useWeekGridCells({
 
   const handleCellBlur = useCallback(
     (e: React.FocusEvent<HTMLInputElement>) => {
+      const cellKey = e.currentTarget.dataset.cellKey ?? "";
+      const committed = lastCommitted.current;
+      if (committed?.cellKey === cellKey && committed.value === editingValue) return;
       const row = rowFromDataset(e.currentTarget.dataset);
       if (!row) return;
       commitCell(
@@ -131,16 +151,6 @@ export function useWeekGridCells({
     [allRows, days],
   );
 
-  /**
-   * Move around the grid with the arrow keys.
-   *
-   * Enter alone used to be the whole keyboard story, and a number input eats
-   * Up and Down natively to step its own value — so a keyboard user pressing
-   * Down on Monday silently changed Monday's hours instead of moving to the
-   * next project. Arrow keys now navigate (and are prevented from stepping),
-   * Home/End jump to the ends of the week, and Enter still commits and moves
-   * down. Typing a value is unaffected: only the movement keys are captured.
-   */
   const handleCellKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (!NAV_KEYS.includes(e.key)) return;
@@ -151,9 +161,6 @@ export function useWeekGridCells({
       const rowIdx = allRows.findIndex((r) => r.rowKey === rowKey);
       if (dayIdx < 0 || rowIdx < 0) return;
 
-      // `selectionStart` is null on `input[type=number]`, which reads as "the
-      // whole value", so Left/Right always navigate here. They still leave a
-      // text-mode cell only from its edges if this ever stops being a number.
       const start = e.currentTarget.selectionStart;
       const end = e.currentTarget.selectionEnd;
       const caretAtStart = start === null || start === 0;
@@ -166,7 +173,11 @@ export function useWeekGridCells({
       if (e.key === "Enter") {
         const row = rowFromDataset(e.currentTarget.dataset);
         if (!row) return;
-        commitCell(rowKey, date, editingValue, row);
+        if (!commitCell(rowKey, date, editingValue, row)) return;
+        lastCommitted.current = {
+          cellKey: e.currentTarget.dataset.cellKey ?? "",
+          value: editingValue,
+        };
         focusCell(rowIdx + 1, dayIdx);
         return;
       }
@@ -185,6 +196,7 @@ export function useWeekGridCells({
     cellRefs,
     editingCell,
     editingValue,
+    cellError,
     saveStatus,
     handleCellFocus,
     handleCellChange,

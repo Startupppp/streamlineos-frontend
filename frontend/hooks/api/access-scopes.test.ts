@@ -2,8 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useCan, useScope } from "./access";
 import type { AccessResponse } from "@/types/access";
 
+jest.mock("react", () => ({
+  ...jest.requireActual("react"),
+  useEffect: jest.fn(),
+}));
+
 jest.mock("@tanstack/react-query", () => ({
   useQuery: jest.fn(),
+  useQueryClient: jest.fn().mockReturnValue({ invalidateQueries: jest.fn() }),
 }));
 
 jest.mock("next-auth/react", () => ({

@@ -1,6 +1,5 @@
 export * from "./shared";
 export * from "./tasks";
-export * from "./sprints";
 export * from "./projects";
 export * from "./releases";
 export * from "./planning";
@@ -21,4 +20,3 @@ export * from "./portfolios";
 export * from "./workflow";
 export * from "./teams";
 export * from "./managed-products";
-export * from "./pm-workspaces";

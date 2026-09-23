@@ -31,7 +31,7 @@ export function useCreateAsset() {
   return useAuthorizedMutation("hr:assets:manage", {
     mutationKey: ["hr", "assets", "create"],
     mutationFn: (data: CreateAssetInput) =>
-      apiClient.post<Asset>("/hr/assets", data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.assetRowContract))),
+      apiClient.post<Asset>("/hr/assets", data, undefined, lazyContract(() => import("@/hooks/api/hr/assets-schema").then(m => m.assetRowContract))),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() }),
   });
 }

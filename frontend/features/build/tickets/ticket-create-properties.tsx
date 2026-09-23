@@ -265,7 +265,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
           </ResponsivePopoverTrigger>
           <ResponsivePopoverContent title="Assignee" className="z-[110] w-52 p-0" align="start">
             <Command>
-              <CommandInput placeholder="Search members…" className="text-xs" />
+              <CommandInput placeholder="Search members…" />
               <CommandList className="max-h-48">
                 <CommandEmpty className="py-2 text-center text-xs text-muted-foreground">No members found.</CommandEmpty>
                 <CommandGroup>

@@ -1,15 +1,18 @@
 ﻿"use client";
 
 import { useCallback } from "react";
-import { X } from "lucide-react";
+import { Save, X } from "lucide-react";
 import { BookmarkIcon } from "@animateicons/react/lucide";
 import type { IconHandle } from "@animateicons/react";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
 import { DisplayOptionsPanel } from "@/features/build/views/display-options-panel";
 import { ViewSwitcher, type ViewType } from "@/features/build/views/view-switcher";
 import { WorkloadFilterBar } from "@/features/build/views/workload-filter-bar";
+import { BugQaFilters } from "@/features/build/views/bug-qa-filters";
+import { SavedViewsMenu } from "@/features/build/views/saved-views-menu";
 import type { FilterState as WorkloadFilterState } from "@/features/build/views/workload-types";
 import type { DisplayOptions } from "@/features/build/shared/types";
 import { useCan } from "@/hooks/api/access";
@@ -62,6 +65,8 @@ interface ProjectViewsToolbarProps {
   activeViewName?: string | null;
   onClearView?: () => void;
   onOpenSaveView: () => void;
+  onUpdateView?: () => void;
+  isUpdatingView?: boolean;
   projectId: number;
   members: Member[];
   statuses?: StatusOption[];
@@ -74,6 +79,10 @@ interface ProjectViewsToolbarProps {
     value: WorkloadFilterState[K],
   ) => void;
   onClearWorkloadFilters: () => void;
+  filterType: string;
+  filterSeverity: string;
+  filterQaState: string;
+  onQaFilterChange: (key: "severity" | "qaState", value: string) => void;
 }
 
 export function ProjectViewsToolbar({
@@ -84,6 +93,8 @@ export function ProjectViewsToolbar({
   activeViewName,
   onClearView,
   onOpenSaveView,
+  onUpdateView,
+  isUpdatingView = false,
   projectId,
   members,
   statuses,
@@ -93,6 +104,10 @@ export function ProjectViewsToolbar({
   workloadFilters,
   onWorkloadFilterChange,
   onClearWorkloadFilters,
+  filterType,
+  filterSeverity,
+  filterQaState,
+  onQaFilterChange,
 }: ProjectViewsToolbarProps) {
   const canManageViews = useCan("build:workspace:manage");
   const handleSaveViewClick = useCallback(() => {
@@ -104,6 +119,8 @@ export function ProjectViewsToolbar({
       <ViewSwitcher activeView={view} onViewChange={onViewChange} />
 
       <div className="flex items-center gap-0.5 sm:gap-1">
+        <SavedViewsMenu projectId={projectId} />
+
         <DisplayOptionsPanel
           viewType={view}
           options={displayOptions}
@@ -118,6 +135,14 @@ export function ProjectViewsToolbar({
           />
         ) : null}
       </div>
+
+      {filterType === "BUG" ? (
+        <BugQaFilters
+          severity={filterSeverity}
+          qaState={filterQaState}
+          onChange={onQaFilterChange}
+        />
+      ) : null}
 
       {activeViewName && onClearView ? (
         <Badge
@@ -134,6 +159,22 @@ export function ProjectViewsToolbar({
             <X className="h-3 w-3" />
           </button>
         </Badge>
+      ) : null}
+
+      {activeViewName && onUpdateView && canManageViews ? (
+        <LoadingButton
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-6 shrink-0 gap-1 px-2 text-xs"
+          isPending={isUpdatingView}
+          loadingText="Updating…"
+          onClick={onUpdateView}
+          aria-label="Update view from current filters"
+        >
+          <Save className="h-3 w-3" />
+          Update
+        </LoadingButton>
       ) : null}
     </div>
   );
@@ -156,11 +197,11 @@ export function ProjectViewsToolbar({
   return (
     <TicketFilterBar
       className="w-full"
+      mobileSearchFirst
       leading={leading}
       members={members}
       statuses={statuses}
       projectId={projectId}
-      showSprintFilter={false}
       showDoneToggle
       hideCompleted={hideCompleted}
       onHideCompletedChange={onHideCompletedChange}

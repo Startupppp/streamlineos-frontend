@@ -1,9 +1,10 @@
 ﻿"use client";
 
 import { useEffect } from "react";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { portalCrSchema, type PortalCrValues } from "./portal-cr-schema";
 import {
   Sheet,
   SheetContent,
@@ -40,15 +41,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSubmitPortalChangeRequest } from "@/hooks/api/build/client-portal";
 
-const schema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string(),
-  impact: z.string(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
-const DEFAULTS: FormValues = {
+const DEFAULTS: PortalCrValues = {
   title: "",
   description: "",
   impact: "",
@@ -62,13 +55,14 @@ interface PortalCrSheetProps {
 
 export function PortalCrSheet({ projectId, open, onOpenChange }: PortalCrSheetProps) {
   const submit = useSubmitPortalChangeRequest(projectId);
-  const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: DEFAULTS });
+  const form = useForm<PortalCrValues>({ resolver: zodResolver(portalCrSchema), defaultValues: DEFAULTS });
+  useRegisterDirtyState(open && form.formState.isDirty);
 
   useEffect(() => {
     if (open) form.reset(DEFAULTS);
   }, [open, form]);
 
-  function handleSubmit(values: FormValues) {
+  function handleSubmit(values: PortalCrValues) {
     submit.mutate(
       {
         title: values.title,

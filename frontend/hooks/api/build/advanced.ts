@@ -80,7 +80,7 @@ export function useCycles(
   projectId: number,
   options?: Omit<UseQueryOptions<Cycle[]>, "queryKey" | "queryFn" | "enabled">
 ) {
-  const canView = useCan("build:view");
+  const canView = useCan("build:sprints:view");
   return useQuery<Cycle[]>({
     queryKey: buildWorkQueryKeys.projects.cycles(projectId),
     queryFn: ({ signal }) => apiClient.get<Cycle[]>(`/build/${projectId}/cycles`, undefined, signal, cycleListContract),
@@ -303,11 +303,11 @@ export function useUpdateIntakeRequest(options?: Parameters<typeof useMutation>[
     ...options,
     mutationKey: ["projects", "intake", "update"],
     mutationFn: ({ intakeRequestId, projectId, ...data }: UpdateIntakeRequestInput & { projectId: number }) =>
-      apiClient.patch<{ success: boolean }>(
+      apiClient.patch<IntakeRequest>(
         `/build/${projectId}/intake/${intakeRequestId}`,
         data,
         undefined,
-        successContract,
+        intakeItemContract,
       ),
     onSuccess: (_: unknown, variables: UpdateIntakeRequestInput & { projectId: number }) => {
       queryClient.invalidateQueries({

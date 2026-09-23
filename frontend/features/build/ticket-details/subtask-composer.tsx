@@ -175,7 +175,7 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
         value={title}
         onChange={handleTitleChange}
         placeholder="Add subtask..."
-        className="h-6 flex-1 border-0 bg-transparent p-0 text-xs shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+        className="h-6 flex-1 border-0 bg-transparent p-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
         onKeyDown={handleKeyDown}
       />
 
@@ -226,7 +226,7 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
         </ResponsivePopoverTrigger>
         <ResponsivePopoverContent title="Assignee" className="w-52 p-0" align="end">
           <Command>
-            <CommandInput placeholder="Search members..." className="text-xs" />
+            <CommandInput placeholder="Search members..." />
             <CommandList className="max-h-48">
               <CommandEmpty className="py-2 text-center text-xs text-muted-foreground">No members found.</CommandEmpty>
               <CommandGroup>

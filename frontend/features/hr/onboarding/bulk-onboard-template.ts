@@ -1,4 +1,5 @@
 import type { BulkOnboardEmployeeRow } from "@/types/hr";
+import { isUserInviteRole } from "@/lib/constants/user-invite-roles";
 
 /** Canonical template columns — keep in sync with backend bulkOnboardEmployeeRowSchema. */
 export const BULK_ONBOARD_COLUMNS = [
@@ -52,11 +53,25 @@ export const BULK_ONBOARD_COLUMNS = [
     sample: "Engineering",
   },
   {
+    key: "reportingManagerEmail",
+    header: "reportingManagerEmail",
+    required: true,
+    width: 28,
+    sample: "manager@company.com",
+  },
+  {
+    key: "topLevelRoleReason",
+    header: "topLevelRoleReason",
+    required: false,
+    width: 24,
+    sample: "",
+  },
+  {
     key: "role",
     header: "role",
     required: false,
     width: 16,
-    sample: "ENGINEERING",
+    sample: "MEMBER",
   },
   {
     key: "employeeId",
@@ -178,6 +193,15 @@ const HEADER_ALIASES: Record<string, ColumnKey> = {
   departmentid: "department",
   "department id": "department",
   role: "role",
+  reportingmanageremail: "reportingManagerEmail",
+  "reporting manager email": "reportingManagerEmail",
+  "reporting manager": "reportingManagerEmail",
+  "reports to": "reportingManagerEmail",
+  manager: "reportingManagerEmail",
+  "manager email": "reportingManagerEmail",
+  toplevelrolereason: "topLevelRoleReason",
+  "top level role reason": "topLevelRoleReason",
+  "top-level role reason": "topLevelRoleReason",
   employeeid: "employeeId",
   "employee id": "employeeId",
   employee_id: "employeeId",
@@ -242,7 +266,9 @@ export function validateAndMap(
   const department = cell(raw, "department");
   const phone = cell(raw, "phone");
   const genderRaw = cell(raw, "gender").toUpperCase();
-  const role = cell(raw, "role");
+  const roleRaw = cell(raw, "role").toUpperCase();
+  const reportingManagerEmail = cell(raw, "reportingManagerEmail").toLowerCase();
+  const topLevelRoleReason = cell(raw, "topLevelRoleReason");
   const employeeId = cell(raw, "employeeId");
   const joiningDate = cell(raw, "joiningDate");
   const dateOfBirth = cell(raw, "dateOfBirth");
@@ -272,6 +298,16 @@ export function validateAndMap(
   }
   if (genderRaw && !GENDER_VALUES.has(genderRaw)) {
     errors.push("gender must be MALE, FEMALE, or OTHER");
+  }
+  if (roleRaw && !isUserInviteRole(roleRaw)) {
+    errors.push("role must be MEMBER or ORG_ADMIN");
+  }
+  if (reportingManagerEmail && topLevelRoleReason) {
+    errors.push("a top-level role cannot also have a reportingManagerEmail");
+  } else if (!reportingManagerEmail && !topLevelRoleReason) {
+    errors.push("reportingManagerEmail is required (or topLevelRoleReason for a top-level role)");
+  } else if (reportingManagerEmail && !EMAIL_RE.test(reportingManagerEmail)) {
+    errors.push("invalid reportingManagerEmail");
   }
 
   if (dateOfBirth) {
@@ -329,7 +365,9 @@ export function validateAndMap(
     ...(departmentName ? { department: departmentName } : {}),
     ...(phone ? { phone } : {}),
     ...(genderRaw ? { gender: genderRaw as "MALE" | "FEMALE" | "OTHER" } : {}),
-    ...(role ? { role } : {}),
+    ...(roleRaw ? { role: roleRaw } : {}),
+    ...(reportingManagerEmail ? { reportingManagerEmail } : {}),
+    ...(topLevelRoleReason ? { topLevelRole: true, topLevelRoleReason } : {}),
     ...(employeeId ? { employeeId } : {}),
     ...(joiningDate ? { joiningDate } : {}),
     ...(dateOfBirth ? { dateOfBirth } : {}),

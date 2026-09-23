@@ -2,10 +2,8 @@
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 
-import { memo, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { motion } from "framer-motion";
 import { EmptyKnowledgeIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -13,6 +11,7 @@ import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useCan } from "@/hooks/api/access";
 import {
   useKbPagesRecent,
   useKbPagesFavorites,
@@ -21,56 +20,18 @@ import {
   useCreateKbPage,
 } from "@/hooks/api/kb";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useMotionVariants } from "@/lib/motion-variants";
 import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
 import { pageHref, projectPageHref } from "@/lib/knowledge-routes";
 import {
   KbClockIcon,
-  KbFileTextIcon,
   KbPlusIcon,
   KbStarIcon,
 } from "@/features/wiki/lib/kb-icons";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
-
-interface PageCardProps {
-  id: number;
-  icon: string | null;
-  title: string;
-  updatedAt: string;
-  href: string;
-}
-
-const PageCard = memo(function PageCard({
-  icon,
-  title,
-  updatedAt,
-  href,
-}: PageCardProps) {
-  return (
-    <Link
-      href={href}
-      className="block p-3 rounded-lg border border-border bg-card shadow-panel hover:bg-muted/50 transition-colors"
-    >
-      <div className="flex items-start gap-3">
-        <span className="text-xl shrink-0">
-          {icon ?? (
-            <KbFileTextIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
-          )}
-        </span>
-        <div className="min-w-0 flex-1">
-          <TruncatedText
-            text={title || "Untitled"}
-            className="font-medium text-sm"
-          />
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {kbTimeAgo(updatedAt)}
-          </p>
-        </div>
-      </div>
-    </Link>
-  );
-});
+import {
+  WikiPageCard,
+  WIKI_PAGE_CARD_GRID_CLASS,
+} from "@/features/wiki/components/wiki-page-card";
 
 interface WikiHomePageProps {
   projectId?: number;
@@ -98,7 +59,17 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   const treeRefetch = treeQuery.refetch;
 
   const createPage = useCreateKbPage();
-  const { staggerContainer, fadeUp } = useMotionVariants();
+  const canCreate = useCan("kb:pages:create");
+
+  const listingLookups = useMemo(() => {
+    const covers = new Map<number, string | null>();
+    const updatedAt = new Map<number, string>();
+    for (const page of [...recentPages, ...favoritePages]) {
+      covers.set(page.id, page.coverImage);
+      updatedAt.set(page.id, page.updatedAt);
+    }
+    return { covers, updatedAt };
+  }, [recentPages, favoritePages]);
 
   const rootPages: KbPageTreeNode[] = treeNodes.filter(
     (n: KbPageTreeNode) => n.parentPageId === null,
@@ -121,19 +92,20 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
     );
   }, [createPage, router, projectId, isProjectScoped, resolvePageHref]);
 
-  const newPageAction = (
+  const newPageAction = canCreate ? (
     <AnimatedIconButton
       type="button"
-      variant="ghost"
-      size="icon"
       icon={KbPlusIcon}
       iconSize={16}
-      className="h-8 w-8 shrink-0"
-      aria-label="New page"
+      iconClassName="mr-1.5"
+      size="sm"
       onClick={handleNewPage}
       disabled={createPage.isPending}
-    />
-  );
+      suppressHydrationWarning
+    >
+      New page
+    </AnimatedIconButton>
+  ) : undefined;
 
   if (isLoading) {
     return (
@@ -192,15 +164,15 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
               Recently visited
             </h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {recentPages.slice(0, 6).map((page) => (
-              <PageCard
+          <div className={WIKI_PAGE_CARD_GRID_CLASS}>
+            {recentPages.map((page) => (
+              <WikiPageCard
                 key={page.id}
-                id={page.id}
                 icon={page.icon}
                 title={page.title}
-                updatedAt={page.updatedAt}
+                subtitle={kbTimeAgo(page.updatedAt)}
                 href={resolvePageHref(page.id)}
+                coverImage={page.coverImage}
               />
             ))}
           </div>
@@ -213,15 +185,15 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
             <KbStarIcon className="h-4 w-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold text-foreground">Favorites</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {favoritePages.slice(0, 6).map((page) => (
-              <PageCard
+          <div className={WIKI_PAGE_CARD_GRID_CLASS}>
+            {favoritePages.map((page) => (
+              <WikiPageCard
                 key={page.id}
-                id={page.id}
                 icon={page.icon}
                 title={page.title}
-                updatedAt={page.updatedAt}
+                subtitle={kbTimeAgo(page.updatedAt)}
                 href={resolvePageHref(page.id)}
+                coverImage={page.coverImage}
               />
             ))}
           </div>
@@ -233,31 +205,22 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
           <h2 className="text-sm font-semibold text-foreground mb-3">
             All pages
           </h2>
-          <motion.div
-            className="space-y-1"
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-          >
+          <div className={WIKI_PAGE_CARD_GRID_CLASS}>
             {rootPages.map((node) => (
-              <motion.div key={node.id} variants={fadeUp}>
-                <Link
-                  href={resolvePageHref(node.id)}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
-                >
-                  <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center leading-none">
-                    {node.icon ?? (
-                      <KbFileTextIcon className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </span>
-                  <TruncatedText
-                    text={node.title || "Untitled"}
-                    className="flex-1 text-sm leading-normal"
-                  />
-                </Link>
-              </motion.div>
+              <WikiPageCard
+                key={node.id}
+                icon={node.icon}
+                title={node.title}
+                subtitle={kbTimeAgo(
+                  node.updatedAt ?? listingLookups.updatedAt.get(node.id) ?? "",
+                )}
+                href={resolvePageHref(node.id)}
+                coverImage={
+                  node.coverImage ?? listingLookups.covers.get(node.id) ?? null
+                }
+              />
             ))}
-          </motion.div>
+          </div>
         </section>
       )}
     </PageWrapper>

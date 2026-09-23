@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect, type ReactNode } from "react";
+import {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  type ReactNode,
+} from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
@@ -15,20 +21,30 @@ import { useMotionVariants } from "@/lib/motion-variants";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
 import { DeferredDashboardContent } from "./deferred-dashboard-content";
 import { HomeSectionBoundary } from "./home-section-boundary";
+import { HomeSectionHeader } from "./home-section-header";
 import { HomeWidgetGrid } from "./home-widget-grid";
 import type { DashboardTicket } from "@/features/dashboard/my-issues-card";
 import type { DashboardAccess } from "@/features/dashboard/use-dashboard-access";
 
 const SprintCard = dynamic(
-  () => import("@/features/dashboard/sprint-card").then((m) => ({ default: m.SprintCard })),
+  () =>
+    import("@/features/dashboard/sprint-card").then((m) => ({
+      default: m.SprintCard,
+    })),
   { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
 );
 const TeamCard = dynamic(
-  () => import("@/features/dashboard/team-card").then((m) => ({ default: m.TeamCard })),
+  () =>
+    import("@/features/dashboard/team-card").then((m) => ({
+      default: m.TeamCard,
+    })),
   { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
 );
 const MyIssuesCard = dynamic(
-  () => import("@/features/dashboard/my-issues-card").then((m) => ({ default: m.MyIssuesCard })),
+  () =>
+    import("@/features/dashboard/my-issues-card").then((m) => ({
+      default: m.MyIssuesCard,
+    })),
   { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
 );
 const RecentProjectsCard = dynamic(
@@ -88,17 +104,23 @@ interface DashboardDeferredBodyProps {
   publicDocumentsSlot?: ReactNode;
 }
 
-export function DashboardDeferredBody({ access, expensesSlot, publicDocumentsSlot }: DashboardDeferredBodyProps) {
+export function DashboardDeferredBody({
+  access,
+  expensesSlot,
+  publicDocumentsSlot,
+}: DashboardDeferredBodyProps) {
   const { fadeUp } = useMotionVariants();
   const router = useRouter();
   const {
     hrEnabled,
+    crmEnabled,
     projectsEnabled,
     canViewAttendance,
     canSelfAttendance,
     canViewLeaves,
     canApproveLeaves,
     canViewExecutive,
+    canViewCrmLeads,
     canViewTickets,
     signEnabled,
     canViewSignEnvelopes,
@@ -174,10 +196,7 @@ export function DashboardDeferredBody({ access, expensesSlot, publicDocumentsSlo
   const handleDeferredVisible = useCallback(() => {
     setDeferredVisible(true);
   }, []);
-  const handleGoToProjects = useCallback(
-    () => router.push("/build/all"),
-    [router],
-  );
+  const handleGoToProjects = useCallback(() => router.push("/build"), [router]);
   const handleRetryTickets = useCallback(
     () => void refetchTickets(),
     [refetchTickets],
@@ -242,6 +261,8 @@ export function DashboardDeferredBody({ access, expensesSlot, publicDocumentsSlo
           hrEnabled={hrEnabled}
           canViewExecutive={canViewExecutive}
           canSelfAttendance={canSelfAttendance}
+          crmEnabled={crmEnabled}
+          canViewCrmLeads={canViewCrmLeads}
           expensesSlot={expensesSlot}
         />
 
@@ -252,6 +273,9 @@ export function DashboardDeferredBody({ access, expensesSlot, publicDocumentsSlo
             animate="visible"
             className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
           >
+            <div className="col-span-full">
+              <HomeSectionHeader title="Team" />
+            </div>
             {canViewLeaves && (
               <HomeSectionBoundary sectionLabel="Who is out today">
                 <LeavesTodayWidget />
@@ -292,11 +316,7 @@ export function DashboardDeferredBody({ access, expensesSlot, publicDocumentsSlo
         )}
 
         {batch2Ready && showDocumentsCard && publicDocumentsSlot ? (
-          <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-          >
+          <motion.div variants={fadeUp} initial="hidden" animate="visible">
             <HomeSectionBoundary sectionLabel="Company documents">
               {publicDocumentsSlot}
             </HomeSectionBoundary>
@@ -310,6 +330,9 @@ export function DashboardDeferredBody({ access, expensesSlot, publicDocumentsSlo
             animate="visible"
             className="grid grid-cols-1 gap-4 md:auto-rows-[22rem] lg:grid-cols-7"
           >
+            <div className="col-span-full">
+              <HomeSectionHeader title="Business" />
+            </div>
             <div className="min-h-0 lg:col-span-4">
               <HomeSectionBoundary sectionLabel="My issues">
                 <MyIssuesCard

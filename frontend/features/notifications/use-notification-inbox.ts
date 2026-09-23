@@ -19,6 +19,7 @@ import {
   useUnarchiveNotification,
 } from "@/hooks/api/notifications";
 import { useRunWhenOnline } from "@/hooks/common/use-run-when-online";
+import { normalizeBuildDeepLink } from "@/lib/build/normalize-build-deep-link";
 import type { NotificationSection } from "@/lib/notification-types";
 
 interface Params {
@@ -82,7 +83,7 @@ export function useNotificationInbox({
 
   const handleOpenLink = useCallback(
     (link: string) => {
-      router.push(link);
+      router.push(normalizeBuildDeepLink(link));
     },
     [router],
   );

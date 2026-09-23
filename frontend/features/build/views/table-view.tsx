@@ -1,18 +1,21 @@
 ﻿"use client";
 
-import { memo, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { cn } from "@/lib/utils";
 import { TicketQuickActions } from "./ticket-quick-actions";
 import { InlineStatus, InlinePriority, InlineAssignee, InlineEstimate, InlineFieldWrapper, InlineFieldCell } from "./card-inline-fields";
-import { InlineType, InlineLabels, InlineCycle, InlineSprint } from "./card-inline-extra-fields";
+import { InlineType, InlineLabels, InlineCycle } from "./card-inline-extra-fields";
 import { InlineDueDate } from "./card-inline-date-fields";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { type Ticket, type TableViewProps, isOverdue } from "./table-view-types";
 import { useCan } from "@/hooks/api/access";
+import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { PriorityBadge } from "@/features/build/shared/priority-badge";
 
 export const TableView = memo(function TableView({ tickets, onTicketClick, projectKey, projectId, projectStatuses, displayOptions, selection }: TableViewProps) {
   const canUpdate = useCan("build:tickets:update");
@@ -178,19 +181,6 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       ),
     },
     {
-      key: "sprint",
-      header: "Sprint",
-      headerClassName: "hidden xl:table-cell",
-      className: "hidden xl:table-cell w-28",
-      cell: (ticket) => (
-        <InlineFieldCell>
-          {hasEditableProject ? (
-            <InlineSprint ticketId={ticket.id} projectId={projectId} currentSprintId={ticket.sprintId} />
-          ) : null}
-        </InlineFieldCell>
-      ),
-    },
-    {
       key: "dueDate",
       header: "Due Date",
       headerClassName: "hidden sm:table-cell",
@@ -253,8 +243,27 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
     showDueDate,
   ]);
 
+  const renderMobileCard = useCallback(
+    (ticket: Ticket) => (
+      <BuildMobileCard
+        eyebrow={formatTicketKey(projectKey, ticket.ticketNumber)}
+        title={<TruncatedText text={ticket.title} />}
+        status={<StatusBadge status={ticket.status} />}
+        person={{ user: ticket.assignee, role: "Assignee" }}
+        meta={[
+          {
+            label: "Priority",
+            value: <PriorityBadge priority={ticket.priority} showLabel />,
+          },
+          { label: "Due", value: ticket.dueDate ?? "—" },
+        ]}
+      />
+    ),
+    [projectKey],
+  );
+
   return (
-    <div className="w-full min-w-0">
+    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
       <DataTable
         data={tickets}
         columns={columns}
@@ -266,8 +275,9 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
         }
         pagination={{ pageSize: 50 }}
         minWidth="640px"
-        className="w-full min-w-0 overflow-hidden"
-        emptyState={<EmptyState className="border-0 bg-transparent min-h-[40vh]" title="No work items" />}
+        mobileCard={renderMobileCard}
+        className="w-full min-w-0 flex-1 overflow-hidden"
+        emptyState={<EmptyState className="min-h-0 flex-1 border-0 bg-transparent" title="No work items" />}
       />
     </div>
   );

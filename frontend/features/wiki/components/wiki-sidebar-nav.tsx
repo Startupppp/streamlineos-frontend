@@ -7,13 +7,11 @@ import {
   KbBarChart2Icon,
   KbBookOpenTextIcon,
   KbClipboardCheckIcon,
-  KbClockIcon,
   KbLayoutGridIcon,
   KbLayoutTemplateIcon,
   KbLockIcon,
+  KbMessageSquareIcon,
   KbSearchIcon,
-  KbSettingsIcon,
-  KbStarIcon,
   KbTrash2Icon,
   KbUploadIcon,
   KbUsersIcon,
@@ -36,12 +34,10 @@ import {
 import {
   KNOWLEDGE_BASE,
   KB_ANALYTICS,
-  KB_FAVORITES,
+  KB_CHAT,
   KB_IMPORT,
   KB_PRIVATE,
-  KB_RECENT,
   KB_REVIEWS,
-  KB_SETTINGS,
   KB_SHARED,
   KB_SPACES,
   KB_TEMPLATES,
@@ -67,7 +63,6 @@ interface WikiSidebarNavProps {
   isCollapsed?: boolean;
   canViewAnalytics: boolean;
   canViewReviews: boolean;
-  canManageSettings: boolean;
 }
 
 interface WikiSidebarFooterProps {
@@ -75,21 +70,22 @@ interface WikiSidebarFooterProps {
   onQuickFind: () => void;
 }
 
+function buildAskKbItem(): WikiNavItem {
+  return { label: "Ask KB", href: KB_CHAT, icon: KbMessageSquareIcon };
+}
+
 function buildPrimaryItems(): WikiNavItem[] {
   return [
     { label: "Wiki", href: KNOWLEDGE_BASE, icon: KbBookOpenTextIcon, exact: true },
-    { label: "Recent", href: KB_RECENT, icon: KbClockIcon },
-    { label: "Favorites", href: KB_FAVORITES, icon: KbStarIcon },
   ];
 }
 
 function buildNavGroups({
   canViewAnalytics,
   canViewReviews,
-  canManageSettings,
 }: Pick<
   WikiSidebarNavProps,
-  "canViewAnalytics" | "canViewReviews" | "canManageSettings"
+  "canViewAnalytics" | "canViewReviews"
 >): WikiNavGroup[] {
   const manageItems: WikiNavItem[] = [
     { label: "Templates", href: KB_TEMPLATES, icon: KbLayoutTemplateIcon },
@@ -99,14 +95,10 @@ function buildNavGroups({
     manageItems.push({ label: "Reviews", href: KB_REVIEWS, icon: KbClipboardCheckIcon });
   }
 
-  manageItems.push({ label: "Import", href: KB_IMPORT, icon: KbUploadIcon });
+  manageItems.push({ label: "Import & Export", href: KB_IMPORT, icon: KbUploadIcon });
 
   if (canViewAnalytics) {
     manageItems.push({ label: "Analytics", href: KB_ANALYTICS, icon: KbBarChart2Icon });
-  }
-
-  if (canManageSettings) {
-    manageItems.push({ label: "Settings", href: KB_SETTINGS, icon: KbSettingsIcon });
   }
 
   return [
@@ -151,6 +143,14 @@ function readStoredOpenGroups(): string[] | null {
   }
 }
 
+function resolveInitialOpenGroups(groupIds: string[]): string[] {
+  const stored = readStoredOpenGroups();
+  if (!stored) return groupIds;
+  const allowed = new Set(groupIds);
+  const filtered = stored.filter((groupId) => allowed.has(groupId));
+  return filtered.length > 0 ? filtered : groupIds;
+}
+
 function WikiNavLink({
   item,
   isActive,
@@ -164,31 +164,25 @@ function WikiNavLink({
 
   if (isCollapsed) {
     return (
-      <Tooltip delayDuration={0}>
-        <TooltipTrigger asChild>
-          <Link
-            href={item.href}
-            aria-current={isActive ? "page" : undefined}
-            aria-label={item.label}
-            {...animatedNavHoverHandlers}
-            className={cn(
-              "flex size-8 items-center justify-center rounded-md transition-colors",
-              isActive
-                ? "bg-muted text-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground",
-            )}
-          >
-            <SidebarAnimatedNavIcon
-              icon={item.icon}
-              iconRef={iconRef}
-              className="size-4 shrink-0"
-            />
-          </Link>
-        </TooltipTrigger>
-        <TooltipContent side="right" sideOffset={8} className="text-xs">
-          {item.label}
-        </TooltipContent>
-      </Tooltip>
+      <Link
+        href={item.href}
+        aria-current={isActive ? "page" : undefined}
+        aria-label={item.label}
+        title={item.label}
+        {...animatedNavHoverHandlers}
+        className={cn(
+          "flex size-8 items-center justify-center rounded-md transition-colors",
+          isActive
+            ? "bg-muted text-foreground"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+        )}
+      >
+        <SidebarAnimatedNavIcon
+          icon={item.icon}
+          iconRef={iconRef}
+          className="size-4 shrink-0"
+        />
+      </Link>
     );
   }
 
@@ -245,31 +239,25 @@ export function WikiSidebarFooter({ isCollapsed, onQuickFind }: WikiSidebarFoote
             Quick find
           </TooltipContent>
         </Tooltip>
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            <Link
-              href={KB_TRASH}
-              aria-current={trashActive ? "page" : undefined}
-              aria-label="Trash"
-              {...trashIcon.animatedNavHoverHandlers}
-              className={cn(
-                "flex size-8 items-center justify-center rounded-md transition-colors",
-                trashActive
-                  ? "bg-muted text-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
-              )}
-            >
-              <SidebarAnimatedNavIcon
-                icon={KbTrash2Icon}
-                iconRef={trashIcon.iconRef}
-                className="size-4"
-              />
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent side="right" sideOffset={8} className="text-xs">
-            Trash
-          </TooltipContent>
-        </Tooltip>
+        <Link
+          href={KB_TRASH}
+          aria-current={trashActive ? "page" : undefined}
+          aria-label="Trash"
+          title="Trash"
+          {...trashIcon.animatedNavHoverHandlers}
+          className={cn(
+            "flex size-8 items-center justify-center rounded-md transition-colors",
+            trashActive
+              ? "bg-muted text-foreground"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground",
+          )}
+        >
+          <SidebarAnimatedNavIcon
+            icon={KbTrash2Icon}
+            iconRef={trashIcon.iconRef}
+            className="size-4"
+          />
+        </Link>
       </div>
     );
   }
@@ -318,51 +306,31 @@ export default function WikiSidebarNav({
   isCollapsed = false,
   canViewAnalytics,
   canViewReviews,
-  canManageSettings,
 }: WikiSidebarNavProps) {
   const pathname = usePathname();
+  const askKbItem = useMemo(() => buildAskKbItem(), []);
   const primaryItems = useMemo(() => buildPrimaryItems(), []);
   const groups = useMemo(
     () =>
       buildNavGroups({
         canViewAnalytics,
         canViewReviews,
-        canManageSettings,
       }),
-    [canViewAnalytics, canViewReviews, canManageSettings],
+    [canViewAnalytics, canViewReviews],
   );
   const accordionItems = useMemo(
     () => groups.flatMap((group) => group.items),
     [groups],
   );
-  const defaultOpenGroups = useMemo(() => groups.map((group) => group.id), [groups]);
-  const [openGroups, setOpenGroups] = useState<string[]>(defaultOpenGroups);
-
-  const activeGroupId = useMemo(() => {
-    for (const group of groups) {
-      if (group.items.some((item) => isNavItemActive(pathname, item.href, item.exact))) {
-        return group.id;
-      }
-    }
-    return null;
-  }, [groups, pathname]);
+  const groupIds = useMemo(
+    () => groups.map((group) => group.id),
+    [groups],
+  );
+  const [openGroups, setOpenGroups] = useState(groupIds);
 
   useEffect(() => {
-    const stored = readStoredOpenGroups();
-    if (stored) {
-      setOpenGroups(stored);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!activeGroupId) return;
-    setOpenGroups((prev) => {
-      if (prev.includes(activeGroupId)) return prev;
-      const next = [...prev, activeGroupId];
-      localStorage.setItem(WIKI_NAV_GROUPS_KEY, JSON.stringify(next));
-      return next;
-    });
-  }, [activeGroupId]);
+    setOpenGroups(resolveInitialOpenGroups(groupIds));
+  }, [groupIds]);
 
   const handleOpenGroupsChange = useCallback((next: string[]) => {
     setOpenGroups(next);
@@ -372,6 +340,12 @@ export default function WikiSidebarNav({
   if (isCollapsed) {
     return (
       <div className="flex flex-col items-center gap-0.5 px-1 py-1">
+        <WikiNavLink
+          item={askKbItem}
+          isActive={isNavItemActive(pathname, askKbItem.href)}
+          isCollapsed
+        />
+        <Separator className="my-1 w-6" />
         {primaryItems.map((item) => (
           <WikiNavLink
             key={item.href}
@@ -394,6 +368,13 @@ export default function WikiSidebarNav({
 
   return (
     <div className="px-2 pb-1 pt-1">
+      <div className="space-y-0.5">
+        <WikiNavLink
+          item={askKbItem}
+          isActive={isNavItemActive(pathname, askKbItem.href)}
+        />
+      </div>
+      <Separator className="my-1" />
       <div className="space-y-0.5">
         {primaryItems.map((item) => (
           <WikiNavLink

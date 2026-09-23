@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
@@ -16,6 +17,7 @@ import {
   essSalaryStructureContract,
   type EssLoan,
   type EssReimbursement,
+  type EssReimbursementsPage,
   type EssSalaryStructure,
 } from "@/hooks/api/payroll/ess-money-schema";
 
@@ -184,17 +186,23 @@ export function useEssSalaryStructure() {
     queryFn: ({ signal }) => apiClient.get("/payroll/me/salary-structure", undefined, signal, essSalaryStructureContract),
     staleTime: 300_000,
     enabled: canSelf,
+    ...INLINE_READ_ERROR,
   });
 }
 
 export function useEssReimbursements() {
   const canSelf = useCan("self:payroll");
-  return useQuery<EssReimbursement[], Error>({
+  return useQuery<EssReimbursementsPage, Error, EssReimbursement[]>({
     queryKey: payrollQueryKeys.payroll.essReimbursements(),
     queryFn: ({ signal }) => apiClient.get("/payroll/me/reimbursements", undefined, signal, essReimbursementsContract),
+    select: selectReimbursementItems,
     staleTime: 60_000,
     enabled: canSelf,
   });
+}
+
+function selectReimbursementItems(page: EssReimbursementsPage): EssReimbursement[] {
+  return page.items;
 }
 
 export function useEssLoans() {

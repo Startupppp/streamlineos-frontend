@@ -1,23 +1,30 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ExternalLink } from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { ChevronDownIcon, ChevronRightIcon } from "@animateicons/react/lucide";
+import { ChevronDownIcon, ChevronRightIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 import {
+  useDeleteFeedbucketSubmission,
+  useDeleteFeedbucketSubmissionMedia,
   useFeedbucketSubmission,
   useUpdateFeedbucketSubmission,
 } from "@/hooks/api/feedbucket/use-feedbucket-submissions";
 import { FeedbucketAiPanel } from "./feedbucket-ai-panel";
 import type {
+  FeedbucketMediaKind,
   FeedbucketSubmissionStatus,
   FeedbucketSubmissionPriority,
   FeedbucketConsoleEntry,
@@ -26,6 +33,11 @@ import type {
 } from "@/types/feedbucket";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { resolveImageUrl } from "@/lib/utils";
+
+const MEDIA_LABELS: Record<FeedbucketMediaKind, string> = {
+  screenshot: "Screenshot",
+  recording: "Screen recording",
+};
 
 const STATUS_LABELS: Record<FeedbucketSubmissionStatus, string> = {
   open: "Open",
@@ -163,12 +175,22 @@ function NetworkLogsPanel({ logs }: { logs: FeedbucketNetworkEntry[] }) {
 
 interface FeedbucketSubmissionDetailProps {
   submissionId: number;
+  backHref: string;
 }
 
-export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissionDetailProps) {
+export function FeedbucketSubmissionDetail({
+  submissionId,
+  backHref,
+}: FeedbucketSubmissionDetailProps) {
+  const router = useRouter();
   const { data: submission, isLoading, isError, refetch } = useFeedbucketSubmission(submissionId);
   const updateMutation = useUpdateFeedbucketSubmission();
+  const canDelete = useCan("feedbucket:submissions:delete");
+  const deleteMediaMutation = useDeleteFeedbucketSubmissionMedia();
+  const deleteSubmissionMutation = useDeleteFeedbucketSubmission();
   const [convertedTicketId, setConvertedTicketId] = useState<number | null>(null);
+  const [pendingMediaKind, setPendingMediaKind] = useState<FeedbucketMediaKind | null>(null);
+  const [deleteSubmissionOpen, setDeleteSubmissionOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -194,7 +216,9 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
   }
 
   const linkedTicketId = convertedTicketId ?? submission.linkedTicketId;
-  const projectId = submission.widget?.projectId;
+  const linkedProjectId =
+    submission.linkedTicket?.projectId ??
+    (convertedTicketId !== null ? undefined : submission.widget?.projectId);
 
   async function handleStatusChange(value: string) {
     try {
@@ -218,10 +242,74 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
     }
   }
 
+  function handleRequestDeleteScreenshot() {
+    setPendingMediaKind("screenshot");
+  }
+
+  function handleRequestDeleteRecording() {
+    setPendingMediaKind("recording");
+  }
+
+  function handleMediaDialogChange(open: boolean) {
+    if (!open) setPendingMediaKind(null);
+  }
+
+  function handleConfirmMediaDelete() {
+    if (pendingMediaKind === null) return;
+    deleteMediaMutation.mutate(
+      { submissionId, mediaKind: pendingMediaKind },
+      {
+        onSuccess: () => {
+          toast.success(`${MEDIA_LABELS[pendingMediaKind]} deleted`);
+          setPendingMediaKind(null);
+        },
+        onError: (error) => {
+          toast.error(getErrorMessage(error));
+        },
+      },
+    );
+  }
+
+  function handleRequestDeleteSubmission() {
+    setDeleteSubmissionOpen(true);
+  }
+
+  function handleConfirmDeleteSubmission() {
+    deleteSubmissionMutation.mutate(
+      { submissionId },
+      {
+        onSuccess: () => {
+          toast.success("Submission deleted");
+          setDeleteSubmissionOpen(false);
+          router.push(backHref);
+        },
+        onError: (error) => {
+          toast.error(getErrorMessage(error));
+        },
+      },
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {submission.screenshotUrl && (
         <div className="rounded-xl border border-border overflow-hidden bg-muted/20">
+          {canDelete ? (
+            <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {MEDIA_LABELS.screenshot}
+              </p>
+              <AnimatedIconButton
+                icon={Trash2Icon}
+                iconSize={14}
+                size="icon"
+                className="h-8 w-8"
+                variant="outline"
+                onClick={handleRequestDeleteScreenshot}
+                aria-label="Delete screenshot"
+              />
+            </div>
+          ) : null}
           <img
             src={resolveImageUrl(submission.screenshotUrl) ?? submission.screenshotUrl}
             alt="Feedback screenshot"
@@ -232,6 +320,22 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
 
       {submission.recordingUrl && (
         <div className="rounded-xl border border-border overflow-hidden bg-muted/20">
+          {canDelete ? (
+            <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {MEDIA_LABELS.recording}
+              </p>
+              <AnimatedIconButton
+                icon={Trash2Icon}
+                iconSize={14}
+                size="icon"
+                className="h-8 w-8"
+                variant="outline"
+                onClick={handleRequestDeleteRecording}
+                aria-label="Delete screen recording"
+              />
+            </div>
+          ) : null}
           <video
             controls
             src={resolveImageUrl(submission.recordingUrl) ?? submission.recordingUrl}
@@ -328,8 +432,47 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
         existingAnalysis={submission.aiAnalysis}
         linkedTicketId={linkedTicketId}
         linkedTicketKey={null}
-        projectId={projectId}
+        projectId={linkedProjectId}
         onTicketCreated={setConvertedTicketId}
+      />
+
+      {canDelete ? (
+        <div className="flex justify-end">
+          <AnimatedIconButton
+            icon={Trash2Icon}
+            iconSize={14}
+            iconClassName="mr-1.5"
+            size="sm"
+            variant="outline"
+            onClick={handleRequestDeleteSubmission}
+          >
+            Delete submission
+          </AnimatedIconButton>
+        </div>
+      ) : null}
+
+      <ConfirmDialog
+        open={pendingMediaKind !== null}
+        onOpenChange={handleMediaDialogChange}
+        destructive
+        title={pendingMediaKind === "recording" ? "Delete this recording?" : "Delete this screenshot?"}
+        description="The file is removed from storage and can no longer be viewed. This cannot be undone. The submission itself is kept."
+        confirmLabel="Delete"
+        isPending={deleteMediaMutation.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleConfirmMediaDelete}
+      />
+
+      <ConfirmDialog
+        open={deleteSubmissionOpen}
+        onOpenChange={setDeleteSubmissionOpen}
+        destructive
+        title="Delete this submission?"
+        description="This submission is removed from the inbox and can no longer be opened. You cannot undo this from here."
+        confirmLabel="Delete submission"
+        isPending={deleteSubmissionMutation.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleConfirmDeleteSubmission}
       />
     </div>
   );

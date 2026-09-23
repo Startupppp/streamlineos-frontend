@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import {
@@ -8,10 +8,10 @@ import {
 } from "@/hooks/api/build/client-portal";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
@@ -28,6 +28,8 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 
 type VisibilityTab = "tickets" | "milestones";
 
@@ -100,8 +102,15 @@ function MilestoneRow({
 }
 
 export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
-  const { data, isLoading, isError, refetch } = useClientVisibility(projectId);
+  const { data, isLoading, isError, error, refetch } = useClientVisibility(projectId);
   const [activeTab, setActiveTab] = useState<VisibilityTab>("tickets");
+
+  const pageState = usePageState({
+    permission: "build:clientvisibility:manage",
+    isLoading,
+    isError,
+    error,
+  });
 
   const ticketCount = data?.tickets.length ?? 0;
   const milestoneCount = data?.milestones.length ?? 0;
@@ -117,6 +126,14 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
     void refetch();
   }
 
+  const visibilitySkeleton = (
+    <div className="flex flex-col gap-2">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <Skeleton key={i} className="h-10 w-full rounded-md" />
+      ))}
+    </div>
+  );
+
   return (
     <PageWrapper
       title="Client Portal"
@@ -124,25 +141,22 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
     >
       <PmPageShell>
         <PmSection index={0}>
-          <div className="flex items-start gap-2.5 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
-            <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            <p className="text-dense leading-relaxed text-foreground/80">
-              Items toggled here appear in the client&apos;s portal. Only enabled tickets and
-              milestones are visible to project clients.
-            </p>
-          </div>
+          <Alert className="w-fit max-w-full bg-muted py-2">
+            <Info className="size-4" />
+            <AlertTitle>Visibility rules</AlertTitle>
+            <AlertDescription>
+              Only enabled tickets and milestones appear in the client portal.
+            </AlertDescription>
+          </Alert>
         </PmSection>
 
         <PmSection index={1}>
-          {isLoading ? (
-            <div className="flex flex-col gap-2">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full rounded-md" />
-              ))}
-            </div>
-          ) : isError ? (
-            <ErrorState className="min-h-[14rem]" onRetry={handleRetry} />
-          ) : (
+          <PageState
+            resolution={pageState}
+            loading={visibilitySkeleton}
+            onRetry={handleRetry}
+            className="flex min-h-0 flex-1 flex-col"
+          >
             <Tabs value={activeTab} onValueChange={handleTabChange} className="flex min-h-0 flex-1 flex-col gap-3">
               <PageTabsToolbar
                 tabsDensity="labeled"
@@ -179,7 +193,7 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
                   />
                 ) : (
                   <PmPanel className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
-                    <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-3 py-1.5 text-micro font-bold uppercase tracking-wider text-muted-foreground shrink-0">
+                    <div className="flex shrink-0 items-center gap-3 border-b border-border bg-secondary px-3 py-2 text-micro font-bold uppercase tracking-wider text-secondary-foreground">
                       <span className="w-16 shrink-0">ID</span>
                       <span className="flex-1">Title</span>
                       <span className="w-16 shrink-0">Type</span>
@@ -205,7 +219,7 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
                   />
                 ) : (
                   <PmPanel className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
-                    <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-3 py-1.5 text-micro font-bold uppercase tracking-wider text-muted-foreground shrink-0">
+                    <div className="flex shrink-0 items-center gap-3 border-b border-border bg-secondary px-3 py-2 text-micro font-bold uppercase tracking-wider text-secondary-foreground">
                       <span className="flex-1">Name</span>
                       <span className="w-10 shrink-0 text-right">Visible</span>
                     </div>
@@ -222,7 +236,7 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
                 )}
               </TabsContent>
             </Tabs>
-          )}
+          </PageState>
         </PmSection>
       </PmPageShell>
     </PageWrapper>

@@ -33,11 +33,13 @@ import { KbNoteSheet } from "@/features/wiki/components/kb-note-sheet";
 import { KbConversationList } from "@/features/wiki/components/kb-conversation-list";
 import {
   ChatBubble,
+  TypingBubble,
+  type ChatMessage,
+} from "@/components/kb/kb-chat-bubble";
+import {
   DaySeparator,
   EmptyChat,
-  TypingBubble,
   buildKbHistoryRows,
-  type ChatMessage,
 } from "@/features/wiki/components/kb-chat-parts";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { getErrorMessage } from "@/lib/get-error-message";

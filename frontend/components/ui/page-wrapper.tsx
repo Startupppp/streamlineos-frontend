@@ -3,10 +3,47 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { Button } from "@/components/ui/button";
-import { PAGE_CHROME_BOTTOM, PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
+import {
+  PAGE_CHROME_BOTTOM,
+  PAGE_CHROME_MOBILE_NAV_PAD,
+  PAGE_CHROME_X,
+} from "@/components/ui/content-fill-panel";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { PageState } from "@/components/shared/page-state";
+import { LoadingState } from "@/components/shared/loading-state";
+import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
+
+function GuardedBackLink({
+  href,
+  label,
+  children,
+}: {
+  href: string;
+  label?: string;
+  children: React.ReactNode;
+}) {
+  const router = useRouter();
+  const requestLeave = useNavigationLeave();
+
+  const handleClick = React.useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>) => {
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+      event.preventDefault();
+      requestLeave(() => router.push(href));
+    },
+    [href, requestLeave, router],
+  );
+
+  return (
+    <Link href={href} aria-label={label} onClick={handleClick}>
+      {children}
+    </Link>
+  );
+}
 
 interface PageWrapperProps {
   title?: React.ReactNode;
@@ -29,6 +66,10 @@ interface PageWrapperProps {
   contentClassName?: string;
   noInternalScroll?: boolean;
   variant?: "default" | "display";
+  state?: PageStateResolution;
+  loading?: React.ReactNode;
+  empty?: React.ReactNode;
+  onRetry?: () => void;
 }
 
 const backButtonClassName = "-ml-2 size-9 shrink-0 sm:size-8";
@@ -50,8 +91,21 @@ export function PageWrapper({
   contentClassName,
   noInternalScroll = false,
   variant = "default",
+  state,
+  loading,
+  empty,
+  onRetry,
 }: PageWrapperProps) {
   const headingId = React.useId();
+  const requestLeave = useNavigationLeave();
+
+  const handleBack = React.useCallback(() => {
+    if (onBack) requestLeave(onBack);
+  }, [onBack, requestLeave]);
+
+  const isInterrupted = state !== undefined && state.kind !== "ready" && state.kind !== "empty";
+  const visibleActions = isInterrupted ? undefined : actions;
+  const visibleFilters = isInterrupted ? undefined : filters;
   const titleClass =
     variant === "display"
       ? "font-display text-xl sm:text-2xl lg:text-[1.7rem] font-extrabold tracking-[-0.02em] text-foreground leading-tight"
@@ -65,7 +119,7 @@ export function PageWrapper({
         variant="ghost"
         size="icon-sm"
         className={backButtonClassName}
-        onClick={onBack}
+        onClick={handleBack}
         aria-label={backLabel}
       >
         <ArrowLeft className="h-4 w-4" />
@@ -77,9 +131,9 @@ export function PageWrapper({
         className={backButtonClassName}
         asChild
       >
-        <Link href={backHref} aria-label={backLabel}>
+        <GuardedBackLink href={backHref} label={backLabel}>
           <ArrowLeft className="h-4 w-4" />
-        </Link>
+        </GuardedBackLink>
       </Button>
     ) : null);
 
@@ -90,8 +144,23 @@ export function PageWrapper({
     backHref != null ||
     onBack != null ||
     leading != null ||
-    actions != null ||
+    visibleActions != null ||
     builtInBack != null;
+
+  const body =
+    state === undefined ? (
+      children
+    ) : (
+      <PageState
+        resolution={state}
+        loading={loading ?? <LoadingState variant="page" />}
+        empty={empty}
+        onRetry={onRetry}
+        className="flex-1"
+      >
+        {children}
+      </PageState>
+    );
 
   return (
     <div className={cn("flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden", className)}>
@@ -121,11 +190,21 @@ export function PageWrapper({
                 {(title != null || badge) && (
                   <div className="flex min-w-0 items-center gap-2 flex-wrap">
                     {typeof title === "string" ? (
-                      <h1 id={headingId} className={cn(titleClass, "min-w-0 max-w-2xl")}>
+                      <h1
+                        suppressHydrationWarning
+                        id={headingId}
+                        className={cn(titleClass, "min-w-0 max-w-2xl")}
+                      >
                         <TruncatedText text={title} />
                       </h1>
                     ) : title != null ? (
-                      <h1 id={headingId} className={cn(titleClass, "w-fit shrink-0")}>{title}</h1>
+                      <h1
+                        suppressHydrationWarning
+                        id={headingId}
+                        className={cn(titleClass, "w-fit shrink-0")}
+                      >
+                        {title}
+                      </h1>
                     ) : null}
                     {badge && (
                       <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-primary/10 text-foreground text-dense font-medium tabular-nums border border-primary/20">
@@ -146,7 +225,7 @@ export function PageWrapper({
               </div>
             </div>
 
-            {actions && (
+            {visibleActions && (
               <div
                 className={cn(
                   actionsInline
@@ -154,14 +233,14 @@ export function PageWrapper({
                     : "flex w-full flex-col items-stretch gap-2 sm:w-auto sm:shrink-0 sm:flex-row sm:flex-nowrap sm:items-center sm:justify-end [&>*]:w-full sm:[&>*]:w-auto",
                 )}
               >
-                {actions}
+                {visibleActions}
               </div>
             )}
           </div>
         </div>
       ) : null}
 
-      {filters && (
+      {visibleFilters && (
         <div
           className={cn(
             // Match FILTER_TOOLBAR_ROW: grow search only, never crush selects into overlaps.
@@ -172,7 +251,7 @@ export function PageWrapper({
             filtersClassName,
           )}
         >
-          {filters}
+          {visibleFilters}
         </div>
       )}
 
@@ -182,10 +261,11 @@ export function PageWrapper({
             "flex h-full min-h-0 flex-1 flex-col overflow-hidden",
             PAGE_CHROME_X,
             PAGE_CHROME_BOTTOM,
+            PAGE_CHROME_MOBILE_NAV_PAD,
             contentClassName,
           )}
         >
-          {children}
+          {body}
         </div>
       ) : (
         <div
@@ -193,18 +273,18 @@ export function PageWrapper({
           aria-labelledby={title != null ? headingId : undefined}
           aria-label={title == null ? "Page content" : undefined}
           tabIndex={0}
-          className="h-full min-h-0 flex-1 overflow-y-auto scrollbar-hide"
+          className="h-full min-h-0 flex-1 overflow-y-auto scrollbar-hide outline-none"
         >
           <div
             className={cn(
               "flex min-h-full w-full flex-col overscroll-contain",
               PAGE_CHROME_X,
               PAGE_CHROME_BOTTOM,
-              "max-md:[.mobile-nav-active_&]:pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]",
+              PAGE_CHROME_MOBILE_NAV_PAD,
               contentClassName,
             )}
           >
-            {children}
+            {body}
           </div>
         </div>
       )}

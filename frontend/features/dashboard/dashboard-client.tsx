@@ -1,15 +1,17 @@
 "use client";
 
-import { useMemo, useCallback, useEffect, useState, type ReactNode } from "react";
+import {
+  useMemo,
+  useCallback,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
-import {
-  useDashboardStats,
-  useMyIssues,
-} from "@/hooks/api/dashboard";
+import { useDashboardStats, useMyIssues } from "@/hooks/api/dashboard";
 import { RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getErrorMessage } from "@/lib/get-error-message";
 const ClockInWidget = dynamic(
   () =>
     import("@/components/attendance/clock-in-widget").then((m) => ({
@@ -18,6 +20,8 @@ const ClockInWidget = dynamic(
   { ssr: false },
 );
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import {
   StatCard,
   StatCardGrid,
@@ -31,6 +35,7 @@ import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { getGreeting, getFirstName } from "@/lib/format-utils";
 import { QuickActions } from "@/features/dashboard/quick-actions";
+import { FocusStrip } from "@/features/dashboard/focus-strip";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
 import {
   ModuleSetupBanners,
@@ -53,11 +58,6 @@ const GuidedTourOverlay = dynamic(
   { ssr: false },
 );
 
-/**
- * The fallback is the same one row of stat cards the widget itself renders
- * while its query is in flight. `WidgetSkeleton rows={2}` was 142px against the
- * widget's 68px, so the chunk landing collapsed the page by 74px.
- */
 const ExecutiveKpiWidget = dynamic(
   () =>
     import("@/components/dashboard/executive-kpi-widget").then((m) => ({
@@ -71,7 +71,10 @@ interface DashboardClientProps {
   publicDocumentsSlot?: ReactNode;
 }
 
-export function DashboardClient({ expensesSlot, publicDocumentsSlot }: DashboardClientProps = {}) {
+export function DashboardClient({
+  expensesSlot,
+  publicDocumentsSlot,
+}: DashboardClientProps = {}) {
   const { fadeUp } = useMotionVariants();
   const { data: session } = useSession();
   const firstName = getFirstName(session);
@@ -92,6 +95,13 @@ export function DashboardClient({ expensesSlot, publicDocumentsSlot }: Dashboard
     error,
     refetch,
   } = useDashboardStats({ retry: 2, retryDelay: 1000 });
+
+  const statsState = usePageState({
+    isLoading,
+    isError: Boolean(error),
+    error,
+    isEmpty: !stats,
+  });
 
   const { data: myIssuesData } = useMyIssues({
     enabled: access.projectsEnabled,
@@ -178,55 +188,45 @@ export function DashboardClient({ expensesSlot, publicDocumentsSlot }: Dashboard
         actions={hrEnabled ? <ClockInWidget /> : undefined}
       >
         <div className="flex flex-1 min-h-0 flex-col gap-4">
-          {isLoading ? (
-            <StatCardGridSkeleton cols={4} />
-          ) : error ? (
-            <div
-              className="rounded-xl border border-destructive/30 bg-destructive/5 p-6"
-              role="alert"
-            >
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-                <div className="flex-1 space-y-3">
-                  <p className="text-sm text-foreground">
-                    {getErrorMessage(error)}
-                  </p>
-                  <Button onClick={handleRefresh} size="sm">
-                    <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
-                    Retry
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ) : !stats ? (
-            <EmptyState
-              illustration={<EmptyActivityIllustration className="h-40 w-40" />}
-              title="No data available"
-              description="Dashboard statistics are not available. Please try refreshing."
-              action={{ label: "Refresh", onClick: handleRefresh }}
-            />
-          ) : statCards.length > 0 ? (
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              className="space-y-2"
-            >
-              <StatCardGrid
-                cols={statCards.length >= 4 ? 4 : statCards.length >= 3 ? 3 : 2}
+          <PageState
+            resolution={statsState}
+            onRetry={handleRefresh}
+            loading={<StatCardGridSkeleton cols={4} />}
+            empty={
+              <EmptyState
+                illustration={
+                  <EmptyActivityIllustration className="h-40 w-40" />
+                }
+                title="No data available"
+                description="Dashboard statistics are not available. Please try refreshing."
+                action={{ label: "Refresh", onClick: handleRefresh }}
+              />
+            }
+          >
+            {statCards.length > 0 ? (
+              <motion.div
+                variants={fadeUp}
+                initial="hidden"
+                animate="visible"
+                className="space-y-2"
               >
-                {statCards.map((stat) => (
-                  <StatCard
-                    key={stat.id}
-                    label={stat.label}
-                    value={stat.value}
-                    hint={stat.hint}
-                    icon={stat.icon}
-                    href={stat.href}
-                  />
-                ))}
-              </StatCardGrid>
-              {/*
+                <StatCardGrid
+                  cols={
+                    statCards.length >= 4 ? 4 : statCards.length >= 3 ? 3 : 2
+                  }
+                >
+                  {statCards.map((stat) => (
+                    <StatCard
+                      key={stat.id}
+                      label={stat.label}
+                      value={stat.value}
+                      hint={stat.hint}
+                      icon={stat.icon}
+                      href={stat.href}
+                    />
+                  ))}
+                </StatCardGrid>
+                {/*
                 A stats section can degrade on its own — `settleSection` hands
                 back `null` for a query that rejected OR merely blew the 2.5 s
                 deadline — while the request itself is a perfectly good 200. That
@@ -234,35 +234,41 @@ export function DashboardClient({ expensesSlot, publicDocumentsSlot }: Dashboard
                 without this strip a failed section is silent and there is
                 nothing to retry with.
               */}
-              {statCards.some((stat) => stat.unavailable) && (
-                <div
-                  role="status"
-                  className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2"
-                >
-                  <AlertCircle
-                    className="h-4 w-4 shrink-0 text-status-warning-ink"
-                    aria-hidden="true"
-                  />
-                  <p className="text-dense text-status-warning-ink">
-                    Some figures could not be loaded and are shown as “—”.
-                  </p>
-                  <Button
-                    onClick={handleRefresh}
-                    size="sm"
-                    variant="outline"
-                    className="h-7"
+                {statCards.some((stat) => stat.unavailable) && (
+                  <div
+                    role="status"
+                    className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2"
                   >
-                    <RefreshCw className="mr-1.5 h-3 w-3" aria-hidden="true" />
-                    Retry
-                  </Button>
-                </div>
-              )}
-            </motion.div>
-          ) : null}
+                    <AlertCircle
+                      className="h-4 w-4 shrink-0 text-status-warning-ink"
+                      aria-hidden="true"
+                    />
+                    <p className="text-dense text-status-warning-ink">
+                      Some figures could not be loaded and are shown as “—”.
+                    </p>
+                    <Button
+                      onClick={handleRefresh}
+                      size="sm"
+                      variant="outline"
+                      className="h-7"
+                    >
+                      <RefreshCw
+                        className="mr-1.5 h-3 w-3"
+                        aria-hidden="true"
+                      />
+                      Retry
+                    </Button>
+                  </div>
+                )}
+              </motion.div>
+            ) : null}
+          </PageState>
 
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
             <QuickActions />
           </motion.div>
+
+          <FocusStrip access={access} />
 
           <ModuleSetupBanners />
 
@@ -272,7 +278,11 @@ export function DashboardClient({ expensesSlot, publicDocumentsSlot }: Dashboard
             </motion.div>
           )}
 
-          <DashboardDeferredBody access={access} expensesSlot={expensesSlot} publicDocumentsSlot={publicDocumentsSlot} />
+          <DashboardDeferredBody
+            access={access}
+            expensesSlot={expensesSlot}
+            publicDocumentsSlot={publicDocumentsSlot}
+          />
         </div>
       </PageWrapper>
       <GuidedTourOverlay />

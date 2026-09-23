@@ -5,7 +5,6 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
-import { queryKeyBase } from "@/lib/query-keys/base";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
 const accessRequestListC = lazyContract(() =>
@@ -39,8 +38,6 @@ export interface PatchAccessRequestInput {
   grantedBy?: string;
 }
 
-const AR_KEY = [...queryKeyBase, "hr", "access-requests"] as const;
-
 export function useAccessRequests(employeeId?: string) {
   return useGatedQuery<AccessRequest[]>("hr:assets:view", {
     queryKey: humanResourcesQueryKeys.hr.hrAccessRequests({ employeeId }),
@@ -53,19 +50,21 @@ export function useAccessRequests(employeeId?: string) {
 export function useCreateAccessRequest() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:assets:manage", {
-    mutationKey: [...AR_KEY, "create"],
+    mutationKey: [...humanResourcesQueryKeys.hr.hrAccessRequests(), "create"],
     mutationFn: (data: CreateAccessRequestInput) =>
       apiClient.post<AccessRequest>("/hr/access-requests", data, undefined, accessRequestC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: AR_KEY }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrAccessRequests() }),
   });
 }
 
 export function useUpdateAccessRequest() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:assets:manage", {
-    mutationKey: [...AR_KEY, "update"],
+    mutationKey: [...humanResourcesQueryKeys.hr.hrAccessRequests(), "update"],
     mutationFn: ({ accessRequestId, ...data }: PatchAccessRequestInput & { accessRequestId: string }) =>
       apiClient.patch<AccessRequest>(`/hr/access-requests/${accessRequestId}`, data, undefined, accessRequestC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: AR_KEY }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrAccessRequests() }),
   });
 }

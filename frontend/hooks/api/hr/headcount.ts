@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -155,7 +154,7 @@ export function useCreateHeadcountJob(
   options?: UseMutationOptions<{ jobId: number }, Error, number>,
 ) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation<{ jobId: number }, Error, number>("hr:employees:manage", {
     mutationKey: ["hr", "headcount", "create-job"],
     mutationFn: (headcountId: number) =>
       apiClient.post<{ jobId: number }>(`/hr/recruitment/headcount/${headcountId}/create-job`, {}, undefined, lazyContract(() => import("@/hooks/api/hr/headcount-schema").then(m => m.createJobFromHeadcountContract))),

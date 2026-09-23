@@ -130,9 +130,7 @@ const CREATE_TICKET_ACTIONS = [
     label: "open the column composer",
     expression: `(() => {
       const button = Array.from(document.querySelectorAll("button")).find(
-        (el) =>
-          (el.textContent || "").trim() === "Add ticket" ||
-          el.getAttribute("aria-label") === "Add ticket to column",
+        (el) => el.getAttribute("aria-label") === "Add ticket to column",
       );
       if (!button) return false;
       button.click();

@@ -35,22 +35,22 @@ export function PageDocumentBreadcrumb({
           Wiki
         </Link>
         {ancestors.map((a) => (
-          <span key={a.id} className="flex items-center gap-1 min-w-0">
+          <span key={a.id} className="hidden min-w-0 items-center gap-1 sm:flex">
             <KbChevronRightIcon className="h-3 w-3 shrink-0" />
             <Link
               href={pageHref(a.id)}
-              className="hover:text-foreground transition-colors truncate max-w-[120px] min-w-0"
+              className="max-w-[7rem] min-w-0 truncate hover:text-foreground"
               title={a.title || "Untitled"}
             >
               {a.title || "Untitled"}
             </Link>
           </span>
         ))}
-        <span className="flex items-center gap-1 shrink-0">
-          <KbChevronRightIcon className="h-3 w-3" />
+        <span className="flex min-w-0 items-center gap-1">
+          <KbChevronRightIcon className="h-3 w-3 shrink-0" />
           <TruncatedText
             text={page.title || "Untitled"}
-            className="text-foreground font-medium max-w-[200px]"
+            className="max-w-[8rem] font-medium text-foreground sm:max-w-[14rem]"
           />
         </span>
       </nav>
@@ -81,12 +81,14 @@ export function PageDocumentBreadcrumb({
               Verified
             </Badge>
           )}
-          {page.trustState === "verification_expired" && (
-            <Badge
-              variant="outline"
-              className="text-micro h-4 px-1.5 bg-status-warning-surface text-status-warning-ink border-status-warning-rule"
-            >
-              Stale
+          {page.coverImage && (
+            <Badge variant="outline" className="text-micro h-4 px-1.5">
+              Cover
+            </Badge>
+          )}
+          {page.isFavorite && (
+            <Badge variant="outline" className="text-micro h-4 px-1.5">
+              Favorite
             </Badge>
           )}
         </div>

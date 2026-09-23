@@ -20,7 +20,10 @@ import { TicketParentControl } from "./ticket-parent-control";
 import { useTicketDetail } from "./use-ticket-detail";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { PageState } from "@/components/shared/page-state";
+import { pageStateFromError } from "@/lib/page-state/resolve-page-state";
 
 
 interface TicketDetailPageProps {
@@ -32,13 +35,13 @@ const RIGHT_PANEL_COLLAPSED_KEY = "streamlineos:ticket-detail:right-panel:collap
 
 function DetailSkeleton() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-hide md:flex-row md:overflow-hidden">
-      <div className="min-w-0 shrink-0 space-y-4 bg-card px-4 pb-4 pt-2 md:min-h-0 md:flex-1 md:overflow-y-auto md:px-6 md:pb-5 md:scrollbar-hide">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:flex-row">
+      <div className="min-h-0 min-w-0 flex-1 basis-0 space-y-4 overflow-y-auto bg-card px-4 pb-4 pt-2 scrollbar-hide md:px-6 md:pb-5">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-40 w-full rounded-lg" />
         <Skeleton className="h-24 w-full rounded-lg" />
       </div>
-      <div className="hidden shrink-0 border-t border-border px-4 py-3 md:block md:w-96 md:min-w-96 md:overflow-y-auto md:border-t-0 md:border-l md:pr-4 md:scrollbar-hide xl:w-[26rem] xl:min-w-[26rem]">
+      <div className="hidden min-h-0 shrink-0 overflow-y-auto border-t border-border px-4 py-3 scrollbar-hide md:block md:w-96 md:min-w-96 md:border-t-0 md:border-l md:pr-4 xl:w-[26rem] xl:min-w-[26rem]">
         <div className="mb-3 flex gap-2">
           <Skeleton className="h-5 w-16 rounded-md" />
           <Skeleton className="h-5 w-20 rounded-md" />
@@ -53,6 +56,7 @@ function DetailSkeleton() {
 }
 
 export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps) {
+  const canViewAccess = useCanState("build:tickets:view");
   const canUpdate = useCan("build:tickets:update");
   const canAssign = useCan("build:tickets:assign");
   const router = useRouter();
@@ -88,7 +92,6 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     isLoading,
     ticketError,
     refetchTicket,
-    sprints,
     subtasks,
     members,
     statuses,
@@ -123,7 +126,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
   if (!parsed) return notFound();
 
-  if (projectLoading || byKeyLoading) {
+  if (projectLoading || byKeyLoading || canViewAccess === "loading") {
     return (
       <PageWrapper title="Loading..." backHref={`/build/${projectId}`} noInternalScroll className="h-full">
         <DetailSkeleton />
@@ -148,9 +151,27 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
       );
     }
     if (isApiError(byKeyError) && byKeyError.status === 404) return notFound();
+    const byKeyState = pageStateFromError(byKeyError);
+    if (byKeyState !== null && byKeyState.kind !== "error" && byKeyState.kind !== "denied") {
+      return (
+        <PageWrapper title="Build" backHref={`/build/${projectId}`}>
+          <PageState resolution={byKeyState} loading={<DetailSkeleton />} onRetry={refetchByKey}>
+            <span />
+          </PageState>
+        </PageWrapper>
+      );
+    }
     return (
       <PageWrapper title="Ticket" backHref={`/build/${projectId}`}>
         <ErrorState className="flex-1" title="Couldn't load ticket" description={getErrorMessage(byKeyError)} onRetry={refetchByKey} />
+      </PageWrapper>
+    );
+  }
+
+  if (canViewAccess === "denied") {
+    return (
+      <PageWrapper title="Ticket" backHref={`/build/${projectId}`}>
+        <NoPermissionState permission="build:tickets:view" />
       </PageWrapper>
     );
   }
@@ -186,6 +207,16 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
   }
 
   if (ticketError && !ticket) {
+    const ticketState = pageStateFromError(ticketError);
+    if (ticketState !== null && ticketState.kind !== "error" && ticketState.kind !== "denied") {
+      return (
+        <PageWrapper title="Build" backHref={`/build/${projectId}`}>
+          <PageState resolution={ticketState} loading={<DetailSkeleton />} onRetry={refetchTicket}>
+            <span />
+          </PageState>
+        </PageWrapper>
+      );
+    }
     return (
       <PageWrapper title={displayKey} backHref={`/build/${projectId}`}>
         <ErrorState className="flex-1" title="Couldn't load ticket" description={getErrorMessage(ticketError)} onRetry={refetchTicket} />
@@ -247,13 +278,13 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
         />
       }
     >
-      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto scrollbar-hide md:flex-row md:overflow-hidden">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:flex-row">
         <div
           aria-hidden
           className="pointer-events-none absolute -top-6 right-1/3 h-32 w-32 rounded-full bg-primary/[0.05] blur-3xl"
         />
 
-        <div className="min-w-0 flex-1 bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 md:min-h-0 md:overflow-y-auto md:px-6 md:pb-5 md:scrollbar-hide">
+        <div className="min-h-0 min-w-0 flex-1 basis-0 overflow-y-auto bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 scrollbar-hide md:px-6 md:pb-5">
           <TicketDetailMainSection
             ticket={ticket}
             ticketId={ticketId}
@@ -279,7 +310,6 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
           ticketId={ticketId}
           projectId={projectId}
           projectKey={projectData?.key}
-          sprints={sprints}
           statuses={statuses}
           onAutoSave={autoSave}
           canUpdate={canUpdate}

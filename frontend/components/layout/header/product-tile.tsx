@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { Lock, CircleCheck } from "lucide-react";
+import { CircleCheck } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { MODULE_ACCENTS, PRODUCT_DESCRIPTIONS, type ProductKey } from "../sidebar/sidebar-nav-items";
+import { NavLockBadge } from "../nav-lock-badge";
 import { cn } from "@/lib/utils";
 
 export const ICON_STROKE = 1.75;
@@ -103,12 +104,10 @@ export function ProductTile({
         </motion.span>
       )}
       {!effectivelyEnabled && (
-        <span className="absolute top-1.5 right-1.5 inline-flex items-center gap-0.5 h-4 px-1 rounded bg-muted border border-border">
-          <Lock className="h-2.5 w-2.5 text-muted-foreground" />
-          <span className="text-micro font-medium text-muted-foreground">
-            {planLocked ? "Upgrade" : "Locked"}
-          </span>
-        </span>
+        <NavLockBadge
+          label={planLocked ? "Upgrade" : "Locked"}
+          className="absolute top-1.5 right-1.5"
+        />
       )}
     </motion.div>
   );

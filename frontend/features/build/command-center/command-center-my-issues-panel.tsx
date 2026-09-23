@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { MyWorkItem } from "@/types/projects/my-work";
 import type { ProjectListItem } from "@/types/projects";
 import { PmSection, PmPanel, PmStaggerList } from "@/components/pm-chrome";
@@ -25,6 +26,7 @@ interface MyIssuesPanelProps {
   projects: ProjectListItem[];
   isLoading: boolean;
   isError: boolean;
+  error?: unknown;
   isFetchingNextPage: boolean;
   emptyActions: { action: EmptyAction; secondaryAction?: EmptyAction };
   onRetry: () => void;
@@ -38,6 +40,7 @@ export function MyIssuesPanel({
   projects,
   isLoading,
   isError,
+  error,
   isFetchingNextPage,
   emptyActions,
   onRetry,
@@ -78,7 +81,7 @@ export function MyIssuesPanel({
           <ErrorState
             className="min-h-[12rem] flex-1"
             title="Failed to load your issues"
-            description="Could not fetch tickets. Please try again."
+            description={getErrorMessage(error)}
             onRetry={onRetry}
           />
         ) : items.length === 0 ? (

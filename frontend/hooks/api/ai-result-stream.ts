@@ -2,7 +2,8 @@
 
 import type { z } from "zod";
 import { ApiError, authedFetch, buildUrl } from "@/lib/api-client";
-import { AI_STREAM_TIMEOUT_MS, readAiStreamError } from "./ai-text-stream";
+import { apiErrorFromResponse } from "@/lib/api-envelope";
+import { AI_STREAM_TIMEOUT_MS } from "./ai-text-stream";
 import { aiResultFrameSchema } from "./ai-result-stream-schema";
 
 export interface AiResultStreamOptions {
@@ -30,7 +31,7 @@ export async function streamAiResult<T extends object>({
     headers: { "Content-Type": "application/json", Accept: "application/x-ndjson", ...headers },
     body: JSON.stringify(body ?? {}),
   }, path, signal, { timeoutMs: AI_STREAM_TIMEOUT_MS });
-  if (!response.ok) throw await readAiStreamError(response, path);
+  if (!response.ok) throw await apiErrorFromResponse(response, path);
   if (!response.headers.get("content-type")?.includes("application/x-ndjson"))
     throw new ApiError("Unexpected AI stream format", 502, "AI_INVALID_OUTPUT");
   const reader = response.body?.getReader();

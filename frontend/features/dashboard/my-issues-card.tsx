@@ -74,7 +74,7 @@ export const MyIssuesCard = memo(function MyIssuesCard({ tickets, isLoading, err
               const TypeIcon = isTicketType(ticket.type) ? typeIcons[ticket.type] : DEFAULT_TICKET_ICON;
               const project = ticket.project;
               return (
-                <Link key={ticket.id} href={project?.id ? `/build/${project.id}` : "/build/all"}>
+                <Link key={ticket.id} href={project?.id ? `/build/${project.id}` : "/build"}>
                   <div className="flex items-center gap-3 p-2 rounded-lg border border-border hover:bg-muted/50 hover:border-primary/30 transition-colors cursor-pointer">
                     <TypeIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" aria-hidden="true" />
                     <div className="flex-1 min-w-0">

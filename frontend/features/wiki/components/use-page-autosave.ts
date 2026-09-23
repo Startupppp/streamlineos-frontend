@@ -3,6 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { isApiError } from "@/lib/api-envelope";
+import {
+  UNATTRIBUTED_PAGE_EDIT_CONFLICT,
+  kbPageEditConflictContract,
+  type KbPageEditConflict,
+} from "@/features/wiki/lib/wiki-schema";
 
 const PAGE_AUTOSAVE_DELAY_MS = 1500;
 
@@ -24,7 +29,7 @@ interface UsePageAutosaveArgs {
   /** Latest revision the server has told us about, for optimistic concurrency. */
   contentRevision: number | undefined;
   save: (payload: SavePayload) => Promise<{ contentRevision: number }>;
-  onConflict: (error: unknown) => void;
+  onConflict: (conflict: KbPageEditConflict) => void;
   onSaveError: (error: unknown) => void;
   delayMs?: number;
 }
@@ -66,11 +71,12 @@ export function usePageAutosave({
   delayMs = PAGE_AUTOSAVE_DELAY_MS,
 }: UsePageAutosaveArgs) {
   const [saveState, setSaveState] = useState<PageSaveState>("idle");
-  const [conflict, setConflict] = useState(false);
+  const [conflict, setConflict] = useState<KbPageEditConflict | null>(null);
 
-  const conflictRef = useRef(false);
+  const conflictRef = useRef<KbPageEditConflict | null>(null);
   const pendingPatchRef = useRef<PageAutosavePatch | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inFlightRef = useRef(false);
   /**
    * Tagged with the page it belongs to. An untagged revision was clobbered by
    * whichever effect happened to run last on mount, and — worse — could have
@@ -78,6 +84,7 @@ export function usePageAutosave({
    * would arrive as a spurious 409.
    */
   const revisionRef = useRef<{ pageId: number; value: number } | null>(null);
+  const runRef = useRef<((patch: PageAutosavePatch) => void) | null>(null);
   const pageIdRef = useRef(pageId);
   const mountedRef = useRef(true);
 
@@ -112,55 +119,86 @@ export function usePageAutosave({
     if (mountedRef.current) setSaveState(next);
   }, []);
 
-  const run = useCallback((patch: PageAutosavePatch) => {
-    const targetPageId = pageIdRef.current;
+  const adoptRevision = useCallback((forPageId: number, value: number) => {
     const known = revisionRef.current;
-    /**
-     * The server requires the precondition, so a save with no known revision would 400 and
-     * lose the edit. Hold the patch until the page's revision arrives instead of sending it.
-     */
-    if (known?.pageId !== targetPageId) {
-      pendingPatchRef.current = { ...patch, ...(pendingPatchRef.current ?? {}) };
-      setStateIfMounted("pending");
-      return;
-    }
-    setStateIfMounted("saving");
-    const payload: SavePayload = {
-      pageId: targetPageId,
-      ...patch,
-      expectedContentRevision: known.value,
-    };
-    handlersRef.current
-      .save(payload)
-      .then((data) => {
-        revisionRef.current = { pageId: targetPageId, value: data.contentRevision };
+    if (known !== null && known.pageId === forPageId && known.value >= value) return;
+    revisionRef.current = { pageId: forPageId, value };
+  }, []);
+
+  const drainQueued = useCallback(() => {
+    if (conflictRef.current !== null) return;
+    const queued = pendingPatchRef.current;
+    if (queued === null) return;
+    const next = runRef.current;
+    if (next === null) return;
+    pendingPatchRef.current = null;
+    next(queued);
+  }, []);
+
+  const run = useCallback(
+    (patch: PageAutosavePatch) => {
+      const targetPageId = pageIdRef.current;
+      const known = revisionRef.current;
+      /**
+       * The server requires the precondition, so a save with no known revision would 400 and
+       * lose the edit. Hold the patch until the page's revision arrives instead of sending it.
+       */
+      if (inFlightRef.current || known === null || known.pageId !== targetPageId) {
+        pendingPatchRef.current = { ...patch, ...(pendingPatchRef.current ?? {}) };
+        setStateIfMounted("pending");
+        return;
+      }
+      inFlightRef.current = true;
+      setStateIfMounted("saving");
+      const payload: SavePayload = {
+        pageId: targetPageId,
+        ...patch,
+        expectedContentRevision: known.value,
+      };
+
+      function handleSaved(data: { contentRevision: number }) {
+        inFlightRef.current = false;
+        adoptRevision(targetPageId, data.contentRevision);
         setStateIfMounted("saved");
-      })
-      .catch((error: unknown) => {
+        drainQueued();
+      }
+
+      function handleFailed(error: unknown) {
+        inFlightRef.current = false;
         setStateIfMounted("idle");
         // Anything typed since this send wins, but the failed fields are not
         // thrown away — they ride along with the next save.
         pendingPatchRef.current = { ...patch, ...(pendingPatchRef.current ?? {}) };
         if (isApiError(error) && error.status === 409) {
-          conflictRef.current = true;
-          if (mountedRef.current) setConflict(true);
-          handlersRef.current.onConflict(error);
+          const parsed = kbPageEditConflictContract.safeParse(error.details);
+          const detail = parsed.success ? parsed.data : UNATTRIBUTED_PAGE_EDIT_CONFLICT;
+          conflictRef.current = detail;
+          if (mountedRef.current) setConflict(detail);
+          handlersRef.current.onConflict(detail);
           return;
         }
         handlersRef.current.onSaveError(error);
-      });
-  }, [setStateIfMounted]);
+      }
+
+      handlersRef.current.save(payload).then(handleSaved, handleFailed);
+    },
+    [adoptRevision, drainQueued, setStateIfMounted],
+  );
+
+  useEffect(() => {
+    runRef.current = run;
+  });
 
   const schedule = useCallback(
     (patch: PageAutosavePatch) => {
-      if (conflictRef.current) {
+      pendingPatchRef.current = { ...(pendingPatchRef.current ?? {}), ...patch };
+      if (conflictRef.current !== null) {
         clearTimer();
         return;
       }
-      pendingPatchRef.current = { ...(pendingPatchRef.current ?? {}), ...patch };
       setSaveState("pending");
       clearTimer();
-      timerRef.current = setTimeout(() => {
+      timerRef.current = setTimeout(function drainTimer() {
         timerRef.current = null;
         const queued = pendingPatchRef.current;
         pendingPatchRef.current = null;
@@ -172,7 +210,7 @@ export function usePageAutosave({
 
   const flush = useCallback(() => {
     clearTimer();
-    if (conflictRef.current) return;
+    if (conflictRef.current !== null) return;
     const queued = pendingPatchRef.current;
     if (!queued) return;
     pendingPatchRef.current = null;
@@ -185,10 +223,11 @@ export function usePageAutosave({
    */
   useEffect(() => {
     if (contentRevision === undefined) return;
-    const hadRevision = revisionRef.current?.pageId === pageId;
-    revisionRef.current = { pageId, value: contentRevision };
+    const known = revisionRef.current;
+    const hadRevision = known !== null && known.pageId === pageId;
+    adoptRevision(pageId, contentRevision);
     if (!hadRevision && pendingPatchRef.current !== null) flush();
-  }, [pageId, contentRevision, flush]);
+  }, [pageId, contentRevision, flush, adoptRevision]);
 
   useEffect(() => {
     const onHidden = () => {
@@ -210,19 +249,32 @@ export function usePageAutosave({
    * the page the pending patch was typed on.
    */
   useEffect(() => {
-    conflictRef.current = false;
-    setConflict(false);
+    conflictRef.current = null;
+    setConflict(null);
     pendingPatchRef.current = null;
     setSaveState("idle");
     pageIdRef.current = pageId;
     return flush;
   }, [pageId, flush]);
 
-  const resolveConflict = useCallback(() => {
-    conflictRef.current = false;
-    setConflict(false);
+  const discardLocalEdits = useCallback(() => {
+    clearTimer();
+    conflictRef.current = null;
+    setConflict(null);
     pendingPatchRef.current = null;
-  }, []);
+    setSaveState("idle");
+  }, [clearTimer]);
 
-  return { saveState, conflict, schedule, resolveConflict };
+  const keepLocalEdits = useCallback(() => {
+    const detail = conflictRef.current;
+    const revisionAdopted =
+      detail !== null && detail.currentContentRevision !== null;
+    if (revisionAdopted)
+      adoptRevision(pageIdRef.current, detail!.currentContentRevision!);
+    conflictRef.current = null;
+    setConflict(null);
+    if (revisionAdopted) flush();
+  }, [adoptRevision, flush]);
+
+  return { saveState, conflict, schedule, discardLocalEdits, keepLocalEdits };
 }

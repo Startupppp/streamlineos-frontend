@@ -14,6 +14,7 @@ export function useKeyboardShortcuts(
     let timer: ReturnType<typeof setTimeout>;
 
     function handleKeyDown(e: KeyboardEvent) {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
       const target = e.target;
       if (!(target instanceof HTMLElement)) return;
       if (
@@ -22,13 +23,6 @@ export function useKeyboardShortcuts(
         target.tagName === "SELECT" ||
         target.isContentEditable
       ) {
-        return;
-      }
-
-      if (e.key === "/") {
-        e.preventDefault();
-        const searchEl = document.querySelector<HTMLElement>("[data-search-input]");
-        searchEl?.focus();
         return;
       }
 
@@ -52,7 +46,7 @@ export function useKeyboardShortcuts(
 
       if (pendingKey === "g" && e.key === "p") {
         setPendingKey(null);
-        router.push("/build/all");
+        router.push("/build");
         return;
       }
 
@@ -71,9 +65,9 @@ export function useKeyboardShortcuts(
       setPendingKey(null);
     }
 
-    window.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
       clearTimeout(timer);
     };
   }, [pendingKey, onCreateProject, onCreateIssue, router]);

@@ -37,29 +37,8 @@ function getOverdueRowKey(row: OverduePeriod) {
   return row.periodId;
 }
 
-/**
- * TS-11. Who is late, and what the system has already done about it.
- *
- * `GET /timesheets/periods/overdue` shipped with no caller. The grace days and
- * reminder thresholds were read by the nightly sweep to decide whom to email
- * and by nothing else, so the only person who ever learned a timesheet was
- * late was the person who owed it — an approver had no list to work from and
- * no way to see that six reminders had already gone unanswered.
- *
- * The policy is rendered beside the queue rather than buried in settings,
- * because every number in the table is derived from it: "9 days late" means
- * nothing until you know the grace period it is counted from, and "no
- * escalation" means two opposite things depending on whether any thresholds
- * exist at all.
- */
 export function OverdueView() {
   const access = usePermissionGate("timesheets:approvals:view");
-  /**
-   * `?userId=` is honoured by `TimesheetOverdueService.listOverdue` only when
-   * `resolveApprovalScope` answers `all`; a narrower approver who picked a name
-   * would get their own unchanged list back and no explanation, so the control
-   * is not offered.
-   */
   const canFilterByMember = useScope("timesheets:approvals:view") === "all";
   const shouldReduceMotion = useReducedMotion();
 
@@ -86,7 +65,6 @@ export function OverdueView() {
       replaceParams((params) => {
         if (value === ALL) params.delete("userId");
         else params.set("userId", value);
-        /** A member filter changes the result set, so page 3 of it is meaningless. */
         params.delete("page");
       }),
     [replaceParams],

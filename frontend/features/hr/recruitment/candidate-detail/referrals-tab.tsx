@@ -14,6 +14,7 @@ import {
   Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger, SheetBody,
 } from "@/components/ui/sheet";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 import { Gift } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -39,7 +40,7 @@ interface Props {
 }
 
 export function ReferralsTab({ candidateId }: Props) {
-  const { data: referrals, isLoading } = useCandidateReferrals(candidateId);
+  const { data: referrals, isLoading, isError, refetch } = useCandidateReferrals(candidateId);
   const createReferral = useCreateReferral(candidateId);
   const updateReferral = useUpdateReferral(candidateId);
   const { iconRef: plusIconRef, hoverHandlers: plusHoverHandlers } = useAnimatedIcon();
@@ -95,6 +96,16 @@ export function ReferralsTab({ candidateId }: Props) {
       <div className="space-y-2">
         {[1, 2].map((i) => <Skeleton key={i} className="h-20 w-full rounded-2xl" />)}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Unable to load referrals"
+        description="Try again. If this keeps happening, contact an admin."
+        onRetry={() => void refetch()}
+      />
     );
   }
 

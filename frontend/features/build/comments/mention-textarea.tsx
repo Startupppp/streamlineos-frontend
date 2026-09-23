@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { getUserInitials } from "@/lib/person-display";
 
 export interface MentionUser {
   id: string;
@@ -23,15 +24,6 @@ interface MentionTextareaProps {
   users: MentionUser[];
   disabled?: boolean;
   rows?: number;
-}
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
 }
 
 export function MentionTextarea({
@@ -172,7 +164,7 @@ export function MentionTextarea({
               >
                 <Avatar className="h-6 w-6 shrink-0">
                   <AvatarFallback className="text-micro bg-primary/10 text-primary">
-                    {getInitials(user.name)}
+                    {getUserInitials({ name: user.name })}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">

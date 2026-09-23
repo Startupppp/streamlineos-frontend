@@ -15,6 +15,9 @@ import {
   useModuleRoleGroups,
   type ModuleMember,
 } from "@/hooks/api/module-access";
+import { viewKey } from "@/hooks/api/module-access/types";
+import { useCanState } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import {
   AddMemberDialog,
   EditGroupsDialog,
@@ -150,6 +153,7 @@ export function ModuleMembersTab({
   const addOpen = onAddOpenChange ? (addOpenProp ?? false) : internalAddOpen;
   const setAddOpen = onAddOpenChange ?? setInternalAddOpen;
 
+  const viewAccess = useCanState(viewKey(moduleKey));
   const membersQuery = useModuleMembersInfinite(moduleKey, PAGE_SIZE);
   const groupsQuery = useModuleRoleGroups(moduleKey);
 
@@ -237,12 +241,14 @@ export function ModuleMembersTab({
       ) : null}
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card">
-        {membersQuery.isLoading ? (
+        {viewAccess === "loading" || membersQuery.isLoading ? (
           <div className="divide-y divide-border/60">
             {Array.from({ length: 5 }).map((_, i) => (
               <MemberRowSkeleton key={i} />
             ))}
           </div>
+        ) : viewAccess === "denied" ? (
+          <NoPermissionState permission={viewKey(moduleKey)} />
         ) : membersQuery.isError ? (
           <EmptyState
             illustrationPreset="team"

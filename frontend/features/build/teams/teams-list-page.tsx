@@ -1,129 +1,107 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { Plus } from "lucide-react";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { toast } from "sonner";
-import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import Link from "next/link";
-import { useProjectTeams, useCreateProjectTeam, useUpdateProjectTeam, useDeleteProjectTeam } from "@/hooks/api/build/teams";
+import {
+  useProjectTeams,
+  useCreateProjectTeam,
+  useUpdateProjectTeam,
+  useDeleteProjectTeam,
+} from "@/hooks/api/build/teams";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { Button } from "@/components/ui/button";
-import { SearchInput } from "@/components/ui/search-input";
-import { Badge } from "@/components/ui/badge";
+import { PageState } from "@/components/shared/page-state";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { TeamFormSheet } from "./team-form-sheet";
-import type { ProjectTeam, CreateTeamInput, UpdateTeamInput } from "@/types/projects";
+import type {
+  ProjectTeam,
+  CreateTeamInput,
+  UpdateTeamInput,
+} from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import {
-  PmPageShell,
-  PmSection,
-  PM_FILL_PANEL,
-} from "@/components/pm-chrome";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
-import { cn } from "@/lib/utils";
+  TEAM_TABLE_HEADERS,
+  TeamMobileCard,
+  buildTeamColumns,
+} from "./team-table-columns";
 
-function NewTeamButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} /> New Team
-    </Button>
-  );
-}
+const PAGE_SIZE = 50;
 
-function TeamRowActions({
-  team,
-  onEdit,
-  onDelete,
-}: {
-  team: ProjectTeam;
-  onEdit: (t: ProjectTeam) => void;
-  onDelete: (t: ProjectTeam) => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const handleEdit = useCallback(() => onEdit(team), [team, onEdit]);
-  const handleDelete = useCallback(() => onDelete(team), [team, onDelete]);
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-7"
-          aria-label="Team actions"
-          {...hoverHandlers}
-        >
-          <EllipsisIcon ref={iconRef} size={14} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" onClick={handleDelete}>
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
+const FILTER_DEFINITIONS = [] as const;
 
 export function TeamsListPage() {
   const canCreate = useCan("build:teams:create");
   const canManage = useCan("build:teams:manage");
 
-  const [search, setSearch] = useState("");
-  const [cursor, setCursor] = useState<string | undefined>(undefined);
-  const [cursorStack, setCursorStack] = useState<string[]>([]);
-  const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
-    useQueryParamOpen("create");
+  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
+  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+    listFilters.resetKey,
+  );
+
+  const {
+    open: createOpen,
+    onOpenChange: setCreateOpen,
+    setOpen: openCreate,
+  } = useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<ProjectTeam | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProjectTeam | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useProjectTeams({
     cursor,
-    pageSize: 50,
-    search: search.trim() || undefined,
+    pageSize: PAGE_SIZE,
+    search: listFilters.debouncedSearch.trim() || undefined,
   });
-
   const createTeam = useCreateProjectTeam();
   const updateTeam = useUpdateProjectTeam();
   const deleteTeam = useDeleteProjectTeam();
 
   const teams = useMemo(() => data?.data ?? [], [data]);
 
-  function handleCreate(input: CreateTeamInput) {
-    createTeam.mutate(input, {
-      onSuccess: () => {
-        toast.success("Team created");
-        setCreateOpen(false);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }
+  const resolution = usePageState({
+    permission: "build:teams:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: teams.length === 0,
+  });
 
-  function handleEdit(input: UpdateTeamInput & { teamId: number }) {
-    updateTeam.mutate(input, {
-      onSuccess: () => {
-        toast.success("Team updated");
-        setEditTarget(null);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }
+  const handleCreate = useCallback(
+    (input: CreateTeamInput) => {
+      createTeam.mutate(input, {
+        onSuccess: () => {
+          toast.success("Team created");
+          setCreateOpen(false);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    },
+    [createTeam, setCreateOpen],
+  );
 
-  function handleDeleteConfirm() {
+  const handleEdit = useCallback(
+    (input: UpdateTeamInput & { teamId: number }) => {
+      updateTeam.mutate(input, {
+        onSuccess: () => {
+          toast.success("Team updated");
+          setEditTarget(null);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    },
+    [updateTeam],
+  );
+
+  const handleDeleteConfirm = useCallback(() => {
     if (!deleteTarget) return;
     deleteTeam.mutate(deleteTarget.id, {
       onSuccess: () => {
@@ -132,35 +110,7 @@ export function TeamsListPage() {
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }
-
-  function resetCursor() {
-    setCursor(undefined);
-    setCursorStack([]);
-  }
-
-  function handleSearchChange(value: string) {
-    setSearch(value);
-    resetCursor();
-  }
-
-  function handleClearSearch() {
-    setSearch("");
-    resetCursor();
-  }
-
-  function handleNextPage() {
-    const nextCursor = data?.pagination.nextCursor;
-    if (!nextCursor) return;
-    setCursorStack((prev) => [...prev, cursor ?? ""]);
-    setCursor(nextCursor);
-  }
-
-  function handlePrevPage() {
-    const prevCursor = cursorStack[cursorStack.length - 1];
-    setCursorStack((prev) => prev.slice(0, -1));
-    setCursor(prevCursor === "" ? undefined : prevCursor);
-  }
+  }, [deleteTarget, deleteTeam]);
 
   const handleOpenCreate = useCallback(() => {
     openCreate();
@@ -176,169 +126,129 @@ export function TeamsListPage() {
     [setCreateOpen],
   );
 
-  function handleDeleteDialogChange(open: boolean) {
+  const handleDeleteDialogChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
-  }
+  }, []);
 
-  function handleRetry() {
+  const handleRetry = useCallback(() => {
     void refetch();
-  }
+  }, [refetch]);
 
-  function handleEditRow(row: ProjectTeam) {
-    setEditTarget(row);
-  }
+  const handleEditRow = useCallback(
+    (row: ProjectTeam) => setEditTarget(row),
+    [],
+  );
+  const handleDeleteRow = useCallback(
+    (row: ProjectTeam) => setDeleteTarget(row),
+    [],
+  );
 
-  function handleDeleteRow(row: ProjectTeam) {
-    setDeleteTarget(row);
-  }
+  const handleNextPage = useCallback(() => {
+    goNext(data?.pagination.nextCursor);
+  }, [data, goNext]);
 
-  const columns: DataTableColumn<ProjectTeam>[] = [
-    {
-      key: "name",
-      header: "Name",
-      className: TABLE_TITLE_CELL,
-      cell: (row) => (
-        <div className="flex min-w-0 items-center gap-2">
-          {row.icon ? (
-            <span className="text-base leading-none">{row.icon}</span>
-          ) : (
-            <span
-              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-micro font-bold text-white"
-              style={{ backgroundColor: row.color ?? "#64748b" }}
-            >
-              {row.key.slice(0, 2)}
-            </span>
-          )}
-          <Link
-            href={`/build/teams/${row.id}`}
-            className={cn(
-              "font-medium text-foreground hover:text-primary",
-              TEXT_ONE_LINE,
-            )}
-            title={row.name}
-          >
-            {row.name}
-          </Link>
-          {row.isPrivate ? (
-            <Badge variant="outline" className="text-micro">
-              Private
-            </Badge>
-          ) : null}
-        </div>
-      ),
-    },
-    {
-      key: "key",
-      header: "Key",
-      className: "w-20",
-      cell: (row) => (
-        <span className="font-mono text-xs text-muted-foreground">{row.key}</span>
-      ),
-    },
-    {
-      key: "members",
-      header: "Members",
-      className: "w-28",
-      cell: (row) => (
-        <span className="tabular-nums text-sm text-muted-foreground">
-          {row.memberCount ?? 0}
-        </span>
-      ),
-    },
-    {
-      key: "actions",
-      header: "",
-      className: "w-10",
-      cell: (row) =>
-        canManage ? (
-          <TeamRowActions team={row} onEdit={handleEditRow} onDelete={handleDeleteRow} />
-        ) : null,
-    },
-  ];
+  const columns = useMemo(
+    () =>
+      buildTeamColumns({
+        canManage,
+        onEdit: handleEditRow,
+        onDelete: handleDeleteRow,
+      }),
+    [canManage, handleDeleteRow, handleEditRow],
+  );
 
-  const isFiltered = !!search.trim();
-  const hasPrev = cursorStack.length > 0;
-  const hasNext = !!data?.pagination.hasMore;
-
-  const filtersBar = (
-    <div className={FILTER_TOOLBAR_ROW}>
-      <SearchInput className="min-w-0"
-        placeholder="Search teams…"
-        value={search}
-        onValueChange={handleSearchChange}
+  const renderMobileCard = useCallback(
+    (row: ProjectTeam) => (
+      <TeamMobileCard
+        team={row}
+        canManage={canManage}
+        onEdit={handleEditRow}
+        onDelete={handleDeleteRow}
       />
-      {isFiltered ? (
-        <Button
-          size="sm"
-          variant="ghost"
-          className="text-xs"
-          onClick={handleClearSearch}
-        >
-          Clear
-        </Button>
-      ) : null}
-    </div>
+    ),
+    [canManage, handleDeleteRow, handleEditRow],
   );
 
   return (
     <PageWrapper
       title="Teams"
       subtitle="Organise members into cross-functional teams"
-      filters={filtersBar}
+      filters={
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search teams…",
+            label: "Search teams",
+          }}
+          onClearAll={listFilters.clearAll}
+        />
+      }
       actions={
-        canCreate ? <NewTeamButton onClick={handleOpenCreate} /> : undefined
+        <BuildHeaderActions
+          actions={
+            canCreate
+              ? [
+                  {
+                    id: "create",
+                    label: "New team",
+                    icon: Plus,
+                    primary: true,
+                    onSelect: handleOpenCreate,
+                  },
+                ]
+              : []
+          }
+        />
       }
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          {isLoading ? (
-            <DataTableSkeleton rows={12} columns={4} className="flex-1" />
-          ) : isError ? (
-            <ErrorState
-              className={PM_FILL_PANEL}
-              title="Couldn't load teams"
-              description={getErrorMessage(error)}
-              onRetry={handleRetry}
-            />
-          ) : teams.length === 0 ? (
-            <EmptyState
-              className={PM_FILL_PANEL}
-              illustrationPreset="projects"
-              title="No teams yet"
-              description={
-                isFiltered
-                  ? undefined
-                  : "Create a team to group members and track work together."
-              }
-              filtersActive={isFiltered}
-              onClearFilters={handleClearSearch}
-              action={
-                !isFiltered && canCreate
-                  ? { label: "New Team", onClick: handleOpenCreate }
-                  : undefined
-              }
-            />
-          ) : (
-            <>
-              <DataTable
-                data={teams}
-                columns={columns}
-                getRowKey={(row) => row.id}
-                minWidth="560px"
-                className={PM_FILL_PANEL}
+          <PageState
+            resolution={resolution}
+            loading={
+              <DataTableSkeleton
+                mobileCards
+                rows={12}
+                headers={TEAM_TABLE_HEADERS}
+                className="flex-1"
               />
-              {(hasPrev || hasNext) ? (
-                <div className="flex items-center justify-end gap-2 border-t px-2 py-2">
-                  <Button variant="outline" size="sm" disabled={!hasPrev} onClick={handlePrevPage}>
-                    Previous
-                  </Button>
-                  <Button variant="outline" size="sm" disabled={!hasNext} onClick={handleNextPage}>
-                    Next
-                  </Button>
-                </div>
-              ) : null}
-            </>
-          )}
+            }
+            empty={
+              <EmptyState
+                className={PM_FILL_PANEL}
+                illustrationPreset="projects"
+                title="No teams yet"
+                description="Create a team to group members and track work together."
+                filtersActive={listFilters.isFiltered}
+                onClearFilters={listFilters.clearAll}
+                action={
+                  canCreate
+                    ? { label: "New team", onClick: handleOpenCreate }
+                    : undefined
+                }
+              />
+            }
+            onRetry={handleRetry}
+            className={PM_FILL_PANEL}
+          >
+            <DataTable
+              data={teams}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              minWidth="560px"
+              mobileCard={renderMobileCard}
+              className={PM_FILL_PANEL}
+              pagination={{
+                mode: "cursor",
+                pageSize: PAGE_SIZE,
+                hasMore: Boolean(data?.pagination.hasMore),
+                hasPrevious,
+                onNext: handleNextPage,
+                onPrevious: goPrevious,
+              }}
+            />
+          </PageState>
         </PmSection>
       </PmPageShell>
 

@@ -3,8 +3,8 @@
 import type { ReactNode } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table";
-import { ErrorState, NoPermissionState } from "@/components/shared";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
 interface ReportShellProps {
@@ -13,7 +13,6 @@ interface ReportShellProps {
   backHref?: string;
   filters?: ReactNode;
   actions?: ReactNode;
-  canView: boolean;
   permission: PermissionKey;
   isLoading: boolean;
   isError: boolean;
@@ -30,7 +29,6 @@ export function ReportShell({
   backHref,
   filters,
   actions,
-  canView,
   permission,
   isLoading,
   isError,
@@ -40,27 +38,29 @@ export function ReportShell({
   fill = false,
   children,
 }: ReportShellProps) {
+  const pageState = usePageState({ permission, isLoading, isError, error });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper title={title} backHref={backHref} backLabel="Back to accounting">
+        <PageState resolution={pageState} loading={null} onRetry={onRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+
   return (
     <PageWrapper
       title={title}
       subtitle={subtitle}
       backHref={backHref}
       backLabel="Back to accounting"
-      filters={canView ? filters : undefined}
-      actions={canView ? actions : undefined}
+      filters={filters}
+      actions={actions}
       className={fill ? "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden" : undefined}
       noInternalScroll={fill}
     >
-      {!canView ? (
-        <NoPermissionState permission={permission} />
-      ) : isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load this report"
-          description={getErrorMessage(error)}
-          onRetry={onRetry}
-        />
-      ) : isLoading ? (
+      {isLoading ? (
         <DataTableSkeleton rows={10} columns={skeletonColumns} />
       ) : (
         <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3">{children}</div>

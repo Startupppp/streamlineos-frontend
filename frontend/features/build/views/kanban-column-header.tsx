@@ -5,7 +5,6 @@ import { GripVertical, Pencil, Trash2 } from "lucide-react";
 import type { DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { Input } from "@/components/ui/input";
-import { isActivationKey } from "@/lib/keyboard-activation";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,6 +30,7 @@ import {
 import type { KanbanColumn } from "../shared/types";
 import { ColumnColorPicker } from "../shared/column-color-picker";
 import { resolveColumnColor } from "@/lib/column-colors";
+import { KanbanColumnWip } from "./kanban-column-wip";
 
 const MAX_COLUMN_NAME = 50;
 
@@ -50,6 +50,7 @@ interface KanbanColumnHeaderProps {
   projectId: number;
   ticketCount: number;
   serverCount?: number;
+  wipLimit?: number | null;
   canManage: boolean;
   existingNames?: string[];
   onRename?: (oldName: string, newName: string) => void;
@@ -63,6 +64,7 @@ export function KanbanColumnHeader({
   projectId,
   ticketCount,
   serverCount,
+  wipLimit,
   canManage,
   existingNames = [],
   onRename,
@@ -177,19 +179,6 @@ export function KanbanColumnHeader({
     e.stopPropagation();
   }, []);
 
-  const handleTitleClick = useCallback(() => {
-    if (isEditable) handleStartRename();
-  }, [isEditable, handleStartRename]);
-
-  const handleTitleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (!isEditable || !isActivationKey(e)) return;
-      e.preventDefault();
-      handleStartRename();
-    },
-    [isEditable, handleStartRename],
-  );
-
   const handleColorChange = useCallback(
     (newColor: string) => {
       const statusId = column.statusId;
@@ -221,7 +210,7 @@ export function KanbanColumnHeader({
   const columnColor = resolveColumnColor(column.color);
 
   return (
-    <div className="relative flex items-center justify-between px-3 py-2 gap-1">
+    <div className="relative flex shrink-0 items-center justify-between gap-1 border-b border-border/60 px-3 py-2">
       <div className="flex items-center gap-1.5 min-w-0 flex-1">
         {dragHandleProps ? (
           <button
@@ -276,23 +265,24 @@ export function KanbanColumnHeader({
             )}
           </div>
         ) : (
-          <h3
-            className={cn(
-              "font-medium text-label text-foreground truncate",
-              isEditable && "cursor-text hover:text-foreground/80",
+          <h3 className="min-w-0 truncate text-[11px] font-semibold uppercase tracking-wider text-foreground">
+            {isEditable ? (
+              <button
+                type="button"
+                className="max-w-full cursor-text truncate transition-colors hover:text-muted-foreground"
+                onClick={handleStartRename}
+                title="Click to rename"
+              >
+                {column.name}
+              </button>
+            ) : (
+              <span className="truncate" title={column.name}>
+                {column.name}
+              </span>
             )}
-            role={isEditable ? "button" : undefined}
-            tabIndex={isEditable ? 0 : undefined}
-            onClick={handleTitleClick}
-            onKeyDown={handleTitleKeyDown}
-            title={isEditable ? "Click to rename" : column.name}
-          >
-            {column.name}
           </h3>
         )}
-        <span className="text-xs text-muted-foreground tabular-nums shrink-0">
-          {displayCount}
-        </span>
+        <KanbanColumnWip count={displayCount} wipLimit={wipLimit} />
       </div>
 
       <div className="flex items-center gap-0.5 shrink-0">

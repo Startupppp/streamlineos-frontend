@@ -33,20 +33,21 @@ export default function PageRightPanel({
   wordCount,
   onNavigate,
 }: PageRightPanelProps) {
-  const [collapsed, setCollapsed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem(STORAGE_KEY) === "true";
-  });
+  const [collapsed, setCollapsed] = useState(false);
 
   const { data: backlinks = [] } = useKbPageBacklinks(pageId);
   const { data: recordLinks = [] } = useKbPageRecordLinks(pageId);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, String(collapsed));
-  }, [collapsed]);
+    setCollapsed(localStorage.getItem(STORAGE_KEY) === "true");
+  }, []);
 
   function handleToggle() {
-    setCollapsed((prev) => !prev);
+    setCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem(STORAGE_KEY, String(next));
+      return next;
+    });
   }
 
   function handleBacklinkClick(id: number) {
@@ -108,11 +109,15 @@ export default function PageRightPanel({
               </div>
               <div className="flex items-center justify-between gap-2">
                 <span className="text-muted-foreground text-xs">Created</span>
-                <span className="text-xs text-foreground">{kbTimeAgo(page.createdAt)}</span>
+                <span className="text-xs text-foreground" suppressHydrationWarning>
+                  {kbTimeAgo(page.createdAt)}
+                </span>
               </div>
               <div className="flex items-center justify-between gap-2">
                 <span className="text-muted-foreground text-xs">Edited</span>
-                <span className="text-xs text-foreground">{kbTimeAgo(page.updatedAt)}</span>
+                <span className="text-xs text-foreground" suppressHydrationWarning>
+                  {kbTimeAgo(page.updatedAt)}
+                </span>
               </div>
             </div>
           </section>

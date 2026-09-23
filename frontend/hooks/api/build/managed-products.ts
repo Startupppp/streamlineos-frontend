@@ -1,6 +1,11 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useInfiniteQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import type { UseInfiniteQueryOptions, InfiniteData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -11,7 +16,9 @@ import type {
   CreateManagedProductInput,
   UpdateManagedProductInput,
 } from "@/types/projects";
+import type { ManagedProductInsights } from "@/hooks/api/build/managed-products-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 
 const managedProductPageContract = lazyContract(() =>
@@ -20,22 +27,28 @@ const managedProductPageContract = lazyContract(() =>
 const managedProductRowContract = lazyContract(() =>
   import("@/hooks/api/build/managed-products-schema").then((m) => m.managedProductRowContract),
 );
+const managedProductInsightsContractLazy = lazyContract(() =>
+  import("@/hooks/api/build/managed-products-schema").then((m) => m.managedProductInsightsContract),
+);
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
 interface ListManagedProductsParams {
-  cursor?: string;
   limit?: number;
+  cursor?: string;
   status?: string;
+  search?: string;
 }
 
 export function useManagedProducts(params?: ListManagedProductsParams) {
   const canView = useCan("build:managed-products:view");
   const queryParams: Record<string, string> = {};
+  
   if (params?.cursor) queryParams["cursor"] = params.cursor;
-  if (params?.limit) queryParams["limit"] = String(params.limit);
   if (params?.status) queryParams["status"] = params.status;
+  if (params?.search) queryParams["search"] = params.search;
+  if (params?.limit) queryParams["limit"] = String(params.limit);
 
   return useQuery<ManagedProductsPage>({
     queryKey: buildWorkQueryKeys.projects.managedProducts.list(
@@ -48,6 +61,49 @@ export function useManagedProducts(params?: ListManagedProductsParams) {
   });
 }
 
+type InfiniteManagedProductsParams = Omit<ListManagedProductsParams, "cursor">;
+
+export function useInfiniteManagedProducts(
+  params: InfiniteManagedProductsParams,
+  options?: Omit<
+    UseInfiniteQueryOptions<
+      ManagedProductsPage,
+      Error,
+      InfiniteData<ManagedProductsPage>,
+      readonly unknown[],
+      string | undefined
+    >,
+    "queryKey" | "queryFn" | "initialPageParam" | "getNextPageParam"
+  >,
+) {
+  const canView = useCan("build:managed-products:view");
+  const { enabled: enabledOption, ...restOptions } = options ?? {};
+  const queryParams: Record<string, string> = {};
+  if (params.status) queryParams["status"] = params.status;
+  if (params.search) queryParams["search"] = params.search;
+  if (params.limit) queryParams["limit"] = String(params.limit);
+
+  return useInfiniteQuery({
+    queryKey: buildWorkQueryKeys.projects.managedProducts.listInfinite(queryParams),
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get<ManagedProductsPage>(
+        "/build/managed-products",
+        {
+          ...queryParams,
+          ...(pageParam !== undefined ? { cursor: pageParam } : {}),
+        },
+        signal,
+        managedProductPageContract,
+      ),
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage: ManagedProductsPage) =>
+      lastPage.pagination.nextCursor ?? undefined,
+    staleTime: 60_000,
+    ...restOptions,
+    enabled: canView && (enabledOption ?? true),
+  });
+}
+
 export function useManagedProduct(managedProductId: number) {
   const canView = useCan("build:managed-products:view");
   return useQuery<ManagedProduct>({
@@ -56,6 +112,22 @@ export function useManagedProduct(managedProductId: number) {
       apiClient.get<ManagedProduct>(`/build/managed-products/${managedProductId}`, undefined, signal, managedProductRowContract),
     enabled: canView && !!managedProductId,
     staleTime: 60_000,
+  });
+}
+
+export function useManagedProductInsights(managedProductId: number) {
+  const canView = useCan("build:managed-products:view");
+  return useQuery<ManagedProductInsights>({
+    queryKey: buildWorkQueryKeys.projects.managedProducts.insights(managedProductId),
+    queryFn: ({ signal }) =>
+      apiClient.get<ManagedProductInsights>(
+        `/build/managed-products/${managedProductId}/insights`,
+        undefined,
+        signal,
+        managedProductInsightsContractLazy,
+      ),
+    enabled: canView && managedProductId > 0,
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -85,11 +157,24 @@ export function useUpdateManagedProduct() {
         undefined,
         managedProductRowContract,
       ),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.managedProducts.list() });
-      qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.detail(vars.managedProductId),
+    onSuccess: (updated, vars) => {
+      qc.setQueryData(
+        buildWorkQueryKeys.projects.managedProducts.detail(vars.managedProductId),
+        updated,
+      );
+      const loadedPages = qc.getQueriesData<ManagedProductsPage>({
+        queryKey: buildWorkQueryKeys.projects.managedProducts.list(),
       });
+      for (const [key, page] of loadedPages) {
+        if (page === undefined) continue;
+        if (!page.data.some((row) => row.id === vars.managedProductId)) continue;
+        qc.setQueryData<ManagedProductsPage>(key, {
+          ...page,
+          data: page.data.map((row) =>
+            row.id === vars.managedProductId ? updated : row,
+          ),
+        });
+      }
     },
   });
 }

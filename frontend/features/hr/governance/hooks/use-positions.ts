@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
@@ -21,6 +21,12 @@ const simulationResultContract = lazyContract(() =>
 const positionDeleteContract = lazyContract(() =>
   import("@/features/hr/governance/hooks/positions-schema").then((m) => m.positionDeleteContract),
 );
+const positionContract = lazyContract(() =>
+  import("@/features/hr/governance/hooks/positions-schema").then((m) => m.positionContract),
+);
+const positionStatusListContract = lazyContract(() =>
+  import("@/features/hr/governance/hooks/positions-schema").then((m) => m.positionStatusListContract),
+);
 
 export interface Position {
   id: number;
@@ -38,6 +44,26 @@ export interface Position {
   updatedAt: string;
 }
 
+export interface PositionStatus {
+  id: number;
+  orgId: string;
+  name: string;
+  order: number;
+  color: string | null;
+  lifecycleGroup: "backlog" | "unstarted" | "started" | "completed" | "cancelled";
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatePositionInput {
+  title: string;
+  status: string;
+  effectiveFrom: string;
+  departmentId?: string;
+  budgetedCostCents?: number;
+}
+
 export interface ReorgScenario {
   id: number;
   orgId: string;
@@ -48,8 +74,6 @@ export interface ReorgScenario {
   createdAt: string;
 }
 
-const POSITIONS_KEY = ["hr", "governance", "positions"] as const;
-const SCENARIOS_KEY = ["hr", "governance", "scenarios"] as const;
 
 export function usePositions(params?: { status?: string; departmentId?: number; page?: number; limit?: number }) {
   const canViewPositions = useCan("hr:positions:view");
@@ -94,13 +118,35 @@ export function useSimulateScenario(scenarioId: number | undefined) {
   });
 }
 
+export function usePositionStatuses(options?: { enabled?: boolean }) {
+  const canViewPositions = useCan("hr:positions:view");
+  return useQuery({
+    queryKey: [...humanResourcesQueryKeys.hr.hrPositionsAll, "statuses"],
+    queryFn: ({ signal }) =>
+      apiClient.get<PositionStatus[]>("/hr/governance/position-taxonomy/statuses", undefined, signal, positionStatusListContract),
+    staleTime: 2 * 60_000,
+    enabled: canViewPositions && (options?.enabled ?? true),
+  });
+}
+
+export function useCreatePosition() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation<Position, Error, CreatePositionInput>("hr:positions:manage", {
+    mutationKey: [...humanResourcesQueryKeys.hr.hrPositionsAll, "create"],
+    mutationFn: (input) => apiClient.post<Position>("/hr/governance/positions", input, undefined, positionContract),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPositionsAll });
+    },
+  });
+}
+
 export function useDeletePosition() {
   const qc = useQueryClient();
   return useAuthorizedMutation<void, Error, number>("hr:positions:manage", {
-    mutationKey: [...POSITIONS_KEY, "delete"],
+    mutationKey: [...humanResourcesQueryKeys.hr.hrPositionsAll, "delete"],
     mutationFn: (positionId) => apiClient.delete(`/hr/governance/positions/${positionId}`, undefined, undefined, positionDeleteContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: POSITIONS_KEY });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPositionsAll });
       toast.success("Position deleted");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -110,10 +156,10 @@ export function useDeletePosition() {
 export function useDeleteReorgScenario() {
   const qc = useQueryClient();
   return useAuthorizedMutation<void, Error, number>("hr:positions:manage", {
-    mutationKey: [...SCENARIOS_KEY, "delete"],
+    mutationKey: [...humanResourcesQueryKeys.hr.hrScenariosAll, "delete"],
     mutationFn: (scenarioId) => apiClient.delete(`/hr/governance/scenarios/${scenarioId}`, undefined, undefined, positionDeleteContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: SCENARIOS_KEY });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrScenariosAll });
       toast.success("Scenario deleted");
     },
     onError: (err) => toast.error(getErrorMessage(err)),

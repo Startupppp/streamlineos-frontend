@@ -54,6 +54,7 @@ export function hydrateDisplayOptions(raw: unknown): DisplayOptions {
     showEstimate: pickBool(raw.showEstimate, base.showEstimate),
     showCycle: pickBool(raw.showCycle, base.showCycle),
     showLabels: pickBool(raw.showLabels, base.showLabels),
+    showDescription: pickBool(raw.showDescription, base.showDescription),
     showDueDate: pickBool(raw.showDueDate, base.showDueDate),
     showProject: pickBool(raw.showProject, base.showProject),
     showMilestone: pickBool(raw.showMilestone, base.showMilestone),
@@ -63,6 +64,82 @@ export function hydrateDisplayOptions(raw: unknown): DisplayOptions {
     showUpdated: pickBool(raw.showUpdated, base.showUpdated),
     showPRs: pickBool(raw.showPRs, base.showPRs),
   };
+}
+
+const BOOLEAN_DISPLAY_KEYS = [
+  "orderCompleteByRecency",
+  "showSubIssues",
+  "showEmptyGroups",
+  "showEmptyColumns",
+  "showEmptyRows",
+  "showId",
+  "showStatus",
+  "showAssignee",
+  "showPriority",
+  "showEstimate",
+  "showCycle",
+  "showLabels",
+  "showDescription",
+  "showDueDate",
+  "showProject",
+  "showMilestone",
+  "showLinks",
+  "showTimeInStatus",
+  "showCreated",
+  "showUpdated",
+  "showPRs",
+] as const satisfies readonly (keyof DisplayOptions)[];
+
+interface ReadonlyParams {
+  get(name: string): string | null;
+}
+
+export function applyDisplayOptionParams(
+  fallback: DisplayOptions,
+  params: ReadonlyParams,
+): DisplayOptions {
+  const groupBy = params.get("groupBy");
+  const orderBy = params.get("orderBy");
+  const rowBy = params.get("rowBy");
+  const columnBy = params.get("columnBy");
+  const completed = params.get("completed");
+  const cols = params.get("cols");
+
+  const next: DisplayOptions = {
+    ...fallback,
+    groupBy: groupBy === null ? fallback.groupBy : pickEnum(groupBy, GROUP_BY_VALUES, fallback.groupBy),
+    orderBy: orderBy === null ? fallback.orderBy : pickEnum(orderBy, ORDER_BY_VALUES, fallback.orderBy),
+    rowBy: rowBy === null ? fallback.rowBy : pickEnum(rowBy, ROW_BY_VALUES, fallback.rowBy),
+    columnBy: columnBy === null ? fallback.columnBy : pickEnum(columnBy, COLUMN_BY_VALUES, fallback.columnBy),
+    completedIssues:
+      completed === null
+        ? fallback.completedIssues
+        : pickEnum(completed, COMPLETED_VALUES, fallback.completedIssues),
+  };
+
+  if (cols === null) return next;
+
+  const enabled = new Set(cols.split(",").filter(Boolean));
+  for (const key of BOOLEAN_DISPLAY_KEYS) {
+    next[key] = enabled.has(key);
+  }
+  return next;
+}
+
+export function writeDisplayOptionParams(
+  params: URLSearchParams,
+  options: DisplayOptions,
+): URLSearchParams {
+  params.set("groupBy", options.groupBy);
+  params.set("orderBy", options.orderBy);
+  params.set("rowBy", options.rowBy);
+  params.set("columnBy", options.columnBy);
+  params.set("completed", options.completedIssues);
+  params.set(
+    "cols",
+    BOOLEAN_DISPLAY_KEYS.filter((key) => options[key]).join(","),
+  );
+  return params;
 }
 
 function loadStored(projectId: number, scope: string): DisplayOptions | null {

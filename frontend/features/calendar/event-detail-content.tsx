@@ -152,7 +152,7 @@ function LinkedTicketRow({ linkedTicket, canUpdate, onClose, onRequestUnlink }: 
   if (linkedTicket) {
     return (
       <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2 group">
-        <Link href={`/build/${linkedTicket.projectId}?ticket=${linkedTicket.id}`} className="flex items-center gap-2 flex-1 min-w-0 hover:opacity-80 transition-opacity" onClick={onClose}>
+        <Link href={`/build/${linkedTicket.projectId}/issues?ticket=${linkedTicket.id}`} className="flex items-center gap-2 flex-1 min-w-0 hover:opacity-80 transition-opacity" onClick={onClose}>
           <Badge variant="outline" className="font-mono text-micro shrink-0 text-muted-foreground border-border">{linkedTicket.key}</Badge>
           <TruncatedText text={linkedTicket.title} className="text-sm flex-1 text-foreground" />
           <Badge variant="secondary" className="text-micro h-4 px-1.5 shrink-0 capitalize">{linkedTicket.status.toLowerCase().replace(/_/g, " ")}</Badge>

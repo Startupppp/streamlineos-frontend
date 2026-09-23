@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useCallback } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { motion, useReducedMotion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,8 +31,17 @@ export const ListViewItem = memo(function ListViewItem({
   displayOptions,
   dragHandleProps,
   isDragging,
+  isSelected,
+  onSelect,
+  isKeyboardFocused,
 }: ListViewItemProps) {
   const handleClick = useCallback(() => onClick(ticket.id), [onClick, ticket.id]);
+  const handleSelectChange = useCallback(
+    (v: boolean | "indeterminate") => {
+      onSelect?.(ticket.id, v === true);
+    },
+    [onSelect, ticket.id],
+  );
   const shouldReduceMotion = useReducedMotion();
   const { iconRef: chevronIconRef, hoverHandlers: chevronHoverHandlers } = useAnimatedIcon();
   const canUpdate = useCan("build:tickets:update");
@@ -53,9 +63,13 @@ export const ListViewItem = memo(function ListViewItem({
 
   return (
     <motion.div
+      data-keyboard-focused={isKeyboardFocused ? "true" : undefined}
+      aria-current={isKeyboardFocused ? "true" : undefined}
       className={cn(
         "group flex items-center border-b border-border/50 bg-card transition-colors hover:bg-primary/[0.04] last:border-b-0",
         isDragging && "shadow-lg ring-1 ring-primary/20 bg-primary/5 rounded-md",
+        isKeyboardFocused &&
+          "bg-primary/[0.06] ring-1 ring-inset ring-primary/40",
       )}
       initial={shouldReduceMotion ? false : { opacity: 0, x: -4 }}
       animate={{ opacity: 1, x: 0 }}
@@ -66,6 +80,15 @@ export const ListViewItem = memo(function ListViewItem({
           : { x: 1 }
       }
     >
+      {onSelect !== undefined && (
+        <div className="flex-shrink-0 pl-2 pr-0.5">
+          <Checkbox
+            checked={isSelected ?? false}
+            onCheckedChange={handleSelectChange}
+            aria-label={`Select ${ticket.title ?? "ticket"}`}
+          />
+        </div>
+      )}
       {hasDragHandle && (
         <div
           {...dragHandleProps}

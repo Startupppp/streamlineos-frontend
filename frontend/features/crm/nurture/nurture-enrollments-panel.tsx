@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState, Gated } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   Select,
   SelectContent,
@@ -90,6 +91,18 @@ export function NurtureEnrollmentsPanel({
   );
 
   const canEnrol = canManage && sequenceStatus === "active" && stepCount > 0;
+
+  const state = usePageState({
+    permission: "crm:autonomy:view",
+    isLoading: enrollments.isLoading,
+    isError: enrollments.isError,
+    error: enrollments.error,
+    isEmpty: rows.length === 0,
+  });
+
+  function handleRetryEnrollments(): void {
+    void enrollments.refetch();
+  }
 
   const handleStatusChange = (value: string) => {
     if (value === ALL) {
@@ -182,25 +195,15 @@ export function NurtureEnrollmentsPanel({
         otherwise be told nobody is enrolled, which is a different and much
         worse statement than "you may not look".
       */}
-      <Gated
-        permission="crm:autonomy:view"
-        isLoading={enrollments.isLoading}
-        isError={enrollments.isError}
-        isEmpty={rows.length === 0}
+      <PageState
+        resolution={state}
+        onRetry={handleRetryEnrollments}
         className="flex-1"
         loading={
           <DataTableSkeleton
             rows={6}
             columns={layout.list.columns.length}
             className="flex-1 min-h-0"
-          />
-        }
-        error={
-          <ErrorState
-            className="flex-1"
-            title="Couldn’t load who is enrolled"
-            description={getErrorMessage(enrollments.error)}
-            onRetry={() => void enrollments.refetch()}
           />
         }
         empty={
@@ -238,7 +241,7 @@ export function NurtureEnrollmentsPanel({
             ) : undefined
           }
         />
-      </Gated>
+      </PageState>
 
       <EnrolInNurtureDialog
         nurtureSequenceId={nurtureSequenceId}

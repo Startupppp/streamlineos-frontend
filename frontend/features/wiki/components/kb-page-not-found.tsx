@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, Home, RotateCcw, Search, Trash2 } from "lucide-react";
+import { Home, RotateCcw, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StateIllustration } from "@/components/illustrations/state-illustration";
 import { isApiError } from "@/lib/api-client";
 import {
-  KB_RECENT,
   KB_SPACES,
   KB_TRASH,
   KNOWLEDGE_BASE,
@@ -72,13 +71,6 @@ export function KbPageNotFound({ error, onRetry }: KbPageNotFoundProps) {
           <Link href={KNOWLEDGE_BASE}>
             <Home className="h-4 w-4" />
             Knowledge home
-          </Link>
-        </Button>
-
-        <Button asChild variant="outline" className="gap-2">
-          <Link href={KB_RECENT}>
-            <BookOpen className="h-4 w-4" />
-            Recent pages
           </Link>
         </Button>
 

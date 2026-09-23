@@ -24,7 +24,11 @@ import { useProjectLabels } from "@/hooks/api/build/projects";
 import { FilterChip } from "@/components/list-view/filter-chip";
 import { FilterTriggerButton } from "@/components/list-view/filter-trigger-button";
 import type { StatusFilterOption } from "@/components/list-view/filter-types";
-import { buildStatusConfig } from "@/features/build/shared/types";
+import {
+  buildStatusConfig,
+  resolveStatusOptions,
+  type StatusOptionSource,
+} from "@/features/build/shared/types";
 import { useTicketFilterParams } from "./use-ticket-filter-params";
 
 const FilterCommandMenu = dynamic(
@@ -51,17 +55,11 @@ interface ProjectOption {
 }
 
 interface TicketFilterBarProps {
-  sprints?: { id: number; name: string }[];
   members?: Member[];
-  statuses?: Array<{
-    name: string;
-    color?: string | null;
-    type?: string | null;
-  }>;
+  statuses?: readonly StatusOptionSource[];
   projectId?: number;
   projectOptions?: ProjectOption[];
   showTypeFilter?: boolean;
-  showSprintFilter?: boolean;
   showAssigneeFilter?: boolean;
   showDoneToggle?: boolean;
   hideCompleted?: boolean;
@@ -81,13 +79,11 @@ function formatDueRange(from: string, to: string): string {
 }
 
 export function TicketFilterBar({
-  sprints,
   members,
   statuses,
   projectId,
   projectOptions,
   showTypeFilter = true,
-  showSprintFilter = true,
   showAssigneeFilter = true,
   showDoneToggle = false,
   hideCompleted,
@@ -108,7 +104,6 @@ export function TicketFilterBar({
     useAnimatedIcon();
 
   const {
-    sprintParam,
     dueDateFrom,
     dueDateTo,
     selectedStatuses,
@@ -127,7 +122,6 @@ export function TicketFilterBar({
     handleToggleAssignee,
     handleToggleLabel,
     handleToggleCycle,
-    handleToggleSprint,
     handleToggleProject,
     handleDueDateFromChange,
     handleDueDateToChange,
@@ -138,7 +132,6 @@ export function TicketFilterBar({
     makeRemoveLabel,
     makeRemoveCycle,
     makeRemoveProject,
-    handleRemoveSprint,
     handleRemoveDueDate,
     clearAll,
   } = useTicketFilterParams();
@@ -152,22 +145,10 @@ export function TicketFilterBar({
     enabled: loadTaxonomyOptions,
   });
 
-  const statusItems = useMemo<StatusFilterOption[]>(() => {
-    if (statuses && statuses.length > 0) {
-      return statuses.map((s) => ({
-        name: s.name,
-        color: s.color ?? null,
-        type: s.type ?? null,
-      }));
-    }
-    return (["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const).map(
-      (name) => ({
-        name,
-        color: null,
-        type: null,
-      }),
-    );
-  }, [statuses]);
+  const statusItems = useMemo<StatusFilterOption[]>(
+    () => resolveStatusOptions(statuses),
+    [statuses],
+  );
 
   const statusConfig = useMemo(
     () => buildStatusConfig(statusItems),
@@ -190,10 +171,6 @@ export function TicketFilterBar({
     () => new Map((projectOptions ?? []).map((p) => [String(p.id), p])),
     [projectOptions],
   );
-  const sprintMap = useMemo(
-    () => new Map((sprints ?? []).map((s) => [String(s.id), s])),
-    [sprints],
-  );
 
   const filterState = {
     selectedStatuses,
@@ -203,7 +180,6 @@ export function TicketFilterBar({
     selectedLabels,
     selectedCycles,
     selectedProjectIds,
-    sprintParam,
     dueDateFrom,
     dueDateTo,
   };
@@ -232,7 +208,7 @@ export function TicketFilterBar({
         value={localSearch}
         onValueChange={handleSearchChange}
         className="[&_svg]:left-2 [&_svg]:h-3.5 [&_svg]:w-3.5"
-        inputClassName="h-9 pl-7 pr-7 text-xs"
+        inputClassName="h-9 pl-7 pr-7"
       />
     </div>
   );
@@ -244,10 +220,8 @@ export function TicketFilterBar({
     members: members ?? [],
     labels,
     cycles,
-    sprints: sprints ?? [],
     projectOptions,
     showTypeFilter,
-    showSprintFilter,
     showAssigneeFilter,
     filterState,
     onToggleStatus: handleToggleStatus,
@@ -256,7 +230,6 @@ export function TicketFilterBar({
     onToggleAssignee: handleToggleAssignee,
     onToggleLabel: handleToggleLabel,
     onToggleCycle: handleToggleCycle,
-    onToggleSprint: handleToggleSprint,
     onToggleProject: handleToggleProject,
     onDueDateFromChange: handleDueDateFromChange,
     onDueDateToChange: handleDueDateToChange,
@@ -437,13 +410,6 @@ export function TicketFilterBar({
                 />
               );
             })}
-            {sprintParam ? (
-              <FilterChip
-                key={`sprint-${sprintParam}`}
-                label={sprintMap.get(sprintParam)?.name ?? `Sprint ${sprintParam}`}
-                onRemove={handleRemoveSprint}
-              />
-            ) : null}
             {dueDateFrom || dueDateTo ? (
               <FilterChip
                 key="due-date"

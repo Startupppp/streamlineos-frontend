@@ -81,37 +81,41 @@ export function AiDraftCard({
       ) : null}
 
       {hasFooter && (
-        <div className="flex items-center gap-1.5 border-t border-border px-3 py-2">
-          {onAccept && (
+        <div className="flex flex-col gap-2 border-t border-border px-3 py-3">
+          {onAccept ? (
             <LoadingButton
               size="sm"
               isPending={isAcceptPending}
               onClick={onAccept}
-              className="h-7 text-xs"
+              className="h-9 w-full whitespace-nowrap text-sm"
             >
               {acceptLabel}
             </LoadingButton>
-          )}
-          {onEdit && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onEdit}
-              className="h-7 text-xs"
-            >
-              Edit
-            </Button>
-          )}
-          {onDiscard && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onDiscard}
-              className="h-7 text-xs text-muted-foreground hover:text-foreground"
-            >
-              Discard
-            </Button>
-          )}
+          ) : null}
+          {onEdit || onDiscard ? (
+            <div className="grid grid-cols-2 gap-2">
+              {onEdit ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onEdit}
+                  className="h-9 text-sm"
+                >
+                  Edit
+                </Button>
+              ) : null}
+              {onDiscard ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onDiscard}
+                  className="h-9 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Discard
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       )}
     </div>

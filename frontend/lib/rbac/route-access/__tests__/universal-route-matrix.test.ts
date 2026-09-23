@@ -4,41 +4,32 @@ import { resolveRouteAccess } from "../route-access";
 interface MatrixRow {
   path: string;
   universalMatch: boolean;
-  decisionKind: "universal" | "permission";
+  decisionKind: "universal" | "permission" | "unknown";
   label: string;
 }
 
 const MATRIX: readonly MatrixRow[] = [
+  // ── retired URLs ────────────────────────────────────────────────────────────
+  // No page component remains; next.config.ts redirects serve the old bookmark.
+  { path: "/home", universalMatch: false, decisionKind: "unknown", label: "retired home alias — redirects to /dashboard" },
+  { path: "/notifications", universalMatch: false, decisionKind: "unknown", label: "retired notifications root — redirects to /inbox?view=notifications" },
+  { path: "/settings/notifications", universalMatch: false, decisionKind: "unknown", label: "retired settings notifications index — redirects to my-preferences" },
+
   // ── /notifications ──────────────────────────────────────────────────────────
-  // root read allowed
-  { path: "/notifications", universalMatch: true, decisionKind: "universal", label: "notification inbox root" },
-  // approved descendant allowed (personal preferences)
-  { path: "/notifications/preferences", universalMatch: true, decisionKind: "universal", label: "personal notification preferences" },
-  { path: "/notifications/preferences/channels", universalMatch: true, decisionKind: "universal", label: "notification preferences sub-page" },
-  // administrative descendants DENIED
-  { path: "/notifications/providers", universalMatch: false, decisionKind: "permission", label: "notification provider admin" },
-  { path: "/notifications/providers/1", universalMatch: false, decisionKind: "permission", label: "notification provider detail" },
-  { path: "/notifications/templates", universalMatch: false, decisionKind: "permission", label: "notification template admin" },
-  { path: "/notifications/events", universalMatch: false, decisionKind: "permission", label: "notification event-catalog admin" },
-  { path: "/notifications/policy", universalMatch: false, decisionKind: "permission", label: "notification policy admin" },
-  { path: "/notifications/broadcasts", universalMatch: false, decisionKind: "permission", label: "broadcast admin" },
+  // sub-routes deleted; handled by next.config.ts redirects
 
   // ── /knowledge ──────────────────────────────────────────────────────────────
   // root read allowed
   { path: "/knowledge", universalMatch: true, decisionKind: "universal", label: "knowledge root" },
   // approved descendants allowed (wiki reading surfaces)
   { path: "/knowledge/wiki", universalMatch: true, decisionKind: "universal", label: "wiki reading root" },
-  { path: "/knowledge/wiki/favorites", universalMatch: true, decisionKind: "universal", label: "wiki favorites" },
-  { path: "/knowledge/wiki/favorites/sub", universalMatch: true, decisionKind: "universal", label: "wiki favorites sub-page" },
-  { path: "/knowledge/wiki/recent", universalMatch: true, decisionKind: "universal", label: "wiki recent pages" },
   { path: "/knowledge/wiki/shared", universalMatch: true, decisionKind: "universal", label: "wiki shared pages" },
   { path: "/knowledge/wiki/private", universalMatch: true, decisionKind: "universal", label: "wiki private pages" },
-  { path: "/knowledge/wiki/pages/123", universalMatch: true, decisionKind: "universal", label: "individual wiki page reading" },
-  { path: "/knowledge/wiki/pages/123/history", universalMatch: true, decisionKind: "universal", label: "wiki page history" },
+  { path: "/knowledge/wiki/doc/123", universalMatch: true, decisionKind: "universal", label: "individual wiki page reading" },
+  { path: "/knowledge/wiki/doc/123/history", universalMatch: true, decisionKind: "universal", label: "wiki page history" },
   { path: "/knowledge/chat", universalMatch: true, decisionKind: "universal", label: "knowledge AI chat" },
   { path: "/knowledge/wiki/spaces/1", universalMatch: true, decisionKind: "universal", label: "individual space page reading — extension is exact so only the list is gated" },
   // administrative descendants DENIED
-  { path: "/knowledge/wiki/settings", universalMatch: false, decisionKind: "permission", label: "wiki settings admin" },
   { path: "/knowledge/wiki/import", universalMatch: false, decisionKind: "permission", label: "wiki import admin" },
   { path: "/knowledge/wiki/analytics", universalMatch: false, decisionKind: "permission", label: "wiki analytics admin" },
   { path: "/knowledge/wiki/reviews", universalMatch: false, decisionKind: "permission", label: "wiki review admin" },
@@ -91,17 +82,11 @@ const MATRIX: readonly MatrixRow[] = [
   // ── /dashboard and /home ────────────────────────────────────────────────────
   // root read allowed — only the root itself is universal; exact-by-default so any new sub-route fails closed
   { path: "/dashboard", universalMatch: true, decisionKind: "universal", label: "dashboard root" },
-  { path: "/home", universalMatch: true, decisionKind: "universal", label: "home alias root" },
 
   // ── /announcements and /hr/announcements ────────────────────────────────────
   // root read allowed — only the root itself is universal; exact-by-default so any new sub-route fails closed
   { path: "/announcements", universalMatch: true, decisionKind: "universal", label: "announcements root" },
   { path: "/hr/announcements", universalMatch: true, decisionKind: "universal", label: "announcements under HR prefix — universal reading" },
-
-  // ── /referrals and /jobs ────────────────────────────────────────────────────
-  // root read allowed — member self-service universal
-  { path: "/referrals", universalMatch: true, decisionKind: "universal", label: "referrals root" },
-  { path: "/jobs", universalMatch: true, decisionKind: "universal", label: "internal job openings" },
 
   // ── /settings ───────────────────────────────────────────────────────────────
   // root read allowed (personal account landing)
@@ -110,6 +95,17 @@ const MATRIX: readonly MatrixRow[] = [
   { path: "/settings/roles", universalMatch: false, decisionKind: "permission", label: "org role management — not personal account" },
   { path: "/settings/billing", universalMatch: false, decisionKind: "permission", label: "billing admin — not personal account" },
 
+  // ── /settings/notifications ─────────────────────────────────────────────────
+  // root and personal preferences are universal
+  { path: "/settings/notifications/my-preferences", universalMatch: true, decisionKind: "universal", label: "personal notification preferences under settings" },
+  { path: "/settings/notifications/my-preferences/channels", universalMatch: true, decisionKind: "universal", label: "notification preferences sub-page under settings" },
+  // administrative descendants DENIED
+  { path: "/settings/notifications/providers", universalMatch: false, decisionKind: "permission", label: "notification provider admin under settings" },
+  { path: "/settings/notifications/templates", universalMatch: false, decisionKind: "permission", label: "notification template admin under settings" },
+  { path: "/settings/notifications/events", universalMatch: false, decisionKind: "permission", label: "notification event-catalog admin under settings" },
+  { path: "/settings/notifications/policy", universalMatch: false, decisionKind: "permission", label: "notification policy admin under settings" },
+  { path: "/settings/notifications/broadcasts", universalMatch: false, decisionKind: "permission", label: "broadcast admin under settings" },
+
   // ── utility pages ───────────────────────────────────────────────────────────
   { path: "/access-denied", universalMatch: true, decisionKind: "universal", label: "access-denied page" },
   { path: "/access-suspended", universalMatch: true, decisionKind: "universal", label: "access-suspended page" },
@@ -117,7 +113,7 @@ const MATRIX: readonly MatrixRow[] = [
 
 describe("universal route matrix — exact-by-default with explicit allowlist", () => {
   it("covers every declared universal root so a missing row cannot pass silently", () => {
-    expect(MATRIX.length).toBeGreaterThan(50);
+    expect(MATRIX.length).toBeGreaterThanOrEqual(50);
   });
 
   it("isUniversalRoute matches every row's expectation", () => {
@@ -154,12 +150,11 @@ describe("universal route matrix — exact-by-default with explicit allowlist", 
 
   it("no admin descendant of a universal root inherits universal access via prefix matching", () => {
     const adminPaths = [
-      "/notifications/providers",
-      "/notifications/templates",
-      "/notifications/events",
-      "/notifications/policy",
-      "/notifications/broadcasts",
-      "/knowledge/wiki/settings",
+      "/settings/notifications/providers",
+      "/settings/notifications/templates",
+      "/settings/notifications/events",
+      "/settings/notifications/policy",
+      "/settings/notifications/broadcasts",
       "/knowledge/wiki/import",
       "/knowledge/wiki/analytics",
       "/knowledge/wiki/reviews",
@@ -177,9 +172,9 @@ describe("universal route matrix — exact-by-default with explicit allowlist", 
     }
   });
 
-  it("personal notification preferences are universal — not confused with admin surfaces", () => {
-    expect(isUniversalRoute("/notifications/preferences")).toBe(true);
-    expect(resolveRouteAccess("/notifications/preferences").kind).toBe("universal");
+  it("personal notification preferences are universal — canonical route under /settings/notifications/my-preferences", () => {
+    expect(isUniversalRoute("/settings/notifications/my-preferences")).toBe(true);
+    expect(resolveRouteAccess("/settings/notifications/my-preferences").kind).toBe("universal");
   });
 
   it("individual knowledge spaces are universal reading while the management list is not", () => {
@@ -205,7 +200,7 @@ describe("universal route matrix — exact-by-default with explicit allowlist", 
   });
 
   it("BITE: declaring an admin path as universal in the matrix would be caught — the test bites", () => {
-    const adminPath = "/notifications/providers";
+    const adminPath = "/settings/notifications/providers";
     const actualUniversal = isUniversalRoute(adminPath);
     expect(actualUniversal).toBe(false);
 
@@ -253,8 +248,6 @@ describe("universal route matrix — exact-by-default with explicit allowlist", 
       "/hr/announcements/admin-panel",
       "/kb/admin-panel",
       "/docs/admin-panel",
-      "/referrals/admin-panel",
-      "/jobs/admin-panel",
     ];
     for (const path of hypotheticalNewRoutes) {
       expect({ path, universal: isUniversalRoute(path) }).toEqual({

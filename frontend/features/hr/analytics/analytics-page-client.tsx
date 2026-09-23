@@ -6,6 +6,7 @@ import {
   useHrAttritionAnalytics,
 } from "@/hooks/api/hr/analytics";
 import { useRecruitmentStats } from "@/hooks/api/hr/recruitment";
+import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -61,10 +62,11 @@ const SECTION_TABS: Array<{
   value: SectionTab;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  requiredPermission?: "hr:interviews:view";
 }> = [
-  { value: "command-center", label: "Command Center", icon: BarChart3 },
+  { value: "command-center", label: "Command center", icon: BarChart3 },
   { value: "workforce", label: "Workforce", icon: Users },
-  { value: "recruitment", label: "Recruitment", icon: Briefcase },
+  { value: "recruitment", label: "Recruitment", icon: Briefcase, requiredPermission: "hr:interviews:view" },
   { value: "attendance", label: "Attendance", icon: Activity },
   { value: "leaves", label: "Leaves", icon: CalendarDays },
   { value: "attrition", label: "Attrition", icon: TrendingDown },
@@ -86,35 +88,35 @@ function ExecutiveKPIs({
 }: {
   totalEmployees: number;
   attritionRate: string;
-  openPositions: number;
+  openPositions: number | null;
   attendanceLogs: number;
   isLoading: boolean;
 }) {
+  const cols = openPositions === null ? 3 : 4;
   if (isLoading) {
-    return <StatCardGridSkeleton cols={4} />;
+    return <StatCardGridSkeleton cols={cols} />;
   }
 
+  const openPositionsKpi: KpiItem[] =
+    openPositions === null
+      ? []
+      : [{ label: "Open positions", value: openPositions, icon: Briefcase, tone: "amber" }];
   const kpis: KpiItem[] = [
     {
-      label: "Total Employees",
+      label: "Total employees",
       value: totalEmployees,
       icon: Users,
       tone: "blue",
     },
     {
-      label: "Attrition Rate",
+      label: "Attrition rate",
       value: `${attritionRate}%`,
       icon: TrendingDown,
       tone: "red",
     },
+    ...openPositionsKpi,
     {
-      label: "Open Positions",
-      value: openPositions,
-      icon: Briefcase,
-      tone: "amber",
-    },
-    {
-      label: "Attendance Logs",
+      label: "Attendance logs",
       value: attendanceLogs,
       icon: Activity,
       tone: "emerald",
@@ -122,7 +124,7 @@ function ExecutiveKPIs({
   ];
 
   return (
-    <StatCardGrid cols={4}>
+    <StatCardGrid cols={cols}>
       {kpis.map((item) => (
         <StatCard
           key={item.label}
@@ -176,6 +178,7 @@ export function AnalyticsPageClient() {
     return 1;
   }, [dateRange]);
 
+  const canViewRecruitment = useCan("hr:interviews:view");
   const {
     data,
     isLoading: isAnalyticsLoading,
@@ -194,8 +197,14 @@ export function AnalyticsPageClient() {
 
   const totalEmployees = data?.headcount.active ?? 0;
   const attritionRate = attritionData?.attritionRatePercent ?? "0.0";
-  const openPositions = recruitmentStats?.openJobs ?? 0;
+  const openPositions = canViewRecruitment ? (recruitmentStats?.openJobs ?? 0) : null;
   const attendanceLogs = data?.attendance.totalLogsThisMonth ?? 0;
+  const visibleTabs = SECTION_TABS.filter(
+    (tab) => tab.requiredPermission === undefined || canViewRecruitment,
+  );
+  const selectedSection = visibleTabs.some((tab) => tab.value === activeSection)
+    ? activeSection
+    : "command-center";
 
   const handleSectionChange = useCallback((v: string) => {
     if (isSectionTab(v)) setActiveSection(v);
@@ -205,7 +214,7 @@ export function AnalyticsPageClient() {
     const supportCode = getCorrelationId(error);
     return (
       <PageWrapper
-        title="HR Analytics"
+        title="People analytics"
         subtitle="Workforce insights and operational metrics">
         <EmptyState
           illustrationPreset="alert"
@@ -225,7 +234,7 @@ export function AnalyticsPageClient() {
   if (!isAnalyticsLoading && data !== undefined && data.headcount.total === 0) {
     return (
       <PageWrapper
-        title="HR Analytics"
+        title="People analytics"
         subtitle="Workforce insights and operational metrics">
         <EmptyState
           illustrationPreset="team"
@@ -241,7 +250,7 @@ export function AnalyticsPageClient() {
 
   return (
     <PageWrapper
-      title="HR Analytics"
+      title="People analytics"
       subtitle="Workforce insights and operational metrics">
       <div className="flex min-h-0 flex-1 flex-col gap-4">
         <ExecutiveKPIs
@@ -253,7 +262,7 @@ export function AnalyticsPageClient() {
         />
 
         <Tabs
-          value={activeSection}
+          value={selectedSection}
           onValueChange={handleSectionChange}
           className="flex min-h-0 flex-1 flex-col gap-4"
         >
@@ -261,7 +270,7 @@ export function AnalyticsPageClient() {
             tabsDensity="labeled"
             tabs={
               <TabsList>
-                {SECTION_TABS.map(({ value, label, icon: Icon }) => (
+                {visibleTabs.map(({ value, label, icon: Icon }) => (
                   <TabsTrigger key={value} value={value} className="gap-1.5">
                     <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                     {label}
@@ -281,7 +290,7 @@ export function AnalyticsPageClient() {
                 />
               </div>
               <h2 className="text-sm font-semibold text-foreground">
-                Detailed Analytics
+                Detailed analytics
               </h2>
             </div>
 
@@ -294,9 +303,11 @@ export function AnalyticsPageClient() {
                 <WorkforceSection data={data} isLoading={isAnalyticsLoading} />
               </TabsContent>
 
-              <TabsContent value="recruitment" className="mt-0 flex-none">
-                <RecruitmentSection isLoading={isRecruitmentLoading} />
-              </TabsContent>
+              {canViewRecruitment ? (
+                <TabsContent value="recruitment" className="mt-0 flex-none">
+                  <RecruitmentSection isLoading={isRecruitmentLoading} />
+                </TabsContent>
+              ) : null}
 
               <TabsContent value="attendance" className="mt-0 flex-none">
                 <AttendanceSection

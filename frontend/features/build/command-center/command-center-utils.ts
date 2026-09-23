@@ -31,13 +31,13 @@ export function resolveMyIssuesEmptyActions(params: {
       action: { label: "New project", onClick: onCreateProject },
       secondaryAction: hasProjects
         ? { label: "View all", href: "/build/my-work" }
-        : { label: "All projects", href: "/build/all" },
+        : { label: "All projects", href: "/build" },
     };
 
   if (hasProjects)
     return { action: { label: "View all", href: "/build/my-work" } };
 
-  return { action: { label: "All projects", href: "/build/all" } };
+  return { action: { label: "All projects", href: "/build" } };
 }
 
 export function mapAllWorkTicketToMyWorkItem(ticket: {

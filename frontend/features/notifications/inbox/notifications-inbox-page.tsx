@@ -249,7 +249,7 @@ export function NotificationsInboxPage() {
             className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <div className="flex-1 min-h-0 rounded-lg border border-border overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-hidden">
             <NotificationVirtualList
               items={items}
               selectedIds={selectedIds}

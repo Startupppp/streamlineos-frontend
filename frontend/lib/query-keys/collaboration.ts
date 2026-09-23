@@ -38,7 +38,7 @@ export const collaborationQueryKeys = {
   aiChat: {
     all: [...base, "aiChat"] as const,
     history: () => [...base, "aiChat", "history"] as const,
-    conversations: () => [...base, "aiChat", "conversations"] as const,
+    conversations: () => [...base, "aiChat", "conversationList"] as const,
     conversationMessages: (conversationId: number) =>
       [...base, "aiChat", "conversations", conversationId, "messages"] as const,
   },
@@ -71,6 +71,7 @@ export const collaborationQueryKeys = {
     announcements: () => [...base, "dashboard", "announcements"] as const,
     personal: () => [...base, "dashboard", "personal"] as const,
     executive: () => [...base, "dashboard", "executive"] as const,
+    crmPulse: () => [...base, "dashboard", "crmPulse"] as const,
     publicDocuments: (limit: number) =>
       [...base, "dashboard", "publicDocuments", limit] as const,
   },

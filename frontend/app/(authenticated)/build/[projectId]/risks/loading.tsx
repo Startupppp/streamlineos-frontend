@@ -5,6 +5,8 @@ import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { PmPageShell, PmSection } from "@/components/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
+const HEADERS = ["ID", "Title", "Probability", "Impact", "Severity", "Owner", "Status", "Actions"] as const;
+
 export default function ProjectRisksLoading() {
   return (
     <PageWrapper
@@ -21,7 +23,7 @@ export default function ProjectRisksLoading() {
             <Skeleton className="h-9 w-40 rounded-md" />
             <Skeleton className="h-9 w-52 rounded-md" />
           </div>
-          <DataTableSkeleton rows={12} columns={8} />
+          <DataTableSkeleton mobileCards rows={12} headers={HEADERS} className="flex-1 min-h-0" />
         </PmSection>
       </PmPageShell>
     </PageWrapper>

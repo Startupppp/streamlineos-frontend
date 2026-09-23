@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
@@ -104,7 +104,11 @@ const BILLING_COLUMNS: DataTableColumn<BillingGroup>[] = [
   },
 ];
 
-export function BillingView() {
+interface BillingViewProps {
+  actionsSlot?: ReactNode;
+}
+
+export function BillingView({ actionsSlot }: BillingViewProps = {}) {
   const canView = useCan("timesheets:billing:view");
   const canExport = useCan("timesheets:billing:export");
   const canInvoice = useCan("timesheets:billing:invoice");
@@ -225,6 +229,7 @@ export function BillingView() {
 
   const pageActions = (
     <div className="flex items-center gap-2">
+      {actionsSlot}
       {canExport && (
         <Button
           variant="outline"
@@ -338,13 +343,6 @@ export function BillingView() {
             className="flex-1 min-h-0"
             data={groups}
             columns={BILLING_COLUMNS}
-            /**
-             * The currency belongs in the key. Billing rows are one per
-             * (project, currency) — a project billed in USD and INR is two
-             * rows, because summing them would be a cross-currency total and
-             * the API refuses to produce one. Keyed on the project alone, those
-             * two rows collide.
-             */
             getRowKey={(r) => `${r.projectId ?? r.projectName}-${r.currency}`}
             isLoading={isLoading}
             emptyState={emptyState}

@@ -18,6 +18,7 @@ export interface SessionOnlySurface {
 }
 
 const SESSION_ONLY_BY_DESIGN: readonly SessionOnlySurface[] = [
+  { path: "/access-denied", reason: "The denial destination itself. It must stay reachable by a user who was just denied, so gating it on a permission would bounce them into a redirect loop." },
   { path: "/dashboard", reason: "Home. Every active member keeps the cross-module read projection." },
   { path: "/inbox", reason: "Unified inbox. Each source is permission-filtered server-side." },
   { path: "/mail", reason: "Platform core communication surface." },
@@ -26,18 +27,19 @@ const SESSION_ONLY_BY_DESIGN: readonly SessionOnlySurface[] = [
   { path: "/chat/channels", subtree: true, reason: "Channel membership is enforced per channel, not per route." },
   { path: "/chat/invite", subtree: true, reason: "Accepting a chat invite is a member self-service action." },
   { path: "/me", subtree: true, reason: "Employee self-service. The whole /me/* subtree derives its subject from the session." },
-  { path: "/notifications", reason: "Personal notification inbox and read state only." },
-  { path: "/notifications/preferences", subtree: true, reason: "A member's own notification preferences." },
   { path: "/settings", reason: "The personal account landing page. Everything beneath it is organization administration." },
+  { path: "/settings/notifications/my-preferences", subtree: true, reason: "A member's own notification preferences under Settings." },
   { path: "/knowledge/chat", subtree: true, reason: "Knowledge Base reading is platform core." },
   { path: "/knowledge/wiki", reason: "Knowledge Base reading is platform core; space and record ACLs still apply." },
-  { path: "/knowledge/wiki/favorites", subtree: true, reason: "A member's own Knowledge Base favourites." },
-  { path: "/knowledge/wiki/recent", subtree: true, reason: "A member's own Knowledge Base reading history." },
   { path: "/knowledge/wiki/shared", subtree: true, reason: "Knowledge Base pages already shared with the member." },
   { path: "/knowledge/wiki/private", subtree: true, reason: "A member's own private Knowledge Base pages." },
-  { path: "/knowledge/wiki/pages", subtree: true, reason: "Knowledge Base page reading is platform core; per-record ACLs gate the content." },
+  { path: "/knowledge/wiki/doc", subtree: true, reason: "Knowledge Base page reading is platform core; per-record ACLs gate the content." },
   { path: "/knowledge/wiki/spaces", childrenOnly: true, reason: "An individual Knowledge Base space is a reading surface; the space list itself stays gated on kb:spaces:view." },
   { path: "/hr/announcements", reason: "Company-wide announcement reading that happens to sit under the HR prefix." },
+  { path: "/announcements", reason: "Alias that redirects to /hr/announcements and renders nothing. The destination carries its own gate." },
+  { path: "/kb", reason: "Alias that redirects to /knowledge/wiki and renders nothing. The destination carries its own gate." },
+  { path: "/docs", reason: "Alias that redirects to /knowledge/wiki and renders nothing. The destination carries its own gate." },
+  { path: "/knowledge", reason: "Module root that redirects to /knowledge/chat and renders nothing. The destination carries its own gate." },
 ];
 
 const GATED_MODULE_PREFIXES = ["/accounting", "/billing", "/blog", "/build", "/crm",

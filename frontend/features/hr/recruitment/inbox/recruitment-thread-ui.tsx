@@ -22,7 +22,8 @@ import { format } from "date-fns";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { Gated, ErrorState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 
 export function candidateName(thread: MessageThread | CandidateMessage): string {
   const first = thread.candidateFirstName ?? "";
@@ -221,6 +222,14 @@ export function ThreadPane({ thread }: { thread: MessageThread }) {
     void messagesQuery.refetch();
   }
 
+  const state = usePageState({
+    permission: "hr:employees:view",
+    isLoading: messagesQuery.isLoading,
+    isError: messagesQuery.isError,
+    error: messagesQuery.error,
+    isEmpty: messages.length === 0,
+  });
+
   return (
     <div className="flex flex-col h-full">
       <div className="border-b px-4 py-3 bg-card border-border">
@@ -229,11 +238,10 @@ export function ThreadPane({ thread }: { thread: MessageThread }) {
       </div>
       <ScrollArea hideScrollbar className="min-h-0 flex-1">
         <div className="overscroll-contain space-y-3 p-4">
-        <Gated
-          permission="hr:employees:view"
-          isLoading={messagesQuery.isLoading}
-          isError={messagesQuery.isError}
-          isEmpty={messages.length === 0}
+        <PageState
+          resolution={state}
+          onRetry={handleRetry}
+          compact
           loading={
             <>
               {Array.from({ length: 12 }).map((_, i) => (
@@ -241,7 +249,6 @@ export function ThreadPane({ thread }: { thread: MessageThread }) {
               ))}
             </>
           }
-          error={<ErrorState onRetry={handleRetry} compact />}
           empty={
             <p className="text-sm text-muted-foreground text-center py-8">
               No messages yet.
@@ -253,7 +260,7 @@ export function ThreadPane({ thread }: { thread: MessageThread }) {
               .reverse()
               .map((msg) => <MessageBubble key={msg.id} msg={msg} />)}
           </>
-        </Gated>
+        </PageState>
         <div ref={bottomRef} />
         </div>
       </ScrollArea>

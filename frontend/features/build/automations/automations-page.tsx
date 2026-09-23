@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence } from "framer-motion";
@@ -19,6 +20,7 @@ import {
   PmStaggerList,
   PM_FILL_PANEL,
 } from "@/components/pm-chrome";
+import { useCan } from "@/hooks/api/access";
 import {
   useAutomations,
   useCreateAutomation,
@@ -36,6 +38,7 @@ interface AutomationsPageProps {
 }
 
 export function AutomationsPage({ projectId }: AutomationsPageProps) {
+  const canManage = useCan("build:manage");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingAutomation, setEditingAutomation] = useState<ProjectAutomation | null>(null);
 
@@ -54,6 +57,7 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
       isActive: true,
     },
   });
+  useRegisterDirtyState(sheetOpen && form.formState.isDirty);
 
   const {
     fields: conditionFields,
@@ -157,7 +161,7 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
     <PageWrapper
       title="Automations"
       subtitle="Automate repetitive actions with if-then rules"
-      actions={<NewAutomationButton onClick={handleOpenNew} />}
+      actions={canManage ? <NewAutomationButton onClick={handleOpenNew} /> : undefined}
     >
       <PmPageShell>
         {isLoading ? (
@@ -182,7 +186,7 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
               illustration={<AutomationsIllustration className="h-32 w-32" />}
               title="No automations yet"
               description="Automate repetitive work — assign tickets, change statuses, and more with if-then rules."
-              action={{ label: "Create Automation", onClick: handleOpenNew }}
+              action={canManage ? { label: "Create Automation", onClick: handleOpenNew } : undefined}
             />
           </PmSection>
         ) : (
@@ -214,6 +218,7 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
                         onToggle={handleToggle}
                         onDelete={handleDelete}
                         onEdit={handleEdit}
+                        canManage={canManage}
                       />
                     </div>
                   ))}

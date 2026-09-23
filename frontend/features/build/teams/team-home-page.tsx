@@ -132,7 +132,7 @@ function MemberRoleSelect({
 
   return (
     <Select value={role} onValueChange={handleValueChange} disabled={isPending}>
-      <SelectTrigger className="w-24 shrink-0 text-xs border-input bg-card">
+      <SelectTrigger className="w-24 shrink-0 border-input bg-card">
         <SelectValue />
       </SelectTrigger>
       <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -261,7 +261,7 @@ export function TeamHomePage({ teamId }: Props) {
   if (isError || !data) {
     return (
       <PageWrapper title="Team" backHref="/build/teams">
-        <PmPageShell withGlow={false}>
+        <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
             <ErrorState className="flex-1" onRetry={handleRetry} />
           </PmSection>
@@ -331,7 +331,7 @@ export function TeamHomePage({ teamId }: Props) {
                   className="h-8 min-w-[180px]"
                 />
                 <Select value={addMemberRole} onValueChange={handleAddMemberRoleChange}>
-                  <SelectTrigger className="w-24 text-xs border-input bg-card">
+                  <SelectTrigger className="w-24 border-input bg-card">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="min-w-[var(--radix-select-trigger-width)]">

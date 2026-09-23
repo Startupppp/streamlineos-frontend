@@ -12,6 +12,8 @@ import {
 import { InlineGroupCreate } from "@/features/build/views/list-view-group-create";
 import { BulkActionBar } from "@/features/build/backlog/bulk-action-bar";
 import { ProjectViewsToolbar } from "@/features/build/views/project-views-toolbar";
+import { DEFAULT_DISPLAY_OPTIONS } from "@/features/build/views/display-options-panel";
+import { INITIAL_FILTERS } from "@/features/build/views/workload-types";
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
@@ -100,7 +102,12 @@ jest.mock("@/features/build/shared/ticket-filter-bar", () => ({
   TicketFilterBar: ({ leading }: { leading: ReactNode }) => <div>{leading}</div>,
 }));
 
+jest.mock("@/features/build/views/saved-views-menu", () => ({
+  SavedViewsMenu: () => null,
+}));
+
 jest.mock("@/features/build/views/display-options-panel", () => ({
+  ...jest.requireActual("@/features/build/views/display-options-panel"),
   DisplayOptionsPanel: () => null,
 }));
 
@@ -232,11 +239,12 @@ describe("Build ticket mutation controls", () => {
       <BulkActionBar
         selectedCount={1}
         members={[]}
-        sprints={[]}
+        cycles={[]}
+        statuses={undefined}
         onBulkStatus={noopString}
         onBulkPriority={noopString}
         onBulkAssignee={noopString}
-        onBulkSprint={noopString}
+        onBulkCycle={noopString}
         onClear={noop}
       />,
     );
@@ -250,7 +258,7 @@ describe("Build ticket mutation controls", () => {
       <ProjectViewsToolbar
         view="board"
         onViewChange={noop}
-        displayOptions={{}}
+        displayOptions={DEFAULT_DISPLAY_OPTIONS}
         onDisplayOptionsChange={noop}
         onOpenSaveView={noop}
         projectId={42}
@@ -258,9 +266,13 @@ describe("Build ticket mutation controls", () => {
         hideCompleted={false}
         onHideCompletedChange={noop}
         doneCount={0}
-        workloadFilters={{}}
+        workloadFilters={INITIAL_FILTERS}
         onWorkloadFilterChange={noop}
         onClearWorkloadFilters={noop}
+        filterType=""
+        filterSeverity=""
+        filterQaState=""
+        onQaFilterChange={noop}
       />,
     );
     expect(screen.queryByRole("button", { name: "Save view" })).not.toBeInTheDocument();
@@ -274,7 +286,7 @@ describe("Build ticket mutation controls", () => {
       <ProjectViewsToolbar
         view="board"
         onViewChange={noop}
-        displayOptions={{}}
+        displayOptions={DEFAULT_DISPLAY_OPTIONS}
         onDisplayOptionsChange={noop}
         onOpenSaveView={noop}
         projectId={42}
@@ -282,9 +294,13 @@ describe("Build ticket mutation controls", () => {
         hideCompleted={false}
         onHideCompletedChange={noop}
         doneCount={0}
-        workloadFilters={{}}
+        workloadFilters={INITIAL_FILTERS}
         onWorkloadFilterChange={noop}
         onClearWorkloadFilters={noop}
+        filterType=""
+        filterSeverity=""
+        filterQaState=""
+        onQaFilterChange={noop}
       />,
     );
     expect(screen.getByRole("button", { name: "Save view" })).toBeInTheDocument();

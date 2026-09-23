@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AiDraftCard } from "./ai-draft-card";
+import { AiDraftText } from "./ai-draft-text";
 import { AiQuotaEmptyState } from "./ai-quota-empty-state";
 import { AiPermissionDenied } from "./ai-permission-denied";
 import {
@@ -90,6 +91,7 @@ export function AiActionResultBody({
         onCancel={contentOnly ? undefined : onCancel}
         variant={noticeVariant}
         expectsCitations={expectsCitations}
+        embedded={contentOnly}
       />
     );
   }
@@ -139,6 +141,7 @@ export function AiActionResultBody({
           text={state.text}
           onRetry={contentOnly ? undefined : onRetry}
           variant={noticeVariant}
+          embedded={contentOnly}
         />
       );
 
@@ -167,19 +170,21 @@ export function AiActionResultBody({
     );
   }
 
+  if (contentOnly) {
+    return <AiDraftText text={state.result.text} />;
+  }
+
   return (
     <AiDraftCard
       citations={state.result.citations}
       confidence={state.result.confidence}
       usage={state.aiUsage ?? state.result.aiUsage}
-      onAccept={contentOnly ? undefined : onApply}
+      onAccept={onApply}
       acceptLabel={applyLabel}
-      hideFooter={contentOnly}
+      hideFooter={false}
       className={compact ? "shadow-none" : undefined}
     >
-      <p className="whitespace-pre-wrap text-label leading-relaxed text-foreground">
-        {state.result.text}
-      </p>
+      <AiDraftText text={state.result.text} />
     </AiDraftCard>
   );
 }
@@ -223,7 +228,7 @@ export function AiActionResultFooter({
           variant="outline"
           size="sm"
           onClick={onCancel}
-          className="h-8 w-full text-xs"
+          className="h-9 w-full whitespace-nowrap text-sm"
         >
           Stop
         </Button>
@@ -239,7 +244,7 @@ export function AiActionResultFooter({
           variant="outline"
           size="sm"
           onClick={onRetry}
-          className="h-8 w-full text-xs"
+          className="h-9 w-full whitespace-nowrap text-sm"
         >
           Retry
         </Button>
@@ -253,7 +258,7 @@ export function AiActionResultFooter({
         <LoadingButton
           size="sm"
           onClick={onApply}
-          className="h-8 w-full text-xs"
+          className="h-9 w-full whitespace-nowrap text-sm"
         >
           {applyLabel}
         </LoadingButton>

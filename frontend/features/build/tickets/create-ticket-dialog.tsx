@@ -37,6 +37,7 @@ import { TicketDialogTitleField } from "./ticket-dialog-title-field";
 import { TicketDialogDescriptionSection } from "./ticket-dialog-description-section";
 import { TicketDialogFooter } from "./ticket-dialog-footer";
 import { useCan } from "@/hooks/api/access";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 
 interface CreateTicketDialogProps {
   projectId?: number;
@@ -105,6 +106,8 @@ function CreateTicketDialogContent({
 
   const resolvedOpen =
     externalOpen !== undefined ? externalOpen || internalOpen : internalOpen;
+
+  useRegisterDirtyState(resolvedOpen && form.formState.isDirty);
 
   const { data: projectsData, isLoading: projectsLoading } = useProjects(
     { status: "ACTIVE", limit: 100 },
@@ -355,13 +358,13 @@ function CreateTicketDialogContent({
               >
                 <SelectTrigger
                   aria-label="Select project"
-                  className="w-auto max-w-[220px] gap-1.5 border-border bg-card px-2 text-xs font-medium shadow-sm disabled:opacity-100"
+                  className="w-auto max-w-[220px] gap-1.5 border-border bg-card px-2 font-medium shadow-sm disabled:opacity-100"
                 >
                   <SelectValue placeholder={projectTriggerLabel} />
                 </SelectTrigger>
                 <SelectContent>
                   {projects.map((p) => (
-                    <SelectItem key={p.id} value={String(p.id)} className="text-xs">
+                    <SelectItem key={p.id} value={String(p.id)}>
                       <span className="mr-1.5 font-mono text-micro text-muted-foreground">
                         {p.key}
                       </span>

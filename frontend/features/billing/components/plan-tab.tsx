@@ -25,7 +25,8 @@ import { CouponSection } from "@/features/billing/components/coupon-section";
 import { SeatsBlock } from "@/features/billing/components/seats-block";
 import { PlanUsageMeters } from "@/features/billing/components/plan-usage-meters";
 import { PlanTabSkeleton } from "@/features/billing/components/billing-page-skeleton";
-import { EntitlementGate } from "@/components/entitlement-gate";
+import { PageState } from "@/components/shared/page-state";
+import { pageStateFromError } from "@/lib/page-state/resolve-page-state";
 import {
   loadCheckoutScript,
   openCheckout,
@@ -419,7 +420,12 @@ export function PlanTab() {
         </button>
       </div>
 
-      <EntitlementGate error={upgradeError} onRetry={handleRetryUpgrade} compact>
+      <PageState
+        resolution={pageStateFromError(upgradeError) ?? { kind: "ready" }}
+        loading={null}
+        onRetry={handleRetryUpgrade}
+        compact
+      >
         {planCatalog.length === 0 ? (
           <div className="rounded-lg border border-status-warning-rule bg-status-warning-surface px-4 py-3 text-sm text-status-warning-ink">
             Plan catalog is unavailable. Refresh the page or contact support to upgrade.
@@ -444,7 +450,7 @@ export function PlanTab() {
             ))}
           </div>
         )}
-      </EntitlementGate>
+      </PageState>
 
       <CouponSection
         couponInput={couponInput}

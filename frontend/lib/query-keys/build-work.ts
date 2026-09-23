@@ -11,12 +11,6 @@ export const buildWorkQueryKeys = {
       [...base, "projects", "list", filters, "infinite"] as const,
     detail: (projectId: number) =>
       [...base, "projects", "detail", projectId] as const,
-    sprints: (projectId?: number) =>
-      projectId === undefined
-        ? ([...base, "projects", "sprints"] as const)
-        : ([...base, "projects", "sprints", projectId] as const),
-    sprint: (sprintId: number) =>
-      [...base, "projects", "sprints", "detail", sprintId] as const,
     tickets: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "projects", "tickets"] as const)
@@ -59,6 +53,8 @@ export const buildWorkQueryKeys = {
       [...base, "projects", projectId, "tickets", ticketId, "custom-field-values"] as const,
     automations: (projectId: number) =>
       [...base, "projects", projectId, "automations"] as const,
+    invoiceLineDetail: (projectId: number) =>
+      [...base, "projects", projectId, "invoice-line-detail"] as const,
     intake: (projectId: number, params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "projects", "intake", projectId] as const)
@@ -79,10 +75,10 @@ export const buildWorkQueryKeys = {
         params === undefined
           ? ([...base, "projects", projectId, "qa", "cases"] as const)
           : ([...base, "projects", projectId, "qa", "cases", params] as const),
-      runs: (projectId: number, status?: string) =>
-        status === undefined
+      runs: (projectId: number, params?: QueryKeyParams) =>
+        params === undefined
           ? ([...base, "projects", projectId, "qa", "runs"] as const)
-          : ([...base, "projects", projectId, "qa", "runs", status] as const),
+          : ([...base, "projects", projectId, "qa", "runs", params] as const),
       run: (projectId: number, runId: number) =>
         [...base, "projects", projectId, "qa", "runs", runId] as const,
     },
@@ -117,8 +113,14 @@ export const buildWorkQueryKeys = {
       visibility: (projectId: number) =>
         [...base, "projects", projectId, "client-visibility"] as const,
     },
+    scopeDirectory: {
+      resolve: (keys: readonly string[]) =>
+        [...base, "projects", "scope-directory", "resolve", [...keys].sort()] as const,
+    },
     approvals: {
       inbox: () => [...base, "projects", "approvals", "inbox"] as const,
+      inboxCount: () =>
+        [...base, "projects", "approvals", "inbox", "count"] as const,
       list: (projectId: number, params?: QueryKeyParams) =>
         params === undefined
           ? ([...base, "projects", projectId, "approvals"] as const)
@@ -133,6 +135,8 @@ export const buildWorkQueryKeys = {
           : ([...base, "projects", projectId, "risks", params] as const),
       detail: (projectId: number, riskId: number) =>
         [...base, "projects", projectId, "risks", riskId] as const,
+      stats: (projectId: number) =>
+        [...base, "projects", projectId, "risks", "stats"] as const,
     },
     decisions: {
       list: (projectId: number, params?: QueryKeyParams) =>
@@ -166,6 +170,20 @@ export const buildWorkQueryKeys = {
           : ([...base, "projects", projectId, "incidents", params] as const),
       detail: (projectId: number, incidentId: number) =>
         [...base, "projects", projectId, "incidents", incidentId] as const,
+    },
+    updates: {
+      list: (projectId: number, cursor?: string) =>
+        cursor === undefined
+          ? ([...base, "projects", projectId, "updates"] as const)
+          : ([...base, "projects", projectId, "updates", cursor] as const),
+    },
+    files: {
+      list: (projectId: number, cursor?: string) =>
+        cursor === undefined
+          ? ([...base, "projects", projectId, "files"] as const)
+          : ([...base, "projects", projectId, "files", cursor] as const),
+      signedUrl: (projectId: number, fileId: number) =>
+        [...base, "projects", projectId, "files", fileId, "url"] as const,
     },
     forms: {
       list: (projectId: number, params?: QueryKeyParams) =>
@@ -205,20 +223,12 @@ export const buildWorkQueryKeys = {
       params === undefined
         ? ([...base, "projects", "managed-products", "list"] as const)
         : ([...base, "projects", "managed-products", "list", params] as const),
+      listInfinite: (filters: QueryKeyParams) =>
+        [...base, "projects", "managed-products", "list", filters, "infinite"] as const,
       detail: (managedProductId: number) =>
         [...base, "projects", "managed-products", "detail", managedProductId] as const,
-    },
-    pmWorkspaces: {
-      list: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "projects", "pm-workspaces", "list"] as const)
-        : ([...base, "projects", "pm-workspaces", "list", params] as const),
-      detail: (workspaceId: string) =>
-        [...base, "projects", "pm-workspaces", "detail", workspaceId] as const,
-      members: (workspaceId: string, params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "projects", "pm-workspaces", "members", workspaceId] as const)
-        : ([...base, "projects", "pm-workspaces", "members", workspaceId, params] as const),
+      insights: (managedProductId: number) =>
+        [...base, "projects", "managed-products", "insights", managedProductId] as const,
     },
     workflow: {
       transitions: (projectId: number) =>
@@ -233,14 +243,29 @@ export const buildWorkQueryKeys = {
       [...base, "projects", "all-work", filters, "infinite"] as const,
     customStates: (projectId: number) =>
       [...base, "projects", projectId, "custom-states"] as const,
+    orgCustomStates: () =>
+      [...base, "projects", "org-custom-states"] as const,
     columnCounts: (projectId: number) =>
       [...base, "projects", "column-counts", projectId] as const,
+    importExport: {
+      all: [...base, "projects", "import-export"] as const,
+      preview: (projectId: number) =>
+        [...base, "projects", "import-export", "preview", projectId] as const,
+      commit: (projectId: number) =>
+        [...base, "projects", "import-export", "commit", projectId] as const,
+      export: (projectId: number) =>
+        [...base, "projects", "import-export", "export", projectId] as const,
+    },
     webhooks: (projectId: number) =>
       [...base, "projects", projectId, "webhooks"] as const,
     webhookDeliveries: (projectId: number, webhookId: number) =>
       [...base, "projects", projectId, "webhooks", webhookId, "deliveries"] as const,
     workspaceViews: () => [...base, "projects", "workspace-views"] as const,
     agentTokens: () => [...base, "projects", "agent-tokens"] as const,
+    agentPulse: (scopeKey: string) =>
+      [...base, "projects", "agent-pulse", scopeKey] as const,
+    workloadCapacity: (projectId: number, start: string, end: string) =>
+      [...base, "projects", projectId, "workload-capacity", start, end] as const,
     commentDrafts: {
       mine: () => [...base, "projects", "comment-drafts", "mine"] as const,
     },
@@ -285,17 +310,37 @@ export const buildWorkQueryKeys = {
       teamProjects: (teamId: number) =>
         [...base, "projects", "teams", "projects", teamId] as const,
     },
-    workspaceMembers: {
-      all: [...base, "projects", "workspaceMembers"] as const,
+    buildMembers: {
+      all: [...base, "projects", "buildMembers"] as const,
       list: (params?: QueryKeyParams) =>
       params === undefined
-        ? ([...base, "projects", "workspaceMembers", "list"] as const)
-        : ([...base, "projects", "workspaceMembers", "list", params] as const),
+        ? ([...base, "projects", "buildMembers", "list"] as const)
+        : ([...base, "projects", "buildMembers", "list", params] as const),
     },
     publicForms: {
       token: (token: string) =>
         [...base, "projects", "public-form", token] as const,
     },
+  },
+
+  projectReports: {
+    all: [...base, "projectReports"] as const,
+    velocity: (projectId: number) =>
+      [...base, "projectReports", "velocity", projectId] as const,
+    burnup: (projectId: number, cycleId?: number) =>
+      cycleId === undefined
+        ? ([...base, "projectReports", "burnup", projectId] as const)
+        : ([...base, "projectReports", "burnup", projectId, cycleId] as const),
+    cfd: (projectId: number, params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "projectReports", "cfd", projectId] as const)
+        : ([...base, "projectReports", "cfd", projectId, params] as const),
+    criticalPath: (projectId: number) =>
+      [...base, "projectReports", "criticalPath", projectId] as const,
+    cycleTime: (projectId: number) =>
+      [...base, "projectReports", "cycleTime", projectId] as const,
+    leadTime: (projectId: number) =>
+      [...base, "projectReports", "leadTime", projectId] as const,
   },
 
 } as const;

@@ -180,6 +180,29 @@ Dataset health is a composite of the open queue by class, weighted by severity, 
 
 Per-tenant layout adjustment (`D07`) becomes real here: the layout description is data, so a tenant administrator can reorder, hide and group fields on a record type, and the system can propose a layout from what the tenant actually fills in.
 
+#### Delivered — the vocabulary, and what was deliberately left out of it
+
+Absorbed from tickets 19 and 20, deleted 2026-09-20 once complete. Recover either with `git show HEAD:docs/tickets/crm-phase-2/<name>.md`.
+
+Measured outcome: 31 files built `DataTableColumn[]` by hand, 3 used a raw `<table>`, 24 hand-rolled `useForm`. After: 0 hand-built tables in the CRM outside the import plan's two files, 1 raw `<table>` (the blueprint transition matrix), 4 hand-rolled forms. 38 record descriptions live in `lib/renderer/crm/`, all registered and all held to the engine's rules by `lib/renderer/registry.test.ts`.
+
+- **`sign: "gain" | "cost"` states direction, never colour.** The description says which way is good news; the engine decides what good news looks like, from the same status tokens a badge uses. A description that named a colour would put presentation back into the data and break the first time a tenant writes one. Zero is neutral both ways and the minus sign remains, so colour is never the only signal.
+- **A signed number is not a threshold.** `daysInStage` is never negative, so `sign: "cost"` would paint every aging row red and say nothing. `DEAL_AGING_LAYOUT` derives a `severity` badge instead — a word that survives greyscale, with the thresholds beside the field they define.
+- **`visibleWhen` is equality against a small set and nothing more.** It is domain, not presentation: a field the rule excludes is not validated and not submitted, so a required field on another arm cannot block an unrelated submit and the API is never sent a leftover. An expression language would be a program in the description, and a description that can compute is no longer data a tenant can be shown.
+- **`withColumns` / `withFormFields` are deliberately not `LayoutAdjustment`s.** An adjustment is what a tenant wants everywhere; these are how one screen frames a record type it embeds. Both apply *after* the tenant's arrangement, so they can only narrow what the tenant already sees. Without them every embedded panel forks the description, and the fork is where two screens quietly stop agreeing what a lead is.
+- **Not closed, on purpose.** Drag-to-reorder on assignment rules (priority order *is* the record's meaning — row reordering belongs to the one platform table, not the layout vocabulary; that page stays hand-written) and cross-field derivation (a description that computes values is a program).
+- **`quote-create-sheet.tsx` could not move.** Its line-item grid is a repeating sub-record collection and the running total reads both the grid and a sibling field. The vocabulary has no repeating collection, and inventing one for a single screen is the special case the engine exists to prevent.
+
+Per-tenant layout, as shipped:
+
+- **An overlay, not a layout.** `LayoutAdjustment` names an order, a hidden set and groups — never a field the description does not declare. A tenant who hid one column in 2026 still receives the field added in 2027, which a forked copy of the description could not do.
+- **Keyed `(orgId, layoutKey)`, never `layoutKey` alone.** That is the whole isolation story, and it is why the cross-tenant test drives one browser with two organisations: a store keyed on the record type would show a dual-member the other tenant's arrangement quietly, because a rearranged screen looks like a working screen.
+- **Stored on the server and only there.** `localStorage` was the first implementation and was replaced, not kept beside: a layout in the browser is per browser, not per tenant — and it would have passed the isolation test for the wrong reason, since two tenants never collide if nothing is shared.
+- **The read is ungated; the three writes are gated.** An arrangement carries no record data, only field names the description already publishes, and every list, detail and form reads it to render at all. Gating it would make a member without an administration key render a different screen from their colleague — a worse failure than the one the gate prevents. `PermissionGuard` is not global, so the key sits on the three writing handlers rather than the class.
+- **Reverting deletes the row.** Storing `{order: [], hidden: []}` would mean "arranged to have nothing arranged", indistinguishable from the default and needing a special case at every render. Grouping is stored only once a tenant has actually regrouped, so a tenant who merely reordered is not holding a frozen copy of today's sections.
+- **Two fields are withheld from hiding** — the title field, because hiding it produces an untitled record, and any required field, because hiding it produces a create form that cannot succeed.
+- **The usage endpoint knows 2 of the 39 registered layouts, deliberately.** A backend map of all 39 would be a second copy of the frontend registry drifting silently, and a wrong proposal is worse than none. An unknown key returns an empty proposal without querying, which renders as "no suggestion".
+
 ### Access control
 
 Every new surface carries a permission key in both catalogues, and every template change ships a backfill migration — templates grant on role creation only, so a key added without a backfill is inert for every organisation that already exists.

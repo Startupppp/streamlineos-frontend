@@ -11,13 +11,10 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   ChevronUpIcon,
-  ChevronsLeftIcon,
-  ChevronsRightIcon,
   CircleCheckIcon,
   ClipboardIcon,
   CopyIcon,
   EllipsisIcon,
-  ExternalLinkIcon,
   GlobeIcon,
   InfoIcon,
   LayoutGridIcon,
@@ -28,9 +25,7 @@ import {
   MoveRightIcon,
   PlusIcon,
   SearchIcon,
-  SettingsIcon,
   ShareIcon,
-  ShieldCheckIcon,
   ShieldXIcon,
   StarIcon,
   ThumbsUpIcon,
@@ -46,7 +41,6 @@ import {
 import {
   Building2,
   Clock,
-  Database,
   FileDown,
   History,
   Image as ImageIcon,
@@ -133,7 +127,6 @@ export const KbLockIcon = createAnimatedIcon(LockIcon);
 export const KbUsersIcon = createAnimatedIcon(UsersIcon);
 export const KbLayoutGridIcon = createAnimatedIcon(LayoutGridIcon);
 export const KbBarChart2Icon = createAnimatedIcon(ChartBarIcon);
-export const KbSettingsIcon = createAnimatedIcon(SettingsIcon);
 export const KbUploadIcon = createAnimatedIcon(UploadIcon);
 export const KbClipboardIcon = createAnimatedIcon(ClipboardIcon);
 export const KbChevronDownIcon = createAnimatedIcon(ChevronDownIcon);
@@ -144,8 +137,6 @@ export const KbCheckIcon = createAnimatedIcon(CheckIcon);
 export const KbCopyIcon = createAnimatedIcon(CopyIcon);
 export const KbGlobeIcon = createAnimatedIcon(GlobeIcon);
 export const KbShare2Icon = createAnimatedIcon(ShareIcon);
-export const KbExternalLinkIcon = createAnimatedIcon(ExternalLinkIcon);
-export const KbShieldCheckIcon = createAnimatedIcon(ShieldCheckIcon);
 export const KbInfoIcon = createAnimatedIcon(InfoIcon);
 export const KbDownloadIcon = createAnimatedIcon(DownloadIcon);
 export const KbTriangleAlertIcon = createAnimatedIcon(TriangleAlertIcon);
@@ -162,8 +153,6 @@ export const KbFileTextIcon = createAnimatedIcon(BookOpenTextIcon);
 export const KbLayoutTemplateIcon = createAnimatedIcon(LayoutListIcon);
 export const KbMessageCircleIcon = createAnimatedIcon(MessageCircleIcon);
 export const KbMessageSquareIcon = createAnimatedIcon(MessageCircleIcon);
-export const KbPanelLeftCloseIcon = createAnimatedIcon(ChevronsLeftIcon);
-export const KbPanelLeftOpenIcon = createAnimatedIcon(ChevronsRightIcon);
 export const KbClipboardCheckIcon = createAnimatedIcon(BookOpenCheckIcon);
 export const KbPencilIcon = createAnimatedIcon(UserPenIcon);
 export const KbEdit2Icon = createAnimatedIcon(UserPenIcon);
@@ -176,7 +165,6 @@ export const KbPanelRightCloseIcon = createLucideIcon(PanelRightClose);
 export const KbImageIcon = createLucideIcon(ImageIcon);
 export const KbSmileIcon = createLucideIcon(Smile);
 export const KbBuilding2Icon = createLucideIcon(Building2);
-export const KbDatabaseIcon = createLucideIcon(Database);
 export const KbLink2Icon = createLucideIcon(Link2);
 export const KbUnlockIcon = createLucideIcon(Unlock);
 export const KbFileDownIcon = createLucideIcon(FileDown);

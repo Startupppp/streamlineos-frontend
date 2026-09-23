@@ -42,12 +42,16 @@ function GroupRowItem({
 }: {
   row: GroupRow;
   active: boolean;
-  onSelect: () => void;
+  onSelect: (key: string) => void;
 }) {
+  function handleClick() {
+    onSelect(row.key);
+  }
+
   return (
     <button
       type="button"
-      onClick={onSelect}
+      onClick={handleClick}
       className={cn(
         "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors",
         active
@@ -230,7 +234,7 @@ function GroupingSidebarBody({
                 key={row.key}
                 row={row}
                 active={activeGroup === row.key}
-                onSelect={() => handleGroupClick(row.key)}
+                onSelect={handleGroupClick}
               />
             ))
           ) : (
@@ -245,7 +249,7 @@ function GroupingSidebarBody({
                 key={row.key}
                 row={row}
                 active={activeGroup === row.key}
-                onSelect={() => handleGroupClick(row.key)}
+                onSelect={handleGroupClick}
               />
             ))
           ) : (
@@ -260,7 +264,7 @@ function GroupingSidebarBody({
                 key={row.key}
                 row={row}
                 active={activeGroup === row.key}
-                onSelect={() => handleGroupClick(row.key)}
+                onSelect={handleGroupClick}
               />
             ))
           ) : (
@@ -275,7 +279,7 @@ function GroupingSidebarBody({
                 key={row.key}
                 row={row}
                 active={activeGroup === row.key}
-                onSelect={() => handleGroupClick(row.key)}
+                onSelect={handleGroupClick}
               />
             ))
           ) : (

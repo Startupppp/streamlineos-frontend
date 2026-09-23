@@ -14,7 +14,8 @@ import { EpicStoryRow } from "@/features/build/epics/epic-story-row";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   Layers,
   AlertCircle,
@@ -26,6 +27,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ModuleDisabledState } from "@/features/build/shared/module-disabled-state";
+import { getCompletedStatusNames } from "@/features/build/shared/completed-status";
 import { useCan } from "@/hooks/api/access";
 import {
   PmPageShell,
@@ -77,9 +79,9 @@ export function EpicsPage({ params }: PageProps) {
   const tasks = tickets.filter((t) => t.type === "TASK");
 
   const handleDeleteEpic = useCallback((epicId: number) => {
-    const children = stories.filter(s => s.epicId === epicId);
-    const unlinkPromises = children.map(s =>
-      updateTicket.mutateAsync({ ticketId: s.id, epicId: undefined })
+    const children = tickets.filter(t => t.type !== "EPIC" && t.epicId === epicId);
+    const unlinkPromises = children.map(t =>
+      updateTicket.mutateAsync({ ticketId: t.id, epicId: undefined })
     );
     Promise.all(unlinkPromises)
       .then(() => {
@@ -92,9 +94,9 @@ export function EpicsPage({ params }: PageProps) {
         );
       })
       .catch(() => {
-        toast.error("Failed to unlink stories from epic");
+        toast.error("Failed to unlink tickets from epic");
       });
-  }, [stories, updateTicket, deleteTicket]);
+  }, [tickets, updateTicket, deleteTicket]);
 
   const handleLinkStory = useCallback((storyId: number, epicId: number) => {
     updateTicket.mutate({ ticketId: storyId, epicId });
@@ -110,11 +112,25 @@ export function EpicsPage({ params }: PageProps) {
     );
   }, [createTicket, projectId]);
 
+  const pageState = usePageState({ permission: "build:view", isLoading, isError, error: loadError });
+
   if (project?.settings?.modules?.epics === false) {
     return <ModuleDisabledState moduleName="Epics" projectId={projectId} />;
   }
 
-  if (isLoading) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+    return (
+      <PageWrapper title="Epics" subtitle="Organize related stories and tasks into larger themes">
+        <PmPageShell>
+          <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+            {null}
+          </PageState>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (pageState.kind === "loading") {
     return (
       <PageWrapper title="Epics">
         <PmPageShell>
@@ -131,25 +147,8 @@ export function EpicsPage({ params }: PageProps) {
     );
   }
 
-  if (isError) {
-    return (
-      <PageWrapper
-        title="Epics"
-        subtitle="Organize related stories and tasks into larger themes"
-      >
-        <PmPageShell>
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load epics"
-            description={getErrorMessage(loadError)}
-            onRetry={handleRetry}
-          />
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
   const unlinkedStories = stories.filter((s) => !s.epicId);
+  const completedStatusNames = getCompletedStatusNames(project?.statuses);
 
   return (
     <PageWrapper
@@ -170,7 +169,7 @@ export function EpicsPage({ params }: PageProps) {
               <StatCard label="Tasks" value={tasks.length} icon={Wrench} tone="default" index={2} />
               <StatCard
                 label="Completed"
-                value={tickets.filter((t) => t.status === "DONE").length}
+                value={tickets.filter((t) => completedStatusNames.has(t.status)).length}
                 icon={CheckCircle2}
                 tone="emerald"
                 index={3}
@@ -192,7 +191,7 @@ export function EpicsPage({ params }: PageProps) {
                   <EpicCard
                     key={epic.id}
                     epic={epic}
-                    stories={stories.filter((s) => s.epicId === epic.id)}
+                    stories={tickets.filter((t) => t.type !== "EPIC" && t.epicId === epic.id)}
                     projectId={projectId}
                     projectKey={project?.key}
                     projectStatuses={project?.statuses}

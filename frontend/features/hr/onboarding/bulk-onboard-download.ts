@@ -29,7 +29,7 @@ export async function downloadBulkOnboardTemplate(departmentNames: string[] = []
         ? `Exact department name. Yours: ${departmentNames.join(", ")}`
         : "Exact department name as configured in HR (or numeric department id)",
     },
-    { field: "role", required: "No", notes: "Org role slug (default ENGINEERING)" },
+    { field: "role", required: "No", notes: "MEMBER or ORG_ADMIN (default MEMBER)" },
     { field: "employeeId", required: "No", notes: "External employee code" },
     { field: "joiningDate", required: "No", notes: "YYYY-MM-DD" },
     { field: "dateOfBirth", required: "No", notes: "YYYY-MM-DD — employee must be 16+" },

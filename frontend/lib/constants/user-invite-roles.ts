@@ -5,6 +5,14 @@ export const USER_INVITE_ROLES = [
   { value: "ORG_ADMIN", label: "Org Admin" },
 ] as const;
 
+export type UserInviteRole = (typeof USER_INVITE_ROLES)[number]["value"];
+
+export const USER_INVITE_ROLE_VALUES = USER_INVITE_ROLES.map((role) => role.value);
+
+export function isUserInviteRole(value: string): value is UserInviteRole {
+  return USER_INVITE_ROLE_VALUES.some((role) => role === value);
+}
+
 /**
  * The role a fresh invite starts on. Least privilege, and the same default the
  * backend applies when a bulk-invite request omits `role` — elevating someone

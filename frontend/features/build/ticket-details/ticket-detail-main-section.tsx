@@ -9,6 +9,7 @@ import { ActivityFeed } from "./activity-feed";
 import { TicketActivityLog } from "@/features/build/tickets/ticket-activity-log";
 import { TicketChecklists } from "./ticket-checklists";
 import { TicketCustomFields } from "./ticket-custom-fields";
+import { TicketQaEvidence } from "./ticket-qa-evidence";
 import { AttachmentImage } from "./attachment-image";
 import {
   TicketDetailAiDescription,
@@ -209,6 +210,11 @@ export function TicketDetailMainSection({
             ticketId={ticketId}
             canUseAI={ticketDetailAi.canUseAI}
             generateChecklistDisabledReason={ticketDetailAi.generateChecklistDisabledReason}
+          />
+          <TicketQaEvidence
+            projectId={projectId}
+            ticketId={ticketId}
+            ticketType={ticket.type}
           />
           <TicketCustomFields projectId={projectId} ticketId={ticketId} />
           <TicketRelations ticketId={ticketId} projectId={projectId} />

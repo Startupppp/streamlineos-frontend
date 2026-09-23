@@ -14,7 +14,6 @@ import {
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
-import { usePathname } from "next/navigation";
 import {
   useAskAI,
   useAiConversations,
@@ -32,8 +31,9 @@ import { classifyAiError, type AiFailureState } from "@/components/ai";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import {
+  askOsComposerRefusal,
   boundedAskOsContext,
-  personaForPathname,
+  prepareAskOsSend,
   type PersonaId,
 } from "./ask-os-request-policy";
 import { AskOsChatComposer } from "./ask-os-chat-composer";
@@ -42,6 +42,12 @@ import { AskOsConversationList } from "./ask-os-conversation-list";
 import { useAskOs } from "./ask-os-context";
 import { AskOsPanelHeader } from "./ask-os-panel-header";
 import { AskOsLauncher } from "./ask-os-launcher";
+import {
+  appendAskOsDirective,
+  extractAskOsDirective,
+  parseAskOsDirectivePayload,
+  type AskOsDirective,
+} from "./ask-os-directive-schema";
 
 interface Draft {
   assistant: string;
@@ -52,31 +58,24 @@ export function GlobalAskOs() {
   const reduce = useReducedMotion();
   const hydrated = useHydrated();
   const isMobile = useIsMobile();
-  const pathname = usePathname();
-  const routePersona = personaForPathname(pathname);
   const { open, setOpen } = useAskOs();
   const queryClient = useQueryClient();
+
   const [input, setInput] = useState("");
+  const [composerError, setComposerError] = useState<string | null>(null);
   const [failure, setFailure] = useState<AiFailureState | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [inFlightDirective, setInFlightDirective] = useState<AskOsDirective[]>([]);
+  const inFlightDirectiveRef = useRef<AskOsDirective[]>([]);
   const [atBottom, setAtBottom] = useState(true);
   const [view, setView] = useState<"chat" | "conversations">("chat");
   const [activeConversationId, setActiveConversationId] = useState<
     number | null
   >(null);
   const [convSearch, setConvSearch] = useState("");
-  const [personaSelection, setPersonaSelection] = useState<{
-    pathname: string;
-    persona: PersonaId | null;
-  }>(() => ({ pathname, persona: routePersona }));
-  const selectedPersona =
-    personaSelection.pathname === pathname
-      ? personaSelection.persona
-      : routePersona;
-  const setSelectedPersona = useCallback(
-    (persona: PersonaId | null) => setPersonaSelection({ pathname, persona }),
-    [pathname],
-  );
+  const [selectedPersona, setSelectedPersona] = useState<PersonaId | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  
   const scrollRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
   const previousScrollHeightRef = useRef(0);
@@ -105,10 +104,12 @@ export function GlobalAskOs() {
     activeConversationId,
     open && activeConversationId !== null,
   );
+
   const conversations = useMemo(
     () => (conversationData?.pages ?? []).flatMap((page) => page.conversations),
     [conversationData],
   );
+
   const persisted = useMemo<AskAiHistoryMessage[]>(
     () =>
       (messageData?.pages ?? [])
@@ -117,21 +118,24 @@ export function GlobalAskOs() {
         .reverse(),
     [messageData],
   );
+
   const isConversations = view === "conversations";
   const showEmpty = activeConversationId === null && !draft;
+  const threadBusy = isStreaming || draft !== null;
+  const fillViewport = isMobile || expanded;
   const panelTransition = reduce
     ? { duration: 0 }
     : { duration: 0.25, ease: "easeOut" as const };
   const anchorClassName = cn(
     "fixed flex flex-col items-stretch",
-    isMobile
+    fillViewport
       ? cn("inset-0 z-[60] w-full", !open && "hidden")
       : cn(
           "right-0 bottom-[env(safe-area-inset-bottom,0px)] z-50",
           open ? "w-[min(100vw,400px)]" : "hidden w-[min(100vw,130px)] md:flex",
         ),
   );
-  const panelMotionProps = isMobile
+  const panelMotionProps = fillViewport
     ? {
         initial: reduce ? false : { opacity: 0, y: 24 },
         animate: { opacity: 1, y: 0 },
@@ -142,6 +146,7 @@ export function GlobalAskOs() {
         animate: { height: "auto" as const, opacity: 1 },
         exit: reduce ? undefined : { height: 0, opacity: 0 },
       };
+
   const loadOlder = useCallback(() => {
     const element = scrollRef.current;
     if (
@@ -155,6 +160,7 @@ export function GlobalAskOs() {
     loadingOlderRef.current = true;
     void fetchNextPage();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
   useEffect(() => {
     const sentinel = topSentinelRef.current;
     const root = scrollRef.current;
@@ -168,6 +174,7 @@ export function GlobalAskOs() {
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [hasNextPage, loadOlder, open]);
+
   useLayoutEffect(() => {
     const element = scrollRef.current;
     if (!element || !open) return;
@@ -187,22 +194,54 @@ export function GlobalAskOs() {
     element.scrollTop = element.scrollHeight;
   }, [draft]);
   useEffect(() => {
-    if (!isMobile || !open) return;
+    if (!fillViewport || !open) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [isMobile, open]);
+  }, [fillViewport, open]);
+  useEffect(() => {
+    if (!open || !expanded || isMobile) return;
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setExpanded(false);
+    }
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [expanded, isMobile, open]);
+  const handleDirectiveData = useCallback(
+    (name: string, data: unknown) => {
+      if (name !== "askos-directive") return;
+      const parsed = parseAskOsDirectivePayload(data);
+      if (parsed === null) return;
+      inFlightDirectiveRef.current = [...inFlightDirectiveRef.current, parsed];
+      setInFlightDirective((previous) => [...previous, parsed]);
+    },
+    [],
+  );
+
   const send = useCallback(
     async (override?: string) => {
-      const text = (override ?? input).trim();
-      if (!text || isStreaming || sendingRef.current) return;
+      const prepared = prepareAskOsSend(override ?? input);
+      if (prepared.status === "empty" || isStreaming || sendingRef.current)
+        return;
+      if (prepared.status === "invalid") {
+        setInput(override ?? input);
+        setComposerError(prepared.error);
+        return;
+      }
+      const text = prepared.text;
       sendingRef.current = true;
       lastSentRef.current = text;
       setInput("");
+      setComposerError(null);
       setFailure(null);
+      inFlightDirectiveRef.current = [];
+      setInFlightDirective([]);
       isNearBottomRef.current = true;
+      setDraft({ user: text, assistant: "" });
       let conversationId = activeConversationId;
       if (conversationId === null) {
         try {
@@ -210,9 +249,23 @@ export function GlobalAskOs() {
             title: text.substring(0, 60).trim(),
           });
           conversationId = conversation.id;
+          queryClient.setQueryData<InfiniteData<AskAiHistoryPage>>(
+            collaborationQueryKeys.aiChat.conversationMessages(conversation.id),
+            {
+              pages: [{ messages: [], nextCursor: null }],
+              pageParams: [undefined],
+            },
+          );
           setActiveConversationId(conversation.id);
         } catch (error) {
           sendingRef.current = false;
+          setDraft(null);
+          const refusal = askOsComposerRefusal(error);
+          if (refusal) {
+            setInput(text);
+            setComposerError(refusal);
+            return;
+          }
           setFailure(classifyAiError(error));
           return;
         }
@@ -220,11 +273,10 @@ export function GlobalAskOs() {
       const context = boundedAskOsContext<AskAIMessage>([
         ...persisted.map((message) => ({
           role: message.role,
-          content: message.content,
+          content: extractAskOsDirective(message.content).prose,
         })),
         { role: "user", content: text },
       ]);
-      setDraft({ user: text, assistant: "" });
       try {
         const outcome = await sendMessage(
           context,
@@ -237,17 +289,34 @@ export function GlobalAskOs() {
           },
           conversationId,
           selectedPersona ?? undefined,
+          handleDirectiveData,
         );
         if (outcome.status === "busy") {
           setDraft(null);
+          inFlightDirectiveRef.current = [];
+          setInFlightDirective([]);
           return;
         }
         if (outcome.status === "cancelled" && outcome.text.length === 0) {
           setDraft(null);
+          inFlightDirectiveRef.current = [];
+          setInFlightDirective([]);
           setFailure({ status: "cancelled" });
           return;
         }
         if (outcome.status === "cancelled") setFailure({ status: "cancelled" });
+        if (
+          outcome.status === "completed" &&
+          outcome.text.trim().length === 0 &&
+          inFlightDirectiveRef.current.length === 0
+        ) {
+          setDraft(null);
+          setFailure({
+            status: "error",
+            message: "The assistant returned nothing. Try rephrasing your question.",
+          });
+          return;
+        }
         const userMessage: AskAiHistoryMessage = {
           id: (temporaryIdRef.current -= 1),
           role: "user",
@@ -257,7 +326,7 @@ export function GlobalAskOs() {
         const assistantMessage: AskAiHistoryMessage = {
           id: (temporaryIdRef.current -= 1),
           role: "assistant",
-          content: outcome.text,
+          content: appendAskOsDirective(outcome.text, inFlightDirectiveRef.current),
           createdAt: new Date().toISOString(),
         };
         queryClient.setQueryData<InfiniteData<AskAiHistoryPage>>(
@@ -294,9 +363,18 @@ export function GlobalAskOs() {
           queryKey: collaborationQueryKeys.aiChat.conversations(),
         });
         setDraft(null);
+        inFlightDirectiveRef.current = [];
+        setInFlightDirective([]);
       } catch (error) {
-        setFailure(classifyAiError(error));
-        setDraft(null);
+        const refusal = askOsComposerRefusal(error);
+        if (refusal) {
+          setInput(text);
+          setComposerError(refusal);
+          setDraft(null);
+        } else {
+          setFailure(classifyAiError(error));
+          setDraft(null);
+        }
       } finally {
         sendingRef.current = false;
       }
@@ -304,6 +382,7 @@ export function GlobalAskOs() {
     [
       activeConversationId,
       createConversation,
+      handleDirectiveData,
       input,
       isStreaming,
       persisted,
@@ -338,6 +417,7 @@ export function GlobalAskOs() {
   }
   function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
     setInput(event.target.value);
+    if (composerError) setComposerError(null);
   }
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -351,8 +431,20 @@ export function GlobalAskOs() {
     setView("chat");
     setConvSearch("");
   }
+  function handleToggleExpanded() {
+    setExpanded((previous) => !previous);
+  }
+  function handleBackToChat() {
+    setView("chat");
+  }
+  function handleOpenConversations() {
+    setView("conversations");
+    setConvSearch("");
+  }
   function handleNewChat() {
     setActiveConversationId(null);
+    setDraft(null);
+    setFailure(null);
     setView("chat");
   }
   function handleSelectConversation(id: number) {
@@ -365,7 +457,7 @@ export function GlobalAskOs() {
   function handleDeleteActive() {
     if (
       activeConversationId === null ||
-      isStreaming ||
+      threadBusy ||
       deleteConversation.isPending
     )
       return;
@@ -394,13 +486,13 @@ export function GlobalAskOs() {
             transition={panelTransition}
             className={cn(
               "overflow-hidden",
-              isMobile && "flex h-full min-h-0 w-full flex-1 flex-col",
+              fillViewport && "flex h-full min-h-0 w-full flex-1 flex-col",
             )}
           >
             <div
               className={cn(
                 "flex flex-col overflow-hidden bg-card",
-                isMobile
+                fillViewport
                   ? "h-full min-h-0 w-full rounded-none border-0 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]"
                   : "h-[min(70dvh,560px)] rounded-tl-2xl border border-b-0 border-border shadow-2xl",
               )}
@@ -409,15 +501,15 @@ export function GlobalAskOs() {
                 activeConversationId={activeConversationId}
                 deletePending={deleteConversation.isPending}
                 isConversations={isConversations}
-                isStreaming={isStreaming}
-                onBackToChat={() => setView("chat")}
+                isStreaming={threadBusy}
+                expanded={expanded}
+                showExpand={!isMobile}
+                onToggleExpanded={handleToggleExpanded}
+                onBackToChat={handleBackToChat}
                 onClose={handleClose}
                 onDeleteActive={handleDeleteActive}
                 onNewChat={handleNewChat}
-                onOpenConversations={() => {
-                  setView("conversations");
-                  setConvSearch("");
-                }}
+                onOpenConversations={handleOpenConversations}
               />
               <AnimatePresence initial={false} mode="wait">
                 {isConversations ? (
@@ -470,10 +562,12 @@ export function GlobalAskOs() {
                       scrollRef={scrollRef}
                       showEmpty={showEmpty}
                       topSentinelRef={topSentinelRef}
+                      directives={inFlightDirective}
                     />
                     <AskOsChatComposer
+                      error={composerError}
                       input={input}
-                      isStreaming={isStreaming}
+                      isStreaming={threadBusy}
                       onInputChange={handleInputChange}
                       onSelectPersona={setSelectedPersona}
                       onStop={stop}
@@ -487,7 +581,7 @@ export function GlobalAskOs() {
           </motion.div>
         )}
       </AnimatePresence>
-      <AskOsLauncher />
+      {!(expanded && open) ? <AskOsLauncher /> : null}
     </div>,
     document.body,
   );

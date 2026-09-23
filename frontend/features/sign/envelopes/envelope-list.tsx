@@ -13,11 +13,14 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable } from "@/components/ui/data-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { useDeleteSignEnvelope, useSignEnvelopes } from "@/hooks/api/sign/envelopes";
 import { CreateEnvelopeDialog } from "@/components/sign/create-envelope-dialog";
 import { EditEnvelopeSheet } from "../components/edit-envelope-sheet";
+import { EnvelopeStatusBadge } from "../components/envelope-status-badge";
 import { envelopeColumns } from "./envelope-list-columns";
 import type { SignEnvelope } from "@/types/sign";
 import { useCan } from "@/hooks/api/access";
@@ -55,6 +58,8 @@ export function EnvelopeList() {
   });
   const envelopes = data?.items ?? [];
   const total = data?.total ?? 0;
+  /** SIGN-002: Track whether this is a post-load error vs initial load */
+  const hasData = data !== undefined;
   const deleteMutation = useDeleteSignEnvelope();
 
   const replaceParams = useCallback(
@@ -98,8 +103,9 @@ export function EnvelopeList() {
     openCreate();
   }
 
-  function handleRetry() {
-    void refetch();
+  async function handleRetry() {
+    /** SIGN-002: Await refetch to ensure it completes before any UI update */
+    await refetch();
   }
 
   function handleRowClick(envelope: SignEnvelope) {
@@ -188,7 +194,7 @@ export function EnvelopeList() {
       }
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4">
-        {isError ? (
+        {isError && !hasData ? (
           <ErrorState
             className="flex-1"
             title="Failed to load envelopes"
@@ -205,6 +211,24 @@ export function EnvelopeList() {
             emptyState={emptyState}
             onRowClick={handleRowClick}
             minWidth="720px"
+            mobileCard={(envelope) => (
+              <div className="flex flex-col gap-2 p-3 border-b border-border last:border-b-0">
+                <div className="flex items-center justify-between gap-2">
+                  <TruncatedText text={envelope.title} className="font-medium text-sm flex-1" />
+                  <EnvelopeStatusBadge status={envelope.status} />
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                  <div>
+                    <span className="font-medium">Sent:</span>{" "}
+                    {envelope.sentAt ? formatShortDate(envelope.sentAt) : "—"}
+                  </div>
+                  <div>
+                    <span className="font-medium">Expires:</span>{" "}
+                    {envelope.expiresAt ? formatShortDate(envelope.expiresAt) : "—"}
+                  </div>
+                </div>
+              </div>
+            )}
             pagination={{
               mode: "server",
               page,

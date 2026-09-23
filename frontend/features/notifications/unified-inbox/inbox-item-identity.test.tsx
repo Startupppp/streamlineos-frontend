@@ -2,8 +2,9 @@ import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createElement, type ReactNode, type CSSProperties } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import type { UnifiedInboxItem } from "@/types/inbox";
+import type { UnifiedInboxItem, BuildApprovalInboxItem } from "@/types/inbox";
 import { InboxShell } from "./inbox-shell";
+import { InboxItemCard } from "./inbox-item-card";
 
 const markReadMutate = jest.fn();
 const dismissBroadcastMutate = jest.fn();
@@ -49,7 +50,9 @@ const state: { items: UnifiedInboxItem[] } = {
 };
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/inbox",
 }));
 
 jest.mock("next-auth/react", () => ({
@@ -165,6 +168,14 @@ jest.mock("next/dynamic", () => () =>
   jest.requireActual<{ InboxVirtualList: unknown }>("./inbox-virtual-list")
     .InboxVirtualList);
 
+jest.mock("./inbox-toolbar", () => ({
+  InboxToolbar: () => null,
+}));
+
+jest.mock("./inbox-bulk-actions", () => ({
+  BulkActionsBar: () => null,
+}));
+
 function renderInbox() {
   return render(
     <TooltipProvider>
@@ -185,6 +196,107 @@ async function clickCardTitled(title: string) {
 beforeEach(() => {
   jest.clearAllMocks();
   state.items = [NOTIFICATION_SEVEN, BROADCAST_SEVEN];
+});
+
+function makeApprovalItem(approvalKind: string): BuildApprovalInboxItem {
+  return {
+    kind: "build_approval",
+    id: 1,
+    status: "pending",
+    approvalKind,
+    projectId: null,
+    ticketId: null,
+    dueAt: null,
+    sourceModule: "build",
+    actor: null,
+    subject: "Approval request",
+    timestamp: new Date().toISOString(),
+    isRead: false,
+    deepLink: null,
+    dedupKey: `approval:1:${approvalKind}`,
+  };
+}
+
+const noop = jest.fn();
+
+describe("ApprovalItemCard — D2 source labels show the approval kind", () => {
+  it("shows 'Build' badge for build approval kind", () => {
+    render(
+      <InboxItemCard
+        item={makeApprovalItem("build")}
+        onNotificationClick={noop}
+        onBroadcastClick={noop}
+        onMailClick={noop}
+        onApprovalClick={noop}
+      />,
+    );
+    expect(screen.getByText("Build")).toBeInTheDocument();
+  });
+
+  it("shows 'Leave' badge for leave approval kind", () => {
+    render(
+      <InboxItemCard
+        item={makeApprovalItem("leave")}
+        onNotificationClick={noop}
+        onBroadcastClick={noop}
+        onMailClick={noop}
+        onApprovalClick={noop}
+      />,
+    );
+    expect(screen.getByText("Leave")).toBeInTheDocument();
+  });
+
+  it("shows 'Work from home' badge for wfh approval kind", () => {
+    render(
+      <InboxItemCard
+        item={makeApprovalItem("wfh")}
+        onNotificationClick={noop}
+        onBroadcastClick={noop}
+        onMailClick={noop}
+        onApprovalClick={noop}
+      />,
+    );
+    expect(screen.getByText("Work from home")).toBeInTheDocument();
+  });
+
+  it("shows 'HR workflow' badge for workflow approval kind", () => {
+    render(
+      <InboxItemCard
+        item={makeApprovalItem("workflow")}
+        onNotificationClick={noop}
+        onBroadcastClick={noop}
+        onMailClick={noop}
+        onApprovalClick={noop}
+      />,
+    );
+    expect(screen.getByText("HR workflow")).toBeInTheDocument();
+  });
+
+  it("shows 'Timesheet' badge for timesheet approval kind", () => {
+    render(
+      <InboxItemCard
+        item={makeApprovalItem("timesheet")}
+        onNotificationClick={noop}
+        onBroadcastClick={noop}
+        onMailClick={noop}
+        onApprovalClick={noop}
+      />,
+    );
+    expect(screen.getByText("Timesheet")).toBeInTheDocument();
+  });
+
+  it("falls back to the raw kind string for an unknown approval kind and does not throw", () => {
+    render(
+      <InboxItemCard
+        item={makeApprovalItem("future_kind_from_new_backend_adapter")}
+        onNotificationClick={noop}
+        onBroadcastClick={noop}
+        onMailClick={noop}
+        onApprovalClick={noop}
+      />,
+    );
+    expect(screen.getByText("future_kind_from_new_backend_adapter")).toBeInTheDocument();
+  });
 });
 
 describe("inbox item identity — a broadcast and a notification sharing id 7", () => {

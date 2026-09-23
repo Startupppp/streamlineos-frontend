@@ -4,8 +4,8 @@ import { renderHook, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import type { ReactNode } from "react";
-import { useCreateTicket, useDeleteTicket, useBulkUpdateTickets, useUpdateTicket } from "./ticket-mutations";
-import { useUpdateSprint } from "./sprints";
+import { useUpdateTicket } from "./ticket-update-mutation";
+import { useCreateTicket, useDeleteTicket, useBulkUpdateTickets } from "./ticket-create-rank-mutations";
 import { queryKeys } from "@/lib/query-keys";
 
 jest.mock("@/lib/api-client", () => ({
@@ -18,7 +18,7 @@ jest.mock("@/lib/api-client", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useAccess: jest.fn(() => ({
-    data: { isOrgOwner: false, scopes: { "build:tickets:create": "all", "build:tickets:delete": "all", "build:sprints:manage": "all" }, modules: {} },
+    data: { isOrgOwner: false, scopes: { "build:tickets:create": "all", "build:tickets:delete": "all" }, modules: {} },
     refetch: jest.fn(),
   })),
   useCan: jest.fn().mockReturnValue(true),
@@ -117,7 +117,7 @@ describe("useDeleteTicket — invalidation contract", () => {
     );
   });
 
-  it("invalidates sprints so sprint ticket counts update", async () => {
+  it("invalidates cycles so cycle ticket counts update", async () => {
     const { result } = renderHook(() => useDeleteTicket(42), { wrapper: wrap(client) });
 
     await act(async () => {
@@ -128,7 +128,7 @@ describe("useDeleteTicket — invalidation contract", () => {
       (c) => JSON.stringify((c[0] as { queryKey: unknown }).queryKey),
     );
     expect(invalidatedKeys).toContain(
-      JSON.stringify(queryKeys.projects.sprints(42)),
+      JSON.stringify(queryKeys.projects.cycles(42)),
     );
   });
 
@@ -191,11 +191,11 @@ describe("useUpdateTicket — invalidation contract", () => {
     });
 
     await act(async () => {
-      await result.current.mutateAsync({ ticketId: 9, sprintId: 3 });
+      await result.current.mutateAsync({ ticketId: 9, cycleId: 3 });
     });
 
     expect(invalidateSpy).toHaveBeenCalledWith({
-      queryKey: queryKeys.projects.sprints(42),
+      queryKey: queryKeys.projects.cycles(42),
       refetchType: "none",
     });
     expect(invalidateSpy).toHaveBeenCalledWith({
@@ -215,7 +215,7 @@ describe("useBulkUpdateTickets — invalidation contract", () => {
     invalidateSpy = jest.spyOn(client, "invalidateQueries");
   });
 
-  it("invalidates projectReports.all so sprint burndown reflects bulk status/sprint changes", async () => {
+  it("invalidates projectReports.all so cycle burndown reflects bulk status/cycle changes", async () => {
     const { result } = renderHook(() => useBulkUpdateTickets(42), { wrapper: wrap(client) });
 
     await act(async () => {
@@ -242,32 +242,6 @@ describe("useBulkUpdateTickets — invalidation contract", () => {
     );
     expect(invalidatedKeys).toContain(
       JSON.stringify(queryKeys.dashboard.myIssues()),
-    );
-  });
-});
-
-describe("useUpdateSprint — invalidation contract", () => {
-  let client: QueryClient;
-  let invalidateSpy: jest.SpyInstance;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    client = makeClient();
-    invalidateSpy = jest.spyOn(client, "invalidateQueries");
-  });
-
-  it("invalidates the sprints list for the project after update", async () => {
-    const { result } = renderHook(() => useUpdateSprint(42), { wrapper: wrap(client) });
-
-    await act(async () => {
-      await result.current.mutateAsync({ sprintId: 7, name: "Sprint 2" });
-    });
-
-    const invalidatedKeys = invalidateSpy.mock.calls.map(
-      (c) => JSON.stringify((c[0] as { queryKey: unknown }).queryKey),
-    );
-    expect(invalidatedKeys).toContain(
-      JSON.stringify(queryKeys.projects.sprints(42)),
     );
   });
 });

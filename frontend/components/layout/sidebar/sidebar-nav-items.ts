@@ -10,7 +10,8 @@ import { INVENTORY_NAV_GROUPS } from "./sidebar-nav-groups-inventory";
 import { WORK_MANAGEMENT_NAV_GROUPS } from "./sidebar-nav-groups-work-management";
 import { KNOWLEDGE_SUPPORT_NAV_GROUPS } from "./sidebar-nav-groups-knowledge-support";
 import { ADMINISTRATION_NAV_GROUPS } from "./sidebar-nav-groups-administration";
-import { isModuleEnabled } from "./sidebar-products";
+import { isModuleEnabled, PRODUCT_MODULE_KEY } from "./sidebar-products";
+import { matchesOrgModule } from "@/lib/org-module-keys";
 
 type GrantedScopes = Readonly<Record<string, unknown>>;
 type GrantedPredicate = (permissionKey: string) => boolean;
@@ -38,6 +39,7 @@ export {
   MODULE_ACCENTS,
   PRODUCT_DEFINITIONS,
   PRODUCT_DESCRIPTIONS,
+  PRODUCT_MODULE_KEY,
 } from "./sidebar-products";
 export type { ModuleAccent, ProductDefinition } from "./sidebar-products";
 
@@ -52,7 +54,7 @@ export const PRODUCT_PATH_EXCEPTIONS: ProductPathException[] = [
   { prefix: "/me", product: "home", reason: "Self-service index; only its children are navigable." },
   { prefix: "/knowledge", product: "documents", reason: "Knowledge index; nav lists /knowledge/chat and /knowledge/wiki." },
   { prefix: "/support/kb", product: "documents", reason: "Knowledge base served under the support prefix." },
-  { prefix: "/recruitment", product: "hrms", reason: "Hiring pipeline reached from the Recruitment group's children." },
+  { prefix: "/recruitment", product: "recruitment", reason: "Hiring pipeline reached from the Recruitment group's children." },
   { prefix: "/sales", product: "crm", reason: "CRM operational surface with no nav entry." },
   { prefix: "/customer-executive", product: "crm", reason: "CRM operational surface with no nav entry." },
   { prefix: "/billing/invoices", product: "finance", reason: "The org's own customer invoicing, not platform billing." },
@@ -140,14 +142,26 @@ function matchesPermission(
   return reqs.some((p) => granted(p));
 }
 
+function isPlanLocked(product: ProductKey, lockedModules: string[]): boolean {
+  const moduleKey = PRODUCT_MODULE_KEY[product];
+  if (!moduleKey) return false;
+  return matchesOrgModule(lockedModules, moduleKey);
+}
+
 function filterRoute(
   route: NavRoute,
   isOwner: boolean,
   granted: GrantedPredicate,
   enabledModules: string[],
+  lockedModules: string[],
   inheritedPermission?: PermissionRequirement,
+  inheritedLocked = false,
 ): NavRoute[] {
-  if (route.module && !isModuleEnabled(route.module, enabledModules))
+  const lockedByPlan =
+    inheritedLocked ||
+    (route.module !== undefined && isPlanLocked(route.module, lockedModules));
+
+  if (route.module && !lockedByPlan && !isModuleEnabled(route.module, enabledModules))
     return [];
   if (
     route.modulesAny &&
@@ -163,7 +177,9 @@ function filterRoute(
       isOwner,
       granted,
       enabledModules,
+      lockedModules,
       effectivePermission,
+      lockedByPlan,
     ),
   );
 
@@ -171,27 +187,35 @@ function filterRoute(
     return children;
   }
 
+  const resolved = lockedByPlan ? { ...route, locked: true } : route;
   return [
     children.length > 0
-      ? { ...route, children }
-      : { ...route, children: undefined },
+      ? { ...resolved, children }
+      : { ...resolved, children: undefined },
   ];
 }
 
-export function getNavGroupsForUser(
+export function filterNavGroupsForUser(
+  groups: NavGroup[],
   role: string | undefined,
   scopes: GrantedScopes | undefined,
   enabledModules: string[] = [],
+  lockedModules: string[] = [],
 ): NavGroup[] {
   if (!role) return [];
 
   const isOwner = role === ROLES.OWNER;
   const granted = grantedFrom(scopes);
 
-  return NAV_GROUPS.filter(
-    (group) => !group.module || isModuleEnabled(group.module, enabledModules),
+  return groups.filter(
+    (group) =>
+      !group.module ||
+      isPlanLocked(group.module, lockedModules) ||
+      isModuleEnabled(group.module, enabledModules),
   )
     .map((group) => {
+      const groupLocked =
+        group.module !== undefined && isPlanLocked(group.module, lockedModules);
       const visibleRoutes = group.routes
         .flatMap((route) =>
           filterRoute(
@@ -199,12 +223,29 @@ export function getNavGroupsForUser(
             isOwner,
             granted,
             enabledModules,
+            lockedModules,
             group.requiredPermission,
+            groupLocked,
           ),
         );
       return { ...group, routes: visibleRoutes };
     })
     .filter((group) => group.routes.length > 0);
+}
+
+export function getNavGroupsForUser(
+  role: string | undefined,
+  scopes: GrantedScopes | undefined,
+  enabledModules: string[] = [],
+  lockedModules: string[] = [],
+): NavGroup[] {
+  return filterNavGroupsForUser(
+    NAV_GROUPS,
+    role,
+    scopes,
+    enabledModules,
+    lockedModules,
+  );
 }
 
 export function flattenNavRoutes(routes: NavRoute[]): NavRoute[] {
@@ -267,6 +308,24 @@ export function isKnowledgeWikiPath(pathname: string): boolean {
   );
 }
 
+export function resolveProductSidebarChrome({
+  sessionReady,
+  emptyNav,
+  isWikiPath,
+  isPortalPath,
+}: {
+  sessionReady: boolean;
+  emptyNav: boolean;
+  isWikiPath: boolean;
+  isPortalPath: boolean;
+}): { hideSidebar: boolean; showSidebarToggle: boolean } {
+  const hideSidebar =
+    sessionReady && (emptyNav || isWikiPath || isPortalPath);
+  const showSidebarToggle =
+    !sessionReady || isWikiPath || (!emptyNav && !isPortalPath);
+  return { hideSidebar, showSidebarToggle };
+}
+
 function routeOwnsPath(route: NavRoute, pathname: string): boolean {
   if (pathname === route.href) return true;
   if (route.href === "/hr") return false;
@@ -323,22 +382,29 @@ function getHomeNavGroups(
   role: string | undefined,
   scopes: GrantedScopes | undefined,
   enabledModules: string[],
+  lockedModules: string[],
 ): NavGroup[] {
   const isOwner = role === ROLES.OWNER;
   const granted = grantedFrom(scopes);
 
-  return HOME_NAV_GROUPS.map((group) => ({
-    ...group,
-    routes: group.routes.flatMap((route) =>
-      filterRoute(
-        route,
-        isOwner,
-        granted,
-        enabledModules,
-        group.requiredPermission,
+  return HOME_NAV_GROUPS.map((group) => {
+    const groupLocked =
+      group.module !== undefined && isPlanLocked(group.module, lockedModules);
+    return {
+      ...group,
+      routes: group.routes.flatMap((route) =>
+        filterRoute(
+          route,
+          isOwner,
+          granted,
+          enabledModules,
+          lockedModules,
+          group.requiredPermission,
+          groupLocked,
+        ),
       ),
-    ),
-  })).filter((group) => group.routes.length > 0);
+    };
+  }).filter((group) => group.routes.length > 0);
 }
 
 export function getNavGroupsForProduct(
@@ -346,10 +412,11 @@ export function getNavGroupsForProduct(
   role: string | undefined,
   scopes: GrantedScopes | undefined,
   enabledModules: string[] = [],
+  lockedModules: string[] = [],
 ): NavGroup[] {
   if (productKey === "home")
-    return getHomeNavGroups(role, scopes, enabledModules);
+    return getHomeNavGroups(role, scopes, enabledModules, lockedModules);
 
-  const allGroups = getNavGroupsForUser(role, scopes, enabledModules);
+  const allGroups = getNavGroupsForUser(role, scopes, enabledModules, lockedModules);
   return allGroups.filter((group) => group.product === productKey);
 }

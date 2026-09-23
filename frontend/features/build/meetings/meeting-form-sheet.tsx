@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -49,7 +50,7 @@ interface MeetingFormSheetProps {
   projectMembers?: ProjectMemberRecord[];
   selectedTemplate?: MeetingTemplate | null;
   onGenerateAgenda?: (sources: AgendaSource[]) => string;
-  hasActiveSprint?: boolean;
+  hasActiveCycle?: boolean;
 }
 
 export function MeetingFormSheet({
@@ -63,7 +64,7 @@ export function MeetingFormSheet({
   projectMembers = [],
   selectedTemplate,
   onGenerateAgenda,
-  hasActiveSprint = false,
+  hasActiveCycle = false,
 }: MeetingFormSheetProps) {
   const [selectedAttendees, setSelectedAttendees] = useState<string[]>([]);
   const [attendeeComboValue, setAttendeeComboValue] = useState("");
@@ -72,6 +73,7 @@ export function MeetingFormSheet({
     resolver: zodResolver(meetingSchema),
     defaultValues: CREATE_DEFAULTS,
   });
+  useRegisterDirtyState(open && form.formState.isDirty);
 
   const watchScheduledAt = form.watch("scheduledAt");
   const watchDuration = form.watch("durationMinutes");
@@ -187,7 +189,7 @@ export function MeetingFormSheet({
               <MeetingSchedulingFields />
               <MeetingAgendaField
                 onGenerateAgenda={onGenerateAgenda}
-                hasActiveSprint={hasActiveSprint}
+                hasActiveCycle={hasActiveCycle}
               />
               <MeetingRecurrenceFields />
               {mode === "create" && projectMembers.length > 0 && (

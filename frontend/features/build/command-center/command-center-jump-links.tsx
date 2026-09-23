@@ -38,7 +38,7 @@ function workspaceHref(path: string) {
 
 function projectHref(path: string) {
   return (projectId: number | null) =>
-    projectId === null ? "/build/all" : `/build/${projectId}${path}`;
+    projectId === null ? "/build" : `/build/${projectId}${path}`;
 }
 
 function renderInboxIcon(_: IconRef) {
@@ -106,7 +106,7 @@ export const COMMAND_CENTER_JUMP_LINKS: CommandCenterJumpLink[] = [
     scope: "workspace",
     permissions: ["build:view"],
     enabledModule: "PROJECTS",
-    buildHref: workspaceHref("/build/all"),
+    buildHref: workspaceHref("/build"),
     renderIcon: renderLayersIcon,
   },
   {

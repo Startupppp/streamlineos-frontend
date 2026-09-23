@@ -6,10 +6,10 @@ import { cn } from "@/lib/utils";
 import { fadeUp, fadeUpReduced, pmSnappy, pmStagger } from "@/lib/motion-presets";
 
 export const PM_PANEL =
-  "rounded-xl border border-border/80 bg-card/85 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-card/75";
+  "w-full min-w-0 rounded-xl border border-border/80 bg-card shadow-sm";
 
 export const PM_PANEL_SOLID =
-  "rounded-xl border border-border/80 bg-card shadow-sm";
+  "w-full min-w-0 rounded-xl border border-border/80 bg-card shadow-sm";
 
 
 export const PM_FILL_SECTION = "flex min-h-0 flex-1 flex-col overflow-hidden";
@@ -20,27 +20,14 @@ export const PM_TOOLBAR =
 export const PM_ROW =
   "group flex min-w-0 items-center gap-2.5 border-b border-border/70 px-3 py-2 last:border-b-0 transition-colors duration-150 hover:bg-primary/[0.035]";
 
-export const PM_GLOW =
-  "pointer-events-none absolute -top-8 right-0 h-40 w-40 rounded-full bg-primary/[0.06] blur-3xl";
-
-export const PM_GLOW_SECONDARY =
-  "pointer-events-none absolute top-28 left-1/4 h-28 w-52 rounded-full bg-primary/[0.04] blur-3xl";
-
 interface PmPageShellProps {
   children: ReactNode;
   className?: string;
-  withGlow?: boolean;
 }
 
-export function PmPageShell({ children, className, withGlow = true }: PmPageShellProps) {
+export function PmPageShell({ children, className }: PmPageShellProps) {
   return (
-    <div className={cn("relative flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden", className)}>
-      {withGlow ? (
-        <>
-          <div aria-hidden className={PM_GLOW} />
-          <div aria-hidden className={PM_GLOW_SECONDARY} />
-        </>
-      ) : null}
+    <div className={cn("relative flex min-h-0 w-full min-w-0 flex-1 flex-col gap-4 overflow-hidden", className)}>
       {children}
     </div>
   );
@@ -56,7 +43,7 @@ export function PmSection({ children, className, index = 0 }: PmSectionProps) {
   const shouldReduceMotion = useReducedMotion();
   return (
     <motion.div
-      className={cn("relative", className)}
+      className={cn("relative w-full min-w-0", className)}
       initial="hidden"
       animate="show"
       variants={shouldReduceMotion ? fadeUpReduced : fadeUp}

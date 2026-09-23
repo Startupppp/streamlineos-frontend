@@ -1,13 +1,29 @@
-import { LayoutDashboard, Briefcase, Clock, CalendarCheck, CalendarDays, Receipt, FileText, Contact2, MessageSquareText, Wallet, Bell, ListChecks, Inbox, Video, Megaphone, BellDot } from "lucide-react";
+import {
+  LayoutDashboard,
+  Briefcase,
+  Clock,
+  CalendarCheck,
+  CalendarDays,
+  Receipt,
+  FileText,
+  Contact2,
+  MessageSquareText,
+  Wallet,
+  ListChecks,
+  Inbox,
+  Video,
+  Megaphone,
+  BellDot,
+  LifeBuoy,
+  Users,
+} from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const HOME_NAV_GROUPS: NavGroup[] = [
   {
     label: "Overview",
     product: "home",
-    routes: [
-      { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    ],
+    routes: [{ label: "Home", href: "/dashboard", icon: LayoutDashboard }],
   },
   {
     label: "Communication",
@@ -35,13 +51,17 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         icon: MessageSquareText,
         inactivePrefixes: ["/chat/settings"],
       },
-      { label: "Notifications", href: "/notifications", icon: Bell },
     ],
   },
   {
     label: "For Me",
     product: "home",
     routes: [
+      {
+        label: "My Team",
+        href: "/me/team",
+        icon: Users,
+      },
       {
         label: "Time Off",
         href: "/me/time-off",
@@ -77,6 +97,21 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         label: "Recruitment",
         href: "/me/recruitment",
         icon: Video,
+      },
+      {
+        label: "Job Openings",
+        href: "/me/job-openings",
+        icon: Briefcase,
+      },
+      {
+        label: "My Referrals",
+        href: "/me/referrals",
+        icon: Contact2,
+      },
+      {
+        label: "Support",
+        href: "/me/support",
+        icon: LifeBuoy,
       },
     ],
   },

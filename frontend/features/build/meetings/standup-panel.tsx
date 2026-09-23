@@ -1,9 +1,13 @@
 ﻿"use client";
 
 import { useEffect } from "react";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import {
+  standupFormSchema,
+  type StandupFormValues,
+} from "@/features/build/meetings/meeting-form-schema";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useUpsertStandup } from "@/hooks/api/build";
@@ -19,14 +23,6 @@ import { cn } from "@/lib/utils";
 import { PM_PANEL, PM_PANEL_SOLID } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 import type { StandupEntry, MeetingAttendee, ProjectMemberRecord } from "@/types/projects";
-
-const standupSchema = z.object({
-  yesterday: z.string().trim().min(1, "Required"),
-  today: z.string().trim().min(1, "Required"),
-  blockers: z.string().trim().min(1, "Required"),
-});
-
-type StandupFormValues = z.infer<typeof standupSchema>;
 
 interface StandupPanelProps {
   projectId: number;
@@ -47,9 +43,10 @@ export function StandupPanel({
   const myEntry = standupEntries.find((e) => e.userId === currentUserId);
 
   const form = useForm<StandupFormValues>({
-    resolver: zodResolver(standupSchema),
+    resolver: zodResolver(standupFormSchema),
     defaultValues: { yesterday: "", today: "", blockers: "" },
   });
+  useRegisterDirtyState(form.formState.isDirty);
 
   useEffect(() => {
     form.reset({

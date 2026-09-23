@@ -1,19 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useApAging } from "@/hooks/api/accounting/ap";
-import { AP_AGING_BUCKETS, type ApAgingPartyRow } from "@/types/accounting-ap-payments";
+import {
+  AP_AGING_BUCKETS,
+  type ApAgingPartyRow,
+} from "@/types/accounting/accounting-ap-payments";
 import { AGING_BUCKET_LABELS } from "../lib/ap-labels";
 import { todayIso } from "../lib/ap-dates";
 import { useUrlListState } from "../lib/use-url-list-state";
@@ -23,12 +26,28 @@ import { VendorAgingSheet } from "./vendor-aging-sheet";
 const PAGE_SIZE = 20;
 
 export function AgedPayablesPage() {
-  const canRead = useCan("accounting:reports:read");
   const { getParam, setParams, page, setPage } = useUrlListState();
   const asOf = getParam("asOf") || todayIso();
-  const [selectedParty, setSelectedParty] = useState<ApAgingPartyRow | null>(null);
+  const [selectedParty, setSelectedParty] = useState<ApAgingPartyRow | null>(
+    null,
+  );
 
-  const agingQuery = useApAging({ asOf, includeItems: true, page, pageSize: PAGE_SIZE });
+  const agingQuery = useApAging({
+    asOf,
+    includeItems: true,
+    page,
+    pageSize: PAGE_SIZE,
+  });
+
+  const pageState = usePageState({
+    permission: "accounting:reports:read",
+    isLoading: agingQuery.isLoading,
+    isError: agingQuery.isError,
+    error: agingQuery.error,
+  });
+  const handleRetry = useCallback(() => {
+    void agingQuery.refetch();
+  }, [agingQuery]);
 
   function handleSheetOpenChange(open: boolean): void {
     if (!open) setSelectedParty(null);
@@ -66,13 +85,23 @@ export function AgedPayablesPage() {
     },
   ];
 
-  if (!canRead) {
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="What we owe">
-        <NoPermissionState permission="accounting:reports:read" />
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
   const rows = agingQuery.data?.parties ?? [];
 
@@ -99,8 +128,13 @@ export function AgedPayablesPage() {
           <StatCard
             key={bucket}
             label={AGING_BUCKET_LABELS[bucket]}
-            value={formatMinorMoney(agingQuery.data?.buckets[bucket] ?? 0, currency)}
-            tone={bucket === "0-30" ? "default" : bucket === "91+" ? "red" : "amber"}
+            value={formatMinorMoney(
+              agingQuery.data?.buckets[bucket] ?? 0,
+              currency,
+            )}
+            tone={
+              bucket === "0-30" ? "default" : bucket === "91+" ? "red" : "amber"
+            }
             isLoading={agingQuery.isPending}
           />
         ))}
@@ -112,38 +146,29 @@ export function AgedPayablesPage() {
         />
       </StatCardGrid>
 
-      {agingQuery.isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't work out what you owe"
-          description={getErrorMessage(agingQuery.error)}
-          onRetry={() => void agingQuery.refetch()}
-        />
-      ) : (
-        <DataTable
-          data={rows}
-          columns={columns}
-          getRowKey={(row) => row.partyId}
-          isLoading={agingQuery.isPending}
-          minWidth="900px"
-          className="flex-1 min-h-0"
-          emptyState={
-            <EmptyState
-              className="border-0 bg-transparent min-h-[40vh]"
-              title="You owe nothing"
-              description="Every vendor bill in the books has been settled."
-            />
-          }
-          pagination={{
-            mode: "server",
-            page,
-            pageSize: PAGE_SIZE,
-            total: agingQuery.data?.totalParties ?? 0,
-            onPageChange: setPage,
-            pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
-          }}
-        />
-      )}
+      <DataTable
+        data={rows}
+        columns={columns}
+        getRowKey={(row) => row.partyId}
+        isLoading={agingQuery.isPending}
+        minWidth="900px"
+        className="flex-1 min-h-0"
+        emptyState={
+          <EmptyState
+            className="border-0 bg-transparent min-h-[40vh]"
+            title="You owe nothing"
+            description="Every vendor bill in the books has been settled."
+          />
+        }
+        pagination={{
+          mode: "server",
+          page,
+          pageSize: PAGE_SIZE,
+          total: agingQuery.data?.totalParties ?? 0,
+          onPageChange: setPage,
+          pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+        }}
+      />
 
       <VendorAgingSheet
         party={selectedParty}

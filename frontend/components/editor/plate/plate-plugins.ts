@@ -116,6 +116,10 @@ export const UPLOAD_CONFIG: UploadConfig = {
 
 export const MAX_FILES_PER_DROP = 5;
 
+function renderNoListWrapper(): undefined {
+  return undefined;
+}
+
 export function buildPlugins() {
   return [
     ParagraphPlugin.withComponent(ParagraphElement),
@@ -176,6 +180,7 @@ export function buildPlugins() {
         OrderedListRules.markdown({ variant: "." }),
         TaskListRules.markdown({ checked: false }),
       ],
+      render: { belowNodes: renderNoListWrapper },
     }),
     CodeBlockPlugin.configure({
       options: { lowlight },

@@ -18,6 +18,7 @@ import {
 import type { User } from "@/hooks/api/users";
 import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { UserDetailSheet } from "./user-detail-sheet";
 import { UserInviteDialog } from "./user-invite-dialog";
 import { UserBulkInviteDialog } from "./user-bulk-invite-dialog";
@@ -44,6 +45,7 @@ import { getUserTableColumns } from "./user-table-columns";
 import { UserDirectoryActions } from "./user-directory-actions";
 import { useUserBulkLifecycle } from "./use-user-bulk-lifecycle";
 import { useEmploymentFacts } from "@/hooks/api/directory/employment";
+import { usePresenceMap } from "@/hooks/api/chat-core-read";
 
 export function UsersPage() {
   const router = useRouter();
@@ -185,8 +187,8 @@ export function UsersPage() {
     refetch,
   } = useUsers({ ...listParams, cursor }, { placeholderData: keepPreviousData });
 
-  const { data: branchesData } = useOrgBranches();
-  const { data: departmentsData } = useOrgDepartments();
+  const { data: branchesData } = useOrgBranches(undefined, INLINE_READ_ERROR);
+  const { data: departmentsData } = useOrgDepartments(undefined, INLINE_READ_ERROR);
   const { mutate: exportUsers, isPending: isExporting } = useExportUsers();
   const canCreate = useCanManageOrganizationMembership();
   const canManage = useCan("settings:organization:manage");
@@ -284,6 +286,7 @@ export function UsersPage() {
   const { byUserId: employmentByUserId } = useEmploymentFacts(
     users.map((user) => user.id),
   );
+  const presenceMap = usePresenceMap();
 
   const columns = useMemo(
     () =>
@@ -292,8 +295,9 @@ export function UsersPage() {
         departmentNames,
         employmentByUserId,
         handleViewUser,
+        presenceMap,
       ),
-    [branchNames, departmentNames, employmentByUserId, handleViewUser],
+    [branchNames, departmentNames, employmentByUserId, handleViewUser, presenceMap],
   );
 
   const emptyStateNode = (

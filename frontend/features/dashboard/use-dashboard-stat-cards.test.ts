@@ -32,7 +32,6 @@ function access(over: Partial<DashboardAccess> = {}): DashboardAccess {
     projectsEnabled: true,
     payrollEnabled: false,
     signEnabled: false,
-    accountingEnabled: false,
     canViewEmployees: true,
     canCreateEmployees: false,
     canViewAttendance: true,
@@ -44,10 +43,6 @@ function access(over: Partial<DashboardAccess> = {}): DashboardAccess {
     canViewCrmReports: false,
     canViewTickets: true,
     canViewPayrollSelf: false,
-    canViewOnboardingDocsSummary: false,
-    canViewExpenses: false,
-    canCreateExpenses: false,
-    canApproveExpenses: false,
     canViewSignEnvelopes: false,
     ...over,
   };

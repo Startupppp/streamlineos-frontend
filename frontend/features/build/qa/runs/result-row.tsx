@@ -98,7 +98,7 @@ export const ResultRow = memo(function ResultRow({
             {tc.priority}
           </Badge>
         ) : null}
-        {result.linkedBugId ? (
+        {result.linkedWorkItemId ? (
           <Link
             href={`/build/${projectId}/bugs`}
             className="shrink-0 text-micro font-medium text-primary hover:underline"
@@ -137,7 +137,7 @@ export const ResultRow = memo(function ResultRow({
           {notesOpen ? "Hide notes" : "Notes"}
         </button>
 
-        {canCreateBug && result.status === "failed" && !result.linkedBugId ? (
+        {canCreateBug && result.status === "failed" && !result.linkedWorkItemId ? (
           <Button
             variant="outline"
             size="sm"

@@ -5,6 +5,7 @@ import { Link as LinkIcon } from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { Input } from "@/components/ui/input";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
 import { cn } from "@/lib/utils";
 import {
@@ -229,13 +230,14 @@ export function TicketRelatedLinksEditor({
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                title={link.url}
                 className="min-w-0 flex-1 truncate text-xs text-primary hover:underline"
               >
                 {link.label || link.url}
               </a>
               {link.label ? (
-                <span className="max-w-[80px] min-w-0 truncate text-micro text-muted-foreground" title={link.url}>
-                  {link.url}
+                <span className="min-w-0 max-w-[140px] shrink text-micro text-muted-foreground">
+                  <TruncatedText text={link.url} tooltip={link.url} />
                 </span>
               ) : null}
               <RemoveLinkButton

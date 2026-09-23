@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence } from "framer-motion";
@@ -30,6 +31,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { useCan } from "@/hooks/api/access";
 import {
   useWebhooks,
   useCreateWebhook,
@@ -87,11 +89,19 @@ interface ProjectWebhooksPageProps {
   projectId: string;
 }
 
-export function ProjectWebhooksPage({ projectId: projectIdStr }: ProjectWebhooksPageProps) {
+export function ProjectWebhooksPage({
+  projectId: projectIdStr,
+}: ProjectWebhooksPageProps) {
   const projectId = parseInt(projectIdStr);
+  const canManage = useCan("build:manage");
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const { data: webhooks = [], isLoading, isError, refetch } = useWebhooks(projectId);
+  const {
+    data: webhooks = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useWebhooks(projectId);
   const createWebhook = useCreateWebhook(projectId);
   const deleteWebhook = useDeleteWebhook(projectId);
 
@@ -99,11 +109,16 @@ export function ProjectWebhooksPage({ projectId: projectIdStr }: ProjectWebhooks
     resolver: zodResolver(webhookSchema),
     defaultValues: { url: "", events: [], secret: "" },
   });
+  useRegisterDirtyState(sheetOpen && form.formState.isDirty);
 
   const handleSubmit = useCallback(
     (values: WebhookFormValues) => {
       createWebhook.mutate(
-        { url: values.url, events: values.events, secret: values.secret || undefined },
+        {
+          url: values.url,
+          events: values.events,
+          secret: values.secret || undefined,
+        },
         {
           onSuccess: () => {
             form.reset();
@@ -142,7 +157,9 @@ export function ProjectWebhooksPage({ projectId: projectIdStr }: ProjectWebhooks
     <PageWrapper
       title="Webhooks"
       subtitle="Receive HTTP POST notifications when project events occur"
-      actions={<AddWebhookButton onClick={handleShowForm} />}
+      actions={
+        canManage ? <AddWebhookButton onClick={handleShowForm} /> : undefined
+      }
     >
       <PmPageShell>
         {isLoading ? (
@@ -163,16 +180,24 @@ export function ProjectWebhooksPage({ projectId: projectIdStr }: ProjectWebhooks
         ) : webhooks.length === 0 ? (
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
             <EmptyState
-                className={PM_FILL_PANEL}
-                illustrationPreset="automations"
-                title="No webhooks configured"
-                description="Get notified in real-time when tickets, sprints, or members change."
-                action={{ label: "Create Webhook", onClick: handleShowForm }}
-              />
+              className={PM_FILL_PANEL}
+              illustrationPreset="automations"
+              title="No webhooks configured"
+              description="Get notified in real-time when tickets, sprints, or members change."
+              action={
+                canManage
+                  ? { label: "Create Webhook", onClick: handleShowForm }
+                  : undefined
+              }
+            />
           </PmSection>
         ) : (
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            <PmStaggerList className="space-y-2.5" role="list" aria-label="Webhooks">
+            <PmStaggerList
+              className="space-y-2.5"
+              role="list"
+              aria-label="Webhooks"
+            >
               <AnimatePresence initial={false}>
                 {webhooks.map((wh) => (
                   <div key={wh.id} role="listitem">
@@ -180,6 +205,7 @@ export function ProjectWebhooksPage({ projectId: projectIdStr }: ProjectWebhooks
                       webhook={wh}
                       projectId={projectId}
                       onDelete={handleDelete}
+                      canManage={canManage}
                     />
                   </div>
                 ))}
@@ -196,13 +222,19 @@ export function ProjectWebhooksPage({ projectId: projectIdStr }: ProjectWebhooks
           </SheetHeader>
           <SheetBody className="px-6 py-5">
             <Form {...form}>
-              <form id="webhook-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              <form
+                id="webhook-form"
+                onSubmit={form.handleSubmit(handleSubmit)}
+                className="space-y-4"
+              >
                 <FormField
                   control={form.control}
                   name="url"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Payload URL</FormLabel>
+                      <FormLabel className="text-xs text-muted-foreground">
+                        Payload URL
+                      </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="https://example.com/webhook"
@@ -236,10 +268,16 @@ export function ProjectWebhooksPage({ projectId: projectIdStr }: ProjectWebhooks
                           >
                             <Checkbox
                               checked={field.value.includes(ev.value)}
-                              onCheckedChange={subscribeToEvent(field.onChange, field.value, ev.value)}
+                              onCheckedChange={subscribeToEvent(
+                                field.onChange,
+                                field.value,
+                                ev.value,
+                              )}
                               className="h-3.5 w-3.5"
                             />
-                            <span className="text-xs font-medium">{ev.label}</span>
+                            <span className="text-xs font-medium">
+                              {ev.label}
+                            </span>
                           </label>
                         ))}
                       </div>
@@ -255,7 +293,9 @@ export function ProjectWebhooksPage({ projectId: projectIdStr }: ProjectWebhooks
                     <FormItem>
                       <FormLabel className="text-xs text-muted-foreground">
                         Signing Secret{" "}
-                        <span className="text-muted-foreground font-normal">(optional)</span>
+                        <span className="text-muted-foreground font-normal">
+                          (optional)
+                        </span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -273,7 +313,9 @@ export function ProjectWebhooksPage({ projectId: projectIdStr }: ProjectWebhooks
           </SheetBody>
           <div className="shrink-0 px-6 py-4 border-t">
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" size="sm" onClick={handleCancelForm}>Cancel</Button>
+              <Button variant="outline" size="sm" onClick={handleCancelForm}>
+                Cancel
+              </Button>
               <LoadingButton
                 size="sm"
                 type="submit"

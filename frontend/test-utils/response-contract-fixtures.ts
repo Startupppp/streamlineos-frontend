@@ -5,6 +5,8 @@
  * screen into an error page, so these are the "accepts" half of the proof.
  */
 
+import type { Entitlements } from "@/hooks/api/entitlements-schema";
+
 export const ACCESS = {
   membershipId: 4711,
   scopes: { "hr:employees:view": "all", "crm:deals:view": "team" },
@@ -17,7 +19,7 @@ export const ACCESS = {
 
 const ENTITLEMENT_LIMIT = { limit: 25, used: 3 };
 
-export const ENTITLEMENTS = {
+export const ENTITLEMENTS: Entitlements = {
   tier: "PAID",
   plan: "PROFESSIONAL",
   seatLimit: 50,

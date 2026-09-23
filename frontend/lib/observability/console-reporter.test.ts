@@ -1,4 +1,5 @@
 import { consoleReporter } from "./console-reporter";
+import { ApiError } from "@/lib/api-envelope";
 import {
   reportError,
   resetErrorReporter,
@@ -90,5 +91,49 @@ describe("consoleReporter", () => {
       throw new Error("console broke");
     };
     expect(() => reportError(new Error("x"))).not.toThrow();
+  });
+});
+
+describe("an ApiError reports the fields that identify what actually failed", () => {
+  it("surfaces status, code and endpoint so a pasted browser log names the failing request", () => {
+    const spy = jest.spyOn(console, "error").mockImplementation(() => undefined);
+    const error = new ApiError(
+      "Network error contacting api.example.test (PATCH /access/org-modules/crm). Check your connection and try again.",
+      undefined,
+      "NETWORK_ERROR",
+      { method: "PATCH", path: "/access/org-modules/crm", host: "api.example.test", cause: "Failed to fetch" },
+      "/access/org-modules/crm",
+    );
+
+    consoleReporter.report({ error, context: {} });
+
+    const payload = JSON.parse(spy.mock.calls[0]?.[0] as string) as {
+      error: { code?: string; endpoint?: string; details?: { cause?: string } };
+    };
+    expect(payload.error.code).toBe("NETWORK_ERROR");
+    expect(payload.error.endpoint).toBe("/access/org-modules/crm");
+    expect(payload.error.details?.cause).toBe("Failed to fetch");
+    spy.mockRestore();
+  });
+
+  it("redacts a secret carried in details rather than printing it into the log", () => {
+    const spy = jest.spyOn(console, "error").mockImplementation(() => undefined);
+    const error = new ApiError("boom", 500, "OOPS", { authorization: "Bearer super-secret" });
+
+    consoleReporter.report({ error, context: {} });
+
+    const raw = spy.mock.calls[0]?.[0] as string;
+    expect(raw).not.toContain("super-secret");
+    spy.mockRestore();
+  });
+
+  it("adds no diagnostic keys to an ordinary Error, so unrelated reports keep their shape", () => {
+    const spy = jest.spyOn(console, "error").mockImplementation(() => undefined);
+
+    consoleReporter.report({ error: new Error("plain"), context: {} });
+
+    const payload = JSON.parse(spy.mock.calls[0]?.[0] as string) as { error: Record<string, unknown> };
+    expect(Object.keys(payload.error).sort()).toEqual(["message", "name", "stack"]);
+    spy.mockRestore();
   });
 });

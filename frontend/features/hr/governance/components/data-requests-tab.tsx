@@ -208,7 +208,7 @@ export function DataRequestsTab() {
         {canManage && (
           <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <PlusIcon size={16} className="mr-1.5" />
-            New Request
+            Create data request
           </Button>
         )}
       </div>
@@ -223,7 +223,7 @@ export function DataRequestsTab() {
             illustrationPreset="documents"
             title="No data requests"
             description="Submit GDPR-style export, anonymization, or deletion requests for employees."
-            action={canManage ? { label: "New Request", onClick: handleOpenSheet } : undefined}
+            action={canManage ? { label: "Create data request", onClick: handleOpenSheet } : undefined}
           />
         }
         pagination={{ mode: "server", page, pageSize: 20, total: data?.data?.length ?? 0, onPageChange: setPage }}

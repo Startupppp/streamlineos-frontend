@@ -16,6 +16,7 @@ jest.mock("@/lib/api-client", () => ({
   apiClient: {
     get: jest.fn(),
     post: jest.fn(),
+    put: jest.fn(),
     patch: jest.fn(),
     delete: jest.fn(),
   },
@@ -198,6 +199,20 @@ describe("chat mutation hooks — throw without permission", () => {
       ).rejects.toThrow("Missing permission: chat:messages:read");
     });
     expect(mockedPost).not.toHaveBeenCalled();
+  });
+
+  it("useSetPresenceStatus — uses chat:messages:read key (not chat:messages:write)", async () => {
+    const { useSetPresenceStatus } = await import("@/hooks/api/chat-core-mutations-b");
+    const client = freshClient();
+    const { result } = renderHook(() => useSetPresenceStatus(), {
+      wrapper: makeWrapper(client),
+    });
+    await act(async () => {
+      await expect(
+        result.current.mutateAsync({ status: "BUSY" }),
+      ).rejects.toThrow("Missing permission: chat:messages:read");
+    });
+    expect(apiClient.put).not.toHaveBeenCalled();
   });
 
   it("useChatHeartbeat — uses chat:messages:read key (not chat:messages:write)", async () => {

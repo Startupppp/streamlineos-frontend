@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/responsive-popover";
 import { DisplayToggleRow } from "@/features/build/shared/display-toggle-row";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { SlidersHorizontalIcon, PlusIcon } from "@animateicons/react/lucide";
+import { SlidersHorizontalIcon } from "@animateicons/react/lucide";
 import { type DisplayProps, DISPLAY_PROP_ITEMS } from "./display-props";
 
 export function WorkspaceRoleBadge({ role }: { role: "member" | "admin" }) {
@@ -70,20 +70,5 @@ export function DisplayPropsToggle({
         </div>
       </ResponsivePopoverContent>
     </ResponsivePopover>
-  );
-}
-
-export function AddMemberButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button
-      size="sm"
-      className="h-9 min-h-9 gap-1.5 text-xs"
-      onClick={onClick}
-      {...hoverHandlers}
-    >
-      <PlusIcon ref={iconRef} size={14} />
-      Add member
-    </Button>
   );
 }

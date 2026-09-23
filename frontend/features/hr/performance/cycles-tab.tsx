@@ -218,7 +218,7 @@ export function CyclesTab() {
           completed={cycleStats.completed}
         />
         <Button size="sm" className="gap-1.5 shrink-0" onClick={openCreate}>
-          <Plus className="h-3.5 w-3.5" />New Cycle
+          <Plus className="h-3.5 w-3.5" />Create review cycle
         </Button>
       </div>
 
@@ -227,7 +227,7 @@ export function CyclesTab() {
           illustrationPreset="calendar"
           title="No review cycles yet"
           description="Create a quarterly or annual cycle to structure your performance reviews."
-          action={{ label: "New Cycle", onClick: openCreate }}
+          action={{ label: "Create review cycle", onClick: openCreate }}
         />
       ) : (
         <div className="space-y-2">

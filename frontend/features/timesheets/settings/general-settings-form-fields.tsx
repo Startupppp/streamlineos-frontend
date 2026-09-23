@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { RoundingRule, ApprovalMode } from "@/features/timesheets/types";
+import type { RoundingRule, ApprovalMode, ApproverSource } from "@/features/timesheets/types";
 import type { GeneralSettingsFormValues } from "./general-settings-schema";
 import { CREATE_REQUIRED_FIELDS, requiredFieldLabel } from "./required-fields";
 import {
@@ -46,15 +46,21 @@ const ROUNDING_OPTIONS: { value: RoundingRule; label: string }[] = [
 const APPROVAL_OPTIONS: { value: ApprovalMode; label: string }[] = [
   { value: "AUTO", label: "No approval (auto-approve)" },
   { value: "MANAGER", label: "Manager approval" },
-  { value: "MULTI_LEVEL", label: "Multi-level approval" },
 ];
 
-/*
- * Only what the server enforces. "Billable flag" and "Work link" were offered
- * here and checked nowhere — ticking either saved, showed a tick on reload, and
- * changed nothing about what anyone could log. `required-fields.test.ts` reads
- * the backend's own `if`s so a third inert option cannot appear.
- */
+const APPROVER_SOURCE_OPTIONS: { value: ApproverSource; label: string; description: string }[] = [
+  {
+    value: "REPORTING_MANAGER",
+    label: "Reporting manager",
+    description: "The employee's reporting manager approves; if they cannot, it goes to their manager, then the department head, then the timesheet approvals queue.",
+  },
+  {
+    value: "PROJECT_MANAGER",
+    label: "Project manager",
+    description: "The manager of the project with most of the period's hours approves; periods without a usable project manager fall back to the reporting manager.",
+  },
+];
+
 const REQUIRED_FIELD_OPTIONS = CREATE_REQUIRED_FIELDS.map((key) => ({
   key,
   label: requiredFieldLabel(key),
@@ -64,10 +70,6 @@ interface GeneralSettingsFormFieldsProps {
   form: UseFormReturn<GeneralSettingsFormValues>;
   canManage: boolean;
   isPending: boolean;
-  /**
-   * The pending changes the server will refuse without a reason, derived by the
-   * form from the same diff its save sends.
-   */
   pendingMaterial: ReturnType<typeof materialChangesIn>;
 }
 
@@ -79,6 +81,9 @@ export function GeneralSettingsFormFields({
 }: GeneralSettingsFormFieldsProps) {
   const { control, register, formState: { isDirty, errors } } = form;
   const allowBackdated = useWatch({ control, name: "allowBackdatedEntries" });
+  const approvalMode = useWatch({ control, name: "approvalMode" });
+  const approverSource = useWatch({ control, name: "approverSource" });
+  const approverSourceDescription = APPROVER_SOURCE_OPTIONS.find((opt) => opt.value === approverSource)?.description;
 
   return (
     <>
@@ -338,6 +343,36 @@ export function GeneralSettingsFormFields({
               )}
             />
           </div>
+          {approvalMode === "MANAGER" && (
+            <div className="space-y-1.5">
+              <Label htmlFor="timesheet-settings-approver-source" className="text-xs font-medium">Who approves</Label>
+              <Controller
+                control={control}
+                name="approverSource"
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    disabled={!canManage}
+                  >
+                    <SelectTrigger id="timesheet-settings-approver-source" className="h-9 w-52">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {APPROVER_SOURCE_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {approverSourceDescription && (
+                <p className="text-xs text-muted-foreground">{approverSourceDescription}</p>
+              )}
+            </div>
+          )}
           <div className="flex items-center justify-between py-0.5">
             <Label htmlFor="timesheet-settings-client-approval-enabled" className="text-xs font-medium">Enable client approval</Label>
             <Controller

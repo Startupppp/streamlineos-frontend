@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -169,9 +171,13 @@ export function InputsTab({ runId, isLocked }: InputsTabProps) {
   const [showReimport, setShowReimport] = useState(false);
   const canUpdate = useCan("payroll:runs:update");
 
-  const { data: inputs, isLoading } = useRunInputs(runId);
+  const { data: inputs, isLoading, isError, error, refetch } = useRunInputs(runId);
   const patchMutation = usePatchInput(runId);
   const reimportMutation = useReimportInputs(runId);
+
+  function handleRetry() {
+    void refetch();
+  }
 
   const form = useForm<OverrideForm>({
     resolver: zodResolver(overrideSchema),
@@ -240,21 +246,30 @@ export function InputsTab({ runId, isLocked }: InputsTabProps) {
           </Button>
         </div>
       )}
-      <DataTable
-        data={inputs ?? []}
-        columns={COLUMNS}
-        getRowKey={(row) => row.id}
-        onRowClick={!isLocked && canUpdate ? handleRowClick : undefined}
-        isLoading={isLoading}
-        minWidth="900px"
-        emptyState={
-          <EmptyState
-            compact
-            title="No attendance inputs"
-            description="Run will pull inputs on generation"
-          />
-        }
-      />
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load run inputs"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <DataTable
+          data={inputs ?? []}
+          columns={COLUMNS}
+          getRowKey={(row) => row.id}
+          onRowClick={!isLocked && canUpdate ? handleRowClick : undefined}
+          isLoading={isLoading}
+          minWidth="900px"
+          emptyState={
+            <EmptyState
+              compact
+              title="No attendance inputs"
+              description="Run will pull inputs on generation"
+            />
+          }
+        />
+      )}
 
       <Sheet open={!!selectedInput} onOpenChange={handleSheetClose}>
         <SheetContent className="p-0 flex flex-col sm:max-w-lg">

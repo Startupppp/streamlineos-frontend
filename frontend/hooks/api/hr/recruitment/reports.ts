@@ -175,7 +175,7 @@ export function useDiversityReport(filters: DiversityFilters) {
   if (filters.to) params.to = filters.to;
   if (filters.departmentIds.length > 0) params.departmentIds = filters.departmentIds.join(",");
 
-  return useGatedQuery<DiversityReport>("hr:employees:view", {
+  return useGatedQuery<DiversityReport>("hr:sensitive:view", {
     queryKey: [...humanResourcesQueryKeys.hr.diversityReport(), params],
     queryFn: ({ signal }) => apiClient.get<DiversityReport>("/hr/recruitment/diversity-report", params, signal, diversityReportC),
     staleTime: 5 * 60_000,

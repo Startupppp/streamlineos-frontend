@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { render, screen } from "@testing-library/react";
 import { backendPath, backendReachable } from "@/lib/test-support/backend-path";
-import type { AccountSystemTagMapping } from "@/types/accounting-kernel-ext";
+import type { AccountSystemTagMapping } from "@/types/accounting/accounting-kernel-ext";
 import { AccountMappingsCard } from "../account-mappings-card";
 
 /**
@@ -194,7 +194,7 @@ describe("the mapping surface matches the API it reads", () => {
       .filter((t) => t !== "gl_system_tag");
     expect(backendTags.length).toBeGreaterThan(40);
 
-    const types = readFileSync(join(__dirname, "../../../../types/accounting-kernel.ts"), "utf8");
+    const types = readFileSync(join(__dirname, "../../../../types/accounting/accounting-kernel.ts"), "utf8");
     const union = types.slice(
       types.indexOf("export type GlSystemTag ="),
       types.indexOf(";", types.indexOf("export type GlSystemTag =")),

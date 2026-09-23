@@ -1,20 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Button } from "@/components/ui/button";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/build/roadmap";
-import type { RoadmapItem, RoadmapStatus } from "@/types/projects";
+import type { RoadmapStatus } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PmPanel, PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { ROADMAP_COLUMNS } from "./roadmap-constants";
-import { RoadmapItemCard } from "./roadmap-item-card";
+import { RoadmapItemCard, type ScorableRoadmapItem } from "./roadmap-item-card";
 import { RoadmapItemSheet } from "./roadmap-item-sheet";
 
 interface RoadmapTabProps {
@@ -38,30 +38,33 @@ function RoadmapBoardSkeleton() {
 }
 
 export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTabProps) {
-  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
-  const [cursorIdx, setCursorIdx] = useState(0);
-  const currentCursor = cursorHistory[cursorIdx];
+  const pager = useCursorPager(search.trim());
 
-  const { data, isLoading, isError, refetch } = useRoadmapItems(
+  const { data, isLoading, isError, error, refetch } = useRoadmapItems(
     search.trim()
-      ? { search: search.trim(), cursor: currentCursor }
-      : { cursor: currentCursor },
+      ? { search: search.trim(), cursor: pager.cursor }
+      : { cursor: pager.cursor },
   );
   const deleteItem = useDeleteRoadmapItem();
   const [internalCreateOpen, setInternalCreateOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<RoadmapItem | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<RoadmapItem | null>(null);
+  const [editTarget, setEditTarget] = useState<ScorableRoadmapItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ScorableRoadmapItem | null>(null);
 
-  useEffect(() => {
-    setCursorHistory([undefined]);
-    setCursorIdx(0);
-  }, [search]);
+  const isEmpty = (data?.data ?? []).length === 0 && !pager.hasPrevious;
+
+  const resolution = usePageState({
+    permission: "build:roadmap:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty,
+  });
 
   const isCreateControlled = onCreateOpenChange !== undefined;
   const sheetOpen = isCreateControlled ? (createOpen ?? false) : internalCreateOpen;
 
   const grouped = useMemo(() => {
-    const map: Record<string, RoadmapItem[]> = {
+    const map: Record<string, ScorableRoadmapItem[]> = {
       planned: [],
       in_progress: [],
       completed: [],
@@ -93,11 +96,11 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
     if (!open) setDeleteTarget(null);
   }
 
-  const handleEditItem = useCallback((item: RoadmapItem) => {
+  const handleEditItem = useCallback((item: ScorableRoadmapItem) => {
     setEditTarget(item);
   }, []);
 
-  const handleDeleteItem = useCallback((item: RoadmapItem) => {
+  const handleDeleteItem = useCallback((item: ScorableRoadmapItem) => {
     setDeleteTarget(item);
   }, []);
 
@@ -112,41 +115,33 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
     });
   }
 
-  function handleNext() {
-    const nc = data?.pagination.nextCursor;
-    if (!nc) return;
-    setCursorHistory((prev) => [...prev.slice(0, cursorIdx + 1), nc]);
-    setCursorIdx((prev) => prev + 1);
-  }
+  const handleNext = useCallback(() => {
+    pager.goNext(data?.pagination.nextCursor);
+  }, [pager, data?.pagination.nextCursor]);
 
-  function handlePrev() {
-    if (cursorIdx === 0) return;
-    setCursorIdx((prev) => prev - 1);
-  }
+  const handlePrev = useCallback(() => {
+    pager.goPrevious();
+  }, [pager]);
 
-  if (isLoading) return <RoadmapBoardSkeleton />;
-
-  if (isError) {
-    return (
-      <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
-    );
-  }
-
-  const isEmpty = (data?.data ?? []).length === 0 && cursorIdx === 0;
-  const hasPrev = cursorIdx > 0;
   const hasNext = data?.pagination.hasMore ?? false;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      {isEmpty ? (
-        <EmptyState
-          className={PM_FILL_PANEL}
-          illustration={<EmptyProjectsIllustration />}
-          title="No roadmap items yet"
-          description="Plan what's coming and share it publicly with your users."
-          action={{ label: "Add roadmap item", onClick: handleOpenSheet }}
-        />
-      ) : (
+      <PageState
+        resolution={resolution}
+        loading={<RoadmapBoardSkeleton />}
+        empty={
+          <EmptyState
+            className={PM_FILL_PANEL}
+            illustrationPreset="projects"
+            title="No roadmap items yet"
+            description="Plan what's coming and share it publicly with your users."
+            action={{ label: "Add roadmap item", onClick: handleOpenSheet }}
+          />
+        }
+        onRetry={handleRetry}
+        className={PM_FILL_PANEL}
+      >
         <div className="flex min-h-0 flex-1 flex-col gap-2">
           <div className="grid min-h-0 flex-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
             {ROADMAP_COLUMNS.map((col) => (
@@ -156,16 +151,16 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
                     {col.label}
                   </span>
                   <span className="min-w-[20px] rounded-full border border-border/50 bg-background/80 px-1.5 py-0.5 text-center text-dense tabular-nums text-muted-foreground">
-                    {grouped[col.status].length}
+                    {(grouped[col.status as RoadmapStatus] ?? []).length}
                   </span>
                 </div>
-                {grouped[col.status].length === 0 ? (
+                {(grouped[col.status as RoadmapStatus] ?? []).length === 0 ? (
                   <div className="rounded-lg border border-dashed border-border/60 py-6 text-center text-xs text-muted-foreground">
                     Empty
                   </div>
                 ) : (
                   <PmStaggerList className="flex flex-col gap-1.5">
-                    {grouped[col.status].map((item) => (
+                    {(grouped[col.status as RoadmapStatus] ?? []).map((item) => (
                       <RoadmapItemCard
                         key={item.id}
                         item={item}
@@ -178,18 +173,16 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
               </PmPanel>
             ))}
           </div>
-          {(hasPrev || hasNext) ? (
-            <div className="flex items-center justify-center gap-2 border-t pt-2">
-              <Button variant="ghost" size="sm" onClick={handlePrev} disabled={!hasPrev}>
-                Previous
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handleNext} disabled={!hasNext}>
-                Next
-              </Button>
-            </div>
-          ) : null}
+          <TablePagination
+            mode="cursor"
+            rowCount={(data?.data ?? []).length}
+            hasMore={hasNext}
+            hasPrevious={pager.hasPrevious}
+            onNext={handleNext}
+            onPrevious={handlePrev}
+          />
         </div>
-      )}
+      </PageState>
 
       {sheetOpen ? <RoadmapItemSheet onClose={handleCloseSheet} /> : null}
       {editTarget ? <RoadmapItemSheet item={editTarget} onClose={handleCloseEdit} /> : null}

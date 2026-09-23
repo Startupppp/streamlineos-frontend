@@ -1,35 +1,41 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { useTestCases, useTestSuites, useDeleteTestCase } from "@/hooks/api/build/qa";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import type { TestCase } from "@/types/projects";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
-import { SearchInput } from "@/components/ui/search-input";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { PlusIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { buildTestCaseColumns } from "./test-case-columns";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import {
+  TEST_CASE_TABLE_HEADERS,
+  buildTestCaseColumns,
+  TestCaseMobileCard,
+} from "./test-case-columns";
 import { TestCaseSheet } from "./test-case-sheet";
+
+const CASE_PAGE_SIZE = 50;
+
+const FILTER_DEFINITIONS = [{ param: "suite" }] as const;
 
 function NewCaseButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button size="sm" className="ml-auto h-7 gap-1 text-dense" onClick={onClick} {...hoverHandlers}>
+    <Button onClick={onClick} {...hoverHandlers}>
       <PlusIcon ref={iconRef} size={14} />
       New Test Case
     </Button>
@@ -42,21 +48,41 @@ interface TestCasesTabProps {
 
 export function TestCasesTab({ projectId }: TestCasesTabProps) {
   const canManage = useCan("build:qa:manage");
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebouncedValue(search, 300);
-  const [suiteFilter, setSuiteFilter] = useState("all");
+  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
+
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editCase, setEditCase] = useState<TestCase | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<TestCase | null>(null);
 
-  const filters = {
-    q: debouncedSearch || undefined,
-    suiteId: suiteFilter !== "all" ? Number(suiteFilter) : undefined,
+  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+    listFilters.resetKey,
+  );
+
+  const suiteValue = listFilters.value("suite");
+  const queryFilters = {
+    q: listFilters.debouncedSearch || undefined,
+    suiteId: suiteValue !== BUILD_FILTER_ALL ? Number(suiteValue) : undefined,
+    cursor: cursor !== undefined ? Number(cursor) : undefined,
   };
 
-  const { data: cases, isLoading, isError, error, refetch } = useTestCases(projectId, filters);
+  const {
+    data: casesPage,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useTestCases(projectId, queryFilters);
+  const cases = casesPage?.data ?? [];
   const { data: suites } = useTestSuites(projectId);
   const deleteCase = useDeleteTestCase();
+
+  const suiteOptions = useMemo(
+    () => [
+      { value: BUILD_FILTER_ALL, label: "All suites" },
+      ...(suites ?? []).map((s) => ({ value: String(s.id), label: s.name })),
+    ],
+    [suites],
+  );
 
   const handleEdit = useCallback((tc: TestCase) => {
     setEditCase(tc);
@@ -68,7 +94,9 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
     setSheetOpen(true);
   }, []);
 
-  const handleDelete = useCallback(() => {
+  const handleDeleteRow = useCallback((tc: TestCase) => setDeleteTarget(tc), []);
+
+  const handleDeleteConfirm = useCallback(() => {
     if (!deleteTarget) return;
     deleteCase.mutate(
       { projectId, id: deleteTarget.id },
@@ -77,14 +105,10 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
           toast.success("Test case deleted");
           setDeleteTarget(null);
         },
-        onError: (error) => toast.error(getErrorMessage(error)),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }, [deleteTarget, deleteCase, projectId]);
-
-  const handleSearchChange = useCallback((value: string) => {
-    setSearch(value);
-  }, []);
 
   const handleDeleteDialogChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
@@ -94,75 +118,118 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
     void refetch();
   }, [refetch]);
 
-  const filtersActive = search.trim() !== "" || suiteFilter !== "all";
+  const handleNextPage = useCallback(() => {
+    goNext(casesPage?.nextCursor == null ? null : String(casesPage.nextCursor));
+  }, [goNext, casesPage]);
 
-  const handleClearFilters = useCallback(() => {
-    setSearch("");
-    setSuiteFilter("all");
-  }, []);
-
-  const columns = useMemo(
-    () => buildTestCaseColumns({ canManage, onEdit: handleEdit, onDelete: setDeleteTarget }),
-    [canManage, handleEdit],
+  const handleSuiteChange = useCallback(
+    (value: string) => listFilters.setValue("suite", value),
+    [listFilters],
   );
 
-  if (isLoading) return <DataTableSkeleton rows={12} columns={5} className="flex-1" />;
-  if (isError)
-    return (
-      <ErrorState
-        className="flex-1"
-        title="Couldn't load test cases"
-        description={getErrorMessage(error)}
-        onRetry={handleRetry}
+  const pageState = usePageState({
+    permission: "build:qa:view",
+    isLoading,
+    isError,
+    error,
+  });
+
+  const columns = useMemo(
+    () =>
+      buildTestCaseColumns({
+        canManage,
+        onEdit: handleEdit,
+        onDelete: handleDeleteRow,
+      }),
+    [canManage, handleEdit, handleDeleteRow],
+  );
+
+  const renderMobileCard = useCallback(
+    (row: TestCase) => (
+      <TestCaseMobileCard
+        testCase={row}
+        canManage={canManage}
+        onEdit={handleEdit}
+        onDelete={handleDeleteRow}
       />
-    );
+    ),
+    [canManage, handleEdit, handleDeleteRow],
+  );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col space-y-3">
-      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-        <SearchInput
-          placeholder="Search cases..."
-          value={search}
-          onValueChange={handleSearchChange}
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <div className="flex shrink-0 items-start gap-2">
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search cases…",
+            label: "Search test cases",
+          }}
+          filters={[
+            {
+              id: "suite",
+              label: "Suite",
+              active: listFilters.isActive("suite"),
+              control: (
+                <BuildFilterSelect
+                  label="Suite"
+                  value={suiteValue}
+                  onValueChange={handleSuiteChange}
+                  options={suiteOptions}
+                />
+              ),
+            },
+          ]}
+          onClearAll={listFilters.clearAll}
+          className="flex-1 min-w-0"
         />
-        <Select value={suiteFilter} onValueChange={setSuiteFilter}>
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="All suites" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All suites</SelectItem>
-            {(suites ?? []).map((s) => (
-              <SelectItem key={s.id} value={String(s.id)}>
-                {s.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         {canManage ? <NewCaseButton onClick={handleNewCase} /> : null}
       </div>
 
-      {(cases ?? []).length === 0 ? (
-        <EmptyState
-          illustrationPreset="ticket"
-          title="No test cases"
-          description={filtersActive ? undefined : "Create a test case to get started."}
-          filtersActive={filtersActive}
-          onClearFilters={handleClearFilters}
-          action={
-            !filtersActive && canManage
-              ? { label: "New Test Case", onClick: handleNewCase }
-              : undefined
-          }
-          className="min-h-[32dvh] flex-1"
-        />
-      ) : (
+      <PageState
+        resolution={pageState}
+        loading={
+          <DataTableSkeleton mobileCards
+            rows={12}
+            headers={TEST_CASE_TABLE_HEADERS}
+            className="flex-1"
+          />
+        }
+        empty={
+          <EmptyState
+            illustrationPreset="ticket"
+            title="No test cases"
+            description="Create a test case to get started."
+            filtersActive={listFilters.isFiltered}
+            onClearFilters={listFilters.clearAll}
+            action={
+              canManage
+                ? { label: "New Test Case", onClick: handleNewCase }
+                : undefined
+            }
+            className="flex-1"
+          />
+        }
+        onRetry={handleRetry}
+        className="flex-1 min-h-0"
+      >
         <DataTable<TestCase>
-          data={cases ?? []}
+          data={cases}
           columns={columns}
           getRowKey={(row) => row.id}
-          className="min-h-0 flex-1"
+          mobileCard={renderMobileCard}
+          className="flex-1 min-h-0"
+          pagination={{
+            mode: "cursor",
+            pageSize: CASE_PAGE_SIZE,
+            hasMore: casesPage?.hasMore ?? false,
+            hasPrevious,
+            onNext: handleNextPage,
+            onPrevious: goPrevious,
+          }}
         />
-      )}
+      </PageState>
 
       <TestCaseSheet
         projectId={projectId}
@@ -179,7 +246,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
         description={`TC-${deleteTarget?.caseNumber ?? ""}${deleteTarget?.title ? ` · ${deleteTarget.title}` : ""} will be permanently deleted.`}
         confirmLabel="Delete"
         destructive
-        onConfirm={handleDelete}
+        onConfirm={handleDeleteConfirm}
       />
     </div>
   );

@@ -14,6 +14,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { useHrAutomationRuns } from "@/hooks/api/hr/hr-automations";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { HrAutomationRun, HrAutomationRunStatus } from "@/types/hr/automations";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -101,12 +103,16 @@ interface Props {
 
 export function AutomationRunsSheet({ ruleId, ruleName, onClose }: Props) {
   const pager = useCursorPager();
-  const { data: runsData, isLoading } = useHrAutomationRuns(ruleId, {
+  const { data: runsData, isLoading, isError, error, refetch } = useHrAutomationRuns(ruleId, {
     cursor: pager.cursor,
     limit: 20,
   });
   const runs = runsData?.data;
   const pagination = runsData?.pagination;
+
+  function handleRetry() {
+    void refetch();
+  }
 
   function handleNext() {
     pager.goNext(pagination?.nextCursor);
@@ -124,10 +130,18 @@ export function AutomationRunsSheet({ ruleId, ruleName, onClose }: Props) {
           {isLoading && Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="h-10 w-full rounded-lg" />
           ))}
-          {!isLoading && (!runs || runs.length === 0) && (
+          {isError && (
+            <ErrorState
+              compact
+              title="Couldn't load run history"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+            />
+          )}
+          {!isLoading && !isError && (!runs || runs.length === 0) && (
             <p className="text-sm text-muted-foreground text-center py-12">No runs yet for this rule.</p>
           )}
-          {runs?.map((run) => <RunRow key={run.id} run={run} />)}
+          {!isError && runs?.map((run) => <RunRow key={run.id} run={run} />)}
         </SheetBody>
 
         {pagination && (pagination.hasMore || pager.hasPrevious) && (

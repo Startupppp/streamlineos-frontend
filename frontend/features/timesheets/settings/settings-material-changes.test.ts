@@ -12,11 +12,6 @@ describe("materialChangesIn", () => {
   });
 
   it("asks for nothing when the diff is empty", () => {
-    /*
-     * The server checks the diff against stored values for this reason: a
-     * requirement that fires when nothing changed is one people satisfy with a
-     * full stop, and the history fills with "." instead of reasons.
-     */
     expect(materialChangesIn({})).toEqual([]);
   });
 
@@ -42,20 +37,6 @@ describe("materialChangesIn", () => {
   });
 });
 
-/**
- * The drift guard, and the reason this file exists.
- *
- * TS-16 added `MATERIAL_FIELDS` to the backend and made a reason mandatory for
- * them. The form never grew a field to supply one — and because every setting
- * this form edits is on that list, `PATCH /timesheets/settings` refused every
- * save with `A changeReason is required when changing approvalMode`. The
- * timesheet settings screen could not save anything at all, and no test in
- * either repository noticed, because each side was internally consistent.
- *
- * So this reads the backend's own list. A field added there and not here brings
- * the wall straight back; a field removed there and not here asks the user for
- * a justification nobody wanted.
- */
 describe("the material-field list matches the backend", () => {
   it("holds exactly the fields MATERIAL_FIELDS names, minus the payroll ones", () => {
     const src = readFileSync(

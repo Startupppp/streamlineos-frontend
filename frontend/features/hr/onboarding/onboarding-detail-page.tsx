@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -62,13 +62,21 @@ export function OnboardingDetailPage({ userId }: OnboardingDetailPageProps) {
   } = useOnboardingStatus();
 
   const completeTask = useCompleteOnboardingTask();
+  const [togglingTaskIds, setTogglingTaskIds] = useState<Set<number>>(new Set());
 
   const handleToggle = useCallback(
     (taskId: number, currentStatus: string) => {
       const newStatus = currentStatus === "COMPLETED" ? "PENDING" : "COMPLETED";
+      setTogglingTaskIds((currentTaskIds) => new Set(currentTaskIds).add(taskId));
       completeTask.mutate(
         { taskId, status: newStatus },
         {
+          onSettled: () =>
+            setTogglingTaskIds((currentTaskIds) => {
+              const nextTaskIds = new Set(currentTaskIds);
+              nextTaskIds.delete(taskId);
+              return nextTaskIds;
+            }),
           onSuccess: () =>
             toast.success(newStatus === "COMPLETED" ? "Task marked complete" : "Task marked pending"),
           onError: (e) => toast.error(getErrorMessage(e)),
@@ -156,7 +164,7 @@ export function OnboardingDetailPage({ userId }: OnboardingDetailPageProps) {
                   <OnboardingTaskCard
                     key={task.id}
                     task={task}
-                    isPending={completeTask.isPending}
+                    isPending={togglingTaskIds.has(task.id)}
                     onToggle={handleToggle}
                   />
                 ))}
@@ -174,7 +182,7 @@ export function OnboardingDetailPage({ userId }: OnboardingDetailPageProps) {
                   <OnboardingTaskCard
                     key={task.id}
                     task={task}
-                    isPending={completeTask.isPending}
+                    isPending={togglingTaskIds.has(task.id)}
                     onToggle={handleToggle}
                   />
                 ))}

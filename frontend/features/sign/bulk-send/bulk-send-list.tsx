@@ -113,8 +113,11 @@ export function BulkSendList() {
   const [createOpen, setCreateOpen] = useState(false);
   const [openJob, setOpenJob] = useState<SignBulkSendJob | null>(null);
   const { data: templates } = useSignTemplates();
-  const { data: jobs, isLoading, isError, refetch } = useBulkSendJobs();
+  const { data: jobs, isLoading, isFetching, isError, error, refetch, access } = useBulkSendJobs();
   const hasPublished = (templates ?? []).some((t) => t.status === "published");
+
+  /** Only show skeleton on initial load, not on background refetch */
+  const showSkeleton = !jobs && (isLoading || isFetching);
 
   function templateNameFor(job: SignBulkSendJob): string | undefined {
     return (templates ?? []).find((template) => template.id === job.templateId)?.name;
@@ -122,6 +125,23 @@ export function BulkSendList() {
 
   function handleJobSheetOpenChange(next: boolean) {
     if (!next) setOpenJob(null);
+  }
+
+  async function handleRetry() {
+    await refetch();
+  }
+
+  if (access.denied) {
+    return (
+      <PageWrapper title="Bulk Send" subtitle="Send one template to a list of people via CSV">
+        <EmptyState
+          illustrationPreset="permissions"
+          access={access}
+          title="Access restricted"
+          description="You don't have permission to view bulk send jobs."
+        />
+      </PageWrapper>
+    );
   }
 
   return (
@@ -134,16 +154,22 @@ export function BulkSendList() {
         </AnimatedIconButton>
       }
     >
-      {isLoading ? (
+      {showSkeleton ? (
         <div className="space-y-3">
           {Array.from({ length: 9 }).map((_, i) => (
             <Skeleton key={i} className="h-16 w-full" />
           ))}
         </div>
       ) : isError ? (
-        <ErrorState title="Failed to load bulk send jobs" onRetry={() => void refetch()} />
+        <ErrorState
+          className="flex-1"
+          title="Failed to load bulk send jobs"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
       ) : !jobs || jobs.length === 0 ? (
         <EmptyState
+          access={access}
           illustration={<IllustrationImage name="empty-upload" className="h-40 w-40" />}
           title={hasPublished ? "No bulk send jobs yet" : "Publish a template first"}
           description={hasPublished ? "Upload a CSV of recipients to send one template to everyone at once." : "Bulk send requires a published single-signer template. Save an envelope as a template, then publish it."}

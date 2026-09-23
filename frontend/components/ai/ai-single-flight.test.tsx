@@ -238,7 +238,7 @@ describe("useAiPopoverAction — one paid dispatch at a time", () => {
 
     await act(async () => {
       pending.reject(
-        new ApiError("Too many concurrent AI requests for this organization", 503),
+        new ApiError("Too many concurrent AI requests for this organization", 503, "AI_CONCURRENCY_LIMIT"),
       );
       await pending.promise.catch(() => undefined);
     });

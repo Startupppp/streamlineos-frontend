@@ -3,13 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { useExecutiveDashboard } from "@/hooks/api/dashboard";
-import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { IndianRupee, TrendingUp, Target, Briefcase, RefreshCw } from "lucide-react";
+import { Users, Briefcase, Folder, RefreshCw } from "lucide-react";
 
 export function ExecutiveKpiWidget() {
   const { data, isLoading, error, refetch } = useExecutiveDashboard();
-  const hasCrmAccess = useCan("crm:leads:view");
 
   const handleRetry = () => void refetch();
 
@@ -27,57 +25,33 @@ export function ExecutiveKpiWidget() {
     );
   }
 
-  const skeletonCount = hasCrmAccess ? 4 : 1;
-
   if (isLoading || !data) {
-    return <StatCardGridSkeleton cols={4} count={skeletonCount} />;
+    return <StatCardGridSkeleton cols={4} count={3} />;
   }
-
-  const fmt = (n: number) =>
-    n >= 1_000_000
-      ? `₹${(n / 1_000_000).toFixed(1)}M`
-      : n >= 1_000
-        ? `₹${(n / 1_000).toFixed(0)}K`
-        : `₹${n}`;
 
   return (
     <StatCardGrid cols={4}>
+      <StatCard
+        label="Headcount"
+        value={data.headcount}
+        icon={Users}
+        color="blue"
+        index={0}
+      />
       <StatCard
         label="Open Roles"
         value={data.openRoles}
         icon={Briefcase}
         color="gold"
-        index={0}
+        index={1}
       />
-      {data.conversionRate !== undefined && (
-        <StatCard
-          label="Conversion Rate"
-          value={`${data.conversionRate}%`}
-          icon={Target}
-          color="purple"
-          index={1}
-          href="/crm/leads"
-        />
-      )}
-      {data.mrr !== undefined && (
-        <StatCard
-          label="MRR (Won)"
-          value={fmt(data.mrr)}
-          icon={IndianRupee}
-          color="gold"
-          index={2}
-        />
-      )}
-      {data.pipelineValue !== undefined && (
-        <StatCard
-          label="Pipeline Value"
-          value={fmt(data.pipelineValue)}
-          icon={TrendingUp}
-          color="blue"
-          index={3}
-          href="/crm/deals"
-        />
-      )}
+      <StatCard
+        label="Active Projects"
+        value={data.activeProjects}
+        icon={Folder}
+        color="purple"
+        index={2}
+      />
     </StatCardGrid>
   );
 }

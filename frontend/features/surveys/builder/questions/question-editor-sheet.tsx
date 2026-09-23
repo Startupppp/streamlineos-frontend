@@ -51,6 +51,7 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, sections, l
   const [variableName, setVariableName] = useState("");
   const [choices, setChoices] = useState<ChoiceInput[]>([]);
   const [settings, setSettings] = useState<Record<string, unknown>>({});
+  const [titleError, setTitleError] = useState<string | null>(null);
 
   const [prevOpen, setPrevOpen] = useState(open);
   const [prevQuestion, setPrevQuestion] = useState(question);
@@ -64,6 +65,7 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, sections, l
       setRequired(question?.required ?? false);
       setVariableName(question?.variableName ?? "");
       setSettings(question?.settings ?? {});
+      setTitleError(null);
       setChoices(
         question?.choices.map((c) => ({
           choiceKey: c.choiceKey,
@@ -86,9 +88,10 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, sections, l
 
   async function handleSave() {
     if (!title.trim() && !meta.isContentOnly) {
-      toast.error("Title is required");
+      setTitleError("Title is required");
       return;
     }
+    setTitleError(null);
     try {
       if (question) {
         await patchQuestion.mutateAsync({
@@ -143,8 +146,26 @@ export function QuestionEditorSheet({ surveyId, sectionId, question, sections, l
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>{meta.isContentOnly ? "Content" : "Question title"}</Label>
-            <Textarea value={title} onChange={(e) => setTitle(e.target.value)} rows={2} />
+            <Label htmlFor="question-title" className={titleError ? "text-destructive" : undefined}>
+              {meta.isContentOnly ? "Content" : "Question title"}
+            </Label>
+            <Textarea
+              id="question-title"
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (titleError) setTitleError(null);
+              }}
+              rows={2}
+              aria-invalid={!!titleError}
+              aria-describedby={titleError ? "question-title-error" : undefined}
+              className={titleError ? "border-destructive focus-visible:ring-destructive" : undefined}
+            />
+            {titleError && (
+              <p id="question-title-error" className="text-xs text-destructive" role="alert">
+                {titleError}
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label>Description / help text</Label>

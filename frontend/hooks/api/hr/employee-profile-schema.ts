@@ -1,8 +1,21 @@
 import { z } from "zod";
 
+export const inviteDeliveryContract = z.object({
+  sent: z.boolean(),
+  reason: z.string().nullable(),
+});
+
+export type InviteDelivery = z.infer<typeof inviteDeliveryContract>;
+
 export const onboardEmployeeResponseContract = z.object({
   success: z.boolean(),
   userId: z.string(),
+  invite: inviteDeliveryContract,
+});
+
+export const resendEmployeeInviteResponseContract = z.object({
+  success: z.boolean(),
+  invite: inviteDeliveryContract,
 });
 
 export const bulkOnboardResultContract = z.object({

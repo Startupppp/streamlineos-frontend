@@ -30,7 +30,6 @@ function unresolvedAccess(): DashboardAccess {
     projectsEnabled: false,
     payrollEnabled: false,
     signEnabled: false,
-    accountingEnabled: false,
     canViewEmployees: false,
     canCreateEmployees: false,
     canViewAttendance: false,
@@ -42,10 +41,6 @@ function unresolvedAccess(): DashboardAccess {
     canViewCrmReports: false,
     canViewTickets: false,
     canViewPayrollSelf: false,
-    canViewOnboardingDocsSummary: false,
-    canViewExpenses: false,
-    canCreateExpenses: false,
-    canApproveExpenses: false,
     canViewSignEnvelopes: false,
   };
 }
@@ -64,10 +59,27 @@ jest.mock("@/hooks/api/dashboard", () => ({
     refetch: jest.fn(),
   }),
   useMyIssues: () => ({ data: [], isLoading: false, error: null, refetch: jest.fn() }),
+  usePendingApprovals: () => ({ data: { pendingLeaves: 0, pendingResignations: 0, total: 0 }, isLoading: false }),
+  usePersonalDashboard: () => ({ data: { myTasks: [], timesheetStatus: null, upcomingEvents: [], degraded: [] }, isLoading: false }),
+}));
+
+jest.mock("@/hooks/api/inbox", () => ({
+  useUnifiedInboxCount: () => ({ data: { notification: 0, mail: 0, approval: 0, total: 0, mailExact: true }, isLoading: false }),
 }));
 
 jest.mock("./use-dashboard-access", () => ({
   useDashboardAccess: () => accessState.current,
+}));
+
+jest.mock("@/hooks/api/access", () => ({
+  useAccess: () => ({
+    data: { isOrgOwner: true, scopes: {}, modules: {} },
+    isLoading: false,
+  }),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined, isLoading: false }),
 }));
 
 jest.mock("./module-setup-banners", () => ({

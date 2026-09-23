@@ -15,7 +15,7 @@ const meetingRowContract = z.object({
   durationMinutes: z.number().int().nullable(),
   timezone: z.string().nullable(),
   recurrenceRule: z.unknown(),
-  sprintId: z.number().int().nullable(),
+  cycleId: z.number().int().nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),

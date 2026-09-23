@@ -9,18 +9,19 @@ import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Form } from "@/components/ui/form";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { STICKY_FOOTER_ABOVE_MOBILE_NAV } from "@/components/ui/content-fill-panel";
 import { Check, ChevronRight, ChevronLeft, Loader2 } from "lucide-react";
 import { useOnboardEmployee } from "@/hooks/api/hr";
 import { useOnboardingTemplateDepartments } from "@/hooks/api/hr/onboarding";
-import { useRoles } from "@/hooks/api/roles";
+import { DEFAULT_INVITE_ROLE } from "@/lib/constants/user-invite-roles";
 import { useRouter } from "next/navigation";
 import {
   employeeAdmissionGuidance,
   fetchEmployeeAdmissionCheck,
 } from "@/components/hr/check-employee-email";
+import { describeUnsentInvite } from "@/components/hr/invite-delivery";
 import { StepPersonalInfo } from "./_onboarding/step-personal-info";
 import { StepEmployment } from "./_onboarding/step-employment";
 import { StepSkillsPay } from "./_onboarding/step-skills-pay";
@@ -39,7 +40,7 @@ const STEPS = [
 
 const STEP_FIELDS: Record<number, FieldPath<FormValues>[]> = {
   1: ["firstName", "lastName", "email", "phone", "gender", "dateOfBirth"],
-  2: ["designation", "departmentId", "role", "joiningDate"],
+  2: ["designation", "departmentId", "reportingManagerUserId", "topLevelRole", "topLevelRoleReason", "role", "joiningDate"],
   3: ["taxId"],
   4: [],
 };
@@ -66,13 +67,7 @@ export function OnboardingWizard() {
   const submittingRef = useRef(false);
   const router = useRouter();
   const { data: departments } = useOnboardingTemplateDepartments();
-  const { data: orgRoles } = useRoles();
   const onboardEmployee = useOnboardEmployee();
-
-  const assignableRoles = useMemo(
-    () => (orgRoles ?? []).filter((r) => r.slug !== "FINAL"),
-    [orgRoles]
-  );
 
   const allDepartmentOptions = useMemo(() => {
     const dbNames = new Set(departments?.map((d) => d.name.toLowerCase()) ?? []);
@@ -89,7 +84,8 @@ export function OnboardingWizard() {
       firstName: "", lastName: "", email: "", phone: "",
       whatsappSameAsPhone: true, whatsappNumber: "", gender: "MALE",
       designation: "", departmentId: undefined,
-      role: "ENGINEERING", employeeId: "", attachToExistingMember: false, joiningDate: new Date(),
+      reportingManagerUserId: undefined, topLevelRole: false, topLevelRoleReason: undefined,
+      role: DEFAULT_INVITE_ROLE, employeeId: "", attachToExistingMember: false, joiningDate: new Date(),
       dateOfBirth: undefined,
       taxId: "", monthlySalary: undefined,
       bankDetails: {
@@ -156,6 +152,12 @@ export function OnboardingWizard() {
         {
           onSuccess: (result) => {
             toast.success("Employee created successfully");
+            const unsentInvite = describeUnsentInvite(result.invite);
+            if (unsentInvite)
+              toast.warning(unsentInvite, {
+                description: "The employee was created. Use Resend invite from their profile once the cause is fixed.",
+                duration: 10_000,
+              });
             router.push(result.userId ? `/hr/employees/${result.userId}` : "/hr/employees");
           },
           onError: (err) => toast.error(getErrorMessage(err)),
@@ -213,23 +215,22 @@ export function OnboardingWizard() {
           }}
           className="flex flex-col flex-1 min-h-0"
         >
-          <ScrollArea hideScrollbar className="min-h-0 flex-1">
-            <div className="overscroll-contain">
+          <div className="min-h-0 flex-1">
             {currentStep === 1 && <StepPersonalInfo form={form} />}
             {currentStep === 2 && (
-              <StepEmployment
-                form={form}
-                assignableRoles={assignableRoles}
-                departments={departments ?? []}
-              />
+              <StepEmployment form={form} departments={departments ?? []} />
             )}
             {currentStep === 3 && <StepSkillsPay form={form} />}
             {currentStep === 4 && <StepBanking form={form} />}
             {currentStep === 5 && <StepReview form={form} allDepartmentOptions={allDepartmentOptions} />}
-            </div>
-          </ScrollArea>
+          </div>
 
-          <div className="shrink-0 flex items-center justify-between pt-4 mt-4 border-t">
+          <div
+            className={cn(
+              "shrink-0 flex items-center justify-between py-4 mt-4 border-t bg-background z-10",
+              STICKY_FOOTER_ABOVE_MOBILE_NAV,
+            )}
+          >
             <Button
               type="button"
               variant="outline"

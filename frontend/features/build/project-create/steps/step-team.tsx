@@ -43,6 +43,16 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
     [members, search],
   );
 
+  const selectedLabels = useMemo(
+    () =>
+      draft.memberIds.map((id) => {
+        const m = members.find((x) => x.userId === id);
+        if (!m) return "Unknown member";
+        return getUserDisplayName({ name: m.name, email: m.email });
+      }),
+    [draft.memberIds, members],
+  );
+
   if (!canManage) {
     return (
       <div className="flex flex-col gap-2 rounded-xl border border-dashed p-6 text-center">
@@ -57,14 +67,19 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
     );
   }
 
-  const selectedCount = draft.memberIds.length;
-
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">Select members to add to this project.</p>
-        {selectedCount > 0 && (
-          <Badge variant="secondary">{selectedCount} selected</Badge>
+        {selectedLabels.length > 0 && (
+          <Badge variant="secondary">
+            {[
+              ...selectedLabels.slice(0, 2),
+              ...(selectedLabels.length > 2
+                ? [`+${selectedLabels.length - 2} more`]
+                : []),
+            ].join(", ")}
+          </Badge>
         )}
       </div>
 

@@ -50,7 +50,7 @@ export function KbDeflectionPanel({ ticketId, ticketTitle }: KbDeflectionPanelPr
     );
   }, [selectedSpaceId, ticketId, createMutate]);
 
-  const articles = searchData?.results ?? [];
+  const articles = searchData?.items ?? [];
 
   return (
     <div className="px-4 py-2 border-t border-border/40 shrink-0">
@@ -78,10 +78,10 @@ export function KbDeflectionPanel({ ticketId, ticketTitle }: KbDeflectionPanelPr
               </div>
             ) : articles.length > 0 ? (
               <ul className="space-y-1">
-                {articles.filter((a) => a.spaceId != null).map((article) => (
+                {articles.map((article) => (
                   <li key={article.id}>
                     <a
-                      href={`/knowledge/spaces/${article.spaceId}/articles/${article.id}`}
+                      href={`/support/kb/${article.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-1 min-w-0 text-xs text-primary hover:underline"

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { idCursorPageContract } from "@/hooks/api/cursor-page-schema";
 
 export const testSuiteRowContract = z.object({
   id: z.number().int(),
@@ -26,17 +27,17 @@ export const testCaseRowContract = z.object({
   preconditions: z.string().nullable(),
   steps: z.array(z.object({ action: z.string(), expected: z.string() })).nullable(),
   expectedResult: z.string().nullable(),
-  priority: z.string(),
+  priority: z.enum(["low", "medium", "high"]),
   component: z.string().nullable(),
   linkedTicketId: z.number().int().nullable(),
-  automationStatus: z.string(),
+  automationStatus: z.enum(["manual", "automated", "planned"]),
   createdBy: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
   deletedAt: z.string().nullable(),
 });
 
-export const testCaseListContract = z.array(testCaseRowContract);
+export const testCasePageContract = idCursorPageContract(testCaseRowContract);
 
 const testRunRowContract = z.object({
   id: z.number().int(),
@@ -44,30 +45,22 @@ const testRunRowContract = z.object({
   projectId: z.number().int(),
   runNumber: z.number().int(),
   name: z.string(),
-  sprintId: z.number().int().nullable(),
+  cycleId: z.number().int().nullable(),
   releaseId: z.number().int().nullable(),
   environment: z.string().nullable(),
   browserDevice: z.string().nullable(),
   testerId: z.string().nullable(),
   testerMembershipId: z.number().int().nullable(),
-  status: z.string(),
+  status: z.enum(["not_started", "in_progress", "completed", "aborted"]),
   startedAt: z.string().nullable(),
   completedAt: z.string().nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
   deletedAt: z.string().nullable(),
-  counts: z.object({
-    total: z.number().int(),
-    passed: z.number().int(),
-    failed: z.number().int(),
-    blocked: z.number().int(),
-    skipped: z.number().int(),
-    notRun: z.number().int(),
-  }).optional(),
 });
 
-const testRunListItemContract = testRunRowContract.extend({
+export const testRunListItemContract = testRunRowContract.extend({
   passCount: z.number().int(),
   failCount: z.number().int(),
   blockedCount: z.number().int(),
@@ -75,7 +68,7 @@ const testRunListItemContract = testRunRowContract.extend({
   skippedCount: z.number().int(),
 });
 
-export const testRunListContract = z.array(testRunListItemContract);
+export const testRunListPageContract = idCursorPageContract(testRunListItemContract);
 export { testRunRowContract };
 
 export const testRunResultRowContract = z.object({
@@ -88,7 +81,7 @@ export const testRunResultRowContract = z.object({
   notes: z.string().nullable(),
   executedBy: z.string().nullable(),
   executedAt: z.string().nullable(),
-  linkedBugId: z.number().int().nullable(),
+  linkedWorkItemId: z.number().int().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -101,12 +94,19 @@ export const bugRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   projectId: z.number().int(),
-  bugNumber: z.number().int(),
+  ticketNumber: z.number().int(),
   title: z.string(),
   description: z.string().nullable(),
-  severity: z.string(),
-  priority: z.string(),
+  type: z.literal("BUG"),
   status: z.string(),
+  priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
+  assigneeMembershipId: z.number().int().nullable(),
+  reporterId: z.string().nullable(),
+  deletedAt: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  qaState: z.enum(["new", "triaged", "assigned", "in_progress", "fixed", "ready_for_qa", "verified", "reopened", "closed"]).nullable(),
+  severity: z.enum(["blocker", "critical", "major", "minor", "trivial"]).nullable(),
   stepsToReproduce: z.string().nullable(),
   expectedResult: z.string().nullable(),
   actualResult: z.string().nullable(),
@@ -114,17 +114,11 @@ export const bugRowContract = z.object({
   browserDevice: z.string().nullable(),
   affectedReleaseId: z.number().int().nullable(),
   fixedReleaseId: z.number().int().nullable(),
-  assigneeMembershipId: z.number().int().nullable(),
-  reporterId: z.string().nullable(),
-  qaOwnerId: z.string().nullable(),
+  qaOwnerUserId: z.string().nullable(),
   qaOwnerMembershipId: z.number().int().nullable(),
-  reopenCount: z.number().int(),
-  linkedTicketId: z.number().int().nullable(),
   linkedTestCaseId: z.number().int().nullable(),
-  createdBy: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  deletedAt: z.string().nullable(),
+  reopenCount: z.number().int().nullable(),
+  createdByUserId: z.string().nullable(),
 });
 
 export const bugListContract = z.array(bugRowContract);

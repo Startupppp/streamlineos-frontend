@@ -25,7 +25,10 @@ import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { usePostableAccounts } from "@/hooks/api/accounting/ledger";
-import type { ApDocumentSummary, VendorSummary } from "@/types/accounting-ap";
+import type {
+  ApDocumentSummary,
+  VendorSummary,
+} from "@/types/accounting/accounting-ap";
 import { VendorPickerField } from "../bills/vendor-picker-field";
 import type { PaymentFormValues } from "./payment-form-schema";
 
@@ -50,7 +53,11 @@ export function PaymentFormFields({
     () =>
       (accountsQuery.data ?? [])
         .filter((account) => account.isCash)
-        .map((account) => ({ value: account.id, label: account.name, sublabel: account.code })),
+        .map((account) => ({
+          value: account.id,
+          label: account.name,
+          sublabel: account.code,
+        })),
     [accountsQuery.data],
   );
 
@@ -63,7 +70,10 @@ export function PaymentFormFields({
           <FormItem>
             <FormLabel>Who you are paying</FormLabel>
             <FormControl>
-              <VendorPickerField value={field.value} onChange={onVendorChange} />
+              <VendorPickerField
+                value={field.value}
+                onChange={onVendorChange}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -123,19 +133,26 @@ export function PaymentFormFields({
       <div className="space-y-2">
         <p className="text-sm font-semibold">Which bills this covers</p>
         {isLoadingBills ? (
-          <p className="text-label text-muted-foreground">Looking up their unpaid bills…</p>
+          <p className="text-label text-muted-foreground">
+            Looking up their unpaid bills…
+          </p>
         ) : openBills.length === 0 ? (
           <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-label text-muted-foreground">
-            Nothing outstanding for this vendor. A payment with no bills behind it sits as money on
-            account until you allocate it.
+            Nothing outstanding for this vendor. A payment with no bills behind
+            it sits as money on account until you allocate it.
           </p>
         ) : (
           openBills.map((bill, index) => (
-            <div key={bill.id} className="rounded-md border border-border/70 bg-card p-3">
+            <div
+              key={bill.id}
+              className="rounded-md border border-border/70 bg-card p-3"
+            >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">
-                    {bill.vendorDocumentNumber ?? bill.documentNumber ?? "Unnumbered bill"}
+                    {bill.vendorDocumentNumber ??
+                      bill.documentNumber ??
+                      "Unnumbered bill"}
                   </p>
                   <p className="text-dense text-muted-foreground">
                     Dated {formatShortDate(bill.issueDate)} · still owed{" "}
@@ -173,7 +190,9 @@ export function PaymentFormFields({
         name="grossAmount"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>What they invoiced, before anything is held back</FormLabel>
+            <FormLabel>
+              What they invoiced, before anything is held back
+            </FormLabel>
             <FormControl>
               <Input
                 {...field}
@@ -183,8 +202,8 @@ export function PaymentFormFields({
               />
             </FormControl>
             <FormDescription>
-              Amounts are in {currency}. The books work out what actually leaves the account:
-              the gross less anything withheld.
+              Amounts are in {currency}. The books work out what actually leaves
+              the account: the gross less anything withheld.
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -204,8 +223,12 @@ export function PaymentFormFields({
                 </SelectTrigger>
               </FormControl>
               <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
-                <SelectItem value="auto">Work it out from the vendor&apos;s code</SelectItem>
-                <SelectItem value="manual">I will state the rate or amount</SelectItem>
+                <SelectItem value="auto">
+                  Work it out from the vendor&apos;s code
+                </SelectItem>
+                <SelectItem value="manual">
+                  I will state the rate or amount
+                </SelectItem>
                 <SelectItem value="none">Nothing is held back</SelectItem>
               </SelectContent>
             </Select>
@@ -236,7 +259,11 @@ export function PaymentFormFields({
               <FormItem>
                 <FormLabel>Rate %</FormLabel>
                 <FormControl>
-                  <Input {...field} inputMode="decimal" className="tabular-nums" />
+                  <Input
+                    {...field}
+                    inputMode="decimal"
+                    className="tabular-nums"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -249,7 +276,11 @@ export function PaymentFormFields({
               <FormItem>
                 <FormLabel>Or amount</FormLabel>
                 <FormControl>
-                  <Input {...field} inputMode="decimal" className="tabular-nums" />
+                  <Input
+                    {...field}
+                    inputMode="decimal"
+                    className="tabular-nums"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

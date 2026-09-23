@@ -43,7 +43,7 @@ interface CreateGitConnectionInput {
 }
 
 interface UpdateGitConnectionInput {
-  id: number;
+  connectionId: number;
   isActive?: boolean;
   repoUrl?: string;
   repoName?: string | null;
@@ -51,15 +51,9 @@ interface UpdateGitConnectionInput {
 }
 
 export function useGitConnections() {
-  // The three mutations below gate on `integrations:git:manage`, matching the controller. This
-  // read gated on `settings:manage`, which the route has never required — the backend declares
-  // `integrations:git:view` on both the canonical `GET /integrations/git/connections` and the
-  // `/settings/integrations/git` alias. A user holding the git-integration grants but not
-  // `settings:manage` could therefore create, edit and delete connections while the list itself
-  // stayed empty.
-  return useGatedQuery("integrations:git:view", {
+   return useGatedQuery("integrations:git:view", {
     queryKey: accountingAndSupportQueryKeys.gitIntegration.connections(),
-    queryFn: ({ signal }) => apiClient.get("/settings/integrations/git", undefined, signal, gitConnectionListContract),
+    queryFn: ({ signal }) => apiClient.get("/integrations/git/connections", undefined, signal, gitConnectionListContract),
     staleTime: 60_000,
   });
 }
@@ -69,7 +63,7 @@ export function useCreateGitConnection() {
   return useAuthorizedMutation("integrations:git:manage", {
     mutationKey: ["create", "git", "connection"],
     mutationFn: (input: CreateGitConnectionInput) =>
-      apiClient.post<CreatedGitConnection>("/settings/integrations/git", input, undefined, gitConnectionCreateContract),
+      apiClient.post<CreatedGitConnection>("/integrations/git/connections", input, undefined, gitConnectionCreateContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.gitIntegration.connections() }),
   });
 }
@@ -78,8 +72,8 @@ export function useUpdateGitConnection() {
   const qc = useQueryClient();
   return useAuthorizedMutation("integrations:git:manage", {
     mutationKey: ["update", "git", "connection"],
-    mutationFn: ({ id, ...input }: UpdateGitConnectionInput) =>
-      apiClient.patch<GitConnectionUpdated>(`/settings/integrations/git/${id}`, input, undefined, gitConnectionUpdateContract),
+    mutationFn: ({ connectionId, ...input }: UpdateGitConnectionInput) =>
+      apiClient.patch<GitConnectionUpdated>(`/integrations/git/connections/${connectionId}`, input, undefined, gitConnectionUpdateContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.gitIntegration.connections() }),
   });
 }
@@ -88,8 +82,8 @@ export function useDeleteGitConnection() {
   const qc = useQueryClient();
   return useAuthorizedMutation("integrations:git:manage", {
     mutationKey: ["delete", "git", "connection"],
-    mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/settings/integrations/git/${id}`, undefined, undefined, gitConnectionDeleteContract),
+    mutationFn: (connectionId: number) =>
+      apiClient.delete<{ success: boolean }>(`/integrations/git/connections/${connectionId}`, undefined, undefined, gitConnectionDeleteContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.gitIntegration.connections() }),
   });
 }

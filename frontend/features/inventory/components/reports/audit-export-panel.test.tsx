@@ -16,7 +16,10 @@ import type { AuditExportJob } from "@/hooks/api/inventory/audit-export";
  */
 
 const mockUseCan = jest.fn(() => true);
-jest.mock("@/hooks/api/access", () => ({ useCan: () => mockUseCan() }));
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => mockUseCan(),
+  useCanState: () => (mockUseCan() ? "granted" : "denied"),
+}));
 
 const mockUseJobs = jest.fn();
 const mockUseVerify = jest.fn();

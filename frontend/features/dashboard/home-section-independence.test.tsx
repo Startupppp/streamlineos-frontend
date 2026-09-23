@@ -70,7 +70,6 @@ function access(): DashboardAccess {
     projectsEnabled: true,
     payrollEnabled: false,
     signEnabled: false,
-    accountingEnabled: false,
     canViewEmployees: false,
     canCreateEmployees: false,
     canViewAttendance: false,
@@ -82,10 +81,6 @@ function access(): DashboardAccess {
     canViewCrmReports: false,
     canViewTickets: true,
     canViewPayrollSelf: false,
-    canViewOnboardingDocsSummary: false,
-    canViewExpenses: false,
-    canCreateExpenses: false,
-    canApproveExpenses: false,
     canViewSignEnvelopes: false,
   };
 }

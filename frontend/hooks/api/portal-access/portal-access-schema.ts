@@ -32,7 +32,6 @@ const grantListItemContract = z.object({
   portalMembershipId: z.string(),
   partyContactId: z.string(),
   projectId: z.number(),
-  pmWorkspaceId: z.string().nullable(),
   canViewMilestones: z.boolean(),
   canViewTasks: z.boolean(),
   canViewAttachments: z.boolean(),
@@ -54,7 +53,6 @@ const grantRowContract = z.object({
   portalMembershipId: z.string(),
   partyContactId: z.string(),
   projectId: z.number(),
-  pmWorkspaceId: z.string().nullable(),
   canViewMilestones: z.boolean(),
   canViewTasks: z.boolean(),
   canViewAttachments: z.boolean(),
@@ -64,8 +62,8 @@ const grantRowContract = z.object({
   expiresAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  contactFirstName: z.string().nullable(),
-  contactLastName: z.string().nullable(),
+  contactFirstName: z.string().nullable().optional().transform((v) => v ?? null),
+  contactLastName: z.string().nullable().optional().transform((v) => v ?? null),
 });
 
 export const grantContract = grantRowContract;

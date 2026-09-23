@@ -213,6 +213,9 @@ export function getStyles(): string {
   background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 13px; font-family: inherit;
   color: #475569; cursor: pointer; transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
 }
+.media-actions { display: flex; gap: 8px; }
+.media-actions .capture-btn { flex: 1 1 0; min-width: 0; }
+.upload-error { margin: 6px 0 0; font-size: 12px; color: #b91c1c; }
 .capture-btn:hover { border-color: #3b82f6; background: #eff6ff; color: #3b82f6; }
 .capture-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .capture-btn svg { width: 16px; height: 16px; }
@@ -286,6 +289,21 @@ export function getStyles(): string {
 }
 .done-btn:hover, .retry-btn:hover { background: #1e293b; }
 
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 2147483646;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 180ms ease, visibility 0ms linear 180ms;
+}
+.backdrop.visible {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 180ms ease, visibility 0ms;
+}
+
 @media (max-width: 480px) {
   .panel.is-sheet .panel-header { padding: 12px 14px; }
   .panel.is-sheet .panel-body { padding: 14px; }
@@ -293,6 +311,7 @@ export function getStyles(): string {
   .type-group { gap: 6px; }
   .actions { flex-wrap: wrap; }
   .actions .cancel-btn, .actions .submit-btn { flex: 1 1 auto; }
+  .widget.panel-open .launcher { opacity: 0 !important; }
 }
 @media (prefers-reduced-motion: reduce) {
   .launcher-btn, .panel, .type-btn, .close-btn, .capture-btn, .remove-screenshot-btn,

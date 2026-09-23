@@ -64,8 +64,8 @@ export interface NotificationTicketContext {
   ticketId: number;
   ticketKey: string;
   priority: string | null;
-  status: string;
-  type: string;
+  status: string | null;
+  type: string | null;
   assignee: NotificationTicketAssignee | null;
 }
 
@@ -103,6 +103,7 @@ export interface NotificationListParams {
   category?: NotificationCategory;
   priority?: NotificationPriority;
   sourceModule?: string;
+  projectId?: number;
   search?: string;
   limit?: number;
   cursor?: number;
@@ -207,7 +208,7 @@ export interface BroadcastListResponse {
 }
 
 export interface NotificationPreferences {
-  id: number;
+  id?: number;
   userId: string;
   orgId: string;
   emailEnabled: boolean;
@@ -221,8 +222,9 @@ export interface NotificationPreferences {
   digestMode: DigestMode;
   categories: Record<string, boolean>;
   channelCategories: Record<string, Record<string, boolean>>;
-  createdAt: Date | string;
-  updatedAt: Date | string;
+  availableChannels?: string[];
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }
 
 export interface UpdatePreferencesInput {
@@ -404,4 +406,45 @@ export interface CreateSuppressionInput {
   scopeKey: string;
   channel?: NotificationChannel;
   expiresAt?: string;
+}
+
+export type PreferenceRuleScopeType = "EVENT" | "MODULE" | "CATEGORY";
+export type PreferenceRuleMode = "ON" | "OFF" | "DIGEST";
+
+export interface PreferenceRuleRow {
+  id: number;
+  orgId: string;
+  membershipId: number;
+  scopeType: PreferenceRuleScopeType;
+  scopeKey: string;
+  channel: string;
+  mode: PreferenceRuleMode;
+  updatedAt: string;
+}
+
+export interface SetPreferenceRuleInput {
+  scopeType: PreferenceRuleScopeType;
+  scopeKey: string;
+  channel: NotificationChannel;
+  mode: PreferenceRuleMode;
+}
+
+export interface PreferenceEventCatalogItem {
+  eventKey: string;
+  displayName: string;
+  description: string;
+  category: string;
+  sourceModule: string | null;
+  priority: string;
+  defaultChannels: string[];
+  allowedChannels: string[];
+  mandatory: boolean;
+  userConfigurable: boolean;
+  userPreference: unknown | null;
+}
+
+export interface UpdateEventPreferenceInput {
+  channels?: Record<string, boolean>;
+  muted?: boolean;
+  mode?: string;
 }

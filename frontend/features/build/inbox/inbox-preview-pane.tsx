@@ -27,7 +27,10 @@ import type {
 } from "@/types/notifications";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
-import { parseInboxTicketLink } from "./parse-inbox-ticket-link";
+import {
+  normalizeBuildDeepLink,
+  parseInboxTicketLink,
+} from "./parse-inbox-ticket-link";
 
 const InboxTicketPreview = dynamic(
   () => import("./inbox-ticket-preview").then((m) => ({ default: m.InboxTicketPreview })),
@@ -196,7 +199,7 @@ function NotificationFallbackPreview({
               size="sm"
               className="h-8 gap-1.5 text-xs"
             >
-              <Link href={notification.link}>
+              <Link href={normalizeBuildDeepLink(notification.link)}>
                 <ExternalLink className="h-3.5 w-3.5" />
                 View in app
               </Link>

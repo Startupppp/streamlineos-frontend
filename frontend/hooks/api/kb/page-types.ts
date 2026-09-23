@@ -51,11 +51,13 @@ export type KbPageTreeNode = {
   projectId: number | null;
   title: string;
   icon: string | null;
+  coverImage?: string | null;
   sortOrder: number | null;
   hasChildren: boolean;
   visibility: string;
   createdById: string | null;
   status: string;
+  updatedAt?: string;
 };
 
 export type KbPageSearchResult = {

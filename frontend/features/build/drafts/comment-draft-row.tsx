@@ -8,7 +8,7 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type { CommentDraft } from "@/hooks/api/build/comment-drafts";
+import type { CommentDraftListItem } from "@/hooks/api/build/comment-drafts";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import {
   getUserDisplayName,
@@ -19,16 +19,16 @@ import { getStatusDotClass, getStatusBadgeClass } from "@/components/shared/tick
 import { priorityConfig, statusConfig } from "@/features/build/shared/types";
 
 interface CommentDraftRowProps {
-  draft: CommentDraft;
-  onOpen: (draft: CommentDraft) => void;
+  draft: CommentDraftListItem;
   onDelete: (id: number) => void;
+  onOpen: (draft: CommentDraftListItem) => void;
 }
 
 const PRIORITY_ICONS = {
-  URGENT: AlertTriangle,
   HIGH: ArrowUp,
   MEDIUM: Minus,
   LOW: ArrowDown,
+  URGENT: AlertTriangle,
 } as const;
 
 type PriorityKey = keyof typeof PRIORITY_ICONS;

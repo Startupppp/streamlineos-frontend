@@ -8,7 +8,7 @@ import { queryKeyBase } from "@/lib/query-keys/base";
 
 
 const ticketUpdateResultLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketUpdateResultContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.ticketUpdateResultContract),
 );
 
 export interface RecurrenceRule {

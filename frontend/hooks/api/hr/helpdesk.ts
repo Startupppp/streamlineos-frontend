@@ -5,210 +5,155 @@ import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
-import { queryKeyBase } from "@/lib/query-keys/base";
+import { employeeSupportQueryKeys } from "@/lib/query-keys/employee-support";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import type { HelpdeskCategory, SupportQueue } from "@/lib/employee-support";
+import type {
+  HelpdeskComment,
+  HelpdeskListResult,
+  HelpdeskQueueSummary,
+  HelpdeskRoutingRule,
+  HelpdeskTicketDetail,
+  TicketPriority,
+  TicketStatus,
+} from "@/hooks/api/hr/helpdesk-schema";
 
-export interface CursorPage<T> {
-  data: T[];
-  pagination: {
-    limit: number;
-    hasMore: boolean;
-    nextCursor: string | null;
-  };
-}
+const keys = employeeSupportQueryKeys.employeeSupport;
 
-export const HELPDESK_CATEGORIES = [
-  "policy_question",
-  "payroll_issue",
-  "document_request",
-  "leave_issue",
-  "benefits",
-  "it_access",
-  "confidential",
-  "other",
-] as const;
-
-export type HelpdeskCategory = (typeof HELPDESK_CATEGORIES)[number];
-
-export const HELPDESK_CATEGORY_LABELS: Record<HelpdeskCategory, string> = {
-  policy_question: "Policy Question",
-  payroll_issue: "Payroll Issue",
-  document_request: "Document Request",
-  leave_issue: "Leave Issue",
-  benefits: "Benefits",
-  it_access: "IT Access",
-  confidential: "Confidential",
-  other: "Other",
-};
-
-export type TicketStatus = "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
-export type TicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-
-export interface HelpdeskTicket {
-  id: number;
-  orgId: string;
-  userId: string;
-  title: string;
-  description: string | null;
-  category: string | null;
-  priority: TicketPriority;
-  status: TicketStatus;
-  assigneeId: string | null;
-  isConfidential: boolean;
-  slaDueAt: string | null;
-  resolvedAt: string | null;
-  resolution: string | null;
-  createdAt: string;
-  updatedAt: string;
-  authorName: string | null;
-  authorImage: string | null;
-}
-
-export interface HelpdeskComment {
-  id: number;
-  body: string;
-  createdAt: string;
-  authorId: string;
-  authorName: string | null;
-  authorImage: string | null;
-}
-
-export interface HelpdeskTicketDetail extends HelpdeskTicket {
-  comments: HelpdeskComment[];
-}
-
-export type HelpdeskListResult = CursorPage<HelpdeskTicket>;
-
-export interface HelpdeskRoutingRule {
-  id: number;
-  category: string;
-  assigneeUserId: string;
-  assigneeName: string | null;
-  assigneeImage: string | null;
-  createdAt: string;
-}
-
-export interface CreateTicketInput {
-  title: string;
-  description?: string;
-  category: HelpdeskCategory;
-  priority?: TicketPriority;
-  isConfidential?: boolean;
-}
+const listC = lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then((m) => m.helpdeskTicketListContract));
+const detailC = lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then((m) => m.helpdeskTicketDetailContract));
+const commentC = lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then((m) => m.helpdeskCommentSingleContract));
+const routingC = lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then((m) => m.helpdeskRoutingListContract));
+const routingRuleC = lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then((m) => m.helpdeskRoutingRuleContract));
+const queuesC = lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then((m) => m.helpdeskQueueListContract));
+const queueC = lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then((m) => m.helpdeskQueueSummaryContract));
+const successC = lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then((m) => m.successResponseContract));
 
 export interface UpdateTicketInput {
   status?: TicketStatus;
   assigneeId?: string | null;
   priority?: TicketPriority;
+  queue?: SupportQueue;
   resolution?: string | null;
 }
 
-export interface SuggestResult {
-  results: Array<{
-    id: number;
-    title: string;
-    slug: string;
-    excerpt: string | null;
-    source: string;
-  }>;
+export interface RoutingRuleInput {
+  category: HelpdeskCategory;
+  queue?: SupportQueue;
+  assigneeUserId?: string;
+}
+
+export interface QueueConfigInput {
+  firstResponseHours: number;
+  resolutionHours: number;
+  escalationUserId: string | null;
 }
 
 export interface HelpdeskListParams {
   limit?: number;
   cursor?: string;
-  status?: string;
-  category?: string;
+  status?: TicketStatus;
+  category?: HelpdeskCategory;
+  queue?: SupportQueue;
   assigneeId?: string;
   q?: string;
 }
 
-const keys = {
-  all: [...queryKeyBase, "hr", "helpdesk"] as const,
-  list: (params?: HelpdeskListParams) => [...queryKeyBase, "hr", "helpdesk", "list", params] as const,
-  detail: (id: number) => [...queryKeyBase, "hr", "helpdesk", "detail", id] as const,
-  routing: () => [...queryKeyBase, "hr", "helpdesk", "routing"] as const,
-  suggest: (q: string) => [...queryKeyBase, "hr", "helpdesk", "suggest", q] as const,
-};
-
-export function useHelpdeskTickets(params?: HelpdeskListParams) {
-  const canHelpdesk = useCan("hr:helpdesk:view");
+export function useSupportQueueTickets(params: HelpdeskListParams) {
+  const canView = useCan("hr:helpdesk:view");
   return useQuery({
-    queryKey: keys.list(params),
-    queryFn: ({ signal }) => apiClient.get<HelpdeskListResult>("/hr/helpdesk", params, signal, lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then(m => m.helpdeskTicketListContract))),
-    staleTime: 60_000,
-    enabled: canHelpdesk,
+    queryKey: keys.queueList(params),
+    queryFn: ({ signal }) => apiClient.get<HelpdeskListResult>("/hr/helpdesk", params, signal, listC),
+    staleTime: 15_000,
+    enabled: canView,
   });
 }
 
-export function useHelpdeskTicket(ticketId: number) {
+export function useSupportQueueTicket(ticketId: number | null) {
   return useGatedQuery("hr:helpdesk:view", {
-    queryKey: keys.detail(ticketId),
-    queryFn: ({ signal }) => apiClient.get<HelpdeskTicketDetail>(`/hr/helpdesk/${ticketId}`, undefined, signal, lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then(m => m.helpdeskTicketDetailContract))),
+    queryKey: keys.queueTicket(ticketId ?? 0),
+    queryFn: ({ signal }) =>
+      apiClient.get<HelpdeskTicketDetail>(`/hr/helpdesk/${ticketId}`, undefined, signal, detailC),
+    enabled: ticketId !== null,
     staleTime: 30_000,
   });
 }
 
-export function useHelpdeskSuggest(query: string) {
+export function useSupportQueues() {
   return useGatedQuery("hr:helpdesk:view", {
-    queryKey: keys.suggest(query),
-    queryFn: ({ signal }) => apiClient.get<SuggestResult>("/hr/helpdesk/suggest", { query }, signal, lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then(m => m.helpdeskSuggestContract))),
-    enabled: query.length >= 2,
-    staleTime: 5 * 60_000,
+    queryKey: keys.queues(),
+    queryFn: ({ signal }) => apiClient.get<HelpdeskQueueSummary[]>("/hr/helpdesk/queues", undefined, signal, queuesC),
+    staleTime: 30_000,
   });
 }
 
-export function useHelpdeskRoutingRules() {
+export function useSupportRoutingRules() {
   return useGatedQuery("hr:helpdesk:manage", {
     queryKey: keys.routing(),
-    queryFn: ({ signal }) => apiClient.get<HelpdeskRoutingRule[]>("/hr/helpdesk/routing", undefined, signal, lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then(m => m.helpdeskRoutingListContract))),
+    queryFn: ({ signal }) => apiClient.get<HelpdeskRoutingRule[]>("/hr/helpdesk/routing", undefined, signal, routingC),
     staleTime: 5 * 60_000,
   });
 }
 
-export function useCreateHelpdeskTicket() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("hr:helpdesk:create", {
-    mutationKey: ["hr", "helpdesk", "create"],
-    mutationFn: (data: CreateTicketInput) => apiClient.post<HelpdeskTicket>("/hr/helpdesk", data, undefined, lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then(m => m.helpdeskTicketDetailContract))),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: keys.all });
-    },
-  });
-}
-
-export function useUpdateHelpdeskTicket(ticketId: number) {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("hr:helpdesk:manage", {
-    mutationKey: ["hr", "helpdesk", "update", ticketId],
-    mutationFn: (data: UpdateTicketInput) =>
-      apiClient.patch<HelpdeskTicket>(`/hr/helpdesk/${ticketId}`, data, undefined, lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then(m => m.helpdeskTicketDetailContract))),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: keys.detail(ticketId) });
-      void qc.invalidateQueries({ queryKey: keys.all });
-    },
-  });
-}
-
-export function useAddHelpdeskComment(ticketId: number) {
+export function useUpdateSupportQueueTicket(ticketId: number | null) {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:helpdesk:view", {
-    mutationKey: ["hr", "helpdesk", "comment", ticketId],
-    mutationFn: (data: { body: string }) =>
-      apiClient.post<HelpdeskComment>(`/hr/helpdesk/${ticketId}/comments`, data, undefined, lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then(m => m.helpdeskCommentSingleContract))),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: keys.detail(ticketId) });
+    mutationKey: ["employee-support", "queue-ticket", "update", ticketId],
+    mutationFn: (data: UpdateTicketInput) =>
+      apiClient.patch<HelpdeskTicketDetail>(`/hr/helpdesk/${ticketId}`, data, undefined, detailC),
+    onSuccess: (detail) => {
+      if (ticketId !== null) qc.setQueryData(keys.queueTicket(ticketId), detail);
+      void qc.invalidateQueries({ queryKey: keys.queueList() });
+      void qc.invalidateQueries({ queryKey: keys.queues() });
     },
   });
 }
 
-export function useDeleteHelpdeskRouting() {
+export function useAddSupportQueueComment(ticketId: number | null) {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("hr:helpdesk:view", {
+    mutationKey: ["employee-support", "queue-ticket", "comment", ticketId],
+    mutationFn: (data: { body: string }) =>
+      apiClient.post<HelpdeskComment>(`/hr/helpdesk/${ticketId}/comments`, data, undefined, commentC),
+    onSuccess: () => {
+      if (ticketId !== null) void qc.invalidateQueries({ queryKey: keys.queueTicket(ticketId) });
+      void qc.invalidateQueries({ queryKey: keys.queues() });
+    },
+  });
+}
+
+export function useUpsertSupportRoutingRule() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:helpdesk:manage", {
-    mutationKey: ["hr", "helpdesk", "routing", "delete"],
-    mutationFn: (ruleId: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/helpdesk/routing/${ruleId}`, undefined, undefined, lazyContract(() => import("@/hooks/api/hr/helpdesk-schema").then(m => m.successResponseContract))),
+    mutationKey: ["employee-support", "routing", "upsert"],
+    mutationFn: (data: RoutingRuleInput) =>
+      apiClient.post<HelpdeskRoutingRule>("/hr/helpdesk/routing", data, undefined, routingRuleC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: keys.routing() });
+    },
+  });
+}
+
+export function useDeleteSupportRoutingRule() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("hr:helpdesk:manage", {
+    mutationKey: ["employee-support", "routing", "delete"],
+    mutationFn: (ruleId: number) =>
+      apiClient.delete<{ success: boolean }>(`/hr/helpdesk/routing/${ruleId}`, undefined, undefined, successC),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.routing() });
+    },
+  });
+}
+
+export function useConfigureSupportQueue() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("hr:helpdesk:manage", {
+    mutationKey: ["employee-support", "queues", "configure"],
+    mutationFn: ({ queue, ...data }: QueueConfigInput & { queue: SupportQueue }) =>
+      apiClient.put<HelpdeskQueueSummary>(`/hr/helpdesk/queues/${queue}`, data, undefined, queueC),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.queues() });
     },
   });
 }

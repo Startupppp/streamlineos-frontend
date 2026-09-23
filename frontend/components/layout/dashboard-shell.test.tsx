@@ -9,6 +9,7 @@ import { getChatMobileBottomNavClassName } from "./mobile/chat-mobile-chrome-lay
 
 const drawerCalls: Array<{ direction?: string; open?: boolean }> = [];
 const productSwitcherCalls: Array<{ drawerOnly?: boolean }> = [];
+const orgSwitcherCalls: Array<{ drawerOnly?: boolean }> = [];
 
 jest.mock("next/dynamic", () => () => () => null);
 
@@ -114,6 +115,7 @@ jest.mock("@/components/ui/drawer", () => ({
   },
   DrawerContent: ({ children }: PropsWithChildren) => <>{children}</>,
   DrawerTitle: ({ children }: PropsWithChildren) => <>{children}</>,
+  DrawerDescription: ({ children }: PropsWithChildren) => <>{children}</>,
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -141,9 +143,17 @@ jest.mock("./header/product-switcher-menu", () => ({
   },
 }));
 
+jest.mock("./header/org-switcher", () => ({
+  WorkspaceSwitcher: ({ drawerOnly }: { drawerOnly?: boolean }) => {
+    orgSwitcherCalls.push({ drawerOnly });
+    return null;
+  },
+}));
+
 jest.mock("./sidebar/use-product-sidebar-visibility", () => ({
   useProductSidebarVisibility: () => ({
     hideSidebar: false,
+    showSidebarToggle: true,
     navGroups: [
       {
         label: "Projects",
@@ -169,6 +179,7 @@ describe("DashboardShell mobile navigation", () => {
     currentPathname = "/build";
     drawerCalls.length = 0;
     productSwitcherCalls.length = 0;
+    orgSwitcherCalls.length = 0;
   });
 
   it("uses a bottom drawer and closes it after navigation", () => {
@@ -211,6 +222,20 @@ describe("DashboardShell mobile navigation", () => {
 
     expect(productSwitcherCalls.at(-1)).toEqual({ drawerOnly: true });
   });
+
+  it("configures the organization switcher as a drawer", () => {
+    renderWithProviders(
+      <DashboardShell
+        userId="user-1"
+        defaultCollapsed={false}
+        shellVariant="desktop"
+      >
+        <div>Content</div>
+      </DashboardShell>,
+    );
+
+    expect(orgSwitcherCalls.at(-1)).toEqual({ drawerOnly: true });
+  });
 });
 
 describe("DashboardShell shell variant", () => {
@@ -218,6 +243,7 @@ describe("DashboardShell shell variant", () => {
     currentPathname = "/build";
     drawerCalls.length = 0;
     productSwitcherCalls.length = 0;
+    orgSwitcherCalls.length = 0;
   });
 
   it("desktop variant renders both the desktop aside and the mobile drawer AppSidebar", () => {

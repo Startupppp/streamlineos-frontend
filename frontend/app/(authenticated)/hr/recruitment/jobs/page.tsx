@@ -1,5 +1,13 @@
+import { Suspense } from "react";
+import { requirePermission } from "@/lib/rbac/require-permission";
 import { JobsPage } from "@/features/hr/recruitment/jobs-page";
+import JobsLoading from "./loading";
 
-export default function Page() {
-  return <JobsPage />;
+export default async function Page() {
+  await requirePermission("hr:requisitions:view");
+  return (
+    <Suspense fallback={<JobsLoading />}>
+      <JobsPage />
+    </Suspense>
+  );
 }

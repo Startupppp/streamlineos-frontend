@@ -29,6 +29,9 @@ import {
   useDeleteModuleRoleGroup,
   type ModuleRoleGroup,
 } from "@/hooks/api/module-access";
+import { viewKey } from "@/hooks/api/module-access/types";
+import { useCanState } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { CreateGroupDialog } from "@/features/module-access/components/create-group-dialog";
 import {
   GroupDetailPanel,
@@ -230,7 +233,9 @@ export function RolesTab({
     [],
   );
 
-  const isLoading = catalogQuery.isLoading || groupsQuery.isLoading;
+  const viewAccess = useCanState(viewKey(moduleKey));
+  const isLoading =
+    viewAccess === "loading" || catalogQuery.isLoading || groupsQuery.isLoading;
   const isError = catalogQuery.isError || groupsQuery.isError;
 
   return (
@@ -251,6 +256,8 @@ export function RolesTab({
 
       {isLoading ? (
         <GroupDetailSkeleton />
+      ) : viewAccess === "denied" ? (
+        <NoPermissionState permission={viewKey(moduleKey)} />
       ) : isError ? (
         <EmptyState
           illustrationPreset="permissions"

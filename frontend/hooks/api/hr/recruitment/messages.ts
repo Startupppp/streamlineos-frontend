@@ -57,7 +57,7 @@ export interface SendCandidateMessageInput {
 }
 
 export function useCandidateMessages(candidateId?: number) {
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:requisitions:view", {
     queryKey: humanResourcesQueryKeys.hr.candidateMessages(candidateId),
     queryFn: ({ signal }) => {
       const params = candidateId ? `?candidateId=${candidateId}` : "";
@@ -69,7 +69,7 @@ export function useCandidateMessages(candidateId?: number) {
 }
 
 export function useMessageThreads() {
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:requisitions:view", {
     queryKey: humanResourcesQueryKeys.hr.messageThreads(),
     queryFn: ({ signal }) => apiClient.get<MessageThread[]>("/hr/recruitment/messages/threads", undefined, signal, messageThreadsListC),
     staleTime: 65_000,
@@ -79,7 +79,7 @@ export function useMessageThreads() {
 
 export function useSendCandidateMessage() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "messages", "send"],
     mutationFn: (data: SendCandidateMessageInput) =>
       apiClient.post<CandidateMessage>("/hr/recruitment/messages", data, undefined, sendCandidateMessageC),

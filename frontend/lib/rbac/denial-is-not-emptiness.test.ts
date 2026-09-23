@@ -39,9 +39,9 @@ import path from "node:path";
  * on the list that reads a gated hook and renders an empty state fails the
  * build. The bug stops growing today and shrinks from here.
  *
- * Fixing one means wrapping its states in `<Gated>` (`components/shared/gated.tsx`),
- * which owns the branch order, and deleting its line below. `crm/issues` is the
- * worked example.
+ * Fixing one means wrapping its states in `<PageState resolution={usePageState(...)}>`
+ * (`components/shared/page-state.tsx`), which owns the branch order, and deleting its
+ * line below. `crm/issues` is the worked example.
  */
 
 const ROOT = path.join(__dirname, "..", "..");
@@ -116,16 +116,18 @@ function claimsEmptiness(source: string): boolean {
  * There are two ways to state a refusal here, not one, and this only knew about
  * the first.
  *
- * `<Gated>` is the newer of them. The older is `usePermissionGate` plus
+ * `<Gated>` was the second of them, since folded into `<PageState
+ * resolution={usePageState(...)}>` (components/shared/page-state.tsx), which
+ * resolves "denied" ahead of "empty". The oldest is `usePermissionGate` plus
  * `<EmptyState access={gate}>`: `EmptyState` returns `NoPermissionState` when
- * `access.denied`, and the gate keeps "denied" apart from "not known yet" the
- * same way `resolveGate` does. That is the same fix, reached through a
- * different component, and a surface using it does not have this bug.
+ * `access.denied`, and the gate keeps "denied" apart from "not known yet".
+ * All three are the same fix, reached through a different component, and a
+ * surface using any of them does not have this bug.
  *
  * Recognising only `<Gated>` reported two already-correct files as broken —
  * `timesheets/approvals` (which was even listed below as unconverted, though it
  * had been converted) and `timesheets/exceptions`. A ratchet that names a fixed
- * file is a ratchet people learn to disbelieve, so it must know both.
+ * file is a ratchet people learn to disbelieve, so it must know all three.
  *
  * Note what this deliberately does NOT accept: a page-level server
  * `requirePermission()`. That does keep a denied user off the page, but it is a
@@ -134,7 +136,9 @@ function claimsEmptiness(source: string): boolean {
  */
 function handlesDenial(source: string): boolean {
   if (source.includes("NoPermissionState")) return true;
-  if (/<Gated\b/.test(source)) return true;
+  if (/<PageState\b/.test(source)) return true;
+  if (/usePageState\(/.test(source)) return true;
+  if (/useCanState\(/.test(source) && /["']denied["']/.test(source)) return true;
   return /usePermissionGate\(/.test(source) && /\baccess=\{/.test(source);
 }
 
@@ -163,7 +167,7 @@ describe("no surface tells a denied user their data is empty", () => {
     const added = measured.filter((file) => !known.has(file));
 
     // Named rather than counted, so a failure says which file to look at.
-    // Wrap its states in `<Gated>`; see `crm/issues/issues-page.tsx`.
+    // Wrap its states in `<PageState>`; see `crm/issues/issues-page.tsx`.
     expect(added).toEqual([]);
   });
 
@@ -212,7 +216,9 @@ function permissionKeyForGatedHook(relativeFile: string, hookName: string): stri
 }
 
 function deniedPermissionKeys(source: string): string[] {
-  return [...source.matchAll(/useCanState\(\s*["']([^"']+)["']\s*\)/g)].map((m) => m[1] as string);
+  const canStateKeys = [...source.matchAll(/useCanState\(\s*["']([^"']+)["']\s*\)/g)].map((m) => m[1] as string);
+  const pageStateKeys = [...source.matchAll(/usePageState\s*\(\s*\{[^}]*permission\s*:\s*["']([^"']+)["']/g)].map((m) => m[1] as string);
+  return [...canStateKeys, ...pageStateKeys];
 }
 
 describe("the deals list denies on the permission that actually gates its data", () => {
@@ -236,5 +242,38 @@ describe("the deals list denies on the permission that actually gates its data",
       "utf8",
     );
     expect(deniedPermissionKeys(source)).toContain(dealsReadKey);
+  });
+});
+
+describe("an explicit useCanState denied branch is a refusal, whatever it renders", () => {
+  it("accepts a disabled control whose placeholder reads Access restricted, because an inline form field states its refusal in place rather than replacing the form with a permission wall", () => {
+    const source = `
+      const categoriesState = useCanState("inventory:products:read");
+      <Select disabled={categoriesState !== "granted"}>
+        <SelectValue placeholder={categoriesState === "denied" ? "Access restricted" : "Select category"} />
+      </Select>
+      <EmptyState title="No categories yet" />
+    `;
+    expect(claimsEmptiness(source)).toBe(true);
+    expect(handlesDenial(source)).toBe(true);
+  });
+
+  it("accepts a nested panel that renders nothing when denied, because hiding an unauthorised export control is what the navigation rules require of a mutation control", () => {
+    const source = `
+      const canExportState = useCanState("inventory:audit:export");
+      if (canExportState === "denied") return null;
+      return <EmptyState title="No evidence has been exported yet" />;
+    `;
+    expect(claimsEmptiness(source)).toBe(true);
+    expect(handlesDenial(source)).toBe(true);
+  });
+
+  it("still reports a surface that reads a gated hook and claims emptiness without ever naming the denied state", () => {
+    const source = `
+      const { data } = useAuditExportJobs({ limit: 20 });
+      if (!data?.length) return <EmptyState title="No evidence has been exported yet" />;
+    `;
+    expect(claimsEmptiness(source)).toBe(true);
+    expect(handlesDenial(source)).toBe(false);
   });
 });

@@ -37,6 +37,7 @@ export const employeeFormSchema = z.object({
     .or(z.literal("")),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   joiningDate: z.date().optional(),
+  reportingTo: z.string().nullable().optional(),
 });
 
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;

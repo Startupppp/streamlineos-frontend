@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useReverseJournal } from "@/hooks/api/accounting/ledger-mutations";
-import type { Journal } from "@/types/accounting-kernel";
+import type { Journal } from "@/types/accounting/accounting-kernel";
 
 interface ReverseJournalDialogProps {
   journal: Journal;
@@ -30,7 +30,9 @@ export function ReverseJournalDialog({
       },
       {
         onSuccess: (reversal) => {
-          toast.success(`Journal ${journal.journalNumber} reversed by ${reversal.journalNumber}`);
+          toast.success(
+            `Journal ${journal.journalNumber} reversed by ${reversal.journalNumber}`,
+          );
           onOpenChange(false);
           router.push(`/accounting/journal/${reversal.id}`);
         },

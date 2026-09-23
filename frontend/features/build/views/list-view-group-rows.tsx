@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { LIST_RENDER_PAGE_SIZE } from "./list-view-shared";
+import { LIST_RENDER_PAGE_SIZE, useItemSelectHandler } from "./list-view-shared";
 import { ListViewItem } from "./list-view-item";
-import type { ListViewItemProps, Ticket } from "./list-view-shared";
+import type { ListSelection, ListViewItemProps, Ticket } from "./list-view-shared";
 
 interface GroupRenderLimit {
   visibleCount: number;
@@ -59,6 +59,8 @@ export interface GroupRowsProps {
   projectStatuses: ListViewItemProps["projectStatuses"];
   displayOptions: ListViewItemProps["displayOptions"];
   onTicketClick: ListViewItemProps["onClick"];
+  selection?: ListSelection;
+  focusedTicketId?: number | null;
 }
 
 export function GroupRows({
@@ -68,10 +70,14 @@ export function GroupRows({
   projectStatuses,
   displayOptions,
   onTicketClick,
+  selection,
+  focusedTicketId,
 }: GroupRowsProps) {
   const { visibleCount, hiddenCount, showMore } = useGroupRenderLimit(
     items.length,
   );
+
+  const handleItemSelect = useItemSelectHandler(selection);
 
   return (
     <>
@@ -85,6 +91,9 @@ export function GroupRows({
             projectStatuses={projectStatuses}
             onClick={onTicketClick}
             displayOptions={displayOptions}
+            isSelected={selection?.selected.has(ticket.id)}
+            onSelect={selection ? handleItemSelect : undefined}
+            isKeyboardFocused={focusedTicketId === ticket.id}
           />
         ))}
       </div>

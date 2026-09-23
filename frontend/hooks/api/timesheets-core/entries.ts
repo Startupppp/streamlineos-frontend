@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -66,6 +66,12 @@ export function useTimesheetEntries(query: EntriesQuery = {}, enabled = true) {
   });
 }
 
+function invalidateWeekReads(qc: QueryClient): void {
+  void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
+  void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periodCurrent() });
+  void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periodApprovers() });
+}
+
 export function useCreateTimesheetEntry() {
   const qc = useQueryClient();
   return useAuthorizedMutation("timesheets:entries:create", {
@@ -73,28 +79,13 @@ export function useCreateTimesheetEntry() {
     mutationFn: (data: CreateEntryInput) =>
       apiClient.post<TimesheetEntry>("/timesheets/entries", data, undefined, entryC),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
-      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periodCurrent() });
+      invalidateWeekReads(qc);
       toast.success("Time logged");
     },
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 }
 
-/**
- * TS-09, which had no caller at all.
- *
- * `POST /timesheets/entries/from-attendance` turns completed clock days into
- * draft entries. It shipped with a permission key, idempotency, an own-time-only
- * guarantee and a careful docblock — and no hook, no button, no route. The
- * feature worked and reached nobody, which is the same defect the overdue queue
- * had and the reason both were found by asking which routes the frontend never
- * names.
- *
- * No toast on success. The result has five outcomes that a single line cannot
- * distinguish, so the caller renders them; a toast here would flatten "your
- * organisation has not enabled this" into "nothing happened".
- */
 export function useDraftEntriesFromAttendance() {
   const qc = useQueryClient();
   return useMutation({
@@ -103,8 +94,7 @@ export function useDraftEntriesFromAttendance() {
       apiClient.post<AttendanceDraftResult>("/timesheets/entries/from-attendance", range),
     onSuccess: (result) => {
       if (result.entriesCreated > 0) {
-        void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
-        void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periodCurrent() });
+        invalidateWeekReads(qc);
       }
     },
     onError: (error) => toast.error(getErrorMessage(error)),
@@ -155,8 +145,7 @@ export function useUpdateTimesheetEntry() {
       toast.success("Entry updated");
     },
     onSettled: () => {
-      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
-      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periodCurrent() });
+      invalidateWeekReads(qc);
     },
   });
 }
@@ -197,8 +186,7 @@ export function useVoidTimesheetEntry() {
       toast.success("Entry voided");
     },
     onSettled: () => {
-      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
-      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periodCurrent() });
+      invalidateWeekReads(qc);
     },
   });
 }

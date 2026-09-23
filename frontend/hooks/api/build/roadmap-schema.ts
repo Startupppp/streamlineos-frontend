@@ -1,11 +1,65 @@
 import { z } from "zod";
 
+export const RICE_INPUT_NAMES = ["reach", "impact", "confidence", "effort"] as const;
+export const RICE_SCORE_UNAVAILABLE_REASONS = ["missing_inputs", "non_positive_effort"] as const;
+export const ROADMAP_DELIVERY_SOURCES = ["epic_ticket", "project", "none"] as const;
+export const CRM_ACCOUNT_TIERS = ["free", "pro", "enterprise"] as const;
+export const ROADMAP_TIER_UNWEIGHTED_REASONS = [
+  "no_linked_feedback",
+  "no_linked_account",
+  "account_tier_unset",
+  "score_unavailable",
+] as const;
+
+export const roadmapPrioritizationContract = z.object({
+  method: z.literal("rice"),
+  score: z.number().nullable(),
+  isComplete: z.boolean(),
+  missingInputs: z.array(z.enum(RICE_INPUT_NAMES)),
+  unavailableReason: z.enum(RICE_SCORE_UNAVAILABLE_REASONS).nullable(),
+});
+
+export const roadmapTierWeightingContract = z.object({
+  tierWeighted: z.boolean(),
+  tier: z.enum(CRM_ACCOUNT_TIERS).nullable(),
+  weight: z.number().nullable(),
+  weightedScore: z.number().nullable(),
+  unweightedReason: z.enum(ROADMAP_TIER_UNWEIGHTED_REASONS).nullable(),
+  linkedFeedbackCount: z.number().int(),
+  linkedAccountCount: z.number().int(),
+});
+
+export const roadmapSignalsContract = z.object({
+  itemId: z.number().int(),
+  prioritization: roadmapPrioritizationContract,
+  tierWeighting: roadmapTierWeightingContract,
+  demand: z.object({
+    votes: z.number().int(),
+    linkedFeedbackCount: z.number().int(),
+    openLinkedFeedbackCount: z.number().int(),
+  }),
+  delivery: z.object({
+    projectId: z.number().int().nullable(),
+    epicTicketId: z.number().int().nullable(),
+    source: z.enum(ROADMAP_DELIVERY_SOURCES),
+    linkedTicketCount: z.number().int(),
+    countedTicketCount: z.number().int(),
+    completedTicketCount: z.number().int(),
+    progressPercent: z.number().int().nullable(),
+  }),
+});
+
+export type RoadmapPrioritization = z.infer<typeof roadmapPrioritizationContract>;
+export type RoadmapTierWeighting = z.infer<typeof roadmapTierWeightingContract>;
+export type CrmAccountTier = (typeof CRM_ACCOUNT_TIERS)[number];
+export type RoadmapSignals = z.infer<typeof roadmapSignalsContract>;
+
 export const roadmapItemContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   title: z.string(),
   description: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
   category: z.string().nullable(),
   isPublic: z.boolean(),
   projectId: z.number().int().nullable(),
@@ -21,6 +75,8 @@ export const roadmapItemContract = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   deletedAt: z.string().nullable(),
+  prioritization: roadmapPrioritizationContract,
+  tierWeighting: roadmapTierWeightingContract,
 });
 
 export const roadmapPageContract = z.object({
@@ -38,7 +94,7 @@ export const feedbackPostContract = z.object({
   orgId: z.string(),
   title: z.string(),
   description: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["open", "planned", "in_progress", "completed", "declined"]),
   category: z.string().nullable(),
   votes: z.number().int(),
   submittedByName: z.string().nullable(),
@@ -70,7 +126,7 @@ export const changelogEntryContract = z.object({
   orgId: z.string(),
   title: z.string(),
   content: z.string(),
-  type: z.string(),
+  type: z.enum(["feature", "improvement", "fix"]),
   version: z.string().nullable(),
   isPublished: z.boolean(),
   linkedRoadmapItemId: z.number().int().nullable(),

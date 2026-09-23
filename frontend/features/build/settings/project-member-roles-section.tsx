@@ -15,11 +15,9 @@ import {
   useProjectMembers,
   useUpdateProjectMemberRole,
 } from "@/hooks/api/build";
-import { useCanManageProject } from "@/hooks/api/build/use-can-manage-project";
-import {
-  getUserDisplayName,
-  getUserInitials,
-} from "@/lib/person-display";
+import { useCan } from "@/hooks/api/access";
+import { ErrorState } from "@/components/shared/error-state";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { ProjectMemberRecord } from "@/types/projects";
 import { resolveImageUrl } from "@/lib/utils";
 
@@ -89,12 +87,12 @@ const MemberRoleRow = memo(function MemberRoleRow({
           onValueChange={handleRoleChange}
           disabled={updateRole.isPending}
         >
-          <SelectTrigger className="w-[100px] text-xs">
+          <SelectTrigger className="w-[100px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
             {ROLE_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value} className="text-xs">
+              <SelectItem key={opt.value} value={opt.value}>
                 {opt.label}
               </SelectItem>
             ))}
@@ -116,8 +114,14 @@ interface ProjectMemberRolesSectionProps {
 export function ProjectMemberRolesSection({
   projectId,
 }: ProjectMemberRolesSectionProps) {
-  const canManage = useCanManageProject(projectId);
-  const { data: members, isLoading } = useProjectMembers(projectId);
+  const canManage = useCan("build:manage");
+  const {
+    data: members,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useProjectMembers(projectId);
 
   if (isLoading) {
     return (
@@ -136,11 +140,20 @@ export function ProjectMemberRolesSection({
     );
   }
 
-  if (!members?.length) {
+  if (isError)
+    return (
+      <ErrorState
+        compact
+        title="Couldn't load member roles"
+        description={getErrorMessage(error)}
+        onRetry={() => void refetch()}
+      />
+    );
+
+  if (!members?.length)
     return (
       <p className="text-sm text-muted-foreground py-2">No members yet.</p>
     );
-  }
 
   return (
     <div className="divide-y divide-border">

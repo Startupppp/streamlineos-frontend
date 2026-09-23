@@ -5,12 +5,14 @@ import {
   useIntakeRequests, useCreateIntakeRequest, useUpdateIntakeRequest,
   useProjectMembers, useCycles, useModules,
 } from "@/hooks/api/build";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PageState } from "@/components/shared/page-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
@@ -24,8 +26,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, ExternalLink } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/lib/person-display";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm, Controller, useController } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { IntakeItemCard } from "@/features/build/intake/intake-item-card";
@@ -40,12 +42,9 @@ import {
   type CreateIntakeForm,
   acceptSchema,
   type AcceptForm,
+  declineIntakeSchema,
+  type DeclineIntakeForm,
 } from "@/features/build/intake/intake-schema";
-
-const declineSchema = z.object({
-  reason: z.string().min(1, "Reason is required"),
-});
-type DeclineForm = z.infer<typeof declineSchema>;
 
 const WORK_STATES = ["backlog", "todo", "in_progress", "done", "cancelled"] as const;
 
@@ -72,7 +71,12 @@ export function IntakePage({ projectId }: { projectId: number }) {
 
   const createForm = useForm<CreateIntakeForm>({ resolver: zodResolver(createIntakeSchema) });
   const acceptForm = useForm<AcceptForm>({ resolver: zodResolver(acceptSchema) });
-  const declineForm = useForm<DeclineForm>({ resolver: zodResolver(declineSchema) });
+  const declineForm = useForm<DeclineIntakeForm>({ resolver: zodResolver(declineIntakeSchema) });
+  useRegisterDirtyState(
+    (createOpen && createForm.formState.isDirty) ||
+    (acceptOpen && acceptForm.formState.isDirty) ||
+    (declineOpen && declineForm.formState.isDirty),
+  );
 
   const { field: assigneeIdField } = useController({ control: acceptForm.control, name: "assigneeId" });
   const { field: cycleIdField } = useController({ control: acceptForm.control, name: "cycleId" });
@@ -120,7 +124,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
     );
   }, [selectedItemId, updateMutation, projectId, acceptForm]);
 
-  const onDeclineSubmit = useCallback((data: DeclineForm) => {
+  const onDeclineSubmit = useCallback((data: DeclineIntakeForm) => {
     if (selectedItemId === null) return;
     updateMutation.mutate(
       { intakeRequestId: selectedItemId, projectId, status: "declined", declineReason: data.reason },
@@ -157,6 +161,9 @@ export function IntakePage({ projectId }: { projectId: number }) {
     );
   }, [updateMutation, projectId]);
 
+  const canManage = useCan("build:workspace:manage");
+  const pageState = usePageState({ permission: "build:view", isLoading, isError, error });
+
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
@@ -176,34 +183,25 @@ export function IntakePage({ projectId }: { projectId: number }) {
   const filteredItems = allItems.filter((item) => activeTab === "all" || item.status === activeTab);
   const pendingCount = allItems.filter((i) => i.status === "pending").length;
 
-  if (isLoading) {
-    return (
-      <PageWrapper title="Intake" subtitle="Collect and triage incoming requests from your team or clients">
-        <PmPageShell>
-          <div className="flex flex-1 min-h-0 flex-col gap-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-20 w-full rounded-xl" />
-            ))}
-          </div>
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") return (
+    <PageWrapper title="Intake" subtitle="Collect and triage incoming requests from your team or clients">
+      <PmPageShell>
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry}>{null}</PageState>
+      </PmPageShell>
+    </PageWrapper>
+  );
 
-  if (isError) {
-    return (
-      <PageWrapper title="Intake" subtitle="Collect and triage incoming requests from your team or clients">
-        <PmPageShell>
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load intake requests"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
+  if (pageState.kind === "loading") return (
+    <PageWrapper title="Intake" subtitle="Collect and triage incoming requests from your team or clients">
+      <PmPageShell>
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 w-full rounded-xl" />
+          ))}
+        </div>
+      </PmPageShell>
+    </PageWrapper>
+  );
 
   return (
     <PageWrapper
@@ -214,6 +212,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
           <Button variant="outline" size="sm" onClick={handleCopyFormUrl}>
             <ExternalLink className="h-4 w-4 mr-1" /> Copy Form URL
           </Button>
+          {canManage ? (
           <Sheet open={createOpen} onOpenChange={setCreateOpen}>
             <SheetTrigger asChild>
               <Button size="sm">
@@ -230,7 +229,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
                     <Label htmlFor="intake-title">Title</Label>
                     <Input id="intake-title" {...createForm.register("title")} />
                     {createForm.formState.errors.title && (
-                      <p className="text-xs text-destructive mt-1">{createForm.formState.errors.title.message}</p>
+                      <p className="text-xs text-destructive mt-1" aria-live="polite">{createForm.formState.errors.title.message}</p>
                     )}
                   </div>
                   <div>
@@ -255,6 +254,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
               </div>
             </SheetContent>
           </Sheet>
+          ) : null}
         </div>
       }
     >
@@ -300,6 +300,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
                     <IntakeItemCard
                       key={item.id}
                       item={item}
+                      canManage={canManage}
                       onAccept={handleAccept}
                       onDecline={handleDecline}
                       onDuplicate={handleDuplicate}
@@ -337,7 +338,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
                   )}
                 />
                 {acceptForm.formState.errors.state && (
-                  <p className="text-xs text-destructive mt-1">{acceptForm.formState.errors.state.message}</p>
+                  <p className="text-xs text-destructive mt-1" aria-live="polite">{acceptForm.formState.errors.state.message}</p>
                 )}
               </div>
               <div>
@@ -389,9 +390,9 @@ export function IntakePage({ projectId }: { projectId: number }) {
           <div className="shrink-0 px-6 py-4 border-t">
             <div className="grid grid-cols-2 gap-2">
               <Button variant="outline" size="sm" onClick={handleCloseAccept}>Cancel</Button>
-              <Button size="sm" type="submit" form="accept-intake-form" disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? "Accepting…" : "Accept & Create"}
-              </Button>
+              <LoadingButton size="sm" type="submit" form="accept-intake-form" isPending={updateMutation.isPending} loadingText="Accepting…">
+                Accept & Create
+              </LoadingButton>
             </div>
           </div>
         </SheetContent>
@@ -412,7 +413,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
                   {...declineForm.register("reason")}
                 />
                 {declineForm.formState.errors.reason && (
-                  <p className="text-xs text-destructive mt-1">{declineForm.formState.errors.reason.message}</p>
+                  <p className="text-xs text-destructive mt-1" aria-live="polite">{declineForm.formState.errors.reason.message}</p>
                 )}
               </div>
             </form>

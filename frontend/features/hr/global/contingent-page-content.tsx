@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import DOMPurify from "isomorphic-dompurify";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,7 +19,7 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { SanitizedHtml } from "@/components/shared/sanitized-html";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileText } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -54,7 +55,16 @@ function ContractStatusBadge({ status }: { status: HrContract["status"] }) {
 
 function CertificateViewer({ contractId }: { contractId: number }) {
   const [enabled, setEnabled] = useState(false);
-  const { data, isLoading } = useInternshipCertificate(contractId, enabled);
+  const { data, isLoading, isError, error } = useInternshipCertificate(contractId, enabled);
+
+  function handleClick() {
+    setEnabled(true);
+  }
+
+  if (enabled && isError) {
+    toast.error(getErrorMessage(error));
+    setEnabled(false);
+  }
 
   return (
     <>
@@ -62,20 +72,20 @@ function CertificateViewer({ contractId }: { contractId: number }) {
         variant="ghost"
         size="sm"
         className="text-xs gap-1"
-        onClick={() => setEnabled(true)}
+        onClick={handleClick}
       >
         <FileText className="h-3 w-3" />
         Certificate
       </Button>
-      {enabled && !isLoading && data && (
+      {enabled && !isLoading && !isError && data && (
         <AlertDialog open onOpenChange={() => setEnabled(false)}>
           <AlertDialogContent className="max-w-2xl">
             <AlertDialogHeader>
               <AlertDialogTitle>Internship Certificate</AlertDialogTitle>
             </AlertDialogHeader>
-            <div
+            <SanitizedHtml
+              html={data.html}
               className="prose prose-sm max-h-96 overflow-y-auto rounded-lg border border-border p-4 bg-card"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.html) }}
             />
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setEnabled(false)}>Close</AlertDialogCancel>

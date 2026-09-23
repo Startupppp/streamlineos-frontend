@@ -8,14 +8,17 @@ export const teamRowContract = z.object({
   icon: z.string().nullable(),
   color: z.string().nullable(),
   isPrivate: z.boolean(),
-  pmWorkspaceId: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
   deletedAt: z.string().nullable(),
 });
 
+export const teamListItemContract = teamRowContract
+  .omit({ deletedAt: true })
+  .extend({ memberCount: z.number().int() });
+
 export const teamPageContract = z.object({
-  data: z.array(teamRowContract),
+  data: z.array(teamListItemContract),
   pagination: z.object({
     limit: z.number().int(),
     hasMore: z.boolean(),

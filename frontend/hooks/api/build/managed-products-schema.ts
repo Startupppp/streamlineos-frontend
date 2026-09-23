@@ -6,9 +6,8 @@ export const managedProductRowContract = z.object({
   name: z.string(),
   key: z.string(),
   description: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["active", "archived"]),
   ownerId: z.string().nullable(),
-  pmWorkspaceId: z.string().nullable(),
   vision: z.string().nullable(),
   missionStatement: z.string().nullable(),
   targetCustomer: z.string().nullable(),
@@ -30,3 +29,20 @@ export const managedProductPageContract = z.object({
     nextCursor: z.string().nullable(),
   }),
 });
+
+export const managedProductInsightsContract = z.object({
+  linkedProjectCount: z.number().int(),
+  projectsByStatus: z.object({
+    active: z.number().int(),
+    completed: z.number().int(),
+    archived: z.number().int(),
+  }),
+  submissionsByStatus: z.object({
+    open: z.number().int(),
+    in_progress: z.number().int(),
+    resolved: z.number().int(),
+    archived: z.number().int(),
+  }),
+});
+
+export type ManagedProductInsights = z.infer<typeof managedProductInsightsContract>;

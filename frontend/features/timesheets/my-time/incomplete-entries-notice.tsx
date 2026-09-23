@@ -15,14 +15,6 @@ export interface IncompleteEntriesNoticeProps {
   rows: IncompleteEntry[];
 }
 
-/**
- * What the server would have said, said by day instead of by row id.
- *
- * `submitPeriod` refuses the whole period with `Entry 4211 is missing a
- * required description`. That number is a primary key; it is printed on no
- * screen in the product, so the person holding the toast had no way to find the
- * entry it was about. The day and the hours are what they can actually look at.
- */
 export function IncompleteEntriesNotice({ rows }: IncompleteEntriesNoticeProps) {
   if (rows.length === 0) return null;
 

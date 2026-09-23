@@ -1,9 +1,12 @@
 "use client";
 
+import { useMemo } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ListTruncationNotice } from "@/components/ui/list-truncation-notice";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { TableView } from "./table-view";
 import { CalendarView } from "./calendar-view";
 import { GanttView } from "./gantt-view";
@@ -11,17 +14,24 @@ import { WorkloadView } from "./workload-view";
 import { BulkActionBar } from "@/features/build/backlog/bulk-action-bar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { SearchX } from "lucide-react";
+import { SearchX, WifiOff } from "lucide-react";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
 import type { ViewType } from "./view-switcher";
-import { type FilterState as WorkloadFilterState } from "./workload-types";
-import type { Sprint } from "@/types/projects";
+
+function assertNever(x: never): never {
+  throw new Error(`Unhandled view type: ${String(x)}`);
+}
+import { type FilterState as WorkloadFilterState, type MemberCapacityData } from "./workload-types";
+import type { Cycle } from "@/types/projects";
 import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
 import { PM_PANEL } from "@/components/pm-chrome";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import type { ProjectStatus, BoardMember } from "./use-board-url-state";
 import { useCan } from "@/hooks/api/access";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 
 const KanbanBoard = dynamic(
   () => import("./kanban-board").then((m) => m.KanbanBoard),
@@ -52,15 +62,25 @@ interface ProjectBoardContentProps {
     key: K,
     value: WorkloadFilterState[K],
   ) => void;
-  sprints: Sprint[];
+  onClearWorkloadFilters: () => void;
+  capacityByMemberId?: Map<string, MemberCapacityData>;
+  cycles: Cycle[];
   selectedIds: Set<string | number>;
   onBulkStatus: (v: string) => void;
   onBulkPriority: (v: string) => void;
   onBulkAssignee: (v: string) => void;
-  onBulkSprint: (v: string) => void;
+  onBulkCycle: (v: string) => void;
   onBulkParent: (parentTicketId: number | null) => void;
   onClearSelection: () => void;
   onSelectionChange: (sel: Set<string | number>) => void;
+  isTruncated: boolean;
+  isFetchingMore: boolean;
+  onLoadMore: () => void;
+  isLoading: boolean;
+  isError: boolean;
+  error: unknown;
+  onRetry: () => void;
+  focusedTicketId?: number | null;
 }
 
 export function ProjectBoardContent({
@@ -79,65 +99,103 @@ export function ProjectBoardContent({
   workloadFilters,
   onTicketSelect,
   onWorkloadFilterChange,
-  sprints,
+  onClearWorkloadFilters,
+  capacityByMemberId,
+  cycles,
   selectedIds,
   onBulkStatus,
   onBulkPriority,
   onBulkAssignee,
-  onBulkSprint,
+  onBulkCycle,
   onBulkParent,
   onClearSelection,
   onSelectionChange,
+  isTruncated,
+  isFetchingMore,
+  onLoadMore,
+  isLoading,
+  isError,
+  error,
+  onRetry,
+  focusedTicketId,
 }: ProjectBoardContentProps) {
   const shouldReduceMotion = useReducedMotion();
+  const isOnline = useOnlineStatus();
   const canUpdate = useCan("build:tickets:update");
+  const resolution = usePageState({
+    permission: "build:tickets:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: showEmptyFilterState,
+  });
   const viewVariants = shouldReduceMotion ? viewSwapReduced : viewSwap;
+  const selection = useMemo(
+    () => canUpdate ? { selected: selectedIds, onChange: onSelectionChange } : undefined,
+    [canUpdate, selectedIds, onSelectionChange],
+  );
 
-  if (showEmptyFilterState) {
-    return (
+  const offlineEmptyState = (
+    <div className="relative flex h-full flex-1 flex-col items-center justify-center py-12">
       <div
         className={cn(
-          PAGE_CHROME_X,
-          "relative flex h-full flex-1 flex-col items-center justify-center py-12",
+          PM_PANEL,
+          "relative flex w-full max-w-sm flex-col items-center gap-3 px-6 py-8 text-center",
         )}
       >
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-6 right-1/4 h-36 w-36 rounded-full bg-primary/[0.06] blur-3xl"
-        />
-        <div
-          className={cn(
-            PM_PANEL,
-            "relative flex w-full max-w-sm flex-col items-center gap-3 px-6 py-8 text-center",
-          )}
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-primary/[0.06] shadow-sm">
-            <SearchX className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-foreground">No tickets match your filters</p>
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              Try adjusting your search or filters to find what you&apos;re looking for.
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onClearSearch}
-            className="mt-0.5 h-8 border-border/70 bg-background/60 text-xs backdrop-blur-sm"
-          >
-            Clear all filters
-          </Button>
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-primary/[0.06] shadow-sm">
+          <WifiOff className="h-5 w-5 text-muted-foreground" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-foreground">
+            You&apos;re offline
+          </p>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Results may not be up to date. Reconnect to see the latest tickets.
+          </p>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 
-  return (
-    <div className={cn(PAGE_CHROME_X, "flex min-h-0 flex-1 flex-col")}>
-      <AnimatePresence mode="wait" initial={false}>
-        {view === "board" ? (
+  const filteredEmptyState = (
+    <div className="relative flex h-full flex-1 flex-col items-center justify-center py-12">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-6 right-1/4 h-36 w-36 rounded-full bg-primary/[0.06] blur-3xl"
+      />
+      <div
+        className={cn(
+          PM_PANEL,
+          "relative flex w-full max-w-sm flex-col items-center gap-3 px-6 py-8 text-center",
+        )}
+      >
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-primary/[0.06] shadow-sm">
+          <SearchX className="h-5 w-5 text-muted-foreground" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-foreground">No tickets match your filters</p>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Try adjusting your search or filters to find what you&apos;re looking for.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onClearSearch}
+          className="mt-0.5 h-8 border-border/70 bg-background/60 text-xs backdrop-blur-sm"
+        >
+          Clear all filters
+        </Button>
+      </div>
+    </div>
+  );
+
+  function renderViewPane(v: ViewType): React.ReactNode {
+    switch (v) {
+      case "board":
+        return (
           <motion.div
             key="board"
             className="flex h-full min-h-0 w-full flex-1 flex-col pb-1"
@@ -159,8 +217,9 @@ export function ProjectBoardContent({
               hasActiveFilters={hasActiveFilters}
             />
           </motion.div>
-        ) : null}
-        {view === "list" ? (
+        );
+      case "list":
+        return (
           <motion.div
             key="list"
             className="min-h-0 flex-1 flex flex-col overflow-hidden pb-1"
@@ -170,6 +229,22 @@ export function ProjectBoardContent({
             exit="exit"
             transition={pmSnappy}
           >
+            {canUpdate && selectedIds.size > 0 && (
+              <BulkActionBar
+                selectedCount={selectedIds.size}
+                members={members}
+                cycles={cycles}
+                statuses={statuses}
+                projectId={projectId}
+                excludeIds={selectedIds}
+                onBulkStatus={onBulkStatus}
+                onBulkPriority={onBulkPriority}
+                onBulkAssignee={onBulkAssignee}
+                onBulkCycle={onBulkCycle}
+                onBulkParent={onBulkParent}
+                onClear={onClearSelection}
+              />
+            )}
             <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
               <div className="overscroll-contain">
                 <ListView
@@ -183,12 +258,15 @@ export function ProjectBoardContent({
                   showEmptyColumns={displayOptions.showEmptyColumns}
                   showEmptyRows={displayOptions.showEmptyRows}
                   projectId={projectId}
+                  selection={selection}
+                  focusedTicketId={focusedTicketId}
                 />
               </div>
             </ScrollArea>
           </motion.div>
-        ) : null}
-        {view === "table" ? (
+        );
+      case "table":
+        return (
           <motion.div
             key="table"
             className="min-h-0 flex-1 flex flex-col overflow-hidden pb-1"
@@ -204,13 +282,14 @@ export function ProjectBoardContent({
                   <BulkActionBar
                     selectedCount={selectedIds.size}
                     members={members}
-                    sprints={sprints}
+                    cycles={cycles}
+                    statuses={statuses}
                     projectId={projectId}
                     excludeIds={selectedIds}
                     onBulkStatus={onBulkStatus}
                     onBulkPriority={onBulkPriority}
                     onBulkAssignee={onBulkAssignee}
-                    onBulkSprint={onBulkSprint}
+                    onBulkCycle={onBulkCycle}
                     onBulkParent={onBulkParent}
                     onClear={onClearSelection}
                   />
@@ -222,13 +301,14 @@ export function ProjectBoardContent({
                   projectId={projectId}
                   projectStatuses={statuses}
                   displayOptions={displayOptions}
-                  selection={canUpdate ? { selected: selectedIds, onChange: onSelectionChange } : undefined}
+                  selection={selection}
                 />
               </div>
             </ScrollArea>
           </motion.div>
-        ) : null}
-        {view === "calendar" ? (
+        );
+      case "calendar":
+        return (
           <motion.div
             key="calendar"
             className="flex min-h-0 flex-1 flex-col overflow-hidden pb-2 pt-0"
@@ -245,10 +325,11 @@ export function ProjectBoardContent({
               projectStatuses={statuses}
             />
           </motion.div>
-        ) : null}
-        {view === "gantt" ? (
+        );
+      case "timeline":
+        return (
           <motion.div
-            key="gantt"
+            key="timeline"
             className="flex min-h-0 flex-1 flex-col overflow-hidden pb-2 pt-0"
             variants={viewVariants}
             initial="initial"
@@ -262,8 +343,9 @@ export function ProjectBoardContent({
               onTicketClick={onTicketSelect}
             />
           </motion.div>
-        ) : null}
-        {view === "workload" ? (
+        );
+      case "workload":
+        return (
           <motion.div
             key="workload"
             className="flex min-h-0 flex-1 flex-col overflow-hidden pb-2 pt-0"
@@ -280,10 +362,47 @@ export function ProjectBoardContent({
               members={members}
               filters={workloadFilters}
               onFilterChange={onWorkloadFilterChange}
+              onClearFilters={onClearWorkloadFilters}
+              capacityByMemberId={capacityByMemberId}
             />
           </motion.div>
+        );
+      default:
+        return assertNever(v);
+    }
+  }
+
+  return (
+    <div className={cn(PAGE_CHROME_X, "flex min-h-0 flex-1 flex-col")}>
+      <PageState
+        resolution={resolution}
+        loading={<KanbanBoardSkeleton />}
+        empty={isOnline ? filteredEmptyState : offlineEmptyState}
+        onRetry={onRetry}
+        className="flex-1"
+      >
+        <AnimatePresence mode="wait" initial={false}>
+          {renderViewPane(view)}
+        </AnimatePresence>
+        {isTruncated ? (
+          <div className="shrink-0 flex items-center justify-between gap-3 border-t border-border/40 py-2">
+            <ListTruncationNotice
+              shown={filteredTickets.length}
+              hint="Load more to see additional tickets, or narrow your filters."
+              className="flex-1 border-0 px-0 py-0"
+            />
+            <LoadingButton
+              type="button"
+              variant="outline"
+              size="sm"
+              isPending={isFetchingMore}
+              onClick={onLoadMore}
+            >
+              Load more
+            </LoadingButton>
+          </div>
         ) : null}
-      </AnimatePresence>
+      </PageState>
     </div>
   );
 }

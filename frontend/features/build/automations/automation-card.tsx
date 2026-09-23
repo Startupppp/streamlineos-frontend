@@ -9,17 +9,7 @@ import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import {
@@ -42,9 +32,10 @@ export interface AutomationCardProps {
   onToggle: (id: number, isActive: boolean) => void;
   onDelete: (id: number) => void;
   onEdit: (automation: ProjectAutomation) => void;
+  canManage?: boolean;
 }
 
-export function AutomationCard({ automation, onToggle, onDelete, onEdit }: AutomationCardProps) {
+export function AutomationCard({ automation, onToggle, onDelete, onEdit, canManage = false }: AutomationCardProps) {
   const { iconRef: editIconRef, hoverHandlers: editHoverHandlers } = useAnimatedIcon();
 
   const handleSwitchChange = useCallback(
@@ -119,52 +110,42 @@ export function AutomationCard({ automation, onToggle, onDelete, onEdit }: Autom
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Switch
-            checked={automation.isActive}
-            onCheckedChange={handleSwitchChange}
-            aria-label={automation.isActive ? "Deactivate" : "Activate"}
-          />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-7"
-            onClick={handleEdit}
-            aria-label="Edit automation"
-            {...editHoverHandlers}
-          >
-            <ChevronRightIcon ref={editIconRef} size={14} />
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <AnimatedIconButton
-                variant="ghost"
-                size="icon"
-                className="w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-                aria-label="Delete automation"
-                icon={Trash2Icon}
-                iconSize={14}
-              />
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete automation?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This rule will stop running immediately.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDeleteAutomation}
-                  variant="destructive"
-                >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
+        {canManage && (
+          <div className="flex items-center gap-2 shrink-0">
+            <Switch
+              checked={automation.isActive}
+              onCheckedChange={handleSwitchChange}
+              aria-label={automation.isActive ? "Deactivate" : "Activate"}
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-7"
+              onClick={handleEdit}
+              aria-label="Edit automation"
+              {...editHoverHandlers}
+            >
+              <ChevronRightIcon ref={editIconRef} size={14} />
+            </Button>
+            <ConfirmDialog
+              title="Delete automation?"
+              description="This rule will stop running immediately."
+              confirmLabel="Delete"
+              destructive
+              onConfirm={handleDeleteAutomation}
+              trigger={
+                <AnimatedIconButton
+                  variant="ghost"
+                  size="icon"
+                  className="w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  aria-label="Delete automation"
+                  icon={Trash2Icon}
+                  iconSize={14}
+                />
+              }
+            />
+          </div>
+        )}
       </div>
     </motion.div>
   );

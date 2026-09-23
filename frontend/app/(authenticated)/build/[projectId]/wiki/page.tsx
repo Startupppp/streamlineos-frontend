@@ -1,4 +1,4 @@
-import { requireSession } from "@/lib/rbac/require-permission";
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { RequireModule } from "@/components/auth/require-module";
 import WikiHomePage from "@/features/wiki/components/wiki-home-page";
 
@@ -7,7 +7,7 @@ interface ProjectWikiPageProps {
 }
 
 export default async function ProjectWikiPage({ params }: ProjectWikiPageProps) {
-  await requireSession();
+  await enforceRouteAccess("/build/[projectId]/wiki");
   const { projectId } = await params;
   const parsedProjectId = Number(projectId);
   return (

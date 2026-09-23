@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo, type DragEvent, type ClipboardEvent } from "react";
+import { createPortal } from "react-dom";
 import {
   Plate,
   PlateContent,
@@ -33,6 +34,7 @@ export interface PlateDocumentEditorProps {
   onNavigateToPage?: (pageId: number) => void;
   contentKey?: string | number;
   uploadFile?: EditorMediaUploader;
+  toolbarHost?: HTMLElement | null;
 }
 
 export default function PlateDocumentEditor({
@@ -45,6 +47,7 @@ export default function PlateDocumentEditor({
   onNavigateToPage,
   contentKey,
   uploadFile,
+  toolbarHost,
 }: PlateDocumentEditorProps) {
   const [initialValue] = useState(() => normalizePlateValue(value));
 
@@ -103,10 +106,12 @@ export default function PlateDocumentEditor({
     [fetchMentionUsers, fetchPageLinks, onNavigateToPage],
   );
 
+  const toolbar = editable ? <FixedToolbar uploadFile={uploadFile} /> : null;
+
   return (
     <EditorPageContext.Provider value={contextValue}>
       <Plate editor={editor} onChange={handleChange}>
-        <FixedToolbar uploadFile={uploadFile} />
+        {toolbar && toolbarHost ? createPortal(toolbar, toolbarHost) : null}
         <PlateContent
           placeholder={placeholder}
           readOnly={!editable}

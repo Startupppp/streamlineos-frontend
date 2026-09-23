@@ -5,7 +5,11 @@ import { apiClient } from "@/lib/api-client";
 import type { FeedbucketSubmissionRow } from "@/hooks/api/feedbucket/feedbucket-schema";
 import { lazyContract } from "@/lib/api-envelope";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
+  BulkFeedbucketSubmissionsInput,
+  BulkFeedbucketSubmissionsResult,
+  FeedbucketMediaKind,
   FeedbucketSubmission,
   PaginatedFeedbucketSubmissions,
   ListFeedbucketSubmissionsQuery,
@@ -13,6 +17,7 @@ import type {
 } from "@/types/feedbucket";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
 const feedbucketSubmissionListC = lazyContract(() =>
   import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketSubmissionListContract),
@@ -25,6 +30,12 @@ const feedbucketUpdateSubmissionC = lazyContract(() =>
 );
 const feedbucketConvertTicketC = lazyContract(() =>
   import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketConvertTicketContract),
+);
+const feedbucketDeleteSubmissionC = lazyContract(() =>
+  import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketDeleteSubmissionContract),
+);
+const feedbucketBulkSubmissionsC = lazyContract(() =>
+  import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketBulkSubmissionsContract),
 );
 
 export function useFeedbucketSubmissions(params?: ListFeedbucketSubmissionsQuery) {
@@ -71,6 +82,72 @@ export function useUpdateFeedbucketSubmission() {
   });
 }
 
+export function useBulkMutateFeedbucketSubmissions() {
+  const qc = useQueryClient();
+  const operation = useIdempotentOperation();
+  return useAuthorizedMutation<
+    BulkFeedbucketSubmissionsResult,
+    Error,
+    BulkFeedbucketSubmissionsInput
+  >("feedbucket:submissions:update", {
+    mutationKey: ["feedbucket", "submissions", "bulk"],
+    mutationFn: (input) =>
+      apiClient.post<BulkFeedbucketSubmissionsResult>(
+        "/feedbucket/submissions/bulk",
+        input,
+        operation.configFor(input),
+        feedbucketBulkSubmissionsC,
+      ),
+    onSuccess: (result) => {
+      operation.settle();
+      for (const item of result.results)
+        if (item.outcome !== "skipped")
+          qc.removeQueries({
+            queryKey: growthAndSignQueryKeys.feedbucket.submission(item.submissionId),
+          });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.all });
+    },
+  });
+}
+
+export function useDeleteFeedbucketSubmission() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("feedbucket:submissions:delete", {
+    mutationKey: ["feedbucket", "submissions", "delete"],
+    mutationFn: ({ submissionId }: { submissionId: number }) =>
+      apiClient.delete<{ success: true }>(
+        `/feedbucket/submissions/${submissionId}`,
+        undefined, undefined, feedbucketDeleteSubmissionC,
+      ),
+    onSuccess: (_, { submissionId }) => {
+      qc.removeQueries({ queryKey: growthAndSignQueryKeys.feedbucket.submission(submissionId) });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.all });
+    },
+  });
+}
+
+export function useDeleteFeedbucketSubmissionMedia() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("feedbucket:submissions:delete", {
+    mutationKey: ["feedbucket", "submissions", "delete-media"],
+    mutationFn: ({
+      submissionId,
+      mediaKind,
+    }: {
+      submissionId: number;
+      mediaKind: FeedbucketMediaKind;
+    }) =>
+      apiClient.delete<{ success: true }>(
+        `/feedbucket/submissions/${submissionId}/media/${mediaKind}`,
+        undefined, undefined, feedbucketDeleteSubmissionC,
+      ),
+    onSuccess: (_, { submissionId }) => {
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.submission(submissionId) });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.all });
+    },
+  });
+}
+
 export function useConvertFeedbucketToTicket() {
   const qc = useQueryClient();
   return useAuthorizedMutation("feedbucket:submissions:manage", {
@@ -84,6 +161,7 @@ export function useConvertFeedbucketToTicket() {
     onSuccess: (_, { submissionId }) => {
       void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.submission(submissionId) });
       void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.all });
+      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.tickets() });
     },
   });
 }

@@ -7,13 +7,18 @@ import { lazyContract } from "@/lib/api-envelope";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { PeriodDetail, TimesheetPeriod } from "@/features/timesheets/types";
+import type { PeriodApproverPreview } from "@/hooks/api/timesheets-core/timesheets-period-schema";
 
 const periodDetailC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-period-schema").then((m) => m.periodDetailResponseContract),
 );
 const timesheetPeriodC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-period-schema").then((m) => m.timesheetPeriodContract),
+);
+const periodApproverPreviewC = lazyContract(() =>
+  import("@/hooks/api/timesheets-core/timesheets-period-schema").then((m) => m.periodApproverPreviewContract),
 );
 
 export function useCurrentPeriod() {
@@ -36,11 +41,18 @@ export function usePeriod(periodId: number | null) {
   });
 }
 
-/**
- * Each action passes its own literal path rather than interpolating the action
- * name: a path segment built from a variable is a path the contract scan cannot
- * read, so drift on it would never be reported.
- */
+export function usePeriodApproverPreview(periodId: number | null, options?: { enabled?: boolean }) {
+  const canView = useCan("timesheets:entries:view");
+  return useQuery({
+    queryKey: usersAndCommerceQueryKeys.timesheets.periodApprover(periodId ?? 0),
+    queryFn: ({ signal }) =>
+      apiClient.get<PeriodApproverPreview>(`/timesheets/periods/${periodId}/approver`, undefined, signal, periodApproverPreviewC),
+    staleTime: 60_000,
+    enabled: periodId !== null && canView && (options?.enabled ?? true),
+    ...INLINE_READ_ERROR,
+  });
+}
+
 function usePeriodAction(
   action: "submit" | "recall",
   message: string,

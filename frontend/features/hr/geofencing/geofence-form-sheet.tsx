@@ -3,7 +3,6 @@
 import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -22,22 +21,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-
-const schema = z.object({
-  name: z.string().min(1, "Name is required"),
-  lat: z.string().min(1, "Latitude is required"),
-  lng: z.string().min(1, "Longitude is required"),
-  radiusMeters: z.number().min(50).max(2000),
-});
-
-type FormValues = z.infer<typeof schema>;
-
-const EMPTY_VALUES: FormValues = {
-  name: "",
-  lat: "",
-  lng: "",
-  radiusMeters: 200,
-};
+import {
+  GEOFENCE_DEFAULTS,
+  geofenceSchema,
+  type GeofenceFormValues,
+} from "@/features/hr/geofencing/geofence-schema";
 
 interface Props {
   open: boolean;
@@ -49,9 +37,9 @@ export function GeofenceFormSheet({ open, onOpenChange, fence }: Props) {
   const isEdit = Boolean(fence);
   const createFence = useCreateGeofence();
   const updateFence = useUpdateGeofence();
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: EMPTY_VALUES,
+  const form = useForm<GeofenceFormValues>({
+    resolver: zodResolver(geofenceSchema),
+    defaultValues: GEOFENCE_DEFAULTS,
   });
 
   const radiusValue = form.watch("radiusMeters");
@@ -61,17 +49,17 @@ export function GeofenceFormSheet({ open, onOpenChange, fence }: Props) {
     form.reset(
       fence
         ? { name: fence.name, lat: fence.lat, lng: fence.lng, radiusMeters: fence.radiusMeters }
-        : EMPTY_VALUES,
+        : GEOFENCE_DEFAULTS,
     );
   }, [open, fence, form]);
 
   const onSubmit = useCallback(
-    (data: FormValues) => {
+    (data: GeofenceFormValues) => {
       const payload = { name: data.name, lat: data.lat, lng: data.lng, radiusMeters: data.radiusMeters };
       const handlers = {
         onSuccess: () => {
           toast.success(isEdit ? "Geofence updated" : "Geofence added");
-          form.reset(EMPTY_VALUES);
+          form.reset(GEOFENCE_DEFAULTS);
           onOpenChange(false);
         },
         onError: (err: unknown) => toast.error(getErrorMessage(err)),
@@ -86,10 +74,10 @@ export function GeofenceFormSheet({ open, onOpenChange, fence }: Props) {
     <HrSheet
       open={open}
       onOpenChange={onOpenChange}
-      title={isEdit ? "Edit Geofence" : "Add Geofence"}
+      title={isEdit ? "Edit geofence" : "Add geofence"}
       description="Define a location boundary for attendance validation"
       onSubmit={form.handleSubmit(onSubmit)}
-      submitLabel={isEdit ? "Save Changes" : "Add Location"}
+      submitLabel={isEdit ? "Save changes" : "Add location"}
       isPending={createFence.isPending || updateFence.isPending}
       isDirty={form.formState.isDirty}
       onDiscard={() => form.reset()}
@@ -102,7 +90,7 @@ export function GeofenceFormSheet({ open, onOpenChange, fence }: Props) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                  Location Name <span className="text-destructive">*</span>
+                  Location name <span className="text-destructive">*</span>
                 </FormLabel>
                 <FormControl>
                   <Input placeholder="e.g. Head Office" className="text-sm" {...field} />
@@ -122,7 +110,7 @@ export function GeofenceFormSheet({ open, onOpenChange, fence }: Props) {
                     Latitude <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="12.9716" className="text-sm font-mono" {...field} />
+                    <Input inputMode="decimal" placeholder="e.g. 13.0827" className="text-sm font-mono" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -137,7 +125,7 @@ export function GeofenceFormSheet({ open, onOpenChange, fence }: Props) {
                     Longitude <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="77.5946" className="text-sm font-mono" {...field} />
+                    <Input inputMode="decimal" placeholder="e.g. 80.2707" className="text-sm font-mono" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

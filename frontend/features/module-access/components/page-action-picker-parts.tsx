@@ -21,9 +21,8 @@ export interface ResourceGroup {
   permissions: ModulePermission[];
 }
 
-const SCOPE_OPTIONS: { value: DataScope; label: string }[] = [
+export const SCOPE_OPTIONS: { value: DataScope; label: string }[] = [
   { value: "all", label: "All" },
-  { value: "team", label: "Team" },
   { value: "own", label: "Own" },
 ];
 

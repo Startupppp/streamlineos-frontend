@@ -34,13 +34,25 @@ describe("which read failures reach the route error boundary", () => {
     );
   });
 
-  it("throws a permission refusal that reached the wire, because an ungated read is a bug and a zero hides it", () => {
-    expect(
-      readErrorReachesBoundary(new ApiError("forbidden", 403), nothingRendered),
-    ).toBe(true);
+  it("throws an unmapped client failure that reached the wire, because an ungated read is a bug and a zero hides it", () => {
     expect(
       readErrorReachesBoundary(new ApiError("gone", 404), nothingRendered),
     ).toBe(true);
+  });
+
+  it("keeps a permission denial inline rather than calling it an unexpected error", () => {
+    expect(
+      readErrorReachesBoundary(new ApiError("forbidden", 403), nothingRendered),
+    ).toBe(false);
+  });
+
+  it("keeps a plan denial inline, because Try Again can never resolve one", () => {
+    const error = new ApiError("nope", 402, "MODULE_NOT_ENABLED", {
+      moduleKey: "feedbucket",
+      reason: "org-disabled",
+      upgradePath: null,
+    });
+    expect(readErrorReachesBoundary(error, nothingRendered)).toBe(false);
   });
 
   it("never throws once the query holds data — a failed background refresh keeps the screen", () => {

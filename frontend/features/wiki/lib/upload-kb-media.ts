@@ -1,6 +1,5 @@
 'use client';
 
-import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 import { lazyContract } from '@/lib/api-envelope';
 import { IDEMPOTENCY_HEADER, newIdempotencyKey } from '@/lib/idempotency-key';
@@ -97,10 +96,7 @@ function idempotencyKeyFor(signature: string): string {
 
 export async function uploadKbMedia(file: File, pageId?: number): Promise<UploadedKbMedia> {
   const error = getValidationError(file);
-  if (error) {
-    toast.error(error);
-    throw new Error(error);
-  }
+  if (error) throw new Error(error);
   const fd = new FormData();
   fd.append('file', file);
   if (pageId != null) fd.append('pageId', String(pageId));

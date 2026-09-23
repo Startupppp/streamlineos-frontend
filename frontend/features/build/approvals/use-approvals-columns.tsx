@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -23,7 +23,6 @@ const APPROVAL_STATUS_VALUES: ApprovalStatus[] = [
 interface UseApprovalsColumnsParams {
   canDecide: boolean;
   canManage: boolean;
-  currentUserId: string | undefined;
   memberName: (userId: string | null) => string;
   setDecideTarget: (row: Approval) => void;
   setDelegateTarget: (row: Approval) => void;
@@ -32,10 +31,67 @@ interface UseApprovalsColumnsParams {
   setDeleteTarget: (row: Approval) => void;
 }
 
+function ApprovalsActionsCell({
+  row,
+  canDecide,
+  canManage,
+  setDecideTarget,
+  setDelegateTarget,
+  handleEscalate,
+  setCancelTarget,
+  setDeleteTarget,
+}: {
+  row: Approval;
+  canDecide: boolean;
+  canManage: boolean;
+  setDecideTarget: (r: Approval) => void;
+  setDelegateTarget: (r: Approval) => void;
+  handleEscalate: (r: Approval) => void;
+  setCancelTarget: (r: Approval) => void;
+  setDeleteTarget: (r: Approval) => void;
+}) {
+  const narrowStatus =
+    APPROVAL_STATUS_VALUES.find((v) => v === row.status) ?? "pending";
+  const canDecideRow = canDecide && DECIDABLE.has(narrowStatus) && canManage;
+
+  const handleDecide = useCallback(
+    () => setDecideTarget(row),
+    [row, setDecideTarget],
+  );
+  const handleDelegate = useCallback(
+    () => setDelegateTarget(row),
+    [row, setDelegateTarget],
+  );
+  const handleEscalateRow = useCallback(
+    () => handleEscalate(row),
+    [row, handleEscalate],
+  );
+  const handleCancel = useCallback(
+    () => setCancelTarget(row),
+    [row, setCancelTarget],
+  );
+  const handleDelete = useCallback(
+    () => setDeleteTarget(row),
+    [row, setDeleteTarget],
+  );
+
+  return (
+    <ApprovalActions
+      canDecideRow={canDecideRow}
+      canManage={canManage}
+      status={narrowStatus}
+      onDecide={handleDecide}
+      onDelegate={handleDelegate}
+      onEscalate={handleEscalateRow}
+      onCancel={handleCancel}
+      onDelete={handleDelete}
+    />
+  );
+}
+
 export function useApprovalsColumns({
   canDecide,
   canManage,
-  currentUserId,
   memberName,
   setDecideTarget,
   setDelegateTarget,
@@ -115,28 +171,32 @@ export function useApprovalsColumns({
       },
       {
         key: "actions",
-        header: "",
+        header: "Actions",
+        headerClassName: "sr-only",
         className: "w-10",
-        cell: (row) => {
-          const narrowStatus =
-            APPROVAL_STATUS_VALUES.find((v) => v === row.status) ?? "pending";
-          const canDecideRow =
-            canDecide && DECIDABLE.has(narrowStatus) && canManage;
-          return (
-            <ApprovalActions
-              canDecideRow={canDecideRow}
-              canManage={canManage}
-              status={narrowStatus}
-              onDecide={() => setDecideTarget(row)}
-              onDelegate={() => setDelegateTarget(row)}
-              onEscalate={() => handleEscalate(row)}
-              onCancel={() => setCancelTarget(row)}
-              onDelete={() => setDeleteTarget(row)}
-            />
-          );
-        },
+        cell: (row) => (
+          <ApprovalsActionsCell
+            row={row}
+            canDecide={canDecide}
+            canManage={canManage}
+            setDecideTarget={setDecideTarget}
+            setDelegateTarget={setDelegateTarget}
+            handleEscalate={handleEscalate}
+            setCancelTarget={setCancelTarget}
+            setDeleteTarget={setDeleteTarget}
+          />
+        ),
       },
     ],
-    [canDecide, canManage, currentUserId, memberName, handleEscalate],
+    [
+      canDecide,
+      canManage,
+      memberName,
+      handleEscalate,
+      setDecideTarget,
+      setDelegateTarget,
+      setCancelTarget,
+      setDeleteTarget,
+    ],
   );
 }

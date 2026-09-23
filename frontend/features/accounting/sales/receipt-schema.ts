@@ -1,15 +1,24 @@
 import { z } from "zod";
 import { parseMoneyInput } from "@/lib/accounting/money";
-import type { CreateReceiptInput, DepositAccountTag } from "@/types/accounting-ar-receipts";
+import type {
+  CreateReceiptInput,
+  DepositAccountTag,
+} from "@/types/accounting/accounting-ar-receipts";
 
-export const DEPOSIT_ACCOUNT_OPTIONS: ReadonlyArray<{ value: DepositAccountTag; label: string }> = [
+export const DEPOSIT_ACCOUNT_OPTIONS: ReadonlyArray<{
+  value: DepositAccountTag;
+  label: string;
+}> = [
   { value: "bank", label: "Straight into the bank" },
   { value: "cash", label: "Cash in hand" },
   { value: "undeposited", label: "Received but not banked yet" },
   { value: "psp_clearing", label: "Held by the payment gateway" },
 ];
 
-export const PAYMENT_METHOD_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+export const PAYMENT_METHOD_OPTIONS: ReadonlyArray<{
+  value: string;
+  label: string;
+}> = [
   { value: "bank_transfer", label: "Bank transfer" },
   { value: "upi", label: "UPI" },
   { value: "card", label: "Card" },
@@ -46,7 +55,10 @@ export const receiptFormSchema = z
 
 export type ReceiptFormValues = z.infer<typeof receiptFormSchema>;
 
-export function emptyReceiptForm(currency: string, partyId: string = ""): ReceiptFormValues {
+export function emptyReceiptForm(
+  currency: string,
+  partyId: string = "",
+): ReceiptFormValues {
   return {
     partyId,
     receiptDate: new Date().toISOString().slice(0, 10),
@@ -60,7 +72,9 @@ export function emptyReceiptForm(currency: string, partyId: string = ""): Receip
   };
 }
 
-export function toCreateReceiptInput(values: ReceiptFormValues): CreateReceiptInput {
+export function toCreateReceiptInput(
+  values: ReceiptFormValues,
+): CreateReceiptInput {
   const currency = values.currency.toUpperCase();
   return {
     partyId: values.partyId,
@@ -68,7 +82,8 @@ export function toCreateReceiptInput(values: ReceiptFormValues): CreateReceiptIn
     depositAccountTag: values.depositAccountTag,
     currency,
     amountMinor: parseMoneyInput(values.amount, currency) ?? 0,
-    paymentMethod: values.paymentMethod.length > 0 ? values.paymentMethod : null,
+    paymentMethod:
+      values.paymentMethod.length > 0 ? values.paymentMethod : null,
     reference: values.reference.length > 0 ? values.reference : null,
     memo: values.memo.length > 0 ? values.memo : null,
     autoAllocateFifo: values.autoAllocateFifo,

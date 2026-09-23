@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/accordion";
 import { SwimlaneRowHeader, getTicketRowKey } from "./kanban-swimlane";
 import type { KanbanTicket, KanbanColumn, DisplayOptions } from "../shared/types";
+import type { ListSelection } from "./list-view-shared";
 import {
   filterHiddenCompletedTickets,
 } from "../shared/completed-status";
@@ -44,6 +45,7 @@ interface KanbanBoardProps {
   displayOptions?: DisplayOptions;
   hideCompleted?: boolean;
   hasActiveFilters?: boolean;
+  selection?: ListSelection;
 }
 
 export function KanbanBoard({
@@ -56,6 +58,7 @@ export function KanbanBoard({
   displayOptions,
   hideCompleted = false,
   hasActiveFilters = false,
+  selection,
 }: KanbanBoardProps) {
   const canManage = useCan("build:manage");
   const canUpdateTickets = useCan("build:tickets:update");
@@ -248,6 +251,7 @@ export function KanbanBoard({
                         onRename={handleColumnRename}
                         onColorChange={handleColumnColorChange}
                         onSelect={handleSelect}
+                        selection={selection}
                         dragStartRef={dragStartRef}
                         canDragTickets={canUpdateTickets}
                       />
@@ -301,7 +305,6 @@ export function KanbanBoard({
                       wipLimit={wipLimits?.[col.id]}
                       serverCount={hasActiveFilters ? undefined : columnCountsData?.[col.id]}
                       displayOptions={displayOptions}
-                      showQuickAdd
                       showHeaderQuickAdd
                       dragHandleProps={
                         canReorderColumn ? columnProvided.dragHandleProps : null
@@ -310,6 +313,7 @@ export function KanbanBoard({
                       onRename={handleColumnRename}
                       onColorChange={handleColumnColorChange}
                       onSelect={handleSelect}
+                        selection={selection}
                       dragStartRef={dragStartRef}
                       canDragTickets={canUpdateTickets}
                       columnInnerRef={columnProvided.innerRef}

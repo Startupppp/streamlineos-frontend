@@ -6,7 +6,7 @@ import {
   type MutableRefObject,
   type SetStateAction,
 } from "react";
-import { useRankTicket } from "@/hooks/api/build/ticket-mutations";
+import { useRankTicket } from "@/hooks/api/build/ticket-create-rank-mutations";
 import { useReorderCustomStates } from "@/hooks/api/build/custom-states";
 import { patchTicketCollections, restoreTicketCollections, ticketRollback, type TicketSnapshots } from "@/hooks/api/build/ticket-cache";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";

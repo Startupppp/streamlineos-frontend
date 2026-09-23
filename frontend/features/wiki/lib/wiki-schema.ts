@@ -10,6 +10,20 @@ export const chatUsersContract = z.array(
   }),
 ).max(500);
 
+export const kbPageEditConflictContract = z.object({
+  currentContentRevision: z.number().int().nullable(),
+  lastEditedByName: z.string().nullable(),
+  lastEditedAt: z.string().nullable(),
+});
+
+export type KbPageEditConflict = z.infer<typeof kbPageEditConflictContract>;
+
+export const UNATTRIBUTED_PAGE_EDIT_CONFLICT: KbPageEditConflict = {
+  currentContentRevision: null,
+  lastEditedByName: null,
+  lastEditedAt: null,
+};
+
 export const kbPageSearchContract = z.object({
   items: z.array(
     z.object({

@@ -12,6 +12,7 @@ import {
 } from "./notification-event-stream";
 import { withCorrelation } from "@/lib/observability/with-correlation";
 import { getBackendToken } from "@/lib/api-client";
+import { normalizeBuildDeepLink } from "@/lib/build/normalize-build-deep-link";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -104,7 +105,7 @@ function showIncoming(
 ): void {
   if (notification.priority === "LOW") return;
   const openLink = () => {
-    if (notification.link) router.push(notification.link);
+    if (notification.link) router.push(normalizeBuildDeepLink(notification.link));
   };
   toast(notification.title, {
     description: notification.message,

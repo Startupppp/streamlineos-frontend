@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -50,6 +50,7 @@ import {
 
 import {
   policySchema,
+  policyFormValues,
   type PolicyFormValues,
   emptyPolicyDefaults,
   blankToUndefined,
@@ -83,6 +84,13 @@ export function PolicyFormSheet({
     resolver: zodResolver(policySchema),
     defaultValues: emptyPolicyDefaults,
   });
+
+  const prevOpenRef = useRef(open);
+  useEffect(() => {
+    const justOpened = open && !prevOpenRef.current;
+    prevOpenRef.current = open;
+    if (justOpened) form.reset(policyFormValues(editingPolicy));
+  }, [open, editingPolicy, form]);
 
   const isDirty = form.formState.isDirty;
 
@@ -204,7 +212,7 @@ export function PolicyFormSheet({
         <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0">
           <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>
-              {editingPolicy ? "Edit Policy" : "New Leave Policy"}
+              {editingPolicy ? "Edit leave policy" : "Create leave policy"}
             </SheetTitle>
           </SheetHeader>
           <Form {...form}>
@@ -217,13 +225,13 @@ export function PolicyFormSheet({
                   control={form.control}
                   name="name"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Policy Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Annual Leave Policy" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                  <FormItem>
+                    <FormLabel>Policy name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Sick Leave Policy" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                   )}
                 />
                 <FormField
@@ -273,7 +281,7 @@ export function PolicyFormSheet({
                               isPending={createLeaveType.isPending}
                               onClick={handleCreateLeaveType}
                             >
-                              Add type
+                              Add leave type
                             </LoadingButton>
                           </div>
                         </div>
@@ -331,15 +339,15 @@ export function PolicyFormSheet({
                     name="accrualRate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Accrual Rate (days)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.5"
-                            placeholder="12"
-                            {...field}
-                          />
-                        </FormControl>
+                      <FormLabel>Accrual rate (days)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.5"
+                          placeholder="e.g. 15"
+                          {...field}
+                        />
+                      </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -455,8 +463,8 @@ export function PolicyFormSheet({
                   {leaveTypeOptions.length === 0
                     ? "Add a leave type first"
                     : editingPolicy
-                      ? "Update Policy"
-                      : "Create Policy"}
+                      ? "Update policy"
+                      : "Create policy"}
                 </LoadingButton>
               </SheetFooter>
             </form>

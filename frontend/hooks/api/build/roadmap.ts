@@ -17,6 +17,12 @@ import type {
 } from "@/types/projects";
 import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type {
+  CrmAccountTier,
+  RoadmapPrioritization,
+  RoadmapSignals,
+  RoadmapTierWeighting,
+} from "@/hooks/api/build/roadmap-schema";
 
 const roadmapPageContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapPageContract),
@@ -36,9 +42,6 @@ const changelogPageContract = lazyContract(() =>
 const changelogEntryContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.changelogEntryContract),
 );
-const roadmapSuccessContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapSuccessContract),
-);
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
@@ -51,6 +54,11 @@ const publicVoteResultContract = lazyContract(() =>
 const publicFeedbackResultContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.publicFeedbackResultContract),
 );
+const roadmapSignalsContract = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapSignalsContract),
+);
+
+export type { CrmAccountTier, RoadmapPrioritization, RoadmapSignals, RoadmapTierWeighting };
 
 export type {
   ChangelogType,
@@ -76,6 +84,7 @@ interface RoadmapItemFilters {
   search?: string;
   cursor?: string;
   limit?: number;
+  managedProductId?: number;
 }
 
 interface CreateRoadmapItemInput {
@@ -88,6 +97,10 @@ interface CreateRoadmapItemInput {
   epicTicketId?: number;
   targetQuarter?: string;
   sortOrder?: number;
+  reach?: number;
+  impact?: number;
+  confidence?: number;
+  effort?: number;
 }
 
 interface UpdateRoadmapItemInput {
@@ -100,6 +113,19 @@ interface UpdateRoadmapItemInput {
   epicTicketId?: number | null;
   targetQuarter?: string | null;
   sortOrder?: number;
+  reach?: number | null;
+  impact?: number | null;
+  confidence?: number | null;
+  effort?: number | null;
+}
+
+export interface ScoredRoadmapItem extends RoadmapItem {
+  reach: number | null;
+  impact: number | null;
+  confidence: number | null;
+  effort: number | null;
+  prioritization: RoadmapPrioritization;
+  tierWeighting: RoadmapTierWeighting;
 }
 
 interface FeedbackPostFilters {
@@ -115,6 +141,7 @@ interface UpdateFeedbackPostInput {
   description?: string | null;
   status?: FeedbackStatus;
   category?: string | null;
+  crmOrganizationId?: number | null;
   linkedRoadmapItemId?: number | null;
 }
 
@@ -178,10 +205,33 @@ export function useRoadmapItems(filters: RoadmapItemFilters = {}) {
   const canView = useCan("build:roadmap:view");
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(params),
-    queryFn: ({ signal }) => apiClient.get<CursorPaginated<RoadmapItem>>("/build/roadmap", params, signal, roadmapPageContract),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginated<ScoredRoadmapItem>>("/build/roadmap", params, signal, roadmapPageContract),
     enabled: canView,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
+  });
+}
+
+const roadmapSignalsQueryKey = (roadmapItemId: number) =>
+  knowledgeAndSurveysQueryKeys.roadmap.itemSignals(roadmapItemId);
+
+export function useRoadmapItemSignals(
+  roadmapItemId: number | null,
+  options?: { enabled?: boolean },
+) {
+  const canView = useCan("build:roadmap:view");
+  return useQuery({
+    ...options,
+    queryKey: roadmapSignalsQueryKey(roadmapItemId ?? 0),
+    queryFn: ({ signal }) =>
+      apiClient.get<RoadmapSignals>(
+        `/build/roadmap/${String(roadmapItemId)}/signals`,
+        undefined,
+        signal,
+        roadmapSignalsContract,
+      ),
+    enabled: canView && roadmapItemId !== null && (options?.enabled ?? true),
+    staleTime: 60_000,
   });
 }
 
@@ -190,7 +240,7 @@ export function useCreateRoadmapItem() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "roadmap", "create"],
     mutationFn: (input: CreateRoadmapItemInput) =>
-      apiClient.post<RoadmapItem>("/build/roadmap", input, undefined, roadmapItemContract),
+      apiClient.post<ScoredRoadmapItem>("/build/roadmap", input, undefined, roadmapItemContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
@@ -200,7 +250,7 @@ export function useUpdateRoadmapItem() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "roadmap", "update"],
     mutationFn: ({ roadmapItemId, ...input }: UpdateRoadmapItemInput & { roadmapItemId: number }) =>
-      apiClient.patch<RoadmapItem>(`/build/roadmap/${roadmapItemId}`, input, undefined, roadmapItemContract),
+      apiClient.patch<ScoredRoadmapItem>(`/build/roadmap/${roadmapItemId}`, input, undefined, roadmapItemContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }

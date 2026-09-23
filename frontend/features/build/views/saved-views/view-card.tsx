@@ -9,6 +9,7 @@ import {
   GitBranch,
   Pin,
   PinOff,
+  Pencil,
   ArrowRight,
 } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -36,7 +37,7 @@ const LAYOUT_META: Record<string, { icon: React.ReactNode; label: string; color:
   list: { icon: <List className="h-4 w-4" />, label: "List", color: "text-status-info-ink bg-status-info-surface" },
   table: { icon: <LayoutGrid className="h-4 w-4" />, label: "Table", color: "text-status-success-ink bg-status-success-surface" },
   calendar: { icon: <Calendar className="h-4 w-4" />, label: "Calendar", color: "text-status-warning-ink bg-status-warning-surface" },
-  gantt: { icon: <GitBranch className="h-4 w-4" />, label: "Gantt", color: "text-status-danger-ink bg-status-danger-surface" },
+  gantt: { icon: <GitBranch className="h-4 w-4" />, label: "Timeline", color: "text-status-danger-ink bg-status-danger-surface" },
 };
 
 interface ViewCardProps {
@@ -45,6 +46,7 @@ interface ViewCardProps {
   currentUserId?: string;
   onNavigate: (view: ViewItem) => void;
   onTogglePin: (viewId: number, isPinned: boolean) => void;
+  onRename: (view: ViewItem) => void;
   onDelete: (viewId: number) => void;
   canManage: boolean;
 }
@@ -55,6 +57,7 @@ export const ViewCard = memo(function ViewCard({
   currentUserId,
   onNavigate,
   onTogglePin,
+  onRename,
   onDelete,
   canManage,
 }: ViewCardProps) {
@@ -67,6 +70,7 @@ export const ViewCard = memo(function ViewCard({
     () => onTogglePin(view.id, !isPinned),
     [onTogglePin, view.id, isPinned],
   );
+  const handleRename = useCallback(() => onRename(view), [onRename, view]);
   const handleDelete = useCallback(() => onDelete(view.id), [onDelete, view.id]);
 
   const filterCount = view.filters ? Object.keys(view.filters).length : 0;
@@ -110,6 +114,17 @@ export const ViewCard = memo(function ViewCard({
         {isOwner && (
           <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleTogglePin}>
             {isPinned ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
+          </Button>
+        )}
+        {isOwner && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0"
+            onClick={handleRename}
+            aria-label="Rename saved view"
+          >
+            <Pencil className="h-3.5 w-3.5" />
           </Button>
         )}
         {isOwner && (

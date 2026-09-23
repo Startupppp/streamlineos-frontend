@@ -65,11 +65,6 @@ export function LogTimeSheet({
 
   const { data: settings } = useTimesheetSettings();
 
-  /*
-   * Empty while editing: the server enforces `requiredFields` on create and on
-   * period submit, never on update, so applying it here would refuse a save the
-   * API would have taken.
-   */
   const requiredFields = useMemo<string[]>(
     () => (isEdit ? [] : (settings?.requiredFields ?? [])),
     [isEdit, settings],
@@ -87,12 +82,6 @@ export function LogTimeSheet({
     [requiredFields],
   );
 
-  /*
-   * The project/ticket pair shares one control and has no `FormField`, so its
-   * message is read out rather than rendered by `FormMessage`. Ticket wins when
-   * both fire: choosing a ticket satisfies the project rule too, so the shorter
-   * instruction is the complete one.
-   */
   const fieldErrors = form.formState.errors;
   const projectTicketError =
     fieldErrors.ticketId?.message ?? fieldErrors.projectId?.message;
@@ -103,11 +92,6 @@ export function LogTimeSheet({
 
   const handleClose = useCallback(() => onOpenChange(false), [onOpenChange]);
 
-  /*
-   * Both halves are re-checked on either change. A ticket satisfies the project
-   * rule as well, so validating only the control that moved would leave the
-   * project message standing under a pair that is now complete.
-   */
   const revalidateProjectTicket = useCallback(() => {
     if (form.formState.isSubmitted) void form.trigger(["projectId", "ticketId"]);
   }, [form]);

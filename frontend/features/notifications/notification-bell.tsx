@@ -19,7 +19,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { useUnreadNotificationCount } from "@/hooks/api/notifications";
+import { useUnifiedInboxCount } from "@/hooks/api/inbox";
 
 const HOVER_CLOSE_DELAY_MS = 175;
 
@@ -64,8 +64,8 @@ export function NotificationBell() {
   const { iconRef: bellIconRef, hoverHandlers: bellHoverHandlers } =
     useAnimatedIcon();
 
-  const { data: unreadData } = useUnreadNotificationCount();
-  const unreadCount = unreadData?.count ?? 0;
+  const { data: unifiedCountData } = useUnifiedInboxCount();
+  const unreadCount = unifiedCountData?.total ?? 0;
 
   const handleOpenChange = useCallback((next: boolean) => {
     if (next) setPanelMounted(true);
@@ -103,7 +103,7 @@ export function NotificationBell() {
   const trigger = (
     <button
       type="button"
-      aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
+      aria-label={`Inbox${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
       onMouseEnter={
         enableHoverOpen ? handleHoverEnter : bellHoverHandlers.onMouseEnter
       }
@@ -123,7 +123,7 @@ export function NotificationBell() {
 
   const liveRegion = (
     <span className="sr-only" role="status" aria-live="polite">
-      {unreadCount > 0 ? `${unreadCount} unread notifications` : ""}
+      {unreadCount > 0 ? `${unreadCount} unread items in inbox` : ""}
     </span>
   );
 

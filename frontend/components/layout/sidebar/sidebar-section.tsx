@@ -16,6 +16,9 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useNavIntentPrefetch } from "@/components/layout/nav-intent-prefetch";
 import { NavPendingIndicator } from "@/components/layout/nav-pending-indicator";
+import { NavLockBadge } from "@/components/layout/nav-lock-badge";
+
+const BILLING_UPGRADE_HREF = "/settings/billing";
 
 function hoistSingletonParentRoutes(routes: NavRoute[]): NavRoute[] {
   if (routes.length !== 1) return routes;
@@ -78,14 +81,14 @@ export function SidebarSection({
           <button
             type="button"
             onClick={onToggleGroup}
-            className="w-full flex items-center justify-between px-2 py-1 mb-0.5 group/header rounded-md hover:bg-sidebar-accent transition-colors"
+            className="w-full flex items-center justify-between px-2 py-1 mb-0.5 group/header rounded-md hover:bg-sidebar-accent transition-colors motion-reduce:transition-none"
           >
-            <span className="text-micro font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/65 select-none transition-colors">
+            <span className="text-micro font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/65 select-none transition-colors motion-reduce:transition-none">
               {group.label}
             </span>
             <ChevronDown
               className={cn(
-                "h-3 w-3 text-sidebar-foreground/20 group-hover/header:text-sidebar-foreground/40 transition-all duration-200 shrink-0",
+                "h-3 w-3 text-sidebar-foreground/20 group-hover/header:text-sidebar-foreground/40 transition-all duration-200 shrink-0 motion-reduce:transition-none",
                 isGroupCollapsed && "-rotate-90",
               )}
             />
@@ -147,20 +150,21 @@ function computeBadge(route: NavRoute, pendingLeaves: number) {
 }
 
 function CollapsedItem({ route, pathname, pendingLeaves, onNavigate, accent }: ItemProps) {
-  const isActive = isNavRouteActive(route, pathname);
+  const isActive = isNavRouteActive(route, pathname) && !route.locked;
   const count = computeBadge(route, pendingLeaves);
-  const hasBadge = count > 0;
+  const hasBadge = count > 0 && !route.locked;
+  const href = route.locked ? BILLING_UPGRADE_HREF : route.href;
   const prefetchOnIntent = useNavIntentPrefetch();
   const handleIntent = useCallback(
-    () => prefetchOnIntent(route.href),
-    [prefetchOnIntent, route.href],
+    () => prefetchOnIntent(href),
+    [prefetchOnIntent, href],
   );
 
   return (
     <Tooltip delayDuration={0}>
       <TooltipTrigger asChild>
         <Link
-          href={route.href}
+          href={href}
           prefetch={false}
           onMouseEnter={handleIntent}
           onFocus={handleIntent}
@@ -177,8 +181,9 @@ function CollapsedItem({ route, pathname, pendingLeaves, onNavigate, accent }: I
           )}
           <route.icon
             className={cn(
-              "nav-icon transition-colors duration-150 h-4 w-4 relative z-[1]",
+              "nav-icon transition-colors duration-150 h-4 w-4 relative z-[1] motion-reduce:transition-none",
               isActive && accent.text,
+              route.locked && "opacity-50",
             )}
           />
           {hasBadge && (
@@ -190,6 +195,7 @@ function CollapsedItem({ route, pathname, pendingLeaves, onNavigate, accent }: I
       <TooltipContent side="right" sideOffset={10} className="z-[9999] text-xs font-medium" style={{ zIndex: 9999 }}>
         {route.label}
         {hasBadge && <span className="ml-1.5 opacity-70">({count})</span>}
+        {route.locked && <span className="ml-1.5 opacity-70">(Upgrade)</span>}
       </TooltipContent>
     </Tooltip>
   );
@@ -203,7 +209,7 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accen
   const hasChildren = !!route.children && route.children.length > 1;
   const singleChild = !!route.children && route.children.length === 1;
   const containsActive = (hasChildren || singleChild) && routeContainsActive(route, pathname);
-  const isActive = isNavRouteActive(route, pathname) && !containsActive;
+  const isActive = isNavRouteActive(route, pathname) && !containsActive && !route.locked;
   const [expanded, setExpanded] = useState<boolean>(isActive || containsActive);
 
   useEffect(() => {
@@ -217,24 +223,26 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accen
   }, []);
 
   const count = computeBadge(route, pendingLeaves);
-  const hasBadge = count > 0;
+  const hasBadge = count > 0 && !route.locked;
   const paddingLeft = depth === 0 ? "0.625rem" : `${0.625 + depth * 0.75}rem`;
+  const href = route.locked ? BILLING_UPGRADE_HREF : route.href;
   const prefetchOnIntent = useNavIntentPrefetch();
   const handleIntent = useCallback(
-    () => prefetchOnIntent(route.href),
-    [prefetchOnIntent, route.href],
+    () => prefetchOnIntent(href),
+    [prefetchOnIntent, href],
   );
 
   return (
     <div>
       <Link
-        href={route.href}
+        href={href}
         prefetch={false}
         onMouseEnter={handleIntent}
         onFocus={handleIntent}
         onTouchStart={handleIntent}
         onClick={onNavigate}
         aria-current={isActive ? "page" : undefined}
+        aria-label={route.locked ? `${route.label} — upgrade plan` : undefined}
         className={cn(
           "nav-item group relative py-1.5 gap-2.5 flex pr-2",
           depth === 0 ? "w-full" : "mx-2",
@@ -247,12 +255,21 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accen
         )}
         <route.icon
           className={cn(
-            "nav-icon transition-colors duration-150 shrink-0",
+            "nav-icon transition-colors duration-150 shrink-0 motion-reduce:transition-none",
             depth > 0 ? "h-3.5 w-3.5" : "h-4 w-4",
             isActive && accent.text,
+            route.locked && "opacity-50",
           )}
         />
-        <TruncatedText text={route.label} className={cn("flex-1 text-label", isActive && "text-sidebar-foreground")} />
+        <TruncatedText
+          text={route.label}
+          className={cn(
+            "flex-1 text-label",
+            isActive && "text-sidebar-foreground",
+            route.locked && "opacity-50",
+          )}
+        />
+        {route.locked && <NavLockBadge label="Upgrade" />}
         {hasBadge && (
           <span className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full text-micro font-bold tabular-nums leading-none bg-status-warning-fill text-white">
             {count > 99 ? "99+" : count}
@@ -264,10 +281,13 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accen
             onClick={toggle}
             aria-label={expanded ? "Collapse" : "Expand"}
             aria-expanded={expanded}
-            className="ml-auto -mr-1 h-5 w-5 flex items-center justify-center rounded text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+            className="ml-auto -mr-1 h-5 w-5 flex items-center justify-center rounded text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors motion-reduce:transition-none"
           >
             <ChevronRight
-              className={cn("h-3 w-3 transition-transform duration-150", expanded && "rotate-90")}
+              className={cn(
+                "h-3 w-3 transition-transform duration-150 motion-reduce:transition-none",
+                expanded && "rotate-90",
+              )}
             />
           </button>
         )}

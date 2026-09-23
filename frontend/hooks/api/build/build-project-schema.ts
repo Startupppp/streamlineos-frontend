@@ -52,7 +52,6 @@ const projectRowSchema = z.object({
   priority: z.string().nullable(),
   dealId: z.number().nullable(),
   managedProductId: z.number().nullable(),
-  pmWorkspaceId: z.string(),
   budget: z.string().nullable(),
   budgetMinor: z.number().nullable(),
   budgetCurrency: z.string().nullable(),
@@ -74,7 +73,7 @@ const projectStatusRowSchema = z.object({
   updatedAt: z.string(),
 });
 
-const projectDetailMemberSchema = z.object({
+export const projectDetailMemberContract = z.object({
   id: z.number(),
   orgId: z.string(),
   projectId: z.number(),
@@ -109,7 +108,7 @@ const projectDetailMemberSchema = z.object({
 
 const projectDetailSchema = projectRowSchema.extend({
   statuses: z.array(projectStatusRowSchema),
-  members: z.array(projectDetailMemberSchema),
+  members: z.array(projectDetailMemberContract),
 });
 
 const projectMemberSchema = z.object({
@@ -133,7 +132,7 @@ const projectMemberRowSchema = z.object({
   orgId: z.string(),
   projectId: z.number(),
   membershipId: z.number(),
-  userId: z.string(),
+  userId: z.string().optional(),
   role: z.string(),
   hourlyRate: z.string(),
   hourlyRateMinor: z.number(),
@@ -286,7 +285,7 @@ const projectAutomationRowSchema = z.object({
   updatedAt: z.string(),
 });
 
-const workspaceMemberItemSchema = z.object({
+const buildMemberItemSchema = z.object({
   id: z.string(),
   role: z.enum(['member', 'admin']),
   addedAt: z.string(),
@@ -298,17 +297,16 @@ const workspaceMemberItemSchema = z.object({
   teams: z.array(z.string()),
 });
 
-const workspaceMemberPageSchema = z.object({
-  data: z.array(workspaceMemberItemSchema),
+const buildMemberPageSchema = z.object({
+  data: z.array(buildMemberItemSchema),
   pagination: z.object({ limit: z.number(), hasMore: z.boolean(), nextCursor: z.string().nullable() }),
 });
 
-const workspaceMemberRowSchema = z.object({
+const buildMemberRowSchema = z.object({
   id: z.number(),
   orgId: z.string(),
   membershipId: z.number(),
   role: z.string(),
-  pmWorkspaceId: z.string(),
   addedAt: z.string(),
 });
 
@@ -327,7 +325,7 @@ export const bulkReorderStatesResultContract = bulkReorderStatesResultSchema;
 export const buildCustomFieldListContract = z.array(buildCustomFieldSchema);
 export const buildCustomFieldContract = buildCustomFieldSchema;
 export const ticketFieldValueListContract = z.array(ticketFieldValueSchema);
-export const ticketFieldValueCreateContract = z.object({ id: z.number().int() });
+export const ticketFieldValueCreateContract = z.object({ success: z.literal(true) });
 export const projectReleaseListContract = z.array(projectReleaseListItemSchema);
 export const projectReleaseRowContract = projectReleaseRowSchema;
 export const projectWebhookListContract = z.array(projectWebhookSchema);
@@ -336,6 +334,6 @@ export const webhookDeliveryListContract = z.array(webhookDeliverySchema);
 export const webhookTestResultContract = webhookTestResultSchema;
 export const projectAutomationListContract = z.array(projectAutomationListItemSchema);
 export const projectAutomationRowContract = projectAutomationRowSchema;
-export const workspaceMemberPageContract = workspaceMemberPageSchema;
-export const workspaceMemberRowContract = workspaceMemberRowSchema;
+export const buildMemberPageContract = buildMemberPageSchema;
+export const buildMemberRowContract = buildMemberRowSchema;
 export const successContract = z.object({ success: z.literal(true) });

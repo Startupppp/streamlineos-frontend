@@ -155,6 +155,13 @@ function rateLimitMessage(error: unknown): string {
   return endpoint ? `${wait} (${endpoint})` : wait;
 }
 
+export function isValidationRefusal(error: unknown): boolean {
+  if (isApiError(error) && error.code === "VALIDATION_FAILED") return true;
+  const status = extractStatus(error);
+  if (status !== 400 && status !== 422) return false;
+  return VALIDATION_HEADLINE.test(extractMessage(error));
+}
+
 export function getErrorMessage(error: unknown): string {
   const message = extractMessage(error);
   const status = extractStatus(error);

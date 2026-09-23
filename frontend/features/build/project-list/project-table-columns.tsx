@@ -348,7 +348,8 @@ export function useProjectTableColumns({
 
     cols.push({
       key: "actions",
-      header: "",
+      header: "Actions",
+      headerClassName: "sr-only",
       className: "w-10 pr-2",
       cell: (p) => (
         <ActionsCell

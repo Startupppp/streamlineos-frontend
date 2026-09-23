@@ -17,7 +17,6 @@ import {
   ResponsivePopoverTrigger,
   ResponsivePopoverContent,
 } from "@/components/ui/responsive-popover";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { useSetKbPageVisibility } from "@/hooks/api/kb/pages";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
@@ -71,18 +70,17 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
 
   return (
     <ResponsivePopover open={open} onOpenChange={setOpen}>
-      <Tooltip delayDuration={0}>
-        <TooltipTrigger asChild>
-          <ResponsivePopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="w-8" aria-label="Share page">
-              <KbShare2Icon className="h-4 w-4" />
-            </Button>
-          </ResponsivePopoverTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="bottom" sideOffset={8} className="text-xs font-medium">
-          Share
-        </TooltipContent>
-      </Tooltip>
+      <ResponsivePopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-9 w-9 px-0"
+          aria-label="Share page"
+        >
+          <KbShare2Icon className="h-4 w-4" />
+        </Button>
+      </ResponsivePopoverTrigger>
       <ResponsivePopoverContent align="end" title="Share" className="w-72 max-w-[85vw] p-0">
         <div className="px-4 pt-3 pb-1">
           <p className="text-xs font-semibold text-foreground">Share</p>

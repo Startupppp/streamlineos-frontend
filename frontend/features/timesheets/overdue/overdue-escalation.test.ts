@@ -4,23 +4,12 @@ import {
   escalationTone,
 } from "./overdue-escalation";
 
-/**
- * The whole point of this module is that `escalationLevel: 0` means two
- * opposite things, so that is what most of these assert.
- */
 describe("describeEscalation", () => {
   it("reports an organisation with no thresholds as unconfigured, not as level zero", () => {
     const state = describeEscalation({ daysOverdue: 40, escalationLevel: 0 }, []);
 
     expect(state).toEqual({ kind: "unconfigured" });
     expect(escalationLabel(state)).toBe("No reminders configured");
-    /*
-     * Neutral, deliberately. Forty days late with nothing watching is bad, but
-     * the badge describes the reminder system, and colouring "nobody has been
-     * told" the same red as "three reminders have gone unanswered" would say
-     * the system is escalating when it is switched off. The days-late column
-     * carries the urgency.
-     */
     expect(escalationTone(state)).toBe("neutral");
   });
 
@@ -59,13 +48,6 @@ describe("describeEscalation", () => {
   });
 
   it("clamps a level that outruns the thresholds it was counted against", () => {
-    /*
-     * A real sequence, not a defensive flourish: the row is counted against the
-     * settings as they were when the request ran, and an administrator removing
-     * a threshold between that count and this render leaves a level of 3 over a
-     * list of 2. Unclamped this indexes past the end and reports "Escalation 3
-     * of 2" over an undefined day count.
-     */
     const state = describeEscalation({ daysOverdue: 60, escalationLevel: 3 }, [7, 14]);
 
     expect(state).toEqual({ kind: "escalated", level: 2, of: 2, passedAt: 14 });

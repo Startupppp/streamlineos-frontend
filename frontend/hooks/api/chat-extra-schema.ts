@@ -52,13 +52,9 @@ export const aiConversationMessagesContract = z.object({
   messages: z.array(
     z.object({
       id: z.number().int(),
-      conversationId: z.number().int(),
       role: z.enum(["user", "assistant"]),
       content: z.string(),
       createdAt: z.string(),
-      aiUsage: z
-        .object({ inputTokens: z.number().int(), outputTokens: z.number().int() })
-        .optional(),
     }),
   ),
   nextCursor: z.number().int().nullable(),

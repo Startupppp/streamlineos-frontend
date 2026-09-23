@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
@@ -149,6 +150,7 @@ export function TeamFormSheet({
     resolver: zodResolver(teamFormSchema),
     defaultValues: teamFormDefaults,
   });
+  useRegisterDirtyState(open && form.formState.isDirty);
 
   useEffect(() => {
     if (open) {

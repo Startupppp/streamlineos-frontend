@@ -17,7 +17,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Zap,
-  Target,
   Boxes,
   RotateCcw,
 } from "lucide-react";
@@ -39,12 +38,6 @@ interface Cycle {
   status: string;
 }
 
-interface Sprint {
-  id: number;
-  name: string;
-  status?: string | null;
-}
-
 interface Status {
   name: string;
   id: number;
@@ -57,13 +50,11 @@ export interface SidebarSelectFieldsProps {
     priority?: string | null;
     type?: string | null;
     points?: number | null;
-    sprintId?: number | null;
     epicId?: number | null;
     moduleId?: number | null;
     cycleId?: number | null;
   };
   statuses?: Status[];
-  sprints: Sprint[];
   epics: Epic[];
   modules: Module[];
   cycles: Cycle[];
@@ -71,7 +62,6 @@ export interface SidebarSelectFieldsProps {
   onPriorityChange: (v: string) => void;
   onTypeChange: (v: string) => void;
   onPointsChange: (points: number | null) => void;
-  onSprintChange: (v: string) => void;
   onEpicChange: (v: string) => void;
   onModuleChange: (v: string) => void;
   onCycleChange: (v: string) => void;
@@ -79,8 +69,7 @@ export interface SidebarSelectFieldsProps {
 }
 
 const FIELD_GRID = "grid grid-cols-1 gap-3 @[18rem]:grid-cols-2";
-const CONTROL_CLASS =
-  "w-full min-h-10 touch-manipulation @[18rem]:min-h-9 md:min-h-9";
+const CONTROL_CLASS = "w-full touch-manipulation";
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -93,7 +82,6 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 export function SidebarSelectFields({
   ticket,
   statuses,
-  sprints,
   epics,
   modules,
   cycles,
@@ -101,7 +89,6 @@ export function SidebarSelectFields({
   onPriorityChange,
   onTypeChange,
   onPointsChange,
-  onSprintChange,
   onEpicChange,
   onModuleChange,
   onCycleChange,
@@ -220,26 +207,6 @@ export function SidebarSelectFields({
       <div className={FIELD_GRID}>
         <div className="min-w-0">
           <FieldLabel>
-            <Target className="mr-0.5 inline h-3 w-3" />
-            Sprint
-          </FieldLabel>
-          <Select value={ticket.sprintId?.toString() || "none"} onValueChange={onSprintChange} disabled={disabled}>
-            <SelectTrigger className={CONTROL_CLASS}>
-              <SelectValue placeholder="None" />
-            </SelectTrigger>
-            <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
-              <SelectItem value="none">None</SelectItem>
-              {sprints?.map((s) => (
-                <SelectItem key={s.id} value={s.id.toString()}>
-                  {s.name}
-                  {s.status === "ACTIVE" ? " (Active)" : ""}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="min-w-0">
-          <FieldLabel>
             <Zap className="mr-0.5 inline h-3 w-3" />
             Epic
           </FieldLabel>
@@ -257,9 +224,6 @@ export function SidebarSelectFields({
             </SelectContent>
           </Select>
         </div>
-      </div>
-
-      <div className={FIELD_GRID}>
         <div className="min-w-0">
           <FieldLabel>
             <Boxes className="mr-0.5 inline h-3 w-3" />

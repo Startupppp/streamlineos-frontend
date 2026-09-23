@@ -64,16 +64,16 @@ export function RecurrencePicker({ value, onChange }: RecurrencePickerProps) {
               max={99}
               value={value.interval}
               onChange={handleInterval}
-              className="h-9 w-16 text-center text-xs touch-manipulation"
+              className="h-9 w-16 text-center touch-manipulation"
             />
             <Select value={value.frequency} onValueChange={handleFrequency}>
               <SelectTrigger className="h-9 min-w-[7rem] flex-1 touch-manipulation sm:w-28 sm:flex-none">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
-                <SelectItem value="daily" className="text-xs">day(s)</SelectItem>
-                <SelectItem value="weekly" className="text-xs">week(s)</SelectItem>
-                <SelectItem value="monthly" className="text-xs">month(s)</SelectItem>
+                <SelectItem value="daily">day(s)</SelectItem>
+                <SelectItem value="weekly">week(s)</SelectItem>
+                <SelectItem value="monthly">month(s)</SelectItem>
               </SelectContent>
             </Select>
           </div>

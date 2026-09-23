@@ -10,11 +10,13 @@ import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "@animateicons/react/lu
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
+import { ApprovalRoutePanel } from "@/components/shared/approval-route-panel";
 import { AiActionsMenu, type AiAction } from "@/components/ai";
-import { useCurrentPeriod, useSubmitPeriod, useRecallPeriod, useTimesheetEntries, useTimesheetSettings, fetchTimesheetPeriodSummary } from "@/hooks/api/timesheets-core";
+import { useCurrentPeriod, usePeriodApproverPreview, useSubmitPeriod, useRecallPeriod, useTimesheetEntries, useTimesheetSettings, fetchTimesheetPeriodSummary } from "@/hooks/api/timesheets-core";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets";
 import type { AttendanceDraftResult } from "@/features/timesheets/types";
 import { missingOnSubmit } from "@/features/timesheets/settings/required-fields";
+import { summarizeTimesheetApprover } from "@/features/timesheets/approval-route-summary";
 import { IncompleteEntriesNotice } from "./incomplete-entries-notice";
 import { FillFromClockButton, FillFromClockNotice } from "./fill-from-clock";
 import { resolveWeekStart, useWeek } from "./use-week";
@@ -36,15 +38,6 @@ export function MyTimeView() {
   );
 
   const { weekStart, weekEnd, days, isCurrentWeek, goToPrev, goToNext, goToCurrent } = useWeek(weekStartsOn);
-  /*
-   * The result is stored WITH the week it ran for, and rendered only while that
-   * week is still on screen.
-   *
-   * A summary saying "3 draft entries created" is about one week; left on screen
-   * after paging it attributes those rows to a week that never had them. Storing
-   * the week and comparing beats clearing in an effect — there is no moment where
-   * the stale summary is shown before an effect gets round to removing it.
-   */
   const [draftResult, setDraftResult] = useState<{ week: string; result: AttendanceDraftResult } | null>(
     null,
   );
@@ -71,17 +64,6 @@ export function MyTimeView() {
     return label;
   }, [weekStart, weekEnd, totalHours]);
 
-  /*
-   * The same rule `periods.service.ts#submitPeriod` applies, run before the
-   * button rather than after it. The server refuses the whole period naming a
-   * row id — "Entry 4211 is missing a required description" — which is a
-   * number that appears on no screen, so the refusal arrived with nowhere to go.
-   *
-   * Scoped by `timesheetPeriodId` exactly as the server scopes it, over the
-   * entries this week has loaded. Anything in the period but outside the week
-   * on screen is still the server's to catch; this only ever removes surprises,
-   * never adds one.
-   */
   const incomplete = useMemo(() => {
     const required = settings?.requiredFields ?? [];
     if (!period || required.length === 0) return [];
@@ -91,11 +73,13 @@ export function MyTimeView() {
       .filter((row) => row.missing.length > 0);
   }, [entries, period, settings]);
 
-  const canSubmit =
+  const awaitingSubmit =
     isCurrentWeek &&
     !!period &&
-    incomplete.length === 0 &&
     (period.status === "OPEN" || period.status === "DRAFT" || period.status === "REJECTED");
+  const approverPreview = usePeriodApproverPreview(period?.id ?? null, { enabled: awaitingSubmit });
+  const approverSummary = approverPreview.data ? summarizeTimesheetApprover(approverPreview.data) : undefined;
+  const canSubmit = awaitingSubmit && incomplete.length === 0 && approverPreview.data?.kind !== "unowned";
   const canRecall = isCurrentWeek && period?.status === "SUBMITTED";
 
   const handleSubmit = useCallback(() => {
@@ -138,69 +122,73 @@ export function MyTimeView() {
   ) : null;
 
   const weekNavActions = (
-    <div className="flex items-center gap-2">
-      <AiActionsMenu
-        actions={aiActions}
-        disabled={!period}
-        menuLabel="Timesheet AI"
-        align="end"
-      />
-
-      <div className="flex items-center rounded-md border border-border overflow-hidden">
-        <AnimatedIconButton
-          icon={ChevronLeftIcon}
-          iconSize={16}
-          variant="ghost"
-          size="icon"
-          className="rounded-none border-r border-border"
-          aria-label="Previous week"
-          onClick={goToPrev}
+    <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+      <div className="flex items-center gap-2 flex-wrap">
+        <AiActionsMenu
+          actions={aiActions}
+          disabled={!period}
+          menuLabel="Timesheet AI"
+          align="end"
         />
-        <Button
-          variant="ghost"
-          className={cn("px-3 rounded-none", isCurrentWeek && "text-primary font-medium")}
-          onClick={goToCurrent}
-        >
-          This week
-        </Button>
-        <AnimatedIconButton
-          icon={ChevronRightIcon}
-          iconSize={16}
-          variant="ghost"
-          size="icon"
-          className="rounded-none border-l border-border"
-          aria-label="Next week"
-          onClick={goToNext}
+
+        <div className="flex items-center rounded-md border border-border overflow-hidden">
+          <AnimatedIconButton
+            icon={ChevronLeftIcon}
+            iconSize={16}
+            variant="ghost"
+            size="icon"
+            className="rounded-none border-r border-border"
+            aria-label="Previous week"
+            onClick={goToPrev}
+          />
+          <Button
+            variant="ghost"
+            className={cn("px-3 rounded-none whitespace-nowrap", isCurrentWeek && "text-primary font-medium")}
+            onClick={goToCurrent}
+          >
+            This week
+          </Button>
+          <AnimatedIconButton
+            icon={ChevronRightIcon}
+            iconSize={16}
+            variant="ghost"
+            size="icon"
+            className="rounded-none border-l border-border"
+            aria-label="Next week"
+            onClick={goToNext}
+          />
+        </div>
+
+        <FillFromClockButton
+          weekStart={weekStart}
+          weekEnd={weekEnd}
+          onResult={(result) => setDraftResult({ week: weekStart, result })}
         />
       </div>
 
-      <FillFromClockButton
-        weekStart={weekStart}
-        weekEnd={weekEnd}
-        onResult={(result) => setDraftResult({ week: weekStart, result })}
-      />
-
-      {canRecall ? (
-        <LoadingButton
-          variant="outline"
-          size="sm"
-          className="gap-1.5"
-          onClick={handleRecall}
-          isPending={recallPeriod.isPending}
-        >
-          Recall
-        </LoadingButton>
-      ) : (
-        <LoadingButton
-          size="sm"
-          className="gap-1.5"
-          onClick={handleSubmit}
-          isPending={submitPeriod.isPending}
-          disabled={!canSubmit}
-        >
-          Submit week
-        </LoadingButton>
-      )}
+      <div className="flex w-full sm:w-auto">
+        {canRecall ? (
+          <LoadingButton
+            variant="outline"
+            size="sm"
+            className="gap-1.5 w-full sm:w-auto"
+            onClick={handleRecall}
+            isPending={recallPeriod.isPending}
+          >
+            Recall
+          </LoadingButton>
+        ) : (
+          <LoadingButton
+            size="sm"
+            className="gap-1.5 w-full sm:w-auto"
+            onClick={handleSubmit}
+            isPending={submitPeriod.isPending}
+            disabled={!canSubmit}
+          >
+            Submit week
+          </LoadingButton>
+        )}
+      </div>
     </div>
   );
 
@@ -222,6 +210,15 @@ export function MyTimeView() {
         )}
 
         {isCurrentWeek && <IncompleteEntriesNotice rows={incomplete} />}
+
+        {awaitingSubmit && (
+          <ApprovalRoutePanel
+            route={approverSummary}
+            isLoading={approverPreview.isLoading}
+            error={approverPreview.error}
+            unownedHint="Ask an HR administrator to set a reporting manager or a timesheet approver before submitting."
+          />
+        )}
 
         {entriesData?.pagination.hasMore && (
           <p className="text-xs text-muted-foreground">

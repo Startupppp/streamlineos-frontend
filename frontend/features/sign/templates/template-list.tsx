@@ -115,20 +115,46 @@ function TemplateRow({ template }: { template: SignTemplate }) {
 }
 
 export function TemplateList() {
-  const { data: templates, isLoading, isError, refetch } = useSignTemplates();
+  const { data: templates, isLoading, isFetching, isError, error, refetch, access } = useSignTemplates();
+
+  /** Only show skeleton on initial load, not on background refetch */
+  const showSkeleton = !templates && (isLoading || isFetching);
+
+  async function handleRetry() {
+    await refetch();
+  }
+
+  if (access.denied) {
+    return (
+      <PageWrapper title="Templates" subtitle="Reusable envelope layouts you can send again and again">
+        <EmptyState
+          illustrationPreset="permissions"
+          access={access}
+          title="Access restricted"
+          description="You don't have permission to view templates."
+        />
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper title="Templates" subtitle="Reusable envelope layouts you can send again and again">
-      {isLoading ? (
+      {showSkeleton ? (
         <div className="space-y-3">
           {Array.from({ length: 9 }).map((_, i) => (
             <Skeleton key={i} className="h-20 w-full" />
           ))}
         </div>
       ) : isError ? (
-        <ErrorState title="Failed to load templates" onRetry={() => void refetch()} />
+        <ErrorState
+          className="flex-1"
+          title="Failed to load templates"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
       ) : !templates || templates.length === 0 ? (
         <EmptyState
+          access={access}
           illustrationPreset="documents"
           title="No templates yet"
           description='Open any envelope and choose "Save as template" to reuse its layout later.'

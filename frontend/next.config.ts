@@ -49,18 +49,6 @@ const optimizePackageImports =
     : ["lucide-react"];
 
 const nextConfig: NextConfig = {
-  /**
-   * A second dev server on this working tree needs its own build directory.
-   *
-   * `next dev` writes a lock into `<distDir>/dev/lock` and refuses to start when
-   * one is already there, which is correct — two servers sharing one `.next`
-   * corrupt each other's output. Two people (or two agent sessions) working on
-   * the same checkout still need to run one each, so the directory is
-   * overridable: `NEXT_DIST_DIR=.next-local npx next dev -p 1002`.
-   *
-   * Unset in every normal case, so CI, Vercel and `pnpm dev` all keep writing
-   * `.next` exactly as before.
-   */
   distDir: process.env.NEXT_DIST_DIR || ".next",
   turbopack: {},
   webpack(config, { dev }) {
@@ -99,8 +87,199 @@ const nextConfig: NextConfig = {
       permanent: true,
     },
     {
-      source: "/build/:projectId/workload",
-      destination: "/build/:projectId?view=workload",
+      source: "/build/:projectId(\\d+)",
+      has: [{ type: "query", key: "view", value: "workload" }],
+      destination: "/build/:projectId/workload",
+      permanent: false,
+    },
+    {
+      source: "/knowledge/wiki/pages/:pageId",
+      destination: "/knowledge/wiki/doc/:pageId",
+      permanent: false,
+    },
+    {
+      source: "/knowledge/wiki/pages/:pageId/history",
+      destination: "/knowledge/wiki/doc/:pageId/history",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/timeline",
+      destination: "/build/:projectId/issues?view=timeline",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/bugs",
+      destination: "/build/:projectId/issues?type=BUG",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/analytics",
+      destination: "/build/:projectId/reports?tab=overview",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/views",
+      destination: "/build/:projectId/issues",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/ai",
+      destination: "/build/command-center?projectId=:projectId",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/workflow",
+      destination: "/build/:projectId/settings/workflow",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/automations",
+      destination: "/build/:projectId/settings/automations",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/webhooks",
+      destination: "/build/:projectId/settings/integrations/webhooks",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/sprints",
+      destination: "/build/:projectId/cycles",
+      permanent: false,
+    },
+    {
+      source: "/build/goal",
+      destination: "/build/goals",
+      permanent: false,
+    },
+    {
+      source: "/build/goal/:goalId(\\d+)",
+      destination: "/build/goals/:goalId",
+      permanent: false,
+    },
+    {
+      source: "/build/pm-workspaces",
+      destination: "/build",
+      permanent: false,
+    },
+    {
+      source: "/build/customers",
+      destination: "/crm",
+      permanent: false,
+    },
+    {
+      source: "/build/members",
+      destination: "/build/settings/access",
+      permanent: false,
+    },
+    {
+      source: "/build/access",
+      destination: "/build/settings/access",
+      permanent: false,
+    },
+    {
+      source: "/build/client-access",
+      destination: "/build/settings/client-access",
+      permanent: false,
+    },
+    {
+      source: "/build/drafts",
+      destination: "/build/inbox?view=drafts",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/my-tickets",
+      destination: "/build/my-work?projectId=:projectId",
+      permanent: false,
+    },
+    {
+      source: "/build/workspaces/:pmWorkspaceId/my-work",
+      destination: "/build/my-work",
+      permanent: false,
+    },
+    {
+      source: "/build/workspaces/:pmWorkspaceId/overview",
+      destination: "/build/command-center",
+      permanent: false,
+    },
+    {
+      source: "/build/workspaces/:pmWorkspaceId/all-work",
+      destination: "/build/all-work",
+      permanent: false,
+    },
+    {
+      source: "/build/workspaces/:pmWorkspaceId/goals",
+      destination: "/build/goals",
+      permanent: false,
+    },
+    {
+      source: "/build/workspaces/:pmWorkspaceId/products",
+      destination: "/build/managed-products",
+      permanent: false,
+    },
+    {
+      source: "/build/workspaces/:pmWorkspaceId/roadmap",
+      destination: "/build/roadmap",
+      permanent: false,
+    },
+    {
+      source: "/build/workspaces/:pmWorkspaceId/teams",
+      destination: "/build/teams",
+      permanent: false,
+    },
+    {
+      source: "/build/workspaces/:pmWorkspaceId",
+      destination: "/build",
+      permanent: false,
+    },
+    {
+      source: "/build/workspaces",
+      destination: "/build",
+      permanent: false,
+    },
+    {
+      source: "/home",
+      destination: "/dashboard",
+      permanent: false,
+    },
+    {
+      source: "/notifications",
+      destination: "/inbox?view=notifications",
+      permanent: false,
+    },
+    {
+      source: "/notifications/preferences",
+      destination: "/settings/notifications/my-preferences",
+      permanent: false,
+    },
+    {
+      source: "/notifications/templates",
+      destination: "/settings/notifications/templates",
+      permanent: false,
+    },
+    {
+      source: "/notifications/broadcasts",
+      destination: "/settings/notifications/broadcasts",
+      permanent: false,
+    },
+    {
+      source: "/notifications/providers",
+      destination: "/settings/notifications/providers",
+      permanent: false,
+    },
+    {
+      source: "/notifications/events",
+      destination: "/settings/notifications/events",
+      permanent: false,
+    },
+    {
+      source: "/notifications/policy",
+      destination: "/settings/notifications/policy",
+      permanent: false,
+    },
+    {
+      source: "/settings/notifications",
+      destination: "/settings/notifications/my-preferences",
       permanent: false,
     },
   ],
@@ -156,15 +335,6 @@ const nextConfig: NextConfig = {
     {
       source: "/(.*)",
       headers: [
-        /**
-         * Advertise that we select the shell variant from Sec-CH-UA-Mobile so
-         * the browser sends it on the next navigation.  Caches must vary on it
-         * (and User-Agent for the UA fallback path) so they never serve the
-         * mobile shell to a desktop or vice-versa.  The Vary header on static
-         * _next/static/** assets is harmless — those URLs are content-addressed
-         * and served Cache-Control: immutable, so no proxy varies their cache
-         * by this header in practice.
-         */
         { key: "Accept-CH", value: "Sec-CH-UA-Mobile" },
         { key: "Vary", value: "Sec-CH-UA-Mobile, User-Agent" },
         { key: "X-Frame-Options", value: "DENY" },

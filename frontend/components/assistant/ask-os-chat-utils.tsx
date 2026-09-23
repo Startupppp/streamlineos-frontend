@@ -6,6 +6,8 @@ import dynamic from "next/dynamic";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
 import type { AskAiHistoryMessage } from "@/hooks/api/chat-ai-assistant";
+import type { ConfirmActionResult } from "@/hooks/api/ai-confirm-action";
+import { extractAskOsDirective, type AskOsDirective } from "./ask-os-directive-schema";
 
 const AskOsConfirmationCard = dynamic(
   () =>
@@ -13,7 +15,12 @@ const AskOsConfirmationCard = dynamic(
   { ssr: false },
 );
 
-export const SUGGESTIONS = [
+const AskOsConnectCard = dynamic(
+  () => import("./ask-os-connect-card").then((m) => m.AskOsConnectCard),
+  { ssr: false },
+);
+
+const SUGGESTIONS = [
   "Summarize my day",
   "What are my hot leads right now?",
   "Search the knowledge base for our leave policy",
@@ -68,25 +75,22 @@ export function EmptyAskOs({
   onSuggestion: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
   return (
-    <div className="flex min-h-full flex-col items-center justify-center gap-4 py-6 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10">
-        <AnimatedLogo size={28} gradient className="rounded-xl" />
-      </div>
-      <div>
-        <p className="text-sm font-semibold text-foreground">How can I help?</p>
-        <p className="mx-auto mt-1 max-w-[16rem] text-xs text-muted-foreground">
-          I can help across CRM, HR, Build, Inventory & Ops, calendars, support,
-          and your knowledge base.
+    <div className="flex min-h-full flex-col items-center justify-center gap-5 px-2 py-8 text-center">
+      <AnimatedLogo size={36} gradient className="rounded-full" />
+      <div className="space-y-1.5">
+        <p className="text-lg font-semibold tracking-tight text-foreground">How can I help?</p>
+        <p className="mx-auto max-w-[18rem] text-[13px] leading-5 text-muted-foreground">
+          CRM, HR, Build, mail, calendar, and your knowledge base.
         </p>
       </div>
-      <div className="w-full space-y-1.5">
+      <div className="flex w-full max-w-[28rem] flex-wrap justify-center gap-2">
         {SUGGESTIONS.map((s) => (
           <button
             key={s}
             type="button"
             data-suggestion={s}
             onClick={onSuggestion}
-            className="w-full rounded-lg bg-muted/60 px-3 py-2 text-left text-xs text-foreground transition-colors hover:bg-muted"
+            className="rounded-full border border-border bg-background px-3 py-1.5 text-[13px] text-foreground transition-colors hover:bg-muted"
           >
             {s}
           </button>
@@ -96,46 +100,72 @@ export function EmptyAskOs({
   );
 }
 
-interface ConfirmPayload {
-  requiresConfirmation: true;
-  proposalId: number;
-  token: string;
-  action: string;
-  summary: string;
-  preview: Record<string, unknown>;
+type ConfirmActionDirective = Extract<AskOsDirective, { kind: "confirm-action" }>;
+
+function confirmOutcomeFallback(action: string): string {
+  if (action === "email.send" || action === "mail.send") return "Email sent.";
+  return "Done.";
 }
 
-function parseConfirmPayload(content: string): ConfirmPayload | null {
-  const prefix = "CONFIRM_ACTION:";
-  if (!content.startsWith(prefix)) return null;
-  try {
-    const parsed: unknown = JSON.parse(content.slice(prefix.length).trim());
-    if (
-      typeof parsed !== "object" ||
-      parsed === null ||
-      !("token" in parsed) ||
-      typeof (parsed as Record<string, unknown>)["token"] !== "string" ||
-      !("action" in parsed) ||
-      typeof (parsed as Record<string, unknown>)["action"] !== "string" ||
-      !("summary" in parsed) ||
-      typeof (parsed as Record<string, unknown>)["summary"] !== "string" ||
-      !("preview" in parsed) ||
-      typeof (parsed as Record<string, unknown>)["preview"] !== "object"
-    ) {
-      return null;
-    }
-    const p = parsed as Record<string, unknown>;
-    return {
-      requiresConfirmation: true,
-      proposalId: Number(p["proposalId"]),
-      token: p["token"] as string,
-      action: p["action"] as string,
-      summary: p["summary"] as string,
-      preview: (p["preview"] ?? {}) as Record<string, unknown>,
-    };
-  } catch {
-    return null;
+function confirmOutcomeCopy(outcome: ConfirmActionResult, action: string): string {
+  const summary = typeof outcome.summary === "string" ? outcome.summary.trim() : "";
+  if (summary) return summary;
+  return confirmOutcomeFallback(action);
+}
+
+function ConfirmDirectiveSlot({
+  directive,
+  persisted,
+}: {
+  directive: ConfirmActionDirective;
+  persisted: boolean;
+}) {
+  const [confirmedOutcome, setConfirmedOutcome] =
+    useState<ConfirmActionResult | null>(null);
+  const [cancelled, setCancelled] = useState(false);
+
+  function handleConfirmed(outcome: ConfirmActionResult) {
+    setConfirmedOutcome(outcome);
   }
+
+  function handleCancelled() {
+    setCancelled(true);
+  }
+
+  const { token } = directive;
+
+  if (persisted || token === undefined)
+    return (
+      <AskOsConfirmationCard
+        mode="record"
+        summary={directive.summary}
+        preview={directive.preview}
+        title={directive.title}
+      />
+    );
+
+  if (confirmedOutcome !== null)
+    return (
+      <p className="text-[13px] text-muted-foreground">
+        {confirmOutcomeCopy(confirmedOutcome, directive.action)}
+      </p>
+    );
+  if (cancelled)
+    return <p className="text-[13px] text-muted-foreground">Cancelled.</p>;
+
+  return (
+    <AskOsConfirmationCard
+      mode="live"
+      summary={directive.summary}
+      preview={directive.preview}
+      token={token}
+      expiresAt={directive.expiresAt}
+      title={directive.title}
+      confirmLabel={directive.confirmLabel}
+      onConfirmed={handleConfirmed}
+      onCancelled={handleCancelled}
+    />
+  );
 }
 
 export function AskOsBubble({
@@ -143,18 +173,14 @@ export function AskOsBubble({
   content,
   streaming,
   reduce,
+  directives: directivesProp,
 }: {
   role: "user" | "assistant";
   content: string;
   streaming: boolean;
   reduce: boolean;
+  directives?: AskOsDirective[];
 }) {
-  const [confirmedResult, setConfirmedResult] = useState<Record<
-    string,
-    unknown
-  > | null>(null);
-  const [cancelled, setCancelled] = useState(false);
-
   if (role === "user") {
     return (
       <motion.div
@@ -162,14 +188,29 @@ export function AskOsBubble({
         animate={{ opacity: 1, y: 0 }}
         className="flex justify-end"
       >
-        <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-br-sm bg-primary px-3 py-2 text-sm text-primary-foreground shadow-sm">
+        <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-primary px-3.5 py-2 text-sm leading-6 text-primary-foreground">
           {content}
         </div>
       </motion.div>
     );
   }
 
-  const confirmPayload = parseConfirmPayload(content);
+  const { directives: extracted, prose } = extractAskOsDirective(content);
+  const directives = directivesProp ?? extracted;
+  const isPersistedTurn = directivesProp === undefined;
+
+  const confirmDirectives = directives.filter(
+    (d): d is ConfirmActionDirective => d.kind === "confirm-action",
+  );
+  const connectDirectives = directives.filter(
+    (d): d is Extract<AskOsDirective, { kind: "connect-integration" }> =>
+      d.kind === "connect-integration",
+  );
+
+  const showTyping =
+    streaming && !prose && confirmDirectives.length === 0 && connectDirectives.length === 0;
+  const showChrome =
+    Boolean(prose) || confirmDirectives.length > 0 || showTyping;
 
   return (
     <motion.div
@@ -178,37 +219,42 @@ export function AskOsBubble({
       className="flex justify-start gap-2"
     >
       <AnimatedLogo
-        size={24}
+        size={20}
         gradient
         className="mt-0.5 shrink-0 rounded-full"
       />
-      <div className="min-w-0 max-w-[85%] rounded-2xl rounded-bl-sm border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm">
-        {confirmPayload && !confirmedResult && !cancelled ? (
-          <AskOsConfirmationCard
-            action={confirmPayload.action}
-            summary={confirmPayload.summary}
-            preview={confirmPayload.preview}
-            token={confirmPayload.token}
-            onConfirmed={setConfirmedResult}
-            onCancelled={() => setCancelled(true)}
-          />
-        ) : confirmedResult ? (
-          <p className="text-xs text-muted-foreground">Action completed.</p>
-        ) : cancelled ? (
-          <p className="text-xs text-muted-foreground">Cancelled.</p>
-        ) : content ? (
-          <div className="break-words">
-            <MarkdownContent content={content} />
+      <div className="min-w-0 max-w-[92%] flex-1 space-y-2 text-sm leading-6 text-foreground">
+        {showChrome ? (
+          <div className="space-y-2">
+            {prose ? (
+              <div className="break-words">
+                <MarkdownContent content={prose} />
+              </div>
+            ) : null}
+            {confirmDirectives.map((directive) => (
+              <ConfirmDirectiveSlot
+                key={directive.proposalId}
+                directive={directive}
+                persisted={isPersistedTurn}
+              />
+            ))}
+            {showTyping ? <TypingDots reduce={reduce} /> : null}
           </div>
-        ) : streaming ? (
-          <TypingDots reduce={reduce} />
         ) : null}
+        {connectDirectives.map((directive) => (
+          <AskOsConnectCard
+            key={directive.toolkit}
+            toolkit={directive.toolkit}
+            reason={directive.reason}
+            summary={directive.summary}
+          />
+        ))}
       </div>
     </motion.div>
   );
 }
 
-export function TypingDots({ reduce }: { reduce: boolean }) {
+function TypingDots({ reduce }: { reduce: boolean }) {
   return (
     <div className="flex items-center gap-1 py-1">
       {[0, 1, 2].map((i) => (

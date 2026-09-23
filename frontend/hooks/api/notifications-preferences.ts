@@ -11,6 +11,10 @@ import type {
   UpdatePreferencesInput,
   SuppressionRule,
   CreateSuppressionInput,
+  PreferenceRuleRow,
+  SetPreferenceRuleInput,
+  PreferenceEventCatalogItem,
+  UpdateEventPreferenceInput,
 } from "@/types/notifications";
 
 const notificationPreferenceContract = lazyContract(() =>
@@ -24,6 +28,15 @@ const suppressionRowContract = lazyContract(() =>
 );
 const notificationSuccessContract = lazyContract(() =>
   import("@/hooks/api/notifications-schema").then((m) => m.notificationSuccessContract),
+);
+const preferenceRulesListContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.preferenceRulesListContract),
+);
+const preferenceRuleOkContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.preferenceRuleOkContract),
+);
+const preferenceEventCatalogContract = lazyContract(() =>
+  import("@/hooks/api/notifications-schema").then((m) => m.preferenceEventCatalogContract),
 );
 
 export const useNotificationPreferences = (
@@ -92,6 +105,93 @@ export const useRemoveSuppression = () => {
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.suppressions() });
+    },
+  });
+};
+
+export const useNotificationPreferenceRules = (
+  options?: Omit<UseQueryOptions<PreferenceRuleRow[], Error>, "queryKey" | "queryFn">,
+) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
+  const { enabled: enabledOption, ...restOptions } = options ?? {};
+  return useQuery<PreferenceRuleRow[], Error>({
+    queryKey: platformCoreQueryKeys.notifications.preferenceRules(),
+    queryFn: ({ signal }) =>
+      apiClient.get<PreferenceRuleRow[]>(
+        "/notification-preferences/rules",
+        undefined,
+        signal,
+        preferenceRulesListContract,
+      ),
+    staleTime: 60_000,
+    ...restOptions,
+    enabled: !!orgId && (enabledOption ?? true),
+  });
+};
+
+export const useSetNotificationPreferenceRule = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ ok: true }, Error, SetPreferenceRuleInput>({
+    mutationKey: ["notifications", "preferences", "rules", "set"],
+    mutationFn: (dto) =>
+      apiClient.put<{ ok: true }>(
+        "/notification-preferences/rules",
+        dto,
+        undefined,
+        preferenceRuleOkContract,
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: platformCoreQueryKeys.notifications.preferenceRules(),
+      });
+    },
+  });
+};
+
+export const useNotificationPreferenceEventCatalog = (
+  options?: Omit<UseQueryOptions<PreferenceEventCatalogItem[], Error>, "queryKey" | "queryFn">,
+) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
+  const { enabled: enabledOption, ...restOptions } = options ?? {};
+  return useQuery<PreferenceEventCatalogItem[], Error>({
+    queryKey: platformCoreQueryKeys.notifications.preferenceEventCatalog(),
+    queryFn: ({ signal }) =>
+      apiClient.get<PreferenceEventCatalogItem[]>(
+        "/notification-preferences/events",
+        undefined,
+        signal,
+        preferenceEventCatalogContract,
+      ),
+    staleTime: 5 * 60_000,
+    ...restOptions,
+    enabled: !!orgId && (enabledOption ?? true),
+  });
+};
+
+export const useUpdateNotificationPreferenceEvent = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    NotificationPreferences,
+    Error,
+    { eventKey: string } & UpdateEventPreferenceInput
+  >({
+    mutationKey: ["notifications", "preferences", "events", "update"],
+    mutationFn: ({ eventKey, ...body }) =>
+      apiClient.patch<NotificationPreferences>(
+        `/notification-preferences/events/${eventKey}`,
+        body,
+        undefined,
+        notificationPreferenceContract,
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: platformCoreQueryKeys.notifications.preferences(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: platformCoreQueryKeys.notifications.preferenceEventCatalog(),
+      });
     },
   });
 };

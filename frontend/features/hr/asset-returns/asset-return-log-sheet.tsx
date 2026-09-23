@@ -17,6 +17,21 @@ import { getUserDisplayName } from "@/lib/person-display";
 import { CONDITIONS } from "./asset-return-constants";
 import type { Asset, EmployeeListItem } from "@/types/hr";
 
+export interface AssetReturnFieldErrors {
+  asset?: string;
+  employee?: string;
+  condition?: string;
+}
+
+function FieldError({ id, message }: { id: string; message: string | undefined }) {
+  if (!message) return null;
+  return (
+    <p id={id} role="alert" className="text-destructive text-xs">
+      {message}
+    </p>
+  );
+}
+
 interface AssetReturnLogSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -29,6 +44,7 @@ interface AssetReturnLogSheetProps {
   condition: string;
   notes: string;
   notesError: string;
+  fieldErrors: AssetReturnFieldErrors;
   isPending: boolean;
   onAssetChange: (id: string) => void;
   onEmployeeOverrideChange: (id: string) => void;
@@ -50,6 +66,7 @@ export function AssetReturnLogSheet({
   condition,
   notes,
   notesError,
+  fieldErrors,
   isPending,
   onAssetChange,
   onEmployeeOverrideChange,
@@ -73,10 +90,10 @@ export function AssetReturnLogSheet({
     <HrSheet
       open={open}
       onOpenChange={onOpenChange}
-      title="Log Asset Return"
+      title="Log asset return"
       description="Select the asset being returned. The employee will be auto-filled from the assignment."
       onSubmit={onSubmit}
-      submitLabel="Log Return"
+      submitLabel="Log return"
       isPending={isPending}
     >
       <div className="space-y-1.5">
@@ -95,6 +112,7 @@ export function AssetReturnLogSheet({
             No currently assigned assets found.
           </p>
         )}
+        <FieldError id="asset-return-asset-error" message={fieldErrors.asset} />
       </div>
 
       {selectedAsset && (
@@ -148,6 +166,7 @@ export function AssetReturnLogSheet({
             placeholder="Select employee…"
           />
         )}
+        <FieldError id="asset-return-employee-error" message={fieldErrors.employee} />
       </div>
 
       <div className="space-y-1.5">
@@ -155,7 +174,7 @@ export function AssetReturnLogSheet({
           Condition <span className="text-destructive">*</span>
         </label>
         <Select value={condition} onValueChange={onConditionChange}>
-          <SelectTrigger>
+          <SelectTrigger aria-invalid={fieldErrors.condition ? true : undefined} aria-describedby={fieldErrors.condition ? "asset-return-condition-error" : undefined}>
             <SelectValue placeholder="Select condition…" />
           </SelectTrigger>
           <SelectContent>
@@ -166,6 +185,7 @@ export function AssetReturnLogSheet({
             ))}
           </SelectContent>
         </Select>
+        <FieldError id="asset-return-condition-error" message={fieldErrors.condition} />
       </div>
 
       <div className="space-y-1.5">

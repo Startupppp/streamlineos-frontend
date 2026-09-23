@@ -8,7 +8,7 @@ const BUILD_CHANGED = "build:changed";
 const clientChannels = new WeakMap<QueryClient, BroadcastChannel>();
 const BUILD_QUERY_PREFIXES = [
   buildWorkQueryKeys.projects.all,
-  accountingAndSupportQueryKeys.projectReports.all,
+  buildWorkQueryKeys.projectReports.all,
   accountingAndSupportQueryKeys.ticketActivity.all,
   accountingAndSupportQueryKeys.whiteboards.all,
   accountingAndSupportQueryKeys.goals.all,

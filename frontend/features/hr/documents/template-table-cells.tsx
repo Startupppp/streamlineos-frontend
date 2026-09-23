@@ -1,6 +1,5 @@
 "use client";
 
-import DOMPurify from "isomorphic-dompurify";
 import { useState, useCallback } from "react";
 import { Eye, Trash2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
+import { SanitizedHtml } from "@/components/shared/sanitized-html";
 import { cn } from "@/lib/utils";
 import type { DocumentTemplate } from "@/hooks/api/hr/document-templates";
 
@@ -73,11 +73,9 @@ export function PreviewDialog({ template }: { template: DocumentTemplate }) {
                 Raw HTML preview with variable tokens shown as-is.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <div
+            <SanitizedHtml
+              html={template.htmlContent}
               className="max-h-[60dvh] overflow-y-auto rounded-xl border bg-card p-4 text-sm prose prose-sm dark:prose-invert max-w-none"
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(template.htmlContent),
-              }}
             />
             <AlertDialogFooter>
               <AlertDialogCancel>Close</AlertDialogCancel>

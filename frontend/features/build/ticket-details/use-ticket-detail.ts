@@ -8,7 +8,6 @@ import {
   useUpdateTicket,
   useDeleteTicket,
   useProject,
-  useSprints,
   useSubtasks,
 } from "@/hooks/api";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -55,7 +54,6 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     refetch: refetchTicket,
   } = useTicket(projectId, ticketId ?? 0, INLINE_READ_ERROR);
   const { data: projectData } = useProject(projectId);
-  const { data: sprints } = useSprints(projectId);
   const { data: subtasks } = useSubtasks(ticketId ?? 0, projectId);
 
   const members = useMemo<ProjectMember[]>(() => {
@@ -207,7 +205,6 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     ticketError,
     refetchTicket,
     projectData,
-    sprints: sprints ?? [],
     subtasks: subtasks ?? [],
     members,
     statuses,

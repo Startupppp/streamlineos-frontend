@@ -9,8 +9,8 @@ import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { Gated } from "@/components/shared/gated";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +36,7 @@ import { StageCard } from "@/features/crm/settings/pipelines/stage-card";
 import { getPipelineTypeMeta } from "@/features/crm/settings/pipelines/pipeline-constants";
 
 export default function PipelinesPage() {
-  const { data, isLoading, isError, refetch } = useCrmMetadata();
+  const { data, isLoading, isError, error, refetch } = useCrmMetadata();
   const qc = useQueryClient();
   const updatePipeline = useUpdatePipeline();
   const deleteStage = useDeleteStage();
@@ -98,6 +98,7 @@ export default function PipelinesPage() {
   }, [qc, selectedPipelineId, sortedStages, reorderStages]);
 
   const handleEditAdvanced = useCallback((stage: CrmPipelineStage) => setEditingStage(stage), []);
+
   const handleDeleteRequest = useCallback((id: string) => setDeleteStageId(id), []);
 
   const handleDeleteConfirm = useCallback(() => {
@@ -113,6 +114,13 @@ export default function PipelinesPage() {
   const handleSheetOpenChange = useCallback((open: boolean) => { if (!open) setEditingStage(null); }, []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleOpenCreate = useCallback(() => setCreateDialogOpen(true), []);
+
+  const state = usePageState({
+    error,
+    isError,
+    isLoading,
+    permission: "crm:leads:view",
+  });
 
   return (
     <>
@@ -162,10 +170,10 @@ export default function PipelinesPage() {
           * ternary this replaced told a caller without the permission that there
           * was nothing here, rather than that they were not allowed to look.
           */}
-        <Gated
-          permission="crm:leads:view"
-          isLoading={isLoading}
-          isError={isError}
+        <PageState
+          resolution={state}
+          onRetry={handleRetry}
+          className={CONTENT_FILL_PANEL}
           loading={
           <div className="flex gap-4 flex-1 min-h-0">
             <div className="w-[280px] shrink-0 space-y-2">
@@ -175,14 +183,6 @@ export default function PipelinesPage() {
               {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
             </div>
           </div>
-          }
-          error={
-          <ErrorState
-            title="Couldn't load pipelines"
-            description="The pipeline list didn't load. Check your connection and try again."
-            onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          />
           }
         >
           <div className="flex min-h-0 flex-1 gap-0 border border-border rounded-xl overflow-hidden bg-card shadow-sm">
@@ -293,7 +293,7 @@ export default function PipelinesPage() {
               )}
             </div>
           </div>
-        </Gated>
+        </PageState>
         </div>
       </PageWrapper>
     </>

@@ -92,7 +92,6 @@ export interface Ticket {
   priority: string | null;
   projectId: number | null;
   ticketNumber: number;
-  sprintId: number | null;
   epicId: number | null;
   assigneeId?: string | null;
   reporterId: string | null;
@@ -120,7 +119,6 @@ export interface Ticket {
   labels?: TicketLabelMapping[];
   watchers?: TicketWatcher[];
   project?: { id: number; name: string; key: string } | null;
-  sprint?: { id: number; name: string } | null;
   cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;
   customerId?: number | null;
   customer?: { id: number; name: string } | null;
@@ -156,7 +154,6 @@ export interface CreateTicketInput {
   assigneeId?: string;
   assigneeIds?: string[];
   reporterId?: string;
-  sprintId?: number;
   epicId?: number;
   cycleId?: number;
   points?: number;
@@ -176,7 +173,6 @@ export interface UpdateTicketInput {
   priority?: TicketPriority;
   assigneeId?: string;
   assigneeIds?: string[];
-  sprintId?: number | null;
   epicId?: number | null;
   moduleId?: number | null;
   cycleId?: number | null;
@@ -221,7 +217,6 @@ export interface TicketFilters {
   type?: string;
   assigneeId?: string;
   labelIds?: string;
-  sprintId?: number;
   cycleId?: string;
   epicId?: number;
   dueDateFrom?: string;
@@ -234,7 +229,6 @@ export interface AllWorkFilters extends TicketFilters {
   projectIds?: string;
   excludeStatus?: string;
   scope?: "all" | "mine" | "created" | "subscribed";
-  pmWorkspaceId?: string;
 }
 
 export interface AllWorkTicketLabel {
@@ -253,7 +247,6 @@ export interface AllWorkTicket {
   projectKey: string | null;
   projectName: string | null;
   ticketNumber: number;
-  sprintId: number | null;
   epicId: number | null;
   assigneeId: string | null;
   points: number | null;
@@ -289,16 +282,19 @@ export interface Checklist {
   updatedAt: string;
 }
 
-export type CustomFieldType =
-  | "text"
-  | "number"
-  | "date"
-  | "user"
-  | "select"
-  | "multi_select"
-  | "checkbox"
-  | "url"
-  | "currency";
+export const CUSTOM_FIELD_TYPES = [
+  "text",
+  "number",
+  "date",
+  "user",
+  "select",
+  "multi_select",
+  "checkbox",
+  "url",
+  "currency",
+] as const;
+
+export type CustomFieldType = (typeof CUSTOM_FIELD_TYPES)[number];
 
 export interface ProjectCustomField {
   id: number;

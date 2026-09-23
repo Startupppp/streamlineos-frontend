@@ -8,6 +8,8 @@ const CANONICAL = "lib/rbac/administering-module.ts";
 const NOT_A_PERMISSION_KEY: Readonly<Record<string, string>> = {
   "lib/renderer/crm/contact-role-layout.ts":
     "entity refs `deal:123` / `company:456`, not a permission key",
+  "features/build/navigation/use-build-scope-recovery.ts":
+    "Build scope refs `product:7` / `workspace:ws-1`, not a permission key",
   "features/build/project-list/projects-page.tsx":
     "`status:ACTIVE` client-side filter-group token, not a permission key",
   "features/hr/attendance/attendance-regularization-dialog.tsx": "HH:MM regularization time",

@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import type { DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 import type { UpdateTicketInput } from "@/types/projects";
 import type { DisplayOptions } from "../shared/types";
@@ -14,13 +15,17 @@ export interface Ticket {
   sequenceId?: string | null;
   assigneeId?: string | null;
   cycleId?: number | null;
-  sprintId?: number | null;
   dueDate?: string | null;
   startDate?: string | null;
   rank?: string | null;
   assignee?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null; image?: string | null } | null;
   labels?: { label?: { id: number; name: string; color?: string | null } }[];
   cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;
+}
+
+export interface ListSelection {
+  selected: Set<string | number>;
+  onChange: (sel: Set<string | number>) => void;
 }
 
 export interface ListViewProps {
@@ -34,6 +39,8 @@ export interface ListViewProps {
   displayOptions?: DisplayOptions;
   showEmptyRows?: boolean;
   showEmptyColumns?: boolean;
+  selection?: ListSelection;
+  focusedTicketId?: number | null;
 }
 
 export interface ListViewItemProps {
@@ -45,6 +52,9 @@ export interface ListViewItemProps {
   displayOptions?: DisplayOptions;
   dragHandleProps?: DraggableProvidedDragHandleProps | null;
   isDragging?: boolean;
+  isSelected?: boolean;
+  onSelect?: (id: string | number, checked: boolean) => void;
+  isKeyboardFocused?: boolean;
 }
 
 export interface InlineGroupCreateProps {
@@ -71,6 +81,8 @@ export interface NestedGroupProps {
   projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
   displayOptions?: DisplayOptions;
   onTicketClick: (id: number) => void;
+  selection?: ListSelection;
+  focusedTicketId?: number | null;
 }
 
 export interface DroppableGroupProps {
@@ -82,6 +94,21 @@ export interface DroppableGroupProps {
   displayOptions?: DisplayOptions;
   onTicketClick: (id: number) => void;
   shouldReduceMotion: boolean | null;
+  selection?: ListSelection;
+  focusedTicketId?: number | null;
+}
+
+export function useItemSelectHandler(selection: ListSelection | undefined) {
+  return useCallback(
+    (id: string | number, checked: boolean) => {
+      if (!selection) return;
+      const next = new Set(selection.selected);
+      if (checked) next.add(id);
+      else next.delete(id);
+      selection.onChange(next);
+    },
+    [selection],
+  );
 }
 
 export type ReorderContext = { previousTickets: Ticket[] };

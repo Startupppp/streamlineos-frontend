@@ -1,9 +1,10 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { testRunSchema, type TestRunFormValues } from "./qa-schema";
 import {
   Sheet,
   SheetContent,
@@ -39,16 +40,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateTestRun, useTestCases, useTestSuites } from "@/hooks/api/build/qa";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
 
-const schema = z.object({
-  name: z.string().min(1, "Name is required"),
-  environment: z.string(),
-  browserDevice: z.string(),
-  testerId: z.string(),
-  suiteId: z.string(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
 interface TestRunSheetProps {
   projectId: number;
   open: boolean;
@@ -63,10 +54,10 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
   const { data: suites } = useTestSuites(projectId);
   const { data: casesData } = useTestCases(projectId);
 
-  const cases = casesData ?? [];
+  const cases = casesData?.data ?? [];
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<TestRunFormValues>({
+    resolver: zodResolver(testRunSchema),
     defaultValues: {
       name: "",
       environment: "",
@@ -75,6 +66,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
       suiteId: "none",
     },
   });
+  useRegisterDirtyState(open && form.formState.isDirty);
 
   useEffect(() => {
     if (open) {
@@ -106,7 +98,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
     setMode(v as "suite" | "cases");
   }
 
-  function handleSubmit(values: FormValues) {
+  function handleSubmit(values: TestRunFormValues) {
     const suiteId =
       mode === "suite" && values.suiteId !== "none" ? Number(values.suiteId) : undefined;
     const caseIds =

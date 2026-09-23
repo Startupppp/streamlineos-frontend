@@ -4,6 +4,8 @@ import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { PmPageShell, PmPanel, PmSection } from "@/components/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
+const HEADERS = ["Type", "Title", "Approver", "Level", "Due", "Status", "Actions"] as const;
+
 export default function ProjectApprovalsLoading() {
   return (
     <PageWrapper
@@ -20,7 +22,7 @@ export default function ProjectApprovalsLoading() {
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           <PmPanel className="p-2">
-            <DataTableSkeleton rows={12} columns={7} className="flex-1" />
+            <DataTableSkeleton mobileCards rows={12} headers={HEADERS} className="flex-1 min-h-0" />
           </PmPanel>
         </PmSection>
       </PmPageShell>

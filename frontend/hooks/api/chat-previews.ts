@@ -12,7 +12,7 @@ import type {
 import { lazyContract } from "@/lib/api-envelope";
 
 const ticketDetailLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketDetailContract),
+  import("@/hooks/api/build/build-tickets-core-schema").then((m) => m.ticketDetailContract),
 );
 
 export type { CommentPermalinkData, TicketPermalinkData };

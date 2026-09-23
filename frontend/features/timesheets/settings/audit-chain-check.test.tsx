@@ -59,14 +59,6 @@ describe("AuditChainCheck", () => {
     expect(screen.getByText("The record is intact")).toBeInTheDocument();
   });
 
-  /**
-   * The assertion this component exists for.
-   *
-   * The server verifies the OLDEST events first and stops at its limit, so on a
-   * long chain `valid: true` describes the beginning of the trail and says
-   * nothing about the recent events somebody is most likely asking about. A
-   * green tick here would be believed, and would be wrong.
-   */
   it("never reports a truncated walk as a clean bill of health", () => {
     verifyState.data = complete({ verified: 10_000, checked: 10_000, total: 90_000, truncated: true });
     render(<AuditChainCheck />);
@@ -104,11 +96,6 @@ describe("AuditChainCheck", () => {
   });
 });
 
-/**
- * A component with a green unit test and no mount point is this effort's
- * signature defect — `GET /timesheets/audit/verify` shipped with no caller at
- * all. So the check that it is actually rendered is written down.
- */
 describe("the audit tab mounts the integrity check", () => {
   it("renders it above the event table", () => {
     verifyState.data = undefined;

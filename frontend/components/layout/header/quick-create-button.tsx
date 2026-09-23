@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   forwardRef,
   useCallback,
@@ -20,6 +21,7 @@ import {
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
@@ -32,9 +34,11 @@ import { useEnabledModules } from "@/hooks/api/access/org-modules"
 import { useCommandPalette } from "@/components/command-palette/hooks/use-command-palette"
 import { cn } from "@/lib/utils"
 import { matchesOrgModule } from "@/lib/org-module-keys"
+import { getProductFromPathname } from "@/components/layout/sidebar/sidebar-nav-items"
 import type { PermissionKey } from "@/lib/rbac/permissions"
 import {
   QUICK_CREATE_GROUPS,
+  orderGroupsForProduct,
   type CreateGroup,
 } from "./quick-create-groups"
 
@@ -46,6 +50,7 @@ function isModuleEnabled(enabledModules: string[], moduleKey?: string): boolean 
 }
 
 export function useQuickCreateGroups(): CreateGroup[] {
+  const product = getProductFromPathname(usePathname())
   const enabledModules = useEnabledModules()
   const canMail = useCan("mail:messages:send")
   const canCalendar = useCan("calendar:write")
@@ -96,7 +101,7 @@ export function useQuickCreateGroups(): CreateGroup[] {
       return permission.some((key) => granted.get(key) === true)
     }
 
-    return QUICK_CREATE_GROUPS.map((group) => ({
+    const visible = QUICK_CREATE_GROUPS.map((group) => ({
       ...group,
       items: group.items.filter(
         (item) =>
@@ -104,7 +109,9 @@ export function useQuickCreateGroups(): CreateGroup[] {
           isModuleEnabled(enabledModules, item.module),
       ),
     })).filter((group) => group.items.length > 0)
+    return orderGroupsForProduct(visible, product)
   }, [
+    product,
     enabledModules,
     canMail,
     canCalendar,
@@ -224,9 +231,8 @@ const QuickCreateTriggerButton = forwardRef<
     <button
       ref={ref}
       type={type}
-      aria-label="Quick create"
       className={cn(
-        "flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm transition-all duration-200 hover:bg-primary/90 hover:shadow focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+        "flex h-8 items-center justify-center gap-1.5 rounded-lg bg-primary px-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-all duration-200 hover:bg-primary/90 hover:shadow focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
         className,
       )}
       {...props}
@@ -234,6 +240,7 @@ const QuickCreateTriggerButton = forwardRef<
       onMouseLeave={handleMouseLeave}
     >
       <PlusIcon ref={iconRef} size={16} />
+      Create
     </button>
   )
 })
@@ -350,6 +357,10 @@ export function QuickCreateButton() {
             <DrawerTitle className="text-sm font-semibold text-foreground">
               Create
             </DrawerTitle>
+            <DrawerDescription className="sr-only">
+              Shortcuts that start a new record in the modules you have access
+              to, without leaving the page you are on.
+            </DrawerDescription>
           </DrawerHeader>
           <QuickCreatePanel
             groups={groups}

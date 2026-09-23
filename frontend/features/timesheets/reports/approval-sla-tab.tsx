@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { Gated } from "@/components/shared/gated";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApprovalSlaReport } from "@/hooks/api/timesheets-core/reports";
 import type { ApprovalSlaApprover, ApprovalSlaReport } from "./reports-types";
@@ -69,6 +69,8 @@ const COLUMNS: DataTableColumn<ApprovalSlaApprover>[] = [
   },
 ];
 
+const COLUMN_HEADERS = COLUMNS.map((column) => column.header);
+
 function getApproverRowKey(row: ApprovalSlaApprover): string {
   return row.approverId;
 }
@@ -88,7 +90,7 @@ function renderApproverMobileCard(row: ApprovalSlaApprover) {
 }
 
 export function ApprovalSlaTab({ params, enabled }: ApprovalSlaTabProps) {
-  const { data, isLoading, isError, refetch } = useApprovalSlaReport(params, enabled);
+  const { data, isLoading, isError, error, refetch } = useApprovalSlaReport(params, enabled);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -99,28 +101,27 @@ export function ApprovalSlaTab({ params, enabled }: ApprovalSlaTabProps) {
     [data],
   );
 
+  const state = usePageState({
+    permission: "timesheets:reports:view",
+    isLoading: !isError && (isLoading || !data),
+    isError,
+    error,
+  });
+
   return (
-    <Gated
-      permission="timesheets:reports:view"
-      isLoading={!isError && (isLoading || !data)}
-      isError={isError}
+    <PageState
+      resolution={state}
+      onRetry={handleRetry}
       loading={
         <div className="space-y-4">
           <StatCardGridSkeleton cols={4} count={4} />
           <Skeleton className="h-[72px] rounded-lg" />
-          <DataTableSkeleton rows={6} columns={3} />
+          <DataTableSkeleton rows={6} headers={COLUMN_HEADERS} />
         </div>
-      }
-      error={
-        <ErrorState
-          title="Couldn't load approval SLA"
-          description="Something went wrong while loading the approval SLA report."
-          onRetry={handleRetry}
-        />
       }
     >
       {data ? <ApprovalSlaBody data={data} statusEntries={statusEntries} /> : null}
-    </Gated>
+    </PageState>
   );
 }
 

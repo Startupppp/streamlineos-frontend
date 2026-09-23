@@ -47,7 +47,8 @@ export type BuildApprovalInboxItem = InboxItemBase & {
   kind: "build_approval";
   id: number;
   status: string;
-  projectId: number;
+  approvalKind: string;
+  projectId: number | null;
   ticketId: number | null;
   dueAt: string | null;
 };
@@ -75,3 +76,11 @@ export type UnifiedInboxResponse = {
 };
 
 export type InboxKind = UnifiedInboxItem["kind"];
+
+export type UnifiedInboxCount = {
+  notification: number;
+  mail: number;
+  approval: number;
+  total: number;
+  mailExact: boolean;
+};

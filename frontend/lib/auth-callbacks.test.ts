@@ -42,7 +42,7 @@ import {
   ORG,
   SESSION_A,
   installTransport,
-} from "./__tests__/auth-callbacks-test-helpers";
+} from "./auth-callbacks-test-helpers";
 
 const postMock = axios.post as unknown as jest.Mock;
 

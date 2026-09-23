@@ -29,8 +29,8 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { Gated } from "@/components/shared/gated";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {
   useCrmMetadata,
@@ -265,7 +265,7 @@ export default function CrmOptionsPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
-  const { data, isLoading, isError, refetch } = useCrmMetadata();
+  const { data, isLoading, isError, error, refetch } = useCrmMetadata();
   const deleteOption = useDeleteOption();
 
   const options = data?.options[selectedType] ?? [];
@@ -304,6 +304,13 @@ export default function CrmOptionsPage() {
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
+  const state = usePageState({
+    permission: "crm:leads:view",
+    isLoading,
+    isError,
+    error,
+  });
+
   return (
     <>
       <AlertDialog open={deleteTargetId !== null} onOpenChange={handleAlertOpenChange}>
@@ -336,22 +343,14 @@ export default function CrmOptionsPage() {
           * ternary this replaced told a caller without the permission that there
           * was nothing here, rather than that they were not allowed to look.
           */}
-        <Gated
-          permission="crm:leads:view"
-          isLoading={isLoading}
-          isError={isError}
+        <PageState
+          resolution={state}
+          onRetry={handleRetry}
+          className={CONTENT_FILL_PANEL}
           loading={
           <div className="space-y-2">
             {[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-9 w-full" />)}
           </div>
-          }
-          error={
-          <ErrorState
-            title="Couldn't load options"
-            description="The dropdown options didn't load. Check your connection and try again."
-            onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          />
           }
         >
           <div className="flex gap-4">
@@ -450,7 +449,7 @@ export default function CrmOptionsPage() {
               )}
             </div>
           </div>
-        </Gated>
+        </PageState>
       </PageWrapper>
     </>
   );

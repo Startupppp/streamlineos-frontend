@@ -9,15 +9,16 @@ import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { reportError } from "@/lib/observability/error-reporter";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { isPresenceStatus, type PresenceStatus } from "@/lib/presence";
 import type {
   Channel,
   ChannelPage,
   Message,
   MessagesPage,
-  OnlineUser,
   OrgUser,
   PublicChannel,
 } from "@/types/chat";
+import type { ChatOnlineUser } from "@/hooks/api/chat-schema/presence-schema";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
@@ -293,9 +294,10 @@ export function useChatOnlineUsers(enabled = true) {
   const canRead = useCan("chat:messages:read");
   return useQuery({
     queryKey: collaborationQueryKeys.chat.onlineUsers(),
-    queryFn: ({ signal }) => apiClient.get<OnlineUser[]>("/chat/presence/online", undefined, signal, chatOnlineUsersContract),
+    queryFn: ({ signal }) => apiClient.get<ChatOnlineUser[]>("/chat/presence/online", undefined, signal, chatOnlineUsersContract),
     refetchInterval: 60_000,
     staleTime: 65_000,
+    ...INLINE_READ_ERROR,
     enabled: enabled && canRead,
   });
 }
@@ -308,5 +310,37 @@ export function useChatOrgUsers(enabled = true) {
     staleTime: 2 * 60_000,
     enabled: enabled && canRead,
   });
+}
+
+export function usePresenceMap(enabled = true): ReadonlyMap<string, PresenceStatus> {
+  const result = useChatOnlineUsers(enabled);
+  return useMemo(() => {
+    const map = new Map<string, PresenceStatus>();
+    for (const user of result.data ?? []) {
+      if (isPresenceStatus(user.status)) map.set(user.userId, user.status);
+    }
+    return map;
+  }, [result.data]);
+}
+
+export interface PresenceCustomStatus {
+  statusMessage: string | null;
+  statusExpiresAt: string | null;
+}
+
+export function usePresenceCustomStatus(
+  userId: string | undefined,
+  enabled = true,
+): PresenceCustomStatus {
+  const result = useChatOnlineUsers(enabled);
+  return useMemo(() => {
+    const row = userId
+      ? result.data?.find((user) => user.userId === userId)
+      : undefined;
+    return {
+      statusMessage: row?.statusMessage ?? null,
+      statusExpiresAt: row?.statusExpiresAt ?? null,
+    };
+  }, [result.data, userId]);
 }
 

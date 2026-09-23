@@ -1,9 +1,9 @@
 ﻿"use client";
 
 import { useEffect } from "react";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   Sheet,
   SheetContent,
@@ -41,37 +41,16 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateChangeRequest, useUpdateChangeRequest } from "@/hooks/api/build/change-requests";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
-import type { ChangeRequest, ChangeRequestStatus } from "@/types/projects";
+import type { ChangeRequest } from "@/types/projects";
+import {
+  CR_STATUSES,
+  CR_STATUS_LABELS,
+  changeRequestFormSchema,
+  type ChangeRequestFormValues,
+  CHANGE_REQUEST_FORM_DEFAULTS,
+} from "./change-request-schema";
 
-const CR_STATUSES: ChangeRequestStatus[] = [
-  "submitted", "under_review", "estimated", "awaiting_approval",
-  "approved", "rejected", "in_progress", "completed",
-];
-
-const CR_STATUS_LABELS: Record<ChangeRequestStatus, string> = {
-  submitted: "Submitted", under_review: "Under Review", estimated: "Estimated",
-  awaiting_approval: "Awaiting Approval", approved: "Approved", rejected: "Rejected",
-  in_progress: "In Progress", completed: "Completed",
-};
-
-const schema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string(),
-  impact: z.string(),
-  status: z.string(),
-  estimateHours: z.string(),
-  budgetRs: z.string(),
-  timelineDays: z.string(),
-  approvalOwnerId: z.string(),
-  decisionComment: z.string(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
-const DEFAULTS: FormValues = {
-  title: "", description: "", impact: "", status: "submitted",
-  estimateHours: "", budgetRs: "", timelineDays: "", approvalOwnerId: "none", decisionComment: "",
-};
+type FormValues = ChangeRequestFormValues;
 
 interface ChangeRequestSheetProps {
   projectId: number;
@@ -84,7 +63,8 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
   const create = useCreateChangeRequest(projectId);
   const update = useUpdateChangeRequest(projectId);
 
-  const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: DEFAULTS });
+  const form = useForm<FormValues>({ resolver: zodResolver(changeRequestFormSchema), defaultValues: CHANGE_REQUEST_FORM_DEFAULTS });
+  useRegisterDirtyState(open && form.formState.isDirty);
 
   useEffect(() => {
     if (!open) return;
@@ -101,7 +81,7 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
         decisionComment: editCr.decisionComment ?? "",
       });
     } else {
-      form.reset(DEFAULTS);
+      form.reset(CHANGE_REQUEST_FORM_DEFAULTS);
     }
   }, [open, editCr, form]);
 

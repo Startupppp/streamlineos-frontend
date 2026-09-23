@@ -203,6 +203,33 @@ describe("streamAiText — the shared AI text-stream client", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("keeps Zod field issues on a 400 so the composer can name what failed", async () => {
+    const details = [
+      {
+        path: "messages.0.content",
+        message: "Too big: expected string to have <=10000 characters",
+      },
+    ];
+    installFetch(() => ({
+      ok: false,
+      status: 400,
+      statusText: "Bad Request",
+      headers: new Headers(),
+      json: () =>
+        Promise.resolve({
+          message: "Validation failed.",
+          code: "VALIDATION_FAILED",
+          details,
+        }),
+    }));
+
+    await expect(streamAiText({ path: JD_PATH, body: {} })).rejects.toMatchObject({
+      status: 400,
+      code: "VALIDATION_FAILED",
+      details,
+    });
+  });
+
   it("raises the HTTP status so credit exhaustion stays renderable as 402", async () => {
     installFetch(() => ({
       ok: false,

@@ -1,6 +1,8 @@
 import type { z } from "zod";
 import type { feedbucketSubmissionListContract } from "@/hooks/api/feedbucket/feedbucket-schema";
 import type { feedbucketSubmissionDetailContract } from "@/hooks/api/feedbucket/feedbucket-schema";
+import type { feedbucketWidgetRowContract } from "@/hooks/api/feedbucket/feedbucket-schema";
+import type { feedbucketBulkSubmissionsContract } from "@/hooks/api/feedbucket/feedbucket-schema";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 export type FeedbucketSubmissionType = "bug" | "idea" | "feature" | "question" | "praise" | "other";
@@ -65,28 +67,11 @@ export interface FeedbucketNetworkEntry {
   error?: string;
 }
 
-export interface FeedbucketWidget {
-  id: number;
-  orgId: string;
-  projectId: number | null;
-  name: string;
-  publicKey: string;
-  allowedDomains: string[];
-  autoCreateTicket: boolean;
-  defaultTicketType: string;
-  isActive: boolean;
-  aiAssistEnabled: boolean;
-  theme: FeedbucketWidgetTheme | null;
-  createdBy: string | null;
-  createdAt: string;
-  updatedAt: string;
-  defaultProjectId: number | null;
-  defaultAssigneeMembershipId: number | null;
-  assigneeRules: Partial<Record<FeedbucketSubmissionType, number>> | null;
+export type FeedbucketWidget = z.infer<typeof feedbucketWidgetRowContract> & {
   project?: { id: number; name: string; key: string } | null;
   submissionCount?: number;
   openCount?: number;
-}
+};
 
 export type FeedbucketSubmission = z.infer<typeof feedbucketSubmissionDetailContract>;
 
@@ -117,20 +102,46 @@ export interface UpdateFeedbucketWidgetInput {
   assigneeRules?: Partial<Record<FeedbucketSubmissionType, string>> | null;
 }
 
-export interface ListFeedbucketSubmissionsQuery {
-  page?: number;
-  limit?: number;
+export interface FeedbucketSubmissionFilters {
   widgetId?: number;
+  managedProductId?: number;
   type?: FeedbucketSubmissionType;
   status?: FeedbucketSubmissionStatus;
   assigneeId?: string;
   search?: string;
+  linked?: "linked" | "unlinked";
+  from?: string;
+  to?: string;
 }
+
+export interface ListFeedbucketSubmissionsQuery extends FeedbucketSubmissionFilters {
+  page?: number;
+  limit?: number;
+  cursor?: string;
+}
+
+export type FeedbucketBulkAction =
+  | { type: "status"; status: FeedbucketSubmissionStatus }
+  | { type: "priority"; priority: FeedbucketSubmissionPriority }
+  | { type: "assign"; assigneeId: string | null }
+  | { type: "delete" };
+
+export interface BulkFeedbucketSubmissionsInput {
+  submissionIds: number[];
+  action: FeedbucketBulkAction;
+  filters?: FeedbucketSubmissionFilters;
+}
+
+export type BulkFeedbucketSubmissionsResult = z.infer<
+  typeof feedbucketBulkSubmissionsContract
+>;
 
 export interface UpdateFeedbucketSubmissionInput {
   status?: FeedbucketSubmissionStatus;
   priority?: FeedbucketSubmissionPriority | null;
   assigneeId?: string | null;
 }
+
+export type FeedbucketMediaKind = "screenshot" | "recording";
 
 export type PaginatedFeedbucketSubmissions = z.infer<typeof feedbucketSubmissionListContract>;

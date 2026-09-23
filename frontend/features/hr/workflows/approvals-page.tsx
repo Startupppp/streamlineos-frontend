@@ -36,6 +36,7 @@ import {
 } from "@/types/hr/workflows";
 import { getUserDisplayName } from "@/lib/person-display";
 import { activationProps } from "@/lib/keyboard-activation";
+import { currentStepRouting } from "@/features/hr/workflows/step-routing";
 
 const STATUS_CHIP: Record<
   HrWorkflowInstanceStatus,
@@ -90,6 +91,7 @@ function InstanceRow({
   showActions: boolean;
 }) {
   const chip = STATUS_CHIP[instance.status];
+  const routing = currentStepRouting(instance);
   const isOverdue =
     instance.dueAt &&
     new Date(instance.dueAt) < new Date() &&
@@ -146,6 +148,13 @@ function InstanceRow({
             </>
           )}
         </div>
+        {routing && showActions ? (
+          <p className="text-xs text-muted-foreground line-clamp-1">
+            {routing.rungLabel ? `${routing.rungLabel}: ` : ""}
+            {routing.explanation}
+            {routing.escalationLabel ? ` Escalates to the ${routing.escalationLabel} when overdue.` : ""}
+          </p>
+        ) : null}
       </div>
 
       <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -271,7 +280,7 @@ export function HrApprovalsPage() {
           className="gap-1.5"
         >
           <UserCheck className="h-4 w-4" />
-          My Delegations
+          My delegations
         </Button>
       }
     >

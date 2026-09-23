@@ -7,6 +7,8 @@ import type {
   contactRowContract,
 } from "@/hooks/api/crm/contacts-schema";
 export type OrgSize = "1-10" | "11-50" | "51-200" | "201-1000" | "1000+";
+/** `business_parties.tier` — stated by a person, never derived. */
+export type CrmAccountTier = "free" | "pro" | "enterprise";
 export type OrgTimelineEventType = "contact_created" | "deal_created" | "lead_linked" | "note_added";
 
 export interface CrmOrganization {
@@ -19,6 +21,7 @@ export interface CrmOrganization {
   website: string | null;
   linkedinUrl: string | null;
   description: string | null;
+  tier: CrmAccountTier | null;
   healthScore: number | null;
   parentId: number | null;
   notes: string | null;
@@ -102,8 +105,22 @@ export interface OrgTimelineEvent {
   entityId: number;
 }
 
+export interface CrmOrganizationListRow {
+  id: number;
+  name: string;
+  domain: string | null;
+  industry: string | null;
+  size: OrgSize | null;
+  website: string | null;
+  linkedinUrl: string | null;
+  description: string | null;
+  tier: CrmAccountTier | null;
+  createdAt: string | null;
+  openRequestCount: number;
+}
+
 export interface PaginatedCrmOrganizations {
-  organizations: CrmOrganization[];
+  organizations: CrmOrganizationListRow[];
   hasMore: boolean;
   nextCursor: string | null;
   totalCount?: number;
@@ -128,6 +145,7 @@ export interface CreateCrmOrganizationInput {
   website?: string;
   linkedinUrl?: string;
   description?: string;
+  tier?: CrmAccountTier;
 }
 
 /**
@@ -144,6 +162,7 @@ export interface UpdateCrmOrganizationInput {
   website?: string | null;
   linkedinUrl?: string | null;
   description?: string | null;
+  tier?: CrmAccountTier | null;
   healthScore?: number | null;
   parentId?: number | null;
   notes?: string | null;

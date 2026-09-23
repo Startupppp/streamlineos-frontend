@@ -2,14 +2,12 @@
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 
-import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useKbPagesTree } from "@/hooks/api/kb";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { pageHref } from "@/lib/knowledge-routes";
 import { KbUsersIcon } from "@/features/wiki/lib/kb-icons";
 import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
@@ -17,37 +15,41 @@ import {
   KB_STATUS_LABELS,
   KB_STATUS_BADGE_CLASS,
 } from "@/features/wiki/lib/kb-page-status";
+import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
+import {
+  WikiPageCard,
+  WIKI_PAGE_CARD_GRID_CLASS,
+} from "@/features/wiki/components/wiki-page-card";
 
-function SharedRow({ node }: { node: KbPageTreeNode }) {
+function SharedCard({ node }: { node: KbPageTreeNode }) {
   const badgeClass =
     KB_STATUS_BADGE_CLASS[node.status] ??
     "bg-muted text-muted-foreground border-border";
   return (
-    <Link
+    <WikiPageCard
       href={pageHref(node.id)}
-      className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
+      title={node.title}
+      icon={node.icon}
+      coverImage={node.coverImage ?? null}
+      subtitle={kbTimeAgo(node.updatedAt ?? "")}
     >
-      <span className="text-base shrink-0 w-5 text-center">
-        {node.icon ?? "📄"}
-      </span>
-      <TruncatedText text={node.title || "Untitled"} className="flex-1 text-sm font-medium" />
-      {node.status && (
+      {node.status ? (
         <Badge
           variant="outline"
           className={`text-micro h-4 px-1.5 shrink-0 ${badgeClass}`}
         >
           {KB_STATUS_LABELS[node.status] ?? node.status}
         </Badge>
-      )}
-    </Link>
+      ) : null}
+    </WikiPageCard>
   );
 }
 
 function SharedSkeleton() {
   return (
-    <div className="space-y-2">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <Skeleton key={i} className="h-11 w-full rounded-lg" />
+    <div className={WIKI_PAGE_CARD_GRID_CLASS}>
+      {Array.from({ length: 6 }).map((_, skeletonIndex) => (
+        <Skeleton key={skeletonIndex} className="h-28 w-full rounded-lg" />
       ))}
     </div>
   );
@@ -90,9 +92,9 @@ export default function SharedPage() {
       )}
 
       {!isLoading && !isError && sharedNodes.length > 0 && (
-        <div className="space-y-1.5">
+        <div className={WIKI_PAGE_CARD_GRID_CLASS}>
           {sharedNodes.map((node) => (
-            <SharedRow key={node.id} node={node} />
+            <SharedCard key={node.id} node={node} />
           ))}
         </div>
       )}

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -113,6 +113,11 @@ export function EventCreateForm({
   const displayLinkedKey = linkedTicket ? `${linkedTicket.projectKey}-${linkedTicket.ticketNumber}` : existingEntityId ? `#${existingEntityId}` : null;
   const displayLinkedTitle = linkedTicket?.title ?? null;
 
+  const handleFormSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    onSave();
+  }, [onSave]);
+
   return (
     <>
       <Drawer open={open} onOpenChange={onOpenChange} direction={isMobile ? "bottom" : "right"}>
@@ -121,8 +126,9 @@ export function EventCreateForm({
             <DrawerTitle className="text-base font-semibold text-foreground">{isEdit ? "Edit Event" : "New Event"}</DrawerTitle>
             <DialogCloseButton type="button" onClick={onClose} className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted transition-colors" title="Close" aria-label="Close" />
           </DrawerHeader>
-          <ScrollArea className="flex-1 min-h-0">
-            <div className="px-4 py-2 space-y-2">
+          <form onSubmit={handleFormSubmit} className="flex flex-col flex-1 min-h-0">
+            <ScrollArea className="flex-1 min-h-0">
+              <div className="px-4 py-2 space-y-2">
               <EventFormFields
                 title={form.title} titleError={titleError} description={form.description} allDay={form.allDay}
                 startDate={form.startDate} startTime={form.startTime} endDate={form.endDate} endTime={form.endTime}
@@ -157,12 +163,13 @@ export function EventCreateForm({
                   )}
                 </div>
               </div>
+              </div>
+            </ScrollArea>
+            <div className="px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] border-t bg-muted/20 shrink-0 flex flex-row items-center justify-end gap-2">
+              <Button type="button" variant="outline" size="sm" className="text-xs px-3 font-normal text-muted-foreground hover:text-foreground" onClick={onClose} disabled={isPending}>Discard</Button>
+              <LoadingButton type="submit" size="sm" className="text-xs px-4 font-medium" disabled={!form.title.trim()} isPending={isPending} loadingText={isEdit ? "Saving…" : "Creating…"}>Save</LoadingButton>
             </div>
-          </ScrollArea>
-          <div className="px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] border-t bg-muted/20 shrink-0 flex flex-row items-center justify-end gap-2">
-            <Button variant="outline" size="sm" className="text-xs px-3 font-normal text-muted-foreground hover:text-foreground" onClick={onClose} disabled={isPending}>Discard</Button>
-            <LoadingButton size="sm" className="text-xs px-4 font-medium" onClick={onSave} disabled={!form.title.trim()} isPending={isPending} loadingText={isEdit ? "Saving…" : "Creating…"}>Save</LoadingButton>
-          </div>
+          </form>
         </DrawerContent>
       </Drawer>
       <TicketPickerDialog open={ticketPickerOpen} onOpenChange={onTicketPickerChange} onSelect={onTicketSelect} />

@@ -16,6 +16,7 @@ import type {
   TimesheetEntry,
 } from "@/features/timesheets/types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
 const timerNullableC = lazyContract(() =>
   import("@/hooks/api/timesheets-core/timesheets-timer-schema").then((m) => m.timerNullableResponseContract),
@@ -38,21 +39,6 @@ export const TIMER_POLL_MS = {
   idleStepMs: 120_000,
 } as const;
 
-/**
- * How long to wait before asking for an active timer again.
- *
- * A running timer is the only state where the answer changes on its own, and
- * it is the state a person is watching, so it polls fastest. A paused timer
- * only moves when its owner moves it. With no timer at all the endpoint is
- * being asked a question whose answer has been "no" for however long the
- * viewer has had this tab open, so the interval doubles every two idle minutes
- * up to a five-minute ceiling — the previous flat 120s asked ~30 times an hour
- * of every open My Time tab in the org, forever.
- *
- * Backoff is derived from elapsed idle time rather than a poll counter so it
- * is a pure function of the clock: StrictMode's double invoke cannot advance
- * it twice, and it resets the moment a timer exists again.
- */
 export function timerPollIntervalMs(
   status: TimerStatus | null | undefined,
   idleMs: number,
@@ -96,11 +82,6 @@ export function useStartTimer() {
   });
 }
 
-/**
- * Each action passes its own literal path rather than interpolating the action
- * name: a path segment built from a variable is a path the contract scan cannot
- * read, so drift on it would never be reported.
- */
 function useTimerAction(action: "pause" | "resume", request: (timerId: number) => Promise<TimerSession>) {
   const qc = useQueryClient();
   return useMutation({
@@ -141,10 +122,22 @@ export function useDiscardTimer() {
 
 export function useConvertTimer() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("timesheets:entries:create", {
+  return useAuthorizedIdempotentMutation<
+    TimesheetEntry,
+    Error,
+    { timerId: number; data: ConvertTimerInput }
+  >("timesheets:entries:create", {
     mutationKey: ["timesheets", "timer", "convert"],
-    mutationFn: ({ timerId, data }: { timerId: number; data: ConvertTimerInput }) =>
-      apiClient.post<TimesheetEntry>(`/timesheets/timer/${timerId}/convert`, data, undefined, entryC),
+    mutationFn: (
+      { timerId, data }: { timerId: number; data: ConvertTimerInput },
+      idempotencyKey: string,
+    ) =>
+      apiClient.post<TimesheetEntry>(
+        `/timesheets/timer/${timerId}/convert`,
+        data,
+        { headers: { "Idempotency-Key": idempotencyKey } },
+        entryC,
+      ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.timerActive() });
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });

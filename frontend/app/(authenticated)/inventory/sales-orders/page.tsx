@@ -22,14 +22,13 @@ import {
   EmptyOrdersIllustration,
   EmptySearchIllustration,
 } from "@/components/illustrations";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { cn } from "@/lib/utils";
 
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useSalesOrders, type SalesOrderStatus, type SalesOrderListItem } from "@/hooks/api/inventory/sales-orders";
-import { useCan } from "@/hooks/api/access";
+
 import { formatShortDate } from "@/lib/date-utils";
 
 type StatusFilter = "ALL" | SalesOrderStatus;
@@ -139,7 +138,6 @@ const columns: DataTableColumn<SalesOrderListItem>[] = [
 ];
 
 function SalesOrdersContent() {
-  const canView = useCan("inventory:sales-orders:read");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
@@ -192,6 +190,13 @@ function SalesOrdersContent() {
     limit: PAGE_SIZE,
   });
 
+  const pageState = usePageState({
+    permission: "inventory:sales-orders:read",
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+  });
+
   const items = query.data?.items ?? [];
   const total = query.data?.total ?? 0;
   const totalPages = query.data?.totalPages ?? 1;
@@ -236,13 +241,15 @@ function SalesOrdersContent() {
     </div>
   );
 
-  if (!canView)
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
     return (
       <PageWrapper
         title="Sales Orders"
         subtitle="Manage customer sales orders from creation to invoicing."
       >
-        <NoPermissionState permission="inventory:sales-orders:read" className="flex-1" />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
 
@@ -268,34 +275,26 @@ function SalesOrdersContent() {
         getRowKey={(so) => so.id}
         isLoading={query.isLoading}
         emptyState={
-          query.error ? (
-            <ErrorState
-              description={getErrorMessage(query.error)}
-              onRetry={handleRetry}
-              compact
-            />
-          ) : (
-            <InventoryEmptyState
-              illustration={
-                hasFilters ? <EmptySearchIllustration /> : <EmptyOrdersIllustration />
-              }
-              title={hasFilters ? "No orders match your filters" : "No sales orders yet"}
-              description={
-                hasFilters
-                  ? "Try adjusting the status or date range."
-                  : "Create a sales order to start fulfilling customer requests."
-              }
-              action={
-                hasFilters
-                  ? {
-                      label: "Clear filters",
-                      onClick: handleClearFilters,
-                    }
-                  : { label: "New SO", href: "/inventory/sales-orders/new" }
-              }
-              className={CONTENT_FILL_PANEL}
-            />
-          )
+          <InventoryEmptyState
+            illustration={
+              hasFilters ? <EmptySearchIllustration /> : <EmptyOrdersIllustration />
+            }
+            title={hasFilters ? "No orders match your filters" : "No sales orders yet"}
+            description={
+              hasFilters
+                ? "Try adjusting the status or date range."
+                : "Create a sales order to start fulfilling customer requests."
+            }
+            action={
+              hasFilters
+                ? {
+                    label: "Clear filters",
+                    onClick: handleClearFilters,
+                  }
+                : { label: "New SO", href: "/inventory/sales-orders/new" }
+            }
+            className={CONTENT_FILL_PANEL}
+          />
         }
         pagination={
           totalPages > 1

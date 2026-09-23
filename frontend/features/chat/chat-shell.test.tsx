@@ -55,8 +55,8 @@ function isVisibleAt(className: string, width: number): boolean {
 const WIDTHS = [320, 360, 375, 414, 480, 600, 639, 640, 700, 767, 768, 1024, 1280];
 
 describe("getChatSidebarClassName", () => {
-  it("hides desktop chat chrome below the md breakpoint", () => {
-    expect(getChatSidebarClassName(false)).toContain("hidden md:flex");
+  it("hides desktop chat chrome below the lg breakpoint", () => {
+    expect(getChatSidebarClassName(false)).toContain("hidden lg:flex");
   });
 
   it("keeps the collapsed rail desktop-only", () => {
@@ -73,9 +73,9 @@ describe("getChatConversationListPaneClassName", () => {
     expect(isVisibleAt(className, 360)).toBe(true);
   });
 
-  it("hides below md when a conversation is open, keeping the desktop widths", () => {
+  it("hides below lg when a conversation is open, keeping the desktop widths", () => {
     const className = getChatConversationListPaneClassName(false, false);
-    expect(className).toContain("hidden md:flex");
+    expect(className).toContain("hidden lg:flex");
     expect(className).toContain("md:w-[300px]");
     expect(className).toContain("lg:w-[340px]");
   });
@@ -89,8 +89,8 @@ describe("getChatConversationListPaneClassName", () => {
 
 describe("the display evaluator behind the reachability invariant", () => {
   it("reads a base utility overridden at a breakpoint", () => {
-    expect(isVisibleAt("hidden md:flex", 767)).toBe(false);
-    expect(isVisibleAt("hidden md:flex", 768)).toBe(true);
+    expect(isVisibleAt("hidden lg:flex", 1023)).toBe(false);
+    expect(isVisibleAt("hidden lg:flex", 1024)).toBe(true);
   });
 
   it("reads a breakpoint-only hide", () => {
@@ -103,7 +103,7 @@ describe("the display evaluator behind the reachability invariant", () => {
     expect(band.length).toBeGreaterThan(0);
     for (const width of band) {
       expect(isVisibleAt("sm:hidden fixed inset-x-0 bottom-0", width)).toBe(false);
-      expect(isVisibleAt("hidden md:flex", width)).toBe(false);
+      expect(isVisibleAt("hidden lg:flex", width)).toBe(false);
     }
   });
 });

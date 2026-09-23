@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -10,7 +10,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { SearchInput } from "@/components/ui/search-input";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import {
   Select,
   SelectContent,
@@ -18,27 +18,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import {
+  FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   RECEIVABLES_MANAGE,
   RECEIVABLES_READ,
   useArAging,
   useArInvoices,
 } from "@/hooks/api/accounting/ar";
-import type { ArDocumentSummary } from "@/types/accounting-ar";
+import type { ArDocumentSummary } from "@/types/accounting/accounting-ar";
 import { usePartyNames } from "../parties/use-party-names";
-import { ArStatusBadge, DOCUMENT_STATUS_OPTIONS, isDocumentStatus } from "./ar-labels";
+import {
+  ArStatusBadge,
+  DOCUMENT_STATUS_OPTIONS,
+  isDocumentStatus,
+} from "./ar-labels";
 import { useListUrlState } from "./use-list-url-state";
 
 export function InvoicesPageClient() {
-  const canRead = useCan(RECEIVABLES_READ);
   const canManage = useCan(RECEIVABLES_MANAGE);
   const router = useRouter();
   const url = useListUrlState();
@@ -57,6 +63,16 @@ export function InvoicesPageClient() {
     pageSize: url.pageSize,
   });
   const agingQuery = useArAging({});
+
+  const pageState = usePageState({
+    permission: RECEIVABLES_READ,
+    isLoading: invoicesQuery.isLoading,
+    isError: invoicesQuery.isError,
+    error: invoicesQuery.error,
+  });
+  const handleRetry = useCallback(() => {
+    void invoicesQuery.refetch();
+  }, [invoicesQuery]);
 
   const rows = invoicesQuery.data?.items ?? [];
   const partyNames = usePartyNames(rows.map((row) => row.partyId));
@@ -90,7 +106,9 @@ export function InvoicesPageClient() {
       key: "issueDate",
       header: "Issued",
       cell: (row) => (
-        <span className="font-mono text-dense tabular-nums">{formatShortDate(row.issueDate)}</span>
+        <span className="font-mono text-dense tabular-nums">
+          {formatShortDate(row.issueDate)}
+        </span>
       ),
     },
     {
@@ -134,7 +152,8 @@ export function InvoicesPageClient() {
     url.setParams({ search: value || undefined });
   }
 
-  const hasFilters = debouncedSearch.length > 0 || statusParam.length > 0 || openOnly;
+  const hasFilters =
+    debouncedSearch.length > 0 || statusParam.length > 0 || openOnly;
   const aging = agingQuery.data;
 
   const filters = (
@@ -147,7 +166,9 @@ export function InvoicesPageClient() {
       />
       <Select
         value={statusParam || "all"}
-        onValueChange={(value) => url.setParams({ status: value === "all" ? undefined : value })}
+        onValueChange={(value) =>
+          url.setParams({ status: value === "all" ? undefined : value })
+        }
       >
         <SelectTrigger className={FILTER_SELECT_TRIGGER} aria-label="Status">
           <SelectValue />
@@ -163,7 +184,9 @@ export function InvoicesPageClient() {
       </Select>
       <Select
         value={openOnly ? "true" : "any"}
-        onValueChange={(value) => url.setParams({ open: value === "any" ? undefined : value })}
+        onValueChange={(value) =>
+          url.setParams({ open: value === "any" ? undefined : value })
+        }
       >
         <SelectTrigger className={FILTER_SELECT_TRIGGER} aria-label="Balance">
           <SelectValue />
@@ -176,13 +199,23 @@ export function InvoicesPageClient() {
     </div>
   );
 
-  if (!canRead) {
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
     return (
       <PageWrapper title="Invoices">
-        <NoPermissionState permission={RECEIVABLES_READ} />
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
-  }
 
   return (
     <PageWrapper
@@ -209,14 +242,25 @@ export function InvoicesPageClient() {
       <StatCardGrid cols={3} className="shrink-0 mb-2">
         <StatCard
           label="Customers owe us"
-          value={aging ? formatMinorMoney(aging.totals.functionalTotalMinor, aging.baseCurrency) : "—"}
+          value={
+            aging
+              ? formatMinorMoney(
+                  aging.totals.functionalTotalMinor,
+                  aging.baseCurrency,
+                )
+              : "—"
+          }
           tone="amber"
           isLoading={agingQuery.isLoading}
           href="/accounting/aged-receivables"
         />
         <StatCard
           label="Overdue 91+ days"
-          value={aging ? formatMinorMoney(aging.totals.days91Plus, aging.baseCurrency) : "—"}
+          value={
+            aging
+              ? formatMinorMoney(aging.totals.days91Plus, aging.baseCurrency)
+              : "—"
+          }
           tone="red"
           isLoading={agingQuery.isLoading}
         />
@@ -228,55 +272,44 @@ export function InvoicesPageClient() {
         />
       </StatCardGrid>
 
-      {invoicesQuery.isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load your invoices"
-          description={getErrorMessage(invoicesQuery.error)}
-          onRetry={() => void invoicesQuery.refetch()}
-        />
-      ) : (
-        <DataTable
-          data={rows}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          isLoading={invoicesQuery.isLoading}
-          minWidth="1000px"
-          className="flex-1 min-h-0"
-          emptyState={
-            <EmptyState
-              className="border-0 bg-transparent min-h-[40vh]"
-              illustrationPreset="documents"
-              title={hasFilters ? "No invoices match your filters" : "No invoices yet"}
-              description={
-                hasFilters
-                  ? "Try a different search, or switch the status filter back to all invoices."
-                  : "Bill your first customer and it will show up here."
-              }
-              action={
-                hasFilters
-                  ? {
-                      label: "Clear filters",
-                      onClick: () =>
-                        url.setParams({ search: undefined, status: undefined, open: undefined }),
-                    }
-                  : canManage
-                    ? { label: "New invoice", href: "/accounting/invoices/new" }
-                    : undefined
-              }
-            />
-          }
-          pagination={{
-            mode: "server",
-            page: url.page,
-            pageSize: url.pageSize,
-            total: invoicesQuery.data?.total ?? 0,
-            onPageChange: url.setPage,
-            onPageSizeChange: url.setPageSize,
-            pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
-          }}
-        />
-      )}
+      <DataTable
+        data={rows}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        isLoading={invoicesQuery.isLoading}
+        minWidth="1000px"
+        className="flex-1 min-h-0"
+        emptyState={
+          <EmptyState
+            className="border-0 bg-transparent min-h-[40vh]"
+            illustrationPreset="documents"
+            title="No invoices yet"
+            description="Bill your first customer and it will show up here."
+            action={
+              canManage
+                ? { label: "New invoice", href: "/accounting/invoices/new" }
+                : undefined
+            }
+            filtersActive={hasFilters}
+            onClearFilters={() =>
+              url.setParams({
+                search: undefined,
+                status: undefined,
+                open: undefined,
+              })
+            }
+          />
+        }
+        pagination={{
+          mode: "server",
+          page: url.page,
+          pageSize: url.pageSize,
+          total: invoicesQuery.data?.total ?? 0,
+          onPageChange: url.setPage,
+          onPageSizeChange: url.setPageSize,
+          pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+        }}
+      />
     </PageWrapper>
   );
 }

@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function HrSimulatorLoading() {
   return (
     <PageWrapper
-      title="HR Simulator"
+      title="Policy simulator"
       subtitle="Model scenarios without affecting production records"
     >
       <div className="flex flex-col flex-1 min-h-0 gap-4">

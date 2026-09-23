@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+const crmAccountTierSchema = z.enum(["free", "pro", "enterprise"] as const);
+
 const crmOrgSchema = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -10,6 +12,7 @@ const crmOrgSchema = z.object({
   website: z.string().nullable(),
   linkedinUrl: z.string().nullable(),
   description: z.string().nullable(),
+  tier: crmAccountTierSchema.nullable(),
   healthScore: z.number().nullable(),
   parentId: z.number().int().nullable(),
   notes: z.string().nullable(),
@@ -18,9 +21,29 @@ const crmOrgSchema = z.object({
   updatedAt: z.string().nullable(),
 });
 
-const crmOrgWithOpenRequestsSchema = crmOrgSchema.extend({
+/**
+ * The list projection, field for field (FE-28).
+ *
+ * `/crm/organizations` selects `COMPANY_COLUMNS` off the party — it does not
+ * carry `orgId`, `healthScore`, `parentId`, `notes`, `mergedIntoId` or
+ * `updatedAt`, which only the detail read derives. Requiring them here made
+ * every page of companies fail the contract rather than render.
+ */
+const crmOrgListRowSchema = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  domain: z.string().nullable(),
+  industry: z.string().nullable(),
+  size: z.enum(["1-10", "11-50", "51-200", "201-1000", "1000+"] as const).nullable(),
+  website: z.string().nullable(),
+  linkedinUrl: z.string().nullable(),
+  description: z.string().nullable(),
+  tier: crmAccountTierSchema.nullable(),
+  createdAt: z.string().nullable(),
   openRequestCount: z.number().int(),
 });
+
+const crmOrgWithOpenRequestsSchema = crmOrgListRowSchema;
 
 export const crmOrgsListContract = z.object({
   organizations: z.array(crmOrgWithOpenRequestsSchema),

@@ -13,7 +13,11 @@ function isFeedbackType(s: unknown): s is FeedbackType {
 }
 import { DragManager } from "./ui-drag";
 import { buildLauncher } from "./ui-launcher-builder";
-import { buildFeedbackPanel } from "./ui-panel-builder";
+import {
+  ALLOWED_UPLOAD_MIMES,
+  MAX_UPLOAD_BYTES,
+  buildFeedbackPanel,
+} from "./ui-panel-builder";
 
 export class FeedbucketWidget {
   private readonly hostEl: HTMLElement;
@@ -47,6 +51,10 @@ export class FeedbucketWidget {
   private readonly emailInput: HTMLInputElement;
   private readonly captureBtn: HTMLButtonElement;
   private readonly captureBtnLabel: HTMLSpanElement;
+  private readonly uploadBtn: HTMLButtonElement;
+  private readonly fileInput: HTMLInputElement;
+  private readonly uploadError: HTMLParagraphElement;
+  private readonly mediaActions: HTMLDivElement;
   private readonly previewWrap: HTMLDivElement;
   private readonly previewImg: HTMLImageElement;
   private readonly recordingBadge: HTMLDivElement;
@@ -56,6 +64,9 @@ export class FeedbucketWidget {
   private readonly typeButtons: HTMLButtonElement[] = [];
 
   private readonly drag: DragManager;
+  private readonly backdrop: HTMLDivElement;
+  private focusTrapHandler: ((e: KeyboardEvent) => void) | null = null;
+  private previouslyFocused: Element | null = null;
 
   private readonly handleScreenshotLauncher = (): void => {
     void this.runScreenshotFlow();
@@ -133,6 +144,35 @@ export class FeedbucketWidget {
     this.captureBtnLabel.textContent = "Capture screenshot";
     if (blob) this.setScreenshot(blob);
   };
+  private readonly handleUploadClick = (): void => {
+    this.setUploadError(null);
+    this.fileInput.click();
+  };
+
+  private readonly handleFileSelected = (event: Event): void => {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file) return;
+
+    if (!ALLOWED_UPLOAD_MIMES.includes(file.type)) {
+      this.setUploadError("Choose a JPEG, PNG, GIF or WebP image.");
+      return;
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      this.setUploadError("That image is over 5MB. Choose a smaller one.");
+      return;
+    }
+
+    this.setUploadError(null);
+    this.setScreenshot(file);
+  };
+
+  private setUploadError(message: string | null): void {
+    this.uploadError.textContent = message ?? "";
+    this.uploadError.hidden = message === null;
+  }
+
   private readonly handleRemoveScreenshot = (): void => {
     if (this.screenshotUrl) {
       URL.revokeObjectURL(this.screenshotUrl);
@@ -141,7 +181,8 @@ export class FeedbucketWidget {
     this.screenshot = null;
     this.previewImg.src = "";
     this.previewWrap.hidden = true;
-    this.captureBtn.style.display = "";
+    this.setUploadError(null);
+    this.mediaActions.style.display = "";
   };
   private readonly handleSubmitClick = async (): Promise<void> => {
     const titleVal = this.titleInput.value.trim();
@@ -220,6 +261,15 @@ export class FeedbucketWidget {
     this.container.className = "widget";
     shadow.appendChild(this.container);
 
+    this.backdrop = document.createElement("div");
+    this.backdrop.className = "backdrop";
+    this.backdrop.setAttribute("aria-hidden", "true");
+    this.backdrop.addEventListener("click", () => {
+      this.isOpen = false;
+      this.syncPanel();
+    });
+    shadow.appendChild(this.backdrop);
+
     const { launcher, logo } = buildLauncher({
       onScreenshot: this.handleScreenshotLauncher,
       onRecord: this.handleRecordLauncher,
@@ -239,6 +289,8 @@ export class FeedbucketWidget {
       onClose: this.handleCloseClick,
       onTypeSelect: this.handleTypeSelect,
       onCaptureClick: this.handleCaptureClick,
+      onUploadClick: this.handleUploadClick,
+      onFileSelected: this.handleFileSelected,
       onRemoveScreenshot: this.handleRemoveScreenshot,
       onRemoveRecording: this.handleRemoveRecording,
       onSubmitClick: this.handleSubmitClick,
@@ -254,6 +306,10 @@ export class FeedbucketWidget {
     this.emailInput = panelRefs.formRefs.emailInput;
     this.captureBtn = panelRefs.formRefs.captureBtn;
     this.captureBtnLabel = panelRefs.formRefs.captureBtnLabel;
+    this.uploadBtn = panelRefs.formRefs.uploadBtn;
+    this.fileInput = panelRefs.formRefs.fileInput;
+    this.uploadError = panelRefs.formRefs.uploadError;
+    this.mediaActions = panelRefs.formRefs.mediaActions;
     this.previewWrap = panelRefs.formRefs.previewWrap;
     this.previewImg = panelRefs.formRefs.previewImg;
     this.recordingBadge = panelRefs.formRefs.recordingBadge;
@@ -413,7 +469,7 @@ export class FeedbucketWidget {
     this.screenshotUrl = URL.createObjectURL(blob);
     this.previewImg.src = this.screenshotUrl;
     this.previewWrap.hidden = false;
-    this.captureBtn.style.display = "none";
+    this.mediaActions.style.display = "none";
   }
 
   private openPanel(type: FeedbackType): void {
@@ -427,13 +483,74 @@ export class FeedbucketWidget {
     this.syncPanel();
   }
 
+  private getFocusableInPanel(): HTMLElement[] {
+    return Array.from(
+      this.panel.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([type="hidden"]):not([disabled]), textarea:not([disabled])',
+      ),
+    ).filter((el) => {
+      if (el.hidden) return false;
+      let node: Element | null = el.parentElement;
+      while (node !== null && node !== this.panel) {
+        if ((node as HTMLElement).hidden) return false;
+        node = node.parentElement;
+      }
+      return true;
+    });
+  }
+
+  private activateFocusTrap(): void {
+    this.previouslyFocused = this.shadowRoot.activeElement ?? document.activeElement;
+    const focusable = this.getFocusableInPanel();
+    if (focusable.length > 0) {
+      focusable[0].focus();
+    } else {
+      this.panel.setAttribute("tabindex", "-1");
+      this.panel.focus();
+    }
+    this.focusTrapHandler = (e: KeyboardEvent): void => {
+      if (e.key !== "Tab") return;
+      const els = this.getFocusableInPanel();
+      if (els.length === 0) return;
+      const active = this.shadowRoot.activeElement;
+      if (e.shiftKey) {
+        if (active === els[0]) {
+          e.preventDefault();
+          els[els.length - 1].focus();
+        }
+      } else {
+        if (active === els[els.length - 1]) {
+          e.preventDefault();
+          els[0].focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", this.focusTrapHandler);
+  }
+
+  private deactivateFocusTrap(): void {
+    if (this.focusTrapHandler !== null) {
+      document.removeEventListener("keydown", this.focusTrapHandler);
+      this.focusTrapHandler = null;
+    }
+    if (this.previouslyFocused instanceof HTMLElement) {
+      this.previouslyFocused.focus();
+    }
+    this.previouslyFocused = null;
+  }
+
   private syncPanel(): void {
     this.panel.setAttribute("aria-hidden", this.isOpen ? "false" : "true");
     if (this.isOpen) {
       this.positionPanel();
+      if (this.focusTrapHandler === null) {
+        this.activateFocusTrap();
+      }
     } else {
+      this.deactivateFocusTrap();
       this.container.classList.remove("panel-open");
       this.panel.classList.remove("is-sheet");
+      this.backdrop.classList.remove("visible");
       if (this.panel.parentElement !== this.container) {
         this.container.appendChild(this.panel);
       }
@@ -454,6 +571,7 @@ export class FeedbucketWidget {
       this.panel.style.top = "";
       this.panel.style.bottom = "";
       this.container.classList.add("panel-open");
+      this.backdrop.classList.add("visible");
       return;
     }
 
@@ -462,6 +580,7 @@ export class FeedbucketWidget {
     }
     this.panel.classList.remove("is-sheet");
     this.container.classList.remove("panel-open");
+    this.backdrop.classList.remove("visible");
     const rect = this.container.getBoundingClientRect();
     this.panel.classList.toggle("flip-left", rect.left < window.innerWidth / 2);
     const isBottom = rect.top > window.innerHeight / 2;

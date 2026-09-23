@@ -16,7 +16,6 @@ export interface DashboardAccess {
   projectsEnabled: boolean;
   payrollEnabled: boolean;
   signEnabled: boolean;
-  accountingEnabled: boolean;
   canViewEmployees: boolean;
   canCreateEmployees: boolean;
   canViewAttendance: boolean;
@@ -28,10 +27,6 @@ export interface DashboardAccess {
   canViewCrmReports: boolean;
   canViewTickets: boolean;
   canViewPayrollSelf: boolean;
-  canViewOnboardingDocsSummary: boolean;
-  canViewExpenses: boolean;
-  canCreateExpenses: boolean;
-  canApproveExpenses: boolean;
   canViewSignEnvelopes: boolean;
 }
 
@@ -40,15 +35,15 @@ export function useDashboardAccess(): DashboardAccess {
   const enabledModules = useEnabledModules();
 
   return useMemo(() => {
-    const moduleOn = (name: string) =>
-      matchesOrgModule(enabledModules, name);
+    const moduleOn = (name: string) => matchesOrgModule(enabledModules, name);
     const owner = data?.isOrgOwner ?? false;
     const scopes = data?.scopes ?? {};
     const can = (key: PermissionKey) => owner || key in scopes;
     const canUseBuild =
       owner ||
       Object.keys(scopes).some(
-        (key) => key.startsWith("build:") || key.startsWith("integrations:git:"),
+        (key) =>
+          key.startsWith("build:") || key.startsWith("integrations:git:"),
       );
     const canSection = (id: string) => {
       const key = homeSectionPermission(id);
@@ -64,7 +59,6 @@ export function useDashboardAccess(): DashboardAccess {
       projectsEnabled: moduleOn("PROJECTS") && canUseBuild,
       payrollEnabled: moduleOn("PAYROLL"),
       signEnabled: moduleOn("SIGN"),
-      accountingEnabled: moduleOn("accounting"),
       canViewEmployees: can("hr:employees:view"),
       canCreateEmployees: can("hr:employees:create"),
       canViewAttendance: canSection("team-attendance"),
@@ -76,10 +70,6 @@ export function useDashboardAccess(): DashboardAccess {
       canViewCrmReports: can("crm:reports:view"),
       canViewTickets: canSection("recent-activity"),
       canViewPayrollSelf: can("self:payroll"),
-      canViewOnboardingDocsSummary: can("hr:onboarding:manage"),
-      canViewExpenses: can("hr:expenses:view"),
-      canCreateExpenses: can("hr:expenses:create"),
-      canApproveExpenses: can("hr:expenses:approve"),
       canViewSignEnvelopes: can("sign:envelope:view"),
     };
   }, [data, isLoading, refetch, enabledModules]);

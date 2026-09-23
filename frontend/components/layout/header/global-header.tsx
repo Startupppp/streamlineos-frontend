@@ -6,16 +6,12 @@ import type { ShellVariant } from "@/lib/shell-variant";
 import type { LucideIcon } from "lucide-react";
 import { Search, CalendarDays, MessageSquare } from "lucide-react";
 import {
-  Tooltip,
-  TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { HeaderBrand } from "./header-brand";
 import { ProductSwitcherMenu } from "./product-switcher-menu";
 import { WorkspaceSwitcher } from "./org-switcher";
-import { PmWorkspaceContextChip } from "./pm-workspace-context-chip";
 import { QuickCreateButton } from "./quick-create-button";
 import { UserAvatarMenu } from "./user-avatar-menu";
 import { SidebarCollapseToggle } from "./sidebar-collapse-toggle";
@@ -60,20 +56,14 @@ function HeaderIconLink({
   children: React.ReactNode;
 }) {
   return (
-    <Tooltip delayDuration={0}>
-      <TooltipTrigger asChild>
-        <Link
-          href={href}
-          className="size-8 rounded-lg flex items-center justify-center text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
-          aria-label={label}
-        >
-          {children}
-        </Link>
-      </TooltipTrigger>
-      <TooltipContent side="bottom" className="text-xs">
-        {label}
-      </TooltipContent>
-    </Tooltip>
+    <Link
+      href={href}
+      className="size-8 rounded-lg flex items-center justify-center text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+      aria-label={label}
+      title={label}
+    >
+      {children}
+    </Link>
   );
 }
 
@@ -123,7 +113,6 @@ function DesktopHeader({
             )}
             <div className="w-px h-4 bg-sidebar-border" />
             <WorkspaceSwitcher variant="header" />
-            <PmWorkspaceContextChip />
           </>
         )}
         {hideAdminChrome && showSidebarToggle && onToggleSidebar && (

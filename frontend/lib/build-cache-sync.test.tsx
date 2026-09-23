@@ -110,7 +110,7 @@ it("marks inactive Build and report caches stale without touching another tenant
   const otherOrg = connect(authenticatedScope("org-b", "member-a"));
   const otherUser = connect(authenticatedScope("org-a", "member-b"));
   const ticketKey = buildWorkQueryKeys.projects.ticket(42);
-  const reportKey = accountingAndSupportQueryKeys.projectReports.velocity(9);
+  const reportKey = buildWorkQueryKeys.projectReports.velocity(9);
   const unrelatedKey = accountingAndSupportQueryKeys.accounting.all;
   for (const { client } of [tabB, otherOrg, otherUser]) {
     client.setQueryData(ticketKey, "Before");

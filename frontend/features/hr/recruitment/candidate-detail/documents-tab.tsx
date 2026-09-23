@@ -19,6 +19,7 @@ import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recr
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 
 import { useRolloutDocuments, type RolloutDocumentRecord } from "@/hooks/api/hr/recruitment";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { RolloutDocumentsDialog } from "@/components/hr/recruitment/rollout-documents-dialog";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -140,7 +141,7 @@ export function DocumentsTab({
   jobTitle,
   candidateStatus,
 }: DocumentsTabProps) {
-  const { data: docs, isLoading, refetch } = useRolloutDocuments(candidateId);
+  const { data: docs, isLoading, isError, error, refetch } = useRolloutDocuments(candidateId);
   const [rolloutOpen, setRolloutOpen] = useState(false);
 
   const isSelected =
@@ -165,6 +166,22 @@ export function DocumentsTab({
     );
   }
 
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-status-danger-rule bg-status-danger-surface px-6 py-8 text-center">
+        <div className="text-sm font-medium text-status-danger-ink">
+          Failed to load documents
+        </div>
+        <p className="text-xs text-status-danger-ink">
+          {getErrorMessage(error)}
+        </p>
+        <Button variant="outline" size="sm" onClick={() => void refetch()}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
   const list = docs ?? [];
 
   return (

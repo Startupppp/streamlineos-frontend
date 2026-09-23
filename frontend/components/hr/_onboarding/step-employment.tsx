@@ -17,52 +17,33 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DepartmentCombobox } from "@/components/hr/department-combobox";
-import Link from "next/link";
+import { UserCombobox } from "@/components/ui/user-combobox";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useCan } from "@/hooks/api/access";
-import { useOrgJobRoles } from "@/hooks/api/hr/hr-org";
-import { useSeedDefaultRoles } from "@/hooks/api/roles";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { USER_INVITE_ROLES } from "@/lib/constants/user-invite-roles";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
-const JOB_ROLE_LIST_ID = "hr-onboarding-job-roles";
-
-interface Role { slug: string; name: string }
-
 interface StepEmploymentProps {
   form: UseFormReturn<FormValues>;
-  assignableRoles: Role[];
   departments: Array<{ id: string; name: string }>;
 }
 
-export function StepEmployment({
-  form,
-  assignableRoles,
-  departments,
-}: StepEmploymentProps) {
+export function StepEmployment({ form, departments }: StepEmploymentProps) {
   const canCreateDept = useCan("hr:employees:manage");
-  const canManageRbac = useCan("settings:rbac:manage");
-  const { data: jobRoles } = useOrgJobRoles();
-  const definedRoles = (jobRoles ?? []).filter((role) => role.isActive);
-  const hasJobArchitecture = definedRoles.length > 0;
-  const seedRoles = useSeedDefaultRoles();
-  const onlyAdminAvailable =
-    assignableRoles.length > 0 &&
-    assignableRoles.every((r) => r.slug === "ADMINISTRATOR" || r.slug === "ADMIN");
+  const topLevelRole = form.watch("topLevelRole") === true;
 
-  function handleSeedRoles() {
-    seedRoles.mutate(undefined, {
-      onSuccess: (result) => {
-        toast.success(
-          result.created.length > 0
-            ? `Added ${result.created.length} standard roles`
-            : "Standard roles already exist",
-        );
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
+  function handleTopLevelRoleChange(checked: boolean | "indeterminate") {
+    const isTopLevel = checked === true;
+    form.setValue("topLevelRole", isTopLevel, { shouldDirty: true });
+    if (isTopLevel) form.setValue("reportingManagerUserId", undefined, { shouldDirty: true });
+    else form.setValue("topLevelRoleReason", undefined, { shouldDirty: true });
+    void form.trigger(["reportingManagerUserId", "topLevelRole", "topLevelRoleReason"]);
+  }
+
+  function handleReportingManagerChange(userId: string) {
+    form.setValue("reportingManagerUserId", userId || undefined, { shouldDirty: true });
+    void form.trigger("reportingManagerUserId");
   }
 
   return (
@@ -96,91 +77,82 @@ export function StepEmployment({
           <FormItem>
             <FormLabel>Designation <span className="text-destructive">*</span></FormLabel>
             <FormControl>
-              <Input
-                placeholder="e.g., Senior Engineer"
-                list={hasJobArchitecture ? JOB_ROLE_LIST_ID : undefined}
-                {...field}
-              />
+              <Input placeholder="e.g., Senior Engineer" {...field} />
             </FormControl>
-            {hasJobArchitecture ? (
-              <datalist id={JOB_ROLE_LIST_ID}>
-                {definedRoles.map((role) => (
-                  <option key={role.id} value={role.name} />
-                ))}
-              </datalist>
-            ) : null}
-            <FormDescription>
-              {hasJobArchitecture ? (
-                <>Matching a job role from your architecture keeps reporting consistent.</>
-              ) : (
-                <>
-                  No job roles are defined yet, so this is recorded as a
-                  provisional title on the employment record only.{" "}
-                  <Link
-                    href="/hr/org"
-                    className="text-primary underline underline-offset-2"
-                  >
-                    Set up job architecture
-                  </Link>{" "}
-                  to make designations selectable.
-                </>
-              )}
-            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
       />
       <FormField
         control={form.control}
+        name="reportingManagerUserId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Reports to {!topLevelRole && <span className="text-destructive">*</span>}</FormLabel>
+            <FormControl>
+              <UserCombobox
+                value={field.value ?? ""}
+                onChange={handleReportingManagerChange}
+                placeholder="Select reporting manager"
+                disabled={topLevelRole}
+              />
+            </FormControl>
+            <FormDescription className="text-xs">
+              Approves this employee&apos;s leave, time and expenses unless a policy overrides it.
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <div className="flex flex-col gap-3">
+        <FormField
+          control={form.control}
+          name="topLevelRole"
+          render={({ field }) => (
+            <FormItem className="flex items-center gap-2 space-y-0 pt-7">
+              <FormControl>
+                <Checkbox checked={field.value === true} onCheckedChange={handleTopLevelRoleChange} />
+              </FormControl>
+              <FormLabel className="text-sm font-normal cursor-pointer">Top-level role — no reporting manager</FormLabel>
+            </FormItem>
+          )}
+        />
+        {topLevelRole && (
+          <FormField
+            control={form.control}
+            name="topLevelRoleReason"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Reason <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. Founder and chief executive" {...field} value={field.value ?? ""} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+      </div>
+      <FormField
+        control={form.control}
         name="role"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>System Role <span className="text-destructive">*</span></FormLabel>
+            <FormLabel>Organization Role <span className="text-destructive">*</span></FormLabel>
             <Select value={field.value} onValueChange={field.onChange}>
               <FormControl>
                 <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
               </FormControl>
               <SelectContent>
-                {assignableRoles.length > 0 ? (
-                  assignableRoles.map((role) => (
-                    <SelectItem key={role.slug} value={role.slug}>{role.name}</SelectItem>
-                  ))
-                ) : (
-                  <>
-                    <SelectItem value="ENGINEERING">Engineering</SelectItem>
-                    <SelectItem value="HR">HR</SelectItem>
-                    <SelectItem value="SALES">Sales</SelectItem>
-                    <SelectItem value="CUSTOMER_SUPPORT">Customer Support</SelectItem>
-                    <SelectItem value="DESIGN">Design</SelectItem>
-                    <SelectItem value="VIDEO_EDITOR">Video Editor</SelectItem>
-                    <SelectItem value="DIGITAL_MARKETING">Digital Marketing</SelectItem>
-                  </>
-                )}
+                {USER_INVITE_ROLES.map((role) => (
+                  <SelectItem key={role.value} value={role.value}>{role.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            <FormDescription className="text-xs">Permission level for system access</FormDescription>
-            {onlyAdminAvailable && (
-              <div className="flex flex-col gap-1.5 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2">
-                <p className="text-xs text-status-warning-ink">
-                  Only the Administrator role exists — every hire would get full access.
-                  {canManageRbac
-                    ? " Add the standard department roles first."
-                    : " Ask an admin to add standard roles in Settings → Roles."}
-                </p>
-                {canManageRbac && (
-                  <LoadingButton
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="w-fit"
-                    isPending={seedRoles.isPending}
-                    onClick={handleSeedRoles}
-                  >
-                    Add standard roles
-                  </LoadingButton>
-                )}
-              </div>
-            )}
+            <FormDescription className="text-xs">
+              Member covers everyday access. Org Admin can administer the organization.
+              Module access is granted afterwards in Settings → Roles.
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}

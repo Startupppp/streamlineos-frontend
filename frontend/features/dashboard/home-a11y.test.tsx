@@ -96,6 +96,8 @@ jest.mock("@/hooks/api/dashboard", () => ({
   useBirthdays: () => q.birthdays,
   usePendingApprovals: () => q.pendingApprovals,
   useAnnouncements: () => q.announcements,
+  useTodayActivities: () => q.todayActivities,
+  useCrmPulse: () => q.crmPulse,
   useCreateAnnouncement: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteAnnouncement: () => ({ mutate: jest.fn(), isPending: false }),
 }));
@@ -118,6 +120,7 @@ jest.mock("@/hooks/api/payroll/command-center", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
+  useCanState: () => "granted",
   useAccess: () => q.access,
   useModuleEnabled: () => true,
 }));
@@ -139,7 +142,6 @@ const dashboardAccess = {
   projectsEnabled: true,
   payrollEnabled: true,
   signEnabled: true,
-  accountingEnabled: true,
   canViewEmployees: true,
   canCreateEmployees: true,
   canViewAttendance: true,
@@ -151,10 +153,6 @@ const dashboardAccess = {
   canViewCrmReports: true,
   canViewTickets: true,
   canViewPayrollSelf: true,
-  canViewOnboardingDocsSummary: true,
-  canViewExpenses: true,
-  canCreateExpenses: true,
-  canApproveExpenses: false,
   canViewSignEnvelopes: true,
 };
 
@@ -178,7 +176,8 @@ const LOADED = {
     upcomingEvents: [],
     degraded: [],
   }),
-  executive: answered({ conversionRate: 22, mrr: 1200, pipelineValue: 4500, activeDeals: 3 }),
+  executive: answered({ headcount: 42, openRoles: 3, activeProjects: 7 }),
+  crmPulse: answered({ conversionRate: 22, mrr: 1200, pipelineValue: 4500, newLeadsThisWeek: 5 }),
   leavesToday: answered([]),
   holidays: answered([]),
   leaveBalance: answered([
@@ -189,6 +188,7 @@ const LOADED = {
   announcements: answered([
     { id: 1, title: "All-hands Friday", content: "Come along.", isPinned: false, createdAt: "2026-09-01T00:00:00.000Z" },
   ]),
+  todayActivities: answered([{ type: "Call", subject: "Follow up with Acme" }]),
   myLeaveRequests: answered({ requests: [] }),
   attendanceStatus: answered({
     status: "CHECKED_IN",
@@ -203,13 +203,15 @@ const LOADED = {
 
 const EMPTY = {
   personal: answered({ myTasks: [], timesheetStatus: null, upcomingEvents: [], degraded: [] }),
-  executive: answered({ conversionRate: 0 }),
+  executive: answered({ headcount: 0, openRoles: 0, activeProjects: 0 }),
+  crmPulse: answered({ conversionRate: 0, mrr: 0, pipelineValue: 0, newLeadsThisWeek: 0 }),
   leavesToday: answered([]),
   holidays: answered([]),
   leaveBalance: answered([]),
   birthdays: answered([]),
   pendingApprovals: answered([]),
   announcements: answered([]),
+  todayActivities: answered([]),
   myLeaveRequests: answered({ requests: [] }),
   attendanceStatus: answered(null),
   expenses: answered({ expenses: [], stats: null, total: 0, isAdmin: false }),
@@ -221,7 +223,7 @@ const EMPTY = {
 const HOOK_NAMES = Object.keys(LOADED);
 
 /**
- * The ten headings Home mounts — nine from `home-widget-grid.tsx` plus the
+ * The eleven headings Home mounts — ten from `home-widget-grid.tsx` plus the
  * expenses slot the route fills. Asserted so a future regression that turns a
  * widget back into a placeholder — or drops one from the grid — shrinks the
  * corpus loudly instead of silently. Recruitment is deliberately absent: root
@@ -236,6 +238,7 @@ const HOME_WIDGET_TITLES = [
   "Announcements",
   "Upcoming Events",
   "Business Pulse",
+  "Today's Activities",
   "My Attendance",
   "My Payroll",
   "My Expenses",
@@ -247,13 +250,14 @@ const HOME_WIDGET_TITLES = [
  */
 const FAILURE_MESSAGES: Record<string, string> = {
   personal: "personal section is down",
-  executive: "executive section is down",
+  crmPulse: "business pulse section is down",
   leaveBalance: "leave balance section is down",
   announcements: "announcements section is down",
   attendanceStatus: "attendance section is down",
   expenses: "expenses section is down",
   notifications: "alerts section is down",
   ess: "payroll section is down",
+  todayActivities: "activities section is down",
 };
 
 function useState(state: "loading" | "loaded" | "empty" | "error"): void {
@@ -277,6 +281,8 @@ async function renderGrid() {
         hrEnabled
         canViewExecutive
         canSelfAttendance
+        crmEnabled
+        canViewCrmLeads
         expensesSlot={<ExpensesWidget />}
       />
     </TooltipProvider>,
@@ -307,7 +313,7 @@ describe("PRD-C115 — the Home widget grid is accessible in every state, at eve
     }
   }
 
-  it("MEASURED: the grid really mounts the ten Home widgets — this corpus is not a stub", async () => {
+  it("MEASURED: the grid really mounts the eleven Home widgets — this corpus is not a stub", async () => {
     useState("loaded");
     await renderGrid();
 

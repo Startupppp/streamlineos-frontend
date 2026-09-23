@@ -14,14 +14,15 @@ import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPersonIllustration } from "@/components/illustrations";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { RecordList, asRecordValues, type RecordValue } from "@/components/renderer";
 import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
 import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { CONTACT_LAYOUT } from "@/lib/renderer/crm/contact-layout";
 import { useContacts, useDeleteContact, useExportContacts } from "@/hooks/api/crm";
-import { useCan, useCanState } from "@/hooks/api/access";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { downloadBlob } from "@/lib/download-blob";
@@ -212,18 +213,16 @@ export function ContactListPage() {
     [contactsById, canMergeContacts, merge, enrichContact.isPending, handleEnrich],
   );
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
-  if (useCanState("crm:contacts:view") === "denied")
-    return <NoPermissionState permission="crm:contacts:view" />;
+  const pageState = usePageState({ permission: "crm:contacts:view", isLoading, isError, error });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper title="Contacts" subtitle="The people you deal with at each company">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper
@@ -271,13 +270,6 @@ export function ContactListPage() {
 
         {isLoading ? (
           <DataTableSkeleton rows={12} columns={layout.list.columns.length} className="flex-1" />
-        ) : isError ? (
-          <ErrorState
-            title="Couldn't load contacts"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          />
         ) : contacts.length === 0 ? (
           <EmptyState
             illustration={<EmptyPersonIllustration />}
@@ -305,7 +297,7 @@ export function ContactListPage() {
             className={CONTENT_FILL_PANEL}
           />
         )}
-        {!isLoading && !isError && (cursorHistory.length > 1 || data?.hasMore) ? (
+        {!isLoading && (cursorHistory.length > 1 || data?.hasMore) ? (
           <CursorPageControls
             page={cursorHistory.length}
             hasNext={data?.hasMore ?? false}

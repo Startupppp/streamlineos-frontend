@@ -21,7 +21,10 @@ export const platformCoreQueryKeys = {
         ? ([...base, "notifications", "list"] as const)
         : ([...base, "notifications", "list", params] as const),
     unreadList: () => [...base, "notifications", "list", "unread"] as const,
-    unreadCount: () => [...base, "notifications", "unreadCount"] as const,
+    unreadCount: (sourceModule?: string) =>
+      sourceModule === undefined
+        ? ([...base, "notifications", "unreadCount"] as const)
+        : ([...base, "notifications", "unreadCount", sourceModule] as const),
     preferences: () => [...base, "notifications", "preferences"] as const,
     templates: (params?: QueryKeyParams) =>
       params === undefined
@@ -39,6 +42,8 @@ export const platformCoreQueryKeys = {
     events: () => [...base, "notifications", "events"] as const,
     policy: () => [...base, "notifications", "policy"] as const,
     suppressions: () => [...base, "notifications", "suppressions"] as const,
+    preferenceRules: () => [...base, "notifications", "preference-rules"] as const,
+    preferenceEventCatalog: () => [...base, "notifications", "preference-event-catalog"] as const,
   },
 
   invoice: {

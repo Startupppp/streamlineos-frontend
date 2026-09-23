@@ -9,6 +9,10 @@ import { SessionProvider } from "../components/providers/session-provider";
 import { getServerAuth } from "../lib/get-server-auth";
 import { MotionProvider } from "../components/providers/motion-provider";
 import { QueryProvider } from "../components/providers/query-provider";
+import {
+  UNAUTHENTICATED_SCOPE,
+  authenticatedScope,
+} from "../lib/query-scope";
 import { ObservabilityProvider } from "../components/providers/observability-provider";
 import {
   BRAND_NAME,
@@ -124,6 +128,9 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const nonce = (await headers()).get("x-nonce") ?? undefined;
   const session = await getServerAuth();
+  const initialQueryScope = session
+    ? authenticatedScope(session.orgId, session.user?.id)
+    : UNAUTHENTICATED_SCOPE;
 
   return (
     <html
@@ -144,7 +151,7 @@ export default async function RootLayout({
         <GoogleTagManagerNoscript />
         <SessionProvider session={session}>
           <ObservabilityProvider />
-          <QueryProvider>
+          <QueryProvider initialScope={initialQueryScope}>
             <MotionProvider>{children}</MotionProvider>
           </QueryProvider>
         </SessionProvider>

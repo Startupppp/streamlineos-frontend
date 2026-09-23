@@ -4,7 +4,7 @@ import { ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NoPermissionStateProps {
-  permission: string;
+  permission?: string;
   title?: string;
   description?: string;
   className?: string;
@@ -44,9 +44,11 @@ export function NoPermissionState({
       >
         {description ?? "You don’t have the required permission for this section."}
       </p>
-      <p className="text-xs text-foreground/80 font-mono bg-muted px-2 py-1 rounded">
-        {permission}
-      </p>
+      {permission ? (
+        <p className="text-xs text-foreground/80 font-mono bg-muted px-2 py-1 rounded">
+          {permission}
+        </p>
+      ) : null}
       {compact ? null : (
         <p className="text-xs text-muted-foreground mt-3">
           Contact your administrator to request access.

@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import type { ProjectWorkspaceMember } from "@/hooks/api/build/workspace-members";
+import type { BuildMember } from "@/hooks/api/build/build-members";
 import {
   getUserDisplayName,
   getUserInitials,
@@ -19,16 +19,16 @@ import { resolveImageUrl } from "@/lib/utils";
 interface UseMembersColumnsParams {
   displayProps: DisplayProps;
   canManage: boolean;
-  handleRemoveRequest: (member: ProjectWorkspaceMember) => void;
+  handleRemoveRequest: (member: BuildMember) => void;
 }
 
 export function useMembersColumns({
   displayProps,
   canManage,
   handleRemoveRequest,
-}: UseMembersColumnsParams): DataTableColumn<ProjectWorkspaceMember>[] {
-  return useMemo<DataTableColumn<ProjectWorkspaceMember>[]>(() => {
-    const cols: DataTableColumn<ProjectWorkspaceMember>[] = [
+}: UseMembersColumnsParams): DataTableColumn<BuildMember>[] {
+  return useMemo<DataTableColumn<BuildMember>[]>(() => {
+    const cols: DataTableColumn<BuildMember>[] = [
       {
         key: "name",
         header: "Name",
@@ -108,7 +108,8 @@ export function useMembersColumns({
     if (canManage) {
       cols.push({
         key: "actions",
-        header: "",
+        header: "Actions",
+        headerClassName: "sr-only",
         className: "w-10 text-right",
         cell: (member) => (
           <MemberActions member={member} onRemove={handleRemoveRequest} />

@@ -19,7 +19,7 @@ type CardGroup = {
   cards: CardDef[];
 };
 
-const CARD_GROUPS: CardGroup[] = [
+export const CARD_GROUPS: CardGroup[] = [
   {
     group: "Organization",
     cards: [
@@ -50,7 +50,7 @@ const CARD_GROUPS: CardGroup[] = [
       {
         title: "Notification Providers",
         description: "Delivery providers, templates, and events",
-        href: "/notifications/providers",
+        href: "/settings/notifications/providers",
         permission: "notifications:providers:view",
       },
     ],
@@ -231,22 +231,19 @@ export function HubGrid({ isAdvanced, onSwitchToAdvanced }: Props) {
   return (
     <div className="space-y-8 pb-6">
       {!isAdvanced && hiddenCount > 0 && (
-        <div className="flex flex-col gap-2 rounded-xl border border-status-info-rule bg-status-info-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-status-info-ink">
-            Simple view shows the guided essentials. {hiddenCount} advanced tools — workflows,
-            automations, simulator, versioning, and integrations — are hidden.
-          </p>
+        <p className="text-xs text-muted-foreground">
+          {hiddenCount} advanced {hiddenCount === 1 ? "tool is" : "tools are"} hidden in Simple view.
           {onSwitchToAdvanced && (
             <button
               type="button"
               onClick={onSwitchToAdvanced}
-              className="inline-flex w-fit shrink-0 items-center gap-1 text-xs font-semibold text-status-info-ink hover:text-status-info-ink"
+              className="ml-1 inline-flex items-center gap-1 font-medium text-status-info-ink hover:underline"
             >
-              Switch to Advanced
+              Show advanced tools
               <ArrowRight className="h-3 w-3" />
             </button>
           )}
-        </div>
+        </p>
       )}
       {accessibleGroups.map((group) => {
         const visibleCards = group.cards.filter((c) => isAdvanced || !c.advanced);

@@ -144,6 +144,7 @@ export function useAskAI() {
       onToken: (token: string) => void,
       conversationId?: number,
       persona?: string,
+      onData?: (name: string, data: unknown) => void,
     ): Promise<AskAiStreamOutcome> => {
       const outcome = await stream({
         path: "/chat",
@@ -153,6 +154,7 @@ export function useAskAI() {
           ...(persona !== undefined && { persona }),
         },
         onToken,
+        onData,
       });
       if (outcome.status === "completed")
         return { status: "completed", text: outcome.text };

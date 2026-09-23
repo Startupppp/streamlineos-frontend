@@ -4,6 +4,7 @@ import {
   getProductFromPathname,
   isNavRouteActive,
   NAV_GROUPS,
+  resolveProductSidebarChrome,
 } from "./sidebar-nav-items";
 import { MANIFEST } from "@/lib/module-manifest";
 
@@ -247,5 +248,51 @@ describe("module-gate completeness", () => {
         violations.push(`"${group.label}" (product=${group.product}) requires "${permStr}" but has no module property`);
     }
     expect(violations).toEqual([]);
+  });
+});
+
+describe("resolveProductSidebarChrome", () => {
+  it("shows the header collapse toggle on wiki even though the product sidebar is hidden", () => {
+    expect(
+      resolveProductSidebarChrome({
+        sessionReady: true,
+        emptyNav: false,
+        isWikiPath: true,
+        isPortalPath: false,
+      }),
+    ).toEqual({ hideSidebar: true, showSidebarToggle: true });
+  });
+
+  it("hides the toggle when there is no sidebar at all", () => {
+    expect(
+      resolveProductSidebarChrome({
+        sessionReady: true,
+        emptyNav: true,
+        isWikiPath: false,
+        isPortalPath: false,
+      }),
+    ).toEqual({ hideSidebar: true, showSidebarToggle: false });
+  });
+
+  it("hides the toggle on portal chromeless routes", () => {
+    expect(
+      resolveProductSidebarChrome({
+        sessionReady: true,
+        emptyNav: false,
+        isWikiPath: false,
+        isPortalPath: true,
+      }),
+    ).toEqual({ hideSidebar: true, showSidebarToggle: false });
+  });
+
+  it("shows the toggle when the product sidebar is visible", () => {
+    expect(
+      resolveProductSidebarChrome({
+        sessionReady: true,
+        emptyNav: false,
+        isWikiPath: false,
+        isPortalPath: false,
+      }),
+    ).toEqual({ hideSidebar: false, showSidebarToggle: true });
   });
 });

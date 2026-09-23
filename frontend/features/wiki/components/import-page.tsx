@@ -1,99 +1,47 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import Link from "next/link";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { useCan } from "@/hooks/api/access";
-import { useKbPagesTree } from "@/hooks/api/kb";
-import { useImportKbPages, useKbImportJobs } from "@/hooks/api/kb";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
 import {
-  KbUploadIcon,
-  KbFileTextIcon,
-  KbClipboardIcon,
-  KbXIcon,
-  KbTriangleAlertIcon,
-} from "@/features/wiki/lib/kb-icons";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  TABS_CONTENT_PAGE_BODY_CLASS,
+} from "@/components/ui/tabs";
+import { useCan } from "@/hooks/api/access";
+import { useImportKbPages, useKbPagesTree } from "@/hooks/api/kb";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { KB_IMPORT, KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
+import { KbUploadIcon, KbClipboardIcon } from "@/features/wiki/lib/kb-icons";
 import { ExportJobsCard } from "./export-jobs-card";
-import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
-import type { KbImportJob } from "@/hooks/api/kb/import-export";
+import { ImportHistorySection } from "./import-history-section";
+import { ImportPendingList, type ImportPendingItem } from "./import-pending-list";
 
-type ParsedItem = {
-  title: string;
-  contentText: string;
-  sizeBytes: number;
-};
+const VALID_TABS = ["import", "export"] as const;
+type ImportExportTab = (typeof VALID_TABS)[number];
 
-type SourceMode = "files" | "paste";
-
-function sizeLabel(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function ImportJobRow({ job }: { job: KbImportJob }) {
-  const sourceLabel =
-    job.sourceType === "markdown"
-      ? "Markdown"
-      : job.sourceType === "html"
-        ? "HTML"
-        : "ZIP";
-
-  return (
-    <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border bg-card text-sm">
-      <KbFileTextIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-      <TruncatedText text={`${sourceLabel} import`} className="flex-1" />
-      <span className="text-xs text-muted-foreground">
-        {job.succeededItems}/{job.totalItems} pages
-      </span>
-      <Badge
-        variant={
-          job.status === "completed"
-            ? "secondary"
-            : job.status === "failed"
-              ? "destructive"
-              : "outline"
-        }
-        className="text-micro h-4 px-1.5"
-      >
-        {job.status}
-      </Badge>
-      <span className="text-xs text-muted-foreground shrink-0">
-        {kbTimeAgo(job.createdAt)}
-      </span>
-    </div>
-  );
+function resolveTab(tabParam: string | null): ImportExportTab {
+  return VALID_TABS.find((t) => t === tabParam) ?? "import";
 }
 
 export default function ImportPage() {
   const canImport = useCan("kb:pages:import");
   const { data: treeNodes = [] } = useKbPagesTree();
   const importMutation = useImportKbPages();
-  const {
-    data: importJobs = [],
-    isLoading: jobsLoading,
-    isError: jobsError,
-    error: jobsErrorValue,
-    refetch: refetchJobs,
-  } = useKbImportJobs();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTab = resolveTab(searchParams.get("tab"));
 
-  const handleRetryJobs = useCallback(() => void refetchJobs(), [refetchJobs]);
-
-  const [mode, setMode] = useState<SourceMode>("files");
-  const [items, setItems] = useState<ParsedItem[]>([]);
+  const [items, setItems] = useState<ImportPendingItem[]>([]);
+  const [showPaste, setShowPaste] = useState(false);
   const [pasteTitle, setPasteTitle] = useState("");
   const [pasteText, setPasteText] = useState("");
 
@@ -101,7 +49,7 @@ export default function ImportPage() {
 
   const existingTitles = new Set(treeNodes.map((n) => n.title.toLowerCase()));
 
-  function hasDupe(title: string): boolean {
+  function titleExists(title: string): boolean {
     return existingTitles.has(title.toLowerCase());
   }
 
@@ -114,12 +62,13 @@ export default function ImportPage() {
       const toProcess = files.slice(0, remaining);
 
       let completed = 0;
-      const newItems: ParsedItem[] = [];
+      const newItems: ImportPendingItem[] = [];
 
       toProcess.forEach((file) => {
         const reader = new FileReader();
         reader.onload = (ev) => {
-          const text = (ev.target?.result as string) ?? "";
+          const result = ev.target?.result;
+          const text = typeof result === "string" ? result : "";
           const title = file.name.replace(/\.(md|markdown|txt)$/i, "");
           newItems.push({ title, contentText: text, sizeBytes: file.size });
           completed++;
@@ -137,6 +86,18 @@ export default function ImportPage() {
 
   function handleChooseFiles() {
     fileInputRef.current?.click();
+  }
+
+  function handleShowPaste() {
+    setShowPaste(true);
+  }
+
+  function handlePasteTitleChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setPasteTitle(event.target.value);
+  }
+
+  function handlePasteTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
+    setPasteText(event.target.value);
   }
 
   function handleAddPaste() {
@@ -159,10 +120,11 @@ export default function ImportPage() {
     ]);
     setPasteTitle("");
     setPasteText("");
+    setShowPaste(false);
   }
 
   function handleRemoveItem(index: number) {
-    setItems((prev) => prev.filter((_, i) => i !== index));
+    setItems((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
   }
 
   function handleClearAll() {
@@ -196,11 +158,12 @@ export default function ImportPage() {
     );
   }
 
-  function handleModeChange(newMode: SourceMode) {
-    setMode(newMode);
-    setItems([]);
-    setPasteTitle("");
-    setPasteText("");
+  function handleTabChange(value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "import") params.delete("tab");
+    else params.set("tab", value);
+    const qs = params.toString();
+    router.replace(qs ? `${KB_IMPORT}?${qs}` : KB_IMPORT, { scroll: false });
   }
 
   if (!canImport) {
@@ -217,211 +180,121 @@ export default function ImportPage() {
     );
   }
 
+  const isImportTab = activeTab === "import";
+
   return (
-    <PageWrapper title="Import & Export">
-      <div className="space-y-4">
-        <PageSection title="Import Pages">
+    <PageWrapper
+      title="Import & Export"
+      subtitle={isImportTab ? `${items.length}/100 files loaded` : "Per-page export lives on each wiki page's menu"}
+      actionsInline
+      contentClassName="flex min-h-0 flex-1 flex-col"
+      actions={
+        isImportTab ? (
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept=".md,.markdown,.txt"
+              className="hidden"
+              onChange={handleFilesChange}
+            />
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={handleShowPaste}
+            >
+              <KbClipboardIcon className="mr-1.5 h-3.5 w-3.5" />
+              Paste text
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleChooseFiles}
+              disabled={items.length >= 100}
+            >
+              Choose files
+            </Button>
+          </>
+        ) : undefined
+      }
+    >
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="flex min-h-0 flex-1 flex-col gap-4"
+      >
+        <TabsList>
+          <TabsTrigger value="import">Import</TabsTrigger>
+          <TabsTrigger value="export">Export</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="import" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <div className="space-y-4">
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant={mode === "files" ? "default" : "outline"}
-                onClick={() => handleModeChange("files")}
-                className="gap-1.5"
-              >
-                <KbUploadIcon className="h-3.5 w-3.5" />
-                Markdown files
-              </Button>
-              <Button
-                size="sm"
-                variant={mode === "paste" ? "default" : "outline"}
-                onClick={() => handleModeChange("paste")}
-                className="gap-1.5"
-              >
-                <KbClipboardIcon className="h-3.5 w-3.5" />
-                Paste text
-              </Button>
-            </div>
-
-            {mode === "files" && (
-              <div className="flex items-center gap-3">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept=".md,.markdown,.txt"
-                  className="hidden"
-                  onChange={handleFilesChange}
-                />
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleChooseFiles}
-                  disabled={items.length >= 100}
-                  className=""
-                >
-                  Choose files…
-                </Button>
-                <span className="text-xs text-muted-foreground">
-                  {items.length}/100 files loaded
-                </span>
-              </div>
-            )}
-
-            {mode === "paste" && (
-              <div className="space-y-2">
-                <div className="space-y-1">
-                  <Label className="text-xs">Page title</Label>
-                  <Input
-                    value={pasteTitle}
-                    onChange={(e) => setPasteTitle(e.target.value)}
-                    placeholder="Untitled page"
-                    className="text-sm"
-                    maxLength={500}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Content</Label>
-                  <Textarea
-                    value={pasteText}
-                    onChange={(e) => setPasteText(e.target.value)}
-                    placeholder="Paste your content here…"
-                    className="min-h-28 text-sm resize-none"
-                    maxLength={50000}
-                  />
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleAddPaste}
-                  disabled={!pasteTitle.trim() || items.length >= 100}
-                  className=""
-                >
-                  Add to list
-                </Button>
-              </div>
-            )}
-
-            {items.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground font-medium">
-                    {items.length} page{items.length === 1 ? "" : "s"} to import
-                  </p>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={handleClearAll}
-                    className="h-6 text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    Clear all
-                  </Button>
-                </div>
-
-                <div className="rounded-lg border border-border overflow-hidden">
-                  <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 px-3 py-1.5 bg-muted/30 text-dense font-medium text-muted-foreground">
-                    <span>Title</span>
-                    <span>Size</span>
-                    <span>Status</span>
-                    <span />
-                  </div>
-                  <div className="divide-y divide-border">
-                    {items.map((item, idx) => (
-                      <div
-                        key={idx}
-                        className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 items-center px-3 py-2 text-sm"
-                      >
-                        <TruncatedText text={item.title || "Untitled"} className="font-medium" />
-                        <span className="text-xs text-muted-foreground">
-                          {sizeLabel(item.sizeBytes)}
-                        </span>
-                        <span className="w-20">
-                          {hasDupe(item.title) && (
-                            <span className="flex items-center gap-1 text-xs text-status-warning-ink">
-                              <KbTriangleAlertIcon className="h-3 w-3" />
-                              Duplicate
-                            </span>
-                          )}
-                        </span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleRemoveItem(idx)}
-                          className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                          aria-label="Remove"
-                        >
-                          <KbXIcon className="h-3.5 w-3.5" />
-                        </Button>
+            {showPaste || items.length > 0 ? (
+              <PageSection title="Import Pages">
+                <div className="space-y-4">
+                  {showPaste ? (
+                    <div className="space-y-2">
+                      <div className="space-y-1">
+                        <Label htmlFor="import-paste-title" className="text-xs">
+                          Page title
+                        </Label>
+                        <Input
+                          id="import-paste-title"
+                          value={pasteTitle}
+                          onChange={handlePasteTitleChange}
+                          placeholder="Untitled page"
+                          className="text-sm"
+                          maxLength={500}
+                        />
                       </div>
-                    ))}
-                  </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="import-paste-content" className="text-xs">
+                          Content
+                        </Label>
+                        <Textarea
+                          id="import-paste-content"
+                          value={pasteText}
+                          onChange={handlePasteTextChange}
+                          placeholder="Paste your content here…"
+                          className="min-h-28 text-sm resize-none"
+                          maxLength={50000}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleAddPaste}
+                        disabled={!pasteTitle.trim() || items.length >= 100}
+                      >
+                        Add to list
+                      </Button>
+                    </div>
+                  ) : null}
+
+                  <ImportPendingList
+                    items={items}
+                    isImporting={importMutation.isPending}
+                    onClearAll={handleClearAll}
+                    onImport={handleImport}
+                    onRemove={handleRemoveItem}
+                    titleExists={titleExists}
+                  />
                 </div>
+              </PageSection>
+            ) : null}
 
-                <LoadingButton
-                  size="sm"
-                  onClick={handleImport}
-                  isPending={importMutation.isPending}
-                  loadingText="Importing…"
-                  className="gap-1.5"
-                >
-                  <KbUploadIcon className="h-3.5 w-3.5" />
-                  Import {items.length} page{items.length === 1 ? "" : "s"}
-                </LoadingButton>
-              </div>
-            )}
+            <ImportHistorySection />
           </div>
-        </PageSection>
+        </TabsContent>
 
-        <PageSection title="Import History">
-          {jobsLoading && (
-            <div className="space-y-1.5">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-9 w-full rounded-lg" />
-              ))}
-            </div>
-          )}
-
-          {!jobsLoading && jobsError && (
-            <ErrorState
-              compact
-              title="Couldn't load import history"
-              description={getErrorMessage(jobsErrorValue)}
-              onRetry={handleRetryJobs}
-            />
-          )}
-
-          {!jobsLoading && !jobsError && importJobs.length === 0 && (
-            <EmptyState
-              compact
-              illustration={
-                <KbFileTextIcon className="h-5 w-5 text-muted-foreground" />
-              }
-              title="No imports yet"
-              description="Import history will appear here after your first import."
-            />
-          )}
-
-          {!jobsLoading && !jobsError && importJobs.length > 0 && (
-            <div className="space-y-1.5">
-              {importJobs.map((job) => (
-                <ImportJobRow key={job.id} job={job} />
-              ))}
-              <p className="text-xs text-muted-foreground pt-1">
-                Imported pages appear in the{" "}
-                <Link
-                  href={KNOWLEDGE_BASE}
-                  className="underline underline-offset-2"
-                >
-                  wiki
-                </Link>
-                .
-              </p>
-            </div>
-          )}
-        </PageSection>
-
-        <ExportJobsCard />
-      </div>
+        <TabsContent value="export" className={TABS_CONTENT_PAGE_BODY_CLASS}>
+          <ExportJobsCard />
+        </TabsContent>
+      </Tabs>
     </PageWrapper>
   );
 }

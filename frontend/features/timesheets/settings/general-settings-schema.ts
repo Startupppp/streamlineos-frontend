@@ -16,7 +16,8 @@ export const generalSettingsSchema = z.object({
     "ROUND_DOWN",
   ]),
   requiredFields: z.array(z.string()),
-  approvalMode: z.enum(["MANAGER", "AUTO", "MULTI_LEVEL"]),
+  approvalMode: z.enum(["MANAGER", "AUTO"]),
+  approverSource: z.enum(["REPORTING_MANAGER", "PROJECT_MANAGER"]),
   clientApprovalEnabled: z.boolean(),
   lockAfterApproval: z.boolean(),
   lockAfterInvoice: z.boolean(),
@@ -24,13 +25,6 @@ export const generalSettingsSchema = z.object({
   expectedDailyHours: z.string(),
   expectedWeeklyHours: z.string(),
   submissionGraceDays: z.string(),
-  /**
-   * Optional here and conditionally required at submit, because whether the
-   * server demands it depends on the DIFF rather than on the field: a material
-   * change needs a reason, pressing Save with nothing altered does not. Zod
-   * bounds the length (the server caps it at 500); the requirement itself is
-   * asserted against the computed changes in the form.
-   */
   changeReason: z.string().max(500),
 });
 

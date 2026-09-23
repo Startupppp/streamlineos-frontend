@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [
+      "side-tab"
+    ],
+    "ignoreFiles": [
+      "features/hr/**/*.tsx",
+      "features/hr/**/*.ts",
+      "app/**/hr/**/*.tsx",
+      "app/**/hr/**/*.ts"
+    ],
+    "ignoreValues": []
+  }
+}

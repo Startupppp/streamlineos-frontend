@@ -85,10 +85,6 @@ jest.mock("@/components/layout/header/org-switcher", () => ({
   WorkspaceSwitcher: () => null,
 }));
 
-jest.mock("@/components/layout/header/pm-workspace-context-chip", () => ({
-  PmWorkspaceContextChip: () => null,
-}));
-
 jest.mock("@/components/layout/header/quick-create-button", () => ({
   QuickCreateButton: () => null,
 }));

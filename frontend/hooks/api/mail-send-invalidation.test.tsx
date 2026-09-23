@@ -88,7 +88,7 @@ function contains(prefixes: string[][], target: readonly unknown[]): boolean {
 
 beforeEach(() => {
   post.mockReset();
-  post.mockResolvedValue({ messageId: "sent-1" });
+  post.mockResolvedValue({ sent: true });
 });
 
 describe("useSendMail invalidation", () => {

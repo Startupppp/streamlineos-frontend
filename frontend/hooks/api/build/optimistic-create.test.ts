@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import type { ReactNode } from "react";
 import type { Ticket, CursorPageResponse } from "@/types/projects";
-import { useCreateTicket } from "./ticket-mutations";
+import { useCreateTicket } from "./ticket-create-rank-mutations";
 import { useAddComment } from "./ticket-sub-resources";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 
@@ -51,7 +51,6 @@ function makeTicket(id: number, overrides?: Partial<Ticket>): Ticket {
     priority: null,
     projectId: 42,
     ticketNumber: id,
-    sprintId: null,
     epicId: null,
     reporterId: null,
     points: null,
@@ -76,7 +75,7 @@ function makeTicket(id: number, overrides?: Partial<Ticket>): Ticket {
 function makeTicketPage(tickets: Ticket[]): CursorPageResponse<Ticket> {
   return {
     data: tickets,
-    pagination: { nextCursor: null, hasMore: false, total: tickets.length },
+    pagination: { limit: 50, nextCursor: null, hasMore: false },
   };
 }
 

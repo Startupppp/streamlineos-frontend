@@ -1,17 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { ExternalLink, MessageSquare, Megaphone, Plus, Sparkles } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RequireModule } from "@/components/auth/require-module";
 import { Button } from "@/components/ui/button";
-import { SearchInput } from "@/components/ui/search-input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  TABS_CONTENT_PAGE_BODY_CLASS,
+} from "@/components/ui/tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
+import { SearchInput } from "@/components/ui/search-input";
 import { RoadmapTab } from "@/features/build/roadmap/roadmap-tab";
 import { FeedbackTab } from "@/features/build/roadmap/feedback-tab";
 import { ChangelogTab } from "@/features/build/roadmap/changelog-tab";
@@ -23,36 +31,40 @@ import {
 
 type RoadmapTabValue = "roadmap" | "feedback" | "changelog";
 
+const FILTER_DEFINITIONS = [
+  { param: "tab", options: ["roadmap", "feedback", "changelog"] },
+] as const;
+
 export function RoadmapListPage() {
   const { data: session } = useSession();
   const orgId = session?.orgId ?? null;
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebouncedValue(search, 300);
-  const [activeTab, setActiveTab] = useState<RoadmapTabValue>("roadmap");
+  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
   const [roadmapCreateOpen, setRoadmapCreateOpen] = useState(false);
   const [changelogCreateOpen, setChangelogCreateOpen] = useState(false);
 
-  function handleTabChange(value: string) {
-    if (value === "roadmap" || value === "feedback" || value === "changelog") {
-      setActiveTab(value);
-    }
-  }
+  const tabValue = listFilters.value("tab");
+  const activeTab: RoadmapTabValue =
+    tabValue === "feedback" ? "feedback" : tabValue === "changelog" ? "changelog" : "roadmap";
 
-  function handleOpenRoadmapCreate() {
+  const handleTabChange = useCallback((value: string) => {
+    listFilters.setValue("tab", value);
+  }, [listFilters]);
+
+  const handleOpenRoadmapCreate = useCallback(() => {
     setRoadmapCreateOpen(true);
-  }
+  }, []);
 
-  function handleOpenChangelogCreate() {
+  const handleOpenChangelogCreate = useCallback(() => {
     setChangelogCreateOpen(true);
-  }
+  }, []);
 
-  function handleRoadmapCreateOpenChange(open: boolean) {
+  const handleRoadmapCreateOpenChange = useCallback((open: boolean) => {
     setRoadmapCreateOpen(open);
-  }
+  }, []);
 
-  function handleChangelogCreateOpenChange(open: boolean) {
+  const handleChangelogCreateOpenChange = useCallback((open: boolean) => {
     setChangelogCreateOpen(open);
-  }
+  }, []);
 
   const showSearch = activeTab === "roadmap" || activeTab === "feedback";
 
@@ -94,49 +106,59 @@ export function RoadmapListPage() {
           title="Roadmap"
           subtitle="Plan publicly, collect feedback and ship a changelog"
           actions={hasActions ? actions : undefined}
+          filters={
+            <PageTabsToolbar
+              tabsDensity="labeled"
+              tabs={
+                <TabsList>
+                  <TabsTrigger value="roadmap" className="gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Roadmap
+                  </TabsTrigger>
+                  <TabsTrigger value="feedback" className="gap-1.5">
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    Feedback
+                  </TabsTrigger>
+                  <TabsTrigger value="changelog" className="gap-1.5">
+                    <Megaphone className="h-3.5 w-3.5" />
+                    Changelog
+                  </TabsTrigger>
+                </TabsList>
+              }
+              search={
+                showSearch ? (
+                  <SearchInput
+                    placeholder="Search…"
+                    value={listFilters.search}
+                    onValueChange={listFilters.setSearch}
+                  />
+                ) : null
+              }
+            />
+          }
         >
           <PmPageShell>
-            <PmSection index={0} className={cn(PM_FILL_SECTION, "gap-3")}>
-              <PageTabsToolbar
-                tabsDensity="labeled"
-                tabs={
-                  <TabsList>
-                    <TabsTrigger value="roadmap" className="gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      Roadmap
-                    </TabsTrigger>
-                    <TabsTrigger value="feedback" className="gap-1.5">
-                      <MessageSquare className="h-3.5 w-3.5" />
-                      Feedback
-                    </TabsTrigger>
-                    <TabsTrigger value="changelog" className="gap-1.5">
-                      <Megaphone className="h-3.5 w-3.5" />
-                      Changelog
-                    </TabsTrigger>
-                  </TabsList>
-                }
-                search={
-                  showSearch ? (
-                    <SearchInput
-                      placeholder="Search…"
-                      value={search}
-                      onValueChange={setSearch}
-                    />
-                  ) : null
-                }
-              />
-
-              <TabsContent value="roadmap" className="mt-0">
+            <PmSection index={0} className={PM_FILL_SECTION}>
+              <TabsContent
+                value="roadmap"
+                className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-y-auto")}
+              >
                 <RoadmapTab
-                  search={debouncedSearch}
+                  search={listFilters.debouncedSearch}
                   createOpen={roadmapCreateOpen}
                   onCreateOpenChange={handleRoadmapCreateOpenChange}
                 />
               </TabsContent>
-              <TabsContent value="feedback" className="mt-0">
-                <FeedbackTab search={debouncedSearch} />
+              <TabsContent
+                value="feedback"
+                className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-y-auto")}
+              >
+                <FeedbackTab search={listFilters.debouncedSearch} />
               </TabsContent>
-              <TabsContent value="changelog" className="mt-0">
+              <TabsContent
+                value="changelog"
+                className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-y-auto")}
+              >
                 <ChangelogTab
                   createOpen={changelogCreateOpen}
                   onCreateOpenChange={handleChangelogCreateOpenChange}

@@ -18,12 +18,12 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const CHART_TOOLTIP_STYLE = {
-  background: "hsl(var(--card))",
-  border: "1px solid hsl(var(--border))",
+  background: "var(--card)",
+  border: "1px solid var(--border)",
   borderRadius: 8,
 } as const;
 
-const AXIS_TICK = { fill: "hsl(var(--muted-foreground))", fontSize: 11 } as const;
+const AXIS_TICK = { fill: "var(--muted-foreground)", fontSize: 11 } as const;
 
 interface ByDayChartProps {
   data: { date: string; hours: number }[];
@@ -55,7 +55,7 @@ export const ByDayChart = memo(function ByDayChart({ data, isLoading }: ByDayCha
                   <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis dataKey="date" tick={AXIS_TICK} />
               <YAxis tick={AXIS_TICK} />
               <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
@@ -105,7 +105,7 @@ export const ByMemberChart = memo(function ByMemberChart({ data, isLoading }: By
             <BarChart data={sorted} layout="vertical" margin={{ left: 8, right: 16 }}>
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="hsl(var(--border))"
+                stroke="var(--border)"
                 horizontal={false}
               />
               <XAxis type="number" tick={AXIS_TICK} />
@@ -161,7 +161,7 @@ export const ByProjectChart = memo(function ByProjectChart({ data, isLoading }: 
             <BarChart data={sorted} layout="vertical" margin={{ left: 8, right: 16 }}>
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="hsl(var(--border))"
+                stroke="var(--border)"
                 horizontal={false}
               />
               <XAxis type="number" tick={AXIS_TICK} />

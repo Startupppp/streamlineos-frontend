@@ -40,6 +40,7 @@ import {
   useTimesheetEntries,
 } from "@/hooks/api/timesheets-core";
 import { BILLING_TYPE_LABEL } from "@/features/timesheets";
+import type { TimerSession } from "@/features/timesheets/types";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 function formatDuration(totalSec: number): string {
@@ -102,14 +103,22 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
     return items;
   }, [weekEntries]);
 
+  const seedConvertDialog = useCallback((session: TimerSession) => {
+    setConvertDate(format(new Date(), "yyyy-MM-dd"));
+    setConvertHours((session.elapsedSeconds / 3600).toFixed(2));
+    setConvertBillable(session.billable);
+    setConvertDesc(session.description ?? "");
+    setConvertOpen(true);
+  }, []);
+
   const handleOpenConvert = useCallback(() => {
     if (!timer) return;
-    setConvertDate(format(new Date(), "yyyy-MM-dd"));
-    setConvertHours((timer.elapsedSeconds / 3600).toFixed(2));
-    setConvertBillable(timer.billable);
-    setConvertDesc(timer.description ?? "");
-    setConvertOpen(true);
-  }, [timer]);
+    if (timer.status !== "RUNNING") {
+      seedConvertDialog(timer);
+      return;
+    }
+    pauseTimer.mutate(timer.id, { onSuccess: seedConvertDialog });
+  }, [timer, pauseTimer, seedConvertDialog]);
 
   const handleConvertConfirm = useCallback(() => {
     if (!timer) return;
@@ -219,9 +228,14 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
                   Resume
                 </AnimatedIconButton>
               )}
-              <Button size="sm" className="h-7 text-xs gap-1" onClick={handleOpenConvert}>
+              <LoadingButton
+                size="sm"
+                className="h-7 text-xs gap-1"
+                onClick={handleOpenConvert}
+                isPending={pauseTimer.isPending}
+              >
                 <Square className="h-3 w-3" /> Stop &amp; Save
-              </Button>
+              </LoadingButton>
               <AnimatedIconButton
                 icon={Trash2Icon}
                 iconSize={12}

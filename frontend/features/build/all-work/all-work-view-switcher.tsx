@@ -68,14 +68,14 @@ export function AllWorkViewSwitcher({ activeView, onViewChange }: AllWorkViewSwi
   return (
     <Select value={activeView} onValueChange={handleChange}>
       <SelectTrigger
-        className="w-[110px] shrink-0 text-xs font-normal *:data-[slot=select-value]:font-normal"
+        className="w-[110px] shrink-0 font-normal *:data-[slot=select-value]:font-normal"
         aria-label="Select view"
       >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
         {VIEW_OPTIONS.map((v) => (
-          <SelectItem key={v.value} value={v.value} className="text-xs">
+          <SelectItem key={v.value} value={v.value}>
             <span className="flex items-center gap-1.5">
               <v.icon className="h-3.5 w-3.5 text-muted-foreground" />
               {v.label}

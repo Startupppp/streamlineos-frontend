@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -20,6 +21,7 @@ import {
   useBulkApprove,
   useBulkReject,
 } from "@/hooks/api/timesheets-core/approvals";
+import { usePeriod } from "@/hooks/api/timesheets-core/periods";
 import type { TimesheetPeriod } from "@/features/timesheets/types";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -34,28 +36,17 @@ import {
 } from "./approvals-tab-panel";
 import { ApprovalTabFilter } from "./approval-tab-filter";
 
+export function linkedPeriodIdOf(raw: string | null): number | null {
+  if (raw === null || !/^\d+$/.test(raw)) return null;
+  const parsed = Number(raw);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
 export function ApprovalsView() {
   const canManage = useCan("timesheets:approvals:manage");
-  /**
-   * The list this page renders is `GET /timesheets/approvals`, whose guard is
-   * `timesheets:approvals:view`. It was gated on `timesheets:team:view`, a
-   * different key: a viewer holding approvals-view but not team-view was told
-   * access was restricted, and one holding team-view but not approvals-view
-   * got the page with a permanently empty table instead of a denial.
-   */
   const access = usePermissionGate("timesheets:approvals:view");
   const { data: accessData } = useAccess();
   const isOrgOwner = accessData?.isOrgOwner ?? false;
-  /**
-   * Whose authority the viewer would be using is decided on membership ids: a
-   * period names its owner and its assigned approver by `organization_members.id`
-   * on both backends, and the period contract parses nothing else. `/me/access`
-   * carries the caller's own membership id for exactly this, because the session
-   * holds a `users.id` that would match no period, and `/organization/members`
-   * needs `settings:view`, which a line manager's delegate need not hold. A
-   * principal with no membership (an agent token, a system job) reads null and
-   * the banner stays silent rather than claiming authority it cannot evidence.
-   */
   const viewerMembershipId: string | null =
     accessData?.membershipId === null || accessData?.membershipId === undefined
       ? null
@@ -69,6 +60,13 @@ export function ApprovalsView() {
   const [selection, setSelection] = useState<Set<string | number>>(new Set());
   const [detailPeriod, setDetailPeriod] = useState<TimesheetPeriod | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const linkedPeriodId = linkedPeriodIdOf(searchParams.get("period"));
+  const [linkDismissed, setLinkDismissed] = useState(false);
+  const { data: linkedDetail } = usePeriod(linkDismissed ? null : linkedPeriodId);
+  const linkedPeriod = linkDismissed ? null : (linkedDetail?.period ?? null);
   const [bulkRejectOpen, setBulkRejectOpen] = useState(false);
   const [bulkApproveOpen, setBulkApproveOpen] = useState(false);
 
@@ -80,13 +78,6 @@ export function ApprovalsView() {
     endDate: dateTo || undefined,
   };
 
-  /**
-   * Page 1 of the pending queue, deliberately keyed identically to what
-   * `ApprovalsTabPanel` asks for on the Pending tab, so the two share one
-   * cache entry rather than issuing two requests for the same rows. It powers
-   * the pending count and the delegate banner, both of which have to be right
-   * even while another tab is showing.
-   */
   const { data: pendingData } = useApprovals(
     { status: "SUBMITTED", ...sharedFilters, limit: APPROVALS_PAGE_SIZE },
     canAccess,
@@ -137,10 +128,18 @@ export function ApprovalsView() {
     setDetailOpen(true);
   }, []);
 
-  const handleDetailOpenChange = useCallback((open: boolean) => {
-    setDetailOpen(open);
-    if (!open) setDetailPeriod(null);
-  }, []);
+  const handleDetailOpenChange = useCallback(
+    (open: boolean) => {
+      setDetailOpen(open);
+      if (open) return;
+      setDetailPeriod(null);
+      if (linkedPeriodId !== null) {
+        setLinkDismissed(true);
+        router.replace(pathname);
+      }
+    },
+    [linkedPeriodId, pathname, router],
+  );
 
   const handleBulkApproveOpen = useCallback(() => setBulkApproveOpen(true), []);
 
@@ -285,8 +284,8 @@ export function ApprovalsView() {
       </motion.div>
 
       <ApprovalDetailSheet
-        period={detailPeriod}
-        open={detailOpen}
+        period={detailPeriod ?? linkedPeriod}
+        open={detailOpen || linkedPeriod !== null}
         onOpenChange={handleDetailOpenChange}
       />
 
@@ -298,6 +297,7 @@ export function ApprovalsView() {
         confirmLabel="Approve"
         onConfirm={handleBulkApproveConfirm}
         isPending={bulkApproveMutation.isPending}
+        keepOpenOnConfirm
       />
 
       <BulkRejectDialog

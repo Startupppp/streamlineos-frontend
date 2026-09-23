@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { RefreshCw, Info } from "lucide-react";
-import { AppSheet } from "@/components/shared";
+import { AppSheet, NoPermissionState } from "@/components/shared";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { useCanState } from "@/hooks/api/access";
 import {
   useChannelPublications,
   useRetryChannelPublications,
@@ -91,8 +92,9 @@ interface PublicationsTableProps {
 }
 
 function PublicationsTable({ channelId, statusFilter, showRetry }: PublicationsTableProps) {
+  const channelState = useCanState("inventory:channels:manage");
   const retryMutation = useRetryChannelPublications();
-  const { data, isLoading } = useChannelPublications(channelId, statusFilter);
+  const { data, isPending } = useChannelPublications(channelId, statusFilter);
   const publications = data ?? [];
 
   function handleRetryAll(): void {
@@ -102,7 +104,11 @@ function PublicationsTable({ channelId, statusFilter, showRetry }: PublicationsT
     });
   }
 
-  if (isLoading) {
+  if (channelState === "denied") {
+    return <NoPermissionState compact permission="inventory:channels:manage" className="mt-3" />;
+  }
+
+  if (isPending) {
     return (
       <div className="space-y-2 mt-3">
         {Array.from({ length: 4 }).map((_, i) => (

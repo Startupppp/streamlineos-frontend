@@ -21,9 +21,9 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
   const [tab, setTab] = useState<"messages" | "channels" | "people">("messages");
   const debouncedQuery = useDebouncedValue(query, 300);
 
-  const { data: messageResults, isLoading: loadingMessages } = useSearchMessages(debouncedQuery, open && tab === "messages");
-  const { data: channelResults, isLoading: loadingChannels } = useSearchChannels(debouncedQuery, open && tab === "channels");
-  const { data: userResults, isLoading: loadingUsers } = useSearchUsers(debouncedQuery, open && tab === "people");
+  const { data: messageResults, isLoading: loadingMessages, isError: messageError } = useSearchMessages(debouncedQuery, open && tab === "messages");
+  const { data: channelResults, isLoading: loadingChannels, isError: channelError } = useSearchChannels(debouncedQuery, open && tab === "channels");
+  const { data: userResults, isLoading: loadingUsers, isError: userError } = useSearchUsers(debouncedQuery, open && tab === "people");
 
   const handleQueryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value), []);
 
@@ -80,7 +80,9 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
               <p className="text-xs">Type to search</p>
             </div>
           ) : tab === "messages" ? (
-            messageResults?.results.length === 0 ? (
+            messageError ? (
+              <p className="text-center text-xs text-muted-foreground py-8">Search failed. Please try again.</p>
+            ) : messageResults?.results.length === 0 ? (
               <p className="text-center text-xs text-muted-foreground py-8">No messages found</p>
             ) : (
               messageResults?.results.map(msg => (
@@ -104,7 +106,9 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
               ))
             )
           ) : tab === "channels" ? (
-            channelResults?.length === 0 ? (
+            channelError ? (
+              <p className="text-center text-xs text-muted-foreground py-8">Search failed. Please try again.</p>
+            ) : channelResults?.length === 0 ? (
               <p className="text-center text-xs text-muted-foreground py-8">No channels found</p>
             ) : (
               channelResults?.map(ch => (
@@ -127,7 +131,9 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
               ))
             )
           ) : (
-            userResults?.length === 0 ? (
+            userError ? (
+              <p className="text-center text-xs text-muted-foreground py-8">Search failed. Please try again.</p>
+            ) : userResults?.length === 0 ? (
               <p className="text-center text-xs text-muted-foreground py-8">No people found</p>
             ) : (
               userResults?.map(u => (

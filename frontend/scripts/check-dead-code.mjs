@@ -158,8 +158,6 @@ const EXPORT_VERDICTS = new Map([
    * DATA_LAYER_CONTRACT_RE, so their verdicts would never be consulted and would read as stale.
    */
 
-  ["components/shared/gated.tsx:GateState", { verdict: "KEEP", reason: "re-exports lib/rbac/gate's GateState beside <Gated>, the state Gated resolves; it is not part of GatedProps and nothing imports it from here (lib/rbac/gate.ts is its home). Deletion candidate for the components/shared owner" }],
-
   ["hooks/api/party/merges.ts:useDetectPartyDuplicates", { verdict: "WIRE", reason: "per-party 'look for duplicates' action not wired; backend POST /party/parties/:partyId/detect-duplicates exists (party-merge.controller.ts) and its results land in the /parties/duplicates queue; add the action to features/party/parties/party-detail-sheet.tsx" }],
 
 
@@ -215,6 +213,23 @@ const EXPORT_VERDICTS = new Map([
   ["hooks/api/accounting/core-coa-schema.ts:coaApplyTemplateContract", { verdict: "KEEP", reason: "mutation response contract for POST /accounting/coa/apply-template returning { templateKey, inserted, skipped }; no hook in ledger-mutations.ts calls this endpoint — the setup wizard's apply-COA-template action is unimplemented. Wire alongside coaTemplateListContract when the setup wizard ships." }],
   ["hooks/api/accounting/core-coa-schema.ts:journalApprovalSubmitContract", { verdict: "KEEP", reason: "mutation response contract for a journal approval-submission endpoint returning { entryId, status }; no hook in ledger-mutations.ts calls a submit endpoint — the journal approval workflow (submit → approve/reject cycle) has not been implemented in the rewritten accounting module. Wire alongside journalApprovalDecisionContract when the approval workflow ships." }],
   ["hooks/api/accounting/core-coa-schema.ts:journalApprovalDecisionContract", { verdict: "KEEP", reason: "mutation response contract for a journal approval-decision endpoint returning { entryId, decision, entryStatus }; no hook exists — same unimplemented journal-approval workflow as journalApprovalSubmitContract. Wire together when the approval workflow ships." }],
+
+  /*
+   * Recorded 2026-09-21 during the repo dead-weight pass. The other eleven findings in the same
+   * run were barrel re-export lines, resolved the way this gate's own message instructs — the line
+   * was deleted, because every consumer already deep-imports the symbol. Only exports whose
+   * invisibility is structural, or whose absence is a missing surface, are answered here.
+   */
+
+  ["hooks/api/kb/article-migration.ts:useArticleMigrationPreview", { verdict: "WIRE", reason: "no KB surface offers the support-article → wiki migration; backend GET kb/article-migration/preview exists (kb/article-conversion/kb-article-migration.controller.ts:22). Stale the day a migration panel ships or the route is removed" }],
+  ["hooks/api/kb/article-migration.ts:useRunArticleMigration", { verdict: "WIRE", reason: "the write half of the same unshipped surface; backend POST kb/article-migration/run exists and is @Idempotent(\"kb:article_migration.run\") (kb-article-migration.controller.ts:29). Wire together with useArticleMigrationPreview" }],
+
+  ["lib/presence.ts:isPresenceClearAfter", { verdict: "KEEP", reason: "the guard half of the exported PresenceClearAfter union, symmetrical with isPresenceStatus in the same file, which guards a wire value at hooks/api/chat-core-read.ts:320. clearAfter is currently only ever local state (presence-status-picker.tsx:61 seeds it from DEFAULT_CLEAR_AFTER), so the union has no inbound wire value to validate yet. Stale the day PRESENCE_CLEAR_AFTER_OPTIONS stops being exported as a union" }],
+  ["lib/page-state/page-state-schema.ts:QuotaDetails", { verdict: "KEEP", reason: "z.infer<typeof quotaDetailsContract> — the member shape of a live page-state contract, reached by indexing the resolution rather than by name. Same shape as the types/leads.ts aliases above, but outside hooks/api/ so DATA_LAYER_CONTRACT_RE does not reach it. Stale the day quotaDetailsContract is removed" }],
+  ["lib/page-state/page-state-schema.ts:FeatureDetails", { verdict: "KEEP", reason: "z.infer<typeof featureDetailsContract> — same shape and same reason as QuotaDetails. Stale the day featureDetailsContract is removed" }],
+  ["lib/page-state/page-state-schema.ts:ModuleDenialDetails", { verdict: "KEEP", reason: "z.infer<typeof moduleDenialDetailsContract> — same shape and same reason as QuotaDetails. Stale the day moduleDenialDetailsContract is removed" }],
+  ["hooks/api/impersonation-schema.ts:startImpersonationResponseSchema|startImpersonationResponseContract", { verdict: "KEEP", reason: "the documented duplicates shape: the base is consumed in-file by z.infer at line 21 (StartImpersonationResponse) and the alias is the seam, passed to lazyContract at hooks/api/impersonation.ts:16. Neither member is unreferenced; collapsing them would erase the route → contract mapping. Stale the day the alias stops being passed to a lazyContract seam" }],
+  ["hooks/api/impersonation-schema.ts:stopImpersonationResponseSchema|stopImpersonationResponseContract", { verdict: "KEEP", reason: "same shape one line down: base consumed by z.infer at line 22, alias passed to lazyContract at hooks/api/impersonation.ts:20" }],
 ]);
 
 function checkStaleVerdicts(verdicts, processedKeys) {

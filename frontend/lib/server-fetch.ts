@@ -37,7 +37,6 @@ async function requestWithToken<T>(
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
   } catch (error: unknown) {
-    if (error instanceof DOMException && error.name === "AbortError") throw error;
     throw new ApiError(
       "The service is taking too long to respond. Please try again.",
       503,

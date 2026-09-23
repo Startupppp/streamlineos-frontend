@@ -70,6 +70,9 @@ jest.mock("@/components/ui/drawer", () => ({
   DrawerTitle: ({ children, className }: PropsWithChildren<{ className?: string }>) => (
     <h2 className={className}>{children}</h2>
   ),
+  DrawerDescription: ({ children, className }: PropsWithChildren<{ className?: string }>) => (
+    <p className={className}>{children}</p>
+  ),
 }));
 
 const mockHomeIcon = ({ className }: { className?: string }) => (
@@ -98,7 +101,11 @@ jest.mock("@/components/layout/mobile/mobile-module-nav-items", () => {
 });
 
 jest.mock("@/components/layout/sidebar/use-product-sidebar-visibility", () => ({
-  useProductSidebarVisibility: () => ({ navGroups: [], hideSidebar: false }),
+  useProductSidebarVisibility: () => ({
+    navGroups: [],
+    hideSidebar: false,
+    showSidebarToggle: true,
+  }),
 }));
 
 // DashboardShell mocks (for skip-to-content test)

@@ -1,4 +1,5 @@
 import type { StatusConfigEntry } from "@/lib/status-config";
+import type { StatusFilterOption } from "@/components/list-view/filter-types";
 
 import type { TicketPriority } from "@/types/projects";
 
@@ -26,6 +27,7 @@ export interface DisplayOptions {
   showEstimate: boolean;
   showCycle: boolean;
   showLabels: boolean;
+  showDescription: boolean;
   showDueDate: boolean;
   showProject: boolean;
   showMilestone: boolean;
@@ -39,6 +41,7 @@ export interface DisplayOptions {
 export interface KanbanTicket {
   id: number;
   title: string;
+  descriptionExcerpt?: string | null;
   type: string;
   status: string;
   priority?: TicketPriority | string | null;
@@ -48,7 +51,6 @@ export interface KanbanTicket {
   storyPoints?: number | null;
   assigneeId?: string | null;
   epicId?: number | null;
-  sprintId?: number | null;
   cycleId?: number | null;
   moduleId?: number | null;
   rank?: string | null;
@@ -117,6 +119,27 @@ export const statusConfig: Record<string, StatusConfigEntry> = {
   IN_REVIEW: { label: "In Review", dotColor: "bg-status-warning-fill" },
   DONE: { label: "Done", dotColor: "bg-status-success-fill" },
 };
+
+export interface StatusOptionSource {
+  name: string;
+  color?: string | null;
+  type?: string | null;
+}
+
+const LEGACY_STATUS_OPTIONS: StatusFilterOption[] = Object.keys(statusConfig).map(
+  (name) => ({ name, color: null, type: null }),
+);
+
+export function resolveStatusOptions(
+  statuses: readonly StatusOptionSource[] | undefined,
+): StatusFilterOption[] {
+  if (!statuses || statuses.length === 0) return LEGACY_STATUS_OPTIONS;
+  return statuses.map((s) => ({
+    name: s.name,
+    color: s.color ?? null,
+    type: s.type ?? null,
+  }));
+}
 
 const TYPE_TO_DOT_COLOR: Record<string, string> = {
   unstarted: "bg-muted-foreground",

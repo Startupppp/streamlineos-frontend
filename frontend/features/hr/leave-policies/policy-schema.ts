@@ -1,10 +1,17 @@
 import { z } from "zod";
+import type { LeavePolicy } from "@/hooks/api/hr/leave-policies";
+
+const accrualTypeSchema = z.enum(["ANNUAL", "MONTHLY", "DAILY"]);
 
 export const policySchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().trim().min(1, "Policy name is required"),
   leaveTypeId: z.string().min(1, "Leave type is required"),
-  accrualType: z.enum(["ANNUAL", "MONTHLY", "DAILY"]),
-  accrualRate: z.string().min(1, "Accrual rate is required"),
+  accrualType: accrualTypeSchema,
+  accrualRate: z
+    .string()
+    .trim()
+    .min(1, { message: "Accrual rate is required", abort: true })
+    .refine((value) => Number.isFinite(Number(value)) && Number(value) >= 0, "Accrual rate must be 0 or more"),
   maxBalance: z.string().optional(),
   carryForwardDays: z.string(),
   encashable: z.boolean(),
@@ -25,9 +32,9 @@ export const emptyPolicyDefaults: PolicyFormValues = {
   carryForwardDays: "0",
   encashable: false,
   probationRestricted: false,
-  name: "",
+  name: "Annual Leave Policy",
   leaveTypeId: "",
-  accrualRate: "",
+  accrualRate: "12",
   maxBalance: "",
   effectiveFrom: "",
 };
@@ -35,4 +42,20 @@ export const emptyPolicyDefaults: PolicyFormValues = {
 export function blankToUndefined(value: string | undefined): string | undefined {
   const trimmed = value?.trim() ?? "";
   return trimmed === "" ? undefined : trimmed;
+}
+
+export function policyFormValues(policy: LeavePolicy | null): PolicyFormValues {
+  if (!policy) return emptyPolicyDefaults;
+  const accrualType = accrualTypeSchema.safeParse(policy.accrualType);
+  return {
+    name: policy.name,
+    leaveTypeId: String(policy.leaveTypeId),
+    accrualType: accrualType.success ? accrualType.data : "ANNUAL",
+    accrualRate: policy.accrualRate,
+    maxBalance: policy.maxBalance ?? "",
+    carryForwardDays: policy.carryForwardDays,
+    encashable: policy.encashable,
+    probationRestricted: policy.probationRestricted,
+    effectiveFrom: policy.effectiveFrom.slice(0, 10),
+  };
 }

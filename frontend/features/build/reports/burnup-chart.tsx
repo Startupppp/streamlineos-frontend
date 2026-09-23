@@ -31,7 +31,7 @@ export function BurnupChart({ data }: { data: BurnupDatum[] }) {
           </defs>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="hsl(var(--border))"
+            stroke="var(--border)"
             vertical={false}
           />
           <XAxis

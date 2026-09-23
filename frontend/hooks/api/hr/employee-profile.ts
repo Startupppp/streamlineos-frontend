@@ -29,6 +29,11 @@ const _onboardEmployeeContract = lazyContract(() =>
     (m) => m.onboardEmployeeResponseContract,
   ),
 );
+const _resendInviteContract = lazyContract(() =>
+  import("@/hooks/api/hr/employee-profile-schema").then(
+    (m) => m.resendEmployeeInviteResponseContract,
+  ),
+);
 const _bulkOnboardContract = lazyContract(() =>
   import("@/hooks/api/hr/employee-profile-schema").then(
     (m) => m.bulkOnboardResultContract,
@@ -80,6 +85,21 @@ export function useOnboardEmployee() {
         _onboardEmployeeContract,
       ),
     onSuccess: (result) => void invalidateHrWorkforceQueries(qc, result.userId),
+    onSettled: operation.settle,
+  });
+}
+
+export function useResendEmployeeInvite() {
+  const operation = useIdempotentOperation();
+  return useAuthorizedMutation("hr:onboarding:manage", {
+    mutationKey: ["hr", "employee", "resend-invite"],
+    mutationFn: (employeeId: string) =>
+      apiClient.post(
+        `/hr/employees/${employeeId}/resend-invite`,
+        undefined,
+        operation.configFor(employeeId),
+        _resendInviteContract,
+      ),
     onSettled: operation.settle,
   });
 }

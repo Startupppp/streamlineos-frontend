@@ -145,6 +145,7 @@ export function useSearchMessages(query: string, enabled: boolean) {
     enabled: enabled && canRead && query.trim().length >= 2,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
+    throwOnError: false,
   });
 }
 
@@ -157,6 +158,7 @@ export function useSearchChannels(query: string, enabled: boolean) {
     enabled: enabled && canRead && query.trim().length >= 1,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
+    throwOnError: false,
   });
 }
 
@@ -169,6 +171,7 @@ export function useSearchUsers(query: string, enabled: boolean) {
     enabled: enabled && canRead && query.trim().length >= 1,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
+    throwOnError: false,
   });
 }
 

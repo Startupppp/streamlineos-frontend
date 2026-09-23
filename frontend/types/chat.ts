@@ -49,7 +49,6 @@ export type ChannelMemberRole = "ADMIN" | "MEMBER";
 
 export type MessageType = "text" | "lead_submission" | "system";
 
-export type PresenceStatus = "ONLINE" | "AWAY" | "OFFLINE";
 
 export type ChatNotificationPreference = "DEFAULT" | "ALL" | "MENTIONS" | "NOTHING";
 
@@ -178,14 +177,6 @@ export interface Message {
 export interface TypingIndicator {
   userId: string;
   name: string;
-}
-
-export interface OnlineUser {
-  userId: string;
-  status: PresenceStatus;
-  lastSeenAt: Date | string | null;
-  userName: string | null;
-  userImage: string | null;
 }
 
 export interface OrgUser {

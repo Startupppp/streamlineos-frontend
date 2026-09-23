@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { Gated } from "@/components/shared/gated";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useComplianceReport } from "@/hooks/api/timesheets-core/reports";
 import type { ComplianceReportUser } from "./reports-types";
 import { formatReportHours, memberLabel } from "./report-format";
@@ -79,6 +79,8 @@ const COLUMNS: DataTableColumn<ComplianceReportUser>[] = [
   },
 ];
 
+const COLUMN_HEADERS = COLUMNS.map((column) => column.header);
+
 function getComplianceRowKey(row: ComplianceReportUser): string {
   return row.userId;
 }
@@ -107,7 +109,7 @@ function renderComplianceMobileCard(row: ComplianceReportUser) {
 }
 
 export function ComplianceTab({ params, enabled }: ComplianceTabProps) {
-  const { data, isLoading, isError, refetch } = useComplianceReport(params, enabled);
+  const { data, isLoading, isError, error, refetch } = useComplianceReport(params, enabled);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -122,23 +124,22 @@ export function ComplianceTab({ params, enabled }: ComplianceTabProps) {
     };
   }, [data]);
 
+  const state = usePageState({
+    permission: "timesheets:reports:view",
+    isLoading: !isError && (isLoading || !data),
+    isError,
+    error,
+  });
+
   return (
-    <Gated
-      permission="timesheets:reports:view"
-      isLoading={!isError && (isLoading || !data)}
-      isError={isError}
+    <PageState
+      resolution={state}
+      onRetry={handleRetry}
       loading={
         <div className="space-y-4">
           <StatCardGridSkeleton cols={4} count={4} />
-          <DataTableSkeleton rows={8} columns={7} />
+          <DataTableSkeleton rows={8} headers={COLUMN_HEADERS} />
         </div>
-      }
-      error={
-        <ErrorState
-          title="Couldn't load compliance"
-          description="Something went wrong while loading the compliance report."
-          onRetry={handleRetry}
-        />
       }
     >
       {data ? (
@@ -186,6 +187,6 @@ export function ComplianceTab({ params, enabled }: ComplianceTabProps) {
           )}
         </div>
       ) : null}
-    </Gated>
+    </PageState>
   );
 }

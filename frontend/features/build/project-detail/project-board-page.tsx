@@ -1,27 +1,33 @@
 "use client";
 
-import { use, useCallback } from "react";
-import { useProject, useSprints, useBulkUpdateTickets } from "@/hooks/api";
+import { use, useCallback, useMemo } from "react";
+import { format, addDays } from "date-fns";
+import { useProject, useCycles, useBulkUpdateTickets } from "@/hooks/api";
+import { useWorkloadCapacity } from "@/hooks/api/build/workload-capacity";
 import type { BulkUpdateTicketsInput } from "@/hooks/api";
 import { useBoardUrlState } from "@/features/build/views/use-board-url-state";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { ProjectBoardContent } from "@/features/build/views/project-board-content";
 import { ProjectViewsToolbar } from "@/features/build/views/project-views-toolbar";
 import { CreateTicketDialog } from "@/features/build/tickets/create-ticket-dialog";
 import { ProjectAiMenu } from "@/features/build/ai/project-ai-menu";
+import { TicketImportExportDialog } from "@/features/build/import-export/components/ticket-import-export-dialog";
 import { SaveViewDialog } from "@/features/build/views/save-view-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
-import { ErrorState } from "@/components/shared/error-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallback";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { notFound } from "next/navigation";
+import type { ViewType } from "@/features/build/views/view-switcher";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
+  defaultView?: ViewType;
 }
 
-export function ProjectBoardPage({ params }: PageProps) {
+export function ProjectBoardPage({ params, defaultView }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
   const {
@@ -31,11 +37,14 @@ export function ProjectBoardPage({ params }: PageProps) {
     error: projectErrorValue,
     refetch: refetchProject,
   } = useProject(projectId);
-  const { data: sprints } = useSprints(projectId);
+  const { data: cycles } = useCycles(projectId);
   const bulkUpdate = useBulkUpdateTickets(projectId);
 
   const {
     view,
+    filterType,
+    filterSeverity,
+    filterQaState,
     displayOptions,
     setDisplayOptions,
     hideCompleted,
@@ -45,11 +54,15 @@ export function ProjectBoardPage({ params }: PageProps) {
     setSaveViewOpen,
     saveViewName,
     createView,
+    updateView,
     selectedIds,
     ticketsLoading,
     ticketsError,
     ticketsErrorValue,
     refetchTickets,
+    isTruncated,
+    fetchMoreTickets,
+    isFetchingMoreTickets,
     filteredTickets,
     statuses,
     members,
@@ -62,19 +75,54 @@ export function ProjectBoardPage({ params }: PageProps) {
     createDefaultCycleId,
     handleViewChange,
     handleClearSearch,
+    handleQaFilterChange,
     handleClearView,
     handleCreateOpenChange,
     handleOpenSaveView,
     handleSaveViewNameChange,
     handleSaveView,
+    handleUpdateActiveView,
     handleWorkloadFilterChange,
     handleClearWorkloadFilters,
     handleTicketSelect,
     handleSelectionChange,
     handleClearSelection,
-  } = useBoardUrlState(projectId);
+  } = useBoardUrlState(projectId, defaultView);
 
-  const isLoading = projectLoading || ticketsLoading;
+  const isLoading = projectLoading;
+
+  const capacityWindow = useMemo(() => {
+    const today = new Date();
+    return {
+      start: format(today, "yyyy-MM-dd"),
+      end: format(addDays(today, 13), "yyyy-MM-dd"),
+    };
+  }, []);
+
+  const capacityByMemberId = useWorkloadCapacity(
+    projectId,
+    capacityWindow.start,
+    capacityWindow.end,
+    { enabled: view === "workload" },
+  );
+
+  const handleOpenFocusedTicket = useCallback(
+    (index: number) => {
+      const ticket = filteredTickets[index];
+      if (ticket) handleTicketSelect(Number(ticket.id));
+    },
+    [filteredTickets, handleTicketSelect],
+  );
+
+  const { focusedIndex } = useBuildListKeyboard({
+    itemCount: filteredTickets.length,
+    onOpen: handleOpenFocusedTicket,
+    onClearSelection: handleClearSelection,
+    enabled: view === "list",
+  });
+
+  const focusedTicketId =
+    focusedIndex === null ? null : Number(filteredTickets[focusedIndex]?.id ?? null);
 
   const handleRetryProject = useCallback(() => void refetchProject(), [refetchProject]);
   const handleRetryTickets = useCallback(() => void refetchTickets(), [refetchTickets]);
@@ -84,7 +132,7 @@ export function ProjectBoardPage({ params }: PageProps) {
       update: Partial<
         Pick<
           BulkUpdateTicketsInput,
-          "assigneeId" | "status" | "sprintId" | "priority" | "parentTicketId"
+          "assigneeId" | "status" | "cycleId" | "priority" | "parentTicketId"
         >
       >,
     ) => {
@@ -122,8 +170,8 @@ export function ProjectBoardPage({ params }: PageProps) {
     (v: string) => handleBulkUpdate({ assigneeId: v }),
     [handleBulkUpdate],
   );
-  const handleBulkSprint = useCallback(
-    (v: string) => handleBulkUpdate({ sprintId: v === "backlog" ? null : Number(v) }),
+  const handleBulkCycle = useCallback(
+    (v: string) => handleBulkUpdate({ cycleId: v === "backlog" ? null : Number(v) }),
     [handleBulkUpdate],
   );
   const handleBulkParent = useCallback(
@@ -133,7 +181,7 @@ export function ProjectBoardPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Loading..." noInternalScroll>
+      <PageWrapper title={<Skeleton className="h-5 w-40" />} noInternalScroll>
         <KanbanBoardSkeleton />
       </PageWrapper>
     );
@@ -164,6 +212,7 @@ export function ProjectBoardPage({ params }: PageProps) {
       actions={
         <div className="flex items-center gap-2">
           <ProjectAiMenu projectId={projectId} />
+          <TicketImportExportDialog projectId={projectId} />
           <CreateTicketDialog
             projectId={projectId}
             defaultCycleId={createDefaultCycleId}
@@ -181,6 +230,8 @@ export function ProjectBoardPage({ params }: PageProps) {
           activeViewName={activeView?.name ?? null}
           onClearView={handleClearView}
           onOpenSaveView={handleOpenSaveView}
+          onUpdateView={handleUpdateActiveView}
+          isUpdatingView={updateView.isPending}
           projectId={projectId}
           members={members}
           statuses={statuses}
@@ -190,6 +241,10 @@ export function ProjectBoardPage({ params }: PageProps) {
           workloadFilters={workloadFilters}
           onWorkloadFilterChange={handleWorkloadFilterChange}
           onClearWorkloadFilters={handleClearWorkloadFilters}
+          filterType={filterType}
+          filterSeverity={filterSeverity}
+          filterQaState={filterQaState}
+          onQaFilterChange={handleQaFilterChange}
         />
       }
     >
@@ -199,41 +254,42 @@ export function ProjectBoardPage({ params }: PageProps) {
         empty state over a project that has thousands, and people created
         duplicates.
       */}
-      {ticketsError ? (
-        <ErrorState
-          className="flex-1 m-3"
-          title="Couldn't load this project's tickets"
-          description={getErrorMessage(ticketsErrorValue)}
-          onRetry={handleRetryTickets}
-        />
-      ) : (
-        <ProjectBoardContent
-          view={view}
-          filteredTickets={filteredTickets}
-          showEmptyFilterState={showEmptyFilterState}
-          onClearSearch={handleClearSearch}
-          projectId={projectId}
-          projectKey={data.key}
-          statuses={statuses}
-          wipLimits={wipLimits}
-          members={members}
-          displayOptions={displayOptions}
-          hideCompleted={hideCompleted}
-          hasActiveFilters={hasActiveFilters}
-          workloadFilters={workloadFilters}
-          onTicketSelect={handleTicketSelect}
-          onWorkloadFilterChange={handleWorkloadFilterChange}
-          sprints={sprints ?? []}
-          selectedIds={selectedIds}
-          onBulkStatus={handleBulkStatus}
-          onBulkPriority={handleBulkPriority}
-          onBulkAssignee={handleBulkAssignee}
-          onBulkSprint={handleBulkSprint}
-          onBulkParent={handleBulkParent}
-          onClearSelection={handleClearSelection}
-          onSelectionChange={handleSelectionChange}
-        />
-      )}
+      <ProjectBoardContent
+        view={view}
+        focusedTicketId={focusedTicketId}
+        filteredTickets={filteredTickets}
+        showEmptyFilterState={showEmptyFilterState}
+        onClearSearch={handleClearSearch}
+        projectId={projectId}
+        projectKey={data.key}
+        statuses={statuses}
+        wipLimits={wipLimits}
+        members={members}
+        displayOptions={displayOptions}
+        hideCompleted={hideCompleted}
+        hasActiveFilters={hasActiveFilters}
+        workloadFilters={workloadFilters}
+        capacityByMemberId={capacityByMemberId}
+        onTicketSelect={handleTicketSelect}
+        onWorkloadFilterChange={handleWorkloadFilterChange}
+        onClearWorkloadFilters={handleClearWorkloadFilters}
+        cycles={cycles ?? []}
+        selectedIds={selectedIds}
+        onBulkStatus={handleBulkStatus}
+        onBulkPriority={handleBulkPriority}
+        onBulkAssignee={handleBulkAssignee}
+        onBulkCycle={handleBulkCycle}
+        onBulkParent={handleBulkParent}
+        onClearSelection={handleClearSelection}
+        onSelectionChange={handleSelectionChange}
+        isTruncated={isTruncated}
+        isFetchingMore={isFetchingMoreTickets}
+        onLoadMore={fetchMoreTickets}
+        isLoading={ticketsLoading}
+        isError={ticketsError}
+        error={ticketsErrorValue}
+        onRetry={handleRetryTickets}
+      />
       <SaveViewDialog
         open={saveViewOpen}
         onOpenChange={setSaveViewOpen}

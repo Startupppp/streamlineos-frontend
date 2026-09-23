@@ -22,7 +22,7 @@ export default function HrLaborRelationsLoading() {
           <Skeleton className="h-9 w-32 rounded-none" />
           <Skeleton className="h-9 w-28 rounded-none" />
         </div>
-        <DataTableSkeleton rows={10} columns={5} />
+        <DataTableSkeleton rows={10} headers={["User", "Union", "Since", "Status", ""]} />
       </div>
     </PageWrapper>
   );

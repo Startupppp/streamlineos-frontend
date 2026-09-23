@@ -1,9 +1,13 @@
 ﻿"use client";
 
 import { useCallback } from "react";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import {
+  milestoneFormSchema,
+  type MilestoneFormValues,
+} from "@/features/build/milestones/milestone-schema";
 import {
   Sheet,
   SheetContent,
@@ -40,15 +44,6 @@ import {
   type ProjectMilestone,
 } from "@/hooks/api/build";
 
-const milestoneSchema = z.object({
-  name: z.string().min(1, "Name is required").max(200, "Name is too long"),
-  description: z.string().optional(),
-  targetDate: z.string().min(1, "Target date is required").regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date"),
-  status: z.enum(["PENDING", "ACHIEVED", "MISSED"]),
-});
-
-type MilestoneFormValues = z.infer<typeof milestoneSchema>;
-
 interface MilestoneUpsertSheetProps {
   projectId: number;
   milestone?: ProjectMilestone;
@@ -62,7 +57,7 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
   const isPending = create.isPending || update.isPending;
 
   const form = useForm<MilestoneFormValues>({
-    resolver: zodResolver(milestoneSchema),
+    resolver: zodResolver(milestoneFormSchema),
     defaultValues: {
       name: milestone?.name ?? "",
       description: milestone?.description ?? "",
@@ -70,6 +65,7 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
       status: milestone?.status ?? "PENDING",
     },
   });
+  useRegisterDirtyState(form.formState.isDirty);
 
   const targetDateValue = form.watch("targetDate");
 

@@ -1,30 +1,10 @@
-/**
- * module-gate-agreement.test.tsx
- *
- * Asserts that <RequireModule> (the route gate) and useModuleEnabled (the hook
- * gate) agree for the alias pairs build/projects and accounting/finance.
- *
- * WHY THIS TEST BITES ON REVERT
- * Before the fix, RequireModule called matchesOrgModule(useEnabledModules(),
- * module). useEnabledModules() returns [] while useAccess data is undefined
- * (loading), so matchesOrgModule([], "build") = false and the component
- * rendered <ModuleDisabledState> — the "loading → denied" flash. After the
- * fix, RequireModule calls useAccess() directly; when data is undefined it
- * returns null. Reverting to the old code path makes the loading-state test
- * below fail because the container is no longer empty.
- *
- * For the alias pairs: normalizeOrgModuleKey("projects") = "build" and
- * normalizeOrgModuleKey("finance") = "accounting" — the same canonical key
- * that useModuleEnabled looks up. Reverting RequireModule to the
- * matchesOrgModule path would diverge on any key absent from ORG_MODULE_NAME
- * (e.g. "chat", which has productKey: null) or on the loading state.
- */
-
 import { render } from "@testing-library/react";
 import { normalizeOrgModuleKey } from "@/lib/org-module-keys";
 import { RequireModule } from "@/components/auth/require-module";
-import { useAccess, useModuleEnabled } from "@/hooks/api/access";
+import { useAccess } from "@/hooks/api/access";
+import { useEntitlements } from "@/hooks/api/entitlements";
 import { pendingQueryResult, successQueryResult } from "@/test-utils";
+import { ENTITLEMENTS } from "@/test-utils/response-contract-fixtures";
 
 jest.mock("next/link", () => ({
   __esModule: true,
@@ -46,19 +26,16 @@ jest.mock("@/components/ui/button", () => ({
   ),
 }));
 
-jest.mock("@/lib/module-catalog", () => ({
-  getModuleCatalogEntry: jest.fn(() => ({ label: "Build" })),
-}));
-
 jest.mock("@/hooks/api/access", () => ({
   useAccess: jest.fn(),
-  useModuleEnabled: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: jest.fn(),
 }));
 
 const mockUseAccess = useAccess as jest.MockedFunction<typeof useAccess>;
-const mockUseModuleEnabled = useModuleEnabled as jest.MockedFunction<
-  typeof useModuleEnabled
->;
+const mockUseEntitlements = useEntitlements as jest.MockedFunction<typeof useEntitlements>;
 
 describe("normalizeOrgModuleKey alias pairs", () => {
   it("normalises 'projects' to 'build'", () => {
@@ -121,19 +98,20 @@ describe("gate agreement — useModuleEnabled logic for alias pairs", () => {
 describe("RequireModule — route gate loading behaviour", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseEntitlements.mockReturnValue(successQueryResult(ENTITLEMENTS));
   });
 
-  it("renders nothing while access data has not loaded", () => {
+  it("shows a skeleton, not the disabled view, while access data has not loaded", () => {
     mockUseAccess.mockReturnValue(pendingQueryResult());
-    mockUseModuleEnabled.mockReturnValue(true);
 
-    const { container } = render(
+    const { getByRole, queryByText } = render(
       <RequireModule module="build">
         <span>content</span>
       </RequireModule>,
     );
 
-    expect(container).toBeEmptyDOMElement();
+    expect(getByRole("status")).toHaveAttribute("aria-busy", "true");
+    expect(queryByText("content")).not.toBeInTheDocument();
   });
 
   it("renders children when the module is enabled and data is loaded", () => {
@@ -143,7 +121,6 @@ describe("RequireModule — route gate loading behaviour", () => {
       canManageOrganizationMembership: false,
       scopes: {},
     }));
-    mockUseModuleEnabled.mockReturnValue(true);
 
     const { getByText } = render(
       <RequireModule module="build">
@@ -161,7 +138,6 @@ describe("RequireModule — route gate loading behaviour", () => {
       canManageOrganizationMembership: false,
       scopes: {},
     }));
-    mockUseModuleEnabled.mockReturnValue(false);
 
     const { queryByText } = render(
       <RequireModule module="build">
@@ -179,7 +155,6 @@ describe("RequireModule — route gate loading behaviour", () => {
       canManageOrganizationMembership: false,
       scopes: {},
     }));
-    mockUseModuleEnabled.mockReturnValue(true);
 
     const { getByText } = render(
       <RequireModule module="projects">
@@ -197,7 +172,6 @@ describe("RequireModule — route gate loading behaviour", () => {
       canManageOrganizationMembership: false,
       scopes: {},
     }));
-    mockUseModuleEnabled.mockReturnValue(true);
 
     const { getByText } = render(
       <RequireModule module="finance">

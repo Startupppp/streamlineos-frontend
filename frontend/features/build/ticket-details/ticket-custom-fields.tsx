@@ -86,7 +86,7 @@ const FieldValueInput = memo(function FieldValueInput({ field, currentValue, onS
         </SelectTrigger>
         <SelectContent>
           {field.options.map((opt) => (
-            <SelectItem key={opt} value={opt} className="text-xs">
+            <SelectItem key={opt} value={opt}>
               {opt}
             </SelectItem>
           ))}
@@ -120,7 +120,7 @@ const FieldValueInput = memo(function FieldValueInput({ field, currentValue, onS
       onChange={handleInputChange}
       onBlur={handleBlurSave}
       placeholder={field.type === "currency" ? "0.00" : "Enter value..."}
-      className="text-xs border-0 bg-muted hover:bg-accent focus:bg-background max-w-[200px]"
+      className="border-0 bg-muted hover:bg-accent focus:bg-background max-w-[200px]"
     />
   );
 });

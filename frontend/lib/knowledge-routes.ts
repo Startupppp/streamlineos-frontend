@@ -1,8 +1,9 @@
 export const KNOWLEDGE_ROOT = "/knowledge";
+export const KB_CHAT = `${KNOWLEDGE_ROOT}/chat`;
 export const KNOWLEDGE_BASE = `${KNOWLEDGE_ROOT}/wiki`;
 
 export function pageHref(id: number): string {
-  return `${KNOWLEDGE_BASE}/pages/${id}`;
+  return `${KNOWLEDGE_BASE}/doc/${id}`;
 }
 
 export function projectPageHref(projectId: number, pageId: number): string {
@@ -10,11 +11,9 @@ export function projectPageHref(projectId: number, pageId: number): string {
 }
 
 export function pageHistoryHref(id: number): string {
-  return `${KNOWLEDGE_BASE}/pages/${id}/history`;
+  return `${KNOWLEDGE_BASE}/doc/${id}/history`;
 }
 
-export const KB_RECENT = `${KNOWLEDGE_BASE}/recent`;
-export const KB_FAVORITES = `${KNOWLEDGE_BASE}/favorites`;
 export const KB_TRASH = `${KNOWLEDGE_BASE}/trash`;
 export const KB_TEMPLATES = `${KNOWLEDGE_BASE}/templates`;
 export const KB_ANALYTICS = `${KNOWLEDGE_BASE}/analytics`;
@@ -27,5 +26,4 @@ export function spaceHref(id: number): string {
 }
 
 export const KB_REVIEWS = `${KNOWLEDGE_BASE}/reviews`;
-export const KB_SETTINGS = `${KNOWLEDGE_BASE}/settings`;
 export const KB_IMPORT = `${KNOWLEDGE_BASE}/import`;

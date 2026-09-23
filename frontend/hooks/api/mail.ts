@@ -125,7 +125,7 @@ export function useSendMail() {
   return useAuthorizedMutation("mail:messages:send", {
     mutationKey: ["mail", "send"],
     mutationFn: (body: SendMailBody) =>
-      apiClient.post<{ messageId: string }>("/mail/send", body, operation.configFor(body), mailSendResultContract),
+      apiClient.post<{ sent: true }>("/mail/send", body, operation.configFor(body), mailSendResultContract),
     onSuccess: () => {
       operation.settle();
       void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
@@ -140,7 +140,7 @@ export function useReplyMail() {
   return useAuthorizedMutation("mail:messages:send", {
     mutationKey: ["mail", "reply"],
     mutationFn: (body: ReplyMailBody) =>
-      apiClient.post<{ messageId: string }>("/mail/reply", body, operation.configFor(body), mailSendResultContract),
+      apiClient.post<{ sent: true }>("/mail/reply", body, operation.configFor(body), mailSendResultContract),
     onSuccess: () => {
       operation.settle();
       void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });

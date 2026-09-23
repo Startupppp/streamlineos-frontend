@@ -1,8 +1,9 @@
 ﻿"use client";
 
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { roadmapItemSchema, parseRiceField, type RoadmapItemFormValues } from "./roadmap-schema";
 import {
   Form,
   FormField,
@@ -37,23 +38,18 @@ import {
   useCreateRoadmapItem,
   useUpdateRoadmapItem,
 } from "@/hooks/api/build/roadmap";
-import type { RoadmapItem } from "@/types/projects";
 import { ROADMAP_STATUS_OPTIONS } from "./roadmap-constants";
-
-const roadmapItemSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string(),
-  status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
-  category: z.string(),
-  targetQuarter: z.string(),
-  isPublic: z.boolean(),
-});
-
-type RoadmapItemFormValues = z.infer<typeof roadmapItemSchema>;
+import { RoadmapDeliveryProgress } from "./roadmap-delivery-progress";
+import { RoadmapRiceFormFields } from "./roadmap-rice-form-fields";
+import type { ScorableRoadmapItem } from "./roadmap-item-card";
 
 interface RoadmapItemSheetProps {
-  item?: RoadmapItem;
+  item?: ScorableRoadmapItem;
   onClose: () => void;
+}
+
+function riceDefault(value: number | null | undefined): string {
+  return value === null || value === undefined ? "" : String(value);
 }
 
 export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
@@ -62,7 +58,7 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
   const update = useUpdateRoadmapItem();
   const isPending = create.isPending || update.isPending;
 
-  const form = useForm<RoadmapItemFormValues, any, RoadmapItemFormValues>({
+  const form = useForm<RoadmapItemFormValues, unknown, RoadmapItemFormValues>({
     resolver: zodResolver(roadmapItemSchema),
     defaultValues: {
       title: item?.title ?? "",
@@ -71,10 +67,21 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
       category: item?.category ?? "",
       targetQuarter: item?.targetQuarter ?? "",
       isPublic: item?.isPublic ?? true,
+      reach: riceDefault(item?.reach),
+      impact: riceDefault(item?.impact),
+      confidence: riceDefault(item?.confidence),
+      effort: riceDefault(item?.effort),
     },
   });
+  useRegisterDirtyState(form.formState.isDirty);
 
   function handleSave(values: RoadmapItemFormValues) {
+    const rice = {
+      reach: parseRiceField(values.reach),
+      impact: parseRiceField(values.impact),
+      confidence: parseRiceField(values.confidence),
+      effort: parseRiceField(values.effort),
+    };
     const payload = {
       title: values.title.trim(),
       description: values.description.trim() || undefined,
@@ -93,6 +100,7 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
           category: payload.category ?? null,
           targetQuarter: payload.targetQuarter ?? null,
           isPublic: payload.isPublic,
+          ...rice,
         },
         {
           onSuccess: () => { toast.success("Roadmap item updated"); onClose(); },
@@ -100,10 +108,19 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
         },
       );
     } else {
-      create.mutate(payload, {
-        onSuccess: () => { toast.success("Roadmap item created"); onClose(); },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      });
+      create.mutate(
+        {
+          ...payload,
+          reach: rice.reach ?? undefined,
+          impact: rice.impact ?? undefined,
+          confidence: rice.confidence ?? undefined,
+          effort: rice.effort ?? undefined,
+        },
+        {
+          onSuccess: () => { toast.success("Roadmap item created"); onClose(); },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
     }
   }
 
@@ -190,6 +207,12 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
                   </FormItem>
                 )}
               />
+              <RoadmapRiceFormFields
+                control={form.control}
+                prioritization={item?.prioritization}
+                tierWeighting={item?.tierWeighting}
+              />
+              {isEdit ? <RoadmapDeliveryProgress roadmapItemId={item.id} /> : null}
               <FormField
                 control={form.control}
                 name="isPublic"

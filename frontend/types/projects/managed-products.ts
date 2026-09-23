@@ -3,7 +3,6 @@ export type ManagedProductStatus = "active" | "archived";
 export interface ManagedProduct {
   id: number;
   orgId: string;
-  pmWorkspaceId: string | null;
   name: string;
   key: string;
   description: string | null;

@@ -21,7 +21,8 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCan } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared";
+import { useCanState } from "@/hooks/api/access";
 import {
   useWebhooks,
   useDeleteWebhook,
@@ -65,13 +66,14 @@ const WebhookActionCell = memo(function WebhookActionCell({
 });
 
 export function WebhooksSettingsCard() {
-  const canManage = useCan("inventory:webhooks:manage");
+  const webhooksState = useCanState("inventory:webhooks:manage");
+  const canManage = webhooksState === "granted";
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingWebhook, setEditingWebhook] = useState<Webhook | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [selectedWebhookId, setSelectedWebhookId] = useState<number | null>(null);
 
-  const { data: webhooks, isLoading } = useWebhooks();
+  const { data: webhooks, isPending } = useWebhooks();
   const deleteMut = useDeleteWebhook();
   const retryMut = useRetryWebhookEvent();
   const eventsQuery = useWebhookEvents(selectedWebhookId ?? 0, { limit: 10 });
@@ -203,7 +205,9 @@ export function WebhooksSettingsCard() {
           )}
         </CardHeader>
         <CardContent className="p-0">
-          {isLoading ? (
+          {webhooksState === "denied" ? (
+            <NoPermissionState compact permission="inventory:webhooks:manage" />
+          ) : isPending ? (
             <div className="px-4 pb-4 space-y-2">
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-full" />

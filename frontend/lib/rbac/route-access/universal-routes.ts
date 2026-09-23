@@ -19,10 +19,6 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
     reason: "Home. Every active member keeps the cross-module read projection.",
   },
   {
-    path: "/home",
-    reason: "Home alias. Same surface as /dashboard.",
-  },
-  {
     path: "/me",
     subtree: true,
     reason:
@@ -45,14 +41,6 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
     ],
     reason:
       "Platform core communication surface. Administrative descendants (org-settings, invite-link management) require explicit permission.",
-  },
-  {
-    path: "/notifications",
-    universalDescendants: [
-      { path: "/notifications/preferences", subtree: true },
-    ],
-    reason:
-      "Platform core communication surface — personal inbox and read state only. Administration (providers, templates, events, policy, broadcasts) is explicitly gated via the extension registry.",
   },
   {
     path: "/calendar",
@@ -85,36 +73,25 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
     path: "/knowledge",
     universalDescendants: [
       { path: "/knowledge/wiki" },
-      { path: "/knowledge/wiki/favorites", subtree: true },
-      { path: "/knowledge/wiki/recent", subtree: true },
       { path: "/knowledge/wiki/shared", subtree: true },
       { path: "/knowledge/wiki/private", subtree: true },
-      { path: "/knowledge/wiki/pages", subtree: true },
+      { path: "/knowledge/wiki/doc", subtree: true },
       { path: "/knowledge/wiki/spaces", childrenOnly: true },
       { path: "/knowledge/chat", subtree: true },
     ],
     reason:
-      "Knowledge Base reading is platform core. Administrative surfaces (settings, import, analytics, reviews, templates, trash, space management) are explicitly gated via the extension registry.",
-  },
-  {
-    path: "/support/my",
-    reason:
-      "A member's own support requests, not the helpdesk queue that serves them.",
-  },
-  {
-    path: "/referrals",
-    reason:
-      "Referrals and internal job openings are universal; the candidate pipeline behind them is not.",
-  },
-  {
-    path: "/jobs",
-    reason:
-      "Internal job openings are universal; recruitment administration is not.",
+      "Knowledge Base reading is platform core. Administrative surfaces (import, analytics, reviews, templates, trash, space management) are explicitly gated via the extension registry.",
   },
   {
     path: "/settings",
     reason:
       "The personal account landing page. Everything beneath /settings is organization administration and stays permissioned.",
+  },
+  {
+    path: "/settings/notifications/my-preferences",
+    subtree: true,
+    reason:
+      "The personal notification preference centre is platform core for every member. Its sibling administration surfaces (templates, providers, events, policy, broadcasts) are gated via the extension registry.",
   },
   {
     path: "/access-denied",

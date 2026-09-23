@@ -72,10 +72,30 @@ const REMAINING_BY_MODULE: Readonly<Record<string, number>> = {
    * users 10 -> 0 (both keys dropped). Direction of travel is unchanged — the
    * numbers below may still only fall.
    */
-  "hr": 125,
+  /*
+   * Re-measured on 2026-09-21 when the HRMS / Timesheets / Payroll programme
+   * merged (HRMS_AUDIT_2026-09-21). These six are NEW work, not arrivals, and
+   * they are counted rather than exempted so ticket 15 can size the batch:
+   *
+   *   hr        125 -> 127   features/hr/employees/manager-coverage-page.tsx
+   *                          (reporting-manager coverage table),
+   *                          features/hr/onboarding/onboarding-templates-tab.tsx
+   *                          (plan editor moved onto react-hook-form)
+   *   payroll    53 ->  54   features/payroll/readiness/readiness-page.tsx
+   *   me          0 ->   1   features/me/team/team-roster.tsx
+   *   employee-support 0 -> 2  features/employee-support/support-request-columns.tsx,
+   *                          support-requests-table-skeleton.tsx
+   *
+   * features/hr/reimbursements/reimbursement-request-sheet.tsx also moved onto
+   * react-hook-form and features/hr/helpdesk/create-ticket-dialog.tsx was
+   * deleted, so hr nets +2. The numbers below may still only fall.
+   */
+  "hr": 127,
   "inventory": 138, // 96 on the CRM lane; +40 from the inventory lane on merge
   "build": 76,
-  "payroll": 53,
+  "payroll": 54,
+  "employee-support": 2,
+  "me": 1,
   "accounting": 32,
   "settings": 25,
   /*
@@ -137,6 +157,8 @@ const REMAINING_BY_MODULE: Readonly<Record<string, number>> = {
  * against the six surfaces named at the top of this file.
  */
 const CRAFTED_BY_DESIGN: Readonly<Record<string, string>> = {
+  "features/guided-chain/generate-invoice-sheet.tsx":
+    "A multi-step flow, not a record form: step one selects which approved timesheet entries to bill and step two prices the invoice they produce. RecordForm has a single-submit contract and no vocabulary for a selection that determines the next step's fields.",
   "features/crm/quotes/components/quote-create-sheet.tsx":
     "A quote is priced line by line with a `useFieldArray` grid; the renderer has no vocabulary for a repeating priced row that recalculates a total.",
   "features/crm/settings/assignment-rule-sheet.tsx":
@@ -153,6 +175,8 @@ const CRAFTED_BY_DESIGN: Readonly<Record<string, string>> = {
     "The columns are built from a compiled report's own projections, so the row type is `Record<string, unknown>` known only at run time. There is no record here to describe.",
   "features/crm/reports/builder/report-builder-panel.tsx":
     "The fields being edited describe a query — source, projections, filters, grouping — not a record, which is the same argument the assignment-rule condition tree makes.",
+  "features/build/shared/build-list-gallery-cases.tsx":
+    "Fixture rows and columns for the dev-only /design-system/build-list gallery, which exists so the Build list contract can be measured in a real browser at 375/768/1280. It renders no record and reaches no endpoint; describing it to the renderer would describe a test double.",
   "features/crm/nurture/nurture-step-editor.tsx":
     "A cadence edited and saved whole through `useFieldArray`, because step numbers come from the array's order and a gap makes the sender fire twice. The ordered array is the data structure.",
 };
@@ -162,6 +186,7 @@ const PATTERN = /DataTableColumn<|<table[ >]|useForm[<(]/;
 /** Comments describe removed markup constantly; only code renders any. */
 function executable(source: string): string {
   return source
+    .replace(/\r\n/g, "\n")
     .replace(/\/\*[\s\S]*?\*\//g, " ")
     .split("\n")
     .map((line) => line.replace(/\/\/.*$/, ""))

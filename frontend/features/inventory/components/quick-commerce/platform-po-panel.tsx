@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { AppSheet, ErrorState } from "@/components/shared";
+import { AppSheet, ErrorState, NoPermissionState } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import {
   useAcceptPlatformPo,
   useFillRate,
@@ -126,9 +126,10 @@ const FILL_RATE_COLUMNS: DataTableColumn<FillRateLine>[] = [
  * our catalogue, and how we did against it.
  */
 export function PlatformPoPanel({ open, onOpenChange, platformPoId }: PlatformPoPanelProps) {
+  const channelState = useCanState("inventory:channels:manage");
   const canAccept = useCan("inventory:purchase-orders:create");
   const canSeeFillRate = useCan("inventory:reports:read");
-  const { data, isLoading, isError, refetch } = usePlatformPurchaseOrder(platformPoId);
+  const { data, isPending, isError, refetch } = usePlatformPurchaseOrder(platformPoId);
   const fillRate = useFillRate(platformPoId);
   const accept = useAcceptPlatformPo();
 
@@ -165,7 +166,9 @@ export function PlatformPoPanel({ open, onOpenChange, platformPoId }: PlatformPo
 
   return (
     <AppSheet open={open} onOpenChange={onOpenChange} title={title} className="sm:max-w-3xl">
-      {isLoading ? (
+      {channelState === "denied" ? (
+        <NoPermissionState compact permission="inventory:channels:manage" />
+      ) : isPending ? (
         <div className="p-6 space-y-2">
           {[...Array(8)].map((_, i) => (
             <Skeleton key={i} className="h-8 w-full" />
@@ -262,7 +265,7 @@ export function PlatformPoPanel({ open, onOpenChange, platformPoId }: PlatformPo
               <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
                 Fill rate
               </p>
-              {fillRate.isLoading ? (
+              {fillRate.isPending ? (
                 <Skeleton className="h-24 w-full" />
               ) : fillRate.isError || !fillRate.data ? (
                 <p className="text-xs text-muted-foreground">

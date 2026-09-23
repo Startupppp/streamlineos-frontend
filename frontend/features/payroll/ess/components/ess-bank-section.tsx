@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,12 +12,14 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { useEssBank, useUpdateBank } from "@/hooks/api/payroll/ess";
+import type { EssBankDetails } from "@/hooks/api/payroll/ess-schema";
 import { cn } from "@/lib/utils";
 import { codeFieldChange } from "@/lib/code-field";
 
@@ -129,20 +131,38 @@ function RevealInput({ placeholder, ...props }: React.InputHTMLAttributes<HTMLIn
   );
 }
 
-function BankSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+type MaskedBank = Extract<EssBankDetails, { hasBank: true }>["masked"];
+
+function seedFromMasked(masked: MaskedBank | null | undefined): BankFormValues {
+  return {
+    bankCountry: masked?.bankCountry ?? "IN",
+    accountNumber: "",
+    confirmAccount: "",
+    code: masked?.ifsc ?? "",
+    accountHolder: masked?.accountHolder ?? "",
+    bankName: masked?.bankName ?? "",
+    branch: masked?.branch ?? "",
+  };
+}
+
+function BankSheet({
+  open,
+  onClose,
+  masked,
+}: {
+  open: boolean;
+  onClose: () => void;
+  masked: MaskedBank | null | undefined;
+}) {
   const mutation = useUpdateBank();
   const form = useForm<BankFormValues>({
     resolver: zodResolver(bankSchema),
-    defaultValues: {
-      bankCountry: "IN",
-      accountNumber: "",
-      confirmAccount: "",
-      code: "",
-      accountHolder: "",
-      bankName: "",
-      branch: "",
-    },
+    defaultValues: seedFromMasked(masked),
   });
+
+  useEffect(() => {
+    if (open) form.reset(seedFromMasked(masked));
+  }, [open, masked, form]);
 
   const watchedCountry = form.watch("bankCountry");
   const scheme = detectScheme(watchedCountry);
@@ -169,12 +189,12 @@ function BankSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
         accountNumber: values.accountNumber,
         code: values.code,
         accountHolder: values.accountHolder,
-        bankName: values.bankName,
-        branch: values.branch,
+        bankName: values.bankName || undefined,
+        branch: values.branch || undefined,
         bankCountry: values.bankCountry,
       });
       toast.success("Bank details updated");
-      form.reset();
+      form.reset(values);
       onClose();
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -244,6 +264,11 @@ function BankSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
                   <FormControl>
                     <RevealInput placeholder="Enter account number" {...field} />
                   </FormControl>
+                  {masked ? (
+                    <FormDescription>
+                      Stored as {masked.accountNumber} — re-enter it in full to confirm or change it.
+                    </FormDescription>
+                  ) : null}
                   <FormMessage />
                 </FormItem>
               )}
@@ -329,7 +354,7 @@ export function EssBankSection({
   sheetOpen?: boolean;
   onSheetOpenChange?: (open: boolean) => void;
 }) {
-  const { data, isLoading } = useEssBank();
+  const { data, isLoading, isError, error, refetch } = useEssBank();
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const sheetOpen = sheetOpenProp ?? uncontrolledOpen;
   const setSheetOpen = onSheetOpenChange ?? setUncontrolledOpen;
@@ -356,6 +381,12 @@ export function EssBankSection({
             </div>
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState
+          title="Couldn't load bank details"
+          description={getErrorMessage(error)}
+          onRetry={() => void refetch()}
+        />
       ) : data?.hasBank && data.masked ? (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -382,7 +413,7 @@ export function EssBankSection({
         />
       )}
 
-      <BankSheet open={sheetOpen} onClose={handleClose} />
+      <BankSheet open={sheetOpen} onClose={handleClose} masked={data?.hasBank ? data.masked : null} />
     </section>
   );
 }

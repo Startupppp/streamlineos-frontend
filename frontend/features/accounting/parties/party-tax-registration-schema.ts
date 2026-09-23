@@ -1,8 +1,11 @@
 import { z } from "zod";
-import type { TaxRegime } from "@/types/accounting-kernel-ext";
-import type { CreatePartyTaxRegistrationInput } from "@/types/accounting-ar";
+import type { TaxRegime } from "@/types/accounting/accounting-kernel-ext";
+import type { CreatePartyTaxRegistrationInput } from "@/types/accounting/accounting-ar";
 
-export const TAX_REGIME_OPTIONS: ReadonlyArray<{ value: TaxRegime; label: string }> = [
+export const TAX_REGIME_OPTIONS: ReadonlyArray<{
+  value: TaxRegime;
+  label: string;
+}> = [
   { value: "GST_IN", label: "India GST (GSTIN)" },
   { value: "VAT_EU", label: "EU VAT" },
   { value: "VAT_GB", label: "UK VAT" },
@@ -41,7 +44,9 @@ export const partyTaxRegistrationSchema = z.object({
   isPrimary: z.boolean(),
 });
 
-export type PartyTaxRegistrationValues = z.infer<typeof partyTaxRegistrationSchema>;
+export type PartyTaxRegistrationValues = z.infer<
+  typeof partyTaxRegistrationSchema
+>;
 
 export function toTaxRegistrationInput(
   values: PartyTaxRegistrationValues,

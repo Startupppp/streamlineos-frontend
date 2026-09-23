@@ -221,4 +221,28 @@ describe("a11y — Notifications/Inbox surface (NotificationCard — real compon
     const deleteBtn = screen.getByRole("button", { name: "Delete notification" });
     expect(deleteBtn).toHaveAttribute("type", "button");
   });
+
+  it("does not repeat a body that matches the title", () => {
+    render(
+      <NotificationCard
+        {...makeProps({
+          title: "Survey response received",
+          message: "Survey response received",
+        })}
+      />,
+    );
+    expect(screen.getAllByText("Survey response received")).toHaveLength(1);
+  });
+
+  it("does not render the raw source module slug", () => {
+    render(
+      <NotificationCard
+        {...makeProps({
+          category: "PROJECTS",
+          sourceModule: "build",
+        })}
+      />,
+    );
+    expect(screen.queryByText("build")).not.toBeInTheDocument();
+  });
 });

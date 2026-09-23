@@ -23,6 +23,9 @@ installAbortSignalPolyfill();
 
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
+jest.mock("@/components/markdown/markdown-content", () => ({
+  MarkdownContent: ({ content }: { content: string }) => <p>{content}</p>,
+}));
 
 const originalFetch = globalThis.fetch;
 let fetchMock: jest.Mock;
@@ -129,7 +132,7 @@ const SURFACES: Surface[] = [
     render: () => {
       render(<KbPageAiActions pageId={7} />);
     },
-    summarizeLabel: /summarize this page/i,
+    summarizeLabel: /summarize/i,
     improveLabel: /improve writing/i,
     askLabel: /ask about this page/i,
   },
@@ -139,7 +142,7 @@ const SURFACES: Surface[] = [
     render: () => {
       render(<KbArticleAiActions articleId={7} />);
     },
-    summarizeLabel: /summarize this article/i,
+    summarizeLabel: /summarize/i,
     improveLabel: /improve writing/i,
     askLabel: /ask about this article/i,
   },
@@ -156,7 +159,7 @@ describe.each(SURFACES)("$name — the KB document actions stream", (surface) =>
     surface.render();
 
     await openMenu(user);
-    await user.click(await screen.findByText(surface.summarizeLabel));
+    await user.click(await screen.findByRole("menuitem", { name: surface.summarizeLabel }));
 
     await waitFor(() => {
       expect(requestedUrls.length).toBeGreaterThan(0);
@@ -212,7 +215,7 @@ describe.each(SURFACES)("$name — the KB document actions stream", (surface) =>
     await screen.findByText(/one/);
 
     await openMenu(user);
-    await user.click(await screen.findByText(surface.summarizeLabel));
+    await user.click(await screen.findByRole("menuitem", { name: surface.summarizeLabel }));
 
     await waitFor(() => {
       expect(requestSignals).toHaveLength(2);
@@ -229,10 +232,13 @@ describe.each(SURFACES)("$name — the KB document actions stream", (surface) =>
     await openMenu(user);
     await user.click(await screen.findByText(surface.askLabel));
 
-    await user.type(await screen.findByPlaceholderText(/prerequisites/i), "What do I need?");
-    await user.click(screen.getByRole("button", { name: /^ask$/i }));
+    await user.type(await screen.findByPlaceholderText(/ask about this page/i), "What do I need?");
+    await user.click(screen.getByRole("button", { name: /^send$/i }));
 
     expect(await screen.findByText(/you need Node 20\./)).toBeInTheDocument();
+    expect(screen.getByText("What do I need?")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /ask another/i })).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/ask about this page/i)).toBeInTheDocument();
     expect(requestedUrls[0]).toContain(`/kb/${surface.scope}/7/ai/ask/stream`);
   });
 
@@ -243,8 +249,8 @@ describe.each(SURFACES)("$name — the KB document actions stream", (surface) =>
 
     await openMenu(user);
     await user.click(await screen.findByText(surface.askLabel));
-    await user.type(await screen.findByPlaceholderText(/prerequisites/i), "First question?");
-    await user.click(screen.getByRole("button", { name: /^ask$/i }));
+    await user.type(await screen.findByPlaceholderText(/ask about this page/i), "First question?");
+    await user.click(screen.getByRole("button", { name: /^send$/i }));
     await screen.findByText(/stale answer/);
 
     await user.click(screen.getByRole("button", { name: /^stop$/i }));

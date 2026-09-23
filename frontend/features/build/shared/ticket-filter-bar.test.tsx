@@ -2,8 +2,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { TicketFilterBar } from "./ticket-filter-bar";
 
 const mockReplace = jest.fn();
-const mockUseCycles = jest.fn(() => ({ data: [] }));
-const mockUseProjectLabels = jest.fn(() => ({ data: [] }));
+const mockUseCycles: jest.Mock = jest.fn(() => ({ data: [] }));
+const mockUseProjectLabels: jest.Mock = jest.fn(() => ({ data: [] }));
 let mockSearchParams = new URLSearchParams();
 
 jest.mock("next/navigation", () => ({
@@ -17,10 +17,10 @@ jest.mock("next/dynamic", () => () => () => null);
 // The bar's only data dependencies. Stubbing them keeps the session and query
 // providers out of a test about chips and URL state.
 jest.mock("@/hooks/api/build/advanced", () => ({
-  useCycles: (...args: unknown[]) => mockUseCycles(...args),
+  useCycles: (...args: [number, Record<string, unknown>?]) => mockUseCycles(...args),
 }));
 jest.mock("@/hooks/api/build/projects", () => ({
-  useProjectLabels: (...args: unknown[]) => mockUseProjectLabels(...args),
+  useProjectLabels: (...args: [number?, Record<string, unknown>?]) => mockUseProjectLabels(...args),
 }));
 
 /**
@@ -36,7 +36,6 @@ function renderWith(query: string) {
     <TicketFilterBar
       statuses={[{ name: "OPEN" }, { name: "DONE" }]}
       members={[{ id: "u1", name: "Priya", firstName: "Priya", lastName: null }]}
-      sprints={[{ id: 7, name: "Sprint 7" }]}
       projectId={42}
     />,
   );

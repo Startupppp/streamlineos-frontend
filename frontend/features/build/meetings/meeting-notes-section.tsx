@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useUpdateMeeting } from "@/hooks/api/build";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import dynamic from "next/dynamic";
 
 const TiptapEditor = dynamic(
@@ -32,6 +33,8 @@ export function MeetingNotesSection({ meeting, projectId, canManage }: MeetingNo
   const [dirty, setDirty] = useState(false);
 
   const updateMeeting = useUpdateMeeting(projectId);
+
+  useRegisterDirtyState(dirty);
 
   function handleAgendaChange(html: string) {
     setAgendaDraft(html);

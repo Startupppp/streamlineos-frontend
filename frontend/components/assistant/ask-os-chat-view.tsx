@@ -1,8 +1,10 @@
 import type { MouseEvent, RefObject } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import type { AskAiHistoryMessage } from "@/hooks/api";
 import { AiActionResultBody, type AiFailureState } from "@/components/ai";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { AskOsDirective } from "./ask-os-directive-schema";
 import {
   AskOsBubble,
   buildMsgRows,
@@ -34,6 +36,7 @@ interface AskOsChatViewProps {
   scrollRef: RefObject<HTMLDivElement | null>;
   showEmpty: boolean;
   topSentinelRef: RefObject<HTMLDivElement | null>;
+  directives?: AskOsDirective[];
 }
 
 export function AskOsChatView({
@@ -54,6 +57,7 @@ export function AskOsChatView({
   scrollRef,
   showEmpty,
   topSentinelRef,
+  directives = [],
 }: AskOsChatViewProps) {
   const msgRows = buildMsgRows(persisted);
   const lastPersisted =
@@ -63,26 +67,30 @@ export function AskOsChatView({
     (!lastPersisted ||
       dayKey(lastPersisted.createdAt) !== dayKey(new Date().toISOString()));
   const showJump = !atBottom && !isLoading && !showEmpty;
+  const awaitingReply = draft !== null && draft.assistant.length === 0;
+  const showHistory = Boolean(draft) || !isLoading;
 
   return (
     <div className="relative min-h-0 flex-1 overflow-hidden">
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="absolute inset-0 overflow-y-auto overscroll-contain p-4 scrollbar-hide"
+        className="absolute inset-0 overflow-y-auto overscroll-contain px-3 py-4 scrollbar-hide"
       >
-        {isLoading ? (
-          <div className="flex min-h-full items-center justify-center">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        {!showHistory ? (
+          <div className="mx-auto flex w-full max-w-[36rem] flex-col gap-4">
+            <Skeleton className="ml-auto h-8 w-2/3 rounded-2xl" />
+            <Skeleton className="h-16 w-4/5 rounded-2xl" />
+            <Skeleton className="ml-auto h-8 w-1/2 rounded-2xl" />
           </div>
         ) : showEmpty ? (
           <EmptyAskOs onSuggestion={onSuggestion} />
         ) : (
-          <div className="space-y-4">
+          <div className="mx-auto w-full max-w-[36rem] space-y-4">
             {hasNextPage ? (
               <div ref={topSentinelRef} className="flex justify-center pb-1">
                 {isFetchingNextPage ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <Skeleton className="h-6 w-28 rounded-full" />
                 ) : (
                   <button
                     type="button"
@@ -131,8 +139,9 @@ export function AskOsChatView({
                 key="draft-assistant"
                 role="assistant"
                 content={draft.assistant}
-                streaming={isStreaming}
+                streaming={isStreaming || awaitingReply}
                 reduce={reduce}
+                directives={directives}
               />
             )}
             {failure && (

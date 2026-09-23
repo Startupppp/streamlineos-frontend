@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { memo } from "react";
+import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowBigUp, Pencil } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
@@ -13,11 +14,22 @@ import { PM_PANEL } from "@/components/pm-chrome";
 import { listItem, listItemReduced, pmSnappy } from "@/lib/motion-presets";
 import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import type { RoadmapPrioritization, RoadmapTierWeighting } from "@/hooks/api/build/roadmap";
+import { RoadmapPriorityScore } from "./roadmap-priority-score";
+
+export type ScorableRoadmapItem = RoadmapItem & {
+  reach?: number | null;
+  impact?: number | null;
+  confidence?: number | null;
+  effort?: number | null;
+  prioritization?: RoadmapPrioritization;
+  tierWeighting?: RoadmapTierWeighting;
+};
 
 interface RoadmapItemCardProps {
-  item: RoadmapItem;
-  onEdit: (item: RoadmapItem) => void;
-  onDelete: (item: RoadmapItem) => void;
+  item: ScorableRoadmapItem;
+  onEdit: (item: ScorableRoadmapItem) => void;
+  onDelete: (item: ScorableRoadmapItem) => void;
 }
 
 export const RoadmapItemCard = memo(function RoadmapItemCard({
@@ -68,6 +80,10 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
           </p>
         ) : null}
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <RoadmapPriorityScore
+            prioritization={item.prioritization}
+            tierWeighting={item.tierWeighting}
+          />
           {item.targetQuarter ? (
             <Badge variant="outline" className="text-micro">
               {item.targetQuarter}
@@ -87,6 +103,15 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
             <ArrowBigUp className="h-3.5 w-3.5" />
             {item.votes}
           </span>
+          {item.projectId !== null ? (
+            <Link
+              href={`/build/${item.projectId}`}
+              aria-label="View project"
+              className="text-dense text-primary underline-offset-2 hover:underline"
+            >
+              View project
+            </Link>
+          ) : null}
         </div>
       </div>
     </motion.div>

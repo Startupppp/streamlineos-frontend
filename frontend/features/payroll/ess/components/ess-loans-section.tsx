@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { EssStatusBadge } from "./ess-status-badge";
 import { useEssLoans, useCreateLoan } from "@/hooks/api/payroll/ess";
@@ -24,16 +25,20 @@ import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import type { EssLoan } from "@/types/payroll/ess";
 import { cn } from "@/lib/utils";
 
+const LOAN_AMOUNT_MIN = 1000;
+const LOAN_AMOUNT_MAX = 10_000_000;
+const LOAN_EMIS_MAX = 360;
+
 const loanSchema = z.object({
   amount: z.string().min(1, "Amount required").refine((v) => {
     const n = parseFloat(v);
-    return Number.isFinite(n) && n > 0;
-  }, "Amount must be positive"),
+    return Number.isFinite(n) && n >= LOAN_AMOUNT_MIN && n <= LOAN_AMOUNT_MAX;
+  }, `Between ₹${LOAN_AMOUNT_MIN.toLocaleString("en-IN")} and ₹${LOAN_AMOUNT_MAX.toLocaleString("en-IN")}`),
   reason: z.string().min(1, "Reason required").max(500),
   totalEmis: z.string().min(1, "EMI count required").refine((v) => {
     const n = parseInt(v, 10);
-    return Number.isFinite(n) && n >= 1 && n <= 60;
-  }, "Between 1 and 60 EMIs"),
+    return Number.isFinite(n) && n >= 1 && n <= LOAN_EMIS_MAX;
+  }, `Between 1 and ${LOAN_EMIS_MAX} EMIs`),
 });
 
 type LoanFormValues = z.infer<typeof loanSchema>;
@@ -124,7 +129,7 @@ function RequestLoanDialog({ open, onClose }: LoanDialogProps) {
                 <FormItem>
                   <FormLabel>Amount (₹) <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
-                    <Input type="number" min="0" step="0.01" placeholder="0.00" {...field} />
+                    <Input type="number" min={LOAN_AMOUNT_MIN} max={LOAN_AMOUNT_MAX} step="0.01" placeholder="0.00" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -137,7 +142,7 @@ function RequestLoanDialog({ open, onClose }: LoanDialogProps) {
                 <FormItem>
                   <FormLabel>Repayment months <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
-                    <Input type="number" min="1" max="60" placeholder="e.g. 12" {...field} />
+                    <Input type="number" min={1} max={LOAN_EMIS_MAX} placeholder="e.g. 12" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -182,7 +187,7 @@ export function EssLoansSection({
   dialogOpen: dialogOpenProp,
   onDialogOpenChange,
 }: EssLoansSectionProps) {
-  const { data: loans, isLoading } = useEssLoans();
+  const { data: loans, isLoading, isError, error, refetch } = useEssLoans();
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const dialogOpen = dialogOpenProp ?? uncontrolledOpen;
   const setDialogOpen = onDialogOpenChange ?? setUncontrolledOpen;
@@ -221,6 +226,12 @@ export function EssLoansSection({
               <LoanSkeleton key={i} />
             ))}
           </div>
+        ) : isError ? (
+          <ErrorState
+            title="Couldn't load loans"
+            description={getErrorMessage(error)}
+            onRetry={() => void refetch()}
+          />
         ) : !loans || loans.length === 0 ? (
           <EmptyState
             illustrationPreset="payroll"

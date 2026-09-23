@@ -8,7 +8,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Gated, ErrorState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { ThreadItem, ThreadPane } from "./recruitment-thread-ui";
 
 export function RecruitmentInboxPage() {
@@ -25,17 +26,23 @@ export function RecruitmentInboxPage() {
     void threadsQuery.refetch();
   }
 
+  const state = usePageState({
+    permission: "hr:requisitions:view",
+    isLoading: threadsQuery.isLoading,
+    isError: threadsQuery.isError,
+    error: threadsQuery.error,
+    isEmpty: threads.length === 0,
+  });
+
   return (
     <PageWrapper
       title="Candidate Inbox"
       subtitle="Manage candidate conversations across channels"
       noInternalScroll
     >
-      <Gated
-        permission="hr:employees:view"
-        isLoading={threadsQuery.isLoading}
-        isError={threadsQuery.isError}
-        isEmpty={threads.length === 0}
+      <PageState
+        resolution={state}
+        onRetry={handleRetry}
         loading={
           <div className="flex gap-4 h-full">
             <div className="w-72 space-y-2">
@@ -45,13 +52,6 @@ export function RecruitmentInboxPage() {
             </div>
             <Skeleton className="flex-1 rounded-xl" />
           </div>
-        }
-        error={
-          <ErrorState
-            title="Unable to load inbox"
-            description="Try again. If this keeps happening, check your permissions or contact an admin."
-            onRetry={handleRetry}
-          />
         }
         empty={
           <RecruitmentEmptyState
@@ -92,7 +92,7 @@ export function RecruitmentInboxPage() {
             )}
           </div>
         </div>
-      </Gated>
+      </PageState>
     </PageWrapper>
   );
 }

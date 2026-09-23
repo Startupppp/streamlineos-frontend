@@ -6,6 +6,7 @@ import { FileText } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { UploadIcon, XIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
@@ -63,17 +64,15 @@ export function UploadDocSheet({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const typeOptions = useMemo((): DocTypeOption[] => {
-    const fromCatalog = (documentTypes ?? [])
-      .filter((dt) => dt.isActive !== false)
-      .map((dt) => ({ id: dt.id, name: dt.name }));
-    if (fromCatalog.length > 0) return fromCatalog;
-
-    if (!selfUpload) return [];
-
     const byId = new Map<number, string>();
-    for (const doc of myDocs?.data ?? []) {
-      if (!byId.has(doc.documentTypeId)) {
-        byId.set(doc.documentTypeId, doc.documentTypeName);
+    for (const docType of documentTypes ?? []) {
+      if (docType.isActive !== false) byId.set(docType.id, docType.name);
+    }
+    if (selfUpload) {
+      for (const doc of myDocs?.data ?? []) {
+        if (!byId.has(doc.documentTypeId)) {
+          byId.set(doc.documentTypeId, doc.documentTypeName);
+        }
       }
     }
     return Array.from(byId, ([id, name]) => ({ id, name }));
@@ -287,13 +286,15 @@ export function UploadDocSheet({
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             className="flex-1"
             onClick={handleUploadSubmit}
-            disabled={isUploading || !uploadDocTypeId || !uploadFile || typeOptions.length === 0}
+            isPending={isUploading}
+            loadingText="Uploading…"
+            disabled={!uploadDocTypeId || !uploadFile}
           >
-            {isUploading ? "Uploading..." : "Upload"}
-          </Button>
+            Upload
+          </LoadingButton>
         </div>
       </SheetContent>
     </Sheet>

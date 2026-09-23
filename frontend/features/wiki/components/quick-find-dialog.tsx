@@ -16,6 +16,7 @@ import type { KbPageSearchResult } from "@/hooks/api/kb/page-types";
 import { pageHref } from "@/lib/knowledge-routes";
 import { KbFileTextIcon, KbLoader2Icon } from "@/features/wiki/lib/kb-icons";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { SearchSnippetText } from "@/features/wiki/lib/search-snippet-text";
 
 interface QuickFindDialogProps {
   open: boolean;
@@ -86,7 +87,10 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
                 <div className="flex flex-col min-w-0">
                   <TruncatedText text={result.title || "Untitled"} className="font-medium" />
                   {result.snippet && (
-                    <TruncatedText text={result.snippet} className="text-xs text-muted-foreground" />
+                    <SearchSnippetText
+                      snippet={result.snippet}
+                      className="text-xs text-muted-foreground"
+                    />
                   )}
                 </div>
               </CommandItem>

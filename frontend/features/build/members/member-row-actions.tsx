@@ -9,11 +9,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { EllipsisIcon } from "@animateicons/react/lucide";
-import type { ProjectWorkspaceMember } from "@/hooks/api/build/workspace-members";
+import type { BuildMember } from "@/hooks/api/build/build-members";
 
 interface MemberActionsProps {
-  member: ProjectWorkspaceMember;
-  onRemove: (member: ProjectWorkspaceMember) => void;
+  member: BuildMember;
+  onRemove: (member: BuildMember) => void;
 }
 
 export function MemberActions({ member, onRemove }: MemberActionsProps) {

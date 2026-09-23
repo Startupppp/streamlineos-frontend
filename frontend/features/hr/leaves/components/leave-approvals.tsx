@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyApprovalIllustration, EmptyCalendarIllustration } from "@/components/illustrations";
 import { Home, CalendarDays } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -40,7 +41,7 @@ export function LeaveApprovalsContent({
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
-  const { data: pendingWfhRequests } = useHrPendingWfhRequests();
+  const { data: pendingWfhRequests, isError: wfhError, error: wfhErrorValue, refetch: refetchWfh } = useHrPendingWfhRequests();
   const processWfhRequestMutation = useProcessWfhRequest();
 
   const handleRejectionReasonChange = useCallback(
@@ -215,7 +216,13 @@ export function LeaveApprovalsContent({
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            {!pendingWfhRequests || pendingWfhRequests.length === 0 ? (
+            {wfhError ? (
+              <ErrorState
+                title="Couldn't load WFH requests"
+                description={getErrorMessage(wfhErrorValue)}
+                onRetry={refetchWfh}
+              />
+            ) : !pendingWfhRequests || pendingWfhRequests.length === 0 ? (
               <EmptyState illustration={<EmptyCalendarIllustration />} title="No pending WFH requests" description="All WFH requests have been processed." />
             ) : (
               <motion.div

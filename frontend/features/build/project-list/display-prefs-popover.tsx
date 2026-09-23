@@ -43,12 +43,11 @@ const GROUP_OPTIONS: { value: ProjectGroupBy; label: string }[] = [
   { value: "lead", label: "Lead" },
 ];
 
-const ORDER_OPTIONS: { value: ProjectOrderBy; label: string }[] = [
+export const ORDER_OPTIONS: { value: ProjectOrderBy; label: string }[] = [
   { value: "name", label: "Name" },
   { value: "status", label: "Status" },
   { value: "targetDate", label: "Target date" },
   { value: "progress", label: "Progress" },
-  { value: "createdAt", label: "Created" },
 ];
 
 const GROUP_BY_OPTIONS = ["none", "status", "lead"] as const satisfies readonly ProjectGroupBy[];
@@ -57,7 +56,6 @@ const ORDER_BY_OPTIONS = [
   "status",
   "targetDate",
   "progress",
-  "createdAt",
 ] as const satisfies readonly ProjectOrderBy[];
 const ORDER_DIR_OPTIONS = ["asc", "desc"] as const satisfies readonly ProjectSortDir[];
 
@@ -78,6 +76,31 @@ const PROPERTY_TOGGLES: { key: BooleanPrefKey; label: string }[] = [
   { key: "showProgress", label: "Progress" },
   { key: "showIssueCount", label: "Issues" },
 ];
+
+function PropertyToggle({
+  propertyKey,
+  label,
+  checked,
+  onToggle,
+}: {
+  propertyKey: BooleanPrefKey;
+  label: string;
+  checked: boolean;
+  onToggle: (key: keyof DisplayPrefs) => void;
+}) {
+  function handleCheckedChange() {
+    onToggle(propertyKey);
+  }
+
+  return (
+    <DisplayToggleRow
+      id={`toggle-${propertyKey}`}
+      label={label}
+      checked={checked}
+      onCheckedChange={handleCheckedChange}
+    />
+  );
+}
 
 export function DisplayPrefsPopover({
   prefs,
@@ -130,7 +153,7 @@ export function DisplayPrefsPopover({
           </SelectTrigger>
           <SelectContent>
             {GROUP_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value} className="text-xs">
+              <SelectItem key={o.value} value={o.value}>
                 {o.label}
               </SelectItem>
             ))}
@@ -145,7 +168,7 @@ export function DisplayPrefsPopover({
             </SelectTrigger>
             <SelectContent>
               {ORDER_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value} className="text-xs">
+                <SelectItem key={o.value} value={o.value}>
                   {o.label}
                 </SelectItem>
               ))}
@@ -156,8 +179,8 @@ export function DisplayPrefsPopover({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="asc" className="text-xs">Asc</SelectItem>
-              <SelectItem value="desc" className="text-xs">Desc</SelectItem>
+              <SelectItem value="asc">Asc</SelectItem>
+              <SelectItem value="desc">Desc</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -174,12 +197,12 @@ export function DisplayPrefsPopover({
         <SectionLabel>Properties</SectionLabel>
         <div>
           {PROPERTY_TOGGLES.map((p) => (
-            <DisplayToggleRow
+            <PropertyToggle
               key={p.key}
-              id={`toggle-${p.key}`}
+              propertyKey={p.key}
               label={p.label}
               checked={prefs[p.key]}
-              onCheckedChange={() => onToggle(p.key)}
+              onToggle={onToggle}
             />
           ))}
         </div>

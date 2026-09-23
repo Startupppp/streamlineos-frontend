@@ -37,16 +37,22 @@ interface PageDocumentHeaderProps {
   page: KbPageDetail;
   pageId: number;
   saveState: "idle" | "pending" | "saving" | "saved";
+  isEditable: boolean;
   onNavigate: (pageId: number) => void;
   onApplyImprovement?: (text: string) => void;
+  onInsertSummary?: (text: string) => void;
+  onOpenCover: () => void;
 }
 
 export default function PageDocumentHeader({
   page,
   pageId,
   saveState,
+  isEditable,
   onNavigate,
   onApplyImprovement,
+  onInsertSummary,
+  onOpenCover,
 }: PageDocumentHeaderProps) {
   const router = useRouter();
   const deletePage = useDeleteKbPage();
@@ -128,22 +134,23 @@ export default function PageDocumentHeader({
 
   return (
     <>
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex min-w-0 items-center justify-between gap-3">
         <PageDocumentBreadcrumb page={page} saveState={saveState} />
-        <div className="flex items-center gap-2">
-          <PageDocumentToolbar
-            page={page}
-            pageId={pageId}
-            onApplyImprovement={onApplyImprovement}
-            onOpenMetaSheet={handleOpenMetaSheet}
-            onOpenComments={handleOpenComments}
-            onOpenHistory={handleOpenHistory}
-            onOpenMove={handleOpenMove}
-            onOpenSaveAsTemplate={handleOpenSaveAsTemplate}
-            onDelete={handleDelete}
-            onNavigate={onNavigate}
-          />
-        </div>
+        <PageDocumentToolbar
+          page={page}
+          pageId={pageId}
+          isEditable={isEditable}
+          onApplyImprovement={onApplyImprovement}
+          onInsertSummary={onInsertSummary}
+          onOpenMetaSheet={handleOpenMetaSheet}
+          onOpenComments={handleOpenComments}
+          onOpenHistory={handleOpenHistory}
+          onOpenMove={handleOpenMove}
+          onOpenSaveAsTemplate={handleOpenSaveAsTemplate}
+          onOpenCover={onOpenCover}
+          onDelete={handleDelete}
+          onNavigate={onNavigate}
+        />
       </div>
 
       <PageCommentsSheet

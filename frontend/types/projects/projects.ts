@@ -31,7 +31,6 @@ export interface Project {
   managerId?: string | null;
   managerMembershipId?: number | null;
   managedProductId: number | null;
-  pmWorkspaceId: string | null;
   startDate: string | Date | null;
   endDate: string | Date | null;
   status: ProjectStatusValue | null;
@@ -235,6 +234,7 @@ export interface CreateProjectInput {
   projectType?: string;
   workflow?: string;
   features?: Record<string, boolean>;
+  managedProductId?: number;
 }
 
 export interface UpdateProjectInput {
@@ -347,8 +347,8 @@ export interface UpdateIntakeRequestInput {
  * Mirrors `listProjectsSchema` in the backend's `build/core/dto`, which is
  * `.strict()` — a field this type carries and that schema does not is not
  * ignored, it is a 400 on every request. `page` used to sit here and
- * `projects-page.tsx` sent it, which is what made `/build` and `/build/all`
- * render "Failed to load projects" at every width. `GET /build` is keyset:
+ * `projects-page.tsx` sent it, which is what made `/build` render
+ * "Failed to load projects" at every width. `GET /build` is keyset:
  * it orders by descending id and takes `afterId`, so there is no page number
  * to send and no total to receive.
  */
@@ -357,7 +357,7 @@ export interface ProjectFilters {
   limit?: number;
   search?: string;
   status?: "ALL" | ProjectStatusValue;
-  pmWorkspaceId?: string;
+  managedProductId?: number;
 }
 
 /** What `GET /build` actually answers. */

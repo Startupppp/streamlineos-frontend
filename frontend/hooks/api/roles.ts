@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
@@ -38,9 +38,6 @@ const roleSuccessContract = lazyContract(() =>
 );
 const setRolePermissionsContract = lazyContract(() =>
   import("@/hooks/api/roles-schema").then((m) => m.setRolePermissionsContract),
-);
-const seedDefaultRolesContract = lazyContract(() =>
-  import("@/hooks/api/roles-schema").then((m) => m.seedDefaultRolesContract),
 );
 const rolePermissionGrantsContract = lazyContract(() =>
   import("@/hooks/api/roles-schema").then((m) => m.rolePermissionGrantsContract),
@@ -174,19 +171,6 @@ export interface RoleTemplate {
   name: string;
   slug: string;
   permissions: readonly string[];
-}
-
-
-export function useSeedDefaultRoles() {
-  const queryClient = useQueryClient();
-  return useAuthorizedMutation("settings:rbac:manage", {
-    mutationKey: ["roles", "seed-defaults"],
-    mutationFn: () =>
-      apiClient.post<{ created: string[]; skipped: string[] }>("/roles/seed-defaults", undefined, undefined, seedDefaultRolesContract),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.all });
-    },
-  });
 }
 
 

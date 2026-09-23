@@ -247,7 +247,7 @@ export function MailReadingPane({
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-xs mb-2 -ml-1 md:hidden"
+            className="h-7 text-xs mb-2 -ml-1 lg:hidden"
             onClick={onBack}
           >
             ← Back

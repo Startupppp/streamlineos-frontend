@@ -4,6 +4,12 @@ import { RolesTab } from "./roles-tab";
 const mockRename = { mutate: jest.fn(), isPending: false };
 const mockDelete = { mutate: jest.fn(), isPending: false };
 
+let viewAccess: "loading" | "granted" | "denied" = "granted";
+
+jest.mock("@/hooks/api/access", () => ({
+  useCanState: () => viewAccess,
+}));
+
 jest.mock("@/hooks/api/module-access", () => ({
   useModuleAccessCatalog: () => ({
     data: [],
@@ -46,6 +52,27 @@ jest.mock("@/features/module-access/components/group-detail-panel", () => ({
   GroupDetailPanel: () => null,
   GroupDetailSkeleton: () => null,
 }));
+
+describe("RolesTab access resolution", () => {
+  afterEach(() => {
+    viewAccess = "granted";
+  });
+
+  it("shows a skeleton, not an empty list, while access is still resolving", () => {
+    viewAccess = "loading";
+    render(<RolesTab moduleKey="hr" canManage={false} />);
+
+    expect(screen.queryByText("Hiring managers")).not.toBeInTheDocument();
+    expect(screen.queryByText(/no role groups/i)).not.toBeInTheDocument();
+  });
+
+  it("tells a denied viewer they lack access instead of showing an empty list", () => {
+    viewAccess = "denied";
+    render(<RolesTab moduleKey="hr" canManage={false} />);
+
+    expect(screen.queryByText(/no role groups/i)).not.toBeInTheDocument();
+  });
+});
 
 describe("RolesTab mutation controls", () => {
   it("renders custom role groups without mutation controls for read-only viewers", () => {

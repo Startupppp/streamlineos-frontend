@@ -6,21 +6,22 @@ import { lazyContract } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
-  Channel,
   CreateDMInput,
   CreateGroupChannelInput,
   CreatePublicChannelInput,
   CreatePrivateChannelInput,
   UpdateChannelInput,
 } from "@/types/chat";
+import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
+import type { PresenceClearAfter, PresenceStatus } from "@/lib/presence";
 import { refreshRealtimeCapability } from "./chat-shared";
 
 const chatOkContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatOkContract),
 );
 
-const chatChannelContract = lazyContract(() =>
-  import("@/hooks/api/chat-schema").then((m) => m.chatChannelContract),
+const chatChannelDetailContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.chatChannelDetailContract),
 );
 
 const chatReactionsContract = lazyContract(() =>
@@ -32,7 +33,7 @@ export function useCreateDMChannel() {
   return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "create-dm"],
     mutationFn: (input: CreateDMInput) =>
-      apiClient.post<Channel>("/chat/channels", { type: "DIRECT", ...input }, undefined, chatChannelContract),
+      apiClient.post<ChatChannelDetailWire>("/chat/channels", { type: "DIRECT", ...input }, undefined, chatChannelDetailContract),
     onSuccess: () => {
       refreshRealtimeCapability();
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
@@ -45,7 +46,7 @@ export function useCreateGroupChannel() {
   return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "create-group"],
     mutationFn: (input: CreateGroupChannelInput) =>
-      apiClient.post<Channel>("/chat/channels", { type: "GROUP", ...input }, undefined, chatChannelContract),
+      apiClient.post<ChatChannelDetailWire>("/chat/channels", { type: "GROUP", ...input }, undefined, chatChannelDetailContract),
     onSuccess: () => {
       refreshRealtimeCapability();
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
@@ -58,7 +59,7 @@ export function useCreatePublicChannel() {
   return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "create-public"],
     mutationFn: (input: CreatePublicChannelInput) =>
-      apiClient.post<Channel>("/chat/channels", { type: "PUBLIC", ...input }, undefined, chatChannelContract),
+      apiClient.post<ChatChannelDetailWire>("/chat/channels", { type: "PUBLIC", ...input }, undefined, chatChannelDetailContract),
     onSuccess: () => {
       refreshRealtimeCapability();
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
@@ -74,7 +75,7 @@ export function useCreatePrivateChannel() {
   return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "create-private"],
     mutationFn: (input: CreatePrivateChannelInput) =>
-      apiClient.post<Channel>("/chat/channels", { type: "PRIVATE", ...input }, undefined, chatChannelContract),
+      apiClient.post<ChatChannelDetailWire>("/chat/channels", { type: "PRIVATE", ...input }, undefined, chatChannelDetailContract),
     onSuccess: () => {
       refreshRealtimeCapability();
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
@@ -183,6 +184,24 @@ export function useChatHeartbeat() {
     mutationKey: ["chat", "presence", "heartbeat"],
     mutationFn: () =>
       apiClient.post<{ ok: boolean }>("/chat/presence/heartbeat", undefined, undefined, chatOkContract),
+  });
+}
+
+export interface SetPresenceStatusInput {
+  status: PresenceStatus;
+  statusMessage?: string;
+  clearAfter?: PresenceClearAfter;
+}
+
+export function useSetPresenceStatus() {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation("chat:messages:read", {
+    mutationKey: ["chat", "presence", "set-status"],
+    mutationFn: (input: SetPresenceStatusInput) =>
+      apiClient.put<{ ok: boolean }>("/chat/status", input, undefined, chatOkContract),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.onlineUsers() });
+    },
   });
 }
 

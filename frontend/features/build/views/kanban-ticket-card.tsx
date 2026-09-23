@@ -2,13 +2,14 @@
 
 import { useCallback, memo } from "react";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { KanbanTicket, DisplayOptions } from "../shared/types";
 import { TicketQuickActions } from "./ticket-quick-actions";
 import { InlinePriority, InlineAssignee, InlineEstimate } from "./card-inline-fields";
 import { InlineType, InlineLabels, InlineCycle } from "./card-inline-extra-fields";
 import { InlineDueDate, InlineStartDate } from "./card-inline-date-fields";
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
-import { getUserInitials } from "@/lib/person-display";
+import { getUserDisplayName } from "@/lib/person-display";
 import { Calendar } from "lucide-react";
 import { format, isValid, parseISO } from "date-fns";
 import { useCan } from "@/hooks/api/access";
@@ -19,6 +20,8 @@ interface KanbanTicketCardProps {
   projectKey?: string;
   isDragging: boolean;
   onSelect: (id: number) => void;
+  isSelected?: boolean;
+  onSelectedChange?: (id: number, next: boolean) => void;
   displayOptions?: DisplayOptions;
 }
 
@@ -28,6 +31,8 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   projectKey,
   isDragging,
   onSelect,
+  isSelected,
+  onSelectedChange,
   displayOptions,
 }: KanbanTicketCardProps) {
   const canUpdate = useCan("build:tickets:update");
@@ -35,6 +40,12 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   const handleActivate = useCallback(() => {
     onSelect(ticket.id);
   }, [ticket.id, onSelect]);
+  const handleSelectedChange = useCallback(
+    (next: boolean | "indeterminate") => {
+      onSelectedChange?.(ticket.id, next === true);
+    },
+    [ticket.id, onSelectedChange],
+  );
 
   const ticketKey = projectKey
     ? `${projectKey}-${ticket.ticketNumber}`
@@ -54,6 +65,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   const showEstimate = displayOptions?.showEstimate ?? true;
   const showCycle = displayOptions?.showCycle ?? true;
   const showLabels = displayOptions?.showLabels ?? true;
+  const showDescription = displayOptions?.showDescription ?? false;
   const showDueDate = displayOptions?.showDueDate ?? true;
 
   const points = ticket.points ?? ticket.storyPoints;
@@ -65,29 +77,20 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
         "group relative rounded-xl border border-border/70 bg-card px-3 py-2.5 shadow-sm",
         "cursor-grab active:cursor-grabbing will-change-transform",
         isDragging
-          ? "z-20 border-primary/30 bg-card opacity-95 shadow-xl ring-1 ring-primary/25 rotate-1 scale-[1.02]"
+          ? "z-20 rotate-1 scale-[1.02] border-primary/30 bg-card opacity-95 shadow-xl ring-1 ring-primary/25"
           : "hover:border-border hover:shadow-md",
       )}
     >
-      <div className="flex items-start justify-between gap-2">
-        {showId ? (
-          <span className="pt-0.5 text-xs font-medium tracking-tight text-muted-foreground">
-            {ticketKey}
-          </span>
-        ) : (
-          <span />
+      <div className="flex items-start gap-1.5">
+        {onSelectedChange !== undefined && (
+          <div className="flex-shrink-0 pt-0.5">
+            <Checkbox
+              checked={isSelected ?? false}
+              onCheckedChange={handleSelectedChange}
+              aria-label={`Select ${ticket.title ?? "ticket"}`}
+            />
+          </div>
         )}
-        {showPriority && projectId && canUpdate ? (
-          <InlinePriority
-            ticketId={ticket.id}
-            projectId={projectId}
-            currentPriority={ticket.priority}
-            showLabel
-          />
-        ) : null}
-      </div>
-
-      <div className="mt-1 flex items-start gap-1.5">
         <button
           type="button"
           onClick={handleActivate}
@@ -101,11 +104,32 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
         <TicketQuickActions
           ticketId={ticket.id}
           projectId={projectId}
-          className="-mr-1 -mt-0.5 opacity-0 transition-all duration-150 group-hover:opacity-100"
+          className="-mr-1 -mt-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 focus-within:opacity-100"
         />
       </div>
 
-      <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5">
+      {showDescription && ticket.descriptionExcerpt ? (
+        <p className={cn(TEXT_TWO_LINES, "mt-1 text-dense leading-relaxed text-muted-foreground")}>
+          {ticket.descriptionExcerpt}
+        </p>
+      ) : null}
+
+      <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5">
+        {showId ? (
+          <span className="shrink-0 font-mono text-dense tabular-nums text-muted-foreground">
+            {ticketKey}
+          </span>
+        ) : null}
+
+        {showPriority && projectId && canUpdate ? (
+          <InlinePriority
+            ticketId={ticket.id}
+            projectId={projectId}
+            currentPriority={ticket.priority}
+            showLabel
+          />
+        ) : null}
+
         {projectId && canUpdate ? (
           <InlineType
             ticketId={ticket.id}
@@ -150,7 +174,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
         ) : null}
       </div>
 
-      <div className="mt-2.5 flex min-w-0 items-center justify-between gap-2">
+      <div className="mt-2.5 flex min-w-0 items-center justify-between gap-2 border-t border-border/60 pt-2">
         {showDueDate && projectId && canUpdate ? (
           <InlineDueDate
             ticketId={ticket.id}
@@ -159,7 +183,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
             fallbackDate={ticket.createdAt}
           />
         ) : createdDate ? (
-          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1 text-dense tabular-nums text-muted-foreground">
             <Calendar className="h-3.5 w-3.5" />
             {format(createdDate, "MMM d, yyyy")}
           </span>
@@ -168,7 +192,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
         )}
 
         {showAssignee && projectId && canAssign ? (
-          <div className="ml-1 flex shrink-0 items-center gap-1.5">
+          <div className="ml-1 flex min-w-0 shrink items-center gap-1.5">
             <InlineAssignee
               ticketId={ticket.id}
               projectId={projectId}
@@ -176,12 +200,14 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
               assignee={primaryAssignee}
             />
             {primaryAssignee ? (
-              <span className="text-xs font-medium text-muted-foreground">
-                {getUserInitials(primaryAssignee)}
+              <span className="min-w-0 truncate text-dense font-medium text-muted-foreground">
+                {getUserDisplayName(primaryAssignee)}
               </span>
             ) : null}
             {extraCount > 0 ? (
-              <span className="text-xs text-muted-foreground">+{extraCount}</span>
+              <span className="shrink-0 text-dense tabular-nums text-muted-foreground">
+                +{extraCount}
+              </span>
             ) : null}
           </div>
         ) : null}

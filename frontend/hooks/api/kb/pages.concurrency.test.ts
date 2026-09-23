@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { createElement } from "react";
 import { useUpdateKbPage } from "./pages";
 import { ApiError } from "@/lib/api-envelope";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
@@ -108,6 +109,98 @@ describe("useUpdateKbPage — optimistic concurrency", () => {
 
     expect(caught).toBeInstanceOf(ApiError);
     expect((caught as ApiError).status).toBe(409);
+  });
+
+  it("patches the cached page with the revision the save returned instead of refetching it", async () => {
+    const cached = {
+      id: 1,
+      contentRevision: 3,
+      title: "Onboarding",
+      orgId: "o",
+      ancestors: [{ id: 9, title: "Handbook" }],
+      isFavorite: true,
+    };
+    client.setQueryData(knowledgeAndSurveysQueryKeys.kb.page(1), cached);
+    patchMock.mockResolvedValueOnce({ ...cached, contentRevision: 4, ancestors: undefined, isFavorite: undefined });
+
+    const { result } = renderHook(() => useUpdateKbPage(), {
+      wrapper: wrapper(client),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        pageId: 1,
+        content: { type: "doc" },
+        expectedContentRevision: 3,
+      });
+    });
+
+    const after = client.getQueryData(knowledgeAndSurveysQueryKeys.kb.page(1));
+    expect(after).toMatchObject({ contentRevision: 4 });
+    expect(client.getQueryState(knowledgeAndSurveysQueryKeys.kb.page(1))?.isInvalidated).toBe(false);
+  });
+
+  it("does not refetch the tree for a body-only save — the tree renders no body", async () => {
+    const invalidate = jest.spyOn(client, "invalidateQueries");
+    patchMock.mockResolvedValueOnce({ id: 1, contentRevision: 4, title: "T", orgId: "o" });
+
+    const { result } = renderHook(() => useUpdateKbPage(), {
+      wrapper: wrapper(client),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        pageId: 1,
+        content: { type: "doc" },
+        contentText: "typed",
+        expectedContentRevision: 3,
+      });
+    });
+
+    expect(invalidate).not.toHaveBeenCalled();
+  });
+
+  it("does refetch the tree for a rename — the tree renders the title", async () => {
+    const invalidate = jest.spyOn(client, "invalidateQueries");
+    patchMock.mockResolvedValueOnce({ id: 1, contentRevision: 3, title: "Renamed", orgId: "o" });
+
+    const { result } = renderHook(() => useUpdateKbPage(), {
+      wrapper: wrapper(client),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({ pageId: 1, title: "Renamed" });
+    });
+
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree(),
+    });
+  });
+
+  it("refetches recent and favorite cards after a cover change", async () => {
+    const invalidate = jest.spyOn(client, "invalidateQueries");
+    patchMock.mockResolvedValueOnce({
+      id: 1,
+      contentRevision: 3,
+      title: "T",
+      coverImage: "gradient:ocean",
+      orgId: "o",
+    });
+
+    const { result } = renderHook(() => useUpdateKbPage(), {
+      wrapper: wrapper(client),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({ pageId: 1, coverImage: "gradient:ocean" });
+    });
+
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: knowledgeAndSurveysQueryKeys.kb.pagesRecent(),
+    });
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: knowledgeAndSurveysQueryKeys.kb.pagesFavorites(),
+    });
   });
 
   it("always carries the precondition — an unguarded page write is not expressible", async () => {

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
@@ -95,10 +96,14 @@ function StatusBadge({ status }: { status: FilingStatus }) {
 
 export function FilingsTab() {
   const canManage = useCan("payroll:tax:manage");
-  const { data, isLoading } = usePayrollFilings();
+  const { data, isLoading, isError, error, refetch } = usePayrollFilings();
   const { data: capability } = useFilingCapabilities();
   const { data: entities } = usePayrollEntities();
   const ackMutation = useAttachAcknowledgement();
+
+  function handleRetry() {
+    void refetch();
+  }
 
   const honestyLabel = capability?.honestyLabel ?? FALLBACK_HONESTY_LABEL;
   const capabilityNote = capability?.note ?? FALLBACK_CAPABILITY_NOTE;
@@ -262,66 +267,75 @@ export function FilingsTab() {
         )}
       </div>
 
-      <DataTable
-        className="flex-1 min-h-0"
-        data={data?.data ?? []}
-        columns={columns}
-        getRowKey={(row) => row.id}
-        isLoading={isLoading}
-        minWidth="720px"
-        mobileCard={(row) => (
-          <div className="flex flex-col gap-1.5 px-1 py-2">
-            <div className="flex items-center justify-between">
-              <span className="text-label font-medium text-foreground">
-                {FILING_TYPE_LABEL[row.filingType]}
-              </span>
-              <StatusBadge status={row.status} />
-            </div>
-            {row.statusLabel && (
-              <span className="text-dense text-muted-foreground">{row.statusLabel}</span>
-            )}
-            <div className="flex items-center justify-between text-dense text-muted-foreground tabular-nums">
-              <span>{row.fiscalYear ?? "—"}</span>
-              <span>{row.acknowledgementRef ?? row.challanRef ?? "No ref"}</span>
-            </div>
-            <div className="mt-1 flex gap-1.5">
-              {row.status !== "DRAFT" && (
-                <LoadingButton
-                  size="sm"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => void handleDownload(row)}
-                  isPending={downloadingId === row.id}
-                >
-                  Download CSV
-                </LoadingButton>
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load filings"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <DataTable
+          className="flex-1 min-h-0"
+          data={data?.data ?? []}
+          columns={columns}
+          getRowKey={(row) => row.id}
+          isLoading={isLoading}
+          minWidth="720px"
+          mobileCard={(row) => (
+            <div className="flex flex-col gap-1.5 px-1 py-2">
+              <div className="flex items-center justify-between">
+                <span className="text-label font-medium text-foreground">
+                  {FILING_TYPE_LABEL[row.filingType]}
+                </span>
+                <StatusBadge status={row.status} />
+              </div>
+              {row.statusLabel && (
+                <span className="text-dense text-muted-foreground">{row.statusLabel}</span>
               )}
-              {canManage && row.status !== "ACKNOWLEDGED" && row.status !== "RECONCILED" && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => handleAckOpen(row)}
-                >
-                  Record ack
-                </Button>
-              )}
+              <div className="flex items-center justify-between text-dense text-muted-foreground tabular-nums">
+                <span>{row.fiscalYear ?? "—"}</span>
+                <span>{row.acknowledgementRef ?? row.challanRef ?? "No ref"}</span>
+              </div>
+              <div className="mt-1 flex gap-1.5">
+                {row.status !== "DRAFT" && (
+                  <LoadingButton
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => void handleDownload(row)}
+                    isPending={downloadingId === row.id}
+                  >
+                    Download CSV
+                  </LoadingButton>
+                )}
+                {canManage && row.status !== "ACKNOWLEDGED" && row.status !== "RECONCILED" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => handleAckOpen(row)}
+                  >
+                    Record ack
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
-        )}
-        emptyState={
-          <EmptyState
-            illustration={<EmptyApprovalIllustration />}
-            title="No filings prepared"
-            description="Prepare a statutory filing export from a payroll month to track submission and acknowledgement."
-            action={
-              canManage
-                ? { label: "Prepare filing export", onClick: () => setShowExport(true) }
-                : undefined
-            }
+          )}
+          emptyState={
+            <EmptyState
+              illustration={<EmptyApprovalIllustration />}
+              title="No filings prepared"
+              description="Prepare a statutory filing export from a payroll month to track submission and acknowledgement."
+              action={
+                canManage
+                  ? { label: "Prepare filing export", onClick: () => setShowExport(true) }
+                  : undefined
+              }
+            />
+          }
           />
-        }
-      />
+      )}
 
       <FilingExportDialog
         open={showExport}

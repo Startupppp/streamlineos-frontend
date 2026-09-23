@@ -1,0 +1,424 @@
+import { act, renderHook } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { createElement } from "react";
+import {
+  OrgStorageScopeProvider,
+  orgScopedStorageKey,
+} from "@/lib/org-scoped-storage";
+import {
+  useBuildNavPins,
+  useBuildScopeStars,
+  useBuildScopeRecents,
+} from "./use-build-nav-preferences";
+import type { BuildScopeRef } from "./use-build-nav-preferences";
+
+const SCOPE_ORG_A_USER_1 = "authenticated:org-a:user-1";
+const SCOPE_ORG_A_USER_2 = "authenticated:org-a:user-2";
+const SCOPE_ORG_B_USER_1 = "authenticated:org-b:user-1";
+
+function wrapWith(scope: string) {
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return createElement(OrgStorageScopeProvider, { scope, children });
+  };
+}
+
+function makeScopeRef(overrides: Partial<BuildScopeRef> = {}): BuildScopeRef {
+  return {
+    key: "product-1",
+    type: "product",
+    id: "product-id-1",
+    name: "Product One",
+    parentPath: null,
+    parentKey: null,
+    projectKey: null,
+    href: "/build/managed-products/product-id-1",
+    ...overrides,
+  };
+}
+
+beforeEach(() => {
+  window.localStorage.clear();
+});
+
+describe("BSN-03-031 — pin prune after permission change", () => {
+  test("pruning writes a filtered list when a tool loses authorization", () => {
+    const scope = "authenticated:org-prune:user-1";
+    const { result, rerender } = renderHook(
+      ({ authIds }: { authIds: string[] }) => useBuildNavPins(authIds, true),
+      {
+        initialProps: { authIds: ["tool-a", "tool-b"] },
+        wrapper: wrapWith(scope),
+      },
+    );
+
+    act(() => {
+      result.current.togglePin("tool-a");
+    });
+    expect(result.current.isPinned("tool-a")).toBe(true);
+
+    act(() => {
+      rerender({ authIds: ["tool-b"] });
+    });
+
+    expect(result.current.isPinned("tool-a")).toBe(false);
+    expect(result.current.pinnedIds).toHaveLength(0);
+  });
+
+  test("pruning does not write when all pinned ids are still authorized", () => {
+    const scope = "authenticated:org-no-prune:user-1";
+    const { result, rerender } = renderHook(
+      ({ authIds }: { authIds: string[] }) => useBuildNavPins(authIds, true),
+      {
+        initialProps: { authIds: ["tool-a", "tool-b"] },
+        wrapper: wrapWith(scope),
+      },
+    );
+
+    act(() => {
+      result.current.togglePin("tool-b");
+    });
+    const pinsBefore = result.current.pinnedIds.slice();
+
+    act(() => {
+      rerender({ authIds: ["tool-a", "tool-b"] });
+    });
+
+    expect(result.current.pinnedIds).toEqual(pinsBefore);
+  });
+
+  test("pruning does not run while access is still loading, even though no tool is authorized yet", () => {
+    const scope = "authenticated:org-loading:user-1";
+    const { result, rerender } = renderHook(
+      ({ authIds, resolved }: { authIds: string[]; resolved: boolean }) =>
+        useBuildNavPins(authIds, resolved),
+      {
+        initialProps: { authIds: ["tool-a", "tool-b"], resolved: true },
+        wrapper: wrapWith(scope),
+      },
+    );
+
+    act(() => {
+      result.current.togglePin("tool-a");
+    });
+    expect(result.current.isPinned("tool-a")).toBe(true);
+
+    act(() => {
+      rerender({ authIds: [], resolved: false });
+    });
+
+    expect(result.current.isPinned("tool-a")).toBe(true);
+    expect(result.current.pinnedIds).toContain("tool-a");
+  });
+
+  test("losing every Build tool prunes every pin rather than leaving them stranded in storage", () => {
+    const scope = "authenticated:org-revoked-all:user-1";
+    const { result, rerender } = renderHook(
+      ({ authIds, resolved }: { authIds: string[]; resolved: boolean }) =>
+        useBuildNavPins(authIds, resolved),
+      {
+        initialProps: { authIds: ["tool-a", "tool-b"], resolved: true },
+        wrapper: wrapWith(scope),
+      },
+    );
+
+    act(() => {
+      result.current.togglePin("tool-a");
+    });
+    expect(result.current.isPinned("tool-a")).toBe(true);
+
+    act(() => {
+      rerender({ authIds: [], resolved: true });
+    });
+
+    expect(result.current.pinnedIds).toEqual([]);
+  });
+
+  test("pruning terminates — a second render with the same authorized set does not write again", () => {
+    const scope = "authenticated:org-term:user-1";
+    const writeSpy = jest.spyOn(Storage.prototype, "setItem");
+    const { result, rerender } = renderHook(
+      ({ authIds }: { authIds: string[] }) => useBuildNavPins(authIds, true),
+      {
+        initialProps: { authIds: ["tool-a", "tool-b"] },
+        wrapper: wrapWith(scope),
+      },
+    );
+
+    act(() => {
+      result.current.togglePin("tool-a");
+    });
+    writeSpy.mockClear();
+
+    act(() => {
+      rerender({ authIds: ["tool-b"] });
+    });
+    const writesAfterPrune = writeSpy.mock.calls.length;
+
+    act(() => {
+      rerender({ authIds: ["tool-b"] });
+    });
+    const writesAfterSecondRender = writeSpy.mock.calls.length;
+
+    expect(writesAfterSecondRender).toBe(writesAfterPrune);
+    writeSpy.mockRestore();
+  });
+});
+
+describe("BSN-02-024 — scope isolation by org AND actor", () => {
+  test("orgScopedStorageKey embeds both the org segment and the actor segment", () => {
+    const key = orgScopedStorageKey("build-nav-pins", SCOPE_ORG_A_USER_1);
+    expect(key).toContain("org-a");
+    expect(key).toContain("user-1");
+    expect(key).toContain("build-nav-pins");
+  });
+
+  test("pins written by actor-1 in org-A are invisible to actor-2 in org-A", () => {
+    const { result: resultUser1 } = renderHook(
+      () => useBuildNavPins(["tool-a"], true),
+      { wrapper: wrapWith(SCOPE_ORG_A_USER_1) },
+    );
+
+    act(() => {
+      resultUser1.current.togglePin("tool-a");
+    });
+    expect(resultUser1.current.isPinned("tool-a")).toBe(true);
+
+    const { result: resultUser2 } = renderHook(
+      () => useBuildNavPins(["tool-a"], true),
+      { wrapper: wrapWith(SCOPE_ORG_A_USER_2) },
+    );
+    expect(resultUser2.current.isPinned("tool-a")).toBe(false);
+  });
+
+  test("pins written by actor-1 in org-A cannot clobber actor-1's pins in org-B", () => {
+    const { result: resultOrgA } = renderHook(
+      () => useBuildNavPins(["tool-a", "tool-b"], true),
+      { wrapper: wrapWith(SCOPE_ORG_A_USER_1) },
+    );
+    const { result: resultOrgB } = renderHook(
+      () => useBuildNavPins(["tool-a", "tool-b"], true),
+      { wrapper: wrapWith(SCOPE_ORG_B_USER_1) },
+    );
+
+    act(() => {
+      resultOrgA.current.togglePin("tool-a");
+    });
+    act(() => {
+      resultOrgB.current.togglePin("tool-b");
+    });
+
+    expect(resultOrgA.current.isPinned("tool-a")).toBe(true);
+    expect(resultOrgA.current.isPinned("tool-b")).toBe(false);
+    expect(resultOrgB.current.isPinned("tool-b")).toBe(true);
+    expect(resultOrgB.current.isPinned("tool-a")).toBe(false);
+  });
+
+  test("a cross-tab storage event reconciles pin state without duplicating", () => {
+    const scope = "authenticated:org-xt:user-xt";
+    const storageKey = `${scope}::build-nav-pins`;
+
+    const { result } = renderHook(() => useBuildNavPins(["tool-a", "tool-b"], true), {
+      wrapper: wrapWith(scope),
+    });
+
+    window.localStorage.setItem(storageKey, JSON.stringify(["tool-a"]));
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: storageKey,
+          storageArea: window.localStorage,
+        }),
+      );
+    });
+
+    expect(result.current.pinnedIds).toEqual(["tool-a"]);
+    expect(result.current.isPinned("tool-a")).toBe(true);
+    expect(result.current.isPinned("tool-b")).toBe(false);
+  });
+
+  test("a cross-tab storage event for a different scope key is ignored", () => {
+    const scope = "authenticated:org-ignore:user-ignore";
+    const otherKey = "authenticated:org-other:user-other::build-nav-pins";
+
+    const { result } = renderHook(() => useBuildNavPins(["tool-a"], true), {
+      wrapper: wrapWith(scope),
+    });
+
+    act(() => {
+      result.current.togglePin("tool-a");
+    });
+
+    window.localStorage.setItem(otherKey, JSON.stringify([]));
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: otherKey,
+          storageArea: window.localStorage,
+        }),
+      );
+    });
+
+    expect(result.current.isPinned("tool-a")).toBe(true);
+  });
+
+  test("stars and recents are also isolated by org and actor", () => {
+    const ref = makeScopeRef();
+
+    const { result: starsA } = renderHook(() => useBuildScopeStars(), {
+      wrapper: wrapWith(SCOPE_ORG_A_USER_1),
+    });
+    const { result: recentsA } = renderHook(() => useBuildScopeRecents(), {
+      wrapper: wrapWith(SCOPE_ORG_A_USER_1),
+    });
+
+    act(() => {
+      starsA.current.toggleStar(ref);
+      recentsA.current.recordScope(ref);
+    });
+
+    const { result: starsUser2 } = renderHook(() => useBuildScopeStars(), {
+      wrapper: wrapWith(SCOPE_ORG_A_USER_2),
+    });
+    const { result: recentsUser2 } = renderHook(() => useBuildScopeRecents(), {
+      wrapper: wrapWith(SCOPE_ORG_A_USER_2),
+    });
+
+    expect(starsUser2.current.isStarred(ref.key)).toBe(false);
+    expect(recentsUser2.current.recents).toHaveLength(0);
+  });
+
+  test("retired workspace and fixed organization entries in browser storage are discarded before they can render", () => {
+    const scope = "authenticated:org-retired-workspace:user-1";
+    const storageKey = `${scope}::build-scope-recents`;
+    const valid = makeScopeRef();
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify([
+        {
+          key: "workspace:legacy",
+          type: "workspace",
+          id: "legacy",
+          name: ["Default", "Workspace"].join(" "),
+          parentPath: "Organization",
+          parentKey: null,
+          projectKey: null,
+          href: "/build/workspaces/legacy",
+        },
+        {
+          key: "organization",
+          type: "organization",
+          id: "organization",
+          name: "All of Build",
+          parentPath: null,
+          parentKey: null,
+          projectKey: null,
+          href: "/build/command-center",
+        },
+        valid,
+      ]),
+    );
+
+    const { result } = renderHook(() => useBuildScopeRecents(), {
+      wrapper: wrapWith(scope),
+    });
+
+    expect(result.current.recents).toEqual([valid]);
+  });
+
+  test("the fixed organization scope cannot be saved as a recent or star", () => {
+    const organization = makeScopeRef({
+      key: "organization",
+      type: "organization",
+      id: "organization",
+      name: "All of Build",
+      href: "/build/command-center",
+    });
+    const scope = "authenticated:org-fixed-root:user-1";
+    const { result: recents } = renderHook(() => useBuildScopeRecents(), {
+      wrapper: wrapWith(scope),
+    });
+    const { result: stars } = renderHook(() => useBuildScopeStars(), {
+      wrapper: wrapWith(scope),
+    });
+
+    act(() => {
+      recents.current.recordScope(organization);
+      stars.current.toggleStar(organization);
+    });
+
+    expect(recents.current.recents).toEqual([]);
+    expect(stars.current.starred).toEqual([]);
+  });
+});
+
+describe("BSN-03-032 — pin ceiling counts only authorized pins", () => {
+  test("stale unauthorized pins do not count against the three-pin ceiling so a newly-authorized tool can still be pinned before access resolves", () => {
+    const scope = "authenticated:org-bsn032-stale:user-1";
+    const storageKey = `${scope}::build-nav-pins`;
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify(["revoked-1", "revoked-2", "revoked-3"]),
+    );
+
+    const { result } = renderHook(
+      () => useBuildNavPins(["tool-authorized"], false),
+      { wrapper: wrapWith(scope) },
+    );
+
+    expect(result.current.canPinMore).toBe(true);
+    act(() => {
+      result.current.togglePin("tool-authorized");
+    });
+    expect(result.current.isPinned("tool-authorized")).toBe(true);
+  });
+
+  test("three authorized pins exhaust the ceiling so a fourth authorized tool cannot be added", () => {
+    const scope = "authenticated:org-bsn032-full:user-1";
+
+    const { result } = renderHook(
+      () => useBuildNavPins(["t1", "t2", "t3", "t4"], true),
+      { wrapper: wrapWith(scope) },
+    );
+
+    act(() => {
+      result.current.togglePin("t1");
+    });
+    act(() => {
+      result.current.togglePin("t2");
+    });
+    act(() => {
+      result.current.togglePin("t3");
+    });
+
+    expect(result.current.canPinMore).toBe(false);
+
+    act(() => {
+      result.current.togglePin("t4");
+    });
+    expect(result.current.isPinned("t4")).toBe(false);
+  });
+
+  test("canPinMore recovers to true after a stale pin is pruned when access resolves", () => {
+    const scope = "authenticated:org-bsn032-recover:user-1";
+
+    const { result, rerender } = renderHook(
+      ({ authIds, resolved }: { authIds: string[]; resolved: boolean }) =>
+        useBuildNavPins(authIds, resolved),
+      {
+        initialProps: { authIds: ["t1", "t2", "t3"], resolved: true },
+        wrapper: wrapWith(scope),
+      },
+    );
+
+    act(() => { result.current.togglePin("t1"); });
+    act(() => { result.current.togglePin("t2"); });
+    act(() => { result.current.togglePin("t3"); });
+    expect(result.current.canPinMore).toBe(false);
+
+    act(() => {
+      rerender({ authIds: ["t1", "t2"], resolved: true });
+    });
+
+    expect(result.current.canPinMore).toBe(true);
+  });
+});

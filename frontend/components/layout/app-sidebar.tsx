@@ -1,15 +1,15 @@
 "use client";
 
-import { Fragment, useMemo, useCallback, useEffect, useState } from "react";
+import { useMemo, useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { usePathname, useParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { usePendingApprovals } from "@/hooks/api/dashboard";
 import { useChatUnreadTotal } from "@/hooks/api/chat-core-read";
-import { useUnreadNotificationCount } from "@/hooks/api/notifications-inbox";
+import { useUnifiedInboxCount } from "@/hooks/api/inbox";
 import { NOTIFICATION_FALLBACK_INTERVAL_MS } from "@/lib/query-request-policies";
 import {
   getNavGroupsForProduct,
@@ -20,25 +20,22 @@ import {
   MODULE_ACCENTS,
   type ModuleAccent,
 } from "./sidebar/sidebar-nav-items";
+import type { BuildSidebarSlotProps } from "./sidebar/build-sidebar-slot";
 import { SidebarSection } from "./sidebar/sidebar-section";
 import { ProductSwitcherMenu } from "./header/product-switcher-menu";
+import { WorkspaceSwitcher } from "./header/org-switcher";
 
 import { useAccess, useCan } from "@/hooks/api/access";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
-
-interface ProjectNavTreeSlotProps {
-  projectId: string;
-  collapsed: boolean;
-  accent: ModuleAccent;
-  onNavigate: () => void;
-}
+import { useEntitlements } from "@/hooks/api/entitlements";
 
 interface AppSidebarProps {
   isCollapsed?: boolean;
   onNavigate?: () => void;
   onRequestProductSwitcher?: () => void;
+  onRequestOrgSwitcher?: () => void;
   isMobile?: boolean;
-  projectNavTreeSlot?: (props: ProjectNavTreeSlotProps) => React.ReactNode;
+  buildSidebarSlot?: (props: BuildSidebarSlotProps) => React.ReactNode;
 }
 
 interface SidebarSkeletonProps {
@@ -55,7 +52,8 @@ function SidebarSkeleton({ isCollapsed, isMobile }: SidebarSkeletonProps) {
     <div
       className={cn(
         "relative flex flex-col h-full overflow-visible bg-sidebar text-sidebar-foreground",
-        !isMobile && "transition-[width] duration-300 ease-in-out",
+        !isMobile &&
+          "transition-[width] duration-300 ease-in-out motion-reduce:transition-none",
         isMobile ? "w-full" : effectiveCollapsed ? "w-[3.5rem]" : "w-[17rem]",
       )}
     >
@@ -86,8 +84,9 @@ export function AppSidebar({
   isCollapsed = false,
   onNavigate,
   onRequestProductSwitcher,
+  onRequestOrgSwitcher,
   isMobile = false,
-  projectNavTreeSlot,
+  buildSidebarSlot,
 }: AppSidebarProps) {
   const { data: session, status } = useSession();
   const { data: access } = useAccess();
@@ -95,35 +94,38 @@ export function AppSidebar({
   const effectiveRole = isOrgOwner ? "OWNER" : "MEMBER";
 
   const pathname = usePathname();
-  const params = useParams();
   const activeProduct = getProductFromPathname(pathname);
   const accent: ModuleAccent = MODULE_ACCENTS[activeProduct];
-  const rawProjectId = params?.projectId;
-  const activeProjectId = useMemo(() => {
-    if (activeProduct !== "build") return null;
-    const value = Array.isArray(rawProjectId) ? rawProjectId[0] : rawProjectId;
-    return typeof value === "string" && /^\d+$/.test(value) ? value : null;
-  }, [activeProduct, rawProjectId]);
+  const isBuildProduct = activeProduct === "build";
 
+  const [collapsedGroups, setCollapsedGroups] = useState<
+    Record<string, boolean>
+  >({});
   const scopes = access?.scopes;
   const canApproveLeaves = useCan("hr:leaves:approve");
   const canReadChat = useCan("chat:channels:read");
   const enabledModules = useEnabledModules();
   const isHrModuleEnabled = isModuleEnabled("hrms", enabledModules);
+  const { data: entitlements } = useEntitlements();
+  const lockedModules = entitlements?.lockedModules ?? [];
 
   const navGroups = useMemo(() => {
+    if (isBuildProduct) return [];
     return getNavGroupsForProduct(
       activeProduct,
       effectiveRole,
       scopes,
       enabledModules,
+      lockedModules,
     );
-  }, [activeProduct, effectiveRole, scopes, enabledModules]);
-
-  const firstBuildGroup = useMemo(
-    () => navGroups.find((group) => group.product === "build") ?? null,
-    [navGroups],
-  );
+  }, [
+    isBuildProduct,
+    activeProduct,
+    effectiveRole,
+    scopes,
+    enabledModules,
+    lockedModules,
+  ]);
 
   const activeGroupLabel = useMemo(() => {
     for (const group of navGroups) {
@@ -134,10 +136,6 @@ export function AppSidebar({
     }
     return null;
   }, [navGroups, pathname]);
-
-  const [collapsedGroups, setCollapsedGroups] = useState<
-    Record<string, boolean>
-  >({});
 
   useEffect(() => {
     try {
@@ -197,25 +195,24 @@ export function AppSidebar({
   );
   const unreadChatCount = chatUnread?.total ?? 0;
 
-  const { data: notifData } = useUnreadNotificationCount({
+  const { data: unifiedCountData } = useUnifiedInboxCount({
     refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS,
     refetchIntervalInBackground: false,
     throwOnError: false,
   });
-  const unreadNotifCount = notifData?.count ?? 0;
+  const unreadInboxCount = unifiedCountData?.total ?? 0;
 
   useEffect(() => {
     const base = "StreamlineOS";
-    const total = unreadChatCount + unreadNotifCount;
+    const total = unreadChatCount + unreadInboxCount;
     document.title =
       total > 0 ? `(${total > 99 ? "99+" : total}) ${base}` : base;
-  }, [unreadChatCount, unreadNotifCount]);
+  }, [unreadChatCount, unreadInboxCount]);
 
   const effectiveCollapsed = isMobile ? false : isCollapsed;
 
-  if (status === "loading") {
+  if (status === "loading")
     return <SidebarSkeleton isCollapsed={isCollapsed} isMobile={isMobile} />;
-  }
 
   return (
     <TooltipProvider>
@@ -225,12 +222,18 @@ export function AppSidebar({
           isMobile
             ? "h-full w-full flex-1 overflow-hidden"
             : "h-full overflow-visible",
-          !isMobile && "transition-[width] duration-300 ease-in-out",
+          !isMobile &&
+            "transition-[width] duration-300 ease-in-out motion-reduce:transition-none",
           !isMobile && (effectiveCollapsed ? "w-[3.5rem]" : "w-[17rem]"),
         )}
       >
         {isMobile && (
-          <div className="shrink-0 border-b border-sidebar-border px-2.5 py-2">
+          <div className="shrink-0 space-y-1 border-b border-sidebar-border px-2.5 py-2">
+            <WorkspaceSwitcher
+              variant="sidebar"
+              triggerOnly
+              onRequestOpen={onRequestOrgSwitcher}
+            />
             <ProductSwitcherMenu
               variant="sidebar"
               triggerOnly
@@ -240,12 +243,20 @@ export function AppSidebar({
         )}
 
         <ScrollArea className="flex-1 min-h-0">
-          <nav className={cn("py-2", effectiveCollapsed ? "px-1" : "px-2.5")}>
-            {navGroups.map((group, i) => {
-              const multiGroup = navGroups.length > 1;
-              return (
-                <Fragment key={group.label}>
+          {isBuildProduct ? (
+            <nav aria-label="Build navigation">
+              {buildSidebarSlot?.({
+                isCollapsed: effectiveCollapsed,
+                onNavigate: onNavigate ?? noop,
+              })}
+            </nav>
+          ) : (
+            <nav className={cn("py-2", effectiveCollapsed ? "px-1" : "px-2.5")}>
+              {navGroups.map((group, i) => {
+                const multiGroup = navGroups.length > 1;
+                return (
                   <SidebarSection
+                    key={group.label}
                     group={group}
                     groupIndex={i}
                     isCollapsed={effectiveCollapsed}
@@ -262,20 +273,10 @@ export function AppSidebar({
                     onNavigate={onNavigate}
                     accent={accent}
                   />
-                  {activeProjectId &&
-                  group === firstBuildGroup &&
-                  projectNavTreeSlot
-                    ? projectNavTreeSlot({
-                        projectId: activeProjectId,
-                        collapsed: effectiveCollapsed,
-                        accent,
-                        onNavigate: onNavigate ?? noop,
-                      })
-                    : null}
-                </Fragment>
-              );
-            })}
-          </nav>
+                );
+              })}
+            </nav>
+          )}
         </ScrollArea>
       </div>
     </TooltipProvider>

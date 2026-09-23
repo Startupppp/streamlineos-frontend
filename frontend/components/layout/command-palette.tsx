@@ -2,7 +2,12 @@
 
 import { useEffect, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCommandPalette } from "@/components/command-palette";
 
@@ -88,6 +93,10 @@ export function CommandPalette() {
         showCloseButton={false}
       >
         <DialogTitle className="sr-only">Search</DialogTitle>
+        <DialogDescription className="sr-only">
+          The search palette is still loading. A search box and its results will
+          replace this placeholder in a moment.
+        </DialogDescription>
         {bodyReady && <CommandPaletteLoadingBody />}
       </DialogContent>
     </Dialog>

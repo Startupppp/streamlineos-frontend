@@ -13,7 +13,7 @@ import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { MeetingAttendee, ProjectMemberRecord } from "@/types/projects";
 
-const FIELD_CLASS = "w-full text-xs bg-card border-border shadow-xs";
+const FIELD_CLASS = "w-full bg-card border-border shadow-xs";
 
 interface AttendeesSectionProps {
   projectId: number;

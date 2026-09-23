@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { addDays, differenceInCalendarDays, format, parseISO } from "date-fns";
 import { Copy, Lock, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ProjectTicketSelect } from "./project-ticket-select";
-import { describeCell, describeDayColumn } from "./day-label";
+import { describeCell } from "./day-label";
 import {
   useCreateTimesheetEntry,
   useUpdateTimesheetEntry,
@@ -19,6 +19,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import type { TimesheetEntry } from "@/features/timesheets";
 import { deriveRows, isCellLocked, rowKeyOf, type GridRow } from "./week-grid-rows";
 import { useWeekGridCells } from "./use-week-grid-cells";
+import { OVERFLOW_EDGE_FADE_CLASS, useHorizontalOverflow } from "@/hooks/common/use-horizontal-overflow";
 
 interface WeekGridProps {
   entries: TimesheetEntry[] | undefined;
@@ -35,12 +36,6 @@ export function WeekGrid({
   weekStart,
   weekEnd,
 }: WeekGridProps) {
-  /**
-   * Marked, not blocked. A holiday is a day the organisation does not expect
-   * work on, which is not the same as a day nobody may log — people do work
-   * public holidays, and refusing the entry would lose that time rather than
-   * record it. So the column is shaded and named, and the input stays live.
-   */
   const { data: holidayData } = useTimesheetHolidays(weekStart, weekEnd);
   const holidayByDate = useMemo(
     () => new Map((holidayData?.holidays ?? []).map((h) => [h.date, h.name])),
@@ -56,6 +51,8 @@ export function WeekGrid({
   const [newRowProject, setNewRowProject] = useState<number | null>(null);
   const [newRowTicket, setNewRowTicket] = useState<number | null>(null);
   const [isCopying, setIsCopying] = useState(false);
+  const gridScrollRef = useRef<HTMLDivElement>(null);
+  const gridOverflow = useHorizontalOverflow(gridScrollRef, entries);
 
   const prevWeekStart = useMemo(
     () => format(addDays(parseISO(weekStart), -7), "yyyy-MM-dd"),
@@ -104,6 +101,7 @@ export function WeekGrid({
     cellRefs,
     editingCell,
     editingValue,
+    cellError,
     saveStatus,
     handleCellFocus,
     handleCellChange,
@@ -208,8 +206,19 @@ export function WeekGrid({
         {saveStatus}
       </p>
 
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <table className="w-full text-xs" style={{ minWidth: 640 }}>
+      {cellError ? (
+        <p role="alert" className="text-xs text-destructive">
+          {cellError}
+        </p>
+      ) : null}
+
+      <div
+        ref={gridScrollRef}
+        data-hidden-left={gridOverflow.hiddenLeft}
+        data-hidden-right={gridOverflow.hiddenRight}
+        className={cn("overflow-x-auto rounded-lg border border-border scrollbar-thin", OVERFLOW_EDGE_FADE_CLASS)}
+      >
+        <table className="w-full text-xs" style={{ minWidth: 800 }}>
           <caption className="sr-only">
             Hours by project and day for the week of{" "}
             {format(parseISO(weekStart), "d MMMM yyyy")}. Use the arrow keys to
@@ -217,7 +226,7 @@ export function WeekGrid({
           </caption>
           <thead>
             <tr className="bg-muted/40 border-b border-border">
-              <th className="text-left px-3 py-2 font-medium text-muted-foreground w-48">
+              <th className="sticky left-0 z-10 bg-muted/40 text-left px-3 py-2 font-medium text-muted-foreground w-48 border-r border-border">
                 Project / Ticket
               </th>
               {days.map((d) => (
@@ -249,7 +258,7 @@ export function WeekGrid({
                   key={row.rowKey}
                   className="group hover:bg-muted/20 transition-colors"
                 >
-                  <th scope="row" className="px-3 py-1.5 text-left font-normal">
+                  <th scope="row" className="sticky left-0 z-10 bg-card group-hover:bg-muted/20 px-3 py-1.5 text-left font-normal border-r border-border">
                     <TruncatedText
                       text={row.projectName}
                       className="font-medium text-foreground"
@@ -288,16 +297,6 @@ export function WeekGrid({
                             min="0"
                             step="0.25"
                             value={displayValue}
-                            /**
-                             * Read-only rather than disabled: a disabled input
-                             * leaves the tab order and is skipped by screen
-                             * readers, so a week whose first three days are
-                             * approved simply had no Monday, Tuesday or
-                             * Wednesday for a keyboard user. Read-only keeps
-                             * the cell reachable and announces why it cannot
-                             * be changed, which is what the padlock already
-                             * says to everyone else.
-                             */
                             readOnly={locked}
                             aria-readonly={locked || undefined}
                             aria-label={describeCell(
@@ -341,7 +340,7 @@ export function WeekGrid({
           </tbody>
           <tfoot>
             <tr className="border-t border-border bg-muted/30">
-              <td className="px-3 py-2 text-xs font-semibold text-muted-foreground">
+              <td className="sticky left-0 z-10 bg-muted/30 px-3 py-2 text-xs font-semibold text-muted-foreground border-r border-border">
                 Total
               </td>
               {dayTotals.map((total, i) => (
@@ -359,6 +358,9 @@ export function WeekGrid({
           </tfoot>
         </table>
       </div>
+      {gridOverflow.scrolls ? (
+        <p className="text-micro text-muted-foreground sm:hidden">Swipe sideways to reach every day of the week.</p>
+      ) : null}
 
       {addingRow ? (
         <div className="flex items-end gap-2 p-3 rounded-lg border border-dashed border-primary/40 bg-primary/5 dark:bg-primary/10">

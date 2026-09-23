@@ -10,14 +10,6 @@ import { cn } from "@/lib/utils";
 import { useVerifyAuditChain } from "@/hooks/api/timesheets-core/audit-verify";
 import type { AuditChainVerification } from "@/features/timesheets/types";
 
-/**
- * What the answer actually means, written out.
- *
- * Four outcomes, not two. A chain can be intact over everything it holds; intact
- * over only the window the server could read; intact over rows that mostly
- * predate hashing and therefore prove nothing; or broken. Collapsing those into
- * a tick and a cross is how a partial check comes to be read as a guarantee.
- */
 function describe(result: AuditChainVerification) {
   if (!result.valid) {
     return {
@@ -64,19 +56,6 @@ function describe(result: AuditChainVerification) {
   };
 }
 
-/**
- * TS. The integrity check for the timesheet audit trail.
- *
- * Every audit event stores a SHA of its own contents chained to the previous
- * event's, so an altered or deleted row breaks the chain and can be detected.
- * `GET /timesheets/audit/verify` does that walk and had no caller — the trail
- * was readable and its integrity was not checkable, which is most of what an
- * audit trail is for.
- *
- * Deliberately a button rather than something that runs on load: the check
- * rehashes up to ten thousand rows, and firing it because somebody opened a tab
- * would make an integrity guarantee expensive enough to want to remove.
- */
 export function AuditChainCheck() {
   const { data, isFetching, isError, error, refetch, canVerify } =
     useVerifyAuditChain();

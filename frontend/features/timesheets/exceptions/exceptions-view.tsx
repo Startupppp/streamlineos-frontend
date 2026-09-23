@@ -65,11 +65,6 @@ function getExceptionRowKey(row: TimesheetException) {
 export function ExceptionsView() {
   const access = usePermissionGate("timesheets:exceptions:view");
   const canManage = useCan("timesheets:exceptions:manage");
-  /**
-   * The backend honours `?userId=` only when the caller's
-   * `timesheets:team:view` scope is `all` (`ExceptionsService.listExceptions`),
-   * so anyone narrower is offered a control that would silently do nothing.
-   */
   const canFilterByMember = useScope("timesheets:team:view") === "all";
   const shouldReduceMotion = useReducedMotion();
 

@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useState, useCallback } from "react";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Bot, ExternalLink, GitBranch } from "lucide-react";
@@ -105,6 +106,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
     resolver: zodResolver(gitConnectionSchema),
     defaultValues: { provider: "github", repoUrl: "", repoName: "" },
   });
+  useRegisterDirtyState(dialogOpen && gitForm.formState.isDirty);
 
   const selectedProvider = gitForm.watch("provider");
 
@@ -136,7 +138,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
   const handleToggle = useCallback(
     (connection: GitConnection) => {
       updateConnection.mutate(
-        { id: connection.id, isActive: !connection.isActive },
+        { connectionId: connection.id, isActive: !connection.isActive },
         {
           onSuccess: () =>
             toast.success(

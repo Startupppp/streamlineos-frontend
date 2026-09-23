@@ -1,13 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { formatBasisPoints, formatMinorMoney } from "@/lib/accounting/money";
 import { formatShortDate } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
-import type { ArDocumentLineView, ArDocumentView } from "@/types/accounting-ar";
-import type { FrozenTaxLine } from "@/types/accounting-ar-receipts";
+import type {
+  ArDocumentLineView,
+  ArDocumentView,
+} from "@/types/accounting/accounting-ar";
+import type { FrozenTaxLine } from "@/types/accounting/accounting-ar-receipts";
 import { quantityLabel } from "./ar-document-schema";
 
 function AmountRow({
@@ -21,11 +30,19 @@ function AmountRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-3 py-1">
-      <span className={cn("text-label", emphasis ? "font-medium" : "text-muted-foreground")}>
+      <span
+        className={cn(
+          "text-label",
+          emphasis ? "font-medium" : "text-muted-foreground",
+        )}
+      >
         {label}
       </span>
       <span
-        className={cn("font-mono tabular-nums", emphasis ? "text-sm font-semibold" : "text-label")}
+        className={cn(
+          "font-mono tabular-nums",
+          emphasis ? "text-sm font-semibold" : "text-label",
+        )}
       >
         {value}
       </span>
@@ -33,7 +50,11 @@ function AmountRow({
   );
 }
 
-export function ArDocumentLinesCard({ arDocument }: { arDocument: ArDocumentView }) {
+export function ArDocumentLinesCard({
+  arDocument,
+}: {
+  arDocument: ArDocumentView;
+}) {
   const columns: DataTableColumn<ArDocumentLineView>[] = [
     {
       key: "description",
@@ -42,7 +63,9 @@ export function ArDocumentLinesCard({ arDocument }: { arDocument: ArDocumentView
         <div className="min-w-0">
           <p className="truncate text-sm">{row.description}</p>
           {row.commodityCode ? (
-            <p className="font-mono text-dense text-muted-foreground">{row.commodityCode}</p>
+            <p className="font-mono text-dense text-muted-foreground">
+              {row.commodityCode}
+            </p>
           ) : null}
         </div>
       ),
@@ -52,7 +75,9 @@ export function ArDocumentLinesCard({ arDocument }: { arDocument: ArDocumentView
       header: "Qty",
       className: "text-right",
       cell: (row) => (
-        <span className="font-mono text-dense tabular-nums">{quantityLabel(row.quantityMilli)}</span>
+        <span className="font-mono text-dense tabular-nums">
+          {quantityLabel(row.quantityMilli)}
+        </span>
       ),
     },
     {
@@ -151,10 +176,17 @@ export function ArDocumentTotalsCard({
               {partyName}
             </Link>
           </div>
-          <AmountRow label="Issued" value={formatShortDate(arDocument.issueDate)} />
+          <AmountRow
+            label="Issued"
+            value={formatShortDate(arDocument.issueDate)}
+          />
           <AmountRow
             label="Due"
-            value={arDocument.dueDate ? formatShortDate(arDocument.dueDate) : "On receipt"}
+            value={
+              arDocument.dueDate
+                ? formatShortDate(arDocument.dueDate)
+                : "On receipt"
+            }
           />
         </div>
         <div className="divide-y divide-border/60">
@@ -162,11 +194,17 @@ export function ArDocumentTotalsCard({
             label="Before tax"
             value={formatMinorMoney(arDocument.netMinor, arDocument.currency)}
           />
-          <AmountRow label="Tax" value={formatMinorMoney(arDocument.taxMinor, arDocument.currency)} />
+          <AmountRow
+            label="Tax"
+            value={formatMinorMoney(arDocument.taxMinor, arDocument.currency)}
+          />
           {arDocument.roundingMinor !== 0 ? (
             <AmountRow
               label="Rounding"
-              value={formatMinorMoney(arDocument.roundingMinor, arDocument.currency)}
+              value={formatMinorMoney(
+                arDocument.roundingMinor,
+                arDocument.currency,
+              )}
             />
           ) : null}
           <AmountRow
@@ -176,7 +214,10 @@ export function ArDocumentTotalsCard({
           />
           <AmountRow
             label="Settled"
-            value={formatMinorMoney(arDocument.settledMinor, arDocument.currency)}
+            value={formatMinorMoney(
+              arDocument.settledMinor,
+              arDocument.currency,
+            )}
           />
           <AmountRow
             label="Still open"
@@ -202,7 +243,8 @@ export function FrozenTaxLinesCard({
       <CardHeader>
         <CardTitle>Tax as filed</CardTitle>
         <CardDescription>
-          The verdict the tax engine froze at posting, exactly as the return will read it.
+          The verdict the tax engine froze at posting, exactly as the return
+          will read it.
         </CardDescription>
       </CardHeader>
       <CardContent className="divide-y divide-border/60">

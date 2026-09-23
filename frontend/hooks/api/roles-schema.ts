@@ -69,6 +69,7 @@ export const grantSourceKindContract = z.enum([
   "org-standing",
   "universal-member",
   "employee-self-service",
+  "manager-authority",
   "role-grant",
   "role-default",
   "delegation",
@@ -144,11 +145,6 @@ export const roleSuccessContract = z.object({ success: z.literal(true) });
 export const setRolePermissionsContract = z.object({
   success: z.literal(true),
   version: z.number(),
-});
-
-export const seedDefaultRolesContract = z.object({
-  created: z.array(z.string()),
-  skipped: z.array(z.string()),
 });
 
 export const rolePermissionGrantsContract = z.array(

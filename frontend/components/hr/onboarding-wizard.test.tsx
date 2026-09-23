@@ -32,17 +32,18 @@ jest.mock("@/hooks/api/hr/onboarding", () => ({
   useOnboardingTemplateDepartments: () => ({ data: [] }),
 }));
 
-jest.mock("@/hooks/api/roles", () => ({
-  useRoles: () => ({ data: [{ id: 1, slug: "MEMBER", name: "Member" }] }),
-}));
-
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
 }));
 
 const toastError = jest.fn();
+const toastWarning = jest.fn();
 jest.mock("sonner", () => ({
-  toast: { success: jest.fn(), error: (message: string) => toastError(message) },
+  toast: {
+    success: jest.fn(),
+    warning: (message: string) => toastWarning(message),
+    error: (message: string) => toastError(message),
+  },
 }));
 
 import { OnboardingWizard } from "@/components/hr/onboarding-wizard";

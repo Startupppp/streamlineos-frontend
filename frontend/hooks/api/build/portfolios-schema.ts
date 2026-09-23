@@ -17,7 +17,7 @@ const portfolioRowContract = z.object({
 
 export { portfolioRowContract };
 
-const portfolioListItemContract = portfolioRowContract.extend({
+const portfolioListItemContract = portfolioRowContract.omit({ deletedAt: true }).extend({
   projectCount: z.number().int(),
 });
 
@@ -61,6 +61,10 @@ export const programRowContract = z.object({
   deletedAt: z.string().nullable(),
 });
 
-export const programListContract = z.array(programRowContract);
+export const programListItemContract = programRowContract.omit({ deletedAt: true }).extend({
+  projectCount: z.number().int(),
+});
+
+export const programListContract = z.array(programListItemContract);
 
 export const portfoliosSuccessContract = z.object({ success: z.literal(true) });

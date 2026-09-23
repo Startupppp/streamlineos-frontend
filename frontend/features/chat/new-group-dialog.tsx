@@ -163,6 +163,7 @@ export function NewGroupDialog({
       }
       onCreated(channel.id);
       onOpenChange(false);
+      toast.success("Channel created");
       setName("");
       setDescription("");
       setAvatarUrl("");

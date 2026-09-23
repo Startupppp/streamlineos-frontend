@@ -27,6 +27,8 @@ import {
 } from "@/lib/person-display";
 import { User, Check } from "lucide-react";
 import { InlineFieldWrapper } from "./card-field-wrapper";
+import { usePresenceMap } from "@/hooks/api/chat-core-read";
+import { AvatarWithPresence } from "@/components/shared/presence-dot";
 
 interface InlineAssigneeProps {
   ticketId: number;
@@ -52,6 +54,7 @@ export const InlineAssignee = memo(function InlineAssignee({
   const updateTicket = useUpdateTicket(projectId, {
     onError: (e) => toast.error(getErrorMessage(e)),
   });
+  const presenceMap = usePresenceMap();
 
   function makeAssigneeHandler(userId: string | null) {
     return function selectAssignee() {
@@ -65,12 +68,12 @@ export const InlineAssignee = memo(function InlineAssignee({
   }
 
   const trigger = assignee ? (
-    <Avatar className="h-5 w-5 border border-background shrink-0 cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all">
-      <AvatarImage src={resolveImageUrl(assignee.image)} />
-      <AvatarFallback className="text-micro bg-primary/10 text-primary font-medium">
-        {getUserInitials(assignee)}
-      </AvatarFallback>
-    </Avatar>
+    <AvatarWithPresence
+      src={resolveImageUrl(assignee.image)}
+      fallback={getUserInitials(assignee)}
+      status={presenceMap.get(assignee.id)}
+      avatarClassName="h-5 w-5 border border-background cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all"
+    />
   ) : (
     <div className="h-5 w-5 rounded-full bg-muted border border-dashed border-muted-foreground/30 flex items-center justify-center shrink-0 cursor-pointer hover:border-muted-foreground/60 transition-colors">
       <span className="text-micro text-muted-foreground">?</span>
@@ -91,7 +94,7 @@ export const InlineAssignee = memo(function InlineAssignee({
           align="end"
         >
           <Command>
-            <CommandInput placeholder="Search members..." className="text-xs" />
+            <CommandInput placeholder="Search members..." />
             <CommandList className="max-h-48">
               <CommandEmpty className="py-2 text-center text-xs text-muted-foreground">
                 No members found.

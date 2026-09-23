@@ -53,11 +53,6 @@ interface Cycle {
   name: string;
 }
 
-interface Sprint {
-  id: number;
-  name: string;
-}
-
 interface ProjectOption {
   id: number;
   name: string;
@@ -72,10 +67,8 @@ interface FilterFlatSearchProps {
   members: Member[];
   labels: Label[];
   cycles: Cycle[];
-  sprints: Sprint[];
   projectOptions?: ProjectOption[];
   showTypeFilter: boolean;
-  showSprintFilter: boolean;
   showAssigneeFilter: boolean;
   selectedStatuses: string[];
   selectedPriorities: string[];
@@ -84,7 +77,6 @@ interface FilterFlatSearchProps {
   selectedLabels: string[];
   selectedCycles: string[];
   selectedProjectIds: string[];
-  sprintParam: string;
   dueDateFrom: string;
   dueDateTo: string;
   onToggleStatus: (v: string) => void;
@@ -93,7 +85,6 @@ interface FilterFlatSearchProps {
   onToggleAssignee: (v: string) => void;
   onToggleLabel: (v: string) => void;
   onToggleCycle: (v: string) => void;
-  onToggleSprint: (v: string) => void;
   onToggleProject: (v: string) => void;
   onDueDateFromChange: (v: string) => void;
   onDueDateToChange: (v: string) => void;
@@ -118,10 +109,8 @@ export function FilterFlatSearch({
   members,
   labels,
   cycles,
-  sprints,
   projectOptions,
   showTypeFilter,
-  showSprintFilter,
   showAssigneeFilter,
   selectedStatuses,
   selectedPriorities,
@@ -130,7 +119,6 @@ export function FilterFlatSearch({
   selectedLabels,
   selectedCycles,
   selectedProjectIds,
-  sprintParam,
   dueDateFrom,
   dueDateTo,
   onToggleStatus,
@@ -139,7 +127,6 @@ export function FilterFlatSearch({
   onToggleAssignee,
   onToggleLabel,
   onToggleCycle,
-  onToggleSprint,
   onToggleProject,
   onDueDateFromChange,
   onDueDateToChange,
@@ -334,32 +321,6 @@ export function FilterFlatSearch({
                     >
                       <CheckMark active={active} />
                       <span className="text-sm">{c.name}</span>
-                    </CommandItem>
-                  );
-                })}
-            </CommandGroup>
-          </>
-        )}
-
-        {showSprintFilter && sprints.length > 0 && (
-          <>
-            <CommandSeparator />
-            <CommandGroup heading="Sprint">
-              {sprints
-                .filter((s) => s.name.toLowerCase().includes(q) || "sprint".includes(q))
-                .map((s) => {
-                  const sprintId = String(s.id);
-                  const active = sprintParam === sprintId;
-                  function onSelectSprint() { onToggleSprint(sprintId); }
-                  return (
-                    <CommandItem
-                      key={s.id}
-                      value={`Sprint ${s.name}`}
-                      keywords={["sprint", s.name]}
-                      onSelect={onSelectSprint}
-                    >
-                      <CheckMark active={active} />
-                      <span className="text-sm">{s.name}</span>
                     </CommandItem>
                   );
                 })}

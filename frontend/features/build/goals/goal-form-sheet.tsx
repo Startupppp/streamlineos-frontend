@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -67,6 +68,7 @@ export function GoalFormSheet({
       dueDate: goal?.dueDate ?? "",
     },
   });
+  useRegisterDirtyState(open && form.formState.isDirty);
 
   const handleAddKeyResult = useCallback(() => {
     setKeyResults((prev) => [...prev, { ...EMPTY_KR }]);

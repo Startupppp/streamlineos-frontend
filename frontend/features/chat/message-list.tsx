@@ -252,7 +252,7 @@ export function MessageList({
           className="min-h-full"
           style={{
             backgroundImage:
-              "radial-gradient(circle at 50% 50%, hsl(var(--muted) / 0.3) 0%, transparent 70%)",
+              "radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--muted) 30%, transparent) 0%, transparent 70%)",
           }}
         >
         {isLoading ? (
@@ -271,7 +271,7 @@ export function MessageList({
         ) : (
           <div
             className={cn(
-              "min-h-full flex flex-col py-2 px-3 sm:px-5 max-w-[900px] mx-auto w-full min-w-0",
+              "min-h-full flex flex-col py-2 px-3 sm:px-5 max-w-[900px] mx-auto w-full min-w-0 pb-14 sm:pb-2",
               messages.length > 0 ? "justify-end" : "justify-center",
             )}
           >

@@ -9,16 +9,16 @@ import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 
 const ticketListPageLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketListPageContract),
+  import("@/hooks/api/build/build-tickets-core-schema").then((m) => m.ticketListPageContract),
 );
 const ticketDetailLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.ticketDetailContract),
+  import("@/hooks/api/build/build-tickets-core-schema").then((m) => m.ticketDetailContract),
 );
 const columnCountsLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.columnCountsContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.columnCountsContract),
 );
 const subtaskListLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-tickets-schema").then((m) => m.subtaskListContract),
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.subtaskListContract),
 );
 import type {
   Ticket,
@@ -27,7 +27,7 @@ import type {
 } from "@/types/projects";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
-const BOARD_PAGE_SIZE = 100;
+export const BOARD_PAGE_SIZE = 100;
 const BOARD_AUTOLOAD_LIMIT = 500;
 
 export function useTickets(
@@ -55,7 +55,6 @@ export type BoardFilters = {
   assigneeId?: string;
   labels?: string;
   cycle?: string;
-  sprint?: string;
   module?: string;
 };
 
@@ -69,7 +68,6 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
     filters?.assigneeId ||
     filters?.labels ||
     filters?.cycle ||
-    filters?.sprint ||
     filters?.module
   );
 
@@ -89,7 +87,6 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
       if (filters?.assigneeId) params.assigneeId = filters.assigneeId;
       if (filters?.labels) params.labelIds = filters.labels;
       if (filters?.cycle) params.cycleId = filters.cycle;
-      if (filters?.sprint) params.sprintIds = filters.sprint;
       if (filters?.module) params.moduleIds = filters.module;
       return apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, params, signal, ticketListPageLazy);
     },

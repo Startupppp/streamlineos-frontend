@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useTransition, useMemo, useEffect } from "react";
-import { useCanState } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Download } from "lucide-react";
 import {
@@ -17,19 +17,9 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { PageState } from "@/components/shared/page-state";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
 import {
   CONTENT_FILL_PANEL,
@@ -99,7 +89,7 @@ export default function QuotesPage() {
 
   const currentCursor = cursorHistory[cursorHistory.length - 1];
 
-  const { data, isLoading, error, refetch, access } = useQuotes({
+  const { data, isLoading, isError, error, refetch, access } = useQuotes({
     search: apiSearch || undefined,
     status: isQuoteStatus(statusFilter) ? statusFilter : undefined,
     cursor: currentCursor,
@@ -130,6 +120,8 @@ export default function QuotesPage() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const pageState = usePageState({ permission: "crm:quotes:read", isLoading, isError, error });
 
   const handleExport = useCallback(async () => {
     setIsExporting(true);
@@ -225,18 +217,14 @@ export default function QuotesPage() {
     [byId, handleRequestDelete, handleStatusUpdate],
   );
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
-  if (useCanState("crm:quotes:read") === "denied")
-    return <NoPermissionState permission="crm:quotes:read" />;
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading")
+    return (
+      <PageWrapper title="Quotes" subtitle="Proposals and pricing sent to clients.">
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
 
   return (
     <>
@@ -282,13 +270,6 @@ export default function QuotesPage() {
         <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
           {isLoading ? (
             <DataTableSkeleton rows={12} columns={layout.list.columns.length} className="flex-1" />
-          ) : error ? (
-            <ErrorState
-              title="Couldn't load quotes"
-              description={getErrorMessage(error)}
-              onRetry={handleRetry}
-              className={CONTENT_FILL_PANEL}
-            />
           ) : quotes.length === 0 ? (
             <EmptyState
               access={access}
@@ -335,25 +316,16 @@ export default function QuotesPage() {
         </div>
       </PageWrapper>
 
-      <AlertDialog open={deleteId !== null} onOpenChange={handleDeleteDialogOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete quote?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. The quote will be permanently removed.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleConfirmDelete}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteId !== null}
+        onOpenChange={handleDeleteDialogOpenChange}
+        title="Delete quote?"
+        description="This action cannot be undone. The quote will be permanently removed."
+        confirmLabel="Delete"
+        destructive
+        isPending={deleteQuote.isPending}
+        onConfirm={handleConfirmDelete}
+      />
     </>
   );
 }

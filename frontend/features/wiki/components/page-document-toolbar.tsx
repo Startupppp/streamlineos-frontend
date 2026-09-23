@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -8,6 +7,7 @@ import {
   KbCopyIcon,
   KbFileDownIcon,
   KbHistoryIcon,
+  KbImageIcon,
   KbInfoIcon,
   KbLink2Icon,
   KbLockIcon,
@@ -21,23 +21,16 @@ import {
 } from "@/features/wiki/lib/kb-icons";
 import { Button } from "@/components/ui/button";
 import {
-  ResponsivePopover,
-  ResponsivePopoverTrigger,
-  ResponsivePopoverContent,
-} from "@/components/ui/responsive-popover";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Check } from "lucide-react";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   useToggleFavoriteKbPage,
@@ -55,42 +48,31 @@ import { pageHref } from "@/lib/knowledge-routes";
 interface PageDocumentToolbarProps {
   page: KbPageDetail;
   pageId: number;
+  isEditable: boolean;
   onApplyImprovement?: (text: string) => void;
+  onInsertSummary?: (text: string) => void;
   onOpenMetaSheet: () => void;
   onOpenComments: () => void;
   onOpenHistory: () => void;
   onOpenMove: () => void;
   onOpenSaveAsTemplate: () => void;
+  onOpenCover: () => void;
   onDelete: () => void;
   onNavigate: (pageId: number) => void;
-}
-
-function HeaderToolbarTooltip({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactElement;
-}) {
-  return (
-    <Tooltip delayDuration={0}>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent side="bottom" sideOffset={8} className="text-xs font-medium">
-        {label}
-      </TooltipContent>
-    </Tooltip>
-  );
 }
 
 export function PageDocumentToolbar({
   page,
   pageId,
+  isEditable,
   onApplyImprovement,
+  onInsertSummary,
   onOpenMetaSheet,
   onOpenComments,
   onOpenHistory,
   onOpenMove,
   onOpenSaveAsTemplate,
+  onOpenCover,
   onDelete,
   onNavigate,
 }: PageDocumentToolbarProps) {
@@ -106,12 +88,10 @@ export function PageDocumentToolbar({
   const lockPage = useLockKbPage();
   const { data: backlinks = [] } = useKbPageBacklinks(pageId);
 
-  const [backlinksOpen, setBacklinksOpen] = useState(false);
-
   function handleToggleFavorite() {
     toggleFavorite.mutate(
       { pageId, isFavorite: page.isFavorite },
-      { onError: () => toast.error("Failed to update favorites") }
+      { onError: () => toast.error("Failed to update favorites") },
     );
   }
 
@@ -132,7 +112,7 @@ export function PageDocumentToolbar({
         onSuccess: () =>
           toast.success(page.isLocked ? "Page unlocked" : "Page locked"),
         onError: () => toast.error("Failed to update lock"),
-      }
+      },
     );
   }
 
@@ -142,177 +122,126 @@ export function PageDocumentToolbar({
     );
   }
 
-  function handleBacklinkClick(e: React.MouseEvent<HTMLButtonElement>) {
-    const id = e.currentTarget.dataset.pageId;
+  function handleBacklinkSelect(event: Event) {
+    const target = event.currentTarget;
+    if (!(target instanceof HTMLElement)) return;
+    const id = target.dataset.pageId;
     if (!id) return;
     onNavigate(Number(id));
-    setBacklinksOpen(false);
   }
 
   return (
-    <TooltipProvider delayDuration={0}>
-      <div className="flex items-center gap-1 shrink-0">
-        <KbPageAiActions
-          pageId={pageId}
-          onApplyImprovement={onApplyImprovement}
-        />
-
-        <HeaderToolbarTooltip label="Page info">
+    <div className="flex items-center gap-1.5 shrink-0">
+      <KbPageAiActions
+        pageId={pageId}
+        onApplyImprovement={onApplyImprovement}
+        onInsertSummary={onInsertSummary}
+      />
+      {canUpdate && <PageSharePopover page={page} />}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
           <Button
-            variant="ghost"
-            size="icon"
-            className="w-8"
-            onClick={onOpenMetaSheet}
-            aria-label="Page settings"
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 w-9 px-0"
+            aria-label="More options"
           >
-            <KbInfoIcon className="h-4 w-4" />
+            <KbMoreHorizontalIcon className="h-4 w-4" />
           </Button>
-        </HeaderToolbarTooltip>
-
-        <HeaderToolbarTooltip
-          label={page.isFavorite ? "Remove from favorites" : "Add to favorites"}
-        >
-          <Button
-            variant="ghost"
-            size="icon"
-            className={`h-8 w-8 ${page.isFavorite ? "text-status-warning-ink" : ""}`}
-            onClick={handleToggleFavorite}
-            aria-label={
-              page.isFavorite ? "Remove from favorites" : "Add to favorites"
-            }
-          >
-            <KbStarIcon
-              className={`h-4 w-4 ${page.isFavorite ? "fill-amber-500" : ""}`}
-            />
-          </Button>
-        </HeaderToolbarTooltip>
-
-        <HeaderToolbarTooltip label="Comments">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-8"
-            onClick={onOpenComments}
-            aria-label="Open comments"
-          >
-            <KbMessageSquareIcon className="h-4 w-4" />
-          </Button>
-        </HeaderToolbarTooltip>
-
-        <HeaderToolbarTooltip label="Version history">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-8"
-            onClick={onOpenHistory}
-            aria-label="View page history"
-          >
-            <KbHistoryIcon className="h-4 w-4" />
-          </Button>
-        </HeaderToolbarTooltip>
-
-        {canUpdate && <PageSharePopover page={page} />}
-
-        <ResponsivePopover open={backlinksOpen} onOpenChange={setBacklinksOpen}>
-          <HeaderToolbarTooltip label="Backlinks">
-            <ResponsivePopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-8"
-                aria-label="View backlinks"
-              >
-                <KbLink2Icon className="h-4 w-4" />
-              </Button>
-            </ResponsivePopoverTrigger>
-          </HeaderToolbarTooltip>
-          <ResponsivePopoverContent
-            align="end"
-            title="Backlinks"
-            className="w-64 p-3"
-          >
-            <p className="text-xs font-semibold text-foreground mb-2">
-              Backlinks ({backlinks.length})
-            </p>
-            {backlinks.length === 0 ? (
-              <p className="text-xs text-muted-foreground">
-                No pages link here yet.
-              </p>
-            ) : (
-              <div className="space-y-1">
-                {backlinks.map((bl) => (
-                  <button
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuItem onSelect={onOpenComments}>
+            <KbMessageSquareIcon className="mr-2 h-4 w-4" />
+            Comments
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={onOpenHistory}>
+            <KbHistoryIcon className="mr-2 h-4 w-4" />
+            Version history
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={onOpenMetaSheet}>
+            <KbInfoIcon className="mr-2 h-4 w-4" />
+            Page info
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={handleToggleFavorite}>
+            <KbStarIcon className="mr-2 h-4 w-4" />
+            {page.isFavorite ? "Remove from favorites" : "Add to favorites"}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {isEditable && (
+            <DropdownMenuItem onSelect={onOpenCover}>
+              <KbImageIcon className="mr-2 h-4 w-4" />
+              {page.coverImage ? "Change cover" : "Add cover"}
+              {page.coverImage ? (
+                <Check className="ml-auto h-4 w-4 text-foreground" />
+              ) : null}
+            </DropdownMenuItem>
+          )}
+          {canCreate && (
+            <DropdownMenuItem onSelect={handleDuplicate}>
+              <KbCopyIcon className="mr-2 h-4 w-4" />
+              Duplicate
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem onSelect={onOpenMove}>
+            <KbMoveRightIcon className="mr-2 h-4 w-4" />
+            Move
+          </DropdownMenuItem>
+          {canManage && (
+            <DropdownMenuItem onSelect={handleToggleLock}>
+              {page.isLocked ? (
+                <KbUnlockIcon className="mr-2 h-4 w-4" />
+              ) : (
+                <KbLockIcon className="mr-2 h-4 w-4" />
+              )}
+              {page.isLocked ? "Unlock page" : "Lock page"}
+            </DropdownMenuItem>
+          )}
+          {canTemplates && (
+            <DropdownMenuItem onSelect={onOpenSaveAsTemplate}>
+              <KbSaveIcon className="mr-2 h-4 w-4" />
+              Save as template
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem onSelect={handleExportHtml}>
+            <KbFileDownIcon className="mr-2 h-4 w-4" />
+            Export HTML
+          </DropdownMenuItem>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <KbLink2Icon className="mr-2 h-4 w-4" />
+              Backlinks
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="w-56">
+              {backlinks.length === 0 ? (
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                  No pages link here yet.
+                </div>
+              ) : (
+                backlinks.map((bl) => (
+                  <DropdownMenuItem
                     key={bl.id}
                     data-page-id={String(bl.id)}
-                    className="flex items-center gap-2 w-full text-left text-sm p-1 rounded hover:bg-muted transition-colors"
-                    onClick={handleBacklinkClick}
+                    onSelect={handleBacklinkSelect}
                   >
-                    <span className="shrink-0">{bl.icon ?? "📄"}</span>
+                    <span className="mr-2 shrink-0">{bl.icon ?? "📄"}</span>
                     <TruncatedText text={bl.title || "Untitled"} />
-                  </button>
-                ))}
-              </div>
-            )}
-          </ResponsivePopoverContent>
-        </ResponsivePopover>
-
-        <DropdownMenu>
-          <HeaderToolbarTooltip label="More actions">
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-8"
-                aria-label="More options"
-              >
-                <KbMoreHorizontalIcon className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-          </HeaderToolbarTooltip>
-          <DropdownMenuContent align="end" className="w-48">
-            {canCreate && (
-              <DropdownMenuItem onSelect={handleDuplicate}>
-                <KbCopyIcon className="h-4 w-4 mr-2" />
-                Duplicate
+                  </DropdownMenuItem>
+                ))
+              )}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          {canDelete && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onSelect={onDelete}>
+                <KbTrash2Icon className="mr-2 h-4 w-4" />
+                Delete
               </DropdownMenuItem>
-            )}
-            <DropdownMenuItem onSelect={onOpenMove}>
-              <KbMoveRightIcon className="h-4 w-4 mr-2" />
-              Move
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {canManage && (
-              <DropdownMenuItem onSelect={handleToggleLock}>
-                {page.isLocked ? (
-                  <KbUnlockIcon className="h-4 w-4 mr-2" />
-                ) : (
-                  <KbLockIcon className="h-4 w-4 mr-2" />
-                )}
-                {page.isLocked ? "Unlock page" : "Lock page"}
-              </DropdownMenuItem>
-            )}
-            {canTemplates && (
-              <DropdownMenuItem onSelect={onOpenSaveAsTemplate}>
-                <KbSaveIcon className="h-4 w-4 mr-2" />
-                Save as template
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem onSelect={handleExportHtml}>
-              <KbFileDownIcon className="h-4 w-4 mr-2" />
-              Export HTML
-            </DropdownMenuItem>
-            {canDelete && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive" onSelect={onDelete}>
-                  <KbTrash2Icon className="h-4 w-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </TooltipProvider>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }

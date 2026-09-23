@@ -25,6 +25,9 @@ const storageUploadContract = lazyContract(() =>
   import("@/hooks/api/chat-extra-schema").then((m) => m.storageUploadContract),
 );
 
+const MAX_ATTACHMENT_MB = 10;
+const MAX_ATTACHMENT_BYTES = MAX_ATTACHMENT_MB * 1024 * 1024;
+
 const formSchema = createTicketInputSchema.omit({ projectId: true, labelIds: true });
 
 export type CreateTicketFormValues = z.infer<typeof formSchema>;
@@ -172,7 +175,7 @@ export function useCreateTicketForm({
     if (projectId != null) {
       queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.tickets({ projectId }) });
       queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.detail(projectId) });
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.sprints(projectId) });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.cycles(projectId) });
     }
     onCreated?.();
     if (createMore) {
@@ -219,7 +222,7 @@ export function useCreateTicketForm({
         try {
           setIsUploading(true);
           await Promise.all([labelTask, linksTask]);
-          await Promise.all(
+          const outcomes = await Promise.allSettled(
             pendingFiles.map(async (file) => {
               const formData = new FormData();
               formData.append("file", file);
@@ -239,9 +242,27 @@ export function useCreateTicketForm({
               });
             }),
           );
-          toast.success(`Issue created with ${pendingFiles.length} attachment${pendingFiles.length > 1 ? "s" : ""}`);
-        } catch {
-          toast.error("Issue created but failed to upload attachments");
+
+          const failed = pendingFiles.filter((_, index) => outcomes[index]?.status === "rejected");
+          const succeeded = pendingFiles.length - failed.length;
+
+          if (failed.length === 0) {
+            toast.success(`Issue created with ${succeeded} attachment${succeeded > 1 ? "s" : ""}`);
+          } else {
+            const firstRejection = outcomes.find((outcome) => outcome.status === "rejected");
+            const reason =
+              firstRejection?.status === "rejected"
+                ? getErrorMessage(firstRejection.reason)
+                : "Upload failed.";
+            const names = failed.map((file) => file.name).join(", ");
+            toast.error(
+              succeeded > 0
+                ? `Issue created. ${succeeded} attached, but ${names} failed: ${reason}`
+                : `Issue created, but ${names} could not be attached: ${reason}`,
+            );
+          }
+        } catch (error) {
+          toast.error(`Issue created, but attachments failed: ${getErrorMessage(error)}`);
         } finally {
           setIsUploading(false);
           finishCreation();
@@ -280,8 +301,8 @@ export function useCreateTicketForm({
 
   const addFiles = useCallback((incoming: File[]) => {
     const valid = incoming.filter((f) => {
-      if (f.size > 25 * 1024 * 1024) {
-        toast.error(`${f.name} exceeds 25MB limit`);
+      if (f.size > MAX_ATTACHMENT_BYTES) {
+        toast.error(`${f.name} exceeds ${MAX_ATTACHMENT_MB}MB limit`);
         return false;
       }
       return true;

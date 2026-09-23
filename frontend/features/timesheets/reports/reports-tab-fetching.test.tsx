@@ -34,11 +34,6 @@ jest.mock("@/hooks/api/access", () => {
       denied: false,
       pending: false,
     })),
-    /**
-     * `<Gated>` reads this, not `useCan`, and the two must agree or a test that
-     * revokes the permission would still render the granted branch. Derived from
-     * the same mock so `can.mockReturnValue(false)` means denied here too.
-     */
     useCanState: jest.fn(() => (useCan() ? "granted" : "denied")),
     useAccess: jest.fn(() => ({
       data: { scopes: {}, modules: {}, isOrgOwner: false },
@@ -56,10 +51,6 @@ const get = apiClient.get as jest.Mock;
 const can = useCan as jest.Mock;
 const scope = useScope as jest.Mock;
 
-/**
- * Every report endpoint the seven tabs can reach. A tab that fetches while
- * inactive shows up here as an unexpected URL.
- */
 const REPORT_URLS = [
   "/timesheets/reports/overview",
   "/timesheets/reports/utilization",
@@ -72,11 +63,6 @@ const REPORT_URLS = [
 
 const RANGE = { startDate: "2026-08-11", endDate: "2026-09-09" };
 
-/**
- * Minimal but contract-shaped responses. `{}` for everything would let a tab
- * crash on a field its own type declares as present, which would fail this
- * suite for a reason that has nothing to do with what it is measuring.
- */
 const RESPONSES: Record<string, unknown> = {
   "/timesheets/reports/overview": {
     ...RANGE,
@@ -142,7 +128,6 @@ function renderReports() {
 }
 
 beforeAll(() => {
-  // Radix triggers measure and capture pointers; jsdom implements neither.
   Element.prototype.hasPointerCapture = jest.fn(() => false);
   Element.prototype.setPointerCapture = jest.fn();
   Element.prototype.releasePointerCapture = jest.fn();
@@ -166,7 +151,6 @@ describe("timesheet reports tabs fetch only when active", () => {
     await waitFor(() =>
       expect(reportRequests()).toContain("/timesheets/reports/overview"),
     );
-    // Let any stray effect-driven fetch land before asserting the negative.
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(reportRequests()).toEqual(["/timesheets/reports/overview"]);
@@ -223,17 +207,6 @@ describe("timesheet reports tabs fetch only when active", () => {
   });
 });
 
-/**
- * The suite above passes today for a reason that is not the `enabled` props:
- * Radix unmounts an inactive `TabsContent`, so an inactive tab's hooks never
- * run whatever they are told. Confirmed by making one tab unconditionally
- * enabled — the suite above stayed green.
- *
- * That makes the props the *second* line of defence, and the only one left the
- * moment someone adds `forceMount` (for animation, or to keep a tab's scroll
- * position) or lifts the tabs out of Radix. These cases mount each tab body
- * directly, which is the only way to measure whether the guard actually bites.
- */
 describe("each report tab's own enabled guard", () => {
   const TABS: {
     name: string;

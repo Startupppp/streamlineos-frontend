@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { notificationListContract } from "@/hooks/api/notifications-schema";
 
 const wireDate = () => z.string();
 
@@ -28,31 +27,3 @@ export const hrDocumentListContract = z.object({
   }),
 });
 
-const hrAssetSchema = z.object({
-  id: z.number().int(),
-  name: z.string(),
-  status: z.string(),
-}).catchall(z.unknown());
-
-export const hrAssetListContract = z.object({
-  data: z.array(hrAssetSchema),
-  counts: z.object({
-    total: z.number().int(),
-    available: z.number().int(),
-    assigned: z.number().int(),
-    maintenance: z.number().int(),
-    retired: z.number().int(),
-  }),
-  pagination: z.object({
-    page: z.number().int(),
-    limit: z.number().int(),
-    total: z.number().int(),
-    totalPages: z.number().int(),
-  }),
-});
-
-export const notificationCursorPageContract = notificationListContract;
-
-export const notificationUnreadCountContract = z.object({
-  count: z.number().int(),
-});

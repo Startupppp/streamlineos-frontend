@@ -19,6 +19,7 @@ import { stopEvent, InlineAssignee } from "./card-inline-fields";
 import { TicketQuickActions } from "./ticket-quick-actions";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { isMemberOverCapacity, type MemberCapacityData } from "./workload-types";
 
 interface WorkloadMember {
   id: string;
@@ -42,6 +43,7 @@ interface WorkloadMemberRowProps {
   motionDelay: number;
   reducedMotion: boolean | null;
   onToggle: (id: string) => void;
+  capacityData?: MemberCapacityData;
 }
 
 function getUtilizationClass(count: number): string {
@@ -65,8 +67,10 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
   motionDelay,
   reducedMotion,
   onToggle,
+  capacityData,
 }: WorkloadMemberRowProps) {
   const displayName = getUserDisplayName(member);
+  const overCapacity = isMemberOverCapacity(total, capacityData);
 
   return (
     <motion.div
@@ -78,7 +82,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
         className={cn(
           "flex items-center border-b cursor-pointer hover:bg-muted/30 transition-colors",
           expanded && "bg-muted/40",
-          total > 5 && "border-l-2 border-l-red-400",
+          overCapacity && "border-l-2 border-l-red-400",
         )}
         role="button"
         onClick={() => onToggle(member.id)}
@@ -129,7 +133,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
                 <span
                   className={cn(
                     "text-sm font-semibold",
-                    total > 5 ? "text-status-danger-ink" : total > 3 ? "text-status-warning-ink" : "text-foreground",
+                    overCapacity ? "text-status-danger-ink" : total > 3 ? "text-status-warning-ink" : "text-foreground",
                   )}
                 >
                   {total}
@@ -137,8 +141,10 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
               </TooltipTrigger>
               <TooltipContent side="top">
                 <p className="text-xs">
-                  {total > 5
-                    ? "Over suggested capacity (5 tickets). Configure member capacity to track precisely."
+                  {overCapacity
+                    ? capacityData !== undefined
+                      ? `${capacityData.loggedHours}h logged${capacityData.capacityHours !== null ? ` of ${capacityData.capacityHours}h capacity` : ""}${capacityData.utilizationPercent !== null ? ` (${capacityData.utilizationPercent}%)` : ""}. Over capacity.`
+                      : "Over suggested capacity (5 tickets). Configure member capacity to track precisely."
                     : `${total} ticket${total !== 1 ? "s" : ""} assigned`}
                 </p>
               </TooltipContent>

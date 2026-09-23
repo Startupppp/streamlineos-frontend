@@ -1,6 +1,12 @@
 ﻿"use client";
 
-import { useState, useMemo, memo, useCallback, type ComponentType } from "react";
+import {
+  useState,
+  useMemo,
+  memo,
+  useCallback,
+  type ComponentType,
+} from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { format, addDays, isSameDay, parseISO } from "date-fns";
 import {
@@ -16,11 +22,12 @@ import { cn } from "@/lib/utils";
 import type { KanbanTicket } from "../shared/types";
 import { stopEvent, InlineAssignee } from "./card-inline-fields";
 import { WorkloadMemberRow } from "./workload-member-row";
-import type { FilterState, StatFilter } from "./workload-types";
-import { hasActiveWorkloadFilters } from "./workload-types";
+import type { FilterState, MemberCapacityData, StatFilter } from "./workload-types";
+import { hasActiveWorkloadFilters, isMemberOverCapacity } from "./workload-types";
 import Link from "next/link";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface WorkloadMember {
   id: string;
@@ -36,14 +43,19 @@ interface WorkloadViewProps {
   projectKey?: string | null;
   members: WorkloadMember[];
   filters: FilterState;
-  onFilterChange: <K extends keyof FilterState>(key: K, value: FilterState[K]) => void;
+  onFilterChange: <K extends keyof FilterState>(
+    key: K,
+    value: FilterState[K],
+  ) => void;
+  onClearFilters: () => void;
+  capacityByMemberId?: Map<string, MemberCapacityData>;
 }
 
-function applyTicketFilters(tickets: KanbanTicket[], filters: FilterState): KanbanTicket[] {
+function applyTicketFilters(
+  tickets: KanbanTicket[],
+  filters: FilterState,
+): KanbanTicket[] {
   let result = tickets;
-  if (filters.sprintId !== "all") {
-    result = result.filter((t) => t.sprintId === Number(filters.sprintId));
-  }
   if (filters.cycleId !== "all") {
     result = result.filter((t) => t.cycleId === Number(filters.cycleId));
   }
@@ -89,11 +101,73 @@ interface WorkloadStat {
 }
 
 const STATS: readonly WorkloadStat[] = [
-  { id: "all", label: "Total Tickets", icon: TrendingUp, bg: "bg-primary/10", text: "text-primary" },
-  { id: "assigned", label: "Assigned", icon: CheckCircle2, bg: "bg-status-success-surface", text: "text-status-success-ink" },
-  { id: "unassigned", label: "Unassigned", icon: Users, bg: "bg-status-warning-surface", text: "text-status-warning-ink" },
-  { id: "over-capacity", label: "Over Capacity", icon: AlertTriangle, bg: "bg-status-danger-surface", text: "text-status-danger-ink" },
+  {
+    id: "all",
+    label: "Total Tickets",
+    icon: TrendingUp,
+    bg: "bg-primary/10",
+    text: "text-primary",
+  },
+  {
+    id: "assigned",
+    label: "Assigned",
+    icon: CheckCircle2,
+    bg: "bg-status-success-surface",
+    text: "text-status-success-ink",
+  },
+  {
+    id: "unassigned",
+    label: "Unassigned",
+    icon: Users,
+    bg: "bg-status-warning-surface",
+    text: "text-status-warning-ink",
+  },
+  {
+    id: "over-capacity",
+    label: "Over Capacity",
+    icon: AlertTriangle,
+    bg: "bg-status-danger-surface",
+    text: "text-status-danger-ink",
+  },
 ];
+
+interface StatButtonProps {
+  stat: WorkloadStat;
+  value: number;
+  isActive: boolean;
+  onToggle: (id: StatFilter) => void;
+}
+
+function StatButton({ stat, value, isActive, onToggle }: StatButtonProps) {
+  function handleClick() {
+    onToggle(stat.id);
+  }
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={cn(
+        "bg-card rounded-lg border border-border p-3 flex h-full items-center gap-3 shadow-sm text-left transition-colors hover:bg-muted/40",
+        isActive && stat.id !== "all" && "ring-2 ring-primary/30 bg-primary/5",
+      )}
+    >
+      <div
+        className={cn(
+          "h-8 w-8 rounded-md flex items-center justify-center shrink-0",
+          stat.bg,
+        )}
+      >
+        <stat.icon className={cn("h-4 w-4", stat.text)} />
+      </div>
+      <div>
+        <p className="text-lg font-semibold text-foreground tabular-nums">
+          {value}
+        </p>
+        <p className="text-dense text-muted-foreground">{stat.label}</p>
+      </div>
+    </button>
+  );
+}
 
 export const WorkloadView = memo(function WorkloadView({
   tickets,
@@ -102,31 +176,44 @@ export const WorkloadView = memo(function WorkloadView({
   projectKey,
   filters,
   onFilterChange,
+  onClearFilters,
+  capacityByMemberId,
 }: WorkloadViewProps) {
   const shouldReduceMotion = useReducedMotion();
-  const [expandedMembers, setExpandedMembers] = useState<Set<string>>(new Set());
+  const [expandedMembers, setExpandedMembers] = useState<Set<string>>(
+    new Set(),
+  );
   const days = useMemo(() => {
     const today = new Date();
     return Array.from({ length: 14 }, (_, i) => addDays(today, i));
   }, []);
 
-  const filteredTickets = useMemo(() => applyTicketFilters(tickets, filters), [tickets, filters]);
+  const filteredTickets = useMemo(
+    () => applyTicketFilters(tickets, filters),
+    [tickets, filters],
+  );
 
   const memberWorkload = useMemo(() => {
     let memberList = members;
     if (filters.statCard === "over-capacity") {
       memberList = members.filter((m) => {
-        const count = filteredTickets.filter((t) => t.assigneeId === m.id).length;
-        return count > 5;
+        const count = filteredTickets.filter(
+          (t) => t.assigneeId === m.id,
+        ).length;
+        return isMemberOverCapacity(count, capacityByMemberId?.get(m.id));
       });
     }
     if (filters.assigneeId !== "all") {
       memberList = memberList.filter((m) => m.id === filters.assigneeId);
     }
     return memberList.map((member) => {
-      const memberTickets = filteredTickets.filter((t) => t.assigneeId === member.id);
+      const memberTickets = filteredTickets.filter(
+        (t) => t.assigneeId === member.id,
+      );
       const ticketsByDay = days.map((day) => {
-        const count = memberTickets.filter((t) => ticketMatchesDay(t, day)).length;
+        const count = memberTickets.filter((t) =>
+          ticketMatchesDay(t, day),
+        ).length;
         return { day, count };
       });
       const total = memberTickets.length;
@@ -134,7 +221,7 @@ export const WorkloadView = memo(function WorkloadView({
       const points = memberTickets.reduce((sum, t) => sum + (t.points ?? 0), 0);
       return { member, memberTickets, ticketsByDay, total, overdue, points };
     });
-  }, [members, filteredTickets, days, filters.statCard, filters.assigneeId]);
+  }, [members, filteredTickets, days, filters.statCard, filters.assigneeId, capacityByMemberId]);
 
   const unassigned = useMemo(
     () => filteredTickets.filter((t) => !t.assigneeId),
@@ -144,7 +231,9 @@ export const WorkloadView = memo(function WorkloadView({
     () => filteredTickets.filter((t) => !!t.assigneeId).length,
     [filteredTickets],
   );
-  const overCapacityCount = memberWorkload.filter((m) => m.total > 5).length;
+  const overCapacityCount = memberWorkload.filter((m) =>
+    isMemberOverCapacity(m.total, capacityByMemberId?.get(m.member.id)),
+  ).length;
 
   const statValues: Record<StatFilter, number> = {
     all: filteredTickets.length,
@@ -162,8 +251,17 @@ export const WorkloadView = memo(function WorkloadView({
     });
   }, []);
 
-  function handleStatCardClick(card: StatFilter) {
-    onFilterChange("statCard", filters.statCard === card ? "all" : card);
+  const handleToggleUnassigned = useCallback(
+    () => handleToggleExpand("__unassigned__"),
+    [handleToggleExpand],
+  );
+
+  function handleUnassignedKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter") handleToggleUnassigned();
+  }
+
+  function handleStatCardToggle(id: StatFilter) {
+    onFilterChange("statCard", filters.statCard === id ? "all" : id);
   }
 
   const hasActiveFilters = hasActiveWorkloadFilters(filters);
@@ -178,30 +276,20 @@ export const WorkloadView = memo(function WorkloadView({
     <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="grid w-full min-w-0 shrink-0 gap-3 overflow-x-auto overscroll-x-contain touch-pan-x scrollbar-hide grid-cols-[repeat(4,minmax(176px,1fr))]">
         {STATS.map((stat) => (
-          <button
+          <StatButton
             key={stat.id}
-            type="button"
-            onClick={() => handleStatCardClick(stat.id)}
-            className={cn(
-              "bg-card rounded-lg border border-border p-3 flex h-full items-center gap-3 shadow-sm text-left transition-colors hover:bg-muted/40",
-              filters.statCard === stat.id && stat.id !== "all" && "ring-2 ring-primary/30 bg-primary/5",
-            )}
-          >
-            <div className={cn("h-8 w-8 rounded-md flex items-center justify-center shrink-0", stat.bg)}>
-              <stat.icon className={cn("h-4 w-4", stat.text)} />
-            </div>
-            <div>
-              <p className="text-lg font-semibold text-foreground tabular-nums">{statValues[stat.id]}</p>
-              <p className="text-dense text-muted-foreground">{stat.label}</p>
-            </div>
-          </button>
+            stat={stat}
+            value={statValues[stat.id]}
+            isActive={filters.statCard === stat.id}
+            onToggle={handleStatCardToggle}
+          />
         ))}
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card">
         <div className="min-h-0 flex-1 overflow-auto">
           <div className="flex min-h-full min-w-max flex-col">
-            <div className="sticky top-0 z-10 flex shrink-0 border-b bg-muted/50">
+            <div className="sticky top-0 z-10 flex shrink-0 border-b bg-secondary">
               <div className="w-52 shrink-0 px-4 py-2.5 text-micro font-bold text-muted-foreground uppercase tracking-wider">
                 Member
               </div>
@@ -222,7 +310,14 @@ export const WorkloadView = memo(function WorkloadView({
                   <p className="text-micro font-bold text-muted-foreground uppercase tracking-wider">
                     {format(day, "EEE")}
                   </p>
-                  <p className={cn("text-dense", isSameDay(day, new Date()) ? "text-primary font-bold" : "text-muted-foreground")}>
+                  <p
+                    className={cn(
+                      "text-dense",
+                      isSameDay(day, new Date())
+                        ? "text-primary font-bold"
+                        : "text-muted-foreground",
+                    )}
+                  >
                     {format(day, "d")}
                   </p>
                 </div>
@@ -230,51 +325,72 @@ export const WorkloadView = memo(function WorkloadView({
             </div>
 
             {memberWorkload.length === 0 && !showUnassignedRow ? (
-              <div className="flex flex-1 items-center justify-center px-4 py-12 text-center">
-                <div>
-                  <Users className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    {hasActiveFilters
-                      ? "No members match the current filters. Try adjusting or clearing filters."
-                      : "No team members with assigned tickets in this project."}
-                  </p>
-                </div>
-              </div>
+              <EmptyState
+                className="flex-1"
+                illustrationPreset="team"
+                title="No workload to show"
+                description="No team members have assigned tickets in this project."
+                filtersActive={hasActiveFilters}
+                filteredTitle="No members match your filters"
+                onClearFilters={onClearFilters}
+              />
             ) : (
-              memberWorkload.map(({ member, memberTickets, ticketsByDay, total, overdue, points }, idx) => (
-                <WorkloadMemberRow
-                  key={member.id}
-                  member={member}
-                  memberTickets={memberTickets}
-                  ticketsByDay={ticketsByDay}
-                  total={total}
-                  overdue={overdue}
-                  points={points}
-                  days={days}
-                  projectId={projectId}
-                  projectKey={projectKey}
-                  expanded={expandedMembers.has(member.id)}
-                  motionDelay={idx * 0.04}
-                  reducedMotion={shouldReduceMotion}
-                  onToggle={handleToggleExpand}
-                />
-              ))
+              memberWorkload.map(
+                (
+                  {
+                    member,
+                    memberTickets,
+                    ticketsByDay,
+                    total,
+                    overdue,
+                    points,
+                  },
+                  idx,
+                ) => (
+                  <WorkloadMemberRow
+                    key={member.id}
+                    member={member}
+                    memberTickets={memberTickets}
+                    ticketsByDay={ticketsByDay}
+                    total={total}
+                    overdue={overdue}
+                    points={points}
+                    days={days}
+                    projectId={projectId}
+                    projectKey={projectKey}
+                    expanded={expandedMembers.has(member.id)}
+                    motionDelay={idx * 0.04}
+                    reducedMotion={shouldReduceMotion}
+                    onToggle={handleToggleExpand}
+                    capacityData={capacityByMemberId?.get(member.id)}
+                  />
+                ),
+              )
             )}
 
             {showUnassignedRow && (
               <motion.div
-                initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
-                animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-                transition={{ delay: memberWorkload.length * 0.04, duration: 0.2, ease: "easeOut" }}
+                initial={
+                  shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }
+                }
+                animate={
+                  shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }
+                }
+                transition={{
+                  delay: memberWorkload.length * 0.04,
+                  duration: 0.2,
+                  ease: "easeOut",
+                }}
               >
                 <div
                   className={cn(
                     "flex items-center border-b cursor-pointer hover:bg-muted/30 transition-colors bg-muted/20",
-                    expandedMembers.has("__unassigned__") && "bg-status-warning-surface",
+                    expandedMembers.has("__unassigned__") &&
+                      "bg-status-warning-surface",
                   )}
                   role="button"
-                  onClick={() => handleToggleExpand("__unassigned__")}
-                  onKeyDown={(e) => e.key === "Enter" && handleToggleExpand("__unassigned__")}
+                  onClick={handleToggleUnassigned}
+                  onKeyDown={handleUnassignedKeyDown}
                   tabIndex={0}
                   aria-expanded={expandedMembers.has("__unassigned__")}
                 >
@@ -287,10 +403,14 @@ export const WorkloadView = memo(function WorkloadView({
                     <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center shrink-0">
                       <Users className="h-3 w-3 text-muted-foreground" />
                     </div>
-                    <span className="text-sm text-muted-foreground">Unassigned</span>
+                    <span className="text-sm text-muted-foreground">
+                      Unassigned
+                    </span>
                   </div>
                   <div className="w-20 shrink-0 px-2 py-3 text-center">
-                    <span className="text-sm font-semibold text-status-warning-ink">{unassigned.length}</span>
+                    <span className="text-sm font-semibold text-status-warning-ink">
+                      {unassigned.length}
+                    </span>
                   </div>
                   <div className="w-20 shrink-0 px-2 py-3 text-center">
                     <span className="text-sm text-muted-foreground">—</span>
@@ -302,7 +422,9 @@ export const WorkloadView = memo(function WorkloadView({
                     className={cn(
                       "grid transition-[grid-template-rows] ease-in-out",
                       shouldReduceMotion ? "duration-0" : "duration-200",
-                      expandedMembers.has("__unassigned__") ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+                      expandedMembers.has("__unassigned__")
+                        ? "grid-rows-[1fr]"
+                        : "grid-rows-[0fr]",
                     )}
                   >
                     <div className="overflow-hidden bg-status-warning-surface">
@@ -314,7 +436,10 @@ export const WorkloadView = memo(function WorkloadView({
                           <span className="w-12 shrink-0 font-mono text-xs text-muted-foreground">
                             #{ticket.ticketNumber}
                           </span>
-                          <TruncatedText text={ticket.title} className="min-w-0 flex-1 text-xs text-foreground" />
+                          <TruncatedText
+                            text={ticket.title}
+                            className="min-w-0 flex-1 text-xs text-foreground"
+                          />
                           {ticket.points != null && (
                             <span className="shrink-0 text-micro tabular-nums text-muted-foreground">
                               {ticket.points}pt
@@ -323,7 +448,11 @@ export const WorkloadView = memo(function WorkloadView({
                           <Link
                             href={
                               ticket.ticketNumber != null
-                                ? getTicketDetailHref(projectId, projectKey, ticket.ticketNumber)
+                                ? getTicketDetailHref(
+                                    projectId,
+                                    projectKey,
+                                    ticket.ticketNumber,
+                                  )
                                 : `/build/${projectId}`
                             }
                             onMouseDown={stopEvent}

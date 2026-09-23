@@ -6,13 +6,13 @@ const feedbucketWidgetThemeContract = z.object({
   label: z.string().optional(),
 });
 
-const feedbucketWidgetRowContract = z.object({
+export const feedbucketWidgetRowContract = z.object({
   id: z.number(),
   orgId: z.string(),
   projectId: z.number().nullable(),
   managedProductId: z.number().nullable(),
-  defaultProjectId: z.number().nullable(),
-  defaultAssigneeMembershipId: z.number().nullable(),
+  defaultProjectId: z.number().nullable().optional(),
+  defaultAssigneeMembershipId: z.number().nullable().optional(),
   assigneeRules: z.object({
     bug: z.number().optional(),
     idea: z.number().optional(),
@@ -20,7 +20,7 @@ const feedbucketWidgetRowContract = z.object({
     question: z.number().optional(),
     praise: z.number().optional(),
     other: z.number().optional(),
-  }).nullable(),
+  }).nullable().optional(),
   name: z.string(),
   publicKey: z.string(),
   allowedDomains: z.array(z.string()),
@@ -142,10 +142,27 @@ export const feedbucketSubmissionListContract = z.object({
       z.object({ widget: feedbucketWidgetRowContract.nullable() }),
     ),
   ),
-  total: z.number(),
-  page: z.number(),
-  limit: z.number(),
-  totalPages: z.number(),
+  pagination: z.object({
+    limit: z.number(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+  page: z.number().optional(),
+  total: z.number().optional(),
+  totalPages: z.number().optional(),
+});
+
+export const feedbucketBulkSubmissionsContract = z.object({
+  requested: z.number(),
+  succeeded: z.number(),
+  skipped: z.number(),
+  results: z.array(
+    z.object({
+      submissionId: z.number(),
+      outcome: z.enum(["updated", "deleted", "skipped"]),
+      reason: z.enum(["not_found_or_filtered"]).nullable(),
+    }),
+  ),
 });
 
 export const feedbucketSubmissionDetailContract = feedbucketSubmissionRowContract.and(
@@ -196,5 +213,7 @@ export const feedbucketCreateTicketFromAnalysisContract = z.object({
 });
 
 export const feedbucketUpdateSubmissionContract = feedbucketSubmissionRowContract;
+
+export const feedbucketDeleteSubmissionContract = z.object({ success: z.literal(true) });
 
 export type FeedbucketSubmissionRow = z.infer<typeof feedbucketSubmissionRowContract>;

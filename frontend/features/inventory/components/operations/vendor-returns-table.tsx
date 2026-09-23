@@ -7,7 +7,8 @@ import {
   DataTableSkeleton,
   type DataTableColumn,
 } from "@/components/ui/data-table";
-import { ErrorState, Gated } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { formatShortDate } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -51,6 +52,13 @@ export function VendorReturnsTable({
   function handleRetry(): void {
     void query.refetch();
   }
+
+  const state = usePageState({
+    permission: VENDOR_RETURNS_PERMISSION,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+  });
 
   function handleApproveDialogChange(open: boolean): void {
     if (!open) setApproving(null);
@@ -148,24 +156,15 @@ export function VendorReturnsTable({
 
   return (
     <>
-      <Gated
-        permission={VENDOR_RETURNS_PERMISSION}
-        isLoading={query.isLoading}
-        isError={query.isError}
+      <PageState
+        resolution={state}
+        onRetry={handleRetry}
         className="flex-1 min-h-0"
         loading={
           <DataTableSkeleton
             rows={10}
             columns={columns.length}
             className="flex-1 min-h-0"
-          />
-        }
-        error={
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load vendor returns"
-            description={getErrorMessage(query.error)}
-            onRetry={handleRetry}
           />
         }
       >
@@ -199,7 +198,7 @@ export function VendorReturnsTable({
           }
           minWidth="640px"
         />
-      </Gated>
+      </PageState>
 
       <ReturnApproveDialog
         open={approving !== null}

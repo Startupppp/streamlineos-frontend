@@ -2,7 +2,6 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TimerCard } from "@/features/hr/attendance/check-in-button";
-import { ManageHolidaysCard } from "@/features/hr/attendance/manage-holidays-card";
 import { DailyHistoryTable } from "@/features/hr/attendance/daily-history-table";
 import { TeamAttendanceCard } from "@/features/hr/attendance/team-attendance-card";
 import { AttendanceRegularizationDialog } from "@/features/hr/attendance/attendance-regularization-dialog";
@@ -29,7 +28,6 @@ export function AttendanceContent({ isAdmin = false }: AttendanceContentProps) {
           {isAdmin ? (
             <div className="space-y-3">
               <TeamAttendanceCard />
-              <ManageHolidaysCard />
             </div>
           ) : null}
         </div>

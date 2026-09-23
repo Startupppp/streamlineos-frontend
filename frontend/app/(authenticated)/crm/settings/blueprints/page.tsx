@@ -6,8 +6,8 @@ import { toast } from "sonner";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { Gated } from "@/components/shared/gated";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -24,7 +24,7 @@ import { CreateBlueprintDialog } from "@/features/crm/settings/blueprints/create
 import { TransitionMatrix } from "@/features/crm/settings/blueprints/transition-matrix";
 
 export default function BlueprintsPage() {
-  const { data: blueprints, isLoading, isError, refetch } = useBlueprints();
+  const { data: blueprints, isLoading, isError, error, refetch } = useBlueprints();
   const { data: metadata } = useCrmMetadata();
   const updateBlueprint = useUpdateBlueprint();
 
@@ -60,6 +60,14 @@ export default function BlueprintsPage() {
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
+  const state = usePageState({
+    permission: "crm:settings:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !blueprints || blueprints.length === 0,
+  });
+
   const getPipelineName = useCallback(
     (pipelineId: string) =>
       metadata?.pipelines.find((p) => p.id === pipelineId)?.name ?? "—",
@@ -84,30 +92,15 @@ export default function BlueprintsPage() {
           </Button>
         }
       >
-        {/*
-          * Ticket 26. A disabled query reports `isLoading: false` with no rows,
-          * which is exactly what an empty list looks like -- so this ternary
-          * told a caller without `crm:settings:view` that no blueprints had been
-          * defined, rather than that they were not allowed to see them.
-          */}
-        <Gated
-          permission="crm:settings:view"
-          isLoading={isLoading}
-          isError={isError}
-          isEmpty={!blueprints || blueprints.length === 0}
+
+        <PageState
+          resolution={state}
+          onRetry={handleRetry}
           className={CONTENT_FILL_PANEL}
           loading={
             <div className="space-y-3">
               {[0, 1, 2].map((i) => <Skeleton key={i} className="h-14 w-full" />)}
             </div>
-          }
-          error={
-            <ErrorState
-              title="Couldn't load blueprints"
-              description="The blueprint list didn't load. Check your connection and try again."
-              onRetry={handleRetry}
-              className={CONTENT_FILL_PANEL}
-            />
           }
           empty={
             <EmptyState
@@ -207,7 +200,7 @@ export default function BlueprintsPage() {
               )}
             </div>
           </div>
-        </Gated>
+        </PageState>
       </PageWrapper>
     </>
   );

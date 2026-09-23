@@ -17,7 +17,7 @@ export function SimulatorPageContent() {
 
   return (
     <PageWrapper
-      title="HR Simulator"
+      title="Policy simulator"
       subtitle="Model scenarios without affecting production records"
       badge={
         <Badge variant="outline" className="text-xs bg-status-warning-surface text-status-warning-ink border-status-warning-rule flex items-center gap-1">

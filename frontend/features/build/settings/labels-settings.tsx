@@ -13,6 +13,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { useCan } from "@/hooks/api/access";
 import {
   useOrgLabels,
   useCreateLabel,
@@ -99,11 +100,13 @@ function LabelListRow({
   index,
   onEdit,
   onDelete,
+  canManage,
 }: {
   label: TicketLabel;
   index: number;
   onEdit: (label: TicketLabel) => void;
   onDelete: (id: number) => void;
+  canManage: boolean;
 }) {
   const reduceMotion = useReducedMotion();
   const color = resolveLabelColor(label.color);
@@ -123,6 +126,26 @@ function LabelListRow({
     }
   }
 
+  const labelChip = (
+    <>
+      <span
+        className={cn(
+          "inline-flex max-w-full items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium",
+          "bg-primary/5 border-primary/15",
+        )}
+      >
+        <span
+          className="h-2 w-2 shrink-0 rounded-full shadow-sm ring-1 ring-background"
+          style={{ backgroundColor: color }}
+        />
+        <span className="truncate">{label.name}</span>
+      </span>
+      <span className="font-mono text-micro uppercase text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+        {color}
+      </span>
+    </>
+  );
+
   return (
     <motion.div
       layout={!reduceMotion}
@@ -132,35 +155,28 @@ function LabelListRow({
       transition={{ delay: reduceMotion ? 0 : index * 0.03, duration: 0.18 }}
       className="flex items-center gap-3 rounded-xl border border-border bg-card p-2.5 shadow-sm hover:bg-muted/40 transition-colors group"
     >
-      <button
-        type="button"
-        onClick={handleEdit}
-        onKeyDown={handleKeyDown}
-        className="flex min-w-0 flex-1 items-center gap-2.5 text-left rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        aria-label={`Edit label ${label.name}`}
-      >
-        <span
-          className={cn(
-            "inline-flex max-w-full items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium",
-            "bg-primary/5 border-primary/15",
-          )}
+      {canManage ? (
+        <button
+          type="button"
+          onClick={handleEdit}
+          onKeyDown={handleKeyDown}
+          className="flex min-w-0 flex-1 items-center gap-2.5 text-left rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          aria-label={`Edit label ${label.name}`}
         >
-          <span
-            className="h-2 w-2 shrink-0 rounded-full shadow-sm ring-1 ring-background"
-            style={{ backgroundColor: color }}
-          />
-          <span className="truncate">{label.name}</span>
-        </span>
-        <span className="font-mono text-micro uppercase text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-          {color}
-        </span>
-      </button>
-      <DeleteLabelButton onConfirm={handleDelete} />
+          {labelChip}
+        </button>
+      ) : (
+        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+          {labelChip}
+        </div>
+      )}
+      {canManage ? <DeleteLabelButton onConfirm={handleDelete} /> : null}
     </motion.div>
   );
 }
 
 export function LabelsSettings() {
+  const canManage = useCan("build:manage");
   const reduceMotion = useReducedMotion();
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
@@ -276,7 +292,7 @@ export function LabelsSettings() {
 
   return (
     <div>
-      <LabelsHeader showAdd={!showForm} onAdd={handleShowForm} />
+      <LabelsHeader showAdd={canManage && !showForm} onAdd={handleShowForm} />
       <div className="space-y-2">
         {labels.length === 0 && !showForm ? (
           <EmptyState
@@ -284,12 +300,12 @@ export function LabelsSettings() {
             illustrationPreset="tasks"
             title="No labels yet"
             description="Create a label to start organizing tickets across this organization."
-            action={{ label: "Add Label", onClick: handleShowForm }}
+            action={canManage ? { label: "Add Label", onClick: handleShowForm } : undefined}
           />
         ) : null}
         <AnimatePresence initial={false} mode="popLayout">
           {labels.map((label, index) => {
-            if (editingId === label.id) {
+            if (canManage && editingId === label.id) {
               function handleSaveEdit() {
                 handleUpdate(label);
               }
@@ -315,13 +331,14 @@ export function LabelsSettings() {
                 index={index}
                 onEdit={handleStartEdit}
                 onDelete={handleDelete}
+                canManage={canManage}
               />
             );
           })}
         </AnimatePresence>
 
         <AnimatePresence>
-          {showForm ? (
+          {canManage && showForm ? (
             <motion.div
               initial={reduceMotion ? false : { opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}

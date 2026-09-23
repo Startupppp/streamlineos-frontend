@@ -1,39 +1,5 @@
 import { z } from "zod";
 
-const sprintListItemSchema = z.object({
-  id: z.number(),
-  orgId: z.string(),
-  projectId: z.number(),
-  name: z.string(),
-  startDate: z.string(),
-  endDate: z.string(),
-  goal: z.string().nullable(),
-  status: z.string().nullable(),
-  tickets: z.array(
-    z.object({
-      id: z.number().int(),
-      title: z.string(),
-      status: z.string(),
-      points: z.number().int().nullable(),
-      sprintId: z.number().int().nullable(),
-    }),
-  ),
-});
-
-const sprintRowSchema = z.object({
-  id: z.number(),
-  orgId: z.string(),
-  projectId: z.number(),
-  name: z.string(),
-  startDate: z.string(),
-  endDate: z.string(),
-  goal: z.string().nullable(),
-  status: z.string(),
-  deletedAt: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
 const cycleListItemSchema = z.object({
   id: z.number(),
   orgId: z.string(),
@@ -122,7 +88,6 @@ const epicRowSchema = z.object({
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).nullable(),
   projectId: z.number().nullable(),
   ticketNumber: z.number(),
-  sprintId: z.number().nullable(),
   epicId: z.number().nullable(),
   reporterId: z.string().nullable(),
   points: z.number().nullable(),
@@ -142,13 +107,28 @@ const epicRowSchema = z.object({
   updatedAt: z.string().nullable(),
 });
 
-export const sprintListContract = z.array(sprintListItemSchema);
-export const sprintRowContract = sprintRowSchema;
 export const cycleListContract = z.array(cycleListItemSchema);
 export const cycleRowContract = cycleRowSchema;
 export const moduleListContract = z.array(moduleListItemSchema);
 export const moduleRowContract = moduleRowSchema;
 export const epicListContract = z.array(epicRowSchema);
-export const sprintUpdateResultContract = z.object({
-  success: z.literal(true),
+
+export const memberCapacityItemSchema = z.object({
+  userId: z.string(),
+  membershipId: z.number().int(),
+  workingDaysInWindow: z.number(),
+  leaveDays: z.number(),
+  halfLeaveDays: z.number(),
+  netCapacityDays: z.number(),
+  capacityHours: z.number().nullable(),
+  loggedHours: z.number(),
+  isOverAllocated: z.boolean(),
+  isZeroCapacity: z.boolean(),
+  utilizationPercent: z.number().nullable(),
 });
+
+export const workloadCapacityContract = z.object({
+  members: z.array(memberCapacityItemSchema),
+});
+
+export type MemberCapacityItem = z.infer<typeof memberCapacityItemSchema>;

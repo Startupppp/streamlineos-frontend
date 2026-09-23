@@ -6,6 +6,7 @@ import { HydrationBoundary, type DehydratedState } from "@tanstack/react-query";
 import { RememberLastProject } from "@/features/build/sidebar/remember-last-project";
 import { AccessDeniedView } from "@/features/build/project-detail/access-denied-view";
 import { BackendUnavailableView } from "@/features/build/project-detail/backend-unavailable-view";
+import { ProjectHydrationProvider } from "@/features/build/project-detail/project-hydration-context";
 
 function getApiErrorDetails(error: { details?: unknown }): Record<string, unknown> | undefined {
   const detailsRaw = error.details;
@@ -58,11 +59,13 @@ export default async function ProjectLayout({
   if (!project) return notFound();
 
   return (
-    <HydrationBoundary state={hydrated}>
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <RememberLastProject projectId={projectId} />
-        {children}
-      </div>
-    </HydrationBoundary>
+    <ProjectHydrationProvider project={project}>
+      <HydrationBoundary state={hydrated}>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <RememberLastProject projectId={projectId} />
+          {children}
+        </div>
+      </HydrationBoundary>
+    </ProjectHydrationProvider>
   );
 }

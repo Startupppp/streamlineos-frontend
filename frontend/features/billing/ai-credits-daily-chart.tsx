@@ -17,13 +17,13 @@ import { formatCredits, formatTokens } from "@/lib/format-ai";
 import type { AiCreditsUsageDaily } from "@/hooks/api/ai-credits";
 
 const TOOLTIP_STYLE = {
-  background: "hsl(var(--card))",
-  border: "1px solid hsl(var(--border))",
+  background: "var(--card)",
+  border: "1px solid var(--border)",
   borderRadius: 8,
   fontSize: 12,
 } as const;
 
-const AXIS_TICK = { fill: "hsl(var(--muted-foreground))", fontSize: 11 } as const;
+const AXIS_TICK = { fill: "var(--muted-foreground)", fontSize: 11 } as const;
 
 interface AiCreditsDailyChartProps {
   data: AiCreditsUsageDaily[];
@@ -61,11 +61,11 @@ export function AiCreditsDailyChart({ data, isLoading }: AiCreditsDailyChartProp
           <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="aiCreditsGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.25} />
-                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.25} />
+                <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis dataKey="date" tick={AXIS_TICK} />
             <YAxis
               tick={AXIS_TICK}
@@ -82,7 +82,7 @@ export function AiCreditsDailyChart({ data, isLoading }: AiCreditsDailyChartProp
               type="monotone"
               dataKey="credits"
               name="credits"
-              stroke="hsl(var(--primary))"
+              stroke="var(--primary)"
               strokeWidth={2}
               fill="url(#aiCreditsGrad)"
             />

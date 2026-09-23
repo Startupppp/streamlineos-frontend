@@ -15,6 +15,7 @@ type UseUnsavedChangesGuardOptions = {
    * "stay" — save in place and dismiss the dialog (sheets).
    */
   saveMode?: "leave" | "stay";
+  handleBrowserBack?: boolean;
 };
 
 type UseUnsavedChangesGuardResult = {
@@ -31,6 +32,7 @@ export function useUnsavedChangesGuard({
   onDiscard,
   enabled = true,
   saveMode = "leave",
+  handleBrowserBack = false,
 }: UseUnsavedChangesGuardOptions): UseUnsavedChangesGuardResult {
   const [open, setOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -61,6 +63,30 @@ export function useUnsavedChangesGuard({
     },
     [enabled, isDirty],
   );
+
+  useEffect(() => {
+    if (!enabled || !isDirty || !handleBrowserBack) return;
+    let restoring = false;
+    let authorizedLeave = false;
+    function onPopState() {
+      if (restoring) {
+        restoring = false;
+        return;
+      }
+      if (authorizedLeave) {
+        authorizedLeave = false;
+        return;
+      }
+      restoring = true;
+      history.go(1);
+      requestLeave(() => {
+        authorizedLeave = true;
+        history.back();
+      });
+    }
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [enabled, isDirty, handleBrowserBack, requestLeave]);
 
   const handleOpenChange = useCallback(
     (next: boolean) => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, type MouseEvent } from "react";
-import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { Release } from "@/hooks/api/build/releases";
@@ -26,25 +26,6 @@ export const STATUS_CONFIG: Record<
       "text-muted-foreground border-border bg-muted",
   },
 };
-
-export function statusSort(r: Release): number {
-  return r.status === "released" ? 0 : r.status === "draft" ? 1 : 2;
-}
-
-export function NewReleaseButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button
-      size="sm"
-      className="gap-1 text-dense"
-      onClick={onClick}
-      {...hoverHandlers}
-    >
-      <PlusIcon ref={iconRef} size={14} />
-      New Release
-    </Button>
-  );
-}
 
 export function DeleteReleaseButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();

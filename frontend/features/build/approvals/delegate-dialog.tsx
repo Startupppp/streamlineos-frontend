@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { delegateApprovalSchema, type DelegateApprovalValues } from "./approvals-schema";
 import {
   Dialog,
   DialogContent,
@@ -30,12 +30,6 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import type { OrgMember } from "@/types/organization";
 
-const schema = z.object({
-  approverId: z.string().min(1, "Required"),
-});
-
-type FormValues = z.infer<typeof schema>;
-
 interface DelegateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -53,18 +47,19 @@ export function DelegateDialog({
   members,
   currentApproverId,
 }: DelegateDialogProps) {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<DelegateApprovalValues>({
+    resolver: zodResolver(delegateApprovalSchema),
     defaultValues: { approverId: "" },
   });
 
   const candidates = members.filter((m) => m.userId !== currentApproverId);
 
-  function handleSubmit(values: FormValues) {
+  function handleSubmit(values: DelegateApprovalValues) {
     onConfirm(values.approverId);
   }
 
   function handleOpenChange(open: boolean) {
+    if (!open && isPending) return;
     if (!open) form.reset();
     onOpenChange(open);
   }

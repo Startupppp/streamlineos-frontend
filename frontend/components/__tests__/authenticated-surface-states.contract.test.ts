@@ -41,6 +41,7 @@ const BASELINE = {
  * given a real empty state rather than an entry here.
  */
 const EMPTY_STATE_NOT_APPLICABLE = [
+  "/build/managed-products/[managedProductId]/insights",
   "/chat/settings",
   "/crm/import",
   "/hr/recruitment/sla",

@@ -7,7 +7,7 @@ function paneWidthClassName(isCollapsed: boolean): string {
 
 export function getChatSidebarClassName(isCollapsed: boolean): string {
   return [
-    "hidden md:flex",
+    "hidden lg:flex",
     CHAT_PANE_CHROME,
     paneWidthClassName(isCollapsed),
   ].join(" ");
@@ -18,7 +18,7 @@ export function getChatConversationListPaneClassName(
   isMobileListVisible: boolean,
 ): string {
   return [
-    isMobileListVisible ? "flex" : "hidden md:flex",
+    isMobileListVisible ? "flex" : "hidden lg:flex",
     "w-full",
     CHAT_PANE_CHROME,
     paneWidthClassName(isCollapsed),

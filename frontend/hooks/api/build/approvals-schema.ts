@@ -39,3 +39,5 @@ export const approvalRowContract = z.object({
 });
 
 export const approvalListContract = z.array(approvalRowContract);
+
+export const approvalInboxCountContract = z.object({ count: z.number().int().nonnegative() });

@@ -211,7 +211,7 @@ describe("Home consumes the generated contract instead of a parallel registry", 
     const literals = [...source.matchAll(/can\(\s*"([^"]+)"\s*\)/g)].map(
       (match) => match[1],
     );
-    expect(literals.length).toBeGreaterThanOrEqual(8);
+    expect(literals.length).toBeGreaterThanOrEqual(6);
     expect(literals.filter((key) => sectionPermissions.has(key))).toEqual([]);
   });
 

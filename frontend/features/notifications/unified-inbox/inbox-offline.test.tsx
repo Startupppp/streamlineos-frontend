@@ -9,7 +9,9 @@ const markReadMutate = jest.fn();
 const approveMutate = jest.fn();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/inbox",
 }));
 
 jest.mock("next-auth/react", () => ({
@@ -138,6 +140,14 @@ jest.mock("next/dynamic", () => () =>
   jest.requireMock<{ InboxVirtualList: unknown }>("./inbox-virtual-list").InboxVirtualList);
 jest.mock("@/lib/utils", () => ({
   cn: (...args: string[]) => args.filter(Boolean).join(" "),
+}));
+
+jest.mock("./inbox-toolbar", () => ({
+  InboxToolbar: () => null,
+}));
+
+jest.mock("./inbox-bulk-actions", () => ({
+  BulkActionsBar: () => null,
 }));
 
 type SonnerMock = { toast: { error: jest.Mock; success: jest.Mock } };

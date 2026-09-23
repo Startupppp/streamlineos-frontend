@@ -119,7 +119,7 @@ export function BuildProjectChatPage({ projectId }: ProjectChatPageProps) {
 
   return (
     <PageWrapper noInternalScroll>
-      <PmPageShell withGlow={false}>
+      <PmPageShell>
         <div className={cn(PM_PANEL_SOLID, "overflow-hidden flex flex-1 min-h-0 overflow-hidden p-0")}>
           <ChatAblyProvider>
             <div className="flex min-h-0 min-w-0 flex-1">

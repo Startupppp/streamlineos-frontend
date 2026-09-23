@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
+import {
+  Lightbulb,
+  ListTree,
+  MessageSquareText,
+  PenLine,
+} from "lucide-react";
 import { AiActionsMenu, type AiAction, type AiActionResult } from "@/components/ai";
 import { KbDocAskSheet } from "@/components/kb/kb-doc-ask-sheet";
 import { streamKbDocAi, type KbDocAiAction } from "@/hooks/api/kb/doc-ai-stream";
@@ -10,6 +15,7 @@ import { useCan } from "@/hooks/api/access";
 interface KbPageAiActionsProps {
   pageId: number;
   onApplyImprovement?: (text: string) => void;
+  onInsertSummary?: (text: string) => void;
 }
 
 /**
@@ -20,20 +26,25 @@ interface KbPageAiActionsProps {
  * a 1024-token ceiling, which a buffered call could not reliably deliver inside
  * the client's own cap on non-streaming requests.
  */
-export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsProps) {
+export function KbPageAiActions({
+  pageId,
+  onApplyImprovement,
+  onInsertSummary,
+}: KbPageAiActionsProps) {
   const canGenerate = useCan("kb:ai:generate");
   const [askOpen, setAskOpen] = useState(false);
 
   function handleApplyImprovement(text: string) {
-    void navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        toast.success("Improvement draft copied to clipboard");
-      })
-      .catch(() => {
-        toast.success("Improvement applied");
-      });
     onApplyImprovement?.(text);
+  }
+
+  function handleInsertSummary(text: string) {
+    onInsertSummary?.(text);
+  }
+
+  async function runAsk(): Promise<AiActionResult> {
+    setAskOpen(true);
+    return { text: "" };
   }
 
   function streamAction(action: KbDocAiAction) {
@@ -52,31 +63,34 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
   const actions: AiAction[] = [
     {
       key: "summarize",
-      label: "Summarize this page",
-      description: "Concise bullet-point summary",
+      label: "Summarize",
+      description: "Key points as concise bullets",
+      icon: ListTree,
       run: streamAction("summarize"),
+      onApply: onInsertSummary ? handleInsertSummary : undefined,
+      applyLabel: "Insert at top",
     },
     {
       key: "ask",
       label: "Ask about this page",
-      description: "Question scoped to this document only",
-      run: async (): Promise<AiActionResult> => {
-        setAskOpen(true);
-        return { text: "" };
-      },
+      description: "Answers grounded in this page only",
+      icon: MessageSquareText,
+      run: runAsk,
     },
     {
       key: "improve",
       label: "Improve writing",
-      description: "Get a rewritten draft — you apply it",
+      description: "Rewritten draft you review and apply",
+      icon: PenLine,
       run: streamAction("improve"),
       onApply: onApplyImprovement ? handleApplyImprovement : undefined,
-      applyLabel: "Copy & apply draft",
+      applyLabel: "Replace page draft",
     },
     {
       key: "suggest-related",
       label: "Suggest related topics",
-      description: "Topics that complement this page",
+      description: "Ideas that extend this page",
+      icon: Lightbulb,
       run: streamAction("suggest-related"),
     },
   ];
@@ -85,7 +99,13 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
 
   return (
     <>
-      <AiActionsMenu actions={actions} triggerLabel="AI" menuLabel="AI assist" align="end" />
+      <AiActionsMenu
+        actions={actions}
+        triggerLabel="AI"
+        menuLabel="AI assist"
+        align="end"
+        iconOnly
+      />
       <KbDocAskSheet
         scope="pages"
         docId={pageId}

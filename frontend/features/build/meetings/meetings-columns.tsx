@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { Clock, Users, ClipboardList, FileText, Layers } from "lucide-react";
@@ -8,17 +8,30 @@ import { MeetingTypeBadge, MeetingStatusBadge } from "./meeting-badges";
 import { getUserDisplayName } from "@/lib/person-display";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import type { Meeting, ProjectMemberRecord } from "@/types/projects";
 
-interface Sprint {
+interface Cycle {
   id: number;
   name: string;
 }
 
+export const MEETINGS_TABLE_HEADERS = [
+  "ID",
+  "Title",
+  "Type",
+  "Status",
+  "Date / Duration",
+  "Host",
+  "Attendees",
+  "Actions",
+  "Notes",
+] as const;
+
 export function buildMeetingsColumns(
   projectId: number,
   memberMap: Map<string, ProjectMemberRecord>,
-  sprintMap: Map<number, Sprint>,
+  cycleMap: Map<number, Cycle>,
 ): DataTableColumn<Meeting>[] {
   return [
     {
@@ -28,7 +41,7 @@ export function buildMeetingsColumns(
       cell: (row) => (
         <Link
           href={`/build/${projectId}/meetings/${row.id}`}
-          className="font-mono text-xs text-primary hover:underline"
+          className="font-mono tabular-nums text-dense text-primary hover:underline"
         >
           MTG-{row.meetingNumber}
         </Link>
@@ -42,14 +55,17 @@ export function buildMeetingsColumns(
         <div className="flex min-w-0 flex-col gap-0.5 overflow-hidden">
           <Link
             href={`/build/${projectId}/meetings/${row.id}`}
-            className="font-medium text-foreground hover:text-primary min-w-0 block"
+            className="block min-w-0 font-medium text-foreground hover:text-primary"
           >
             <TruncatedText text={row.title} />
           </Link>
-          {row.sprintId != null && sprintMap.has(row.sprintId) ? (
+          {row.cycleId != null && cycleMap.has(row.cycleId) ? (
             <span className="flex max-w-full min-w-0 items-center gap-1 text-dense text-muted-foreground">
               <Layers className="h-3 w-3 shrink-0" />
-              <TruncatedText text={sprintMap.get(row.sprintId)?.name ?? ""} className="text-dense" />
+              <TruncatedText
+                text={cycleMap.get(row.cycleId)?.name ?? ""}
+                className="text-dense"
+              />
             </span>
           ) : null}
         </div>
@@ -73,7 +89,7 @@ export function buildMeetingsColumns(
       cell: (row) => (
         <div className="flex flex-col gap-0.5">
           {row.scheduledAt ? (
-            <span className="tabular-nums text-sm text-foreground">
+            <span className="font-mono tabular-nums text-sm text-foreground">
               {new Date(row.scheduledAt).toLocaleString(undefined, {
                 month: "short",
                 day: "numeric",
@@ -102,7 +118,10 @@ export function buildMeetingsColumns(
         if (!host) return <span className="text-sm text-muted-foreground">—</span>;
         const label = getUserDisplayName(host);
         return (
-          <TruncatedText text={label} className="max-w-[120px] text-sm text-foreground" />
+          <TruncatedText
+            text={label}
+            className="max-w-[120px] text-sm text-foreground"
+          />
         );
       },
     },
@@ -111,7 +130,7 @@ export function buildMeetingsColumns(
       header: "Attendees",
       className: "w-24",
       cell: (row) => (
-        <span className="flex items-center gap-1 tabular-nums text-sm text-muted-foreground">
+        <span className="flex items-center gap-1 font-mono tabular-nums text-sm text-muted-foreground">
           {(row.attendeeCount ?? 0) > 0 ? (
             <>
               <Users className="h-3 w-3 shrink-0" />
@@ -126,9 +145,10 @@ export function buildMeetingsColumns(
     {
       key: "actionItemCount",
       header: "Actions",
+      headerClassName: "sr-only",
       className: "w-28",
       cell: (row) => (
-        <div className="flex items-center gap-1.5 tabular-nums text-sm text-muted-foreground">
+        <div className="flex items-center gap-1.5 font-mono tabular-nums text-sm text-muted-foreground">
           {(row.actionItemCount ?? 0) > 0 ? (
             <>
               <ClipboardList className="h-3 w-3 shrink-0" />
@@ -160,4 +180,35 @@ export function buildMeetingsColumns(
         ),
     },
   ];
+}
+
+export function MeetingMobileCard({
+  meeting,
+  memberMap,
+}: {
+  meeting: Meeting;
+  memberMap: Map<string, ProjectMemberRecord>;
+}) {
+  const host = meeting.createdBy ? memberMap.get(meeting.createdBy) : undefined;
+  const personUser = host ? { name: host.name ?? null, email: host.email } : null;
+  const scheduledDate = meeting.scheduledAt
+    ? new Date(meeting.scheduledAt).toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "—";
+  return (
+    <BuildMobileCard
+      eyebrow={`MTG-${meeting.meetingNumber}`}
+      title={meeting.title}
+      status={<MeetingStatusBadge status={meeting.status} />}
+      person={{ user: personUser, role: "Host" }}
+      meta={[
+        { label: "Date", value: scheduledDate },
+        { label: "Attendees", value: meeting.attendeeCount ?? 0 },
+      ]}
+    />
+  );
 }

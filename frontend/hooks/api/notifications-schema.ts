@@ -34,6 +34,24 @@ const notificationItemContract = z.object({
   archivedAt: z.string().nullable(),
   snoozedUntil: z.string().nullable(),
   createdAt: z.string(),
+  ticketContext: z
+    .object({
+      ticketId: z.number().int(),
+      ticketKey: z.string(),
+      priority: z.string().nullable(),
+      status: z.string().nullable(),
+      type: z.string().nullable(),
+      assignee: z
+        .object({
+          id: z.string(),
+          name: z.string().nullable(),
+          firstName: z.string().nullable(),
+          lastName: z.string().nullable(),
+          image: z.string().nullable(),
+        })
+        .nullable(),
+    })
+    .nullable(),
   actions: z
     .array(z.object({ label: z.string(), url: z.string().optional(), action: z.string().optional() }))
     .optional(),
@@ -143,7 +161,7 @@ export const notificationPolicyRowContract = notificationPolicyBase;
 
 /** `notificationPreferenceSchema` */
 export const notificationPreferenceContract = z.object({
-  id: z.number().int(),
+  id: z.number().int().optional(),
   userId: z.string(),
   orgId: z.string(),
   emailEnabled: z.boolean(),
@@ -164,8 +182,9 @@ export const notificationPreferenceContract = z.object({
   inherited: z
     .object({ defaultChannels: z.array(z.string()), canUserOverride: z.boolean() })
     .optional(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  availableChannels: z.array(z.enum(["IN_APP", "EMAIL", "PUSH", "SMS", "WHATSAPP"])).optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 
 const suppressionBase = z.object({
@@ -288,4 +307,40 @@ export const broadcastListContract = z.object({
 
 /** `broadcastSuccessSchema` */
 export const broadcastSuccessContract = z.object({ success: z.literal(true) });
+
+/** `notificationPreferenceRuleRowSchema` — one row from GET /notification-preferences/rules. */
+export const preferenceRuleRowContract = z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  membershipId: z.number().int(),
+  scopeType: z.enum(["EVENT", "MODULE", "CATEGORY"]),
+  scopeKey: z.string(),
+  channel: z.string(),
+  mode: z.enum(["ON", "OFF", "DIGEST"]),
+  updatedAt: z.string(),
+});
+
+/** `notificationPreferenceRulesListSchema` */
+export const preferenceRulesListContract = z.array(preferenceRuleRowContract);
+
+/** `preferenceRuleOkSchema` */
+export const preferenceRuleOkContract = z.object({ ok: z.literal(true) });
+
+/** One item from the user-facing GET /notification-preferences/events catalog. */
+export const preferenceEventCatalogItemContract = z.object({
+  eventKey: z.string(),
+  displayName: z.string(),
+  description: z.string(),
+  category: z.string(),
+  sourceModule: z.string().nullable(),
+  priority: z.string(),
+  defaultChannels: z.array(z.string()),
+  allowedChannels: z.array(z.string()),
+  mandatory: z.boolean(),
+  userConfigurable: z.boolean(),
+  userPreference: z.unknown().nullable(),
+});
+
+/** `notificationEventCatalogSchema` (user-facing) */
+export const preferenceEventCatalogContract = z.array(preferenceEventCatalogItemContract);
 

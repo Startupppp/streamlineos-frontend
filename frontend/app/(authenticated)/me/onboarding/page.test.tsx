@@ -8,12 +8,8 @@ jest.mock("next/navigation", () => ({
   }),
 }));
 
-jest.mock("@/lib/rbac/get-server-access", () => ({
-  getServerAccess: jest.fn(),
-}));
-
 jest.mock("@/lib/rbac/require-permission", () => ({
-  requireModulePermission: jest.fn().mockResolvedValue(undefined),
+  requirePermission: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock("@/features/hr/onboarding/my-onboarding-tasks-page", () => ({
@@ -21,43 +17,26 @@ jest.mock("@/features/hr/onboarding/my-onboarding-tasks-page", () => ({
 }));
 
 import { redirect } from "next/navigation";
-import { getServerAccess } from "@/lib/rbac/get-server-access";
-import { requireModulePermission } from "@/lib/rbac/require-permission";
+import { requirePermission } from "@/lib/rbac/require-permission";
 import MyOnboardingRoute from "@/app/(authenticated)/me/onboarding/page";
 
-const mockedGetServerAccess = getServerAccess as jest.Mock;
-const mockedRequireModulePermission = requireModulePermission as jest.Mock;
+const mockedRequirePermission = requirePermission as jest.Mock;
 /* `redirect` returns `never`, which does not overlap jest.Mock. */
 const mockedRedirect = jest.mocked(redirect);
 
-describe("MyOnboardingRoute — access guards", () => {
+describe("MyOnboardingRoute — /me/* is universal, so nobody is bounced off it", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("redirects org owners to /dashboard before reaching requireModulePermission", async () => {
-    mockedGetServerAccess.mockResolvedValueOnce({
-      isOrgOwner: true,
-      scopes: {},
-      modules: {},
-      canManageOrganizationMembership: false,
-    });
-
-    await expect(MyOnboardingRoute()).rejects.toThrow("NEXT_REDIRECT");
-
-    expect(mockedRedirect).toHaveBeenCalledWith("/dashboard");
-    expect(mockedRequireModulePermission).not.toHaveBeenCalled();
-  });
-
-  it("allows non-owner members through and calls requireModulePermission", async () => {
-    mockedGetServerAccess.mockResolvedValueOnce({
-      isOrgOwner: false,
-      scopes: {},
-      modules: { hr: true },
-      canManageOrganizationMembership: false,
-    });
-
+  it("renders for an org owner instead of redirecting them to the dashboard", async () => {
     await MyOnboardingRoute();
 
     expect(mockedRedirect).not.toHaveBeenCalled();
-    expect(mockedRequireModulePermission).toHaveBeenCalledWith("hr", "self:onboarding-tasks");
+    expect(mockedRequirePermission).toHaveBeenCalledWith("self:onboarding-tasks");
+  });
+
+  it("gates on the self-service permission and nothing else", async () => {
+    await MyOnboardingRoute();
+
+    expect(mockedRequirePermission).toHaveBeenCalledTimes(1);
   });
 });

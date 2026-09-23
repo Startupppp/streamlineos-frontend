@@ -37,7 +37,9 @@ const state: {
 };
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/inbox",
 }));
 
 jest.mock("next-auth/react", () => ({
@@ -166,6 +168,14 @@ jest.mock("@/features/notifications/notification-detail-drawer-lazy", () => ({
 jest.mock("next/dynamic", () => () =>
   jest.requireActual<{ InboxVirtualList: unknown }>("./inbox-virtual-list")
     .InboxVirtualList);
+
+jest.mock("./inbox-toolbar", () => ({
+  InboxToolbar: () => null,
+}));
+
+jest.mock("./inbox-bulk-actions", () => ({
+  BulkActionsBar: () => null,
+}));
 
 function renderInbox() {
   return render(

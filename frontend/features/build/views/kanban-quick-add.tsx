@@ -26,40 +26,18 @@ function HeaderAddButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-function InlineAddButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex items-center gap-1.5 w-full p-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
-      {...hoverHandlers}
-    >
-      <PlusIcon ref={iconRef} size={14} />
-      Add ticket
-    </button>
-  );
-}
-
 interface QuickAddInputProps {
   columnId: string;
   projectId: number;
-  headerMode?: boolean;
 }
 
-export function QuickAddInput({ columnId, projectId, headerMode = false }: QuickAddInputProps) {
+export function QuickAddInput({ columnId, projectId }: QuickAddInputProps) {
   const canCreate = useCan("build:tickets:create");
   if (!canCreate) return null;
-  return (
-    <QuickAddInputContent
-      columnId={columnId}
-      projectId={projectId}
-      headerMode={headerMode}
-    />
-  );
+  return <QuickAddInputContent columnId={columnId} projectId={projectId} />;
 }
 
-function QuickAddInputContent({ columnId, projectId, headerMode = false }: QuickAddInputProps) {
+function QuickAddInputContent({ columnId, projectId }: QuickAddInputProps) {
   const [value, setValue] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -115,23 +93,20 @@ function QuickAddInputContent({ columnId, projectId, headerMode = false }: Quick
     setTimeout(() => inputRef.current?.focus(), 50);
   }, []);
 
-  if (!isAdding) {
-    if (headerMode) {
-      return <HeaderAddButton onClick={handleAddClick} />;
-    }
-    return <InlineAddButton onClick={handleAddClick} />;
-  }
+  if (!isAdding) 
+    return <HeaderAddButton onClick={handleAddClick} />;
+  
 
   return (
-    <div className={headerMode ? "absolute top-full left-0 right-0 z-50 p-1.5 bg-muted/20 border-x border-b border-border rounded-b-lg" : "p-1.5"}>
+    <div className="absolute top-full left-0 right-0 z-50 p-1.5 bg-muted/20 border-x border-b border-border rounded-b-lg">
       <Input
         ref={inputRef}
         value={value}
+        className="text-sm"
+        onBlur={handleBlur}
         onChange={handleChange}
         placeholder="Ticket title..."
-        className="text-sm"
         onKeyDown={handleKeyDown}
-        onBlur={handleBlur}
         disabled={createTicket.isPending}
       />
     </div>

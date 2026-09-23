@@ -1,14 +1,17 @@
-﻿"use client";
+"use client";
 
-import { memo, useState, useCallback } from "react";
+import { memo, useState, useCallback, useMemo } from "react";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { customFieldSchema, type CustomFieldFormValues } from "./custom-fields-schema";
 import {
   useProjectCustomFields,
   useCreateProjectCustomField,
+  useUpdateProjectCustomField,
   useDeleteProjectCustomField,
 } from "@/hooks/api/build/custom-fields";
+import { useCan } from "@/hooks/api/access";
 import {
   Form,
   FormField,
@@ -31,7 +34,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
 import { Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
+import { Pencil } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
@@ -41,14 +46,6 @@ import type { CustomFieldType } from "@/types/projects/tasks";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
-
-const customFieldSchema = z.object({
-  fieldName: z.string().min(1, "Field name is required"),
-  fieldType: z.string(),
-  options: z.string(),
-});
-
-type CustomFieldFormValues = z.infer<typeof customFieldSchema>;
 
 const FIELD_TYPES: Array<{ value: CustomFieldType; label: string }> = [
   { value: "text", label: "Text" },
@@ -62,14 +59,6 @@ const FIELD_TYPES: Array<{ value: CustomFieldType; label: string }> = [
   { value: "user", label: "User" },
 ];
 
-/**
- * Field type is a taxonomy — a date field is not a warning. Nine types read as
- * four looks, so select, multi-select and currency were one chip and number,
- * user and url were another.
- *
- * user takes indigo and url sky, rather than the blue all three shared before
- * the migration; number keeps it.
- */
 const fieldTypeColors: Record<CustomFieldType, string> = {
   text: "bg-muted text-muted-foreground",
   number: "bg-category-blue-surface text-category-blue-ink",
@@ -94,14 +83,19 @@ interface CustomFieldRowProps {
   field: CustomFieldItem;
   index: number;
   onDelete: (fieldId: number) => void;
+  onEdit: (field: CustomFieldItem) => void;
+  canManage: boolean;
 }
 
 const CustomFieldRow = memo(function CustomFieldRow({
   field,
   index,
   onDelete,
+  onEdit,
+  canManage,
 }: CustomFieldRowProps) {
   const handleDelete = useCallback(() => onDelete(field.id), [field.id, onDelete]);
+  const handleEdit = useCallback(() => onEdit(field), [field, onEdit]);
   const { iconRef: deleteIconRef, hoverHandlers: deleteHoverHandlers } = useAnimatedIcon();
 
   return (
@@ -136,33 +130,110 @@ const CustomFieldRow = memo(function CustomFieldRow({
           required
         </Badge>
       )}
-      <ConfirmDialog
-        trigger={
+      {canManage ? (
+        <>
           <button
             type="button"
-            className="w-7 flex items-center justify-center rounded-lg text-status-danger-ink hover:text-status-danger-ink hover:bg-status-danger-surface transition-colors shrink-0"
-            aria-label="Delete field"
-            {...deleteHoverHandlers}
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+            aria-label={`Edit field ${field.name}`}
+            onClick={handleEdit}
           >
-            <Trash2Icon ref={deleteIconRef} size={14} />
+            <Pencil size={14} />
           </button>
-        }
-        title="Delete custom field?"
-        description="This will remove the field and all its values from all tickets. This cannot be undone."
-        confirmLabel="Delete"
-        destructive
-        onConfirm={handleDelete}
-      />
+          <ConfirmDialog
+            trigger={
+              <button
+                type="button"
+                className="w-7 flex items-center justify-center rounded-lg text-status-danger-ink hover:text-status-danger-ink hover:bg-status-danger-surface transition-colors shrink-0"
+                aria-label="Delete field"
+                {...deleteHoverHandlers}
+              >
+                <Trash2Icon ref={deleteIconRef} size={14} />
+              </button>
+            }
+            title="Delete custom field?"
+            description="This will remove the field and all its values from all tickets. This cannot be undone."
+            confirmLabel="Delete"
+            destructive
+            onConfirm={handleDelete}
+          />
+        </>
+      ) : null}
     </motion.div>
   );
 });
+
+interface CustomFieldFormFieldsProps {
+  form: ReturnType<typeof useForm<CustomFieldFormValues>>;
+}
+
+function CustomFieldFormFields({ form }: CustomFieldFormFieldsProps) {
+  const currentFieldType = form.watch("fieldType");
+
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-3">
+        <FormField
+          control={form.control}
+          name="fieldName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs">Field Name <span className="text-destructive">*</span></FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="e.g. Story Points" className="text-sm" autoFocus />
+              </FormControl>
+              <FormMessage className="text-micro" />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="fieldType"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs">Type</FormLabel>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {FIELD_TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value} className="text-sm">{t.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage className="text-micro" />
+            </FormItem>
+          )}
+        />
+      </div>
+      {(currentFieldType === "select" || currentFieldType === "multi_select") && (
+        <FormField
+          control={form.control}
+          name="options"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs">Options (comma-separated)</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Option 1, Option 2, Option 3" className="text-sm" />
+              </FormControl>
+              <FormMessage className="text-micro" />
+            </FormItem>
+          )}
+        />
+      )}
+    </>
+  );
+}
 
 interface CustomFieldsSettingsProps {
   projectId: number;
 }
 
 export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
+  const canManage = useCan("build:manage");
   const [showForm, setShowForm] = useState(false);
+  const [editingField, setEditingField] = useState<CustomFieldItem | null>(null);
 
   const {
     data: fields = [],
@@ -172,12 +243,14 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
     refetch,
   } = useProjectCustomFields(projectId);
   const createField = useCreateProjectCustomField(projectId);
+  const updateField = useUpdateProjectCustomField(projectId);
   const deleteField = useDeleteProjectCustomField(projectId);
 
   const form = useForm<CustomFieldFormValues>({
     resolver: zodResolver(customFieldSchema),
     defaultValues: { fieldName: "", fieldType: "text", options: "" },
   });
+  useRegisterDirtyState(showForm && form.formState.isDirty);
 
   const currentFieldType = form.watch("fieldType");
 
@@ -193,7 +266,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
         : null;
 
     createField.mutate(
-      { name: values.fieldName.trim(), type: values.fieldType as CustomFieldType, options: parsedOptions },
+      { name: values.fieldName.trim(), type: values.fieldType, options: parsedOptions },
       {
         onSuccess: () => {
           form.reset();
@@ -215,6 +288,49 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
     [deleteField],
   );
 
+  const handleOpenEdit = useCallback((field: CustomFieldItem) => {
+    setEditingField(field);
+  }, []);
+
+  const handleCloseEdit = useCallback((open: boolean) => {
+    if (!open) setEditingField(null);
+  }, []);
+
+  const handleUpdate = useCallback((values: CustomFieldFormValues) => {
+    if (!editingField) return;
+    const parsedOptions =
+      (values.fieldType === "select" || values.fieldType === "multi_select") && values.options.trim()
+        ? values.options.split(",").map((s) => s.trim()).filter(Boolean)
+        : null;
+
+    updateField.mutate(
+      {
+        fieldId: editingField.id,
+        data: {
+          name: values.fieldName.trim(),
+          type: values.fieldType,
+          options: parsedOptions,
+        },
+      },
+      {
+        onSuccess: () => {
+          setEditingField(null);
+          toast.success("Custom field updated");
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }, [editingField, updateField]);
+
+  const editDefaultValues = useMemo<CustomFieldFormValues>(
+    () => ({
+      fieldName: editingField?.name ?? "",
+      fieldType: editingField?.type ?? "text",
+      options: editingField?.options?.join(", ") ?? "",
+    }),
+    [editingField],
+  );
+
   const handleShowForm = useCallback(() => setShowForm(true), []);
 
   const handleRetry = useCallback(() => {
@@ -232,7 +348,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
             Define additional data fields for tickets in this project.
           </p>
         </div>
-        {!showForm ? (
+        {canManage && !showForm ? (
           <AnimatedIconButton
             variant="outline"
             size="sm"
@@ -268,7 +384,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                   illustrationPreset="settings"
                   title="No custom fields yet"
                   description="Add fields to capture additional ticket data."
-                  action={{ label: "Add Custom Field", onClick: handleShowForm }}
+                  action={canManage ? { label: "Add Custom Field", onClick: handleShowForm } : undefined}
                 />
               </motion.div>
             )}
@@ -279,12 +395,14 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                 field={field}
                 index={idx}
                 onDelete={handleDelete}
+                onEdit={handleOpenEdit}
+                canManage={canManage}
               />
             ))}
           </AnimatePresence>
 
           <AnimatePresence>
-            {showForm && (
+            {canManage && showForm && (
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -296,56 +414,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                     onSubmit={form.handleSubmit(handleCreate)}
                     className="p-4 rounded-lg border border-border bg-muted/30 space-y-3"
                   >
-                    <div className="grid grid-cols-2 gap-3">
-                      <FormField
-                        control={form.control}
-                        name="fieldName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-xs">Field Name <span className="text-destructive">*</span></FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="e.g. Story Points" className="text-sm" autoFocus />
-                            </FormControl>
-                            <FormMessage className="text-micro" />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="fieldType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-xs">Type</FormLabel>
-                            <Select value={field.value} onValueChange={field.onChange}>
-                              <FormControl>
-                                <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {FIELD_TYPES.map((t) => (
-                                  <SelectItem key={t.value} value={t.value} className="text-sm">{t.label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage className="text-micro" />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    {(currentFieldType === "select" || currentFieldType === "multi_select") && (
-                      <FormField
-                        control={form.control}
-                        name="options"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-xs">Options (comma-separated)</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="Option 1, Option 2, Option 3" className="text-sm" />
-                            </FormControl>
-                            <FormMessage className="text-micro" />
-                          </FormItem>
-                        )}
-                      />
-                    )}
+                    <CustomFieldFormFields form={form} />
                     <div className="flex gap-2">
                       <LoadingButton type="submit" size="sm" isPending={createField.isPending} loadingText="Creating…" className="text-xs">
                         Create Field
@@ -360,6 +429,22 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
             )}
           </AnimatePresence>
         </div>
+      )}
+
+      {canManage && (
+        <EntityFormDialog<CustomFieldFormValues>
+          open={!!editingField}
+          onOpenChange={handleCloseEdit}
+          title="Edit custom field"
+          resolver={zodResolver(customFieldSchema)}
+          defaultValues={editDefaultValues}
+          onSubmit={handleUpdate}
+          isSubmitting={updateField.isPending}
+          submitLabel="Save changes"
+          resetOnOpen
+        >
+          {(form) => <CustomFieldFormFields form={form} />}
+        </EntityFormDialog>
       )}
     </div>
   );

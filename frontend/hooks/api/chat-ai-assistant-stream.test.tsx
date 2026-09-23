@@ -96,8 +96,16 @@ function streamingResponse(...args: unknown[]) {
   return Promise.resolve({
     ok: true,
     status: 200,
+    headers: new Headers({
+      "content-type": "text/event-stream",
+      "x-vercel-ai-ui-message-stream": "v1",
+    }),
     body: { getReader: () => lastStream?.reader },
   });
+}
+
+function textDelta(delta: string): string {
+  return `data: ${JSON.stringify({ type: "text-delta", id: "a", delta })}\n\n`;
 }
 
 describe("useAskAI — the one streaming AI client", () => {
@@ -135,6 +143,37 @@ describe("useAskAI — the one streaming AI client", () => {
     });
   });
 
+  it("renders the chat route's SSE frames as answer text, not as the raw data: lines the user was shown", async () => {
+    authedFetch.mockImplementation(streamingResponse);
+
+    const tokens: string[] = [];
+    const { result } = renderHook(() => useAskAI());
+
+    let outcome: Promise<AskAiStreamOutcome> | null = null;
+    await act(async () => {
+      outcome = result.current.sendMessage(
+        [{ role: "user", content: "summarize my day" }],
+        (token) => tokens.push(token),
+      );
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      lastStream?.push(`data: ${JSON.stringify({ type: "start" })}\n\n`);
+      lastStream?.push(textDelta("I don't"));
+      lastStream?.push(textDelta(" have access"));
+      lastStream?.push(`data: ${JSON.stringify({ type: "finish" })}\n\ndata: [DONE]\n\n`);
+      lastStream?.finish();
+      await Promise.resolve();
+    });
+
+    await expect(outcome).resolves.toEqual({
+      status: "completed",
+      text: "I don't have access",
+    });
+    expect(tokens.join("")).not.toContain("data:");
+  });
+
   it("keeps the partial output when the user stops the stream", async () => {
     authedFetch.mockImplementation(streamingResponse);
 
@@ -151,8 +190,8 @@ describe("useAskAI — the one streaming AI client", () => {
     });
 
     await act(async () => {
-      lastStream?.push("half an ");
-      lastStream?.push("answer");
+      lastStream?.push(textDelta("half an "));
+      lastStream?.push(textDelta("answer"));
       await Promise.resolve();
       await Promise.resolve();
     });

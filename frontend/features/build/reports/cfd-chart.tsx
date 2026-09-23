@@ -36,7 +36,7 @@ export function CfdChart({ data }: { data: CfdDatum[] }) {
         <AreaChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="hsl(var(--border))"
+            stroke="var(--border)"
             vertical={false}
           />
           <XAxis

@@ -11,11 +11,15 @@ export function moduleOwningNamespace(namespace: string): string {
   return NAMESPACE_TO_MODULE.get(namespace) ?? namespace;
 }
 
-export function administeringModuleOf(permissionKey: string): string {
+export function namespaceOf(permissionKey: string): string {
   const separatorIndex = permissionKey.indexOf(":");
-  const namespace =
-    separatorIndex === -1 ? permissionKey : permissionKey.slice(0, separatorIndex);
-  return moduleOwningNamespace(namespace);
+  return separatorIndex === -1
+    ? permissionKey
+    : permissionKey.slice(0, separatorIndex);
+}
+
+export function administeringModuleOf(permissionKey: string): string {
+  return moduleOwningNamespace(namespaceOf(permissionKey));
 }
 
 export function actionOf(permissionKey: string): string {
