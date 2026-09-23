@@ -26,6 +26,8 @@ import type {
   BuildApprovalInboxItem,
 } from "@/types/inbox";
 import { toDrawerNotification } from "./inbox-schema";
+import { mailDeepLinkParams } from "./inbox-mail-link";
+import { MENTION_EVENT_KEYS } from "./inbox-view-params";
 import {
   dedupeInboxItems,
   deniedPermissionFor,
@@ -62,6 +64,9 @@ export function InboxShell() {
     handlePriorityChange,
     handleKindOverrideChange,
     handleGroupChange,
+    handleFromChange,
+    handleToChange,
+    handleModuleChange,
     handleToggleSelect,
     handleClearSelection,
     applyFilterState,
@@ -87,9 +92,47 @@ export function InboxShell() {
   const pages = useMemo(() => data?.pages ?? [], [data]);
   const items = useMemo(() => dedupeInboxItems(pages), [pages]);
   const deferredItems = useDeferredValue(items);
+
+  const clientFilteredItems = useMemo(() => {
+    let result = deferredItems;
+
+    if (filterState.view === "mentions") {
+      result = result.filter(
+        (item) =>
+          item.kind === "notification" &&
+          item.eventKey !== null &&
+          MENTION_EVENT_KEYS.has(item.eventKey),
+      );
+    }
+
+    if (filterState.from || filterState.to) {
+      const fromTs = filterState.from
+        ? new Date(filterState.from + "T00:00:00").getTime()
+        : -Infinity;
+      const toTs = filterState.to
+        ? new Date(filterState.to + "T23:59:59.999").getTime()
+        : Infinity;
+      result = result.filter((item) => {
+        const ts = new Date(item.timestamp).getTime();
+        return ts >= fromTs && ts <= toTs;
+      });
+    }
+
+    if (filterState.module) {
+      result = result.filter((item) => item.sourceModule === filterState.module);
+    }
+
+    return result;
+  }, [deferredItems, filterState.view, filterState.from, filterState.to, filterState.module]);
+
+  const availableModules = useMemo(
+    () => Array.from(new Set(deferredItems.map((item) => item.sourceModule))).sort(),
+    [deferredItems],
+  );
+
   const groups = useMemo(
-    () => groupInboxItems(deferredItems, filterState.group),
-    [deferredItems, filterState.group],
+    () => groupInboxItems(clientFilteredItems, filterState.group),
+    [clientFilteredItems, filterState.group],
   );
   const deniedPermission = deniedPermissionFor(filterState.view, pages[0]?.sources ?? []);
   const degraded = useMemo(
@@ -129,23 +172,26 @@ export function InboxShell() {
 
   const handleMailClick = useCallback(
     (item: MailInboxItem) => {
-      const idParams =
-        item.threadId !== null
-          ? { threadId: item.threadId, accountId: String(item.accountId) }
-          : { messageId: item.id, accountId: String(item.accountId) };
-      router.push(`/mail?${toSearchParams(idParams).toString()}`);
+      router.push(`/mail?${toSearchParams(mailDeepLinkParams(item)).toString()}`);
     },
     [router],
   );
 
   const handleApprovalClick = useCallback(
     (item: BuildApprovalInboxItem) => {
-      if (item.projectId !== null) {
-        const params = toSearchParams({ projectId: String(item.projectId) });
-        router.push(`/build/approvals?${params.toString()}`);
-      } else {
-        router.push("/build/approvals");
+      if (item.deepLink !== null) {
+        router.push(normalizeBuildDeepLink(item.deepLink));
+        return;
       }
+      if (item.sourceModule === "build") {
+        if (item.projectId !== null) {
+          router.push(`/build/approvals?${toSearchParams({ projectId: String(item.projectId) }).toString()}`);
+        } else {
+          router.push("/build/approvals");
+        }
+        return;
+      }
+      router.push("/inbox?view=approvals");
     },
     [router],
   );
@@ -158,6 +204,11 @@ export function InboxShell() {
   const handleRetry = useCallback(() => void refetch(), [refetch]);
   const handleLoadMore = useCallback(() => void fetchNextPage(), [fetchNextPage]);
 
+  const emptyStateDescription =
+    filterState.view === "mentions"
+      ? "No @mentions yet. New mentions will appear here. Filtering happens in your browser from the notifications feed."
+      : "Notifications, mail and approvals will appear here when they arrive.";
+
   return (
     <PageWrapper
       title="Inbox"
@@ -165,6 +216,7 @@ export function InboxShell() {
       filters={
         <InboxToolbar
           state={filterState}
+          availableModules={availableModules}
           onViewChange={handleViewChange}
           onSearchChange={handleSearchChange}
           onUnreadOnlyChange={handleUnreadOnlyChange}
@@ -172,6 +224,9 @@ export function InboxShell() {
           onPriorityChange={handlePriorityChange}
           onKindOverrideChange={handleKindOverrideChange}
           onGroupChange={handleGroupChange}
+          onFromChange={handleFromChange}
+          onToChange={handleToChange}
+          onModuleChange={handleModuleChange}
           onApplySavedView={applyFilterState}
         />
       }
@@ -212,18 +267,18 @@ export function InboxShell() {
             )}
             <BulkActionsBar
               selectedKeys={selectedKeys}
-              items={deferredItems}
+              items={clientFilteredItems}
               actions={actions}
               onClearSelection={handleClearSelection}
             />
-            {items.length === 0 ? (
+            {clientFilteredItems.length === 0 ? (
               <EmptyState
                 className="flex-1 min-h-0"
                 illustration={
                   <Inbox className="h-8 w-8 text-muted-foreground/40" />
                 }
                 title="All caught up"
-                description="Notifications, mail and approvals will appear here when they arrive."
+                description={emptyStateDescription}
               />
             ) : (
               <div className="flex-1 min-h-0 overflow-hidden">
@@ -251,7 +306,7 @@ export function InboxShell() {
                   />
                 ) : (
                   <InboxVirtualList
-                    items={deferredItems}
+                    items={clientFilteredItems}
                     hasNextPage={hasNextPage ?? false}
                     isFetchingNextPage={isFetchingNextPage}
                     isOnline={actions.isOnline}

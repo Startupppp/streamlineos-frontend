@@ -55,7 +55,10 @@ function EventRow({ ev }: { ev: UpcomingEvent }) {
 }
 
 export function UpcomingEventsWidget() {
-  const { data, isLoading, error } = usePersonalDashboard();
+  const { data, isLoading, error, refetch } = usePersonalDashboard();
+  function handleRetry() {
+    void refetch();
+  }
   const events = data?.upcomingEvents ?? [];
   const sourceFailed = data?.degraded?.includes("upcomingEvents") ?? false;
   const todayEvents = events.filter((ev) => isToday(new Date(ev.startTime)));
@@ -75,6 +78,7 @@ export function UpcomingEventsWidget() {
       errorMessage={
         !error && sourceFailed ? "Couldn't load upcoming events." : undefined
       }
+      onRetry={handleRetry}
       isEmpty={!events.length}
       empty={
         <EmptyState

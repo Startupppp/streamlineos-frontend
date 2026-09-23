@@ -22,7 +22,10 @@ const priorityColors: Record<string, string> = {
 };
 
 export function MyTasksWidget() {
-  const { data, isLoading, error } = usePersonalDashboard();
+  const { data, isLoading, error, refetch } = usePersonalDashboard();
+  function handleRetry() {
+    void refetch();
+  }
   const tasks = data?.myTasks ?? [];
   const sourceFailed = data?.degraded?.includes("myTasks") ?? false;
 
@@ -40,6 +43,7 @@ export function MyTasksWidget() {
       errorMessage={
         !error && sourceFailed ? "Couldn't load your tasks." : undefined
       }
+      onRetry={handleRetry}
       isEmpty={!tasks.length}
       empty={
         <EmptyState

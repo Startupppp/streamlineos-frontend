@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { NOTIFICATION_CATEGORY_VALUES } from "@/types/notifications";
 import type { InboxKind } from "@/types/inbox";
 import {
@@ -46,8 +47,16 @@ const PRIORITY_OPTIONS = [
   { value: "CRITICAL", label: "Critical" },
 ] as const;
 
+function formatModuleLabel(mod: string): string {
+  return mod
+    .split(/[_-]/)
+    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+    .join(" ");
+}
+
 export interface InboxToolbarProps {
   state: InboxFilterState;
+  availableModules: string[];
   onViewChange: (view: InboxView) => void;
   onSearchChange: (q: string) => void;
   onUnreadOnlyChange: (unreadOnly: boolean) => void;
@@ -55,11 +64,15 @@ export interface InboxToolbarProps {
   onPriorityChange: (priority: string) => void;
   onKindOverrideChange: (kinds: InboxKind[]) => void;
   onGroupChange: (group: InboxGrouping) => void;
+  onFromChange: (from: string) => void;
+  onToChange: (to: string) => void;
+  onModuleChange: (module: string) => void;
   onApplySavedView: (next: InboxFilterState) => void;
 }
 
 export function InboxToolbar({
   state,
+  availableModules,
   onViewChange,
   onSearchChange,
   onUnreadOnlyChange,
@@ -67,6 +80,9 @@ export function InboxToolbar({
   onPriorityChange,
   onKindOverrideChange,
   onGroupChange,
+  onFromChange,
+  onToChange,
+  onModuleChange,
   onApplySavedView,
 }: InboxToolbarProps) {
   const [rawSearch, setRawSearch] = useState(state.q);
@@ -123,6 +139,19 @@ export function InboxToolbar({
   const handleUnreadToggle = useCallback(
     () => onUnreadOnlyChange(!state.unreadOnly),
     [onUnreadOnlyChange, state.unreadOnly],
+  );
+
+  const handleModuleValueChange = useCallback(
+    (value: string) => onModuleChange(value === "__all__" ? "" : value),
+    [onModuleChange],
+  );
+
+  const handleDateRangeChange = useCallback(
+    (range: { from: string; to: string }) => {
+      onFromChange(range.from);
+      onToChange(range.to);
+    },
+    [onFromChange, onToChange],
   );
 
   const kindSelectValue =
@@ -206,6 +235,31 @@ export function InboxToolbar({
             ))}
           </SelectContent>
         </Select>
+        {availableModules.length > 0 && (
+          <Select
+            value={state.module || "__all__"}
+            onValueChange={handleModuleValueChange}
+          >
+            <SelectTrigger className="w-36 h-9 text-sm" aria-label="Filter by module">
+              <SelectValue placeholder="Module" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">All modules</SelectItem>
+              {availableModules.map((mod) => (
+                <SelectItem key={mod} value={mod}>
+                  {formatModuleLabel(mod)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        <DateRangePicker
+          from={state.from || undefined}
+          to={state.to || undefined}
+          onChange={handleDateRangeChange}
+          placeholder="Date range"
+          className="w-44 h-9 text-sm"
+        />
         <Select value={state.group} onValueChange={handleGroupValueChange}>
           <SelectTrigger className="w-36 h-9 text-sm" aria-label="Group by">
             <SelectValue placeholder="Group by" />

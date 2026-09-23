@@ -63,7 +63,11 @@ interface FocusStripProps {
 }
 
 export function FocusStrip({ access }: FocusStripProps) {
-  const { items, isLoading } = useFocusStrip(access);
+  const { items, isLoading, isError, refetch } = useFocusStrip(access);
+
+  function handleRetry() {
+    refetch();
+  }
 
   if (isLoading) {
     return (
@@ -75,6 +79,24 @@ export function FocusStrip({ access }: FocusStripProps) {
         <Skeleton className="h-7 w-36 rounded-full" />
         <Skeleton className="h-7 w-28 rounded-full" />
         <Skeleton className="h-7 w-32 rounded-full" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div
+        role="alert"
+        className="flex items-center gap-2 text-xs text-destructive"
+      >
+        <span>Could not load your focus items.</span>
+        <button
+          type="button"
+          onClick={handleRetry}
+          className="underline hover:no-underline"
+        >
+          Retry
+        </button>
       </div>
     );
   }

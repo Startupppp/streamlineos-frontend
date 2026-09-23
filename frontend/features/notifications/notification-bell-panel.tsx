@@ -19,6 +19,7 @@ import {
   INBOX_SOURCE_LABELS,
   degradedSources,
 } from "./unified-inbox/inbox-sources";
+import { mailDeepLinkParams } from "./unified-inbox/inbox-mail-link";
 import { formatRelativeTime } from "./format-relative-time";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { normalizeBuildDeepLink } from "@/lib/build/normalize-build-deep-link";
@@ -151,21 +152,28 @@ export function NotificationBellPanel({
 
   const handleMailClick = useCallback(
     (item: MailInboxItem) => {
-      const params = toSearchParams({
-        messageId: item.id,
-        accountId: String(item.accountId),
-      });
       onClose();
-      router.push(`/mail?${params.toString()}`);
+      router.push(`/mail?${toSearchParams(mailDeepLinkParams(item)).toString()}`);
     },
     [onClose, router],
   );
 
   const handleApprovalClick = useCallback(
     (item: BuildApprovalInboxItem) => {
-      const params = toSearchParams({ projectId: String(item.projectId) });
       onClose();
-      router.push(`/build/approvals?${params.toString()}`);
+      if (item.deepLink !== null) {
+        router.push(normalizeBuildDeepLink(item.deepLink));
+        return;
+      }
+      if (item.sourceModule === "build") {
+        if (item.projectId !== null) {
+          router.push(`/build/approvals?${toSearchParams({ projectId: String(item.projectId) }).toString()}`);
+        } else {
+          router.push("/build/approvals");
+        }
+        return;
+      }
+      router.push("/inbox?view=approvals");
     },
     [onClose, router],
   );

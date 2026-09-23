@@ -38,6 +38,9 @@ export interface InboxFilterControl {
   handlePriorityChange: (next: string) => void;
   handleKindOverrideChange: (next: InboxKind[]) => void;
   handleGroupChange: (next: InboxGrouping) => void;
+  handleFromChange: (next: string) => void;
+  handleToChange: (next: string) => void;
+  handleModuleChange: (next: string) => void;
   handleToggleSelect: (key: string) => void;
   handleClearSelection: () => void;
   applyFilterState: (next: InboxFilterState) => void;
@@ -70,6 +73,9 @@ export function useInboxFilterState(
   const [group, setGroup] = useState<InboxGrouping>(() =>
     parseGrouping(searchParams.get("group")),
   );
+  const [from, setFrom] = useState(() => searchParams.get("from") ?? "");
+  const [to, setTo] = useState(() => searchParams.get("to") ?? "");
+  const [module, setModule] = useState(() => searchParams.get("module") ?? "");
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
 
   const filterState = useMemo(
@@ -81,8 +87,11 @@ export function useInboxFilterState(
       priority,
       kindOverride,
       group,
+      from,
+      to,
+      module,
     }),
-    [view, q, unreadOnly, category, priority, kindOverride, group],
+    [view, q, unreadOnly, category, priority, kindOverride, group, from, to, module],
   );
 
   useEffect(() => {
@@ -100,6 +109,9 @@ export function useInboxFilterState(
     setPriority("");
     setKindOverride([]);
     setGroup("none");
+    setFrom("");
+    setTo("");
+    setModule("");
     setSelectedKeys(new Set());
   }, []);
 
@@ -133,6 +145,21 @@ export function useInboxFilterState(
     setSelectedKeys(new Set());
   }, []);
 
+  const handleFromChange = useCallback((next: string) => {
+    setFrom(next);
+    setSelectedKeys(new Set());
+  }, []);
+
+  const handleToChange = useCallback((next: string) => {
+    setTo(next);
+    setSelectedKeys(new Set());
+  }, []);
+
+  const handleModuleChange = useCallback((next: string) => {
+    setModule(next);
+    setSelectedKeys(new Set());
+  }, []);
+
   const applyFilterState = useCallback((next: InboxFilterState) => {
     setView(next.view);
     setQ(next.q);
@@ -141,6 +168,9 @@ export function useInboxFilterState(
     setPriority(next.priority);
     setKindOverride(next.kindOverride);
     setGroup(next.group);
+    setFrom(next.from);
+    setTo(next.to);
+    setModule(next.module);
     setSelectedKeys(new Set());
   }, []);
 
@@ -166,6 +196,9 @@ export function useInboxFilterState(
     handlePriorityChange,
     handleKindOverrideChange,
     handleGroupChange,
+    handleFromChange,
+    handleToChange,
+    handleModuleChange,
     handleToggleSelect,
     handleClearSelection,
     applyFilterState,

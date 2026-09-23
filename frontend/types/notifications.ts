@@ -222,6 +222,7 @@ export interface NotificationPreferences {
   digestMode: DigestMode;
   categories: Record<string, boolean>;
   channelCategories: Record<string, Record<string, boolean>>;
+  availableChannels?: string[];
   createdAt?: Date | string;
   updatedAt?: Date | string;
 }

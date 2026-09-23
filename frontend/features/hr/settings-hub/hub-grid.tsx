@@ -19,7 +19,7 @@ type CardGroup = {
   cards: CardDef[];
 };
 
-const CARD_GROUPS: CardGroup[] = [
+export const CARD_GROUPS: CardGroup[] = [
   {
     group: "Organization",
     cards: [
@@ -50,7 +50,7 @@ const CARD_GROUPS: CardGroup[] = [
       {
         title: "Notification Providers",
         description: "Delivery providers, templates, and events",
-        href: "/notifications/providers",
+        href: "/settings/notifications/providers",
         permission: "notifications:providers:view",
       },
     ],

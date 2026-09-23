@@ -27,18 +27,40 @@ const PRIORITY_ORDER: Record<AttentionPriority, number> = {
 export function useFocusStrip(access: DashboardAccess): {
   items: AttentionItem[];
   isLoading: boolean;
+  isError: boolean;
+  refetch: () => void;
 } {
-  const { data: inboxData, isLoading: inboxLoading } = useUnifiedInboxCount();
+  const {
+    data: inboxData,
+    isLoading: inboxLoading,
+    isError: inboxError,
+    refetch: refetchInbox,
+  } = useUnifiedInboxCount();
 
-  const { data: approvalsData, isLoading: approvalsLoading } =
-    usePendingApprovals({
-      enabled: access.hrEnabled && access.canApproveLeaves,
-    });
+  const {
+    data: approvalsData,
+    isLoading: approvalsLoading,
+    isError: approvalsError,
+    refetch: refetchApprovals,
+  } = usePendingApprovals({
+    enabled: access.hrEnabled && access.canApproveLeaves,
+  });
 
-  const { data: personalData, isLoading: personalLoading } =
-    usePersonalDashboard();
+  const {
+    data: personalData,
+    isLoading: personalLoading,
+    isError: personalError,
+    refetch: refetchPersonal,
+  } = usePersonalDashboard();
 
   const isLoading = inboxLoading || approvalsLoading || personalLoading;
+  const isError = inboxError || approvalsError || personalError;
+
+  function refetch() {
+    void refetchInbox();
+    void refetchApprovals();
+    void refetchPersonal();
+  }
 
   const items = useMemo((): AttentionItem[] => {
     const result: AttentionItem[] = [];
@@ -67,7 +89,7 @@ export function useFocusStrip(access: DashboardAccess): {
         id: "timesheet",
         label: "Timesheet not submitted",
         count: 1,
-        href: "/me/timesheet",
+        href: "/timesheets",
         priority: "warning",
       });
     }
@@ -81,7 +103,7 @@ export function useFocusStrip(access: DashboardAccess): {
             ? "1 upcoming event"
             : `${eventsCount} upcoming events`,
         count: eventsCount,
-        href: "/me/calendar",
+        href: "/calendar",
         priority: "info",
       });
     }
@@ -95,7 +117,7 @@ export function useFocusStrip(access: DashboardAccess): {
             ? "1 notification"
             : `${notifCount} notifications`,
         count: notifCount,
-        href: "/me/inbox",
+        href: "/inbox?view=notifications",
         priority: "info",
       });
     }
@@ -108,7 +130,7 @@ export function useFocusStrip(access: DashboardAccess): {
         id: "mail",
         label: `${countLabel} unread message${mailCount === 1 && inboxData?.mailExact !== false ? "" : "s"}`,
         count: mailCount,
-        href: "/me/inbox?kind=mail",
+        href: "/inbox?view=mail",
         priority: "info",
       });
     }
@@ -118,5 +140,5 @@ export function useFocusStrip(access: DashboardAccess): {
     );
   }, [inboxData, approvalsData, personalData, access]);
 
-  return { items, isLoading };
+  return { items, isLoading, isError, refetch };
 }

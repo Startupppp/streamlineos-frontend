@@ -15,14 +15,23 @@ jest.mock("next/link", () => {
   };
 });
 
-const mockInboxCount: { data: UnifiedInboxCount | undefined; isLoading: boolean } = {
+const mockInboxCount: {
+  data: UnifiedInboxCount | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  refetch: () => void;
+} = {
   data: undefined,
   isLoading: false,
+  isError: false,
+  refetch: jest.fn(),
 };
 const mockApprovals: {
   data: { pendingLeaves: number; pendingResignations: number; total: number } | undefined;
   isLoading: boolean;
-} = { data: undefined, isLoading: false };
+  isError: boolean;
+  refetch: () => void;
+} = { data: undefined, isLoading: false, isError: false, refetch: jest.fn() };
 const mockPersonal: {
   data: {
     myTasks: unknown[];
@@ -31,7 +40,9 @@ const mockPersonal: {
     degraded: unknown[];
   } | undefined;
   isLoading: boolean;
-} = { data: undefined, isLoading: false };
+  isError: boolean;
+  refetch: () => void;
+} = { data: undefined, isLoading: false, isError: false, refetch: jest.fn() };
 
 jest.mock("@/hooks/api/inbox", () => ({ useUnifiedInboxCount: () => mockInboxCount }));
 jest.mock("@/hooks/api/dashboard", () => ({
@@ -59,10 +70,13 @@ const emptyData = {
 beforeEach(() => {
   mockInboxCount.data = undefined;
   mockInboxCount.isLoading = false;
+  mockInboxCount.isError = false;
   mockApprovals.data = undefined;
   mockApprovals.isLoading = false;
+  mockApprovals.isError = false;
   mockPersonal.data = undefined;
   mockPersonal.isLoading = false;
+  mockPersonal.isError = false;
 });
 
 describe("FocusStrip — all-clear state", () => {
@@ -106,7 +120,7 @@ describe("FocusStrip — actionable items", () => {
     mockPersonal.data = emptyData.personal;
     render(<FocusStrip access={baseAccess} />);
     const link = screen.getByRole("link", { name: /5 notifications/i });
-    expect(link).toHaveAttribute("href", "/me/inbox");
+    expect(link).toHaveAttribute("href", "/inbox?view=notifications");
   });
 
   it("shows unread mail with a link to the mail inbox", () => {
@@ -115,7 +129,7 @@ describe("FocusStrip — actionable items", () => {
     mockPersonal.data = emptyData.personal;
     render(<FocusStrip access={baseAccess} />);
     const link = screen.getByRole("link", { name: /2 unread messages/i });
-    expect(link).toHaveAttribute("href", "/me/inbox?kind=mail");
+    expect(link).toHaveAttribute("href", "/inbox?view=mail");
   });
 
   it("shows timesheet exception when hours logged but not submitted", () => {
@@ -129,7 +143,7 @@ describe("FocusStrip — actionable items", () => {
     };
     render(<FocusStrip access={baseAccess} />);
     const link = screen.getByRole("link", { name: /timesheet not submitted/i });
-    expect(link).toHaveAttribute("href", "/me/timesheet");
+    expect(link).toHaveAttribute("href", "/timesheets");
   });
 
   it("does NOT show timesheet item when timesheet is already submitted", () => {
@@ -155,7 +169,7 @@ describe("FocusStrip — actionable items", () => {
     };
     render(<FocusStrip access={baseAccess} />);
     const link = screen.getByRole("link", { name: /2 upcoming events/i });
-    expect(link).toHaveAttribute("href", "/me/calendar");
+    expect(link).toHaveAttribute("href", "/calendar");
   });
 });
 
@@ -212,5 +226,60 @@ describe("useFocusStrip — item ordering", () => {
     mockPersonal.data = emptyData.personal;
     const { result: done } = renderHook(() => useFocusStrip(baseAccess));
     expect(done.current.isLoading).toBe(false);
+  });
+});
+
+describe("FocusStrip — error state", () => {
+  it("shows an error message when any data source fails", () => {
+    mockInboxCount.isError = true;
+    render(<FocusStrip access={baseAccess} />);
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(screen.getByText(/could not load/i)).toBeInTheDocument();
+  });
+
+  it("POSITIVE: shows the retry button when errored", () => {
+    mockInboxCount.isError = true;
+    render(<FocusStrip access={baseAccess} />);
+    expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
+  });
+
+  it("NEGATIVE: does not show all-caught-up when the API fails", () => {
+    mockInboxCount.isError = true;
+    render(<FocusStrip access={baseAccess} />);
+    expect(screen.queryByText(/all caught up/i)).not.toBeInTheDocument();
+  });
+});
+
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { collectAppRoutes } from "@/lib/rbac/route-access/app-routes";
+
+describe("FocusStrip — all hrefs resolve to real routes", () => {
+  function declaredRedirectSources(): Set<string> {
+    const src = readFileSync(join(process.cwd(), "next.config.ts"), "utf8");
+    const sources = new Set<string>();
+    for (const m of src.matchAll(/source:\s*"([^"]+)"/g)) sources.add(m[1]);
+    return sources;
+  }
+
+  it("every href the focus strip can emit resolves to a real route or a declared redirect", () => {
+    const appPaths = new Set(
+      collectAppRoutes("(authenticated)").map((r) => r.path),
+    );
+    const redirectSources = declaredRedirectSources();
+
+    const allHrefs = [
+      "/timesheets",
+      "/calendar",
+      "/inbox?view=notifications",
+      "/inbox?view=mail",
+      "/hr/leaves?tab=pending",
+    ];
+
+    for (const href of allHrefs) {
+      const pathname = href.split("?")[0];
+      const resolves = appPaths.has(pathname) || redirectSources.has(pathname);
+      expect({ href, resolves }).toEqual({ href, resolves: true });
+    }
   });
 });

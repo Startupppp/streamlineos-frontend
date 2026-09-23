@@ -18,6 +18,7 @@ import {
 } from "@/hooks/api/dashboard";
 import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
 import { DeferredDashboardContent } from "./deferred-dashboard-content";
 import { HomeSectionBoundary } from "./home-section-boundary";
@@ -124,7 +125,13 @@ export function DashboardDeferredBody({
     canViewTickets,
     signEnabled,
     canViewSignEnvelopes,
+    payrollEnabled,
+    canViewPayrollSelf,
   } = access;
+
+  const accountingEnabled = useModuleEnabled("accounting");
+  const canViewExpenses = useCan("hr:expenses:view");
+  const expensesEnabled = accountingEnabled && canViewExpenses;
 
   const [deferredVisible, setDeferredVisible] = useState(false);
   const [batch2Ready, setBatch2Ready] = useState(false);
@@ -263,6 +270,9 @@ export function DashboardDeferredBody({
           canSelfAttendance={canSelfAttendance}
           crmEnabled={crmEnabled}
           canViewCrmLeads={canViewCrmLeads}
+          payrollEnabled={payrollEnabled}
+          canViewPayrollSelf={canViewPayrollSelf}
+          expensesEnabled={expensesEnabled}
           expensesSlot={expensesSlot}
         />
 

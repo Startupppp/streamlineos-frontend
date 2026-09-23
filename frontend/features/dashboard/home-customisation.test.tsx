@@ -121,6 +121,8 @@ const allEnabled: HomeWidgetGridProps = {
   projectsEnabled: true, hrEnabled: true,
   canViewExecutive: true, canSelfAttendance: true,
   crmEnabled: true, canViewCrmLeads: true,
+  payrollEnabled: true, canViewPayrollSelf: true,
+  expensesEnabled: true,
   expensesSlot: <div>My Expenses</div>,
 };
 

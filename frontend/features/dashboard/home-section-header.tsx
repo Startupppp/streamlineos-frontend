@@ -6,8 +6,8 @@ interface HomeSectionHeaderProps {
 
 export function HomeSectionHeader({ title }: HomeSectionHeaderProps) {
   return (
-    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground pb-1">
+    <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground pb-1">
       {title}
-    </p>
+    </h2>
   );
 }

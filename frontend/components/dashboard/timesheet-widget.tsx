@@ -8,7 +8,10 @@ import { Clock, CheckCircle2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function TimesheetWidget() {
-  const { data, isLoading, error } = usePersonalDashboard();
+  const { data, isLoading, error, refetch } = usePersonalDashboard();
+  function handleRetry() {
+    void refetch();
+  }
   const ts = data?.timesheetStatus;
   const sourceFailed = data?.degraded?.includes("timesheet") ?? false;
 
@@ -22,6 +25,7 @@ export function TimesheetWidget() {
       errorMessage={
         !error && sourceFailed ? "Couldn't load this week's hours." : undefined
       }
+      onRetry={handleRetry}
       loadingRows={2}
     >
       {ts && ts.hoursLogged > 0 ? (

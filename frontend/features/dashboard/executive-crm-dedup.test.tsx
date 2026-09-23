@@ -127,13 +127,34 @@ describe("T3 — ExecutiveKpiWidget shows business-wide metrics only", () => {
     expect(screen.getByText("Open Roles")).toBeInTheDocument();
   });
 
-  it("renders Active Projects", () => {
+  it("does NOT render Active Projects (it lives in the stat bar, not the executive widget)", () => {
     render(
       <Wrapper>
         <ExecutiveKpiWidget />
       </Wrapper>,
     );
-    expect(screen.getByText("Active Projects")).toBeInTheDocument();
+    expect(screen.queryByText("Active Projects")).not.toBeInTheDocument();
+  });
+});
+
+describe("T3 — Active Projects appears exactly once across Home", () => {
+  it("Active Projects does not render when only ExecutiveKpiWidget is mounted", () => {
+    render(
+      <Wrapper>
+        <ExecutiveKpiWidget />
+      </Wrapper>,
+    );
+    expect(screen.queryByText("Active Projects")).not.toBeInTheDocument();
+  });
+
+  it("POSITIVE: BusinessPulseWidget renders its CRM metrics but not Active Projects", () => {
+    render(
+      <Wrapper>
+        <BusinessPulseWidget />
+      </Wrapper>,
+    );
+    expect(screen.getByText("Conversion Rate")).toBeInTheDocument();
+    expect(screen.queryByText("Active Projects")).not.toBeInTheDocument();
   });
 });
 

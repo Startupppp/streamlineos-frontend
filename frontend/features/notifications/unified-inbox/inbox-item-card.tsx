@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { NotificationCard } from "@/features/notifications/notification-card";
 import { formatRelativeTime } from "@/lib/format-relative-time";
+import { approvalKindLabel } from "./inbox-sources";
 import type {
   UnifiedInboxItem,
   NotificationInboxItem,
@@ -196,6 +197,9 @@ function ApprovalItemCard({ item, onClick }: ApprovalItemCardProps) {
           <div className="flex items-center gap-2 mt-0.5">
             <Badge variant="outline" className="h-4 px-1.5 py-0 text-micro">
               {item.status}
+            </Badge>
+            <Badge variant="secondary" className="h-4 px-1.5 py-0 text-micro">
+              {approvalKindLabel(item.approvalKind)}
             </Badge>
             {item.dueAt && (
               <span className="text-dense text-muted-foreground tabular-nums">

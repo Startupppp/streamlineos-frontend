@@ -33,12 +33,12 @@ import { PreferenceEventsSection } from "@/features/notifications/components/pre
 import { PreferenceScopeRulesSection } from "@/features/notifications/components/preference-scope-rules-section";
 
 const CHANNELS = [
-  { key: "inAppEnabled" as const, label: "In-App", description: "Notifications inside the app", icon: Bell },
-  { key: "emailEnabled" as const, label: "Email", description: "Delivered to your inbox", icon: Mail },
-  { key: "pushEnabled" as const, label: "Push", description: "Browser & mobile push alerts", icon: Smartphone },
-  { key: "smsEnabled" as const, label: "SMS", description: "Text messages to your phone", icon: MessageSquare },
-  { key: "whatsappEnabled" as const, label: "WhatsApp", description: "Messages via WhatsApp", icon: MessageSquare },
-  { key: "soundEnabled" as const, label: "Sound", description: "Play sound for new notifications", icon: Volume2 },
+  { key: "inAppEnabled" as const, label: "In-App", description: "Notifications inside the app", icon: Bell, backendChannel: null },
+  { key: "emailEnabled" as const, label: "Email", description: "Delivered to your inbox", icon: Mail, backendChannel: null },
+  { key: "pushEnabled" as const, label: "Push", description: "Browser & mobile push alerts", icon: Smartphone, backendChannel: "PUSH" as const },
+  { key: "smsEnabled" as const, label: "SMS", description: "Text messages to your phone", icon: MessageSquare, backendChannel: "SMS" as const },
+  { key: "whatsappEnabled" as const, label: "WhatsApp", description: "Messages via WhatsApp", icon: MessageSquare, backendChannel: "WHATSAPP" as const },
+  { key: "soundEnabled" as const, label: "Sound", description: "Play sound for new notifications", icon: Volume2, backendChannel: null },
 ];
 
 const DIGEST_OPTIONS: Array<{ value: DigestMode; label: string }> = [
@@ -76,7 +76,7 @@ export function NotificationPreferencesPage() {
         { [key]: value },
         {
           onSuccess: () => toast.success("Preferences saved"),
-          onError: () => toast.error("Failed to save preferences"),
+          onError: (error) => toast.error(getErrorMessage(error)),
         },
       );
     },
@@ -87,7 +87,10 @@ export function NotificationPreferencesPage() {
     (field: "quietHoursStart" | "quietHoursEnd", value: string) => {
       updatePreferences.mutate(
         { [field]: value || null },
-        { onError: () => toast.error("Failed to save") },
+        {
+          onSuccess: () => toast.success("Quiet hours saved"),
+          onError: (error) => toast.error(getErrorMessage(error)),
+        },
       );
     },
     [updatePreferences],
@@ -99,7 +102,7 @@ export function NotificationPreferencesPage() {
         { digestMode: value as DigestMode },
         {
           onSuccess: () => toast.success("Digest mode updated"),
-          onError: () => toast.error("Failed to save"),
+          onError: (error) => toast.error(getErrorMessage(error)),
         },
       );
     },
@@ -111,7 +114,7 @@ export function NotificationPreferencesPage() {
       const current = prefs?.categories ?? {};
       updatePreferences.mutate(
         { categories: { ...current, [category]: enabled } },
-        { onError: () => toast.error("Failed to save") },
+        { onError: (error) => toast.error(getErrorMessage(error)) },
       );
     },
     [prefs?.categories, updatePreferences],
@@ -169,21 +172,28 @@ export function NotificationPreferencesPage() {
         <section>
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Channels</h2>
           <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
-            {CHANNELS.map(({ key, label, description, icon: Icon }) => {
+            {CHANNELS.map(({ key, label, description, icon: Icon, backendChannel }) => {
               const enabled = prefs ? (prefs[key as keyof typeof prefs] as boolean) : false;
+              const providerUnavailable =
+                backendChannel !== null &&
+                prefs?.availableChannels !== undefined &&
+                !prefs.availableChannels.includes(backendChannel);
               return (
                 <div key={key} className="flex items-center justify-between px-3 py-2.5 gap-3 bg-card">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <Icon className={cn("h-4 w-4 shrink-0", enabled ? "text-primary" : "text-muted-foreground")} />
+                    <Icon className={cn("h-4 w-4 shrink-0", enabled && !providerUnavailable ? "text-primary" : "text-muted-foreground")} />
                     <div className="min-w-0">
                       <p className="text-sm font-medium leading-snug">{label}</p>
-                      <p className="text-dense text-muted-foreground">{description}</p>
+                      <p className="text-dense text-muted-foreground">
+                        {providerUnavailable ? "No provider configured — contact your admin" : description}
+                      </p>
                     </div>
                   </div>
                   <Switch
-                    checked={enabled}
+                    checked={enabled && !providerUnavailable}
                     onCheckedChange={(v) => handleChannelToggle(key, v)}
-                    disabled={updatePreferences.isPending}
+                    disabled={updatePreferences.isPending || providerUnavailable}
+                    aria-label={providerUnavailable ? `${label} unavailable — no provider configured` : undefined}
                     className="shrink-0"
                   />
                 </div>

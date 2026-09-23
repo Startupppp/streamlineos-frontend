@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { useExecutiveDashboard } from "@/hooks/api/dashboard";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Users, Briefcase, Folder, RefreshCw } from "lucide-react";
+import { Users, Briefcase, RefreshCw } from "lucide-react";
 
 export function ExecutiveKpiWidget() {
   const { data, isLoading, error, refetch } = useExecutiveDashboard();
@@ -26,7 +26,7 @@ export function ExecutiveKpiWidget() {
   }
 
   if (isLoading || !data) {
-    return <StatCardGridSkeleton cols={4} count={3} />;
+    return <StatCardGridSkeleton cols={4} count={2} />;
   }
 
   return (
@@ -44,13 +44,6 @@ export function ExecutiveKpiWidget() {
         icon={Briefcase}
         color="gold"
         index={1}
-      />
-      <StatCard
-        label="Active Projects"
-        value={data.activeProjects}
-        icon={Folder}
-        color="purple"
-        index={2}
       />
     </StatCardGrid>
   );
