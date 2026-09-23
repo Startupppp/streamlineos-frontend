@@ -36,6 +36,7 @@ import type {
   UpdateProjectInput,
 } from "@/types/projects";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { useHydratedProject } from "@/features/build/project-detail/project-hydration-context";
 
 export {
   useAddProjectMember,
@@ -128,11 +129,13 @@ export function useProject(
   >,
 ) {
   const canView = useCan("build:view");
+  const hydratedProject = useHydratedProject(projectId);
   return useQuery<ProjectWithDetails | null>({
     queryKey: buildWorkQueryKeys.projects.detail(projectId),
     queryFn: ({ signal }) => apiClient.get<ProjectWithDetails | null>(`/build/${projectId}`, undefined, signal, projectDetailLazy),
     enabled: canView && !!projectId,
     staleTime: 30_000,
+    initialData: hydratedProject,
     ...options,
   });
 }

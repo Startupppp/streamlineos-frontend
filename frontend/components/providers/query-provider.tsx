@@ -84,6 +84,22 @@ export function createAppQueryClient(scope = "unscoped"): QueryClient {
   return client;
 }
 
+export function resolveQueryProviderScope({
+  initialScope,
+  status,
+  orgId,
+  userId,
+}: {
+  initialScope?: string;
+  status: "authenticated" | "loading" | "unauthenticated";
+  orgId: string | undefined;
+  userId: string | undefined;
+}): string {
+  if (status === "loading") return initialScope ?? LOADING_SCOPE;
+  if (orgId && userId) return authenticatedScope(orgId, userId);
+  return UNAUTHENTICATED_SCOPE;
+}
+
 function ScopedQueryProvider({
   children,
   scope,
@@ -114,16 +130,22 @@ function ScopedQueryProvider({
   );
 }
 
-export function QueryProvider({ children }: { children: React.ReactNode }) {
+export function QueryProvider({
+  children,
+  initialScope,
+}: {
+  children: React.ReactNode;
+  initialScope?: string;
+}) {
   const { data: session, status } = useSession();
   const userId = session?.user?.id ?? "";
   const orgId = session?.orgId ?? "";
-  const scope =
-    orgId && userId
-      ? authenticatedScope(orgId, userId)
-      : status === "loading"
-        ? LOADING_SCOPE
-        : UNAUTHENTICATED_SCOPE;
+  const scope = resolveQueryProviderScope({
+    initialScope,
+    status,
+    orgId: orgId || undefined,
+    userId: userId || undefined,
+  });
 
   return (
     <ScopedQueryProvider key={scope} scope={scope}>
