@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
 export const portalProjectItemContract = z.object({
   id: z.number().int(),
@@ -141,3 +142,26 @@ export const changeRequestListContract = z.union([
     pagination: crPagePaginationContract,
   }),
 ]);
+
+const changeRequestAffectedTicketSummaryContract = z.object({
+  id: z.number().int(),
+  title: z.string(),
+  ticketNumber: z.number().int(),
+  status: z.string(),
+  priority: z.string(),
+  type: z.string(),
+});
+
+export const changeRequestAffectedItemContract = z.object({
+  id: z.number().int(),
+  orgId: z.string(),
+  changeRequestId: z.number().int(),
+  ticketId: z.number().int(),
+  createdAt: z.string(),
+  createdBy: z.string().nullable(),
+  ticket: changeRequestAffectedTicketSummaryContract,
+});
+
+export const changeRequestAffectedItemListContract = cursorPageContract(
+  changeRequestAffectedItemContract,
+);
