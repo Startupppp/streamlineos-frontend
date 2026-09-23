@@ -188,6 +188,12 @@ export const bulkInviteContract = z.object({
 
 export const userSuccessContract = z.object({ success: z.literal(true) });
 
+export const invitationJoinLinkContract = z.object({
+  joinUrl: z.string(),
+  email: z.string(),
+  expiresAt: z.string(),
+});
+
 export const bulkActionResultContract = z.object({
   results: z.array(z.object({
     userId: z.string(),
