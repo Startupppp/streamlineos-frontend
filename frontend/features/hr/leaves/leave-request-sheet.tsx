@@ -7,6 +7,7 @@ import { format, startOfDay } from "date-fns";
 import { toast } from "sonner";
 
 import { Form } from "@/components/ui/form";
+import { leaveSetupBlocker } from "./leave-setup-blocker";
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -183,12 +184,11 @@ export function LeaveRequestSheet({
       title="Request Leave"
       description="Fill in the details to submit a leave request"
       onSubmit={form.handleSubmit(onSubmit)}
-      submitLabel={approvers.length === 0 ? "No approver available" : "Submit Request"}
+      submitLabel={leaveSetupBlocker(leaveTypes, approvers)?.submitLabel ?? "Submit Request"}
       isPending={requestLeaveMutation.isPending}
       submitDisabled={
         (!isValid && isDirty) ||
-        leaveTypes.length === 0 ||
-        approvers.length === 0
+        leaveSetupBlocker(leaveTypes, approvers) !== null
       }
       isDirty={isDirty}
       onDiscard={() => form.reset()}

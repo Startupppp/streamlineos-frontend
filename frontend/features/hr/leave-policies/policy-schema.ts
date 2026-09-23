@@ -31,3 +31,8 @@ export const emptyPolicyDefaults: PolicyFormValues = {
   maxBalance: "",
   effectiveFrom: "",
 };
+
+export function blankToUndefined(value: string | undefined): string | undefined {
+  const trimmed = value?.trim() ?? "";
+  return trimmed === "" ? undefined : trimmed;
+}

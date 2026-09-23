@@ -26,6 +26,7 @@ import { isWeekend } from "./leave-date-helpers";
 import { LeaveBalancePreview, LeaveLimitError } from "./leave-balance-preview";
 import type { LeaveFormValues } from "./leave-request-schema";
 import type { LeaveType, Approver, LeaveBalance } from "./components/leaves-shared";
+import { leaveSetupBlocker } from "./leave-setup-blocker";
 
 interface LeaveRequestFormFieldsProps {
   form: UseFormReturn<LeaveFormValues>;
@@ -54,6 +55,7 @@ export function LeaveRequestFormFields({
   leaveDayLimitError,
 }: LeaveRequestFormFieldsProps) {
   const watchedHalfDay = form.watch("halfDay");
+  const blocker = leaveSetupBlocker(leaveTypes, approvers);
 
   return (
     <div className="space-y-5">
@@ -260,12 +262,20 @@ export function LeaveRequestFormFields({
               (assigned automatically)
             </span>
           </p>
-        ) : (
-          <p className="mt-1 text-xs leading-relaxed text-destructive">
-            No authorized approver is configured. Ask an organization
-            administrator to assign a leave approver before submitting.
-          </p>
-        )}
+        ) : blocker ? (
+          <div className="mt-1 space-y-1.5">
+            <p className="text-sm font-medium text-foreground">{blocker.title}</p>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              {blocker.description}
+            </p>
+            <Link
+              href={blocker.href}
+              className="inline-block text-xs font-medium text-primary underline underline-offset-2"
+            >
+              {blocker.actionLabel}
+            </Link>
+          </div>
+        ) : null}
       </div>
 
       <FormField

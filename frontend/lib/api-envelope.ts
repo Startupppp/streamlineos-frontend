@@ -40,6 +40,30 @@ export function getApiErrorCode(error: unknown): string | undefined {
   return isApiError(error) ? error.code : undefined;
 }
 
+export interface ValidationFieldError {
+  readonly path: string;
+  readonly message: string;
+}
+
+export function getValidationFieldErrors(
+  error: unknown,
+): readonly ValidationFieldError[] {
+  if (!isApiError(error) || error.code !== "VALIDATION_FAILED") return [];
+  const raw = Array.isArray(error.details)
+    ? error.details
+    : isRecord(error.details) && Array.isArray(error.details.details)
+      ? error.details.details
+      : undefined;
+  if (raw === undefined) return [];
+  return raw.flatMap((entry) =>
+    isRecord(entry) &&
+    typeof entry.path === "string" &&
+    typeof entry.message === "string"
+      ? [{ path: entry.path, message: entry.message }]
+      : [],
+  );
+}
+
 export function getCorrelationId(error: unknown): string | undefined {
   if (!isApiError(error) || !isRecord(error.details)) return undefined;
   const id = error.details.correlationId;
