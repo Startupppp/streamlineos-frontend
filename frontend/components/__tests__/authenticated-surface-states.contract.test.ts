@@ -40,7 +40,7 @@ const EMPTY_STATE_NOT_APPLICABLE = [
   "/crm/import",
   "/hr/recruitment/sla",
   "/inventory/products/new",
-  "/notifications/policy",
+  "/settings/notifications/policy",
   "/settings/organization/structure",
   "/surveys/new",
 ] as const;

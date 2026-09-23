@@ -161,7 +161,11 @@ function makeReview(overrides: Partial<KbPageReview> = {}): KbPageReview {
 
 function makePage(
   reviews: KbPageReview[],
-  pagination = { limit: 50, hasMore: false, nextCursor: null },
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null } = {
+    limit: 50,
+    hasMore: false,
+    nextCursor: null,
+  },
 ) {
   return { data: reviews, pagination };
 }

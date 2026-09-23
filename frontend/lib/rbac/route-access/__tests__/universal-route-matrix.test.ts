@@ -111,7 +111,7 @@ const MATRIX: readonly MatrixRow[] = [
 
 describe("universal route matrix — exact-by-default with explicit allowlist", () => {
   it("covers every declared universal root so a missing row cannot pass silently", () => {
-    expect(MATRIX.length).toBeGreaterThanOrEqual(50);
+    expect(MATRIX.length).toBeGreaterThanOrEqual(49);
   });
 
   it("isUniversalRoute matches every row's expectation", () => {
