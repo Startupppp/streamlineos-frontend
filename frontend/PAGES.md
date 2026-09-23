@@ -76,13 +76,20 @@
 
 ## Notifications
 
-- `/notifications` · **Platform** · hooks: `→ feature/notifications`
-- `/notifications/broadcasts` · **Platform** · hooks: `→ feature/notifications`
-- `/notifications/events` · **Platform** · hooks: `→ feature/notifications`
-- `/notifications/policy` · **Platform** · hooks: `→ feature/notifications`
-- `/notifications/preferences` · **Platform** · hooks: `→ feature/notifications`
-- `/notifications/providers` · **Platform** · hooks: `→ feature/notifications`
-- `/notifications/templates` · **Platform** · hooks: `→ feature/notifications`
+- `/inbox` · **Platform (universal)** · hooks: `→ feature/inbox` — member notification inbox; replaced the old `/notifications` hub as the canonical user-facing surface
+- `/settings/notifications/my-preferences` · **Platform (universal)** · hooks: `→ features/notifications` — per-user channel, category, quiet-hours and digest preferences; no permission required
+- `/settings/notifications/templates` · **Platform** · hooks: `→ features/notifications` — gated `notifications:templates:view`
+- `/settings/notifications/broadcasts` · **Platform** · hooks: `→ features/notifications` — gated `notifications:broadcasts:view`
+- `/settings/notifications/providers` · **Platform** · hooks: `→ features/notifications` — gated `notifications:providers:view`
+- `/settings/notifications/events` · **Platform** · hooks: `→ features/notifications` — gated `notifications:events:view`
+- `/settings/notifications/policy` · **Platform** · hooks: `→ features/notifications` — gated `notifications:policy:view`
+- `/notifications` · [RETIRED — redirects to `/inbox` via `next.config.ts`; kept as compatibility redirect]
+- `/notifications/preferences` · [RETIRED — redirects to `/settings/notifications/my-preferences` via `next.config.ts`]
+- `/notifications/providers` · [RETIRED — redirects to `/settings/notifications/providers` via `next.config.ts`]
+- `/notifications/templates` · [RETIRED — redirects to `/settings/notifications/templates` via `next.config.ts`]
+- `/notifications/broadcasts` · [RETIRED — redirects to `/settings/notifications/broadcasts` via `next.config.ts`]
+- `/notifications/events` · [RETIRED — redirects to `/settings/notifications/events` via `next.config.ts`]
+- `/notifications/policy` · [RETIRED — redirects to `/settings/notifications/policy` via `next.config.ts`]
 
 ---
 

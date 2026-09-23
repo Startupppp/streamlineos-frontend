@@ -132,7 +132,7 @@ function MemberRoleSelect({
 
   return (
     <Select value={role} onValueChange={handleValueChange} disabled={isPending}>
-      <SelectTrigger className="w-24 shrink-0 text-xs border-input bg-card">
+      <SelectTrigger className="w-24 shrink-0 border-input bg-card">
         <SelectValue />
       </SelectTrigger>
       <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -331,7 +331,7 @@ export function TeamHomePage({ teamId }: Props) {
                   className="h-8 min-w-[180px]"
                 />
                 <Select value={addMemberRole} onValueChange={handleAddMemberRoleChange}>
-                  <SelectTrigger className="w-24 text-xs border-input bg-card">
+                  <SelectTrigger className="w-24 border-input bg-card">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="min-w-[var(--radix-select-trigger-width)]">

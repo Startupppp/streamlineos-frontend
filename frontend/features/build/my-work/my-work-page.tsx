@@ -174,6 +174,7 @@ export function MyWorkPage() {
         filtersClassName="flex-col items-stretch gap-0 overflow-visible pb-2 [&>*]:w-full [&>*]:min-w-0 [&>*]:shrink"
         filters={
           <PageTabsToolbar
+            collapseBelow="xl"
             tabs={
               <TabsList>
                 {WORK_TABS.map((tab) => (
@@ -183,9 +184,10 @@ export function MyWorkPage() {
                 ))}
               </TabsList>
             }
-            filters={() =>
+            search={
               filterBarReady ? (
                 <TicketFilterBar
+                  className="w-full"
                   showAssigneeFilter={false}
                   statuses={orgStates}
                 />

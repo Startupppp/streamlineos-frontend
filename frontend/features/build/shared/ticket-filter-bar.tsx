@@ -208,7 +208,7 @@ export function TicketFilterBar({
         value={localSearch}
         onValueChange={handleSearchChange}
         className="[&_svg]:left-2 [&_svg]:h-3.5 [&_svg]:w-3.5"
-        inputClassName="h-9 pl-7 pr-7 text-xs"
+        inputClassName="h-9 pl-7 pr-7"
       />
     </div>
   );

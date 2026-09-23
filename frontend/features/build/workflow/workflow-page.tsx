@@ -14,8 +14,13 @@ import {
   PM_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { TEXT_BODY, TEXT_ONE_LINE } from "@/lib/text-overflow";
-import { TransitionsTable } from "./transitions-table";
+import {
+  TRANSITION_TABLE_HEADERS,
+  TransitionsTable,
+} from "./transitions-table";
 import { WipRow } from "./wip-row";
+
+const WIP_TABLE_HEADERS = ["Status", "WIP limit"] as const;
 
 interface WorkflowPageProps {
   projectId: number;
@@ -45,8 +50,12 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
       <PmPageShell>
         {isLoading ? (
           <div className="flex min-h-0 flex-1 flex-col space-y-4">
-            <DataTableSkeleton rows={12} columns={2} className="flex-1" />
-            <DataTableSkeleton rows={12} columns={6} className="flex-1" />
+            <DataTableSkeleton rows={12} headers={WIP_TABLE_HEADERS} className="flex-1" />
+            <DataTableSkeleton
+              rows={12}
+              headers={TRANSITION_TABLE_HEADERS}
+              className="flex-1"
+            />
           </div>
         ) : isError ? (
           <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />

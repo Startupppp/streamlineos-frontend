@@ -1,46 +1,29 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { SearchInput } from "@/components/ui/search-input";
+import {
+  Plus,
+  Target,
+  TrendingUp,
+  AlertTriangle,
+} from "lucide-react";
 import { RequireModule } from "@/components/auth/require-module";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 import {
-  Target,
-  Users,
-  TrendingUp,
-  AlertTriangle,
-  CalendarDays,
-  ListChecks,
-} from "lucide-react";
-import { PlusIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { format } from "date-fns";
-import {
   useGoals,
   useGoalStats,
   type GoalListItem,
   type GoalLevel,
-  type GoalStatus,
 } from "@/hooks/api/goals";
 import { useCan } from "@/hooks/api/access";
 import { GoalFormSheet } from "@/features/build/goals/goal-form-sheet";
 import {
-  GoalFiltersPopover,
-  GoalLevelStatusFilters,
-} from "@/features/build/goals/goal-filters-popover";
-import {
-  STATUS_CONFIG,
   LEVEL_LABEL,
   STATUS_OPTIONS,
   LEVEL_OPTIONS,
@@ -52,93 +35,20 @@ import {
   PM_FILL_PANEL,
   PM_FILL_SECTION,
   PM_PANEL,
-  PM_TOOLBAR,
 } from "@/components/pm-chrome";
-import {
-  listItem,
-  listItemReduced,
-  pmSnappy,
-} from "@/lib/motion-presets";
-import { TEXT_TWO_LINES } from "@/lib/text-overflow";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import {
+  GoalCard,
+  GoalsListToolbar,
+  GOAL_FILTER_DEFINITIONS,
+  GOAL_LEVEL_ORDER,
+} from "@/features/build/goals/goals-list-shared";
 
-function NewGoalButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button size="sm" onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} className="mr-1" /> New Goal
-    </Button>
-  );
-}
-
-const LEVEL_ORDER: GoalLevel[] = ["company", "team", "individual"];
-
-function GoalCard({ goal }: { goal: GoalListItem }) {
-  const cfg = STATUS_CONFIG[goal.status];
-  const ownerName = goal.owner?.name ?? goal.owner?.email ?? null;
-  const shouldReduceMotion = useReducedMotion();
-
-  return (
-    <motion.div
-      variants={shouldReduceMotion ? listItemReduced : listItem}
-      transition={pmSnappy}
-    >
-      <Link href={`/build/goals/${goal.id}`} className="group block">
-        <div
-          className={cn(
-            PM_PANEL,
-            "space-y-3 p-4 transition-[border-color,box-shadow] duration-200 group-hover:border-primary/40 group-hover:shadow-md",
-          )}
-        >
-          <div className="flex min-w-0 items-start justify-between gap-2">
-            <p
-              className={cn(TEXT_TWO_LINES, "text-sm font-medium leading-snug")}
-              title={goal.title}
-            >
-              {goal.title}
-            </p>
-            <Badge variant={cfg.variant} className="shrink-0 text-micro">
-              {cfg.label}
-            </Badge>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Progress</span>
-              <span className="tabular-nums">{goal.progress}%</span>
-            </div>
-            <Progress
-              value={goal.progress}
-              className="h-1.5"
-              aria-label={`${goal.title} progress`}
-            />
-          </div>
-
-          <div className="flex min-w-0 items-center justify-between text-xs text-muted-foreground">
-            <span className="flex min-w-0 items-center gap-1.5">
-              <Users className="h-3.5 w-3.5 shrink-0" />
-              <TruncatedText text={ownerName ?? "Unassigned"} />
-            </span>
-            <span className="flex shrink-0 items-center gap-1.5">
-              <ListChecks className="h-3.5 w-3.5" />
-              {goal.keyResultCount} KR{goal.keyResultCount === 1 ? "" : "s"}
-            </span>
-          </div>
-
-          {goal.dueDate ? (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <CalendarDays className="h-3.5 w-3.5" />
-              <span>Due {format(new Date(goal.dueDate), "MMM d, yyyy")}</span>
-            </div>
-          ) : null}
-        </div>
-      </Link>
-    </motion.div>
-  );
-}
+const CREATE_ACTION = { id: "create", label: "New Goal", icon: Plus, primary: true as const };
 
 function GoalsGridSkeleton() {
   return (
@@ -158,19 +68,32 @@ function GoalsGridSkeleton() {
 
 export function GoalsPage() {
   const canManage = useCan("build:goals:manage");
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebouncedValue(search, 300);
-  const [statusFilter, setStatusFilter] = useState<GoalStatus | "all">("all");
-  const [levelFilter, setLevelFilter] = useState<GoalLevel | "all">("all");
+  const listFilters = useBuildListFilters({ filters: GOAL_FILTER_DEFINITIONS });
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
+
+  const levelValue = listFilters.value("level");
+  const statusValue = listFilters.value("status");
+
+  const typedLevel = useMemo(
+    () => LEVEL_OPTIONS.find((o) => o.value === levelValue)?.value,
+    [levelValue],
+  );
+
+  const typedStatus = useMemo(
+    () => STATUS_OPTIONS.find((o) => o.value === statusValue)?.value,
+    [statusValue],
+  );
+
   const params = useMemo(
     () => ({
-      ...(statusFilter !== "all" ? { status: statusFilter } : {}),
-      ...(levelFilter !== "all" ? { level: levelFilter } : {}),
-      ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
+      ...(typedStatus ? { status: typedStatus } : {}),
+      ...(typedLevel ? { level: typedLevel } : {}),
+      ...(listFilters.debouncedSearch.trim()
+        ? { search: listFilters.debouncedSearch.trim() }
+        : {}),
     }),
-    [statusFilter, levelFilter, debouncedSearch],
+    [typedStatus, typedLevel, listFilters.debouncedSearch],
   );
 
   const { data: goals, isLoading, isError, error, refetch } = useGoals(params);
@@ -178,7 +101,7 @@ export function GoalsPage() {
 
   const grouped = useMemo(() => {
     const map = new Map<GoalLevel, GoalListItem[]>();
-    for (const level of LEVEL_ORDER) map.set(level, []);
+    for (const level of GOAL_LEVEL_ORDER) map.set(level, []);
     for (const goal of goals ?? []) map.get(goal.level)?.push(goal);
     return map;
   }, [goals]);
@@ -187,30 +110,7 @@ export function GoalsPage() {
 
   const handleOpenCreate = useCallback(() => { openCreate(); }, [openCreate]);
 
-  const filtersActive =
-    search.trim() !== "" || statusFilter !== "all" || levelFilter !== "all";
-
-  const handleClearFilters = useCallback(() => {
-    setSearch("");
-    setStatusFilter("all");
-    setLevelFilter("all");
-  }, []);
-
-  function handleSearchChange(value: string) { setSearch(value); }
-
-  function handleLevelFilterChange(v: string) {
-    if (v === "all") { setLevelFilter("all"); return; }
-    const found = LEVEL_OPTIONS.find((o) => o.value === v);
-    if (found) setLevelFilter(found.value);
-  }
-
-  function handleStatusFilterChange(v: string) {
-    if (v === "all") { setStatusFilter("all"); return; }
-    const found = STATUS_OPTIONS.find((o) => o.value === v);
-    if (found) setStatusFilter(found.value);
-  }
-
-  function handleRetry() { void refetch(); }
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const pageState = usePageState({
     permission: "build:goals:view",
@@ -220,14 +120,31 @@ export function GoalsPage() {
     isEmpty: !hasGoals,
   });
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+  const createActions = useMemo(
+    () =>
+      canManage
+        ? [{ ...CREATE_ACTION, onSelect: handleOpenCreate }]
+        : [],
+    [canManage, handleOpenCreate],
+  );
+
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  ) {
     return (
       <PageWrapper
         title="Goals & OKRs"
         subtitle="Track company, team, and individual objectives and their key results"
       >
         <PmPageShell>
-          <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          <PageState
+            resolution={pageState}
+            loading={null}
+            onRetry={handleRetry}
+            className="flex-1"
+          >
             {null}
           </PageState>
         </PmPageShell>
@@ -240,36 +157,8 @@ export function GoalsPage() {
       <PageWrapper
         title="Goals & OKRs"
         subtitle="Track company, team, and individual objectives and their key results"
-        actions={
-          <div className="flex items-center gap-2">
-            <div className="md:hidden">
-              <GoalFiltersPopover
-                levelFilter={levelFilter}
-                statusFilter={statusFilter}
-                onLevelChange={handleLevelFilterChange}
-                onStatusChange={handleStatusFilterChange}
-              />
-            </div>
-            {canManage ? <NewGoalButton onClick={handleOpenCreate} /> : null}
-          </div>
-        }
-        filters={
-          <div className={PM_TOOLBAR}>
-            <SearchInput
-              placeholder="Search goals..."
-              value={search}
-              onValueChange={handleSearchChange}
-            />
-            <div className="hidden md:block">
-              <GoalLevelStatusFilters
-                levelFilter={levelFilter}
-                statusFilter={statusFilter}
-                onLevelChange={handleLevelFilterChange}
-                onStatusChange={handleStatusFilterChange}
-              />
-            </div>
-          </div>
-        }
+        filters={<GoalsListToolbar listFilters={listFilters} />}
+        actions={<BuildHeaderActions actions={createActions} />}
       >
         <PmPageShell>
           <PmSection index={0} className="shrink-0">
@@ -317,14 +206,14 @@ export function GoalsPage() {
                   illustration={<EmptyTargetIllustration />}
                   title="No goals yet"
                   description={
-                    filtersActive
+                    listFilters.isFiltered
                       ? undefined
                       : "Create your first objective with measurable key results to start tracking progress."
                   }
-                  filtersActive={filtersActive}
-                  onClearFilters={handleClearFilters}
+                  filtersActive={listFilters.isFiltered}
+                  onClearFilters={listFilters.clearAll}
                   action={
-                    filtersActive || !canManage
+                    listFilters.isFiltered || !canManage
                       ? undefined
                       : { label: "New Goal", onClick: handleOpenCreate }
                   }
@@ -332,7 +221,7 @@ export function GoalsPage() {
               }
             >
               <div className="flex flex-col gap-6 overflow-y-auto">
-                {LEVEL_ORDER.map((level) => {
+                {GOAL_LEVEL_ORDER.map((level) => {
                   const levelGoals = grouped.get(level) ?? [];
                   if (levelGoals.length === 0) return null;
                   return (

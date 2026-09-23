@@ -87,12 +87,12 @@ const MemberRoleRow = memo(function MemberRoleRow({
           onValueChange={handleRoleChange}
           disabled={updateRole.isPending}
         >
-          <SelectTrigger className="w-[100px] text-xs">
+          <SelectTrigger className="w-[100px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
             {ROLE_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value} className="text-xs">
+              <SelectItem key={opt.value} value={opt.value}>
                 {opt.label}
               </SelectItem>
             ))}

@@ -8,6 +8,18 @@ export const INBOX_SOURCE_LABELS: Record<InboxKind, string> = {
   build_approval: "Approvals",
 };
 
+export const APPROVAL_KIND_LABELS: Record<string, string> = {
+  build: "Build",
+  leave: "Leave",
+  wfh: "Work from home",
+  workflow: "HR workflow",
+  timesheet: "Timesheet",
+};
+
+export function approvalKindLabel(kind: string): string {
+  return APPROVAL_KIND_LABELS[kind] ?? kind;
+}
+
 const PERMISSION_REASON_PREFIX = "no permission: ";
 const UNSUPPORTED_REASON_PREFIX = "unsupported: ";
 

@@ -1,12 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
+import { Plus } from "lucide-react";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { toast } from "sonner";
-import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import Link from "next/link";
 import {
   usePortfolios,
   useCreatePortfolio,
@@ -17,31 +14,11 @@ import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
-
-import { Button } from "@/components/ui/button";
-import { SearchInput } from "@/components/ui/search-input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  PortfolioStatusBadge,
-  PortfolioHealthBadge,
-} from "./portfolio-status-badge";
 import { PortfolioFormSheet } from "./portfolio-form-sheet";
 import type {
   Portfolio,
@@ -50,78 +27,43 @@ import type {
 } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
-import { cn } from "@/lib/utils";
-import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import type { NamedUser } from "@/lib/person-display";
+import {
+  PORTFOLIO_TABLE_HEADERS,
+  PortfolioMobileCard,
+  buildPortfolioColumns,
+} from "./portfolio-table-columns";
 
-function NewPortfolioButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} /> New Portfolio
-    </Button>
-  );
-}
+const PAGE_SIZE = 20;
 
-function PortfolioRowActions({
-  portfolio,
-  onEdit,
-  onDelete,
-}: {
-  portfolio: Portfolio;
-  onEdit: (p: Portfolio) => void;
-  onDelete: (p: Portfolio) => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const handleEdit = useCallback(() => onEdit(portfolio), [portfolio, onEdit]);
-  const handleDelete = useCallback(
-    () => onDelete(portfolio),
-    [portfolio, onDelete],
-  );
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-7"
-          aria-label="Portfolio actions"
-          {...hoverHandlers}
-        >
-          <EllipsisIcon ref={iconRef} size={14} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" onClick={handleDelete}>
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-const STATUS_OPTS = [
-  { value: "all", label: "All statuses" },
+const STATUS_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All statuses" },
   { value: "active", label: "Active" },
-  { value: "on_hold", label: "On Hold" },
+  { value: "on_hold", label: "On hold" },
   { value: "completed", label: "Completed" },
   { value: "archived", label: "Archived" },
 ];
 
+const FILTER_DEFINITIONS = [
+  {
+    param: "status",
+    options: STATUS_OPTIONS.map((option) => option.value),
+  },
+] as const;
+
 export function PortfoliosPage() {
   const canManage = useCan("build:portfolios:manage");
-
-  const { cursor, setCursor, setListParams, clearFilters } = useBuildListUrlState();
-  const searchParams = useSearchParams();
-  const urlStatus = searchParams.get("status") ?? "all";
-  const urlQ = searchParams.get("q") ?? "";
-
-  const [searchInput, setSearchInput] = useState(urlQ);
-  const debouncedSearchInput = useDebouncedValue(searchInput, 300);
-  const [cursorStack, setCursorStack] = useState<string[]>([]);
+  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
+  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+    listFilters.resetKey,
+  );
 
   const {
     open: createOpen,
@@ -131,16 +73,11 @@ export function PortfoliosPage() {
   const [editTarget, setEditTarget] = useState<Portfolio | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Portfolio | null>(null);
 
-  useEffect(() => {
-    const current = searchParams.get("q") ?? "";
-    if (debouncedSearchInput === current) return;
-    setListParams({ q: debouncedSearchInput || null });
-  }, [debouncedSearchInput, searchParams, setListParams]);
-
+  const statusValue = listFilters.value("status");
   const { data, isLoading, isError, error, refetch } = usePortfolios({
-    cursor: cursor ?? undefined,
-    limit: 20,
-    status: urlStatus !== "all" ? urlStatus : undefined,
+    cursor,
+    limit: PAGE_SIZE,
+    status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
   });
   const { data: membersRes } = useOrgMembers(1, 100);
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
@@ -149,18 +86,21 @@ export function PortfoliosPage() {
   const updatePortfolio = useUpdatePortfolio();
   const deletePortfolio = useDeletePortfolio();
 
-  function memberName(userId: string | null): string {
-    if (!userId) return "—";
-    const m = members.find((x) => x.userId === userId);
-    return m?.name ?? m?.email ?? "Unknown";
-  }
+  const ownerOf = useCallback(
+    (ownerId: string | null): NamedUser | null => {
+      if (!ownerId) return null;
+      const match = members.find((member) => member.userId === ownerId);
+      return match ? { name: match.name, email: match.email } : null;
+    },
+    [members],
+  );
 
-  const rows = data?.data ?? [];
+  const rows = useMemo(() => data?.data ?? [], [data]);
+  const search = listFilters.debouncedSearch.trim().toLowerCase();
   const displayed = useMemo(() => {
-    if (!searchInput.trim()) return rows;
-    const q = searchInput.toLowerCase();
-    return rows.filter((p) => p.name.toLowerCase().includes(q));
-  }, [rows, searchInput]);
+    if (!search) return rows;
+    return rows.filter((row) => row.name.toLowerCase().includes(search));
+  }, [rows, search]);
 
   const resolution = usePageState({
     permission: "build:portfolios:view",
@@ -170,27 +110,33 @@ export function PortfoliosPage() {
     isEmpty: displayed.length === 0,
   });
 
-  function handleCreate(input: CreatePortfolioInput) {
-    createPortfolio.mutate(input, {
-      onSuccess: () => {
-        toast.success("Portfolio created");
-        setCreateOpen(false);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }
+  const handleCreate = useCallback(
+    (input: CreatePortfolioInput) => {
+      createPortfolio.mutate(input, {
+        onSuccess: () => {
+          toast.success("Portfolio created");
+          setCreateOpen(false);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    },
+    [createPortfolio, setCreateOpen],
+  );
 
-  function handleEdit(input: UpdatePortfolioInput & { portfolioId: number }) {
-    updatePortfolio.mutate(input, {
-      onSuccess: () => {
-        toast.success("Portfolio updated");
-        setEditTarget(null);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }
+  const handleEdit = useCallback(
+    (input: UpdatePortfolioInput & { portfolioId: number }) => {
+      updatePortfolio.mutate(input, {
+        onSuccess: () => {
+          toast.success("Portfolio updated");
+          setEditTarget(null);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    },
+    [updatePortfolio],
+  );
 
-  function handleDeleteConfirm() {
+  const handleDeleteConfirm = useCallback(() => {
     if (!deleteTarget) return;
     deletePortfolio.mutate(deleteTarget.id, {
       onSuccess: () => {
@@ -199,35 +145,12 @@ export function PortfoliosPage() {
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }
+  }, [deletePortfolio, deleteTarget]);
 
-  function handleSearchChange(value: string) {
-    setSearchInput(value);
-  }
-
-  function handleStatusChange(value: string) {
-    setListParams({ status: value !== "all" ? value : null });
-    setCursorStack([]);
-  }
-
-  function handleClearFilters() {
-    setSearchInput("");
-    clearFilters();
-    setCursorStack([]);
-  }
-
-  function handleNextPage() {
-    const nextCursor = data?.pagination.nextCursor;
-    if (!nextCursor) return;
-    setCursorStack((prev) => [...prev, cursor ?? ""]);
-    setCursor(nextCursor);
-  }
-
-  function handlePrevPage() {
-    const prevCursor = cursorStack[cursorStack.length - 1];
-    setCursorStack((prev) => prev.slice(0, -1));
-    setCursor(prevCursor === "" ? null : prevCursor);
-  }
+  const handleStatusChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
 
   const handleOpenCreate = useCallback(() => {
     openCreate();
@@ -243,149 +166,94 @@ export function PortfoliosPage() {
     [setCreateOpen],
   );
 
-  function handleDeleteDialogChange(open: boolean) {
+  const handleDeleteDialogChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
-  }
+  }, []);
 
-  function handleRetry() {
+  const handleRetry = useCallback(() => {
     void refetch();
-  }
+  }, [refetch]);
 
-  function handleEditRow(row: Portfolio) {
-    setEditTarget(row);
-  }
+  const handleEditRow = useCallback((row: Portfolio) => setEditTarget(row), []);
+  const handleDeleteRow = useCallback(
+    (row: Portfolio) => setDeleteTarget(row),
+    [],
+  );
 
-  function handleDeleteRow(row: Portfolio) {
-    setDeleteTarget(row);
-  }
+  const handleNextPage = useCallback(() => {
+    goNext(data?.pagination.nextCursor);
+  }, [data, goNext]);
 
-  const columns: DataTableColumn<Portfolio>[] = [
-    {
-      key: "name",
-      header: "Name",
-      className: TABLE_TITLE_CELL,
-      cell: (row) => (
-        <Link
-          href={`/build/portfolios/${row.id}`}
-          className={cn(
-            "font-medium text-foreground hover:text-primary",
-            TEXT_ONE_LINE,
-          )}
-          title={row.name}
-        >
-          {row.name}
-        </Link>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (row) => <PortfolioStatusBadge status={row.status} />,
-    },
-    {
-      key: "health",
-      header: "Health",
-      cell: (row) => <PortfolioHealthBadge health={row.health} />,
-    },
-    {
-      key: "ownerId",
-      header: "Owner",
-      cell: (row) => (
-        <span
-          className={cn(
-            "max-w-[140px] text-sm text-muted-foreground",
-            TEXT_ONE_LINE,
-          )}
-        >
-          {memberName(row.ownerId)}
-        </span>
-      ),
-    },
-    {
-      key: "projectCount",
-      header: "Projects",
-      className: "w-20",
-      cell: (row) => (
-        <span className="tabular-nums text-muted-foreground">
-          {row.projectCount ?? 0}
-        </span>
-      ),
-    },
-    {
-      key: "strategicGoal",
-      header: "Strategic Goal",
-      cell: (row) => (
-        <span
-          className={cn(
-            "max-w-[200px] text-sm text-muted-foreground",
-            TEXT_ONE_LINE,
-          )}
-          title={row.strategicGoal ?? undefined}
-        >
-          {row.strategicGoal ?? "—"}
-        </span>
-      ),
-    },
-    {
-      key: "actions",
-      header: "",
-      className: "w-10",
-      cell: (row) =>
-        canManage ? (
-          <PortfolioRowActions
-            portfolio={row}
-            onEdit={handleEditRow}
-            onDelete={handleDeleteRow}
-          />
-        ) : null,
-    },
-  ];
+  const columns = useMemo(
+    () =>
+      buildPortfolioColumns({
+        canManage,
+        ownerOf,
+        onEdit: handleEditRow,
+        onDelete: handleDeleteRow,
+      }),
+    [canManage, handleDeleteRow, handleEditRow, ownerOf],
+  );
 
-  const isFiltered = urlStatus !== "all" || !!searchInput.trim();
-  const hasPrev = cursorStack.length > 0;
-  const hasNext = !!data?.pagination.hasMore;
-
-  const filtersBar = (
-    <div className={FILTER_TOOLBAR_ROW}>
-      <Select value={urlStatus} onValueChange={handleStatusChange}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {STATUS_OPTS.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <SearchInput
-        placeholder="Search portfolios…"
-        value={searchInput}
-        onValueChange={handleSearchChange}
+  const renderMobileCard = useCallback(
+    (row: Portfolio) => (
+      <PortfolioMobileCard
+        portfolio={row}
+        canManage={canManage}
+        ownerOf={ownerOf}
+        onEdit={handleEditRow}
+        onDelete={handleDeleteRow}
       />
-      {isFiltered ? (
-        <Button
-          size="sm"
-          variant="ghost"
-          className="text-xs"
-          onClick={handleClearFilters}
-        >
-          Clear
-        </Button>
-      ) : null}
-    </div>
+    ),
+    [canManage, handleDeleteRow, handleEditRow, ownerOf],
   );
 
   return (
     <PageWrapper
       title="Portfolios"
       subtitle="Group related projects into portfolios"
-      filters={filtersBar}
+      filters={
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search portfolios…",
+            label: "Search portfolios",
+          }}
+          filters={[
+            {
+              id: "status",
+              label: "Status",
+              active: listFilters.isActive("status"),
+              control: (
+                <BuildFilterSelect
+                  label="Status"
+                  value={statusValue}
+                  onValueChange={handleStatusChange}
+                  options={STATUS_OPTIONS}
+                />
+              ),
+            },
+          ]}
+          onClearAll={listFilters.clearAll}
+        />
+      }
       actions={
-        canManage ? (
-          <NewPortfolioButton onClick={handleOpenCreate} />
-        ) : undefined
+        <BuildHeaderActions
+          actions={
+            canManage
+              ? [
+                  {
+                    id: "create",
+                    label: "New portfolio",
+                    icon: Plus,
+                    primary: true,
+                    onSelect: handleOpenCreate,
+                  },
+                ]
+              : []
+          }
+        />
       }
     >
       <PmPageShell>
@@ -393,23 +261,23 @@ export function PortfoliosPage() {
           <PageState
             resolution={resolution}
             loading={
-              <DataTableSkeleton rows={12} columns={7} className="flex-1" />
+              <DataTableSkeleton mobileCards
+                rows={12}
+                headers={PORTFOLIO_TABLE_HEADERS}
+                className="flex-1"
+              />
             }
             empty={
               <EmptyState
                 className={PM_FILL_PANEL}
                 illustrationPreset="projects"
                 title="No portfolios yet"
-                description={
-                  isFiltered
-                    ? undefined
-                    : "Create a portfolio to group and govern your projects."
-                }
-                filtersActive={isFiltered}
-                onClearFilters={handleClearFilters}
+                description="Create a portfolio to group and govern your projects."
+                filtersActive={listFilters.isFiltered}
+                onClearFilters={listFilters.clearAll}
                 action={
-                  canManage && !isFiltered
-                    ? { label: "New Portfolio", onClick: handleOpenCreate }
+                  canManage
+                    ? { label: "New portfolio", onClick: handleOpenCreate }
                     : undefined
                 }
               />
@@ -417,35 +285,22 @@ export function PortfoliosPage() {
             onRetry={handleRetry}
             className={PM_FILL_PANEL}
           >
-            <>
-              <DataTable
-                data={displayed}
-                columns={columns}
-                getRowKey={(row) => row.id}
-                minWidth="780px"
-                className={PM_FILL_PANEL}
-              />
-              {hasPrev || hasNext ? (
-                <div className="flex items-center justify-end gap-2 border-t px-2 py-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={!hasPrev}
-                    onClick={handlePrevPage}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={!hasNext}
-                    onClick={handleNextPage}
-                  >
-                    Next
-                  </Button>
-                </div>
-              ) : null}
-            </>
+            <DataTable
+              data={displayed}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              minWidth="780px"
+              mobileCard={renderMobileCard}
+              className={PM_FILL_PANEL}
+              pagination={{
+                mode: "cursor",
+                pageSize: PAGE_SIZE,
+                hasMore: Boolean(data?.pagination.hasMore),
+                hasPrevious,
+                onNext: handleNextPage,
+                onPrevious: goPrevious,
+              }}
+            />
           </PageState>
         </PmSection>
       </PmPageShell>

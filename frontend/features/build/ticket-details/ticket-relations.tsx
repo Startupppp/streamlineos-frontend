@@ -190,7 +190,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
               icon={PlusIcon}
               iconSize={12}
               iconClassName="mr-1"
-              className="h-8 text-xs px-2 bg-muted/50 hover:bg-muted"
+              className="px-2 bg-muted/50 hover:bg-muted"
             >
               Add
             </AnimatedIconButton>
@@ -201,14 +201,14 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {RELATION_TYPES.map((t) => (
-                  <SelectItem key={t} value={t} className="text-xs">
+                  <SelectItem key={t} value={t}>
                     {RELATION_LABELS[t].label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Command>
-              <CommandInput placeholder="Search tickets..." className="text-xs" />
+              <CommandInput placeholder="Search tickets..." />
               <CommandList className="max-h-[160px]">
                 <CommandEmpty className="py-2 text-xs text-muted-foreground text-center">No tickets found.</CommandEmpty>
                 <CommandGroup>

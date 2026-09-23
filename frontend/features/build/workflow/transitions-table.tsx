@@ -73,6 +73,16 @@ interface TransitionsTableProps {
   statuses: CustomState[];
 }
 
+export const TRANSITION_TABLE_HEADERS = [
+  "From",
+  "To",
+  "Label",
+  "Approval",
+  "Required fields",
+  "Allowed roles",
+  "Actions",
+] as const;
+
 export function TransitionsTable({ projectId, statuses }: TransitionsTableProps) {
   const canManage = useCan("build:workflow:manage");
   const { data: transitions, isLoading } = useWorkflowTransitions(projectId);
@@ -214,7 +224,8 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
       ? [
           {
             key: "actions",
-            header: "",
+            header: "Actions",
+            headerClassName: "sr-only",
             className: "w-10",
             cell: (row: WorkflowTransition) => (
               <TransitionRowActions
@@ -236,7 +247,7 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
       </div>
 
       {isLoading ? (
-        <DataTableSkeleton rows={12} columns={6} className="px-4 pb-4" />
+        <DataTableSkeleton rows={12} headers={TRANSITION_TABLE_HEADERS} className="px-4 pb-4" />
       ) : (transitions ?? []).length === 0 ? (
         <EmptyState
           illustrationPreset="projects"

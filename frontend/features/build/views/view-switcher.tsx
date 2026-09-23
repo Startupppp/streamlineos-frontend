@@ -80,7 +80,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({
     <div className={cn("flex min-w-0 items-center", className)}>
       <Select value={activeView} onValueChange={handleSelectChange}>
         <SelectTrigger
-          className="h-9 w-fit min-w-0 shrink-0 gap-1 px-2 text-xs sm:min-w-[7.5rem]"
+          className="h-9 w-fit min-w-0 shrink-0 gap-1 px-2 sm:min-w-[7.5rem]"
           aria-label="Select view"
         >
           <SelectValue placeholder={activeMeta?.label ?? "View"} />
@@ -90,7 +90,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({
             const AnimatedIcon = v.animatedIcon;
             const StaticIcon = v.staticIcon;
             return (
-              <SelectItem key={v.value} value={v.value} className="text-xs">
+              <SelectItem key={v.value} value={v.value}>
                 <span className="flex items-center gap-1.5">
                   {AnimatedIcon ? (
                     <AnimatedIcon size={14} className="h-3.5 w-3.5 text-muted-foreground" />

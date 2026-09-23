@@ -91,6 +91,21 @@ jest.mock("./sla", () => ({
 
 import { IncidentsPage } from "./incidents-page";
 
+const mockReplace = jest.fn();
+let mockSearchParams = new URLSearchParams();
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockReplace, push: jest.fn(), refresh: jest.fn() }),
+  usePathname: () => "/build",
+  useSearchParams: () => mockSearchParams,
+}));
+
+beforeEach(() => {
+  mockReplace.mockClear();
+  mockSearchParams = new URLSearchParams();
+});
+
+
 const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:incidents:view": "all" }, modules: {} },
   isLoading: false,

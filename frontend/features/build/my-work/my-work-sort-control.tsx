@@ -47,12 +47,12 @@ export const MyWorkSortControl = memo(function MyWorkSortControl({
   return (
     <div className="flex shrink-0 items-center gap-1">
       <Select value={sortField} onValueChange={handleFieldChange}>
-        <SelectTrigger className="h-8 w-[7.5rem] text-xs">
+        <SelectTrigger className="w-[7.5rem]">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
           {BUILD_LIST_SORT_FIELDS.map((field) => (
-            <SelectItem key={field} value={field} className="text-xs">
+            <SelectItem key={field} value={field}>
               {SORT_FIELD_LABELS[field]}
             </SelectItem>
           ))}

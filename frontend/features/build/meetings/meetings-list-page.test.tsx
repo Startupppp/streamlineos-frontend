@@ -66,9 +66,8 @@ jest.mock("@/components/ui/empty-state", () => ({
 }));
 
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: ({ isLoading }: { isLoading?: boolean }) => (
-    <div data-testid={isLoading ? "data-table-loading" : "data-table"} />
-  ),
+  DataTable: () => <div data-testid="data-table" />,
+  DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 
 jest.mock("@/components/pm-chrome", () => ({
@@ -133,6 +132,21 @@ import {
 } from "@/hooks/api/build";
 import { useCan, useAccess } from "@/hooks/api/access";
 
+const mockReplace = jest.fn();
+let mockSearchParams = new URLSearchParams();
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockReplace, push: jest.fn(), refresh: jest.fn() }),
+  usePathname: () => "/build",
+  useSearchParams: () => mockSearchParams,
+}));
+
+beforeEach(() => {
+  mockReplace.mockClear();
+  mockSearchParams = new URLSearchParams();
+});
+
+
 const mockUseMeetings = useMeetings as jest.Mock;
 const mockUseCreateMeeting = useCreateMeeting as jest.Mock;
 const mockUseProjectMembers = useProjectMembers as jest.Mock;
@@ -178,12 +192,12 @@ it("renders denied state when build:meetings:view is not in the access snapshot"
   expect(screen.getByTestId("no-permission")).toHaveTextContent("build:meetings:view");
 });
 
-it("shows the data table in loading state and not a denial while the access snapshot is still in flight because useCan answers false before it lands", () => {
+it("shows the skeleton and not a denial while the access snapshot is still in flight because useCan answers false before it lands", () => {
   mockUseAccess.mockReturnValue({ data: undefined, isLoading: true });
   mockUseCan.mockReturnValue(false);
   render(<MeetingsListPage projectId={1} />);
   expect(screen.queryByTestId("no-permission")).not.toBeInTheDocument();
-  expect(screen.getByTestId("data-table-loading")).toBeInTheDocument();
+  expect(screen.getByTestId("data-table-skeleton")).toBeInTheDocument();
 });
 
 it("renders the plan upgrade link the backend sent with a 402 MODULE_NOT_ENABLED instead of a generic error", () => {

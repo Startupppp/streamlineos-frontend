@@ -4,6 +4,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PmPageShell, PmPanel } from "@/components/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
+const HEADERS = ["ID", "Title", "Status", "Owner", "Decided", "Revisit", "Actions"] as const;
+
 export default function ProjectDecisionsLoading() {
   return (
     <PageWrapper
@@ -18,7 +20,7 @@ export default function ProjectDecisionsLoading() {
     >
       <PmPageShell>
         <PmPanel className="min-w-0">
-          <DataTableSkeleton rows={12} columns={7} />
+          <DataTableSkeleton mobileCards rows={12} headers={HEADERS} className="flex-1 min-h-0" />
         </PmPanel>
       </PmPageShell>
     </PageWrapper>

@@ -1,13 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
+import { Plus } from "lucide-react";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
-import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
-import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   usePrograms,
   useCreateProgram,
@@ -19,118 +15,67 @@ import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { Button } from "@/components/ui/button";
-import { SearchInput } from "@/components/ui/search-input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  PortfolioStatusBadge,
-  PortfolioHealthBadge,
-} from "@/features/build/portfolios/portfolio-status-badge";
 import { ProgramFormSheet } from "./program-form-sheet";
-import type { Program, CreateProgramInput, UpdateProgramInput } from "@/types/projects";
+import type {
+  Program,
+  CreateProgramInput,
+  UpdateProgramInput,
+} from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
-import { cn } from "@/lib/utils";
+import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import type { NamedUser } from "@/lib/person-display";
+import {
+  PROGRAM_TABLE_HEADERS,
+  ProgramMobileCard,
+  buildProgramColumns,
+} from "./program-table-columns";
 
-function NewProgramButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} /> New Program
-    </Button>
-  );
-}
+const PAGE_SIZE = 25;
 
-function ProgramRowActions({
-  program,
-  onEdit,
-  onDelete,
-}: {
-  program: Program;
-  onEdit: (p: Program) => void;
-  onDelete: (p: Program) => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const handleEdit = useCallback(() => onEdit(program), [program, onEdit]);
-  const handleDelete = useCallback(() => onDelete(program), [program, onDelete]);
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-7"
-          aria-label="Program actions"
-          {...hoverHandlers}
-        >
-          <EllipsisIcon ref={iconRef} size={14} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" onClick={handleDelete}>
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-const STATUS_OPTS = [
-  { value: "all", label: "All statuses" },
+const STATUS_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All statuses" },
   { value: "active", label: "Active" },
-  { value: "on_hold", label: "On Hold" },
+  { value: "on_hold", label: "On hold" },
   { value: "completed", label: "Completed" },
   { value: "archived", label: "Archived" },
 ];
 
+const FILTER_DEFINITIONS = [
+  {
+    param: "status",
+    options: STATUS_OPTIONS.map((option) => option.value),
+  },
+] as const;
+
 export function ProgramsPage() {
   const canManage = useCan("build:programs:manage");
+  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
 
-  const searchParams = useSearchParams();
-  const { setListParams, clearFilters } = useBuildListUrlState();
-
-  const statusFilter = searchParams.get("status") ?? "all";
-  const searchFromUrl = searchParams.get("q") ?? "";
-
-  const [rawSearch, setRawSearch] = useState(searchFromUrl);
-  const debouncedSearch = useDebouncedValue(rawSearch, 300);
-
-  useEffect(() => {
-    const current = searchParams.get("q") ?? "";
-    if (debouncedSearch === current) return;
-    setListParams({ q: debouncedSearch || null });
-  }, [debouncedSearch, searchParams, setListParams]);
-
-  const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
-    useQueryParamOpen("create");
+  const {
+    open: createOpen,
+    onOpenChange: setCreateOpen,
+    setOpen: openCreate,
+  } = useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<Program | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Program | null>(null);
 
+  const statusValue = listFilters.value("status");
   const { data, isLoading, isError, error, refetch } = usePrograms({
-    status: statusFilter !== "all" ? statusFilter : undefined,
+    status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
   });
   const { data: portfoliosPage } = usePortfolios();
-  const portfolios = portfoliosPage?.data ?? [];
+  const portfolios = useMemo(() => portfoliosPage?.data ?? [], [portfoliosPage]);
   const { data: membersRes } = useOrgMembers(1, 100);
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
 
@@ -138,11 +83,11 @@ export function ProgramsPage() {
   const updateProgram = useUpdateProgram();
   const deleteProgram = useDeleteProgram();
 
-  const memberName = useCallback(
-    (userId: string | null): string => {
-      if (!userId) return "—";
-      const m = members.find((x) => x.userId === userId);
-      return m?.name ?? m?.email ?? "Unknown";
+  const ownerOf = useCallback(
+    (ownerId: string | null): NamedUser | null => {
+      if (!ownerId) return null;
+      const match = members.find((member) => member.userId === ownerId);
+      return match ? { name: match.name, email: match.email } : null;
     },
     [members],
   );
@@ -150,16 +95,17 @@ export function ProgramsPage() {
   const portfolioName = useCallback(
     (portfolioId: number | null): string => {
       if (portfolioId === null) return "—";
-      return (portfolios ?? []).find((p) => p.id === portfolioId)?.name ?? "—";
+      return portfolios.find((p) => p.id === portfolioId)?.name ?? "—";
     },
     [portfolios],
   );
 
+  const rows = useMemo(() => data ?? [], [data]);
+  const search = listFilters.debouncedSearch.trim().toLowerCase();
   const displayed = useMemo(() => {
-    if (!searchFromUrl.trim()) return data ?? [];
-    const q = searchFromUrl.toLowerCase();
-    return (data ?? []).filter((p) => p.name.toLowerCase().includes(q));
-  }, [data, searchFromUrl]);
+    if (!search) return rows;
+    return rows.filter((row) => row.name.toLowerCase().includes(search));
+  }, [rows, search]);
 
   const resolution = usePageState({
     permission: "build:programs:view",
@@ -169,27 +115,33 @@ export function ProgramsPage() {
     isEmpty: displayed.length === 0,
   });
 
-  function handleCreate(input: CreateProgramInput) {
-    createProgram.mutate(input, {
-      onSuccess: () => {
-        toast.success("Program created");
-        setCreateOpen(false);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }
+  const handleCreate = useCallback(
+    (input: CreateProgramInput) => {
+      createProgram.mutate(input, {
+        onSuccess: () => {
+          toast.success("Program created");
+          setCreateOpen(false);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    },
+    [createProgram, setCreateOpen],
+  );
 
-  function handleEdit(input: UpdateProgramInput & { programId: number }) {
-    updateProgram.mutate(input, {
-      onSuccess: () => {
-        toast.success("Program updated");
-        setEditTarget(null);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }
+  const handleEdit = useCallback(
+    (input: UpdateProgramInput & { programId: number }) => {
+      updateProgram.mutate(input, {
+        onSuccess: () => {
+          toast.success("Program updated");
+          setEditTarget(null);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    },
+    [updateProgram],
+  );
 
-  function handleDeleteConfirm() {
+  const handleDeleteConfirm = useCallback(() => {
     if (!deleteTarget) return;
     deleteProgram.mutate(deleteTarget.id, {
       onSuccess: () => {
@@ -198,20 +150,12 @@ export function ProgramsPage() {
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }
+  }, [deleteProgram, deleteTarget]);
 
-  const handleStatusFilterChange = useCallback((value: string) => {
-    setListParams({ status: value === "all" ? null : value });
-  }, [setListParams]);
-
-  function handleSearchChange(value: string) {
-    setRawSearch(value);
-  }
-
-  function handleClearFilters() {
-    setRawSearch("");
-    clearFilters();
-  }
+  const handleStatusChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
 
   const handleOpenCreate = useCallback(() => {
     openCreate();
@@ -227,135 +171,119 @@ export function ProgramsPage() {
     [setCreateOpen],
   );
 
-  function handleDeleteDialogChange(open: boolean) {
+  const handleDeleteDialogChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
-  }
+  }, []);
 
-  function handleRetry() {
+  const handleRetry = useCallback(() => {
     void refetch();
-  }
+  }, [refetch]);
 
-  function handleEditRow(row: Program) {
-    setEditTarget(row);
-  }
+  const handleEditRow = useCallback(
+    (row: Program) => setEditTarget(row),
+    [],
+  );
+  const handleDeleteRow = useCallback(
+    (row: Program) => setDeleteTarget(row),
+    [],
+  );
 
-  function handleDeleteRow(row: Program) {
-    setDeleteTarget(row);
-  }
+  const columns = useMemo(
+    () =>
+      buildProgramColumns({
+        canManage,
+        ownerOf,
+        portfolioName,
+        onEdit: handleEditRow,
+        onDelete: handleDeleteRow,
+      }),
+    [canManage, handleDeleteRow, handleEditRow, ownerOf, portfolioName],
+  );
 
-  const columns: DataTableColumn<Program>[] = [
-    {
-      key: "name",
-      header: "Name",
-      className: TABLE_TITLE_CELL,
-      cell: (row) => (
-        <span className={cn("font-medium text-foreground", TEXT_ONE_LINE)} title={row.name}>
-          {row.name}
-        </span>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (row) => <PortfolioStatusBadge status={row.status} />,
-    },
-    {
-      key: "health",
-      header: "Health",
-      cell: (row) => <PortfolioHealthBadge health={row.health} />,
-    },
-    {
-      key: "portfolioId",
-      header: "Portfolio",
-      cell: (row) => (
-        <span className={cn("max-w-[160px] text-sm text-muted-foreground", TEXT_ONE_LINE)}>
-          {portfolioName(row.portfolioId)}
-        </span>
-      ),
-    },
-    {
-      key: "ownerId",
-      header: "Owner",
-      cell: (row) => (
-        <span className={cn("max-w-[140px] text-sm text-muted-foreground", TEXT_ONE_LINE)}>
-          {memberName(row.ownerId)}
-        </span>
-      ),
-    },
-    {
-      key: "projectCount",
-      header: "Projects",
-      className: "w-20",
-      cell: (row) => (
-        <span className="tabular-nums text-muted-foreground">{row.projectCount ?? 0}</span>
-      ),
-    },
-    {
-      key: "actions",
-      header: "",
-      className: "w-10",
-      cell: (row) =>
-        canManage ? (
-          <ProgramRowActions program={row} onEdit={handleEditRow} onDelete={handleDeleteRow} />
-        ) : null,
-    },
-  ];
-
-  const isFiltered = statusFilter !== "all" || !!searchFromUrl.trim();
-  const filtersBar = (
-    <div className={FILTER_TOOLBAR_ROW}>
-      <SearchInput
-        placeholder="Search programs…"
-        value={rawSearch}
-        onValueChange={handleSearchChange}
+  const renderMobileCard = useCallback(
+    (row: Program) => (
+      <ProgramMobileCard
+        program={row}
+        canManage={canManage}
+        ownerOf={ownerOf}
+        portfolioName={portfolioName}
+        onEdit={handleEditRow}
+        onDelete={handleDeleteRow}
       />
-      <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-          {STATUS_OPTS.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {isFiltered ? (
-        <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>
-          Clear
-        </Button>
-      ) : null}
-    </div>
+    ),
+    [canManage, handleDeleteRow, handleEditRow, ownerOf, portfolioName],
   );
 
   return (
     <PageWrapper
       title="Programs"
       subtitle="Coordinate related projects as a single program of work"
-      filters={filtersBar}
-      actions={canManage ? <NewProgramButton onClick={handleOpenCreate} /> : undefined}
+      filters={
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search programs…",
+            label: "Search programs",
+          }}
+          filters={[
+            {
+              id: "status",
+              label: "Status",
+              active: listFilters.isActive("status"),
+              control: (
+                <BuildFilterSelect
+                  label="Status"
+                  value={statusValue}
+                  onValueChange={handleStatusChange}
+                  options={STATUS_OPTIONS}
+                />
+              ),
+            },
+          ]}
+          onClearAll={listFilters.clearAll}
+        />
+      }
+      actions={
+        <BuildHeaderActions
+          actions={
+            canManage
+              ? [
+                  {
+                    id: "create",
+                    label: "New program",
+                    icon: Plus,
+                    primary: true,
+                    onSelect: handleOpenCreate,
+                  },
+                ]
+              : []
+          }
+        />
+      }
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           <PageState
             resolution={resolution}
-            loading={<DataTableSkeleton rows={12} columns={7} className="flex-1" />}
+            loading={
+              <DataTableSkeleton mobileCards
+                rows={12}
+                headers={PROGRAM_TABLE_HEADERS}
+                className="flex-1"
+              />
+            }
             empty={
               <EmptyState
                 className={PM_FILL_PANEL}
                 illustrationPreset="projects"
                 title="No programs yet"
-                description={
-                  isFiltered
-                    ? undefined
-                    : "Create a program to coordinate related projects toward one outcome."
-                }
-                filtersActive={isFiltered}
-                onClearFilters={handleClearFilters}
+                description="Create a program to coordinate related projects toward one outcome."
+                filtersActive={listFilters.isFiltered}
+                onClearFilters={listFilters.clearAll}
                 action={
-                  !isFiltered && canManage
-                    ? { label: "New Program", onClick: handleOpenCreate }
+                  canManage
+                    ? { label: "New program", onClick: handleOpenCreate }
                     : undefined
                 }
               />
@@ -368,7 +296,9 @@ export function ProgramsPage() {
               columns={columns}
               getRowKey={(row) => row.id}
               minWidth="780px"
+              mobileCard={renderMobileCard}
               className={PM_FILL_PANEL}
+              pagination={{ pageSize: PAGE_SIZE }}
             />
           </PageState>
         </PmSection>

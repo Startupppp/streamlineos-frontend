@@ -96,11 +96,6 @@ jest.mock("@/features/build/goals/goal-form-sheet", () => ({
   GoalFormSheet: () => null,
 }));
 
-jest.mock("@/features/build/goals/goal-filters-popover", () => ({
-  GoalFiltersPopover: () => null,
-  GoalLevelStatusFilters: () => null,
-}));
-
 jest.mock("@/features/build/goals/constants", () => ({
   STATUS_CONFIG: {},
   LEVEL_LABEL: { company: "Company", team: "Team", individual: "Individual" },
@@ -121,6 +116,12 @@ jest.mock("framer-motion", () => ({
   ),
 }));
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: jest.fn() }),
+  usePathname: () => "/build/goals",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 jest.mock("next/link", () => ({
   __esModule: true,
   default: ({
@@ -130,10 +131,6 @@ jest.mock("next/link", () => ({
     children: React.ReactNode;
     href: string;
   }) => <a href={href}>{children}</a>,
-}));
-
-jest.mock("@/components/ui/search-input", () => ({
-  SearchInput: () => <input data-testid="search-input" />,
 }));
 
 jest.mock("@animateicons/react/lucide", () => ({
@@ -236,5 +233,5 @@ it("hides the New Goal control when build:goals:manage is denied, because a crea
 it("shows the New Goal control when build:goals:manage is granted", () => {
   render(<GoalsPage />);
 
-  expect(screen.getByText("New Goal")).toBeInTheDocument();
+  expect(screen.getAllByText("New Goal")[0]).toBeInTheDocument();
 });

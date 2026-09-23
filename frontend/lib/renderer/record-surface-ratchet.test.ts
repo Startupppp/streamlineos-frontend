@@ -175,6 +175,8 @@ const CRAFTED_BY_DESIGN: Readonly<Record<string, string>> = {
     "The columns are built from a compiled report's own projections, so the row type is `Record<string, unknown>` known only at run time. There is no record here to describe.",
   "features/crm/reports/builder/report-builder-panel.tsx":
     "The fields being edited describe a query — source, projections, filters, grouping — not a record, which is the same argument the assignment-rule condition tree makes.",
+  "features/build/shared/build-list-gallery-cases.tsx":
+    "Fixture rows and columns for the dev-only /design-system/build-list gallery, which exists so the Build list contract can be measured in a real browser at 375/768/1280. It renders no record and reaches no endpoint; describing it to the renderer would describe a test double.",
   "features/crm/nurture/nurture-step-editor.tsx":
     "A cadence edited and saved whole through `useFieldArray`, because step numbers come from the array's order and a gap makes the sender fire twice. The ordered array is the data structure.",
 };

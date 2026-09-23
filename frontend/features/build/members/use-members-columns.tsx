@@ -108,7 +108,8 @@ export function useMembersColumns({
     if (canManage) {
       cols.push({
         key: "actions",
-        header: "",
+        header: "Actions",
+        headerClassName: "sr-only",
         className: "w-10 text-right",
         cell: (member) => (
           <MemberActions member={member} onRemove={handleRemoveRequest} />

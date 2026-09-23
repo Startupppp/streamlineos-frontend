@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Button } from "@/components/ui/button";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/build/roadmap";
 import type { RoadmapStatus } from "@/types/projects";
@@ -39,21 +38,19 @@ function RoadmapBoardSkeleton() {
 }
 
 export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTabProps) {
-  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
-  const [cursorIdx, setCursorIdx] = useState(0);
-  const currentCursor = cursorHistory[cursorIdx];
+  const pager = useCursorPager(search.trim());
 
   const { data, isLoading, isError, error, refetch } = useRoadmapItems(
     search.trim()
-      ? { search: search.trim(), cursor: currentCursor }
-      : { cursor: currentCursor },
+      ? { search: search.trim(), cursor: pager.cursor }
+      : { cursor: pager.cursor },
   );
   const deleteItem = useDeleteRoadmapItem();
   const [internalCreateOpen, setInternalCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ScorableRoadmapItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ScorableRoadmapItem | null>(null);
 
-  const isEmpty = (data?.data ?? []).length === 0 && cursorIdx === 0;
+  const isEmpty = (data?.data ?? []).length === 0 && !pager.hasPrevious;
 
   const resolution = usePageState({
     permission: "build:roadmap:view",
@@ -62,11 +59,6 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
     error,
     isEmpty,
   });
-
-  useEffect(() => {
-    setCursorHistory([undefined]);
-    setCursorIdx(0);
-  }, [search]);
 
   const isCreateControlled = onCreateOpenChange !== undefined;
   const sheetOpen = isCreateControlled ? (createOpen ?? false) : internalCreateOpen;
@@ -123,19 +115,14 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
     });
   }
 
-  function handleNext() {
-    const nc = data?.pagination.nextCursor;
-    if (!nc) return;
-    setCursorHistory((prev) => [...prev.slice(0, cursorIdx + 1), nc]);
-    setCursorIdx((prev) => prev + 1);
-  }
+  const handleNext = useCallback(() => {
+    pager.goNext(data?.pagination.nextCursor);
+  }, [pager, data?.pagination.nextCursor]);
 
-  function handlePrev() {
-    if (cursorIdx === 0) return;
-    setCursorIdx((prev) => prev - 1);
-  }
+  const handlePrev = useCallback(() => {
+    pager.goPrevious();
+  }, [pager]);
 
-  const hasPrev = cursorIdx > 0;
   const hasNext = data?.pagination.hasMore ?? false;
 
   return (
@@ -146,7 +133,7 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
         empty={
           <EmptyState
             className={PM_FILL_PANEL}
-            illustration={<EmptyProjectsIllustration />}
+            illustrationPreset="projects"
             title="No roadmap items yet"
             description="Plan what's coming and share it publicly with your users."
             action={{ label: "Add roadmap item", onClick: handleOpenSheet }}
@@ -186,16 +173,14 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
               </PmPanel>
             ))}
           </div>
-          {(hasPrev || hasNext) ? (
-            <div className="flex items-center justify-center gap-2 border-t pt-2">
-              <Button variant="ghost" size="sm" onClick={handlePrev} disabled={!hasPrev}>
-                Previous
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handleNext} disabled={!hasNext}>
-                Next
-              </Button>
-            </div>
-          ) : null}
+          <TablePagination
+            mode="cursor"
+            rowCount={(data?.data ?? []).length}
+            hasMore={hasNext}
+            hasPrevious={pager.hasPrevious}
+            onNext={handleNext}
+            onPrevious={handlePrev}
+          />
         </div>
       </PageState>
 

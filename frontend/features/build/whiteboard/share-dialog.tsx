@@ -192,7 +192,7 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">People</Label>
               <ResponsivePopover open={pickerOpen} onOpenChange={setPickerOpen}>
                 <ResponsivePopoverTrigger asChild>
-                  <Button size="sm" variant="outline" className="h-7 text-xs">Add people</Button>
+                  <Button size="sm" variant="outline">Add people</Button>
                 </ResponsivePopoverTrigger>
                 <ResponsivePopoverContent title="Add people" className="p-0 w-64" align="end">
                   <Command shouldFilter={false}>
@@ -257,7 +257,7 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
                 <Link2 className="h-3.5 w-3.5" />Public link
               </div>
               <div className="flex gap-1.5">
-                <Input readOnly value={publicUrl} className="text-xs font-mono" aria-label="Share URL" />
+                <Input readOnly value={publicUrl} className="font-mono" aria-label="Share URL" />
                 <AnimatedIconButton size="sm" variant="outline" className="h-8 shrink-0" onClick={handleCopyLink} aria-label="Copy link" icon={CopyIcon} iconSize={14} />
               </div>
               <div className="flex items-center justify-between gap-3">

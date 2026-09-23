@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { memo, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,9 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { type Ticket, type TableViewProps, isOverdue } from "./table-view-types";
 import { useCan } from "@/hooks/api/access";
+import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { PriorityBadge } from "@/features/build/shared/priority-badge";
 
 export const TableView = memo(function TableView({ tickets, onTicketClick, projectKey, projectId, projectStatuses, displayOptions, selection }: TableViewProps) {
   const canUpdate = useCan("build:tickets:update");
@@ -240,8 +243,27 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
     showDueDate,
   ]);
 
+  const renderMobileCard = useCallback(
+    (ticket: Ticket) => (
+      <BuildMobileCard
+        eyebrow={formatTicketKey(projectKey, ticket.ticketNumber)}
+        title={<TruncatedText text={ticket.title} />}
+        status={<StatusBadge status={ticket.status} />}
+        person={{ user: ticket.assignee, role: "Assignee" }}
+        meta={[
+          {
+            label: "Priority",
+            value: <PriorityBadge priority={ticket.priority} showLabel />,
+          },
+          { label: "Due", value: ticket.dueDate ?? "—" },
+        ]}
+      />
+    ),
+    [projectKey],
+  );
+
   return (
-    <div className="w-full min-w-0">
+    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
       <DataTable
         data={tickets}
         columns={columns}
@@ -253,8 +275,9 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
         }
         pagination={{ pageSize: 50 }}
         minWidth="640px"
-        className="w-full min-w-0 overflow-hidden"
-        emptyState={<EmptyState className="border-0 bg-transparent min-h-[40vh]" title="No work items" />}
+        mobileCard={renderMobileCard}
+        className="w-full min-w-0 flex-1 overflow-hidden"
+        emptyState={<EmptyState className="min-h-0 flex-1 border-0 bg-transparent" title="No work items" />}
       />
     </div>
   );

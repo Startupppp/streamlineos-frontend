@@ -245,7 +245,7 @@ export function ProjectSettingsPage({ params }: PageProps) {
         >
           {project && (
             <div className="flex flex-col gap-4 pb-8 md:flex-row">
-              <PmSection index={0} className="w-full shrink-0 md:w-48">
+              <PmSection index={0} className="w-full shrink-0 md:w-52">
                 <PmPanel className="p-1.5">
                   <nav
                     aria-label="Project settings"
@@ -258,14 +258,14 @@ export function ProjectSettingsPage({ params }: PageProps) {
                         data-section={section.id}
                         onClick={handleSectionClick}
                         className={cn(
-                          "shrink-0 rounded-md px-3 py-2 text-left text-xs transition-colors",
+                          "shrink-0 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors",
                           TEXT_ONE_LINE,
                           section.id === "danger" &&
                             "md:mt-2 md:border-t md:border-border md:pt-2 max-md:ml-1 max-md:border-l max-md:border-border max-md:pl-2",
                           activeSection === section.id
                             ? section.id === "danger"
-                              ? "bg-destructive/10 font-medium text-destructive"
-                              : "bg-primary/10 font-medium text-foreground"
+                              ? "bg-destructive/10 font-semibold text-destructive"
+                              : "bg-accent font-semibold text-accent-foreground"
                             : section.id === "danger"
                               ? "text-destructive hover:bg-destructive/5 hover:text-destructive"
                               : "text-foreground/80 hover:bg-muted hover:text-foreground",

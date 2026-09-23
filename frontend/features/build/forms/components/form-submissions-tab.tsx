@@ -3,6 +3,15 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { DataTable, type DataTableColumn, DataTableSkeleton } from "@/components/ui/data-table";
+import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
+
+const FORM_SUBMISSION_TABLE_HEADERS = [
+  "Submitter",
+  "Status",
+  "Ticket",
+  "Submitted",
+  "Actions",
+] as const;
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -146,7 +155,8 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
     },
     {
       key: "actions",
-      header: "",
+      header: "Actions",
+      headerClassName: "sr-only",
       className: "w-40",
       cell: (row) => (
         <SubmissionActionsCell
@@ -161,22 +171,60 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
 
   const items = data ?? [];
 
+  const renderMobileCard = (row: FormSubmission) => (
+    <BuildMobileCard
+      eyebrow={`#${row.id}`}
+      title={row.submittedByName ?? "Anonymous"}
+      status={
+        <Badge variant={STATUS_VARIANT[row.status]}>{STATUS_LABEL[row.status]}</Badge>
+      }
+      meta={[
+        { label: "Submitted", value: row.createdAt.slice(0, 10) },
+        { label: "Ticket", value: row.convertedTicketId ? "Converted" : "—" },
+      ]}
+      actions={
+        <SubmissionActionsCell
+          row={row}
+          canManage={canManage}
+          onView={handleViewOpen}
+          onStatusUpdate={handleStatusUpdate}
+        />
+      }
+    />
+  );
+
   return (
-    <div className="pt-3 space-y-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 pt-3">
       <PageState
         resolution={pageState}
-        loading={<DataTableSkeleton rows={12} columns={6} />}
+        loading={
+          <DataTableSkeleton
+            mobileCards
+            rows={12}
+            headers={FORM_SUBMISSION_TABLE_HEADERS}
+            className="flex-1 min-h-0"
+          />
+        }
         onRetry={handleRetry}
-        className="min-h-[40vh]"
+        className="flex min-h-0 flex-1 flex-col"
       >
         {items.length === 0 ? (
           <EmptyState
+            className="min-h-0 flex-1"
             illustrationPreset="documents"
             title="No submissions yet"
             description="Submissions will appear here once the form is filled out."
           />
         ) : (
-          <DataTable data={items} columns={columns} getRowKey={(row) => row.id} minWidth="640px" />
+          <DataTable
+            data={items}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            minWidth="640px"
+            mobileCard={renderMobileCard}
+            className="min-h-0 flex-1"
+            pagination={{ pageSize: 25 }}
+          />
         )}
       </PageState>
 

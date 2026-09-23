@@ -1,8 +1,6 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useSyncExternalStore } from "react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { isApiError } from "@/lib/api-client";
 import { useProject } from "@/hooks/api/build/projects";
 import {
@@ -10,6 +8,7 @@ import {
   clearLastProjectId,
   parseLastProjectId,
 } from "@/lib/projects/last-project";
+import type { BuildHeaderAction } from "@/features/build/shared/build-header-actions";
 
 function getLastProjectId(): number | null {
   const cookie = document.cookie
@@ -26,7 +25,7 @@ function getServerLastProjectId(): null {
   return null;
 }
 
-export function ResumeLastProjectAction() {
+export function useResumeLastProject(): BuildHeaderAction | null {
   const projectId = useSyncExternalStore(
     subscribeToLastProject,
     getLastProjectId,
@@ -45,10 +44,9 @@ export function ResumeLastProjectAction() {
   }, [isError, error, project]);
 
   if (!projectId || !project || project.status !== "ACTIVE") return null;
-
-  return (
-    <Button variant="outline" size="sm" asChild>
-      <Link href={`/build/${project.id}`}>Resume {project.name}</Link>
-    </Button>
-  );
+  return {
+    id: "resume",
+    label: `Resume ${project.name}`,
+    href: `/build/${project.id}`,
+  };
 }

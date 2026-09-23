@@ -108,7 +108,7 @@ export function buildMenuEntries(opts: {
 
   const prefsLinks: MenuLink[] = [
     {
-      href: "/notifications/preferences",
+      href: "/settings/notifications/my-preferences",
       label: "Notification Preferences",
       icon: Bell,
     },

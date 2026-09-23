@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, type MouseEvent } from "react";
+import { forwardRef, type MouseEvent, type ReactNode } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { resolveImageUrl } from "@/lib/utils";
+import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import type {
   PaginatedFeedbucketSubmissions,
   FeedbucketSubmissionType,
@@ -137,6 +138,24 @@ export const SUBMISSION_COLUMNS: DataTableColumn<SubmissionRow>[] = [
     className: "hidden sm:table-cell w-[120px] text-right",
   },
 ];
+
+export function SubmissionMobileCard({
+  row,
+  actions,
+}: {
+  row: SubmissionRow;
+  actions?: ReactNode;
+}) {
+  return (
+    <BuildMobileCard
+      eyebrow={TypeCell(row)}
+      title={MessageCell(row)}
+      status={StatusCell(row)}
+      meta={[{ label: "Age", value: formatSubmissionAge(row.createdAt) }]}
+      actions={actions}
+    />
+  );
+}
 
 interface DeleteSubmissionButtonProps {
   submissionId: number;

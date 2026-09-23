@@ -4,6 +4,8 @@ import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { PmPageShell } from "@/components/pm-chrome";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
+const HEADERS = ["Name", "Status", "Health", "Owner", "Projects", "Strategic goal", "Actions"] as const;
+
 export default function PortfoliosLoading() {
   return (
     <PageWrapper
@@ -18,7 +20,7 @@ export default function PortfoliosLoading() {
       actions={<Skeleton className="h-9 w-32 rounded-md" />}
     >
       <PmPageShell>
-        <DataTableSkeleton rows={12} columns={7} />
+        <DataTableSkeleton mobileCards rows={12} headers={HEADERS} className="flex-1 min-h-0" />
       </PmPageShell>
     </PageWrapper>
   );

@@ -1,12 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useCallback, useMemo, useState } from "react";
+import { Plus } from "lucide-react";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { toast } from "sonner";
-import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   useManagedProducts,
   useCreateManagedProduct,
@@ -16,29 +13,12 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
-import { Button } from "@/components/ui/button";
-import { SearchInput } from "@/components/ui/search-input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ManagedProductStatusBadge } from "./managed-product-status-badge";
 import { ManagedProductFormSheet } from "./managed-product-form-sheet";
 import type {
   ManagedProduct,
@@ -46,103 +26,60 @@ import type {
   UpdateManagedProductInput,
 } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import {
-  PmPageShell,
-  PmSection,
-  PM_FILL_PANEL,
-  PM_FILL_SECTION,
-} from "@/components/pm-chrome";
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import type { NamedUser } from "@/lib/person-display";
 import {
-  FILTER_SELECT_TRIGGER,
-  FILTER_TOOLBAR_ROW,
-} from "@/components/ui/content-fill-panel";
-import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
-import { cn } from "@/lib/utils";
-import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
+  MANAGED_PRODUCT_TABLE_HEADERS,
+  ManagedProductMobileCard,
+  buildManagedProductColumns,
+} from "./managed-product-table-columns";
 
 const PAGE_SIZE = 20;
 
-const STATUS_OPTS = [
-  { value: "all", label: "All statuses" },
+const STATUS_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All statuses" },
   { value: "active", label: "Active" },
   { value: "archived", label: "Archived" },
 ];
 
-function NewProductButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} /> New Product
-    </Button>
-  );
-}
-
-function ProductRowActions({
-  product,
-  onEdit,
-  onDelete,
-}: {
-  product: ManagedProduct;
-  onEdit: (p: ManagedProduct) => void;
-  onDelete: (p: ManagedProduct) => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const handleEdit = useCallback(() => onEdit(product), [product, onEdit]);
-  const handleDelete = useCallback(() => onDelete(product), [product, onDelete]);
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-7"
-          aria-label="Product actions"
-          {...hoverHandlers}
-        >
-          <EllipsisIcon ref={iconRef} size={14} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" onClick={handleDelete}>
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
+const FILTER_DEFINITIONS = [
+  {
+    param: "status",
+    options: STATUS_OPTIONS.map((option) => option.value),
+  },
+] as const;
 
 export function ManagedProductsPage() {
   const canCreate = useCan("build:managed-products:create");
   const canUpdate = useCan("build:managed-products:update");
   const canDelete = useCan("build:managed-products:delete");
 
-  const { cursor, setCursor, setListParams, clearFilters } = useBuildListUrlState();
-  const searchParams = useSearchParams();
-  const urlStatus = searchParams.get("status") ?? "all";
-  const urlQ = searchParams.get("q") ?? "";
+  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
+  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+    listFilters.resetKey,
+  );
 
-  const [searchInput, setSearchInput] = useState(urlQ);
-  const debouncedSearchInput = useDebouncedValue(searchInput, 300);
-  const [cursorStack, setCursorStack] = useState<string[]>([]);
-
-  const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
-    useQueryParamOpen("create");
+  const {
+    open: createOpen,
+    onOpenChange: setCreateOpen,
+    setOpen: openCreate,
+  } = useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<ManagedProduct | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ManagedProduct | null>(null);
 
-  useEffect(() => {
-    const current = searchParams.get("q") ?? "";
-    if (debouncedSearchInput === current) return;
-    setListParams({ q: debouncedSearchInput || null });
-  }, [debouncedSearchInput, searchParams, setListParams]);
-
+  const statusValue = listFilters.value("status");
   const { data, isLoading, isError, error, refetch } = useManagedProducts({
-    cursor: cursor ?? undefined,
+    cursor,
     limit: PAGE_SIZE,
-    status: urlStatus !== "all" ? urlStatus : undefined,
-    search: urlQ.trim() || undefined,
+    status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
+    search: listFilters.debouncedSearch.trim() || undefined,
   });
 
   const { data: membersRes } = useOrgMembers(1, 100);
@@ -152,35 +89,52 @@ export function ManagedProductsPage() {
   const updateProduct = useUpdateManagedProduct();
   const deleteProduct = useDeleteManagedProduct();
 
-  function memberName(userId: string | null): string {
-    if (!userId) return "—";
-    const m = members.find((x) => x.userId === userId);
-    return m?.name ?? m?.email ?? "Unknown";
-  }
+  const ownerOf = useCallback(
+    (ownerId: string | null): NamedUser | null => {
+      if (!ownerId) return null;
+      const match = members.find((member) => member.userId === ownerId);
+      return match ? { name: match.name, email: match.email } : null;
+    },
+    [members],
+  );
 
-  const displayed = data?.data ?? [];
+  const displayed = useMemo(() => data?.data ?? [], [data]);
 
-  function handleCreate(input: CreateManagedProductInput) {
-    createProduct.mutate(input, {
-      onSuccess: () => {
-        toast.success("Managed product created");
-        setCreateOpen(false);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }
+  const resolution = usePageState({
+    permission: "build:managed-products:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: displayed.length === 0,
+  });
 
-  function handleEdit(input: UpdateManagedProductInput & { managedProductId: number }) {
-    updateProduct.mutate(input, {
-      onSuccess: () => {
-        toast.success("Managed product updated");
-        setEditTarget(null);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }
+  const handleCreate = useCallback(
+    (input: CreateManagedProductInput) => {
+      createProduct.mutate(input, {
+        onSuccess: () => {
+          toast.success("Managed product created");
+          setCreateOpen(false);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    },
+    [createProduct, setCreateOpen],
+  );
 
-  function handleDeleteConfirm() {
+  const handleEdit = useCallback(
+    (input: UpdateManagedProductInput & { managedProductId: number }) => {
+      updateProduct.mutate(input, {
+        onSuccess: () => {
+          toast.success("Managed product updated");
+          setEditTarget(null);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    },
+    [updateProduct],
+  );
+
+  const handleDeleteConfirm = useCallback(() => {
     if (!deleteTarget) return;
     deleteProduct.mutate(deleteTarget.id, {
       onSuccess: () => {
@@ -189,36 +143,12 @@ export function ManagedProductsPage() {
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }
+  }, [deleteProduct, deleteTarget]);
 
-  function handleSearchChange(value: string) {
-    setSearchInput(value);
-    setCursorStack([]);
-  }
-
-  function handleStatusChange(value: string) {
-    setListParams({ status: value !== "all" ? value : null });
-    setCursorStack([]);
-  }
-
-  function handleClearFilters() {
-    setSearchInput("");
-    clearFilters();
-    setCursorStack([]);
-  }
-
-  function handleNextPage() {
-    const nextCursor = data?.pagination.nextCursor;
-    if (!nextCursor) return;
-    setCursorStack((prev) => [...prev, cursor ?? ""]);
-    setCursor(nextCursor);
-  }
-
-  function handlePrevPage() {
-    const prevCursor = cursorStack[cursorStack.length - 1];
-    setCursorStack((prev) => prev.slice(0, -1));
-    setCursor(prevCursor === "" ? null : prevCursor);
-  }
+  const handleStatusChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
 
   const handleOpenCreate = useCallback(() => {
     openCreate();
@@ -234,173 +164,147 @@ export function ManagedProductsPage() {
     [setCreateOpen],
   );
 
-  function handleDeleteDialogChange(open: boolean) {
+  const handleDeleteDialogChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
-  }
+  }, []);
 
-  function handleRetry() {
+  const handleRetry = useCallback(() => {
     void refetch();
-  }
+  }, [refetch]);
 
-  function handleEditRow(row: ManagedProduct) {
-    setEditTarget(row);
-  }
+  const handleEditRow = useCallback(
+    (row: ManagedProduct) => setEditTarget(row),
+    [],
+  );
+  const handleDeleteRow = useCallback(
+    (row: ManagedProduct) => setDeleteTarget(row),
+    [],
+  );
 
-  function handleDeleteRow(row: ManagedProduct) {
-    setDeleteTarget(row);
-  }
+  const handleNextPage = useCallback(() => {
+    goNext(data?.pagination.nextCursor);
+  }, [data, goNext]);
 
   const canManageRow = canUpdate || canDelete;
 
-  const columns: DataTableColumn<ManagedProduct>[] = [
-    {
-      key: "name",
-      header: "Name",
-      className: TABLE_TITLE_CELL,
-      cell: (row) => (
-        <Link
-          href={`/build/managed-products/${row.id}`}
-          className={cn("font-medium text-foreground hover:text-primary hover:underline", TEXT_ONE_LINE)}
-          title={row.name}
-        >
-          {row.name}
-        </Link>
-      ),
-    },
-    {
-      key: "key",
-      header: "Key",
-      className: "w-28",
-      cell: (row) => (
-        <span className="font-mono text-xs text-muted-foreground">{row.key}</span>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (row) => <ManagedProductStatusBadge status={row.status} />,
-    },
-    {
-      key: "ownerId",
-      header: "Owner",
-      cell: (row) => (
-        <span className={cn("max-w-[140px] text-sm text-muted-foreground", TEXT_ONE_LINE)}>
-          {memberName(row.ownerId)}
-        </span>
-      ),
-    },
-    {
-      key: "description",
-      header: "Description",
-      cell: (row) => (
-        <span
-          className={cn("max-w-[240px] text-sm text-muted-foreground", TEXT_ONE_LINE)}
-          title={row.description ?? undefined}
-        >
-          {row.description ?? "—"}
-        </span>
-      ),
-    },
-    {
-      key: "actions",
-      header: "",
-      className: "w-10",
-      cell: (row) =>
-        canManageRow ? (
-          <ProductRowActions product={row} onEdit={handleEditRow} onDelete={handleDeleteRow} />
-        ) : null,
-    },
-  ];
+  const columns = useMemo(
+    () =>
+      buildManagedProductColumns({
+        canManage: canManageRow,
+        ownerOf,
+        onEdit: handleEditRow,
+        onDelete: handleDeleteRow,
+      }),
+    [canManageRow, handleDeleteRow, handleEditRow, ownerOf],
+  );
 
-  const resolution = usePageState({
-    permission: "build:managed-products:view",
-    isLoading,
-    isError,
-    error,
-    isEmpty: displayed.length === 0,
-  });
-
-  const isFiltered = urlStatus !== "all" || !!searchInput.trim();
-  const hasPrev = cursorStack.length > 0;
-  const hasNext = !!data?.pagination.hasMore;
-
-  const filtersBar = (
-    <div className={FILTER_TOOLBAR_ROW}>
-      <SearchInput
-        placeholder="Search products…"
-        value={searchInput}
-        onValueChange={handleSearchChange}
+  const renderMobileCard = useCallback(
+    (row: ManagedProduct) => (
+      <ManagedProductMobileCard
+        product={row}
+        canManage={canManageRow}
+        ownerOf={ownerOf}
+        onEdit={handleEditRow}
+        onDelete={handleDeleteRow}
       />
-      <Select value={urlStatus} onValueChange={handleStatusChange}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-40")}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
-          {STATUS_OPTS.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {isFiltered ? (
-        <Button
-          size="sm"
-          variant="ghost"
-          className="ml-auto"
-          onClick={handleClearFilters}
-        >
-          Clear
-        </Button>
-      ) : null}
-    </div>
+    ),
+    [canManageRow, handleDeleteRow, handleEditRow, ownerOf],
   );
 
   return (
     <PageWrapper
       title="Managed Products"
       subtitle="Track products and link projects to them"
-      filters={filtersBar}
-      actions={canCreate ? <NewProductButton onClick={handleOpenCreate} /> : undefined}
+      filters={
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search products…",
+            label: "Search products",
+          }}
+          filters={[
+            {
+              id: "status",
+              label: "Status",
+              active: listFilters.isActive("status"),
+              control: (
+                <BuildFilterSelect
+                  label="Status"
+                  value={statusValue}
+                  onValueChange={handleStatusChange}
+                  options={STATUS_OPTIONS}
+                />
+              ),
+            },
+          ]}
+          onClearAll={listFilters.clearAll}
+        />
+      }
+      actions={
+        <BuildHeaderActions
+          actions={
+            canCreate
+              ? [
+                  {
+                    id: "create",
+                    label: "New product",
+                    icon: Plus,
+                    primary: true,
+                    onSelect: handleOpenCreate,
+                  },
+                ]
+              : []
+          }
+        />
+      }
     >
       <PmPageShell>
-        <PmSection index={0} className={PM_FILL_SECTION}>
+        <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           <PageState
             resolution={resolution}
-            loading={<DataTableSkeleton rows={12} columns={6} className="flex-1" />}
+            loading={
+              <DataTableSkeleton
+                mobileCards
+                rows={12}
+                headers={MANAGED_PRODUCT_TABLE_HEADERS}
+                className="flex-1"
+              />
+            }
             empty={
               <EmptyState
                 className={PM_FILL_PANEL}
                 illustrationPreset="projects"
                 title="No managed products yet"
-                description={isFiltered ? undefined : "Create a managed product to track delivery across projects."}
-                filtersActive={isFiltered}
-                onClearFilters={handleClearFilters}
-                action={canCreate && !isFiltered ? { label: "New Product", onClick: handleOpenCreate } : undefined}
+                description="Create a managed product to track delivery across projects."
+                filtersActive={listFilters.isFiltered}
+                onClearFilters={listFilters.clearAll}
+                action={
+                  canCreate
+                    ? { label: "New product", onClick: handleOpenCreate }
+                    : undefined
+                }
               />
             }
             onRetry={handleRetry}
             className={PM_FILL_PANEL}
           >
-            <>
-              <DataTable
-                data={displayed}
-                columns={columns}
-                getRowKey={(row) => row.id}
-                minWidth="720px"
-                className={PM_FILL_PANEL}
-              />
-              {(hasPrev || hasNext) ? (
-                <div className="flex items-center justify-end gap-2 border-t px-2 py-2">
-                  <Button variant="outline" size="sm" disabled={!hasPrev} onClick={handlePrevPage}>
-                    Previous
-                  </Button>
-                  <Button variant="outline" size="sm" disabled={!hasNext} onClick={handleNextPage}>
-                    Next
-                  </Button>
-                </div>
-              ) : null}
-            </>
+            <DataTable
+              data={displayed}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              minWidth="720px"
+              mobileCard={renderMobileCard}
+              className={PM_FILL_PANEL}
+              pagination={{
+                mode: "cursor",
+                pageSize: PAGE_SIZE,
+                hasMore: Boolean(data?.pagination.hasMore),
+                hasPrevious,
+                onNext: handleNextPage,
+                onPrevious: goPrevious,
+              }}
+            />
           </PageState>
         </PmSection>
       </PmPageShell>

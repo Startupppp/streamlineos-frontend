@@ -24,6 +24,7 @@ import type {
 import {
   DeleteSubmissionButton,
   SUBMISSION_COLUMNS,
+  SubmissionMobileCard,
   type SubmissionRow,
 } from "./submission-inbox-columns";
 import {
@@ -246,6 +247,19 @@ export function ProjectSubmissionsInbox({
         columns={columns}
         getRowKey={getSubmissionRowKey}
         onRowClick={handleRowClick}
+        mobileCard={(row) => (
+          <SubmissionMobileCard
+            row={row}
+            actions={
+              canDelete ? (
+                <DeleteSubmissionButton
+                  submissionId={row.id}
+                  onRequestDelete={handleRequestDelete}
+                />
+              ) : undefined
+            }
+          />
+        )}
         selection={
           selectionEnabled
             ? {

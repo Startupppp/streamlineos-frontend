@@ -105,7 +105,7 @@ function ParentPickerPopover({
   return (
     <ResponsivePopover open={open} onOpenChange={handleOpenChange}>
       <ResponsivePopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 shrink-0 text-xs">
+        <Button variant="outline" size="sm" className="shrink-0">
           Set parent
         </Button>
       </ResponsivePopoverTrigger>
@@ -116,7 +116,7 @@ function ParentPickerPopover({
           aria-label="Search parent tickets"
           value={q}
           onChange={handleInputChange}
-          className="mb-2 h-8 text-xs"
+          className="mb-2"
         />
         <div className="max-h-52 overflow-y-auto">
           <button

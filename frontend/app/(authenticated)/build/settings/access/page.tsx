@@ -8,12 +8,14 @@ export const metadata = {
   title: "Access & Members",
 };
 
+const ACCESS_HEADERS = ["Name", "Role", "Added", "Teams", "Actions"] as const;
+
 export default async function BuildSettingsAccessRoute() {
   await enforceRouteAccess("/build/settings/access");
   return (
     <>
       <Suspense
-        fallback={<DataTableSkeleton rows={10} columns={5} className="m-6" />}
+        fallback={<DataTableSkeleton mobileCards rows={10} headers={ACCESS_HEADERS} className="m-6" />}
       >
         <MembersPage />
       </Suspense>

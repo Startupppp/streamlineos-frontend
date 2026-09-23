@@ -1,7 +1,11 @@
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { resolveRouteAccess } from "@/lib/rbac/route-access/route-access";
 import { isUniversalRoute } from "@/lib/rbac/route-access/universal-routes";
 import { HOME_NAV_GROUPS } from "@/components/layout/sidebar/sidebar-home-nav";
 import { NAV_GROUPS, flattenNavRoutes } from "@/components/layout/sidebar/sidebar-nav-items";
+import { buildMenuEntries } from "@/components/layout/header/user-avatar-menu-entries";
+import { CARD_GROUPS } from "@/features/hr/settings-hub/hub-grid";
 
 describe("Settings → Notifications route access declarations", () => {
   describe("/settings/notifications/my-preferences is universal", () => {
@@ -109,5 +113,143 @@ describe("Settings → Notifications route access declarations", () => {
       expect(hrefs.has("/notifications/policy")).toBe(false);
       expect(hrefs.has("/notifications/broadcasts")).toBe(false);
     });
+  });
+});
+
+describe("Avatar menu — notification preferences link points at the canonical URL", () => {
+  const entries = buildMenuEntries({
+    canManageSettings: false,
+    canManagePersonalTokens: false,
+    canViewAiCredits: false,
+    canSeeOrgPeople: false,
+    canManageRbac: false,
+    showAccessGroup: false,
+  });
+
+  function allMenuHrefs(menuEntries: ReturnType<typeof buildMenuEntries>): string[] {
+    return menuEntries.flatMap((e) => (e.kind === "links" ? e.links.map((l) => l.href) : []));
+  }
+
+  it("contains /settings/notifications/my-preferences", () => {
+    expect(allMenuHrefs(entries)).toContain("/settings/notifications/my-preferences");
+  });
+
+  it("BITE: does NOT contain the retired /notifications/preferences href", () => {
+    expect(allMenuHrefs(entries)).not.toContain("/notifications/preferences");
+  });
+
+  it("BITE: the entry list is non-empty so the absence test is real", () => {
+    expect(allMenuHrefs(entries).length).toBeGreaterThan(0);
+  });
+});
+
+describe("HR settings hub — Notification Providers card points at the canonical URL", () => {
+  const allHubHrefs = CARD_GROUPS.flatMap((g) => g.cards.map((c) => c.href));
+
+  it("contains /settings/notifications/providers", () => {
+    expect(allHubHrefs).toContain("/settings/notifications/providers");
+  });
+
+  it("BITE: does NOT contain the retired /notifications/providers href", () => {
+    expect(allHubHrefs).not.toContain("/notifications/providers");
+  });
+
+  it("BITE: the hub card list is non-empty so the absence test is real", () => {
+    expect(allHubHrefs.length).toBeGreaterThan(0);
+  });
+});
+
+describe("No UI navigation target in features/ or components/ points at a retired /notifications/* page route", () => {
+  const RETIRED_NAV_HREFS = [
+    "/notifications/preferences",
+    "/notifications/providers",
+    "/notifications/templates",
+    "/notifications/broadcasts",
+    "/notifications/events",
+    "/notifications/policy",
+  ];
+
+  const FRONTEND_ROOT = join(__dirname, "..", "..");
+
+  function collectSourceFiles(dir: string, files: string[] = []): string[] {
+    let entries: string[];
+    try {
+      entries = readdirSync(dir);
+    } catch {
+      return files;
+    }
+    for (const entry of entries) {
+      if (entry.startsWith(".") || entry === "node_modules") continue;
+      const fullPath = join(dir, entry);
+      let stat;
+      try {
+        stat = statSync(fullPath);
+      } catch {
+        continue;
+      }
+      if (stat.isDirectory()) {
+        collectSourceFiles(fullPath, files);
+      } else if (entry.endsWith(".ts") || entry.endsWith(".tsx")) {
+        files.push(fullPath);
+      }
+    }
+    return files;
+  }
+
+  function isApiCallLine(line: string): boolean {
+    return (
+      line.includes("apiClient") ||
+      line.includes("api-client") ||
+      line.includes("fetch(") ||
+      line.includes("axios.") ||
+      line.includes("// ")
+    );
+  }
+
+  function findRetiredNavHrefs(content: string, retired: string[]): string[] {
+    const found: string[] = [];
+    for (const line of content.split("\n")) {
+      if (isApiCallLine(line)) continue;
+      for (const href of retired) {
+        if (
+          line.includes(`href="${href}"`) ||
+          line.includes(`href='${href}'`) ||
+          line.includes(`href: "${href}"`) ||
+          line.includes(`href: '${href}'`) ||
+          (line.includes(`"${href}"`) && !line.includes("apiClient") && !line.includes("RETIRED"))
+        ) {
+          found.push(href);
+        }
+      }
+    }
+    return found;
+  }
+
+  const dirsToScan = [
+    join(FRONTEND_ROOT, "features"),
+    join(FRONTEND_ROOT, "components"),
+  ];
+
+  const violations: Array<{ file: string; hrefs: string[] }> = [];
+
+  for (const dir of dirsToScan) {
+    for (const file of collectSourceFiles(dir)) {
+      if (file.endsWith(".test.ts") || file.endsWith(".test.tsx")) continue;
+      const content = readFileSync(file, "utf8");
+      const found = findRetiredNavHrefs(content, RETIRED_NAV_HREFS);
+      if (found.length > 0) {
+        violations.push({ file: file.replace(FRONTEND_ROOT, ""), hrefs: found });
+      }
+    }
+  }
+
+  it("no source file under features/ or components/ navigates to a retired /notifications/* page route", () => {
+    expect(violations).toEqual([]);
+  });
+
+  it("BITE: the scan covered at least 50 files so the empty result is not vacuous", () => {
+    let count = 0;
+    for (const dir of dirsToScan) count += collectSourceFiles(dir).length;
+    expect(count).toBeGreaterThan(50);
   });
 });

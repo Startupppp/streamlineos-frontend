@@ -182,6 +182,7 @@ export const notificationPreferenceContract = z.object({
   inherited: z
     .object({ defaultChannels: z.array(z.string()), canUserOverride: z.boolean() })
     .optional(),
+  availableChannels: z.array(z.enum(["IN_APP", "EMAIL", "PUSH", "SMS", "WHATSAPP"])).optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });

@@ -62,7 +62,7 @@ export function TicketCustomerPicker({
           <ResponsivePopoverTrigger asChild>
             <button
               type="button"
-              className="flex min-h-10 min-w-0 flex-1 touch-manipulation items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs text-left transition-colors hover:bg-accent @[18rem]:min-h-9 md:min-h-9"
+              className="flex min-w-0 flex-1 touch-manipulation items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-left transition-colors hover:bg-accent"
             >
               {customerName ? (
                 <span className="min-w-0 flex-1 truncate text-foreground">
@@ -79,7 +79,7 @@ export function TicketCustomerPicker({
             <Command shouldFilter={false}>
               <CommandInput
                 placeholder="Search customers..."
-                className="h-8 text-xs"
+                className="h-9"
                 value={search}
                 onValueChange={setSearch}
               />
@@ -116,7 +116,7 @@ export function TicketCustomerPicker({
           <button
             type="button"
             onClick={handleClear}
-            className="flex h-10 w-10 shrink-0 touch-manipulation items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-destructive @[18rem]:h-9 @[18rem]:w-9 md:h-9 md:w-9"
+            className="flex h-9 w-9 shrink-0 touch-manipulation items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-destructive"
             aria-label="Clear customer"
           >
             <X className="h-3.5 w-3.5" />

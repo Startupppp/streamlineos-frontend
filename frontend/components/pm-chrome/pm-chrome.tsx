@@ -6,10 +6,10 @@ import { cn } from "@/lib/utils";
 import { fadeUp, fadeUpReduced, pmSnappy, pmStagger } from "@/lib/motion-presets";
 
 export const PM_PANEL =
-  "rounded-xl border border-border/80 bg-card/85 shadow-sm";
+  "w-full min-w-0 rounded-xl border border-border/80 bg-card shadow-sm";
 
 export const PM_PANEL_SOLID =
-  "rounded-xl border border-border/80 bg-card shadow-sm";
+  "w-full min-w-0 rounded-xl border border-border/80 bg-card shadow-sm";
 
 
 export const PM_FILL_SECTION = "flex min-h-0 flex-1 flex-col overflow-hidden";
@@ -27,7 +27,7 @@ interface PmPageShellProps {
 
 export function PmPageShell({ children, className }: PmPageShellProps) {
   return (
-    <div className={cn("relative flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden", className)}>
+    <div className={cn("relative flex min-h-0 w-full min-w-0 flex-1 flex-col gap-4 overflow-hidden", className)}>
       {children}
     </div>
   );
@@ -43,7 +43,7 @@ export function PmSection({ children, className, index = 0 }: PmSectionProps) {
   const shouldReduceMotion = useReducedMotion();
   return (
     <motion.div
-      className={cn("relative", className)}
+      className={cn("relative w-full min-w-0", className)}
       initial="hidden"
       animate="show"
       variants={shouldReduceMotion ? fadeUpReduced : fadeUp}

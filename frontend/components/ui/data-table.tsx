@@ -313,7 +313,7 @@ export function DataTable<T>({
   }
 
   return (
-    <div className={cn("rounded-md border border-border bg-card flex flex-col min-w-0", className)}>
+    <div className={cn("flex w-full min-w-0 flex-col rounded-md border border-border bg-card", className)}>
       {(search !== undefined || toolbar !== undefined) && (
         <div className="shrink-0 flex flex-col gap-2 border-b border-border bg-muted/50 px-2 py-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
           {search !== undefined ? (
@@ -346,7 +346,7 @@ export function DataTable<T>({
               </p>
             )}
             {mobileCard ? (
-              <div className="sm:hidden flex flex-col gap-2 p-2">
+              <div className="flex flex-col gap-2 p-1 sm:hidden">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <Skeleton key={i} className="h-20 w-full rounded-lg" />
                 ))}
@@ -387,7 +387,7 @@ export function DataTable<T>({
         ) : (
           <>
           {mobileCard ? (
-            <div className="sm:hidden flex flex-col gap-2 p-2">
+            <div className="flex flex-col gap-2 p-1 sm:hidden">
               {rows.map((row, index) => (
                 <div
                   key={row.id}
