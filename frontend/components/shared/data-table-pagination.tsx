@@ -55,7 +55,7 @@ interface CursorPaginationProps extends PaginationChrome {
 export type DataTablePaginationProps = OffsetPaginationProps | CursorPaginationProps;
 
 const NAV_CLASS =
-  "flex flex-col items-center justify-between gap-1.5 px-0 py-1.5 sm:flex-row sm:gap-2";
+  "flex min-w-0 flex-row items-center justify-between gap-2 px-0 py-1.5";
 
 function PageSizeSelect({ limit, onLimitChange, pageSizeOptions }: PaginationChrome) {
   if (!onLimitChange) return null;
@@ -90,8 +90,8 @@ function CursorPagination({
 
   return (
     <nav aria-label="Pagination" className={NAV_CLASS}>
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <span className="tabular-nums">
+      <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+        <span className="min-w-0 truncate tabular-nums">
           {rowCount === 1 ? "1 result on this page" : `${rowCount} results on this page`}
           {pageNumber ? ` · page ${pageNumber}` : null}
         </span>
@@ -158,8 +158,8 @@ function OffsetPagination({
 
   return (
     <nav aria-label="Pagination" className={NAV_CLASS}>
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <span className="tabular-nums">Showing {start}-{end} of {total}</span>
+      <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+        <span className="min-w-0 truncate tabular-nums">Showing {start}-{end} of {total}</span>
         <PageSizeSelect limit={limit} onLimitChange={onLimitChange} pageSizeOptions={pageSizeOptions} />
       </div>
 

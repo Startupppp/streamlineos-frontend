@@ -22,7 +22,6 @@ interface PageTabsToolbarProps {
   actions?: ReactNode;
   tabsDensity?: PageTabsDensity;
   collapseBelow?: PageTabsCollapseBelow;
-  /** Keep a single simple filter visible instead of collapsing it into a menu. */
   filtersAlwaysVisible?: boolean;
   className?: string;
 }
@@ -55,8 +54,8 @@ export function PageTabsToolbar({
           ? atXl
             ? "flex-col xl:flex-row xl:flex-nowrap xl:items-center xl:justify-between"
             : atLg
-            ? "flex-col lg:flex-row lg:flex-nowrap lg:items-center lg:justify-between"
-            : "flex-col md:flex-row md:flex-nowrap md:items-center md:justify-between"
+              ? "flex-col lg:flex-row lg:flex-nowrap lg:items-center lg:justify-between"
+              : "flex-col md:flex-row md:flex-nowrap md:items-center md:justify-between"
           : "flex-row flex-nowrap items-center justify-between",
         className,
       )}
@@ -68,8 +67,8 @@ export function PageTabsToolbar({
             ? atXl
               ? "w-full xl:w-auto"
               : atLg
-              ? "w-full lg:w-auto"
-              : "w-full md:w-auto"
+                ? "w-full lg:w-auto"
+                : "w-full md:w-auto"
             : "shrink-0",
         )}
       >
@@ -83,8 +82,8 @@ export function PageTabsToolbar({
             ? atXl
               ? "w-full xl:ml-auto xl:w-auto xl:max-w-full xl:justify-end"
               : atLg
-              ? "w-full lg:ml-auto lg:w-auto lg:max-w-full lg:justify-end"
-              : "w-full md:ml-auto md:w-auto md:max-w-full md:justify-end"
+                ? "w-full lg:ml-auto lg:w-auto lg:max-w-full lg:justify-end"
+                : "w-full md:ml-auto md:w-auto md:max-w-full md:justify-end"
             : "ml-auto min-w-0 shrink-0 justify-end",
         )}
       >
@@ -96,8 +95,8 @@ export function PageTabsToolbar({
                 ? atXl
                   ? "w-full flex-none sm:flex-1 xl:w-60 xl:max-w-sm xl:flex-none"
                   : atLg
-                  ? "flex-1 lg:w-[240px] lg:max-w-sm lg:flex-none"
-                  : "flex-1 md:w-[240px] md:max-w-sm md:flex-none"
+                    ? "flex-1 lg:w-[240px] lg:max-w-sm lg:flex-none"
+                    : "flex-1 md:w-[240px] md:max-w-sm md:flex-none"
                 : "w-[200px] sm:w-[240px]",
             )}
           >
@@ -153,9 +152,7 @@ export function PageTabsToolbar({
         ) : null}
 
         {actions ? (
-          <div className="flex shrink-0 items-center gap-2">
-            {actions}
-          </div>
+          <div className="flex shrink-0 items-center gap-2">{actions}</div>
         ) : null}
       </div>
     </div>

@@ -29,6 +29,8 @@ Live observations are labelled **Observed**. Source-only conclusions are labelle
 
 ## Document map
 
+Use [`MASTER-IMPLEMENTATION-PROMPT.md`](MASTER-IMPLEMENTATION-PROMPT.md) when handing the complete program to an implementation agent.
+
 | Step | Document | Decision owned |
 |---:|---|---|
 | 0 | [`00-current-state-audit.md`](00-current-state-audit.md) | Complete page census and current gaps |
