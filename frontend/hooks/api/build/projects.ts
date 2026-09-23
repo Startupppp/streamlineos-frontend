@@ -37,6 +37,7 @@ import type {
 } from "@/types/projects";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { useHydratedProject } from "@/features/build/project-detail/project-hydration-context";
+import { projectReadErrorReachesBoundary } from "@/lib/query-error-policy";
 
 export {
   useAddProjectMember,
@@ -136,6 +137,7 @@ export function useProject(
     enabled: canView && !!projectId,
     staleTime: 30_000,
     initialData: hydratedProject,
+    throwOnError: projectReadErrorReachesBoundary,
     ...options,
   });
 }

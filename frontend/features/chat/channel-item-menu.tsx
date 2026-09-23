@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import type React from "react";
 import {
   Bell,
   BellOff,
@@ -52,25 +51,6 @@ const MUTE_DURATIONS: { value: "15m" | "1h" | "8h" | "24h" | "forever"; label: s
 ];
 
 type MuteDuration = (typeof MUTE_DURATIONS)[number]["value"];
-
-function MuteDurationItem({
-  duration,
-  label,
-  onMute,
-}: {
-  duration: MuteDuration;
-  label: string;
-  onMute: (duration: MuteDuration) => void;
-}) {
-  const handleSelect = useCallback(
-    (event: Event) => {
-      event.preventDefault();
-      onMute(duration);
-    },
-    [onMute, duration],
-  );
-  return <DropdownMenuItem onSelect={handleSelect}>{label}</DropdownMenuItem>;
-}
 
 export function ChannelItemMenu({
   channel,
@@ -135,11 +115,6 @@ export function ChannelItemMenu({
     [muteChannel, channel.id],
   );
 
-  const handleMuteDuration = useCallback(
-    (duration: MuteDuration) => { void handleMute(duration); },
-    [handleMute],
-  );
-
   const handleUnmute = useCallback(
     async (event: Event) => {
       event.preventDefault();
@@ -188,10 +163,6 @@ export function ChannelItemMenu({
     },
     [onStartCall, channel.id],
   );
-
-  const handleStopPropagation = useCallback((event: React.SyntheticEvent) => {
-    event.stopPropagation();
-  }, []);
 
   const handleOpenInvite = useCallback((event: Event) => {
     event.preventDefault();

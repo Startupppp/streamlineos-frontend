@@ -1,91 +1,187 @@
 "use client";
 
-import { PageWrapper } from "@/components/ui/page-wrapper";
-
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { SearchInput } from "@/components/ui/search-input";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
+import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useKbSpaces, useDeleteKbSpace } from "@/hooks/api/kb/spaces";
-import { useKbPagesTree } from "@/hooks/api/kb/pages";
+import {
+  useKbSpaces,
+  useArchiveKbSpace,
+  useRestoreKbSpace,
+} from "@/hooks/api/kb/spaces";
+import type { KbSpaceListItem } from "@/hooks/api/kb/spaces";
+import type { KbSpace } from "@/types/kb";
 import {
   KbLayoutGridIcon,
   KbPlusIcon,
 } from "@/features/wiki/lib/kb-icons";
-import type { KbSpace } from "@/types/kb";
 import { SpaceCard, SpaceCardSkeleton } from "./space-card";
 import { SpaceSheet } from "./space-sheet";
 
+const AUDIENCE_FILTER_VALUES = ["all", "internal", "public", "mixed"] as const;
+type AudienceFilter = (typeof AUDIENCE_FILTER_VALUES)[number];
+
+const ARCHIVED_FILTER_VALUES = ["all", "active", "archived"] as const;
+type ArchivedFilter = (typeof ARCHIVED_FILTER_VALUES)[number];
+
+const LIST_LIMIT = 30;
+
+function SpacesGrid({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {children}
+    </div>
+  );
+}
+
 export default function SpacesPage() {
   const canManage = useCan("kb:spaces:manage");
-  const { data: spaces = [], isLoading, isError } = useKbSpaces();
-  const { data: treeNodes = [] } = useKbPagesTree();
-  const pageCountBySpaceId = treeNodes.reduce<Record<number, number>>(
-    (acc, n) => {
-      if (n.spaceId != null) {
-        acc[n.spaceId] = (acc[n.spaceId] ?? 0) + 1;
-      }
-      return acc;
-    },
-    {},
-  );
-  const deleteSpace = useDeleteKbSpace();
+
+  const { filters, update: updateFilters } = useUrlFilters({
+    q: "",
+    audience: "all" as AudienceFilter,
+    status: "active" as ArchivedFilter,
+  });
+
+  const audienceFilter = parseEnum(AUDIENCE_FILTER_VALUES, filters.audience, "all");
+  const archivedFilter = parseEnum(ARCHIVED_FILTER_VALUES, filters.status, "active");
+  const rawSearch = typeof filters.q === "string" ? filters.q : "";
+  const debouncedSearch = useDebouncedValue(rawSearch, 300);
+
+  const cursorState = useCursorPagination();
+
+  const queryParams = {
+    q: debouncedSearch || undefined,
+    audience:
+      audienceFilter === "all"
+        ? undefined
+        : (audienceFilter as "internal" | "public" | "mixed"),
+    archived:
+      archivedFilter === "all"
+        ? undefined
+        : archivedFilter === "archived"
+          ? true
+          : false,
+    cursor: cursorState.cursor,
+    limit: LIST_LIMIT,
+  };
+
+  const { data, isLoading, isError, error } = useKbSpaces(queryParams);
+
+  const spaces = data?.data ?? [];
+  const pagination = data?.pagination;
+
+  const pageState = usePageState({
+    permission: "kb:spaces:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !isLoading && !isError && spaces.length === 0,
+  });
+
+  const archiveSpace = useArchiveKbSpace();
+  const restoreSpace = useRestoreKbSpace();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingSpace, setEditingSpace] = useState<KbSpace | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<KbSpace | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<KbSpace | null>(null);
+  const [restoreTarget, setRestoreTarget] = useState<KbSpace | null>(null);
 
-  function handleCreate() {
+  const handleCreate = useCallback(() => {
     setEditingSpace(null);
     setSheetOpen(true);
-  }
+  }, []);
 
-  function handleEdit(space: KbSpace) {
+  const handleEdit = useCallback((space: KbSpace) => {
     setEditingSpace(space);
     setSheetOpen(true);
-  }
+  }, []);
 
-  function handleDelete(space: KbSpace) {
-    setDeleteTarget(space);
-  }
+  const handleArchive = useCallback((space: KbSpace) => {
+    setArchiveTarget(space);
+  }, []);
 
-  function handleSheetOpenChange(open: boolean) {
+  const handleRestore = useCallback((space: KbSpace) => {
+    setRestoreTarget(space);
+  }, []);
+
+  const handleSheetOpenChange = useCallback((open: boolean) => {
     setSheetOpen(open);
     if (!open) setEditingSpace(null);
-  }
+  }, []);
 
-  function handleSheetSuccess() {
+  const handleSheetSuccess = useCallback(() => {
     setSheetOpen(false);
     setEditingSpace(null);
-  }
+  }, []);
 
-  function handleDeleteAlertOpenChange(open: boolean) {
-    if (!open) setDeleteTarget(null);
-  }
-
-  function handleConfirmDelete() {
-    if (!deleteTarget) return;
-    deleteSpace.mutate(deleteTarget.id, {
+  function handleConfirmArchive() {
+    if (!archiveTarget) return;
+    archiveSpace.mutate(archiveTarget.id, {
       onSuccess: () => {
-        toast.success("Space deleted");
-        setDeleteTarget(null);
+        toast.success(`"${archiveTarget.name}" archived`);
+        setArchiveTarget(null);
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
+
+  function handleConfirmRestore() {
+    if (!restoreTarget) return;
+    restoreSpace.mutate(restoreTarget.id, {
+      onSuccess: () => {
+        toast.success(`"${restoreTarget.name}" restored`);
+        setRestoreTarget(null);
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }
+
+  function handleAudienceChange(value: string) {
+    updateFilters({ audience: value as AudienceFilter });
+    cursorState.reset();
+  }
+
+  function handleStatusChange(value: string) {
+    updateFilters({ status: value as ArchivedFilter });
+    cursorState.reset();
+  }
+
+  function handleSearchChange(value: string) {
+    updateFilters({ q: value });
+    cursorState.reset();
+  }
+
+  function handleClearFilters() {
+    updateFilters({ q: "", audience: "all", status: "active" });
+    cursorState.reset();
+  }
+
+  function handleGoNext() {
+    cursorState.goNext(pagination?.nextCursor);
+  }
+
+  const hasActiveFilters =
+    rawSearch !== "" || audienceFilter !== "all" || archivedFilter !== "active";
 
   const subtitle = "Organize your wiki pages into spaces";
 
@@ -102,55 +198,100 @@ export default function SpacesPage() {
         ) : undefined
       }
     >
-      {isLoading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <SpaceCardSkeleton key={i} />
-          ))}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <SearchInput
+            value={rawSearch}
+            onChange={handleSearchChange}
+            placeholder="Search spaces…"
+            className="h-9 w-48"
+          />
+          <Select value={audienceFilter} onValueChange={handleAudienceChange}>
+            <SelectTrigger className="h-9 w-36">
+              <SelectValue placeholder="Audience" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All audiences</SelectItem>
+              <SelectItem value="internal">Internal</SelectItem>
+              <SelectItem value="public">Public</SelectItem>
+              <SelectItem value="mixed">Mixed</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={archivedFilter} onValueChange={handleStatusChange}>
+            <SelectTrigger className="h-9 w-36">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="archived">Archived</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      )}
 
-      {!isLoading && isError && (
-        <EmptyState
-          illustration={
-            <KbLayoutGridIcon className="w-8 text-muted-foreground" />
-          }
-          title="Could not load spaces"
-          description="There was a problem fetching spaces."
-          className={CONTENT_FILL_PANEL}
-        />
-      )}
-
-      {!isLoading && !isError && spaces.length === 0 && (
-        <EmptyState
-          illustration={
-            <KbLayoutGridIcon className="w-8 text-muted-foreground" />
-          }
-          title="No spaces yet"
-          description="Create a space to organize your wiki pages."
-          action={
-            canManage
-              ? { label: "Create space", onClick: handleCreate }
-              : undefined
-          }
-          className={CONTENT_FILL_PANEL}
-        />
-      )}
-
-      {!isLoading && !isError && spaces.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {spaces.map((space) => (
-            <SpaceCard
-              key={space.id}
-              space={space}
-              canManage={canManage}
-              pageCount={pageCountBySpaceId[space.id] ?? 0}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
-      )}
+        <PageState resolution={pageState}>
+          {{
+            loading: (
+              <SpacesGrid>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <SpaceCardSkeleton key={i} />
+                ))}
+              </SpacesGrid>
+            ),
+            empty: hasActiveFilters ? (
+              <EmptyState
+                illustration={<KbLayoutGridIcon className="w-8 text-muted-foreground" />}
+                title="No spaces match your filters"
+                description="Try adjusting your search or filters."
+                action={{ label: "Clear filters", onClick: handleClearFilters }}
+                className={CONTENT_FILL_PANEL}
+              />
+            ) : (
+              <EmptyState
+                illustration={<KbLayoutGridIcon className="w-8 text-muted-foreground" />}
+                title="No spaces yet"
+                description="Create a space to organize your wiki pages."
+                action={
+                  canManage
+                    ? { label: "Create space", onClick: handleCreate }
+                    : undefined
+                }
+                className={CONTENT_FILL_PANEL}
+              />
+            ),
+            ready: (
+              <div className="flex flex-col gap-4">
+                <SpacesGrid>
+                  {spaces.map((space: KbSpaceListItem) => (
+                    <SpaceCard
+                      key={space.id}
+                      space={space}
+                      canManage={canManage}
+                      pageCount={space.pageCount}
+                      onEdit={handleEdit}
+                      onDelete={
+                        space.archivedAt
+                          ? handleRestore
+                          : handleArchive
+                      }
+                    />
+                  ))}
+                </SpacesGrid>
+                {pagination && (
+                  <TablePagination
+                    kind="cursor"
+                    pageNumber={cursorState.pageNumber}
+                    hasPrevious={cursorState.hasPrevious}
+                    hasMore={pagination.hasMore}
+                    onNext={handleGoNext}
+                    onPrevious={cursorState.goPrevious}
+                  />
+                )}
+              </div>
+            ),
+          }}
+        </PageState>
+      </div>
 
       <SpaceSheet
         open={sheetOpen}
@@ -159,29 +300,38 @@ export default function SpacesPage() {
         onSuccess={handleSheetSuccess}
       />
 
-      <AlertDialog
-        open={deleteTarget !== null}
-        onOpenChange={handleDeleteAlertOpenChange}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete space?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleConfirmDelete}
-              disabled={deleteSpace.isPending}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={archiveTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setArchiveTarget(null);
+        }}
+        title="Archive space?"
+        description={
+          archiveTarget
+            ? `Archiving "${archiveTarget.name}" will hide it from users. Pages and content are preserved and can be restored.`
+            : ""
+        }
+        confirmLabel="Archive"
+        destructive
+        isPending={archiveSpace.isPending}
+        onConfirm={handleConfirmArchive}
+      />
+
+      <ConfirmDialog
+        open={restoreTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setRestoreTarget(null);
+        }}
+        title="Restore space?"
+        description={
+          restoreTarget
+            ? `Restore "${restoreTarget.name}" to make it accessible again?`
+            : ""
+        }
+        confirmLabel="Restore"
+        isPending={restoreSpace.isPending}
+        onConfirm={handleConfirmRestore}
+      />
     </PageWrapper>
   );
 }

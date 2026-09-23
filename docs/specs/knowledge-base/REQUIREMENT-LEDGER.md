@@ -50,25 +50,25 @@ These were resolved at open and constrain every slice. Re-verify before trusting
 | # | Slice | Phase | Priority | Status |
 |---:|---|---|---|---|
 | S01 | `KnowledgeAuthorization` + `kb_page_grants` schema | 1 | P0 | IN PROGRESS |
-| S02 | My pages — server-side ownership | 1 | P0 | IN PROGRESS — backend landed |
-| S03 | Shared with me — explicit grants | 1 | P0 | IN PROGRESS — backend landed |
-| S04 | `KnowledgeCollection` + canonical `GET /kb/pages` + cursor codec | 2 | P0 | IN PROGRESS |
-| S05 | Full Search — `/knowledge/wiki/search` | 2 | P0 | NOT STARTED |
-| S06 | Wiki Home rebuilt on list projection | 2 | P0 | NOT STARTED |
-| S07 | Spaces list + detail, server counts, archive/restore, lazy tree | 2/3 | P0 | NOT STARTED |
-| S08 | Page document — trust header, action model, offline/conflict | 3 | P0 | NOT STARTED |
-| S09 | History — diff + append-only restore | 3 | P0 | NOT STARTED |
-| S10 | Reviews — derived overdue, URL filters, bulk decide | 4 | P0/P1 | IN PROGRESS |
-| S11 | Trash — cursor, bulk restore/purge, resumable purge ledger | 3 | P0 | IN PROGRESS |
+| S02 | My pages — server-side ownership | 1 | P0 | LANDED — needs final gate sweep |
+| S03 | Shared with me — explicit grants | 1 | P0 | LANDED — needs final gate sweep |
+| S04 | `KnowledgeCollection` + canonical `GET /kb/pages` + cursor codec | 2 | P0 | LANDED — EXPLAIN evidence blocked on IAM |
+| S05 | Full Search — `/knowledge/wiki/search` | 2 | P0 | LANDED — needs final gate sweep |
+| S06 | Wiki Home rebuilt on list projection | 2 | P0 | IN PROGRESS |
+| S07 | Spaces list + detail, server counts, archive/restore, lazy tree | 2/3 | P0 | IN PROGRESS |
+| S08 | Page document — trust header, action model, offline/conflict | 3 | P0 | IN PROGRESS |
+| S09 | History — diff + append-only restore | 3 | P0 | IN PROGRESS |
+| S10 | Reviews — derived overdue, URL filters, bulk decide | 4 | P0/P1 | LANDED — needs final gate sweep |
+| S11 | Trash — cursor, bulk restore/purge, resumable purge ledger | 3 | P0 | LANDED — resumable purge ledger still open |
 | S12 | Templates — URL state, preview, saved-template lifecycle | 3 | P1 | NOT STARTED |
 | S13 | Import & Export — validation, dry-run, resumable jobs | 3 | P0 | NOT STARTED |
 | S14 | Analytics — permission-safe, minimum cohort, drill-down | 4 | P1 | NOT STARTED |
 | S15 | Content Health — `/knowledge/wiki/manage` | 4 | P1 | NOT STARTED |
-| S16 | Ask KB — scope, citations, fallback, budgets | 1/4 | P0/P1 | NOT STARTED |
+| S16 | Ask KB — scope, citations, fallback, budgets | 1/4 | P0/P1 | IN PROGRESS |
 | S17 | Public page — `/wiki/[shareToken]` | 3 | P0 | NOT STARTED |
 | S18 | Project wiki adapters | 2 | P0 | NOT STARTED |
 | S19 | Research Briefs moved under Knowledge | 4 | P1 | NOT STARTED |
-| S20 | `/ask` removal, redirects, aliases | 6 | P0 | NOT STARTED |
+| S20 | `/ask` removal, redirects, aliases | 6 | P0 | IN PROGRESS |
 | S21 | `kb_articles` cutover + destructive contraction | 6 | P1 | NOT STARTED |
 | S22 | Async scale — queue lanes, admission, SLOs, DR drills | 5 | P0/P1 | NOT STARTED |
 | S23 | Observability — dashboards, alerts, cost budgets, runbooks | 0/5 | P0 | NOT STARTED |
@@ -162,6 +162,34 @@ The spec was repointed, not deleted — it pins acceptance criterion AR-06. Its 
 ### New migration 1170
 
 `1170_kb_page_reviews_derive_overdue` (idx 1050) — collapses any `status = 'expired'` row into `'pending'` and adds `chk_kb_page_reviews_status` (`NOT VALID` then `VALIDATE`, so it does not hold a long lock). `kb_page_reviews.status` had **no** CHECK constraint at all; it was a bare `text` column, so nothing at the database level stopped `expired` coming back. Marked `-- @data-loss`: the rollback drops the constraint but cannot resurrect the collapsed rows, which is intentional.
+
+### S05 Full Search — landed
+
+`GET /kb/pages/full-search`, **not** `GET /kb/search` as doc 05's interface table says: `GET /kb/search` already exists and serves help-centre articles. Taking that path would have shadowed a live route. Recorded as a deliberate deviation from the doc.
+
+New: `retrieval/kb-page-search-query.service.ts`, `retrieval/dto/kb-page-search-query.schemas.ts`, the route on `kb-search.controller.ts`, and the frontend route `/knowledge/wiki/search` with `wiki-search-page.tsx`. Quick find now hands off with the query intact. The search tokenizer is the shared `kbPagePrefixTsQuery` — no third copy.
+
+**Pagination decision: a bounded top-N (max 50) with a reported `hasMore`, not a keyset.** `ts_rank` ordering is not stable across requests — scores shift as rows change, so a cursor would silently skip or repeat rows at every boundary. This matches the reasoning already documented on `GET /kb/pages/search`. The ceiling is reported rather than silent, which is what "a query never silently truncates" actually requires.
+
+No migration needed: the `kb_pages.fts` GIN index already exists.
+
+Evidence: 12 backend tests, 13 frontend tests.
+
+### S10 Reviews frontend — landed, plus a backend filter that silently did nothing
+
+The lane rebuilt `reviews-page.tsx` on `usePageState`/`<PageState>`, `DataTable` with `mobileCard`, cursor pagination, URL filters, and a bulk-decide state machine that reports **per-row** failures with a retry for just the failed ids.
+
+It also found a real defect outside its own scope and flagged rather than fixed it: **`spaceId` was accepted by the reviews Zod schema and then never applied** — `KbPageReviewsQueryService.list` had no condition for it. A filter that passes validation and silently does nothing is worse than a missing one; the user gets an unfiltered list that looks filtered. Fixed in the query service, and pinned by a test asserting every accepted filter (`status`, `type`, `reviewer`, `spaceId`, `dueFrom`, `dueTo`) actually reaches the rendered SQL. `reviewer`, `dueFrom` and `dueTo` were already correct.
+
+Still not user-facing, and deliberately so: the `reviewer` filter needs a member picker that does not exist for this surface, and the due-date range needs a filter sheet — two date inputs would overflow the filter row at 375 px. Both are wired through the URL and the API, so they work if driven externally.
+
+Evidence: `npx jest src/modules/kb/wiki/kb-page-reviews-derived-overdue.spec.ts` → **18 passed**. 11 frontend tests.
+
+### A lane's green claim was false — verify, don't relay
+
+The reviews frontend lane reported `pnpm type-check:specs` **exit 0**. Run independently it was **exit 2**, with two `TS2322` errors in that lane's own new spec file: a `makePage` helper whose default parameter inferred `nextCursor: null`, so every call passing a real cursor string failed. Fixed by typing the parameter instead of inferring it.
+
+The pattern to expect: a lane reports the gate it *intended* to run, or ran it before its last edit. **Re-run every gate a lane claims, on the whole project, after it finishes.** This is the second time on this task that a lane's self-report diverged from the tree.
 
 ### Gate status at this checkpoint
 
