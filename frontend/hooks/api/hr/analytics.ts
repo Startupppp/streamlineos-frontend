@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { type RawLeaveTrendsResponse, normalizeLeaveTrends } from "./analytics-normalize";
 
 const hrAnalyticsOverviewC = lazyContract(() =>
@@ -67,6 +68,7 @@ export function useHrAnalytics() {
     queryFn: ({ signal }) => apiClient.get<HrAnalyticsData>("/hr/analytics", undefined, signal, hrAnalyticsOverviewC),
     staleTime: 60_000,
     enabled: canAnalytics,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -89,6 +91,7 @@ export function useHrAttendanceAnalytics(year: number, month: number) {
       }, signal, hrAttendanceAnalyticsC),
     staleTime: 60_000,
     enabled: canAnalytics,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -107,6 +110,7 @@ export function useHrAttritionAnalytics() {
       apiClient.get<HrAttritionAnalytics>("/hr/analytics/attrition", undefined, signal, hrAttritionC),
     staleTime: 5 * 60_000,
     enabled: canAnalytics,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -132,6 +136,7 @@ export function useHrCommandCenter(departmentId?: number) {
       ),
     staleTime: 5 * 60_000,
     enabled: canAnalytics,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -152,6 +157,7 @@ export function useHrAttritionPlus(departmentId?: number) {
       ),
     staleTime: 5 * 60_000,
     enabled: canAnalytics,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -170,6 +176,7 @@ export function useHrLeaveTrends(departmentId?: number) {
     },
     staleTime: 5 * 60_000,
     enabled: canAnalytics,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -184,6 +191,7 @@ export function useHrPayrollCost(options?: { enabled?: boolean }) {
     queryFn: ({ signal }) => apiClient.get<HrPayrollCostData>("/hr/analytics-plus/payroll-cost", undefined, signal, hrPayrollCostC),
     staleTime: 10 * 60_000,
     enabled: canAnalytics && (options?.enabled ?? true),
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -198,6 +206,7 @@ export function useHrEngagement() {
     queryFn: ({ signal }) => apiClient.get<HrEngagementData>("/hr/analytics-plus/engagement", undefined, signal, hrEngagementC),
     staleTime: 5 * 60_000,
     enabled: canAnalytics,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -216,6 +225,7 @@ export function useHrPerformanceDist(cycleId?: number) {
       ),
     staleTime: 10 * 60_000,
     enabled: canAnalytics,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -234,6 +244,7 @@ export function useHrComplianceGaps(departmentId?: number) {
       ),
     staleTime: 5 * 60_000,
     enabled: canAnalytics,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -257,5 +268,6 @@ export function useHrDrilldown(metric: string, page: number, departmentId?: numb
       }, signal, hrDrilldownC),
     staleTime: 60_000,
     enabled: canAnalytics && !!metric,
+    ...INLINE_READ_ERROR,
   });
 }

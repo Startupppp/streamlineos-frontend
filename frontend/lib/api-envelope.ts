@@ -40,6 +40,36 @@ export function getApiErrorCode(error: unknown): string | undefined {
   return isApiError(error) ? error.code : undefined;
 }
 
+export interface ValidationFieldError {
+  readonly path: string;
+  readonly message: string;
+}
+
+export function getValidationFieldErrors(
+  error: unknown,
+): readonly ValidationFieldError[] {
+  if (!isApiError(error) || error.code !== "VALIDATION_FAILED") return [];
+  const raw = Array.isArray(error.details)
+    ? error.details
+    : isRecord(error.details) && Array.isArray(error.details.details)
+      ? error.details.details
+      : undefined;
+  if (raw === undefined) return [];
+  return raw.flatMap((entry) =>
+    isRecord(entry) &&
+    typeof entry.path === "string" &&
+    typeof entry.message === "string"
+      ? [{ path: entry.path, message: entry.message }]
+      : [],
+  );
+}
+
+export function getCorrelationId(error: unknown): string | undefined {
+  if (!isApiError(error) || !isRecord(error.details)) return undefined;
+  const id = error.details.correlationId;
+  return typeof id === "string" && id.length > 0 ? id : undefined;
+}
+
 export const CONTRACT_VIOLATION_CODE = "CONTRACT_VIOLATION";
 
 const CONTRACT_VIOLATION_MESSAGE =
@@ -92,12 +122,13 @@ export class ApiContractError extends ApiError {
     resource: string,
     status: number | undefined,
     issues: readonly ContractIssue[],
+    correlationId?: string,
   ) {
     super(
       CONTRACT_VIOLATION_MESSAGE,
       status,
       CONTRACT_VIOLATION_CODE,
-      { resource, issues },
+      { resource, issues, ...(correlationId ? { correlationId } : {}) },
       resource,
     );
     this.name = "ApiContractError";
@@ -114,7 +145,16 @@ export interface ApiResponseLike {
   readonly ok: boolean;
   readonly status: number;
   readonly statusText: string;
+  readonly headers?: { get(name: string): string | null };
   json(): Promise<unknown>;
+}
+
+function responseCorrelationId(res: ApiResponseLike): string | undefined {
+  try {
+    return res.headers?.get("x-correlation-id") ?? undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function unwrapEnvelope(body: unknown): unknown {
@@ -144,6 +184,7 @@ function rejectContractViolation(
     path: ReadonlyArray<PropertyKey>;
     message: string;
   }>,
+  correlationId?: string,
 ): never {
   const issues: ContractIssue[] = zodIssues
     .slice(0, MAX_REPORTED_ISSUES)
@@ -151,8 +192,8 @@ function rejectContractViolation(
       path: issuePath(issue.path),
       message: issue.message,
     }));
-  const error = new ApiContractError(resource, status, issues);
-  reportError(error, { resource, status, issues });
+  const error = new ApiContractError(resource, status, issues, correlationId);
+  reportError(error, { resource, status, issues, correlationId });
   throw error;
 }
 
@@ -161,11 +202,12 @@ function applyContract<T>(
   contract: ResponseContract<T> | undefined,
   resource: string,
   status: number,
+  correlationId?: string,
 ): T {
   if (contract === undefined) return assertUnchecked<T>(payload);
   const result = contract.safeParse(payload);
   if (result.success) return result.data;
-  return rejectContractViolation(resource, status, result.error.issues);
+  return rejectContractViolation(resource, status, result.error.issues, correlationId);
 }
 
 /**
@@ -181,6 +223,7 @@ function applyContract<T>(
 export async function apiErrorFromResponse(
   res: ApiResponseLike,
   endpoint?: string,
+  correlationId?: string,
 ): Promise<ApiError> {
   let message = `${res.status} ${res.statusText}`;
   let code: string | undefined;
@@ -188,7 +231,13 @@ export async function apiErrorFromResponse(
   try {
     const body = await res.json();
     if (!isRecord(body))
-      return new ApiError(message, res.status, code, details, endpoint);
+      return new ApiError(
+        message,
+        res.status,
+        code,
+        withCorrelationId(details, correlationId),
+        endpoint,
+      );
     if (typeof body.message === "string" && body.message) {
       message = body.message;
     } else if (Array.isArray(body.message) && body.message.length > 0) {
@@ -213,7 +262,20 @@ export async function apiErrorFromResponse(
       if (Object.keys(rest).length > 0) details = rest;
     }
   } catch {}
-  return new ApiError(message, res.status, code, details, endpoint);
+  return new ApiError(
+    message,
+    res.status,
+    code,
+    withCorrelationId(details, correlationId),
+    endpoint,
+  );
+}
+
+function withCorrelationId(details: unknown, correlationId?: string): unknown {
+  if (correlationId === undefined) return details;
+  if (details === undefined) return { correlationId };
+  if (isRecord(details)) return { ...details, correlationId };
+  return { details, correlationId };
 }
 
 /**
@@ -225,10 +287,18 @@ export async function parseApiResponse<T>(
   res: ApiResponseLike,
   contract?: ResponseContract<T>,
   resource = "response",
+  correlationId?: string,
 ): Promise<T> {
-  if (!res.ok) throw await apiErrorFromResponse(res, resource);
+  const requestId = correlationId ?? responseCorrelationId(res);
+  if (!res.ok) throw await apiErrorFromResponse(res, resource, requestId);
   if (res.status === 204)
-    return applyContract<T>(undefined, contract, resource, res.status);
+    return applyContract<T>(undefined, contract, resource, res.status, requestId);
   const body = await res.json();
-  return applyContract<T>(unwrapEnvelope(body), contract, resource, res.status);
+  return applyContract<T>(
+    unwrapEnvelope(body),
+    contract,
+    resource,
+    res.status,
+    requestId,
+  );
 }

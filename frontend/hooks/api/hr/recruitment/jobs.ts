@@ -9,6 +9,7 @@ const noContentC = lazyContract(() =>
 );
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   JobPosting,
@@ -104,6 +105,7 @@ export function useRecruitmentStats() {
     queryFn: ({ signal }) => apiClient.get<RecruitmentStats>("/hr/recruitment/stats", undefined, signal, recruitmentStatsC),
     staleTime: 2 * 60_000,
     enabled: canInterviews,
+    ...INLINE_READ_ERROR,
   });
 }
 

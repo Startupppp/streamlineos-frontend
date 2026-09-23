@@ -60,6 +60,11 @@ jest.mock("@/hooks/api/users", () => ({
     return { ...queryState, refetch };
   },
   useResendInvite: () => ({ mutate: jest.fn(), isPending: false, variables: undefined }),
+  useReissueInvitationJoinLink: () => ({
+    mutateAsync: jest.fn(),
+    isPending: false,
+    variables: undefined,
+  }),
   useCancelInvitation: () => ({ mutate: jest.fn(), isPending: false }),
   useChangeInvitationRole: () => ({ mutate: jest.fn(), isPending: false, variables: undefined }),
 }));

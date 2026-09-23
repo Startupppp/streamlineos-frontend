@@ -113,13 +113,15 @@ export const userPreferencesContract = z.object({
   timezone: z.string(),
   dateFormat: z.string(),
   timeFormat: z.string(),
-  numberFormat: z.string().nullable(),
-  weekStartDay: z.string().nullable(),
+  // Defaults path omits these; a stored row may send null. Accept both.
+  numberFormat: z.string().nullish(),
+  weekStartDay: z.string().nullish(),
   notificationPreferences: z.record(z.string(), z.boolean()),
   dashboardPreferences: z.record(z.string(), z.unknown()),
   updatedAt: z.string().optional(),
 });
 
+/** Mirrors backend `userMembershipResponseSchema` / `UserProfileService.getMembership`. */
 export const userMembershipContract = z.object({
   userId: z.string(),
   orgId: z.string(),
@@ -185,6 +187,12 @@ export const bulkInviteContract = z.object({
 });
 
 export const userSuccessContract = z.object({ success: z.literal(true) });
+
+export const invitationJoinLinkContract = z.object({
+  joinUrl: z.string(),
+  email: z.string(),
+  expiresAt: z.string(),
+});
 
 export const bulkActionResultContract = z.object({
   results: z.array(z.object({

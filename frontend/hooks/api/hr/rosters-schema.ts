@@ -29,6 +29,7 @@ export const rostersListContract = z.array(rosterRowSchema);
 
 export const createRosterContract = rosterRowSchema;
 
+export const rosterEntryRowContract = rosterEntryRowSchema;
 export const rosterEntriesContract = z.array(rosterEntryRowSchema);
 
 export const publishRosterContract = rosterRowSchema;

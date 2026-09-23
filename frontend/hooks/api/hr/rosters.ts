@@ -16,6 +16,9 @@ const createRosterC = lazyContract(() =>
 const rosterEntriesC = lazyContract(() =>
   import("@/hooks/api/hr/rosters-schema").then((m) => m.rosterEntriesContract),
 );
+const rosterEntryC = lazyContract(() =>
+  import("@/hooks/api/hr/rosters-schema").then((m) => m.rosterEntryRowContract),
+);
 const publishRosterC = lazyContract(() =>
   import("@/hooks/api/hr/rosters-schema").then((m) => m.publishRosterContract),
 );
@@ -69,6 +72,37 @@ export function useRosterEntries(rosterId: number) {
     queryFn: ({ signal }) => apiClient.get<RosterEntry[]>(`/hr/rosters/${rosterId}/entries`, undefined, signal, rosterEntriesC),
     staleTime: 30_000,
     enabled: hrEnabled && canView && rosterId > 0,
+  });
+}
+
+export interface UpsertRosterEntryInput {
+  rosterId: number;
+  userId: string;
+  date: string;
+  shiftId?: number;
+  isDayOff?: boolean;
+  notes?: string;
+}
+
+export function useUpsertRosterEntry() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("hr:attendance:manage", {
+    mutationKey: ["hr", "rosters", "entries", "upsert"],
+    mutationFn: ({ rosterId, ...body }: UpsertRosterEntryInput) =>
+      apiClient.post<RosterEntry>(
+        `/hr/rosters/${rosterId}/entries`,
+        body,
+        undefined,
+        rosterEntryC,
+      ),
+    onSuccess: (_entry, { rosterId }) => {
+      void qc.invalidateQueries({
+        queryKey: [...humanResourcesQueryKeys.hr.all, "rosterEntries", rosterId],
+      });
+      void qc.invalidateQueries({
+        queryKey: [...humanResourcesQueryKeys.hr.all, "rosters"],
+      });
+    },
   });
 }
 

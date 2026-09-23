@@ -30,6 +30,7 @@ import {
   useInvitations,
   useResendInvite,
   useCancelInvitation,
+  useReissueInvitationJoinLink,
   useChangeInvitationRole,
 } from "@/hooks/api/users";
 import type { Invitation } from "@/hooks/api/users";
@@ -94,6 +95,32 @@ export function UserInvitationsPanel() {
     isPending: isResending,
     variables: resendingInvitationId,
   } = useResendInvite();
+  const {
+    mutateAsync: reissueJoinLink,
+    isPending: isCopyingJoinLink,
+    variables: copyingJoinLinkInvitationId,
+  } = useReissueInvitationJoinLink();
+
+  const handleCopyJoinLink = useCallback(
+    (invitationId: string) => {
+      void reissueJoinLink(invitationId)
+        .then(async (link) => {
+          try {
+            await navigator.clipboard.writeText(link.joinUrl);
+            toast.success(`Join link copied for ${link.email}`, {
+              description:
+                "It replaces any link already sent and expires in 7 days.",
+            });
+          } catch {
+            toast.message(`Join link for ${link.email}`, {
+              description: link.joinUrl,
+            });
+          }
+        })
+        .catch((err: unknown) => toast.error(getErrorMessage(err)));
+    },
+    [reissueJoinLink],
+  );
   const { mutate: cancel, isPending: isCancelling } = useCancelInvitation();
   const {
     mutate: changeRole,
@@ -239,15 +266,21 @@ export function UserInvitationsPanel() {
         isCancelling,
         onRoleChange: handleRoleChange,
         onResend: handleResend,
+        onCopyJoinLink: handleCopyJoinLink,
+        isCopyingJoinLink,
+        copyingJoinLinkInvitationId,
         onCancelRequest: handleCancelRequest,
       }),
     [
       canCancelInvitation,
       canInvite,
       changingRoleVariables?.invitationId,
+      copyingJoinLinkInvitationId,
       handleCancelRequest,
+      handleCopyJoinLink,
       handleResend,
       handleRoleChange,
+      isCopyingJoinLink,
       isCancelling,
       isChangingRole,
       isResending,

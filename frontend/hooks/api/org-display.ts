@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { DEFAULT_MONEY_DISPLAY, type MoneyDisplay } from "@/lib/format-utils";
 import { lazyContract } from "@/lib/api-envelope";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 /** Deferred: every money-rendering surface imports this, and the schema pulls Zod. */
 const displayContract = lazyContract(() =>
@@ -28,6 +29,7 @@ export function useOrgDisplay(): MoneyDisplay {
     queryFn: ({ signal }) =>
       apiClient.get("/me/org-display", undefined, signal, displayContract),
     staleTime: 30 * 60_000,
+    ...INLINE_READ_ERROR,
   });
 
   return data ?? DEFAULT_MONEY_DISPLAY;
