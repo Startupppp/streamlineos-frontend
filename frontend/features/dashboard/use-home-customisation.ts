@@ -10,14 +10,30 @@ export type HomeDensity = "compact" | "comfortable";
 
 const STORAGE_NAME = "home-widget-customisation";
 
-export const HOME_CUSTOMISATION_DEFAULT: HomeCustomisationState = {
-  hiddenWidgets: [],
-  density: "comfortable",
-};
-
 export interface HomeCustomisationState {
   hiddenWidgets: readonly string[];
   density: HomeDensity;
+  widgetOrder: readonly string[];
+}
+
+export const HOME_CUSTOMISATION_DEFAULT: HomeCustomisationState = {
+  hiddenWidgets: [],
+  density: "comfortable",
+  widgetOrder: [],
+};
+
+export function applyWidgetOrder(
+  allIds: readonly string[],
+  widgetOrder: readonly string[],
+): readonly string[] {
+  const orderMap = new Map(widgetOrder.map((id, i) => [id, i]));
+  const known = allIds
+    .filter((id) => orderMap.has(id))
+    .sort(
+      (a, b) => (orderMap.get(a) ?? Infinity) - (orderMap.get(b) ?? Infinity),
+    );
+  const unknown = allIds.filter((id) => !orderMap.has(id));
+  return [...known, ...unknown];
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -39,7 +55,10 @@ function readState(storageKey: string): HomeCustomisationState {
       rawDensity === "compact" || rawDensity === "comfortable"
         ? rawDensity
         : "comfortable";
-    return { hiddenWidgets, density };
+    const widgetOrder = Array.isArray(parsed.widgetOrder)
+      ? parsed.widgetOrder.filter((s): s is string => typeof s === "string")
+      : [];
+    return { hiddenWidgets, density, widgetOrder };
   } catch {
     return HOME_CUSTOMISATION_DEFAULT;
   }
@@ -49,7 +68,7 @@ function writeState(storageKey: string, state: HomeCustomisationState): void {
   try {
     window.localStorage.setItem(storageKey, JSON.stringify(state));
   } catch {
-    /* ignore quota errors */
+    return;
   }
 }
 
@@ -57,6 +76,11 @@ export interface UseHomeCustomisationResult {
   state: HomeCustomisationState;
   toggleWidgetVisibility: (widgetId: string) => void;
   setDensity: (density: HomeDensity) => void;
+  moveWidget: (
+    widgetId: string,
+    direction: "up" | "down",
+    allIds: readonly string[],
+  ) => void;
   reset: () => void;
   isHidden: (widgetId: string) => boolean;
 }
@@ -86,7 +110,9 @@ export function useHomeCustomisation(): UseHomeCustomisationResult {
 
   const toggleWidgetVisibility = useCallback(
     (widgetId: string) => {
-      const next: HomeCustomisationState = state.hiddenWidgets.includes(widgetId)
+      const next: HomeCustomisationState = state.hiddenWidgets.includes(
+        widgetId,
+      )
         ? {
             ...state,
             hiddenWidgets: state.hiddenWidgets.filter((id) => id !== widgetId),
@@ -104,6 +130,29 @@ export function useHomeCustomisation(): UseHomeCustomisationResult {
     [state, update],
   );
 
+  const moveWidget = useCallback(
+    (widgetId: string, direction: "up" | "down", allIds: readonly string[]) => {
+      const effective = [...applyWidgetOrder(allIds, state.widgetOrder)];
+      const idx = effective.indexOf(widgetId);
+      if (idx === -1) return;
+      if (direction === "up" && idx > 0) {
+        [effective[idx - 1], effective[idx]] = [
+          effective[idx],
+          effective[idx - 1],
+        ];
+      } else if (direction === "down" && idx < effective.length - 1) {
+        [effective[idx + 1], effective[idx]] = [
+          effective[idx],
+          effective[idx + 1],
+        ];
+      } else {
+        return;
+      }
+      update({ ...state, widgetOrder: effective });
+    },
+    [state, update],
+  );
+
   const reset = useCallback(() => {
     update(HOME_CUSTOMISATION_DEFAULT);
   }, [update]);
@@ -113,5 +162,12 @@ export function useHomeCustomisation(): UseHomeCustomisationResult {
     [state.hiddenWidgets],
   );
 
-  return { state, toggleWidgetVisibility, setDensity, reset, isHidden };
+  return {
+    state,
+    toggleWidgetVisibility,
+    setDensity,
+    moveWidget,
+    reset,
+    isHidden,
+  };
 }

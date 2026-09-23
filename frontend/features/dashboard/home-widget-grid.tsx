@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { useMemo, Fragment, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
@@ -11,7 +11,10 @@ import {
   HomeCustomisationBar,
   type WidgetOption,
 } from "./home-customisation-bar";
-import { useHomeCustomisation } from "./use-home-customisation";
+import {
+  useHomeCustomisation,
+  applyWidgetOrder,
+} from "./use-home-customisation";
 
 const LeaveBalanceWidget = dynamic(
   () =>
@@ -132,6 +135,7 @@ export function HomeWidgetGrid({
         visible: hrEnabled && canSelfAttendance,
       },
       { id: "Payroll", label: "Payroll", visible: true },
+      { id: "Expenses", label: "Expenses", visible: Boolean(expensesSlot) },
     ];
     return candidates
       .filter((w) => w.visible)
@@ -143,7 +147,72 @@ export function HomeWidgetGrid({
     canSelfAttendance,
     crmEnabled,
     canViewCrmLeads,
+    expensesSlot,
   ]);
+
+  const allAccessibleIds = availableWidgets.map((w) => w.id);
+  const orderedVisibleIds = applyWidgetOrder(
+    allAccessibleIds,
+    state.widgetOrder,
+  ).filter((id) => !isHidden(id));
+
+  const widgetNodes: Record<string, ReactNode> = {
+    "My tasks": (
+      <HomeSectionBoundary sectionLabel="My tasks">
+        <MyTasksWidget />
+      </HomeSectionBoundary>
+    ),
+    Timesheet: (
+      <HomeSectionBoundary sectionLabel="Timesheet">
+        <TimesheetWidget />
+      </HomeSectionBoundary>
+    ),
+    "Leave balance": (
+      <HomeSectionBoundary sectionLabel="Leave balance">
+        <LeaveBalanceWidget />
+      </HomeSectionBoundary>
+    ),
+    Alerts: (
+      <HomeSectionBoundary sectionLabel="Alerts">
+        <AlertsWidget />
+      </HomeSectionBoundary>
+    ),
+    Announcements: (
+      <HomeSectionBoundary sectionLabel="Announcements">
+        <AnnouncementsWidget />
+      </HomeSectionBoundary>
+    ),
+    "Upcoming events": (
+      <HomeSectionBoundary sectionLabel="Upcoming events">
+        <UpcomingEventsWidget />
+      </HomeSectionBoundary>
+    ),
+    "Business pulse": (
+      <HomeSectionBoundary sectionLabel="Business pulse">
+        <BusinessPulseWidget />
+      </HomeSectionBoundary>
+    ),
+    "Today's activities": (
+      <HomeSectionBoundary sectionLabel="Today's activities">
+        <TodayActivitiesWidget />
+      </HomeSectionBoundary>
+    ),
+    "My attendance": (
+      <HomeSectionBoundary sectionLabel="My attendance">
+        <MyAttendanceWidget />
+      </HomeSectionBoundary>
+    ),
+    Payroll: (
+      <HomeSectionBoundary sectionLabel="Payroll">
+        <PayrollWidget />
+      </HomeSectionBoundary>
+    ),
+    Expenses: expensesSlot ? (
+      <HomeSectionBoundary sectionLabel="Expenses">
+        {expensesSlot}
+      </HomeSectionBoundary>
+    ) : null,
+  };
 
   return (
     <>
@@ -160,65 +229,11 @@ export function HomeWidgetGrid({
         animate="visible"
         className={`grid grid-cols-1 ${gapClass} md:grid-cols-2 xl:grid-cols-3`}
       >
-        {projectsEnabled && !isHidden("My tasks") ? (
-          <HomeSectionBoundary sectionLabel="My tasks">
-            <MyTasksWidget />
-          </HomeSectionBoundary>
-        ) : null}
-        {projectsEnabled && !isHidden("Timesheet") ? (
-          <HomeSectionBoundary sectionLabel="Timesheet">
-            <TimesheetWidget />
-          </HomeSectionBoundary>
-        ) : null}
-        {hrEnabled && !isHidden("Leave balance") ? (
-          <HomeSectionBoundary sectionLabel="Leave balance">
-            <LeaveBalanceWidget />
-          </HomeSectionBoundary>
-        ) : null}
-        {!isHidden("Alerts") ? (
-          <HomeSectionBoundary sectionLabel="Alerts">
-            <AlertsWidget />
-          </HomeSectionBoundary>
-        ) : null}
-        {!isHidden("Announcements") ? (
-          <HomeSectionBoundary sectionLabel="Announcements">
-            <AnnouncementsWidget />
-          </HomeSectionBoundary>
-        ) : null}
-        {!isHidden("Upcoming events") ? (
-          <HomeSectionBoundary sectionLabel="Upcoming events">
-            <UpcomingEventsWidget />
-          </HomeSectionBoundary>
-        ) : null}
-        {canViewExecutive && !isHidden("Business pulse") ? (
-          <HomeSectionBoundary sectionLabel="Business pulse">
-            <BusinessPulseWidget />
-          </HomeSectionBoundary>
-        ) : null}
-        {crmEnabled &&
-        canViewCrmLeads &&
-        !isHidden("Today's activities") ? (
-          <HomeSectionBoundary sectionLabel="Today's activities">
-            <TodayActivitiesWidget />
-          </HomeSectionBoundary>
-        ) : null}
-        {hrEnabled &&
-        canSelfAttendance &&
-        !isHidden("My attendance") ? (
-          <HomeSectionBoundary sectionLabel="My attendance">
-            <MyAttendanceWidget />
-          </HomeSectionBoundary>
-        ) : null}
-        {!isHidden("Payroll") ? (
-          <HomeSectionBoundary sectionLabel="Payroll">
-            <PayrollWidget />
-          </HomeSectionBoundary>
-        ) : null}
-        {expensesSlot && !isHidden("Expenses") ? (
-          <HomeSectionBoundary sectionLabel="Expenses">
-            {expensesSlot}
-          </HomeSectionBoundary>
-        ) : null}
+        {orderedVisibleIds.map((id) => {
+          const node = widgetNodes[id];
+          if (!node) return null;
+          return <Fragment key={id}>{node}</Fragment>;
+        })}
       </motion.div>
     </>
   );

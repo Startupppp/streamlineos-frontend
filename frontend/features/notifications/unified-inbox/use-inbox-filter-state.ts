@@ -11,7 +11,9 @@ import {
   type InboxView,
   type InboxFilterState,
   type InboxQueryParams,
+  type InboxGrouping,
 } from "./inbox-view-params";
+import { parseGrouping } from "./inbox-grouping";
 
 const VALID_KINDS: ReadonlySet<string> = new Set<InboxKind>([
   "notification",
@@ -35,8 +37,10 @@ export interface InboxFilterControl {
   handleCategoryChange: (next: string) => void;
   handlePriorityChange: (next: string) => void;
   handleKindOverrideChange: (next: InboxKind[]) => void;
+  handleGroupChange: (next: InboxGrouping) => void;
   handleToggleSelect: (key: string) => void;
   handleClearSelection: () => void;
+  applyFilterState: (next: InboxFilterState) => void;
 }
 
 export function useInboxFilterState(
@@ -63,6 +67,9 @@ export function useInboxFilterState(
   const [kindOverride, setKindOverride] = useState<InboxKind[]>(() =>
     parseKindsFromURL(searchParams.get("kinds")),
   );
+  const [group, setGroup] = useState<InboxGrouping>(() =>
+    parseGrouping(searchParams.get("group")),
+  );
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
 
   const filterState = useMemo(
@@ -73,8 +80,9 @@ export function useInboxFilterState(
       category,
       priority,
       kindOverride,
+      group,
     }),
-    [view, q, unreadOnly, category, priority, kindOverride],
+    [view, q, unreadOnly, category, priority, kindOverride, group],
   );
 
   useEffect(() => {
@@ -91,6 +99,7 @@ export function useInboxFilterState(
     setCategory("");
     setPriority("");
     setKindOverride([]);
+    setGroup("none");
     setSelectedKeys(new Set());
   }, []);
 
@@ -119,6 +128,22 @@ export function useInboxFilterState(
     setSelectedKeys(new Set());
   }, []);
 
+  const handleGroupChange = useCallback((next: InboxGrouping) => {
+    setGroup(next);
+    setSelectedKeys(new Set());
+  }, []);
+
+  const applyFilterState = useCallback((next: InboxFilterState) => {
+    setView(next.view);
+    setQ(next.q);
+    setUnreadOnly(next.unreadOnly);
+    setCategory(next.category);
+    setPriority(next.priority);
+    setKindOverride(next.kindOverride);
+    setGroup(next.group);
+    setSelectedKeys(new Set());
+  }, []);
+
   const handleToggleSelect = useCallback((key: string) => {
     setSelectedKeys((prev) => {
       const next = new Set(prev);
@@ -140,7 +165,9 @@ export function useInboxFilterState(
     handleCategoryChange,
     handlePriorityChange,
     handleKindOverrideChange,
+    handleGroupChange,
     handleToggleSelect,
     handleClearSelection,
+    applyFilterState,
   };
 }

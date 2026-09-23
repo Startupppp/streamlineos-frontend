@@ -12,6 +12,8 @@ import dynamic from "next/dynamic";
 import { useUnifiedInbox } from "@/hooks/api/inbox";
 import { useInboxActions } from "./use-inbox-actions";
 import { useInboxFilterState } from "./use-inbox-filter-state";
+import { groupInboxItems } from "./inbox-grouping";
+import type { InboxGroupedVirtualListProps } from "./inbox-grouped-virtual-list";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toSearchParams } from "@/lib/route-search-params";
 import { normalizeBuildDeepLink } from "@/lib/build/normalize-build-deep-link";
@@ -41,6 +43,10 @@ const InboxVirtualList = dynamic<InboxVirtualListProps>(() =>
   import("./inbox-virtual-list").then((m) => m.InboxVirtualList),
 );
 
+const InboxGroupedVirtualList = dynamic<InboxGroupedVirtualListProps>(() =>
+  import("./inbox-grouped-virtual-list").then((m) => m.InboxGroupedVirtualList),
+);
+
 export function InboxShell() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -55,8 +61,10 @@ export function InboxShell() {
     handleCategoryChange,
     handlePriorityChange,
     handleKindOverrideChange,
+    handleGroupChange,
     handleToggleSelect,
     handleClearSelection,
+    applyFilterState,
   } = useInboxFilterState(searchParams, router);
 
   const {
@@ -79,6 +87,10 @@ export function InboxShell() {
   const pages = useMemo(() => data?.pages ?? [], [data]);
   const items = useMemo(() => dedupeInboxItems(pages), [pages]);
   const deferredItems = useDeferredValue(items);
+  const groups = useMemo(
+    () => groupInboxItems(deferredItems, filterState.group),
+    [deferredItems, filterState.group],
+  );
   const deniedPermission = deniedPermissionFor(filterState.view, pages[0]?.sources ?? []);
   const degraded = useMemo(
     () => (isDegraded(pages) ? degradedSources(pages) : []),
@@ -159,6 +171,8 @@ export function InboxShell() {
           onCategoryChange={handleCategoryChange}
           onPriorityChange={handlePriorityChange}
           onKindOverrideChange={handleKindOverrideChange}
+          onGroupChange={handleGroupChange}
+          onApplySavedView={applyFilterState}
         />
       }
     >
@@ -213,27 +227,51 @@ export function InboxShell() {
               />
             ) : (
               <div className="flex-1 min-h-0 overflow-hidden">
-                <InboxVirtualList
-                  items={deferredItems}
-                  hasNextPage={hasNextPage ?? false}
-                  isFetchingNextPage={isFetchingNextPage}
-                  isOnline={actions.isOnline}
-                  selectedKeys={selectedKeys}
-                  onToggleSelect={handleToggleSelect}
-                  onNotificationClick={handleNotificationClick}
-                  onBroadcastClick={handleBroadcastClick}
-                  onMailClick={handleMailClick}
-                  onApprovalClick={handleApprovalClick}
-                  onArchive={actions.handleArchive}
-                  onDelete={actions.handleDelete}
-                  onApprove={actions.handleApprove}
-                  onReject={actions.handleReject}
-                  approvingId={actions.approvingId}
-                  rejectingId={actions.rejectingId}
-                  archivingId={actions.archivingId}
-                  deletingId={actions.deletingId}
-                  onLoadMore={handleLoadMore}
-                />
+                {filterState.group !== "none" ? (
+                  <InboxGroupedVirtualList
+                    groups={groups}
+                    hasNextPage={hasNextPage ?? false}
+                    isFetchingNextPage={isFetchingNextPage}
+                    isOnline={actions.isOnline}
+                    selectedKeys={selectedKeys}
+                    onToggleSelect={handleToggleSelect}
+                    onNotificationClick={handleNotificationClick}
+                    onBroadcastClick={handleBroadcastClick}
+                    onMailClick={handleMailClick}
+                    onApprovalClick={handleApprovalClick}
+                    onArchive={actions.handleArchive}
+                    onDelete={actions.handleDelete}
+                    onApprove={actions.handleApprove}
+                    onReject={actions.handleReject}
+                    approvingId={actions.approvingId}
+                    rejectingId={actions.rejectingId}
+                    archivingId={actions.archivingId}
+                    deletingId={actions.deletingId}
+                    onLoadMore={handleLoadMore}
+                  />
+                ) : (
+                  <InboxVirtualList
+                    items={deferredItems}
+                    hasNextPage={hasNextPage ?? false}
+                    isFetchingNextPage={isFetchingNextPage}
+                    isOnline={actions.isOnline}
+                    selectedKeys={selectedKeys}
+                    onToggleSelect={handleToggleSelect}
+                    onNotificationClick={handleNotificationClick}
+                    onBroadcastClick={handleBroadcastClick}
+                    onMailClick={handleMailClick}
+                    onApprovalClick={handleApprovalClick}
+                    onArchive={actions.handleArchive}
+                    onDelete={actions.handleDelete}
+                    onApprove={actions.handleApprove}
+                    onReject={actions.handleReject}
+                    approvingId={actions.approvingId}
+                    rejectingId={actions.rejectingId}
+                    archivingId={actions.archivingId}
+                    deletingId={actions.deletingId}
+                    onLoadMore={handleLoadMore}
+                  />
+                )}
               </div>
             )}
           </>

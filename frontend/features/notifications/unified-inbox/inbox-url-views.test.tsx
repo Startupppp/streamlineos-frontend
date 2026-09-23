@@ -146,8 +146,10 @@ jest.mock("./inbox-toolbar", () => {
       state,
       onViewChange,
     }: {
-      state: { view: string };
+      state: { view: string; group: string };
       onViewChange: (v: string) => void;
+      onGroupChange?: (g: string) => void;
+      onApplySavedView?: (s: unknown) => void;
     }) =>
       ce(
         "div",
@@ -279,6 +281,7 @@ describe("buildQueryParams — view → backend params mapping", () => {
       category: "",
       priority: "",
       kindOverride: [],
+      group: "none",
     };
   }
 
@@ -387,6 +390,7 @@ describe("parseInboxFilterState — round-trip with filterStateToSearchParams", 
       category: "MENTIONS",
       priority: "HIGH",
       kindOverride: ["notification"],
+      group: "kind",
     };
     const params = filterStateToSearchParams(original);
     const restored = parseInboxFilterState(params);

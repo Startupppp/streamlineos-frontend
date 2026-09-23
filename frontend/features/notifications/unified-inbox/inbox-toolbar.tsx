@@ -15,8 +15,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { NOTIFICATION_CATEGORY_VALUES } from "@/types/notifications";
 import type { InboxKind } from "@/types/inbox";
-import { VIEWS, type InboxView, type InboxFilterState } from "./inbox-view-params";
+import {
+  VIEWS,
+  type InboxView,
+  type InboxFilterState,
+  type InboxGrouping,
+} from "./inbox-view-params";
+import { GROUPING_OPTIONS } from "./inbox-grouping";
 import { INBOX_SOURCE_LABELS } from "./inbox-sources";
+import { InboxSavedViewsPanel } from "./inbox-saved-views-panel";
 
 const ALL_KINDS: InboxKind[] = [
   "notification",
@@ -47,6 +54,8 @@ export interface InboxToolbarProps {
   onCategoryChange: (category: string) => void;
   onPriorityChange: (priority: string) => void;
   onKindOverrideChange: (kinds: InboxKind[]) => void;
+  onGroupChange: (group: InboxGrouping) => void;
+  onApplySavedView: (next: InboxFilterState) => void;
 }
 
 export function InboxToolbar({
@@ -57,6 +66,8 @@ export function InboxToolbar({
   onCategoryChange,
   onPriorityChange,
   onKindOverrideChange,
+  onGroupChange,
+  onApplySavedView,
 }: InboxToolbarProps) {
   const [rawSearch, setRawSearch] = useState(state.q);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -102,6 +113,11 @@ export function InboxToolbar({
       if (kind !== null) onKindOverrideChange([kind]);
     },
     [onKindOverrideChange],
+  );
+
+  const handleGroupValueChange = useCallback(
+    (value: string) => onGroupChange(value as InboxGrouping),
+    [onGroupChange],
   );
 
   const handleUnreadToggle = useCallback(
@@ -190,6 +206,22 @@ export function InboxToolbar({
             ))}
           </SelectContent>
         </Select>
+        <Select value={state.group} onValueChange={handleGroupValueChange}>
+          <SelectTrigger className="w-36 h-9 text-sm" aria-label="Group by">
+            <SelectValue placeholder="Group by" />
+          </SelectTrigger>
+          <SelectContent>
+            {GROUPING_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <InboxSavedViewsPanel
+          currentState={state}
+          onApply={onApplySavedView}
+        />
       </div>
     </div>
   );

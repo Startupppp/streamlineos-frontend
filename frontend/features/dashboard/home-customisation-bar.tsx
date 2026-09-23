@@ -8,6 +8,8 @@ import {
   LayoutGrid,
   AlignJustify,
   RotateCcw,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +19,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import type { UseHomeCustomisationResult, HomeDensity } from "./use-home-customisation";
+import { applyWidgetOrder } from "./use-home-customisation";
 
 export interface WidgetOption {
   id: string;
@@ -54,16 +57,56 @@ interface WidgetToggleRowProps {
   option: WidgetOption;
   isHidden: boolean;
   onToggle: (id: string) => void;
+  onMoveUp: (id: string) => void;
+  onMoveDown: (id: string) => void;
+  isFirst: boolean;
+  isLast: boolean;
 }
 
-function WidgetToggleRow({ option, isHidden, onToggle }: WidgetToggleRowProps) {
+function WidgetToggleRow({
+  option,
+  isHidden,
+  onToggle,
+  onMoveUp,
+  onMoveDown,
+  isFirst,
+  isLast,
+}: WidgetToggleRowProps) {
   function handleToggle() {
     onToggle(option.id);
   }
+  function handleMoveUp() {
+    onMoveUp(option.id);
+  }
+  function handleMoveDown() {
+    onMoveDown(option.id);
+  }
 
   return (
-    <div className="flex items-center justify-between gap-2 py-1.5">
-      <span className="text-sm text-foreground">{option.label}</span>
+    <div className="flex items-center justify-between gap-1 py-1.5">
+      <span className="flex-1 text-sm text-foreground">{option.label}</span>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        aria-label={`Move ${option.label} up`}
+        onClick={handleMoveUp}
+        disabled={isFirst}
+        className="h-7 w-7 p-0 shrink-0"
+      >
+        <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        aria-label={`Move ${option.label} down`}
+        onClick={handleMoveDown}
+        disabled={isLast}
+        className="h-7 w-7 p-0 shrink-0"
+      >
+        <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+      </Button>
       <Button
         type="button"
         variant="ghost"
@@ -92,9 +135,16 @@ export function HomeCustomisationBar({
   availableWidgets,
 }: HomeCustomisationBarProps) {
   const [open, setOpen] = useState(false);
-  const { state, toggleWidgetVisibility, setDensity, reset, isHidden } =
+  const [announcement, setAnnouncement] = useState("");
+  const { state, toggleWidgetVisibility, setDensity, moveWidget, reset, isHidden } =
     customisation;
   const hiddenCount = state.hiddenWidgets.length;
+
+  const allIds = availableWidgets.map((w) => w.id);
+  const widgetById = new Map(availableWidgets.map((w) => [w.id, w]));
+  const orderedWidgets: WidgetOption[] = applyWidgetOrder(allIds, state.widgetOrder)
+    .map((id) => widgetById.get(id))
+    .filter((w): w is WidgetOption => w !== undefined);
 
   function handleOpenChange(value: boolean) {
     setOpen(value);
@@ -104,8 +154,23 @@ export function HomeCustomisationBar({
     reset();
   }
 
+  function handleMoveUp(widgetId: string) {
+    moveWidget(widgetId, "up", allIds);
+    const label = widgetById.get(widgetId)?.label ?? widgetId;
+    setAnnouncement(`Moved ${label} up`);
+  }
+
+  function handleMoveDown(widgetId: string) {
+    moveWidget(widgetId, "down", allIds);
+    const label = widgetById.get(widgetId)?.label ?? widgetId;
+    setAnnouncement(`Moved ${label} down`);
+  }
+
   return (
     <div className="flex items-center justify-end">
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {announcement}
+      </div>
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <Button
@@ -163,16 +228,22 @@ export function HomeCustomisationBar({
               </div>
             </div>
 
-            {availableWidgets.length > 0 && (
+            {orderedWidgets.length > 0 && (
               <div className="flex flex-col gap-0.5">
-                <span className="text-xs text-muted-foreground">Widgets</span>
+                <span className="text-xs text-muted-foreground">
+                  Widgets — drag or use arrows to reorder
+                </span>
                 <div className="divide-y divide-border">
-                  {availableWidgets.map((option) => (
+                  {orderedWidgets.map((option, index) => (
                     <WidgetToggleRow
                       key={option.id}
                       option={option}
                       isHidden={isHidden(option.id)}
                       onToggle={toggleWidgetVisibility}
+                      onMoveUp={handleMoveUp}
+                      onMoveDown={handleMoveDown}
+                      isFirst={index === 0}
+                      isLast={index === orderedWidgets.length - 1}
                     />
                   ))}
                 </div>

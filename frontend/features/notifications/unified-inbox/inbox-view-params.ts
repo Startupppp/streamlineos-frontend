@@ -1,6 +1,7 @@
 import { Archive, Bell, CheckCircle, Clock, Inbox, Mail } from "lucide-react";
 import type { ViewOption } from "@/components/ui/view-toggle";
 import type { InboxKind } from "@/types/inbox";
+import { parseGrouping, type InboxGrouping } from "./inbox-grouping";
 
 export type InboxView =
   | "primary"
@@ -90,7 +91,10 @@ export interface InboxFilterState {
   category: string;
   priority: string;
   kindOverride: InboxKind[];
+  group: InboxGrouping;
 }
+
+export { type InboxGrouping };
 
 export function parseInboxFilterState(
   params: URLSearchParams,
@@ -108,7 +112,8 @@ export function parseInboxFilterState(
   const kindOverride: InboxKind[] = kindsRaw
     ? kindsRaw.split(",").filter((k): k is InboxKind => VALID_KINDS.has(k))
     : [];
-  return { view, q, unreadOnly, category, priority, kindOverride };
+  const group = parseGrouping(params.get("group"));
+  return { view, q, unreadOnly, category, priority, kindOverride, group };
 }
 
 export interface InboxQueryParams {
@@ -153,5 +158,6 @@ export function filterStateToSearchParams(
   if (state.priority) p.set("priority", state.priority);
   if (state.kindOverride.length > 0)
     p.set("kinds", state.kindOverride.join(","));
+  if (state.group !== "none") p.set("group", state.group);
   return p;
 }
