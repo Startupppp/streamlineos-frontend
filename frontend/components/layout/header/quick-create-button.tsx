@@ -195,11 +195,13 @@ const QuickCreateTriggerButton = forwardRef<
   ComponentPropsWithoutRef<"button"> & {
     iconRef: ReturnType<typeof useAnimatedIcon>["iconRef"]
     hoverHandlers: ReturnType<typeof useAnimatedIcon>["hoverHandlers"]
+    compact?: boolean
   }
 >(function QuickCreateTriggerButton(
   {
     iconRef,
     hoverHandlers,
+    compact = false,
     className,
     type = "button",
     onMouseEnter,
@@ -232,15 +234,17 @@ const QuickCreateTriggerButton = forwardRef<
       ref={ref}
       type={type}
       className={cn(
-        "flex h-8 items-center justify-center gap-1.5 rounded-lg bg-primary px-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-all duration-200 hover:bg-primary/90 hover:shadow focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+        "flex items-center justify-center rounded-lg bg-primary text-sm font-medium text-primary-foreground shadow-sm transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:bg-primary/90 hover:shadow focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 motion-reduce:transform-none motion-reduce:transition-none",
+        compact ? "size-9" : "h-8 gap-1.5 px-2.5",
         className,
       )}
+      aria-label={compact ? "Create" : undefined}
       {...props}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       <PlusIcon ref={iconRef} size={16} />
-      Create
+      <span className={compact ? "sr-only" : undefined}>Create</span>
     </button>
   )
 })
@@ -295,7 +299,7 @@ function QuickCreateMenuItems({
   )
 }
 
-export function QuickCreateButton() {
+export function QuickCreateButton({ compact = false }: { compact?: boolean }) {
   const groups = useQuickCreateGroups()
   const isMobile = useIsMobile()
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -350,7 +354,7 @@ export function QuickCreateButton() {
     return (
       <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
         <DrawerTrigger asChild>
-          <QuickCreateTriggerButton iconRef={iconRef} hoverHandlers={hoverHandlers} />
+          <QuickCreateTriggerButton compact={compact} iconRef={iconRef} hoverHandlers={hoverHandlers} />
         </DrawerTrigger>
         <DrawerContent className="flex h-[min(85dvh,32rem)] flex-col gap-0 overflow-hidden rounded-t-xl border bg-card p-0 shadow-2xl">
           <DrawerHeader className="shrink-0 px-4 pb-2 pt-1">
@@ -376,6 +380,7 @@ export function QuickCreateButton() {
     <Popover open={menuOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <QuickCreateTriggerButton
+          compact={compact}
           iconRef={iconRef}
           hoverHandlers={hoverHandlers}
           onMouseEnter={handleHoverEnter}

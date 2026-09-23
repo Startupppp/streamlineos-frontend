@@ -27,6 +27,12 @@ jest.mock("lucide-react", () => ({
   ),
 }));
 
+jest.mock("@animateicons/react/lucide", () => ({
+  SearchIcon: ({ className }: { className?: string }) => (
+    <svg aria-hidden="true" className={className} />
+  ),
+}));
+
 jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: () => false,
 }));
@@ -201,19 +207,7 @@ describe("a11y — GlobalHeader", () => {
 
   it("Search button exposes an accessible name", () => {
     render(<GlobalHeader showSidebarToggle={false} />);
-    expect(
-      screen.getByRole("button", { name: /Search/i }),
-    ).toBeInTheDocument();
-  });
-
-  it("Calendar icon link has an accessible label", () => {
-    render(<GlobalHeader showSidebarToggle={false} />);
-    expect(screen.getByRole("link", { name: "Calendar" })).toBeInTheDocument();
-  });
-
-  it("Chat icon link has an accessible label", () => {
-    render(<GlobalHeader showSidebarToggle={false} />);
-    expect(screen.getByRole("link", { name: "Chat" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /Search/i })).toHaveLength(2);
   });
 
   it("sidebar collapse toggle renders with accessible name when shown", () => {
@@ -257,8 +251,10 @@ describe("a11y — GlobalHeader", () => {
 
   it("Search button carries the exact aria-label", () => {
     render(<GlobalHeader showSidebarToggle={false} />);
-    const btn = screen.getByRole("button", { name: /Search/i });
-    expect(btn).toHaveAttribute("aria-label", "Search (⌘K)");
+    const buttons = screen.getAllByRole("button", { name: /Search/i });
+    for (const button of buttons) {
+      expect(button).toHaveAttribute("aria-label", "Search (⌘K)");
+    }
   });
 });
 

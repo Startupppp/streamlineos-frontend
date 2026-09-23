@@ -59,7 +59,6 @@ export function InboxShell() {
     selectedKeys,
     handleViewChange,
     handleSearchChange,
-    handleUnreadOnlyChange,
     handleCategoryChange,
     handlePriorityChange,
     handleKindOverrideChange,
@@ -219,7 +218,6 @@ export function InboxShell() {
           availableModules={availableModules}
           onViewChange={handleViewChange}
           onSearchChange={handleSearchChange}
-          onUnreadOnlyChange={handleUnreadOnlyChange}
           onCategoryChange={handleCategoryChange}
           onPriorityChange={handlePriorityChange}
           onKindOverrideChange={handleKindOverrideChange}

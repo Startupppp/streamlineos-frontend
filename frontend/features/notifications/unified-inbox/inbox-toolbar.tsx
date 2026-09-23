@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Settings2 } from "lucide-react";
+import { Settings2, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { ViewToggle } from "@/components/ui/view-toggle";
 import { SearchInput } from "@/components/ui/search-input";
@@ -14,6 +14,11 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { NOTIFICATION_CATEGORY_VALUES } from "@/types/notifications";
 import type { InboxKind } from "@/types/inbox";
 import {
@@ -59,7 +64,6 @@ export interface InboxToolbarProps {
   availableModules: string[];
   onViewChange: (view: InboxView) => void;
   onSearchChange: (q: string) => void;
-  onUnreadOnlyChange: (unreadOnly: boolean) => void;
   onCategoryChange: (category: string) => void;
   onPriorityChange: (priority: string) => void;
   onKindOverrideChange: (kinds: InboxKind[]) => void;
@@ -75,7 +79,6 @@ export function InboxToolbar({
   availableModules,
   onViewChange,
   onSearchChange,
-  onUnreadOnlyChange,
   onCategoryChange,
   onPriorityChange,
   onKindOverrideChange,
@@ -136,11 +139,6 @@ export function InboxToolbar({
     [onGroupChange],
   );
 
-  const handleUnreadToggle = useCallback(
-    () => onUnreadOnlyChange(!state.unreadOnly),
-    [onUnreadOnlyChange, state.unreadOnly],
-  );
-
   const handleModuleValueChange = useCallback(
     (value: string) => onModuleChange(value === "__all__" ? "" : value),
     [onModuleChange],
@@ -157,125 +155,150 @@ export function InboxToolbar({
   const kindSelectValue =
     state.kindOverride.length === 1 ? state.kindOverride[0] : "__all__";
 
+  const activeFilterCount = [
+    state.category,
+    state.priority,
+    state.kindOverride.length > 0 ? "source" : "",
+    state.module,
+    state.from || state.to,
+    state.group !== "none" ? state.group : "",
+  ].filter(Boolean).length;
+
   return (
     <div className="flex flex-col gap-2 shrink-0">
-      <div className="flex items-center gap-2 flex-wrap">
-        <ViewToggle<InboxView>
-          value={state.view}
-          options={VIEWS}
-          onChange={onViewChange}
-          showLabel
-        />
+      <div className="flex min-w-0 items-center gap-2">
+        <div className="min-w-0 flex-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <ViewToggle<InboxView>
+            value={state.view}
+            options={VIEWS}
+            onChange={onViewChange}
+            showLabel={false}
+            className="flex w-max min-w-full md:hidden"
+          />
+          <ViewToggle<InboxView>
+            value={state.view}
+            options={VIEWS}
+            onChange={onViewChange}
+            showLabel
+            className="hidden max-w-full overflow-x-auto md:flex"
+          />
+        </div>
         <Link
           href="/settings/notifications/my-preferences"
-          className="ml-auto inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Notification settings"
+          title="Notification settings"
+          className="ml-auto inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground xl:size-auto xl:gap-1.5 xl:rounded-none xl:text-xs"
         >
           <Settings2 className="h-3.5 w-3.5" aria-hidden />
-          Notification settings
+          <span className="hidden xl:inline">Notification settings</span>
         </Link>
       </div>
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex min-w-0 items-center gap-2">
         <SearchInput
           value={rawSearch}
           onValueChange={handleSearchValueChange}
           placeholder="Search inbox…"
-          className="flex-1 min-w-[10rem] max-w-sm"
+          className="min-w-0 flex-1 md:max-w-sm"
         />
-        <Button
-          type="button"
-          variant={state.unreadOnly ? "default" : "outline"}
-          size="sm"
-          onClick={handleUnreadToggle}
-          aria-pressed={state.unreadOnly}
-        >
-          Unread only
-        </Button>
-        <Select
-          value={state.category || "__all__"}
-          onValueChange={handleCategoryValueChange}
-        >
-          <SelectTrigger className="w-36 h-9 text-sm" aria-label="Filter by category">
-            <SelectValue placeholder="Category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__all__">All categories</SelectItem>
-            {NOTIFICATION_CATEGORY_VALUES.map((cat) => (
-              <SelectItem key={cat} value={cat}>
-                {cat}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={state.priority || "__all__"}
-          onValueChange={handlePriorityValueChange}
-        >
-          <SelectTrigger className="w-28 h-9 text-sm" aria-label="Filter by priority">
-            <SelectValue placeholder="Priority" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__all__">All priorities</SelectItem>
-            {PRIORITY_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={kindSelectValue} onValueChange={handleKindValueChange}>
-          <SelectTrigger className="w-36 h-9 text-sm" aria-label="Filter by source">
-            <SelectValue placeholder="Source" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__all__">All sources</SelectItem>
-            {ALL_KINDS.map((k) => (
-              <SelectItem key={k} value={k}>
-                {INBOX_SOURCE_LABELS[k]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {availableModules.length > 0 && (
-          <Select
-            value={state.module || "__all__"}
-            onValueChange={handleModuleValueChange}
-          >
-            <SelectTrigger className="w-36 h-9 text-sm" aria-label="Filter by module">
-              <SelectValue placeholder="Module" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all__">All modules</SelectItem>
-              {availableModules.map((mod) => (
-                <SelectItem key={mod} value={mod}>
-                  {formatModuleLabel(mod)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-        <DateRangePicker
-          from={state.from || undefined}
-          to={state.to || undefined}
-          onChange={handleDateRangeChange}
-          placeholder="Date range"
-          className="w-44 h-9 text-sm"
-        />
-        <Select value={state.group} onValueChange={handleGroupValueChange}>
-          <SelectTrigger className="w-36 h-9 text-sm" aria-label="Group by">
-            <SelectValue placeholder="Group by" />
-          </SelectTrigger>
-          <SelectContent>
-            {GROUPING_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <InboxSavedViewsPanel
-          currentState={state}
-          onApply={onApplySavedView}
-        />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant={activeFilterCount > 0 ? "default" : "outline"}
+              size="sm"
+              className="shrink-0 gap-1.5"
+              aria-label="Open inbox filters"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
+              <span className="hidden sm:inline">Filters</span>
+              {activeFilterCount > 0 ? ` ${activeFilterCount}` : null}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[min(22rem,calc(100vw-2rem))] p-3">
+            <div className="grid grid-cols-2 gap-2">
+              <Select
+                value={state.category || "__all__"}
+                onValueChange={handleCategoryValueChange}
+              >
+                <SelectTrigger className="h-9 w-full text-sm" aria-label="Filter by category">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">All categories</SelectItem>
+                  {NOTIFICATION_CATEGORY_VALUES.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={state.priority || "__all__"}
+                onValueChange={handlePriorityValueChange}
+              >
+                <SelectTrigger className="h-9 w-full text-sm" aria-label="Filter by priority">
+                  <SelectValue placeholder="Priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">All priorities</SelectItem>
+                  {PRIORITY_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={kindSelectValue} onValueChange={handleKindValueChange}>
+                <SelectTrigger className="h-9 w-full text-sm" aria-label="Filter by source">
+                  <SelectValue placeholder="Source" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">All sources</SelectItem>
+                  {ALL_KINDS.map((k) => (
+                    <SelectItem key={k} value={k}>
+                      {INBOX_SOURCE_LABELS[k]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {availableModules.length > 0 && (
+                <Select value={state.module || "__all__"} onValueChange={handleModuleValueChange}>
+                  <SelectTrigger className="h-9 w-full text-sm" aria-label="Filter by module">
+                    <SelectValue placeholder="Module" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all__">All modules</SelectItem>
+                    {availableModules.map((mod) => (
+                      <SelectItem key={mod} value={mod}>
+                        {formatModuleLabel(mod)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <DateRangePicker
+                from={state.from || undefined}
+                to={state.to || undefined}
+                onChange={handleDateRangeChange}
+                placeholder="Date range"
+                className="col-span-2 h-9 w-full text-sm"
+              />
+              <Select value={state.group} onValueChange={handleGroupValueChange}>
+                <SelectTrigger className="col-span-2 h-9 w-full text-sm" aria-label="Group by">
+                  <SelectValue placeholder="Group by" />
+                </SelectTrigger>
+                <SelectContent>
+                  {GROUPING_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <InboxSavedViewsPanel currentState={state} onApply={onApplySavedView} />
       </div>
     </div>
   );
