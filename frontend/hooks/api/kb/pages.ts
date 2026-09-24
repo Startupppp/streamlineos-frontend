@@ -236,7 +236,7 @@ export function useKbPagesSearch(q: string) {
   const { data: spaces, isLoading: spacesLoading } = useKbSpaces();
   const aclVersion = spacesLoading
     ? null
-    : deriveAclVersion((spaces ?? []).map((s) => s.id));
+    : deriveAclVersion((spaces?.data ?? []).map((s) => s.id));
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.pagesSearch(q, aclVersion ?? ""),
     queryFn: ({ signal }) =>

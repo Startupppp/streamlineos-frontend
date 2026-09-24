@@ -26,7 +26,7 @@ export function useKbSearch(params: KbSearchParams, options?: { enabled?: boolea
   const { data: spaces, isLoading: spacesLoading } = useKbSpaces();
   const aclVersion = spacesLoading
     ? null
-    : deriveAclVersion((spaces ?? []).map((s) => s.id));
+    : deriveAclVersion((spaces?.data ?? []).map((s) => s.id));
   const cacheParams: Record<string, unknown> = { ...params, aclVersion: aclVersion ?? "" };
   const apiParams: Record<string, unknown> = { ...params };
   return useQuery({

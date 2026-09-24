@@ -37,7 +37,8 @@ function selectSpaceId(
 export function KbResearchBriefForm() {
   const router = useRouter();
   const createMutation = useCreateResearchBrief();
-  const { data: spaces } = useKbSpaces();
+  const { data: spacesPage } = useKbSpaces();
+  const spaces = spacesPage?.data;
 
   const form = useForm<KbResearchBriefFormValues>({
     resolver: zodResolver(kbResearchBriefSchema),

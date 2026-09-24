@@ -12,6 +12,7 @@ jest.mock("@/features/build/project-detail/project-hydration-context", () => ({
 }));
 
 import { useQuery } from "@tanstack/react-query";
+import type { Query } from "@tanstack/react-query";
 import { ApiError } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
 import { useHydratedProject } from "@/features/build/project-detail/project-hydration-context";
@@ -37,7 +38,7 @@ describe("useProject error boundary policy", () => {
       typeof options?.throwOnError === "function" &&
         options.throwOnError(
           new ApiError("Project not found", 404, "PROJECTS_NOT_FOUND"),
-          { state: { data: undefined } },
+          { state: { data: undefined } } as unknown as Query<unknown, unknown>,
         ),
     ).toBe(false);
   });

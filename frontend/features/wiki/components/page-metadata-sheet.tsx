@@ -86,7 +86,8 @@ export default function PageMetadataSheet({
   const verifyPage = useVerifyKbPage();
   const markStalePage = useMarkStaleKbPage();
 
-  const { data: spaces = [] } = useKbSpaces();
+  const { data: spacesPage } = useKbSpaces();
+  const spaces = spacesPage?.data ?? [];
 
   function handleSpaceChange(value: string) {
     updatePage.mutate(
