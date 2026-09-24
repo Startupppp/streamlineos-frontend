@@ -126,7 +126,7 @@ Build owns projects, work items, cycles, delivery planning, project governance, 
 
 ## Deliverables in this directory
 
-- `RELEASE-STATUS.md`: **current authoritative release status** — production mismatch, migration state, registry, tenant isolation, dead code, and the active Vercel deployment blocker.
+- `RELEASE-STATUS.md`: current authority for deployment, migration, verification, and remaining release actions.
 - `01-ia-navigation.md`: current inventory, final IA, navigation behavior, and route dispositions.
 - `02-schemas.md`: canonical entities, relations, indexes, tenancy, audit, and migrations.
 - `03-api-contracts.md`: endpoint and wire conventions.

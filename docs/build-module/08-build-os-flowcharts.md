@@ -202,11 +202,11 @@ Sequenced and owned in [`06-prioritized-backlog.md`](./06-prioritized-backlog.md
 - Change Request **release** and **client visibility** fields ship and are applied to production.
 - Workload reads real capacity from approved leave and timesheet settings, and Inbox filters by project.
 
-### P0: finish before calling Build fully consolidated
+### P0: release closure — complete for the current candidate
 
-1. **Verify the current branch in a browser.** Earlier release evidence does not cover the uncommitted implementation now on `codex/build-final-completion`; burnup and meeting-agenda generation fail quietly and deserve attention first.
-2. Apply and verify `1177_roadmap_search_id_probe` in production only after the matching backend code is deployed.
-3. Keep route, permission, contract, migration, typecheck, and focused test gates green.
+1. The authenticated desktop and mobile parent-route browser matrices passed. Data-backed cycle and ticket details also passed; pages without production fixture rows were verified in their empty states.
+2. Canonical migrations `1185_roadmap_search_id_probe` and `1186_project_programs_list_indexes`, historically deployed as `1177` and `1178`, are applied and verified in production.
+3. Build-owned route, permission, contract, migration, typecheck, focused test, and workspace-removal checks are green. Unrelated repository debt is listed in [`RELEASE-STATUS.md`](./RELEASE-STATUS.md).
 
 ### P1: make the three journeys feel complete
 

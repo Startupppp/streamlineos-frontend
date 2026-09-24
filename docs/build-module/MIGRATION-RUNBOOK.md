@@ -1,6 +1,6 @@
 # Migration runbook — Sprint/Cycle and QA Bug contraction
 
-**Status:** the Sprint/Cycle and QA Bug contraction described here was executed in production on 2026-09-22. Do not rerun these files. This document is retained for rollback reasoning and for the ordering rules that apply to future destructive migrations. Current migration state lives in [RELEASE-STATUS.md](./RELEASE-STATUS.md); migration `1177_roadmap_search_id_probe` is not covered by this runbook.
+**Status:** the Sprint/Cycle and QA Bug contraction described here was executed in production on 2026-09-22. Do not rerun these files. This document is retained for rollback reasoning and for the ordering rules that apply to future destructive migrations. Current migration state lives in [RELEASE-STATUS.md](./RELEASE-STATUS.md); canonical Build search migrations `1185_roadmap_search_id_probe` and `1186_project_programs_list_indexes`, historically deployed as `1177` and `1178`, are outside this contraction runbook.
 
 These phase files live in `backend/migrations/sql/` and were deliberately not journalled, so they required explicit one-at-a-time execution in the order below.
 
