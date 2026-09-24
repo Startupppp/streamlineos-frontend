@@ -117,4 +117,20 @@ describe("ticket filter bar", () => {
     expect(control.tagName).toBe("BUTTON");
     expect(control).toHaveAttribute("type", "button");
   });
+
+  it("gives the chip's remove control a design-token focus ring, because the strip it sits in scrolls horizontally at 375px and the browser default outline is the only other cue", () => {
+    renderWith("status=OPEN");
+
+    const control = screen.getByLabelText(/remove open filter/i);
+    expect(control.className).toContain("focus-visible:ring-ring");
+    expect(control.className).toContain("focus-visible:ring-1");
+  });
+
+  it("keeps the chips in a horizontally scrollable strip whose own children never shrink, so the focus ring above is never squeezed out of view", () => {
+    const { container } = renderWith("status=OPEN");
+
+    const strip = container.querySelector(".overflow-x-auto");
+    expect(strip).not.toBeNull();
+    expect(strip?.className).toContain("[&>*]:shrink-0");
+  });
 });

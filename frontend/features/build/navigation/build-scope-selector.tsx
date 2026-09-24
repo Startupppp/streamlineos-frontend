@@ -25,6 +25,8 @@ import {
   BUILD_ROOT_PATH,
   type BuildScope,
 } from "@/lib/build/build-scope";
+import { buildOrganizationCatalog } from "@/lib/build/nav/build-organization-catalog";
+import { buildProjectCatalog } from "@/lib/build/nav/build-project-catalog";
 import { BuildScopeBrowser } from "./build-scope-browser";
 import {
   useBuildScopeRecents,
@@ -72,10 +74,13 @@ export function BuildScopeSelector({
   const settingsHrefFor = useCallback(
     (target: BuildScopeRef): string | null => {
       if (target.type === "project")
-        return canUpdateProject ? `${BUILD_ROOT_PATH}/${target.id}/settings` : null;
+        return canUpdateProject
+          ? (buildProjectCatalog(`${BUILD_ROOT_PATH}/${target.id}`).settings
+              ?.href ?? null)
+          : null;
       if (target.type === "organization")
         return canManageIntegrations
-          ? `${BUILD_ROOT_PATH}/settings/integrations`
+          ? (buildOrganizationCatalog().settings?.href ?? null)
           : null;
       return null;
     },
