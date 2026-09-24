@@ -193,7 +193,7 @@ describe("WikiPageCollectionTable — filter and empty states", () => {
     );
 
     expect(
-      screen.getByText("No pages match your filters."),
+      screen.getByText("No results match your filters."),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /clear filters/i }),
@@ -324,7 +324,7 @@ describe("WikiPageCollectionTable — filter and empty states", () => {
       screen.queryByText("Your access may have changed"),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByText("No pages match your filters."),
+      screen.getByText("No results match your filters."),
     ).toBeInTheDocument();
   });
 });
