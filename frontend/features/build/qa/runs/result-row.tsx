@@ -100,7 +100,7 @@ export const ResultRow = memo(function ResultRow({
         ) : null}
         {result.linkedWorkItemId ? (
           <Link
-            href={`/build/${projectId}/bugs`}
+            href={`/build/${projectId}/issues?type=BUG`}
             className="shrink-0 text-micro font-medium text-primary hover:underline"
           >
             Linked bug

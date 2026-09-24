@@ -64,6 +64,14 @@ jest.mock("./incident-sheet", () => ({
   IncidentSheet: () => null,
 }));
 
+jest.mock("./incident-decisions", () => ({
+  IncidentDecisions: () => null,
+}));
+
+jest.mock("./incident-follow-ups", () => ({
+  IncidentFollowUps: () => null,
+}));
+
 import { IncidentDetailPage } from "./incident-detail-page";
 
 const ACCESS_GRANTED = {
@@ -107,6 +115,8 @@ function baseIncident(overrides: Partial<Incident> = {}): Incident {
     responseDueAt: null,
     resolutionDueAt: null,
     linkedTicketId: null,
+    releaseId: null,
+    createdBy: null,
     deletedAt: null,
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
