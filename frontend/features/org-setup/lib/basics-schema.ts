@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isValidPhoneNumber } from "react-phone-number-input";
+import { IMPLAUSIBLE_PHONE_MESSAGE, isImplausiblePhone } from "@/lib/implausible-phone";
 
 /**
  * Mirrors the backend's `setupSchema`
@@ -37,5 +38,10 @@ export const basicsStepSchema = z.object({
   phone: z
     .string()
     .min(1, "Enter your mobile number.")
-    .refine((val) => isValidPhoneNumber(val), "Enter a valid mobile number."),
+    .refine((val) => isValidPhoneNumber(val), "Enter a valid mobile number.")
+    // isValidPhoneNumber checks the numbering plan, and 9999999999 satisfies it
+    // — ten digits, leading 9, right length for +91. QA typed exactly that and
+    // was let through. No OTP is sent here, so nothing downstream would ever
+    // have found out that the contact cannot be reached.
+    .refine((val) => !isImplausiblePhone(val), IMPLAUSIBLE_PHONE_MESSAGE),
 });
