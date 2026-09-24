@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, UserCheck, UserX } from "lucide-react";
+import { Users, UserCheck, UserX, MailQuestion } from "lucide-react";
 import {
   StatCard,
   StatCardGrid,
@@ -37,7 +37,7 @@ export function EmployeesDirectoryStats({
         ? counts.data.active
         : statusFilter === "inactive"
           ? counts.data.inactive
-          : counts.data.active + counts.data.inactive;
+          : counts.data.active + (counts.data.pending ?? 0) + counts.data.inactive;
 
   return (
     <StatCardGrid>
@@ -62,6 +62,19 @@ export function EmployeesDirectoryStats({
           tone="emerald"
           hint={FILTERED_HINT}
           href={statusHref("active")}
+        />
+      ) : null}
+      {counts.data && (counts.data.pending ?? 0) > 0 && statusFilter === "all" ? (
+        <StatCard
+          label="Pending invite"
+          value={counts.data.pending}
+          icon={MailQuestion}
+          tone="amber"
+          // Its own card rather than a slice of Active. These people have an
+          // account and no acceptance: counting them as headcount is what made
+          // a two-person org report two active employees when one had never
+          // opened the invitation.
+          hint="Invited, not yet accepted"
         />
       ) : null}
       {counts.data && statusFilter !== "active" ? (
