@@ -18,3 +18,4 @@ export * from "./article-ai";
 export * from "./page-collection";
 export * from "./content-health";
 export * from "./hr-link-config";
+export * from "./linked-documents";

@@ -19,6 +19,8 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Document } from "@/types/hr";
 import { DocumentClassificationFormFields } from "./document-classification-form-fields";
+import { DocumentKbLinkPanel } from "./document-kb-link-panel";
+import { DocumentVersionsPanel } from "./document-versions-panel";
 import {
   audiencesFromForm,
   classificationFormSchema,
@@ -116,7 +118,8 @@ export function DocumentClassificationSheet({ open, onOpenChange, document }: Do
           linksTakenDown > 0 ? ` ${takenDownMessage(linksTakenDown)}` : ""
         }`,
       );
-      onOpenChange(false);
+      // A document just made shareable stays open: adding it to the Knowledge Base is the next step, and it is right below.
+      if (!shareable) onOpenChange(false);
     },
     [classify, document, loaded, onOpenChange, setAudiences],
   );
@@ -178,6 +181,12 @@ export function DocumentClassificationSheet({ open, onOpenChange, document }: Do
           </div>
         </Form>
       )}
+      {loaded && document ? (
+        <div className="mt-6 flex flex-col gap-4">
+          <DocumentKbLinkPanel documentId={document.id} documentName={document.name} />
+          <DocumentVersionsPanel documentId={document.id} />
+        </div>
+      ) : null}
     </HrSheet>
   );
 }

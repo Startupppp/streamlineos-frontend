@@ -23,6 +23,7 @@ import { DocumentTable, type FolderItem } from "@/features/hr/documents/document
 import { NewFolderDialog } from "@/features/hr/documents/new-folder-dialog";
 import { EditDocumentSheet } from "@/features/hr/documents/edit-document-sheet";
 import { DocumentClassificationSheet } from "@/features/hr/documents/components/document-classification-sheet";
+import { HrKbSharingSwitch } from "@/features/hr/documents/components/hr-kb-sharing-switch";
 import { useHrKbLinkFlags } from "@/hooks/api/kb/hr-link-config";
 import { useCan } from "@/hooks/api/access";
 import { RichDocumentsSection } from "@/features/hr/documents/rich-documents-section";
@@ -208,6 +209,7 @@ export function DocumentsPage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
+        <HrKbSharingSwitch />
         <StatCardGrid cols={4}>
           <StatCard label="Total Documents" value={totalDocuments} icon={FileText} color="blue" />
           <StatCard label="Folders" value={folders.length + customFolders.length} icon={FolderOpen} color="amber" />

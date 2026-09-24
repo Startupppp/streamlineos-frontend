@@ -32,6 +32,8 @@ jest.mock("@/lib/api-client", () => ({
 
 jest.mock("@/hooks/api/kb/hr-link-config", () => ({
   useHrKbLinkFlags: () => ({ link: false, search: false, ai: false }),
+  useHrKbLinkFlagsAdmin: () => ({ data: undefined }),
+  useUpdateHrKbLinkFlags: () => ({ mutateAsync: jest.fn(), isPending: false }),
 }));
 
 jest.mock("@/hooks/common/use-debounce", () => ({

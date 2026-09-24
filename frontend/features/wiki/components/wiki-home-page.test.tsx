@@ -29,6 +29,14 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
 }));
 
+jest.mock("@/hooks/api/kb/hr-link-config", () => ({
+  useHrKbLinkFlags: () => ({ link: false, search: false, ai: false }),
+}));
+
+jest.mock("@/hooks/api/kb/linked-documents", () => ({
+  useLinkedDocuments: () => ({ data: undefined }),
+}));
+
 jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: jest.fn(),
 }));

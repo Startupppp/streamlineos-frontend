@@ -7,6 +7,7 @@ import {
   KbBarChart2Icon,
   KbBookOpenTextIcon,
   KbClipboardCheckIcon,
+  KbFileTextIcon,
   KbLayoutGridIcon,
   KbLayoutTemplateIcon,
   KbLockIcon,
@@ -35,6 +36,7 @@ import {
   KNOWLEDGE_BASE,
   KB_ANALYTICS,
   KB_CHAT,
+  KB_COMPANY_DOCUMENTS,
   KB_IMPORT,
   KB_PRIVATE,
   KB_REVIEWS,
@@ -64,6 +66,8 @@ interface WikiSidebarNavProps {
   isCollapsed?: boolean;
   canViewAnalytics: boolean;
   canViewReviews: boolean;
+  /** HR documents in the knowledge base are switched on for this tenant. */
+  showCompanyDocuments?: boolean;
 }
 
 interface WikiSidebarFooterProps {
@@ -85,9 +89,10 @@ function buildPrimaryItems(): WikiNavItem[] {
 function buildNavGroups({
   canViewAnalytics,
   canViewReviews,
+  showCompanyDocuments,
 }: Pick<
   WikiSidebarNavProps,
-  "canViewAnalytics" | "canViewReviews"
+  "canViewAnalytics" | "canViewReviews" | "showCompanyDocuments"
 >): WikiNavGroup[] {
   const manageItems: WikiNavItem[] = [
     { label: "Templates", href: KB_TEMPLATES, icon: KbLayoutTemplateIcon },
@@ -111,6 +116,9 @@ function buildNavGroups({
         { label: "Private", href: KB_PRIVATE, icon: KbLockIcon },
         { label: "Shared", href: KB_SHARED, icon: KbUsersIcon },
         { label: "Spaces", href: KB_SPACES, icon: KbLayoutGridIcon },
+        ...(showCompanyDocuments === true
+          ? [{ label: "Company documents", href: KB_COMPANY_DOCUMENTS, icon: KbFileTextIcon }]
+          : []),
       ],
     },
     {
@@ -308,6 +316,7 @@ export default function WikiSidebarNav({
   isCollapsed = false,
   canViewAnalytics,
   canViewReviews,
+  showCompanyDocuments = false,
 }: WikiSidebarNavProps) {
   const pathname = usePathname();
   const askKbItem = useMemo(() => buildAskKbItem(), []);
@@ -317,8 +326,9 @@ export default function WikiSidebarNav({
       buildNavGroups({
         canViewAnalytics,
         canViewReviews,
+        showCompanyDocuments,
       }),
-    [canViewAnalytics, canViewReviews],
+    [canViewAnalytics, canViewReviews, showCompanyDocuments],
   );
   const accordionItems = useMemo(
     () => groups.flatMap((group) => group.items),

@@ -19,6 +19,9 @@ jest.mock("@/hooks/api/hr/document-classification", () => ({
   useSetDocumentAudiences: () => ({ mutateAsync: mockSetAudiences, isPending: false }),
 }));
 
+jest.mock("./document-kb-link-panel", () => ({ DocumentKbLinkPanel: () => <div data-testid="kb-link-panel" /> }));
+jest.mock("./document-versions-panel", () => ({ DocumentVersionsPanel: () => <div data-testid="versions-panel" /> }));
+
 jest.mock("@/hooks/api/org-hierarchy-units", () => ({
   useOrgDepartments: () => ({ data: { data: [{ id: "d1", name: "Finance" }, { id: "d2", name: "Legal" }] }, isPending: false }),
 }));
@@ -105,6 +108,29 @@ describe("DocumentClassificationSheet", () => {
       expect(mockSetAudiences).toHaveBeenCalledWith({ documentId: 7, audiences: [{ kind: "ALL_EMPLOYEES", refId: null }] }),
     );
     expect(mockToast.success).toHaveBeenCalledWith(expect.stringContaining("internal"));
+  });
+
+  it("stays open after a document is made shareable, so it can be added to the Knowledge Base next", async () => {
+    const { onOpenChange } = renderSheet(viewFixture());
+
+    fireEvent.click(radio(/^internal/i));
+    fireEvent.click(await screen.findByRole("radio", { name: /all employees/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+
+    await waitFor(() => expect(mockSetAudiences).toHaveBeenCalled());
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    expect(screen.getByTestId("kb-link-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("versions-panel")).toBeInTheDocument();
+  });
+
+  it("closes after a document is classified as something that cannot be shared", async () => {
+    mockClassify.mockResolvedValue({ ...viewFixture({ classification: "CONFIDENTIAL" }), linksTakenDown: 0 });
+    const { onOpenChange } = renderSheet(viewFixture({ classification: "INTERNAL", publishable: true, blockers: [] }));
+
+    fireEvent.click(radio(/^confidential/i));
+    fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
   });
 
   it("sends exactly the ticked departments and locations for a Restricted document", async () => {
