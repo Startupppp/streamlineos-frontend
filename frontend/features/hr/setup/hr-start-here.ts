@@ -1,4 +1,4 @@
-export type HrSetupStepId = "people" | "leave" | "attendance" | "documents";
+export type HrSetupStepId = "people" | "leave" | "shifts" | "documents";
 
 export type HrSetupStepStatus = "done" | "next" | "todo" | "unknown";
 
@@ -47,11 +47,16 @@ const STEP_DEFINITIONS: readonly StepDefinition[] = [
     signal: "leaveTypes",
   },
   {
-    id: "attendance",
+    // The step is named for a shift, its completion is counted in shifts, and
+    // its button says "Create a shift" — but it linked to /hr/attendance, which
+    // has no way to create one. Somebody following the checklist arrived at the
+    // wrong screen and the step stayed incomplete however long they looked.
+    // Renamed from "attendance" to match what it actually asks for.
+    id: "shifts",
     title: "Define a shift",
     description:
       "A shift gives attendance something to measure against. You can record hours without any biometric hardware.",
-    href: "/hr/attendance",
+    href: "/hr/shifts",
     actionLabel: "Create a shift",
     signal: "shifts",
   },
