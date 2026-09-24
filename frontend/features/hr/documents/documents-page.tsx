@@ -22,6 +22,8 @@ import { DocumentFilters, DOCUMENT_TYPES } from "@/features/hr/documents/documen
 import { DocumentTable, type FolderItem } from "@/features/hr/documents/document-table";
 import { NewFolderDialog } from "@/features/hr/documents/new-folder-dialog";
 import { EditDocumentSheet } from "@/features/hr/documents/edit-document-sheet";
+import { DocumentClassificationSheet } from "@/features/hr/documents/components/document-classification-sheet";
+import { useHrKbLinkFlags } from "@/hooks/api/kb/hr-link-config";
 import { useCan } from "@/hooks/api/access";
 import { RichDocumentsSection } from "@/features/hr/documents/rich-documents-section";
 import { DocumentsExtendedSection } from "@/features/hr/documents/documents-extended-section";
@@ -50,6 +52,7 @@ export function DocumentsPage() {
   const [customFolders, setCustomFolders] = useState<string[]>([]);
   const [editingDocument, setEditingDocument] = useState<Document | null>(null);
   const [signatureDocument, setSignatureDocument] = useState<Document | null>(null);
+  const [classifyingDocument, setClassifyingDocument] = useState<Document | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([
     undefined,
@@ -57,6 +60,7 @@ export function DocumentsPage() {
   const pageSize = 20;
 
   const canManageDocs = useCan("hr:documents:manage");
+  const hrKbLink = useHrKbLinkFlags();
   const [isLetterGenOpen, setIsLetterGenOpen] = useState(false);
 
   const foldersKey = session?.orgId ? `hr-doc-folders-${session.orgId}` : null;
@@ -146,6 +150,8 @@ export function DocumentsPage() {
   const handleViewGrid = useCallback(() => setViewMode("grid"), []);
   const handleEdit = useCallback((doc: Document) => setEditingDocument(doc), []);
   const handleSendForSignature = useCallback((doc: Document) => setSignatureDocument(doc), []);
+  const handleClassify = useCallback((doc: Document) => setClassifyingDocument(doc), []);
+  const handleClassifySheetChange = useCallback((open: boolean) => { if (!open) setClassifyingDocument(null); }, []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleOpenLetterGen = useCallback(() => setIsLetterGenOpen(true), []);
   const handleLetterSaved = useCallback(() => { void refetch(); }, [refetch]);
@@ -229,6 +235,7 @@ export function DocumentsPage() {
           onEdit={handleEdit}
           onOpenUpload={handleOpenUpload}
           onSendForSignature={handleSendForSignature}
+          onClassify={hrKbLink.link && canManageDocs ? handleClassify : undefined}
         />
 
         <RichDocumentsSection />
@@ -257,6 +264,11 @@ export function DocumentsPage() {
           documentTypes={DOCUMENT_TYPES}
           categories={[...DOCUMENT_CATEGORIES, ...customFolders]}
           canAssignEmployee={canManageDocs}
+        />
+        <DocumentClassificationSheet
+          open={!!classifyingDocument}
+          onOpenChange={handleClassifySheetChange}
+          document={classifyingDocument}
         />
         <CreateEnvelopeDialog
           open={!!signatureDocument}

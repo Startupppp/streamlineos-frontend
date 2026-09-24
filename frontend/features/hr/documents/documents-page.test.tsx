@@ -30,6 +30,10 @@ jest.mock("@/lib/api-client", () => ({
   },
 }));
 
+jest.mock("@/hooks/api/kb/hr-link-config", () => ({
+  useHrKbLinkFlags: () => ({ link: false, search: false, ai: false }),
+}));
+
 jest.mock("@/hooks/common/use-debounce", () => ({
   useDebouncedValue: <T,>(value: T) => value,
 }));
@@ -111,6 +115,8 @@ const seededDocuments = {
       parentDocumentId: null,
       isPublic: false,
       isActive: true,
+      classification: "PERSONAL" as const,
+      effectiveDate: null,
       expiryDate: null,
       expiryReminderSent: null,
       tags: null,
