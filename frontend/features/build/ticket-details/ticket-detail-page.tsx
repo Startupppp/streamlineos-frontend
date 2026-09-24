@@ -68,6 +68,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     if (typeof window === "undefined") return false;
     return localStorage.getItem(RIGHT_PANEL_COLLAPSED_KEY) === "true";
   });
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
 
   const parsed = useMemo(() => parseTicketKey(ticketKey), [ticketKey]);
   const { data: projectData, isLoading: projectLoading } = useProject(projectId);
@@ -115,6 +116,10 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
   );
 
   function handleRightPanelOpenChange(open: boolean) {
+    if (isMobile) {
+      setMobilePanelOpen(open);
+      return;
+    }
     const collapsed = !open;
     setRightPanelCollapsed(collapsed);
     localStorage.setItem(RIGHT_PANEL_COLLAPSED_KEY, String(collapsed));
@@ -239,6 +244,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
   }
 
   const pageTitle = localTitle || ticket.title;
+  const panelOpen = isMobile ? mobilePanelOpen : !rightPanelCollapsed;
 
   return (
     <PageWrapper
@@ -271,7 +277,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
       actions={
         <TicketDetailToolbar
           isMobile={isMobile}
-          rightPanelCollapsed={rightPanelCollapsed}
+          rightPanelCollapsed={isMobile ? !mobilePanelOpen : rightPanelCollapsed}
           onExpandRightPanel={handleExpandRightPanel}
           onDelete={handleDelete}
           isDeleting={isDeleting}
@@ -302,7 +308,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
         </div>
 
         <TicketDetailRightPanel
-          open={!rightPanelCollapsed}
+          open={panelOpen}
           onOpenChange={handleRightPanelOpenChange}
           displayKey={displayKey}
           saving={saving}

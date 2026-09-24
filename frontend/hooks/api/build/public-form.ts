@@ -33,11 +33,10 @@ async function messageFrom(res: Response, fallback: string): Promise<string> {
   return fallback;
 }
 
-export async function fetchPublicForm(
-  token: string,
+async function fetchPublicFormAtPath(
+  path: string,
   signal?: AbortSignal,
 ): Promise<PublicFormDefinition> {
-  const path = `/public/forms/${token}`;
   const res = await fetch(buildUrl(path), {
     credentials: "omit",
     headers: withCorrelation(new Headers()),
@@ -48,6 +47,13 @@ export async function fetchPublicForm(
       await messageFrom(res, "Form not found or no longer active."),
     );
   return parseApiResponse(res, publicFormDefinitionContract, path);
+}
+
+export function fetchPublicForm(
+  token: string,
+  signal?: AbortSignal,
+): Promise<PublicFormDefinition> {
+  return fetchPublicFormAtPath(`/public/forms/${token}`, signal);
 }
 
 export async function submitPublicForm(
@@ -79,7 +85,8 @@ export type {
 export function usePublicForm(token: string) {
   return useQuery<PublicFormDefinition>({
     queryKey: buildWorkQueryKeys.projects.publicForms.token(token),
-    queryFn: ({ signal }) => fetchPublicForm(token, signal),
+    queryFn: ({ signal }) =>
+      fetchPublicFormAtPath(`/public/forms/${token}`, signal),
     enabled: !!token,
     retry: false,
     staleTime: 60_000,

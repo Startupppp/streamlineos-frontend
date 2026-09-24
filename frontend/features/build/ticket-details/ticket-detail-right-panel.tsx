@@ -90,7 +90,6 @@ function TicketDetailRightPanelBody({
   statuses,
   onAutoSave,
   onClose,
-  hideClose = false,
   canUpdate,
   canAssign,
 }: {
@@ -103,7 +102,6 @@ function TicketDetailRightPanelBody({
   statuses?: TicketDetailRightPanelProps["statuses"];
   onAutoSave: TicketDetailRightPanelProps["onAutoSave"];
   onClose: () => void;
-  hideClose?: boolean;
   canUpdate: boolean;
   canAssign: boolean;
 }) {
@@ -124,18 +122,16 @@ function TicketDetailRightPanelBody({
               </span>
             )}
           </div>
-          {hideClose ? null : (
-            <AnimatedIconButton
-              type="button"
-              variant="ghost"
-              size="icon"
-              icon={XIcon}
-              iconSize={16}
-              className="absolute right-0 top-1/2 h-8 w-8 shrink-0 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              onClick={onClose}
-              aria-label="Close details panel"
-            />
-          )}
+          <AnimatedIconButton
+            type="button"
+            variant="ghost"
+            size="icon"
+            icon={XIcon}
+            iconSize={16}
+            className="absolute right-0 top-1/2 h-8 w-8 shrink-0 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            onClick={onClose}
+            aria-label="Close details panel"
+          />
         </div>
       </div>
 
@@ -221,7 +217,7 @@ export function TicketDetailRightPanel({
           </DrawerHeader>
           {isMobile ? (
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              <TicketDetailRightPanelBody {...bodyProps} hideClose />
+              <TicketDetailRightPanelBody {...bodyProps} />
             </div>
           ) : null}
         </DrawerContent>

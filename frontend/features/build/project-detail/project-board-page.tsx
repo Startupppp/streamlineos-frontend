@@ -210,7 +210,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
       contentClassName="!p-0 flex flex-col"
       className="relative"
       actions={
-        <div className="flex items-center gap-2">
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center [&>*]:w-full sm:[&>*]:w-auto [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
           <ProjectAiMenu projectId={projectId} />
           <TicketImportExportDialog projectId={projectId} />
           <CreateTicketDialog
