@@ -34,7 +34,11 @@ function selectSpaceId(
   };
 }
 
-export function KbResearchBriefForm() {
+interface KbResearchBriefFormProps {
+  basePath: string;
+}
+
+export function KbResearchBriefForm({ basePath }: KbResearchBriefFormProps) {
   const router = useRouter();
   const createMutation = useCreateResearchBrief();
   const { data: spaces } = useKbSpaces();
@@ -51,7 +55,7 @@ export function KbResearchBriefForm() {
         onSuccess: (data) => {
           toast.success("Research brief queued");
           form.reset();
-          router.push(`/support/kb/research-briefs/${data.briefId}`);
+          router.push(`${basePath}/${data.briefId}`);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
@@ -78,7 +82,7 @@ export function KbResearchBriefForm() {
             </FormItem>
           )}
         />
-        {spaces && spaces.length > 0 && (
+        {spaces && spaces.data.length > 0 && (
           <FormField
             control={form.control}
             name="spaceId"
@@ -96,7 +100,7 @@ export function KbResearchBriefForm() {
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="all">All spaces</SelectItem>
-                    {spaces.map((s) => (
+                    {spaces.data.map((s) => (
                       <SelectItem key={s.id} value={String(s.id)}>
                         {s.name}
                       </SelectItem>

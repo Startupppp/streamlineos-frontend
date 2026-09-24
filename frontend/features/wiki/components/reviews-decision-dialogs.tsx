@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -49,6 +50,10 @@ export function ApproveDialog({ review, onClose }: ApproveDialogProps) {
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>Approve review</DialogTitle>
+          <DialogDescription>
+            Approving marks this page as reviewed. You can leave an optional
+            note for the requester.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-3 px-0 py-2">
           <TruncatedText
@@ -118,6 +123,10 @@ export function RejectDialog({ review, onClose }: RejectDialogProps) {
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>Reject review</DialogTitle>
+          <DialogDescription>
+            Rejecting sends this page back to its author. Explain what needs to
+            change.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-3 px-0 py-2">
           <TruncatedText

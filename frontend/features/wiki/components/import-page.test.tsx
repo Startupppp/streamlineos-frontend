@@ -12,6 +12,12 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
+  usePermissionGate: (permission: string) => ({
+    permission,
+    allowed: true,
+    denied: false,
+    pending: false,
+  }),
 }));
 
 jest.mock("@/hooks/api/kb", () => ({

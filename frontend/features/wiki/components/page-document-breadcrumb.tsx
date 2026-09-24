@@ -7,7 +7,7 @@ import {
   KbChevronRightIcon,
   KbLoader2Icon,
 } from "@/features/wiki/lib/kb-icons";
-import { KNOWLEDGE_BASE, pageHref } from "@/lib/knowledge-routes";
+import { KNOWLEDGE_BASE, pageHref, projectPageHref } from "@/lib/knowledge-routes";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import {
   KB_STATUS_LABELS,
@@ -17,19 +17,38 @@ import {
 interface PageDocumentBreadcrumbProps {
   page: KbPageDetail;
   saveState: "idle" | "pending" | "saving" | "saved";
+  projectId?: number;
 }
 
 export function PageDocumentBreadcrumb({
   page,
   saveState,
+  projectId,
 }: PageDocumentBreadcrumbProps) {
   const ancestors = page.ancestors ?? [];
+  const isProjectScoped = projectId !== undefined && projectId > 0;
+  const wikiHref = isProjectScoped ? `/build/${projectId}/wiki` : KNOWLEDGE_BASE;
+
+  function resolveAncestorHref(id: number): string {
+    return isProjectScoped ? projectPageHref(projectId!, id) : pageHref(id);
+  }
 
   return (
     <div className="flex items-center gap-2 min-w-0">
       <nav className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap min-w-0">
+        {isProjectScoped && (
+          <>
+            <Link
+              href={`/build/${projectId}`}
+              className="hover:text-foreground transition-colors shrink-0"
+            >
+              Project
+            </Link>
+            <KbChevronRightIcon className="h-3 w-3 shrink-0" />
+          </>
+        )}
         <Link
-          href={KNOWLEDGE_BASE}
+          href={wikiHref}
           className="hover:text-foreground transition-colors shrink-0"
         >
           Wiki
@@ -38,7 +57,7 @@ export function PageDocumentBreadcrumb({
           <span key={a.id} className="hidden min-w-0 items-center gap-1 sm:flex">
             <KbChevronRightIcon className="h-3 w-3 shrink-0" />
             <Link
-              href={pageHref(a.id)}
+              href={resolveAncestorHref(a.id)}
               className="max-w-[7rem] min-w-0 truncate hover:text-foreground"
               title={a.title || "Untitled"}
             >

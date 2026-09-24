@@ -74,13 +74,14 @@ async function fetchPageLinks(query: string) {
 interface PageDocumentProps {
   pageId: number;
   onNavigateToPage?: (targetPageId: number) => void;
+  projectId?: number;
 }
 
 function nextReload(current: number): number {
   return current + 1;
 }
 
-export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentProps) {
+export default function PageDocument({ pageId, onNavigateToPage, projectId }: PageDocumentProps) {
   const router = useRouter();
   const { data: page, isLoading, isError, error, refetch } = useKbPage(pageId);
   const updatePage = useUpdateKbPage();
@@ -283,6 +284,7 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
                 onApplyImprovement={handleApplyImprovement}
                 onInsertSummary={handleInsertSummary}
                 onOpenCover={handleOpenCover}
+                projectId={projectId}
               />
             </div>
             {isEditable ? (

@@ -12,6 +12,7 @@ import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-sur
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useKbSpaces } from "./spaces";
+import type { KbSpaceListPage } from "./spaces";
 import type {
   CreateKbPageInput,
   KbPage,
@@ -26,8 +27,12 @@ import type {
 } from "./page-types";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
-function deriveAclVersion(ids: number[]): string {
-  return [...ids].sort((a, b) => a - b).join(",");
+const ACL_VERSION_SPACE_LIMIT = 100;
+
+function deriveAclVersion(page: KbSpaceListPage | undefined): string {
+  if (page === undefined) return "";
+  const ids = page.data.map((s) => s.id).sort((a, b) => a - b);
+  return page.pagination.hasMore ? `${ids.join(",")}~truncated` : ids.join(",");
 }
 
 const kbPageTreeContract = lazyContract(() =>
@@ -233,10 +238,10 @@ export function useKbBulkPurgePages() {
 
 export function useKbPagesSearch(q: string) {
   const canView = useCan("kb:pages:view");
-  const { data: spaces, isLoading: spacesLoading } = useKbSpaces();
-  const aclVersion = spacesLoading
-    ? null
-    : deriveAclVersion((spaces ?? []).map((s) => s.id));
+  const { data: spaces, isLoading: spacesLoading } = useKbSpaces({
+    limit: ACL_VERSION_SPACE_LIMIT,
+  });
+  const aclVersion = spacesLoading ? null : deriveAclVersion(spaces);
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.pagesSearch(q, aclVersion ?? ""),
     queryFn: ({ signal }) =>

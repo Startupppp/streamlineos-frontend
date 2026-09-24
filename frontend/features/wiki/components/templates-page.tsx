@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
@@ -66,6 +67,9 @@ export default function TemplatesPage() {
     isLoading,
     data: templates = [],
     refetch: refetchTemplates,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
   } = useKbPageTemplates();
   const canDelete = useCan("kb:templates:manage");
 
@@ -212,6 +216,17 @@ export default function TemplatesPage() {
                 />
               ))}
             </div>
+            {hasNextPage ? (
+              <div className="mt-4 flex justify-center">
+                <Button
+                  variant="outline"
+                  onClick={() => void fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                >
+                  {isFetchingNextPage ? "Loading…" : "Load more templates"}
+                </Button>
+              </div>
+            ) : null}
           </PageState>
         </TabsContent>
       </Tabs>

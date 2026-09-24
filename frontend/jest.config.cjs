@@ -31,7 +31,7 @@ module.exports = async () => {
   jestConfig.transformIgnorePatterns = (jestConfig.transformIgnorePatterns ?? []).map(
     (pattern) => pattern.replace(
       /\(geist/g,
-      "(geist|next-auth|@auth|@auth\\+core|oauth4webapi|preact|preact-render-to-string|jose|htmlparser2|domhandler|domelementtype|dom-serializer|domutils|entities|nanoid",
+      "(geist|next-auth|@auth|@auth\\+core|oauth4webapi|preact|preact-render-to-string|jose|htmlparser2|domhandler|domelementtype|dom-serializer|domutils|entities|nanoid|react-markdown|remark-.*|rehype-.*|micromark|micromark-.*|mdast-util-.*|unist-util-.*|hast-util-.*|unified|bail|trough|vfile|vfile-message|is-plain-obj|devlop|decode-named-character-reference|character-entities|character-entities-.*|property-information|space-separated-tokens|comma-separated-tokens|html-url-attributes|html-void-elements|estree-util-is-identifier-name|style-to-js|style-to-object|inline-style-parser|ccount|escape-string-regexp|markdown-table|longest-streak|zwitch|stringify-entities|web-namespaces|trim-lines|parse-entities|character-reference-invalid|is-alphanumerical|is-decimal|is-hexadecimal|unist-builder|collapse-white-space|markdown-space|@ungap\\+structured-clone",
     ),
   );
   return jestConfig;

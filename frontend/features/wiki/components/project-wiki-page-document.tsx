@@ -34,7 +34,7 @@ export default function ProjectWikiPageDocument({ projectId, pageId }: ProjectWi
         </Button>
       </div>
       <div className="flex-1 min-h-0 overflow-auto">
-        <PageDocument pageId={pageId} onNavigateToPage={handleNavigate} />
+        <PageDocument pageId={pageId} onNavigateToPage={handleNavigate} projectId={projectId} />
       </div>
     </div>
   );
