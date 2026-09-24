@@ -1046,3 +1046,49 @@ dependency only runs one way: retrieval now exports `KbResearchBriefService`, an
 `KbBriefToPageService` lives in wiki, where `KbPagesService` already is. It resolves the brief
 through `getById`, so the brief's tenant scoping and citation re-check still run — the converter
 does not re-implement either.
+
+### Registering a route makes it a published contract, with obligations
+
+Fixing BE-01 on the analytics and content-health controllers and giving three upload routes a
+response schema had a consequence nobody asked for: those operations became **published**, and
+`check:contract-registry` requires every published operation to declare a version or deprecation
+window, a named consumer, an idempotency/replay rule and a parameter baseline.
+
+Four KB routes were closed by `pnpm registry:generate` (the registry is generated output and is
+never hand-edited). The fifth, `POST /careers/resumes/upload`, needed a hand-authored term.
+
+The honest declaration is `at-least-once-unfenced`. `CareersService.uploadResume` does a bare
+`INSERT` into `candidate_documents_vault` with no unique constraint and no conflict handling. The
+storage key is deterministic (`candidateId/fileName`) so the object overwrites, but the vault row
+does not — a client that retries after a timeout gets a second document row pointing at the same
+object. That mode exists in `published-contract-terms.json` precisely so a gate can pass while
+leaving the defect visible; inventing a fence that does not exist would have been the easy lie.
+
+Two related process notes:
+- `check:response-contracts` does **not** exist in the backend. It is a frontend script and passes
+  there. Running it from `backend/` yields "Command not found" and exit 1, which reads exactly like
+  a failing gate. Check that a gate exists in the repo you are standing in before reporting it red.
+- Round-tripping a hand-authored JSON file through `JSON.parse`/`JSON.stringify` re-encodes
+  non-ASCII (literal `—` becomes `—`) and can reorder keys, producing a diff of churn around
+  a one-entry change. Insert into the text instead and re-parse only to validate.
+
+### The AI job queue stranded work on every worker crash
+
+`ai_jobs` carries `locked_by`/`locked_at`, but **nothing ever read `locked_at`**. `claimBatch`
+selects only `status = 'QUEUED'`, so a job whose worker died — OOM, deploy, eviction — stayed
+`RUNNING` forever: never retried, never dead-lettered, never surfaced as failed.
+
+`reclaimExpiredLeases` closes it. Two details matter more than the query: the reclaim **increments
+`attempts`**, or a job that reliably kills its worker is reclaimed in an infinite loop; and a
+reclaimed job at `max_attempts` goes to `DEAD` rather than back to `QUEUED`.
+
+A per-tenant fairness rewrite of `claimBatch` was written and then **deliberately reverted**.
+`ai_jobs` is shared by KB, CRM, Build and chat, and there is no database here to test a claim-query
+rewrite against. Rendering the SQL before trusting it showed the rewrite had dropped the
+`status = 'QUEUED'` re-check from inside the `FOR UPDATE` subquery — the re-check is what makes
+EvalPlanQual skip a row another worker just committed, so two workers could have claimed one job.
+Thirty-two passing mocked tests did not see it; reading the generated SQL did.
+
+`claimBatch` is now byte-identical to its pre-session form. Fairness stays unbuilt until it can be
+exercised against a real queue. `1175_ai_jobs_expired_lease_index` supports the reclaim and is
+written, reversible, and deliberately unjournalled.
