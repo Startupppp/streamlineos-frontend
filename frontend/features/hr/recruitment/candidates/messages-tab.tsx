@@ -18,6 +18,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { WhatsappConsentPanel } from "./whatsapp-consent-panel";
 
 const MESSAGE_CHANNELS = [
   "EMAIL",
@@ -125,6 +126,13 @@ export function MessagesTab({
         </div>
       </ScrollArea>
       <div className="border-t p-3 space-y-2">
+        {/*
+          Above the channel selector, because the selector has offered WHATSAPP
+          since before anything could deliver one — picking it wrote a message
+          row and nothing else, so a recruiter read "sent" while the candidate's
+          phone never rang.
+        */}
+        {channel === "WHATSAPP" && <WhatsappConsentPanel candidateId={candidateId} />}
         <div className="flex items-center gap-2">
           <div className="flex-1 space-y-1">
             <Label className="text-xs text-muted-foreground">Channel</Label>

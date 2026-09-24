@@ -175,6 +175,8 @@ export const humanResourcesQueryKeys = {
       [...base, "hr", "recruitingAnalytics", from, to] as const,
     candidateVoiceScreens: (candidateId: number) =>
       [...base, "hr", "candidate", candidateId, "voiceScreens"] as const,
+    candidateWhatsapp: (candidateId: number) =>
+      [...base, "hr", "candidate", candidateId, "whatsapp"] as const,
     pipelineAutomations: () => [...base, "hr", "pipelineAutomations"] as const,
     referrals: () => [...base, "hr", "referrals"] as const,
     talentPools: () => [...base, "hr", "talentPools"] as const,
