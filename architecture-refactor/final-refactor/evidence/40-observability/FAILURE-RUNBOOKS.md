@@ -608,6 +608,42 @@ node backend/src/scripts/alert-job-queue-age.mjs
 
 ---
 
+## #kb-indexing
+
+**What fires:** `kb-indexing` (high, knowledge-team) when more than 5% of KB page indexing operations in the window end in a fault outcome — `embedding_unavailable`, `credits_exhausted` or `error` — and at least 2 such operations occurred. The floor is what stops one failed reindex from paging.
+
+**Detection signal:** `alert-kb-indexing.mjs` reads the structured log for `kb.indexing.operation` spans emitted by `KbIndexingMetrics`. The alert keys on `kb.outcome`, not on the span's ok/error status, because the three faults have three different fixes. **A firing alert means pages are not searchable, never that content leaked** — a failed index drops chunks, and retrieval is filtered by the SQL ACL predicate regardless.
+
+Read the outcome histogram first:
+
+- `embedding_unavailable` — the AI gateway reports no embedding provider, or the provider returned 503. Nothing was charged.
+- `credits_exhausted` — the organization has no AI credits. This is a billing state, not an outage; it is in the alert so a tenant silently losing search is visible.
+- `error` — a defect or a database failure in the chunk write. Investigate.
+- `reused` / `acl_only` — healthy. A content-hash match means the re-index was free; an ACL-only change rewrote the chunk ACL without re-embedding.
+
+**First five minutes**
+
+```bash
+# 1. Outcome histogram, fault ratio and p95 over the window
+node backend/src/scripts/alert-kb-indexing.mjs --log=app.log --hours=1
+
+# 2. If embedding_unavailable dominates, the provider is the subject, not KB
+node backend/src/scripts/alert-p95.mjs --log=app.log | head -20
+
+# 3. If credits_exhausted dominates, identify the tenant
+node backend/src/scripts/alert-tenant-cost.mjs --hours=24
+```
+
+See `#provider-outage` when `embedding_unavailable` accounts for the cluster.
+
+**Containment:** None is needed at the data layer — an unindexed page is invisible to vector search but still reachable by keyword search and by its own route, and its chunks were removed rather than written half-formed. Do not disable the KB ingestion consumer to silence the alert: the outbox retains the intent, and a disabled consumer converts a visible fault into a silent backlog that `#queue-backlog` will report later and less usefully.
+
+**Recovery:** Fix the source, then re-drive. For a provider outage, restore the embedding configuration and let the ingestion consumer retry — `embedChunksWithResumption` checkpoints every embedded chunk, so a retry pays only for the chunks that never landed. For credit exhaustion, top up the organization's AI credits; no replay is needed beyond the next content event. For `error`, read the correlated `ERROR_REPORT` line on the same `correlation.id` before re-driving. A full rebuild for one tenant is `POST /kb/pages/reindex-all`, which is cursor-paged and safe to resume.
+
+**Verification:** `alert-kb-indexing.mjs --hours=1` exits 0 with `fired: false`, and the outcome histogram shows `indexed` or `reused` for the pages that were failing. An exit code of 2 is **not** a pass — it means no `kb.indexing.operation` span reached the log at all, so either the window is empty or the instrumentation is unwired.
+
+---
+
 ## Incident response process
 
 On-call rotation, severity-to-escalation matrix, customer communication criteria and the post-incident review template are in [INCIDENT-RESPONSE.md](./INCIDENT-RESPONSE.md). That document also records the two operational limitations of the current alert delivery system (no-auth webhook, local suppression file) that affect escalation planning before production.

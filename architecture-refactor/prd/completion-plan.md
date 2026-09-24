@@ -6626,6 +6626,10 @@ Inspect the outbound channel/provider after domain intent persistence. Confirm p
 
 Distinguish queued/no claimant from stalled running/expired lease. Inspect worker/cron registration and lease owner/expiry. Never clear a live lease manually. Recover through the existing fenced claim/retry mechanism and prove a stale worker cannot commit after its successor, with no duplicate or lost job.
 
+### kb-indexing
+
+Read the `kb.outcome` histogram before anything else; provider unavailability, tenant credit exhaustion and an application defect share one span and have three different owners. An unindexed page is invisible to vector search, not leaked — retrieval remains filtered by the SQL ACL predicate. Do not disable the ingestion consumer to silence the alert; that converts a visible fault into a silent outbox backlog. Recover by fixing the source and letting the checkpointed resumption re-drive, which re-pays only for chunks that never landed. Verify a populated window: exit 2 means nothing was measured, not health. Full detection, containment and recovery steps are in `#kb-indexing` of the observability failure runbooks.
+
 ### tenant-ctx-errors
 
 Inspect sanitized populated logs and classify guard, request, after-commit, detached worker or sweep caller. A 42501 can have several causes; verify the actual role/GUC/privilege failure instead of assuming missing context or no leak. Restore the correct explicit tenant transaction and current membership/authorization using canonical helpers. Durable effects remain in the existing outbox. Reproduce negative controls and verify actual affected writes without suppressing the error.
