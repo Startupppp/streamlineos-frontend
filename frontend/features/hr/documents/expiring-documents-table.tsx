@@ -1,6 +1,5 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
 import { format, differenceInDays, parseISO } from "date-fns";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -140,7 +139,7 @@ export function ExpiringDocumentsTable({
 
   const emptyState = (
     <EmptyState
-      illustration={<AlertTriangle className="w-8 text-status-success-ink" />}
+      illustrationPreset="approval"
       title="No expiring items"
       description="All documents and certifications are up to date within the selected window."
       compact

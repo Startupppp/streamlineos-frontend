@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Calendar } from "lucide-react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import { format, parseISO } from "date-fns";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
@@ -83,7 +82,7 @@ export function ComplianceCalendar() {
         />
       ) : events.length === 0 ? (
         <EmptyState
-          illustration={<Calendar className="w-8 text-muted-foreground" />}
+          illustrationPreset="calendar"
           title="No compliance events"
           description={`No expiries in ${monthLabel}.`}
           compact

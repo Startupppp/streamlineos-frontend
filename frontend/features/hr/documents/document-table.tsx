@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { Download, Folder, Upload } from "lucide-react";
+import { Download, Folder } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable } from "@/components/ui/data-table";
@@ -108,7 +108,7 @@ export function DocumentTable({
 
   const emptyState = (
     <EmptyState
-      illustration={<Upload className="w-8 text-muted-foreground" />}
+      illustrationPreset="upload"
       title="No documents found"
       description="Upload your first document to get started"
       action={
