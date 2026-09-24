@@ -170,6 +170,11 @@ export const humanResourcesQueryKeys = {
       [...base, "hr", "emailSequence", emailSequenceId] as const,
     emailSequenceMetrics: (emailSequenceId: number) =>
       [...base, "hr", "emailSequence", emailSequenceId, "metrics"] as const,
+    /** Conversion over a window, keyed by the window so two ranges do not share a cache entry. */
+    recruitingAnalytics: (from: string, to: string) =>
+      [...base, "hr", "recruitingAnalytics", from, to] as const,
+    candidateVoiceScreens: (candidateId: number) =>
+      [...base, "hr", "candidate", candidateId, "voiceScreens"] as const,
     pipelineAutomations: () => [...base, "hr", "pipelineAutomations"] as const,
     referrals: () => [...base, "hr", "referrals"] as const,
     talentPools: () => [...base, "hr", "talentPools"] as const,

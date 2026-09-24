@@ -3,6 +3,7 @@
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import type { VoiceScreenView } from "@/hooks/api/hr/recruitment/voice-screens-schema";
 
 export type { VoiceScreenView };
@@ -21,7 +22,7 @@ const listC = lazyContract(() =>
  */
 export function useCandidateVoiceScreens(candidateId: number) {
   return useGatedQuery("hr:requisitions:view", {
-    queryKey: ["hr", "recruitment", "candidates", candidateId, "voice-screens"] as const,
+    queryKey: humanResourcesQueryKeys.hr.candidateVoiceScreens(candidateId),
     queryFn: ({ signal }) =>
       apiClient.get<VoiceScreenView[]>(
         `/hr/recruitment/candidates/${candidateId}/voice-screens`,
