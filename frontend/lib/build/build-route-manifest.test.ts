@@ -1,4 +1,4 @@
-import { readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { BUILD_ROUTE_MANIFEST, BuildRouteManifestEntrySchema } from "./build-route-manifest";
 
@@ -88,9 +88,15 @@ describe("BLD-001 — build route manifest covers all 65 authenticated build pag
     }
   });
 
-  it("still tracks intake, whose Forms-versus-Triage destination is an unresolved open question", () => {
-    const routes = BUILD_ROUTE_MANIFEST.map((entry) => entry.route);
-    expect(routes).toContain("/build/[projectId]/intake");
+  it("still tracks intake, and keeps it, because the generated contract proves neither Forms nor Triage can absorb its job", () => {
+    const entry = BUILD_ROUTE_MANIFEST.find(
+      (e) => e.route === "/build/[projectId]/intake",
+    );
+    expect(entry).toEqual({
+      route: "/build/[projectId]/intake",
+      decision: "KEEP",
+      target: null,
+    });
   });
 
   it("disk route count matches manifest count so neither direction can silently absorb extra entries", () => {
@@ -105,6 +111,81 @@ describe("BLD-001 — build route manifest covers all 65 authenticated build pag
   it("every page.tsx on disk appears in the manifest so no unreviewed route can land undetected", () => {
     const untracked = [...diskRoutes].filter((route) => !manifestRoutes.has(route));
     expect(untracked).toEqual([]);
+  });
+});
+
+describe("BLD-001 — intake is retained because the generated contract gives it a job Forms and Triage do not have", () => {
+  const contract = JSON.parse(
+    readFileSync(resolve(__dirname, "../../contracts/openapi.json"), "utf8"),
+  ) as {
+    paths: Record<string, Record<string, { "x-permission"?: string }>>;
+  };
+  const paths = contract.paths;
+
+  const intakeRow = () => {
+    const response = paths["/build/{projectId}/intake"].get as unknown as {
+      responses: {
+        "200": {
+          content: {
+            "application/json": {
+              schema: {
+                properties: {
+                  data: {
+                    properties: {
+                      data: {
+                        items: { properties: Record<string, unknown> };
+                      };
+                    };
+                  };
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    return response.responses["200"].content["application/json"].schema
+      .properties.data.properties.data.items.properties;
+  };
+
+  it("intake owns three endpoints of its own, so retiring the page would strand a live resource", () => {
+    expect(Object.keys(paths["/build/{projectId}/intake"]).sort()).toEqual([
+      "get",
+      "post",
+    ]);
+    expect(Object.keys(paths["/build/{projectId}/intake/{requestId}"])).toEqual([
+      "patch",
+    ]);
+  });
+
+  it("triage owns no endpoint at all, so it cannot be the destination for intake submissions", () => {
+    const triagePaths = Object.keys(paths).filter((p) => p.includes("triage"));
+    expect(triagePaths).toEqual([]);
+  });
+
+  it("forms owns definitions and its own submissions, a resource whose rows carry none of intake's fields", () => {
+    expect(paths["/build/{projectId}/forms"]).toBeDefined();
+    expect(
+      paths["/build/{projectId}/forms/{formId}/submissions"],
+    ).toBeDefined();
+    const formsList = JSON.stringify(paths["/build/{projectId}/forms"].get);
+    expect(formsList).not.toContain("linkedWorkItemId");
+    expect(formsList).not.toContain("declineReason");
+  });
+
+  it("only intake rows carry the accepted-to-work-item link and the decline reason that its accept and decline flows write", () => {
+    expect(Object.keys(intakeRow())).toEqual(
+      expect.arrayContaining(["linkedWorkItemId", "declineReason", "source"]),
+    );
+  });
+
+  it("intake is gated by a different permission family than forms, so consolidating it would silently move the access boundary", () => {
+    expect(paths["/build/{projectId}/intake"].post["x-permission"]).toBe(
+      "build:workspace:manage",
+    );
+    expect(paths["/build/{projectId}/forms"].post["x-permission"]).toBe(
+      "build:forms:manage",
+    );
   });
 });
 

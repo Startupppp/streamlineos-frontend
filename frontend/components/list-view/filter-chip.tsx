@@ -37,7 +37,7 @@ export function FilterChip({ label, color, onRemove, className }: FilterChipProp
       <button
         type="button"
         onClick={handleRemoveClick}
-        className="inline-flex size-4 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="inline-flex size-4 shrink-0 items-center justify-center rounded-sm text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring"
         aria-label={`Remove ${label} filter`}
         {...hoverHandlers}
       >
