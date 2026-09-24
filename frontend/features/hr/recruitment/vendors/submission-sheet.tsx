@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { formatCurrencyFull } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getTodayString } from "@/lib/date-utils";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -221,13 +222,33 @@ export function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>Submitted {format(new Date(sub.submittedAt), "MMM d, yyyy")}</span>
-                    {sub.invoiceAmount && <span className="font-medium">${parseFloat(sub.invoiceAmount).toLocaleString()}</span>}
+                    {sub.invoiceAmount && (
+                      <span className="font-medium">{formatCurrencyFull(sub.invoiceAmount)}</span>
+                    )}
                   </div>
                   {canViewFinancials && (sub.billRate || sub.payRate) && (
                     <div className="flex items-center gap-3 text-dense text-muted-foreground pt-1 border-t">
-                      {sub.billRate && <span>Bill: ${parseFloat(sub.billRate).toLocaleString()}/hr</span>}
-                      {sub.payRate && <span>Pay: ${parseFloat(sub.payRate).toLocaleString()}/hr</span>}
-                      {sub.margin && <span className="font-medium text-foreground">Margin: ${parseFloat(sub.margin).toLocaleString()}/hr</span>}
+                      {sub.billRate && <span>Bill: {formatCurrencyFull(sub.billRate)}/hr</span>}
+                      {sub.payRate && <span>Pay: {formatCurrencyFull(sub.payRate)}/hr</span>}
+                      {sub.marginAmount && (
+                        <span
+                          className={
+                            sub.negative
+                              ? "font-medium text-destructive"
+                              : "font-medium text-foreground"
+                          }
+                        >
+                          Margin: {formatCurrencyFull(sub.marginAmount)}/hr
+                          {sub.marginPercent !== null && ` (${sub.marginPercent}%)`}
+                          {/*
+                            Called out rather than left to a minus sign. A
+                            contractor placed above the bill rate loses money on
+                            every hour worked, and it arrives through an
+                            ordinary data-entry slip.
+                          */}
+                          {sub.negative && " — below cost"}
+                        </span>
+                      )}
                     </div>
                   )}
                   {sub.placementStatus === "PLACED" && sub.invoiceStatus !== "PAID" && (
