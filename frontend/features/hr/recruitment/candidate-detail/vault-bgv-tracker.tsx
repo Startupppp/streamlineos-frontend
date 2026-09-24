@@ -114,6 +114,17 @@ export function BgvTracker({
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-2 space-y-3">
+        {/*
+          Provenance, stated rather than left to be assumed. Every value on this
+          card is typed in by whoever is handling the candidate — there is no
+          background-check integration behind it, so a "Cleared" badge with no
+          attribution reads as a claim the platform is making and verifying.
+          It is not one.
+        */}
+        <p className="text-xs text-muted-foreground">
+          Recorded by your team. StreamlineOS does not run this check or receive
+          a result from the agency.
+        </p>
         <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
           {bgvInitiatedAt && (
             <span className="flex items-center gap-1">
