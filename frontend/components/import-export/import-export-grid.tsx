@@ -2,9 +2,9 @@
 
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { downloadExport } from "@/lib/download-export";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { EntityCard, type ImportEntity } from "./entity-card";
 
@@ -20,14 +20,16 @@ export function ImportExportGrid({ entities }: ImportExportGridProps) {
     if (!entity.exportEndpoint) return;
     setExportingIds((prev) => new Set([...prev, entity.id]));
     try {
-      const blob = await apiClient.download(entity.exportEndpoint);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${entity.id}-export-${new Date().toISOString().split("T")[0]}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success(`${entity.label} export downloaded`);
+      // Was: fetch a blob and hand it to an anchor. An empty body and an error
+      // page saved exactly like a real CSV, and both announced success — which
+      // is how a 0-byte assets export read as a finished download twice.
+      const { filename, bytes } = await downloadExport(entity.exportEndpoint, {
+        label: entity.label,
+        fallbackName: `${entity.id}-export-${new Date().toISOString().split("T")[0]}.csv`,
+      });
+      toast.success(`${entity.label} export downloaded`, {
+        description: `${filename} · ${(bytes / 1024).toFixed(1)} KB`,
+      });
     } catch (err) {
       toast.error(getErrorMessage(err) || `Failed to export ${entity.label}`);
     } finally {
