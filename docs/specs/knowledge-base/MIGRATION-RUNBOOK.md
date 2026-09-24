@@ -1,4 +1,4 @@
-# KB migration runbook — 1168 … 1174
+# KB migration runbook — 1168 … 1175
 
 You run these. This session has no IAM credential, so nothing here has been applied or
 verified against a real database. Every migration below is **unverified until applied**.
@@ -218,3 +218,30 @@ The journal has two `a`-suffixed entries (`0464a_gl_kernel` idx 717, `0271a_wait
 idx 726) ordered before `1078` while carrying later `when` values. Correcting it means
 renumbering applied migrations, which BE-59 and BE-60 forbid. The failing ordering test is
 the accurate state of the world. Left alone on purpose — don't let anyone "fix" it.
+
+---
+
+## 1175 — `ai_jobs` expired-lease index (NOT journalled)
+
+Supports the lease-recovery query added to `AiJobsService.reclaimExpiredLeases`. Without it,
+every worker tick sequentially scans `ai_jobs`.
+
+Partial on purpose — `WHERE status = 'RUNNING'` — because only a small fraction of rows are ever
+RUNNING, and that is the only slice the reclaim reads.
+
+**Deliberately absent from `_journal.json`.** It is additive and reversible, so journalling it is
+safe whenever you want it; the entry was withheld only so nothing new reaches production without
+you choosing it. To enable:
+
+```json
+{ "idx": 1056, "version": "7", "when": 1803000010671, "tag": "1175_ai_jobs_expired_lease_index", "breakpoints": true }
+```
+
+Then apply as usual:
+
+```bash
+node D:/agent-work/mig-iam.mjs src/scripts/run-pending-migrations.mjs --tag=1175_ai_jobs_expired_lease_index --dry-run
+node D:/agent-work/mig-iam.mjs src/scripts/run-pending-migrations.mjs --tag=1175_ai_jobs_expired_lease_index
+```
+
+The reclaim works without it — just slower. Nothing breaks if you never apply it.

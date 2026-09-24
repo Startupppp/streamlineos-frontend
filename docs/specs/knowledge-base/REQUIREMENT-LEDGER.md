@@ -1019,3 +1019,30 @@ its own tsc output can report "no matches" from a run that predated its last edi
 
 Independently re-run `tsc` after every lane, with `--max-old-space-size=10240`. At 8192 it
 dies exit 134 printing no type errors at all, which reads as a passing build.
+
+### `git diff HEAD` stops proving anything when a peer session is committing
+
+Partway through this pass, `git status` in both repos went to **zero** uncommitted files. Nothing
+was lost — a peer session had committed the work (`ec12d601d` share tokens + migrations,
+`e405138f7` brief-to-page). But it silently invalidated the standing technique for separating a
+regression from a pre-existing failure: once your own work is in `HEAD`, `git diff --quiet HEAD`
+reports it as "unchanged", which reads exactly like "not mine".
+
+Pin the comparison to a commit from **before the session started**, not to `HEAD`. The frontend
+baseline here was `942466cf7`.
+
+That distinction mattered immediately. `heavy-module-lazy-boundaries` fails because
+`page-document.tsx` pulls `plate-value-convert` into the project-wiki route's first-load graph,
+and `page-document.tsx` *was* edited this pass — so against `HEAD` it looked like ours. Against
+the real baseline, the eager import sits at line 40 of the unchanged original and the entire
+chain below the route was already eager; our edit adds three lines threading `projectId`. The
+failure predates the work. All ten red frontend suites are pre-existing.
+
+### Convert-to-page had to go on the wiki side
+
+`KbWikiModule` already imports `KbRetrievalModule`, so putting brief→page conversion in retrieval
+would have closed an import cycle, and BE-10 forbids hiding one behind `forwardRef`. The
+dependency only runs one way: retrieval now exports `KbResearchBriefService`, and
+`KbBriefToPageService` lives in wiki, where `KbPagesService` already is. It resolves the brief
+through `getById`, so the brief's tenant scoping and citation re-check still run — the converter
+does not re-implement either.
