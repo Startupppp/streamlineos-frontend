@@ -22,6 +22,13 @@ export interface ComboboxOption {
   value: string;
   label: string;
   sublabel?: string;
+  /**
+   * A small visual that belongs to the option itself — a person's avatar, an
+   * entity's type mark. It renders in the list row and, once the option is
+   * chosen, in the trigger, so picking someone does not drop what identified
+   * them. Sized by its caller; the box here only keeps it from shrinking.
+   */
+  icon?: React.ReactNode;
 }
 
 interface ComboboxProps {
@@ -139,12 +146,17 @@ export function Combobox({
             className,
           )}
         >
-          <span className="truncate text-left">
-            {selected ? (
-              selected.label
-            ) : (
-              <span className="text-muted-foreground">{placeholder}</span>
-            )}
+          <span className="flex min-w-0 items-center gap-2 text-left">
+            {selected?.icon ? (
+              <span className="flex shrink-0 items-center">{selected.icon}</span>
+            ) : null}
+            <span className="truncate">
+              {selected ? (
+                selected.label
+              ) : (
+                <span className="text-muted-foreground">{placeholder}</span>
+              )}
+            </span>
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -179,6 +191,9 @@ export function Combobox({
                         value === opt.value ? "opacity-100" : "opacity-0",
                       )}
                     />
+                    {opt.icon ? (
+                      <span className="mr-2 flex shrink-0 items-center">{opt.icon}</span>
+                    ) : null}
                     <div className="flex flex-col min-w-0">
                       <span className="text-sm truncate">{opt.label}</span>
                       {opt.sublabel && (
