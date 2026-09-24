@@ -10,6 +10,11 @@ let mockByKeyError: Error | null = null;
 let mockByKeyTicket: { id: number } | undefined = { id: 1 };
 let mockTicketError: Error | null = null;
 let mockCanViewAccess: "loading" | "granted" | "denied" = "granted";
+let mockIsMobile = false;
+let mockResolvedTicket:
+  | { id: number; ticketNumber: number; title: string }
+  | undefined;
+let mockRightPanelOpen = false;
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
@@ -17,7 +22,12 @@ jest.mock("next/navigation", () => ({
   notFound: () => mockNotFound(),
 }));
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children }: { children: ReactNode }) => <main>{children}</main>,
+  PageWrapper: ({ children, actions }: { children: ReactNode; actions?: ReactNode }) => (
+    <main>
+      {actions}
+      {children}
+    </main>
+  ),
 }));
 jest.mock("@/hooks/api", () => ({
   useProject: () => ({ data: { key: "TEST" }, isLoading: false }),
@@ -38,17 +48,32 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
   useCanState: () => mockCanViewAccess,
 }));
-jest.mock("@/hooks/common/use-mobile", () => ({ useIsMobile: () => false }));
+jest.mock("@/hooks/common/use-mobile", () => ({ useIsMobile: () => mockIsMobile }));
 jest.mock("./use-ticket-detail", () => ({
   useTicketDetail: () => ({
-    ticket: undefined,
+    ticket: mockResolvedTicket,
     isLoading: false,
     ticketError: mockTicketError,
     refetchTicket: mockRetryTicket,
+    subtasks: [],
+    members: [],
+    statuses: [],
+    saving: false,
+    localTitle: mockResolvedTicket?.title ?? "",
+    handleTitleChange: jest.fn(),
+    handleDescriptionEditorChange: jest.fn(),
+    autoSave: jest.fn(),
+    handleDelete: jest.fn(),
+    isDeleting: false,
   }),
 }));
 jest.mock("./ticket-detail-main-section", () => ({ TicketDetailMainSection: () => null }));
-jest.mock("./ticket-detail-right-panel", () => ({ TicketDetailRightPanel: () => null }));
+jest.mock("./ticket-detail-right-panel", () => ({
+  TicketDetailRightPanel: ({ open }: { open: boolean }) => {
+    mockRightPanelOpen = open;
+    return open ? <div role="dialog" aria-label="Ticket properties" /> : null;
+  },
+}));
 jest.mock("./ticket-detail-actions", () => ({
   TicketDetailActions: () => null,
   TicketDetailDeleteDialog: () => null,
@@ -61,6 +86,9 @@ beforeEach(() => {
   mockByKeyTicket = { id: 1 };
   mockTicketError = null;
   mockCanViewAccess = "granted";
+  mockIsMobile = false;
+  mockResolvedTicket = undefined;
+  mockRightPanelOpen = false;
   jest.clearAllMocks();
 });
 
@@ -104,4 +132,20 @@ it("shows a plan-required state for a 402 MODULE_NOT_ENABLED on ticket key looku
   render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
   expect(screen.queryByText("Couldn't load ticket")).not.toBeInTheDocument();
   expect(mockNotFound).not.toHaveBeenCalled();
+});
+
+it("keeps mobile ticket properties closed until the user opens them", () => {
+  mockIsMobile = true;
+  mockResolvedTicket = {
+    id: 1,
+    ticketNumber: 1,
+    title: "Mobile ticket",
+  };
+
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+
+  expect(mockRightPanelOpen).toBe(false);
+  fireEvent.click(screen.getByRole("button", { name: "Expand details panel" }));
+  expect(mockRightPanelOpen).toBe(true);
+  expect(screen.getByRole("dialog", { name: "Ticket properties" })).toBeInTheDocument();
 });

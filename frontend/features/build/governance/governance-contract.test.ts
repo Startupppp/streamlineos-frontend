@@ -1,4 +1,4 @@
-import { riskRowContract, riskPageContract, riskStatsContract } from "@/hooks/api/build/governance-schema";
+import { riskRowContract, riskPageContract, riskStatsContract, decisionRowContract } from "@/hooks/api/build/governance-schema";
 
 const BASE_RISK_ROW = {
   id: 1,
@@ -109,5 +109,46 @@ describe("riskStatsContract keeps the register tiles describing the whole regist
 
   it("rejects a bare array, so the old first-page-derived tile shape cannot pass as the aggregate", () => {
     expect(riskStatsContract.safeParse([BASE_RISK_ROW]).success).toBe(false);
+  });
+});
+
+const BASE_DECISION_ROW = {
+  id: 1,
+  orgId: "org_1",
+  projectId: 10,
+  decisionNumber: 1,
+  title: "Adopt keyset pagination",
+  context: null,
+  decision: null,
+  optionsConsidered: null,
+  status: "proposed",
+  ownerId: null,
+  decidedAt: null,
+  revisitAt: null,
+  linkedTicketId: null,
+  createdBy: null,
+  createdAt: "2026-01-01T00:00:00.000Z",
+  updatedAt: "2026-01-01T00:00:00.000Z",
+  deletedAt: null,
+};
+
+describe("decisionRowContract status matches the decision_status Postgres enum", () => {
+  it.each(["proposed", "accepted", "superseded", "revisit"] as const)(
+    "accepts %s as a real decision status value",
+    (status) => {
+      expect(decisionRowContract.safeParse({ ...BASE_DECISION_ROW, status }).success).toBe(true);
+    },
+  );
+
+  it("rejects an out-of-enum status rather than rendering an undefined status badge", () => {
+    expect(
+      decisionRowContract.safeParse({ ...BASE_DECISION_ROW, status: "rejected" }).success,
+    ).toBe(false);
+  });
+
+  it("rejects a lowercase-mismatched status, pinning the wire casing to the enum", () => {
+    expect(
+      decisionRowContract.safeParse({ ...BASE_DECISION_ROW, status: "Proposed" }).success,
+    ).toBe(false);
   });
 });

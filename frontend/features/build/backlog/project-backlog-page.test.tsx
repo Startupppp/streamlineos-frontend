@@ -1,9 +1,14 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+const mockReplace = jest.fn();
+const mockSearchParamsContainer = { current: new URLSearchParams() };
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
-  useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
+  usePathname: () => "/build/1/backlog",
+  useSearchParams: () => mockSearchParamsContainer.current,
   notFound: jest.fn(() => null),
 }));
 
@@ -69,7 +74,15 @@ jest.mock("@/features/build/shared/project-load-fallback", () => ({
 }));
 
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: () => <div data-testid="data-table" />,
+  DataTable: ({ data }: { data: { id: number; title: string }[] }) => (
+    <div data-testid="data-table">
+      {data.map((row) => (
+        <span key={row.id} data-testid="data-table-row">
+          {row.title}
+        </span>
+      ))}
+    </div>
+  ),
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 
@@ -123,9 +136,14 @@ const READY_TICKETS = {
   isError: false,
   error: undefined,
   refetch: jest.fn(),
+  isTruncated: false,
+  fetchNextPage: jest.fn(),
+  isFetchingNextPage: false,
 };
 
 beforeEach(() => {
+  jest.clearAllMocks();
+  mockSearchParamsContainer.current = new URLSearchParams();
   usePageState.mockReturnValue({ kind: "ready" });
   mockUseProject.mockReturnValue(READY_PROJECT);
   mockUseProjectBoardTickets.mockReturnValue(READY_TICKETS);
@@ -255,5 +273,66 @@ describe("ProjectBacklogPage — project error path", () => {
     renderPage();
     expect(screen.queryByTestId("project-load-fallback")).toBeNull();
     expect(screen.getByTestId("data-table")).toBeDefined();
+  });
+});
+
+describe("ProjectBacklogPage — server filtering and cursor pagination", () => {
+  it("forwards every shared filter to the server query", () => {
+    mockSearchParamsContainer.current = new URLSearchParams(
+      "q=login&status=TODO,DONE&priority=HIGH,URGENT&type=TASK,BUG&assigneeId=@me,__unassigned__&labels=11,22&cycle=7,8&dueDateFrom=2026-01-01&dueDateTo=2026-02-01",
+    );
+
+    renderPage();
+
+    expect(mockUseProjectBoardTickets).toHaveBeenCalledWith(1, {
+      q: "login",
+      status: "TODO,DONE",
+      priority: "HIGH,URGENT",
+      type: "TASK,BUG",
+      assigneeId: "@me,__unassigned__",
+      labels: "11,22",
+      cycle: "7,8",
+      dueDateFrom: "2026-01-01",
+      dueDateTo: "2026-02-01",
+    });
+  });
+
+  it("renders the server page without filtering the loaded subset again", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("status=TODO");
+    mockUseProjectBoardTickets.mockReturnValue({
+      ...READY_TICKETS,
+      data: [{ id: 9, title: "server-authoritative", status: "DONE", type: "TASK" }],
+    });
+
+    renderPage();
+
+    expect(screen.getByText("server-authoritative")).toBeInTheDocument();
+  });
+
+  it("loads the next cursor page only when the user asks", async () => {
+    const fetchNextPage = jest.fn();
+    mockUseProjectBoardTickets.mockReturnValue({
+      ...READY_TICKETS,
+      isTruncated: true,
+      fetchNextPage,
+    });
+    renderPage();
+    expect(fetchNextPage).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole("button", { name: /load more/i }));
+
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the load-more action disabled while the next page is loading", () => {
+    mockUseProjectBoardTickets.mockReturnValue({
+      ...READY_TICKETS,
+      isTruncated: true,
+      isFetchingNextPage: true,
+    });
+
+    renderPage();
+
+    expect(screen.getByRole("button", { name: /load more/i })).toBeDisabled();
   });
 });

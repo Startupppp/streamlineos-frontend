@@ -325,6 +325,40 @@ describe("BSN-02-024 — scope isolation by org AND actor", () => {
     expect(result.current.recents).toEqual([valid]);
   });
 
+  test("keeps legacy project recents while normalizing missing parent metadata", () => {
+    const scope = "authenticated:org-legacy-project:user-1";
+    const storageKey = `${scope}::build-scope-recents`;
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify([
+        {
+          key: "project:7",
+          type: "project",
+          id: "7",
+          name: "Legacy Project",
+          href: "/build/7",
+        },
+      ]),
+    );
+
+    const { result } = renderHook(() => useBuildScopeRecents(), {
+      wrapper: wrapWith(scope),
+    });
+
+    expect(result.current.recents).toEqual([
+      {
+        key: "project:7",
+        type: "project",
+        id: "7",
+        name: "Legacy Project",
+        parentPath: null,
+        parentKey: null,
+        projectKey: null,
+        href: "/build/7",
+      },
+    ]);
+  });
+
   test("the fixed organization scope cannot be saved as a recent or star", () => {
     const organization = makeScopeRef({
       key: "organization",

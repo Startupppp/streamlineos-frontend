@@ -1,26 +1,18 @@
 # Build Prioritized Backlog
 
-Reconciled 2026-09-22, re-verified against the live production catalog 2026-09-23 at root
-`ca83cb100` / backend `7d27370e8`.
+Reconciled 2026-09-24 against `codex/build-final-completion` and the paired backend worktree.
 
-**Stages A through D are complete.** The code cutover, its verification, the deployment and all
-five destructive migration phases have landed. **Stage E — browser verification — is the only
-thing still open**, and nothing in this programme has been confirmed in a browser.
+This is the durable product backlog, not a release-completion claim. The Sprint/Cycle and QA Bug contraction is complete. Canonical Build migrations `1185_roadmap_search_id_probe` and `1186_project_programs_list_indexes`, historically deployed as `1177` and `1178`, are verified in production with zero pending migrations. The current-worktree authenticated browser matrix passed. Current release truth lives in [RELEASE-STATUS.md](./RELEASE-STATUS.md).
 
-Order is **dependency order, not wish order**: application code cutover → verification →
-deployment → destructive migration → browser verification. A stage cannot start before the
-stage above it is complete, because each later stage is irreversible in a way the earlier one
-is not. That ordering held: the deploy preceded the drops, and phase 04 preceded phase 05
-because four foreign keys would otherwise have failed it `2BP01`.
+Order remains **dependency order, not wish order**: application code → focused verification → deployment → migration → browser verification. A later stage cannot be inferred complete from an earlier test result.
 
 Effort is engineering days for one experienced engineer with existing repository context. It
 excludes migration observation windows and security review. Every figure is an estimate.
 
 Evidence paths are repository-relative. `backend/` is a separate git repository from the root
-checkout; both are on `main` and both carry the merged closure work.
+checkout. Backend commit `f139e315f` is in backend `origin/main` and deployed. The frontend release candidate is on `codex/build-final-completion` until the final release push recorded in [RELEASE-STATUS.md](./RELEASE-STATUS.md).
 
-Execution detail for stages A–E lives in
-[`10-next-phase-execution.md`](./10-next-phase-execution.md).
+Migration execution rules live in [MIGRATION-RUNBOOK.md](./MIGRATION-RUNBOOK.md).
 
 ## Completed — historical
 
@@ -30,20 +22,21 @@ code. They are kept for audit history and must not be re-opened without new evid
 | Previous item | Disproving evidence |
 |---|---|
 | Fix Cycles navigation `/sprints` → `/cycles` | No `/sprints` route exists. Nav points at `${basePath}/cycles` in `frontend/lib/build/nav/build-project-catalog.ts:76-81`, pinned by `frontend/lib/build/build-project-catalog.test.ts:58` |
-| Establish route manifest tests for keep/move/consolidate/delete | `frontend/lib/build/build-route-manifest.ts` holds 79 typed entries (72 KEEP, 6 CONSOLIDATE, 1 DELETE) with `frontend/lib/build/build-route-manifest.test.ts`. Independently re-measured 2026-09-22: `app/(authenticated)/build` contains exactly **79 `page.tsx` files**, one per manifest entry. Gate `check:route-census` (root `package.json`) is recorded PASS with 0 drift in `NEXT-CLOSURE-STATUS.md:42` |
-| Make project workspace optional | BLD-003 in `IMPLEMENTATION-STATUS.md:304`; migration 1141 applied per `P0-PRODUCTION-EXECUTION-2026-09-22.md`. Superseded — PM Workspace was later removed outright, not kept optional; see the row below |
+| Establish route manifest tests for keep/move/consolidate/delete | `frontend/lib/build/build-route-manifest.ts` and `frontend/lib/build/build-route-manifest.test.ts` cover exactly **65 `KEEP` routes**, matching the 65 physical authenticated Build pages. The root `check:route-census` gate owns drift detection |
+| Make project workspace optional | Superseded — PM Workspace was removed outright by migration `1159_build_remove_pm_workspaces`; see the row below |
 | Remove PM Workspace entirely | Migration `1159_build_remove_pm_workspaces` drops `build.pm_workspaces`, `build.pm_workspace_memberships`, and every `pm_workspace_id` column; `build.project_workspace_members` renamed to `build.build_members`. All 9 `/build/workspaces*` endpoints and routes deleted; deep links redirect to `/build` and its scoped pages. See [`99-kill-list.md`](./99-kill-list.md) |
-| Close authorization gaps for lists, details, projections, mutations | `check:build-authz-census` (`backend/package.json`) reports `VULNERABLE = 0`. The named Releases escalation is closed: every method in `backend/src/modules/build/core/projects-releases.service.ts` now takes `u` and calls `assertProjectAccess` (lines 30, 58, 70, 109, 121, 140) |
+| Close authorization gaps for lists, details, projections, mutations | `check:build-authz-census` covers 49 controllers and 325 handlers: `VULNERABLE=0`, `NEEDS-REVIEW=0`, `CLOSED=42`, `VERIFIED=283`. The generated evidence is under `backend-docs/`. |
 | Workload with HR leave/capacity and Timesheets actuals | `backend/src/modules/build/execution/workload-capacity.service.ts` reads `leaveRequests` filtered to `APPROVED`, `timesheetSettings.expectedDailyHours` and `timesheets`; served at `/build/:projectId/workload/capacity`, consumed by `frontend/hooks/api/build/workload-capacity.ts` and wired at `frontend/features/build/project-detail/project-board-page.tsx:96` |
 | Add project filtering to Inbox | `frontend/features/build/inbox/inbox-filter-bar.tsx:23,95-102`; index applied by `backend/migrations/1151_notifications_metadata_project_id_index.sql` |
-| Change Request release and client-visibility fields | `client_visible` and `release_id` exist in `backend/src/db/schema/build/change-requests.ts:36-37`, read and filtered in `backend/src/modules/build/client-portal/change-requests.service.ts:57-58,117-121`; applied to production per `P0-PRODUCTION-EXECUTION-1149-1151.md` |
-| Sprint/Cycle and QA Bug **application** cutover (backend) | `NEXT-CLOSURE-STATUS.md:20-24`; commits merged into backend `main` |
+| Change Request release, client visibility, and affected-ticket linkage | `backend/src/db/schema/build/change-requests.ts`, `backend/src/modules/build/client-portal/change-request-affected-items.service.ts`, and `frontend/hooks/api/build/change-request-affected-items.ts` |
+| Sprint/Cycle and QA Bug **application** cutover (backend) | Cycle-only and canonical BUG invariant specs under `backend/src/modules/build/phase-2/` |
 | **A1 — frontend Sprint→Cycle read cutover** | Landed `36e7402ad` / `f794b484a`. Re-measured at `f794b484a`: the `sprintId` census returns **0** across the whole frontend. `frontend/hooks/api/build/sprints.ts` and `frontend/types/projects/sprints.ts` are deleted |
 | **A1b — backend `tickets.sprint_id` removal** | Landed `e06314424`, `de8ccd58a`. `tickets`, `project_meetings`, `test_runs` and `sprint_scope_events` no longer declare `sprint_id`; the only remaining `sprint_id` in the schema is `cycles.legacy_sprint_id` (`backend/src/db/schema/build/core.ts:165`) |
 | **A4 — invoice → timesheet pointer** | Landed `8bd5a84b4`. `invoice_items.timesheet_entry_id` is written and read — `backend/src/modules/invoices/invoices-write.service.ts:139`, `invoices-update.service.ts:130,168`, `invoices.service.ts:121` |
 | QA Bug legacy writer | Deleted `06b398ec8`. No non-test `from(bugs)`, `insert(bugs)`, `update(bugs)` or `delete(bugs)` remains |
 | **A2 — retire the `build.sprints` access path** | Landed on `main` as the coordinator's **freeze**: every `SprintsService` verb throws `GoneException`, `cycles.legacy_sprint_id` was removed from the schema, and `e48e4d139` deleted the `sprints` and `bugs` table declarations outright. A parallel branch in this lane reached the same goal by bridging the endpoints through `cycles` instead; **the freeze is the winner** and the bridge was discarded. Guarded going forward by `backend/src/modules/build/phase-2/sprint-cycle-drop-invariant.spec.ts` |
 | **A5 — the phase-05 rename** | Resolved on `main` in `1baada9ca`: the two `RENAME` statements were split out into `migrations/sql/a-sprint-cycle-06-rename-scope-events.sql`, so the drop no longer requires a same-instant code deploy |
+| Build search migrations `1185` and `1186`, historically `1177` and `1178` | Applied to production Aurora PostgreSQL after snapshot `streamlineos-pre-build-1177-1178-20260924-1` reached `AVAILABLE`; ledger `created_at` values are `1803000010691` and `1803000010701`, exact local SHA-256 hashes match, all 11 expected indexes and both search functions exist, both functions are `SECURITY DEFINER`, executable by `streamline_app`, scoped through `app.current_org_id()`, and the cross-tenant probe returned `0`. Production now has zero pending migrations. |
 
 Nine physical route removals are recorded in [`99-kill-list.md`](./99-kill-list.md) and are not
 repeated here.
@@ -55,18 +48,16 @@ repeated here.
 Nothing in Stage D may run until every Stage A task is deployed. Dropping a column that live
 code still reads raises PostgreSQL `42703` on production traffic with no warning.
 
-A1, A1b, A2, A4 and A5 have all landed and moved to the historical table above. **No code
-blocker remains for any contraction phase.** A3 is open but gates nothing — the only thing
-standing between the repository and the three unapplied migrations is a **deploy**.
+A1 through A5 have landed and moved to the historical table above. **No application-code or production-migration blocker remains for the contraction.**
 
-#### A3 — Change Requests: affected-work linkage
+#### A3 — Change Requests: affected-work linkage — **DONE IN CURRENT BRANCH**
 
 - **User job:** see which tickets a change request actually changes, so scope impact is reviewable.
 - **Owner:** backend, then frontend
 - **Depends on:** none
-- **Acceptance:** a tenant-safe link from `build.change_requests` to work items exists with a composite `(org_id, …)` foreign key; the list projection and filter cover it; `check:list-projections` stays PASS.
-- **Evidence:** `backend/src/db/schema/build/change-requests.ts:19-58` has `release_id` and `client_visible` but **no affected-work column**; `grep -rni affectedWork` returns nothing in either repository.
-- **Effort:** 3–5 d
+- **Acceptance:** a tenant-safe link from change requests to work items exists with bounded list, link, and unlink operations.
+- **Evidence:** `backend/src/modules/build/client-portal/change-request-affected-items.controller.ts`, `change-request-affected-items.service.ts`, and `frontend/hooks/api/build/change-request-affected-items.ts`.
+- **Effort:** spent
 
 ## Stage B — verification
 
@@ -76,7 +67,7 @@ standing between the repository and the three unapplied migrations is a **deploy
 - **Owner:** backend
 - **Depends on:** nothing further
 - **Acceptance:** an invariant spec fails if any non-schema reference to `tickets.sprint_id` or to the `sprints` table reappears, in string, Drizzle relational (`sprintId: true`) and query-builder form, with an empty allowlist.
-- **Evidence:** the `tickets.sprint_id` half is `backend/src/modules/build/phase-2/sprint-cycle-detach-invariant.spec.ts`; the table half is `backend/src/modules/build/phase-2/sprint-cycle-drop-invariant.spec.ts`, added in `35549635b` with ten non-vacuity proofs for each scanner form. The DO-block guard in `backend/migrations/sql/a-sprint-cycle-04-detach.sql` is a **data** check over `sprint_binding_archive` and has zero visibility into application code — stated at `lane-1-cycle-cutover.md:82`.
+- **Evidence:** the `tickets.sprint_id` half is `backend/src/modules/build/phase-2/sprint-cycle-detach-invariant.spec.ts`; the table half is `backend/src/modules/build/phase-2/sprint-cycle-drop-invariant.spec.ts`. The migration guard is a data check and the invariant specs own application-code coverage.
 - **Effort:** spent
 
 #### B2 — Run the QA Bug contract verification — **DONE 2026-09-22**
@@ -88,14 +79,14 @@ standing between the repository and the three unapplied migrations is a **deploy
 - **Evidence:** executed against the production Aurora cluster over a read-only IAM connection inside a `SET TRANSACTION READ ONLY` transaction on 2026-09-22. All 14 named checks returned 0. **Read the vacuity caveat in Stage D before treating this as a successful migration:** `build.bugs` has 0 rows, so the checks passed over an empty table.
 - **Effort:** spent
 
-#### B3 — Measure `check:contract-parity` outside a junctioned worktree
+#### B3 — Measure `check:contract-parity` outside a junctioned worktree — **DONE FOR THE PREVIOUS RELEASE**
 
 - **User job:** none directly — it is the only unmeasured gate in the closure set.
 - **Owner:** coordinator
 - **Depends on:** none
-- **Acceptance:** the gate runs to completion from a checkout with its own installed `node_modules` and its result is compared against the `main` baseline of FAIL with 6 new required fields.
-- **Evidence:** `NEXT-CLOSURE-STATUS.md:82-89` records the junction artifact and the `main` baseline.
-- **Effort:** 0.5 d
+- **Acceptance:** the gate runs to completion from a checkout with its own dependencies.
+- **Evidence:** [RELEASE-STATUS.md](./RELEASE-STATUS.md) section 6 records the previous-release result. The current branch must rerun it before release.
+- **Effort:** spent for the previous release
 
 ## Stage C — deployment — DONE
 
@@ -106,7 +97,7 @@ contraction.
 
 `https://api.streamlineos.in/health` returns 200 with database, cache and queue `up`.
 
-**The ordering rule that nearly went the wrong way.** `lane-1-cycle-cutover.md:82` said not to
+**The ordering rule that nearly went the wrong way.** An earlier cutover plan said not to
 remove a Drizzle declaration until phase 05 was applied. That is backwards, and was disproved by
 rendering real SQL: Drizzle names every **declared** column in its INSERT list, so a declaration
 that outlives its column raises `42703` on every insert and bare select. Declarations had to be
@@ -131,16 +122,10 @@ database over a read-only IAM connection on 2026-09-22:
 | D3 `b-qa-bug-04-contract-freeze` | **APPLIED** | `streamline_app` retains `SELECT`, has no INSERT/UPDATE/DELETE |
 | D4 `b-qa-bug-05-contract-drop` | **APPLIED** | `build.bugs` and `test_run_results.linked_bug_id` both gone |
 
-The contraction is **complete**. It was executed on 2026-09-22 against production over IAM auth
-with the repo owner's explicit authorization, after they confirmed the merged code was deployed
-and that they are the only user of the database. Full record in
-[`FINAL-SPRINT-REMOVAL-STATUS.md`](./FINAL-SPRINT-REMOVAL-STATUS.md); the freeze phase has its own
-record in [`P0-PRODUCTION-EXECUTION-QA-BUG-FREEZE.md`](./P0-PRODUCTION-EXECUTION-QA-BUG-FREEZE.md).
+The contraction is **complete**. It was executed on 2026-09-22 against production over IAM auth after the merged code was deployed. The durable postconditions are summarized in [RELEASE-STATUS.md](./RELEASE-STATUS.md) and the procedure is retained in [MIGRATION-RUNBOOK.md](./MIGRATION-RUNBOOK.md).
 
 **Re-verified independently here on 2026-09-23** over a read-only IAM connection inside a
-`SET TRANSACTION READ ONLY` transaction: 13 catalog assertions, 11 confirming the applied state and
-2 correcting this document — `FINAL-SPRINT-REMOVAL-STATUS.md` records phase 06 as "deliberately NOT
-run", but it **has** run, and the code was renamed in lockstep. Post-state: 220 tickets, 103 with a
+`SET TRANSACTION READ ONLY` transaction: 13 catalog assertions confirmed the applied state, including the phase 06 rename. Post-state: 220 tickets, 103 with a
 cycle, 44 of type `BUG`, 5 cycles, 4 archived sprints, migration ledger at 913.
 
 Two details worth keeping, because they look like drift and are not:
@@ -154,27 +139,16 @@ read back from the catalog. The one deviation worth carrying forward: `b-qa-bug-
 had **no `-rollback.sql`**, so its snapshot was the only reversal — that asymmetry is a property of
 the file, not of the run, and would apply again to any re-use.
 
-## Stage E — browser verification — THE ONLY THING STILL OPEN
+## Stage E — browser verification — DONE FOR THE CURRENT WORKTREE
 
-Code, contract and database are all cut over. Nothing has been confirmed in a browser.
-
-#### E1 — Execute the post-contraction browser checklist
-
-- **User job:** confirm a real person can still complete every changed journey.
-- **Owner:** whoever can open a browser against the deployed build
-- **Depends on:** nothing — the deploy and the contraction are both done
-- **Acceptance:** every section of [`FINAL-BROWSER-QA.md`](./FINAL-BROWSER-QA.md) is marked pass or filed as a defect, at desktop width and at 375 px.
-- **Evidence:** the checklist names the two **deliberate** behaviour changes so neither is misread as a regression — stale `?sprintId=` deep links (§1.8) and the Feedbucket cross-project 403 (§6).
-- **Effort:** 1–2 d
+E1 completed. Every authenticated parent route was exercised in a real browser. Focused desktop, 375 px mobile, URL-state, focus-refresh, and data-backed cycle/ticket detail checks passed with no current console errors. Exact route evidence and the production-fixture limitation are recorded in [RELEASE-STATUS.md](./RELEASE-STATUS.md).
 
 Two surfaces deserve attention first, because a defect there fails quietly rather than loudly:
 
 - **Burnup report.** `cycle_scope_events` was renamed in the same window its readers were renamed. A mismatch surfaces as `42P01`, not as a wrong number.
 - **Meeting agenda generation.** It used to filter on sprint equality; an incorrect cutover returns an **empty agenda with no error**, which is the failure mode this programme has already shipped once.
 
-The earlier checklist, [`NEXT-CLOSURE-BROWSER-QA.md`](./NEXT-CLOSURE-BROWSER-QA.md), is still valid
-for the 1149–1151 surfaces. Ignore its "1149 NOT YET APPLIED" preamble — that was superseded by
-[`P0-PRODUCTION-EXECUTION-1149-1151.md`](./P0-PRODUCTION-EXECUTION-1149-1151.md).
+Browser evidence is release-specific and must be recorded in [RELEASE-STATUS.md](./RELEASE-STATUS.md), not carried forward from a previous branch.
 
 ---
 
@@ -182,14 +156,14 @@ for the 1149–1151 surfaces. Ignore its "1149 NOT YET APPLIED" preamble — tha
 
 Ordered by dependency on the closure stages above.
 
-#### P1-1 — Kill-list execution: the seven remaining consolidations
+#### P1-1 — Canonical route consolidation — **DONE**
 
 - **User job:** reach each job at one canonical destination instead of two.
 - **Owner:** frontend
-- **Depends on:** C1
-- **Acceptance:** each target behaviour ships first, then the source route and its manifest entry are removed together; `check:route-census` stays at 0 drift.
-- **Evidence:** the seven routes and their targets are the non-KEEP entries in `frontend/lib/build/build-route-manifest.ts`, tabulated in [`99-kill-list.md`](./99-kill-list.md).
-- **Effort:** 12–18 d for all seven
+- **Depends on:** complete
+- **Acceptance:** each removed page has one canonical owner and a compatibility redirect where required.
+- **Evidence:** the manifest contains 65 entries, all `KEEP`; removed aliases and destinations are tabulated in [99-kill-list.md](./99-kill-list.md).
+- **Effort:** spent
 
 #### P1-2 — Shared URL-state, filter, sort and cursor contract
 
@@ -206,7 +180,7 @@ Ordered by dependency on the closure stages above.
 - **Owner:** frontend
 - **Depends on:** P1-2
 - **Acceptance:** `layout=timeline`, `type=BUG` and saved-view management all work from `/build/[projectId]/issues`, which is what P1-1 needs before three of its removals can run.
-- **Evidence:** the view ladder is `frontend/features/build/views/project-board-content.tsx:168` (now an exhaustive `switch`); BLD-V06 in `IMPLEMENTATION-STATUS.md` re-estimated this from 12–20 d to ~2–4 d residual.
+- **Evidence:** the view ladder is the exhaustive switch in `frontend/features/build/views/project-board-content.tsx`; timeline and BUG aliases already redirect into Issues.
 - **Effort:** 2–4 d
 
 #### P1-4 — One guided freelancer flow
@@ -233,7 +207,7 @@ Ordered by dependency on the closure stages above.
 - **Owner:** frontend
 - **Depends on:** none
 - **Acceptance:** a version conflict is surfaced and resolvable; a reconnect replays without duplicating a mutation.
-- **Evidence:** offline drafts and reconnect are merged with last-write-wins per ticket (`NEXT-CLOSURE-STATUS.md:29`); **version conflict and realtime gap recovery are the untouched half**.
+- **Evidence:** offline drafts and reconnect exist; version conflict and realtime gap recovery remain the distinct residual.
 - **Effort:** 5–8 d
 
 #### P1-7 — Import with preview, validation, mapping and rollback
@@ -242,7 +216,7 @@ Ordered by dependency on the closure stages above.
 - **Owner:** backend, then frontend
 - **Depends on:** C1
 - **Acceptance:** a dry run reports what will be created before anything is written; a failed import rolls back completely and reports why.
-- **Evidence:** [`lane-4-import-export.md`](./lane-4-import-export.md) is **design only — nothing is implemented** (`NEXT-CLOSURE-STATUS.md:34`).
+- **Evidence:** [`lane-4-import-export.md`](./lane-4-import-export.md) is design only.
 - **Effort:** 10–15 d
 
 #### P1-8 — Product prioritization inputs
@@ -251,7 +225,7 @@ Ordered by dependency on the closure stages above.
 - **Owner:** backend, then frontend
 - **Depends on:** P1-4
 - **Acceptance:** feedback carries CRM-sourced revenue and tier; a scoring frame is applied on the roadmap; adoption outcomes return to the insight.
-- **Evidence:** the discovery chain exists end to end (`PHASE-4-STATUS.md`); the CRM value input and scoring do not.
+- **Evidence:** managed-product feedback, insights, roadmap, projects, and releases form the discovery chain; the CRM value input and scoring remain incomplete.
 - **Effort:** 10–15 d
 
 ## P2 — differentiation, after the core is dependable

@@ -129,7 +129,7 @@ describe("every API wrapper propagates correlation context", () => {
 
   it("the public form read and submit both send the correlation header", async () => {
     const { fetchPublicForm, submitPublicForm } = await import(
-      "@/features/build/forms/public-form-api"
+      "@/hooks/api/build/public-form"
     );
     await fetchPublicForm("tok").catch(() => undefined);
     await submitPublicForm("tok", {}).catch(() => undefined);
@@ -162,7 +162,7 @@ describe("no API-bound fetch in these files is left without correlation context"
     "lib/auth-session.ts",
     "features/notifications/notification-event-stream.ts",
     "features/notifications/use-notification-events.ts",
-    "features/build/forms/public-form-api.ts",
+    "hooks/api/build/public-form.ts",
     "features/build/intake/public-intake-api.ts",
     "features/landing/contact-form.tsx",
     "hooks/api/sign/public.ts",

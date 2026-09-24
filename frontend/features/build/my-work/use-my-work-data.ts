@@ -9,7 +9,6 @@ import {
   useBuildListUrlState,
   type BuildListSortField,
   type BuildListSortDirection,
-  type BuildListGrouping,
 } from "@/features/build/shared/use-build-list-url-state";
 import { parseMyWorkView } from "./my-work-view";
 import { mapAllWorkTicketToKanban, buildTicketMetaMap } from "./map-all-work-ticket";
@@ -251,7 +250,7 @@ export function useMyWorkData({
     setCursor: urlState.setCursor,
     sortField: urlState.sortField,
     sortDirection: urlState.sortDirection,
-    grouping: urlState.grouping as BuildListGrouping,
+    grouping: urlState.grouping,
     cursor: urlState.cursor,
     isPending: urlState.isPending,
     kanbanTickets,

@@ -10,6 +10,7 @@ import {
   useUpdateProgram,
   useDeleteProgram,
   usePortfolios,
+  useProjects,
 } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
@@ -19,6 +20,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import { ProgramFormSheet } from "./program-form-sheet";
 import type {
   Program,
@@ -28,39 +30,41 @@ import type {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
-import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
-import type { NamedUser } from "@/lib/person-display";
+import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 import {
   PROGRAM_TABLE_HEADERS,
   ProgramMobileCard,
   buildProgramColumns,
 } from "./program-table-columns";
+import {
+  PROGRAM_FILTER_DEFINITIONS,
+  PROGRAM_HEALTH_VALUES,
+  PROGRAM_ORDER_VALUES,
+  PROGRAM_SORT_VALUES,
+  PROGRAM_STATUS_VALUES,
+  ProgramsToolbar,
+} from "./programs-toolbar";
 
 const PAGE_SIZE = 25;
 
-const STATUS_OPTIONS = [
-  { value: BUILD_FILTER_ALL, label: "All statuses" },
-  { value: "active", label: "Active" },
-  { value: "on_hold", label: "On hold" },
-  { value: "completed", label: "Completed" },
-  { value: "archived", label: "Archived" },
-];
-
-const FILTER_DEFINITIONS = [
-  {
-    param: "status",
-    options: STATUS_OPTIONS.map((option) => option.value),
-  },
-] as const;
+function positiveId(value: string): number | undefined {
+  if (value === BUILD_FILTER_ALL) return undefined;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+}
 
 export function ProgramsPage() {
   const canManage = useCan("build:programs:manage");
-  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
+  const listFilters = useBuildListFilters({
+    filters: PROGRAM_FILTER_DEFINITIONS,
+  });
+  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+    listFilters.resetKey,
+  );
 
   const {
     open: createOpen,
@@ -71,11 +75,43 @@ export function ProgramsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Program | null>(null);
 
   const statusValue = listFilters.value("status");
+  const healthValue = listFilters.value("health");
+  const ownerIdValue = listFilters.value("ownerId");
+  const portfolioIdValue = listFilters.value("portfolioId");
+  const projectIdValue = listFilters.value("projectId");
+  const sortValue = listFilters.value("sort");
+  const orderValue = listFilters.value("order");
+  const status = PROGRAM_STATUS_VALUES.find((value) => value === statusValue);
+  const health = PROGRAM_HEALTH_VALUES.find((value) => value === healthValue);
+  const sort = PROGRAM_SORT_VALUES.find((value) => value === sortValue);
+  const order = PROGRAM_ORDER_VALUES.find((value) => value === orderValue);
+  const normalizedOwnerId = ownerIdValue.trim();
+  const ownerId =
+    ownerIdValue === BUILD_FILTER_ALL ||
+    normalizedOwnerId.length === 0 ||
+    normalizedOwnerId.length > 255
+      ? undefined
+      : normalizedOwnerId;
+  const portfolioId = positiveId(portfolioIdValue);
+  const projectId = positiveId(projectIdValue);
+  const query = listFilters.debouncedSearch.trim().slice(0, 120);
+
   const { data, isLoading, isError, error, refetch } = usePrograms({
-    status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
+    cursor,
+    limit: PAGE_SIZE,
+    q: query || undefined,
+    ownerId,
+    health,
+    status,
+    portfolioId,
+    projectId,
+    sort,
+    order,
   });
-  const { data: portfoliosPage } = usePortfolios();
+  const { data: portfoliosPage } = usePortfolios({ limit: 100 });
   const portfolios = useMemo(() => portfoliosPage?.data ?? [], [portfoliosPage]);
+  const { data: projectsPage } = useProjects({ limit: 100, status: "ALL" });
+  const projects = useMemo(() => projectsPage?.data ?? [], [projectsPage]);
   const { data: membersRes } = useOrgMembers(1, 100);
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
 
@@ -100,19 +136,47 @@ export function ProgramsPage() {
     [portfolios],
   );
 
-  const rows = useMemo(() => data ?? [], [data]);
-  const search = listFilters.debouncedSearch.trim().toLowerCase();
-  const displayed = useMemo(() => {
-    if (!search) return rows;
-    return rows.filter((row) => row.name.toLowerCase().includes(search));
-  }, [rows, search]);
+  const ownerOptions = useMemo(
+    () => [
+      { value: BUILD_FILTER_ALL, label: "All owners" },
+      ...members.map((member) => ({
+        value: member.userId,
+        label: getUserDisplayName(member),
+      })),
+    ],
+    [members],
+  );
+
+  const portfolioOptions = useMemo(
+    () => [
+      { value: BUILD_FILTER_ALL, label: "All portfolios" },
+      ...portfolios.map((portfolio) => ({
+        value: String(portfolio.id),
+        label: portfolio.name,
+      })),
+    ],
+    [portfolios],
+  );
+
+  const projectOptions = useMemo(
+    () => [
+      { value: BUILD_FILTER_ALL, label: "All projects" },
+      ...projects.map((project) => ({
+        value: String(project.id),
+        label: project.name,
+      })),
+    ],
+    [projects],
+  );
+
+  const rows = useMemo(() => data?.data ?? [], [data]);
 
   const resolution = usePageState({
     permission: "build:programs:view",
     isLoading,
     isError,
     error,
-    isEmpty: displayed.length === 0,
+    isEmpty: rows.length === 0,
   });
 
   const handleCreate = useCallback(
@@ -152,11 +216,6 @@ export function ProgramsPage() {
     });
   }, [deleteProgram, deleteTarget]);
 
-  const handleStatusChange = useCallback(
-    (value: string) => listFilters.setValue("status", value),
-    [listFilters],
-  );
-
   const handleOpenCreate = useCallback(() => {
     openCreate();
   }, [openCreate]);
@@ -178,6 +237,10 @@ export function ProgramsPage() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const handleNextPage = useCallback(() => {
+    goNext(data?.pagination.nextCursor);
+  }, [data, goNext]);
 
   const handleEditRow = useCallback(
     (row: Program) => setEditTarget(row),
@@ -219,29 +282,11 @@ export function ProgramsPage() {
       title="Programs"
       subtitle="Coordinate related projects as a single program of work"
       filters={
-        <BuildListToolbar
-          search={{
-            value: listFilters.search,
-            onValueChange: listFilters.setSearch,
-            placeholder: "Search programs…",
-            label: "Search programs",
-          }}
-          filters={[
-            {
-              id: "status",
-              label: "Status",
-              active: listFilters.isActive("status"),
-              control: (
-                <BuildFilterSelect
-                  label="Status"
-                  value={statusValue}
-                  onValueChange={handleStatusChange}
-                  options={STATUS_OPTIONS}
-                />
-              ),
-            },
-          ]}
-          onClearAll={listFilters.clearAll}
+        <ProgramsToolbar
+          filters={listFilters}
+          ownerOptions={ownerOptions}
+          portfolioOptions={portfolioOptions}
+          projectOptions={projectOptions}
         />
       }
       actions={
@@ -292,13 +337,20 @@ export function ProgramsPage() {
             className={PM_FILL_PANEL}
           >
             <DataTable
-              data={displayed}
+              data={rows}
               columns={columns}
               getRowKey={(row) => row.id}
               minWidth="780px"
               mobileCard={renderMobileCard}
               className={PM_FILL_PANEL}
-              pagination={{ pageSize: PAGE_SIZE }}
+              pagination={{
+                mode: "cursor",
+                pageSize: PAGE_SIZE,
+                hasMore: Boolean(data?.pagination.hasMore),
+                hasPrevious,
+                onNext: handleNextPage,
+                onPrevious: goPrevious,
+              }}
             />
           </PageState>
         </PmSection>

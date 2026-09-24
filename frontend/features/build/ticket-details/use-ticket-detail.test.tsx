@@ -1,23 +1,28 @@
 import { act, renderHook } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
+import { toast } from "sonner";
+import { ApiError } from "@/lib/api-envelope";
 import { useTicketDetail } from "./use-ticket-detail";
 
 const mockMutateAsync = jest.fn();
+const mockRefetchTicket = jest.fn();
+let mockTicket = {
+  id: 7,
+  title: "Regression ticket",
+  updatedAt: "2026-09-15T10:00:00.000Z",
+};
 let mockUpdateOptions: {
   onSuccess?: (data: { updated: boolean; updatedAt: string }) => void;
+  onError?: (error: unknown, variables: Record<string, unknown>) => void;
 } = {};
 
 jest.mock("@/hooks/api", () => ({
   useTicket: () => ({
-    data: {
-      id: 7,
-      title: "Regression ticket",
-      updatedAt: "2026-09-15T10:00:00.000Z",
-    },
+    data: mockTicket,
     isLoading: false,
     error: null,
-    refetch: jest.fn(),
+    refetch: mockRefetchTicket,
   }),
   useProject: () => ({ data: { members: [], statuses: [] } }),
   useSubtasks: () => ({ data: [] }),
@@ -54,6 +59,13 @@ function wrapper(client: QueryClient) {
 
 beforeEach(() => {
   mockMutateAsync.mockReset();
+  mockRefetchTicket.mockReset();
+  mockTicket = {
+    id: 7,
+    title: "Regression ticket",
+    updatedAt: "2026-09-15T10:00:00.000Z",
+  };
+  mockRefetchTicket.mockResolvedValue({ data: mockTicket, error: null });
   mockUpdateOptions = {};
 });
 
@@ -116,4 +128,82 @@ it("serializes rapid ticket updates with the latest server version", async () =>
   });
 
   expect(result.current.saving).toBe(false);
+});
+
+it("offers a reapply action on a version conflict instead of silently dropping the edit", async () => {
+  const conflict = new ApiError("conflict", 409, "PROJECTS_TICKET_CONFLICT");
+  mockMutateAsync.mockImplementation((variables: Record<string, unknown>) => {
+    mockUpdateOptions.onError?.(conflict, variables);
+    return Promise.reject(conflict);
+  });
+
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  const { result } = renderHook(
+    () => useTicketDetail({ projectId: 5, ticketId: 7 }),
+    { wrapper: wrapper(client) },
+  );
+
+  await act(async () => {
+    result.current.autoSave({ status: "IN_PROGRESS" });
+    await Promise.resolve();
+  });
+
+  const warn = (toast as unknown as { warning: jest.Mock }).warning;
+  expect(warn).toHaveBeenCalled();
+  const [, options] = warn.mock.calls[0] as [
+    string,
+    { action: { label: string; onClick: () => Promise<void> } },
+  ];
+  expect(options.action.label).toBe("Reapply");
+
+  mockRefetchTicket.mockResolvedValue({
+    data: {
+      ...mockTicket,
+      title: "Changed elsewhere",
+      updatedAt: "2026-09-15T10:30:00.000Z",
+    },
+    error: null,
+  });
+  mockMutateAsync.mockClear();
+  mockMutateAsync.mockImplementation(() =>
+    Promise.resolve({ updated: true, updatedAt: "2026-09-15T11:00:00.000Z" }),
+  );
+  await act(async () => {
+    await options.action.onClick();
+    await Promise.resolve();
+  });
+
+  expect(mockMutateAsync).toHaveBeenCalledWith(
+    expect.objectContaining({
+      ticketId: 7,
+      status: "IN_PROGRESS",
+      expectedUpdatedAt: "2026-09-15T10:30:00.000Z",
+    }),
+  );
+});
+
+it("resyncs the title when the same ticket receives a newer server version", async () => {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  const { result, rerender } = renderHook(
+    () => useTicketDetail({ projectId: 5, ticketId: 7 }),
+    { wrapper: wrapper(client) },
+  );
+
+  expect(result.current.localTitle).toBe("Regression ticket");
+
+  mockTicket = {
+    ...mockTicket,
+    title: "Updated regression ticket",
+    updatedAt: "2026-09-15T10:45:00.000Z",
+  };
+  await act(async () => {
+    rerender();
+    await Promise.resolve();
+  });
+
+  expect(result.current.localTitle).toBe("Updated regression ticket");
 });

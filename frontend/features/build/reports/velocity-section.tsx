@@ -32,21 +32,21 @@ export function VelocitySection({ projectId }: { projectId: number }) {
   );
 
   return (
-    <ChartCard title="Velocity · latest 100 sprints" icon={Gauge}>
+    <ChartCard title="Velocity · latest 100 cycles" icon={Gauge}>
       {isLoading ? (
         <LoadingState variant="cards" rows={2} />
       ) : isError ? (
         <ErrorState
           title="Could not load velocity"
-          description="Something went wrong while computing sprint velocity."
+          description="Something went wrong while computing cycle velocity."
           onRetry={handleRetry}
           compact
         />
       ) : chartData.length === 0 ? (
         <EmptyState
           illustration={<EmptyLeaderboardIllustration />}
-          title="No sprint data yet"
-          description="Velocity appears once you have active or completed sprints with estimated work."
+          title="No cycle data yet"
+          description="Velocity appears once you have active or completed cycles with estimated work."
           compact
         />
       ) : (

@@ -63,14 +63,14 @@ flowchart TD
 |---|---|---|---|
 | Personal work | Command Center, My Work, Inbox/Drafts, All Work | `/build/command-center`, `/build/my-work`, `/build/inbox`, `/build/all-work` | LIVE |
 | Structure | Projects, Teams, Templates | `/build`, `/build/teams`, `/build/templates` | LIVE |
-| Plan | Overview, Backlog, Epics, Milestones, Cycles, Timeline | `/build/[projectId]`, `/backlog`, `/epics`, `/milestones`, `/cycles`, `/timeline` | LIVE |
+| Plan | Overview, Backlog, Epics, Milestones, Cycles, Issues Timeline | `/build/[projectId]`, `/backlog`, `/epics`, `/milestones`, `/cycles`, `/issues?view=timeline` | LIVE |
 | Execute | Issues views and ticket detail | `/issues`, `/tickets/[ticketKey]` | LIVE |
-| Intake | Forms, public forms, Intake, Triage | `/forms`, `/forms/[formId]`, `/triage`, public `/forms/[formToken]` | LIVE; `/intake` is still its own page rendering `features/build/intake/intake-page`. The route manifest decision is CONSOLIDATE into `/build/[projectId]/forms` and it is **not executed** |
+| Intake | Forms, public forms, Intake, Triage | `/forms`, `/forms/[formId]`, `/intake`, `/triage`, public `/forms/[formToken]` | LIVE; Intake is the request queue, Forms owns definitions/publication, and Triage owns broader evidence classification |
 | Collaboration | Chat, Meetings, Files, Wiki, Whiteboard | `/chat`, `/meetings`, `/files`, `/wiki`, `/whiteboard` | LIVE |
-| Quality | QA, test runs, Bugs | `/qa`, `/qa/runs/[runId]`, `/bugs` | LIVE; the Bug data-model cutover is **complete** — `build.bugs` is dropped and defects live on `tickets` + `work_item_qa_details` |
+| Quality | QA, test runs, BUG work items | `/qa`, `/qa/runs/[runId]`, `/issues?type=BUG` | LIVE; the Bug data-model cutover is complete and defects live on `tickets` + `work_item_qa_details` |
 | Delivery | Releases, Updates, Approvals | `/releases`, `/updates`, `/approvals` | LIVE |
 | Governance | Risks, Decisions, Budget, Incidents | `/risks`, `/decisions`, `/budget`, `/incidents` | LIVE |
-| Insight | Reports, Analytics, Workload | `/reports`, `/analytics`, `/workload` | LIVE; Workload now reads real capacity from approved leave and timesheet settings via `/build/:projectId/workload/capacity`. `/analytics` is a CONSOLIDATE target awaiting `/reports?tab=overview` |
+| Insight | Reports and Workload | `/reports`, `/workload` | LIVE; legacy `/analytics` redirects to `/reports?tab=overview`, and Workload reads capacity from approved leave and timesheet settings |
 | Configuration | Workflow, Automations, Webhooks, Modules, Settings | `/settings/workflow`, `/settings/automations`, `/settings/integrations/webhooks`, `/modules`, `/settings` | LIVE |
 
 ## 2. Product management flow
@@ -117,7 +117,7 @@ flowchart TD
 | Public communication | Public roadmap, Updates | public `/roadmap/[orgId]`, project `/updates` | LIVE |
 | Customer master | CRM Clients, Companies, Contacts | `/crm/clients`, `/crm/companies`, `/crm/contacts` | ADD-ON; intentionally not duplicated in Build |
 
-The durable discovery chain is implemented as feedback to insight to roadmap to project to release. [`PHASE-4-STATUS.md`](./PHASE-4-STATUS.md) records the tenant-bound links and the browser fixes that make the chain traversable.
+The durable discovery chain is implemented as feedback to insight to roadmap to project to release. Its current release standing and browser caveats are recorded in [RELEASE-STATUS.md](./RELEASE-STATUS.md).
 
 ## 3. Freelancer and client flow
 
@@ -154,7 +154,7 @@ flowchart TD
 | Find and qualify clients | Leads, Clients, Contacts, Companies, Deals | `/crm/leads`, `/crm/clients`, `/crm/contacts`, `/crm/companies`, `/crm/deals` | ADD-ON |
 | Price and agree | Quotes, Sign envelopes/templates | `/crm/quotes`, `/sign/envelopes`, `/sign/templates` | ADD-ON; handoff is not yet one guided flow |
 | Deliver | Project Overview, Issues, Milestones, Files, Meetings, Chat | project Build routes | LIVE |
-| Control scope | Budget, Approvals, Change Requests | `/build/[projectId]/budget`, `/approvals`, `/change-requests` | LIVE; release and client-visible filters ship and are applied to production. **Affected-work linkage is still missing** |
+| Control scope | Budget, Approvals, Change Requests | `/build/[projectId]/budget`, `/approvals`, `/change-requests` | LIVE; affected-ticket linkage exists on the current branch but still needs release verification |
 | Share safely | Client Access, internal publication controls, guest portal | `/build/settings/client-access`, `/build/[projectId]/client-portal`, guest `/client-portal/[projectId]` | LIVE |
 | Capture effort | Ticket time tracker, Timesheets | ticket detail, `/timesheets`, `/timesheets/billing` | LIVE/ADD-ON |
 | Bill and collect | Billing invoices, Accounting invoices, payments received | `/billing/invoices`, `/accounting/invoices`, `/accounting/payments-received` | ADD-ON; needs one canonical freelancer billing journey |
@@ -193,8 +193,7 @@ Current competitor references: [ClickUp features](https://clickup.com/features),
 
 ## What is still missing or pending
 
-Sequenced and owned in [`06-prioritized-backlog.md`](./06-prioritized-backlog.md); the
-step-by-step runbook is [`10-next-phase-execution.md`](./10-next-phase-execution.md).
+Sequenced and owned in [`06-prioritized-backlog.md`](./06-prioritized-backlog.md). Migration safety rules live in [`MIGRATION-RUNBOOK.md`](./MIGRATION-RUNBOOK.md).
 
 ### Already shipped — historical, do not re-open
 
@@ -203,21 +202,20 @@ step-by-step runbook is [`10-next-phase-execution.md`](./10-next-phase-execution
 - Change Request **release** and **client visibility** fields ship and are applied to production.
 - Workload reads real capacity from approved leave and timesheet settings, and Inbox filters by project.
 
-### P0: finish before calling Build fully consolidated
+### P0: release closure — complete for the current candidate
 
-1. **Verify the whole cutover in a browser.** Nothing in this programme has been seen in one. `FINAL-BROWSER-QA.md` is the checklist; burnup and meeting-agenda generation fail quietly rather than loudly and deserve attention first.
-2. Add the remaining Change Request dimension: **affected work**. Release and client visibility are done; no affected-work column exists.
-3. Keep the route, permission, contract and typecheck gates green, and measure `check:contract-parity` from a checkout that is not junctioned.
+1. The authenticated desktop and mobile parent-route browser matrices passed. Data-backed cycle and ticket details also passed; pages without production fixture rows were verified in their empty states.
+2. Canonical migrations `1185_roadmap_search_id_probe` and `1186_project_programs_list_indexes`, historically deployed as `1177` and `1178`, are applied and verified in production.
+3. Build-owned route, permission, contract, migration, typecheck, focused test, and workspace-removal checks are green. Unrelated repository debt is listed in [`RELEASE-STATUS.md`](./RELEASE-STATUS.md).
 
 ### P1: make the three journeys feel complete
 
-1. Execute the seven remaining kill-list consolidations, each behind its replacement behaviour.
-2. Build one guided freelancer flow: CRM deal and quote to e-sign to Build project to approved time to invoice to payment — starting by populating the applied `invoice_items.timesheet_entry_id` pointer, which no code writes yet.
-3. Add version conflicts and realtime gap recovery. Offline drafts and reconnect are merged; this is the untouched half.
-4. Add Feedbucket bulk actions and server-supported owner, linked, duplicate, date, and cursor filters.
-5. Extend the shared URL-state, filter, sort and cursor contract past its current 7 consumers.
-6. Add importers with preview, validation, mapping, and rollback reports for Jira, ClickUp, Linear, CSV, and Trello. The design exists; nothing is implemented.
-7. Complete product prioritization with customer revenue/tier impact, scoring frameworks, experiments, and adoption outcomes.
+1. Build one guided freelancer flow: CRM deal and quote to e-sign to Build project to approved time to invoice to payment.
+2. Add version conflicts and realtime gap recovery. Offline drafts and reconnect are merged; this is the distinct residual.
+3. Add Feedbucket bulk actions and server-supported owner, linked, duplicate, date, and cursor filters.
+4. Extend the shared URL-state, filter, sort, and cursor contract to every unbounded Build list.
+5. Add importers with preview, validation, mapping, and rollback reports for Jira, ClickUp, Linear, CSV, and Trello. The design exists; implementation is not release-proven.
+6. Complete product prioritization with customer revenue/tier impact, scoring frameworks, experiments, and adoption outcomes.
 
 ### P2: differentiation after the core is dependable
 
@@ -233,11 +231,11 @@ An internally-simulated escrow or held balance is refused rather than deferred; 
 ## Recommended product order
 
 ```text
-First:   verify the shipped cutover in a browser — nothing has been seen in one
-Second:  execute the seven remaining kill-list consolidations
-Third:   complete the freelancer cross-module handoff
-Fourth:  close realtime, Feedbucket, URL-state, and import gaps
-Fifth:   add AI, automation, scenario planning, and enterprise governance
+First:   finish focused verification for the current branch
+Second:  deploy matching backend code, apply migration 1177, and verify its catalog postconditions
+Third:   run the current browser matrix at desktop and mobile widths
+Fourth:  complete the freelancer cross-module handoff and remaining realtime/import gaps
+Fifth:   add evidence-backed AI, scenario planning, and enterprise governance
 ```
 
 The strongest positioning is not “another Jira.” It is: **one operating system where customer demand, product decisions, project delivery, people capacity, client collaboration, time, invoices, and accounting can become one connected flow.**

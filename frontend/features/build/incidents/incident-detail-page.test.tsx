@@ -1,12 +1,14 @@
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { ApiError } from "@/lib/api-envelope";
-import type { Incident } from "@/types/projects";
+import type { Incident, IncidentDetail } from "@/hooks/api/build/incidents-schema";
 import { getSlaState } from "./sla";
 
 const mockUseIncident = jest.fn();
 const mockUseDeleteIncident = jest.fn();
-const mockUseOrgMembers = jest.fn();
+const mockUseProjectMembers = jest.fn();
+const mockUseReleases = jest.fn();
+const mockUseTicket = jest.fn();
 const mockUseCan = jest.fn();
 const mockUseAccess = jest.fn();
 
@@ -15,8 +17,16 @@ jest.mock("@/hooks/api/build/incidents", () => ({
   useDeleteIncident: () => mockUseDeleteIncident(),
 }));
 
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: (...args: unknown[]) => mockUseOrgMembers(...args),
+jest.mock("@/hooks/api/build/project-members", () => ({
+  useProjectMembers: (...args: unknown[]) => mockUseProjectMembers(...args),
+}));
+
+jest.mock("@/hooks/api/build/releases", () => ({
+  useReleases: (...args: unknown[]) => mockUseReleases(...args),
+}));
+
+jest.mock("@/hooks/api/build/ticket-queries", () => ({
+  useTicket: (...args: unknown[]) => mockUseTicket(...args),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -64,6 +74,14 @@ jest.mock("./incident-sheet", () => ({
   IncidentSheet: () => null,
 }));
 
+jest.mock("./incident-decisions", () => ({
+  IncidentDecisions: () => null,
+}));
+
+jest.mock("./incident-follow-ups", () => ({
+  IncidentFollowUps: () => null,
+}));
+
 import { IncidentDetailPage } from "./incident-detail-page";
 
 const ACCESS_GRANTED = {
@@ -83,6 +101,9 @@ function baseQuery(overrides = {}) {
     isError: false,
     error: undefined,
     refetch: jest.fn(),
+    fetchNextPage: jest.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
     ...overrides,
   };
 }
@@ -107,9 +128,26 @@ function baseIncident(overrides: Partial<Incident> = {}): Incident {
     responseDueAt: null,
     resolutionDueAt: null,
     linkedTicketId: null,
+    releaseId: null,
+    createdBy: null,
     deletedAt: null,
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+function baseIncidentDetail(overrides: Partial<IncidentDetail> = {}): IncidentDetail {
+  return {
+    ...baseIncident(),
+    updates: [],
+    decisions: [],
+    followUpActions: [],
+    childrenPagination: {
+      updates: { limit: 100, hasMore: false, nextCursor: null },
+      decisions: { limit: 100, hasMore: false, nextCursor: null },
+      followUpActions: { limit: 100, hasMore: false, nextCursor: null },
+    },
     ...overrides,
   };
 }
@@ -119,7 +157,9 @@ beforeEach(() => {
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseIncident.mockReturnValue(baseQuery());
-  mockUseOrgMembers.mockReturnValue(baseQuery({ data: { data: [], total: 0 } }));
+  mockUseProjectMembers.mockReturnValue(baseQuery({ data: [] }));
+  mockUseReleases.mockReturnValue(baseQuery({ data: [] }));
+  mockUseTicket.mockReturnValue(baseQuery({ data: null }));
   mockUseDeleteIncident.mockReturnValue({ mutate: jest.fn(), isPending: false });
 });
 
@@ -160,7 +200,7 @@ describe("IncidentDetailPage page-state gating", () => {
   });
 
   it("renders the incident once access is granted and data has loaded", () => {
-    mockUseIncident.mockReturnValue(baseQuery({ data: baseIncident() }));
+    mockUseIncident.mockReturnValue(baseQuery({ data: baseIncidentDetail() }));
     render(<IncidentDetailPage projectId={1} incidentId={1} />);
     expect(screen.getByRole("heading", { name: "Payments outage" })).toBeInTheDocument();
   });

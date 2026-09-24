@@ -16,12 +16,10 @@ import {
   useFeedbucketSubmissions,
 } from "@/hooks/api/feedbucket";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type {
-  FeedbucketSubmissionFilters,
-  FeedbucketSubmissionType,
-  FeedbucketSubmissionStatus,
-} from "@/types/feedbucket";
+import type { FeedbucketSubmissionFilters } from "@/types/feedbucket";
 import {
+  ALL_STATUSES,
+  ALL_TYPES,
   DeleteSubmissionButton,
   SUBMISSION_COLUMNS,
   SubmissionMobileCard,
@@ -59,15 +57,23 @@ export function ProjectSubmissionsInbox({
   const { reset: resetWalk } = walk;
 
   const filterValues = useMemo<SubmissionInboxFilterValues>(
-    () => ({
-      status: searchParams.get("status") as FeedbucketSubmissionStatus | null,
-      type: searchParams.get("type") as FeedbucketSubmissionType | null,
-      linked: searchParams.get("linked") as "linked" | "unlinked" | null,
-      assigneeId: searchParams.get("assigneeId"),
-      search: searchParams.get("search"),
-      from: searchParams.get("from"),
-      to: searchParams.get("to"),
-    }),
+    () => {
+      const statusParam = searchParams.get("status");
+      const typeParam = searchParams.get("type");
+      const linkedParam = searchParams.get("linked");
+      return {
+        status: ALL_STATUSES.find((status) => status === statusParam) ?? null,
+        type: ALL_TYPES.find((type) => type === typeParam) ?? null,
+        linked:
+          linkedParam === "linked" || linkedParam === "unlinked"
+            ? linkedParam
+            : null,
+        assigneeId: searchParams.get("assigneeId"),
+        search: searchParams.get("search"),
+        from: searchParams.get("from"),
+        to: searchParams.get("to"),
+      };
+    },
     [searchParams],
   );
 

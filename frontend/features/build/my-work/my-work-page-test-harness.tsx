@@ -37,29 +37,26 @@ export const mockDefaultDisplayOptions = {
   showDueDate: false,
 };
 
-export function mockMakeCursorPaginationStub() {
-  return {
-    cursor: undefined,
-    pageNumber: 1,
-    hasPrevious: false,
-    goNext: jest.fn(),
-    goPrevious: jest.fn(),
-    reset: jest.fn(),
-  };
-}
-
 export function MockMyWorkContentStub({
   pageState,
   filtersActive,
   emptyTitle,
   bulk,
   onClearFilters,
+  pageNumber,
+  hasPrevious,
+  onNextPage,
+  onPreviousPage,
 }: {
   pageState: PageStateResolution;
   filtersActive: boolean;
   emptyTitle: string;
   bulk: { selectedCount: number };
   onClearFilters: () => void;
+  pageNumber?: number;
+  hasPrevious?: boolean;
+  onNextPage?: () => void;
+  onPreviousPage?: () => void;
 }) {
   const { useOnlineStatus } = jest.requireMock<{
     useOnlineStatus: () => boolean;
@@ -105,6 +102,18 @@ export function MockMyWorkContentStub({
       {bulk.selectedCount > 0 ? (
         <div data-testid="bulk-bar">{bulk.selectedCount} selected</div>
       ) : null}
+      <span data-testid="page-number">{pageNumber}</span>
+      <span data-testid="has-previous">{String(hasPrevious)}</span>
+      <button type="button" data-testid="next-page" onClick={onNextPage}>
+        Next
+      </button>
+      <button
+        type="button"
+        data-testid="previous-page"
+        onClick={onPreviousPage}
+      >
+        Previous
+      </button>
     </div>
   );
 }
@@ -205,6 +214,16 @@ export function withData(tickets = [stubTicket], hasMore = false) {
       nextCursor: hasMore ? "cur1" : null,
       limit: 50,
     },
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+  };
+}
+
+export function withDataCursor(nextCursor: string, tickets = [stubTicket]) {
+  return {
+    data: { data: tickets, hasMore: true, nextCursor, limit: 50 },
     isLoading: false,
     isError: false,
     error: null,

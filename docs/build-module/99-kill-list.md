@@ -6,15 +6,14 @@ re-quoted as current.
 
 | Delete/refuse | User job replacement | Evidence/rationale |
 |---|---|---|
-| PM Workspace (routes, permissions, tables) | Organization directly owns Products, Projects, Teams, Programs, Portfolios; a project without a product is an organization-level project | **EXECUTED.** Migration `1159_build_remove_pm_workspaces` drops `build.pm_workspaces`, `build.pm_workspace_memberships`, and every `pm_workspace_id` column; `build.project_workspace_members` is renamed to `build.build_members` (workspace relationship dropped, roster job kept). All 9 `/build/workspaces*` endpoints, the 6 `build:workspaces:*` permission keys (`view`, `create`, `update`, `delete`, `members:view`, `members:manage`), and the routes below are deleted. See below and [`WORKSPACE-REMOVAL-CENSUS.md`](./WORKSPACE-REMOVAL-CENSUS.md) |
+| PM Workspace (routes, permissions, tables) | Organization directly owns Products, Projects, Teams, Programs, Portfolios; a project without a product is an organization-level project | **EXECUTED.** Migration `1159_build_remove_pm_workspaces` drops `build.pm_workspaces`, `build.pm_workspace_memberships`, and every `pm_workspace_id` column; `build.project_workspace_members` is renamed to `build.build_members` (workspace relationship dropped, roster job kept). All `/build/workspaces*` endpoints, workspace permission keys, and physical workspace routes are deleted. Redirects preserve old deep links. |
 | Standalone Drafts page | Recover drafts in Inbox | `/build/drafts` duplicates personal notification work. **Executed** — see below |
 | Sprint route/model | Plan timeboxed work through Cycles | **EXECUTED 2026-09-22.** The routes are frozen with `GoneException`, `build.sprints` is dropped and archived, and `sprintId` was removed from the published contract. *Historical:* the production sidebar once pointed at a broken `/sprints`; that has not been true since the nav was pinned to `${basePath}/cycles` |
 | Separate QA Bug lifecycle | Track defects as `WorkItem.type=BUG` with QA evidence | **EXECUTED 2026-09-22.** `build.bugs` and `test_run_results.linked_bug_id` are dropped; defects live on `tickets` + `work_item_qa_details`. Note the consolidation moved **zero** rows — the table was already empty |
 | Project Analytics page | Understand delivery through Reports Overview | *Historical:* `/analytics` once rendered “Board” in production. It now renders its own `ProjectAnalyticsPage`, so the surviving rationale is duplication of report metrics, not a wrong-surface defect |
-| Project Timeline page | See issues by time through Issues `layout=timeline` | Same entities and filters; separate route fragments saved views |
+| Project Timeline page | See issues by time through Issues `view=timeline` | Same entities and filters; separate route fragments saved views |
 | Project Saved Views page | Create/manage views inside Issues; administer in Settings | A view is configuration of Issues, not a destination |
 | Project My Tickets page | Filter global My Work by project | Personal work has one cross-project owner |
-| Authenticated Intake page | Configure Forms and process submissions in Triage | Avoids duplicate submission state and conversion logic |
 | Standalone Bugs page | Issues filtered to BUG | Canonical work item owns lifecycle |
 | Standalone AI page | Contextual assistant plus Command Center runs | A chat landing page without durable action ownership is noise |
 | Operational Automations/Webhooks/Workflow pages | Configure under Project Settings | They are configuration, not daily navigation |
@@ -30,8 +29,6 @@ re-quoted as current.
 ## Executed removals
 
 Physical pages removed from disk, with the user job preserved at the target.
-Full dependency census in
-[`DEAD-BUILD-SURFACE-INVENTORY.md`](./DEAD-BUILD-SURFACE-INVENTORY.md).
 
 | Date | Removed | Job preserved at | Deep link preserved by |
 |---|---|---|---|
@@ -75,23 +72,7 @@ index above `/build/workspaces/[pmWorkspaceId]`, matching the
 longer exists** — PM Workspace was removed entirely on 2026-09-23 (row above),
 and `/build/pm-workspaces` now redirects straight to `/build`.
 
-Still not executed, and why — each is a kill-list entry whose replacement does
-not exist yet, so removing the page would delete the job rather than move it:
-
-| Route | Replacement it needs first | Status |
-|---|---|---|
-| `/build/[projectId]/timeline` | `timeline` view on `/build/[projectId]/issues` | **EXECUTED 2026-09-23.** `gantt` was renamed to `timeline` throughout the view vocabulary; `?view=gantt` still resolves |
-| `/build/[projectId]/bugs` | `type=BUG` filtering on `/build/[projectId]/issues` | **EXECUTED 2026-09-23.** QA evidence moved to the ticket detail; severity and QA-state filters moved to the Issues toolbar |
-| `/build/[projectId]/analytics` | `tab=overview` on `/build/[projectId]/reports` | **EXECUTED 2026-09-23** |
-| `/build/[projectId]/views` | saved-view management inside Issues | **EXECUTED 2026-09-23.** Apply, pin, rename, delete and create all live in the Issues toolbar's Views menu |
-| `/build/[projectId]/intake` | the Forms-definitions / Triage-submissions split | **NOT EXECUTED.** The destination is [open question 12](./99-open-questions.md) — Forms and Triage produce different deep links, and neither has been chosen |
-| `/build/[projectId]/ai` | `projectId=` run history on `/build/command-center` | **EXECUTED 2026-09-23** |
-| `/build/customers` | the CRM customer linkage `/crm` owns | **EXECUTED 2026-09-23** |
-
-Only `/build/[projectId]/intake` keeps its page, its sidebar destination and its
-route-access gate. It is the one row of the seven whose target is still an open
-question rather than a recorded decision, so removing it would pick an answer by
-implementation. The route manifest still records its intended target.
+Every planned duplicate-route removal in this list is executed. Project Intake is not a removal candidate: it is the canonical request queue, while Forms owns definitions and Triage owns broader evidence classification.
 
 Two notes on the executed rows, because both departed from the wording above:
 
@@ -107,16 +88,7 @@ Two notes on the executed rows, because both departed from the wording above:
   `fromSavedViewLayout` (`frontend/lib/build/view-types.ts`) map across that
   boundary, and `view-types.test.ts` pins the round trip.
 
-Re-verified 2026-09-23: `frontend/lib/build/build-route-manifest.ts` holds exactly **73 entries,
-1 of them non-KEEP** — the single `CONSOLIDATE` row for `/build/[projectId]/intake` — and
-`app/(authenticated)/build` contains exactly 73 `page.tsx` files. The route census reports 82
-Build routes, down from 88. `build-route-manifest.test.ts` pins both counts and asserts the
-manifest and the disk tree cover each other in both directions, so neither can drift alone.
-
-One replacement description above is broader than the manifest target and should not be read
-as authority:
-
-- `/build/[projectId]/intake` — the manifest target is `/build/[projectId]/forms`, with no Triage half. The Forms-definitions / Triage-submissions split is an **open question**, not a decision; see [`99-open-questions.md`](./99-open-questions.md).
+Re-verified 2026-09-24: `frontend/lib/build/build-route-manifest.ts` holds exactly **65 entries, all `KEEP`**, and `app/(authenticated)/build` contains exactly 65 `page.tsx` files. `build-route-manifest.test.ts` pins the manifest and disk tree in both directions.
 
 The `/build/[projectId]/views` note that used to sit here is resolved: the executed
 target is `/build/[projectId]/issues`, and the "plus Settings" half was never built
@@ -132,11 +104,11 @@ not picked up again. Retired 2026-09-22 during backlog reconciliation.
 
 | Refused work | Why | Evidence |
 |---|---|---|
-| Re-authoring the Sprint/Cycle or QA Bug cutover migrations | Both plans already exist, fully authored with rollbacks and spec coverage, and phases 01–03 / 01–02 are applied to production. One agent wrote duplicate migrations `1145`/`1146` before this was discovered; they were deleted | 18 files in `backend/migrations/sql/` matching `a-sprint-cycle-*` and `b-qa-bug-*`; `NEXT-CLOSURE-STATUS.md:138-147` |
-| Chasing `check:permission-catalog` and `check:build-execution-plan` failures on a fresh Windows checkout | The generator writes LF, a Windows checkout holds CRLF, and the regenerated file is the **same git blob** as `main`'s. The gate fails on line endings regardless of content. Fixing "the drift" changes nothing | `NEXT-CLOSURE-STATUS.md:73-80`; blob `bddf8207dc2ddfaa714d6cd73e9706cee20b996d`, 24762 vs 25606 bytes |
+| Re-authoring the Sprint/Cycle or QA Bug cutover migrations | The contraction already exists with rollback and invariant coverage; duplicate migration tags would create a second history for the same data transition | `backend/migrations/sql/a-sprint-cycle-*`, `backend/migrations/sql/b-qa-bug-*`, and [MIGRATION-RUNBOOK.md](./MIGRATION-RUNBOOK.md) |
+| Chasing generated-file line-ending drift as a product defect | A generated blob that differs only by checkout line endings contains no semantic change; compare blobs or normalized output before editing generated artifacts | Generator commands in the relevant package scripts |
 | Internally-simulated escrow or a held client balance | Holding client money against a database column is a regulated activity being imitated with a number. If payment protection is wanted, integrate a provider that actually holds the funds | [`08-build-os-flowcharts.md`](./08-build-os-flowcharts.md) P2 |
 | Monolithic "consolidate Sprint/Cycle" and "consolidate QA Bug" backlog items | Both were single 8–15 d entries that hid the fact that the irreversible half depends on a deployment. They are replaced by staged tasks whose order is enforced | [`06-prioritized-backlog.md`](./06-prioritized-backlog.md) stages A–E |
-| A second frontend `sprintId` compatibility shim | `sprintId: null` already shipped once as "backward compatibility". A contract that accepts `null` cannot tell you the value stopped arriving; meeting agendas would have silently come back empty | `NEXT-CLOSURE-STATUS.md:104-107`; `frontend/features/build/meetings/generate-agenda.ts` |
+| A second frontend `sprintId` compatibility shim | A contract that accepts `null` cannot tell whether the value stopped arriving; meeting agendas can silently return empty | `frontend/features/build/meetings/generate-agenda.ts` and the Cycle-only schemas |
 
 ## Acceptance criteria
 

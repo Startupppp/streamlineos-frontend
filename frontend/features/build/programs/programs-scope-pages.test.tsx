@@ -1,10 +1,13 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { ProgramsPage } from "./programs-page";
 
+const mockReplace = jest.fn();
+const mockSearchParamsContainer = { current: new URLSearchParams() };
+
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
+  useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
   usePathname: () => "/build/programs",
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => mockSearchParamsContainer.current,
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -14,6 +17,7 @@ jest.mock("@/hooks/api/access", () => ({
 jest.mock("@/hooks/api/build", () => ({
   usePrograms: jest.fn(),
   usePortfolios: jest.fn(() => ({ data: undefined })),
+  useProjects: jest.fn(() => ({ data: undefined })),
   useCreateProgram: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useUpdateProgram: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDeleteProgram: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
@@ -89,6 +93,50 @@ jest.mock("@/components/ui/search-input", () => ({
   SearchInput: () => null,
 }));
 
+jest.mock("@/features/build/shared/build-list-toolbar", () => ({
+  BuildListToolbar: ({ search, filters, onClearAll }: {
+    search?: {
+      value: string;
+      onValueChange: (value: string) => void;
+      label?: string;
+      placeholder: string;
+    };
+    filters?: readonly { id: string; control: React.ReactNode }[];
+    onClearAll?: () => void;
+  }) => (
+    <div>
+      {search ? (
+        <input
+          aria-label={search.label ?? search.placeholder}
+          value={search.value}
+          onChange={(event) => search.onValueChange(event.target.value)}
+        />
+      ) : null}
+      {filters?.map((filter) => <div key={filter.id}>{filter.control}</div>)}
+      <button type="button" onClick={onClearAll}>Clear all</button>
+    </div>
+  ),
+}));
+
+jest.mock("@/features/build/shared/build-filter-select", () => ({
+  BuildFilterSelect: ({ label, value, onValueChange, options }: {
+    label: string;
+    value: string;
+    onValueChange: (value: string) => void;
+    options: readonly { value: string; label: string }[];
+  }) => (
+    <select
+      aria-label={label}
+      value={value}
+      onChange={(event) => onValueChange(event.target.value)}
+    >
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>{option.label}</option>
+      ))}
+    </select>
+  ),
+}));
+
 jest.mock("@/components/ui/confirm-dialog", () => ({
   ConfirmDialog: () => null,
 }));
@@ -143,6 +191,7 @@ const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSearchParamsContainer.current = new URLSearchParams();
   usePageState.mockReturnValue({ kind: "ready" });
 });
 
@@ -183,7 +232,12 @@ describe("ProgramsPage — denied state (BSN-FE-D2)", () => {
 
   it("shows data table when usePageState returns ready with data", () => {
     usePrograms.mockReturnValue({
-      data: [{ id: 1, name: "Test Program", status: "active", portfolioId: null, ownerId: null, health: null }],
+      data: {
+        data: [
+          { id: 1, name: "Test Program", status: "active", portfolioId: null, ownerId: null, health: null },
+        ],
+        pagination: { limit: 25, hasMore: false, nextCursor: null },
+      },
       isLoading: false,
       isError: false,
       error: null,
@@ -195,5 +249,70 @@ describe("ProgramsPage — denied state (BSN-FE-D2)", () => {
 
     expect(screen.getByTestId("data-table")).toBeInTheDocument();
     expect(screen.queryByTestId("denied-state")).not.toBeInTheDocument();
+  });
+
+  it("sends URL search, filters, and sort to the server query", () => {
+    mockSearchParamsContainer.current = new URLSearchParams(
+      "q=launch&ownerId=user-2&health=at_risk&status=on_hold&portfolioId=7&projectId=9&sort=name&order=asc",
+    );
+    usePrograms.mockReturnValue({
+      data: { data: [], pagination: { limit: 25, hasMore: false, nextCursor: null } },
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<ProgramsPage />);
+
+    expect(usePrograms).toHaveBeenCalledWith({
+      cursor: undefined,
+      limit: 25,
+      q: "launch",
+      ownerId: "user-2",
+      health: "at_risk",
+      status: "on_hold",
+      portfolioId: 7,
+      projectId: 9,
+      sort: "name",
+      order: "asc",
+    });
+  });
+
+  it("writes filter and sort changes to the URL and clears the stale cursor", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("q=launch&cursor=stale");
+    usePrograms.mockReturnValue({
+      data: { data: [], pagination: { limit: 25, hasMore: false, nextCursor: null } },
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<ProgramsPage />);
+
+    fireEvent.change(screen.getByLabelText("Health"), {
+      target: { value: "off_track" },
+    });
+    expect(mockReplace).toHaveBeenCalledWith(
+      "/build/programs?q=launch&health=off_track",
+      { scroll: false },
+    );
+
+    fireEvent.change(screen.getByLabelText("Sort programs"), {
+      target: { value: "name" },
+    });
+    expect(mockReplace).toHaveBeenCalledWith(
+      "/build/programs?q=launch&sort=name",
+      { scroll: false },
+    );
+
+    fireEvent.click(screen.getByLabelText("Sort descending"));
+    expect(mockReplace).toHaveBeenCalledWith(
+      "/build/programs?q=launch&order=asc",
+      { scroll: false },
+    );
   });
 });

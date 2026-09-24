@@ -15,7 +15,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { IncidentSheet } from "./incident-sheet";
 import { getSlaState } from "./sla";
-import type { Incident } from "@/types/projects";
+import type { Incident } from "@/hooks/api/build/incidents-schema";
 import {
   PmPageShell,
   PmSection,

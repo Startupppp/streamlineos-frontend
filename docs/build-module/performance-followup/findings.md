@@ -216,7 +216,7 @@ Both are in `backend/src/modules/build/core/projects-analytics.service.ts`:
 
 **`GET /build/resource-allocation` has no caller.** An exhaustive search across `backend/src` and `frontend` finds the controller, the service, three spec files and the census — and nothing else. No frontend hook, no AI tool, no internal service. It is live, permissioned, module-gated, unbounded, and dead.
 
-That changes the recommendation. Paginating an endpoint nothing calls is contract churn for no reader; the question is whether it should exist. It belongs in the dead-surface process alongside `docs/build-module/DEAD-BUILD-SURFACE-INVENTORY.md`, not in a pagination change.
+That changes the recommendation. Paginating an endpoint nothing calls is contract churn for no reader; first prove a caller or remove the dead surface under the rules in `docs/build-module/99-kill-list.md`.
 
 It was **not** deleted here: removing a Build route trips three disk-bound gates — the route manifest, the authorization census and module-access — all of which read the live tree and all of which are on this task's do-not-touch list.
 

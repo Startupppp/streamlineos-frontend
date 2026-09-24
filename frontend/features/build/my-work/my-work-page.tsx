@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useState, useRef } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useCallback, useMemo, useState, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
@@ -18,7 +18,6 @@ import { PanelRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAfterLoad } from "@/hooks/common/use-after-load";
 import { useOrgCustomStates } from "@/hooks/api/build/custom-states";
-import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { MY_WORK_VIEWS } from "./my-work-view";
 import { MyWorkContent } from "./my-work-content";
 import { MyWorkSortControl } from "./my-work-sort-control";
@@ -48,7 +47,6 @@ const DISPLAY_STORAGE_ID = -1;
 
 export function MyWorkPage() {
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const activeTab = parseWorkTab(searchParams.get("tab"));
@@ -76,7 +74,7 @@ export function MyWorkPage() {
     sortField,
     sortDirection,
     grouping,
-    cursor: _cursor,
+    cursor,
     kanbanTickets,
     ticketMeta,
     dueBuckets,
@@ -86,7 +84,28 @@ export function MyWorkPage() {
     emptyDescription,
   } = useMyWorkData({ activeTab, activeView });
 
-  const pagination = useCursorPagination();
+  const [storedTrail, setStoredTrail] = useState<(string | null)[]>([null]);
+  const cursorTrail = useMemo(
+    () =>
+      storedTrail[storedTrail.length - 1] === cursor ? storedTrail : [cursor],
+    [cursor, storedTrail],
+  );
+  const hasPrevious = cursorTrail.length > 1;
+  const pageNumber = cursorTrail.length;
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = activeData?.nextCursor ?? null;
+    if (!nextCursor) return;
+    setStoredTrail([...cursorTrail, nextCursor]);
+    setCursor(nextCursor);
+  }, [activeData?.nextCursor, cursorTrail, setCursor]);
+
+  const handlePreviousPage = useCallback(() => {
+    if (cursorTrail.length <= 1) return;
+    const trimmed = cursorTrail.slice(0, -1);
+    setStoredTrail(trimmed);
+    setCursor(trimmed[trimmed.length - 1] ?? null);
+  }, [cursorTrail, setCursor]);
 
   const bulk = useMyWorkBulk(activeData?.data ?? [], sortField, sortDirection);
 
@@ -113,26 +132,23 @@ export function MyWorkPage() {
 
   const handleTabChange = useCallback(
     (value: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (value === "assigned") params.delete("tab");
-      else params.set("tab", value);
-      params.delete("view");
-      router.replace(
-        params.toString() ? `${pathname}?${params.toString()}` : pathname,
-        { scroll: false },
-      );
+      setListParams({
+        tab: value === "assigned" ? null : value,
+        view: null,
+        cursor: null,
+      });
     },
-    [router, pathname, searchParams],
+    [setListParams],
   );
 
   const handleViewChange = useCallback(
     (next: ViewType) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (next === "list") params.delete("view");
-      else params.set("view", next);
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      setListParams({
+        view: next === "list" ? null : next,
+        cursor: null,
+      });
     },
-    [router, pathname, searchParams],
+    [setListParams],
   );
 
   const handleSortChange = useCallback(
@@ -256,19 +272,13 @@ export function MyWorkPage() {
                   filtersActive={filtersActive}
                   sortField={sortField}
                   sortDirection={sortDirection}
-                  pageNumber={pagination.pageNumber}
-                  hasPrevious={pagination.hasPrevious}
+                  pageNumber={pageNumber}
+                  hasPrevious={hasPrevious}
                   onRetry={handleRetry}
                   onClearFilters={handleClearFilters}
                   onSortChange={handleSortChange}
-                  onNextPage={() => {
-                    pagination.goNext(activeData?.nextCursor);
-                    setCursor(activeData?.nextCursor ?? null);
-                  }}
-                  onPreviousPage={() => {
-                    pagination.goPrevious();
-                    setCursor(null);
-                  }}
+                  onNextPage={handleNextPage}
+                  onPreviousPage={handlePreviousPage}
                   bulk={bulk}
                   orgStatuses={orgStates}
                 />

@@ -4,11 +4,10 @@
 
 - **Current/target route:** `/build/[projectId]/intake`
 - **Scope:** project
-- **Disposition:** **CONSOLIDATE**
-- **Decision:** Migrate the user job to `/build/[projectId]/forms and /build/[projectId]/triage`, preserve deep links temporarily, then remove this physical route.
-- **User job:** Turn submissions into prioritized work without duplicates.
-- **Evidence:** `frontend/app/(authenticated)/build/[projectId]/intake/page.tsx`; Project 6 rendered the All Projects surface.
-- **Note (2026-09-23):** This removal is NOT in scope for the current release. All three routes — `/intake`, `/forms`, and `/triage` — exist as live product routes. Verified: `intake/page.tsx`, `forms/page.tsx`, and `triage/page.tsx` all exist under `frontend/app/(authenticated)/build/[projectId]/`. See [RELEASE-STATUS.md](./RELEASE-STATUS.md) section 7.
+- **Disposition:** **KEEP**
+- **Decision:** Keep Intake as the project request queue. Forms owns definition and publication; Triage owns broader evidence classification; Intake owns accept, decline, duplicate detection, and conversion into work.
+- **User job:** Turn incoming requests into prioritized work without duplicates.
+- **Evidence:** `frontend/lib/build/build-route-manifest.ts`; `frontend/app/(authenticated)/build/[projectId]/intake/page.tsx`; `frontend/features/build/intake/intake-page.tsx`.
 
 ## Product contract
 
@@ -98,7 +97,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 ## Acceptance criteria
 
-- [ ] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
+- [ ] `/build/[projectId]/intake` remains a canonical `KEEP` route and does not duplicate form-definition or general triage ownership.
 - [ ] The page satisfies the stated user job and success metric without duplicating another module owner.
 - [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
 - [ ] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.

@@ -119,8 +119,8 @@ export function BuildScopeBrowser({
         return;
       }
       if (key === "ArrowRight" || key === "ArrowLeft") {
-        const focused = document.activeElement as HTMLElement | null;
-        if (!focused || !treeRef.current?.contains(focused)) return;
+        const focused = document.activeElement;
+        if (!(focused instanceof HTMLElement) || !treeRef.current?.contains(focused)) return;
         const scopeKey = focused.dataset["scopeKey"];
         if (!scopeKey) return;
         if (key === "ArrowRight") {

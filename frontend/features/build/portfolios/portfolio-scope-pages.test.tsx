@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { PortfoliosPage } from "./portfolios-page";
 import { PortfolioDetailPage } from "./portfolio-detail-page";
 
@@ -100,8 +100,10 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
 jest.mock("@/components/ui/select", () => ({
   Select: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   SelectTrigger: () => null,
-  SelectContent: () => null,
-  SelectItem: () => null,
+  SelectContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SelectItem: ({ children, value }: { children: React.ReactNode; value: string }) => (
+    <div data-testid={`select-item-${value}`}>{children}</div>
+  ),
   SelectValue: () => null,
 }));
 
@@ -139,9 +141,10 @@ jest.mock("./portfolio-form-sheet", () => ({
   PortfolioFormSheet: () => null,
 }));
 
-const { usePortfolios, usePortfolio } = jest.requireMock("@/hooks/api/build") as {
+const { usePortfolios, usePortfolio, useProjects } = jest.requireMock("@/hooks/api/build") as {
   usePortfolios: jest.Mock;
   usePortfolio: jest.Mock;
+  useProjects: jest.Mock;
 };
 const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
   usePageState: jest.Mock;
@@ -238,5 +241,62 @@ describe("PortfolioDetailPage — denied state (BSN-FE-D4)", () => {
 
     expect(screen.queryByTestId("denied-state")).not.toBeInTheDocument();
     expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+  });
+
+  it("appends and deduplicates linked projects while rendering linked programs", () => {
+    useProjects.mockReturnValue({
+      data: {
+        data: [
+          { id: 1, name: "Project One" },
+          { id: 2, name: "Project Two" },
+          { id: 3, name: "Project Three" },
+        ],
+      },
+    });
+    usePortfolio.mockImplementation(
+      (_portfolioId: number, filters?: { projectsCursor?: string }) => ({
+        data: {
+          id: 1,
+          name: "Portfolio One",
+          status: "active",
+          health: "on_track",
+          ownerId: null,
+          strategicGoal: null,
+          description: null,
+          projects:
+            filters?.projectsCursor === "next-projects"
+              ? {
+                  data: [
+                    { id: 1, name: "Project One", key: "ONE", status: "ACTIVE" },
+                    { id: 2, name: "Project Two", key: "TWO", status: "ACTIVE" },
+                  ],
+                  pagination: { nextCursor: null, hasMore: false },
+                }
+              : {
+                  data: [{ id: 1, name: "Project One", key: "ONE", status: "ACTIVE" }],
+                  pagination: { nextCursor: "next-projects", hasMore: true },
+                },
+          programs: {
+            data: [{ id: 10, name: "Program Alpha", status: "active" }],
+            pagination: { nextCursor: null, hasMore: false },
+          },
+        },
+        isLoading: false,
+        isError: false,
+        error: null,
+        refetch: jest.fn(),
+      }),
+    );
+
+    render(<PortfolioDetailPage portfolioId={1} />);
+
+    expect(screen.getByText("Project One")).toBeInTheDocument();
+    expect(screen.getByText("Program Alpha")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show more linked projects" }));
+    expect(screen.getByText("Project Two")).toBeInTheDocument();
+    expect(screen.getAllByText("Project One")).toHaveLength(1);
+    expect(screen.queryByTestId("select-item-1")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("select-item-2")).not.toBeInTheDocument();
+    expect(screen.getByTestId("select-item-3")).toBeInTheDocument();
   });
 });

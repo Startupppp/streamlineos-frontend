@@ -7,7 +7,6 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/build/roadmap";
-import type { RoadmapStatus } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PmPanel, PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
@@ -151,16 +150,16 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
                     {col.label}
                   </span>
                   <span className="min-w-[20px] rounded-full border border-border/50 bg-background/80 px-1.5 py-0.5 text-center text-dense tabular-nums text-muted-foreground">
-                    {(grouped[col.status as RoadmapStatus] ?? []).length}
+                    {(grouped[col.status] ?? []).length}
                   </span>
                 </div>
-                {(grouped[col.status as RoadmapStatus] ?? []).length === 0 ? (
+                {(grouped[col.status] ?? []).length === 0 ? (
                   <div className="rounded-lg border border-dashed border-border/60 py-6 text-center text-xs text-muted-foreground">
                     Empty
                   </div>
                 ) : (
                   <PmStaggerList className="flex flex-col gap-1.5">
-                    {(grouped[col.status as RoadmapStatus] ?? []).map((item) => (
+                    {(grouped[col.status] ?? []).map((item) => (
                       <RoadmapItemCard
                         key={item.id}
                         item={item}

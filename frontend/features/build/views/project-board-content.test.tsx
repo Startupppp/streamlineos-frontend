@@ -105,7 +105,7 @@ describe("ProjectBoardContent — truncation notice", () => {
     jest.clearAllMocks();
   });
 
-  it("renders a truncation notice when the board query has a next page that was not auto-loaded because filters were active", () => {
+  it("renders a truncation notice whenever the board query has a next page", () => {
     const tickets = Array.from({ length: 3 }, (_, i) => ({ id: i })) as unknown as KanbanTicket[];
     render(<ProjectBoardContent {...buildBaseProps(tickets, { isTruncated: true })} />);
 
@@ -131,6 +131,19 @@ describe("ProjectBoardContent — truncation notice", () => {
     await userEvent.click(screen.getByRole("button", { name: /load more/i }));
 
     expect(onLoadMore).toHaveBeenCalledTimes(1);
+  });
+
+  it("disables the load-more action while the next page is loading", () => {
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps([{ id: 1, title: "Ticket", type: "TASK", status: "TODO" }], {
+          isTruncated: true,
+          isFetchingMore: true,
+        })}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: /load more/i })).toBeDisabled();
   });
 });
 

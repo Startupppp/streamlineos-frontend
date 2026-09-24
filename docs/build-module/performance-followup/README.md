@@ -29,7 +29,7 @@ P2-1 was attempted and reverted — classifying those reads correctly requires r
 
 ## What this pass did not touch
 
-QA Bug files, invoice files, Feedbucket files, route manifests, permission catalogs, generated OpenAPI and `IMPLEMENTATION-STATUS.md` were not edited. Findings that land in them are recorded here and handed over.
+QA Bug files, invoice files, Feedbucket files, route manifests, permission catalogs, and generated OpenAPI were not edited. Findings outside this package are recorded here for their owning module.
 
 Two items on that list **were** edited, both deliberately and both recorded in [migrations.md](./migrations.md):
 

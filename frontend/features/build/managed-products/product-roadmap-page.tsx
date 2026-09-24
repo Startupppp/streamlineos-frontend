@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/build/roadmap";
-import type { RoadmapItem, RoadmapStatus } from "@/types/projects";
+import type { RoadmapItem } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -156,14 +156,14 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
                     <div className="mb-2 flex items-center justify-between px-1">
                       <span className="text-dense font-semibold uppercase tracking-wide text-muted-foreground">{col.label}</span>
                       <span className="min-w-[20px] rounded-full border border-border/50 bg-background/80 px-1.5 py-0.5 text-center text-dense tabular-nums text-muted-foreground">
-                        {(grouped[col.status as RoadmapStatus] ?? []).length}
+                        {(grouped[col.status] ?? []).length}
                       </span>
                     </div>
-                    {(grouped[col.status as RoadmapStatus] ?? []).length === 0 ? (
+                    {(grouped[col.status] ?? []).length === 0 ? (
                       <div className="rounded-lg border border-dashed border-border/60 py-6 text-center text-xs text-muted-foreground">Empty</div>
                     ) : (
                       <PmStaggerList className="flex flex-col gap-1.5">
-                        {(grouped[col.status as RoadmapStatus] ?? []).map((item) => (
+                        {(grouped[col.status] ?? []).map((item) => (
                           <RoadmapItemCard key={item.id} item={item} onEdit={handleEditItem} onDelete={handleDeleteItem} />
                         ))}
                       </PmStaggerList>

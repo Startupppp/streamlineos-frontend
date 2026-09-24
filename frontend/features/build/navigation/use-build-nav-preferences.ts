@@ -63,18 +63,20 @@ function readStore<TValue>(
   } catch {
     return fallback;
   }
-  if (raw === store.raw) return store.value as TValue;
+  if (raw === store.raw) return parse(store.value);
   store.raw = raw;
   if (raw === null) {
     store.value = fallback;
     return fallback;
   }
   try {
-    store.value = parse(JSON.parse(raw));
+    const value = parse(JSON.parse(raw));
+    store.value = value;
+    return value;
   } catch {
     store.value = fallback;
+    return fallback;
   }
-  return store.value as TValue;
 }
 
 function writeStore<TValue>(
@@ -142,29 +144,77 @@ function useStoredJson<TValue>(
 
 function parseIds(raw: unknown): readonly string[] {
   if (!Array.isArray(raw)) return EMPTY_IDS;
+  if (
+    raw.every(
+      (entry): entry is string => typeof entry === "string" && entry.length > 0,
+    )
+  ) {
+    return raw;
+  }
   return raw.filter(
     (entry): entry is string => typeof entry === "string" && entry.length > 0,
   );
 }
 
+function parseScopeRef(entry: unknown): BuildScopeRef | null {
+  if (typeof entry !== "object" || entry === null) return null;
+  if (!("key" in entry) || typeof entry.key !== "string") return null;
+  if (!("type" in entry) || (entry.type !== "product" && entry.type !== "project")) {
+    return null;
+  }
+  if (!("id" in entry) || typeof entry.id !== "string") return null;
+  if (!("name" in entry) || typeof entry.name !== "string") return null;
+  if (!("href" in entry) || typeof entry.href !== "string") return null;
+  return {
+    key: entry.key,
+    type: entry.type,
+    id: entry.id,
+    name: entry.name,
+    parentPath:
+      "parentPath" in entry && typeof entry.parentPath === "string"
+        ? entry.parentPath
+        : null,
+    parentKey:
+      "parentKey" in entry && typeof entry.parentKey === "string"
+        ? entry.parentKey
+        : null,
+    projectKey:
+      "projectKey" in entry && typeof entry.projectKey === "string"
+        ? entry.projectKey
+        : null,
+    href: entry.href,
+  };
+}
+
 function isScopeRef(entry: unknown): entry is BuildScopeRef {
   if (typeof entry !== "object" || entry === null) return false;
-  const candidate = entry as Record<string, unknown>;
   return (
-    typeof candidate["key"] === "string" &&
-    (candidate["type"] === "product" || candidate["type"] === "project") &&
-    typeof candidate["id"] === "string" &&
-    typeof candidate["name"] === "string" &&
-    typeof candidate["href"] === "string"
+    "key" in entry &&
+    typeof entry.key === "string" &&
+    "type" in entry &&
+    (entry.type === "product" || entry.type === "project") &&
+    "id" in entry &&
+    typeof entry.id === "string" &&
+    "name" in entry &&
+    typeof entry.name === "string" &&
+    "parentPath" in entry &&
+    (typeof entry.parentPath === "string" || entry.parentPath === null) &&
+    "parentKey" in entry &&
+    (typeof entry.parentKey === "string" || entry.parentKey === null) &&
+    "projectKey" in entry &&
+    (typeof entry.projectKey === "string" || entry.projectKey === null) &&
+    "href" in entry &&
+    typeof entry.href === "string"
   );
 }
 
 function parseScopeRefs(raw: unknown): readonly BuildScopeRef[] {
   if (!Array.isArray(raw)) return EMPTY_SCOPES;
-  return raw.filter(isScopeRef).map((entry) => ({
-    ...entry,
-    parentKey: typeof entry.parentKey === "string" ? entry.parentKey : null,
-  }));
+  if (raw.every(isScopeRef)) return raw;
+  return raw.flatMap((entry) => {
+    const scope = parseScopeRef(entry);
+    return scope === null ? [] : [scope];
+  });
 }
 
 export function useBuildNavPins(

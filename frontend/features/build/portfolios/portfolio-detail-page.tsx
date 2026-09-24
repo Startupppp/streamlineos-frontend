@@ -1,18 +1,14 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PlusIcon, XIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import Link from "next/link";
 import {
-  usePortfolio,
-  useUpdatePortfolio,
-  useDeletePortfolio,
-  useLinkPortfolioProject,
-  useUnlinkPortfolioProject,
-  useProjects,
+  useDeletePortfolio, useLinkPortfolioProject, usePortfolio, useProjects,
+  useUnlinkPortfolioProject, useUpdatePortfolio,
 } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
@@ -24,31 +20,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { PortfolioStatusBadge, PortfolioHealthBadge } from "./portfolio-status-badge";
 import { PortfolioFormSheet } from "./portfolio-form-sheet";
-import type { UpdatePortfolioInput } from "@/types/projects";
+import type { LinkedProgram, LinkedProject, UpdatePortfolioInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
-import {
-  PmPageShell,
-  PmPanel,
-  PmSection,
-  PM_PANEL,
-  PM_ROW,
-} from "@/components/pm-chrome";
+import { PmPageShell, PmPanel, PmSection, PM_PANEL, PM_ROW } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 
@@ -78,6 +57,37 @@ function UnlinkProjectButton({
       {...hoverHandlers}
     >
       <XIcon ref={iconRef} size={14} />
+    </Button>
+  );
+}
+
+function mergePage<T extends { id: number }>(current: T[], page: T[]): T[] {
+  const next = new Map(current.map((item) => [item.id, item]));
+  for (const item of page) next.set(item.id, item);
+  return Array.from(next.values());
+}
+
+function LoadMoreRelationsButton({
+  label,
+  nextCursor,
+  onLoadMore,
+}: {
+  label: string;
+  nextCursor: string | null;
+  onLoadMore: (cursor: string) => void;
+}) {
+  const handleClick = useCallback(() => {
+    if (nextCursor) onLoadMore(nextCursor);
+  }, [nextCursor, onLoadMore]);
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="w-full text-xs"
+      onClick={handleClick}
+      disabled={!nextCursor}
+    >
+      {label}
     </Button>
   );
 }
@@ -116,9 +126,7 @@ function PortfolioActionsButton() {
   );
 }
 
-interface Props {
-  portfolioId: number;
-}
+type Props = { portfolioId: number };
 
 function DetailSkeleton() {
   return (
@@ -141,7 +149,7 @@ function DetailSkeleton() {
   );
 }
 
-export function PortfolioDetailPage({ portfolioId }: Props) {
+function PortfolioDetailContent({ portfolioId }: Props) {
   const canManage = useCan("build:portfolios:manage");
   const router = useRouter();
 
@@ -149,7 +157,23 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [linkProjectId, setLinkProjectId] = useState("");
 
-  const { data, isLoading, isError, error, refetch } = usePortfolio(portfolioId);
+  const [projectsCursor, setProjectsCursor] = useState<string | undefined>(undefined);
+  const [programsCursor, setProgramsCursor] = useState<string | undefined>(undefined);
+  const [loadedProjects, setLoadedProjects] = useState<LinkedProject[]>([]);
+  const [loadedPrograms, setLoadedPrograms] = useState<LinkedProgram[]>([]);
+  const { data, isLoading, isError, error, refetch } = usePortfolio(portfolioId, {
+    projectsCursor,
+    programsCursor,
+  });
+
+  const linkedProjects = useMemo(
+    () => mergePage(loadedProjects, data?.projects.data ?? []),
+    [data?.projects.data, loadedProjects],
+  );
+  const linkedPrograms = useMemo(
+    () => mergePage(loadedPrograms, data?.programs.data ?? []),
+    [data?.programs.data, loadedPrograms],
+  );
 
   const resolution = usePageState({
     permission: "build:portfolios:view",
@@ -174,8 +198,8 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
   }
 
   const linkedIds = useMemo(
-    () => new Set((data?.projects ?? []).map((p) => p.id)),
-    [data?.projects],
+    () => new Set(linkedProjects.map((p) => p.id)),
+    [linkedProjects],
   );
   const availableProjects = useMemo(
     () => (allProjectsRes?.data ?? []).filter((p) => !linkedIds.has(p.id)),
@@ -208,6 +232,8 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
       onSuccess: () => {
         toast.success("Project linked");
         setLinkProjectId("");
+        setProjectsCursor(undefined);
+        setLoadedProjects([]);
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
@@ -215,7 +241,11 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
 
   function handleUnlink(projectId: number) {
     unlinkProject.mutate(projectId, {
-      onSuccess: () => toast.success("Project unlinked"),
+      onSuccess: () => {
+        toast.success("Project unlinked");
+        setLoadedProjects((current) => current.filter((project) => project.id !== projectId));
+        setProjectsCursor(undefined);
+      },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
@@ -230,6 +260,16 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
 
   function handleRetry() {
     void refetch();
+  }
+
+  function handleLoadMoreProjects(cursor: string) {
+    setLoadedProjects((current) => mergePage(current, data?.projects.data ?? []));
+    setProjectsCursor(cursor);
+  }
+
+  function handleLoadMorePrograms(cursor: string) {
+    setLoadedPrograms((current) => mergePage(current, data?.programs.data ?? []));
+    setProgramsCursor(cursor);
   }
 
   function handleNoopCreate() {
@@ -314,7 +354,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
           <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
             <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
               Linked Projects
-              {data.projects.length > 0 ? ` (${data.projects.length})` : ""}
+              {linkedProjects.length > 0 ? ` (${linkedProjects.length})` : ""}
             </p>
             {canManage && availableProjects.length > 0 ? (
               <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -339,7 +379,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
             ) : null}
           </div>
 
-          {data.projects.length === 0 ? (
+          {linkedProjects.length === 0 ? (
             <PmPanel className="flex items-center justify-center p-4">
               <EmptyState
                 illustrationPreset="projects"
@@ -350,7 +390,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
             </PmPanel>
           ) : (
             <PmPanel>
-              {data.projects.map((proj) => (
+              {linkedProjects.map((proj) => (
                 <div key={proj.id} className={PM_ROW}>
                   <span className="shrink-0 font-mono text-xs text-muted-foreground">
                     {proj.key}
@@ -378,6 +418,52 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
                   ) : null}
                 </div>
               ))}
+              {data.projects.pagination.hasMore ? (
+                <div className={PM_ROW}>
+                  <LoadMoreRelationsButton
+                    label="Show more linked projects"
+                    nextCursor={data.projects.pagination.nextCursor}
+                    onLoadMore={handleLoadMoreProjects}
+                  />
+                </div>
+              ) : null}
+            </PmPanel>
+          )}
+        </PmSection>
+
+        <PmSection index={2} className="space-y-3">
+          <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
+            Programs
+            {linkedPrograms.length > 0 ? ` (${linkedPrograms.length})` : ""}
+          </p>
+          {linkedPrograms.length === 0 ? (
+            <PmPanel className="flex items-center justify-center p-4">
+              <EmptyState
+                illustrationPreset="projects"
+                title="No linked programs"
+                description="Programs assigned to this portfolio will appear here."
+                compact
+              />
+            </PmPanel>
+          ) : (
+            <PmPanel>
+              {linkedPrograms.map((program) => (
+                <div key={program.id} className={PM_ROW}>
+                  <span className={cn(TEXT_ONE_LINE, "flex-1 text-sm font-medium text-foreground")}>
+                    {program.name}
+                  </span>
+                  <PortfolioStatusBadge status={program.status} />
+                </div>
+              ))}
+              {data.programs.pagination.hasMore ? (
+                <div className={PM_ROW}>
+                  <LoadMoreRelationsButton
+                    label="Show more programs"
+                    nextCursor={data.programs.pagination.nextCursor}
+                    onLoadMore={handleLoadMorePrograms}
+                  />
+                </div>
+              ) : null}
             </PmPanel>
           )}
         </PmSection>
@@ -405,4 +491,8 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
       />
     </PageWrapper>
   );
+}
+
+export function PortfolioDetailPage({ portfolioId }: Props) {
+  return <PortfolioDetailContent key={portfolioId} portfolioId={portfolioId} />;
 }

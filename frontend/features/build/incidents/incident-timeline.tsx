@@ -23,7 +23,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useAddIncidentUpdate } from "@/hooks/api/build/incidents";
-import type { IncidentUpdate, IncidentStatus } from "@/types/projects";
+import type { IncidentDetail, IncidentStatus } from "@/hooks/api/build/incidents-schema";
+import { formatDateTime } from "@/lib/date-utils";
 
 const STATUS_LABELS: Record<string, string> = {
   detected: "Detected", investigating: "Investigating", mitigating: "Mitigating",
@@ -46,26 +47,32 @@ const STATUSES: IncidentStatus[] = [
 interface AddUpdateFormProps {
   projectId: number;
   incidentId: number;
+  unresolvedFollowUps: number;
 }
 
-function AddUpdateForm({ projectId, incidentId }: AddUpdateFormProps) {
+function AddUpdateForm({ projectId, incidentId, unresolvedFollowUps }: AddUpdateFormProps) {
   const addUpdate = useAddIncidentUpdate();
   const form = useForm<IncidentUpdateValues>({
     resolver: zodResolver(incidentUpdateSchema),
-    defaultValues: { message: "", newStatus: "none" },
+    defaultValues: { message: "", newStatus: "none", followUpWaiverReason: "" },
   });
   useRegisterDirtyState(form.formState.isDirty);
 
   function handleSubmit(values: IncidentUpdateValues) {
+    if (values.newStatus === "closed" && unresolvedFollowUps > 0 && !values.followUpWaiverReason.trim()) {
+      form.setError("followUpWaiverReason", { message: "Explain why unresolved follow-ups can be waived" });
+      return;
+    }
     addUpdate.mutate(
       {
         projectId,
         incidentId,
         message: values.message,
         newStatus: values.newStatus !== "none" ? STATUSES.find((s) => s === values.newStatus) : undefined,
+        followUpWaiverReason: values.followUpWaiverReason.trim() || undefined,
       },
       {
-        onSuccess: () => { toast.success("Update posted"); form.reset({ message: "", newStatus: "none" }); },
+        onSuccess: () => { toast.success("Update posted"); form.reset({ message: "", newStatus: "none", followUpWaiverReason: "" }); },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
@@ -87,6 +94,21 @@ function AddUpdateForm({ projectId, incidentId }: AddUpdateFormProps) {
             </FormItem>
           )}
         />
+        {form.watch("newStatus") === "closed" && unresolvedFollowUps > 0 ? (
+          <FormField
+            control={form.control}
+            name="followUpWaiverReason"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-dense">Closure waiver</FormLabel>
+                <FormControl>
+                  <Textarea {...field} placeholder="Why can the unresolved follow-ups be waived?" className="text-dense min-h-[64px] resize-none" />
+                </FormControl>
+                <FormMessage className="text-micro" />
+              </FormItem>
+            )}
+          />
+        ) : null}
         <div className="flex items-center gap-2">
           <div className="w-44">
             <FormField
@@ -117,7 +139,9 @@ function AddUpdateForm({ projectId, incidentId }: AddUpdateFormProps) {
   );
 }
 
-const TimelineEntry = memo(function TimelineEntry({ update }: { update: IncidentUpdate }) {
+type IncidentTimelineUpdate = IncidentDetail["updates"][number];
+
+const TimelineEntry = memo(function TimelineEntry({ update }: { update: IncidentTimelineUpdate }) {
   return (
     <div className="border-l-2 border-border pl-3 py-0.5 space-y-0.5">
       <div className="flex items-center gap-2 flex-wrap">
@@ -127,7 +151,7 @@ const TimelineEntry = memo(function TimelineEntry({ update }: { update: Incident
           </Badge>
         )}
         <span className="text-micro text-muted-foreground">
-          {update.createdBy ?? "System"} · {new Date(update.createdAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+          {update.createdByName ?? update.createdByEmail ?? "System"} · {formatDateTime(update.createdAt)}
         </span>
       </div>
       <p className="text-xs text-foreground whitespace-pre-wrap">{update.message}</p>
@@ -138,11 +162,12 @@ const TimelineEntry = memo(function TimelineEntry({ update }: { update: Incident
 interface IncidentTimelineProps {
   projectId: number;
   incidentId: number;
-  updates: IncidentUpdate[];
+  updates: IncidentTimelineUpdate[];
   canManage: boolean;
+  unresolvedFollowUps: number;
 }
 
-export function IncidentTimeline({ projectId, incidentId, updates, canManage }: IncidentTimelineProps) {
+export function IncidentTimeline({ projectId, incidentId, updates, canManage, unresolvedFollowUps }: IncidentTimelineProps) {
   const sorted = useMemo(
     () => [...updates].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
     [updates],
@@ -163,7 +188,7 @@ export function IncidentTimeline({ projectId, incidentId, updates, canManage }: 
       ))}
 
       {canManage && (
-        <AddUpdateForm projectId={projectId} incidentId={incidentId} />
+        <AddUpdateForm projectId={projectId} incidentId={incidentId} unresolvedFollowUps={unresolvedFollowUps} />
       )}
     </div>
   );

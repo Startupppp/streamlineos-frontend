@@ -5,6 +5,7 @@ import { collaborationQueryKeys } from "./query-keys/collaboration";
 import { knowledgeAndSurveysQueryKeys } from "./query-keys/knowledge-and-surveys";
 
 const BUILD_CHANGED = "build:changed";
+const BUILD_FOCUS_REFRESH_THROTTLE_MS = 15_000;
 const clientChannels = new WeakMap<QueryClient, BroadcastChannel>();
 const BUILD_QUERY_PREFIXES = [
   buildWorkQueryKeys.projects.all,
@@ -74,6 +75,20 @@ export function subscribeBuildCacheSync(client: QueryClient, scope: string): () 
       void client.invalidateQueries({ queryKey });
   }
 
+  let lastFocusRefreshAt: number | undefined;
+
+  function refreshActiveBuildQueries() {
+    const now = Date.now();
+    if (
+      lastFocusRefreshAt !== undefined &&
+      now - lastFocusRefreshAt < BUILD_FOCUS_REFRESH_THROTTLE_MS
+    )
+      return;
+    lastFocusRefreshAt = now;
+    for (const queryKey of BUILD_QUERY_PREFIXES)
+      void client.refetchQueries({ queryKey, type: "active" });
+  }
+
   function handleMessage(event: MessageEvent<unknown>) {
     if (event.data === BUILD_CHANGED) invalidateBuildQueries();
   }
@@ -82,15 +97,21 @@ export function subscribeBuildCacheSync(client: QueryClient, scope: string): () 
     if (event.key === channelName && event.newValue === BUILD_CHANGED) invalidateBuildQueries();
   }
 
+  function handleVisibilityChange() {
+    if (document.visibilityState === "visible") refreshActiveBuildQueries();
+  }
+
   channel?.addEventListener("message", handleMessage);
   window.addEventListener("storage", handleStorage);
-  if (!channel) window.addEventListener("focus", invalidateBuildQueries);
+  window.addEventListener("focus", refreshActiveBuildQueries);
+  document.addEventListener("visibilitychange", handleVisibilityChange);
 
   return () => {
     if (clientChannels.get(client) === channel) clientChannels.delete(client);
     channel?.removeEventListener("message", handleMessage);
     channel?.close();
     window.removeEventListener("storage", handleStorage);
-    window.removeEventListener("focus", invalidateBuildQueries);
+    window.removeEventListener("focus", refreshActiveBuildQueries);
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
   };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
@@ -28,7 +28,6 @@ import type {
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export const BOARD_PAGE_SIZE = 100;
-const BOARD_AUTOLOAD_LIMIT = 500;
 
 export function useTickets(
   projectId: number,
@@ -56,21 +55,12 @@ export type BoardFilters = {
   labels?: string;
   cycle?: string;
   module?: string;
+  dueDateFrom?: string;
+  dueDateTo?: string;
 };
 
 export function useProjectBoardTickets(projectId: number, filters?: BoardFilters) {
   const canView = useCan("build:tickets:view");
-  const hasFilters = !!(
-    filters?.q ||
-    filters?.status ||
-    filters?.priority ||
-    filters?.type ||
-    filters?.assigneeId ||
-    filters?.labels ||
-    filters?.cycle ||
-    filters?.module
-  );
-
   const query = useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.tickets({ projectId, view: "board", ...filters }),
     queryFn: ({ pageParam , signal }) => {
@@ -88,6 +78,8 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
       if (filters?.labels) params.labelIds = filters.labels;
       if (filters?.cycle) params.cycleId = filters.cycle;
       if (filters?.module) params.moduleIds = filters.module;
+      if (filters?.dueDateFrom) params.dueDateFrom = filters.dueDateFrom;
+      if (filters?.dueDateTo) params.dueDateTo = filters.dueDateTo;
       return apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, params, signal, ticketListPageLazy);
     },
     initialPageParam: NO_CURSOR_YET,
@@ -101,21 +93,12 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
     () => query.data?.pages.flatMap((p) => p.data ?? []) ?? [],
     [query.data],
   );
-  const { hasNextPage, isFetchingNextPage, fetchNextPage } = query;
-
-  useEffect(() => {
-    if (hasFilters) return;
-    if (!hasNextPage || isFetchingNextPage) return;
-    if (data.length >= BOARD_AUTOLOAD_LIMIT) return;
-    void fetchNextPage();
-  }, [hasFilters, hasNextPage, isFetchingNextPage, fetchNextPage, data.length]);
-
   return {
     ...query,
     data,
     total: data.length,
     loadedCount: data.length,
-    isTruncated: hasNextPage,
+    isTruncated: query.hasNextPage,
   };
 }
 

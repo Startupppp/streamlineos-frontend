@@ -168,7 +168,6 @@ const DOUBLE_CAST_LEDGER = new Map([
  *       fix above and is 0 now; no ledger, no permitted count.
  */
 const RAW_JSON_LEDGER = new Map([
-  ["features/build/forms/public-form-api.ts", { count: 1, seam: "external", test: "features/build/forms/public-form-envelope.test.ts::fetchPublicForm keeps the backend message on a failure", invariant: "the error branch only: a failed public-form response is read for its `message` before being thrown as an Error. Read as `Record<string, unknown>` and every field is typeof-guarded before use. The SUCCESS branch of this file goes through `parseApiResponse` with `publicFormDefinitionContract`, which is what unwraps the envelope." }],
   ["features/build/intake/public-intake-api.ts", { count: 1, seam: "external", test: "scripts/__tests__/assertion-seam-contracts.test.ts::(negative) falls back to the generic message when the body's message is not a string or a string array", invariant: "the error branch only, same shape as public-form-api.ts: `Record<string, unknown>` with a typeof guard on every read. The success branch goes through `parseApiResponse` with `intakeSubmitResponseContract`." }],
 ]);
 

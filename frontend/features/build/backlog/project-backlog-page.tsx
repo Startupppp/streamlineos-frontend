@@ -4,12 +4,20 @@ import { useMemo, useCallback, useState, useEffect } from "react";
 import { useProject, useCycles } from "@/hooks/api";
 import { useBulkUpdateTickets, useProjectBoardTickets } from "@/hooks/api/build";
 import type { BulkUpdateTicketsInput } from "@/hooks/api/build";
-import { notFound, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CreateTicketDialog } from "@/features/build/tickets/create-ticket-dialog";
 import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
+import {
+  TICKET_FILTER_SPEC,
+  useTicketFilterParams,
+} from "@/features/build/shared/use-ticket-filter-params";
+import { categoryParams } from "@/components/list-view/list-filter-spec";
+import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
 import { buildTicketDetailUrl } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ListTruncationNotice } from "@/components/ui/list-truncation-notice";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallback";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -41,20 +49,6 @@ import { resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
 import { useCan } from "@/hooks/api/access";
 
-const BACKLOG_FILTER_PARAMS = [
-  "q",
-  "status",
-  "priority",
-  "type",
-  "assigneeId",
-  "labels",
-  "cycle",
-  "projectIds",
-  "dueDateFrom",
-  "dueDateTo",
-  "page",
-] as const;
-
 interface ProjectBacklogPageProps {
   projectId: string;
 }
@@ -62,6 +56,42 @@ interface ProjectBacklogPageProps {
 export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPageProps) {
   const canUpdate = useCan("build:tickets:update");
   const projectId = parseInt(projectIdStr);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { setListParams } = useBuildListUrlState();
+  const {
+    q,
+    selectedStatuses,
+    selectedPriorities,
+    selectedTypes,
+    selectedAssignees,
+    selectedLabels,
+    selectedCycles,
+    dueDateFrom,
+    dueDateTo,
+    activeFilterCount,
+  } = useTicketFilterParams();
+  const filtersActive = Boolean(q) || activeFilterCount > 0;
+  const backlogFilters = {
+    q: q || undefined,
+    status:
+      selectedStatuses.length > 0 ? selectedStatuses.join(",") : undefined,
+    priority:
+      selectedPriorities.length > 0
+        ? selectedPriorities.join(",")
+        : undefined,
+    type: selectedTypes.length > 0 ? selectedTypes.join(",") : undefined,
+    assigneeId:
+      selectedAssignees.length > 0
+        ? selectedAssignees.join(",")
+        : undefined,
+    labels:
+      selectedLabels.length > 0 ? selectedLabels.join(",") : undefined,
+    cycle:
+      selectedCycles.length > 0 ? selectedCycles.join(",") : undefined,
+    dueDateFrom: dueDateFrom || undefined,
+    dueDateTo: dueDateTo || undefined,
+  };
   const {
     data,
     isLoading: projectLoading,
@@ -75,50 +105,22 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     isError: ticketsError,
     error: ticketsErrorValue,
     refetch: refetchTickets,
-  } = useProjectBoardTickets(projectId);
+    isTruncated,
+    fetchNextPage: fetchMoreTickets,
+    isFetchingNextPage: isFetchingMoreTickets,
+  } = useProjectBoardTickets(projectId, backlogFilters);
   const isLoading = projectLoading || ticketsLoading;
   const handleRetryProject = useCallback(() => void refetchProject(), [refetchProject]);
   const handleRetryTickets = useCallback(() => void refetchTickets(), [refetchTickets]);
   const { data: cycles } = useCycles(projectId);
   const bulkUpdate = useBulkUpdateTickets(projectId);
-  const searchParams = useSearchParams();
-  const router = useRouter();
 
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
 
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
 
-  const q = searchParams.get("q") ?? "";
-  const filterStatus = searchParams.get("status") ?? "";
-  const filterPriority = searchParams.get("priority") ?? "";
-  const filterType = searchParams.get("type") ?? "";
-  const filterAssigneeId = searchParams.get("assigneeId") ?? "";
-  const filtersActive = Boolean(
-    q || filterStatus || filterPriority || filterType || filterAssigneeId,
-  );
-
   const tickets = useMemo(() => boardTickets ?? [], [boardTickets]);
-
-  const filteredTickets = useMemo(() => {
-    let result = tickets;
-    if (q) {
-      const lower = q.toLowerCase();
-      result = result.filter(
-        (t) => t.title?.toLowerCase().includes(lower) || t.description?.toLowerCase().includes(lower),
-      );
-    }
-    if (filterStatus) result = result.filter((t) => t.status === filterStatus);
-    if (filterPriority) result = result.filter((t) => t.priority === filterPriority);
-    if (filterType) result = result.filter((t) => t.type === filterType);
-    if (filterAssigneeId) {
-      const assigneeSet = new Set(filterAssigneeId.split(",").filter(Boolean));
-      result = result.filter((t) =>
-        assigneeSet.has("__unassigned__") ? !t.assigneeId : t.assigneeId != null && assigneeSet.has(t.assigneeId),
-      );
-    }
-    return result;
-  }, [tickets, q, filterStatus, filterPriority, filterType, filterAssigneeId]);
 
   const members = useMemo(() => {
     if (!data?.members) return [];
@@ -186,17 +188,20 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     [handleBulkUpdate],
   );
   const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
+  const handleLoadMore = useCallback(
+    () => void fetchMoreTickets(),
+    [fetchMoreTickets],
+  );
 
   const handleSelectionChange = useCallback((sel: Set<string | number>) => {
     setSelectedIds(sel);
   }, []);
 
   const handleClearFilters = useCallback(() => {
-    const next = new URLSearchParams(searchParams.toString());
-    for (const param of BACKLOG_FILTER_PARAMS) next.delete(param);
-    const qs = next.toString();
-    router.replace(qs ? `?${qs}` : "?", { scroll: false });
-  }, [router, searchParams]);
+    const cleared: Record<string, string | null> = { q: null, page: null };
+    for (const param of categoryParams(TICKET_FILTER_SPEC)) cleared[param] = null;
+    setListParams(cleared);
+  }, [setListParams]);
 
   const handleRowClick = useCallback(
     (ticket: Ticket) => handleTicketSelect(ticket.id),
@@ -208,7 +213,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     isLoading,
     isError: ticketsError,
     error: ticketsErrorValue,
-    isEmpty: filteredTickets.length === 0,
+    isEmpty: tickets.length === 0,
   });
 
   const columns = useMemo<DataTableColumn<Ticket>[]>(
@@ -326,7 +331,18 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     );
   }
 
-  if (!data) return notFound();
+  if (!data)
+    return (
+      <PageWrapper title="Backlog">
+        <EmptyState
+          className="flex-1"
+          illustrationPreset="projects"
+          title="Project unavailable"
+          description="This project could not be loaded. Pick another project to carry on."
+          action={{ label: "All Projects", href: "/build" }}
+        />
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper
@@ -337,6 +353,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
         <div className={PM_TOOLBAR}>
           <TicketFilterBar
             className="w-full"
+            projectId={projectId}
             members={members}
             statuses={data?.statuses}
           />
@@ -361,11 +378,6 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
           />
         ) : null}
 
-        {/*
-          A 500 on GET /build/:id/tickets flattens to `[]` here, so the table
-          used to render "No tickets yet" over a project with thousands and
-          people created duplicates.
-        */}
         <PageState
           resolution={resolution}
           loading={<DataTableSkeleton mobileCards rows={12} headers={BACKLOG_TABLE_HEADERS} className="flex-1 min-h-0" />}
@@ -384,7 +396,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
         >
           <PmPanel className="min-w-0 flex-1 min-h-0 flex flex-col">
             <DataTable
-              data={filteredTickets}
+              data={tickets}
               columns={columns}
               getRowKey={(ticket) => ticket.id}
               onRowClick={handleRowClick}
@@ -397,6 +409,24 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
               mobileCard={renderMobileCard}
               className="border-0 rounded-none flex-1 min-h-0"
             />
+            {isTruncated ? (
+              <div className="shrink-0 flex items-center justify-between gap-3 border-t border-border/40 px-3 py-2">
+                <ListTruncationNotice
+                  shown={tickets.length}
+                  hint="Load more to see additional tickets."
+                  className="flex-1 border-0 px-0 py-0"
+                />
+                <LoadingButton
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  isPending={isFetchingMoreTickets}
+                  onClick={handleLoadMore}
+                >
+                  Load more
+                </LoadingButton>
+              </div>
+            ) : null}
           </PmPanel>
         </PageState>
       </PmPageShell>

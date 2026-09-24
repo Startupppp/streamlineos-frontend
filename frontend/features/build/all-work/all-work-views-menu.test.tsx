@@ -11,6 +11,9 @@ const mockView: ProjectView = {
 };
 
 const mockReplace = jest.fn();
+const mockSearchParamsContainer = {
+  current: new URLSearchParams("status=old&page=3"),
+};
 const mockUpdateView = jest.fn();
 const mockDeleteView = jest.fn();
 let mockCurrentUserId = "other-1";
@@ -18,7 +21,7 @@ let mockCurrentUserId = "other-1";
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: mockReplace }),
   usePathname: () => "/build/all-work",
-  useSearchParams: () => new URLSearchParams("status=old&page=3"),
+  useSearchParams: () => mockSearchParamsContainer.current,
 }));
 jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: { user: { id: mockCurrentUserId } } }),
@@ -33,6 +36,7 @@ jest.mock("@/hooks/api/build/advanced", () => ({
 beforeEach(() => {
   jest.clearAllMocks();
   mockCurrentUserId = "other-1";
+  mockSearchParamsContainer.current = new URLSearchParams("status=old&page=3");
 });
 
 it("applies a saved view through the menu with Enter and Space, but not other keys", async () => {
@@ -70,4 +74,19 @@ it("hides owner-only actions for another user while keeping the view usable", as
   expect(screen.getByTitle("Personal")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: mockView.name }));
   expect(mockReplace).toHaveBeenCalledWith("/build/all-work?priority=urgent&view=list", { scroll: false });
+});
+
+it("clears every filter the shared list owns when a saved view is applied, not the nine it used to name", async () => {
+  mockSearchParamsContainer.current = new URLSearchParams(
+    "status=old&cycleId=4&cycle=9&projectId=7&cursor=c2&page=3",
+  );
+  const user = userEvent.setup();
+  render(<AllWorkViewsMenu activeView="list" hasActiveFilters={false} />);
+  await user.click(screen.getByRole("button", { name: "Views" }));
+  fireEvent.keyDown(screen.getByRole("button", { name: mockView.name }), {
+    key: "Enter",
+  });
+
+  const url = mockReplace.mock.calls.at(-1)?.[0] as string;
+  expect(url).toBe("/build/all-work?priority=urgent&view=list");
 });

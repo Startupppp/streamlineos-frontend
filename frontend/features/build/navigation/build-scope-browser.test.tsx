@@ -91,9 +91,13 @@ function renderBrowser(props: Partial<typeof DEFAULT_PROPS> = {}) {
   return render(<BuildScopeBrowser {...DEFAULT_PROPS} {...props} />);
 }
 
-beforeEach(() => {
-  jest.clearAllMocks();
-});
+function setupExpandable(name = "WS") {
+  const product = makeEntry({ key: "product:p1", type: "product", name, parentKey: null });
+  const child = makeEntry({ key: "project:1", name: "ChildProject", parentKey: "product:p1" });
+  setupMocks({ products: [product], projects: [child] });
+}
+
+beforeEach(() => jest.clearAllMocks());
 
 describe("BSN-02-017 — four distinct empty states", () => {
   test("isLoading shows skeleton rows and not error or no-scopes text", () => {
@@ -246,18 +250,7 @@ describe("BSN-02-030 — ARIA roles for browse tree and flat lists", () => {
   });
 
   test("ArrowRight on a collapsed expandable treeitem expands it", async () => {
-    const product = makeEntry({
-      key: "product:p1",
-      type: "product",
-      name: "Product1",
-      parentKey: null,
-    });
-    const child = makeEntry({
-      key: "project:1",
-      name: "ChildProject",
-      parentKey: "product:p1",
-    });
-    setupMocks({ products: [product], projects: [child] });
+    setupExpandable("Product1");
     renderBrowser();
 
     const expandBtn = screen.getByRole("button", { name: "Expand Product1" });
@@ -274,18 +267,7 @@ describe("BSN-02-030 — ARIA roles for browse tree and flat lists", () => {
   });
 
   test("ArrowLeft on an expanded treeitem collapses it", async () => {
-    const product = makeEntry({
-      key: "product:p1",
-      type: "product",
-      name: "Product1",
-      parentKey: null,
-    });
-    const child = makeEntry({
-      key: "project:1",
-      name: "ChildProject",
-      parentKey: "product:p1",
-    });
-    setupMocks({ products: [product], projects: [child] });
+    setupExpandable("Product1");
     renderBrowser();
 
     await userEvent.click(screen.getByRole("button", { name: "Expand Product1" }));
@@ -301,18 +283,7 @@ describe("BSN-02-030 — ARIA roles for browse tree and flat lists", () => {
   });
 
   test("children of an expanded item are wrapped in role=group", async () => {
-    const product = makeEntry({
-      key: "product:p1",
-      type: "product",
-      name: "Product1",
-      parentKey: null,
-    });
-    const child = makeEntry({
-      key: "project:1",
-      name: "ChildProject",
-      parentKey: "product:p1",
-    });
-    setupMocks({ products: [product], projects: [child] });
+    setupExpandable("Product1");
     renderBrowser();
 
     await userEvent.click(screen.getByRole("button", { name: "Expand Product1" }));
@@ -325,18 +296,14 @@ describe("BSN-02-030 — ARIA roles for browse tree and flat lists", () => {
 
 describe("BSN-02-033 — 44px touch targets on expand buttons (class assertion — not layout-verified in jsdom)", () => {
   test("expand button carries h-11 for 44px mobile touch target", () => {
-    const product = makeEntry({ key: "product:p1", type: "product", name: "WS", parentKey: null });
-    const child = makeEntry({ key: "project:1", parentKey: "product:p1" });
-    setupMocks({ products: [product], projects: [child] });
+    setupExpandable();
     renderBrowser();
     const expandBtn = screen.getByRole("button", { name: /Expand WS/ });
     expect(expandBtn.className).toContain("h-11");
   });
 
   test("expand button reverts to h-5 at md breakpoint for desktop density", () => {
-    const product = makeEntry({ key: "product:p1", type: "product", name: "WS", parentKey: null });
-    const child = makeEntry({ key: "project:1", parentKey: "product:p1" });
-    setupMocks({ products: [product], projects: [child] });
+    setupExpandable();
     renderBrowser();
     const expandBtn = screen.getByRole("button", { name: /Expand WS/ });
     expect(expandBtn.className).toContain("md:h-5");
@@ -345,9 +312,7 @@ describe("BSN-02-033 — 44px touch targets on expand buttons (class assertion �
 
 describe("BSN-02-034 — reduced motion (class assertion — not browser-verified in jsdom)", () => {
   test("expand chevron carries motion-reduce:transition-none to disable rotation animation under reduced motion", () => {
-    const product = makeEntry({ key: "product:p1", type: "product", name: "WS", parentKey: null });
-    const child = makeEntry({ key: "project:1", parentKey: "product:p1" });
-    setupMocks({ products: [product], projects: [child] });
+    setupExpandable();
     renderBrowser();
     const expandBtn = screen.getByRole("button", { name: /Expand WS/ });
     const chevron = expandBtn.querySelector("svg");

@@ -28,6 +28,8 @@ const UNWEIGHTED_TIER = {
   unweightedReason: "no_linked_feedback",
   linkedFeedbackCount: 0,
   linkedAccountCount: 0,
+  linkedRevenue: null,
+  revenueKnownAccountCount: 0,
 };
 
 function baseRoadmapItem(status: string) {
@@ -229,6 +231,8 @@ it("keeps the weighted score and the tier that produced it on a parsed row", () 
       unweightedReason: null,
       linkedFeedbackCount: 3,
       linkedAccountCount: 2,
+      linkedRevenue: 1500,
+      revenueKnownAccountCount: 2,
     },
   };
   const parsed = roadmapItemContract.parse(weighted);
