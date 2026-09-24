@@ -4,6 +4,7 @@ import { memo, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
@@ -132,6 +133,7 @@ function AddFollowUpForm({ projectId, incidentId }: { projectId: number; inciden
     resolver: zodResolver(incidentFollowUpSchema),
     defaultValues: { title: "", description: "", ownerId: "", dueAt: "" },
   });
+  useRegisterDirtyState(form.formState.isDirty);
 
   function handleSubmit(values: IncidentFollowUpValues) {
     addAction.mutate(
