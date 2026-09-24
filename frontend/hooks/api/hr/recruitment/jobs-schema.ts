@@ -73,17 +73,22 @@ export const jobBoardOutcomeContract = z.discriminatedUnion("status", [
   }),
   z.object({
     platform: z.string(),
-    status: z.literal("POSTED"),
-    externalPostingId: z.string(),
-    url: z.string().nullable(),
+    status: z.literal("QUEUED"),
+    postingId: z.number().int(),
+  }),
+  z.object({
+    platform: z.string(),
+    status: z.literal("FAILED"),
+    message: z.string(),
+    httpStatus: z.number().int().nullable(),
   }),
 ]);
 
 export const publishJobContract = z.object({
   results: z.array(jobBoardOutcomeContract),
-  postedCount: z.number().int(),
+  queuedCount: z.number().int(),
   blockedCount: z.number().int(),
-  externalIds: z.record(z.string(), z.string()),
+  failedCount: z.number().int(),
 });
 
 export const duplicateJobPostingContract = jobPostingRowContract;

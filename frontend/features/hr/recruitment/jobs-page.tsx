@@ -144,22 +144,30 @@ export function JobsPage() {
       const platforms: JobBoardPlatform[] = ["LINKEDIN", "NAUKRI", "INDEED"];
       publishToBoards.mutate({ jobId: id, platforms }, {
         onSuccess: (data) => {
-          if (data.postedCount > 0) {
-            toast.success(`Posted to ${data.postedCount} board${data.postedCount !== 1 ? "s" : ""}`);
+          /**
+           * "Queued", not "Posted". At the moment this response is written
+           * nothing has been sent — the request is on the outbox and a consumer
+           * is what talks to the board. "Posted to N platforms" used to appear
+           * whenever an oauth token happened to be saved, for an API call that
+           * reached nobody; saying "queued" is the one claim that is true here,
+           * and Track boards is where the outcome actually lands.
+           */
+          if (data.queuedCount > 0) {
+            toast.success(
+              `Queued for ${data.queuedCount} board${data.queuedCount !== 1 ? "s" : ""}`,
+              { description: "Track boards shows whether each one went live." },
+            );
             return;
           }
-          /**
-           * No board was posted to, and the recruiter is told WHICH problem it
-           * is. "Posted to N platforms" used to appear whenever an oauth token
-           * happened to be saved, for an API call that reached nobody.
-           */
-          const blocked = data.results.filter((r) => r.status === "BLOCKED");
-          const reasons = [...new Set(blocked.map((r) => r.message))];
+          const stopped = data.results.filter(
+            (r): r is Extract<typeof r, { message: string }> => r.status !== "QUEUED",
+          );
+          const reasons = [...new Set(stopped.map((r) => r.message))];
           toast.error(reasons[0] ?? "No board accepted this job.", {
             description:
               reasons.length > 1
                 ? reasons.slice(1).join(" ")
-                : blocked.map((r) => r.platform).join(", "),
+                : stopped.map((r) => r.platform).join(", "),
           });
         },
         onError: (e) => toast.error(getErrorMessage(e)),

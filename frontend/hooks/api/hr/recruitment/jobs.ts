@@ -66,13 +66,20 @@ export type JobBoardOutcome =
       code: "no-integration" | "inactive" | "needs-keys" | "not-implemented";
       message: string;
     }
-  | { platform: string; status: "POSTED"; externalPostingId: string; url: string | null };
+  /**
+   * The only positive answer a publish request can give, because at the moment
+   * it returns nothing has been sent: the backend queues the work onto the
+   * outbox and a consumer is what talks to the board. Follow `postingId` on the
+   * board-postings list to see whether it became LIVE or FAILED.
+   */
+  | { platform: string; status: "QUEUED"; postingId: number }
+  | { platform: string; status: "FAILED"; message: string; httpStatus: number | null };
 
 export interface PublishJobResult {
   results: JobBoardOutcome[];
-  postedCount: number;
+  queuedCount: number;
   blockedCount: number;
-  externalIds: Record<string, string>;
+  failedCount: number;
 }
 
 export interface SourcePortal {
