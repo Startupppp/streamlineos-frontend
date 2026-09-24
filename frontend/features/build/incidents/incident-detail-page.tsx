@@ -20,6 +20,8 @@ import { useOrgMembers } from "@/hooks/api/organization";
 import { IncidentSlaPanel } from "./incident-sla-panel";
 import { IncidentTimeline } from "./incident-timeline";
 import { IncidentSheet } from "./incident-sheet";
+import { IncidentDecisions } from "./incident-decisions";
+import { IncidentFollowUps } from "./incident-follow-ups";
 
 /**
  * Two ladders, and both lost their orange rung: `high` and `investigating` were
@@ -199,12 +201,32 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
               <Badge variant="outline" className="text-micro font-mono">#{incident.linkedTicketId}</Badge>
             </div>
           ) : null}
+          {incident.releaseId ? (
+            <div className="space-y-1">
+              <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Affected Release</p>
+              <Badge variant="outline" className="text-micro font-mono">#{incident.releaseId}</Badge>
+            </div>
+          ) : null}
         </div>
 
         <IncidentTimeline
           projectId={projectId}
           incidentId={incidentId}
           updates={incident.updates}
+          canManage={canManage}
+        />
+
+        <IncidentFollowUps
+          projectId={projectId}
+          incidentId={incidentId}
+          actions={incident.followUpActions}
+          canManage={canManage}
+        />
+
+        <IncidentDecisions
+          projectId={projectId}
+          incidentId={incidentId}
+          decisions={incident.decisions}
           canManage={canManage}
         />
       </div>
