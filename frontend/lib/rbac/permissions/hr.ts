@@ -200,6 +200,12 @@ export const HR_PERMISSIONS: Permission[] = [
     description: "Manage documents",
   },
   {
+    name: "hr:documents:publish",
+    resource: "hr:documents",
+    action: "publish",
+    description: "Classify company documents and publish them to the knowledge base",
+  },
+  {
     name: "hr:performance:view",
     resource: "hr:performance",
     action: "view",

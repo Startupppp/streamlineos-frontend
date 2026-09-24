@@ -350,6 +350,7 @@
     "hr:contracts:view",
     "hr:custom-fields:manage",
     "hr:documents:manage",
+    "hr:documents:publish",
     "hr:documents:view",
     "hr:email-templates:manage",
     "hr:emergency:manage",
