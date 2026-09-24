@@ -83,6 +83,17 @@ const COLUMNS: DataTableColumn<HrImportJob>[] = [
     cell: (row) => <span className="text-xs">{row.validRows}</span>,
   },
   {
+    key: "outcome",
+    header: "New · changed · same",
+    headerClassName: "text-right",
+    className: "text-right tabular-nums text-muted-foreground",
+    cell: (row) => (
+      <span className="text-xs">
+        {row.status === "committed" || row.status === "rolled_back" ? `${row.createdRows} · ${row.updatedRows} · ${row.unchangedRows}` : "—"}
+      </span>
+    ),
+  },
+  {
     key: "errorRows",
     header: "Errors",
     headerClassName: "text-right",
