@@ -1,0 +1,91 @@
+"use client";
+
+import { useCallback } from "react";
+import { Link2 } from "lucide-react";
+import { toast } from "sonner";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { useCan } from "@/hooks/api/access";
+import { useCreateEmployeeInviteLink } from "@/hooks/api/hr";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
+
+/**
+ * HRMS-E2E-001b. The second way in.
+ *
+ * An invitation had exactly one delivery route: an email. When the provider is
+ * unconfigured, the domain unverified, or the message silently dropped — QA hit
+ * all three symptoms and watched two inboxes stay empty for three minutes —
+ * onboarding stopped for the whole organisation, and the only thing on screen
+ * said the invitation had been sent.
+ *
+ * This hands the administrator the link the email would have carried, so the new
+ * hire can be let in through whatever channel the two of them already use. The
+ * link is the same credential the email carries: single-use, hashed at rest,
+ * seven-day expiry, and taking one retires every earlier link for that person —
+ * which is also why the clipboard always ends up holding the live one.
+ */
+interface CopyInviteLinkButtonProps {
+  employeeId: string;
+  employeeName: string;
+  className?: string;
+}
+
+async function writeToClipboard(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    // Clipboard access is refused in an insecure context and in some embedded
+    // browsers. Showing the link beats swallowing the failure.
+    return false;
+  }
+}
+
+export function CopyInviteLinkButton({
+  employeeId,
+  employeeName,
+  className,
+}: CopyInviteLinkButtonProps) {
+  const canInvite = useCan("hr:onboarding:manage");
+  const createLink = useCreateEmployeeInviteLink();
+
+  const handleCopy = useCallback(() => {
+    createLink.mutate(employeeId, {
+      onSuccess: async (link) => {
+        const expires = new Date(link.expiresAt).toLocaleDateString(undefined, {
+          day: "numeric",
+          month: "short",
+        });
+        const copied = await writeToClipboard(link.inviteUrl);
+        if (copied)
+          toast.success(`Invite link for ${employeeName} copied`, {
+            description: `Single use, expires ${expires}. Any earlier link for them no longer works.`,
+          });
+        else
+          toast.info(`Invite link for ${employeeName}`, {
+            description: link.inviteUrl,
+            duration: 30_000,
+          });
+      },
+      onError: (error) => toast.error(getErrorMessage(error)),
+    });
+  }, [createLink, employeeId, employeeName]);
+
+  if (!canInvite) return null;
+
+  return (
+    <LoadingButton
+      type="button"
+      variant="outline"
+      size="sm"
+      className={cn("gap-1.5", className)}
+      isPending={createLink.isPending}
+      loadingText="Creating…"
+      onClick={handleCopy}
+      aria-label={`Copy invite link for ${employeeName}`}
+    >
+      <Link2 className="h-3.5 w-3.5" aria-hidden="true" />
+      Copy invite link
+    </LoadingButton>
+  );
+}

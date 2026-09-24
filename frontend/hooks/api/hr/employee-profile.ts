@@ -34,6 +34,9 @@ const _resendInviteContract = lazyContract(() =>
     (m) => m.resendEmployeeInviteResponseContract,
   ),
 );
+const _inviteLinkContract = lazyContract(() =>
+  import("@/hooks/api/hr/employee-profile-schema").then((m) => m.inviteLinkContract),
+);
 const _bulkOnboardContract = lazyContract(() =>
   import("@/hooks/api/hr/employee-profile-schema").then(
     (m) => m.bulkOnboardResultContract,
@@ -101,6 +104,26 @@ export function useResendEmployeeInvite() {
         _resendInviteContract,
       ),
     onSettled: operation.settle,
+  });
+}
+
+/**
+ * Mints a single-use join link for an employee.
+ *
+ * Deliberately not a query: each call issues a credential and retires the last
+ * one, so it must happen when an administrator asks for it and never on a
+ * render, a refetch or a cache warm.
+ */
+export function useCreateEmployeeInviteLink() {
+  return useAuthorizedMutation("hr:onboarding:manage", {
+    mutationKey: ["hr", "employee", "invite-link"],
+    mutationFn: (employeeId: string) =>
+      apiClient.post(
+        `/hr/employees/${employeeId}/invite-link`,
+        undefined,
+        undefined,
+        _inviteLinkContract,
+      ),
   });
 }
 

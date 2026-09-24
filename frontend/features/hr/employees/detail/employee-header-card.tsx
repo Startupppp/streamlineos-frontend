@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import type { EmployeeData } from "@/features/hr/employees/detail/edit-employee-form";
 import { ResendInviteButton } from "@/components/hr/resend-invite-button";
+import { CopyInviteLinkButton } from "@/components/hr/copy-invite-link-button";
 
 interface EmployeeStats {
   attendance?: { daysPresent?: number } | null;
@@ -184,7 +185,14 @@ export function EmployeeHeaderCard({
             </div>
 
             {!isSelf && !isAlreadyTerminated && (
-              <ResendInviteButton employeeId={employee.id} employeeName={employeeName} />
+              // Two ways in, beside each other. Resend is the ordinary one;
+              // Copy invite link is what keeps onboarding moving when email
+              // delivery is unconfigured or silently dropping, which is the
+              // state the audited environment was in.
+              <div className="flex flex-wrap items-center gap-2">
+                <ResendInviteButton employeeId={employee.id} employeeName={employeeName} />
+                <CopyInviteLinkButton employeeId={employee.id} employeeName={employeeName} />
+              </div>
             )}
 
             {typeof employee.bio === "string" && employee.bio && (

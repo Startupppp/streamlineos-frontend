@@ -7,6 +7,18 @@ export const inviteDeliveryContract = z.object({
 
 export type InviteDelivery = z.infer<typeof inviteDeliveryContract>;
 
+/**
+ * A join link an administrator can pass on when email cannot be relied on.
+ * The token lives in `inviteUrl` and nowhere else.
+ */
+export const inviteLinkContract = z.object({
+  inviteUrl: z.string().url(),
+  expiresAt: z.string(),
+  email: z.string().email(),
+});
+
+export type InviteLink = z.infer<typeof inviteLinkContract>;
+
 export const onboardEmployeeResponseContract = z.object({
   success: z.boolean(),
   userId: z.string(),
