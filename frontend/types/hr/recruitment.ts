@@ -188,11 +188,20 @@ export interface AtsPipelineStage {
   /** How many of `total` this response carries — the endpoint caps each stage. */
   shown: number;
   truncated: boolean;
+  /** Hiring-flow round names for this column, when every open job agrees. */
+  roundLabel?: string | null;
   candidates: AtsPipelineCandidate[];
+}
+
+export interface AtsPipelineHiringRound {
+  jobPostingId: number;
+  jobTitle: string;
+  rounds: { name: string; orderIndex: number; roundType: string }[];
 }
 
 export interface AtsPipelineResponse {
   stages: AtsPipelineStage[];
+  hiringRounds?: AtsPipelineHiringRound[];
 }
 
 export interface InterviewRubricEntry {

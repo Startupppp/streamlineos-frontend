@@ -240,6 +240,8 @@ export const pipelineStageSchema = z.object({
    */
   shown: z.number().int(),
   truncated: z.boolean(),
+  /** Present when the open jobs agree on a round name for this column. */
+  roundLabel: z.string().nullable().optional(),
   candidates: z.array(
     z.object({
       id: z.number().int(),
@@ -260,6 +262,21 @@ export const pipelineStageSchema = z.object({
 
 export const pipelineResponseSchema = z.object({
   stages: z.array(pipelineStageSchema),
+  hiringRounds: z
+    .array(
+      z.object({
+        jobPostingId: z.number().int(),
+        jobTitle: z.string(),
+        rounds: z.array(
+          z.object({
+            name: z.string(),
+            orderIndex: z.number().int(),
+            roundType: z.string(),
+          }),
+        ),
+      }),
+    )
+    .optional(),
 });
 
 export const candidateMoveStageResponseSchema = z.object({

@@ -94,8 +94,9 @@ export function DuplicateResolutionDialog({ group, onClose }: DuplicateResolutio
         <DialogHeader>
           <DialogTitle className="text-base">Possible duplicate candidates</DialogTitle>
           <DialogDescription className="text-xs">
-            These candidates share the same email address ({group.key}). Choose which record to keep — the
-            others will be linked to it as duplicates and hidden from the main list.
+            These candidates share the same email address ({group.key}). Choose which record to keep.
+            Applications, messages, documents, referrals, reference checks and interviews move onto that
+            record. The others stay linked as duplicates.
           </DialogDescription>
         </DialogHeader>
 
@@ -114,8 +115,8 @@ export function DuplicateResolutionDialog({ group, onClose }: DuplicateResolutio
           <Button variant="outline" size="sm" onClick={onClose}>
             Keep separate
           </Button>
-          <LoadingButton size="sm" onClick={handleMerge} isPending={linkDuplicate.isPending} loadingText="Linking…">
-            Link as duplicate
+          <LoadingButton size="sm" onClick={handleMerge} isPending={linkDuplicate.isPending} loadingText="Merging…">
+            Merge into this record
           </LoadingButton>
         </DialogFooter>
       </DialogContent>
