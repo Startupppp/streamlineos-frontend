@@ -52,10 +52,28 @@ export function usePortfolios(filters?: ListFilters) {
   });
 }
 
-export function usePortfolio(portfolioId: number) {
+interface PortfolioDetailFilters {
+  projectsCursor?: string;
+  programsCursor?: string;
+}
+
+export function usePortfolio(portfolioId: number, filters?: PortfolioDetailFilters) {
+  const params: Record<string, string> = {};
+  if (filters?.projectsCursor) params["projectsCursor"] = filters.projectsCursor;
+  if (filters?.programsCursor) params["programsCursor"] = filters.programsCursor;
+  const hasParams = Object.keys(params).length > 0;
   return useGatedQuery<PortfolioDetail>("build:portfolios:view", {
-    queryKey: buildWorkQueryKeys.projects.portfolios.detail(portfolioId),
-    queryFn: ({ signal }) => apiClient.get<PortfolioDetail>(`/build/portfolios/${portfolioId}`, undefined, signal, portfolioDetailContract),
+    queryKey: buildWorkQueryKeys.projects.portfolios.detail(
+      portfolioId,
+      hasParams ? params : undefined,
+    ),
+    queryFn: ({ signal }) =>
+      apiClient.get<PortfolioDetail>(
+        `/build/portfolios/${portfolioId}`,
+        hasParams ? params : undefined,
+        signal,
+        portfolioDetailContract,
+      ),
     enabled: !!portfolioId,
     staleTime: 60_000,
   });

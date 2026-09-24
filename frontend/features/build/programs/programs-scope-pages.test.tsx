@@ -183,7 +183,12 @@ describe("ProgramsPage — denied state (BSN-FE-D2)", () => {
 
   it("shows data table when usePageState returns ready with data", () => {
     usePrograms.mockReturnValue({
-      data: [{ id: 1, name: "Test Program", status: "active", portfolioId: null, ownerId: null, health: null }],
+      data: {
+        data: [
+          { id: 1, name: "Test Program", status: "active", portfolioId: null, ownerId: null, health: null },
+        ],
+        pagination: { limit: 25, hasMore: false, nextCursor: null },
+      },
       isLoading: false,
       isError: false,
       error: null,

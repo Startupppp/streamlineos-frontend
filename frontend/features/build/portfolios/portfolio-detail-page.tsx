@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PlusIcon, XIcon, EllipsisIcon } from "@animateicons/react/lucide";
@@ -82,6 +82,29 @@ function UnlinkProjectButton({
   );
 }
 
+function LoadMoreProjectsButton({
+  nextCursor,
+  onLoadMore,
+}: {
+  nextCursor: string | null;
+  onLoadMore: (cursor: string) => void;
+}) {
+  const handleClick = useCallback(() => {
+    if (nextCursor) onLoadMore(nextCursor);
+  }, [nextCursor, onLoadMore]);
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="w-full text-xs"
+      onClick={handleClick}
+      disabled={!nextCursor}
+    >
+      Show more linked projects
+    </Button>
+  );
+}
+
 function LinkProjectButton({
   disabled,
   isPending,
@@ -149,7 +172,11 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [linkProjectId, setLinkProjectId] = useState("");
 
-  const { data, isLoading, isError, error, refetch } = usePortfolio(portfolioId);
+  const [projectsCursor, setProjectsCursor] = useState<string | undefined>(undefined);
+  const { data, isLoading, isError, error, refetch } = usePortfolio(portfolioId, {
+    projectsCursor,
+  });
+  const linkedProjects = useMemo(() => data?.projects.data ?? [], [data?.projects.data]);
 
   const resolution = usePageState({
     permission: "build:portfolios:view",
@@ -174,8 +201,8 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
   }
 
   const linkedIds = useMemo(
-    () => new Set((data?.projects ?? []).map((p) => p.id)),
-    [data?.projects],
+    () => new Set(linkedProjects.map((p) => p.id)),
+    [linkedProjects],
   );
   const availableProjects = useMemo(
     () => (allProjectsRes?.data ?? []).filter((p) => !linkedIds.has(p.id)),
@@ -314,7 +341,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
           <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
             <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
               Linked Projects
-              {data.projects.length > 0 ? ` (${data.projects.length})` : ""}
+              {linkedProjects.length > 0 ? ` (${linkedProjects.length})` : ""}
             </p>
             {canManage && availableProjects.length > 0 ? (
               <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -339,7 +366,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
             ) : null}
           </div>
 
-          {data.projects.length === 0 ? (
+          {linkedProjects.length === 0 ? (
             <PmPanel className="flex items-center justify-center p-4">
               <EmptyState
                 illustrationPreset="projects"
@@ -350,7 +377,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
             </PmPanel>
           ) : (
             <PmPanel>
-              {data.projects.map((proj) => (
+              {linkedProjects.map((proj) => (
                 <div key={proj.id} className={PM_ROW}>
                   <span className="shrink-0 font-mono text-xs text-muted-foreground">
                     {proj.key}
@@ -378,6 +405,14 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
                   ) : null}
                 </div>
               ))}
+              {data.projects.pagination.hasMore ? (
+                <div className={PM_ROW}>
+                  <LoadMoreProjectsButton
+                    nextCursor={data.projects.pagination.nextCursor}
+                    onLoadMore={setProjectsCursor}
+                  />
+                </div>
+              ) : null}
             </PmPanel>
           )}
         </PmSection>

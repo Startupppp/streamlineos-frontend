@@ -19,14 +19,14 @@ export function ReportsExportButton({ projectId }: ReportsExportButtonProps) {
     if (!data?.length) return;
     exportToCsv(
       "velocity-report.csv",
-      data.map((sprint) => ({
-        sprint_name: sprint.name,
-        start_date: sprint.startDate,
-        end_date: sprint.endDate,
-        committed_points: sprint.committedPoints,
-        completed_points: sprint.completedPoints,
-        committed_count: sprint.committedCount,
-        completed_count: sprint.completedCount,
+      data.map((cycle) => ({
+        cycle_name: cycle.name,
+        start_date: cycle.startDate,
+        end_date: cycle.endDate,
+        committed_points: cycle.committedPoints,
+        completed_points: cycle.completedPoints,
+        committed_count: cycle.committedCount,
+        completed_count: cycle.completedCount,
       })),
     );
   }, [data]);

@@ -9,6 +9,10 @@ jest.mock("@/hooks/api/build/roadmap", () => ({
   useRoadmapItemSignals: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/org-display", () => ({
+  useOrgDisplay: () => ({ currency: "INR", locale: "en-IN" }),
+}));
+
 const mockUseSignals = useRoadmapItemSignals as unknown as jest.Mock;
 
 function prioritization(overrides: Partial<RoadmapPrioritization> = {}): RoadmapPrioritization {
@@ -34,6 +38,8 @@ function signals(overrides: Partial<RoadmapSignals["delivery"]> = {}): RoadmapSi
       unweightedReason: "score_unavailable",
       linkedFeedbackCount: 3,
       linkedAccountCount: 0,
+      linkedRevenue: null,
+      revenueKnownAccountCount: 0,
     },
     demand: { votes: 12, linkedFeedbackCount: 3, openLinkedFeedbackCount: 2 },
     delivery: {
@@ -171,5 +177,86 @@ describe("parseRiceField — a blank field clears the stored value", () => {
 
   it("maps a filled field to its number — positive control", () => {
     expect(parseRiceField("1200")).toBe(1200);
+  });
+});
+
+describe("linked account revenue is shown as unknown rather than zero", () => {
+  const SCORED = prioritization({
+    score: 42,
+    isComplete: true,
+    missingInputs: [],
+    unavailableReason: null,
+  });
+
+  function weighting(overrides: Partial<RoadmapSignals["tierWeighting"]> = {}) {
+    return {
+      tierWeighted: false as boolean,
+      tier: null,
+      weight: null,
+      weightedScore: null,
+      unweightedReason: "account_tier_unset" as const,
+      linkedFeedbackCount: 2,
+      linkedAccountCount: 2,
+      linkedRevenue: null as number | null,
+      revenueKnownAccountCount: 0,
+      ...overrides,
+    } as RoadmapSignals["tierWeighting"];
+  }
+
+  it("says revenue is unknown when no linked account carries a recorded value", () => {
+    render(<RoadmapPriorityScore prioritization={SCORED} tierWeighting={weighting()} />);
+    expect(screen.getByText("Revenue unknown")).toBeInTheDocument();
+    expect(screen.queryByText(/₹0|\$0/)).not.toBeInTheDocument();
+  });
+
+  it("renders the total when the linked accounts do carry a value — positive control", () => {
+    render(
+      <RoadmapPriorityScore
+        prioritization={SCORED}
+        tierWeighting={weighting({ linkedRevenue: 1500, revenueKnownAccountCount: 2 })}
+      />,
+    );
+    expect(screen.queryByText("Revenue unknown")).not.toBeInTheDocument();
+    expect(screen.getByText(/1\.5K/)).toBeInTheDocument();
+  });
+
+  it("declares how many accounts the total covers when only some carry a value", () => {
+    render(
+      <RoadmapPriorityScore
+        prioritization={SCORED}
+        tierWeighting={weighting({ linkedRevenue: 900, revenueKnownAccountCount: 1 })}
+      />,
+    );
+    expect(screen.getByText(/\(1\/2\)/)).toBeInTheDocument();
+  });
+
+  it("does not claim a partial total when every linked account is known", () => {
+    render(
+      <RoadmapPriorityScore
+        prioritization={SCORED}
+        tierWeighting={weighting({ linkedRevenue: 900, revenueKnownAccountCount: 2 })}
+      />,
+    );
+    expect(screen.queryByText(/\(2\/2\)/)).not.toBeInTheDocument();
+  });
+
+  it("renders a zero total as zero, which is a different statement from unknown", () => {
+    render(
+      <RoadmapPriorityScore
+        prioritization={SCORED}
+        tierWeighting={weighting({ linkedRevenue: 0, revenueKnownAccountCount: 2 })}
+      />,
+    );
+    expect(screen.queryByText("Revenue unknown")).not.toBeInTheDocument();
+  });
+
+  it("says nothing about revenue when no account is linked at all", () => {
+    render(
+      <RoadmapPriorityScore
+        prioritization={SCORED}
+        tierWeighting={weighting({ linkedAccountCount: 0, unweightedReason: "no_linked_account" })}
+      />,
+    );
+    expect(screen.queryByText("Revenue unknown")).not.toBeInTheDocument();
   });
 });
