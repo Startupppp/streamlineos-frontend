@@ -119,10 +119,10 @@ export function isReorderContext(v: unknown): v is ReorderContext {
 
 export type GroupFieldPatch = Pick<UpdateTicketInput, "status" | "priority" | "assigneeId" | "assigneeIds">;
 
-export const VALID_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
-export type ValidPriority = typeof VALID_PRIORITIES[number];
+const VALID_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
+type ValidPriority = typeof VALID_PRIORITIES[number];
 
-export function isValidPriority(v: string): v is ValidPriority {
+function isValidPriority(v: string): v is ValidPriority {
   return VALID_PRIORITIES.some((candidate) => candidate === v);
 }
 

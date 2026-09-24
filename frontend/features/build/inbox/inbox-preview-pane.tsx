@@ -19,7 +19,8 @@ import { XIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { formatDistanceToNow, format } from "date-fns";
+import { format } from "date-fns";
+import { formatRelativeTime } from "@/lib/date-utils";
 import Link from "next/link";
 import type {
   NotificationType,
@@ -156,7 +157,7 @@ function NotificationFallbackPreview({
                 className="tabular-nums text-xs text-muted-foreground"
                 title={format(createdAt, "PPpp")}
               >
-                {formatDistanceToNow(createdAt, { addSuffix: true })}
+                {formatRelativeTime(createdAt)}
               </span>
               {!notification.isRead && (
                 <>

@@ -2,6 +2,15 @@ import { render, screen } from "@testing-library/react";
 import { CyclesPage } from "./cycles-page";
 import { ApiError } from "@/lib/api-envelope";
 
+const mockReplace = jest.fn();
+const mockSearchParamsContainer = { current: new URLSearchParams() };
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
+  usePathname: () => "/build/1/cycles",
+  useSearchParams: () => mockSearchParamsContainer.current,
+}));
+
 jest.mock("@/hooks/api/build", () => ({
   useCycles: jest.fn(),
   useCreateCycle: jest.fn(),
@@ -129,6 +138,8 @@ function baseQueryResult(overrides = {}) {
 }
 
 beforeEach(() => {
+  mockReplace.mockClear();
+  mockSearchParamsContainer.current = new URLSearchParams();
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseCycles.mockReturnValue(baseQueryResult({ data: [] }));
@@ -177,4 +188,40 @@ it("offers the upgrade path the backend sent with a 402 rather than a generic fa
     "href",
     "/settings/billing",
   );
+});
+
+describe("CyclesPage — the completed disclosure is shareable, not local component state", () => {
+  const COMPLETED_CYCLE = {
+    id: 9,
+    name: "Closed cycle",
+    status: "completed",
+    startDate: "2026-01-01",
+    endDate: "2026-01-14",
+    progress: 100,
+    completedItems: 4,
+    totalItems: 4,
+  };
+
+  it("keeps completed cycles collapsed when the URL does not ask for them", () => {
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [COMPLETED_CYCLE] }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByText("Completed (1)")).toBeDefined();
+    expect(screen.queryByText("Closed cycle")).toBeNull();
+  });
+
+  it("expands completed cycles from completed=1 so the disclosure survives a reload or a shared link", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("completed=1");
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [COMPLETED_CYCLE] }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByText("Closed cycle")).toBeDefined();
+  });
+
+  it("writes the disclosure to the URL instead of mutating component state", () => {
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [COMPLETED_CYCLE] }));
+    render(<CyclesPage projectId={1} />);
+    screen.getByText("Completed (1)").click();
+    expect(mockReplace).toHaveBeenCalledWith("/build/1/cycles?completed=1", {
+      scroll: false,
+    });
+  });
 });
